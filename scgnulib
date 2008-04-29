@@ -1,0 +1,6 @@
+#! /bin/sh
+
+gnulib-tool \
+    --source-base=gnulib --m4-base=gnulib/m4 \
+    --doc-base=gnulib/doc --tests-base=gnulib/test \
+    --macro-prefix=GNULIB --import "$@"

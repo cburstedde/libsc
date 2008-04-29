@@ -1,11 +1,11 @@
 
 ## Makefile.am in sc
 
-ACLOCAL_AMFLAGS = -I config
+ACLOCAL_AMFLAGS = -I config -I gnulib/m4
 
-SUBDIRS = src
+SUBDIRS = gnulib src
 
-EXTRA_DIST = bootstrap
+EXTRA_DIST = bootstrap scgnulib scindent
 
 if HAVE_SPLINT # splint is used non-recursively
 splint:

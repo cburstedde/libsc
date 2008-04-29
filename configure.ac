@@ -4,7 +4,7 @@ dnl
 
 AC_PREREQ([2.59])
 AC_INIT([sc], [0.1], [ccgo@ices.utexas.edu])
-AC_CONFIG_HEADER([src/sc_config.h])
+AC_CONFIG_HEADER([src/config.h])
 AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
@@ -20,9 +20,11 @@ echo "| Checking for compilers"
 echo "o----------------------------------"
 
 ACX_MPI([icc gcc cc])
-AC_PROG_RANLIB
+GNULIB_EARLY
+
 AC_CHECK_PROG([HAVE_PROG_SPLINT], [splint], [yes])
 AM_CONDITIONAL([HAVE_SPLINT], [test "$HAVE_PROG_SPLINT" = yes])
+GNULIB_INIT
 
 # Checks for libraries.
 echo "o----------------------------------"
@@ -66,6 +68,7 @@ echo "o----------------------------------"
 # And the end.
 AC_CONFIG_FILES([Makefile
                  src/Makefile
+		 gnulib/Makefile
                 ])
 
 AC_OUTPUT
