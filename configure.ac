@@ -8,7 +8,7 @@ AC_CONFIG_HEADER([src/config.h])
 AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
-AC_CONFIG_LIBOBJ_DIR(src)
+AC_CONFIG_LIBOBJ_DIR(gnulib)
 AM_INIT_AUTOMAKE
 
 # General settings.

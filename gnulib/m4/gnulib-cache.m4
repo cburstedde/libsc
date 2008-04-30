@@ -15,11 +15,11 @@
 
 
 # Specification in the form of a command-line invocation:
-#   gnulib-tool --import --dir=. --lib=libgnu --source-base=gnulib --m4-base=gnulib/m4 --doc-base=gnulib/doc --aux-dir=config --no-libtool --macro-prefix=GNULIB getopt obstack
+#   gnulib-tool --import --dir=. --lib=libgnu --source-base=gnulib --m4-base=gnulib/m4 --doc-base=gnulib/doc --aux-dir=config --no-libtool --macro-prefix=GNULIB bladfsk getopt obstack
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
-gl_MODULES([getopt obstack])
+gl_MODULES([bladfsk getopt obstack])
 gl_AVOID([])
 gl_SOURCE_BASE([gnulib])
 gl_M4_BASE([gnulib/m4])

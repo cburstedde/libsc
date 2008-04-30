@@ -1,6 +1,6 @@
 /*
   This file is part of sc.
-  sc is a C library for parallel scientific applications.
+  sc is a C library to support parallel scientific applications.
 
   Copyright (C) 2008 Carsten Burstedde, Lucas Wilcox.
 
@@ -17,6 +17,12 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+/*
+  The files under gnulib are imported from GNU gnulib,
+  Copyright (C) Free Software Foundation, Inc.
+*/
+
 
 Contact:
 
