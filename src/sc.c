@@ -25,5 +25,21 @@
 /* header files safe to use via gnulib */
 #include <getopt.h>
 #include <obstack.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+/*@unused@*/
+
+static void
+test_printf (void)
+{
+  int64_t             i64 = 0;
+  long                l = 0;
+  size_t              s = 0;
+  ssize_t             ss = 0;
+
+  printf ("%lld %ld %zu %zd\n", (long long) i64, l, s, ss);
+}
 
 /* EOF sc.c */
