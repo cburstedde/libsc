@@ -18,17 +18,31 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* config.h comes first in every compilation unit */
-#include <config.h>
+/* sc.h comes first in every compilation unit */
 #include <sc.h>
 
-/* header files safe to use via gnulib */
-#include <getopt.h>
-#include <obstack.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+/* *INDENT-OFF* */
+const int sc_log_lookup_table[256] =
+{ -1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
+   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+   5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+   5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+   6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+   6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+   6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+   6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+   7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+   7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+   7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+   7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+   7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+   7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+   7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+   7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+};
+/* *INDENT-ON* */
 
+#if 0
 /*@unused@*/
 
 static void
@@ -41,5 +55,6 @@ test_printf (void)
 
   printf ("%lld %ld %zu %zd\n", (long long) i64, l, s, ss);
 }
+#endif /* 0 */
 
 /* EOF sc.c */

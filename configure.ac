@@ -6,13 +6,18 @@ AC_PREREQ([2.59])
 AC_INIT([libsc], [0.1], [ccgo@ices.utexas.edu])
 AC_CONFIG_HEADER([src/config.h])
 AC_CONFIG_SRCDIR([src/sc.h])
-AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_MACRO_DIR(config)
-AC_CONFIG_LIBOBJ_DIR(gnulib)
-AM_INIT_AUTOMAKE
+AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_MACRO_DIR([config])
+AC_CONFIG_LIBOBJ_DIR([gnulib])
+AM_INIT_AUTOMAKE([no-define])
 
 dnl # General settings.
 dnl AC_CANONICAL_HOST
+
+# Options.
+SC_ARG_ENABLE([debug], [enable debug mode], [SC_DEBUG])
+SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
+              [SC_RESIZE_REALLOC])
 
 # Checks for programs.
 echo "o----------------------------------"
@@ -32,22 +37,23 @@ GNULIB_EARLY
 GNULIB_INIT
 
 # Checks for libraries.
-# echo "o----------------------------------"
-# echo "| Checking for libraries"
-# echo "o----------------------------------"
+echo "o----------------------------------"
+echo "| Checking for libraries"
+echo "o----------------------------------"
 
-dnl SC_REQUIRE_LIB([m], [fabs])
-dnl SC_REQUIRE_LIB([z], [adler32_combine])
+SC_REQUIRE_LIB([m], [fabs])
+SC_REQUIRE_LIB([z], [adler32_combine])
 
-# echo "o----------------------------------"
+echo "o----------------------------------"
 # echo "| Checking headers and functions"
-# echo "o----------------------------------"
+echo "| Checking header files"
+echo "o----------------------------------"
 
 # Checks for header files.
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([ctype.h stdarg.h stddef.h stdint.h stdio.h stdlib.h])
 dnl AC_CHECK_HEADERS([execinfo.h getopt.h libgen.h signal.h unistd.h])
-dnl AC_CHECK_HEADERS([arpa/inet.h netinet/in.h zlib.h])
+AC_CHECK_HEADERS([arpa/inet.h netinet/in.h zlib.h])
 
 # Checks for functions.
 dnl AC_CHECK_FUNCS([backtrace backtrace_symbols])

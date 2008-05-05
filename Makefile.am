@@ -10,14 +10,16 @@ EXTRA_DIST = bootstrap scgnulib scindent
 if HAVE_SPLINT # splint is used non-recursively
 
 SPLINT_FLAGS = \
-	-weak -badflag -preproc -posixlib \
+	-weak -badflag -preproc -posix-lib \
 	-unrecogcomments -formatcode
+SPLINT_INCLUDES = \
+	-I@top_builddir@/src -I@top_srcdir@/src @MPI_INCLUDES@
 
 splint:
 	for CFILE in @top_srcdir@/src/*.c ; do \
 	  echo "Checking $$CFILE" ; \
-	  splint -DP4EST_SPLINT $(SPLINT_FLAGS) \
-	    -I@top_srcdir@/src @MPI_INCLUDES@ "$$CFILE" || exit 1 ; \
+	  splint -DSC_SPLINT $(SPLINT_FLAGS) $(SPLINT_INCLUDES) \
+	     "$$CFILE" || exit 1 ; \
 	done
 
 .PHONY: splint
