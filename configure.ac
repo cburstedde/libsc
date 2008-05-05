@@ -9,7 +9,7 @@ AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([config])
 AC_CONFIG_LIBOBJ_DIR([gnulib])
-AM_INIT_AUTOMAKE([no-define])
+AM_INIT_AUTOMAKE
 
 dnl # General settings.
 dnl AC_CANONICAL_HOST

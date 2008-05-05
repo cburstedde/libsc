@@ -24,6 +24,13 @@
 /* this file must be named config.h due to gnulib */
 /* make sure your package uses a different name for the config header */
 #include <config.h>
+#define SC_BUGREPORT PACKAGE_BUGREPORT
+#define SC_STRING PACKAGE_STRING
+#undef PACKAGE_BUGREPORT
+#undef PACKAGE_NAME
+#undef PACKAGE_STRING
+#undef PACKAGE_TARNAME
+#undef PACKAGE_VERSION
 
 /* header files safe to use via gnulib with above config.h included */
 #include <getopt.h>
@@ -112,6 +119,7 @@
       printf ((fmt), __VA_ARGS__);         \
     }                                      \
   } while (0)
+#define SC_LOG(level,s) SC_LOGF((level), "%s", (s))
 
 /* extern declarations */
 extern const int    sc_log_lookup_table[256];

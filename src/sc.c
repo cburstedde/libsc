@@ -42,6 +42,9 @@ const int sc_log_lookup_table[256] =
 };
 /* *INDENT-ON* */
 
+static int          malloc_count = 0;
+static int          free_count = 0;
+
 #if 0
 /*@unused@*/
 
@@ -56,5 +59,101 @@ test_printf (void)
   printf ("%lld %ld %zu %zd\n", (long long) i64, l, s, ss);
 }
 #endif /* 0 */
+
+void               *
+sc_malloc (size_t size)
+{
+  void               *ret;
+
+  ret = malloc (size);
+
+  if (size > 0) {
+    SC_CHECK_ABORT (ret != NULL, "Allocation");
+    ++malloc_count;
+  }
+  else {
+    malloc_count += ((ret == NULL) ? 0 : 1);
+  }
+
+  return ret;
+}
+
+void               *
+sc_calloc (size_t nmemb, size_t size)
+{
+  void               *ret;
+
+  ret = calloc (nmemb, size);
+
+  if (nmemb * size > 0) {
+    SC_CHECK_ABORT (ret != NULL, "Allocation");
+    ++malloc_count;
+  }
+  else {
+    malloc_count += ((ret == NULL) ? 0 : 1);
+  }
+
+  return ret;
+}
+
+void               *
+sc_realloc (void *ptr, size_t size)
+{
+  void               *ret;
+
+  ret = realloc (ptr, size);
+
+  if (ptr == NULL) {
+    if (size > 0) {
+      SC_CHECK_ABORT (ret != NULL, "Reallocation");
+      ++malloc_count;
+    }
+    else {
+      malloc_count += ((ret == NULL) ? 0 : 1);
+    }
+  }
+  else {
+    if (size > 0) {
+      SC_CHECK_ABORT (ret != NULL, "Reallocation");
+    }
+    else {
+      free_count += ((ret == NULL) ? 1 : 0);
+    }
+  }
+
+  return ret;
+}
+
+char               *
+sc_strdup (const char *s)
+{
+  size_t              len;
+  char               *d;
+
+  if (s == NULL) {
+    return NULL;
+  }
+
+  len = strlen (s) + 1;
+  d = sc_malloc (len);
+  memcpy (d, s, len);
+
+  return d;
+}
+
+void
+sc_free (void *ptr)
+{
+  if (ptr != NULL) {
+    ++free_count;
+    free (ptr);
+  }
+}
+
+void
+sc_memory_check (void)
+{
+  SC_CHECK_ABORT (malloc_count == free_count, "Memory balance");
+}
 
 /* EOF sc.c */
