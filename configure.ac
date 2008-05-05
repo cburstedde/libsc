@@ -1,5 +1,5 @@
 dnl
-dnl sc configure.ac
+dnl libsc configure.ac
 dnl
 
 AC_PREREQ([2.59])
@@ -11,32 +11,37 @@ AC_CONFIG_MACRO_DIR(config)
 AC_CONFIG_LIBOBJ_DIR(gnulib)
 AM_INIT_AUTOMAKE
 
-# General settings.
-AC_CANONICAL_HOST
+dnl # General settings.
+dnl AC_CANONICAL_HOST
 
 # Checks for programs.
 echo "o----------------------------------"
-echo "| Checking for compilers"
+echo "| Checking for programs"
 echo "o----------------------------------"
-
-ACX_MPI([icc gcc cc])
-GNULIB_EARLY
 
 AC_CHECK_PROG([HAVE_PROG_SPLINT], [splint], [yes])
 AM_CONDITIONAL([HAVE_SPLINT], [test "$HAVE_PROG_SPLINT" = yes])
+ACX_MPI([icc gcc cc])
+
+# Checks from gnulib.
+echo "o----------------------------------"
+echo "| Configuring gnulib"
+echo "o----------------------------------"
+
+GNULIB_EARLY
 GNULIB_INIT
 
 # Checks for libraries.
-echo "o----------------------------------"
-echo "| Checking for libraries"
-echo "o----------------------------------"
+# echo "o----------------------------------"
+# echo "| Checking for libraries"
+# echo "o----------------------------------"
 
 dnl SC_REQUIRE_LIB([m], [fabs])
 dnl SC_REQUIRE_LIB([z], [adler32_combine])
 
-echo "o----------------------------------"
-echo "| Checking headers and functions"
-echo "o----------------------------------"
+# echo "o----------------------------------"
+# echo "| Checking headers and functions"
+# echo "o----------------------------------"
 
 # Checks for header files.
 dnl AC_HEADER_STDC
@@ -49,6 +54,10 @@ dnl AC_CHECK_FUNCS([backtrace backtrace_symbols])
 dnl SC_REQUIRE_FUNCS([memset pow sqrt floor])
 
 # Checks for typedefs, structures, and compiler characteristics.
+echo "o----------------------------------"
+echo "| Checking keywords and types"
+echo "o----------------------------------"
+
 AC_C_CONST
 AC_C_INLINE
 AC_TYPE_SIZE_T
@@ -65,10 +74,9 @@ echo "| LDFLAGS:     $LDFLAGS"
 echo "| LIBS:        $LIBS"
 echo "o----------------------------------"
 
-# And the end.
+# Create output files.
 AC_CONFIG_FILES([Makefile
                  src/Makefile
 		 gnulib/Makefile
                 ])
-
 AC_OUTPUT
