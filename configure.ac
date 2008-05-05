@@ -1,5 +1,5 @@
 dnl
-dnl libsc configure.ac
+dnl This file is part of the SC Library.
 dnl
 
 AC_PREREQ([2.59])
