@@ -15,11 +15,11 @@
 
 
 # Specification in the form of a command-line invocation:
-#   gnulib-tool --import --dir=. --lib=libgnu --source-base=gnulib --m4-base=gnulib/m4 --doc-base=gnulib/doc --aux-dir=config --avoid=exit --avoid=exitfail --lgpl=3 --no-libtool --macro-prefix=GNULIB base64 calloc-posix getopt malloc-posix obstack stdint stdlib
+#   gnulib-tool --import --dir=. --lib=libgnu --source-base=gnulib --m4-base=gnulib/m4 --doc-base=gnulib/doc --aux-dir=config --avoid=exit --avoid=exitfail --lgpl=3 --no-libtool --macro-prefix=GNULIB base64 calloc-posix getopt malloc-posix obstack stdint stdlib string
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
-gl_MODULES([base64 calloc-posix getopt malloc-posix obstack stdint stdlib])
+gl_MODULES([base64 calloc-posix getopt malloc-posix obstack stdint stdlib string])
 gl_AVOID([exit exitfail])
 gl_SOURCE_BASE([gnulib])
 gl_M4_BASE([gnulib/m4])

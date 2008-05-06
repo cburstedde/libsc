@@ -52,12 +52,12 @@ echo "o----------------------------------"
 # Checks for header files.
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([ctype.h stdarg.h stddef.h stdint.h stdio.h stdlib.h])
-dnl AC_CHECK_HEADERS([execinfo.h getopt.h libgen.h signal.h unistd.h])
-AC_CHECK_HEADERS([arpa/inet.h netinet/in.h zlib.h])
+dnl AC_CHECK_HEADERS([libgen.h signal.h unistd.h])
+AC_CHECK_HEADERS([execinfo.h arpa/inet.h netinet/in.h zlib.h])
 
 # Checks for functions.
-dnl AC_CHECK_FUNCS([backtrace backtrace_symbols])
 dnl SC_REQUIRE_FUNCS([memset pow sqrt floor])
+AC_CHECK_FUNCS([backtrace backtrace_symbols])
 
 # Checks for typedefs, structures, and compiler characteristics.
 echo "o----------------------------------"

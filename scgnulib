@@ -6,6 +6,7 @@ MODULES="
    obstack
    stdint
    stdlib
+   string
    calloc-posix
    malloc-posix
 "

@@ -38,6 +38,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 /* using sqrt to compute hash statistics */
 #include <math.h>

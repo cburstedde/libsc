@@ -25,6 +25,7 @@ AC_DEFUN([GNULIB_EARLY],
   m4_pattern_allow([^gl_LIBOBJS$])dnl a variable
   m4_pattern_allow([^gl_LTLIBOBJS$])dnl a variable
   AC_REQUIRE([AC_PROG_RANLIB])
+  AC_REQUIRE([gl_USE_SYSTEM_EXTENSIONS])
 ])
 
 # This macro should be invoked from ./configure.ac, in the section
@@ -53,6 +54,7 @@ AC_DEFUN([GNULIB_INIT],
   AM_STDBOOL_H
   gl_STDINT_H
   gl_STDLIB_H
+  gl_HEADER_STRING_H
   gl_UNISTD_H
   gl_WCHAR_H
   m4_popdef([AC_LIBSOURCES])
@@ -190,10 +192,12 @@ AC_DEFUN([GNULIB_FILE_LIST], [
   lib/stdbool.in.h
   lib/stdint.in.h
   lib/stdlib.in.h
+  lib/string.in.h
   lib/unistd.in.h
   lib/wchar.in.h
   m4/base64.m4
   m4/calloc.m4
+  m4/extensions.m4
   m4/getopt.m4
   m4/gnulib-common.m4
   m4/include_next.m4
@@ -203,6 +207,7 @@ AC_DEFUN([GNULIB_FILE_LIST], [
   m4/stdbool.m4
   m4/stdint.m4
   m4/stdlib_h.m4
+  m4/string_h.m4
   m4/unistd_h.m4
   m4/wchar.m4
 ])
