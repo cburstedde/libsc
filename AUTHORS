@@ -19,11 +19,6 @@
 */
 
 /*
-  The files under gnulib are imported from GNU gnulib with -lgpl=3,
-  Copyright (C) Free Software Foundation, Inc.
-*/
-
-/*
   The files under iniparser have been copied from iniparser3.0b
   and modified.  iniparser is licensed unter the MIT license,
   see the LICENSE and AUTHORS files in that directory.
