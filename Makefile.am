@@ -11,8 +11,15 @@ MAINTAINERCLEANFILES = ChangeLog
 SUBDIRS = gnulib
 AM_CPPFLAGS = -I@top_builddir@/gnulib -I@top_srcdir@/gnulib
 
+# initialize empty variables
+lib_LIBRARIES =
+include_HEADERS =
+noinst_PROGRAMS =
+LDADD =
+
 # non-recursive build
 include src/Makefile.am
+include iniparser/Makefile.am
 
 # non-recursively splint
 SPLINT_FLAGS = \
