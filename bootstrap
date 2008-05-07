@@ -1,7 +1,6 @@
 #!/bin/sh
 
-gnulib-tool --update
-aclocal -I config -I gnulib/m4
+aclocal -I config
 autoheader
 automake --add-missing --copy
 autoconf

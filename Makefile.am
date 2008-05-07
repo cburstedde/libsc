@@ -1,27 +1,23 @@
 
 ## Makefile.am in sc
 
-ACLOCAL_AMFLAGS = -I config -I gnulib/m4
+ACLOCAL_AMFLAGS = -I config
 
-EXTRA_DIST = bootstrap scgnulib scindent
+EXTRA_DIST = bootstrap scindent
 
 MAINTAINERCLEANFILES = ChangeLog
-
-# gnulib is built recursively
-SUBDIRS = gnulib
-AM_CPPFLAGS = -I@top_builddir@/gnulib -I@top_srcdir@/gnulib
 
 # initialize empty variables
 lib_LIBRARIES =
 include_HEADERS =
 noinst_PROGRAMS =
+AM_CPPFLAGS =
 LDADD =
 
 # non-recursive build
 include src/Makefile.am
 include iniparser/Makefile.am
 include example/options/Makefile.am
-LDADD += @top_builddir@/gnulib/libgnu.a
 
 # non-recursive splint
 SPLINT_FLAGS = \

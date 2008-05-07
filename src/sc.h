@@ -21,40 +21,70 @@
 #ifndef SC_H
 #define SC_H
 
-/* this file must be named config.h due to gnulib */
-/* make sure your package uses a different name for the config header */
-#include <config.h>
-#define SC_BUGREPORT PACKAGE_BUGREPORT
-#define SC_STRING PACKAGE_STRING
+/* include the sc_config header */
+
+#ifdef PACKAGE
+#undef PACKAGE
+#endif
+#ifdef PACKAGE_BUGREPORT
+#undef PACKAGE_BUGREPORT
+#endif
+#ifdef PACKAGE_NAME
+#undef PACKAGE_NAME
+#endif
+#ifdef PACKAGE_STRING
+#undef PACKAGE_STRING
+#endif
+#ifdef PACKAGE_TARNAME
+#undef PACKAGE_TARNAME
+#endif
+#ifdef PACKAGE_VERSION
+#undef PACKAGE_VERSION
+#endif
+#include <sc_config.h>
+#undef PACKAGE
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE_NAME
 #undef PACKAGE_STRING
 #undef PACKAGE_TARNAME
 #undef PACKAGE_VERSION
 
-/* header files safe to use via gnulib with above config.h included */
-#include <getopt.h>
-#include <obstack.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+/* include system headers */
 
-/* using sqrt to compute hash statistics */
 #include <math.h>
+#include <stdio.h>
+#include <string.h>
 
-/* require zlib header for adler32 checksums */
-#ifdef HAVE_ZLIB_H
-#include <zlib.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
 #endif
 
-/* require libgen header for basename */
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+
 #ifdef HAVE_LIBGEN_H
 #include <libgen.h>
 #endif
 
+#ifdef HAVE_GETOPT_H
+#include <getopt.h>
+#endif
+
+#ifdef HAVE_OBSTACK_H
+#include <obstack.h>
+#endif
+
+#ifdef HAVE_ZLIB_H
+#include <zlib.h>
+#endif
+
 /* check macros, always enabled */
+
 #define SC_NOOP do { ; } while (0)
 #define SC_CHECK_ABORT(c,s)                        \
   do {                                             \
@@ -75,6 +105,7 @@
 #define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI operation")
 
 /* assertions, only enabled in debug mode */
+
 #ifdef SC_DEBUG
 #define SC_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
 #else
@@ -83,6 +114,7 @@
 #define SC_ASSERT_NOT_REACHED() SC_CHECK_ABORT (0, "Unreachable code")
 
 /* macros for memory allocation, will abort if out of memory */
+
 #define SC_ALLOC(t,n) (t *) sc_malloc ((n) * sizeof(t))
 #define SC_ALLOC_ZERO(t,n) (t *) sc_calloc ((n), sizeof(t))
 #define SC_REALLOC(p,t,n) (t *) sc_realloc ((p), (n) * sizeof(t))
@@ -90,10 +122,12 @@
 #define SC_FREE(p) sc_free (p)
 
 /* min and max helper macros */
+
 #define SC_MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define SC_MAX(a,b) (((a) > (b)) ? (a) : (b))
 
 /* hopefully fast binary logarithms and binary round up */
+
 #define SC_LOG2_8(x) (sc_log_lookup_table[(x)])
 #define SC_LOG2_16(x) (((x) > 0xff) ?                                   \
                        (SC_LOG2_8 ((x) >> 8) + 8) : SC_LOG2_8 (x))
@@ -107,6 +141,7 @@
   (((x) <= 0) ? 0 : (1 << (SC_LOG2_64 ((x) - 1) + 1)))
 
 /* primitive logging macros for now */
+
 #define SC_LP_NONE        0
 #define SC_LP_TRACE       1     /* this will prefix file and line number */
 #define SC_LP_DEBUG       2     /* any information on the internal state */
@@ -129,9 +164,11 @@
 #define SC_LOG(level,s) SC_LOGF((level), "%s", (s))
 
 /* extern declarations */
+
 extern const int    sc_log_lookup_table[256];
 
 /* memory allocation functions, handle NULL pointers gracefully */
+
 void               *sc_malloc (size_t size);
 void               *sc_calloc (size_t nmemb, size_t size);
 void               *sc_realloc (void *ptr, size_t size);
@@ -140,6 +177,7 @@ void                sc_free (void *ptr);
 void                sc_memory_check (void);
 
 /* prints a stack trace, calls the abort handler and terminates */
+
 void                sc_abort (void)
   __attribute__ ((noreturn));
 

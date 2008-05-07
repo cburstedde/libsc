@@ -4,15 +4,11 @@ dnl
 
 AC_PREREQ([2.59])
 AC_INIT([libsc], [0.1], [ccgo@ices.utexas.edu])
-AC_CONFIG_HEADER([src/config.h])
+AC_CONFIG_HEADER([src/sc_config.h])
 AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([config])
-AC_CONFIG_LIBOBJ_DIR([gnulib])
-AM_INIT_AUTOMAKE([no-define subdir-objects])
-
-dnl # General settings.
-dnl AC_CANONICAL_HOST
+AM_INIT_AUTOMAKE([subdir-objects])
 
 # Options.
 SC_ARG_ENABLE([debug], [enable debug mode], [SC_DEBUG])
@@ -28,14 +24,7 @@ AC_CHECK_PROG([HAVE_PROG_SPLINT], [splint], [yes])
 AM_CONDITIONAL([HAVE_SPLINT], [test "$HAVE_PROG_SPLINT" = yes])
 ACX_MPI([icc gcc cc])
 AM_PROG_CC_C_O
-
-# Checks from gnulib.
-echo "o----------------------------------"
-echo "| Configuring gnulib"
-echo "o----------------------------------"
-
-GNULIB_EARLY
-GNULIB_INIT
+AC_PROG_RANLIB
 
 # Checks for libraries.
 echo "o----------------------------------"
@@ -46,15 +35,15 @@ SC_REQUIRE_LIB([m], [fabs])
 SC_REQUIRE_LIB([z], [adler32_combine])
 
 echo "o----------------------------------"
-# echo "| Checking headers and functions"
-echo "| Checking header files"
+echo "| Checking headers and functions"
 echo "o----------------------------------"
 
 # Checks for header files.
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([ctype.h stdarg.h stddef.h stdint.h stdio.h stdlib.h])
 dnl AC_CHECK_HEADERS([signal.h unistd.h])
-AC_CHECK_HEADERS([execinfo.h libgen.h arpa/inet.h netinet/in.h zlib.h])
+AC_CHECK_HEADERS([inttypes.h libgen.h getopt.h obstack.h zlib.h])
+AC_CHECK_HEADERS([execinfo.h arpa/inet.h netinet/in.h unistd.h])
 
 # Checks for functions.
 dnl SC_REQUIRE_FUNCS([memset pow sqrt floor])
@@ -83,6 +72,5 @@ echo "o----------------------------------"
 
 # Create output files.
 AC_CONFIG_FILES([Makefile
-		 gnulib/Makefile
                 ])
 AC_OUTPUT
