@@ -20,16 +20,19 @@ LDADD =
 # non-recursive build
 include src/Makefile.am
 include iniparser/Makefile.am
+include example/options/Makefile.am
+LDADD += @top_builddir@/gnulib/libgnu.a
 
-# non-recursively splint
+# non-recursive splint
 SPLINT_FLAGS = \
 	-weak -badflag -preproc -posix-lib \
 	-unrecogcomments -formatcode
 SPLINT_INCLUDES = \
-	-I@top_builddir@/src -I@top_srcdir@/src @MPI_INCLUDES@
+	-I@top_builddir@/src -I@top_srcdir@/src -I@top_srcdir@/iniparser \
+	@MPI_INCLUDES@
 splint:
 if HAVE_SPLINT
-	for CFILE in @top_srcdir@/src/*.c ; do \
+	for CFILE in @top_srcdir@/src/*.c @top_srcdir@/example/**/*.c ; do \
 	  echo "Checking $$CFILE" ; \
 	  splint -DSC_SPLINT $(SPLINT_FLAGS) $(SPLINT_INCLUDES) \
 	     "$$CFILE" || exit 1 ; \

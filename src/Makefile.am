@@ -2,8 +2,8 @@
 # Makefile.am in sc/src
 # included non-recursively from toplevel directory
 
-libsc_installed_headers = src/sc.h src/sc_memory.h
-libsc_compiled_sources  = src/sc.c src/sc_memory.c
+libsc_installed_headers = src/sc.h src/sc_memory.h src/sc_options.h
+libsc_compiled_sources  = src/sc.c src/sc_memory.c src/sc_options.c
 
 lib_LIBRARIES += src/libsc.a
 src_libsc_a_SOURCES = $(libsc_installed_headers) $(libsc_compiled_sources)

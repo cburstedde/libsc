@@ -49,6 +49,11 @@
 #include <zlib.h>
 #endif
 
+/* require libgen header for basename */
+#ifdef HAVE_LIBGEN_H
+#include <libgen.h>
+#endif
+
 /* check macros, always enabled */
 #define SC_NOOP do { ; } while (0)
 #define SC_CHECK_ABORT(c,s)                        \

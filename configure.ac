@@ -53,8 +53,8 @@ echo "o----------------------------------"
 # Checks for header files.
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([ctype.h stdarg.h stddef.h stdint.h stdio.h stdlib.h])
-dnl AC_CHECK_HEADERS([libgen.h signal.h unistd.h])
-AC_CHECK_HEADERS([execinfo.h arpa/inet.h netinet/in.h zlib.h])
+dnl AC_CHECK_HEADERS([signal.h unistd.h])
+AC_CHECK_HEADERS([execinfo.h libgen.h arpa/inet.h netinet/in.h zlib.h])
 
 # Checks for functions.
 dnl SC_REQUIRE_FUNCS([memset pow sqrt floor])

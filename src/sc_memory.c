@@ -19,7 +19,6 @@
 */
 
 /* sc.h comes first in every compilation unit */
-
 #include <sc.h>
 #include <sc_memory.h>
 
