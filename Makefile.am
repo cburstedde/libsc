@@ -21,9 +21,9 @@ include src/Makefile.am
 include iniparser/Makefile.am
 include example/options/Makefile.am
 
-ALL_LINT_FLAGS=$(LINT_FLAGS) -systemdirs /usr/include:$(MPI_INCLUDE_PATH) \
-               $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(MPI_INCLUDES) \
-               $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(src_libsc_a_CPPFLAGS)
+ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+               $(MPI_INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) \
+               $(src_libsc_a_CPPFLAGS)
 
 lint:
 if LINT

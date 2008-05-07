@@ -36,6 +36,8 @@ dnl of the copyright holder.
 # Sets $LINT_FLAGS to flags to pass to source checker
 # Sets LINT automake conditional if enabled (default: disabled)
 #
+# Note that MPI_INCLUDE_PATH should be defined before this function is called.
+#
 AC_DEFUN([SC_WITH_LINT],[
 
 # Allow checking code with lint, sparse, etc.
@@ -58,6 +60,13 @@ if test "x$LINT_FLAGS" = "x" -a "x$LINT" != "xno" ; then
         ;;
       splint|*/splint)
         LINT_FLAGS="-weak -badflag -preproc -posix-lib"
+        ;;
+    esac
+fi
+if test "x$LINT" != "xno" ; then
+    case $LINT in
+      splint|*/splint)
+        LINT_FLAGS="$LINT_FLAGS -systemdirs /usr/include:$MPI_INCLUDE_PATH"
         ;;
     esac
 fi
