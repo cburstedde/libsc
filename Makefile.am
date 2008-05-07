@@ -5,7 +5,19 @@ ACLOCAL_AMFLAGS = -I config -I gnulib/m4
 
 SUBDIRS = gnulib src
 
-EXTRA_DIST = bootstrap scgnulib scindent
+EXTRA_DIST = bootstrap scgnulib scindent ChangeLog
+
+MAINTAINERCLEANFILES=ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .ChangeLog.tmp && \
+		mv .ChangeLog.tmp ChangeLog; rm -f .ChangeLog.tmp) || \
+	(touch ChangeLog; \
+		echo 'Warning not in git dir; ChangeLog could be wrong.' >&2)
+
+dist-hook: ChangeLog
 
 if HAVE_SPLINT # splint is used non-recursively
 
