@@ -217,7 +217,7 @@ void iniparser_dump_ini(dictionary * d, FILE * f)
     char    keym[ASCIILINESZ+1];
     int     nsec ;
     char *  secname ;
-    int     seclen ;
+    size_t  seclen ;
 
     if (d==NULL || f==NULL) return ;
 
@@ -233,9 +233,9 @@ void iniparser_dump_ini(dictionary * d, FILE * f)
     }
     for (i=0 ; i<nsec ; i++) {
         secname = iniparser_getsecname(d, i) ;
-        seclen  = (int)strlen(secname);
+        seclen  = strlen(secname);
         fprintf(f, "\n[%s]\n", secname);
-        sprintf(keym, "%s:", secname);
+        snprintf(keym, ASCIILINESZ + 1, "%s:", secname);
         for (j=0 ; j<d->size ; j++) {
             if (d->key[j]==NULL)
                 continue ;
@@ -605,7 +605,7 @@ dictionary * iniparser_load(const char * ininame, FILE * f)
             break ;
 
             case LINE_VALUE:
-            sprintf(tmp, "%s:%s", section, key);
+            snprintf(tmp, ASCIILINESZ + 1, "%s:%s", section, key);
             errs = dictionary_set(dict, tmp, val) ;
             break ;
 

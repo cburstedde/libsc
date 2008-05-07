@@ -10,6 +10,7 @@ MAINTAINERCLEANFILES = ChangeLog
 # initialize empty variables
 lib_LIBRARIES =
 include_HEADERS =
+nodist_include_HEADERS =
 noinst_PROGRAMS =
 AM_CPPFLAGS =
 LDADD =
@@ -20,16 +21,19 @@ include src/Makefile.am
 include iniparser/Makefile.am
 include example/options/Makefile.am
 
-if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) -systemdirs /usr/include:$(MPI_INCLUDE_PATH) \
                $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(MPI_INCLUDES) \
                $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(src_libsc_a_CPPFLAGS)
 
 lint:
+if LINT
 	for f in $(LINT_CSOURCES) ; do \
-		$(LINT) $(ALL_LINT_FLAGS) $(top_srcdir)/$$f ; \
+		$(LINT) $(ALL_LINT_FLAGS) $(top_srcdir)/$$f || \
+		echo "Lint check failed for $$f" ; \
 	done
 endif LINT
+
+.PHONY: lint
 
 ChangeLog:
 	(GIT_DIR=@top_srcdir@/.git git-log | @top_srcdir@/git2cl \

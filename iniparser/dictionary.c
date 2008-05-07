@@ -43,7 +43,7 @@
 
 /* Doubles the allocated size associated to a pointer */
 /* 'size' is the current allocated size. */
-static void * mem_double(void * ptr, int size)
+static void * mem_double(void * ptr, size_t size)
 {
     void * newptr;
 
@@ -95,9 +95,9 @@ static char * xstrdup(char * s)
 /*--------------------------------------------------------------------------*/
 unsigned dictionary_hash(char * key)
 {
-	int			len ;
+        size_t		len ;
 	unsigned	hash ;
-	int			i ;
+	size_t		i ;
 
 	len = strlen(key);
 	for (hash=0, i=0 ; i<len ; i++) {
@@ -122,7 +122,7 @@ unsigned dictionary_hash(char * key)
   dictionary, give size=0.
  */
 /*--------------------------------------------------------------------------*/
-dictionary * dictionary_new(int size)
+dictionary * dictionary_new(size_t size)
 {
 	dictionary	*	d ;
 
@@ -132,7 +132,7 @@ dictionary * dictionary_new(int size)
 	if (!(d = (dictionary *)calloc(1, sizeof(dictionary)))) {
 		return NULL;
 	}
-	d->size = size ;
+	d->size = (int) size ;
 	d->val  = (char **)calloc(size, sizeof(char*));
 	d->key  = (char **)calloc(size, sizeof(char*));
 	d->hash = (unsigned int *)calloc(size, sizeof(unsigned));

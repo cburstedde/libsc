@@ -21,9 +21,9 @@ echo "| Checking for programs"
 echo "o----------------------------------"
 
 ACX_MPI([icc gcc cc])
-SC_WITH_LINT
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
+SC_WITH_LINT
 
 # Checks for libraries.
 echo "o----------------------------------"
