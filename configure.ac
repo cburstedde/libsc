@@ -9,7 +9,7 @@ AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([config])
 AC_CONFIG_LIBOBJ_DIR([gnulib])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([no-define subdir-objects])
 
 dnl # General settings.
 dnl AC_CANONICAL_HOST
@@ -27,6 +27,7 @@ echo "o----------------------------------"
 AC_CHECK_PROG([HAVE_PROG_SPLINT], [splint], [yes])
 AM_CONDITIONAL([HAVE_SPLINT], [test "$HAVE_PROG_SPLINT" = yes])
 ACX_MPI([icc gcc cc])
+AM_PROG_CC_C_O
 
 # Checks from gnulib.
 echo "o----------------------------------"
@@ -82,7 +83,6 @@ echo "o----------------------------------"
 
 # Create output files.
 AC_CONFIG_FILES([Makefile
-                 src/Makefile
 		 gnulib/Makefile
                 ])
 AC_OUTPUT

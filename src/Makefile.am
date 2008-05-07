@@ -1,15 +1,14 @@
 
-## Makefile.am in sc/src
+# Makefile.am in sc/src
+# included non-recursively from toplevel directory
 
-## SUBDIRS =
+libsc_installed_headers = src/sc.h src/sc_memory.h
+libsc_compiled_sources  = src/sc.c src/sc_memory.c
 
-lib_LIBRARIES = libsc.a
+lib_LIBRARIES = src/libsc.a
 
-libsc_installed_headers = sc.h sc_memory.h
-libsc_compiled_sources  = sc.c sc_memory.c
-
-libsc_a_SOURCES =  $(libsc_installed_headers) $(libsc_compiled_sources)
+src_libsc_a_SOURCES =  $(libsc_installed_headers) $(libsc_compiled_sources)
 
 include_HEADERS = $(libsc_installed_headers)
 
-AM_CPPFLAGS = -I@top_builddir@/gnulib -I@top_srcdir@/gnulib
+AM_CPPFLAGS += -I@top_srcdir@/src
