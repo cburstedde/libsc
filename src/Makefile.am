@@ -16,3 +16,7 @@ include_HEADERS += $(libsc_installed_headers)
 AM_CPPFLAGS += -I@top_srcdir@/src
 
 LDADD += @top_builddir@/src/libsc.a
+
+if LINT
+LINT_CSOURCES += $(src_libsc_a_SOURCES)
+endif LINT

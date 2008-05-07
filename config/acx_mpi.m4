@@ -131,11 +131,12 @@ fi
 
 dnl ACX_MPI_INCLUDES
 dnl Call the compiler with various --show* options
-dnl to figure out the MPI_INCLUDES directory
+dnl to figure out the MPI_INCLUDES and MPI_INCLUDE_PATH varables
 dnl
 AC_DEFUN([ACX_MPI_INCLUDES],
 [
 MPI_INCLUDES=
+MPI_INCLUDE_PATH=
 if test "$HAVE_PKG_MPI" = yes ; then
   echo "Trying to determine MPI_INCLUDES"
   for SHOW in -showme:compile -showme:incdirs -showme -show ; do
@@ -155,8 +156,14 @@ if test "$HAVE_PKG_MPI" = yes ; then
     MPI_INCLUDES=`echo $MPI_INCLUDES | sed -e 's/^ *//' -e 's/  */ /g'`
     echo "   Found MPI_INCLUDES $MPI_INCLUDES"
   fi
+  if test -n "$MPI_INCLUDES" ; then
+    MPI_INCLUDE_PATH=`echo $MPI_INCLUDES | sed -e 's/^-I//'`
+    MPI_INCLUDE_PATH=`echo $MPI_INCLUDE_PATH | sed -e 's/-I/:/g'`
+    echo "   Found MPI_INCLUDE_PATH $MPI_INCLUDE_PATH"
+  fi
 fi
 AC_SUBST([MPI_INCLUDES])
+AC_SUBST([MPI_INCLUDE_PATH])
 ])
 
 dnl ACX_MPI

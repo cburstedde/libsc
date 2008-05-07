@@ -20,9 +20,8 @@ echo "o----------------------------------"
 echo "| Checking for programs"
 echo "o----------------------------------"
 
-AC_CHECK_PROG([HAVE_PROG_SPLINT], [splint], [yes])
-AM_CONDITIONAL([HAVE_SPLINT], [test "$HAVE_PROG_SPLINT" = yes])
 ACX_MPI([icc gcc cc])
+SC_WITH_LINT
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 

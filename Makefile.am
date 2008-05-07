@@ -13,29 +13,23 @@ include_HEADERS =
 noinst_PROGRAMS =
 AM_CPPFLAGS =
 LDADD =
+LINT_CSOURCES =
 
 # non-recursive build
 include src/Makefile.am
 include iniparser/Makefile.am
 include example/options/Makefile.am
 
-# non-recursive splint
-SPLINT_FLAGS = \
-	-weak -badflag -preproc -posix-lib \
-	-unrecogcomments -formatcode
-SPLINT_INCLUDES = \
-	-I@top_builddir@/src -I@top_srcdir@/src -I@top_srcdir@/iniparser \
-	@MPI_INCLUDES@
-splint:
-if HAVE_SPLINT
-	for CFILE in @top_srcdir@/src/*.c @top_srcdir@/example/**/*.c ; do \
-	  echo "Checking $$CFILE" ; \
-	  splint -DSC_SPLINT $(SPLINT_FLAGS) $(SPLINT_INCLUDES) \
-	     "$$CFILE" || exit 1 ; \
-	done
-endif # HAVE_SPLINT
+if LINT
+ALL_LINT_FLAGS=$(LINT_FLAGS) -systemdirs /usr/include:$(MPI_INCLUDE_PATH) \
+               $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(MPI_INCLUDES) \
+               $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(src_libsc_a_CPPFLAGS)
 
-.PHONY: splint
+lint:
+	for f in $(LINT_CSOURCES) ; do \
+		$(LINT) $(ALL_LINT_FLAGS) $(top_srcdir)/$$f ; \
+	done
+endif LINT
 
 ChangeLog:
 	(GIT_DIR=@top_srcdir@/.git git-log | @top_srcdir@/git2cl \
