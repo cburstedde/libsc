@@ -71,8 +71,6 @@ dnl Check for all functions in FUNCTION LIST, exit with error if not found
 dnl
 AC_DEFUN([SC_REQUIRE_FUNCS],
     [
-dnl AS_IF([false], [AC_CHECK_FUNCS([$1])]) dnl keep autoscan quiet
-     AC_CHECK_FUNCS([$1])
      AC_FOREACH([sc_thefunc], [$1],
       [AC_CHECK_FUNC([sc_thefunc], ,
         [AC_MSG_ERROR([Could not find function sc_thefunc])])])])

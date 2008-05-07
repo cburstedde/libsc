@@ -46,7 +46,7 @@ AC_CHECK_HEADERS([inttypes.h libgen.h getopt.h obstack.h zlib.h])
 AC_CHECK_HEADERS([execinfo.h arpa/inet.h netinet/in.h unistd.h])
 
 # Checks for functions.
-dnl SC_REQUIRE_FUNCS([memset pow sqrt floor])
+SC_REQUIRE_FUNCS([getopt_long obstack_free])
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
 
 # Checks for typedefs, structures, and compiler characteristics.
