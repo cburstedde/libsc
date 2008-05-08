@@ -7,6 +7,8 @@ EXTRA_DIST = bootstrap scindent
 
 MAINTAINERCLEANFILES = ChangeLog
 
+.PHONY: lint ChangeLog
+
 # initialize empty variables
 lib_LIBRARIES =
 include_HEADERS =
@@ -32,8 +34,6 @@ if LINT
 		echo "Lint check failed for $$f" ; \
 	done
 endif LINT
-
-.PHONY: lint
 
 ChangeLog:
 	(GIT_DIR=@top_srcdir@/.git git-log | @top_srcdir@/git2cl \
