@@ -68,8 +68,12 @@
 #include <libgen.h>
 #endif
 
+#ifdef SC_GETOPT
+#include <sc_getopt.h>
+#else
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
 #endif
 
 #ifdef SC_OBSTACK

@@ -11,6 +11,7 @@ MAINTAINERCLEANFILES = ChangeLog
 
 # initialize empty variables
 lib_LIBRARIES =
+noinst_HEADERS =
 include_HEADERS =
 nodist_include_HEADERS =
 noinst_PROGRAMS =
