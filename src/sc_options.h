@@ -22,7 +22,7 @@
 #define SC_OPTIONS_H
 
 /* sc.h should be included before this header file */
-#include <sc_memory.h>
+#include <sc_containers.h>
 
 typedef enum
 {

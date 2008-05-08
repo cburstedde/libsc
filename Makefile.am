@@ -1,5 +1,5 @@
 
-## Makefile.am in sc
+# Makefile.am in sc
 
 ACLOCAL_AMFLAGS = -I config
 
@@ -21,6 +21,7 @@ LINT_CSOURCES =
 # non-recursive build
 include src/Makefile.am
 include iniparser/Makefile.am
+# include zlib/Makefile.am
 include example/options/Makefile.am
 
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \

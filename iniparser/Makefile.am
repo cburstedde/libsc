@@ -1,5 +1,5 @@
 
-# Makefile.am in iniparser
+# Makefile.am in sc/iniparser
 # included non-recursively from toplevel directory
 
 noinst_PROGRAMS += iniparser/sc_iniexample

@@ -18,8 +18,8 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SC_MEMORY_H
-#define SC_MEMORY_H
+#ifndef SC_CONTAINERS_H
+#define SC_CONTAINERS_H
 
 /* sc.h should be included before this header file */
 
@@ -344,4 +344,4 @@ int                 sc_hash_remove (sc_hash_t * hash, void *v, void **found);
 void                sc_hash_print_statistics (int log_priority,
                                               sc_hash_t * hash);
 
-#endif /* !SC_MEMORY_H */
+#endif /* !SC_CONTAINERS_H */

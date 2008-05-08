@@ -20,7 +20,7 @@
 
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
-#include <sc_memory.h>
+#include <sc_containers.h>
 
 /* array routines */
 
@@ -898,4 +898,4 @@ sc_hash_print_statistics (int log_priority, sc_hash_t * hash)
            (unsigned long) hash->resize_actions);
 }
 
-/* EOF sc_memory.c */
+/* EOF sc_containers.c */

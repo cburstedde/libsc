@@ -3,8 +3,8 @@
 # included non-recursively from toplevel directory
 
 libsc_generated_headers = src/sc_config.h
-libsc_installed_headers = src/sc.h src/sc_memory.h src/sc_options.h
-libsc_compiled_sources =  src/sc.c src/sc_memory.c src/sc_options.c
+libsc_installed_headers = src/sc.h src/sc_containers.h src/sc_options.h
+libsc_compiled_sources =  src/sc.c src/sc_containers.c src/sc_options.c
 
 lib_LIBRARIES += src/libsc.a
 src_libsc_a_SOURCES = \

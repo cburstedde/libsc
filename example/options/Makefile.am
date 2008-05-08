@@ -1,5 +1,5 @@
 
-## Makefile.am in example/options
+# Makefile.am in sc/example/options
 # included non-recursively from toplevel directory
 
 bin_PROGRAMS = example/options/sc_options
