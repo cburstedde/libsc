@@ -5,6 +5,10 @@
 libsc_generated_headers = src/sc_config.h
 libsc_installed_headers = src/sc.h src/sc_containers.h src/sc_options.h
 libsc_compiled_sources =  src/sc.c src/sc_containers.c src/sc_options.c
+if SC_OBSTACK
+  libsc_installed_headers += src/sc_obstack.h
+  libsc_compiled_sources +=  src/sc_obstack.c
+endif
 
 lib_LIBRARIES += src/libsc.a
 src_libsc_a_SOURCES = \
@@ -18,6 +22,4 @@ AM_CPPFLAGS += -I@top_srcdir@/src
 
 LDADD += @top_builddir@/src/libsc.a
 
-if LINT
 LINT_CSOURCES += $(libsc_compiled_sources)
-endif LINT

@@ -14,6 +14,9 @@ AM_INIT_AUTOMAKE([subdir-objects])
 SC_ARG_ENABLE([debug], [enable debug mode], [SC_DEBUG])
 SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
               [SC_RESIZE_REALLOC])
+dnl SC_ARG_WITHOUT([getopt], [disable builtin getopt code], [SC_OBSTACK])
+SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],
+               [SC_OBSTACK])
 
 # Checks for programs.
 echo "o----------------------------------"
@@ -45,7 +48,9 @@ AC_CHECK_HEADERS([inttypes.h libgen.h getopt.h obstack.h zlib.h])
 AC_CHECK_HEADERS([execinfo.h arpa/inet.h netinet/in.h unistd.h])
 
 # Checks for functions.
-SC_REQUIRE_FUNCS([getopt_long obstack_free])
+AS_IF([test "$sc_with_SC_OBSTACK" = "no"],
+      [SC_REQUIRE_FUNCS([obstack_free])])
+SC_REQUIRE_FUNCS([getopt_long])
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
 
 # Checks for typedefs, structures, and compiler characteristics.

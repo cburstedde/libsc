@@ -72,8 +72,12 @@
 #include <getopt.h>
 #endif
 
+#ifdef SC_OBSTACK
+#include <sc_obstack.h>
+#else
 #ifdef HAVE_OBSTACK_H
 #include <obstack.h>
+#endif
 #endif
 
 #ifdef HAVE_ZLIB_H

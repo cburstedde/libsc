@@ -42,7 +42,7 @@ AC_DEFUN([SC_WITH_LINT],[
 
 # Allow checking code with lint, sparse, etc.
 AC_ARG_WITH(lint, [AC_HELP_STRING([--with-lint],
-    [Use a lint-style source code checker (default: disabled)])],
+    [use static source code checker (default: disabled)])],
      [use_lint=$withval], [use_lint=no])
 if test "x$use_lint" = "xyes" ; then
   LINT="splint"

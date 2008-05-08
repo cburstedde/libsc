@@ -19,6 +19,11 @@
 */
 
 /*
+  The files sc_obstack.{c,h} have been copied from the GNU C library 2.7,
+  Copyright (C) Free Software Foundation, Inc., and modified.
+*/
+
+/*
   The files under iniparser have been copied from iniparser3.0b
   and modified.  iniparser is licensed unter the MIT license,
   see the LICENSE and AUTHORS files in that directory.

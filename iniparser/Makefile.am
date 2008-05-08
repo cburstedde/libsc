@@ -14,8 +14,6 @@ src_libsc_a_CPPFLAGS += -I@top_srcdir@/iniparser
 
 EXTRA_DIST += iniparser/AUTHORS iniparser/LICENSE iniparser/twisted.ini
 
-if LINT
 LINT_CSOURCES += \
 	$(iniparser_compiled_sources) \
 	$(iniparser_sc_iniexample_SOURCES)
-endif LINT
