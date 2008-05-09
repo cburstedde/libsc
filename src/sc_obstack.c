@@ -398,3 +398,5 @@ print_and_abort (void)
 }
 
 #endif	/* !ELIDE_CODE */
+
+/* *INDENT-ON* */

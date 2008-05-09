@@ -132,3 +132,5 @@ extern int _getopt_long_only_r (int ___argc, char *const *___argv,
 				struct _getopt_data *__data);
 
 #endif /* getopt_int.h */
+
+/* *INDENT-ON* */

@@ -506,3 +506,5 @@ __extension__								\
 #endif
 
 #endif /* obstack.h */
+
+/* *INDENT-ON* */
