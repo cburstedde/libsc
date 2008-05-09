@@ -35,15 +35,14 @@ AM_PROG_CC_C_O
 AC_PROG_RANLIB
 SC_WITH_LINT
 
-dnl For some reason the AS_IF does not disable the AC_F77_* calls anyway.
-dnl AS_IF([test "$sc_enable_SC_BLAS" != "no"],
-dnl      [
+dnl For some reason the AS_IF does not disable the AC_F77_* calls.
+if test "$sc_enable_SC_BLAS" != "no" ; then
 echo "o----------------------------------"
 echo "| Checking fortran conventions"
 echo "o----------------------------------"
 AC_F77_WRAPPERS
 AC_F77_LIBRARY_LDFLAGS
-dnl      ])
+fi
 
 # Checks for libraries.
 echo "o----------------------------------"
