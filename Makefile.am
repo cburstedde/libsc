@@ -10,11 +10,12 @@ MAINTAINERCLEANFILES = ChangeLog
 .PHONY: lint ChangeLog
 
 # initialize empty variables
+bin_PROGRAMS =
+noinst_PROGRAMS =
 lib_LIBRARIES =
 noinst_HEADERS =
 include_HEADERS =
 nodist_include_HEADERS =
-noinst_PROGRAMS =
 AM_CPPFLAGS =
 LDADD =
 LINT_CSOURCES =
@@ -22,6 +23,7 @@ LINT_CSOURCES =
 # non-recursive build
 include src/Makefile.am
 include iniparser/Makefile.am
+include libb64/Makefile.am
 # include zlib/Makefile.am
 include example/options/Makefile.am
 
