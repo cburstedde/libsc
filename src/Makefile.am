@@ -18,12 +18,11 @@ endif
 
 lib_LIBRARIES += src/libsc.a
 src_libsc_a_SOURCES = \
-	$(lihsc_internal_headers) \
+	$(libsc_internal_headers) \
 	$(libsc_installed_headers) \
 	$(libsc_compiled_sources)
 src_libsc_a_CPPFLAGS = $(AM_CPPFLAGS)
 
-noinst_HEADERS += $(libsc_internal_headers)
 nodist_include_HEADERS += $(libsc_generated_headers)
 include_HEADERS += $(libsc_installed_headers)
 
