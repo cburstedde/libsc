@@ -1,5 +1,4 @@
 dnl
-
 dnl This file is part of the SC Library.
 dnl
 
@@ -12,11 +11,20 @@ AC_CONFIG_MACRO_DIR([config])
 AM_INIT_AUTOMAKE([subdir-objects])
 
 # Options.
-SC_ARG_ENABLE([debug], [enable debug mode],
+AC_ARG_ENABLE([logging],
+              [AC_HELP_STRING([--enable-logging=PRIO], [\
+change log priority (see sc.h for possible values)])],
+              [if test "$enableval" = "yes" ; then
+                 AC_MSG_ERROR([\
+See sc.h for possible log priorities in --enable-logging=PRIO])
+               fi
+               AC_DEFINE_UNQUOTED([SC_LOG_PRIORITY], [$enableval],
+                                  [log priority])])
+SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [SC_DEBUG])
 SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
               [SC_RESIZE_REALLOC])
-SC_ARG_DISABLE([blas], [disable all BLAS dependent code],
+SC_ARG_WITHOUT([blas], [disable all BLAS dependent code],
                [SC_BLAS])
 SC_ARG_WITHOUT([getopt], [disable builtin getopt code, provide your own],
                [SC_GETOPT])
@@ -36,7 +44,7 @@ AC_PROG_RANLIB
 SC_WITH_LINT
 
 dnl For some reason the AS_IF does not disable the AC_F77_* calls.
-if test "$sc_enable_SC_BLAS" != "no" ; then
+if test "$sc_with_SC_BLAS" != "no" ; then
 echo "o----------------------------------"
 echo "| Checking fortran conventions"
 echo "o----------------------------------"
@@ -52,7 +60,7 @@ echo "o----------------------------------"
 SC_REQUIRE_LIB([m], [fabs])
 AS_IF([test "$sc_with_SC_ZLIB" = "no"],
       [SC_REQUIRE_LIB([z], [adler32_combine])])
-AS_IF([test "$sc_enable_SC_BLAS" != "no"],
+AS_IF([test "$sc_with_SC_BLAS" != "no"],
       [
 ACX_BLAS([], [AC_MSG_ERROR([[Cannot find blas library, specify a path using LDFLAGS=-L<DIR> (ex. LDFLAGS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
 

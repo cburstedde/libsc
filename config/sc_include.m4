@@ -4,9 +4,9 @@ dnl
 
 dnl Documentation for macro names: brackets indicate optional arguments
 
-dnl SC_ARG_ENABLE(NAME, COMMENT, DEFINE)
-dnl Check for --enable/disable-NAME using shell variable sc_enable_DEFINE
-dnl If enabled, define DEFINE to 1 and set conditional DEFINE
+dnl SC_ARG_ENABLE(NAME, COMMENT, TOKEN)
+dnl Check for --enable/disable-NAME using shell variable sc_enable_TOKEN
+dnl If enabled, define TOKEN to 1 and set conditional TOKEN
 dnl Default is disabled
 dnl
 AC_DEFUN([SC_ARG_ENABLE],
@@ -19,9 +19,9 @@ fi
 AM_CONDITIONAL([$3], [test "$sc_enable_$3" != "no"])
 ])
 
-dnl SC_ARG_DISABLE(NAME, COMMENT, DEFINE)
-dnl Check for --enable/disable-NAME using shell variable sc_enable_DEFINE
-dnl If enabled, define DEFINE to 1 and set conditional DEFINE
+dnl SC_ARG_DISABLE(NAME, COMMENT, TOKEN)
+dnl Check for --enable/disable-NAME using shell variable sc_enable_TOKEN
+dnl If enabled, define TOKEN to 1 and set conditional TOKEN
 dnl Default is enabled
 dnl
 AC_DEFUN([SC_ARG_DISABLE],
@@ -34,9 +34,9 @@ fi
 AM_CONDITIONAL([$3], [test "$sc_enable_$3" != "no"])
 ])
 
-dnl SC_ARG_WITH(NAME, COMMENT, CONDITIONAL)
-dnl Check for --with/without-NAME using shell variable sc_with_CONDITIONAL
-dnl If with, define CONDITIONAL to 1 and set conditional CONDITIONAL
+dnl SC_ARG_WITH(NAME, COMMENT, TOKEN)
+dnl Check for --with/without-NAME using shell variable sc_with_TOKEN
+dnl If with, define TOKEN to 1 and set conditional TOKEN
 dnl Default is without
 dnl
 AC_DEFUN([SC_ARG_WITH],
@@ -49,9 +49,9 @@ fi
 AM_CONDITIONAL([$3], [test "$sc_with_$3" != "no"])
 ])
 
-dnl SC_ARG_WITHOUT(NAME, COMMENT, CONDITIONAL)
-dnl Check for --with/without-NAME using shell variable sc_with_CONDITIONAL
-dnl If with, define CONDITIONAL to 1 and set conditional CONDITIONAL
+dnl SC_ARG_WITHOUT(NAME, COMMENT, TOKEN)
+dnl Check for --with/without-NAME using shell variable sc_with_TOKEN
+dnl If with, define TOKEN to 1 and set conditional TOKEN
 dnl Default is with
 dnl
 AC_DEFUN([SC_ARG_WITHOUT],

@@ -891,11 +891,11 @@ sc_hash_print_statistics (int log_priority, sc_hash_t * hash)
   avg = sum / divide;
   sqr = squaresum / divide - avg * avg;
   std = sqrt (sqr);
-  SC_LOGF (log_priority,
-           "Hash size %lu avg %.3g std %.3g checks %lu %lu\n",
-           (unsigned long) slots->elem_count, avg, std,
-           (unsigned long) hash->resize_checks,
-           (unsigned long) hash->resize_actions);
+  SC_NORMAL_LOGF (log_priority,
+                  "Hash size %lu avg %.3g std %.3g checks %lu %lu\n",
+                  (unsigned long) slots->elem_count, avg, std,
+                  (unsigned long) hash->resize_checks,
+                  (unsigned long) hash->resize_actions);
 }
 
 /* EOF sc_containers.c */

@@ -32,7 +32,7 @@
 #endif
 
 /* *INDENT-OFF* */
-const int sc_log_lookup_table[256] =
+const int sc_log2_lookup_table[256] =
 { -1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
    5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
@@ -55,6 +55,9 @@ const int sc_log_lookup_table[256] =
 static int          malloc_count = 0;
 static int          free_count = 0;
 static int          sc_identifier = -1;
+static int          sc_log_priority = SC_LP_NONE;
+static FILE        *sc_log_stream = NULL;
+static bool         sc_log_stream_set = false;
 
 #if 0
 /*@unused@*/
@@ -70,6 +73,57 @@ test_printf (void)
   printf ("%lld %ld %zu %zd\n", (long long) i64, l, s, ss);
 }
 #endif /* 0 */
+
+void
+sc_log_init (FILE * log_stream, int identifier)
+{
+  sc_identifier = identifier;
+  sc_log_stream = log_stream;
+  sc_log_stream_set = true;
+}
+
+void
+sc_log_threshold (int log_priority)
+{
+  sc_log_priority = log_priority;
+}
+
+void
+sc_logf (const char *filename, int lineno,
+         int priority, int category, const char *fmt, ...)
+{
+  va_list             ap;
+
+  SC_ASSERT (priority >= SC_LP_NONE && priority < SC_LP_SILENT);
+
+  if (sc_log_stream == NULL && !sc_log_stream_set) {
+    sc_log_stream = stdout;
+    sc_log_stream_set = true;
+  }
+
+  if (sc_log_stream == NULL || priority < sc_log_priority)
+    return;
+
+  if (category == SC_LC_GLOBAL && sc_identifier > 0)
+    return;
+
+  if (category == SC_LC_NORMAL && sc_identifier >= 0)
+    fprintf (sc_log_stream, "[%d] ", sc_identifier);
+
+  if (priority == SC_LP_TRACE) {
+    char                bn[BUFSIZ], *bp;
+
+    snprintf (bn, BUFSIZ, "%s", filename);
+    bp = basename (bn);
+    fprintf (sc_log_stream, "%s:%d ", bp, lineno);
+  }
+
+  va_start (ap, fmt);
+  vfprintf (sc_log_stream, fmt, ap);
+  va_end (ap);
+
+  fflush (sc_log_stream);
+}
 
 void               *
 sc_malloc (size_t size)

@@ -52,6 +52,7 @@
 /* include system headers */
 
 #include <math.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -132,7 +133,7 @@
 
 /* hopefully fast binary logarithms and binary round up */
 
-#define SC_LOG2_8(x) (sc_log_lookup_table[(x)])
+#define SC_LOG2_8(x) (sc_log2_lookup_table[(x)])
 #define SC_LOG2_16(x) (((x) > 0xff) ?                                   \
                        (SC_LOG2_8 ((x) >> 8) + 8) : SC_LOG2_8 (x))
 #define SC_LOG2_32(x) (((x) > 0xffff) ?                                 \
@@ -144,7 +145,7 @@
 #define SC_ROUNDUP2_64(x)                               \
   (((x) <= 0) ? 0 : (1 << (SC_LOG2_64 ((x) - 1) + 1)))
 
-/* primitive logging macros for now */
+/* log priorities */
 
 #define SC_LP_NONE        0
 #define SC_LP_TRACE       1     /* this will prefix file and line number */
@@ -154,22 +155,89 @@
 #define SC_LP_STATISTICS  5     /* important for consistency or performance */
 #define SC_LP_PRODUCTION  6     /* a few lines for a major api function */
 #define SC_LP_SILENT      7     /* this will never log anything */
+#ifdef SC_LOG_PRIORITY
+#define SC_LP_THRESHOLD SC_LOG_PRIORITY
+#else
 #ifdef SC_DEBUG
 #define SC_LP_THRESHOLD SC_LP_DEBUG
 #else
 #define SC_LP_THRESHOLD SC_LP_INFO
 #endif
-#define SC_LOGF(level,fmt,...)             \
-  do {                                     \
-    if ((level) >= SC_LP_THRESHOLD) {      \
-      printf ((fmt), __VA_ARGS__);         \
-    }                                      \
+#endif
+
+/* log categories */
+
+#define SC_LC_GLOBAL      1     /* log only for master process */
+#define SC_LC_NORMAL      2     /* log for every process */
+
+/* generic log macros */
+
+#define SC_LOGF(priority,category,fmt,...)                              \
+  do {                                                                  \
+    if ((priority) >= SC_LP_THRESHOLD) {                                \
+      sc_logf (__FILE__, __LINE__, (priority), (category),              \
+               (fmt), __VA_ARGS__);                                     \
+    }                                                                   \
   } while (0)
-#define SC_LOG(level,s) SC_LOGF((level), "%s", (s))
+#define SC_LOG(p,c,s) SC_LOGF((p), (c), "%s", (s))
+#define SC_GLOBAL_LOG(p,s) SC_LOG ((p), SC_LC_GLOBAL, (s))
+#define SC_GLOBAL_LOGF(p,f,...) SC_LOGF ((p), SC_LC_GLOBAL, (f), __VA_ARGS__)
+#define SC_NORMAL_LOG(p,s) SC_LOG ((p), SC_LC_NORMAL, (s))
+#define SC_NORMAL_LOGF(p,f,...) SC_LOGF ((p), SC_LC_NORMAL, (f), __VA_ARGS__)
+
+/* convenience global log macros will only output if identifier <= 0 */
+
+#define SC_GLOBAL_TRACE(s) SC_GLOBAL_LOG (SC_LP_TRACE, (s))
+#define SC_GLOBAL_TRACEF(f,...) \
+  SC_GLOBAL_LOGF (SC_LP_TRACE, (f), __VA_ARGS__)
+#define SC_GLOBAL_DEBUG(s) SC_GLOBAL_LOG (SC_LP_DEBUG, (s))
+#define SC_GLOBAL_DEBUGF(f,...) \
+  SC_GLOBAL_LOGF (SC_LP_DEBUG, (f), __VA_ARGS__)
+#define SC_GLOBAL_VERBOSE(s) SC_GLOBAL_LOG (SC_LP_VERBOSE, (s))
+#define SC_GLOBAL_VERBOSEF(f,...) \
+  SC_GLOBAL_LOGF (SC_LP_VERBOSE, (f), __VA_ARGS__)
+#define SC_GLOBAL_INFO(s) SC_GLOBAL_LOG (SC_LP_INFO, (s))
+#define SC_GLOBAL_INFOF(f,...) \
+  SC_GLOBAL_LOGF (SC_LP_INFO, (f), __VA_ARGS__)
+#define SC_GLOBAL_STATISTICS(s) SC_GLOBAL_LOG (SC_LP_STATISTICS, (s))
+#define SC_GLOBAL_STATISTICSF(f,...) \
+  SC_GLOBAL_LOGF (SC_LP_STATISTICS, (f), __VA_ARGS__)
+#define SC_GLOBAL_PRODUCTION(s) SC_GLOBAL_LOG (SC_LP_PRODUCTION, (s))
+#define SC_GLOBAL_PRODUCTIONF(f,...) \
+  SC_GLOBAL_LOGF (SC_LP_PRODUCTION, (f), __VA_ARGS__)
+
+/* convenience log macros that output regardless of identifier */
+
+#define SC_TRACE(s) SC_NORMAL_LOG (SC_LP_TRACE, (s))
+#define SC_TRACEF(f,...) \
+  SC_NORMAL_LOGF (SC_LP_TRACE, (f), __VA_ARGS__)
+#define SC_DEBUG(s) SC_NORMAL_LOG (SC_LP_DEBUG, (s))
+#define SC_DEBUGF(f,...) \
+  SC_NORMAL_LOGF (SC_LP_DEBUG, (f), __VA_ARGS__)
+#define SC_VERBOSE(s) SC_NORMAL_LOG (SC_LP_VERBOSE, (s))
+#define SC_VERBOSEF(f,...) \
+  SC_NORMAL_LOGF (SC_LP_VERBOSE, (f), __VA_ARGS__)
+#define SC_INFO(s) SC_NORMAL_LOG (SC_LP_INFO, (s))
+#define SC_INFOF(f,...) \
+  SC_NORMAL_LOGF (SC_LP_INFO, (f), __VA_ARGS__)
+#define SC_STATISTICS(s) SC_NORMAL_LOG (SC_LP_STATISTICS, (s))
+#define SC_STATISTICSF(f,...) \
+  SC_NORMAL_LOGF (SC_LP_STATISTICS, (f), __VA_ARGS__)
+#define SC_PRODUCTION(s) SC_NORMAL_LOG (SC_LP_PRODUCTION, (s))
+#define SC_PRODUCTIONF(f,...) \
+  SC_NORMAL_LOGF (SC_LP_PRODUCTION, (f), __VA_ARGS__)
 
 /* extern declarations */
 
-extern const int    sc_log_lookup_table[256];
+extern const int    sc_log2_lookup_table[256];
+
+/* logging functions */
+
+void                sc_log_init (FILE * log_stream, int identifier);
+void                sc_log_threshold (int log_priority);
+void                sc_logf (const char *filename, int lineno,
+                             int priority, int category, const char *fmt, ...)
+  __attribute__ ((format (printf, 5, 6)));
 
 /* memory allocation functions, handle NULL pointers gracefully */
 
