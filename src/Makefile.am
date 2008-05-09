@@ -4,7 +4,6 @@
 
 libsc_internal_headers =
 libsc_generated_headers = src/sc_config.h
-<<<<<<< HEAD:src/Makefile.am
 libsc_installed_headers = src/sc.h src/sc_containers.h src/sc_options.h \
                           src/sc_blas.h src/sc_blas_types.h src/sc_dmatrix.h
 libsc_compiled_sources =  src/sc.c src/sc_containers.c src/sc_options.c \
