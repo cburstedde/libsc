@@ -1,4 +1,5 @@
 dnl
+
 dnl This file is part of the SC Library.
 dnl
 
@@ -30,6 +31,12 @@ AM_PROG_CC_C_O
 AC_PROG_RANLIB
 SC_WITH_LINT
 
+echo "o----------------------------------"
+echo "| Checking fortran conventions"
+echo "o----------------------------------"
+AC_F77_WRAPPERS
+AC_F77_LIBRARY_LDFLAGS
+
 # Checks for libraries.
 echo "o----------------------------------"
 echo "| Checking for libraries"
@@ -37,6 +44,10 @@ echo "o----------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
 SC_REQUIRE_LIB([z], [adler32_combine])
+
+ACX_BLAS([], [AC_MSG_ERROR([[Cannot find blas library, specify a path using LDFLAGS=-L<DIR> (ex. LDFLAGS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
+
+ACX_LAPACK([], [AC_MSG_ERROR([[Cannot find lapack library, specify a path using LDFLAGSs=-L<DIR> (ex. LDFLAGS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
 
 echo "o----------------------------------"
 echo "| Checking headers and functions"
@@ -73,8 +84,13 @@ echo "| CC:          $CC"
 echo "| CFLAGS:      $CFLAGS"
 echo "| CPP:         $CPP"
 echo "| CPPFLAGS:    $CPPFLAGS"
+echo "| F77:         $F77"
+echo "| FFLAGS:      $FFLAGS"
 echo "| LDFLAGS:     $LDFLAGS"
+echo "| BLAS_LIBS:   $BLAS_LIBS"
+echo "| LAPACK_LIBS: $LAPACK_LIBS"
 echo "| LIBS:        $LIBS"
+echo "| FLIBS:       $FLIBS"
 echo "o----------------------------------"
 
 # Create output files.

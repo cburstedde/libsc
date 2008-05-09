@@ -25,7 +25,10 @@ include src/Makefile.am
 include iniparser/Makefile.am
 include libb64/Makefile.am
 # include zlib/Makefile.am
+include example/dmatrix/Makefile.am
 include example/options/Makefile.am
+
+LDADD += @LAPACK_LIBS@ @BLAS_LIBS@ @FLIBS@
 
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
                $(MPI_INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) \
