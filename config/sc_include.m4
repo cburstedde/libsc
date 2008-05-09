@@ -6,30 +6,32 @@ dnl Documentation for macro names: brackets indicate optional arguments
 
 dnl SC_ARG_ENABLE(NAME, COMMENT, DEFINE)
 dnl Check for --enable/disable-NAME using shell variable sc_enable_DEFINE
-dnl If enabled, define DEFINE to 1
+dnl If enabled, define DEFINE to 1 and set conditional DEFINE
 dnl Default is disabled
 dnl
 AC_DEFUN([SC_ARG_ENABLE],
 [
 AC_ARG_ENABLE([$1], [AC_HELP_STRING([--enable-$1], [$2])],
-              [sc_define_$3="$enableval"], [sc_define_$3="no"])
-if test "$sc_define_$3" != "no" ; then
+              [sc_enable_$3="$enableval"], [sc_enable_$3="no"])
+if test "$sc_enable_$3" != "no" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
+AM_CONDITIONAL([$3], [test "$sc_enable_$3" != "no"])
 ])
 
 dnl SC_ARG_DISABLE(NAME, COMMENT, DEFINE)
 dnl Check for --enable/disable-NAME using shell variable sc_enable_DEFINE
-dnl If enabled, define DEFINE to 1
+dnl If enabled, define DEFINE to 1 and set conditional DEFINE
 dnl Default is enabled
 dnl
 AC_DEFUN([SC_ARG_DISABLE],
 [
 AC_ARG_ENABLE([$1], [AC_HELP_STRING([--disable-$1], [$2])],
-              [sc_define_$3="$enableval"], [sc_define_$3="yes"])
-if test "$sc_define_$3" != "no" ; then
+              [sc_enable_$3="$enableval"], [sc_enable_$3="yes"])
+if test "$sc_enable_$3" != "no" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
+AM_CONDITIONAL([$3], [test "$sc_enable_$3" != "no"])
 ])
 
 dnl SC_ARG_WITH(NAME, COMMENT, CONDITIONAL)

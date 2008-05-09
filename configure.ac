@@ -16,6 +16,8 @@ SC_ARG_ENABLE([debug], [enable debug mode],
               [SC_DEBUG])
 SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
               [SC_RESIZE_REALLOC])
+SC_ARG_DISABLE([blas], [disable all BLAS dependent code],
+               [SC_BLAS])
 SC_ARG_WITHOUT([getopt], [disable builtin getopt code, provide your own],
                [SC_GETOPT])
 SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],
@@ -33,11 +35,15 @@ AM_PROG_CC_C_O
 AC_PROG_RANLIB
 SC_WITH_LINT
 
+dnl For some reason the AS_IF does not disable the AC_F77_* calls anyway.
+dnl AS_IF([test "$sc_enable_SC_BLAS" != "no"],
+dnl      [
 echo "o----------------------------------"
 echo "| Checking fortran conventions"
 echo "o----------------------------------"
 AC_F77_WRAPPERS
 AC_F77_LIBRARY_LDFLAGS
+dnl      ])
 
 # Checks for libraries.
 echo "o----------------------------------"
@@ -47,10 +53,12 @@ echo "o----------------------------------"
 SC_REQUIRE_LIB([m], [fabs])
 AS_IF([test "$sc_with_SC_ZLIB" = "no"],
       [SC_REQUIRE_LIB([z], [adler32_combine])])
-
+AS_IF([test "$sc_enable_SC_BLAS" != "no"],
+      [
 ACX_BLAS([], [AC_MSG_ERROR([[Cannot find blas library, specify a path using LDFLAGS=-L<DIR> (ex. LDFLAGS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
 
 ACX_LAPACK([], [AC_MSG_ERROR([[Cannot find lapack library, specify a path using LDFLAGSs=-L<DIR> (ex. LDFLAGS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
+      ])
 
 echo "o----------------------------------"
 echo "| Checking headers and functions"

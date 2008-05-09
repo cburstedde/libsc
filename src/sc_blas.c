@@ -1,3 +1,6 @@
+
+/* sc.h comes first in every compilation unit */
+#include <sc.h>
 #include <sc_blas.h>
 
 const char          sc_transchar[] = { 'N', 'T', 'C' };

@@ -4,10 +4,12 @@
 
 libsc_internal_headers =
 libsc_generated_headers = src/sc_config.h
-libsc_installed_headers = src/sc.h src/sc_containers.h src/sc_options.h \
-                          src/sc_blas.h src/sc_blas_types.h src/sc_dmatrix.h
-libsc_compiled_sources =  src/sc.c src/sc_containers.c src/sc_options.c \
-                          src/sc_blas.c src/sc_dmatrix.c
+libsc_installed_headers = src/sc.h src/sc_containers.h src/sc_options.h
+libsc_compiled_sources =  src/sc.c src/sc_containers.c src/sc_options.c
+if SC_BLAS
+  libsc_installed_headers += src/sc_blas.h src/sc_dmatrix.h
+  libsc_compiled_sources +=  src/sc_blas.c src/sc_dmatrix.c
+endif
 if SC_GETOPT
   libsc_internal_headers +=  src/sc_getopt_int.h
   libsc_installed_headers += src/sc_getopt.h
