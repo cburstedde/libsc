@@ -88,6 +88,12 @@
 #include <zlib.h>
 #endif
 
+#ifdef SC_MPI
+#include <mpi.h>
+#else
+#include <sc_dummympi.h>
+#endif
+
 /* check macros, always enabled */
 
 #define SC_NOOP do { ; } while (0)
@@ -190,8 +196,8 @@
 #define SC_GLOBAL_TRACE(s) SC_GLOBAL_LOG (SC_LP_TRACE, (s))
 #define SC_GLOBAL_TRACEF(f,...) \
   SC_GLOBAL_LOGF (SC_LP_TRACE, (f), __VA_ARGS__)
-#define SC_GLOBAL_DEBUG(s) SC_GLOBAL_LOG (SC_LP_DEBUG, (s))
-#define SC_GLOBAL_DEBUGF(f,...) \
+#define SC_GLOBAL_LDEBUG(s) SC_GLOBAL_LOG (SC_LP_DEBUG, (s))
+#define SC_GLOBAL_LDEBUGF(f,...) \
   SC_GLOBAL_LOGF (SC_LP_DEBUG, (f), __VA_ARGS__)
 #define SC_GLOBAL_VERBOSE(s) SC_GLOBAL_LOG (SC_LP_VERBOSE, (s))
 #define SC_GLOBAL_VERBOSEF(f,...) \
@@ -211,8 +217,8 @@
 #define SC_TRACE(s) SC_NORMAL_LOG (SC_LP_TRACE, (s))
 #define SC_TRACEF(f,...) \
   SC_NORMAL_LOGF (SC_LP_TRACE, (f), __VA_ARGS__)
-#define SC_DEBUG(s) SC_NORMAL_LOG (SC_LP_DEBUG, (s))
-#define SC_DEBUGF(f,...) \
+#define SC_LDEBUG(s) SC_NORMAL_LOG (SC_LP_DEBUG, (s))
+#define SC_LDEBUGF(f,...) \
   SC_NORMAL_LOGF (SC_LP_DEBUG, (f), __VA_ARGS__)
 #define SC_VERBOSE(s) SC_NORMAL_LOG (SC_LP_VERBOSE, (s))
 #define SC_VERBOSEF(f,...) \

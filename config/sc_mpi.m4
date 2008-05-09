@@ -45,8 +45,8 @@ dnl 2. --with-mpicc=<...>
 dnl 3. environment variables CC
 dnl 4. mpicc unless --without-mpicc
 dnl
-dnl If MPI is turned on HAVE_MPI will be defined for autoconf/automake
-dnl and HAVE_MPI will be defined in the config header file.
+dnl If MPI is turned on SC_MPI will be defined for autoconf/automake
+dnl and SC_MPI will be defined in the config header file.
 
 dnl ACX_MPI_CONFIG
 dnl Figure out the MPI configuration
@@ -94,12 +94,12 @@ if test "$HAVE_PKG_MPI" = yes ; then
 
   echo "                             MPI_CC set to $MPI_CC"
 
-  AC_DEFINE([HAVE_MPI], 1, [Define to 1 if we are using MPI])
+  AC_DEFINE([SC_MPI], 1, [Define to 1 if we are using MPI])
 else
   unset MPI_CC
 fi
 
-AM_CONDITIONAL([HAVE_MPI], [test "$HAVE_PKG_MPI" = yes])
+AM_CONDITIONAL([SC_MPI], [test "$HAVE_PKG_MPI" = yes])
 ])
 
 dnl ACX_MPI_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])

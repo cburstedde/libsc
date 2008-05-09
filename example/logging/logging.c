@@ -25,7 +25,7 @@ static void
 log_normal (void)
 {
   SC_TRACE ("Trace normal\n");
-  SC_DEBUG ("Debug normal\n");
+  SC_LDEBUG ("Debug normal\n");
   SC_VERBOSE ("Verbose normal\n");
   SC_INFO ("Info normal\n");
   SC_STATISTICS ("Statistics normal\n");
@@ -36,7 +36,7 @@ static void
 log_global (void)
 {
   SC_GLOBAL_TRACE ("Trace global\n");
-  SC_GLOBAL_DEBUG ("Debug global\n");
+  SC_GLOBAL_LDEBUG ("Debug global\n");
   SC_GLOBAL_VERBOSE ("Verbose global\n");
   SC_GLOBAL_INFO ("Info global\n");
   SC_GLOBAL_STATISTICS ("Statistics global\n");

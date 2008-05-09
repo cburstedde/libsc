@@ -6,6 +6,10 @@ libsc_internal_headers =
 libsc_generated_headers = src/sc_config.h
 libsc_installed_headers = src/sc.h src/sc_containers.h src/sc_options.h
 libsc_compiled_sources =  src/sc.c src/sc_containers.c src/sc_options.c
+if !SC_MPI
+  libsc_installed_headers += src/sc_dummympi.h
+  libsc_compiled_sources +=  src/sc_dummympi.c
+endif
 if SC_BLAS
   libsc_installed_headers += src/sc_blas.h src/sc_dmatrix.h
   libsc_compiled_sources +=  src/sc_blas.c src/sc_dmatrix.c
