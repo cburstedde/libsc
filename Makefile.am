@@ -24,7 +24,7 @@ LINT_CSOURCES =
 include src/Makefile.am
 include iniparser/Makefile.am
 include libb64/Makefile.am
-# include zlib/Makefile.am
+include zlib/Makefile.am
 include example/dmatrix/Makefile.am
 include example/options/Makefile.am
 

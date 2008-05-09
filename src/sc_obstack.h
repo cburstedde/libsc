@@ -122,7 +122,7 @@ extern "C" {
 #ifdef __PTRDIFF_TYPE__
 # define PTR_INT_TYPE __PTRDIFF_TYPE__
 #else
-# include <stddef.h>
+/* # include <stddef.h> already included by sc.h */
 # define PTR_INT_TYPE ptrdiff_t
 #endif
 

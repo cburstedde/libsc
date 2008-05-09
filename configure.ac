@@ -20,6 +20,8 @@ SC_ARG_WITHOUT([getopt], [disable builtin getopt code, provide your own],
                [SC_GETOPT])
 SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],
                [SC_OBSTACK])
+SC_ARG_WITHOUT([zlib], [disable builtin zlib code, provide your own],
+               [SC_ZLIB])
 
 # Checks for programs.
 echo "o----------------------------------"
@@ -43,7 +45,8 @@ echo "| Checking for libraries"
 echo "o----------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
-SC_REQUIRE_LIB([z], [adler32_combine])
+AS_IF([test "$sc_with_SC_ZLIB" = "no"],
+      [SC_REQUIRE_LIB([z], [adler32_combine])])
 
 ACX_BLAS([], [AC_MSG_ERROR([[Cannot find blas library, specify a path using LDFLAGS=-L<DIR> (ex. LDFLAGS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
 

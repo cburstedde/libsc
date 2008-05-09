@@ -53,16 +53,14 @@
 
 #include <math.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
 #endif
 
 #ifdef HAVE_LIBGEN_H
@@ -85,7 +83,7 @@
 #endif
 #endif
 
-#ifdef HAVE_ZLIB_H
+#if defined(SC_ZLIB) || defined(HAVE_ZLIB_H)
 #include <zlib.h>
 #endif
 

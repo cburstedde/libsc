@@ -35,6 +35,11 @@
   see the LICENSE and AUTHORS files in that directory.
 */
 
+/*
+  The files under zlib except zlib/Makefile.am are copied from zlib 1.2.3,
+  Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler.
+*/
+
 Contact:
 
 Carsten Burstedde <carsten@ices.utexas.edu>
