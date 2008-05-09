@@ -189,8 +189,7 @@ sc_abort (void)
   bt_size = backtrace (bt_buffer, SC_STACK_SIZE);
   bt_strings = backtrace_symbols (bt_buffer, bt_size);
 
-  fprintf (stderr, "%sAbort: Obtained %d stack frames\n",
-           prefix, bt_size);
+  fprintf (stderr, "%sAbort: Obtained %d stack frames\n", prefix, bt_size);
 
 #ifdef SC_ADDRTOLINE
   /* implement pipe connection to addr2line */
