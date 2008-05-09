@@ -1,5 +1,5 @@
-
 /* *INDENT-OFF* */
+
 /*-------------------------------------------------------------------------*/
 /**
    @file    iniparser.c
@@ -657,3 +657,5 @@ void iniparser_freedict(dictionary * d)
 }
 
 /* EOF iniparser.c */
+
+/* *INDENT-ON* */

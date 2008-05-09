@@ -1,5 +1,5 @@
-
 /* *INDENT-OFF* */
+
 /*-------------------------------------------------------------------------*/
 /**
    @file    iniparser.h
@@ -273,3 +273,5 @@ dictionary * iniparser_load(const char * ininame, FILE * f);
 void iniparser_freedict(dictionary * d);
 
 #endif
+
+/* *INDENT-ON* */
