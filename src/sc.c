@@ -52,6 +52,9 @@ const int sc_log2_lookup_table[256] =
 };
 /* *INDENT-ON* */
 
+FILE               *sc_root_stdout = NULL;
+FILE               *sc_root_stderr = NULL;
+
 static int          malloc_count = 0;
 static int          free_count = 0;
 static int          sc_identifier = -1;
@@ -80,6 +83,9 @@ sc_log_init (FILE * log_stream, int identifier)
   sc_identifier = identifier;
   sc_log_stream = log_stream;
   sc_log_stream_set = true;
+
+  sc_root_stdout = identifier > 0 ? NULL : stdout;
+  sc_root_stderr = identifier > 0 ? NULL : stderr;
 }
 
 void

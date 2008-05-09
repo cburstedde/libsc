@@ -46,24 +46,36 @@ log_global (void)
 int
 main (int argc, char **argv)
 {
+  int                 mpiret;
+  int                 rank;
+
+  mpiret = MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+
+  mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+  SC_CHECK_MPI (mpiret);
+
   log_normal ();
   log_global ();
 
   sc_log_threshold (SC_LP_STATISTICS);
   log_normal ();
 
-  sc_log_init (stderr, 19);
+  sc_log_init (stderr, rank);
   log_normal ();
   log_global ();
 
-  sc_log_init (stdout, 0);
+  sc_log_init (stdout, rank);
   log_normal ();
   log_global ();
 
-  sc_log_init (NULL, 23);
+  sc_log_init (NULL, rank);
   log_normal ();
 
   sc_memory_check ();
+
+  mpiret = MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
 
   return 0;
 }

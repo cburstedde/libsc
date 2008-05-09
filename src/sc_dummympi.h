@@ -26,4 +26,15 @@
 #error "SC_MPI must not be defined when sc_dummympi.h is included"
 #endif
 
+#define MPI_SUCCESS 0
+#define MPI_COMM_WORLD ((MPI_Comm) 0)
+
+typedef int         MPI_Comm;
+
+int                 MPI_Init (int *, char ***);
+int                 MPI_Finalize (void);
+
+int                 MPI_Comm_size (MPI_Comm, int *);
+int                 MPI_Comm_rank (MPI_Comm, int *);
+
 #endif /* !SC_DUMMYMPI_H */

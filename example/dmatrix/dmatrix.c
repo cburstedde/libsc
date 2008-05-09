@@ -144,12 +144,20 @@ check_matrix_multiply ()
 }
 
 int
-main (void)
+main (int argc, char **argv)
 {
+  int                 mpiret;
+
+  mpiret = MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+
   check_matrix_vector ();
   check_matrix_multiply ();
 
   sc_memory_check ();
+
+  mpiret = MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
 
   return 0;
 }

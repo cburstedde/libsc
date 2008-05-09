@@ -25,12 +25,22 @@
 int
 main (int argc, char **argv)
 {
+  int                 mpiret;
+  int                 rank;
   int                 first_arg;
   int                 w;
   int                 i1, i2;
   double              d;
   const char         *s1, *s2;
   sc_options_t       *opt;
+
+  mpiret = MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+
+  mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+  SC_CHECK_MPI (mpiret);
+
+  sc_log_init (stdout, rank);
 
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'w', "switch", &w, "Switch");
@@ -43,24 +53,29 @@ main (int argc, char **argv)
 
   /* this is just to show off the load function */
   if (!sc_options_load (opt, "preload.ini", NULL)) {
-    printf ("Preload successful\n");
+    SC_GLOBAL_INFO ("Preload successful\n");
   }
   else {
-    printf ("Preload not found or failed\n");
+    SC_GLOBAL_INFO ("Preload not found or failed\n");
   }
 
-  first_arg = sc_options_parse (opt, argc, argv, stderr);
-  if (first_arg < 0) {
-    sc_options_print_help (opt, 1, stdout);
-  }
-  else {
-    sc_options_print_summary (opt, stdout);
-    sc_options_print_arguments (opt, first_arg, argc, argv, stdout);
+  first_arg = sc_options_parse (opt, argc, argv, sc_root_stderr);
+  if (rank == 0) {
+    if (first_arg < 0) {
+      sc_options_print_help (opt, 1, stdout);
+    }
+    else {
+      sc_options_print_summary (opt, stdout);
+      sc_options_print_arguments (opt, first_arg, argc, argv, stdout);
+    }
   }
 
   sc_options_destroy (opt);
 
   sc_memory_check ();
+
+  mpiret = MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
 
   return 0;
 }

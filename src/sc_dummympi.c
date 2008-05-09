@@ -20,4 +20,32 @@
 
 #include <sc_dummympi.h>
 
+int
+MPI_Init (int *argc, char ***argv)
+{
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Finalize (void)
+{
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Comm_size (MPI_Comm comm, int *size)
+{
+  *size = 1;
+
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Comm_rank (MPI_Comm comm, int *rank)
+{
+  *rank = 0;
+
+  return MPI_SUCCESS;
+}
+
 /* EOF sc_dummympi.c */

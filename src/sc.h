@@ -236,6 +236,8 @@
 /* extern declarations */
 
 extern const int    sc_log2_lookup_table[256];
+extern FILE        *sc_root_stdout;
+extern FILE        *sc_root_stderr;
 
 /* logging functions */
 
