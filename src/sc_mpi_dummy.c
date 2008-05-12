@@ -22,6 +22,14 @@
 #include <sc.h>
 #include <sc_mpi_dummy.h>
 
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
+
 int
 MPI_Init (int *argc, char ***argv)
 {
@@ -48,6 +56,18 @@ MPI_Comm_rank (MPI_Comm comm, int *rank)
   *rank = 0;
 
   return MPI_SUCCESS;
+}
+
+double
+MPI_Wtime (void)
+{
+  int                 retval;
+  struct timeval      tv;
+
+  retval = gettimeofday (&tv, NULL);
+  SC_CHECK_ABORT (retval == 0, "gettimeofday");
+
+  return tv.tv_sec + tv.tv_usec * 1.e-6;
 }
 
 /* EOF sc_mpi_dummy.c */

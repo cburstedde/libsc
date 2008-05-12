@@ -81,6 +81,7 @@ dnl AC_CHECK_HEADERS([ctype.h stdarg.h stddef.h stdint.h stdio.h stdlib.h])
 dnl AC_CHECK_HEADERS([signal.h unistd.h])
 AC_CHECK_HEADERS([inttypes.h libgen.h getopt.h obstack.h mpi.h zlib.h])
 AC_CHECK_HEADERS([execinfo.h arpa/inet.h netinet/in.h unistd.h])
+AC_CHECK_HEADERS([sys/time.h time.h])
 
 # Checks for functions.
 AS_IF([test "$sc_with_SC_PROVIDE_GETOPT" = "no"],

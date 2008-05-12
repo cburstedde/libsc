@@ -34,4 +34,6 @@ int                 MPI_Finalize (void);
 int                 MPI_Comm_size (MPI_Comm, int *);
 int                 MPI_Comm_rank (MPI_Comm, int *);
 
+double              MPI_Wtime (void);
+
 #endif /* !SC_MPI_DUMMY_H */
