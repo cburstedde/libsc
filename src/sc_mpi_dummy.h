@@ -18,12 +18,12 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SC_DUMMYMPI_H
-#define SC_DUMMYMPI_H
+#ifndef SC_MPI_DUMMY_H
+#define SC_MPI_DUMMY_H
 
 /* sc.h should be included before this header file */
 #ifdef SC_MPI
-#error "SC_MPI must not be defined when sc_dummympi.h is included"
+#error "sc_mpi_dummy.h must not be included when SC_MPI is defined"
 #endif
 
 #define MPI_SUCCESS 0
@@ -37,4 +37,4 @@ int                 MPI_Finalize (void);
 int                 MPI_Comm_size (MPI_Comm, int *);
 int                 MPI_Comm_rank (MPI_Comm, int *);
 
-#endif /* !SC_DUMMYMPI_H */
+#endif /* !SC_MPI_DUMMY_H */

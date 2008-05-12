@@ -68,7 +68,7 @@
 #include <libgen.h>
 #endif
 
-#ifdef SC_GETOPT
+#ifdef SC_PROVIDE_GETOPT
 #include <sc_getopt.h>
 #else
 #ifdef HAVE_GETOPT_H
@@ -76,7 +76,7 @@
 #endif
 #endif
 
-#ifdef SC_OBSTACK
+#ifdef SC_PROVIDE_OBSTACK
 #include <sc_obstack.h>
 #else
 #ifdef HAVE_OBSTACK_H
@@ -84,14 +84,16 @@
 #endif
 #endif
 
-#if defined(SC_ZLIB) || defined(HAVE_ZLIB_H)
+#if defined(SC_PROVIDE_ZLIB) || defined(HAVE_ZLIB_H)
 #include <zlib.h>
 #endif
 
 #ifdef SC_MPI
+#ifdef HAVE_MPI_H
 #include <mpi.h>
+#endif
 #else
-#include <sc_dummympi.h>
+#include <sc_mpi_dummy.h>
 #endif
 
 /* check macros, always enabled */

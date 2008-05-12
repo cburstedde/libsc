@@ -31,11 +31,11 @@ SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
 SC_ARG_WITHOUT([blas], [disable all BLAS dependent code],
                [SC_BLAS])
 SC_ARG_WITHOUT([getopt], [disable builtin getopt code, provide your own],
-               [SC_GETOPT])
+               [SC_PROVIDE_GETOPT])
 SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],
-               [SC_OBSTACK])
+               [SC_PROVIDE_OBSTACK])
 SC_ARG_WITHOUT([zlib], [disable builtin zlib code, provide your own],
-               [SC_ZLIB])
+               [SC_PROVIDE_ZLIB])
 
 # Checks for programs.
 echo "o----------------------------------"
@@ -62,7 +62,7 @@ echo "| Checking for libraries"
 echo "o----------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
-AS_IF([test "$sc_with_SC_ZLIB" = "no"],
+AS_IF([test "$sc_with_SC_PROVIDE_ZLIB" = "no"],
       [SC_REQUIRE_LIB([z], [adler32_combine])])
 AS_IF([test "$sc_with_SC_BLAS" != "no"],
       [
@@ -79,13 +79,13 @@ echo "o----------------------------------"
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([ctype.h stdarg.h stddef.h stdint.h stdio.h stdlib.h])
 dnl AC_CHECK_HEADERS([signal.h unistd.h])
-AC_CHECK_HEADERS([inttypes.h libgen.h getopt.h obstack.h zlib.h])
+AC_CHECK_HEADERS([inttypes.h libgen.h getopt.h obstack.h mpi.h zlib.h])
 AC_CHECK_HEADERS([execinfo.h arpa/inet.h netinet/in.h unistd.h])
 
 # Checks for functions.
-AS_IF([test "$sc_with_SC_GETOPT" = "no"],
+AS_IF([test "$sc_with_SC_PROVIDE_GETOPT" = "no"],
       [SC_REQUIRE_FUNCS([getopt_long])])
-AS_IF([test "$sc_with_SC_OBSTACK" = "no"],
+AS_IF([test "$sc_with_SC_PROVIDE_OBSTACK" = "no"],
       [SC_REQUIRE_FUNCS([obstack_free])])
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
 

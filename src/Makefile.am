@@ -7,19 +7,19 @@ libsc_generated_headers = src/sc_config.h
 libsc_installed_headers = src/sc.h src/sc_containers.h src/sc_options.h
 libsc_compiled_sources =  src/sc.c src/sc_containers.c src/sc_options.c
 if !SC_MPI
-  libsc_installed_headers += src/sc_dummympi.h
-  libsc_compiled_sources +=  src/sc_dummympi.c
+  libsc_installed_headers += src/sc_mpi_dummy.h
+  libsc_compiled_sources +=  src/sc_mpi_dummy.c
 endif
 if SC_BLAS
   libsc_installed_headers += src/sc_blas.h src/sc_dmatrix.h
   libsc_compiled_sources +=  src/sc_blas.c src/sc_dmatrix.c
 endif
-if SC_GETOPT
+if SC_PROVIDE_GETOPT
   libsc_internal_headers +=  src/sc_getopt_int.h
   libsc_installed_headers += src/sc_getopt.h
   libsc_compiled_sources +=  src/sc_getopt.c
 endif
-if SC_OBSTACK
+if SC_PROVIDE_OBSTACK
   libsc_installed_headers += src/sc_obstack.h
   libsc_compiled_sources +=  src/sc_obstack.c
 endif

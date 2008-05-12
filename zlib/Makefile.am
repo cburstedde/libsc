@@ -7,7 +7,7 @@
 
 EXTRA_DIST += zlib/ChangeLog zlib/FAQ zlib/README zlib/algorithm.txt
 
-if SC_ZLIB
+if SC_PROVIDE_ZLIB
 zlib_internal_headers = \
 	zlib/zconf.h zlib/zlib.h \
 	zlib/crc32.h zlib/inffast.h zlib/inflate.h zlib/trees.h \

@@ -18,7 +18,9 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sc_dummympi.h>
+/* sc.h comes first in every compilation unit */
+#include <sc.h>
+#include <sc_mpi_dummy.h>
 
 int
 MPI_Init (int *argc, char ***argv)
@@ -48,4 +50,4 @@ MPI_Comm_rank (MPI_Comm comm, int *rank)
   return MPI_SUCCESS;
 }
 
-/* EOF sc_dummympi.c */
+/* EOF sc_mpi_dummy.c */
