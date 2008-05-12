@@ -69,6 +69,9 @@
 #endif
 
 #ifdef SC_PROVIDE_GETOPT
+#ifdef _GETOPT_H
+#error "getopt.h is included.  Include sc.h first or use --without-getopt".
+#endif
 #include <sc_getopt.h>
 #else
 #ifdef HAVE_GETOPT_H
@@ -77,6 +80,9 @@
 #endif
 
 #ifdef SC_PROVIDE_OBSTACK
+#ifdef _OBSTACK_H
+#error "obstack.h is included.  Include sc.h first or use --without-obstack".
+#endif
 #include <sc_obstack.h>
 #else
 #ifdef HAVE_OBSTACK_H
@@ -85,6 +91,9 @@
 #endif
 
 #if defined(SC_PROVIDE_ZLIB) || defined(HAVE_ZLIB_H)
+#if defined(SC_PROVIDE_ZLIB) && defined (ZLIB_H)
+#error "zlib.h is included.  Include sc.h first or use --without-zlib".
+#endif
 #include <zlib.h>
 #endif
 
@@ -93,6 +102,9 @@
 #include <mpi.h>
 #endif
 #else
+#ifdef MPI_SUCCESS
+#error "mpi.h is included.  Use --enable-mpi."
+#endif
 #include <sc_mpi_dummy.h>
 #endif
 
