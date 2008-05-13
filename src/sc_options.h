@@ -67,7 +67,7 @@ void                sc_options_destroy (sc_options_t * opt);
 
 /**
  * Add a switch option. This option is used without option arguments.
- * Every use increments the variable by one. Its initial value is 0.
+ * Every use increments the variable by one.  Its initial value is 0.
  * Either opt_char or opt_name must be valid, that is, not '\0'/NULL.
  * \param [in] opt_char      Short option character, may be '\0'.
  * \param [in] opt_name      Option name without initial dashes, may be NULL.
@@ -103,6 +103,7 @@ void                sc_options_add_double (sc_options_t * opt,
 /**
  * Add a string option.
  * \param [in] init_value  The default value of the option may be NULL.
+ *                         If not NULL, the value is copied.
  */
 void                sc_options_add_string (sc_options_t * opt,
                                            int opt_char,
@@ -122,7 +123,7 @@ void                sc_options_add_inifile (sc_options_t * opt,
 /**
  * Print a usage message.
  * \param [in] include_args   Include the string <ARGS> in the message.
- * \param [in] nout           The stream to print to, may be NULL.
+ * \param [in] nout           The stream to print to, may be NULL (silent).
  */
 void                sc_options_print_help (sc_options_t * opt,
                                            int include_args, FILE * nout);
@@ -147,7 +148,7 @@ void                sc_options_print_arguments (sc_options_t * opt,
 
 /**
  * Loads a file in .ini format and updates entries found under [Options].
- * \param [in] nerr       Stream for error output, may be NULL.
+ * \param [in] nerr       Stream for error output, may be NULL (silent).
  * \return                Returns 0 on success, -1 on failure.
  */
 int                 sc_options_load (sc_options_t * opt,
@@ -156,7 +157,7 @@ int                 sc_options_load (sc_options_t * opt,
 /**
  * Parse command line options.
  * \param [in,out] argv   The options may be moved before the non-options.
- * \param [in] nerr       Stream for error output, may be NULL.
+ * \param [in] nerr       Stream for error output, may be NULL (silent).
  * \return                Returns -1 on an invalid option, otherwise
  *                                the position of the first non-option argument.
  */

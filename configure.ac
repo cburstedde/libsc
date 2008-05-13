@@ -2,8 +2,8 @@ dnl
 dnl This file is part of the SC Library.
 dnl
 
-AC_PREREQ([2.59])
 AC_INIT([libsc], [0.1], [ccgo@ices.utexas.edu])
+AC_PREREQ([2.59])
 AC_CONFIG_HEADER([src/sc_config.h])
 AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR([config])
