@@ -101,7 +101,7 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   flatout = flat + 7 * nvars;
 
   for (i = 0; i < nvars; ++i) {
-    flatin[7 * i + 0] = stats[i].count;
+    flatin[7 * i + 0] = (double) stats[i].count;
     flatin[7 * i + 1] = stats[i].sum_values;
     flatin[7 * i + 2] = stats[i].sum_squares;
     flatin[7 * i + 3] = stats[i].min;
