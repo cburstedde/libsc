@@ -90,11 +90,15 @@
 #endif
 #endif
 
-#if defined(SC_PROVIDE_ZLIB) || defined(HAVE_ZLIB_H)
-#if defined(SC_PROVIDE_ZLIB) && defined (ZLIB_H)
+#ifdef SC_PROVIDE_ZLIB
+#ifdef ZLIB_H
 #error "zlib.h is included.  Include sc.h first or use --without-zlib".
 #endif
+#include <sc_zlib.h>
+#else
+#ifdef HAVE_ZLIB_H
 #include <zlib.h>
+#endif
 #endif
 
 #ifdef SC_MPI

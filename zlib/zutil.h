@@ -8,13 +8,15 @@
    subject to change. Applications should only use zlib.h.
  */
 
+/* MODIFIED to include sc_zlib.h, see AUTHORS file in toplevel directory */
+
 /* @(#) $Id$ */
 
 #ifndef ZUTIL_H
 #define ZUTIL_H
 
 #define ZLIB_INTERNAL
-#include "zlib.h"
+#include <sc_zlib.h>
 
 #ifdef STDC
 #  ifndef _WIN32_WCE

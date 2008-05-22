@@ -1,3 +1,5 @@
+/* *INDENT-OFF* */
+
 /* zlib.h -- interface of the 'zlib' general purpose compression library
   version 1.2.3, July 18th, 2005
 
@@ -28,10 +30,13 @@
   (zlib format), rfc1951.txt (deflate format) and rfc1952.txt (gzip format).
 */
 
+/* This is NOT the original zlib software.  RENAMED from zlib.h and
+   MODIFIED to include sc_zconf.h, see AUTHORS file in toplevel directory */
+
 #ifndef ZLIB_H
 #define ZLIB_H
 
-#include "zconf.h"
+#include <sc_zconf.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -1355,3 +1360,5 @@ ZEXTERN const uLongf * ZEXPORT get_crc_table    OF((void));
 #endif
 
 #endif /* ZLIB_H */
+
+/* *INDENT-ON* */

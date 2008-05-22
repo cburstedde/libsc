@@ -9,7 +9,9 @@
 
 . git-sh-setup
 
-CHFILES=$(git-diff-index -M --name-only --cached HEAD | grep '.*\.[ch]$')
+CHFILES=$(git-diff-index -M --name-only --cached HEAD | \
+          grep '.*\.[ch]$' | grep -v '^zlib/')
+
 for CHFILE in $CHFILES;
 do
   MKTEMPLATE=`basename $CHFILE`.XXXXXXXX

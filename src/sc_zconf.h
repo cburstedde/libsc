@@ -1,7 +1,12 @@
+/* *INDENT-OFF* */
+
 /* zconf.h -- configuration of the zlib compression library
  * Copyright (C) 1995-2005 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
+
+/* This is NOT the original zlib software.
+   RENAMED from zconf.h, see AUTHORS file in toplevel directory */
 
 /* @(#) $Id$ */
 
@@ -330,3 +335,5 @@ typedef uLong FAR uLongf;
 #endif
 
 #endif /* ZCONF_H */
+
+/* *INDENT-ON* */

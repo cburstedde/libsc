@@ -3,10 +3,12 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
+/* MODIFIED to include sc_zlib.h, see AUTHORS file in toplevel directory */
+
 /* @(#) $Id$ */
 
 #define ZLIB_INTERNAL
-#include "zlib.h"
+#include <sc_zlib.h>
 
 #define BASE 65521UL    /* largest prime smaller than 65536 */
 #define NMAX 5552
