@@ -146,7 +146,41 @@ size_t              sc_array_pqueue_pop (sc_array_t * array,
 /** Returns a pointer to an array element.
  * \param [in] index needs to be in [0]..[elem_count-1].
  */
-void               *sc_array_index (sc_array_t * array, size_t index);
+static inline void *
+sc_array_index (sc_array_t * array, size_t index)
+{
+  SC_ASSERT (index < array->elem_count);
+
+  return (void *) (array->array + (array->elem_size * index));
+}
+
+/** Remove the last element from an array and return a pointer to it.
+ * This is safe since the array memory is not freed or reallocated.
+ * \return Returns a pointer to the last element before removal.
+ */
+static inline void *
+sc_array_pop (sc_array_t * array)
+{
+  SC_ASSERT (array->elem_count > 0);
+
+  return (void *) (array->array + (array->elem_size * --array->elem_count));
+}
+
+/** Enlarge an array by one.  Grows the array memory if necessary.
+ * \return Returns a pointer to the uninitialized newly added element.
+ */
+static inline void *
+sc_array_push (sc_array_t * array)
+{
+  if (array->elem_size * (array->elem_count + 1) > array->byte_alloc) {
+    const size_t        old_count = array->elem_count;
+
+    sc_array_resize (array, old_count + 1);
+    return (void *) (array->array + (array->elem_size * old_count));
+  }
+
+  return (void *) (array->array + (array->elem_size * array->elem_count++));
+}
 
 /** The sc_mempool object provides a large pool of equal-size elements.
  * The pool grows dynamically for element allocation.
@@ -185,12 +219,46 @@ void                sc_mempool_reset (sc_mempool_t * mempool);
  * Elements previously returned to the pool are recycled.
  * \return Returns a new or recycled element pointer.
  */
-void               *sc_mempool_alloc (sc_mempool_t * mempool);
+static inline void *
+sc_mempool_alloc (sc_mempool_t * mempool)
+{
+  void               *ret;
+  sc_array_t         *freed = &mempool->freed;
+
+  ++mempool->elem_count;
+
+  if (freed->elem_count > 0) {
+    ret = *(void **) sc_array_pop (freed);
+  }
+  else {
+    ret = obstack_alloc (&mempool->obstack, (long) mempool->elem_size);
+  }
+
+#ifdef SC_DEBUG
+  memset (ret, -1, mempool->elem_size);
+#endif
+
+  return ret;
+}
 
 /** Return a previously allocated element to the pool.
  * \param [in] elem  The element to be returned to the pool.
  */
-void                sc_mempool_free (sc_mempool_t * mempool, void *elem);
+static inline void
+sc_mempool_free (sc_mempool_t * mempool, void *elem)
+{
+  sc_array_t         *freed = &mempool->freed;
+
+  SC_ASSERT (mempool->elem_count > 0);
+
+#ifdef SC_DEBUG
+  memset (elem, -1, mempool->elem_size);
+#endif
+
+  --mempool->elem_count;
+
+  *(void **) sc_array_push (freed) = elem;
+}
 
 /** The sc_link structure is one link of a linked list.
  */

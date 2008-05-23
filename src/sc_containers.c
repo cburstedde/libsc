@@ -350,14 +350,6 @@ sc_array_pqueue_pop (sc_array_t * array, void *result,
   return swaps;
 }
 
-void               *
-sc_array_index (sc_array_t * array, size_t index)
-{
-  SC_ASSERT (index < array->elem_count);
-
-  return (void *) (array->array + (array->elem_size * index));
-}
-
 /* mempool routines */
 
 static void        *(*obstack_chunk_alloc) (size_t) = sc_malloc;
@@ -399,50 +391,6 @@ sc_mempool_reset (sc_mempool_t * mempool)
   obstack_free (&mempool->obstack, NULL);
   obstack_init (&mempool->obstack);
   mempool->elem_count = 0;
-}
-
-void               *
-sc_mempool_alloc (sc_mempool_t * mempool)
-{
-  size_t              new_count;
-  void               *ret;
-  sc_array_t         *freed = &mempool->freed;
-
-  ++mempool->elem_count;
-
-  if (freed->elem_count > 0) {
-    new_count = freed->elem_count - 1;
-    ret = *(void **) sc_array_index (freed, new_count);
-    sc_array_resize (freed, new_count);
-  }
-  else {
-    ret = obstack_alloc (&mempool->obstack, (long) mempool->elem_size);
-  }
-
-#ifdef SC_DEBUG
-  memset (ret, -1, mempool->elem_size);
-#endif
-
-  return ret;
-}
-
-void
-sc_mempool_free (sc_mempool_t * mempool, void *elem)
-{
-  size_t              old_count;
-  sc_array_t         *freed = &mempool->freed;
-
-  SC_ASSERT (mempool->elem_count > 0);
-
-#ifdef SC_DEBUG
-  memset (elem, -1, mempool->elem_size);
-#endif
-
-  --mempool->elem_count;
-
-  old_count = freed->elem_count;
-  sc_array_resize (freed, old_count + 1);
-  *(void **) sc_array_index (freed, old_count) = elem;
 }
 
 /* list routines */
