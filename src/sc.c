@@ -91,6 +91,8 @@ sc_log_init (FILE * log_stream, int identifier)
 void
 sc_log_threshold (int log_priority)
 {
+  SC_ASSERT (log_priority >= SC_LP_NONE && log_priority <= SC_LP_SILENT);
+
   sc_log_priority = log_priority;
 }
 
