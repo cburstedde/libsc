@@ -22,11 +22,11 @@
 #include <sc.h>
 #include <sc_mpi_dummy.h>
 
-#ifdef HAVE_SYS_TIME_H
+#ifdef SC_HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 
-#ifdef HAVE_TIME_H
+#ifdef SC_HAVE_TIME_H
 #include <time.h>
 #endif
 

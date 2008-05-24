@@ -23,31 +23,7 @@
 
 /* include the sc_config header */
 
-#ifdef PACKAGE
-#undef PACKAGE
-#endif
-#ifdef PACKAGE_BUGREPORT
-#undef PACKAGE_BUGREPORT
-#endif
-#ifdef PACKAGE_NAME
-#undef PACKAGE_NAME
-#endif
-#ifdef PACKAGE_STRING
-#undef PACKAGE_STRING
-#endif
-#ifdef PACKAGE_TARNAME
-#undef PACKAGE_TARNAME
-#endif
-#ifdef PACKAGE_VERSION
-#undef PACKAGE_VERSION
-#endif
 #include <sc_config.h>
-#undef PACKAGE
-#undef PACKAGE_BUGREPORT
-#undef PACKAGE_NAME
-#undef PACKAGE_STRING
-#undef PACKAGE_TARNAME
-#undef PACKAGE_VERSION
 
 /* include system headers */
 
@@ -60,11 +36,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef HAVE_UNISTD_H
+#ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
-#ifdef HAVE_LIBGEN_H
+#ifdef SC_HAVE_LIBGEN_H
 #include <libgen.h>
 #endif
 
@@ -74,7 +50,7 @@
 #endif
 #include <sc_getopt.h>
 #else
-#ifdef HAVE_GETOPT_H
+#ifdef SC_HAVE_GETOPT_H
 #include <getopt.h>
 #endif
 #endif
@@ -85,7 +61,7 @@
 #endif
 #include <sc_obstack.h>
 #else
-#ifdef HAVE_OBSTACK_H
+#ifdef SC_HAVE_OBSTACK_H
 #include <obstack.h>
 #endif
 #endif
@@ -96,13 +72,13 @@
 #endif
 #include <sc_zlib.h>
 #else
-#ifdef HAVE_ZLIB_H
+#ifdef SC_HAVE_ZLIB_H
 #include <zlib.h>
 #endif
 #endif
 
 #ifdef SC_MPI
-#ifdef HAVE_MPI_H
+#ifdef SC_HAVE_MPI_H
 #include <mpi.h>
 #endif
 #else

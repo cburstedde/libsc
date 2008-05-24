@@ -4,11 +4,12 @@ dnl
 
 AC_INIT([libsc], [0.5], [ccgo@ices.utexas.edu])
 AC_PREREQ([2.59])
-AC_CONFIG_HEADER([src/sc_config.h])
+AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([config])
 AM_INIT_AUTOMAKE([subdir-objects])
+AX_PREFIX_CONFIG_H([src/sc_config.h], [SC])
 
 # Options.
 AC_ARG_ENABLE([logging],
@@ -25,17 +26,17 @@ See sc.h for possible log priorities in --enable-logging=PRIO])
                                        [minimal log priority])
                esac])
 SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
-              [SC_DEBUG])
+              [DEBUG])
 SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
-              [SC_RESIZE_REALLOC])
+              [RESIZE_REALLOC])
 SC_ARG_WITHOUT([blas], [disable all BLAS dependent code],
-               [SC_BLAS])
+               [BLAS])
 SC_ARG_WITHOUT([getopt], [disable builtin getopt code, provide your own],
-               [SC_PROVIDE_GETOPT])
+               [PROVIDE_GETOPT])
 SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],
-               [SC_PROVIDE_OBSTACK])
+               [PROVIDE_OBSTACK])
 SC_ARG_WITHOUT([zlib], [disable builtin zlib code, provide your own],
-               [SC_PROVIDE_ZLIB])
+               [PROVIDE_ZLIB])
 
 # Checks for programs.
 echo "o----------------------------------"

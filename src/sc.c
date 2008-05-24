@@ -21,9 +21,9 @@
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
 
-#ifdef HAVE_BACKTRACE
-#ifdef HAVE_BACKTRACE_SYMBOLS
-#ifdef HAVE_EXECINFO_H
+#ifdef SC_HAVE_BACKTRACE
+#ifdef SC_HAVE_BACKTRACE_SYMBOLS
+#ifdef SC_HAVE_EXECINFO_H
 #include <execinfo.h>
 #define SC_BACKTRACE
 #define SC_STACK_SIZE 64

@@ -68,13 +68,13 @@ extern const char   sc_antitranschar[]; /* does not work for complex */
 extern const char   sc_uplochar[];
 extern const char   sc_cmachchar[];
 
-#define BLAS_DLAMCH  F77_FUNC(dlamch,DLAMCH)
-#define BLAS_DSCAL   F77_FUNC(dscal,DSCAL)
-#define BLAS_DCOPY   F77_FUNC(dcopy,DCOPY)
-#define BLAS_DAXPY   F77_FUNC(daxpy,DAXPY)
-#define BLAS_DDOT    F77_FUNC(ddot,DDOT)
-#define BLAS_DGEMV   F77_FUNC(dgemv,DGEMV)
-#define BLAS_DGEMM   F77_FUNC(dgemm,DGEMM)
+#define BLAS_DLAMCH  SC_F77_FUNC(dlamch,DLAMCH)
+#define BLAS_DSCAL   SC_F77_FUNC(dscal,DSCAL)
+#define BLAS_DCOPY   SC_F77_FUNC(dcopy,DCOPY)
+#define BLAS_DAXPY   SC_F77_FUNC(daxpy,DAXPY)
+#define BLAS_DDOT    SC_F77_FUNC(ddot,DDOT)
+#define BLAS_DGEMV   SC_F77_FUNC(dgemv,DGEMV)
+#define BLAS_DGEMM   SC_F77_FUNC(dgemm,DGEMM)
 
 double              BLAS_DLAMCH (const char *cmach);
 void                BLAS_DSCAL (const sc_bint_t * n, const double *alpha,
@@ -104,4 +104,4 @@ void                BLAS_DGEMM (const char *transa, const char *transb,
                                 const double *beta, double *c,
                                 const sc_bint_t * ldc);
 
-#endif /* !SC_BLAS_H_ */
+#endif /* !SC_BLAS_H */

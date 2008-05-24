@@ -94,7 +94,7 @@ if test "$HAVE_PKG_MPI" = yes ; then
 
   echo "                             MPI_CC set to $MPI_CC"
 
-  AC_DEFINE([SC_MPI], 1, [Define to 1 if we are using MPI])
+  AC_DEFINE([MPI], 1, [Define to 1 if we are using MPI])
 else
   unset MPI_CC
 fi
