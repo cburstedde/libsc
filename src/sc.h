@@ -77,7 +77,7 @@
 
 /* check macros, always enabled */
 
-#define SC_NOOP do { ; } while (0)
+#define SC_NOOP() do { ; } while (0)
 #define SC_CHECK_ABORT(c,s)                        \
   do {                                             \
     if (!(c)) {                                    \
@@ -101,17 +101,23 @@
 #ifdef SC_DEBUG
 #define SC_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
 #else
-#define SC_ASSERT(c) SC_NOOP
+#define SC_ASSERT(c) SC_NOOP ()
 #endif
 #define SC_ASSERT_NOT_REACHED() SC_CHECK_ABORT (0, "Unreachable code")
 
 /* macros for memory allocation, will abort if out of memory */
 
-#define SC_ALLOC(t,n) (t *) sc_malloc ((n) * sizeof(t))
-#define SC_ALLOC_ZERO(t,n) (t *) sc_calloc ((n), sizeof(t))
-#define SC_REALLOC(p,t,n) (t *) sc_realloc ((p), (n) * sizeof(t))
-#define SC_STRDUP(s) sc_strdup (s)
-#define SC_FREE(p) sc_free (p)
+#define SC_ALLOC(t,n)             (t *) sc_malloc ((n) * sizeof(t))
+#define SC_ALLOC_ZERO(t,n)        (t *) sc_calloc ((n), sizeof(t))
+#define SC_REALLOC(p,t,n)         (t *) sc_realloc ((p), (n) * sizeof(t))
+#define SC_STRDUP(s)                    sc_strdup (s)
+#define SC_FREE(p)                      sc_free (p)
+
+/**
+ * Sets n elements of a memory range to zero.
+ * Assumes the pointer p is of the correct type.
+ */
+#define SC_BZERO(p,n) do { memset ((p), 0, (n) * sizeof (*(p))); } while (0)
 
 /* min and max helper macros */
 
