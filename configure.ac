@@ -45,7 +45,7 @@ SC_ARG_WITHOUT([zlib], [disable builtin zlib code, provide your own],
 
 # Checks for MPI C compiler and other programs (no F77 at this point!).
 echo "o---------------------------------------"
-echo "| Checking for MPI and other programs"
+echo "| Checking MPI and other programs"
 echo "o---------------------------------------"
 
 ACX_MPI([SC], [icc gcc cc])
@@ -55,7 +55,7 @@ ACX_WITH_LINT
 
 # Checks for libraries.
 echo "o---------------------------------------"
-echo "| Checking for libraries"
+echo "| Checking libraries"
 echo "o---------------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
@@ -67,7 +67,7 @@ fi
 if test "$SC_WITH_BLAS" != "no" ; then
 
 echo "o---------------------------------------"
-echo "| Checking for BLAS and F77 support"
+echo "| Checking BLAS and F77 support"
 echo "o---------------------------------------"
 
 dnl Try a default name mangling scheme without using F77.
@@ -100,6 +100,13 @@ Cannot find lapack library, specify a path using LIBS=-L<DIR> (ex.\
  (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
 fi
 
+# Checks for header files.
+echo "o---------------------------------------"
+echo "| Checking headers"
+echo "o---------------------------------------"
+
+AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h time.h])
+
 # Checks for functions.
 echo "o---------------------------------------"
 echo "| Checking functions"
@@ -113,18 +120,6 @@ if test "$SC_WITH_PROVIDE_OBSTACK" = "no" ; then
 fi
 
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
-
-# Checks for header files.
-echo "o---------------------------------------"
-echo "| Checking headers"
-echo "o---------------------------------------"
-
-dnl AC_HEADER_STDC
-dnl AC_CHECK_HEADERS([ctype.h stdarg.h stddef.h stdint.h stdio.h stdlib.h])
-dnl AC_CHECK_HEADERS([signal.h unistd.h])
-AC_CHECK_HEADERS([ctype.h inttypes.h libgen.h getopt.h obstack.h mpi.h zlib.h])
-AC_CHECK_HEADERS([execinfo.h arpa/inet.h netinet/in.h unistd.h])
-AC_CHECK_HEADERS([sys/time.h time.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 echo "o---------------------------------------"

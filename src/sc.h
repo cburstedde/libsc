@@ -220,19 +220,15 @@
 #define SC_PRODUCTIONF(f,...) \
   SC_NORMAL_LOGF (SC_LP_PRODUCTION, (f), __VA_ARGS__)
 
+/* callback typedefs */
+
+typedef void        (*sc_handler_t) (void *data);
+
 /* extern declarations */
 
 extern const int    sc_log2_lookup_table[256];
 extern FILE        *sc_root_stdout;
 extern FILE        *sc_root_stderr;
-
-/* logging functions */
-
-void                sc_log_init (FILE * log_stream, int identifier);
-void                sc_log_threshold (int log_priority);
-void                sc_logf (const char *filename, int lineno,
-                             int priority, int category, const char *fmt, ...)
-  __attribute__ ((format (printf, 5, 6)));
 
 /* memory allocation functions, handle NULL pointers gracefully */
 
@@ -243,8 +239,19 @@ char               *sc_strdup (const char *s);
 void                sc_free (void *ptr);
 void                sc_memory_check (void);
 
-/* prints a stack trace, calls the abort handler and terminates */
+/* logging functions */
 
+void                sc_log_init (FILE * log_stream, int identifier);
+void                sc_log_threshold (int log_priority);
+void                sc_logf (const char *filename, int lineno,
+                             int priority, int category, const char *fmt, ...)
+  __attribute__ ((format (printf, 5, 6)));
+
+/** Installs an abort handler and catches signals INT SEGV USR2. */
+void                sc_set_abort_handler (sc_handler_t handler,
+                                          void *data);
+
+/** Prints a stack trace, calls the abort handler and terminates. */
 void                sc_abort (void)
   __attribute__ ((noreturn));
 

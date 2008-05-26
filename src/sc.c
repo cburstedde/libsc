@@ -21,6 +21,10 @@
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
 
+#ifdef SC_HAVE_SIGNAL_H
+#include <signal.h>
+#endif
+
 #ifdef SC_HAVE_BACKTRACE
 #ifdef SC_HAVE_BACKTRACE_SYMBOLS
 #ifdef SC_HAVE_EXECINFO_H
@@ -57,10 +61,20 @@ FILE               *sc_root_stderr = NULL;
 
 static int          malloc_count = 0;
 static int          free_count = 0;
+
 static int          sc_identifier = -1;
+
 static int          sc_log_priority = SC_LP_NONE;
 static FILE        *sc_log_stream = NULL;
 static bool         sc_log_stream_set = false;
+
+static bool         signals_caught = false;
+static sig_t        system_int_handler = NULL;
+static sig_t        system_segv_handler = NULL;
+static sig_t        system_usr2_handler = NULL;
+
+static sc_handler_t sc_abort_handler = NULL;
+static void        *sc_abort_data = NULL;
 
 #if 0
 /*@unused@*/
@@ -77,60 +91,36 @@ test_printf (void)
 }
 #endif /* 0 */
 
-void
-sc_log_init (FILE * log_stream, int identifier)
+static void
+sc_signal_handler (int sig)
 {
-  sc_identifier = identifier;
-  sc_log_stream = log_stream;
-  sc_log_stream_set = true;
+  char                prefix[BUFSIZ];
+  char               *sigstr;
 
-  sc_root_stdout = identifier > 0 ? NULL : stdout;
-  sc_root_stderr = identifier > 0 ? NULL : stderr;
-}
-
-void
-sc_log_threshold (int log_priority)
-{
-  SC_ASSERT (log_priority >= SC_LP_NONE && log_priority <= SC_LP_SILENT);
-
-  sc_log_priority = log_priority;
-}
-
-void
-sc_logf (const char *filename, int lineno,
-         int priority, int category, const char *fmt, ...)
-{
-  va_list             ap;
-
-  SC_ASSERT (priority >= SC_LP_NONE && priority < SC_LP_SILENT);
-
-  if (sc_log_stream == NULL && !sc_log_stream_set) {
-    sc_log_stream = stdout;
-    sc_log_stream_set = true;
+  if (sc_identifier >= 0) {
+    snprintf (prefix, BUFSIZ, "[%d] ", sc_identifier);
+  }
+  else {
+    prefix[0] = '\0';
   }
 
-  if (sc_log_stream == NULL || priority < sc_log_priority)
-    return;
-
-  if (category == SC_LC_GLOBAL && sc_identifier > 0)
-    return;
-
-  if (category == SC_LC_NORMAL && sc_identifier >= 0)
-    fprintf (sc_log_stream, "[%d] ", sc_identifier);
-
-  if (priority == SC_LP_TRACE) {
-    char                bn[BUFSIZ], *bp;
-
-    snprintf (bn, BUFSIZ, "%s", filename);
-    bp = basename (bn);
-    fprintf (sc_log_stream, "%s:%d ", bp, lineno);
+  switch (sig) {
+  case SIGINT:
+    sigstr = "INT";
+    break;
+  case SIGSEGV:
+    sigstr = "SEGV";
+    break;
+  case SIGUSR2:
+    sigstr = "USR2";
+    break;
+  default:
+    sigstr = "<unknown>";
+    break;
   }
+  fprintf (stderr, "%sAbort: Signal %s\n", prefix, sigstr);
 
-  va_start (ap, fmt);
-  vfprintf (sc_log_stream, fmt, ap);
-  va_end (ap);
-
-  fflush (sc_log_stream);
+  sc_abort ();
 }
 
 void               *
@@ -230,6 +220,88 @@ sc_memory_check (void)
 }
 
 void
+sc_log_init (FILE * log_stream, int identifier)
+{
+  sc_identifier = identifier;
+  sc_log_stream = log_stream;
+  sc_log_stream_set = true;
+
+  sc_root_stdout = identifier > 0 ? NULL : stdout;
+  sc_root_stderr = identifier > 0 ? NULL : stderr;
+}
+
+void
+sc_log_threshold (int log_priority)
+{
+  SC_ASSERT (log_priority >= SC_LP_NONE && log_priority <= SC_LP_SILENT);
+
+  sc_log_priority = log_priority;
+}
+
+void
+sc_logf (const char *filename, int lineno,
+         int priority, int category, const char *fmt, ...)
+{
+  va_list             ap;
+
+  SC_ASSERT (priority >= SC_LP_NONE && priority < SC_LP_SILENT);
+
+  if (sc_log_stream == NULL && !sc_log_stream_set) {
+    sc_log_stream = stdout;
+    sc_log_stream_set = true;
+  }
+
+  if (sc_log_stream == NULL || priority < sc_log_priority)
+    return;
+
+  if (category == SC_LC_GLOBAL && sc_identifier > 0)
+    return;
+
+  if (category == SC_LC_NORMAL && sc_identifier >= 0)
+    fprintf (sc_log_stream, "[%d] ", sc_identifier);
+
+  if (priority == SC_LP_TRACE) {
+    char                bn[BUFSIZ], *bp;
+
+    snprintf (bn, BUFSIZ, "%s", filename);
+    bp = basename (bn);
+    fprintf (sc_log_stream, "%s:%d ", bp, lineno);
+  }
+
+  va_start (ap, fmt);
+  vfprintf (sc_log_stream, fmt, ap);
+  va_end (ap);
+
+  fflush (sc_log_stream);
+}
+
+void
+sc_set_abort_handler (sc_handler_t handler, void *data)
+{
+  sc_abort_handler = handler;
+  sc_abort_data = data;
+
+  if (handler != NULL && !signals_caught) {
+    system_int_handler = signal (SIGINT, sc_signal_handler);
+    SC_CHECK_ABORT (system_int_handler != SIG_ERR, "catching INT");
+    system_segv_handler = signal (SIGSEGV, sc_signal_handler);
+    SC_CHECK_ABORT (system_segv_handler != SIG_ERR, "catching SEGV");
+    system_usr2_handler = signal (SIGUSR2, sc_signal_handler);
+    SC_CHECK_ABORT (system_usr2_handler != SIG_ERR, "catching USR2");
+    signals_caught = true;
+  }
+  else if (handler == NULL && signals_caught) {
+    signal (SIGINT, system_int_handler);
+    system_int_handler = NULL;
+    signal (SIGSEGV, system_segv_handler);
+    system_segv_handler = NULL;
+    signal (SIGUSR2, system_usr2_handler);
+    system_usr2_handler = NULL;
+    signals_caught = false;
+  }
+}
+
+void
 sc_abort (void)
 {
   char                prefix[BUFSIZ];
@@ -275,12 +347,9 @@ sc_abort (void)
   fflush (stderr);
   sleep (1);
 
-#if 0
   if (sc_abort_handler != NULL) {
     sc_abort_handler (sc_abort_data);
   }
-#endif
-
   abort ();
 }
 

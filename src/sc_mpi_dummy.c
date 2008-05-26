@@ -22,10 +22,10 @@
 #include <sc.h>
 #include <sc_mpi_dummy.h>
 
+/* gettimeofday is in either of these two */
 #ifdef SC_HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
-
 #ifdef SC_HAVE_TIME_H
 #include <time.h>
 #endif
