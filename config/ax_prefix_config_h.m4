@@ -165,7 +165,7 @@ else
   if test ! -f "$_INP" ; then if test -f "$srcdir/$_INP" ; then
      _INP="$srcdir/$_INP"
   fi fi
-  AC_MSG_NOTICE(creating $_OUT - prefix $_UPP for $_INP defines)
+  AC_MSG_NOTICE([creating $_OUT from $_INP (prefix $_UPP)])
   if test -f $_INP ; then
     echo "s/^@%:@undef  *\\(@<:@m4_cr_LETTERS[]_@:>@\\)/@%:@undef $_UPP""_\\1/" > _script
     echo "s/^@%:@undef  *\\(@<:@m4_cr_letters@:>@\\)/@%:@undef $_LOW""_\\1/" >> _script
