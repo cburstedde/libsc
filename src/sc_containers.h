@@ -146,6 +146,7 @@ size_t              sc_array_pqueue_pop (sc_array_t * array,
 /** Returns a pointer to an array element.
  * \param [in] index needs to be in [0]..[elem_count-1].
  */
+/*@unused@*/
 static inline void *
 sc_array_index (sc_array_t * array, size_t index)
 {
@@ -219,6 +220,7 @@ void                sc_mempool_reset (sc_mempool_t * mempool);
  * Elements previously returned to the pool are recycled.
  * \return Returns a new or recycled element pointer.
  */
+/*@unused@*/
 static inline void *
 sc_mempool_alloc (sc_mempool_t * mempool)
 {
@@ -244,6 +246,7 @@ sc_mempool_alloc (sc_mempool_t * mempool)
 /** Return a previously allocated element to the pool.
  * \param [in] elem  The element to be returned to the pool.
  */
+/*@unused@*/
 static inline void
 sc_mempool_free (sc_mempool_t * mempool, void *elem)
 {

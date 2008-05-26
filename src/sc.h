@@ -28,6 +28,8 @@
 /* include system headers */
 
 #include <math.h>
+#include <ctype.h>
+#include <libgen.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -35,18 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef SC_HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-
-#ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-
-#ifdef SC_HAVE_LIBGEN_H
-#include <libgen.h>
-#endif
 
 #ifdef SC_PROVIDE_GETOPT
 #ifdef _GETOPT_H
@@ -54,9 +45,7 @@
 #endif
 #include <sc_getopt.h>
 #else
-#ifdef SC_HAVE_GETOPT_H
 #include <getopt.h>
-#endif
 #endif
 
 #ifdef SC_PROVIDE_OBSTACK
@@ -65,9 +54,7 @@
 #endif
 #include <sc_obstack.h>
 #else
-#ifdef SC_HAVE_OBSTACK_H
 #include <obstack.h>
-#endif
 #endif
 
 #ifdef SC_PROVIDE_ZLIB
@@ -76,15 +63,11 @@
 #endif
 #include <sc_zlib.h>
 #else
-#ifdef SC_HAVE_ZLIB_H
 #include <zlib.h>
-#endif
 #endif
 
 #ifdef SC_MPI
-#ifdef SC_HAVE_MPI_H
 #include <mpi.h>
-#endif
 #else
 #ifdef MPI_SUCCESS
 #error "mpi.h is included.  Use --enable-mpi."
