@@ -21,7 +21,6 @@
 #ifndef SC_OPTIONS_H
 #define SC_OPTIONS_H
 
-/* sc.h should be included before this header file */
 #include <sc_containers.h>
 
 typedef enum

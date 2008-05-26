@@ -21,6 +21,10 @@
 #ifndef SC_FUNCTIONS_H
 #define SC_FUNCTIONS_H
 
+#ifndef SC_H
+#error "sc.h should be included before this header file"
+#endif
+
 typedef double      (*sc_function3_t) (double, double, double, void *);
 
 /*

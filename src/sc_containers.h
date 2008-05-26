@@ -21,7 +21,9 @@
 #ifndef SC_CONTAINERS_H
 #define SC_CONTAINERS_H
 
-/* sc.h should be included before this header file */
+#ifndef SC_H
+#error "sc.h should be included before this header file"
+#endif
 
 /** Function to compute a hash value of an object.
  * \return Returns an unsigned integer.

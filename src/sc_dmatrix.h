@@ -21,7 +21,6 @@
 #ifndef SC_DMATRIX_H
 #define SC_DMATRIX_H
 
-/* sc.h should be included before this header file */
 #include <sc_blas.h>
 
 typedef struct sc_dmatrix

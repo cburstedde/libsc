@@ -21,7 +21,9 @@
 #ifndef SC_MPI_DUMMY_H
 #define SC_MPI_DUMMY_H
 
-/* sc.h should be included before this header file */
+#ifndef SC_H
+#error "sc.h should be included before this header file"
+#endif
 
 #define MPI_SUCCESS 0
 #define MPI_COMM_WORLD ((MPI_Comm) 0)

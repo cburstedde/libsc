@@ -21,7 +21,9 @@
 #ifndef SC_STATISTICS_H
 #define SC_STATISTICS_H
 
-/* sc.h should be included before this header file */
+#ifndef SC_H
+#error "sc.h should be included before this header file"
+#endif
 
 typedef struct sc_statinfo
 {

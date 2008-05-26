@@ -4,22 +4,25 @@
 
 ACLOCAL_AMFLAGS = -I config
 
-EXTRA_DIST = bootstrap scindent
-
-MAINTAINERCLEANFILES = ChangeLog
-
-.PHONY: lint ChangeLog
-
 # initialize empty variables
-bin_PROGRAMS =
-noinst_PROGRAMS =
-lib_LIBRARIES =
-noinst_HEADERS =
-include_HEADERS =
-nodist_include_HEADERS =
 AM_CPPFLAGS =
+EXTRA_DIST =
 LDADD =
 LINT_CSOURCES =
+MAINTAINERCLEANFILES =
+TESTS =
+bin_PROGRAMS =
+check_PROGRAMS =
+include_HEADERS =
+lib_LIBRARIES =
+nodist_include_HEADERS =
+noinst_HEADERS =
+noinst_PROGRAMS =
+
+# handle toplevel directory
+EXTRA_DIST += bootstrap scindent
+MAINTAINERCLEANFILES += ChangeLog
+.PHONY: lint ChangeLog
 
 # non-recursive build
 include src/Makefile.am

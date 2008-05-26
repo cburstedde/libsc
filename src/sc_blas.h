@@ -21,7 +21,9 @@
 #ifndef SC_BLAS_H
 #define SC_BLAS_H
 
-/* sc.h should be included before this header file */
+#ifndef SC_H
+#error "sc.h should be included before this header file"
+#endif
 
 typedef int         sc_bint_t;  /* Integer type for all of the blas calls */
 
