@@ -55,6 +55,7 @@ AC_DEFUN([ACX_MPI_CONFIG],
 [
 HAVE_PKG_MPI=no
 MPI_CC_NONE=
+MPI_F77_NONE=
 
 AC_ARG_ENABLE([mpi],
 [AC_HELP_STRING([--enable-mpi], [enable MPI])],
@@ -81,6 +82,21 @@ else
 fi
 ])
 
+AC_ARG_WITH([mpif77],
+[AC_HELP_STRING([--with-mpif77=MPIF77], [specify MPI C compiler])],
+[
+if test "$withval" = yes ; then
+  AC_MSG_ERROR([Please use --with-mpif77=MPIF77 with a valid mpi F77 compiler])
+else
+  HAVE_PKG_MPI=yes
+  if test "$withval" = no ; then
+    MPI_F77_NONE=yes
+  else
+    AC_CHECK_PROG([MPI_F77], [$withval], [$withval], [false])
+  fi
+fi
+])
+
 AC_MSG_CHECKING([whether we are using MPI])
 AC_MSG_RESULT([$HAVE_PKG_MPI])
 
@@ -91,8 +107,15 @@ if test "$HAVE_PKG_MPI" = yes ; then
   if test -n "$MPI_CC" ; then
     CC="$MPI_CC"
   fi
+  if test -z "$MPI_F77" -a -z "$MPI_F77_NONE" ; then
+    MPI_F77=mpif77
+  fi
+  if test -n "$MPI_F77" ; then
+    F77="$MPI_F77"
+  fi
 
   echo "                             MPI_CC set to $MPI_CC"
+  echo "                            MPI_F77 set to $MPI_F77"
 
   AC_DEFINE([MPI], 1, [Define to 1 if we are using MPI])
 else
@@ -167,7 +190,7 @@ AC_SUBST([MPI_INCLUDE_PATH])
 ])
 
 dnl ACX_MPI
-dnl Configure MPI in one line
+dnl Configure MPI and check its C compiler in one line
 dnl
 AC_DEFUN([ACX_MPI],
 [

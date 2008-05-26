@@ -11,72 +11,72 @@ AC_CONFIG_MACRO_DIR([config])
 AM_INIT_AUTOMAKE([subdir-objects])
 AX_PREFIX_CONFIG_H([src/sc_config.h], [SC])
 
-# Options.
-AC_ARG_ENABLE([logging],
-              [AC_HELP_STRING([--enable-logging=PRIO], [\
-change log priority (see sc.h for possible values)])],
-              [case "$enableval" in
-                 yes) AC_MSG_ERROR([\
-See sc.h for possible log priorities in --enable-logging=PRIO])
-                 ;;
-                 no) AC_DEFINE([SC_LOG_PRIORITY], [SC_LP_SILENT],
-                               [minimal log priority])
-                 ;;
-                 *) AC_DEFINE_UNQUOTED([SC_LOG_PRIORITY], [$enableval],
-                                       [minimal log priority])
-               esac])
-SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
-              [DEBUG])
-SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
-              [RESIZE_REALLOC])
-SC_ARG_WITHOUT([blas], [disable all BLAS dependent code],
-               [BLAS])
-SC_ARG_WITHOUT([getopt], [disable builtin getopt code, provide your own],
-               [PROVIDE_GETOPT])
-SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],
-               [PROVIDE_OBSTACK])
-SC_ARG_WITHOUT([zlib], [disable builtin zlib code, provide your own],
-               [PROVIDE_ZLIB])
+# Process command line options.
+echo "o---------------------------------------"
+echo "| Processing options"
+echo "o---------------------------------------"
 
-# Checks for programs.
-echo "o----------------------------------"
-echo "| Checking for programs"
-echo "o----------------------------------"
+SC_PROVIDE_OPTIONS
+
+# Checks for MPI C compiler and other programs (no F77 at this point!).
+echo "o---------------------------------------"
+echo "| Checking for MPI and other programs"
+echo "o---------------------------------------"
 
 ACX_MPI([icc gcc cc])
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 SC_WITH_LINT
 
-dnl For some reason the AS_IF does not disable the AC_F77_* calls.
-if test "$sc_with_SC_BLAS" != "no" ; then
-echo "o----------------------------------"
-echo "| Checking fortran conventions"
-echo "o----------------------------------"
+# Checks for libraries.
+echo "o---------------------------------------"
+echo "| Checking for libraries"
+echo "o---------------------------------------"
+
+SC_PROVIDE_LIBRARIES
+
+# Checks for BLAS (and F77 environment only if necessary).
+if test "$sc_with_BLAS" != "no" ; then
+
+echo "o---------------------------------------"
+echo "| Checking for BLAS and F77 support"
+echo "o---------------------------------------"
+
+dnl Try a default name mangling scheme without using F77.
+dgemm=dgemm_;dgecon=dgecon_
+ACX_BLAS([$dgemm],,[
+echo "Could not find BLAS without F77 support"
+])
+if test "$acx_blas_ok" = no ; then
+
+echo "Calling F77 autoconf macros"
+dnl For some strange reason these wrappers need to be toplevel.
+dnl Otherwise they are executed even if the test above fails.
 AC_F77_WRAPPERS
 AC_F77_LIBRARY_LDFLAGS
+dgemm=;AC_F77_FUNC(dgemm)
+dgecon=;AC_F77_FUNC(dgecon)
+
+echo "Checking BLAS with proper F77 support"
+ACX_BLAS([$dgemm],,[AC_MSG_ERROR([[Cannot find blas library, specify a path using LIBS=-L<DIR> (ex. LIBS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
 fi
 
-# Checks for libraries.
-echo "o----------------------------------"
-echo "| Checking for libraries"
-echo "o----------------------------------"
+ACX_LAPACK([$dgecon],,[AC_MSG_ERROR([[Cannot find lapack library, specify a path using LIBS=-L<DIR> (ex. LIBS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
+fi
 
-SC_REQUIRE_LIB([m], [fabs])
-AS_IF([test "$sc_with_SC_PROVIDE_ZLIB" = "no"],
-      [SC_REQUIRE_LIB([z], [adler32_combine])])
-AS_IF([test "$sc_with_SC_BLAS" != "no"],
-      [
-ACX_BLAS([], [AC_MSG_ERROR([[Cannot find blas library, specify a path using LDFLAGS=-L<DIR> (ex. LDFLAGS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
+# Checks for functions.
+echo "o---------------------------------------"
+echo "| Checking functions"
+echo "o---------------------------------------"
 
-ACX_LAPACK([], [AC_MSG_ERROR([[Cannot find lapack library, specify a path using LDFLAGSs=-L<DIR> (ex. LDFLAGS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
-      ])
-
-echo "o----------------------------------"
-echo "| Checking headers and functions"
-echo "o----------------------------------"
+SC_PROVIDE_FUNCTIONS
+AC_CHECK_FUNCS([backtrace backtrace_symbols])
 
 # Checks for header files.
+echo "o---------------------------------------"
+echo "| Checking headers"
+echo "o---------------------------------------"
+
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([ctype.h stdarg.h stddef.h stdint.h stdio.h stdlib.h])
 dnl AC_CHECK_HEADERS([signal.h unistd.h])
@@ -84,17 +84,10 @@ AC_CHECK_HEADERS([inttypes.h libgen.h getopt.h obstack.h mpi.h zlib.h])
 AC_CHECK_HEADERS([execinfo.h arpa/inet.h netinet/in.h unistd.h])
 AC_CHECK_HEADERS([sys/time.h time.h])
 
-# Checks for functions.
-AS_IF([test "$sc_with_SC_PROVIDE_GETOPT" = "no"],
-      [SC_REQUIRE_FUNCS([getopt_long])])
-AS_IF([test "$sc_with_SC_PROVIDE_OBSTACK" = "no"],
-      [SC_REQUIRE_FUNCS([obstack_free])])
-AC_CHECK_FUNCS([backtrace backtrace_symbols])
-
 # Checks for typedefs, structures, and compiler characteristics.
-echo "o----------------------------------"
+echo "o---------------------------------------"
 echo "| Checking keywords and types"
-echo "o----------------------------------"
+echo "o---------------------------------------"
 
 AC_C_CONST
 AC_C_INLINE

@@ -68,6 +68,10 @@ extern const char   sc_antitranschar[]; /* does not work for complex */
 extern const char   sc_uplochar[];
 extern const char   sc_cmachchar[];
 
+#ifndef SC_F77_FUNC
+#define SC_F77_FUNC(small,caps) small ## _
+#endif
+
 #define BLAS_DLAMCH  SC_F77_FUNC(dlamch,DLAMCH)
 #define BLAS_DSCAL   SC_F77_FUNC(dscal,DSCAL)
 #define BLAS_DCOPY   SC_F77_FUNC(dcopy,DCOPY)

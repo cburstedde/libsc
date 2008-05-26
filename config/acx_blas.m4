@@ -27,7 +27,7 @@ dnl Questions? Contact Michael A. Heroux (maherou@sandia.gov)
 dnl
 dnl ***********************************************************************
 dnl
-dnl @synopsis ACX_BLAS([ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
+dnl @synopsis ACX_BLAS(BLAS-FUNCTION, [ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
 dnl
 dnl This macro looks for a library that implements the BLAS
 dnl linear-algebra interface (see http://www.netlib.org/blas/).
@@ -66,10 +66,23 @@ dnl sgemm.
 dnl Edited by Jim Willenbring on 4-17-2006 to stop looking for BLAS if
 dnl a specific BLAS library specified by a user cannot be used.
 
+dnl Edited by Carsten Burstedde <carsten@ices.utexas.edu>
+dnl Expect the F77_ autoconf macros to be called outside of this file.
+dnl Take as argument a mangled BLAS function to check for.
+dnl This way the ACX_BLAS macro can be called multiple times
+dnl with different Fortran environments to minimize F77 dependencies.
+dnl Replaced obsolete AC_TRY_LINK_FUNC macro.
+dnl Disabled the PhiPack test since it requires BLAS_LIBS anyway.
+dnl Fixed buggy generic Mac OS X library test.
+
+dnl The first argument of this macro should be a mangled BLAS function.
 AC_DEFUN([ACX_BLAS], [
 AC_PREREQ(2.50)
-AC_REQUIRE([AC_F77_LIBRARY_LDFLAGS])
+dnl Expect this to be called already.
+dnl AC_REQUIRE([AC_F77_LIBRARY_LDFLAGS])
+dnl AC_REQUIRE([AC_F77_WRAPPERS])
 acx_blas_ok=no
+user_spec_blas_failed=no
 
 AC_ARG_WITH(blas,
 	[AC_HELP_STRING([--with-blas=<lib>], [use BLAS library <lib>])])
@@ -81,8 +94,10 @@ case $with_blas in
 esac
 
 # Get fortran linker names of BLAS functions to check for.
-AC_F77_FUNC(sgemm)
-AC_F77_FUNC(dgemm)
+dnl AC_F77_FUNC(sgemm)
+dnl AC_F77_FUNC(dgemm)
+dnl Expect the mangled BLAS function name to be in $1.
+acx_blas_func="$1"
 
 acx_blas_save_LIBS="$LIBS"
 LIBS="$LIBS $FLIBS"
@@ -91,8 +106,9 @@ LIBS="$LIBS $FLIBS"
 if test $acx_blas_ok = no; then
 if test "x$BLAS_LIBS" != x; then
 	save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS"
-	AC_MSG_CHECKING([for $dgemm in $BLAS_LIBS])
-	AC_TRY_LINK_FUNC($dgemm, [acx_blas_ok=yes], [user_spec_blas_failed=yes])
+	AC_MSG_CHECKING([for $acx_blas_func in $BLAS_LIBS])
+	AC_LINK_IFELSE([AC_LANG_CALL([], [$acx_blas_func])],
+                       [acx_blas_ok=yes], [user_spec_blas_failed=yes])
 	AC_MSG_RESULT($acx_blas_ok)
 	LIBS="$save_LIBS"
 fi
@@ -106,15 +122,13 @@ if test "x$user_spec_blas_failed" != xyes; then
 
 # BLAS linked to by default?  (happens on some supercomputers)
 if test $acx_blas_ok = no; then
-	save_LIBS="$LIBS"; LIBS="$LIBS"
-	AC_CHECK_FUNC($dgemm, [acx_blas_ok=yes])
-	LIBS="$save_LIBS"
+	AC_CHECK_FUNC($acx_blas_func, [acx_blas_ok=yes])
 fi
 
 # BLAS in ATLAS library? (http://math-atlas.sourceforge.net/)
 if test $acx_blas_ok = no; then
 	AC_CHECK_LIB(atlas, ATL_xerbla,
-		[AC_CHECK_LIB(f77blas, $dgemm,
+		[AC_CHECK_LIB(f77blas, $acx_blas_func,
 		[AC_CHECK_LIB(cblas, cblas_dgemm,
 			[acx_blas_ok=yes
 			 BLAS_LIBS="-lcblas -lf77blas -latlas"],
@@ -123,7 +137,8 @@ if test $acx_blas_ok = no; then
 fi
 
 # BLAS in PhiPACK libraries? (requires generic BLAS lib, too)
-if test $acx_blas_ok = no; then
+# Disabled since we might want more than sgemm and dgemm.
+if test $acx_blas_ok = no -a -z 1 ; then
 	AC_CHECK_LIB(blas, $dgemm,
 		[AC_CHECK_LIB(dgemm, $dgemm,
 		[AC_CHECK_LIB(sgemm, $sgemm,
@@ -134,31 +149,31 @@ fi
 
 # BLAS in Intel MKL library?
 if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(mkl, $dgemm, [acx_blas_ok=yes;BLAS_LIBS="-lmkl"])
+	AC_CHECK_LIB(mkl, $acx_blas_func, [acx_blas_ok=yes;BLAS_LIBS="-lmkl"])
 fi
 
 # BLAS in Apple vecLib library?
 if test $acx_blas_ok = no; then
 	save_LIBS="$LIBS"; LIBS="-framework vecLib $LIBS"
-	AC_CHECK_FUNC($dgemm, [acx_blas_ok=yes;BLAS_LIBS="-framework vecLib"])
+	AC_CHECK_FUNC($acx_blas_func, [acx_blas_ok=yes;BLAS_LIBS="-framework vecLib"])
 	LIBS="$save_LIBS"
 fi
 
 # BLAS in Alpha CXML library?
 if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(cxml, $dgemm, [acx_blas_ok=yes;BLAS_LIBS="-lcxml"])
+	AC_CHECK_LIB(cxml, $acx_blas_func, [acx_blas_ok=yes;BLAS_LIBS="-lcxml"])
 fi
 
 # BLAS in Alpha DXML library? (now called CXML, see above)
 if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(dxml, $dgemm, [acx_blas_ok=yes;BLAS_LIBS="-ldxml"])
+	AC_CHECK_LIB(dxml, $acx_blas_func, [acx_blas_ok=yes;BLAS_LIBS="-ldxml"])
 fi
 
 # BLAS in Sun Performance library?
 if test $acx_blas_ok = no; then
 	if test "x$GCC" != xyes; then # only works with Sun CC
 		AC_CHECK_LIB(sunmath, acosp,
-			[AC_CHECK_LIB(sunperf, $dgemm,
+			[AC_CHECK_LIB(sunperf, $acx_blas_func,
         			[BLAS_LIBS="-xlic_lib=sunperf -lsunmath"
                                  acx_blas_ok=yes],[],[-lsunmath])])
 	fi
@@ -166,19 +181,19 @@ fi
 
 # BLAS in SCSL library?  (SGI/Cray Scientific Library)
 if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(scs, $dgemm, [acx_blas_ok=yes; BLAS_LIBS="-lscs"])
+	AC_CHECK_LIB(scs, $acx_blas_func, [acx_blas_ok=yes; BLAS_LIBS="-lscs"])
 fi
 
 # BLAS in SGIMATH library?
 if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(complib.sgimath, $dgemm,
+	AC_CHECK_LIB(complib.sgimath, $acx_blas_func,
 		     [acx_blas_ok=yes; BLAS_LIBS="-lcomplib.sgimath"])
 fi
 
 # BLAS in IBM ESSL library? (requires generic BLAS lib, too)
 if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(blas, $dgemm,
-		[AC_CHECK_LIB(essl, $dgemm,
+	AC_CHECK_LIB(blas, $acx_blas_func,
+		[AC_CHECK_LIB(essl, $acx_blas_func,
 			[acx_blas_ok=yes; BLAS_LIBS="-lessl -lblas"],
 			[], [-lblas $FLIBS])])
 fi
@@ -186,14 +201,14 @@ fi
 # Generic Mac OS X library?
 if test $acx_blas_ok = no; then
 	save_LIBS="$LIBS"; LIBS="-framework Accelerate $LIBS"
-	AC_CHECK_FUNC($dgemm, [acx_blas_ok=yes])
-	BLAS_LIBS="-framework Accelerate"
+	AC_CHECK_FUNC($acx_blas_func, [acx_blas_ok=yes
+                               BLAS_LIBS="-framework Accelerate"])
 	LIBS="$save_LIBS"
 fi
 
 # Generic BLAS library?
 if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(blas, $dgemm, [acx_blas_ok=yes; BLAS_LIBS="-lblas"])
+	AC_CHECK_LIB(blas, $acx_blas_func, [acx_blas_ok=yes; BLAS_LIBS="-lblas"])
 fi
 
 AC_SUBST(BLAS_LIBS)
@@ -205,11 +220,11 @@ LIBS="$acx_blas_save_LIBS"
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test x"$acx_blas_ok" = xyes; then
-        ifelse([$1],,AC_DEFINE(HAVE_BLAS,1,[Define if you have a BLAS library.]),[$1])
+        ifelse([$2],,[AC_DEFINE(HAVE_BLAS,1,[Define if you have a BLAS library.])],[$2])
         :
 else
         acx_blas_ok=no
-        $2
+        $3
 fi
 
 ])dnl ACX_BLAS

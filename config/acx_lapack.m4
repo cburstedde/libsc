@@ -27,7 +27,7 @@ dnl Questions? Contact Michael A. Heroux (maherou@sandia.gov)
 dnl
 dnl ***********************************************************************
 dnl
-dnl @synopsis ACX_LAPACK([ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
+dnl @synopsis ACX_LAPACK(LAPACK_FUNCTION, [ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
 dnl
 dnl This macro looks for a library that implements the LAPACK
 dnl linear-algebra interface (see http://www.netlib.org/lapack/).
@@ -65,9 +65,18 @@ dnl again on 5-13-2004 to check for dgecon instead of sgecon.
 dnl Edited by Jim Willenbring on 4-17-2006 to stop looking for LAPACK if
 dnl a specific LAPACK library specified by a user cannot be used.
 
+dnl Edited by Carsten Burstedde <carsten@ices.utexas.edu>
+dnl Expect the F77_ autoconf macros to be called outside of this file.
+dnl Take as argument a mangled LAPACK function to check for.
+dnl This way the ACX_LAPACK macro can be called multiple times
+dnl with different Fortran environments to minimize F77 dependencies.
+dnl Replaced obsolete AC_TRY_LINK_FUNC macro.
+
+dnl The first argument of this macro should be a mangled LAPACK function.
 AC_DEFUN([ACX_LAPACK], [
 AC_REQUIRE([ACX_BLAS])
 acx_lapack_ok=no
+user_spec_lapack_failed=no
 
 AC_ARG_WITH(lapack,
         [AC_HELP_STRING([--with-lapack=<lib>], [use LAPACK library <lib>])])
@@ -79,7 +88,9 @@ case $with_lapack in
 esac
 
 # Get fortran linker name of LAPACK function to check for.
-AC_F77_FUNC(dgecon)
+dnl AC_F77_FUNC(dgecon)
+dnl Expect the mangled LAPACK function name to be in $1.
+acx_lapack_func="$1"
 
 # We cannot use LAPACK if BLAS is not found
 if test "x$acx_blas_ok" != xyes; then
@@ -89,8 +100,9 @@ fi
 # First, check LAPACK_LIBS environment variable
 if test "x$LAPACK_LIBS" != x; then
         save_LIBS="$LIBS"; LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
-        AC_MSG_CHECKING([for $dgecon in $LAPACK_LIBS])
-        AC_TRY_LINK_FUNC($dgecon, [acx_lapack_ok=yes], [user_spec_lapack_failed=yes])
+        AC_MSG_CHECKING([for $acx_lapack_func in $LAPACK_LIBS])
+	AC_LINK_IFELSE([AC_LANG_CALL([], [$acx_lapack_func])],
+                       [acx_lapack_ok=yes], [user_spec_lapack_failed=yes])
         AC_MSG_RESULT($acx_lapack_ok)
         LIBS="$save_LIBS"
         if test acx_lapack_ok = no; then
@@ -106,8 +118,8 @@ if test "x$user_spec_lapack_failed" != xyes; then
 
 # LAPACK linked to by default?  (is sometimes included in BLAS lib)
 if test $acx_lapack_ok = no; then
-        save_LIBS="$LIBS"; LIBS="$LIBS $BLAS_LIBS $FLIBS"
-        AC_CHECK_FUNC($dgecon, [acx_lapack_ok=yes])
+        save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS $FLIBS"
+        AC_CHECK_FUNC($acx_lapack_func, [acx_lapack_ok=yes])
         LIBS="$save_LIBS"
 fi
 
@@ -115,7 +127,7 @@ fi
 for lapack in lapack lapack_rs6k; do
         if test $acx_lapack_ok = no; then
                 save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS"
-                AC_CHECK_LIB($lapack, $dgecon,
+                AC_CHECK_LIB($lapack, $acx_lapack_func,
                     [acx_lapack_ok=yes; LAPACK_LIBS="-l$lapack"], [], [$FLIBS])
                 LIBS="$save_LIBS"
         fi
@@ -128,10 +140,11 @@ fi # If the user specified library wasn't found, we skipped the remaining
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test x"$acx_lapack_ok" = xyes; then
-        ifelse([$1],,AC_DEFINE(HAVE_LAPACK,1,[Define if you have LAPACK library.]),[$1])
+        ifelse([$2],,[AC_DEFINE(HAVE_LAPACK,1,[Define if you have LAPACK library.])],[$2])
         :
 else
         acx_lapack_ok=no
-        $2
+        $3
 fi
+
 ])dnl ACX_LAPACK
