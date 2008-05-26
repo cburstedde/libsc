@@ -1,5 +1,6 @@
 
-# Makefile.am in sc/example/logging
+# This file is part of the SC Library
+# Makefile.am in example/logging
 # included non-recursively from toplevel directory
 
 bin_PROGRAMS += example/logging/sc_logging

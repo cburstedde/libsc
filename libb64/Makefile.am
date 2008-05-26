@@ -1,5 +1,6 @@
 
-# Makefile.am in sc/libb64
+# This file is part of the SC Library
+# Makefile.am in libb64
 # included non-recursively from toplevel directory
 
 bin_PROGRAMS += libb64/sc_b64enc libb64/sc_b64dec

@@ -1,5 +1,6 @@
 
-# Makefile.am in sc/example/dmatrix
+# This file is part of the SC Library
+# Makefile.am in example/dmatrix
 # included non-recursively from toplevel directory
 
 if SC_BLAS

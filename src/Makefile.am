@@ -1,5 +1,6 @@
 
-# Makefile.am in sc/src
+# This file is part of the SC Library
+# Makefile.am in src
 # included non-recursively from toplevel directory
 
 libsc_internal_headers =

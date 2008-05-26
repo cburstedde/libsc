@@ -29,7 +29,7 @@ dnl ***********************************************************************
 dnl
 dnl Now almost nothing of the original code is left.
 dnl
-dnl @synopsis ACX_MPI([list of non-MPI C compilers])
+dnl @synopsis ACX_MPI(PREFIX, [list of non-MPI C compilers])
 dnl
 dnl This macro calls AC_PROG_CC.
 dnl
@@ -45,10 +45,10 @@ dnl 2. --with-mpicc=<...>
 dnl 3. environment variables CC
 dnl 4. mpicc unless --without-mpicc
 dnl
-dnl If MPI is turned on SC_MPI will be defined for autoconf/automake
-dnl and SC_MPI will be defined in the config header file.
+dnl If MPI is turned on PREFIX_MPI will be defined for autoconf/automake
+dnl and MPI will be defined in the config header file.
 
-dnl ACX_MPI_CONFIG
+dnl ACX_MPI_CONFIG(PREFIX)
 dnl Figure out the MPI configuration
 dnl
 AC_DEFUN([ACX_MPI_CONFIG],
@@ -122,7 +122,7 @@ else
   unset MPI_CC
 fi
 
-AM_CONDITIONAL([SC_MPI], [test "$HAVE_PKG_MPI" = yes])
+AM_CONDITIONAL([$1_MPI], [test "$HAVE_PKG_MPI" = yes])
 ])
 
 dnl ACX_MPI_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
@@ -194,8 +194,8 @@ dnl Configure MPI and check its C compiler in one line
 dnl
 AC_DEFUN([ACX_MPI],
 [
-ACX_MPI_CONFIG
-AC_PROG_CC([$1])
+ACX_MPI_CONFIG([$1])
+AC_PROG_CC([$2])
 ACX_MPI_VERIFY
 ACX_MPI_INCLUDES
 ])

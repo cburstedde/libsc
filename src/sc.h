@@ -36,6 +36,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef SC_HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+
 #ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
 #endif

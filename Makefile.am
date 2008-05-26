@@ -1,5 +1,6 @@
 
-# Makefile.am in sc
+# This file is part of the SC Library
+# Makefile.am in toplevel directory
 
 ACLOCAL_AMFLAGS = -I config
 

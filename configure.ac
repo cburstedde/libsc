@@ -23,10 +23,10 @@ echo "o---------------------------------------"
 echo "| Checking for MPI and other programs"
 echo "o---------------------------------------"
 
-ACX_MPI([icc gcc cc])
+ACX_MPI([SC], [icc gcc cc])
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
-SC_WITH_LINT
+ACX_WITH_LINT
 
 # Checks for libraries.
 echo "o---------------------------------------"
@@ -44,6 +44,8 @@ echo "o---------------------------------------"
 
 dnl Try a default name mangling scheme without using F77.
 dgemm=dgemm_;dgecon=dgecon_
+
+echo "Checking BLAS without F77 support first"
 ACX_BLAS([$dgemm],,[
 echo "Could not find BLAS without F77 support"
 ])
@@ -80,7 +82,7 @@ echo "o---------------------------------------"
 dnl AC_HEADER_STDC
 dnl AC_CHECK_HEADERS([ctype.h stdarg.h stddef.h stdint.h stdio.h stdlib.h])
 dnl AC_CHECK_HEADERS([signal.h unistd.h])
-AC_CHECK_HEADERS([inttypes.h libgen.h getopt.h obstack.h mpi.h zlib.h])
+AC_CHECK_HEADERS([ctype.h inttypes.h libgen.h getopt.h obstack.h mpi.h zlib.h])
 AC_CHECK_HEADERS([execinfo.h arpa/inet.h netinet/in.h unistd.h])
 AC_CHECK_HEADERS([sys/time.h time.h])
 

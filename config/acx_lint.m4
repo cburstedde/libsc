@@ -26,7 +26,7 @@ dnl shall not be used in advertising or otherwise to promote the sale, use
 dnl or other dealings in this Software without prior written authorization
 dnl of the copyright holder.
 
-# SC_WITH_LINT()
+# ACX_WITH_LINT()
 # ----------------
 # Minimum version: 1.1.0
 #
@@ -38,7 +38,7 @@ dnl of the copyright holder.
 #
 # Note that MPI_INCLUDE_PATH should be defined before this function is called.
 #
-AC_DEFUN([SC_WITH_LINT],[
+AC_DEFUN([ACX_WITH_LINT],[
 
 # Allow checking code with lint, sparse, etc.
 AC_ARG_WITH(lint, [AC_HELP_STRING([--with-lint],
@@ -75,4 +75,4 @@ AC_SUBST(LINT)
 AC_SUBST(LINT_FLAGS)
 AM_CONDITIONAL(LINT, [test x$LINT != xno])
 
-]) # SC_WITH_LINT
+]) # ACX_WITH_LINT

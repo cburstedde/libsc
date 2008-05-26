@@ -1,5 +1,6 @@
 
-# Makefile.am in sc/iniparser
+# This file is part of the SC Library
+# Makefile.am in iniparser
 # included non-recursively from toplevel directory
 
 noinst_PROGRAMS += iniparser/sc_iniexample

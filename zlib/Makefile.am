@@ -1,8 +1,9 @@
 
-# Makefile.am in sc/zlib
+# This file is part of the SC Library
+# Makefile.am in zlib
 # included non-recursively from toplevel directory
 #
-# This Makefile.am is part of SC and NOT part of zlib.
+# This Makefile.am is part of the SC Library and NOT part of zlib.
 # All other files in this directory are unchanged as in zlib 1.2.3.
 
 EXTRA_DIST += zlib/ChangeLog zlib/FAQ zlib/README zlib/algorithm.txt

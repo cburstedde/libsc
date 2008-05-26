@@ -1,5 +1,6 @@
 
-# Makefile.am in sc/example/options
+# This file is part of the SC Library
+# Makefile.am in example/options
 # included non-recursively from toplevel directory
 
 bin_PROGRAMS += example/options/sc_options
