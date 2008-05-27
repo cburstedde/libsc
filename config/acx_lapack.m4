@@ -78,8 +78,9 @@ AC_REQUIRE([ACX_BLAS])
 acx_lapack_ok=no
 user_spec_lapack_failed=no
 
-AC_ARG_WITH(lapack,
-        [AC_HELP_STRING([--with-lapack=<lib>], [use LAPACK library <lib>])])
+AC_ARG_WITH([lapack], [AC_HELP_STRING([--with-lapack=<lib>],
+            [change default LAPACK library to <lib>
+             or specify --without-lapack to use no LAPACK at all])])
 case $with_lapack in
         yes | "") ;;
         no) acx_lapack_ok=disable ;;
@@ -93,11 +94,14 @@ dnl Expect the mangled LAPACK function name to be in $1.
 acx_lapack_func="$1"
 
 # We cannot use LAPACK if BLAS is not found
-if test "x$acx_blas_ok" != xyes; then
+if test "$acx_blas_ok" = disable ; then
+        acx_lapack_ok=disable
+elif test "$acx_blas_ok" != yes; then
         acx_lapack_ok=noblas
 fi
 
 # First, check LAPACK_LIBS environment variable
+if test "$acx_lapack_ok" = no; then
 if test "x$LAPACK_LIBS" != x; then
         save_LIBS="$LIBS"; LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
         AC_MSG_CHECKING([for $acx_lapack_func in $LAPACK_LIBS])
@@ -108,6 +112,7 @@ if test "x$LAPACK_LIBS" != x; then
         if test acx_lapack_ok = no; then
                 LAPACK_LIBS=""
         fi
+fi
 fi
 
 # If the user specified a LAPACK library that could not be used we will
@@ -139,10 +144,10 @@ fi # If the user specified library wasn't found, we skipped the remaining
    # checks.
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x"$acx_lapack_ok" = xyes; then
+if test "$acx_lapack_ok" = yes; then
         ifelse([$2],,[AC_DEFINE(HAVE_LAPACK,1,[Define if you have LAPACK library.])],[$2])
         :
-else
+elif test "$acx_lapack_ok" != disable ; then
         acx_lapack_ok=no
         $3
 fi

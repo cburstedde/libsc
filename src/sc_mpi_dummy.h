@@ -26,7 +26,9 @@
 #endif
 
 #define MPI_SUCCESS 0
-#define MPI_COMM_WORLD ((MPI_Comm) 0)
+#define MPI_COMM_NULL   ((MPI_Comm) 0x04000000)
+#define MPI_COMM_WORLD  ((MPI_Comm) 0x44000000)
+#define MPI_COMM_SELF   ((MPI_Comm) 0x44000001)
 
 typedef int         MPI_Comm;
 

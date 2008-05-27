@@ -34,8 +34,6 @@ SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
 SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
               [RESIZE_REALLOC])
-SC_ARG_WITHOUT([blas-code], [disable all BLAS dependent code],
-               [BLAS])
 SC_ARG_WITHOUT([getopt], [disable builtin getopt code, provide your own],
                [PROVIDE_GETOPT])
 SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],
@@ -64,19 +62,21 @@ if test "$SC_WITH_PROVIDE_ZLIB" = "no" ; then
 fi
 
 # Checks for BLAS (and F77 environment only if necessary).
-if test "$SC_WITH_BLAS" != "no" ; then
+# use the command line option from ACX_BLAS
+# if test "$SC_WITH_BLAS" != "no" ; then
 
 echo "o---------------------------------------"
-echo "| Checking BLAS and F77 support"
+echo "| Checking BLAS, LAPACK and F77 support"
 echo "o---------------------------------------"
 
 dnl Try a default name mangling scheme without using F77.
 dgemm=dgemm_;dgecon=dgecon_
 
 echo "Checking BLAS without F77 support first"
-ACX_BLAS([$dgemm],,[
-echo "Could not find BLAS without F77 support"
-])
+ACX_BLAS([$dgemm],
+         [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
+         [echo "Could not find BLAS without F77 support"])
+# at this point $acx_blas_ok is either of: yes no disable
 if test "$acx_blas_ok" = no ; then
 
 echo "Calling F77 autoconf macros"
@@ -88,17 +88,31 @@ dgemm=;AC_F77_FUNC(dgemm)
 dgecon=;AC_F77_FUNC(dgecon)
 
 echo "Checking BLAS with proper F77 support"
-ACX_BLAS([$dgemm],,[AC_MSG_ERROR([[\
-Cannot find blas library, specify a path using LIBS=-L<DIR> (ex.\
+ACX_BLAS([$dgemm],
+         [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
+         [AC_MSG_ERROR([[\
+Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
  LIBS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB\
  (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
 fi
+# at this point $acx_blas_ok is either of: yes disable
+if test "$acx_blas_ok" = disable ; then
+        echo "Not using BLAS"
+fi
+AM_CONDITIONAL([SC_BLAS], [test "$acx_blas_ok" = yes])
 
-ACX_LAPACK([$dgecon],,[AC_MSG_ERROR([[\
-Cannot find lapack library, specify a path using LIBS=-L<DIR> (ex.\
+ACX_LAPACK([$dgecon],
+           [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
+           [AC_MSG_ERROR([[\
+Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
  LIBS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB\
  (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
+# fi
+# at this point $acx_lapack_ok is either of: yes disable
+if test "$acx_lapack_ok" = disable ; then
+        echo "Not using LAPACK"
 fi
+AM_CONDITIONAL([SC_LAPACK], [test "$acx_lapack_ok" = yes])
 
 # Checks for header files.
 echo "o---------------------------------------"

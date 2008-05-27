@@ -84,8 +84,9 @@ dnl AC_REQUIRE([AC_F77_WRAPPERS])
 acx_blas_ok=no
 user_spec_blas_failed=no
 
-AC_ARG_WITH(blas,
-	[AC_HELP_STRING([--with-blas=<lib>], [use BLAS library <lib>])])
+AC_ARG_WITH([blas], [AC_HELP_STRING([--with-blas=<lib>],
+            [change default BLAS library to <lib>
+             or specify --without-blas to use no BLAS and LAPACK at all])])
 case $with_blas in
 	yes | "") ;;
 	no) acx_blas_ok=disable ;;
@@ -103,7 +104,7 @@ acx_blas_save_LIBS="$LIBS"
 LIBS="$LIBS $FLIBS"
 
 # First, check BLAS_LIBS environment variable
-if test $acx_blas_ok = no; then
+if test "$acx_blas_ok" = no; then
 if test "x$BLAS_LIBS" != x; then
 	save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS"
 	AC_MSG_CHECKING([for $acx_blas_func in $BLAS_LIBS])
@@ -219,10 +220,10 @@ fi # If the user specified library wasn't found, we skipped the remaining
 LIBS="$acx_blas_save_LIBS"
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x"$acx_blas_ok" = xyes; then
+if test "$acx_blas_ok" = yes ; then
         ifelse([$2],,[AC_DEFINE(HAVE_BLAS,1,[Define if you have a BLAS library.])],[$2])
         :
-else
+elif test "$acx_blas_ok" != disable ; then
         acx_blas_ok=no
         $3
 fi

@@ -275,7 +275,7 @@ extern void (*obstack_alloc_failed_handler) (void);
 # define obstack_make_room(OBSTACK,length)				\
 __extension__								\
 ({ struct obstack *__o = (OBSTACK);					\
-   int __len = (length);						\
+   int __len = (int) (length);						\
    if (__o->chunk_limit - __o->next_free < __len)			\
      _obstack_newchunk (__o, __len);					\
    (void) 0; })
@@ -291,7 +291,7 @@ __extension__								\
 # define obstack_grow(OBSTACK,where,length)				\
 __extension__								\
 ({ struct obstack *__o = (OBSTACK);					\
-   int __len = (length);						\
+   int __len = (int) (length);						\
    if (__o->next_free + __len > __o->chunk_limit)			\
      _obstack_newchunk (__o, __len);					\
    memcpy (__o->next_free, where, __len);				\
@@ -301,7 +301,7 @@ __extension__								\
 # define obstack_grow0(OBSTACK,where,length)				\
 __extension__								\
 ({ struct obstack *__o = (OBSTACK);					\
-   int __len = (length);						\
+   int __len = (int) (length);						\
    if (__o->next_free + __len + 1 > __o->chunk_limit)			\
      _obstack_newchunk (__o, __len + 1);				\
    memcpy (__o->next_free, where, __len);				\
@@ -352,7 +352,7 @@ __extension__								\
 # define obstack_blank(OBSTACK,length)					\
 __extension__								\
 ({ struct obstack *__o = (OBSTACK);					\
-   int __len = (length);						\
+   int __len = (int) (length);						\
    if (__o->chunk_limit - __o->next_free < __len)			\
      _obstack_newchunk (__o, __len);					\
    obstack_blank_fast (__o, __len);					\
@@ -422,19 +422,19 @@ __extension__								\
    but some compilers won't accept it.  */
 
 # define obstack_make_room(h,length)					\
-( (h)->temp.tempint = (length),						\
+( (h)->temp.tempint = (PTR_INT_TYPE) (length),                          \
   (((h)->next_free + (h)->temp.tempint > (h)->chunk_limit)		\
    ? (_obstack_newchunk ((h), (h)->temp.tempint), 0) : 0))
 
 # define obstack_grow(h,where,length)					\
-( (h)->temp.tempint = (length),						\
+( (h)->temp.tempint = (PTR_INT_TYPE) (length),                          \
   (((h)->next_free + (h)->temp.tempint > (h)->chunk_limit)		\
    ? (_obstack_newchunk ((h), (h)->temp.tempint), 0) : 0),		\
   memcpy ((h)->next_free, where, (h)->temp.tempint),			\
   (h)->next_free += (h)->temp.tempint)
 
 # define obstack_grow0(h,where,length)					\
-( (h)->temp.tempint = (length),						\
+( (h)->temp.tempint = (PTR_INT_TYPE) (length),                          \
   (((h)->next_free + (h)->temp.tempint + 1 > (h)->chunk_limit)		\
    ? (_obstack_newchunk ((h), (h)->temp.tempint + 1), 0) : 0),		\
   memcpy ((h)->next_free, where, (h)->temp.tempint),			\
@@ -463,7 +463,7 @@ __extension__								\
   (((int *) ((h)->next_free += sizeof (int)))[-1] = (aint))
 
 # define obstack_blank(h,length)					\
-( (h)->temp.tempint = (length),						\
+( (h)->temp.tempint = (PTR_INT_TYPE) (length),                          \
   (((h)->chunk_limit - (h)->next_free < (h)->temp.tempint)		\
    ? (_obstack_newchunk ((h), (h)->temp.tempint), 0) : 0),		\
   obstack_blank_fast (h, (h)->temp.tempint))

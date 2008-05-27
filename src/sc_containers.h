@@ -235,7 +235,7 @@ sc_mempool_alloc (sc_mempool_t * mempool)
     ret = *(void **) sc_array_pop (freed);
   }
   else {
-    ret = obstack_alloc (&mempool->obstack, (long) mempool->elem_size);
+    ret = obstack_alloc (&mempool->obstack, mempool->elem_size);
   }
 
 #ifdef SC_DEBUG

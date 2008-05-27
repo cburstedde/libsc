@@ -131,7 +131,7 @@
                        (SC_LOG2_8 ((x) >> 8) + 8) : SC_LOG2_8 (x))
 #define SC_LOG2_32(x) (((x) > 0xffff) ?                                 \
                        (SC_LOG2_16 ((x) >> 16)) + 16 : SC_LOG2_16 (x))
-#define SC_LOG2_64(x) (((long long) (x) > 0xffffffffLL) ?               \
+#define SC_LOG2_64(x) (((x) > 0xffffffff) ?                             \
                        (SC_LOG2_32 ((x) >> 32)) + 32 : SC_LOG2_32 (x))
 #define SC_ROUNDUP2_32(x)                               \
   (((x) <= 0) ? 0 : (1 << (SC_LOG2_32 ((x) - 1) + 1)))
