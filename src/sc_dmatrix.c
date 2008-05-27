@@ -180,13 +180,16 @@ sc_dmatrix_add (double alpha, sc_dmatrix_t * X, sc_dmatrix_t * Y)
 }
 
 void
-sc_dmatrix_vector (sc_trans_t transa, double alpha, sc_dmatrix_t * A,
+sc_dmatrix_vector (sc_trans_t transa, sc_trans_t transx, sc_trans_t transy,
+                   double alpha, sc_dmatrix_t * A,
                    sc_dmatrix_t * X, double beta, sc_dmatrix_t * Y)
 {
   sc_bint_t           Arows, Acols, inc = 1;
 #ifdef SC_DEBUG
-  sc_bint_t           dimX = SC_MAX (X->m, X->n);
-  sc_bint_t           dimY = SC_MAX (Y->m, Y->n);
+  sc_bint_t           dimX = (transx == SC_NO_TRANS) ? X->m : X->n;
+  sc_bint_t           dimY = (transy == SC_NO_TRANS) ? Y->m : Y->n;
+  sc_bint_t           dimX1 = (transx == SC_NO_TRANS) ? X->n : X->m;
+  sc_bint_t           dimY1 = (transy == SC_NO_TRANS) ? Y->n : Y->m;
 #endif
 
   Arows = (transa == SC_NO_TRANS) ? A->m : A->n;
@@ -194,6 +197,7 @@ sc_dmatrix_vector (sc_trans_t transa, double alpha, sc_dmatrix_t * A,
 
   SC_ASSERT (Acols != 0 && Arows != 0);
   SC_ASSERT (Acols == dimX && Arows == dimY);
+  SC_ASSERT (dimX1 == 1 && dimY1 == 1);
 
   BLAS_DGEMV (&sc_antitranschar[transa], &A->n, &A->m, &alpha,
               A->e[0], &A->n, X->e[0], &inc, &beta, Y->e[0], &inc);

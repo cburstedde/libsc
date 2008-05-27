@@ -56,9 +56,9 @@ check_matrix_vector (void)
     }
   }
 
-  sc_dmatrix_vector (SC_NO_TRANS, 1., A, X4, 0., Y3a);
-  sc_dmatrix_vector (SC_NO_TRANS, 2., A, X4, 2., Y3a);
-  sc_dmatrix_vector (SC_NO_TRANS, 4., A, X4, 0., Y3b);
+  sc_dmatrix_vector (SC_NO_TRANS, SC_TRANS, SC_NO_TRANS, 1., A, X4, 0., Y3a);
+  sc_dmatrix_vector (SC_NO_TRANS, SC_TRANS, SC_NO_TRANS, 2., A, X4, 2., Y3a);
+  sc_dmatrix_vector (SC_NO_TRANS, SC_TRANS, SC_TRANS, 4., A, X4, 0., Y3b);
   for (i = 0; i < 3; ++i) {
     Y3b->e[0][i] -= Y3a->e[i][0];
   }
@@ -68,9 +68,9 @@ check_matrix_vector (void)
   printf ("0 =\n");
   sc_dmatrix_print (Y3b, stdout);
 
-  sc_dmatrix_vector (SC_TRANS, 1., A, X3, 0., Y4a);
-  sc_dmatrix_vector (SC_TRANS, 1., A, X3, 2., Y4a);
-  sc_dmatrix_vector (SC_TRANS, 3., A, X3, 0., Y4b);
+  sc_dmatrix_vector (SC_TRANS, SC_NO_TRANS, SC_NO_TRANS, 1., A, X3, 0., Y4a);
+  sc_dmatrix_vector (SC_TRANS, SC_NO_TRANS, SC_NO_TRANS, 1., A, X3, 2., Y4a);
+  sc_dmatrix_vector (SC_TRANS, SC_NO_TRANS, SC_TRANS, 3., A, X3, 0., Y4b);
   for (j = 0; j < 4; ++j) {
     Y4b->e[0][j] -= Y4a->e[j][0];
   }

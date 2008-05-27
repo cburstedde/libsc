@@ -65,10 +65,14 @@ void                sc_dmatrix_add (double alpha, sc_dmatrix_t * X,
 /**
  * Perform matrix-vector multiplication Y = alpha * A * X + beta * Y.
  * \param [in] transa    Transpose operation for matrix A.
+ * \param [in] transx    Transpose operation for matrix X.
+ * \param [in] transy    Transpose operation for matrix Y.
  * \param [in] A         Matrix.
  * \param [in] X, Y      Column or row vectors (or one each).
  */
 void                sc_dmatrix_vector (sc_trans_t transa,
+                                       sc_trans_t transx,
+                                       sc_trans_t transy,
                                        double alpha, sc_dmatrix_t * A,
                                        sc_dmatrix_t * X, double beta,
                                        sc_dmatrix_t * Y);
