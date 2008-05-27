@@ -34,7 +34,10 @@ include example/dmatrix/Makefile.am
 include example/options/Makefile.am
 
 if SC_BLAS
-LDADD += @LAPACK_LIBS@ @BLAS_LIBS@ @FLIBS@
+if SC_LAPACK
+LDADD += @LAPACK_LIBS@
+endif
+LDADD += @BLAS_LIBS@ @FLIBS@
 endif
 
 ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \

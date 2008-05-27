@@ -18,6 +18,10 @@ endif
 if SC_BLAS
   libsc_installed_headers += src/sc_blas.h src/sc_dmatrix.h
   libsc_compiled_sources +=  src/sc_blas.c src/sc_dmatrix.c
+if SC_LAPACK
+  libsc_installed_headers += src/sc_lapack.h
+  libsc_compiled_sources +=  src/sc_lapack.c
+endif
 endif
 if SC_PROVIDE_GETOPT
   libsc_internal_headers +=  src/sc_getopt_int.h
