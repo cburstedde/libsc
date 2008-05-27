@@ -67,7 +67,7 @@ MPI_Wtime (void)
   retval = gettimeofday (&tv, NULL);
   SC_CHECK_ABORT (retval == 0, "gettimeofday");
 
-  return tv.tv_sec + tv.tv_usec * 1.e-6;
+  return (double) tv.tv_sec + 1.e-6 * tv.tv_usec;
 }
 
 /* EOF sc_mpi_dummy.c */

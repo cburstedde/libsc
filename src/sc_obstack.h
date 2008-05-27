@@ -487,7 +487,7 @@ __extension__								\
 		   (h)->alignment_mask),				\
   (((h)->next_free - (char *) (h)->chunk				\
     > (h)->chunk_limit - (char *) (h)->chunk)				\
-   ? ((h)->next_free = (h)->chunk_limit) : 0),				\
+   ? ((h)->next_free = (h)->chunk_limit) : (char *) 0),                 \
   (h)->object_base = (h)->next_free,					\
   (h)->temp.tempptr)
 

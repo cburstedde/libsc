@@ -59,7 +59,7 @@ if test "x$LINT_FLAGS" = "x" -a "x$LINT" != "xno" ; then
         esac
         ;;
       splint|*/splint)
-        LINT_FLAGS="-weak -badflag -preproc -posix-lib"
+        LINT_FLAGS="-weak -badflag -preproc -unixlib"
         ;;
     esac
 fi

@@ -25,6 +25,8 @@
 #include <signal.h>
 #endif
 
+typedef void (*sc_sig_t) (int);
+
 #ifdef SC_HAVE_BACKTRACE
 #ifdef SC_HAVE_BACKTRACE_SYMBOLS
 #ifdef SC_HAVE_EXECINFO_H
@@ -69,27 +71,12 @@ static FILE        *sc_log_stream = NULL;
 static bool         sc_log_stream_set = false;
 
 static bool         signals_caught = false;
-static sig_t        system_int_handler = NULL;
-static sig_t        system_segv_handler = NULL;
-static sig_t        system_usr2_handler = NULL;
+static sc_sig_t     system_int_handler = NULL;
+static sc_sig_t     system_segv_handler = NULL;
+static sc_sig_t     system_usr2_handler = NULL;
 
 static sc_handler_t sc_abort_handler = NULL;
 static void        *sc_abort_data = NULL;
-
-#if 0
-/*@unused@*/
-
-static void
-test_printf (void)
-{
-  int64_t             i64 = 0;
-  long                l = 0;
-  size_t              s = 0;
-  ssize_t             ss = 0;
-
-  printf ("%lld %ld %zu %zd\n", (long long) i64, l, s, ss);
-}
-#endif /* 0 */
 
 static void
 sc_signal_handler (int sig)
@@ -291,11 +278,11 @@ sc_set_abort_handler (sc_handler_t handler, void *data)
     signals_caught = true;
   }
   else if (handler == NULL && signals_caught) {
-    signal (SIGINT, system_int_handler);
+    (void) signal (SIGINT, system_int_handler);
     system_int_handler = NULL;
-    signal (SIGSEGV, system_segv_handler);
+    (void) signal (SIGSEGV, system_segv_handler);
     system_segv_handler = NULL;
-    signal (SIGUSR2, system_usr2_handler);
+    (void) signal (SIGUSR2, system_usr2_handler);
     system_usr2_handler = NULL;
     signals_caught = false;
   }
