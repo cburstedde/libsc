@@ -41,15 +41,14 @@ extern const char   sc_jobzchar[];
 #define SC_F77_FUNC(small,caps) small ## _
 #endif
 
-#define LAPACK_SSTEV  SC_F77_FUNC(sstev,SSTEV)
+#define LAPACK_DSTEV  SC_F77_FUNC(dstev,DSTEV)
 
-void                LAPACK_SSTEV (const char * jobz,
+void                LAPACK_DSTEV (const char *jobz,
                                   const sc_bint_t * n,
-                                  const double * d,
-                                  const double * e,
-                                  const double * z,
+                                  const double *d,
+                                  const double *e,
+                                  const double *z,
                                   const sc_bint_t * ldz,
-                                  const double * work,
-                                  const sc_bint_t * info);
+                                  const double *work, const sc_bint_t * info);
 
 #endif /* !SC_LAPACK_H */
