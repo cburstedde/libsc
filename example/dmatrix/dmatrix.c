@@ -142,6 +142,10 @@ check_matrix_multiply ()
   printf ("C =\n");
   sc_dmatrix_print (C, stdout);
 
+  sc_dmatrix_reshape (vA, 2, 3);
+  printf ("reshape(2, 3, vA) =\n");
+  sc_dmatrix_print (vA, stdout);
+
   sc_dmatrix_destroy (vA);
   sc_dmatrix_destroy (A);
   sc_dmatrix_destroy (B);

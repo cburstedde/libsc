@@ -22,52 +22,13 @@
 #include <sc.h>
 #include <sc_dmatrix.h>
 
-static sc_dmatrix_t *
-sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, bool init_zero)
+static void
+sc_dmatrix_new_e (sc_dmatrix_t * rdm, sc_bint_t m, sc_bint_t n, double *data)
 {
   sc_bint_t           i;
-  sc_dmatrix_t       *rdm;
-  size_t              size = (size_t) (m * n);
 
   SC_ASSERT (m >= 0 && n >= 0);
-
-  rdm = SC_ALLOC (sc_dmatrix_t, 1);
-
-  if (m > 0 && n > 0) {
-    rdm->e = SC_ALLOC (double *, m + 1);
-
-    if (init_zero) {
-      rdm->e[0] = SC_ALLOC_ZERO (double, size);
-    }
-    else {
-      rdm->e[0] = SC_ALLOC (double, size);
-    }
-
-    for (i = 1; i < m; ++i)
-      rdm->e[i] = rdm->e[i - 1] + n;
-    rdm->e[m] = NULL;           /* safeguard */
-  }
-  else {
-    rdm->e = NULL;
-  }
-
-  rdm->m = m;
-  rdm->n = n;
-  rdm->view = false;
-
-  return rdm;
-}
-
-sc_dmatrix_t       *
-sc_dmatrix_view (sc_bint_t m, sc_bint_t n, double *data)
-{
-  sc_bint_t           i;
-  sc_dmatrix_t       *rdm;
-  size_t              size = (size_t) (m * n);
-
-  SC_ASSERT (m >= 0 && n >= 0);
-
-  rdm = SC_ALLOC (sc_dmatrix_t, 1);
+  SC_ASSERT (rdm != NULL);
 
   if (m > 0 && n > 0) {
     rdm->e = SC_ALLOC (double *, m + 1);
@@ -83,6 +44,41 @@ sc_dmatrix_view (sc_bint_t m, sc_bint_t n, double *data)
 
   rdm->m = m;
   rdm->n = n;
+}
+
+static sc_dmatrix_t *
+sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, bool init_zero)
+{
+  sc_dmatrix_t       *rdm;
+  double             *data;
+  size_t              size = (size_t) (m * n);
+
+  SC_ASSERT (m >= 0 && n >= 0);
+
+  rdm = SC_ALLOC (sc_dmatrix_t, 1);
+
+  if (init_zero) {
+    data = SC_ALLOC_ZERO (double, size);
+  }
+  else {
+    data = SC_ALLOC (double, size);
+  }
+
+  sc_dmatrix_new_e (rdm, m, n, data);
+  rdm->view = false;
+
+  return rdm;
+}
+
+sc_dmatrix_t       *
+sc_dmatrix_view (sc_bint_t m, sc_bint_t n, double *data)
+{
+  sc_dmatrix_t       *rdm;
+
+  SC_ASSERT (m >= 0 && n >= 0);
+
+  rdm = SC_ALLOC (sc_dmatrix_t, 1);
+  sc_dmatrix_new_e (rdm, m, n, data);
   rdm->view = true;
 
   return rdm;
@@ -118,9 +114,13 @@ sc_dmatrix_clone (sc_dmatrix_t * dmatrix)
 void
 sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
 {
+  double             *data;
+  SC_ASSERT (dmatrix->e != NULL);
   SC_ASSERT (dmatrix->m * dmatrix->n == m * n);
-  dmatrix->m = m;
-  dmatrix->n = n;
+
+  data = dmatrix->e[0];
+  SC_FREE (dmatrix->e);
+  sc_dmatrix_new_e (dmatrix, m, n, data);
 }
 
 void
