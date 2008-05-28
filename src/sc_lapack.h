@@ -38,7 +38,7 @@ sc_jobz_t;
 extern const char   sc_jobzchar[];
 
 #ifndef SC_F77_FUNC
-#define SC_F77_FUNC(small,caps) small ## _
+#define SC_F77_FUNC(small,CAPS) small ## _
 #endif
 
 #define LAPACK_DSTEV  SC_F77_FUNC(dstev,DSTEV)

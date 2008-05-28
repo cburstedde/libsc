@@ -71,7 +71,7 @@ extern const char   sc_uplochar[];
 extern const char   sc_cmachchar[];
 
 #ifndef SC_F77_FUNC
-#define SC_F77_FUNC(small,caps) small ## _
+#define SC_F77_FUNC(small,CAPS) small ## _
 #endif
 
 #define BLAS_DLAMCH  SC_F77_FUNC(dlamch,DLAMCH)

@@ -33,17 +33,19 @@ dnl @synopsis ACX_MPI(PREFIX, [list of non-MPI C compilers])
 dnl
 dnl This macro calls AC_PROG_CC.
 dnl
-dnl --enable-mpi           Turn on MPI, use compiler mpicc.
+dnl --enable-mpi           Turn on MPI, use compilers mpicc and mpif77.
 dnl --with-mpicc=<...>     Specify MPI C compiler.
 dnl --without-mpicc        Do not use a special MPI C compiler.
+dnl --with-mpif77=<...>    Specify MPI F77 compiler.
+dnl --without-mpif77       Do not use a special MPI F77 compiler.
 dnl
 dnl All --with* options turn on MPI, so --enable-mpi is then not needed.
 dnl
 dnl Order of precedence for the selection of MPI compilers
-dnl 1. environment variables MPI_CC
-dnl 2. --with-mpicc=<...>
-dnl 3. environment variables CC
-dnl 4. mpicc unless --without-mpicc
+dnl 1. environment variables MPI_CC, MPI_F77
+dnl 2. --with-mpicc=<...>, --with-mpif77=<...>
+dnl 3. environment variables CC, F77
+dnl 4. mpicc, mpif77 unless --without-mpicc, --without-mpif77
 dnl
 dnl If MPI is turned on PREFIX_MPI will be defined for autoconf/automake
 dnl and MPI will be defined in the config header file.
@@ -83,7 +85,7 @@ fi
 ])
 
 AC_ARG_WITH([mpif77],
-[AC_HELP_STRING([--with-mpif77=MPIF77], [specify MPI C compiler])],
+[AC_HELP_STRING([--with-mpif77=MPIF77], [specify MPI F77 compiler])],
 [
 if test "$withval" = yes ; then
   AC_MSG_ERROR([Please use --with-mpif77=MPIF77 with a valid mpi F77 compiler])
@@ -107,6 +109,7 @@ if test "$HAVE_PKG_MPI" = yes ; then
   if test -n "$MPI_CC" ; then
     CC="$MPI_CC"
   fi
+
   if test -z "$MPI_F77" -a -z "$MPI_F77_NONE" ; then
     MPI_F77=mpif77
   fi
