@@ -1,0 +1,6 @@
+This file describes a list of coding standards that the SC Library
+tries to adhere to.
+
+ - All bool parameters will not be checked with (a==true) or (a==false).  One
+   should follow the standard C convention where (a) is used to test true
+   and (!a) is used to test false.

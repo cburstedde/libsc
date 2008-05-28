@@ -127,7 +127,7 @@ void
 sc_dmatrix_destroy (sc_dmatrix_t * dmatrix)
 {
   if (dmatrix->e != NULL) {
-    if (dmatrix->view == false) {
+    if (!dmatrix->view) {
       SC_FREE (dmatrix->e[0]);
     }
     SC_FREE (dmatrix->e);
