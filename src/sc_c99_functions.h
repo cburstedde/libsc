@@ -1,4 +1,4 @@
-/* Declarations of various C99 functions 
+/* Declarations of various C99 functions
    Copyright (C) 2004, 2006, 2007 Free Software Foundation, Inc.
 
 This file is part of the GNU Fortran 95 runtime library (libgfortran).
@@ -25,12 +25,16 @@ Boston, MA 02110-1301, USA.  */
    This exception does not however invalidate any other reasons why
    the executable file might be covered by the GNU General Public License.  */
 
+/* made some changes to preprocessor macros for libsc */
 
-#ifndef SC_C99_PROTOS_H
-#define SC_C99_PROTOS_H 1
+#ifndef SC_C99_FUNCTIONS_H
+#define SC_C99_FUNCTIONS_H
+
+#ifndef SC_H
+#error "sc.h should be included before this header file"
+#endif
 
 /* Gamma-related prototypes.  */
-extern double tgamma (double);
+double              tgamma (double);
 
-#endif  /* SC_C99_PROTOS_H  */
-
+#endif /* SC_C99_FUNCTIONS_H  */

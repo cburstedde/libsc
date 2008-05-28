@@ -1,4 +1,6 @@
-/* Implementation of various C99 functions 
+/* *INDENT-OFF* */
+
+/* Implementation of various C99 functions
    Copyright (C) 2004 Free Software Foundation, Inc.
 
 This file is part of the GNU Fortran 95 runtime library (libgfortran).
@@ -28,15 +30,15 @@ write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 Boston, MA 02110-1301, USA.  */
 
 /* This function was taken from c99_functions.c in libfortran, see the
- * license above
+ * license above.  It was modified to compile with the Intel compilers,
+ * and got some non-functional changes.
  */
 
-#include <sc_config.h>
+/* sc.h comes first in every compilation unit */
+#include <sc.h>
 
-#if !defined(SC_HAVE_TGAMMA)
+#ifndef SC_HAVE_TGAMMA
 #define SC_HAVE_TGAMMA 1
-
-extern double tgamma (double); 
 
 /* Fallback tgamma() function. Uses the algorithm from
    http://www.netlib.org/specfun/gamma and references therein.  */
@@ -53,28 +55,33 @@ tgamma (double x)
   int i, n, parity;
   double fact, res, sum, xden, xnum, y, y1, ysq, z;
 
-  static double p[8] = {
+  static const double p[8] = {
     -1.71618513886549492533811e0,  2.47656508055759199108314e1,
     -3.79804256470945635097577e2,  6.29331155312818442661052e2,
      8.66966202790413211295064e2, -3.14512729688483675254357e4,
     -3.61444134186911729807069e4,  6.64561438202405440627855e4 };
 
-  static double q[8] = {
+  static const double q[8] = {
     -3.08402300119738975254353e1,  3.15350626979604161529144e2,
     -1.01515636749021914166146e3, -3.10777167157231109440444e3,
      2.25381184209801510330112e4,  4.75584627752788110767815e3,
     -1.34659959864969306392456e5, -1.15132259675553483497211e5 };
 
-  static double c[7] = {             -1.910444077728e-03,
+  static const double c[7] = {             -1.910444077728e-03,
      8.4171387781295e-04,            -5.952379913043012e-04,
      7.93650793500350248e-04,        -2.777777777777681622553e-03,
      8.333333333333333331554247e-02,  5.7083835261e-03 };
 
   static const double xminin = 2.23e-308;
   static const double xbig = 171.624;
-  static const double xnan = __builtin_nan ("0x0"), xinf = __builtin_inf ();
   static double eps = 0;
-  
+
+  /*
+    static const double xnan = __builtin_nan ("0x0"), xinf = __builtin_inf ();
+  */
+  /* for some reason Intel does not like this to be static */
+  const double xnan = 0. / 0., xinf = 1. / 0.;
+
   if (eps == 0)
     eps = nextafter(1., 2.) - 1.;
 
@@ -83,7 +90,8 @@ tgamma (double x)
   n = 0;
   y = x;
 
-  if (__builtin_isnan (x))
+  /* testing for NAN */
+  if (x != x)
     return x;
 
   if (y <= 0)
@@ -168,6 +176,7 @@ tgamma (double x)
 
   return res;
 }
-#endif
+
+#endif /* !SC_HAVE_TGAMMA */
 
 /* *INDENT-ON* */

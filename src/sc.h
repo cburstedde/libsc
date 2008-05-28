@@ -75,7 +75,7 @@
 #include <sc_mpi_dummy.h>
 #endif
 
-#include <sc_c99_protos.h>
+#include <sc_c99_functions.h>
 
 /* check macros, always enabled */
 
@@ -250,8 +250,7 @@ void                sc_logf (const char *filename, int lineno,
   __attribute__ ((format (printf, 5, 6)));
 
 /** Installs an abort handler and catches signals INT SEGV USR2. */
-void                sc_set_abort_handler (sc_handler_t handler,
-                                          void *data);
+void                sc_set_abort_handler (sc_handler_t handler, void *data);
 
 /** Prints a stack trace, calls the abort handler and terminates. */
 void                sc_abort (void)
