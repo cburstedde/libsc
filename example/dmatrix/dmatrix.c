@@ -92,7 +92,7 @@ check_matrix_vector (void)
 static void
 check_matrix_multiply ()
 {
-  sc_dmatrix_t       *A, *B, *C, *D, *E;
+  sc_dmatrix_t       *A, *B, *C, *D, *E, *vA;
   double              alpha, beta;
 
   A = sc_dmatrix_new (3, 2);
@@ -136,6 +136,13 @@ check_matrix_multiply ()
   printf ("E =\n");
   sc_dmatrix_print (E, stdout);
 
+  vA = sc_dmatrix_view (3, 2, A->e[0]);
+
+  sc_dmatrix_multiply (SC_NO_TRANS, SC_NO_TRANS, alpha, vA, B, beta, C);
+  printf ("C =\n");
+  sc_dmatrix_print (C, stdout);
+
+  sc_dmatrix_destroy (vA);
   sc_dmatrix_destroy (A);
   sc_dmatrix_destroy (B);
   sc_dmatrix_destroy (C);

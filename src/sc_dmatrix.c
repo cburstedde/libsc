@@ -53,6 +53,37 @@ sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, bool init_zero)
 
   rdm->m = m;
   rdm->n = n;
+  rdm->view = false;
+
+  return rdm;
+}
+
+sc_dmatrix_t       *
+sc_dmatrix_view (sc_bint_t m, sc_bint_t n, double *data)
+{
+  sc_bint_t           i;
+  sc_dmatrix_t       *rdm;
+  size_t              size = (size_t) (m * n);
+
+  SC_ASSERT (m >= 0 && n >= 0);
+
+  rdm = SC_ALLOC (sc_dmatrix_t, 1);
+
+  if (m > 0 && n > 0) {
+    rdm->e = SC_ALLOC (double *, m + 1);
+    rdm->e[0] = data;
+
+    for (i = 1; i < m; ++i)
+      rdm->e[i] = rdm->e[i - 1] + n;
+    rdm->e[m] = NULL;           /* safeguard */
+  }
+  else {
+    rdm->e = NULL;
+  }
+
+  rdm->m = m;
+  rdm->n = n;
+  rdm->view = true;
 
   return rdm;
 }
@@ -96,7 +127,9 @@ void
 sc_dmatrix_destroy (sc_dmatrix_t * dmatrix)
 {
   if (dmatrix->e != NULL) {
-    SC_FREE (dmatrix->e[0]);
+    if (dmatrix->view == false) {
+      SC_FREE (dmatrix->e[0]);
+    }
     SC_FREE (dmatrix->e);
   }
 

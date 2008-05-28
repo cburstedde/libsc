@@ -27,6 +27,7 @@ typedef struct sc_dmatrix
 {
   double            **e;
   int                 m, n;
+  bool                view;
 }
 sc_dmatrix_t;
 
@@ -37,6 +38,7 @@ sc_dmatrix_t;
 sc_dmatrix_t       *sc_dmatrix_new (int m, int n);
 sc_dmatrix_t       *sc_dmatrix_new_zero (int m, int n);
 sc_dmatrix_t       *sc_dmatrix_clone (sc_dmatrix_t * dmatrix);
+sc_dmatrix_t       *sc_dmatrix_view (int m, int n, double *data);
 
 void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, int m, int n);
 
