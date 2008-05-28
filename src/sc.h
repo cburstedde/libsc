@@ -75,6 +75,8 @@
 #include <sc_mpi_dummy.h>
 #endif
 
+#include <sc_c99_protos.h>
+
 /* check macros, always enabled */
 
 #define SC_NOOP() do { ; } while (0)

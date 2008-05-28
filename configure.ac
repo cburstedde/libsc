@@ -134,6 +134,7 @@ if test "$SC_WITH_PROVIDE_OBSTACK" = "no" ; then
 fi
 
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
+AC_CHECK_LIB([m],[tgamma],[AC_DEFINE([HAVE_TGAMMA],[1],[libm includes tgamma])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 echo "o---------------------------------------"
