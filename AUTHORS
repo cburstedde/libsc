@@ -49,6 +49,11 @@
   see the LICENSE and AUTHORS files in that directory.
 */
 
+/*
+  The files src/sc_c99_protos.h and src/sc_c99_functions.c are based on
+  files from libgfortran, Copyright (C) 2004 Free Software Foundation, Inc.
+*/
+
 Contact:
 
 Carsten Burstedde <carsten@ices.utexas.edu>
