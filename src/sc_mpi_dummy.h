@@ -52,16 +52,19 @@ typedef int         MPI_Datatype;
 
 int                 MPI_Init (int *, char ***);
 int                 MPI_Finalize (void);
+int                 MPI_Abort (MPI_Comm, int)
+  __attribute__ ((noreturn));
 
 int                 MPI_Comm_size (MPI_Comm, int *);
 int                 MPI_Comm_rank (MPI_Comm, int *);
 
 int                 MPI_Barrier (MPI_Comm);
 int                 MPI_Bcast (void *, int, MPI_Datatype, int, MPI_Comm);
+int                 MPI_Gather (void *, int, MPI_Datatype,
+                                void *, int, MPI_Datatype, int, MPI_Comm);
+int                 MPI_Allgather (void *, int, MPI_Datatype,
+                                   void *, int, MPI_Datatype, MPI_Comm);
 
 double              MPI_Wtime (void);
-
-int                 MPI_Abort (MPI_Comm, int)
-  __attribute__ ((noreturn));
 
 #endif /* !SC_MPI_DUMMY_H */

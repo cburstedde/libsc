@@ -36,5 +36,6 @@ Boston, MA 02110-1301, USA.  */
 
 /* Gamma-related prototypes.  */
 double              tgamma (double);
+double              trunc (double);
 
 #endif /* SC_C99_FUNCTIONS_H  */

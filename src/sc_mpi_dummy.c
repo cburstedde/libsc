@@ -100,6 +100,46 @@ MPI_Barrier (MPI_Comm comm)
 int
 MPI_Bcast (void *p, int n, MPI_Datatype t, int rank, MPI_Comm comm)
 {
+  SC_ASSERT (rank == 0);
+
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Gather (void *p, int np, MPI_Datatype tp,
+            void *q, int nq, MPI_Datatype tq, int rank, MPI_Comm comm)
+{
+  size_t              lp, lq;
+
+  SC_ASSERT (rank == 0 && np >= 0 && nq >= 0);
+
+/* *INDENT-OFF* horrible indent bug */
+  lp = (size_t) np * mpi_dummy_sizeof (tp);
+  lq = (size_t) nq * mpi_dummy_sizeof (tq);
+/* *INDENT-ON* */
+
+  SC_ASSERT (lp == lq);
+  memcpy (q, p, lp);
+
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Allgather (void *p, int np, MPI_Datatype tp,
+               void *q, int nq, MPI_Datatype tq, MPI_Comm comm)
+{
+  size_t              lp, lq;
+
+  SC_ASSERT (np >= 0 && nq >= 0);
+
+/* *INDENT-OFF* horrible indent bug */
+  lp = (size_t) np * mpi_dummy_sizeof (tp);
+  lq = (size_t) nq * mpi_dummy_sizeof (tq);
+/* *INDENT-ON* */
+
+  SC_ASSERT (lp == lq);
+  memcpy (q, p, lp);
+
   return MPI_SUCCESS;
 }
 
