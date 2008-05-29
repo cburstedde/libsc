@@ -233,16 +233,17 @@ sc_dmatrix_vector (sc_trans_t transa, sc_trans_t transx, sc_trans_t transy,
                    double alpha, sc_dmatrix_t * A,
                    sc_dmatrix_t * X, double beta, sc_dmatrix_t * Y)
 {
-  sc_bint_t           Arows, Acols, inc = 1;
+  sc_bint_t           inc = 1;
+
 #ifdef SC_DEBUG
   sc_bint_t           dimX = (transx == SC_NO_TRANS) ? X->m : X->n;
   sc_bint_t           dimY = (transy == SC_NO_TRANS) ? Y->m : Y->n;
   sc_bint_t           dimX1 = (transx == SC_NO_TRANS) ? X->n : X->m;
   sc_bint_t           dimY1 = (transy == SC_NO_TRANS) ? Y->n : Y->m;
-#endif
 
-  Arows = (transa == SC_NO_TRANS) ? A->m : A->n;
-  Acols = (transa == SC_NO_TRANS) ? A->n : A->m;
+  sc_bint_t           Arows = (transa == SC_NO_TRANS) ? A->m : A->n;
+  sc_bint_t           Acols = (transa == SC_NO_TRANS) ? A->n : A->m;
+#endif
 
   SC_ASSERT (Acols != 0 && Arows != 0);
   SC_ASSERT (Acols == dimX && Arows == dimY);
