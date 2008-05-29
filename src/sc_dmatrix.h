@@ -57,6 +57,10 @@ void                sc_dmatrix_set_value (sc_dmatrix_t * dmatrix,
 
 void                sc_dmatrix_scale (double alpha, sc_dmatrix_t * X);
 
+/** Perform elementwise multiplcations Y = Y .* X.
+ */
+void                sc_dmatrix_dotmult (sc_dmatrix_t * X, sc_dmatrix_t * Y);
+
 void                sc_dmatrix_copy (sc_dmatrix_t * X, sc_dmatrix_t * Y);
 
 /*! \brief Matrix Matrix Add (AXPY)  \c Y = alpha X + Y

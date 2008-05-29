@@ -187,6 +187,22 @@ sc_dmatrix_scale (double alpha, sc_dmatrix_t * X)
 }
 
 void
+sc_dmatrix_dotmult (sc_dmatrix_t * X, sc_dmatrix_t * Y)
+{
+  sc_bint_t           size, i;
+  double             *Xdata, *Ydata;
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  size = X->n * X->m;
+  Xdata = X->e[0];
+  Ydata = Y->e[0];
+
+  for (i = 0; i < size; ++i)
+    Ydata[i] *= Xdata[i];
+}
+
+void
 sc_dmatrix_copy (sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           totalsize, inc;
