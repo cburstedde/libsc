@@ -158,14 +158,20 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
+  int                 rank;
 
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
+  mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+  SC_CHECK_MPI (mpiret);
+
+  sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
+  
   check_matrix_vector ();
   check_matrix_multiply ();
 
-  sc_memory_check ();
+  sc_finalize ();
 
   mpiret = MPI_Finalize ();
   SC_CHECK_MPI (mpiret);

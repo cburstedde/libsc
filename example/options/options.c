@@ -40,7 +40,7 @@ main (int argc, char **argv)
   mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &rank);
   SC_CHECK_MPI (mpiret);
 
-  sc_log_init (stdout, rank);
+  sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
 
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'w', "switch", &w, "Switch");
@@ -71,8 +71,7 @@ main (int argc, char **argv)
   }
 
   sc_options_destroy (opt);
-
-  sc_memory_check ();
+  sc_finalize ();
 
   mpiret = MPI_Finalize ();
   SC_CHECK_MPI (mpiret);

@@ -41,15 +41,20 @@ dnl of the copyright holder.
 AC_DEFUN([ACX_WITH_LINT],[
 
 # Allow checking code with lint, sparse, etc.
-AC_ARG_WITH(lint, [AC_HELP_STRING([--with-lint],
-    [use static source code checker (default: disabled)])],
-     [use_lint=$withval], [use_lint=no])
-if test "x$use_lint" = "xyes" ; then
-  LINT="splint"
-else
-  LINT="$use_lint"
+AC_ARG_WITH([lint], [AC_HELP_STRING([--with-lint],
+            [use static source code checker (default: disabled)])],
+            [use_lint=$withval], [use_lint=no])
+if test "$use_lint" = yes ; then
+  use_lint="splint"
 fi
-if test "x$LINT_FLAGS" = "x" -a "x$LINT" != "xno" ; then
+if test "$use_lint" != no ; then
+
+AC_PATH_PROG([LINT], [$use_lint], [no])
+if test "$LINT" = no ; then
+  AC_MSG_ERROR([Static source code checker $use_lint not found])
+fi
+
+if test "$LINT_FLAGS" = "" ; then
     case $LINT in
       lint|*/lint)
         case $host_os in
@@ -63,16 +68,17 @@ if test "x$LINT_FLAGS" = "x" -a "x$LINT" != "xno" ; then
         ;;
     esac
 fi
-if test "x$LINT" != "xno" ; then
-    case $LINT in
-      splint|*/splint)
-        LINT_FLAGS="$LINT_FLAGS -systemdirs /usr/include:$MPI_INCLUDE_PATH"
-        ;;
-    esac
+
+case $LINT in
+  splint|*/splint)
+    LINT_FLAGS="$LINT_FLAGS -systemdirs /usr/include:$MPI_INCLUDE_PATH"
+    ;;
+esac
+
 fi
 
 AC_SUBST(LINT)
 AC_SUBST(LINT_FLAGS)
-AM_CONDITIONAL(LINT, [test x$LINT != xno])
+AM_CONDITIONAL(LINT, [test "$use_lint" != no])
 
 ]) # ACX_WITH_LINT

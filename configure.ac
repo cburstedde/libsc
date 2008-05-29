@@ -19,15 +19,15 @@ echo "o---------------------------------------"
 
 AC_ARG_ENABLE([logging],
               [AC_HELP_STRING([--enable-logging=PRIO], [\
-change log priority (see sc.h for possible values)])],
+change log threshold (see sc.h for possible values)])],
               [case "$enableval" in
                  yes) AC_MSG_ERROR([\
 See sc.h for possible log priorities in --enable-logging=PRIO])
                  ;;
-                 no) AC_DEFINE([SC_LOG_PRIORITY], [SC_LP_SILENT],
+                 no) AC_DEFINE([LOG_PRIORITY], [SC_LP_SILENT],
                                [minimal log priority])
                  ;;
-                 *) AC_DEFINE_UNQUOTED([SC_LOG_PRIORITY], [$enableval],
+                 *) AC_DEFINE_UNQUOTED([LOG_PRIORITY], [$enableval],
                                        [minimal log priority])
                esac])
 SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],

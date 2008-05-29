@@ -25,7 +25,7 @@
 #include <signal.h>
 #endif
 
-typedef void (*sc_sig_t) (int);
+typedef void        (*sc_sig_t) (int);
 
 #ifdef SC_HAVE_BACKTRACE
 #ifdef SC_HAVE_BACKTRACE_SYMBOLS
@@ -36,6 +36,23 @@ typedef void (*sc_sig_t) (int);
 #endif
 #endif
 #endif
+
+#define SC_MAX_PACKAGES 128
+
+typedef struct sc_package
+{
+  bool                is_registered;
+  sc_log_handler_t    log_handler;
+  int                 log_threshold;
+  const char         *name;
+  const char         *full;
+}
+sc_package_t;
+
+/** The only log handler that comes with libsc. */
+static void         sc_log_handler (const char *filename, int lineno,
+                                    int package, int category, int priority,
+                                    const char *fmt, va_list ap);
 
 /* *INDENT-OFF* */
 const int sc_log2_lookup_table[256] =
@@ -56,17 +73,23 @@ const int sc_log2_lookup_table[256] =
    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
 };
-/* *INDENT-ON* */
 
+static long         sc_vp_default_key[2];
+void               *SC_VP_DEFAULT  = (void *) &sc_vp_default_key[0];
+FILE               *SC_FP_KEEP     = (FILE *) &sc_vp_default_key[1];
 FILE               *sc_root_stdout = NULL;
 FILE               *sc_root_stderr = NULL;
+int                 sc_package_id  = -1;
+/* *INDENT-ON* */
 
 static int          malloc_count = 0;
 static int          free_count = 0;
 
 static int          sc_identifier = -1;
 
-static int          sc_log_priority = SC_LP_NONE;
+static int          sc_default_log_threshold = SC_LP_THRESHOLD;
+static sc_log_handler_t sc_default_log_handler = sc_log_handler;
+
 static FILE        *sc_log_stream = NULL;
 static bool         sc_log_stream_set = false;
 
@@ -77,6 +100,9 @@ static sc_sig_t     system_usr2_handler = NULL;
 
 static sc_handler_t sc_abort_handler = NULL;
 static void        *sc_abort_data = NULL;
+
+static int          sc_num_packages = 0;
+static sc_package_t sc_packages[SC_MAX_PACKAGES];
 
 static void
 sc_signal_handler (int sig)
@@ -108,6 +134,49 @@ sc_signal_handler (int sig)
   fprintf (stderr, "%sAbort: Signal %s\n", prefix, sigstr);
 
   sc_abort ();
+}
+
+static void
+sc_log_handler (const char *filename, int lineno,
+                int package, int category, int priority,
+                const char *fmt, va_list ap)
+{
+  bool                wp = false, wi = false;
+
+  if (sc_log_stream == NULL && !sc_log_stream_set) {
+    sc_log_stream = stdout;
+    sc_log_stream_set = true;
+  }
+  if (sc_log_stream == NULL)
+    return;
+
+  if (package != -1) {
+    SC_ASSERT (sc_package_is_registered (package));
+    wp = true;
+  }
+  wi = (category == SC_LC_NORMAL && sc_identifier >= 0);
+
+  if (wp || wi) {
+    fputc ('[', sc_log_stream);
+    if (wp)
+      fprintf (sc_log_stream, "%s", sc_packages[package].name);
+    if (wp && wi)
+      fputc (' ', sc_log_stream);
+    if (wi)
+      fprintf (sc_log_stream, "%d", sc_identifier);
+    fputs ("] ", sc_log_stream);
+  }
+
+  if (priority == SC_LP_TRACE) {
+    char                bn[BUFSIZ], *bp;
+
+    snprintf (bn, BUFSIZ, "%s", filename);
+    bp = basename (bn);
+    fprintf (sc_log_stream, "%s:%d ", bp, lineno);
+  }
+
+  vfprintf (sc_log_stream, fmt, ap);
+  fflush (sc_log_stream);
 }
 
 void               *
@@ -207,59 +276,60 @@ sc_memory_check (void)
 }
 
 void
-sc_log_init (FILE * log_stream, int identifier)
+sc_set_log_defaults (sc_log_handler_t log_handler, int log_threshold,
+                     FILE * log_stream)
 {
-  sc_identifier = identifier;
-  sc_log_stream = log_stream;
-  sc_log_stream_set = true;
+  sc_default_log_handler =
+    (log_handler == NULL ? sc_log_handler : log_handler);
 
-  sc_root_stdout = identifier > 0 ? NULL : stdout;
-  sc_root_stderr = identifier > 0 ? NULL : stderr;
-}
+  if (log_threshold == SC_LP_DEFAULT) {
+    sc_default_log_threshold = SC_LP_THRESHOLD;
+  }
+  else {
+    SC_ASSERT (log_threshold >= SC_LP_NONE && log_threshold <= SC_LP_SILENT);
+    sc_default_log_threshold = log_threshold;
+  }
 
-void
-sc_log_threshold (int log_priority)
-{
-  SC_ASSERT (log_priority >= SC_LP_NONE && log_priority <= SC_LP_SILENT);
-
-  sc_log_priority = log_priority;
+  if (log_stream != SC_FP_KEEP) {
+    sc_log_stream = log_stream;
+    sc_log_stream_set = true;
+  }
 }
 
 void
 sc_logf (const char *filename, int lineno,
-         int priority, int category, const char *fmt, ...)
+         int package, int category, int priority, const char *fmt, ...)
 {
+  int                 log_threshold;
+  sc_log_handler_t    log_handler;
+  sc_package_t       *p;
   va_list             ap;
 
-  SC_ASSERT (priority >= SC_LP_NONE && priority < SC_LP_SILENT);
-
-  if (sc_log_stream == NULL && !sc_log_stream_set) {
-    sc_log_stream = stdout;
-    sc_log_stream_set = true;
+  if (package == -1) {
+    p = NULL;
+    log_threshold = sc_default_log_threshold;
+    log_handler = sc_default_log_handler;
   }
-
-  if (sc_log_stream == NULL || priority < sc_log_priority)
-    return;
+  else {
+    SC_ASSERT (sc_package_is_registered (package));
+    p = sc_packages + package;
+    log_threshold =
+      (p->log_threshold ==
+       SC_LP_DEFAULT) ? sc_default_log_threshold : p->log_threshold;
+    log_handler =
+      (p->log_handler == NULL) ? sc_default_log_handler : p->log_handler;
+  }
+  SC_ASSERT (category == SC_LC_NORMAL || category == SC_LC_GLOBAL);
+  SC_ASSERT (priority >= SC_LP_NONE && priority < SC_LP_SILENT);
 
   if (category == SC_LC_GLOBAL && sc_identifier > 0)
     return;
-
-  if (category == SC_LC_NORMAL && sc_identifier >= 0)
-    fprintf (sc_log_stream, "[%d] ", sc_identifier);
-
-  if (priority == SC_LP_TRACE) {
-    char                bn[BUFSIZ], *bp;
-
-    snprintf (bn, BUFSIZ, "%s", filename);
-    bp = basename (bn);
-    fprintf (sc_log_stream, "%s:%d ", bp, lineno);
-  }
+  if (priority < log_threshold)
+    return;
 
   va_start (ap, fmt);
-  vfprintf (sc_log_stream, fmt, ap);
+  log_handler (filename, lineno, package, category, priority, fmt, ap);
   va_end (ap);
-
-  fflush (sc_log_stream);
 }
 
 void
@@ -338,6 +408,137 @@ sc_abort (void)
     sc_abort_handler (sc_abort_data);
   }
   abort ();
+}
+
+int
+sc_package_register (sc_log_handler_t log_handler, int log_threshold,
+                     const char *name, const char *full)
+{
+  int                 i;
+  sc_package_t       *p;
+
+  SC_CHECK_ABORT (sc_num_packages < SC_MAX_PACKAGES, "Too many packages");
+  SC_CHECK_ABORT (log_threshold == SC_LP_DEFAULT ||
+                  (log_threshold >= SC_LP_NONE
+                   && log_threshold <= SC_LP_SILENT),
+                  "Invalid package log threshold");
+  SC_CHECK_ABORT (strchr (name, ' ') == NULL,
+                  "Packages name contains spaces");
+
+  /* sc_packages is static and thus initialized to all zeros */
+  for (i = 0; i < SC_MAX_PACKAGES; ++i) {
+    p = sc_packages + i;
+    SC_CHECK_ABORTF (!p->is_registered || strcmp (p->name, name),
+                     "Package %s is already registered", name);
+  }
+  for (i = 0; i < SC_MAX_PACKAGES; ++i) {
+    p = sc_packages + i;
+    if (!p->is_registered) {
+      p->is_registered = true;
+      p->log_handler = log_handler;
+      p->log_threshold = log_threshold;
+      p->name = name;
+      p->full = full;
+      break;
+    }
+  }
+  SC_ASSERT (i < SC_MAX_PACKAGES);
+
+  ++sc_num_packages;
+  SC_ASSERT (sc_num_packages <= SC_MAX_PACKAGES);
+
+  return i;
+}
+
+bool
+sc_package_is_registered (int package_id)
+{
+  SC_CHECK_ABORT (0 <= package_id && package_id < SC_MAX_PACKAGES,
+                  "Invalid package id");
+
+  /* sc_packages is static and thus initialized to all zeros */
+  return sc_packages[package_id].is_registered;
+}
+
+void
+sc_package_unregister (int package_id)
+{
+  sc_package_t       *p;
+
+  SC_CHECK_ABORT (sc_package_is_registered (package_id),
+                  "Package not registered");
+
+  p = sc_packages + package_id;
+  p->is_registered = false;
+  p->log_handler = NULL;
+  p->log_threshold = SC_LP_NONE;
+  p->name = p->full = NULL;
+
+  --sc_num_packages;
+}
+
+void
+sc_package_summary (FILE * stream)
+{
+  int                 i;
+  sc_package_t       *p;
+
+  if (stream == NULL) {
+    return;
+  }
+
+  fprintf (stream, "Package summary (%d total)\n", sc_num_packages);
+
+  /* sc_packages is static and thus initialized to all zeros */
+  for (i = 0; i < SC_MAX_PACKAGES; ++i) {
+    p = sc_packages + i;
+    if (p->is_registered) {
+      fprintf (stream, "   %3d: %-15s %s\n", i, p->name, p->full);
+    }
+  }
+}
+
+void
+sc_init (int identifier,
+         sc_handler_t abort_handler, void *abort_data,
+         sc_log_handler_t log_handler, int log_threshold)
+{
+  sc_identifier = identifier;
+  sc_root_stdout = identifier > 0 ? NULL : stdout;
+  sc_root_stderr = identifier > 0 ? NULL : stderr;
+
+  sc_set_abort_handler (abort_handler, abort_data);
+
+  sc_package_id = sc_package_register (log_handler, log_threshold,
+                                       "libsc", "The SC Library");
+}
+
+void
+sc_finalize (void)
+{
+  int                 i;
+  sc_package_t       *p;
+
+  sc_memory_check ();
+
+  /* sc_packages is static and thus initialized to all zeros */
+  for (i = 0; i < SC_MAX_PACKAGES; ++i) {
+    p = sc_packages + i;
+    if (p->is_registered) {
+      p->is_registered = false;
+      p->log_handler = NULL;
+      p->log_threshold = SC_LP_NONE;
+      p->name = p->full = NULL;
+
+      --sc_num_packages;
+    }
+  }
+  SC_ASSERT (sc_num_packages == 0);
+
+  sc_set_abort_handler (NULL, NULL);
+
+  sc_identifier = -1;
+  sc_root_stdout = sc_root_stderr = NULL;
 }
 
 /* EOF sc.c */

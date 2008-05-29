@@ -58,6 +58,12 @@ MPI_Comm_rank (MPI_Comm comm, int *rank)
   return MPI_SUCCESS;
 }
 
+int
+MPI_Barrier (MPI_Comm comm)
+{
+  return MPI_SUCCESS;
+}
+
 double
 MPI_Wtime (void)
 {
@@ -68,6 +74,12 @@ MPI_Wtime (void)
   SC_CHECK_ABORT (retval == 0, "gettimeofday");
 
   return (double) tv.tv_sec + 1.e-6 * tv.tv_usec;
+}
+
+int
+MPI_Abort (MPI_Comm comm, int exitcode)
+{
+  abort ();
 }
 
 /* EOF sc_mpi_dummy.c */

@@ -140,8 +140,14 @@
 #define SC_ROUNDUP2_64(x)                               \
   (((x) <= 0) ? 0 : (1 << (SC_LOG2_64 ((x) - 1) + 1)))
 
+/* log categories */
+
+#define SC_LC_GLOBAL      1     /* log only for master process */
+#define SC_LC_NORMAL      2     /* log for every process */
+
 /* log priorities */
 
+#define SC_LP_DEFAULT   (-1)    /* this selects the SC default threshold */
 #define SC_LP_NONE        0
 #define SC_LP_TRACE       1     /* this will prefix file and line number */
 #define SC_LP_DEBUG       2     /* any information on the internal state */
@@ -160,25 +166,20 @@
 #endif
 #endif
 
-/* log categories */
-
-#define SC_LC_GLOBAL      1     /* log only for master process */
-#define SC_LC_NORMAL      2     /* log for every process */
-
 /* generic log macros */
 
-#define SC_LOGF(priority,category,fmt,...)                              \
+#define SC_LOGF(category,priority,fmt,...)                              \
   do {                                                                  \
     if ((priority) >= SC_LP_THRESHOLD) {                                \
-      sc_logf (__FILE__, __LINE__, (priority), (category),              \
+      sc_logf (__FILE__, __LINE__, sc_package_id, (category), (priority), \
                (fmt), __VA_ARGS__);                                     \
     }                                                                   \
   } while (0)
-#define SC_LOG(p,c,s) SC_LOGF((p), (c), "%s", (s))
-#define SC_GLOBAL_LOG(p,s) SC_LOG ((p), SC_LC_GLOBAL, (s))
-#define SC_GLOBAL_LOGF(p,f,...) SC_LOGF ((p), SC_LC_GLOBAL, (f), __VA_ARGS__)
-#define SC_NORMAL_LOG(p,s) SC_LOG ((p), SC_LC_NORMAL, (s))
-#define SC_NORMAL_LOGF(p,f,...) SC_LOGF ((p), SC_LC_NORMAL, (f), __VA_ARGS__)
+#define SC_LOG(c,p,s) SC_LOGF((c), (p), "%s", (s))
+#define SC_GLOBAL_LOG(p,s) SC_LOG (SC_LC_GLOBAL, (p), (s))
+#define SC_GLOBAL_LOGF(p,f,...) SC_LOGF (SC_LC_GLOBAL, (p), (f), __VA_ARGS__)
+#define SC_NORMAL_LOG(p,s) SC_LOG (SC_LC_NORMAL, (p), (s))
+#define SC_NORMAL_LOGF(p,f,...) SC_LOGF (SC_LC_NORMAL, (p), (f), __VA_ARGS__)
 
 /* convenience global log macros will only output if identifier <= 0 */
 
@@ -225,12 +226,19 @@
 /* callback typedefs */
 
 typedef void        (*sc_handler_t) (void *data);
+typedef void        (*sc_log_handler_t) (const char *filename, int lineno,
+                                         int package, int category,
+                                         int priority, const char *fmt,
+                                         va_list ap);
 
 /* extern declarations */
 
 extern const int    sc_log2_lookup_table[256];
+extern void        *SC_VP_DEFAULT;      /* a unique void pointer value */
+extern FILE        *SC_FP_KEEP; /* a unique FILE pointer value */
 extern FILE        *sc_root_stdout;
 extern FILE        *sc_root_stderr;
+extern int          sc_package_id;
 
 /* memory allocation functions, handle NULL pointers gracefully */
 
@@ -241,13 +249,26 @@ char               *sc_strdup (const char *s);
 void                sc_free (void *ptr);
 void                sc_memory_check (void);
 
-/* logging functions */
+/** Controls the default SC log behavior.
+ * \param [in] log_handler   Set default SC log handler (NULL selects builtin).
+ * \param [in] log_threshold Set default SC log threshold (or SC_LP_DEFAULT).
+ * \param [in] log_stream    Set stream to use by the builtin log handler.
+ *                           This can be SC_FP_KEEP to keep the status quo
+ *                           or NULL which silences the builtin log handler.
+ */
+void                sc_set_log_defaults (sc_log_handler_t log_handler,
+                                         int log_thresold, FILE * log_stream);
 
-void                sc_log_init (FILE * log_stream, int identifier);
-void                sc_log_threshold (int log_priority);
+/** The central log function to be called by all packages.
+ * Dispatches the log calls by package and filters by category and priority.
+ * \param [in] package   Must be a registered package id or -1.
+ * \param [in] category  Must be SC_LC_NORMAL or SC_LC_GLOBAL.
+ * \param [in] priority  Must be >= SC_LP_NONE and < SC_LP_SILENT.
+ */
 void                sc_logf (const char *filename, int lineno,
-                             int priority, int category, const char *fmt, ...)
-  __attribute__ ((format (printf, 5, 6)));
+                             int package, int category, int priority,
+                             const char *fmt, ...)
+  __attribute__ ((format (printf, 6, 7)));
 
 /** Installs an abort handler and catches signals INT SEGV USR2. */
 void                sc_set_abort_handler (sc_handler_t handler, void *data);
@@ -255,5 +276,42 @@ void                sc_set_abort_handler (sc_handler_t handler, void *data);
 /** Prints a stack trace, calls the abort handler and terminates. */
 void                sc_abort (void)
   __attribute__ ((noreturn));
+
+/** Register a software package with SC.
+ * \param [in] log_handler   Custom log function, or NULL to select the
+ *                           default SC log handler.
+ * \param [in] log_threshold Minimal log priority required for output, or
+ *                           SC_LP_DEFAULT to select the SC default threshold.
+ * \return                   Returns a unique package id.
+ */
+int                 sc_package_register (sc_log_handler_t log_handler,
+                                         int log_threshold,
+                                         const char *name, const char *full);
+bool                sc_package_is_registered (int package_id);
+void                sc_package_unregister (int package_id);
+
+/** Print a summary of all packages registered with SC.
+ * \param [in] stream  Stream to print to. If NULL, nothing happens.
+ */
+void                sc_package_summary (FILE * stream);
+
+/** Sets the global program identifier (e.g. the MPI rank) and abort handler.
+ * This function is optional.
+ * If this function is not called or called with log_handler == NULL,
+ * the default SC log handler will be used.
+ * If this function is not called or called with log_threshold == SC_LP_DEFAULT,
+ * the default SC log threshold will be used.
+ * The default SC log settings can be changed with sc_set_log_defaults ().
+ */
+void                sc_init (int identifier,
+                             sc_handler_t abort_handler, void *abort_data,
+                             sc_log_handler_t log_handler, int log_threshold);
+
+/** Unregisters all packages, runs the memory check, removes the
+ * abort and signal handlers and resets sc_identifier and sc_root_*.
+ * This function is optional.
+ * This function does not require sc_init to be called first.
+ */
+void                sc_finalize (void);
 
 #endif /* SC_H */

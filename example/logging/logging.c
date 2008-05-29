@@ -58,21 +58,27 @@ main (int argc, char **argv)
   log_normal ();
   log_global ();
 
-  sc_log_threshold (SC_LP_STATISTICS);
+  sc_set_log_defaults (NULL, SC_LP_VERBOSE, stdout);
   log_normal ();
 
-  sc_log_init (stderr, rank);
+  sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
+
+  sc_package_summary (stdout);
+  
+  sc_set_log_defaults (NULL, SC_LP_STATISTICS, stderr);
   log_normal ();
   log_global ();
 
-  sc_log_init (stdout, rank);
+  sc_set_log_defaults (NULL, SC_LP_TRACE, stdout);
   log_normal ();
+
+  sc_set_log_defaults (NULL, SC_LP_TRACE, NULL);
   log_global ();
 
-  sc_log_init (NULL, rank);
+  sc_set_log_defaults (NULL, SC_LP_SILENT, stderr);
   log_normal ();
 
-  sc_memory_check ();
+  sc_finalize ();
 
   mpiret = MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
