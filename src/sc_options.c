@@ -238,7 +238,7 @@ sc_options_print_help (sc_options_t * opt, int include_args, FILE * nout)
       provide_long = "=<INIFILE>";
       break;
     default:
-      SC_ASSERT_NOT_REACHED ();
+      SC_CHECK_NOT_REACHED ();
     }
     if (item->opt_char != '\0' && item->opt_name != NULL) {
       printed = fprintf (nout, "      -%c%s | --%s%s",
@@ -252,7 +252,7 @@ sc_options_print_help (sc_options_t * opt, int include_args, FILE * nout)
       printed = fprintf (nout, "      --%s%s", item->opt_name, provide_long);
     }
     else {
-      SC_ASSERT_NOT_REACHED ();
+      SC_CHECK_NOT_REACHED ();
     }
     if (item->help_string != NULL) {
       fprintf (nout, "%*s%s\n", SC_MAX (1, 48 - printed), "",
@@ -313,7 +313,7 @@ sc_options_print_summary (sc_options_t * opt, FILE * nout)
       printed += fprintf (nout, "%s", string_val);
       break;
     default:
-      SC_ASSERT_NOT_REACHED ();
+      SC_CHECK_NOT_REACHED ();
     }
     fprintf (nout, "\n");
   }
@@ -412,7 +412,7 @@ sc_options_load (sc_options_t * opt, const char *inifile, FILE * nerr)
       }
       break;
     default:
-      SC_ASSERT_NOT_REACHED ();
+      SC_CHECK_NOT_REACHED ();
     }
   }
 
@@ -518,7 +518,7 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
       }
       break;
     default:
-      SC_ASSERT_NOT_REACHED ();
+      SC_CHECK_NOT_REACHED ();
     }
   }
 

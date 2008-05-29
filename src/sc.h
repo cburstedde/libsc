@@ -97,6 +97,7 @@
     }                                                   \
   } while (0)
 #define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI operation")
+#define SC_CHECK_NOT_REACHED() SC_CHECK_ABORT (0, "Unreachable code")
 
 /* assertions, only enabled in debug mode */
 
@@ -105,15 +106,15 @@
 #else
 #define SC_ASSERT(c) SC_NOOP ()
 #endif
-#define SC_ASSERT_NOT_REACHED() SC_CHECK_ABORT (0, "Unreachable code")
 
 /* macros for memory allocation, will abort if out of memory */
 
-#define SC_ALLOC(t,n)             (t *) sc_malloc ((n) * sizeof(t))
-#define SC_ALLOC_ZERO(t,n)        (t *) sc_calloc ((n), sizeof(t))
-#define SC_REALLOC(p,t,n)         (t *) sc_realloc ((p), (n) * sizeof(t))
-#define SC_STRDUP(s)                    sc_strdup (s)
-#define SC_FREE(p)                      sc_free (p)
+#define SC_ALLOC(t,n)         (t *) sc_malloc (sc_package_id, (n) * sizeof(t))
+#define SC_ALLOC_ZERO(t,n)    (t *) sc_calloc (sc_package_id, (n), sizeof(t))
+#define SC_REALLOC(p,t,n)     (t *) sc_realloc (sc_package_id,          \
+                                             (p), (n) * sizeof(t))
+#define SC_STRDUP(s)                sc_strdup (sc_package_id, (s))
+#define SC_FREE(p)                  sc_free (sc_package_id, (p))
 
 /**
  * Sets n elements of a memory range to zero.
@@ -242,12 +243,12 @@ extern int          sc_package_id;
 
 /* memory allocation functions, handle NULL pointers gracefully */
 
-void               *sc_malloc (size_t size);
-void               *sc_calloc (size_t nmemb, size_t size);
-void               *sc_realloc (void *ptr, size_t size);
-char               *sc_strdup (const char *s);
-void                sc_free (void *ptr);
-void                sc_memory_check (void);
+void               *sc_malloc (int package, size_t size);
+void               *sc_calloc (int package, size_t nmemb, size_t size);
+void               *sc_realloc (int package, void *ptr, size_t size);
+char               *sc_strdup (int package, const char *s);
+void                sc_free (int package, void *ptr);
+void                sc_memory_check (int package);
 
 /** Controls the default SC log behavior.
  * \param [in] log_handler   Set default SC log handler (NULL selects builtin).

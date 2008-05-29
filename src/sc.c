@@ -44,6 +44,8 @@ typedef struct sc_package
   bool                is_registered;
   sc_log_handler_t    log_handler;
   int                 log_threshold;
+  int                 malloc_count;
+  int                 free_count;
   const char         *name;
   const char         *full;
 }
@@ -82,8 +84,8 @@ FILE               *sc_root_stderr = NULL;
 int                 sc_package_id  = -1;
 /* *INDENT-ON* */
 
-static int          malloc_count = 0;
-static int          free_count = 0;
+static int          default_malloc_count = 0;
+static int          default_free_count = 0;
 
 static int          sc_identifier = -1;
 
@@ -179,64 +181,88 @@ sc_log_handler (const char *filename, int lineno,
   fflush (sc_log_stream);
 }
 
+static int         *
+sc_malloc_count (int package)
+{
+  if (package == -1)
+    return &default_malloc_count;
+
+  SC_ASSERT (sc_package_is_registered (package));
+  return &sc_packages[package].malloc_count;
+}
+
+static int         *
+sc_free_count (int package)
+{
+  if (package == -1)
+    return &default_free_count;
+
+  SC_ASSERT (sc_package_is_registered (package));
+  return &sc_packages[package].free_count;
+}
+
 void               *
-sc_malloc (size_t size)
+sc_malloc (int package, size_t size)
 {
   void               *ret;
+  int                *malloc_count = sc_malloc_count (package);
 
   ret = malloc (size);
 
   if (size > 0) {
     SC_CHECK_ABORT (ret != NULL, "Allocation");
-    ++malloc_count;
+    ++*malloc_count;
   }
   else {
-    malloc_count += ((ret == NULL) ? 0 : 1);
+    *malloc_count += ((ret == NULL) ? 0 : 1);
   }
 
   return ret;
 }
 
 void               *
-sc_calloc (size_t nmemb, size_t size)
+sc_calloc (int package, size_t nmemb, size_t size)
 {
   void               *ret;
+  int                *malloc_count = sc_malloc_count (package);
 
   ret = calloc (nmemb, size);
 
   if (nmemb * size > 0) {
     SC_CHECK_ABORT (ret != NULL, "Allocation");
-    ++malloc_count;
+    ++*malloc_count;
   }
   else {
-    malloc_count += ((ret == NULL) ? 0 : 1);
+    *malloc_count += ((ret == NULL) ? 0 : 1);
   }
 
   return ret;
 }
 
 void               *
-sc_realloc (void *ptr, size_t size)
+sc_realloc (int package, void *ptr, size_t size)
 {
   void               *ret;
 
   ret = realloc (ptr, size);
 
   if (ptr == NULL) {
+    int                *malloc_count = sc_malloc_count (package);
     if (size > 0) {
       SC_CHECK_ABORT (ret != NULL, "Reallocation");
-      ++malloc_count;
+      ++*malloc_count;
     }
     else {
-      malloc_count += ((ret == NULL) ? 0 : 1);
+      *malloc_count += ((ret == NULL) ? 0 : 1);
     }
   }
   else {
+    int                *free_count = sc_free_count (package);
     if (size > 0) {
       SC_CHECK_ABORT (ret != NULL, "Reallocation");
     }
     else {
-      free_count += ((ret == NULL) ? 1 : 0);
+      *free_count += ((ret == NULL) ? 1 : 0);
     }
   }
 
@@ -244,7 +270,7 @@ sc_realloc (void *ptr, size_t size)
 }
 
 char               *
-sc_strdup (const char *s)
+sc_strdup (int package, const char *s)
 {
   size_t              len;
   char               *d;
@@ -254,25 +280,36 @@ sc_strdup (const char *s)
   }
 
   len = strlen (s) + 1;
-  d = sc_malloc (len);
+  d = sc_malloc (package, len);
   memcpy (d, s, len);
 
   return d;
 }
 
 void
-sc_free (void *ptr)
+sc_free (int package, void *ptr)
 {
   if (ptr != NULL) {
-    ++free_count;
+    int                *free_count = sc_free_count (package);
+    ++*free_count;
     free (ptr);
   }
 }
 
 void
-sc_memory_check (void)
+sc_memory_check (int package)
 {
-  SC_CHECK_ABORT (malloc_count == free_count, "Memory balance");
+  sc_package_t       *p;
+
+  if (package == -1)
+    SC_CHECK_ABORT (default_malloc_count == default_free_count,
+                    "Memory balance (default)");
+  else {
+    SC_ASSERT (sc_package_is_registered (package));
+    p = sc_packages + package;
+    SC_CHECK_ABORTF (p->malloc_count == p->free_count,
+                     "Memory balance (%s)", p->name);
+  }
 }
 
 void
@@ -422,6 +459,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
                   (log_threshold >= SC_LP_NONE
                    && log_threshold <= SC_LP_SILENT),
                   "Invalid package log threshold");
+  SC_CHECK_ABORT (strcmp (name, "default"), "Package default forbidden");
   SC_CHECK_ABORT (strchr (name, ' ') == NULL,
                   "Packages name contains spaces");
 
@@ -437,6 +475,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
       p->is_registered = true;
       p->log_handler = log_handler;
       p->log_threshold = log_threshold;
+      p->malloc_count = p->free_count = 0;
       p->name = name;
       p->full = full;
       break;
@@ -467,11 +506,13 @@ sc_package_unregister (int package_id)
 
   SC_CHECK_ABORT (sc_package_is_registered (package_id),
                   "Package not registered");
+  sc_memory_check (package_id);
 
   p = sc_packages + package_id;
   p->is_registered = false;
   p->log_handler = NULL;
-  p->log_threshold = SC_LP_NONE;
+  p->log_threshold = SC_LP_DEFAULT;
+  p->malloc_count = p->free_count = 0;
   p->name = p->full = NULL;
 
   --sc_num_packages;
@@ -493,7 +534,8 @@ sc_package_summary (FILE * stream)
   for (i = 0; i < SC_MAX_PACKAGES; ++i) {
     p = sc_packages + i;
     if (p->is_registered) {
-      fprintf (stream, "   %3d: %-15s %s\n", i, p->name, p->full);
+      fprintf (stream, "   %3d: %-15s +%d-%d   %s\n",
+               i, p->name, p->malloc_count, p->free_count, p->full);
     }
   }
 }
@@ -517,23 +559,14 @@ void
 sc_finalize (void)
 {
   int                 i;
-  sc_package_t       *p;
-
-  sc_memory_check ();
 
   /* sc_packages is static and thus initialized to all zeros */
-  for (i = 0; i < SC_MAX_PACKAGES; ++i) {
-    p = sc_packages + i;
-    if (p->is_registered) {
-      p->is_registered = false;
-      p->log_handler = NULL;
-      p->log_threshold = SC_LP_NONE;
-      p->name = p->full = NULL;
+  for (i = 0; i < SC_MAX_PACKAGES; ++i)
+    if (sc_packages[i].is_registered)
+      sc_package_unregister (i);
 
-      --sc_num_packages;
-    }
-  }
   SC_ASSERT (sc_num_packages == 0);
+  sc_memory_check (-1);
 
   sc_set_abort_handler (NULL, NULL);
 

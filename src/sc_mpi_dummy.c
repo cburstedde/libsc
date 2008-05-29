@@ -59,7 +59,30 @@ mpi_dummy_sizeof (MPI_Datatype t)
   case MPI_UNSIGNED_LONG_LONG:
     return sizeof (long long);
   default:
-    SC_ASSERT_NOT_REACHED ();
+    SC_CHECK_NOT_REACHED ();
+  }
+}
+
+static inline void
+mpi_dummy_assert_op (MPI_Op op)
+{
+  switch (op) {
+  case MPI_MAX:
+  case MPI_MIN:
+  case MPI_SUM:
+  case MPI_PROD:
+  case MPI_LAND:
+  case MPI_BAND:
+  case MPI_LOR:
+  case MPI_BOR:
+  case MPI_LXOR:
+  case MPI_BXOR:
+  case MPI_MINLOC:
+  case MPI_MAXLOC:
+  case MPI_REPLACE:
+    break;
+  default:
+    SC_CHECK_NOT_REACHED ();
   }
 }
 
@@ -73,6 +96,12 @@ int
 MPI_Finalize (void)
 {
   return MPI_SUCCESS;
+}
+
+int
+MPI_Abort (MPI_Comm comm, int exitcode)
+{
+  abort ();
 }
 
 int
@@ -143,6 +172,42 @@ MPI_Allgather (void *p, int np, MPI_Datatype tp,
   return MPI_SUCCESS;
 }
 
+int
+MPI_Reduce (void *p, void *q, int n, MPI_Datatype t,
+            MPI_Op op, int rank, MPI_Comm comm)
+{
+  size_t              l;
+
+  SC_ASSERT (rank == 0 && n >= 0);
+  mpi_dummy_assert_op (op);
+
+/* *INDENT-OFF* horrible indent bug */
+  l = (size_t) n * mpi_dummy_sizeof (t);
+/* *INDENT-ON* */
+
+  memcpy (q, p, l);
+
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Allreduce (void *p, void *q, int n, MPI_Datatype t,
+               MPI_Op op, MPI_Comm comm)
+{
+  size_t              l;
+
+  SC_ASSERT (n >= 0);
+  mpi_dummy_assert_op (op);
+
+/* *INDENT-OFF* horrible indent bug */
+  l = (size_t) n * mpi_dummy_sizeof (t);
+/* *INDENT-ON* */
+
+  memcpy (q, p, l);
+
+  return MPI_SUCCESS;
+}
+
 double
 MPI_Wtime (void)
 {
@@ -153,12 +218,6 @@ MPI_Wtime (void)
   SC_CHECK_ABORT (retval == 0, "gettimeofday");
 
   return (double) tv.tv_sec + 1.e-6 * tv.tv_usec;
-}
-
-int
-MPI_Abort (MPI_Comm comm, int exitcode)
-{
-  abort ();
 }
 
 /* EOF sc_mpi_dummy.c */

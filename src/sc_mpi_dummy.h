@@ -47,8 +47,23 @@
 #define MPI_UNSIGNED_LONG_LONG  ((MPI_Datatype) 0x4c000819)
 #define MPI_LONG_LONG           MPI_LONG_LONG_INT
 
+#define MPI_MAX                 ((MPI_Op) 0x58000001)
+#define MPI_MIN                 ((MPI_Op) 0x58000002)
+#define MPI_SUM                 ((MPI_Op) 0x58000003)
+#define MPI_PROD                ((MPI_Op) 0x58000004)
+#define MPI_LAND                ((MPI_Op) 0x58000005)
+#define MPI_BAND                ((MPI_Op) 0x58000006)
+#define MPI_LOR                 ((MPI_Op) 0x58000007)
+#define MPI_BOR                 ((MPI_Op) 0x58000008)
+#define MPI_LXOR                ((MPI_Op) 0x58000009)
+#define MPI_BXOR                ((MPI_Op) 0x5800000a)
+#define MPI_MINLOC              ((MPI_Op) 0x5800000b)
+#define MPI_MAXLOC              ((MPI_Op) 0x5800000c)
+#define MPI_REPLACE             ((MPI_Op) 0x5800000d)
+
 typedef int         MPI_Comm;
 typedef int         MPI_Datatype;
+typedef int         MPI_Op;
 
 int                 MPI_Init (int *, char ***);
 int                 MPI_Finalize (void);
@@ -64,6 +79,10 @@ int                 MPI_Gather (void *, int, MPI_Datatype,
                                 void *, int, MPI_Datatype, int, MPI_Comm);
 int                 MPI_Allgather (void *, int, MPI_Datatype,
                                    void *, int, MPI_Datatype, MPI_Comm);
+int                 MPI_Reduce (void *, void *, int, MPI_Datatype,
+                                MPI_Op, int, MPI_Comm);
+int                 MPI_Allreduce (void *, void *, int, MPI_Datatype,
+                                   MPI_Op, MPI_Comm);
 
 double              MPI_Wtime (void);
 
