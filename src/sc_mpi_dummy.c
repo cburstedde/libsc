@@ -30,6 +30,39 @@
 #include <time.h>
 #endif
 
+static inline       size_t
+mpi_dummy_sizeof (MPI_Datatype t)
+{
+  switch (t) {
+  case MPI_CHAR:
+  case MPI_SIGNED_CHAR:
+  case MPI_UNSIGNED_CHAR:
+    return sizeof (char);
+  case MPI_BYTE:
+    return 1;
+  case MPI_SHORT:
+  case MPI_UNSIGNED_SHORT:
+    return sizeof (short);
+  case MPI_INT:
+  case MPI_UNSIGNED:
+    return sizeof (int);
+  case MPI_LONG:
+  case MPI_UNSIGNED_LONG:
+    return sizeof (long);
+  case MPI_FLOAT:
+    return sizeof (float);
+  case MPI_DOUBLE:
+    return sizeof (double);
+  case MPI_LONG_DOUBLE:
+    return sizeof (long double);
+  case MPI_LONG_LONG_INT:
+  case MPI_UNSIGNED_LONG_LONG:
+    return sizeof (long long);
+  default:
+    SC_ASSERT_NOT_REACHED ();
+  }
+}
+
 int
 MPI_Init (int *argc, char ***argv)
 {
@@ -60,6 +93,12 @@ MPI_Comm_rank (MPI_Comm comm, int *rank)
 
 int
 MPI_Barrier (MPI_Comm comm)
+{
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Bcast (void *p, int n, MPI_Datatype t, int rank, MPI_Comm comm)
 {
   return MPI_SUCCESS;
 }
