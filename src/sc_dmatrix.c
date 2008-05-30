@@ -203,6 +203,19 @@ sc_dmatrix_dotmult (sc_dmatrix_t * X, sc_dmatrix_t * Y)
 }
 
 void
+sc_dmatrix_alphadotdivide (double alpha, sc_dmatrix_t * X)
+{
+  sc_bint_t           size, i;
+  double             *Xdata;
+
+  size = X->n * X->m;
+  Xdata = X->e[0];
+
+  for (i = 0; i < size; ++i)
+    Xdata[i] = alpha / Xdata[i];
+}
+
+void
 sc_dmatrix_copy (sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           totalsize, inc;

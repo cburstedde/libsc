@@ -62,6 +62,11 @@ void                sc_dmatrix_scale (double alpha, sc_dmatrix_t * X);
  */
 void                sc_dmatrix_dotmult (sc_dmatrix_t * X, sc_dmatrix_t * Y);
 
+/** Perform elementwise divison from a scalar X = alpha ./ X.
+ */
+void                sc_dmatrix_alphadotdivide (double alpha,
+                                               sc_dmatrix_t * X);
+
 void                sc_dmatrix_copy (sc_dmatrix_t * X, sc_dmatrix_t * Y);
 
 /*! \brief Matrix Matrix Add (AXPY)  \c Y = alpha X + Y
