@@ -272,8 +272,8 @@ sc_dmatrix_multiply (sc_trans_t transa, sc_trans_t transb, double alpha,
   Ccols = C->n;
 
   SC_ASSERT (Acols == Brows && Arows == Crows && Bcols == Ccols);
-  SC_ASSERT (transa >= 0 && transa < SC_TRANS_ANCHOR);
-  SC_ASSERT (transb >= 0 && transb < SC_TRANS_ANCHOR);
+  SC_ASSERT (transa == SC_NO_TRANS || transa == SC_TRANS);
+  SC_ASSERT (transb == SC_NO_TRANS || transb == SC_TRANS);
 
   SC_ASSERT (Acols != 0 && Crows != 0 && Ccols != 0);
 
