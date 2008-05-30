@@ -26,7 +26,7 @@
 typedef struct sc_dmatrix
 {
   double            **e;
-  int                 m, n;
+  sc_bint_t           m, n;
   bool                view;
 }
 sc_dmatrix_t;
@@ -35,12 +35,13 @@ sc_dmatrix_t;
  * The sc_dmatrix_new/clone functions abort on allocation errors.
  * There is no need to check the return value.
  */
-sc_dmatrix_t       *sc_dmatrix_new (int m, int n);
-sc_dmatrix_t       *sc_dmatrix_new_zero (int m, int n);
+sc_dmatrix_t       *sc_dmatrix_new (sc_bint_t m, sc_bint_t n);
+sc_dmatrix_t       *sc_dmatrix_new_zero (sc_bint_t m, sc_bint_t n);
 sc_dmatrix_t       *sc_dmatrix_clone (sc_dmatrix_t * dmatrix);
-sc_dmatrix_t       *sc_dmatrix_view (int m, int n, double *data);
+sc_dmatrix_t       *sc_dmatrix_view (sc_bint_t m, sc_bint_t n, double *data);
 
-void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, int m, int n);
+void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m,
+                                        sc_bint_t n);
 
 void                sc_dmatrix_destroy (sc_dmatrix_t * dmatrix);
 
