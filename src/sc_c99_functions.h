@@ -38,4 +38,9 @@ Boston, MA 02110-1301, USA.  */
 double              tgamma (double);
 double              trunc (double);
 
+/* Supply prototypes that splint doesn't know about */
+#ifdef ACX_SPLINT
+long long int       strtoll (const char *nptr, char **endptr, int base);
+#endif
+
 #endif /* SC_C99_FUNCTIONS_H  */

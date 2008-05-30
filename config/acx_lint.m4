@@ -71,7 +71,8 @@ fi
 
 case $LINT in
   splint|*/splint)
-    LINT_FLAGS="$LINT_FLAGS -systemdirs /usr/include:$MPI_INCLUDE_PATH"
+    LINT_FLAGS="$LINT_FLAGS -DACX_SPLINT \
+                -systemdirs /usr/include:$MPI_INCLUDE_PATH"
     ;;
 esac
 
