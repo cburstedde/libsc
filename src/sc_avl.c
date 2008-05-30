@@ -98,7 +98,7 @@ unsigned int avl_count(const avl_tree_t *avltree) {
 	return NODE_COUNT(avltree->top);
 }
 
-avl_node_t *avl_at(const avl_tree_t *avltree, unsigned int index) {
+avl_node_t *avl_at(const avl_tree_t *avltree, unsigned int u) {
 	avl_node_t *avlnode;
 	unsigned int c;
 
@@ -107,11 +107,11 @@ avl_node_t *avl_at(const avl_tree_t *avltree, unsigned int index) {
 	while(avlnode) {
 		c = L_COUNT(avlnode);
 
-		if(index < c) {
+		if(u < c) {
 			avlnode = avlnode->left;
-		} else if(index > c) {
+		} else if(u > c) {
 			avlnode = avlnode->right;
-			index -= c+1;
+			u -= c+1;
 		} else {
 			return avlnode;
 		}
@@ -604,7 +604,7 @@ void avl_rebalance(avl_tree_t *avltree, avl_node_t *avlnode) {
 
 typedef struct avl_to_array_data
 {
-  size_t              index;
+  size_t              iz;
   sc_array_t         *array;
 }
 avl_to_array_data_t;
@@ -622,10 +622,10 @@ avl_to_array_foreach (void *item, void *data)
   void              **pp;
   avl_to_array_data_t *adata = data;
 
-  pp = sc_array_index (adata->array, adata->index);
+  pp = sc_array_index (adata->array, adata->iz);
   *pp = item;
 
-  ++adata->index;
+  ++adata->iz;
 }
 
 static void
@@ -663,10 +663,10 @@ avl_to_array (avl_tree_t * avltree, sc_array_t * array)
 
   sc_array_resize (array, avl_count (avltree));
 
-  adata.index = 0;
+  adata.iz = 0;
   adata.array = array;
   avl_foreach (avltree, avl_to_array_foreach, &adata);
-  SC_ASSERT (adata.index == adata.array->elem_count);
+  SC_ASSERT (adata.iz == adata.array->elem_count);
 }
 
 #endif /* AVL_COUNT */

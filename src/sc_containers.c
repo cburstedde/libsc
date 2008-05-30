@@ -211,18 +211,18 @@ ssize_t
 sc_array_bsearch (sc_array_t * array, const void *key,
                   int (*compar) (const void *, const void *))
 {
-  ssize_t             index = -1;
+  ssize_t             is = -1;
   char               *retval;
 
   retval = (char *)
     bsearch (key, array->array, array->elem_count, array->elem_size, compar);
 
   if (retval != NULL) {
-    index = (ssize_t) ((retval - array->array) / array->elem_size);
-    SC_ASSERT (index >= 0 && (size_t) index < array->elem_count);
+    is = (ssize_t) ((retval - array->array) / array->elem_size);
+    SC_ASSERT (is >= 0 && is < (ssize_t) array->elem_count);
   }
 
-  return index;
+  return is;
 }
 
 unsigned
@@ -458,14 +458,14 @@ sc_list_init (sc_list_t * list, sc_mempool_t * allocator)
 void
 sc_list_reset (sc_list_t * list)
 {
-  sc_link_t          *link;
+  sc_link_t          *lynk;
   sc_link_t          *temp;
 
-  link = list->first;
-  while (link != NULL) {
-    temp = link->next;
-    sc_mempool_free (list->allocator, link);
-    link = temp;
+  lynk = list->first;
+  while (lynk != NULL) {
+    temp = lynk->next;
+    sc_mempool_free (list->allocator, lynk);
+    lynk = temp;
     --list->elem_count;
   }
   SC_ASSERT (list->elem_count == 0);
@@ -483,14 +483,14 @@ sc_list_unlink (sc_list_t * list)
 void
 sc_list_prepend (sc_list_t * list, void *data)
 {
-  sc_link_t          *link;
+  sc_link_t          *lynk;
 
-  link = sc_mempool_alloc (list->allocator);
-  link->data = data;
-  link->next = list->first;
-  list->first = link;
+  lynk = sc_mempool_alloc (list->allocator);
+  lynk->data = data;
+  lynk->next = list->first;
+  list->first = lynk;
   if (list->last == NULL) {
-    list->last = link;
+    list->last = lynk;
   }
 
   ++list->elem_count;
@@ -499,18 +499,18 @@ sc_list_prepend (sc_list_t * list, void *data)
 void
 sc_list_append (sc_list_t * list, void *data)
 {
-  sc_link_t          *link;
+  sc_link_t          *lynk;
 
-  link = sc_mempool_alloc (list->allocator);
-  link->data = data;
-  link->next = NULL;
+  lynk = sc_mempool_alloc (list->allocator);
+  lynk->data = data;
+  lynk->next = NULL;
   if (list->last != NULL) {
-    list->last->next = link;
+    list->last->next = lynk;
   }
   else {
-    list->first = link;
+    list->first = lynk;
   }
-  list->last = link;
+  list->last = lynk;
 
   ++list->elem_count;
 }
@@ -518,16 +518,16 @@ sc_list_append (sc_list_t * list, void *data)
 void
 sc_list_insert (sc_list_t * list, sc_link_t * pred, void *data)
 {
-  sc_link_t          *link;
+  sc_link_t          *lynk;
 
   SC_ASSERT (pred != NULL);
 
-  link = sc_mempool_alloc (list->allocator);
-  link->data = data;
-  link->next = pred->next;
-  pred->next = link;
+  lynk = sc_mempool_alloc (list->allocator);
+  lynk->data = data;
+  lynk->next = pred->next;
+  pred->next = lynk;
   if (pred == list->last) {
-    list->last = link;
+    list->last = lynk;
   }
 
   ++list->elem_count;
@@ -536,7 +536,7 @@ sc_list_insert (sc_list_t * list, sc_link_t * pred, void *data)
 void               *
 sc_list_remove (sc_list_t * list, sc_link_t * pred)
 {
-  sc_link_t          *link;
+  sc_link_t          *lynk;
   void               *data;
 
   if (pred == NULL) {
@@ -545,13 +545,13 @@ sc_list_remove (sc_list_t * list, sc_link_t * pred)
 
   SC_ASSERT (pred->next != NULL);
 
-  link = pred->next;
-  pred->next = link->next;
-  data = link->data;
-  if (list->last == link) {
+  lynk = pred->next;
+  pred->next = lynk->next;
+  data = lynk->data;
+  if (list->last == lynk) {
     list->last = pred;
   }
-  sc_mempool_free (list->allocator, link);
+  sc_mempool_free (list->allocator, lynk);
 
   --list->elem_count;
   return data;
@@ -560,15 +560,15 @@ sc_list_remove (sc_list_t * list, sc_link_t * pred)
 void               *
 sc_list_pop (sc_list_t * list)
 {
-  sc_link_t          *link;
+  sc_link_t          *lynk;
   void               *data;
 
   SC_ASSERT (list->first != NULL);
 
-  link = list->first;
-  list->first = link->next;
-  data = link->data;
-  sc_mempool_free (list->allocator, link);
+  lynk = list->first;
+  list->first = lynk->next;
+  data = lynk->data;
+  sc_mempool_free (list->allocator, lynk);
   if (list->first == NULL) {
     list->last = NULL;
   }
@@ -588,7 +588,7 @@ sc_hash_maybe_resize (sc_hash_t * hash)
   size_t              i, j;
   size_t              new_size, new_count;
   sc_list_t          *old_list, *new_list;
-  sc_link_t          *link, *temp;
+  sc_link_t          *lynk, *temp;
   sc_array_t         *new_slots;
   sc_array_t         *old_slots = hash->slots;
 
@@ -621,18 +621,18 @@ sc_hash_maybe_resize (sc_hash_t * hash)
   new_count = 0;
   for (i = 0; i < old_slots->elem_count; ++i) {
     old_list = sc_array_index (old_slots, i);
-    link = old_list->first;
-    while (link != NULL) {
+    lynk = old_list->first;
+    while (lynk != NULL) {
       /* insert data into new slot list */
-      j = hash->hash_fn (link->data) % new_size;
+      j = hash->hash_fn (lynk->data) % new_size;
       new_list = sc_array_index (new_slots, j);
-      sc_list_prepend (new_list, link->data);
+      sc_list_prepend (new_list, lynk->data);
       ++new_count;
 
       /* remove old list element */
-      temp = link->next;
-      sc_mempool_free (old_list->allocator, link);
-      link = temp;
+      temp = lynk->next;
+      sc_mempool_free (old_list->allocator, lynk);
+      lynk = temp;
       --old_list->elem_count;
     }
     SC_ASSERT (old_list->elem_count == 0);
@@ -749,16 +749,16 @@ sc_hash_lookup (sc_hash_t * hash, void *v, void **found)
 {
   size_t              hval;
   sc_list_t          *list;
-  sc_link_t          *link;
+  sc_link_t          *lynk;
 
   hval = hash->hash_fn (v) % hash->slots->elem_count;
   list = sc_array_index (hash->slots, hval);
 
-  for (link = list->first; link != NULL; link = link->next) {
+  for (lynk = list->first; lynk != NULL; lynk = lynk->next) {
     /* check if an equal object is contained in the hash table */
-    if (hash->equal_fn (link->data, v)) {
+    if (hash->equal_fn (lynk->data, v)) {
       if (found != NULL) {
-        *found = link->data;
+        *found = lynk->data;
       }
       return 1;
     }
@@ -771,16 +771,16 @@ sc_hash_insert_unique (sc_hash_t * hash, void *v, void **found)
 {
   size_t              hval;
   sc_list_t          *list;
-  sc_link_t          *link;
+  sc_link_t          *lynk;
 
   hval = hash->hash_fn (v) % hash->slots->elem_count;
   list = sc_array_index (hash->slots, hval);
 
-  for (link = list->first; link != NULL; link = link->next) {
+  for (lynk = list->first; lynk != NULL; lynk = lynk->next) {
     /* check if an equal object is already contained in the hash table */
-    if (hash->equal_fn (link->data, v)) {
+    if (hash->equal_fn (lynk->data, v)) {
       if (found != NULL) {
-        *found = link->data;
+        *found = lynk->data;
       }
       return 0;
     }
@@ -801,17 +801,17 @@ sc_hash_remove (sc_hash_t * hash, void *v, void **found)
 {
   size_t              hval;
   sc_list_t          *list;
-  sc_link_t          *link, *prev;
+  sc_link_t          *lynk, *prev;
 
   hval = hash->hash_fn (v) % hash->slots->elem_count;
   list = sc_array_index (hash->slots, hval);
 
   prev = NULL;
-  for (link = list->first; link != NULL; link = link->next) {
+  for (lynk = list->first; lynk != NULL; lynk = lynk->next) {
     /* check if an equal object is contained in the hash table */
-    if (hash->equal_fn (link->data, v)) {
+    if (hash->equal_fn (lynk->data, v)) {
       if (found != NULL) {
-        *found = link->data;
+        *found = lynk->data;
       }
       (void) sc_list_remove (list, prev);
       --hash->elem_count;
@@ -822,7 +822,7 @@ sc_hash_remove (sc_hash_t * hash, void *v, void **found)
       }
       return 1;
     }
-    prev = link;
+    prev = lynk;
   }
   return 0;
 }

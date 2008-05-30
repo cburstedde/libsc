@@ -21,10 +21,6 @@
 #ifndef SC_LAPACK_H
 #define SC_LAPACK_H
 
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
-
 #include <sc_blas.h>
 
 typedef enum sc_jobz

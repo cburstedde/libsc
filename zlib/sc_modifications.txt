@@ -1,0 +1,8 @@
+
+Summary of all changes to the original zlib 1.2.3 for inclusion in libsc
+
+ * The files zlib.h and zconf.h have been renamed sc_zlib.h and sc_zconf.h
+   and moved to the sc directory.
+ * The include directives for zlib.h and zconf.h have been adapted in all
+   files in this directory
+ * A warning has been fixed in gzio.c:550 by including a (char *) cast.

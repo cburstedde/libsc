@@ -41,13 +41,13 @@ sc_options_new (const char *program_path)
 void
 sc_options_destroy (sc_options_t * opt)
 {
-  size_t              i;
+  size_t              iz;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
 
-  for (i = 0; i < count; ++i) {
-    item = sc_array_index (items, i);
+  for (iz = 0; iz < count; ++iz) {
+    item = sc_array_index (items, iz);
     SC_FREE (item->string_value);
   }
 
@@ -60,16 +60,16 @@ sc_options_add_switch (sc_options_t * opt, int opt_char,
                        const char *opt_name,
                        int *variable, const char *help_string)
 {
-  size_t              index;
+  size_t              iz;
   sc_array_t         *items = opt->option_items;
   sc_option_item_t   *item;
 
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  index = items->elem_count;
-  sc_array_resize (items, index + 1);
-  item = sc_array_index (items, index);
+  iz = items->elem_count;
+  sc_array_resize (items, iz + 1);
+  item = sc_array_index (items, iz);
 
   item->opt_type = SC_OPTION_SWITCH;
   item->opt_char = opt_char;
@@ -87,16 +87,16 @@ sc_options_add_int (sc_options_t * opt, int opt_char,
                     const char *opt_name,
                     int *variable, int init_value, const char *help_string)
 {
-  size_t              index;
+  size_t              iz;
   sc_array_t         *items = opt->option_items;
   sc_option_item_t   *item;
 
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  index = items->elem_count;
-  sc_array_resize (items, index + 1);
-  item = sc_array_index (items, index);
+  iz = items->elem_count;
+  sc_array_resize (items, iz + 1);
+  item = sc_array_index (items, iz);
 
   item->opt_type = SC_OPTION_INT;
   item->opt_char = opt_char;
@@ -115,16 +115,16 @@ sc_options_add_double (sc_options_t * opt, int opt_char,
                        double *variable, double init_value,
                        const char *help_string)
 {
-  size_t              index;
+  size_t              iz;
   sc_array_t         *items = opt->option_items;
   sc_option_item_t   *item;
 
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  index = items->elem_count;
-  sc_array_resize (items, index + 1);
-  item = sc_array_index (items, index);
+  iz = items->elem_count;
+  sc_array_resize (items, iz + 1);
+  item = sc_array_index (items, iz);
 
   item->opt_type = SC_OPTION_DOUBLE;
   item->opt_char = opt_char;
@@ -144,16 +144,16 @@ sc_options_add_string (sc_options_t * opt,
                        const char **variable,
                        const char *init_value, const char *help_string)
 {
-  size_t              index;
+  size_t              iz;
   sc_array_t         *items = opt->option_items;
   sc_option_item_t   *item;
 
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  index = items->elem_count;
-  sc_array_resize (items, index + 1);
-  item = sc_array_index (items, index);
+  iz = items->elem_count;
+  sc_array_resize (items, iz + 1);
+  item = sc_array_index (items, iz);
 
   item->opt_type = SC_OPTION_STRING;
   item->opt_char = opt_char;
@@ -171,16 +171,16 @@ sc_options_add_inifile (sc_options_t * opt,
                         int opt_char,
                         const char *opt_name, const char *help_string)
 {
-  size_t              index;
+  size_t              iz;
   sc_array_t         *items = opt->option_items;
   sc_option_item_t   *item;
 
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  index = items->elem_count;
-  sc_array_resize (items, index + 1);
-  item = sc_array_index (items, index);
+  iz = items->elem_count;
+  sc_array_resize (items, iz + 1);
+  item = sc_array_index (items, iz);
 
   item->opt_type = SC_OPTION_INIFILE;
   item->opt_char = opt_char;
@@ -195,7 +195,7 @@ void
 sc_options_print_help (sc_options_t * opt, int include_args, FILE * nout)
 {
   int                 printed;
-  size_t              i;
+  size_t              iz;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
@@ -214,8 +214,8 @@ sc_options_print_help (sc_options_t * opt, int include_args, FILE * nout)
 
   fprintf (nout, "Usage: %s <OPTIONS>%s\n", opt->program_name, provide_args);
   fprintf (nout, "   OPTIONS:\n");
-  for (i = 0; i < count; ++i) {
-    item = sc_array_index (items, i);
+  for (iz = 0; iz < count; ++iz) {
+    item = sc_array_index (items, iz);
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
       provide_short = "";
@@ -271,7 +271,7 @@ void
 sc_options_print_summary (sc_options_t * opt, FILE * nout)
 {
   int                 printed;
-  size_t              i;
+  size_t              iz;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
@@ -286,8 +286,8 @@ sc_options_print_summary (sc_options_t * opt, FILE * nout)
   }
 
   fprintf (nout, "Summary:\n   OPTIONS:\n");
-  for (i = 0; i < count; ++i) {
-    item = sc_array_index (items, i);
+  for (iz = 0; iz < count; ++iz) {
+    item = sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE) {
       continue;
     }
@@ -343,7 +343,7 @@ sc_options_print_arguments (sc_options_t * opt,
 int
 sc_options_load (sc_options_t * opt, const char *inifile, FILE * nerr)
 {
-  size_t              i;
+  size_t              iz;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
@@ -359,8 +359,8 @@ sc_options_load (sc_options_t * opt, const char *inifile, FILE * nerr)
     return -1;
   }
 
-  for (i = 0; i < count; ++i) {
-    item = sc_array_index (items, i);
+  for (iz = 0; iz < count; ++iz) {
+    item = sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE) {
       continue;
     }
@@ -427,7 +427,7 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
   int                 position, printed;
   int                 c, option_index;
   int                 item_index;
-  size_t              i;
+  size_t              iz;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
@@ -440,8 +440,8 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
 
   lo = longopts;
   position = 0;
-  for (i = 0; i < count; ++i) {
-    item = sc_array_index (items, i);
+  for (iz = 0; iz < count; ++iz) {
+    item = sc_array_index (items, iz);
     if (item->opt_char != '\0') {
       printed = snprintf (optstring + position, BUFSIZ - position,
                           "%c%s", item->opt_char, item->has_arg ? ":" : "");
@@ -452,7 +452,7 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
       lo->name = item->opt_name;
       lo->has_arg = item->has_arg;
       lo->flag = &item_index;
-      lo->val = (int) i;
+      lo->val = (int) iz;
       ++lo;
     }
   }
@@ -480,13 +480,13 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
       item = sc_array_index (items, (size_t) item_index);
     }
     else {                      /* short option */
-      for (i = 0; i < count; ++i) {
-        item = sc_array_index (items, i);
+      for (iz = 0; iz < count; ++iz) {
+        item = sc_array_index (items, iz);
         if (item->opt_char == c) {
           break;
         }
       }
-      if (i == count) {
+      if (iz == count) {
         if (nerr != NULL) {
           fprintf (nerr, "Encountered invalid short option: %c\n", c);
         }

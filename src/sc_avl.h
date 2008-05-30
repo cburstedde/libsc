@@ -31,8 +31,8 @@
 
 /* renamed from avl.h to sc_avl.h for the SC Library and modified */
 
-#ifndef SC_AVL_H
-#define SC_AVL_H
+#ifndef _AVL_H
+#define _AVL_H
 
 #include <sc_containers.h>
 
@@ -205,4 +205,4 @@ extern void avl_to_array (avl_tree_t *, sc_array_t *);
 
 #endif /* AVL_COUNT */
 
-#endif /* !SC_AVL_H */
+#endif /* !_AVL_H */

@@ -150,11 +150,11 @@ size_t              sc_array_pqueue_pop (sc_array_t * array,
  */
 /*@unused@*/
 static inline void *
-sc_array_index (sc_array_t * array, size_t index)
+sc_array_index (sc_array_t * array, size_t iz)
 {
-  SC_ASSERT (index < array->elem_count);
+  SC_ASSERT (iz < array->elem_count);
 
-  return (void *) (array->array + (array->elem_size * index));
+  return (void *) (array->array + (array->elem_size * iz));
 }
 
 /** Remove the last element from an array and return a pointer to it.

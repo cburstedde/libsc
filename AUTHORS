@@ -34,8 +34,7 @@
 /*
   The files under zlib except zlib/Makefile.am are copied from zlib 1.2.3,
   Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler.  They have been
-  modified to include sc_zlib.h and sc_zconf.h, see above.  Also a warning
-  has been fixed in gzio.c.
+  modified as described in zlib/sc_modifications.txt.
 */
 
 /*

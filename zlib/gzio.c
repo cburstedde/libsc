@@ -5,10 +5,6 @@
  * Compile this file with -DNO_GZCOMPRESS to avoid the compression code.
  */
 
-/*
- * To line 554 has been added a (char *) cast to remove a warning.
- */
-
 /* @(#) $Id$ */
 
 #include <stdio.h>
