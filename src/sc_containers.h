@@ -157,6 +157,30 @@ sc_array_index (sc_array_t * array, size_t iz)
   return (void *) (array->array + (array->elem_size * iz));
 }
 
+/** Returns a pointer to an array element indexed by a plain int.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ */
+/*@unused@*/
+static inline void *
+sc_array_index_int (sc_array_t * array, int i)
+{
+  SC_ASSERT (i >= 0 && (size_t) i < array->elem_count);
+
+  return (void *) (array->array + (array->elem_size * (size_t) i));
+}
+
+/** Returns a pointer to an array element indexed by a ssize_t.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ */
+/*@unused@*/
+static inline void *
+sc_array_index_ssize_t (sc_array_t * array, ssize_t is)
+{
+  SC_ASSERT (is >= 0 && (size_t) is < array->elem_count);
+
+  return (void *) (array->array + (array->elem_size * (size_t) is));
+}
+
 /** Remove the last element from an array and return a pointer to it.
  * This is safe since the array memory is not freed or reallocated.
  * \return Returns a pointer to the last element before removal.

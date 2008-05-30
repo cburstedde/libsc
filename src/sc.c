@@ -78,6 +78,7 @@ const int sc_log2_lookup_table[256] =
 
 static long         sc_vp_default_key[2];
 void               *SC_VP_DEFAULT  = (void *) &sc_vp_default_key[0];
+/*@access FILE@*/
 FILE               *SC_FP_KEEP     = (FILE *) &sc_vp_default_key[1];
 FILE               *sc_root_stdout = NULL;
 FILE               *sc_root_stderr = NULL;
