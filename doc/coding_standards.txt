@@ -15,3 +15,12 @@ tries to adhere to.
    Loop variables of type int can be named as usual: i, j, etc.
    Loop variables of type size_t should be named iz, jz, etc.
    Loop variables of type ssize_t should be named is, js, etc.
+
+ * Printf and friends on 64bit integers, size_t, etc.
+   We will have to wait until all compilers and some lint checkers
+   understand printf ("%jd %ju", (intmax_t) i, (uintmax_t) u) since that
+   is a nice way to accomodate 128bit integers without changing the printf
+   code.  In the mean time, we're using printf ("%lld %llu", (long long)
+   i, (unsigned long long) j) which is unsafe for 128 bit integers.
+   This also holds for size_t since support for the following is still
+   incomplete: printf ("%zd %zu", ssize_t_var, size_t_var).

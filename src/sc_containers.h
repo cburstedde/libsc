@@ -31,9 +31,9 @@
 typedef unsigned    (*sc_hash_function_t) (const void *v);
 
 /** Function to check equality of two objects.
- * \return Returns 0 if *v1 is unequal *v2 and true otherwise.
+ * \return Returns false if *v1 is unequal *v2 and true otherwise.
  */
-typedef int         (*sc_equal_function_t) (const void *v1, const void *v2);
+typedef bool        (*sc_equal_function_t) (const void *v1, const void *v2);
 
 /** The sc_array object provides a large array of equal-size elements.
  * The array can be resized.
@@ -415,26 +415,26 @@ void                sc_hash_unlink_destroy (sc_hash_t * hash);
  * \param [in]  v      The object to be looked up.
  * \param [out] found  If found != NULL, *found is set to the object
  *                     if the object is found.
- * \return Returns 1 if object is found, 0 otherwise.
+ * \return Returns true if object is found, false otherwise.
  */
-int                 sc_hash_lookup (sc_hash_t * hash, void *v, void **found);
+bool                sc_hash_lookup (sc_hash_t * hash, void *v, void **found);
 
 /** Insert an object into a hash table if it is not contained already.
  * \param [in]  v      The object to be inserted.
  * \param [out] found  If found != NULL, *found is set to the object
  *                     that is already contained if that exists.
- * \return Returns 1 if object is added, 0 if it is already contained.
+ * \return Returns true if object is added, false if it is already contained.
  */
-int                 sc_hash_insert_unique (sc_hash_t * hash, void *v,
+bool                sc_hash_insert_unique (sc_hash_t * hash, void *v,
                                            void **found);
 
 /** Remove an object from a hash table.
  * \param [in]  v      The object to be removed.
  * \param [out] found  If found != NULL, *found is set to the object
                        that is removed if that exists.
- * \return Returns 1 if object is found, 0 if is not contained.
+ * \return Returns true if object is found, false if is not contained.
  */
-int                 sc_hash_remove (sc_hash_t * hash, void *v, void **found);
+bool                sc_hash_remove (sc_hash_t * hash, void *v, void **found);
 
 /** Compute and print statistical information about the occupancy.
  */

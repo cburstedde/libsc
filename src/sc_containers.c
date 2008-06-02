@@ -744,7 +744,7 @@ sc_hash_unlink_destroy (sc_hash_t * hash)
   SC_FREE (hash);
 }
 
-int
+bool
 sc_hash_lookup (sc_hash_t * hash, void *v, void **found)
 {
   size_t              hval;
@@ -760,13 +760,13 @@ sc_hash_lookup (sc_hash_t * hash, void *v, void **found)
       if (found != NULL) {
         *found = lynk->data;
       }
-      return 1;
+      return true;
     }
   }
-  return 0;
+  return false;
 }
 
-int
+bool
 sc_hash_insert_unique (sc_hash_t * hash, void *v, void **found)
 {
   size_t              hval;
@@ -782,7 +782,7 @@ sc_hash_insert_unique (sc_hash_t * hash, void *v, void **found)
       if (found != NULL) {
         *found = lynk->data;
       }
-      return 0;
+      return false;
     }
   }
   /* append new object to the list */
@@ -793,10 +793,10 @@ sc_hash_insert_unique (sc_hash_t * hash, void *v, void **found)
   if (hash->elem_count % hash->slots->elem_count == 0) {
     sc_hash_maybe_resize (hash);
   }
-  return 1;
+  return true;
 }
 
-int
+bool
 sc_hash_remove (sc_hash_t * hash, void *v, void **found)
 {
   size_t              hval;
@@ -820,11 +820,11 @@ sc_hash_remove (sc_hash_t * hash, void *v, void **found)
       if (hash->elem_count % sc_hash_shrink_interval == 0) {
         sc_hash_maybe_resize (hash);
       }
-      return 1;
+      return true;
     }
     prev = lynk;
   }
-  return 0;
+  return false;
 }
 
 void
