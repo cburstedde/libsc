@@ -33,7 +33,8 @@ typedef unsigned    (*sc_hash_function_t) (const void *v);
 /** Function to check equality of two objects.
  * \return Returns false if *v1 is unequal *v2 and true otherwise.
  */
-typedef bool        (*sc_equal_function_t) (const void *v1, const void *v2);
+typedef             bool (*sc_equal_function_t) (const void *v1,
+                                                 const void *v2);
 
 /** The sc_array object provides a large array of equal-size elements.
  * The array can be resized.
