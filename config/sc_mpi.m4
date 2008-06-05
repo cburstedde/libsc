@@ -60,7 +60,7 @@ MPI_CC_NONE=
 MPI_F77_NONE=
 
 AC_ARG_ENABLE([mpi],
-[AC_HELP_STRING([--enable-mpi], [enable MPI])],
+[AS_HELP_STRING([--enable-mpi], [enable MPI])],
 [
 if test "$enableval" = yes ; then
   HAVE_PKG_MPI=yes
@@ -70,7 +70,7 @@ fi
 ])
 
 AC_ARG_WITH([mpicc],
-[AC_HELP_STRING([--with-mpicc=MPICC], [specify MPI C compiler])],
+[AS_HELP_STRING([--with-mpicc=MPICC], [specify MPI C compiler])],
 [
 if test "$withval" = yes ; then
   AC_MSG_ERROR([Please use --with-mpicc=MPICC with a valid mpi C compiler])
@@ -85,7 +85,7 @@ fi
 ])
 
 AC_ARG_WITH([mpif77],
-[AC_HELP_STRING([--with-mpif77=MPIF77], [specify MPI F77 compiler])],
+[AS_HELP_STRING([--with-mpif77=MPIF77], [specify MPI F77 compiler])],
 [
 if test "$withval" = yes ; then
   AC_MSG_ERROR([Please use --with-mpif77=MPIF77 with a valid mpi F77 compiler])

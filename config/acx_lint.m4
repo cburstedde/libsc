@@ -41,7 +41,7 @@ dnl of the copyright holder.
 AC_DEFUN([ACX_WITH_LINT],[
 
 # Allow checking code with lint, sparse, etc.
-AC_ARG_WITH([lint], [AC_HELP_STRING([--with-lint],
+AC_ARG_WITH([lint], [AS_HELP_STRING([--with-lint],
             [use static source code checker (default: disabled)])],
             [use_lint=$withval], [use_lint=no])
 if test "$use_lint" = yes ; then

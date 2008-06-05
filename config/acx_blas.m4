@@ -84,7 +84,7 @@ dnl AC_REQUIRE([AC_F77_WRAPPERS])
 acx_blas_ok=no
 user_spec_blas_failed=no
 
-AC_ARG_WITH([blas], [AC_HELP_STRING([--with-blas=<lib>],
+AC_ARG_WITH([blas], [AS_HELP_STRING([--with-blas=<lib>],
             [change default BLAS library to <lib>
              or specify --without-blas to use no BLAS and LAPACK at all])])
 case $with_blas in

@@ -11,7 +11,7 @@ dnl Default is disabled
 dnl
 AC_DEFUN([SC_ARG_ENABLE_PREFIX],
 [
-AC_ARG_ENABLE([$1], [AC_HELP_STRING([--enable-$1], [$2])],
+AC_ARG_ENABLE([$1], [AS_HELP_STRING([--enable-$1], [$2])],
               [$4_ENABLE_$3="$enableval"], [$4_ENABLE_$3="no"])
 if test "$$4_ENABLE_$3" != "no" ; then
   AC_DEFINE([$3], 1, [$2])
@@ -27,7 +27,7 @@ dnl Default is enabled
 dnl
 AC_DEFUN([SC_ARG_DISABLE_PREFIX],
 [
-AC_ARG_ENABLE([$1], [AC_HELP_STRING([--disable-$1], [$2])],
+AC_ARG_ENABLE([$1], [AS_HELP_STRING([--disable-$1], [$2])],
               [$4_ENABLE_$3="$enableval"], [$4_ENABLE_$3="yes"])
 if test "$$4_ENABLE_$3" != "no" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
@@ -43,7 +43,7 @@ dnl Default is without
 dnl
 AC_DEFUN([SC_ARG_WITH_PREFIX],
 [
-AC_ARG_WITH([$1], [AC_HELP_STRING([--with-$1], [$2])],
+AC_ARG_WITH([$1], [AS_HELP_STRING([--with-$1], [$2])],
             [$4_WITH_$3="$withval"], [$4_WITH_$3="no"])
 if test "$$4_WITH_$3" != "no" ; then
   AC_DEFINE([$3], 1, [$2])
@@ -59,7 +59,7 @@ dnl Default is with
 dnl
 AC_DEFUN([SC_ARG_WITHOUT_PREFIX],
 [
-AC_ARG_WITH([$1], [AC_HELP_STRING([--without-$1], [$2])],
+AC_ARG_WITH([$1], [AS_HELP_STRING([--without-$1], [$2])],
             [$4_WITH_$3="$withval"], [$4_WITH_$3="yes"])
 if test "$$4_WITH_$3" != "no" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
@@ -75,7 +75,7 @@ dnl Default is no
 dnl
 AC_DEFUN([SC_ARG_WITH_YES_PREFIX],
 [
-AC_ARG_WITH([$1], [AC_HELP_STRING([--with-$1], [$2])],
+AC_ARG_WITH([$1], [AS_HELP_STRING([--with-$1], [$2])],
             [$4_WITH_$3="$withval"], [$4_WITH_$3="no"])
 if test "$$4_WITH_$3" = "yes" ; then
   AC_DEFINE([$3], 1, [$2])
@@ -92,7 +92,7 @@ dnl Default is yes
 dnl
 AC_DEFUN([SC_ARG_WITHOUT_YES_PREFIX],
 [
-AC_ARG_WITH([$1], [AC_HELP_STRING([--without-$1], [$2])],
+AC_ARG_WITH([$1], [AS_HELP_STRING([--without-$1], [$2])],
             [$4_WITH_$3="$withval"], [$4_WITH_$3="yes"])
 if test "$$4_WITH_$3" = "yes" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
@@ -120,9 +120,11 @@ dnl SC_REQUIRE_FUNCS(FUNCTION LIST)
 dnl Check for all functions in FUNCTION LIST, exit with error if not found
 dnl
 AC_DEFUN([SC_REQUIRE_FUNCS],
-    [
-     AC_FOREACH([sc_thefunc], [$1],
-      [AC_CHECK_FUNC([sc_thefunc], ,
-        [AC_MSG_ERROR([Could not find function sc_thefunc])])])])
+[
+m4_foreach_w([sc_thefunc], [$1],
+             [AC_CHECK_FUNC([sc_thefunc], ,
+                            [AC_MSG_ERROR([\
+Could not find function sc_thefunc])])])
+])
 
 dnl EOF acinclude.m4

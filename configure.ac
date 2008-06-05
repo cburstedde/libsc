@@ -2,8 +2,8 @@ dnl
 dnl This file is part of the SC Library.
 dnl
 
-AC_INIT([libsc], [0.5], [ccgo@ices.utexas.edu])
-AC_PREREQ([2.59])
+AC_INIT([libsc],[0.5],[ccgo@ices.utexas.edu])
+AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([src/pre_config.h])
 AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR([config])
@@ -18,7 +18,7 @@ echo "| Processing options"
 echo "o---------------------------------------"
 
 AC_ARG_ENABLE([logging],
-              [AC_HELP_STRING([--enable-logging=PRIO], [\
+              [AS_HELP_STRING([--enable-logging=PRIO], [\
 change log threshold (see sc.h for possible values)])],
               [case "$enableval" in
                  yes) AC_MSG_ERROR([\

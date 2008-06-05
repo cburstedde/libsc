@@ -78,7 +78,7 @@ AC_REQUIRE([ACX_BLAS])
 acx_lapack_ok=no
 user_spec_lapack_failed=no
 
-AC_ARG_WITH([lapack], [AC_HELP_STRING([--with-lapack=<lib>],
+AC_ARG_WITH([lapack], [AS_HELP_STRING([--with-lapack=<lib>],
             [change default LAPACK library to <lib>
              or specify --without-lapack to use no LAPACK at all])])
 case $with_lapack in
