@@ -26,6 +26,7 @@
 #endif
 
 typedef int         sc_bint_t;  /* Integer type for all of the blas calls */
+typedef unsigned int sc_buint_t;        /* Unsigned Integer type for blas */
 
 typedef enum sc_trans
 {

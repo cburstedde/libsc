@@ -101,6 +101,18 @@ void                sc_dmatrix_multiply (sc_trans_t transa,
                                          sc_dmatrix_t * B, double beta,
                                          sc_dmatrix_t * C);
 
+/** \brief Right Divide \c A / \c B.
+ * Solves  \c A = \c C \c B or \c A = \c C \c B'.
+ *
+ *   \param transb Use the transpose of \c B
+ *   \param A matrix
+ *   \param B matrix
+ *   \param C matrix
+ */
+void                sc_dmatrix_rdivide (sc_trans_t transb,
+                                        sc_dmatrix_t * A,
+                                        sc_dmatrix_t * B, sc_dmatrix_t * C);
+
 /** \brief Prints a matrix to \c fp
  *
  *   \param dmatrix Pointer to matrix to print

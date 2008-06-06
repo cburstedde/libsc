@@ -21,6 +21,7 @@
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
 #include <sc_dmatrix.h>
+#include <sc_lapack.h>
 
 static void
 sc_dmatrix_new_e (sc_dmatrix_t * rdm, sc_bint_t m, sc_bint_t n, double *data)
@@ -293,6 +294,45 @@ sc_dmatrix_multiply (sc_trans_t transa, sc_trans_t transb, double alpha,
   BLAS_DGEMM (&sc_transchar[transb], &sc_transchar[transa], &Ccols,
               &Crows, &Acols, &alpha, B->e[0], &B->n, A->e[0], &A->n, &beta,
               C->e[0], &C->n);
+}
+
+void
+sc_dmatrix_rdivide (sc_trans_t transb,
+                    sc_dmatrix_t * A, sc_dmatrix_t * B, sc_dmatrix_t * C)
+{
+  sc_bint_t           A_nrows = A->m;
+  sc_bint_t           A_ncols = A->n;
+  sc_bint_t           B_nrows = (transb == SC_NO_TRANS) ? B->m : B->n;
+  sc_bint_t           B_ncols = (transb == SC_NO_TRANS) ? B->n : B->m;
+  sc_bint_t           C_nrows = C->m;
+  sc_bint_t           C_ncols = C->n;
+  sc_bint_t           M = B_ncols, N = B_nrows, Nrhs = A_nrows, info = 0;
+
+  SC_ASSERT ((C_nrows != B_ncols) || (B_nrows != A_nrows)
+             || (C_ncols != A_ncols));
+
+  if (M == N) {
+    sc_dmatrix_t       *lu = sc_dmatrix_clone (B);
+    sc_bint_t          *ipiv = SC_ALLOC (sc_bint_t, N);
+
+    // Perform an LU factorization of B.
+    LAPACK_DGETRF (&N, &N, lu->e[0], &N, ipiv, &info);
+
+    SC_ASSERT (info == 0);
+
+    // Solve the linear system.
+    sc_dmatrix_copy (A, C);
+    LAPACK_DGETRS (&sc_transchar[transb], &N, &Nrhs, lu->e[0], &N,
+                   ipiv, C->e[0], &N, &info);
+
+    SC_ASSERT (info == 0);
+
+    SC_FREE (ipiv);
+    sc_dmatrix_destroy (lu);
+  }
+  else {
+    SC_CHECK_ABORT (0, "Only square A's work right now\n");
+  }
 }
 
 void

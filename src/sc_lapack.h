@@ -37,14 +37,44 @@ extern const char   sc_jobzchar[];
 #define SC_F77_FUNC(small,CAPS) small ## _
 #endif
 
-#define LAPACK_DSTEV  SC_F77_FUNC(dstev,DSTEV)
+#define LAPACK_DGELS   SC_F77_FUNC(dgels,DGELS)
+#define LAPACK_DGETRF  SC_F77_FUNC(dgetrf,DGETRF)
+#define LAPACK_DGETRS  SC_F77_FUNC(dgetrs,DGETRS)
+#define LAPACK_DSTEV   SC_F77_FUNC(dstev,DSTEV)
+#define LAPACK_ILAENV  SC_F77_FUNC(ilaenv,ILAENV)
+
+void                LAPACK_DGELS (const char *trans,
+                                  const sc_bint_t * m, const sc_bint_t * n,
+                                  const sc_bint_t * nrhs, double *a,
+                                  const sc_bint_t * lda, double *b,
+                                  const sc_bint_t * ldb, double *work,
+                                  const sc_bint_t * lwork, sc_bint_t * info);
+void                LAPACK_DGETRF (const sc_bint_t * m, const sc_bint_t * n,
+                                   double *a, const sc_bint_t * lda,
+                                   sc_bint_t * ipiv, sc_bint_t * info);
+
+void                LAPACK_DGETRS (const char *trans, const sc_bint_t * n,
+                                   const sc_bint_t * nrhs, const double *a,
+                                   const sc_bint_t * lda,
+                                   const sc_bint_t * ipiv, double *b,
+                                   const sc_bint_t * ldx, sc_bint_t * info);
 
 void                LAPACK_DSTEV (const char *jobz,
                                   const sc_bint_t * n,
-                                  const double *d,
-                                  const double *e,
-                                  const double *z,
+                                  double *d,
+                                  double *e,
+                                  double *z,
                                   const sc_bint_t * ldz,
-                                  const double *work, const sc_bint_t * info);
+                                  double *work, sc_bint_t * info);
+
+int                 LAPACK_ILAENV (const sc_bint_t * ispec,
+                                   const char *name,
+                                   const char *opts,
+                                   const sc_bint_t * N1,
+                                   const sc_bint_t * N2,
+                                   const sc_bint_t * N3,
+                                   const sc_bint_t * N4,
+                                   sc_buint_t name_length,
+                                   sc_buint_t opts_length);
 
 #endif /* !SC_LAPACK_H */
