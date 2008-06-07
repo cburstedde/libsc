@@ -232,7 +232,7 @@ sc_dmatrix_copy (sc_dmatrix_t * X, sc_dmatrix_t * Y)
 void
 sc_dmatrix_transpose (sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
-  sc_bint_t           totalsize, i, j, Xrows, Xcols, Xstride, Ystride;
+  sc_bint_t           i, j, Xrows, Xcols, Xstride, Ystride;
   double             *Xdata, *Ydata;
 
   SC_ASSERT ((X)->m == (Y)->n && (X)->n == (Y)->m);
@@ -243,8 +243,6 @@ sc_dmatrix_transpose (sc_dmatrix_t * X, sc_dmatrix_t * Y)
   Ystride = Y->n;
   Xdata = X->e[0];
   Ydata = Y->e[0];
-
-  totalsize = Xrows * Xcols;
 
   for (i = 0; i < Xrows; i++) {
     for (j = 0; j < Xcols; j++) {

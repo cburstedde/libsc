@@ -372,6 +372,7 @@ sc_mempool_new (size_t elem_size)
   sc_mempool_t       *mempool;
 
   SC_ASSERT (elem_size > 0);
+  SC_ASSERT (elem_size <= (size_t) INT_MAX);    /* obstack limited to int */
 
   mempool = SC_ALLOC_ZERO (sc_mempool_t, 1);
 

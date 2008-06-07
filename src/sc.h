@@ -30,6 +30,7 @@
 #include <math.h>
 #include <ctype.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -76,6 +77,15 @@
 #endif
 
 #include <sc_c99_functions.h>
+
+#if 0
+/*@ignore@*/
+#define index   DONT_USE_NAME_CONFLICT_1 ---
+#define rindex  DONT_USE_NAME_CONFLICT_2 ---
+#define link    DONT_USE_NAME_CONFLICT_3 ---
+#define NO_DEFINE_DONT_USE_CONFLICT SPLINT_IS_STUPID_ALSO
+/*@end@*/
+#endif /* 0 */
 
 /* check macros, always enabled */
 

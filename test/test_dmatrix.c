@@ -27,7 +27,7 @@ static const double eps = 2.220446049250313e-16;
 int
 main (int argc, char **argv)
 {
-  int                 num_failed_tests;
+  int                 num_failed_tests = 0;
   int                 j;
   int                 rank;
   int                 mpiret;
