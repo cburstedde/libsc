@@ -69,6 +69,8 @@ void                sc_dmatrix_alphadotdivide (double alpha,
 
 void                sc_dmatrix_copy (sc_dmatrix_t * X, sc_dmatrix_t * Y);
 
+void                sc_dmatrix_transpose (sc_dmatrix_t * X, sc_dmatrix_t * Y);
+
 /*! \brief Matrix Matrix Add (AXPY)  \c Y = alpha X + Y
  */
 void                sc_dmatrix_add (double alpha, sc_dmatrix_t * X,
@@ -100,6 +102,18 @@ void                sc_dmatrix_multiply (sc_trans_t transa,
                                          sc_dmatrix_t * A,
                                          sc_dmatrix_t * B, double beta,
                                          sc_dmatrix_t * C);
+
+/** \brief Left Divide \c A \ \c B.
+ * Solves  \c A \c C = \c B or \c A' \c C = \c B.
+ *
+ *   \param transa Use the transpose of \c A
+ *   \param A matrix
+ *   \param B matrix
+ *   \param C matrix
+ */
+void                sc_dmatrix_ldivide (sc_trans_t transa,
+                                        sc_dmatrix_t * A,
+                                        sc_dmatrix_t * B, sc_dmatrix_t * C);
 
 /** \brief Right Divide \c A / \c B.
  * Solves  \c A = \c C \c B or \c A = \c C \c B'.

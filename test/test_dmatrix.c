@@ -31,7 +31,7 @@ main (int argc, char **argv)
   int                 j;
   int                 rank;
   int                 mpiret;
-  sc_dmatrix_t       *A, *x, *xexact, *b;
+  sc_dmatrix_t       *A, *x, *xexact, *b, *bT, *xT, *xTexact;
   double              xmaxerror = 0.0;
   double              A_data[] = { 8.0, 1.0, 6.0,
     3.0, 5.0, 7.0,
@@ -86,6 +86,32 @@ main (int argc, char **argv)
     ++num_failed_tests;
   }
 
+  bT = sc_dmatrix_view (3, 1, b_data);
+  xT = sc_dmatrix_new (3, 1);
+  xTexact = sc_dmatrix_new (3, 1);
+
+  xTexact->e[0][0] = 0.05;
+  xTexact->e[1][0] = 0.3;
+  xTexact->e[2][0] = 0.05;
+
+  sc_dmatrix_ldivide (SC_NO_TRANS, A, bT, xT);
+
+  sc_dmatrix_add (-1.0, xTexact, xT);
+
+  xmaxerror = 0.0;
+  for (j = 0; j < 3; ++j) {
+    xmaxerror = SC_MAX (xmaxerror, fabs (xT->e[0][j]));
+  }
+
+  SC_LDEBUGF ("xTmaxerror = %g\n", xmaxerror);
+
+  if (xmaxerror > 100.0 * eps) {
+    ++num_failed_tests;
+  }
+
+  sc_dmatrix_destroy (xTexact);
+  sc_dmatrix_destroy (xT);
+  sc_dmatrix_destroy (bT);
   sc_dmatrix_destroy (A);
   sc_dmatrix_destroy (b);
   sc_dmatrix_destroy (x);
@@ -96,7 +122,7 @@ main (int argc, char **argv)
   mpiret = MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
-  return 0;
+  return num_failed_tests;
 }
 
 /* EOF test_dmatrix.c */

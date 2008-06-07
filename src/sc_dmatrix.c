@@ -230,6 +230,30 @@ sc_dmatrix_copy (sc_dmatrix_t * X, sc_dmatrix_t * Y)
 }
 
 void
+sc_dmatrix_transpose (sc_dmatrix_t * X, sc_dmatrix_t * Y)
+{
+  sc_bint_t           totalsize, i, j, Xrows, Xcols, Xstride, Ystride;
+  double             *Xdata, *Ydata;
+
+  SC_ASSERT ((X)->m == (Y)->n && (X)->n == (Y)->m);
+
+  Xrows = X->m;
+  Xcols = X->n;
+  Xstride = X->n;
+  Ystride = Y->n;
+  Xdata = X->e[0];
+  Ydata = Y->e[0];
+
+  totalsize = Xrows * Xcols;
+
+  for (i = 0; i < Xrows; i++) {
+    for (j = 0; j < Xcols; j++) {
+      Ydata[j * Ystride + i] = Xdata[i * Xstride + j];
+    }
+  }
+}
+
+void
 sc_dmatrix_add (double alpha, sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           totalsize, inc;
@@ -297,6 +321,34 @@ sc_dmatrix_multiply (sc_trans_t transa, sc_trans_t transb, double alpha,
 }
 
 void
+sc_dmatrix_ldivide (sc_trans_t transa,
+                    sc_dmatrix_t * A, sc_dmatrix_t * B, sc_dmatrix_t * C)
+{
+  sc_dmatrix_t       *BT;
+  sc_trans_t          invtransa =
+    (transa == SC_NO_TRANS) ? SC_TRANS : SC_NO_TRANS;
+
+  sc_bint_t           A_nrows = (transa == SC_NO_TRANS) ? A->m : A->n;
+  sc_bint_t           A_ncols = (transa == SC_NO_TRANS) ? A->n : A->m;
+  sc_bint_t           B_nrows = B->m;
+  sc_bint_t           B_ncols = B->n;
+  sc_bint_t           C_nrows = C->m;
+  sc_bint_t           C_ncols = C->n;
+
+  SC_ASSERT ((C_nrows == A_ncols) && (B_nrows == A_nrows)
+             && (B_ncols == C_ncols));
+
+  BT = sc_dmatrix_new (B->n, B->m);
+  sc_dmatrix_transpose (B, BT);
+
+  sc_dmatrix_rdivide (invtransa, BT, A, BT);
+
+  sc_dmatrix_transpose (BT, C);
+
+  sc_dmatrix_destroy (BT);
+}
+
+void
 sc_dmatrix_rdivide (sc_trans_t transb,
                     sc_dmatrix_t * A, sc_dmatrix_t * B, sc_dmatrix_t * C)
 {
@@ -308,8 +360,8 @@ sc_dmatrix_rdivide (sc_trans_t transb,
   sc_bint_t           C_ncols = C->n;
   sc_bint_t           M = B_ncols, N = B_nrows, Nrhs = A_nrows, info = 0;
 
-  SC_ASSERT ((C_nrows != B_ncols) || (B_nrows != A_nrows)
-             || (C_ncols != A_ncols));
+  SC_ASSERT ((C_nrows == A_nrows) && (B_nrows == C_ncols)
+             && (B_ncols == A_ncols));
 
   if (M == N) {
     sc_dmatrix_t       *lu = sc_dmatrix_clone (B);
