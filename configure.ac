@@ -2,7 +2,7 @@ dnl
 dnl This file is part of the SC Library.
 dnl
 
-AC_INIT([libsc],[0.5.0],[ccgo@ices.utexas.edu])
+AC_INIT([libsc],[0.6.pre],[ccgo@ices.utexas.edu])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([src/pre_config.h])
 AC_CONFIG_SRCDIR([src/sc.h])
@@ -141,6 +141,7 @@ echo "o---------------------------------------"
 echo "| Checking keywords and types"
 echo "o---------------------------------------"
 
+AC_C_BIGENDIAN
 AC_C_CONST
 AC_C_INLINE
 AC_TYPE_SIZE_T

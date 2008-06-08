@@ -38,9 +38,15 @@ Boston, MA 02110-1301, USA.  */
 double              tgamma (double);
 double              trunc (double);
 
-/* Supply prototypes that splint doesn't know about */
+/* Supply defines and prototypes that splint doesn't know about */
 #ifdef ACX_SPLINT
-long long int       strtoll (const char *nptr, char **endptr, int base);
+
+#ifndef UINT32_MAX
+#define UINT32_MAX  (4294967295U)
 #endif
+
+long long int       strtoll (const char *nptr, char **endptr, int base);
+
+#endif /* ACX_SPLINT */
 
 #endif /* SC_C99_FUNCTIONS_H  */
