@@ -27,6 +27,7 @@ static const double eps = 2.220446049250313e-16;
 int
 main (int argc, char **argv)
 {
+#if defined(SC_BLAS) && defined(SC_LAPACK)
   int                 num_failed_tests = 0;
   int                 j;
   int                 rank;
@@ -123,6 +124,8 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   return num_failed_tests;
+#endif
+  return 0;
 }
 
 /* EOF test_dmatrix.c */
