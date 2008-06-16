@@ -6,13 +6,18 @@ dnl Documentation for macro names: brackets indicate optional arguments
 
 dnl SC_ARG_ENABLE_PREFIX(NAME, COMMENT, TOKEN, PREFIX)
 dnl Check for --enable/disable-NAME using shell variable PREFIX_ENABLE_TOKEN
+dnl If shell variable is set beforehand it overrides the option
 dnl If enabled, define TOKEN to 1 and set conditional PREFIX_TOKEN
 dnl Default is disabled
 dnl
 AC_DEFUN([SC_ARG_ENABLE_PREFIX],
 [
-AC_ARG_ENABLE([$1], [AS_HELP_STRING([--enable-$1], [$2])],
-              [$4_ENABLE_$3="$enableval"], [$4_ENABLE_$3="no"])
+AC_ARG_ENABLE([$1], [AS_HELP_STRING([--enable-$1], [$2])],, [enableval="no"])
+if test -z "$$4_ENABLE_$3" ; then
+  $4_ENABLE_$3="$enableval"
+else
+  echo "Option override $4_ENABLE_$3=$$4_ENABLE_$3"
+fi
 if test "$$4_ENABLE_$3" != "no" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
@@ -22,13 +27,18 @@ AC_DEFUN([SC_ARG_ENABLE], [SC_ARG_ENABLE_PREFIX([$1], [$2], [$3], [SC])])
 
 dnl SC_ARG_DISABLE_PREFIX(NAME, COMMENT, TOKEN, PREFIX)
 dnl Check for --enable/disable-NAME using shell variable PREFIX_ENABLE_TOKEN
+dnl If shell variable is set beforehand it overrides the option
 dnl If enabled, define TOKEN to 1 and set conditional PREFIX_TOKEN
 dnl Default is enabled
 dnl
 AC_DEFUN([SC_ARG_DISABLE_PREFIX],
 [
-AC_ARG_ENABLE([$1], [AS_HELP_STRING([--disable-$1], [$2])],
-              [$4_ENABLE_$3="$enableval"], [$4_ENABLE_$3="yes"])
+AC_ARG_ENABLE([$1], [AS_HELP_STRING([--disable-$1], [$2])],, [enableval="yes"])
+if test -z "$$4_ENABLE_$3" ; then
+  $4_ENABLE_$3="$enableval"
+else
+  echo "Option override $4_ENABLE_$3=$$4_ENABLE_$3"
+fi
 if test "$$4_ENABLE_$3" != "no" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
@@ -38,13 +48,18 @@ AC_DEFUN([SC_ARG_DISABLE], [SC_ARG_DISABLE_PREFIX([$1], [$2], [$3], [SC])])
 
 dnl SC_ARG_WITH_PREFIX(NAME, COMMENT, TOKEN, PREFIX)
 dnl Check for --with/without-NAME using shell variable PREFIX_WITH_TOKEN
+dnl If shell variable is set beforehand it overrides the option
 dnl If with, define TOKEN to 1 and set conditional PREFIX_TOKEN
 dnl Default is without
 dnl
 AC_DEFUN([SC_ARG_WITH_PREFIX],
 [
-AC_ARG_WITH([$1], [AS_HELP_STRING([--with-$1], [$2])],
-            [$4_WITH_$3="$withval"], [$4_WITH_$3="no"])
+AC_ARG_WITH([$1], [AS_HELP_STRING([--with-$1], [$2])],, [withval="no"])
+if test -z "$$4_WITH_$3" ; then
+  $4_WITH_$3="$withval"
+else
+  echo "Option override $4_WITH_$3=$$4_WITH_$3"
+fi
 if test "$$4_WITH_$3" != "no" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
@@ -54,13 +69,18 @@ AC_DEFUN([SC_ARG_WITH], [SC_ARG_WITH_PREFIX([$1], [$2], [$3], [SC])])
 
 dnl SC_ARG_WITHOUT_PREFIX(NAME, COMMENT, TOKEN, PREFIX)
 dnl Check for --with/without-NAME using shell variable PREFIX_WITH_TOKEN
+dnl If shell variable is set beforehand it overrides the option
 dnl If with, define TOKEN to 1 and set conditional PREFIX_TOKEN
 dnl Default is with
 dnl
 AC_DEFUN([SC_ARG_WITHOUT_PREFIX],
 [
-AC_ARG_WITH([$1], [AS_HELP_STRING([--without-$1], [$2])],
-            [$4_WITH_$3="$withval"], [$4_WITH_$3="yes"])
+AC_ARG_WITH([$1], [AS_HELP_STRING([--without-$1], [$2])],, [withval="yes"])
+if test -z "$$4_WITH_$3" ; then
+  $4_WITH_$3="$withval"
+else
+  echo "Option override $4_WITH_$3=$$4_WITH_$3"
+fi
 if test "$$4_WITH_$3" != "no" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
@@ -70,13 +90,18 @@ AC_DEFUN([SC_ARG_WITHOUT], [SC_ARG_WITHOUT_PREFIX([$1], [$2], [$3], [SC])])
 
 dnl SC_ARG_WITH_YES_PREFIX(NAME, COMMENT, TOKEN, PREFIX)
 dnl Check for --with/without-NAME using shell variable PREFIX_WITH_TOKEN
+dnl If shell variable is set beforehand it overrides the option
 dnl If with = yes, define TOKEN to 1 and set conditional PREFIX_TOKEN
 dnl Default is no
 dnl
 AC_DEFUN([SC_ARG_WITH_YES_PREFIX],
 [
-AC_ARG_WITH([$1], [AS_HELP_STRING([--with-$1], [$2])],
-            [$4_WITH_$3="$withval"], [$4_WITH_$3="no"])
+AC_ARG_WITH([$1], [AS_HELP_STRING([--with-$1], [$2])],, [withval="no"])
+if test -z "$$4_WITH_$3" ; then
+  $4_WITH_$3="$withval"
+else
+  echo "Option override $4_WITH_$3=$$4_WITH_$3"
+fi
 if test "$$4_WITH_$3" = "yes" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
@@ -87,13 +112,18 @@ AC_DEFUN([SC_ARG_WITH_YES],
 
 dnl SC_ARG_WITHOUT_YES_PREFIX(NAME, COMMENT, TOKEN, PREFIX)
 dnl Check for --with/without-NAME using shell variable PREFIX_WITH_TOKEN
+dnl If shell variable is set beforehand it overrides the option
 dnl If with = yes, define TOKEN to 1 and set conditional PREFIX_TOKEN
 dnl Default is yes
 dnl
 AC_DEFUN([SC_ARG_WITHOUT_YES_PREFIX],
 [
-AC_ARG_WITH([$1], [AS_HELP_STRING([--without-$1], [$2])],
-            [$4_WITH_$3="$withval"], [$4_WITH_$3="yes"])
+AC_ARG_WITH([$1], [AS_HELP_STRING([--without-$1], [$2])],, [withval="yes"])
+if test -z "$$4_WITH_$3" ; then
+  $4_WITH_$3="$withval"
+else
+  echo "Option override $4_WITH_$3=$$4_WITH_$3"
+fi
 if test "$$4_WITH_$3" = "yes" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
