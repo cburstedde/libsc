@@ -98,6 +98,9 @@
       sc_abort ();                                 \
     }                                              \
   } while (0)
+/* Only include the following define in C, not C++, since C++98
+   does not allow variadic macros. */
+#ifndef __cplusplus
 #define SC_CHECK_ABORTF(c,fmt,...)                      \
   do {                                                  \
     if (!(c)) {                                         \
@@ -106,6 +109,7 @@
       sc_abort ();                                      \
     }                                                   \
   } while (0)
+#endif
 #define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI operation")
 #define SC_CHECK_NOT_REACHED() SC_CHECK_ABORT (0, "Unreachable code")
 
@@ -179,6 +183,10 @@
 
 /* generic log macros */
 
+/* Only include these logging macros in C, not C++, since C++98
+   does not allow variadic macros. */
+#ifndef __cplusplus
+
 #define SC_LOGF(category,priority,fmt,...)                              \
   do {                                                                  \
     if ((priority) >= SC_LP_THRESHOLD) {                                \
@@ -233,6 +241,8 @@
 #define SC_PRODUCTION(s) SC_NORMAL_LOG (SC_LP_PRODUCTION, (s))
 #define SC_PRODUCTIONF(f,...) \
   SC_NORMAL_LOGF (SC_LP_PRODUCTION, (f), __VA_ARGS__)
+
+#endif /* !__cplusplus */
 
 /* callback typedefs */
 

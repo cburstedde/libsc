@@ -34,13 +34,19 @@ Boston, MA 02110-1301, USA.  */
 #error "sc.h should be included before this header file"
 #endif
 
+#ifndef __cplusplus
+
 /* Gamma-related prototypes.  */
 double              tgamma (double);
 double              trunc (double);
 
-/* Supply prototypes that splint doesn't know about */
+#endif /* !__cplusplus */
+
 #ifdef ACX_SPLINT
+
+/* Supply prototypes that splint doesn't know about */
 long long int       strtoll (const char *nptr, char **endptr, int base);
-#endif
+
+#endif /* ACX_SPLINT */
 
 #endif /* SC_C99_FUNCTIONS_H  */
