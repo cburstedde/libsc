@@ -81,6 +81,10 @@ user_spec_lapack_failed=no
 AC_ARG_WITH([lapack], [AS_HELP_STRING([--with-lapack=<lib>],
             [change default LAPACK library to <lib>
              or specify --without-lapack to use no LAPACK at all])])
+if test -n "$SC_WITH_LAPACK" ; then
+  echo "Option override SC_WITH_LAPACK=$SC_WITH_LAPACK"
+  with_lapack="$SC_WITH_LAPACK"
+fi
 case $with_lapack in
         yes | "") ;;
         no) acx_lapack_ok=disable ;;
