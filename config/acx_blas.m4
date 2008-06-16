@@ -87,6 +87,10 @@ user_spec_blas_failed=no
 AC_ARG_WITH([blas], [AS_HELP_STRING([--with-blas=<lib>],
             [change default BLAS library to <lib>
              or specify --without-blas to use no BLAS and LAPACK at all])])
+if test -n "$SC_WITH_BLAS" ; then
+  echo "Option override SC_WITH_BLAS=$SC_WITH_BLAS"
+  with_blas="$SC_WITH_BLAS"
+fi
 case $with_blas in
 	yes | "") ;;
 	no) acx_blas_ok=disable ;;

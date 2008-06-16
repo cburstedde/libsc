@@ -60,14 +60,16 @@ MPI_CC_NONE=
 MPI_F77_NONE=
 
 AC_ARG_ENABLE([mpi],
-[AS_HELP_STRING([--enable-mpi], [enable MPI])],
-[
+[AS_HELP_STRING([--enable-mpi], [enable MPI])],, [enableval="no"])
+if test -n "$SC_ENABLE_MPI" ; then
+  echo "Option override SC_ENABLE_MPI=$SC_ENABLE_MPI"
+  enableval="$SC_ENABLE_MPI"
+fi
 if test "$enableval" = yes ; then
   HAVE_PKG_MPI=yes
 elif test "$enableval" != no ; then
   AC_MSG_ERROR([Please use --enable-mpi without an argument])
 fi
-])
 
 AC_ARG_WITH([mpicc],
 [AS_HELP_STRING([--with-mpicc=MPICC], [specify MPI C compiler])],
