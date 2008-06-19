@@ -31,16 +31,16 @@ sc_dmatrix_new_e (sc_dmatrix_t * rdm, sc_bint_t m, sc_bint_t n, double *data)
   SC_ASSERT (m >= 0 && n >= 0);
   SC_ASSERT (rdm != NULL);
 
-  if (m > 0 && n > 0) {
-    rdm->e = SC_ALLOC (double *, m + 1);
+  if (m > 0) {
+    rdm->e = SC_ALLOC (double *, m);
     rdm->e[0] = data;
 
     for (i = 1; i < m; ++i)
       rdm->e[i] = rdm->e[i - 1] + n;
-    rdm->e[m] = NULL;           /* safeguard */
   }
   else {
-    rdm->e = NULL;
+    rdm->e = SC_ALLOC (double *, 1);
+    rdm->e[0] = data;
   }
 
   rdm->m = m;
@@ -127,12 +127,10 @@ sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
 void
 sc_dmatrix_destroy (sc_dmatrix_t * dmatrix)
 {
-  if (dmatrix->e != NULL) {
-    if (!dmatrix->view) {
-      SC_FREE (dmatrix->e[0]);
-    }
-    SC_FREE (dmatrix->e);
+  if (!dmatrix->view) {
+    SC_FREE (dmatrix->e[0]);
   }
+  SC_FREE (dmatrix->e);
 
   SC_FREE (dmatrix);
 }
