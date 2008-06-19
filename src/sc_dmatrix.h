@@ -37,7 +37,7 @@ sc_dmatrix_t;
  */
 sc_dmatrix_t       *sc_dmatrix_new (sc_bint_t m, sc_bint_t n);
 sc_dmatrix_t       *sc_dmatrix_new_zero (sc_bint_t m, sc_bint_t n);
-sc_dmatrix_t       *sc_dmatrix_clone (sc_dmatrix_t * dmatrix);
+sc_dmatrix_t       *sc_dmatrix_clone (const sc_dmatrix_t * dmatrix);
 sc_dmatrix_t       *sc_dmatrix_view (sc_bint_t m, sc_bint_t n, double *data);
 
 void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m,
@@ -49,7 +49,7 @@ void                sc_dmatrix_destroy (sc_dmatrix_t * dmatrix);
  * Check matrix for symmetry.
  * The tolerance measures the absolute value of the maximum difference.
  */
-bool                sc_dmatrix_is_symmetric (sc_dmatrix_t * A,
+bool                sc_dmatrix_is_symmetric (const sc_dmatrix_t * A,
                                              double tolerance);
 
 void                sc_dmatrix_set_zero (sc_dmatrix_t * dmatrix);
@@ -60,20 +60,23 @@ void                sc_dmatrix_scale (double alpha, sc_dmatrix_t * X);
 
 /** Perform elementwise multiplcations Y = Y .* X.
  */
-void                sc_dmatrix_dotmult (sc_dmatrix_t * X, sc_dmatrix_t * Y);
+void                sc_dmatrix_dotmult (const sc_dmatrix_t * X,
+                                        sc_dmatrix_t * Y);
 
 /** Perform elementwise divison from a scalar X = alpha ./ X.
  */
 void                sc_dmatrix_alphadotdivide (double alpha,
                                                sc_dmatrix_t * X);
 
-void                sc_dmatrix_copy (sc_dmatrix_t * X, sc_dmatrix_t * Y);
+void                sc_dmatrix_copy (const sc_dmatrix_t * X,
+                                     sc_dmatrix_t * Y);
 
-void                sc_dmatrix_transpose (sc_dmatrix_t * X, sc_dmatrix_t * Y);
+void                sc_dmatrix_transpose (const sc_dmatrix_t * X,
+                                          sc_dmatrix_t * Y);
 
 /*! \brief Matrix Matrix Add (AXPY)  \c Y = alpha X + Y
  */
-void                sc_dmatrix_add (double alpha, sc_dmatrix_t * X,
+void                sc_dmatrix_add (double alpha, const sc_dmatrix_t * X,
                                     sc_dmatrix_t * Y);
 
 /**
@@ -87,8 +90,8 @@ void                sc_dmatrix_add (double alpha, sc_dmatrix_t * X,
 void                sc_dmatrix_vector (sc_trans_t transa,
                                        sc_trans_t transx,
                                        sc_trans_t transy,
-                                       double alpha, sc_dmatrix_t * A,
-                                       sc_dmatrix_t * X, double beta,
+                                       double alpha, const sc_dmatrix_t * A,
+                                       const sc_dmatrix_t * X, double beta,
                                        sc_dmatrix_t * Y);
 
 /*! \brief Matrix Matrix Multiply  \c C = alpha * A * B + beta * C
@@ -99,8 +102,8 @@ void                sc_dmatrix_vector (sc_trans_t transa,
  */
 void                sc_dmatrix_multiply (sc_trans_t transa,
                                          sc_trans_t transb, double alpha,
-                                         sc_dmatrix_t * A,
-                                         sc_dmatrix_t * B, double beta,
+                                         const sc_dmatrix_t * A,
+                                         const sc_dmatrix_t * B, double beta,
                                          sc_dmatrix_t * C);
 
 /** \brief Left Divide \c A \ \c B.
@@ -112,8 +115,9 @@ void                sc_dmatrix_multiply (sc_trans_t transa,
  *   \param C matrix
  */
 void                sc_dmatrix_ldivide (sc_trans_t transa,
-                                        sc_dmatrix_t * A,
-                                        sc_dmatrix_t * B, sc_dmatrix_t * C);
+                                        const sc_dmatrix_t * A,
+                                        const sc_dmatrix_t * B,
+                                        sc_dmatrix_t * C);
 
 /** \brief Right Divide \c A / \c B.
  * Solves  \c A = \c C \c B or \c A = \c C \c B'.
@@ -124,14 +128,16 @@ void                sc_dmatrix_ldivide (sc_trans_t transa,
  *   \param C matrix
  */
 void                sc_dmatrix_rdivide (sc_trans_t transb,
-                                        sc_dmatrix_t * A,
-                                        sc_dmatrix_t * B, sc_dmatrix_t * C);
+                                        const sc_dmatrix_t * A,
+                                        const sc_dmatrix_t * B,
+                                        sc_dmatrix_t * C);
 
 /** \brief Prints a matrix to \c fp
  *
  *   \param dmatrix Pointer to matrix to print
  *   \param fp      Pointer to file to print to
  */
-void                sc_dmatrix_print (sc_dmatrix_t * dmatrix, FILE * fp);
+void                sc_dmatrix_print (const sc_dmatrix_t * dmatrix,
+                                      FILE * fp);
 
 #endif /* !SC_DMATRIX_H */

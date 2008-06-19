@@ -98,7 +98,7 @@ sc_dmatrix_new_zero (sc_bint_t m, sc_bint_t n)
 }
 
 sc_dmatrix_t       *
-sc_dmatrix_clone (sc_dmatrix_t * dmatrix)
+sc_dmatrix_clone (const sc_dmatrix_t * dmatrix)
 {
   sc_bint_t           totalsize, inc;
   sc_dmatrix_t       *clone;
@@ -138,7 +138,7 @@ sc_dmatrix_destroy (sc_dmatrix_t * dmatrix)
 }
 
 bool
-sc_dmatrix_is_symmetric (sc_dmatrix_t * A, double tolerance)
+sc_dmatrix_is_symmetric (const sc_dmatrix_t * A, double tolerance)
 {
   sc_bint_t           i, j;
   double              diff;
@@ -188,10 +188,11 @@ sc_dmatrix_scale (double alpha, sc_dmatrix_t * X)
 }
 
 void
-sc_dmatrix_dotmult (sc_dmatrix_t * X, sc_dmatrix_t * Y)
+sc_dmatrix_dotmult (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           size, i;
-  double             *Xdata, *Ydata;
+  const double       *Xdata;
+  double             *Ydata;
 
   SC_ASSERT (X->m == Y->m && X->n == Y->n);
 
@@ -217,7 +218,7 @@ sc_dmatrix_alphadotdivide (double alpha, sc_dmatrix_t * X)
 }
 
 void
-sc_dmatrix_copy (sc_dmatrix_t * X, sc_dmatrix_t * Y)
+sc_dmatrix_copy (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           totalsize, inc;
 
@@ -230,10 +231,11 @@ sc_dmatrix_copy (sc_dmatrix_t * X, sc_dmatrix_t * Y)
 }
 
 void
-sc_dmatrix_transpose (sc_dmatrix_t * X, sc_dmatrix_t * Y)
+sc_dmatrix_transpose (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           i, j, Xrows, Xcols, Xstride, Ystride;
-  double             *Xdata, *Ydata;
+  double             *Ydata;
+  const double       *Xdata = X->e[0];
 
   SC_ASSERT ((X)->m == (Y)->n && (X)->n == (Y)->m);
 
@@ -241,7 +243,6 @@ sc_dmatrix_transpose (sc_dmatrix_t * X, sc_dmatrix_t * Y)
   Xcols = X->n;
   Xstride = X->n;
   Ystride = Y->n;
-  Xdata = X->e[0];
   Ydata = Y->e[0];
 
   for (i = 0; i < Xrows; i++) {
@@ -252,7 +253,7 @@ sc_dmatrix_transpose (sc_dmatrix_t * X, sc_dmatrix_t * Y)
 }
 
 void
-sc_dmatrix_add (double alpha, sc_dmatrix_t * X, sc_dmatrix_t * Y)
+sc_dmatrix_add (double alpha, const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           totalsize, inc;
 
@@ -266,8 +267,8 @@ sc_dmatrix_add (double alpha, sc_dmatrix_t * X, sc_dmatrix_t * Y)
 
 void
 sc_dmatrix_vector (sc_trans_t transa, sc_trans_t transx, sc_trans_t transy,
-                   double alpha, sc_dmatrix_t * A,
-                   sc_dmatrix_t * X, double beta, sc_dmatrix_t * Y)
+                   double alpha, const sc_dmatrix_t * A,
+                   const sc_dmatrix_t * X, double beta, sc_dmatrix_t * Y)
 {
   sc_bint_t           inc = 1;
 
@@ -291,8 +292,8 @@ sc_dmatrix_vector (sc_trans_t transa, sc_trans_t transx, sc_trans_t transy,
 
 void
 sc_dmatrix_multiply (sc_trans_t transa, sc_trans_t transb, double alpha,
-                     sc_dmatrix_t * A, sc_dmatrix_t * B, double beta,
-                     sc_dmatrix_t * C)
+                     const sc_dmatrix_t * A, const sc_dmatrix_t * B,
+                     double beta, sc_dmatrix_t * C)
 {
   sc_bint_t           Acols, Crows, Ccols;
 #ifdef SC_DEBUG
@@ -319,8 +320,8 @@ sc_dmatrix_multiply (sc_trans_t transa, sc_trans_t transb, double alpha,
 }
 
 void
-sc_dmatrix_ldivide (sc_trans_t transa,
-                    sc_dmatrix_t * A, sc_dmatrix_t * B, sc_dmatrix_t * C)
+sc_dmatrix_ldivide (sc_trans_t transa, const sc_dmatrix_t * A,
+                    const sc_dmatrix_t * B, sc_dmatrix_t * C)
 {
   sc_dmatrix_t       *BT;
   sc_trans_t          invtransa =
@@ -347,8 +348,8 @@ sc_dmatrix_ldivide (sc_trans_t transa,
 }
 
 void
-sc_dmatrix_rdivide (sc_trans_t transb,
-                    sc_dmatrix_t * A, sc_dmatrix_t * B, sc_dmatrix_t * C)
+sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
+                    const sc_dmatrix_t * B, sc_dmatrix_t * C)
 {
   sc_bint_t           A_nrows = A->m;
   sc_bint_t           A_ncols = A->n;
@@ -386,7 +387,7 @@ sc_dmatrix_rdivide (sc_trans_t transb,
 }
 
 void
-sc_dmatrix_print (sc_dmatrix_t * dmatrix, FILE * fp)
+sc_dmatrix_print (const sc_dmatrix_t * dmatrix, FILE * fp)
 {
   sc_bint_t           i, j, m, n;
 
