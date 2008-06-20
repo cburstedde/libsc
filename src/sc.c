@@ -293,8 +293,8 @@ sc_free (int package, void *ptr)
   if (ptr != NULL) {
     int                *free_count = sc_free_count (package);
     ++*free_count;
-    free (ptr);
   }
+  free (ptr);
 }
 
 void
