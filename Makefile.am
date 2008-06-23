@@ -6,6 +6,7 @@ ACLOCAL_AMFLAGS = -I config
 
 # initialize empty variables
 AM_CPPFLAGS =
+DISTCLEANFILES =
 EXTRA_DIST =
 LDADD =
 LINT_CSOURCES =
@@ -21,6 +22,7 @@ noinst_PROGRAMS =
 
 # handle toplevel directory
 EXTRA_DIST += bootstrap scindent
+DISTCLEANFILES += _configs.sed src/sc_config.h
 MAINTAINERCLEANFILES += ChangeLog
 .PHONY: lint ChangeLog
 
