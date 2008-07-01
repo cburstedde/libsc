@@ -34,17 +34,22 @@ Boston, MA 02110-1301, USA.  */
 #error "sc.h should be included before this header file"
 #endif
 
+/* Supply some C99 prototypes */
 #ifndef __cplusplus
 
-/* Gamma-related prototypes.  */
+/* Gamma-related prototypes */
 double              tgamma (double);
 double              trunc (double);
 
 #endif /* !__cplusplus */
 
+/* Supply defines and prototypes that splint doesn't know about */
 #ifdef ACX_SPLINT
 
-/* Supply prototypes that splint doesn't know about */
+#ifndef UINT32_MAX
+#define UINT32_MAX  (4294967295U)
+#endif
+
 long long int       strtoll (const char *nptr, char **endptr, int base);
 
 #endif /* ACX_SPLINT */
