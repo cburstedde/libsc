@@ -21,9 +21,23 @@
 #ifndef SC_H
 #define SC_H
 
-/* include the sc_config header */
+/* include the sc_config header first */
 
 #include <sc_config.h>
+
+/* include MPI before stdio.h */
+
+#ifdef SC_MPI
+#include <mpi.h>
+#ifndef MPI_UNSIGNED_LONG_LONG
+#define MPI_UNSIGNED_LONG_LONG MPI_LONG_LONG_INT
+#endif
+#else
+#ifdef MPI_SUCCESS
+#error "mpi.h is included.  Use --enable-mpi."
+#endif
+#include <sc_mpi_dummy.h>
+#endif
 
 /* include system headers */
 
@@ -65,15 +79,6 @@
 #include <sc_zlib.h>
 #else
 #include <zlib.h>
-#endif
-
-#ifdef SC_MPI
-#include <mpi.h>
-#else
-#ifdef MPI_SUCCESS
-#error "mpi.h is included.  Use --enable-mpi."
-#endif
-#include <sc_mpi_dummy.h>
 #endif
 
 #include <sc_c99_functions.h>
