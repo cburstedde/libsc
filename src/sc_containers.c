@@ -626,7 +626,7 @@ sc_hash_maybe_resize (sc_hash_t * hash)
     lynk = old_list->first;
     while (lynk != NULL) {
       /* insert data into new slot list */
-      j = hash->hash_fn (lynk->data) % new_size;
+      j = hash->hash_fn (lynk->data, hash->user_data) % new_size;
       new_list = sc_array_index (new_slots, j);
       sc_list_prepend (new_list, lynk->data);
       ++new_count;
@@ -648,8 +648,8 @@ sc_hash_maybe_resize (sc_hash_t * hash)
 }
 
 sc_hash_t          *
-sc_hash_new (sc_hash_function_t hash_fn,
-             sc_equal_function_t equal_fn, sc_mempool_t * allocator)
+sc_hash_new (sc_hash_function_t hash_fn, sc_equal_function_t equal_fn,
+             void *user_data, sc_mempool_t * allocator)
 {
   size_t              i;
   sc_hash_t          *hash;
@@ -673,6 +673,7 @@ sc_hash_new (sc_hash_function_t hash_fn,
   hash->resize_actions = 0;
   hash->hash_fn = hash_fn;
   hash->equal_fn = equal_fn;
+  hash->user_data = user_data;
 
   hash->slots = slots = sc_array_new (sizeof (sc_list_t));
   sc_array_resize (slots, sc_hash_minimal_size);
@@ -758,20 +759,20 @@ sc_hash_unlink_destroy (sc_hash_t * hash)
 }
 
 bool
-sc_hash_lookup (sc_hash_t * hash, void *v, void **found)
+sc_hash_lookup (sc_hash_t * hash, void *v, void ***found)
 {
   size_t              hval;
   sc_list_t          *list;
   sc_link_t          *lynk;
 
-  hval = hash->hash_fn (v) % hash->slots->elem_count;
+  hval = hash->hash_fn (v, hash->user_data) % hash->slots->elem_count;
   list = sc_array_index (hash->slots, hval);
 
   for (lynk = list->first; lynk != NULL; lynk = lynk->next) {
     /* check if an equal object is contained in the hash table */
-    if (hash->equal_fn (lynk->data, v)) {
+    if (hash->equal_fn (lynk->data, v, hash->user_data)) {
       if (found != NULL) {
-        *found = lynk->data;
+        *found = &lynk->data;
       }
       return true;
     }
@@ -780,32 +781,42 @@ sc_hash_lookup (sc_hash_t * hash, void *v, void **found)
 }
 
 bool
-sc_hash_insert_unique (sc_hash_t * hash, void *v, void **found)
+sc_hash_insert_unique (sc_hash_t * hash, void *v, void ***found)
 {
+  bool                found_again;
   size_t              hval;
   sc_list_t          *list;
   sc_link_t          *lynk;
 
-  hval = hash->hash_fn (v) % hash->slots->elem_count;
+  hval = hash->hash_fn (v, hash->user_data) % hash->slots->elem_count;
   list = sc_array_index (hash->slots, hval);
 
+  /* check if an equal object is already contained in the hash table */
   for (lynk = list->first; lynk != NULL; lynk = lynk->next) {
-    /* check if an equal object is already contained in the hash table */
-    if (hash->equal_fn (lynk->data, v)) {
+    if (hash->equal_fn (lynk->data, v, hash->user_data)) {
       if (found != NULL) {
-        *found = lynk->data;
+        *found = &lynk->data;
       }
       return false;
     }
   }
+
   /* append new object to the list */
   sc_list_append (list, v);
+  if (found != NULL) {
+    *found = &list->last->data;
+  }
   ++hash->elem_count;
 
-  /* check for resize at specific intervals and return */
+  /* check for resize at specific intervals and reassign output */
   if (hash->elem_count % hash->slots->elem_count == 0) {
     sc_hash_maybe_resize (hash);
+    if (found != NULL) {
+      found_again = sc_hash_lookup (hash, v, found);
+      SC_ASSERT (found_again);
+    }
   }
+
   return true;
 }
 
@@ -816,13 +827,13 @@ sc_hash_remove (sc_hash_t * hash, void *v, void **found)
   sc_list_t          *list;
   sc_link_t          *lynk, *prev;
 
-  hval = hash->hash_fn (v) % hash->slots->elem_count;
+  hval = hash->hash_fn (v, hash->user_data) % hash->slots->elem_count;
   list = sc_array_index (hash->slots, hval);
 
   prev = NULL;
   for (lynk = list->first; lynk != NULL; lynk = lynk->next) {
     /* check if an equal object is contained in the hash table */
-    if (hash->equal_fn (lynk->data, v)) {
+    if (hash->equal_fn (lynk->data, v, hash->user_data)) {
       if (found != NULL) {
         *found = lynk->data;
       }
@@ -870,16 +881,51 @@ sc_hash_print_statistics (int log_priority, sc_hash_t * hash)
                   (unsigned long) hash->resize_actions);
 }
 
+static unsigned
+sc_hash_array_hash_fn (const void *v, const void *u)
+{
+  const sc_hash_array_data_t *internal_data = u;
+  long                l = (long) v;
+  void               *p;
+
+  p = (l == -1) ? internal_data->current_item :
+    sc_array_index_long (internal_data->pa, l);
+
+  return internal_data->hash_fn (p, internal_data->user_data);
+}
+
+static              bool
+sc_hash_array_equal_fn (const void *v1, const void *v2, const void *u)
+{
+  const sc_hash_array_data_t *internal_data = u;
+  long                l1 = (long) v1;
+  long                l2 = (long) v2;
+  void               *p1, *p2;
+
+  p1 = (l1 == -1) ? internal_data->current_item :
+    sc_array_index_long (internal_data->pa, l1);
+  p2 = (l2 == -1) ? internal_data->current_item :
+    sc_array_index_long (internal_data->pa, l2);
+
+  return internal_data->equal_fn (p1, p2, internal_data->user_data);
+}
+
 sc_hash_array_t    *
 sc_hash_array_new (size_t elem_size, sc_hash_function_t hash_fn,
-                   sc_equal_function_t equal_fn)
+                   sc_equal_function_t equal_fn, void *user_data)
 {
   sc_hash_array_t    *hash_array;
 
   hash_array = SC_ALLOC_ZERO (sc_hash_array_t, 1);
 
-  hash_array->h = sc_hash_new (hash_fn, equal_fn, NULL);
   sc_array_init (&hash_array->a, elem_size);
+  hash_array->internal_data.pa = &hash_array->a;
+  hash_array->internal_data.hash_fn = hash_fn;
+  hash_array->internal_data.equal_fn = equal_fn;
+  hash_array->internal_data.user_data = user_data;
+  hash_array->internal_data.current_item = NULL;
+  hash_array->h = sc_hash_new (sc_hash_array_hash_fn, sc_hash_array_equal_fn,
+                               &hash_array->internal_data, NULL);
 
   return hash_array;
 }
@@ -898,6 +944,35 @@ sc_hash_array_truncate (sc_hash_array_t * hash_array)
 {
   sc_hash_truncate (hash_array->h);
   sc_array_reset (&hash_array->a);
+}
+
+bool
+sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
+                             size_t * position)
+{
+  bool                added;
+  void              **found_void;
+  void               *new_item;
+
+  hash_array->internal_data.current_item = v;
+  added = sc_hash_insert_unique (hash_array->h, (void *) (-1), &found_void);
+  hash_array->internal_data.current_item = NULL;
+
+  if (added) {
+    if (position != NULL) {
+      *position = hash_array->a.elem_count;
+    }
+    *found_void = (void *) hash_array->a.elem_count;
+    new_item = sc_array_push (&hash_array->a);
+    memcpy (new_item, v, hash_array->a.elem_size);
+  }
+  else {
+    if (position != NULL) {
+      *position = (size_t) (*found_void);
+    }
+  }
+
+  return added;
 }
 
 /* EOF sc_containers.c */

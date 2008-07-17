@@ -25,16 +25,40 @@
 #error "sc.h should be included before this header file"
 #endif
 
+/* Hash macros from lookup3.c by Bob Jenkins, May 2006, public domain. */
+#define sc_hash_rot(x,k) (((x) << (k)) | ((x) >> (32 - (k))))
+#define sc_hash_mix(a,b,c) do {                         \
+    a -= c; a ^= sc_hash_rot(c, 4); c += b;             \
+    b -= a; b ^= sc_hash_rot(a, 6); a += c;             \
+    c -= b; c ^= sc_hash_rot(b, 8); b += a;             \
+    a -= c; a ^= sc_hash_rot(c,16); c += b;             \
+    b -= a; b ^= sc_hash_rot(a,19); a += c;             \
+    c -= b; c ^= sc_hash_rot(b, 4); b += a;             \
+  } while (0)
+#define sc_hash_final(a,b,c) do {                       \
+    c ^= b; c -= sc_hash_rot(b,14);                     \
+    a ^= c; a -= sc_hash_rot(c,11);                     \
+    b ^= a; b -= sc_hash_rot(a,25);                     \
+    c ^= b; c -= sc_hash_rot(b,16);                     \
+    a ^= c; a -= sc_hash_rot(c, 4);                     \
+    b ^= a; b -= sc_hash_rot(a,14);                     \
+    c ^= b; c -= sc_hash_rot(b,24);                     \
+  } while (0)
+
 /** Function to compute a hash value of an object.
+ * \param [in] v   The object to hash.
+ * \param [in] u   Arbitrary user data.
  * \return Returns an unsigned integer.
  */
-typedef unsigned    (*sc_hash_function_t) (const void *v);
+typedef unsigned    (*sc_hash_function_t) (const void *v, const void *u);
 
 /** Function to check equality of two objects.
+ * \param [in] u   Arbitrary user data.
  * \return Returns false if *v1 is unequal *v2 and true otherwise.
  */
 typedef             bool (*sc_equal_function_t) (const void *v1,
-                                                 const void *v2);
+                                                 const void *v2,
+                                                 const void *u);
 
 /** The sc_array object provides a large array of equal-size elements.
  * The array can be resized.
@@ -168,6 +192,18 @@ sc_array_index_int (sc_array_t * array, int i)
   SC_ASSERT (i >= 0 && (size_t) i < array->elem_count);
 
   return (void *) (array->array + (array->elem_size * (size_t) i));
+}
+
+/** Returns a pointer to an array element indexed by a plain long.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ */
+/*@unused@*/
+static inline void *
+sc_array_index_long (sc_array_t * array, long l)
+{
+  SC_ASSERT (l >= 0 && (size_t) l < array->elem_count);
+
+  return (void *) (array->array + (array->elem_size * (size_t) l));
 }
 
 /** Returns a pointer to an array element indexed by a ssize_t.
@@ -374,6 +410,7 @@ typedef struct sc_hash
 
   /* implementation variables */
   sc_array_t         *slots;    /* the slot count is slots->elem_count */
+  void               *user_data;        /* user data passed to hash function */
   sc_hash_function_t  hash_fn;
   sc_equal_function_t equal_fn;
   size_t              resize_checks, resize_actions;
@@ -386,11 +423,12 @@ sc_hash_t;
  * The number of hash slots is chosen dynamically.
  * \param [in] hash_fn     Function to compute the hash value.
  * \param [in] equal_fn    Function to test two objects for equality.
+ * \param [in] user_data   User data passed through to the hash function.
  * \param [in] allocator   Memory allocator for sc_link_t, can be NULL.
  */
 sc_hash_t          *sc_hash_new (sc_hash_function_t hash_fn,
                                  sc_equal_function_t equal_fn,
-                                 sc_mempool_t * allocator);
+                                 void *user_data, sc_mempool_t * allocator);
 
 /** Destroy a hash table.
  *
@@ -422,20 +460,22 @@ void                sc_hash_unlink_destroy (sc_hash_t * hash);
 
 /** Check if an object is contained in the hash table.
  * \param [in]  v      The object to be looked up.
- * \param [out] found  If found != NULL, *found is set to the object
- *                     if the object is found.
+ * \param [out] found  If found != NULL, *found is set to the address of the
+ *                     pointer to the already contained object if the object
+ *                     is found.  You can assign to **found to override.
  * \return Returns true if object is found, false otherwise.
  */
-bool                sc_hash_lookup (sc_hash_t * hash, void *v, void **found);
+bool                sc_hash_lookup (sc_hash_t * hash, void *v, void ***found);
 
 /** Insert an object into a hash table if it is not contained already.
  * \param [in]  v      The object to be inserted.
- * \param [out] found  If found != NULL, *found is set to the object
- *                     that is already contained if that exists.
+ * \param [out] found  If found != NULL, *found is set to the address of the
+ *                     pointer to the already contained, or if not present,
+ *                     the new object.  You can assign to **found to override.
  * \return Returns true if object is added, false if it is already contained.
  */
 bool                sc_hash_insert_unique (sc_hash_t * hash, void *v,
-                                           void **found);
+                                           void ***found);
 
 /** Remove an object from a hash table.
  * \param [in]  v      The object to be removed.
@@ -450,14 +490,25 @@ bool                sc_hash_remove (sc_hash_t * hash, void *v, void **found);
 void                sc_hash_print_statistics (int log_priority,
                                               sc_hash_t * hash);
 
+typedef struct sc_hash_array_data
+{
+  sc_array_t         *pa;
+  sc_hash_function_t  hash_fn;
+  sc_equal_function_t equal_fn;
+  void               *user_data;
+  void               *current_item;
+}
+sc_hash_array_data_t;
+
 /** The sc_hash_array implements an array backed up by a hash table.
  * This enables O(1) access for array elements.
  */
 typedef struct sc_hash_array
 {
   /* implementation variables */
-  sc_hash_t          *h;
   sc_array_t          a;
+  sc_hash_array_data_t internal_data;
+  sc_hash_t          *h;
 }
 sc_hash_array_t;
 
@@ -468,7 +519,8 @@ sc_hash_array_t;
  */
 sc_hash_array_t    *sc_hash_array_new (size_t elem_size,
                                        sc_hash_function_t hash_fn,
-                                       sc_equal_function_t equal_fn);
+                                       sc_equal_function_t equal_fn,
+                                       void *user_data);
 
 /** Destroy a hash array.
  */
@@ -478,5 +530,15 @@ void                sc_hash_array_destroy (sc_hash_array_t * hash_array);
  * \param [in,out] hash_array   Hash array to truncate.
  */
 void                sc_hash_array_truncate (sc_hash_array_t * hash_array);
+
+/** Insert an object into a hash array if it is not contained already.
+ * \param [in]  v          The object to be inserted.
+ * \param [out] position   If position != NULL, *position is set to the
+ *                         array position of the already contained, or if
+ *                         not present, the new object.
+ * \return Returns true if object is added, false if it is already contained.
+ */
+bool                sc_hash_array_insert_unique (sc_hash_array_t * hash_array,
+                                                 void *v, size_t * position);
 
 #endif /* !SC_CONTAINERS_H */
