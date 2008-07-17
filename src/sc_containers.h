@@ -391,16 +391,24 @@ sc_hash_t;
 sc_hash_t          *sc_hash_new (sc_hash_function_t hash_fn,
                                  sc_equal_function_t equal_fn,
                                  sc_mempool_t * allocator);
-/** Destroy a hash table in O(N).
+
+/** Destroy a hash table.
+ *
+ * If the allocator is owned, this runs in O(1), otherwise in O(N).
  * \note If allocator was provided in sc_hash_new, it will not be destroyed.
  */
 void                sc_hash_destroy (sc_hash_t * hash);
 
-/** Remove all entries from a hash table in O(N). */
-void                sc_hash_reset (sc_hash_t * hash);
+/** Remove all entries from a hash table in O(N).
+ *
+ * If the allocator is owned, it calls sc_hash_unlink and sc_mempool_reset.
+ * Otherwise, it calls sc_list_reset on every hash slot which is slower.
+ */
+void                sc_hash_truncate (sc_hash_t * hash);
 
-/** Unlinks all hash elements without returning them to the mempool.
- * This runs faster than sc_hash_reset, still in O(N),
+/** Unlink all hash elements without returning them to the mempool.
+ *
+ * If the allocator is not owned, this runs faster than sc_hash_truncate,
  *    but is dangerous because of potential memory leaks.
  * \param [in,out]  hash       Hash structure to be unlinked.
  */
@@ -441,5 +449,34 @@ bool                sc_hash_remove (sc_hash_t * hash, void *v, void **found);
  */
 void                sc_hash_print_statistics (int log_priority,
                                               sc_hash_t * hash);
+
+/** The sc_hash_array implements an array backed up by a hash table.
+ * This enables O(1) access for array elements.
+ */
+typedef struct sc_hash_array
+{
+  /* implementation variables */
+  sc_hash_t          *h;
+  sc_array_t          a;
+}
+sc_hash_array_t;
+
+/** Create a new hash array.
+ * \param [in] elem_size   Size of one array element in bytes.
+ * \param [in] hash_fn     Function to compute the hash value.
+ * \param [in] equal_fn    Function to test two objects for equality.
+ */
+sc_hash_array_t    *sc_hash_array_new (size_t elem_size,
+                                       sc_hash_function_t hash_fn,
+                                       sc_equal_function_t equal_fn);
+
+/** Destroy a hash array.
+ */
+void                sc_hash_array_destroy (sc_hash_array_t * hash_array);
+
+/** Remove all elements from the hash array.
+ * \param [in,out] hash_array   Hash array to truncate.
+ */
+void                sc_hash_array_truncate (sc_hash_array_t * hash_array);
 
 #endif /* !SC_CONTAINERS_H */

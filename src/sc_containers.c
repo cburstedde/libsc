@@ -388,8 +388,6 @@ sc_mempool_new (size_t elem_size)
 void
 sc_mempool_destroy (sc_mempool_t * mempool)
 {
-  SC_ASSERT (mempool->elem_count == 0);
-
   sc_array_reset (&mempool->freed);
   obstack_free (&mempool->obstack, NULL);
 
@@ -434,10 +432,13 @@ sc_list_new (sc_mempool_t * allocator)
 void
 sc_list_destroy (sc_list_t * list)
 {
-  sc_list_reset (list);
 
   if (list->allocator_owned) {
+    sc_list_unlink (list);
     sc_mempool_destroy (list->allocator);
+  }
+  else {
+    sc_list_reset (list);
   }
   SC_FREE (list);
 }
@@ -686,20 +687,24 @@ sc_hash_new (sc_hash_function_t hash_fn,
 void
 sc_hash_destroy (sc_hash_t * hash)
 {
-  sc_hash_reset (hash);
-
-  sc_array_destroy (hash->slots);
   if (hash->allocator_owned) {
+    /* in this case we don't need to clean up each list separately: O(1) */
     sc_mempool_destroy (hash->allocator);
   }
+  else {
+    /* return all list elements to the allocator: requires O(N) */
+    sc_hash_truncate (hash);
+  }
+  sc_array_destroy (hash->slots);
 
   SC_FREE (hash);
 }
 
 void
-sc_hash_reset (sc_hash_t * hash)
+sc_hash_truncate (sc_hash_t * hash)
 {
-  size_t              i, count;
+  size_t              i;
+  size_t              count;
   sc_list_t          *list;
   sc_array_t         *slots = hash->slots;
 
@@ -707,6 +712,13 @@ sc_hash_reset (sc_hash_t * hash)
     return;
   }
 
+  if (hash->allocator_owned) {
+    sc_hash_unlink (hash);
+    sc_mempool_reset (hash->allocator);
+    return;
+  }
+
+  /* return all list elements to the outside memory allocator */
   for (i = 0, count = 0; i < slots->elem_count; ++i) {
     list = sc_array_index (slots, i);
     count += list->elem_count;
@@ -737,10 +749,10 @@ sc_hash_unlink (sc_hash_t * hash)
 void
 sc_hash_unlink_destroy (sc_hash_t * hash)
 {
-  sc_array_destroy (hash->slots);
   if (hash->allocator_owned) {
     sc_mempool_destroy (hash->allocator);
   }
+  sc_array_destroy (hash->slots);
 
   SC_FREE (hash);
 }
@@ -856,6 +868,36 @@ sc_hash_print_statistics (int log_priority, sc_hash_t * hash)
                   (unsigned long) slots->elem_count, avg, std,
                   (unsigned long) hash->resize_checks,
                   (unsigned long) hash->resize_actions);
+}
+
+sc_hash_array_t    *
+sc_hash_array_new (size_t elem_size, sc_hash_function_t hash_fn,
+                   sc_equal_function_t equal_fn)
+{
+  sc_hash_array_t    *hash_array;
+
+  hash_array = SC_ALLOC_ZERO (sc_hash_array_t, 1);
+
+  hash_array->h = sc_hash_new (hash_fn, equal_fn, NULL);
+  sc_array_init (&hash_array->a, elem_size);
+
+  return hash_array;
+}
+
+void
+sc_hash_array_destroy (sc_hash_array_t * hash_array)
+{
+  sc_hash_destroy (hash_array->h);
+  sc_array_reset (&hash_array->a);
+
+  SC_FREE (hash_array);
+}
+
+void
+sc_hash_array_truncate (sc_hash_array_t * hash_array)
+{
+  sc_hash_truncate (hash_array->h);
+  sc_array_reset (&hash_array->a);
 }
 
 /* EOF sc_containers.c */
