@@ -975,4 +975,13 @@ sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
   return added;
 }
 
+void
+sc_hash_array_rip (sc_hash_array_t * hash_array, sc_array_t * rip)
+{
+  sc_hash_destroy (hash_array->h);
+  memcpy (rip, &hash_array->a, sizeof (sc_array_t));
+
+  SC_FREE (hash_array);
+}
+
 /* EOF sc_containers.c */

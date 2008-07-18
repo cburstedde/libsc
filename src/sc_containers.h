@@ -541,4 +541,13 @@ void                sc_hash_array_truncate (sc_hash_array_t * hash_array);
 bool                sc_hash_array_insert_unique (sc_hash_array_t * hash_array,
                                                  void *v, size_t * position);
 
+/** Extract the array data from a hash array and destroy everything else.
+ * \param [in] hash_array   The hash array is destroyed after extraction.
+ * \param [in] rip          Array structure that will be overwritten.
+ *                          All previous array data (if any) will be leaked.
+ *                          The filled array can be freed with sc_array_reset.
+ */
+void                sc_hash_array_rip (sc_hash_array_t * hash_array,
+                                       sc_array_t * rip);
+
 #endif /* !SC_CONTAINERS_H */
