@@ -946,13 +946,12 @@ sc_hash_array_truncate (sc_hash_array_t * hash_array)
   sc_array_reset (&hash_array->a);
 }
 
-bool
+void *
 sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
                              size_t * position)
 {
   bool                added;
   void              **found_void;
-  void               *new_item;
 
   hash_array->internal_data.current_item = v;
   added = sc_hash_insert_unique (hash_array->h, (void *) (-1), &found_void);
@@ -963,16 +962,14 @@ sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
       *position = hash_array->a.elem_count;
     }
     *found_void = (void *) hash_array->a.elem_count;
-    new_item = sc_array_push (&hash_array->a);
-    memcpy (new_item, v, hash_array->a.elem_size);
+    return sc_array_push (&hash_array->a);
   }
   else {
     if (position != NULL) {
       *position = (size_t) (*found_void);
     }
+    return NULL;
   }
-
-  return added;
 }
 
 void
@@ -982,6 +979,50 @@ sc_hash_array_rip (sc_hash_array_t * hash_array, sc_array_t * rip)
   memcpy (rip, &hash_array->a, sizeof (sc_array_t));
 
   SC_FREE (hash_array);
+}
+
+void
+sc_recycle_array_init (sc_recycle_array_t * rec_array, size_t elem_size)
+{
+  sc_array_init (&rec_array->a, elem_size);
+  sc_array_init (&rec_array->f, sizeof (size_t));
+}
+
+void
+sc_recycle_array_reset (sc_recycle_array_t * rec_array)
+{
+  sc_array_reset (&rec_array->a);
+  sc_array_reset (&rec_array->f);
+}
+
+void *
+sc_recycle_array_insert (sc_recycle_array_t * rec_array, size_t * position)
+{
+  size_t              newpos;
+  void               *newitem;
+
+  if (rec_array->f.elem_count > 0) {
+    newpos = *(size_t *) sc_array_pop (&rec_array->f);    
+    newitem = sc_array_index (&rec_array->a, newpos);
+  }
+  else {
+    newpos = rec_array->a.elem_count;
+    newitem = sc_array_push (&rec_array->a);
+  }
+  
+  if (position != NULL) {
+    *position = newpos;
+  }
+
+  return newitem;
+}
+
+void *
+sc_recycle_array_remove (sc_recycle_array_t * rec_array, size_t position)
+{
+  *(size_t *) sc_array_push (&rec_array->f) = position;
+
+  return sc_array_index (&rec_array->a, position);
 }
 
 /* EOF sc_containers.c */

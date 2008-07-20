@@ -219,8 +219,9 @@ sc_array_index_ssize_t (sc_array_t * array, ssize_t is)
 }
 
 /** Remove the last element from an array and return a pointer to it.
- * This is safe since the array memory is not freed or reallocated.
- * \return Returns a pointer to the last element before removal.
+ *
+ * \return                The pointer to the removed object.  Will be valid
+ *                        as long as no other function is called on this array.
  */
 static inline void *
 sc_array_pop (sc_array_t * array)
@@ -532,13 +533,17 @@ void                sc_hash_array_destroy (sc_hash_array_t * hash_array);
 void                sc_hash_array_truncate (sc_hash_array_t * hash_array);
 
 /** Insert an object into a hash array if it is not contained already.
- * \param [in]  v          The object to be inserted.
+ * The object is not copied into the array.  Use the return value for that.
+ * New objects are guaranteed to be added at the end of the array.
+ *
+ * \param [in]  v          A pointer to the object.  Used for search only.
  * \param [out] position   If position != NULL, *position is set to the
  *                         array position of the already contained, or if
  *                         not present, the new object.
- * \return Returns true if object is added, false if it is already contained.
+ * \return                 Returns NULL if the object is already contained.
+ *                         Otherwise returns its new address in the array.
  */
-bool                sc_hash_array_insert_unique (sc_hash_array_t * hash_array,
+void *              sc_hash_array_insert_unique (sc_hash_array_t * hash_array,
                                                  void *v, size_t * position);
 
 /** Extract the array data from a hash array and destroy everything else.
@@ -549,5 +554,50 @@ bool                sc_hash_array_insert_unique (sc_hash_array_t * hash_array,
  */
 void                sc_hash_array_rip (sc_hash_array_t * hash_array,
                                        sc_array_t * rip);
+
+/** The sc_recycle_array object provides an array of slots that can be reused.
+ *
+ * It keeps a list of free slots in the array which will be used for insertion
+ * while available.  Otherwise, the array is grown.
+ */
+typedef struct sc_recycle_array
+{
+  sc_array_t          a;
+  sc_array_t          f;
+}
+sc_recycle_array_t;
+
+/** Initialize a recycle array.
+ *
+ * \param [in] elem_size   Size of the objects to be stored in the array.
+ */
+void                sc_recycle_array_new (size_t elem_size);
+
+/** Reset a recycle array.
+ *
+ * As with all _reset functions, calling _init, then any array operations,
+ * then _reset is memory neutral.
+ */
+void                sc_recycle_array_reset (sc_recycle_array_t * rec_array);
+
+/** Insert an object into the recycle array.
+ * The object is not copied into the array.  Use the return value for that.
+ *
+ * \param [out] position   If position != NULL, *position is set to the
+ *                         array position of the inserted object.
+ * \return                 Returns the new address of the object in the array.
+ */
+void *              sc_recycle_array_insert (sc_recycle_array_t * rec_array,
+                                             size_t * position);
+
+/** Remove an object from the recycle array.  It must be valid.
+ *
+ * \param [in] position   Index into the array for the object to remove.
+ * \return                The pointer to the removed object.  Will be valid
+ *                        as long as no other function is called
+ *                        on this recycle array.  
+ */
+void *              sc_recycle_array_remove (sc_recycle_array_t * rec_array,
+                                             size_t position);
 
 #endif /* !SC_CONTAINERS_H */
