@@ -278,7 +278,7 @@ void                sc_mempool_destroy (sc_mempool_t * mempool);
 
 /** Invalidates all previously returned pointers, resets count to 0.
  */
-void                sc_mempool_reset (sc_mempool_t * mempool);
+void                sc_mempool_truncate (sc_mempool_t * mempool);
 
 /** Allocate a single element.
  * Elements previously returned to the pool are recycled.
@@ -440,7 +440,7 @@ void                sc_hash_destroy (sc_hash_t * hash);
 
 /** Remove all entries from a hash table in O(N).
  *
- * If the allocator is owned, it calls sc_hash_unlink and sc_mempool_reset.
+ * If the allocator is owned, it calls sc_hash_unlink and sc_mempool_truncate.
  * Otherwise, it calls sc_list_reset on every hash slot which is slower.
  */
 void                sc_hash_truncate (sc_hash_t * hash);
@@ -543,7 +543,7 @@ void                sc_hash_array_truncate (sc_hash_array_t * hash_array);
  * \return                 Returns NULL if the object is already contained.
  *                         Otherwise returns its new address in the array.
  */
-void *              sc_hash_array_insert_unique (sc_hash_array_t * hash_array,
+void               *sc_hash_array_insert_unique (sc_hash_array_t * hash_array,
                                                  void *v, size_t * position);
 
 /** Extract the array data from a hash array and destroy everything else.
@@ -571,7 +571,8 @@ sc_recycle_array_t;
  *
  * \param [in] elem_size   Size of the objects to be stored in the array.
  */
-void                sc_recycle_array_new (size_t elem_size);
+void                sc_recycle_array_init (sc_recycle_array_t * rec_array,
+                                           size_t elem_size);
 
 /** Reset a recycle array.
  *
@@ -587,7 +588,7 @@ void                sc_recycle_array_reset (sc_recycle_array_t * rec_array);
  *                         array position of the inserted object.
  * \return                 Returns the new address of the object in the array.
  */
-void *              sc_recycle_array_insert (sc_recycle_array_t * rec_array,
+void               *sc_recycle_array_insert (sc_recycle_array_t * rec_array,
                                              size_t * position);
 
 /** Remove an object from the recycle array.  It must be valid.
@@ -595,9 +596,9 @@ void *              sc_recycle_array_insert (sc_recycle_array_t * rec_array,
  * \param [in] position   Index into the array for the object to remove.
  * \return                The pointer to the removed object.  Will be valid
  *                        as long as no other function is called
- *                        on this recycle array.  
+ *                        on this recycle array.
  */
-void *              sc_recycle_array_remove (sc_recycle_array_t * rec_array,
+void               *sc_recycle_array_remove (sc_recycle_array_t * rec_array,
                                              size_t position);
 
 #endif /* !SC_CONTAINERS_H */

@@ -395,7 +395,7 @@ sc_mempool_destroy (sc_mempool_t * mempool)
 }
 
 void
-sc_mempool_reset (sc_mempool_t * mempool)
+sc_mempool_truncate (sc_mempool_t * mempool)
 {
   sc_array_reset (&mempool->freed);
   obstack_free (&mempool->obstack, NULL);
@@ -715,7 +715,7 @@ sc_hash_truncate (sc_hash_t * hash)
 
   if (hash->allocator_owned) {
     sc_hash_unlink (hash);
-    sc_mempool_reset (hash->allocator);
+    sc_mempool_truncate (hash->allocator);
     return;
   }
 
@@ -946,7 +946,7 @@ sc_hash_array_truncate (sc_hash_array_t * hash_array)
   sc_array_reset (&hash_array->a);
 }
 
-void *
+void               *
 sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
                              size_t * position)
 {
@@ -995,21 +995,21 @@ sc_recycle_array_reset (sc_recycle_array_t * rec_array)
   sc_array_reset (&rec_array->f);
 }
 
-void *
+void               *
 sc_recycle_array_insert (sc_recycle_array_t * rec_array, size_t * position)
 {
   size_t              newpos;
   void               *newitem;
 
   if (rec_array->f.elem_count > 0) {
-    newpos = *(size_t *) sc_array_pop (&rec_array->f);    
+    newpos = *(size_t *) sc_array_pop (&rec_array->f);
     newitem = sc_array_index (&rec_array->a, newpos);
   }
   else {
     newpos = rec_array->a.elem_count;
     newitem = sc_array_push (&rec_array->a);
   }
-  
+
   if (position != NULL) {
     *position = newpos;
   }
@@ -1017,7 +1017,7 @@ sc_recycle_array_insert (sc_recycle_array_t * rec_array, size_t * position)
   return newitem;
 }
 
-void *
+void               *
 sc_recycle_array_remove (sc_recycle_array_t * rec_array, size_t position)
 {
   *(size_t *) sc_array_push (&rec_array->f) = position;
