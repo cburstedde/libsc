@@ -562,6 +562,10 @@ void                sc_hash_array_rip (sc_hash_array_t * hash_array,
  */
 typedef struct sc_recycle_array
 {
+  /* interface variables */
+  size_t              elem_count;       /* number of valid entries */
+
+  /* implementation variables */
   sc_array_t          a;
   sc_array_t          f;
 }

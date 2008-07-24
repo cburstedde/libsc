@@ -986,13 +986,20 @@ sc_recycle_array_init (sc_recycle_array_t * rec_array, size_t elem_size)
 {
   sc_array_init (&rec_array->a, elem_size);
   sc_array_init (&rec_array->f, sizeof (size_t));
+
+  rec_array->elem_count = 0;
 }
 
 void
 sc_recycle_array_reset (sc_recycle_array_t * rec_array)
 {
+  SC_ASSERT (rec_array->a.elem_count ==
+             rec_array->elem_count + rec_array->f.elem_count);
+
   sc_array_reset (&rec_array->a);
   sc_array_reset (&rec_array->f);
+
+  rec_array->elem_count = 0;
 }
 
 void               *
@@ -1013,6 +1020,7 @@ sc_recycle_array_insert (sc_recycle_array_t * rec_array, size_t * position)
   if (position != NULL) {
     *position = newpos;
   }
+  ++rec_array->elem_count;
 
   return newitem;
 }
@@ -1020,7 +1028,10 @@ sc_recycle_array_insert (sc_recycle_array_t * rec_array, size_t * position)
 void               *
 sc_recycle_array_remove (sc_recycle_array_t * rec_array, size_t position)
 {
+  SC_ASSERT (rec_array->elem_count > 0);
+
   *(size_t *) sc_array_push (&rec_array->f) = position;
+  --rec_array->elem_count;
 
   return sc_array_index (&rec_array->a, position);
 }
