@@ -81,12 +81,12 @@ extraf77=yes
 echo "Calling F77 autoconf macros"
 dnl For some strange reason these wrappers need to be toplevel.
 dnl Otherwise they are executed even if the test above fails.
-AC_PROG_F77([fl32 f77 fort77 xlf gfortran g77 f90 xlf90])
+AC_PROG_F77([gfortran g77 fl32 f77 fort77 xlf f90 xlf90])
 AC_F77_WRAPPERS
 AC_F77_LIBRARY_LDFLAGS
-AC_F77_FUNC(dgemm)
+dgemm=;AC_F77_FUNC(dgemm)
 if test "$dgemm" = unknown ; then dgemm=dgemm_ ; fi
-AC_F77_FUNC(dgecon)
+dgecon=;AC_F77_FUNC(dgecon)
 if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
 
 echo "Checking BLAS with proper F77 support"
@@ -115,10 +115,10 @@ extraf77=yes
 echo "Calling F77 autoconf macros"
 dnl For some strange reason these wrappers need to be toplevel.
 dnl Otherwise they are executed even if the test above fails.
-AC_PROG_F77([fl32 f77 fort77 xlf gfortran g77 f90 xlf90])
+AC_PROG_F77([gfortran g77 fl32 f77 fort77 xlf f90 xlf90])
 AC_F77_WRAPPERS
 AC_F77_LIBRARY_LDFLAGS
-AC_F77_FUNC(dgecon)
+dgecon=;AC_F77_FUNC(dgecon)
 if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
 fi
 else acx_lapack_ok=no
