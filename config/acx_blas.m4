@@ -27,7 +27,7 @@ dnl Questions? Contact Michael A. Heroux (maherou@sandia.gov)
 dnl
 dnl ***********************************************************************
 dnl
-dnl @synopsis ACX_BLAS(BLAS-FUNCTION, [ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
+dnl @synopsis ACX_BLAS(DGEMM-FUNCTION, [ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
 dnl
 dnl This macro looks for a library that implements the BLAS
 dnl linear-algebra interface (see http://www.netlib.org/blas/).
@@ -68,14 +68,14 @@ dnl a specific BLAS library specified by a user cannot be used.
 
 dnl Edited by Carsten Burstedde <carsten@ices.utexas.edu>
 dnl Expect the F77_ autoconf macros to be called outside of this file.
-dnl Take as argument a mangled BLAS function to check for.
+dnl Take as argument a mangled DGEMM function to check for.
 dnl This way the ACX_BLAS macro can be called multiple times
 dnl with different Fortran environments to minimize F77 dependencies.
 dnl Replaced obsolete AC_TRY_LINK_FUNC macro.
 dnl Disabled the PhiPack test since it requires BLAS_LIBS anyway.
 dnl Fixed buggy generic Mac OS X library test.
 
-dnl The first argument of this macro should be a mangled BLAS function.
+dnl The first argument of this macro should be a mangled DGEMM function.
 AC_DEFUN([ACX_BLAS], [
 AC_PREREQ(2.50)
 dnl Expect this to be called already.
@@ -98,10 +98,7 @@ case $with_blas in
 	*) BLAS_LIBS="-l$with_blas" ;;
 esac
 
-# Get fortran linker names of BLAS functions to check for.
-dnl AC_F77_FUNC(sgemm)
-dnl AC_F77_FUNC(dgemm)
-dnl Expect the mangled BLAS function name to be in $1.
+dnl Expect the mangled DGEMM function name to be in $1.
 acx_blas_func="$1"
 
 acx_blas_save_LIBS="$LIBS"
@@ -222,6 +219,24 @@ fi # If the user specified library wasn't found, we skipped the remaining
    # checks.
 
 LIBS="$acx_blas_save_LIBS"
+
+# Test link and run a BLAS program
+if test "$acx_blas_ok" = yes ; then
+        acx_blas_save_run_LIBS="$LIBS"
+        LIBS="$BLAS_LIBS $LIBS $FLIBS"
+        AC_MSG_CHECKING([for BLAS by running a C program])
+        AC_RUN_IFELSE([AC_LANG_PROGRAM(,
+[[
+int     i = 1;
+double  alpha = 1., beta = 1.;
+double  A = 1., B = 1., C = 1.;
+$acx_blas_func ("N", "N", &i, &i, &i, &alpha, &A, &i, &B, &i, &beta, &C, &i);
+]])],
+[AC_MSG_RESULT([successful])],
+[AC_MSG_RESULT([failed]); acx_blas_ok=no],
+:)
+        LIBS="$acx_blas_save_run_LIBS"
+fi
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test "$acx_blas_ok" = yes ; then

@@ -27,7 +27,7 @@ dnl Questions? Contact Michael A. Heroux (maherou@sandia.gov)
 dnl
 dnl ***********************************************************************
 dnl
-dnl @synopsis ACX_LAPACK(LAPACK_FUNCTION, [ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
+dnl @synopsis ACX_LAPACK(DGECON_FUNCTION, [ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
 dnl
 dnl This macro looks for a library that implements the LAPACK
 dnl linear-algebra interface (see http://www.netlib.org/lapack/).
@@ -67,12 +67,12 @@ dnl a specific LAPACK library specified by a user cannot be used.
 
 dnl Edited by Carsten Burstedde <carsten@ices.utexas.edu>
 dnl Expect the F77_ autoconf macros to be called outside of this file.
-dnl Take as argument a mangled LAPACK function to check for.
+dnl Take as argument a mangled DGECON function to check for.
 dnl This way the ACX_LAPACK macro can be called multiple times
 dnl with different Fortran environments to minimize F77 dependencies.
 dnl Replaced obsolete AC_TRY_LINK_FUNC macro.
 
-dnl The first argument of this macro should be a mangled LAPACK function.
+dnl The first argument of this macro should be a mangled DGECON function.
 AC_DEFUN([ACX_LAPACK], [
 AC_REQUIRE([ACX_BLAS])
 acx_lapack_ok=no
@@ -92,9 +92,7 @@ case $with_lapack in
         *) LAPACK_LIBS="-l$with_lapack" ;;
 esac
 
-# Get fortran linker name of LAPACK function to check for.
-dnl AC_F77_FUNC(dgecon)
-dnl Expect the mangled LAPACK function name to be in $1.
+dnl Expect the mangled DGECON function name to be in $1.
 acx_lapack_func="$1"
 
 # We cannot use LAPACK if BLAS is not found
@@ -146,6 +144,24 @@ AC_SUBST(LAPACK_LIBS)
 
 fi # If the user specified library wasn't found, we skipped the remaining
    # checks.
+
+# Test link and run a LAPACK program
+if test "$acx_lapack_ok" = yes ; then
+        acx_lapack_save_run_LIBS="$LIBS"
+        LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
+        AC_MSG_CHECKING([for LAPACK by running a C program])
+        AC_RUN_IFELSE([AC_LANG_PROGRAM(,
+[[
+int     i = 1, info = 0, iwork[1];
+double  anorm = 1., rcond;
+double  A = 1., work[4];
+$acx_lapack_func ("1", &i, &A, &i, &anorm, &rcond, work, iwork, &info);
+]])],
+[AC_MSG_RESULT([successful])],
+[AC_MSG_RESULT([failed]); acx_lapack_ok=no],
+:)
+        LIBS="$acx_lapack_save_run_LIBS"
+fi
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test "$acx_lapack_ok" = yes; then

@@ -62,15 +62,13 @@ if test "$SC_WITH_PROVIDE_ZLIB" = "no" ; then
 fi
 
 # Checks for BLAS (and F77 environment only if necessary).
-# use the command line option from ACX_BLAS
-# if test "$SC_WITH_BLAS" != "no" ; then
-
 echo "o---------------------------------------"
 echo "| Checking BLAS, LAPACK and F77 support"
 echo "o---------------------------------------"
 
 dnl Try a default name mangling scheme without using F77.
 dgemm=dgemm_;dgecon=dgecon_
+extraf77=no
 
 echo "Checking BLAS without F77 support first"
 ACX_BLAS([$dgemm],
@@ -79,13 +77,16 @@ ACX_BLAS([$dgemm],
 # at this point $acx_blas_ok is either of: yes no disable
 if test "$acx_blas_ok" = no ; then
 
+extraf77=yes
 echo "Calling F77 autoconf macros"
 dnl For some strange reason these wrappers need to be toplevel.
 dnl Otherwise they are executed even if the test above fails.
 AC_F77_WRAPPERS
 AC_F77_LIBRARY_LDFLAGS
-dgemm=;AC_F77_FUNC(dgemm)
-dgecon=;AC_F77_FUNC(dgecon)
+AC_F77_FUNC(dgemm)
+if test "$dgemm" = unknown ; then dgemm=dgemm_ ; fi
+AC_F77_FUNC(dgecon)
+if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
 
 echo "Checking BLAS with proper F77 support"
 ACX_BLAS([$dgemm],
@@ -101,13 +102,35 @@ if test "$acx_blas_ok" = disable ; then
 fi
 AM_CONDITIONAL([SC_BLAS], [test "$acx_blas_ok" = yes])
 
+if test "$extraf77" = no ; then
+echo "Checking LAPACK without F77 support first"
+ACX_LAPACK([$dgecon],
+           [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
+           [echo "Could not find LAPACK without F77 support"])
+# at this point $acx_lapack_ok is either of: yes no disable
+if test "$acx_lapack_ok" = no ; then
+
+extraf77=yes
+echo "Calling F77 autoconf macros"
+dnl For some strange reason these wrappers need to be toplevel.
+dnl Otherwise they are executed even if the test above fails.
+AC_F77_WRAPPERS
+AC_F77_LIBRARY_LDFLAGS
+AC_F77_FUNC(dgecon)
+if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
+fi
+else acx_lapack_ok=no
+fi
+if test "$acx_lapack_ok" = no ; then
+
+echo "Checking LAPACK with proper F77 support"
 ACX_LAPACK([$dgecon],
            [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
            [AC_MSG_ERROR([[\
 Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
  LIBS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB\
  (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
-# fi
+fi
 # at this point $acx_lapack_ok is either of: yes disable
 if test "$acx_lapack_ok" = disable ; then
         echo "Not using LAPACK"
