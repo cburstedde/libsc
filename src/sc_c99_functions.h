@@ -41,6 +41,8 @@ Boston, MA 02110-1301, USA.  */
 double              tgamma (double);
 double              trunc (double);
 
+intmax_t            imaxabs (intmax_t);
+
 #endif /* !__cplusplus */
 
 /* Supply defines and prototypes that splint doesn't know about */
@@ -51,6 +53,7 @@ double              trunc (double);
 #endif
 
 long long int       strtoll (const char *nptr, char **endptr, int base);
+intmax_t            imaxabs (intmax_t a);
 
 #endif /* ACX_SPLINT */
 
