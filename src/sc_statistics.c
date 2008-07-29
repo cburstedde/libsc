@@ -93,8 +93,13 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   MPI_Datatype        ctype;
 #endif
 
-  mpiret = MPI_Comm_rank (mpicomm, &rank);
-  SC_CHECK_MPI (mpiret);
+  if (mpicomm == MPI_COMM_NULL) {
+    rank = 0;
+  }
+  else {
+    mpiret = MPI_Comm_rank (mpicomm, &rank);
+    SC_CHECK_MPI (mpiret);
+  }
 
   flat = SC_ALLOC (double, 2 * 7 * nvars);
   flatin = flat;
@@ -111,17 +116,28 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   }
 
 #ifdef SC_MPI
-  mpiret = MPI_Type_contiguous (7, MPI_DOUBLE, &ctype);
-  SC_CHECK_MPI (mpiret);
+  if (mpicomm == MPI_COMM_NULL) {
+    memcpy (flatout, flatin, 7 * nvars * sizeof (*flatout));
+  }
+  else {
+    mpiret = MPI_Type_contiguous (7, MPI_DOUBLE, &ctype);
+    SC_CHECK_MPI (mpiret);
 
-  mpiret = MPI_Type_commit (&ctype);
-  SC_CHECK_MPI (mpiret);
+    mpiret = MPI_Type_commit (&ctype);
+    SC_CHECK_MPI (mpiret);
 
-  mpiret = MPI_Op_create (sc_statinfo_mpifunc, 1, &op);
-  SC_CHECK_MPI (mpiret);
+    mpiret = MPI_Op_create (sc_statinfo_mpifunc, 1, &op);
+    SC_CHECK_MPI (mpiret);
 
-  mpiret = MPI_Allreduce (flatin, flatout, nvars, ctype, op, mpicomm);
-  SC_CHECK_MPI (mpiret);
+    mpiret = MPI_Allreduce (flatin, flatout, nvars, ctype, op, mpicomm);
+    SC_CHECK_MPI (mpiret);
+
+    mpiret = MPI_Op_free (&op);
+    SC_CHECK_MPI (mpiret);
+
+    mpiret = MPI_Type_free (&ctype);
+    SC_CHECK_MPI (mpiret);
+  }
 #else
   memcpy (flatout, flatin, 7 * nvars * sizeof (*flatout));
 #endif /* SC_MPI */
@@ -142,14 +158,6 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     stats[i].standev = sqrt (stats[i].variance);
     stats[i].standev_mean = sqrt (stats[i].variance_mean);
   }
-
-#ifdef SC_MPI
-  mpiret = MPI_Op_free (&op);
-  SC_CHECK_MPI (mpiret);
-
-  mpiret = MPI_Type_free (&ctype);
-  SC_CHECK_MPI (mpiret);
-#endif /* SC_MPI */
 
   SC_FREE (flat);
 }
@@ -173,75 +181,72 @@ sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 }
 
 void
-sc_statinfo_print (int nvars, sc_statinfo_t * stats,
-                   bool full, bool summary, FILE * nout)
+sc_statinfo_print (int log_priority,
+                   int nvars, sc_statinfo_t * stats, bool full, bool summary)
 {
   int                 i;
   sc_statinfo_t      *si;
   char                buffer[BUFSIZ];
 
-  if (nout == NULL) {
-    return;
-  }
-
   if (full) {
     for (i = 0; i < nvars; ++i) {
       si = &stats[i];
       if (si->variable != NULL) {
-        fprintf (nout, "Statistics for variable: %s\n", si->variable);
+        SC_GLOBAL_LOGF (log_priority, "Statistics for %s\n", si->variable);
       }
       else {
-        fprintf (nout, "Statistics for variable no. %d\n", i);
+        SC_GLOBAL_LOGF (log_priority, "Statistics for %d\n", i);
       }
-      fprintf (nout, "   Global number of values: %5d\n", si->count);
+      SC_GLOBAL_LOGF (log_priority, "   Global number of values: %5d\n",
+                      si->count);
       if (si->average != 0.) {  /* ignore the comparison warning */
-        fprintf (nout,
-                 "   Mean value (std. dev.):         %g (%.3g = %.3g%%)\n",
-                 si->average, si->standev,
-                 100. * si->standev / fabs (si->average));
+        SC_GLOBAL_LOGF (log_priority,
+                        "   Mean value (std. dev.):         %g (%.3g = %.3g%%)\n",
+                        si->average, si->standev,
+                        100. * si->standev / fabs (si->average));
       }
       else {
-        fprintf (nout, "   Mean value (std. dev.):         %g (%.3g)\n",
-                 si->average, si->standev);
+        SC_GLOBAL_LOGF (log_priority,
+                        "   Mean value (std. dev.):         %g (%.3g)\n",
+                        si->average, si->standev);
       }
-      fprintf (nout, "   Minimum attained at rank %5d: %g\n",
-               si->min_at_rank, si->min);
-      fprintf (nout, "   Maximum attained at rank %5d: %g\n",
-               si->max_at_rank, si->max);
+      SC_GLOBAL_LOGF (log_priority, "   Minimum attained at rank %5d: %g\n",
+                      si->min_at_rank, si->min);
+      SC_GLOBAL_LOGF (log_priority, "   Maximum attained at rank %5d: %g\n",
+                      si->max_at_rank, si->max);
     }
   }
   else {
     for (i = 0; i < nvars; ++i) {
       si = &stats[i];
       if (si->variable != NULL) {
-        snprintf (buffer, BUFSIZ, "for variable %s:", si->variable);
+        snprintf (buffer, BUFSIZ, "for %s:", si->variable);
       }
       else {
-        snprintf (buffer, BUFSIZ, "for variable no. %d:", i);
+        snprintf (buffer, BUFSIZ, "for %d:", i);
       }
       if (si->average != 0.) {  /* ignore the comparison warning */
-        fprintf (nout,
-                 "Mean value (std. dev.) %-28s %g (%.3g = %.3g%%)\n",
-                 buffer, si->average, si->standev,
-                 100. * si->standev / fabs (si->average));
+        SC_GLOBAL_LOGF (log_priority,
+                        "Mean value (std. dev.) %-28s %g (%.3g = %.3g%%)\n",
+                        buffer, si->average, si->standev,
+                        100. * si->standev / fabs (si->average));
       }
       else {
-        fprintf (nout, "Mean value (std. dev.) %-28s %g (%.3g)\n",
-                 buffer, si->average, si->standev);
+        SC_GLOBAL_LOGF (log_priority,
+                        "Mean value (std. dev.) %-28s %g (%.3g)\n", buffer,
+                        si->average, si->standev);
       }
     }
   }
 
   if (summary) {
-    fputs ("Summary = ", nout);
+    SC_GLOBAL_LOG (log_priority, "Summary = ");
     for (i = 0; i < nvars; ++i) {
       si = &stats[i];
-      fprintf (nout, "%s%g", i == 0 ? "[ " : " ", si->average);
+      SC_GLOBAL_LOGF (log_priority, "%s%g", i == 0 ? "[ " : " ", si->average);
     }
-    fputs (" ];\n", nout);
+    SC_GLOBAL_LOG (log_priority, " ];\n");
   }
-
-  fflush (nout);
 }
 
 void
@@ -270,8 +275,7 @@ sc_flopinfo_start (sc_flopinfo_t * fi)
 }
 
 void
-sc_papi_stop (float *rtime, float *ptime, long long *flpops,
-              float *mflops)
+sc_papi_stop (float *rtime, float *ptime, long long *flpops, float *mflops)
 {
 #ifdef SC_PAPI
   float               p_rtime, p_ptime, p_mflops;

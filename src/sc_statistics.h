@@ -30,8 +30,8 @@ typedef struct sc_statinfo
   int                 count;    /* the global count is 52bit accurate */
   double              sum_values, sum_squares, min, max;        /* inout */
   int                 min_at_rank, max_at_rank; /* out */
-  double              average, variance, standev;      /* out */
-  double              variance_mean, standev_mean;     /* out */
+  double              average, variance, standev;       /* out */
+  double              variance_mean, standev_mean;      /* out */
   const char         *variable; /* name of the variable for output */
 }
 sc_statinfo_t;
@@ -85,12 +85,13 @@ void                sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars,
 
 /**
  * Print measured statistics. Should be called on 1 core only.
+ * \param [in] log_priority   Log priority for output according to sc.h.
  * \param [in] full      Boolean: print full information for every variable.
  * \param [in] summary   Boolean: print summary information all on 1 line.
- * \param [in] nout      Stream used for output if not NULL.
  */
-void                sc_statinfo_print (int nvars, sc_statinfo_t * stats,
-                                       bool full, bool summary, FILE * nout);
+void                sc_statinfo_print (int log_priority,
+                                       int nvars, sc_statinfo_t * stats,
+                                       bool full, bool summary);
 
 /**
  * Start counting times and flops.
