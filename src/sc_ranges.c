@@ -119,7 +119,7 @@ sc_ranges_compute (int num_procs, int *procs,
   SC_ASSERT (nwin >= 0 && nwin < num_ranges);
 
   /* sort empty ranges by start rank */
-  qsort (ranges, nwin, 2 * sizeof (int), sc_ranges_compare);
+  qsort (ranges, (size_t) nwin, 2 * sizeof (int), sc_ranges_compare);
 
 #ifdef SC_DEBUG
   /* check consistency of empty ranges */
@@ -184,6 +184,7 @@ sc_ranges_statistics (int log_priority,
 
   empties = 0;
   for (i = 0; i < num_ranges; ++i) {
+    SC_ASSERT (ranges[2 * i] >= 0 || ranges[2 * i] > ranges[2 * i + 1]);
     for (j = ranges[2 * i]; j <= ranges[2 * i + 1]; ++j) {
       empties += (j != rank && procs[j] == 0);
     }
