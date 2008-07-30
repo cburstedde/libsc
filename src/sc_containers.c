@@ -852,6 +852,23 @@ sc_hash_remove (sc_hash_t * hash, void *v, void **found)
 }
 
 void
+sc_hash_foreach (sc_hash_t * hash, sc_hash_foreach_t fn)
+{
+  size_t              slot;
+  sc_list_t          *list;
+  sc_link_t          *lynk;
+
+  for (slot = 0; slot < hash->slots->elem_count; ++slot) {
+    list = sc_array_index (hash->slots, slot);
+    for (lynk = list->first; lynk != NULL; lynk = lynk->next) {
+      if (!fn (&lynk->data, hash->user_data)) {
+        return;
+      }
+    }
+  }
+}
+
+void
 sc_hash_print_statistics (int log_priority, sc_hash_t * hash)
 {
   size_t              i;
@@ -888,7 +905,7 @@ sc_hash_array_hash_fn (const void *v, const void *u)
   long                l = (long) v;
   void               *p;
 
-  p = (l == -1) ? internal_data->current_item :
+  p = (l == -1L) ? internal_data->current_item :
     sc_array_index_long (internal_data->pa, l);
 
   return internal_data->hash_fn (p, internal_data->user_data);
@@ -902,9 +919,9 @@ sc_hash_array_equal_fn (const void *v1, const void *v2, const void *u)
   long                l2 = (long) v2;
   void               *p1, *p2;
 
-  p1 = (l1 == -1) ? internal_data->current_item :
+  p1 = (l1 == -1L) ? internal_data->current_item :
     sc_array_index_long (internal_data->pa, l1);
-  p2 = (l2 == -1) ? internal_data->current_item :
+  p2 = (l2 == -1L) ? internal_data->current_item :
     sc_array_index_long (internal_data->pa, l2);
 
   return internal_data->equal_fn (p1, p2, internal_data->user_data);
@@ -946,6 +963,28 @@ sc_hash_array_truncate (sc_hash_array_t * hash_array)
   sc_array_reset (&hash_array->a);
 }
 
+bool
+sc_hash_array_lookup (sc_hash_array_t * hash_array, void *v,
+                      size_t * position)
+{
+  bool                found;
+  void              **found_void;
+
+  hash_array->internal_data.current_item = v;
+  found = sc_hash_lookup (hash_array->h, (void *) (-1L), &found_void);
+  hash_array->internal_data.current_item = NULL;
+
+  if (found) {
+    if (position != NULL) {
+      *position = (size_t) (*found_void);
+    }
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
 void               *
 sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
                              size_t * position)
@@ -954,7 +993,7 @@ sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
   void              **found_void;
 
   hash_array->internal_data.current_item = v;
-  added = sc_hash_insert_unique (hash_array->h, (void *) (-1), &found_void);
+  added = sc_hash_insert_unique (hash_array->h, (void *) (-1L), &found_void);
   hash_array->internal_data.current_item = NULL;
 
   if (added) {

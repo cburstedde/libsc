@@ -60,6 +60,13 @@ typedef             bool (*sc_equal_function_t) (const void *v1,
                                                  const void *v2,
                                                  const void *u);
 
+/** Function to call on every data item of a hash table.
+ * \param [in] v   The address of the pointer to the current object.
+ * \param [in] u   Arbitrary user data.
+ * \return Return true if the traversal should continue, false to stop.
+ */
+typedef             bool (*sc_hash_foreach_t) (void **v, const void *u);
+
 /** The sc_array object provides a large array of equal-size elements.
  * The array can be resized.
  * Elements are accessed by their 0-based index, their address may change.
@@ -486,6 +493,11 @@ bool                sc_hash_insert_unique (sc_hash_t * hash, void *v,
  */
 bool                sc_hash_remove (sc_hash_t * hash, void *v, void **found);
 
+/** Invoke a callback for every member of the hash table.
+ * The functions hash_fn and equal_fn are not called by this function.
+ */
+void                sc_hash_foreach (sc_hash_t * hash, sc_hash_foreach_t fn);
+
 /** Compute and print statistical information about the occupancy.
  */
 void                sc_hash_print_statistics (int log_priority,
@@ -531,6 +543,17 @@ void                sc_hash_array_destroy (sc_hash_array_t * hash_array);
  * \param [in,out] hash_array   Hash array to truncate.
  */
 void                sc_hash_array_truncate (sc_hash_array_t * hash_array);
+
+/** Check if an object is contained in a hash array.
+ *
+ * \param [in]  v          A pointer to the object.
+ * \param [out] position   If position != NULL, *position is set to the
+ *                         array position of the already contained object
+ *                         if found.
+ * \return                 Returns true if object is found, false otherwise.
+ */
+bool                sc_hash_array_lookup (sc_hash_array_t * hash_array,
+                                          void *v, size_t * position);
 
 /** Insert an object into a hash array if it is not contained already.
  * The object is not copied into the array.  Use the return value for that.
