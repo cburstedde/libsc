@@ -230,6 +230,7 @@ sc_array_index_ssize_t (sc_array_t * array, ssize_t is)
  * \return                The pointer to the removed object.  Will be valid
  *                        as long as no other function is called on this array.
  */
+/*@unused@*/
 static inline void *
 sc_array_pop (sc_array_t * array)
 {
@@ -238,9 +239,10 @@ sc_array_pop (sc_array_t * array)
   return (void *) (array->array + (array->elem_size * --array->elem_count));
 }
 
-/** Enlarge an array by one.  Grows the array memory if necessary.
+/** Enlarge an array by one.  Grows the array if necessary.
  * \return Returns a pointer to the uninitialized newly added element.
  */
+/*@unused@*/
 static inline void *
 sc_array_push (sc_array_t * array)
 {
@@ -252,6 +254,27 @@ sc_array_push (sc_array_t * array)
   }
 
   return (void *) (array->array + (array->elem_size * array->elem_count++));
+}
+
+/** Enlarge a char array by a given number.  Grows the array if necessary.
+ * \return Returns a pointer to the uninitialized newly added bytes.
+ */
+/*@unused@*/
+static inline char *
+sc_array_push_bytes (sc_array_t * array, size_t bytes)
+{
+  const size_t        old_count = array->elem_count;
+
+  SC_ASSERT (array->elem_size == 1);
+
+  if (old_count + bytes > array->byte_alloc) {
+    sc_array_resize (array, old_count + bytes);
+  }
+  else {
+    array->elem_count += bytes;
+  }
+
+  return array->array + old_count;
 }
 
 /** The sc_mempool object provides a large pool of equal-size elements.
@@ -538,6 +561,10 @@ sc_hash_array_t    *sc_hash_array_new (size_t elem_size,
 /** Destroy a hash array.
  */
 void                sc_hash_array_destroy (sc_hash_array_t * hash_array);
+
+/** Check the internal consistency of a hash array.
+ */
+bool                sc_hash_array_is_valid (sc_hash_array_t * hash_array);
 
 /** Remove all elements from the hash array.
  * \param [in,out] hash_array   Hash array to truncate.

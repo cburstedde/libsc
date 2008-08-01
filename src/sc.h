@@ -98,6 +98,7 @@
 #define SC_CHECK_ABORT(c,s)                        \
   do {                                             \
     if (!(c)) {                                    \
+      sleep (1);                                   \
       fprintf (stderr, "Abort: %s\n   in %s:%d\n", \
                (s), __FILE__, __LINE__);           \
       sc_abort ();                                 \
@@ -109,6 +110,7 @@
 #define SC_CHECK_ABORTF(c,fmt,...)                      \
   do {                                                  \
     if (!(c)) {                                         \
+      sleep (1);                                        \
       fprintf (stderr, "Abort: " fmt "\n   in %s:%d\n", \
                __VA_ARGS__, __FILE__, __LINE__);        \
       sc_abort ();                                      \

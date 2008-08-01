@@ -956,6 +956,24 @@ sc_hash_array_destroy (sc_hash_array_t * hash_array)
   SC_FREE (hash_array);
 }
 
+bool
+sc_hash_array_is_valid (sc_hash_array_t * hash_array)
+{
+  bool                found;
+  size_t              zz, position;
+  void               *v;
+
+  for (zz = 0; zz < hash_array->a.elem_count; ++zz) {
+    v = sc_array_index (&hash_array->a, zz);
+    found = sc_hash_array_lookup (hash_array, v, &position);
+    if (!found || position != zz) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void
 sc_hash_array_truncate (sc_hash_array_t * hash_array)
 {
@@ -991,6 +1009,8 @@ sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
 {
   bool                added;
   void              **found_void;
+
+  SC_ASSERT (hash_array->a.elem_count == hash_array->h->elem_count);
 
   hash_array->internal_data.current_item = v;
   added = sc_hash_insert_unique (hash_array->h, (void *) (-1L), &found_void);
