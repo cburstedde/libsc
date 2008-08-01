@@ -30,7 +30,7 @@
 #define MPI_COMM_WORLD          ((MPI_Comm) 0x44000000)
 #define MPI_COMM_SELF           ((MPI_Comm) 0x44000001)
 
-#define MPI_REQUEST_NULL   ((MPI_Request)0x2c000000)
+#define MPI_REQUEST_NULL        ((MPI_Request) 0x2c000000)
 
 #define MPI_CHAR                ((MPI_Datatype) 0x4c000101)
 #define MPI_SIGNED_CHAR         ((MPI_Datatype) 0x4c000118)
@@ -74,7 +74,10 @@ typedef struct MPI_Status
   int                 MPI_SOURCE;
   int                 MPI_TAG;
   int                 MPI_ERROR;
-} MPI_Status;
+}
+MPI_Status;
+
+/* These functions are valid and functional for a single process. */
 
 int                 MPI_Init (int *, char ***);
 int                 MPI_Finalize (void);
@@ -95,12 +98,17 @@ int                 MPI_Reduce (void *, void *, int, MPI_Datatype,
 int                 MPI_Allreduce (void *, void *, int, MPI_Datatype,
                                    MPI_Op, MPI_Comm);
 
+double              MPI_Wtime (void);
+
+/* This function will abort. */
 int                 MPI_Irecv (void *, int, MPI_Datatype, int, int, MPI_Comm,
                                MPI_Request *);
+
+/* This function will abort. */
 int                 MPI_Isend (void *, int, MPI_Datatype, int, int, MPI_Comm,
                                MPI_Request *);
-int                 MPI_Waitall (int, MPI_Request *, MPI_Status *);
 
-double              MPI_Wtime (void);
+/* This function is only allowed to be called with zero size arrays. */
+int                 MPI_Waitall (int, MPI_Request *, MPI_Status *);
 
 #endif /* !SC_MPI_DUMMY_H */

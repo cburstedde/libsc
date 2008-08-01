@@ -228,8 +228,7 @@ int
 MPI_Waitall (int count, MPI_Request * array_of_requests,
              MPI_Status * array_of_statuses)
 {
-  SC_CHECK_ABORT (count == 0, "Only zero requests are handled");
-
+  SC_CHECK_ABORT (count == 0, "MPI_Waitall handles only zero requests");
   return MPI_SUCCESS;
 }
 
