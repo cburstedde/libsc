@@ -30,6 +30,8 @@
 #define MPI_COMM_WORLD          ((MPI_Comm) 0x44000000)
 #define MPI_COMM_SELF           ((MPI_Comm) 0x44000001)
 
+#define MPI_REQUEST_NULL   ((MPI_Request)0x2c000000)
+
 #define MPI_CHAR                ((MPI_Datatype) 0x4c000101)
 #define MPI_SIGNED_CHAR         ((MPI_Datatype) 0x4c000118)
 #define MPI_UNSIGNED_CHAR       ((MPI_Datatype) 0x4c000102)
@@ -64,6 +66,15 @@
 typedef int         MPI_Comm;
 typedef int         MPI_Datatype;
 typedef int         MPI_Op;
+typedef int         MPI_Request;
+typedef struct MPI_Status
+{
+  int                 count;
+  int                 cancelled;
+  int                 MPI_SOURCE;
+  int                 MPI_TAG;
+  int                 MPI_ERROR;
+} MPI_Status;
 
 int                 MPI_Init (int *, char ***);
 int                 MPI_Finalize (void);
@@ -83,6 +94,12 @@ int                 MPI_Reduce (void *, void *, int, MPI_Datatype,
                                 MPI_Op, int, MPI_Comm);
 int                 MPI_Allreduce (void *, void *, int, MPI_Datatype,
                                    MPI_Op, MPI_Comm);
+
+int                 MPI_Irecv (void *, int, MPI_Datatype, int, int, MPI_Comm,
+                               MPI_Request *);
+int                 MPI_Isend (void *, int, MPI_Datatype, int, int, MPI_Comm,
+                               MPI_Request *);
+int                 MPI_Waitall (int, MPI_Request *, MPI_Status *);
 
 double              MPI_Wtime (void);
 

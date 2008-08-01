@@ -208,6 +208,31 @@ MPI_Allreduce (void *p, void *q, int n, MPI_Datatype t,
   return MPI_SUCCESS;
 }
 
+int
+MPI_Irecv (void *buf, int count, MPI_Datatype datatype, int source, int tag,
+           MPI_Comm comm, MPI_Request * request)
+{
+  SC_CHECK_ABORT (false, "MPI_Irecv is not implemented");
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Isend (void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+           MPI_Comm comm, MPI_Request * request)
+{
+  SC_CHECK_ABORT (false, "MPI_Isend is not implemented");
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Waitall (int count, MPI_Request * array_of_requests,
+             MPI_Status * array_of_statuses)
+{
+  SC_CHECK_ABORT (count == 0, "Only zero requests are handled");
+
+  return MPI_SUCCESS;
+}
+
 double
 MPI_Wtime (void)
 {
