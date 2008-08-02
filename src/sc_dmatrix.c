@@ -324,12 +324,14 @@ sc_dmatrix_ldivide (sc_trans_t transa, const sc_dmatrix_t * A,
   sc_trans_t          invtransa =
     (transa == SC_NO_TRANS) ? SC_TRANS : SC_NO_TRANS;
 
+#ifdef SC_DEBUG
   sc_bint_t           A_nrows = (transa == SC_NO_TRANS) ? A->m : A->n;
   sc_bint_t           A_ncols = (transa == SC_NO_TRANS) ? A->n : A->m;
   sc_bint_t           B_nrows = B->m;
   sc_bint_t           B_ncols = B->n;
   sc_bint_t           C_nrows = C->m;
   sc_bint_t           C_ncols = C->n;
+#endif
 
   SC_ASSERT ((C_nrows == A_ncols) && (B_nrows == A_nrows)
              && (B_ncols == C_ncols));
@@ -349,11 +351,13 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
                     const sc_dmatrix_t * B, sc_dmatrix_t * C)
 {
   sc_bint_t           A_nrows = A->m;
-  sc_bint_t           A_ncols = A->n;
   sc_bint_t           B_nrows = (transb == SC_NO_TRANS) ? B->m : B->n;
   sc_bint_t           B_ncols = (transb == SC_NO_TRANS) ? B->n : B->m;
+#ifdef SC_DEBUG
+  sc_bint_t           A_ncols = A->n;
   sc_bint_t           C_nrows = C->m;
   sc_bint_t           C_ncols = C->n;
+#endif
   sc_bint_t           M = B_ncols, N = B_nrows, Nrhs = A_nrows, info = 0;
 
   SC_ASSERT ((C_nrows == A_nrows) && (B_nrows == C_ncols)
