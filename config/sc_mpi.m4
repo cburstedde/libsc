@@ -34,10 +34,11 @@ dnl
 dnl This macro calls AC_PROG_CC.
 dnl
 dnl --enable-mpi           Turn on MPI, use compilers mpicc and mpif77.
-dnl --with-mpicc=<...>     Specify MPI C compiler.
+dnl --with-mpicc=<...>     Specify MPI C compiler, can be "no".
 dnl --without-mpicc        Do not use a special MPI C compiler.
-dnl --with-mpif77=<...>    Specify MPI F77 compiler.
+dnl --with-mpif77=<...>    Specify MPI F77 compiler, can be "no".
 dnl --without-mpif77       Do not use a special MPI F77 compiler.
+dnl --with-mpitest=<...>   Use this as PREFIX_MPI_TESTS_ENVIRONMENT.
 dnl
 dnl All --with* options turn on MPI, so --enable-mpi is then not needed.
 dnl
@@ -59,47 +60,50 @@ HAVE_PKG_MPI=no
 MPI_CC_NONE=
 MPI_F77_NONE=
 
-AC_ARG_ENABLE([mpi],
-[AS_HELP_STRING([--enable-mpi], [enable MPI])],, [enableval="no"])
-if test -n "$SC_ENABLE_MPI" ; then
-  echo "Option override SC_ENABLE_MPI=$SC_ENABLE_MPI"
-  enableval="$SC_ENABLE_MPI"
-fi
+SC_ARG_ENABLE([mpi], [enable MPI], [MPI])
 if test "$enableval" = yes ; then
   HAVE_PKG_MPI=yes
 elif test "$enableval" != no ; then
   AC_MSG_ERROR([Please use --enable-mpi without an argument])
 fi
 
-AC_ARG_WITH([mpicc],
-[AS_HELP_STRING([--with-mpicc=MPICC], [specify MPI C compiler])],
-[
+SC_ARG_NOT_GIVEN_DEFAULT="notgiven"
+SC_ARG_WITH([mpicc], [specify MPI C compiler, can be "no"],
+            [MPICC], [=MPICC])
 if test "$withval" = yes ; then
   AC_MSG_ERROR([Please use --with-mpicc=MPICC with a valid mpi C compiler])
-else
+elif test "$withval" = no ; then
   HAVE_PKG_MPI=yes
-  if test "$withval" = no ; then
-    MPI_CC_NONE=yes
-  else
-    AC_CHECK_PROG([MPI_CC], [$withval], [$withval], [false])
-  fi
+  MPI_CC_NONE=yes
+elif test "$withval" != notgiven ; then
+  HAVE_PKG_MPI=yes
+  AC_CHECK_PROG([MPI_CC], [$withval], [$withval], [false])
 fi
-])
 
-AC_ARG_WITH([mpif77],
-[AS_HELP_STRING([--with-mpif77=MPIF77], [specify MPI F77 compiler])],
-[
+SC_ARG_NOT_GIVEN_DEFAULT="notgiven"
+SC_ARG_WITH([mpif77], [specify MPI F77 compiler, can be "no"],
+            [MPIF77], [=MPIF77])
 if test "$withval" = yes ; then
   AC_MSG_ERROR([Please use --with-mpif77=MPIF77 with a valid mpi F77 compiler])
-else
+elif test "$withval" = no ; then
   HAVE_PKG_MPI=yes
-  if test "$withval" = no ; then
-    MPI_F77_NONE=yes
-  else
-    AC_CHECK_PROG([MPI_F77], [$withval], [$withval], [false])
-  fi
+  MPI_F77_NONE=yes
+elif test "$withval" != notgiven ; then
+  HAVE_PKG_MPI=yes
+  AC_CHECK_PROG([MPI_F77], [$withval], [$withval], [false])
 fi
-])
+
+SC_ARG_NOT_GIVEN_DEFAULT="yes"
+SC_ARG_WITH([mpitest], [use DRIVER to run MPI tests (default: mpirun -np 2)],
+            [MPI_TESTS], [[[[[=DRIVER]]]]])
+if test "$HAVE_PKG_MPI" = yes ; then
+  if test "$withval" = yes ; then
+    withval="mpirun -np 2"
+  elif test "$withval" = no ; then
+    withval=""
+  fi
+  AC_SUBST([$1_MPI_TESTS_ENVIRONMENT], [$withval])
+fi
 
 AC_MSG_CHECKING([whether we are using MPI])
 AC_MSG_RESULT([$HAVE_PKG_MPI])

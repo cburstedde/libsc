@@ -20,6 +20,9 @@ nodist_include_HEADERS =
 noinst_HEADERS =
 noinst_PROGRAMS =
 
+# set test environment
+TESTS_ENVIRONMENT = @SC_MPI_TESTS_ENVIRONMENT@
+
 # handle toplevel directory
 EXTRA_DIST += bootstrap scindent
 DISTCLEANFILES += _configs.sed src/sc_config.h
