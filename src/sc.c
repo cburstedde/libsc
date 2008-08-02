@@ -313,6 +313,39 @@ sc_memory_check (int package)
   }
 }
 
+int
+sc_int_compare (const void *v1, const void *v2)
+{
+  return *(int *) v1 - *(int *) v2;
+}
+
+int
+sc_int16_compare (const void *v1, const void *v2)
+{
+  const int16_t       i1 = *(int16_t *) v1;
+  const int16_t       i2 = *(int16_t *) v2;
+
+  return (i1 == i2) ? 0 : ((i1 < i2) ? -1 : +1);
+}
+
+int
+sc_int32_compare (const void *v1, const void *v2)
+{
+  const int32_t       i1 = *(int32_t *) v1;
+  const int32_t       i2 = *(int32_t *) v2;
+
+  return (i1 == i2) ? 0 : ((i1 < i2) ? -1 : +1);
+}
+
+int
+sc_int64_compare (const void *v1, const void *v2)
+{
+  const int64_t       i1 = *(int64_t *) v1;
+  const int64_t       i2 = *(int64_t *) v2;
+
+  return (i1 == i2) ? 0 : ((i1 < i2) ? -1 : +1);
+}
+
 void
 sc_set_log_defaults (sc_log_handler_t log_handler, int log_threshold,
                      FILE * log_stream)

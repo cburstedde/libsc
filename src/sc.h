@@ -277,6 +277,13 @@ char               *sc_strdup (int package, const char *s);
 void                sc_free (int package, void *ptr);
 void                sc_memory_check (int package);
 
+/* comparison functions for various integer sizes */
+
+int                 sc_int_compare (const void *v1, const void *v2);
+int                 sc_int16_compare (const void *v1, const void *v2);
+int                 sc_int32_compare (const void *v1, const void *v2);
+int                 sc_int64_compare (const void *v1, const void *v2);
+
 /** Controls the default SC log behavior.
  * \param [in] log_handler   Set default SC log handler (NULL selects builtin).
  * \param [in] log_threshold Set default SC log threshold (or SC_LP_DEFAULT).
