@@ -64,7 +64,7 @@ main (int argc, char **argv)
   sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
 
   sc_package_summary (stdout);
-  
+
   sc_set_log_defaults (NULL, SC_LP_STATISTICS, stderr);
   log_normal ();
   log_global ();

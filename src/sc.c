@@ -371,6 +371,23 @@ sc_logf (const char *filename, int lineno,
 }
 
 void
+sc_generic_abort_fn (void *data)
+{
+  int                 rank;
+  MPI_Comm           *mpicomm = data;
+
+  if (mpicomm == NULL) {
+    fprintf (stderr, "Error: sc_generic_abort_fn needs MPI_Comm* data!\n");
+  }
+  else {
+    rank = -1;
+    MPI_Comm_rank (*mpicomm, &rank);
+    fprintf (stderr, "[libsc %d] generic MPI abort handler\n", rank);
+    MPI_Abort (*mpicomm, 1);
+  }
+}
+
+void
 sc_set_abort_handler (sc_handler_t handler, void *data)
 {
   sc_abort_handler = handler;

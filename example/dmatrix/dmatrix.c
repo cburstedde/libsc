@@ -167,7 +167,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
-  
+
   check_matrix_vector ();
   check_matrix_multiply ();
 
