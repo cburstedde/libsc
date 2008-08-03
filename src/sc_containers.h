@@ -225,6 +225,18 @@ sc_array_index_ssize_t (sc_array_t * array, ssize_t is)
   return (void *) (array->array + (array->elem_size * (size_t) is));
 }
 
+/** Returns a pointer to an array element indexed by a int16_t.
+ * \param [in] index needs to be in [0]..[elem_count-1].
+ */
+/*@unused@*/
+static inline void *
+sc_array_index_int16 (sc_array_t * array, int16_t i16)
+{
+  SC_ASSERT (i16 >= 0 && (size_t) i16 < array->elem_count);
+
+  return (void *) (array->array + (array->elem_size * (size_t) i16));
+}
+
 /** Remove the last element from an array and return a pointer to it.
  *
  * \return                The pointer to the removed object.  Will be valid
