@@ -45,6 +45,27 @@ int                 sc_ranges_compute (int num_procs, int *procs, int rank,
                                        int first_peer, int last_peer,
                                        int num_ranges, int *ranges);
 
+/** Compute the globally optimal ranges of processors.
+ *
+ * \param [in] mpicomm      MPI Communicator for Allreduce and Allgather.
+ * \param [in] procs        Same as in sc_ranges_compute ().
+ * \param [in,out] inout1
+ *     On input, first_peer as in sc_ranges_compute ().
+ *     On output, global maximum of peer counts.
+ * \param [in,out] inout2
+ *     On input, last_peer as in sc_ranges_compute ().
+ *     On output, global maximum of ranges.
+ * \param [in] num_ranges   Same as in sc_ranges_compute ().
+ * \param [in] ranges       Same as in sc_ranges_compute ().
+ * \param [out] global_ranges
+ *     If not NULL, will be allocated and filled with everybody's ranges.
+ *     Size will be 2 * inout2 * num_procs.  Must be freed with SC_FREE ().
+ * \return                  Returns the number of locally filled ranges.
+ */
+int
+sc_ranges_adaptive (MPI_Comm mpicomm, int *procs, int *inout1, int * inout2,
+                    int num_ranges, int *ranges, int **global_ranges);
+
 /** Compute global statistical information on the ranges.
  */
 void                sc_ranges_statistics (int log_priority,

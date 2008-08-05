@@ -115,11 +115,9 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     flatin[7 * i + 6] = (double) rank;  /* rank that attains maximum */
   }
 
+  memcpy (flatout, flatin, 7 * nvars * sizeof (*flatout));
 #ifdef SC_MPI
-  if (mpicomm == MPI_COMM_NULL) {
-    memcpy (flatout, flatin, 7 * nvars * sizeof (*flatout));
-  }
-  else {
+  if (mpicomm != MPI_COMM_NULL) {
     mpiret = MPI_Type_contiguous (7, MPI_DOUBLE, &ctype);
     SC_CHECK_MPI (mpiret);
 
@@ -138,8 +136,6 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     mpiret = MPI_Type_free (&ctype);
     SC_CHECK_MPI (mpiret);
   }
-#else
-  memcpy (flatout, flatin, 7 * nvars * sizeof (*flatout));
 #endif /* SC_MPI */
 
   for (i = 0; i < nvars; ++i) {

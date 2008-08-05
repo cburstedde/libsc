@@ -173,6 +173,68 @@ sc_ranges_compute (int num_procs, int *procs,
   return nwin;
 }
 
+int
+sc_ranges_adaptive (MPI_Comm mpicomm, int *procs, int *inout1, int *inout2,
+                    int num_ranges, int *ranges, int **global_ranges)
+{
+  int                 mpiret;
+  int                 j, num_procs, rank;
+  int                 first_peer, last_peer;
+  int                 local[2], global[2];
+  int                 nwin, maxwin, twomaxwin;
+
+  /* get processor related information */
+  if (mpicomm == MPI_COMM_NULL) {
+    num_procs = 1;
+    rank = 0;
+  }
+  else {
+    mpiret = MPI_Comm_size (mpicomm, &num_procs);
+    SC_CHECK_MPI (mpiret);
+    mpiret = MPI_Comm_rank (mpicomm, &rank);
+    SC_CHECK_MPI (mpiret);
+  }
+  first_peer = *inout1;
+  last_peer = *inout2;
+
+  /* count max peers and compute the local ranges */
+  local[0] = 0;
+  for (j = 0; j < num_procs; ++j) {
+    local[0] += (procs[j] > 0 && j != rank);
+  }
+  local[1] = nwin =
+    sc_ranges_compute (num_procs, procs, rank, first_peer, last_peer,
+                       num_ranges, ranges);
+
+  /* communicate the maximum number of peers and ranges */
+  memcpy (global, local, 2 * sizeof (int));
+#ifdef SC_MPI
+  if (mpicomm != MPI_COMM_NULL) {
+    mpiret = MPI_Allreduce (local, global, 2, MPI_INT, MPI_MAX, mpicomm);
+    SC_CHECK_MPI (mpiret);
+  }
+#endif
+  *inout1 = global[0];
+  *inout2 = maxwin = global[1];
+  twomaxwin = 2 * maxwin;
+  SC_ASSERT (nwin <= maxwin && maxwin <= num_ranges);
+
+  /* distribute everybody's range information */
+  if (global_ranges != NULL) {
+    *global_ranges = SC_ALLOC (int, twomaxwin * num_procs);
+    memcpy (*global_ranges, ranges, twomaxwin * sizeof (int));
+#ifdef SC_MPI
+    if (mpicomm != MPI_COMM_NULL) {
+      mpiret = MPI_Allgather (ranges, twomaxwin, MPI_INT,
+                              *global_ranges, twomaxwin, MPI_INT, mpicomm);
+      SC_CHECK_MPI (mpiret);
+    }
+#endif
+  }
+
+  return nwin;
+}
+
 void
 sc_ranges_statistics (int log_priority,
                       MPI_Comm mpicomm, int num_procs, int *procs,
