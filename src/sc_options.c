@@ -367,6 +367,7 @@ sc_options_load (sc_options_t * opt, const char *inifile, FILE * nerr)
 
     key = NULL;
     skey[0] = lkey[0] = '\0';
+    found_short = found_long = 0;
     if (item->opt_char != '\0') {
       snprintf (skey, BUFSIZ, "Options:-%c", item->opt_char);
       found_short = iniparser_find_entry (dict, skey);
