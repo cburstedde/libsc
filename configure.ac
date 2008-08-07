@@ -50,6 +50,7 @@ ACX_MPI([SC], [icc gcc cc])
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 ACX_WITH_LINT
+ACX_C_RESTRICT
 
 # Checks for libraries.
 echo "o---------------------------------------"
