@@ -205,4 +205,51 @@ m4_foreach_w([sc_thefunc], [$1],
 Could not find function sc_thefunc])])])
 ])
 
+dnl SC_DETERMINE_INCLUDE_PATH(PREFIX, CPPFLAGS)
+dnl This function expects the variable PREFIX_DIR to exist.
+dnl Looks for PREFIX_DIR/include and then PREFIX_DIR/src.
+dnl If neither is found, throws an error.
+dnl Otherwise, set the shell variable PREFIX_CPPFLAGS to -I<dir> CPPFLAGS.
+dnl
+AC_DEFUN([SC_DETERMINE_INCLUDE_PATH],
+[
+$1_INC="$$1_DIR/include"
+if test ! -d "$$1_INC" ; then
+  $1_INC="$$1_DIR/src"
+fi
+if test ! -d "$$1_INC" ; then
+  AC_MSG_ERROR([Include directories based on $$1_DIR not found])
+fi
+$1_CPPFLAGS="-I$$1_INC $2"
+])
+
+dnl SC_DETERMINE_LIBRARY_PATH(PREFIX, LIBS)
+dnl This function expects the variable PREFIX_DIR to exist.
+dnl Looks for PREFIX_DIR/lib and then PREFIX_DIR/src.
+dnl If neither is found, throws an error.
+dnl Otherwise, set the shell variable PREFIX_LDADD to -L<dir> LIBS.
+dnl
+AC_DEFUN([SC_DETERMINE_LIBRARY_PATH],
+[
+$1_LIB="$$1_DIR/lib"
+if test ! -d "$$1_LIB" ; then
+  $1_LIB="$$1_DIR/src"
+fi
+if test ! -d "$$1_LIB" ; then
+  AC_MSG_ERROR([Library directories based on $$1_DIR not found])
+fi
+$1_LDADD="-L$$1_LIB $2"
+])
+
+dnl SC_DETERMINE_CONFIG_PATH(PREFIX, CONFIG)
+dnl This function expects the variable PREFIX_DIR to exist.
+dnl Looks for PREFIX_DIR/CONFIG and overrides PREFIX_CONFIG when found.
+dnl
+AC_DEFUN([SC_DETERMINE_CONFIG_PATH],
+[
+if test -d "$$1_DIR/$2" ; then
+  $1_CONFIG="$$1_DIR/$2"
+fi
+])
+
 dnl EOF acinclude.m4

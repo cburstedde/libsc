@@ -1,4 +1,7 @@
-#!/bin/sh
+#! /bin/sh
+
+echo "This is the bootstrap script for libsc"
+echo "Current directory is $PWD"
 
 aclocal -Wall -I config
 autoheader -Wall
