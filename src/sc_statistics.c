@@ -246,19 +246,13 @@ sc_statinfo_print (int log_priority,
 }
 
 void
-sc_papi_start (float *rtime, float *ptime, long long *flpops)
+sc_papi_start (float *irtime, float *iptime, long long *iflpops,
+               float *imflops)
 {
 #ifdef SC_PAPI
-  float               p_rtime, p_ptime, p_mflops;
-  long long           p_flpops;
   int                 retval;
-
-  retval = PAPI_flops (&p_rtime, &p_ptime, &p_flpops, &p_mflops);
-  if (retval == PAPI_OK) {
-    *rtime = -p_rtime;
-    *ptime = -p_ptime;
-    *flpops = -p_flpops;
-  }
+  retval = PAPI_flops (irtime, iptime, iflpops, imflops);
+  SC_CHECK_ABORT (retval == PAPI_OK, "Papi not happy");
 #endif
 }
 
@@ -266,7 +260,7 @@ void
 sc_flopinfo_start (sc_flopinfo_t * fi)
 {
   fi->seconds = -MPI_Wtime ();
-  sc_papi_start (&fi->rtime, &fi->ptime, &fi->flpops);
+  sc_papi_start (&fi->irtime, &fi->iptime, &fi->iflpops, &fi->imflops);
   fi->mflops = 0.;
 }
 
@@ -274,21 +268,9 @@ void
 sc_papi_stop (float *rtime, float *ptime, long long *flpops, float *mflops)
 {
 #ifdef SC_PAPI
-  float               p_rtime, p_ptime, p_mflops;
-  long long           p_flpops;
   int                 retval;
-
-  retval = PAPI_flops (&p_rtime, &p_ptime, &p_flpops, &p_mflops);
-  if (retval == PAPI_OK) {
-    *rtime += p_rtime;
-    *ptime += p_ptime;
-    *flpops += p_flpops;
-    *mflops = p_mflops;
-  }
-  else {
-    *rtime = *ptime = *mflops = 0.;
-    *flpops = 0;
-  }
+  retval = PAPI_flops (rtime, ptime, flpops, mflops);
+  SC_CHECK_ABORT (retval == PAPI_OK, "Papi not happy");
 #else
   *rtime = *ptime = *mflops = 0.;
   *flpops = 0;

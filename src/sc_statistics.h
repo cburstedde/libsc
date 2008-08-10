@@ -39,6 +39,12 @@ sc_statinfo_t;
 typedef struct sc_flopinfo
 {
   double              seconds;  /* time from MPI_Wtime() */
+
+  float               irtime;   /* input real time */
+  float               iptime;   /* input process time */
+  long long           iflpops;  /* input floating point operations */
+  float               imflops;  /* input MFlop/s rate */
+
   float               rtime;    /* real time */
   float               ptime;    /* process time */
   long long           flpops;   /* floating point operations */
@@ -95,12 +101,13 @@ void                sc_statinfo_print (int log_priority,
 
 /**
  * Start counting times and flops.
- * \param [out] rtime    Initialized to negative real time.
- * \param [out] ptime    Initialized to negative Process time.
- * \param [out] flpops   Initialized to negative total floating point ops.
+ * \param [out] irtime    Not defined
+ * \param [out] iptime    Not defined
+ * \param [out] iflpops   Not defined
+ * \param [out] imflops   Not defined
  */
-void                sc_papi_start (float *rtime, float *ptime,
-                                   long long *flpops);
+void                sc_papi_start (float *irtime, float *iptime,
+                                   long long *iflpops, float *imflops);
 
 /**
  * Start counting times and flops.
@@ -110,9 +117,9 @@ void                sc_flopinfo_start (sc_flopinfo_t * fi);
 
 /**
  * Compute the times, flops and flop rate since the corresponding _start call.
- * \param [in,out] rtime    Real time.
- * \param [in,out] ptime    Process time.
- * \param [in,out] flpops   Floating point operations.
+ * \param [out]    rtime    Real time.
+ * \param [out]    ptime    Process time.
+ * \param [out]    flpops   Floating point operations.
  * \param [out]    mflops   Flop/s rate.
  */
 void                sc_papi_stop (float *rtime, float *ptime,
