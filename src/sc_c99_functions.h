@@ -51,6 +51,7 @@ intmax_t            imaxabs (intmax_t);
 #ifndef UINT32_MAX
 #define UINT32_MAX  (4294967295U)
 #endif
+#define restrict
 
 long long int       strtoll (const char *nptr, char **endptr, int base);
 intmax_t            imaxabs (intmax_t a);

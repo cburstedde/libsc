@@ -155,12 +155,12 @@
                        (SC_LOG2_8 ((x) >> 8) + 8) : SC_LOG2_8 (x))
 #define SC_LOG2_32(x) (((x) > 0xffff) ?                                 \
                        (SC_LOG2_16 ((x) >> 16)) + 16 : SC_LOG2_16 (x))
-#define SC_LOG2_64(x) (((x) > 0xffffffff) ?                             \
+#define SC_LOG2_64(x) (((x) > 0xffffffffLL) ?                           \
                        (SC_LOG2_32 ((x) >> 32)) + 32 : SC_LOG2_32 (x))
 #define SC_ROUNDUP2_32(x)                               \
   (((x) <= 0) ? 0 : (1 << (SC_LOG2_32 ((x) - 1) + 1)))
 #define SC_ROUNDUP2_64(x)                               \
-  (((x) <= 0) ? 0 : (1 << (SC_LOG2_64 ((x) - 1) + 1)))
+  (((x) <= 0) ? 0 : (1 << (SC_LOG2_64 ((x) - 1LL) + 1)))
 
 /* log categories */
 
