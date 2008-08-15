@@ -306,7 +306,7 @@ void                sc_logf (const char *filename, int lineno,
   __attribute__ ((format (printf, 6, 7)));
 
 /** Generic MPI abort handler. The data must point to a MPI_Comm object. */
-void                sc_generic_abort_fn (void *data);
+void                sc_generic_abort (void *data);
 
 /** Installs an abort handler and catches signals INT SEGV USR2. */
 void                sc_set_abort_handler (sc_handler_t handler, void *data);
