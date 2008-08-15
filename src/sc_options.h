@@ -102,7 +102,8 @@ void                sc_options_add_double (sc_options_t * opt,
 /**
  * Add a string option.
  * \param [in] init_value  The default value of the option may be NULL.
- *                         If not NULL, the value is copied.
+ *                         If not NULL, the value is copied internally.
+ * \param [out] variable   Will point to an internal string value.
  */
 void                sc_options_add_string (sc_options_t * opt,
                                            int opt_char,
