@@ -403,4 +403,70 @@ sc_dmatrix_print (const sc_dmatrix_t * dmatrix, FILE * fp)
   }
 }
 
+sc_dmatrix_pool_t  *
+sc_dmatrix_pool_new (int m, int n)
+{
+  sc_dmatrix_pool_t  *dmpool;
+
+  SC_ASSERT (m >= 0 && n >= 0);
+
+  dmpool = SC_ALLOC (sc_dmatrix_pool_t, 1);
+
+  dmpool->m = m;
+  dmpool->n = n;
+  dmpool->elem_count = 0;
+  sc_array_init (&dmpool->freed, sizeof (sc_dmatrix_t *));
+
+  return dmpool;
+}
+
+void
+sc_dmatrix_pool_destroy (sc_dmatrix_pool_t * dmpool)
+{
+  size_t              zz;
+  sc_dmatrix_t      **pdm;
+
+  SC_ASSERT (dmpool->elem_count == 0);
+
+  for (zz = 0; zz < dmpool->freed.elem_count; ++zz) {
+    pdm = sc_array_index (&dmpool->freed, zz);
+    sc_dmatrix_destroy (*pdm);
+  }
+  sc_array_reset (&dmpool->freed);
+
+  SC_FREE (dmpool);
+}
+
+sc_dmatrix_t       *
+sc_dmatrix_pool_alloc (sc_dmatrix_pool_t * dmpool)
+{
+  sc_dmatrix_t       *dm;
+
+  ++dmpool->elem_count;
+
+  if (dmpool->freed.elem_count > 0) {
+    dm = *(sc_dmatrix_t **) sc_array_pop (&dmpool->freed);
+  }
+  else {
+    dm = sc_dmatrix_new (dmpool->m, dmpool->n);
+  }
+
+#ifdef SC_DEBUG
+  sc_dmatrix_set_value (dm, -1.);
+#endif
+
+  return dm;
+}
+
+void
+sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool, sc_dmatrix_t * dm)
+{
+  SC_ASSERT (dmpool->elem_count > 0);
+  SC_ASSERT (dm->m == dmpool->m && dm->n == dmpool->n);
+
+  --dmpool->elem_count;
+
+  *(sc_dmatrix_t **) sc_array_push (&dmpool->freed) = dm;
+}
+
 /* EOF sc_dmatrix.c */

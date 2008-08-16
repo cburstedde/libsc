@@ -22,6 +22,7 @@
 #define SC_DMATRIX_H
 
 #include <sc_blas.h>
+#include <sc_containers.h>
 
 typedef struct sc_dmatrix
 {
@@ -139,5 +140,45 @@ void                sc_dmatrix_rdivide (sc_trans_t transb,
  */
 void                sc_dmatrix_print (const sc_dmatrix_t * dmatrix,
                                       FILE * fp);
+
+/*
+ * The sc_dmatrix_pool recycles matrices of the same size.
+ */
+typedef struct sc_dmatrix_pool
+{
+  int                 m, n;
+  size_t              elem_count;
+  sc_array_t          freed;    /* buffers the freed elements */
+}
+sc_dmatrix_pool_t;
+
+/** Create a new dmatrix pool.
+ * \param [in] m    Row count of the stored matrices.
+ * \param [in] n    Column count of the stored matrices.
+ * \return          Returns a dmatrix pool that is ready to use.
+ */
+sc_dmatrix_pool_t  *sc_dmatrix_pool_new (int m, int n);
+
+/** Destroy a dmatrix pool.
+ * This will also destroy all matrices stored for reuse.
+ * Requires all allocated matrices to be returned to the pool previously.
+ * \param [in]      The dmatrix pool to destroy.
+ */
+void                sc_dmatrix_pool_destroy (sc_dmatrix_pool_t * dmpool);
+
+/** Allocate a dmatrix from the pool.
+ * Reuses a matrix previously returned to the pool, or allocated a fresh one.
+ * \param [in] pool   The dmatrix pool to use.
+ * \return            Returns a dmatrix of size pool->m by pool->n.
+ */
+sc_dmatrix_t       *sc_dmatrix_pool_alloc (sc_dmatrix_pool_t * dmpool);
+
+/** Return a dmatrix to the pool.
+ * The matrix is stored internally for reuse and not freed in this function.
+ * \param [in] pool   The dmatrix pool to use.
+ * \param [in] dm     The dmatrix pool to return to the pool.
+ */
+void                sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool,
+                                          sc_dmatrix_t * dm);
 
 #endif /* !SC_DMATRIX_H */
