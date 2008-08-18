@@ -25,6 +25,7 @@
 int
 main (int argc, char **argv)
 {
+#ifdef SC_BLAS
   int                 mpiret;
   int                 rank;
   sc_dmatrix_pool_t  *p13, *p92;
@@ -66,6 +67,7 @@ main (int argc, char **argv)
 
   mpiret = MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
+#endif
 
   return 0;
 }
