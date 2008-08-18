@@ -101,6 +101,12 @@ void                sc_statinfo_print (int log_priority,
 
 /**
  * Start counting times and flops.
+ * The semantic for sc_flopinfo_start and sc_flopinfo_stop
+ * are changed so that
+ *  sc_flopinfo_start (fi);
+ *  ... flop work
+ *  sc_flopinfo_stop (fi);
+ * will only time the work in between start and stop.
  * \param [out] irtime    Not defined
  * \param [out] iptime    Not defined
  * \param [out] iflpops   Not defined
@@ -117,6 +123,12 @@ void                sc_flopinfo_start (sc_flopinfo_t * fi);
 
 /**
  * Compute the times, flops and flop rate since the corresponding _start call.
+ * The semantic for sc_flopinfo_start and sc_flopinfo_stop
+ * are changed so that
+ *  sc_flopinfo_start (fi);
+ *  ... flop work
+ *  sc_flopinfo_stop (fi);
+ * will only time the work in between start and stop.
  * \param [out]    rtime    Real time.
  * \param [out]    ptime    Process time.
  * \param [out]    flpops   Floating point operations.

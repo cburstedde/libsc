@@ -259,9 +259,17 @@ sc_papi_start (float *irtime, float *iptime, long long *iflpops,
 void
 sc_flopinfo_start (sc_flopinfo_t * fi)
 {
+  static bool         init = false;
   fi->seconds = -MPI_Wtime ();
+
   sc_papi_start (&fi->irtime, &fi->iptime, &fi->iflpops, &fi->imflops);
-  fi->mflops = 0.;
+  if (!init) {
+    fi->irtime = 0.;
+    fi->iptime = 0.;
+    fi->iflpops = 0;
+    fi->mflops = 0.;
+    init = true;
+  }
 }
 
 void
@@ -281,6 +289,10 @@ void
 sc_flopinfo_stop (sc_flopinfo_t * fi)
 {
   sc_papi_stop (&fi->rtime, &fi->ptime, &fi->flpops, &fi->mflops);
+  fi->rtime -= fi->irtime;
+  fi->ptime -= fi->iptime;
+  fi->flpops -= fi->iflpops;
+
   fi->seconds += MPI_Wtime ();
 }
 
