@@ -27,7 +27,7 @@
 
 typedef struct sc_statinfo
 {
-  int                 count;    /* the global count is 52bit accurate */
+  long                count;    /* inout, global count is 52bit accurate */
   double              sum_values, sum_squares, min, max;        /* inout */
   int                 min_at_rank, max_at_rank; /* out */
   double              average, variance, standev;       /* out */

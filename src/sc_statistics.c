@@ -140,7 +140,7 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 
   for (i = 0; i < nvars; ++i) {
     cnt = flatout[7 * i + 0];
-    stats[i].count = (int) cnt;
+    stats[i].count = (long) cnt;
     stats[i].sum_values = flatout[7 * i + 1];
     stats[i].sum_squares = flatout[7 * i + 2];
     stats[i].min = flatout[7 * i + 3];
@@ -193,7 +193,7 @@ sc_statinfo_print (int log_priority,
       else {
         SC_GLOBAL_LOGF (log_priority, "Statistics for %d\n", i);
       }
-      SC_GLOBAL_LOGF (log_priority, "   Global number of values: %5d\n",
+      SC_GLOBAL_LOGF (log_priority, "   Global number of values: %5ld\n",
                       si->count);
       if (si->average != 0.) {  /* ignore the comparison warning */
         SC_GLOBAL_LOGF (log_priority,
