@@ -43,6 +43,7 @@
 
 #include <math.h>
 #include <ctype.h>
+#include <float.h>
 #include <libgen.h>
 #include <limits.h>
 #include <stdarg.h>
