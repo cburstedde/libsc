@@ -253,6 +253,9 @@ sc_papi_start (float *irtime, float *iptime, long long *iflpops,
   int                 retval;
   retval = PAPI_flops (irtime, iptime, iflpops, imflops);
   SC_CHECK_ABORT (retval == PAPI_OK, "Papi not happy");
+#else
+  *irtime = *iptime = *imflops = 0.;
+  *iflpops = 0;
 #endif
 }
 
