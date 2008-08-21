@@ -64,7 +64,7 @@ sc_amr_error_stats (MPI_Comm mpicomm, long num_elements,
 
 void
 sc_amr_coarsen_specify (sc_amr_control_t * amr, double coarsen_threshold,
-                        sc_amr_count_coarsen_fn cfn, void * user_data)
+                        sc_amr_count_coarsen_fn cfn, void *user_data)
 {
   int                 mpiret;
   long                local_coarsen, global_coarsen;
@@ -95,7 +95,7 @@ sc_amr_coarsen_specify (sc_amr_control_t * amr, double coarsen_threshold,
 
 void
 sc_amr_coarsen_search (sc_amr_control_t * amr,
-                       double coarsen_ratio, double coarsen_threshold_high,
+                       long num_total_low, double coarsen_threshold_high,
                        double target_window, int max_binary_steps,
                        sc_amr_count_coarsen_fn cfn, void *user_data)
 {
@@ -105,10 +105,8 @@ sc_amr_coarsen_search (sc_amr_control_t * amr,
   int                 mpiret;
   int                 binary_count;
   long                local_coarsen, global_coarsen;
-  long                num_total_low, num_total_high, num_total_estimated;
+  long                num_total_high, num_total_estimated;
   double              coarsen_threshold_low;
-
-  num_total_low = (long) (num_total_elements * (1. - coarsen_ratio));
 
   SC_GLOBAL_STATISTICSF ("Search for coarsen threshold"
                          " assuming %ld refinements\n", num_total_refine);
@@ -189,11 +187,10 @@ sc_amr_coarsen_search (sc_amr_control_t * amr,
 }
 
 void
-sc_amr_refine_threshold (sc_amr_control_t * amr,
-                         sc_amr_count_refine_fn rfn,
-                         long num_local_ideal,
-                         double binary_fudge,
-                         int max_binary_steps, void *user_data)
+sc_amr_refine_search (sc_amr_control_t * amr,
+                      long num_total_high, double refine_threshold_low,
+                      double target_window, int max_binary_steps,
+                      sc_amr_count_refine_fn rfn, void *user_data)
 {
   const sc_statinfo_t *errors = &amr->estats;
   const long          num_total_elements = amr->num_total_elements;
@@ -201,56 +198,58 @@ sc_amr_refine_threshold (sc_amr_control_t * amr,
   int                 mpiret;
   int                 binary_count;
   long                local_refine, global_refine;
-  long                num_total_low, num_total_high, num_total_estimated;
-  double              refine_threshold_low, refine_threshold_high;
+  long                num_total_low, num_total_estimated;
+  double              refine_threshold_high;
 
-  SC_ASSERT (binary_fudge < 1.);
   SC_GLOBAL_STATISTICSF ("Search for refine threshold"
                          " assuming %ld coarsenings\n", num_total_coarsen);
 
-  /* assign initial threshold range */
-  num_total_high = num_local_ideal * amr->num_procs_long;
-  refine_threshold_low = errors->min;
+  /* assign initial threshold range and check */
   refine_threshold_high = errors->max;
-  if (refine_threshold_low >= refine_threshold_high ||
+  if (rfn == NULL ||
+      refine_threshold_low >= refine_threshold_high ||
       num_total_elements - num_total_coarsen >= num_total_high) {
 
-    SC_GLOBAL_STATISTICSF ("Binary search anomaly"
-                           " with low = %.3g, up = %.3g\n",
+    SC_GLOBAL_STATISTICSF ("Search for refinement skipped with"
+                           " low = %.3g, up = %.3g\n",
                            refine_threshold_low, refine_threshold_high);
 
     amr->refine_threshold = errors->max;
+    amr->num_total_refine = 0;
     amr->num_total_estimated = num_total_elements - num_total_coarsen;
     return;
   }
 
   /* fix range of acceptable total element counts */
-  num_total_low = (long) (num_total_high * binary_fudge);
+  num_total_low = (long) (num_total_high * target_window);
   SC_GLOBAL_INFOF ("Range of acceptable total element counts %ld %ld\n",
                    num_total_low, num_total_high);
 
-  for (binary_count = 0; binary_count < max_binary_steps; ++binary_count) {
+  /* start binary search at the lower end */
+  amr->refine_threshold = refine_threshold_low;
+  for (binary_count = 0;; ++binary_count) {
 
-    /* estimate expected number of elements */
-    amr->refine_threshold =
-      (refine_threshold_low + refine_threshold_high) / 2.;
+    /* call back to count the elements to refine locally */
     local_refine = rfn (amr, user_data);
     mpiret = MPI_Allreduce (&local_refine, &global_refine, 1, MPI_LONG,
                             MPI_SUM, amr->mpicomm);
     SC_CHECK_MPI (mpiret);
     num_total_estimated =
       num_total_elements + global_refine - num_total_coarsen;
+    SC_GLOBAL_LDEBUGF ("At %.3g total %ld estimated %ld refine %ld\n",
+                       amr->refine_threshold, num_total_elements,
+                       num_total_estimated, global_refine);
 
-    /* print status message */
-    SC_GLOBAL_LDEBUGF ("Total %ld estimated %ld refine %ld\n",
-                       num_total_elements, num_total_estimated,
-                       global_refine);
-    SC_GLOBAL_INFOF ("Binary search for %ld elements"
-                     " at low = %.3g, up = %.3g\n", num_total_estimated,
-                     refine_threshold_low, refine_threshold_high);
+    /* check loop condition */
+    if (binary_count == max_binary_steps) {
+      break;
+    }
 
     /* binary search action */
     if (num_total_estimated < num_total_low) {
+      if (binary_count == 0) {
+        break;                  /* impossible to refine more */
+      }
       refine_threshold_high = amr->refine_threshold;
     }
     else if (num_total_estimated > num_total_high) {
@@ -259,17 +258,25 @@ sc_amr_refine_threshold (sc_amr_control_t * amr,
     else {                      /* binary search sucessful */
       break;
     }
+    SC_GLOBAL_INFOF ("Binary search for %ld elements"
+                     " at low = %.3g, up = %.3g\n", num_total_estimated,
+                     refine_threshold_low, refine_threshold_high);
+
+    /* compute next guess for binary search */
+    amr->refine_threshold =
+      (refine_threshold_low + refine_threshold_high) / 2.;
   }
+  amr->num_total_refine = global_refine;
+  amr->num_total_estimated = num_total_estimated;
 
   /* binary search is ended */
-  SC_GLOBAL_INFOF ("Binary search for refine stopped after %d steps"
+  SC_GLOBAL_INFOF ("Search for refine stopped after %d steps"
                    " with threshold %.3g\n",
                    binary_count, amr->refine_threshold);
-  SC_GLOBAL_INFOF ("Global number of refinements = %ld\n", global_refine);
+  SC_GLOBAL_INFOF ("Global number of refinements = %ld\n",
+                   amr->num_total_refine);
   SC_GLOBAL_INFOF ("Estimated global number of elements = %ld\n",
-                   num_total_estimated);
-
-  amr->num_total_estimated = num_total_estimated;
+                   amr->num_total_estimated);
 }
 
 /* EOF sc_amr.c */

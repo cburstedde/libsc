@@ -87,7 +87,7 @@ void                sc_amr_coarsen_specify (sc_amr_control_t * amr,
 /** Binary search for coarsening threshold without refinement.
  *
  * \param [in,out] amr                  AMR control structure.
- * \param [in] coarsen_ratio            Do not remove more elements than this.
+ * \param [in] num_total_ideal          Target number of global elements.
  * \param [in] coarsen_threshold_high   Upper bound on the error indicator.
  * \param [in] target_window            Relative target window (< 1).
  * \param [in] max_binary_steps         Upper bound on binary search steps.
@@ -95,7 +95,7 @@ void                sc_amr_coarsen_specify (sc_amr_control_t * amr,
  * \param [in] user_data                Will be passed to the cfn callback.
  */
 void                sc_amr_coarsen_search (sc_amr_control_t * amr,
-                                           double coarsen_ratio,
+                                           long num_total_ideal,
                                            double coarsen_threshold_high,
                                            double target_window,
                                            int max_binary_steps,
@@ -104,18 +104,20 @@ void                sc_amr_coarsen_search (sc_amr_control_t * amr,
 
 /** Binary search for refinement threshold without coarsening.
  *
- * \param [in,out] amr           AMR control structure.
- * \param [in] rfn               Callback to count local refinements.
- * \param [in] num_local_ideal   Target number of local elements.
- * \param [in] binary_fudge      Target tolerance < 1.
- * \param [in] max_binary_steps  Upper bound on binary search steps.
- * \param [in] user_data         Will be passed to the rfn callback.
+ * \param [in,out] amr                  AMR control structure.
+ * \param [in] num_total_ideal          Target number of global elements.
+ * \param [in] refine_threshold_low     Lower bound on the error indicator.
+ * \param [in] target_window            Relative target window (< 1).
+ * \param [in] max_binary_steps         Upper bound on binary search steps.
+ * \param [in] rfn                      Callback to count local refinements.
+ * \param [in] user_data                Will be passed to the rfn callback.
  */
-void                sc_amr_refine_threshold (sc_amr_control_t * amr,
-                                             sc_amr_count_refine_fn rfn,
-                                             long num_local_ideal,
-                                             double binary_fudge,
-                                             int max_binary_steps,
-                                             void *user_data);
+void                sc_amr_refine_search (sc_amr_control_t * amr,
+                                          long num_total_ideal,
+                                          double refine_threshold_low,
+                                          double target_window,
+                                          int max_binary_steps,
+                                          sc_amr_count_refine_fn rfn,
+                                          void *user_data);
 
 #endif /* !SC_AMR_H */
