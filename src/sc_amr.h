@@ -72,20 +72,50 @@ typedef long        (*sc_amr_count_coarsen_fn) (sc_amr_control_t * amr,
 typedef long        (*sc_amr_count_refine_fn) (sc_amr_control_t * amr,
                                                void *user_data);
 
+/** Specify a coarsening threshold and count the expected elements.
+ *
+ * \param [in,out] amr                  AMR control structure.
+ * \param [in] coarsen_threshold        Coarsening threshold.
+ * \param [in] cfn                      Callback to count local coarsenings.
+ * \param [in] user_data                Will be passed to the cfn callback.
+ */
+void                sc_amr_coarsen_specify (sc_amr_control_t * amr,
+                                            double coarsen_threshold,
+                                            sc_amr_count_coarsen_fn cfn,
+                                            void *user_data);
+
 /** Binary search for coarsening threshold without refinement.
  *
+ * \param [in,out] amr                  AMR control structure.
+ * \param [in] coarsen_ratio            Do not remove more elements than this.
+ * \param [in] coarsen_threshold_high   Upper bound on the error indicator.
+ * \param [in] target_window            Relative target window (< 1).
+ * \param [in] max_binary_steps         Upper bound on binary search steps.
+ * \param [in] cfn                      Callback to count local coarsenings.
+ * \param [in] user_data                Will be passed to the cfn callback.
+ */
+void                sc_amr_coarsen_search (sc_amr_control_t * amr,
+                                           double coarsen_ratio,
+                                           double coarsen_threshold_high,
+                                           double target_window,
+                                           int max_binary_steps,
+                                           sc_amr_count_coarsen_fn cfn,
+                                           void *user_data);
+
+/** Binary search for refinement threshold without coarsening.
+ *
  * \param [in,out] amr           AMR control structure.
- * \param [in] cfn               Callback to count local coarsenings.
+ * \param [in] rfn               Callback to count local refinements.
  * \param [in] num_local_ideal   Target number of local elements.
  * \param [in] binary_fudge      Target tolerance < 1.
  * \param [in] max_binary_steps  Upper bound on binary search steps.
- * \param [in] user_data         Will be passed to the cfn callback.
+ * \param [in] user_data         Will be passed to the rfn callback.
  */
-void                sc_amr_coarsen_threshold (sc_amr_control_t * amr,
-                                              sc_amr_count_coarsen_fn cfn,
-                                              long num_local_ideal,
-                                              double binary_fudge,
-                                              int max_binary_steps,
-                                              void *user_data);
+void                sc_amr_refine_threshold (sc_amr_control_t * amr,
+                                             sc_amr_count_refine_fn rfn,
+                                             long num_local_ideal,
+                                             double binary_fudge,
+                                             int max_binary_steps,
+                                             void *user_data);
 
 #endif /* !SC_AMR_H */
