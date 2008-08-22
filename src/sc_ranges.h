@@ -67,8 +67,11 @@ sc_ranges_adaptive (MPI_Comm mpicomm, int *procs, int *inout1, int * inout2,
                     int num_ranges, int *ranges, int **global_ranges);
 
 /** Compute global statistical information on the ranges.
+ *
+ * \param [in] package_id       Registered package id or -1.
+ * \param [in] log_priority     Priority to use for logging.
  */
-void                sc_ranges_statistics (int log_priority,
+void                sc_ranges_statistics (int package_id, int log_priority,
                                           MPI_Comm mpicomm, int num_procs,
                                           int *procs, int rank,
                                           int num_ranges, int *ranges);

@@ -74,18 +74,21 @@ typedef long        (*sc_amr_count_refine_fn) (sc_amr_control_t * amr,
 
 /** Specify a coarsening threshold and count the expected elements.
  *
+ * \param [in] package_id               Registered package id or -1.
  * \param [in,out] amr                  AMR control structure.
  * \param [in] coarsen_threshold        Coarsening threshold.
  * \param [in] cfn                      Callback to count local coarsenings.
  * \param [in] user_data                Will be passed to the cfn callback.
  */
-void                sc_amr_coarsen_specify (sc_amr_control_t * amr,
+void                sc_amr_coarsen_specify (int package_id,
+                                            sc_amr_control_t * amr,
                                             double coarsen_threshold,
                                             sc_amr_count_coarsen_fn cfn,
                                             void *user_data);
 
 /** Binary search for coarsening threshold without refinement.
  *
+ * \param [in] package_id               Registered package id or -1.
  * \param [in,out] amr                  AMR control structure.
  * \param [in] num_total_ideal          Target number of global elements.
  * \param [in] coarsen_threshold_high   Upper bound on the error indicator.
@@ -94,7 +97,8 @@ void                sc_amr_coarsen_specify (sc_amr_control_t * amr,
  * \param [in] cfn                      Callback to count local coarsenings.
  * \param [in] user_data                Will be passed to the cfn callback.
  */
-void                sc_amr_coarsen_search (sc_amr_control_t * amr,
+void                sc_amr_coarsen_search (int package_id,
+                                           sc_amr_control_t * amr,
                                            long num_total_ideal,
                                            double coarsen_threshold_high,
                                            double target_window,
@@ -104,6 +108,7 @@ void                sc_amr_coarsen_search (sc_amr_control_t * amr,
 
 /** Binary search for refinement threshold without coarsening.
  *
+ * \param [in] package_id               Registered package id or -1.
  * \param [in,out] amr                  AMR control structure.
  * \param [in] num_total_ideal          Target number of global elements.
  * \param [in] refine_threshold_low     Lower bound on the error indicator.
@@ -112,7 +117,8 @@ void                sc_amr_coarsen_search (sc_amr_control_t * amr,
  * \param [in] rfn                      Callback to count local refinements.
  * \param [in] user_data                Will be passed to the rfn callback.
  */
-void                sc_amr_refine_search (sc_amr_control_t * amr,
+void                sc_amr_refine_search (int package_id,
+                                          sc_amr_control_t * amr,
                                           long num_total_ideal,
                                           double refine_threshold_low,
                                           double target_window,

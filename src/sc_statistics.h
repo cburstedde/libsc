@@ -91,11 +91,12 @@ void                sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars,
 
 /**
  * Print measured statistics. Should be called on 1 core only.
- * \param [in] log_priority   Log priority for output according to sc.h.
- * \param [in] full      Boolean: print full information for every variable.
- * \param [in] summary   Boolean: print summary information all on 1 line.
+ * \param [in] package_id       Registered package id or -1.
+ * \param [in] log_priority     Log priority for output according to sc.h.
+ * \param [in] full             Print full information for every variable.
+ * \param [in] summary          Print summary information all on 1 line.
  */
-void                sc_statinfo_print (int log_priority,
+void                sc_statinfo_print (int package_id, int log_priority,
                                        int nvars, sc_statinfo_t * stats,
                                        bool full, bool summary);
 

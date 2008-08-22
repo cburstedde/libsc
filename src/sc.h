@@ -195,18 +195,20 @@
    does not allow variadic macros. */
 #ifndef __cplusplus
 
-#define SC_LOGF(category,priority,fmt,...)                              \
+#define SC_LOGF(package,category,priority,fmt,...)                      \
   do {                                                                  \
     if ((priority) >= SC_LP_THRESHOLD) {                                \
-      sc_logf (__FILE__, __LINE__, sc_package_id, (category), (priority), \
+      sc_logf (__FILE__, __LINE__, (package), (category), (priority),   \
                (fmt), __VA_ARGS__);                                     \
     }                                                                   \
   } while (0)
-#define SC_LOG(c,p,s) SC_LOGF((c), (p), "%s", (s))
-#define SC_GLOBAL_LOG(p,s) SC_LOG (SC_LC_GLOBAL, (p), (s))
-#define SC_GLOBAL_LOGF(p,f,...) SC_LOGF (SC_LC_GLOBAL, (p), (f), __VA_ARGS__)
-#define SC_NORMAL_LOG(p,s) SC_LOG (SC_LC_NORMAL, (p), (s))
-#define SC_NORMAL_LOGF(p,f,...) SC_LOGF (SC_LC_NORMAL, (p), (f), __VA_ARGS__)
+#define SC_LOG(g,c,p,s) SC_LOGF((g), (c), (p), "%s", (s))
+#define SC_GLOBAL_LOG(p,s) SC_LOG (sc_package_id, SC_LC_GLOBAL, (p), (s))
+#define SC_GLOBAL_LOGF(p,f,...) \
+  SC_LOGF (sc_package_id, SC_LC_GLOBAL, (p), (f), __VA_ARGS__)
+#define SC_NORMAL_LOG(p,s) SC_LOG (sc_package_id, SC_LC_NORMAL, (p), (s))
+#define SC_NORMAL_LOGF(p,f,...) \
+  SC_LOGF (sc_package_id, SC_LC_NORMAL, (p), (f), __VA_ARGS__)
 
 /* convenience global log macros will only output if identifier <= 0 */
 

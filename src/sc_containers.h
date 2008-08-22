@@ -535,7 +535,8 @@ void                sc_hash_foreach (sc_hash_t * hash, sc_hash_foreach_t fn);
 
 /** Compute and print statistical information about the occupancy.
  */
-void                sc_hash_print_statistics (int log_priority,
+void                sc_hash_print_statistics (int package_id,
+                                              int log_priority,
                                               sc_hash_t * hash);
 
 typedef struct sc_hash_array_data
