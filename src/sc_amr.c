@@ -70,19 +70,19 @@ sc_amr_coarsen_specify (sc_amr_control_t * amr, double coarsen_threshold,
   long                local_coarsen, global_coarsen;
 
   if (cfn == NULL) {
-    local_coarsen = global_coarsen = 0;
     amr->coarsen_threshold = amr->estats.min;
+    local_coarsen = global_coarsen = 0;
   }
   else {
+    amr->coarsen_threshold = coarsen_threshold;
     SC_GLOBAL_STATISTICSF ("Set coarsen threshold %.3g"
                            " assuming %ld refinements\n",
-                           coarsen_threshold, amr->num_total_refine);
+                           amr->coarsen_threshold, amr->num_total_refine);
 
     local_coarsen = cfn (amr, user_data);
     mpiret = MPI_Allreduce (&local_coarsen, &global_coarsen, 1, MPI_LONG,
                             MPI_SUM, amr->mpicomm);
     SC_CHECK_MPI (mpiret);
-    amr->coarsen_threshold = coarsen_threshold;
   }
 
   amr->num_total_coarsen = global_coarsen;
