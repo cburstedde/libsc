@@ -25,7 +25,7 @@
 
 typedef struct sc_amr_control
 {
-  const double       *errors;
+  const double       *restrict errors;
   sc_statinfo_t       estats;
   MPI_Comm            mpicomm;
   long                num_procs_long;
@@ -47,7 +47,7 @@ sc_amr_control_t;
  */
 void                sc_amr_error_stats (MPI_Comm mpicomm,
                                         long num_local_elements,
-                                        const double *errors,
+                                        const double *restrict errors,
                                         sc_amr_control_t * amr);
 
 /** Count the local number of elements that will be coarsened.
