@@ -30,7 +30,7 @@ sc_ranges_compare (const void *v1, const void *v2)
 }
 
 int
-sc_ranges_compute (int num_procs, int *procs,
+sc_ranges_compute (int package_id, int num_procs, int *procs,
                    int rank, int first_peer, int last_peer,
                    int num_ranges, int *ranges)
 {
@@ -79,8 +79,8 @@ sc_ranges_compute (int num_procs, int *procs,
     }
     if (prev < j - 1) {
       length = j - 1 - prev;
-      SC_LDEBUGF ("found empty range prev %d j %d length %d\n",
-                  prev, j, length);
+      SC_LOGF (package_id, SC_LC_NORMAL, SC_LP_DEBUG,
+               "found empty range prev %d j %d length %d\n", prev, j, length);
 
       /* claim unused range */
       for (i = 0; i < num_ranges; ++i) {
@@ -134,8 +134,9 @@ sc_ranges_compute (int num_procs, int *procs,
     SC_ASSERT (ranges[2 * i + 1] == -2);
   }
   for (i = 0; i < nwin; ++i) {
-    SC_LDEBUGF ("empty range %d from %d to %d\n",
-                i, ranges[2 * i], ranges[2 * i + 1]);
+    SC_LOGF (package_id, SC_LC_NORMAL, SC_LP_DEBUG,
+             "empty range %d from %d to %d\n",
+             i, ranges[2 * i], ranges[2 * i + 1]);
   }
 #endif
 
@@ -165,8 +166,8 @@ sc_ranges_compute (int num_procs, int *procs,
     }
   }
   for (i = 0; i < nwin; ++i) {
-    SC_LDEBUGF ("range %d from %d to %d\n",
-                i, ranges[2 * i], ranges[2 * i + 1]);
+    SC_LOGF (package_id, SC_LC_NORMAL, SC_LP_DEBUG,
+             "range %d from %d to %d\n", i, ranges[2 * i], ranges[2 * i + 1]);
   }
 #endif
 
@@ -174,7 +175,8 @@ sc_ranges_compute (int num_procs, int *procs,
 }
 
 int
-sc_ranges_adaptive (MPI_Comm mpicomm, int *procs, int *inout1, int *inout2,
+sc_ranges_adaptive (int package_id,
+                    MPI_Comm mpicomm, int *procs, int *inout1, int *inout2,
                     int num_ranges, int *ranges, int **global_ranges)
 {
   int                 mpiret;
@@ -203,8 +205,8 @@ sc_ranges_adaptive (MPI_Comm mpicomm, int *procs, int *inout1, int *inout2,
     local[0] += (procs[j] > 0 && j != rank);
   }
   local[1] = nwin =
-    sc_ranges_compute (num_procs, procs, rank, first_peer, last_peer,
-                       num_ranges, ranges);
+    sc_ranges_compute (package_id, num_procs, procs, rank,
+                       first_peer, last_peer, num_ranges, ranges);
 
   /* communicate the maximum number of peers and ranges */
   memcpy (global, local, 2 * sizeof (int));

@@ -27,6 +27,7 @@
 
 /** Compute the optimal ranges of processors to talk to.
  *
+ * \param [in] package_id   Registered package id or -1.
  * \param [in] num_procs    Number of processors processed.
  * \param [in] procs        Array [num_procs] interpreted as booleans.
  *                          Nonzero entries need to be talked to.
@@ -41,12 +42,14 @@
  *                          indicate that the range is not needed.
  * \return                  Returns the number of filled ranges.
  */
-int                 sc_ranges_compute (int num_procs, int *procs, int rank,
+int                 sc_ranges_compute (int package_id,
+                                       int num_procs, int *procs, int rank,
                                        int first_peer, int last_peer,
                                        int num_ranges, int *ranges);
 
 /** Compute the globally optimal ranges of processors.
  *
+ * \param [in] package_id   Registered package id or -1.
  * \param [in] mpicomm      MPI Communicator for Allreduce and Allgather.
  * \param [in] procs        Same as in sc_ranges_compute ().
  * \param [in,out] inout1
@@ -62,9 +65,10 @@ int                 sc_ranges_compute (int num_procs, int *procs, int rank,
  *     Size will be 2 * inout2 * num_procs.  Must be freed with SC_FREE ().
  * \return                  Returns the number of locally filled ranges.
  */
-int
-sc_ranges_adaptive (MPI_Comm mpicomm, int *procs, int *inout1, int * inout2,
-                    int num_ranges, int *ranges, int **global_ranges);
+int                 sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
+                                        int *procs, int *inout1, int *inout2,
+                                        int num_ranges, int *ranges,
+                                        int **global_ranges);
 
 /** Compute global statistical information on the ranges.
  *
