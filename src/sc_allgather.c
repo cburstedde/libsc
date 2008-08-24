@@ -8,38 +8,6 @@
 #include <sc.h>
 #include <sc_allgather.h>
 
-size_t
-sc_mpi_sizeof (MPI_Comm mpicomm, MPI_Datatype t)
-{
-  switch (t) {
-  case MPI_CHAR:
-    return sizeof (char);
-  case MPI_BYTE:
-    return 1;
-  case MPI_SHORT:
-  case MPI_UNSIGNED_SHORT:
-    return sizeof (short);
-  case MPI_INT:
-  case MPI_UNSIGNED:
-    return sizeof (int);
-  case MPI_LONG:
-  case MPI_UNSIGNED_LONG:
-    return sizeof (long);
-  case MPI_FLOAT:
-    return sizeof (float);
-  case MPI_DOUBLE:
-    return sizeof (double);
-  case MPI_LONG_DOUBLE:
-    return sizeof (long double);
-  case MPI_LONG_LONG_INT:
-  case MPI_UNSIGNED_LONG_LONG:
-    return sizeof (long long);
-  default:
-    SC_CHECK_NOT_REACHED ();
-    return 0;
-  }
-}
-
 void
 sc_ag_alltoall (MPI_Comm mpicomm, char *data, int datasize,
                 int groupsize, int myoffset, int myrank)
@@ -130,19 +98,20 @@ sc_allgather (void *sendbuf, int sendcount, MPI_Datatype sendtype,
   int                 mpiret;
   int                 mpisize;
   int                 mpirank;
-  int                 datasize, datasize2;
+  size_t              datasize, datasize2;
 
   mpiret = MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
   mpiret = MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  datasize = sendcount * (int) sc_mpi_sizeof (mpicomm, sendtype);
-  datasize2 = recvcount * (int) sc_mpi_sizeof (mpicomm, recvtype);
+  datasize = (size_t) sendcount * sc_mpi_sizeof (sendtype);
+  datasize2 = (size_t) recvcount * sc_mpi_sizeof (recvtype);
   SC_ASSERT (datasize == datasize2);
 
   memcpy (((char *) recvbuf) + mpirank * datasize, sendbuf, datasize);
-  sc_ag_recursive (mpicomm, recvbuf, datasize, mpisize, mpirank, mpirank);
+  sc_ag_recursive (mpicomm, recvbuf, (int) datasize,
+                   mpisize, mpirank, mpirank);
 
   return MPI_SUCCESS;
 }

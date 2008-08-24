@@ -355,4 +355,8 @@ void                sc_init (int identifier,
  */
 void                sc_finalize (void);
 
+/** Returns the size of MPI data types in bytes.
+ */
+size_t              sc_mpi_sizeof (MPI_Datatype t);
+
 #endif /* SC_H */

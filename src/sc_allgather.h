@@ -20,9 +20,6 @@
 #define SC_AG_RECURSIVE_TAG_A   2
 #define SC_AG_RECURSIVE_TAG_B   3
 
-/** Returns the size of the MPI data type in bytes. */
-size_t              sc_mpi_sizeof (MPI_Comm mpicomm, MPI_Datatype t);
-
 /** Allgather by direct point-to-point communication.
  * Only makes sense for small group sizes.
  */

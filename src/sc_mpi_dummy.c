@@ -30,39 +30,6 @@
 #include <time.h>
 #endif
 
-static inline       size_t
-mpi_dummy_sizeof (MPI_Datatype t)
-{
-  switch (t) {
-  case MPI_CHAR:
-  case MPI_SIGNED_CHAR:
-  case MPI_UNSIGNED_CHAR:
-    return sizeof (char);
-  case MPI_BYTE:
-    return 1;
-  case MPI_SHORT:
-  case MPI_UNSIGNED_SHORT:
-    return sizeof (short);
-  case MPI_INT:
-  case MPI_UNSIGNED:
-    return sizeof (int);
-  case MPI_LONG:
-  case MPI_UNSIGNED_LONG:
-    return sizeof (long);
-  case MPI_FLOAT:
-    return sizeof (float);
-  case MPI_DOUBLE:
-    return sizeof (double);
-  case MPI_LONG_DOUBLE:
-    return sizeof (long double);
-  case MPI_LONG_LONG_INT:
-  case MPI_UNSIGNED_LONG_LONG:
-    return sizeof (long long);
-  default:
-    SC_CHECK_NOT_REACHED ();
-  }
-}
-
 static inline void
 mpi_dummy_assert_op (MPI_Op op)
 {
@@ -143,8 +110,8 @@ MPI_Gather (void *p, int np, MPI_Datatype tp,
   SC_ASSERT (rank == 0 && np >= 0 && nq >= 0);
 
 /* *INDENT-OFF* horrible indent bug */
-  lp = (size_t) np * mpi_dummy_sizeof (tp);
-  lq = (size_t) nq * mpi_dummy_sizeof (tq);
+  lp = (size_t) np * sc_mpi_sizeof (tp);
+  lq = (size_t) nq * sc_mpi_sizeof (tq);
 /* *INDENT-ON* */
 
   SC_ASSERT (lp == lq);
@@ -162,8 +129,8 @@ MPI_Allgather (void *p, int np, MPI_Datatype tp,
   SC_ASSERT (np >= 0 && nq >= 0);
 
 /* *INDENT-OFF* horrible indent bug */
-  lp = (size_t) np * mpi_dummy_sizeof (tp);
-  lq = (size_t) nq * mpi_dummy_sizeof (tq);
+  lp = (size_t) np * sc_mpi_sizeof (tp);
+  lq = (size_t) nq * sc_mpi_sizeof (tq);
 /* *INDENT-ON* */
 
   SC_ASSERT (lp == lq);
@@ -182,7 +149,7 @@ MPI_Reduce (void *p, void *q, int n, MPI_Datatype t,
   mpi_dummy_assert_op (op);
 
 /* *INDENT-OFF* horrible indent bug */
-  l = (size_t) n * mpi_dummy_sizeof (t);
+  l = (size_t) n * sc_mpi_sizeof (t);
 /* *INDENT-ON* */
 
   memcpy (q, p, l);
@@ -200,7 +167,7 @@ MPI_Allreduce (void *p, void *q, int n, MPI_Datatype t,
   mpi_dummy_assert_op (op);
 
 /* *INDENT-OFF* horrible indent bug */
-  l = (size_t) n * mpi_dummy_sizeof (t);
+  l = (size_t) n * sc_mpi_sizeof (t);
 /* *INDENT-ON* */
 
   memcpy (q, p, l);
