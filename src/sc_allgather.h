@@ -16,10 +16,6 @@
 #define SC_AG_ALLTOALL_MAX      5
 #endif
 
-#define SC_AG_ALLTOALL_TAG      1
-#define SC_AG_RECURSIVE_TAG_A   2
-#define SC_AG_RECURSIVE_TAG_B   3
-
 /** Allgather by direct point-to-point communication.
  * Only makes sense for small group sizes.
  */
