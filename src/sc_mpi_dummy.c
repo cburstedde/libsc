@@ -124,6 +124,13 @@ int
 MPI_Allgather (void *p, int np, MPI_Datatype tp,
                void *q, int nq, MPI_Datatype tq, MPI_Comm comm)
 {
+  return sc_allgather (p, np, tp, q, nq, tq, comm);
+}
+
+int
+sc_allgather (void *p, int np, MPI_Datatype tp,
+              void *q, int nq, MPI_Datatype tq, MPI_Comm comm)
+{
   size_t              lp, lq;
 
   SC_ASSERT (np >= 0 && nq >= 0);

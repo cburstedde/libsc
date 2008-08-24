@@ -16,6 +16,8 @@
 #define SC_AG_ALLTOALL_MAX      5
 #endif
 
+#ifdef SC_MPI
+
 /** Allgather by direct point-to-point communication.
  * Only makes sense for small group sizes.
  */
@@ -29,6 +31,8 @@ void                sc_ag_alltoall (MPI_Comm mpicomm, char *data,
 void                sc_ag_recursive (MPI_Comm mpicomm, char *data,
                                      int datasize, int groupsize,
                                      int myoffset, int myrank);
+
+#endif /* SC_MPI */
 
 /** Drop-in allgather replacement.
  */
