@@ -18,6 +18,9 @@ libsc_compiled_sources = \
 if !SC_MPI
   libsc_installed_headers += src/sc_mpi_dummy.h
   libsc_compiled_sources +=  src/sc_mpi_dummy.c
+else
+  libsc_installed_headers += src/sc_allgather.h
+  libsc_compiled_sources +=  src/sc_allgather.c
 endif
 if SC_BLAS
   libsc_installed_headers += src/sc_blas.h src/sc_dmatrix.h
