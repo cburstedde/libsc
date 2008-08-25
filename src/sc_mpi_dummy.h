@@ -108,6 +108,9 @@ int                 MPI_Irecv (void *, int, MPI_Datatype, int, int, MPI_Comm,
 int                 MPI_Isend (void *, int, MPI_Datatype, int, int, MPI_Comm,
                                MPI_Request *);
 
+/* This function will abort. */
+int                 MPI_Send (void *, int, MPI_Datatype, int, int, MPI_Comm);
+
 /* This function is only allowed to be called with zero size arrays. */
 int                 MPI_Waitall (int, MPI_Request *, MPI_Status *);
 

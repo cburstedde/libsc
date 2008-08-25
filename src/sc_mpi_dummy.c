@@ -199,6 +199,14 @@ MPI_Isend (void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 }
 
 int
+MPI_Send (void *buf, int count, MPI_Datatype datatype,
+          int dest, int tag, MPI_Comm comm)
+{
+  SC_CHECK_ABORT (false, "MPI_Send is not implemented");
+  return MPI_SUCCESS;
+}
+
+int
 MPI_Waitall (int count, MPI_Request * array_of_requests,
              MPI_Status * array_of_statuses)
 {
