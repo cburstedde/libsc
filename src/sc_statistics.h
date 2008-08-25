@@ -27,6 +27,7 @@
 
 typedef struct sc_statinfo
 {
+  bool                dirty;    /* only update stats if this is true */
   long                count;    /* inout, global count is 52bit accurate */
   double              sum_values, sum_squares, min, max;        /* inout */
   int                 min_at_rank, max_at_rank; /* out */
@@ -53,13 +54,14 @@ typedef struct sc_flopinfo
 sc_flopinfo_t;
 
 /**
- * Populate a sc_statinfo_t structure assuming count=1.
+ * Populate a sc_statinfo_t structure assuming count=1 and mark it dirty.
  */
 void                sc_statinfo_set1 (sc_statinfo_t * stats,
                                       double value, const char *variable);
 
 /**
  * Compute global average and standard deviation.
+ * Only updates dirty variables. Then removes the dirty flag.
  * \param [in]     mpicomm   MPI communicator to use.
  * \param [in]     nvars     Number of variables to be examined.
  * \param [in,out] stats     Set of statisitcs for each variable.
@@ -85,6 +87,7 @@ void                sc_statinfo_compute (MPI_Comm mpicomm, int nvars,
  * Version of sc_statistics_statistics that assumes count=1.
  * On input, the field sum_values needs to be set to the value
  * and the field variable must contain a valid string or NULL.
+ * Only updates dirty variables. Then removes the dirty flag.
  */
 void                sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars,
                                           sc_statinfo_t * stats);

@@ -70,6 +70,7 @@ sc_statinfo_mpifunc (void *invec, void *inoutvec, int *len,
 void
 sc_statinfo_set1 (sc_statinfo_t * stats, double value, const char *variable)
 {
+  stats->dirty = true;
   stats->count = 1;
   stats->sum_values = value;
   stats->sum_squares = value * value;
@@ -106,6 +107,10 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   flatout = flat + 7 * nvars;
 
   for (i = 0; i < nvars; ++i) {
+    if (!stats[i].dirty) {
+      memset (flatin + 7 * i, 0, 7 * sizeof (*flatin));
+      continue;
+    }
     flatin[7 * i + 0] = (double) stats[i].count;
     flatin[7 * i + 1] = stats[i].sum_values;
     flatin[7 * i + 2] = stats[i].sum_squares;
@@ -139,6 +144,9 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 #endif /* SC_MPI */
 
   for (i = 0; i < nvars; ++i) {
+    if (!stats[i].dirty) {
+      continue;
+    }
     cnt = flatout[7 * i + 0];
     stats[i].count = (long) cnt;
     stats[i].sum_values = flatout[7 * i + 1];
@@ -153,6 +161,7 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     stats[i].variance_mean = stats[i].variance / cnt;
     stats[i].standev = sqrt (stats[i].variance);
     stats[i].standev_mean = sqrt (stats[i].variance_mean);
+    stats[i].dirty = false;
   }
 
   SC_FREE (flat);
