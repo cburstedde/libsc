@@ -189,7 +189,7 @@ void
 sc_statinfo_print (int package_id, int log_priority,
                    int nvars, sc_statinfo_t * stats, bool full, bool summary)
 {
-  int                 i;
+  int                 i, count;
   sc_statinfo_t      *si;
   char                buffer[BUFSIZ];
 
@@ -249,13 +249,19 @@ sc_statinfo_print (int package_id, int log_priority,
   }
 
   if (summary) {
-    SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Summary = ");
-    for (i = 0; i < nvars; ++i) {
+    count = snprintf (buffer, BUFSIZ, "Summary = ");
+    for (i = 0; i < nvars && count >= 0 && count < BUFSIZ; ++i) {
       si = &stats[i];
-      SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-               "%s%g", i == 0 ? "[ " : " ", si->average);
+      count += snprintf (buffer + count, BUFSIZ - count,
+                         "%s%g", i == 0 ? "[ " : " ", si->average);
     }
-    SC_LOG (package_id, SC_LC_GLOBAL, log_priority, " ];\n");
+    if (count >= 0 && count < BUFSIZ) {
+      snprintf (buffer + count, BUFSIZ - count, "%s", " ];\n");
+      SC_LOG (package_id, SC_LC_GLOBAL, log_priority, buffer);
+    }
+    else {
+      SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Summary overflow\n");
+    }
   }
 }
 
@@ -264,9 +270,16 @@ sc_papi_start (float *irtime, float *iptime, long long *iflpops,
                float *imflops)
 {
 #ifdef SC_PAPI
+  static bool         init = false;
   int                 retval;
+
   retval = PAPI_flops (irtime, iptime, iflpops, imflops);
   SC_CHECK_ABORT (retval == PAPI_OK, "Papi not happy");
+  if (!init) {
+    *irtime = *iptime = *imflops = 0.;
+    *iflpops = 0;
+    init = true;
+  }
 #else
   *irtime = *iptime = *imflops = 0.;
   *iflpops = 0;
