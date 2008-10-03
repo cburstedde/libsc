@@ -32,7 +32,6 @@ main (int argc, char **argv)
   int                 i1, i2;
   double              d;
   const char         *s1, *s2;
-  sc_options_t       *opt;
 
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -42,6 +41,9 @@ main (int argc, char **argv)
 
   sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
 
+#ifdef SC_OPTIONS
+
+  sc_options_t       *opt;
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'w', "switch", &w, "Switch");
   sc_options_add_int (opt, 'i', "integer1", &i1, 0, "Integer 1");
@@ -71,6 +73,15 @@ main (int argc, char **argv)
   }
 
   sc_options_destroy (opt);
+
+#else
+
+  SC_GLOBAL_INFO ("The libsc option parser is disabled.\n"
+                  "Rerun ./configure without --disable-options to enable\n"
+                  "this example.\n");
+
+#endif
+
   sc_finalize ();
 
   mpiret = MPI_Finalize ();

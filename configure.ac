@@ -34,6 +34,8 @@ SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
 SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
               [RESIZE_REALLOC])
+SC_ARG_DISABLE([options], [disable the libsc option parser],
+              [OPTIONS])
 SC_ARG_WITHOUT([getopt], [disable builtin getopt code, provide your own],
                [PROVIDE_GETOPT])
 SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],

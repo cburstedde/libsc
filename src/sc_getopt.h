@@ -22,6 +22,12 @@
 
 #ifndef _GETOPT_H
 
+#ifndef SC_H
+#error "sc.h should be included before this header file"
+#endif
+
+#ifdef SC_OPTIONS
+
 #ifndef __need_getopt
 # define _GETOPT_H 1
 #endif
@@ -164,6 +170,8 @@ extern int getopt_long_only (int ___argc, char *const *___argv,
 
 /* Make sure we later can get all the definitions and declarations.  */
 #undef __need_getopt
+
+#endif
 
 #endif /* getopt.h */
 
