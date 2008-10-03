@@ -23,6 +23,8 @@
 
 #include <sc_blas.h>
 
+SC_EXTERN_C_BEGIN;
+
 typedef struct sc_dmatrix
 {
   double            **e;
@@ -139,5 +141,7 @@ void                sc_dmatrix_rdivide (sc_trans_t transb,
  */
 void                sc_dmatrix_print (const sc_dmatrix_t * dmatrix,
                                       FILE * fp);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_DMATRIX_H */

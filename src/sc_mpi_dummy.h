@@ -25,6 +25,8 @@
 #error "sc.h should be included before this header file"
 #endif
 
+SC_EXTERN_C_BEGIN;
+
 #define MPI_SUCCESS 0
 #define MPI_COMM_NULL           ((MPI_Comm) 0x04000000)
 #define MPI_COMM_WORLD          ((MPI_Comm) 0x44000000)
@@ -85,5 +87,7 @@ int                 MPI_Allreduce (void *, void *, int, MPI_Datatype,
                                    MPI_Op, MPI_Comm);
 
 double              MPI_Wtime (void);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_MPI_DUMMY_H */

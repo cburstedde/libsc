@@ -23,6 +23,8 @@
 
 #include <sc_blas.h>
 
+SC_EXTERN_C_BEGIN;
+
 typedef enum sc_jobz
 {
   SC_EIGVALS_ONLY,
@@ -76,5 +78,7 @@ int                 LAPACK_ILAENV (const sc_bint_t * ispec,
                                    const sc_bint_t * N4,
                                    sc_buint_t name_length,
                                    sc_buint_t opts_length);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_LAPACK_H */

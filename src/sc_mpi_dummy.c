@@ -20,6 +20,10 @@
 
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
+
+/* in case somebody does not use our Makefile.am */
+#ifndef SC_MPI
+
 #include <sc_mpi_dummy.h>
 
 /* gettimeofday is in either of these two */
@@ -29,6 +33,8 @@
 #ifdef SC_HAVE_TIME_H
 #include <time.h>
 #endif
+
+SC_EXTERN_C_BEGIN;
 
 static inline       size_t
 mpi_dummy_sizeof (MPI_Datatype t)
@@ -219,5 +225,9 @@ MPI_Wtime (void)
 
   return (double) tv.tv_sec + 1.e-6 * tv.tv_usec;
 }
+
+SC_EXTERN_C_END;
+
+#endif /* !SC_MPI */
 
 /* EOF sc_mpi_dummy.c */

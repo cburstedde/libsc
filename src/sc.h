@@ -25,6 +25,16 @@
 
 #include <sc_config.h>
 
+/* provide extern C defines */
+
+#ifdef __cplusplus
+#define SC_EXTERN_C_BEGIN       extern "C" {
+#define SC_EXTERN_C_END         }
+#else
+#define SC_EXTERN_C_BEGIN
+#define SC_EXTERN_C_END
+#endif
+
 /* include MPI before stdio.h */
 
 #ifdef SC_MPI
@@ -188,7 +198,7 @@
 
 /* generic log macros */
 
-/* Only include these logging macros in C, not C++, since C++98
+/* Only include these logging macros in C, not C++, since C++99
    does not allow variadic macros. */
 #ifndef __cplusplus
 
@@ -248,6 +258,8 @@
   SC_NORMAL_LOGF (SC_LP_PRODUCTION, (f), __VA_ARGS__)
 
 #endif /* !__cplusplus */
+
+SC_EXTERN_C_BEGIN;
 
 /* callback typedefs */
 
@@ -339,5 +351,7 @@ void                sc_init (int identifier,
  * This function does not require sc_init to be called first.
  */
 void                sc_finalize (void);
+
+SC_EXTERN_C_END;
 
 #endif /* SC_H */

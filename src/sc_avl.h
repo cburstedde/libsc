@@ -36,6 +36,8 @@
 
 #include <sc_containers.h>
 
+SC_EXTERN_C_BEGIN;
+
 /* modification to use count only */
 #define AVL_COUNT
 
@@ -204,5 +206,7 @@ extern unsigned int avl_index(const avl_node_t *);
 extern void avl_to_array (avl_tree_t *, sc_array_t *);
 
 #endif /* AVL_COUNT */
+
+SC_EXTERN_C_END;
 
 #endif /* !_AVL_H */

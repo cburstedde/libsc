@@ -25,13 +25,15 @@
 #error "sc.h should be included before this header file"
 #endif
 
+SC_EXTERN_C_BEGIN;
+
 typedef struct sc_statinfo
 {
   int                 count;    /* the global count is 52bit accurate */
   double              sum_values, sum_squares, min, max;        /* inout */
   int                 min_at_rank, max_at_rank; /* out */
-  double              average, variance, standev;      /* out */
-  double              variance_mean, standev_mean;     /* out */
+  double              average, variance, standev;       /* out */
+  double              variance_mean, standev_mean;      /* out */
   const char         *variable; /* name of the variable for output */
 }
 sc_statinfo_t;
@@ -122,5 +124,7 @@ void                sc_papi_stop (float *rtime, float *ptime,
  * \param [in,out] fi   Flop info structure.
  */
 void                sc_flopinfo_stop (sc_flopinfo_t * fi);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_STATISTICS_H */

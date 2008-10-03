@@ -25,6 +25,8 @@
 #error "sc.h should be included before this header file"
 #endif
 
+SC_EXTERN_C_BEGIN;
+
 /** Function to compute a hash value of an object.
  * \return Returns an unsigned integer.
  */
@@ -441,5 +443,7 @@ bool                sc_hash_remove (sc_hash_t * hash, void *v, void **found);
  */
 void                sc_hash_print_statistics (int log_priority,
                                               sc_hash_t * hash);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_CONTAINERS_H */
