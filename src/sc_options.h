@@ -27,6 +27,8 @@
 
 #include <sc_containers.h>
 
+SC_EXTERN_C_BEGIN;
+
 #ifdef SC_OPTIONS
 
 typedef enum
@@ -170,6 +172,8 @@ int                 sc_options_load (sc_options_t * opt,
 int                 sc_options_parse (sc_options_t * opt,
                                       int argc, char **argv, FILE * nerr);
 
-#endif
+#endif /* SC_OPTIONS */
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_OPTIONS_H */

@@ -24,6 +24,8 @@
 #include <sc_blas.h>
 #include <sc_containers.h>
 
+SC_EXTERN_C_BEGIN;
+
 typedef struct sc_dmatrix
 {
   double            **e;
@@ -180,5 +182,7 @@ sc_dmatrix_t       *sc_dmatrix_pool_alloc (sc_dmatrix_pool_t * dmpool);
  */
 void                sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool,
                                           sc_dmatrix_t * dm);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_DMATRIX_H */

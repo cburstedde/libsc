@@ -25,6 +25,8 @@
 #error "sc.h should be included before this header file"
 #endif
 
+SC_EXTERN_C_BEGIN;
+
 typedef double      (*sc_function3_t) (double, double, double, void *);
 
 /*
@@ -62,5 +64,7 @@ double              sc_z (double x, double y, double z, void *data);
 double              sc_sum (double x, double y, double z, void *data);
 double              sc_product (double x, double y, double z, void *data);
 double              sc_tensor (double x, double y, double z, void *data);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_FUNCTIONS_H */

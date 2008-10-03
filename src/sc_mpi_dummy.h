@@ -25,6 +25,8 @@
 #error "sc.h should be included before this header file"
 #endif
 
+SC_EXTERN_C_BEGIN;
+
 #define MPI_SUCCESS 0
 #define MPI_COMM_NULL           ((MPI_Comm) 0x04000000)
 #define MPI_COMM_WORLD          ((MPI_Comm) 0x44000000)
@@ -113,5 +115,7 @@ int                 MPI_Send (void *, int, MPI_Datatype, int, int, MPI_Comm);
 
 /* This function is only allowed to be called with zero size arrays. */
 int                 MPI_Waitall (int, MPI_Request *, MPI_Status *);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_MPI_DUMMY_H */

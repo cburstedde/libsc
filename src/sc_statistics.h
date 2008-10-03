@@ -25,6 +25,8 @@
 #error "sc.h should be included before this header file"
 #endif
 
+SC_EXTERN_C_BEGIN;
+
 typedef struct sc_statinfo
 {
   bool                dirty;    /* only update stats if this is true */
@@ -146,5 +148,7 @@ void                sc_papi_stop (float *rtime, float *ptime,
  * \param [in,out] fi   Flop info structure.
  */
 void                sc_flopinfo_stop (sc_flopinfo_t * fi);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_STATISTICS_H */

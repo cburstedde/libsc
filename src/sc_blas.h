@@ -25,6 +25,8 @@
 #error "sc.h should be included before this header file"
 #endif
 
+SC_EXTERN_C_BEGIN;
+
 typedef int         sc_bint_t;  /* Integer type for all of the blas calls */
 typedef unsigned int sc_buint_t;        /* Unsigned Integer type for blas */
 
@@ -110,5 +112,7 @@ void                BLAS_DGEMM (const char *transa, const char *transb,
                                 const double *b, const sc_bint_t * ldb,
                                 const double *beta, double *c,
                                 const sc_bint_t * ldc);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_BLAS_H */

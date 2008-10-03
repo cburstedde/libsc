@@ -25,6 +25,8 @@
 #error "sc.h should be included before this header file"
 #endif
 
+SC_EXTERN_C_BEGIN;
+
 /* Hash macros from lookup3.c by Bob Jenkins, May 2006, public domain. */
 #define sc_hash_rot(x,k) (((x) << (k)) | ((x) >> (32 - (k))))
 #define sc_hash_mix(a,b,c) do {                         \
@@ -667,5 +669,7 @@ void               *sc_recycle_array_insert (sc_recycle_array_t * rec_array,
  */
 void               *sc_recycle_array_remove (sc_recycle_array_t * rec_array,
                                              size_t position);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_CONTAINERS_H */
