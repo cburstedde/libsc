@@ -35,6 +35,8 @@ SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
 SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
               [RESIZE_REALLOC])
 SC_ARG_DISABLE([sc-allgather], [use stock MPI_Allgather], [ALLGATHER])
+SC_ARG_DISABLE([options], [disable the libsc option parser],
+              [OPTIONS])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 SC_ARG_WITHOUT([getopt], [disable builtin getopt code, provide your own],
                [PROVIDE_GETOPT])

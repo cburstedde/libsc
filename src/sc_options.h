@@ -21,7 +21,13 @@
 #ifndef SC_OPTIONS_H
 #define SC_OPTIONS_H
 
+#ifndef SC_H
+#error "sc.h should be included before this header file"
+#endif
+
 #include <sc_containers.h>
+
+#ifdef SC_OPTIONS
 
 typedef enum
 {
@@ -163,5 +169,7 @@ int                 sc_options_load (sc_options_t * opt,
  */
 int                 sc_options_parse (sc_options_t * opt,
                                       int argc, char **argv, FILE * nerr);
+
+#endif
 
 #endif /* !SC_OPTIONS_H */

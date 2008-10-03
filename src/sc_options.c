@@ -21,8 +21,9 @@
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
 #include <sc_options.h>
-
 #include <iniparser.h>
+
+#ifdef SC_OPTIONS
 
 sc_options_t       *
 sc_options_new (const char *program_path)
@@ -527,5 +528,7 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
   SC_FREE (longopts);
   return retval < 0 ? -1 : optind;
 }
+
+#endif
 
 /* EOF sc_options.c */
