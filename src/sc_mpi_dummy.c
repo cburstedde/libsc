@@ -34,8 +34,6 @@
 #include <time.h>
 #endif
 
-SC_EXTERN_C_BEGIN;
-
 static inline       size_t
 mpi_dummy_sizeof (MPI_Datatype t)
 {
@@ -225,8 +223,6 @@ MPI_Wtime (void)
 
   return (double) tv.tv_sec + 1.e-6 * tv.tv_usec;
 }
-
-SC_EXTERN_C_END;
 
 #endif /* !SC_MPI */
 
