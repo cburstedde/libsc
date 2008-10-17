@@ -250,12 +250,12 @@ sc_statinfo_print (int package_id, int log_priority,
 
   if (summary) {
     count = snprintf (buffer, BUFSIZ, "Summary = ");
-    for (i = 0; i < nvars && count >= 0 && count < BUFSIZ; ++i) {
+    for (i = 0; i < nvars && count >= 0 && (size_t) count < BUFSIZ; ++i) {
       si = &stats[i];
       count += snprintf (buffer + count, BUFSIZ - count,
                          "%s%g", i == 0 ? "[ " : " ", si->average);
     }
-    if (count >= 0 && count < BUFSIZ) {
+    if (count >= 0 && (size_t) count < BUFSIZ) {
       snprintf (buffer + count, BUFSIZ - count, "%s", " ];\n");
       SC_LOG (package_id, SC_LC_GLOBAL, log_priority, buffer);
     }

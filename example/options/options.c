@@ -27,6 +27,14 @@ main (int argc, char **argv)
 {
   int                 mpiret;
   int                 rank;
+#ifdef SC_OPTIONS
+  int                 first_arg;
+  int                 w;
+  int                 i1, i2;
+  double              d;
+  const char         *s1, *s2;
+  sc_options_t       *opt;
+#endif
 
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -37,14 +45,6 @@ main (int argc, char **argv)
   sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
 
 #ifdef SC_OPTIONS
-
-  int                 first_arg;
-  int                 w;
-  int                 i1, i2;
-  double              d;
-  const char         *s1, *s2;
-  sc_options_t       *opt;
-
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'w', "switch", &w, "Switch");
   sc_options_add_int (opt, 'i', "integer1", &i1, 0, "Integer 1");

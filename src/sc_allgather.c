@@ -135,28 +135,32 @@ sc_allgather (void *sendbuf, int sendcount, MPI_Datatype sendtype,
   int                 mpiret;
   int                 mpisize;
   int                 mpirank;
+#endif
   size_t              datasize, datasize2;
 
-  mpiret = MPI_Comm_size (mpicomm, &mpisize);
-  SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &mpirank);
-  SC_CHECK_MPI (mpiret);
+  SC_ASSERT (sendcount >= 0 && recvcount >= 0);
 
   /* *INDENT-OFF* HORRIBLE indent bug */
   datasize = (size_t) sendcount * sc_mpi_sizeof (sendtype);
   datasize2 = (size_t) recvcount * sc_mpi_sizeof (recvtype);
   /* *INDENT-ON* */
+
   SC_ASSERT (datasize == datasize2);
+
+#ifdef SC_MPI
+  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = MPI_Comm_rank (mpicomm, &mpirank);
+  SC_CHECK_MPI (mpiret);
 
   memcpy (((char *) recvbuf) + mpirank * datasize, sendbuf, datasize);
   sc_ag_recursive (mpicomm, recvbuf, (int) datasize,
                    mpisize, mpirank, mpirank);
+#else
+  memcpy (recvbuf, sendbuf, datasize);
+#endif
 
   return MPI_SUCCESS;
-#else
-  return MPI_Allgather (sendbuf, sendcount, sendtype,
-                        recvbuf, recvcount, recvtype, mpicomm);
-#endif
 }
 
 /* EOF sc_allgather.c */

@@ -30,6 +30,7 @@
 #ifdef SC_HAVE_TIME_H
 #include <time.h>
 #endif
+#include <sc_allgather.h>
 
 static inline void
 mpi_dummy_assert_op (MPI_Op op)
@@ -126,25 +127,6 @@ MPI_Allgather (void *p, int np, MPI_Datatype tp,
                void *q, int nq, MPI_Datatype tq, MPI_Comm comm)
 {
   return sc_allgather (p, np, tp, q, nq, tq, comm);
-}
-
-int
-sc_allgather (void *p, int np, MPI_Datatype tp,
-              void *q, int nq, MPI_Datatype tq, MPI_Comm comm)
-{
-  size_t              lp, lq;
-
-  SC_ASSERT (np >= 0 && nq >= 0);
-
-/* *INDENT-OFF* horrible indent bug */
-  lp = (size_t) np * sc_mpi_sizeof (tp);
-  lq = (size_t) nq * sc_mpi_sizeof (tq);
-/* *INDENT-ON* */
-
-  SC_ASSERT (lp == lq);
-  memcpy (q, p, lp);
-
-  return MPI_SUCCESS;
 }
 
 int
