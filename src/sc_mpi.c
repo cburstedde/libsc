@@ -21,10 +21,7 @@
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
 
-/* in case somebody does not use our Makefile.am */
 #ifndef SC_MPI
-
-#include <sc_mpi_dummy.h>
 
 /* gettimeofday is in either of these two */
 #ifdef SC_HAVE_SYS_TIME_H
@@ -232,4 +229,35 @@ MPI_Wtime (void)
 
 #endif /* !SC_MPI */
 
-/* EOF sc_mpi_dummy.c */
+size_t
+sc_mpi_sizeof (MPI_Datatype t)
+{
+  switch (t) {
+  case MPI_CHAR:
+    return sizeof (char);
+  case MPI_BYTE:
+    return 1;
+  case MPI_SHORT:
+  case MPI_UNSIGNED_SHORT:
+    return sizeof (short);
+  case MPI_INT:
+  case MPI_UNSIGNED:
+    return sizeof (int);
+  case MPI_LONG:
+  case MPI_UNSIGNED_LONG:
+    return sizeof (long);
+  case MPI_FLOAT:
+    return sizeof (float);
+  case MPI_DOUBLE:
+    return sizeof (double);
+  case MPI_LONG_DOUBLE:
+    return sizeof (long double);
+  case MPI_LONG_LONG_INT:
+  case MPI_UNSIGNED_LONG_LONG:
+    return sizeof (long long);
+  default:
+    SC_CHECK_NOT_REACHED ();
+  }
+}
+
+/* EOF sc_mpi.c */

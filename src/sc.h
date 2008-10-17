@@ -46,7 +46,6 @@
 #ifdef MPI_SUCCESS
 #error "mpi.h is included.  Use --enable-mpi."
 #endif
-#include <sc_mpi_dummy.h>
 #endif
 
 /* include system headers */
@@ -93,6 +92,7 @@
 #endif
 
 #include <sc_c99_functions.h>
+#include <sc_mpi.h>
 
 #if 0
 /*@ignore@*/
@@ -366,10 +366,6 @@ void                sc_init (int identifier,
  * This function does not require sc_init to be called first.
  */
 void                sc_finalize (void);
-
-/** Returns the size of MPI data types in bytes.
- */
-size_t              sc_mpi_sizeof (MPI_Datatype t);
 
 SC_EXTERN_C_END;
 

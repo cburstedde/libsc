@@ -8,6 +8,8 @@
 #include <sc.h>
 #include <sc_allgather.h>
 
+#ifdef SC_MPI
+
 enum
 {
   SC_AG_ALLTOALL_TAG = 17,
@@ -122,11 +124,14 @@ sc_ag_recursive (MPI_Comm mpicomm, char *data, int datasize,
   }
 }
 
+#endif /* SC_MPI */
+
 int
 sc_allgather (void *sendbuf, int sendcount, MPI_Datatype sendtype,
               void *recvbuf, int recvcount, MPI_Datatype recvtype,
               MPI_Comm mpicomm)
 {
+#ifdef SC_MPI
   int                 mpiret;
   int                 mpisize;
   int                 mpirank;
@@ -137,8 +142,10 @@ sc_allgather (void *sendbuf, int sendcount, MPI_Datatype sendtype,
   mpiret = MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
+  /* *INDENT-OFF* HORRIBLE indent bug */
   datasize = (size_t) sendcount * sc_mpi_sizeof (sendtype);
   datasize2 = (size_t) recvcount * sc_mpi_sizeof (recvtype);
+  /* *INDENT-ON* */
   SC_ASSERT (datasize == datasize2);
 
   memcpy (((char *) recvbuf) + mpirank * datasize, sendbuf, datasize);
@@ -146,6 +153,10 @@ sc_allgather (void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    mpisize, mpirank, mpirank);
 
   return MPI_SUCCESS;
+#else
+  return MPI_Allgather (sendbuf, sendcount, sendtype,
+                        recvbuf, recvcount, recvtype, mpicomm);
+#endif
 }
 
 /* EOF sc_allgather.c */

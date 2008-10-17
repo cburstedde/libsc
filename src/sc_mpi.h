@@ -18,14 +18,16 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SC_MPI_DUMMY_H
-#define SC_MPI_DUMMY_H
+#ifndef SC_MPI_H
+#define SC_MPI_H
 
 #ifndef SC_H
 #error "sc.h should be included before this header file"
 #endif
 
 SC_EXTERN_C_BEGIN;
+
+#ifndef SC_MPI
 
 #define MPI_SUCCESS 0
 #define MPI_COMM_NULL           ((MPI_Comm) 0x04000000)
@@ -116,6 +118,14 @@ int                 MPI_Send (void *, int, MPI_Datatype, int, int, MPI_Comm);
 /* This function is only allowed to be called with zero size arrays. */
 int                 MPI_Waitall (int, MPI_Request *, MPI_Status *);
 
+#endif /* !SC_MPI */
+
+/** Return the size of MPI data types.
+ * \param [in] t    MPI data type.
+ * \return          Returns the size in bytes.
+ */
+size_t              sc_mpi_sizeof (MPI_Datatype t);
+
 SC_EXTERN_C_END;
 
-#endif /* !SC_MPI_DUMMY_H */
+#endif /* !SC_MPI_H */
