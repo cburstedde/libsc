@@ -20,7 +20,7 @@
 
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
-#include <sc_vtk.h>
+#include <sc_io.h>
 #include <libb64.h>
 
 int
@@ -181,4 +181,24 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
   return 0;
 }
 
-/* EOF sc_vtk.c */
+void
+sc_fwrite (const void *ptr, size_t size, size_t nmemb, FILE * file,
+           const char *errmsg)
+{
+  size_t              nwritten;
+
+  nwritten = fwrite (ptr, size, nmemb, file);
+  SC_CHECK_ABORT (nwritten == nmemb, errmsg);
+}
+
+void
+sc_fread (void *ptr, size_t size, size_t nmemb, FILE * file,
+          const char *errmsg)
+{
+  size_t              nread;
+
+  nread = fread (ptr, size, nmemb, file);
+  SC_CHECK_ABORT (nread == nmemb, errmsg);
+}
+
+/* EOF sc_io.c */

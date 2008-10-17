@@ -8,12 +8,12 @@ libsc_generated_headers = src/sc_config.h
 libsc_installed_headers = \
         src/sc.h src/sc_containers.h src/sc_avl.h \
         src/sc_options.h src/sc_functions.h src/sc_statistics.h \
-        src/sc_ranges.h src/sc_c99_functions.h src/sc_vtk.h \
+        src/sc_ranges.h src/sc_c99_functions.h src/sc_io.h \
         src/sc_amr.h src/sc_allgather.h
 libsc_compiled_sources = \
         src/sc.c src/sc_containers.c src/sc_avl.c \
         src/sc_options.c src/sc_functions.c src/sc_statistics.c \
-        src/sc_ranges.c src/sc_c99_functions.c src/sc_vtk.c \
+        src/sc_ranges.c src/sc_c99_functions.c src/sc_io.c \
         src/sc_amr.c
 if !SC_MPI
   libsc_installed_headers += src/sc_mpi_dummy.h

@@ -18,12 +18,14 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SC_VTK_H
-#define SC_VTK_H
+#ifndef SC_IO_H
+#define SC_IO_H
 
 #ifndef SC_H
 #error "sc.h should be included before this header file"
 #endif
+
+SC_EXTERN_C_BEGIN;
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream openened for writing.
@@ -44,4 +46,28 @@ int                 sc_vtk_write_compressed (FILE * vtkfile,
                                              char *numeric_data,
                                              size_t byte_length);
 
-#endif /* SC_VTK_H */
+/** Write memory content to a file.
+ * \param [in] ptr      Data array to write to disk.
+ * \param [in] size     Size of one array member.
+ * \param [in] nmemb    Number of array members.
+ * \param [in,out] file File pointer, must be opened for writing.
+ * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                This function aborts on file errors.
+ */
+void                sc_fwrite (const void *ptr, size_t size,
+                               size_t nmemb, FILE * file, const char *errmsg);
+
+/** Read file content into memory.
+ * \param [out] ptr     Data array to read from disk.
+ * \param [in] size     Size of one array member.
+ * \param [in] nmemb    Number of array members.
+ * \param [in,out] file File pointer, must be opened for reading.
+ * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                This function aborts on file errors.
+ */
+void                sc_fread (void *ptr, size_t size,
+                              size_t nmemb, FILE * file, const char *errmsg);
+
+SC_EXTERN_C_END;
+
+#endif /* SC_IO_H */
