@@ -1,7 +1,7 @@
 --- !ditz.rubyforge.org,2008-03-06/issue 
-title: Builtin getlog segfaults on the mac
+title: Builtin getopt segfaults on the mac
 desc: |-
-  The getlog in libsc fails on the mac.
+  The getopt in libsc fails on the mac.
   
   For example :
     ./example/options/sc_options -d 2
