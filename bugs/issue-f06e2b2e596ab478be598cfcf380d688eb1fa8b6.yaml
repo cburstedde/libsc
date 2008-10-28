@@ -15,8 +15,8 @@ type: :bugfix
 component: libsc
 release: "0.6"
 reporter: Lucas C Wilcox <lucasw@ices.utexas.edu>
-status: :unstarted
-disposition: 
+status: :closed
+disposition: :wontfix
 creation_time: 2008-10-17 16:58:25.336995 Z
 references: []
 
@@ -26,3 +26,9 @@ log_events:
   - Lucas C Wilcox <lucasw@ices.utexas.edu>
   - created
   - Initial report
+- - 2008-10-28 21:46:56.521206 Z
+  - Lucas C Wilcox <lucasw@ices.utexas.edu>
+  - closed with disposition wontfix
+  - |-
+    The segfault was curcumvented by not including sc's getopt on
+    systems that have getopt_long.

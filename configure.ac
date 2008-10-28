@@ -38,8 +38,7 @@ SC_ARG_DISABLE([sc-allgather], [use stock MPI_Allgather], [ALLGATHER])
 SC_ARG_DISABLE([options], [disable the libsc option parser],
               [OPTIONS])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
-SC_ARG_WITHOUT([getopt], [disable builtin getopt code, provide your own],
-               [PROVIDE_GETOPT])
+SC_ARG_WITH([getopt], [enable builtin getopt code], [PROVIDE_GETOPT])
 SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],
                [PROVIDE_OBSTACK])
 SC_ARG_WITHOUT([zlib], [disable builtin zlib code, provide your own],
@@ -157,7 +156,7 @@ echo "| Checking functions"
 echo "o---------------------------------------"
 
 if test "$SC_WITH_PROVIDE_GETOPT" = "no" ; then
-  SC_REQUIRE_FUNCS([getopt_long])
+  AC_CHECK_FUNC([getopt_long], ,AC_DEFINE([PROVIDE_GETOPT], 1, [Define to 1 if getopt is provided by sc]))
 fi
 if test "$SC_WITH_PROVIDE_OBSTACK" = "no" ; then
   SC_REQUIRE_FUNCS([obstack_free])
