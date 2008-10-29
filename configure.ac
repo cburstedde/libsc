@@ -10,7 +10,7 @@ AC_CONFIG_HEADERS([src/pre_config.h])
 AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([config])
-AC_PREFIX_DEFAULT([$PWD/install])
+AC_PREFIX_DEFAULT([$PWD/local])
 AM_INIT_AUTOMAKE([subdir-objects])
 AX_PREFIX_CONFIG_H([src/sc_config.h], [SC])
 
