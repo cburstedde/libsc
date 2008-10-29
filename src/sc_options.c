@@ -428,7 +428,7 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
   int                 retval;
   int                 position, printed;
   int                 c, option_index;
-  int                 item_index;
+  int                 item_index = -1;
   size_t              iz;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
@@ -496,6 +496,8 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
         break;
       }
     }
+    SC_ASSERT (item != NULL);
+
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
       ++*(int *) item->opt_var;

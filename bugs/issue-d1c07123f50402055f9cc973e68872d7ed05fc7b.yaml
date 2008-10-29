@@ -37,8 +37,8 @@ type: :bugfix
 component: libsc
 release: 
 reporter: Lucas C Wilcox <lucasw@ices.utexas.edu>
-status: :unstarted
-disposition: 
+status: :closed
+disposition: :wontfix
 creation_time: 2008-10-17 17:06:11.024651 Z
 references: []
 
@@ -48,3 +48,9 @@ log_events:
   - Lucas C Wilcox <lucasw@ices.utexas.edu>
   - created
   - Initial report
+- - 2008-10-29 17:53:50.709546 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - closed with disposition wontfix
+  - |-
+    The warnings for sc_options.c have been addressed.
+    The remaining ones are for sc_getopt and sc_obstack which is glibc code.
