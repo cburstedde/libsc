@@ -24,7 +24,7 @@ noinst_PROGRAMS =
 TESTS_ENVIRONMENT = @SC_MPI_TESTS_ENVIRONMENT@
 
 # handle toplevel directory
-EXTRA_DIST += bootstrap scindent
+EXTRA_DIST += bootstrap scindent config/git-version-gen
 DISTCLEANFILES += _configs.sed src/sc_config.h
 MAINTAINERCLEANFILES += ChangeLog
 .PHONY: lint ChangeLog
@@ -66,3 +66,5 @@ ChangeLog:
 		echo 'Warning not in git dir; ChangeLog could be wrong.' >&2)
 
 dist-hook: ChangeLog
+	echo $(VERSION) > $(distdir)/.tarball-version
+	(test "x$(VERSION)" = "x`@top_srcdir@/config/git-version-gen @top_srcdir@/.tarball-version`" || (echo "Stale version;" && echo "Please run:" && echo "     cd @top_srcdir@ && ./bootstrap" && echo "before make dist" && exit 1 ))

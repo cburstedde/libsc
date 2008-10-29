@@ -2,7 +2,9 @@ dnl
 dnl This file is part of the SC Library.
 dnl
 
-AC_INIT([libsc],[0.6.pre],[ccgo@ices.utexas.edu])
+AC_INIT([libsc],
+        [m4_esyscmd([config/git-version-gen .tarball-version])],
+        [ccgo@ices.utexas.edu])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([src/pre_config.h])
 AC_CONFIG_SRCDIR([src/sc.h])

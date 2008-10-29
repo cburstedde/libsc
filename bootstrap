@@ -6,4 +6,4 @@ echo "Current directory is $PWD"
 aclocal -Wall -I config
 autoheader -Wall
 automake -Wall --add-missing --copy
-autoconf -Wall
+autoconf -Wall -f
