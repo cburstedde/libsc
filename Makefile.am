@@ -59,7 +59,7 @@ if LINT
 endif LINT
 
 ChangeLog:
-	@(GIT_DIR=@top_srcdir@/.git git log | @top_srcdir@/git2cl \
+	@(GIT_DIR=@top_srcdir@/.git git log | @top_srcdir@/config/git2cl \
 		> .ChangeLog.tmp && \
 		mv .ChangeLog.tmp ChangeLog; rm -f .ChangeLog.tmp) || \
 	(touch ChangeLog; \
