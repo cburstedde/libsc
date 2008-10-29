@@ -39,9 +39,6 @@
 
 #ifdef SC_MPI
 #include <mpi.h>
-#ifndef MPI_UNSIGNED_LONG_LONG
-#define MPI_UNSIGNED_LONG_LONG MPI_LONG_LONG_INT
-#endif
 #else
 #ifdef MPI_SUCCESS
 #error "mpi.h is included.  Use --enable-mpi."

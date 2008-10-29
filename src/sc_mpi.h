@@ -50,8 +50,6 @@ SC_EXTERN_C_BEGIN;
 #define MPI_DOUBLE              ((MPI_Datatype) 0x4c00080b)
 #define MPI_LONG_DOUBLE         ((MPI_Datatype) 0x4c000c0c)
 #define MPI_LONG_LONG_INT       ((MPI_Datatype) 0x4c000809)
-#define MPI_UNSIGNED_LONG_LONG  ((MPI_Datatype) 0x4c000819)
-#define MPI_LONG_LONG           MPI_LONG_LONG_INT
 
 #define MPI_MAX                 ((MPI_Op) 0x58000001)
 #define MPI_MIN                 ((MPI_Op) 0x58000002)

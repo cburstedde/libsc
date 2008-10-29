@@ -235,7 +235,6 @@ sc_mpi_sizeof (MPI_Datatype t)
   case MPI_LONG_DOUBLE:
     return sizeof (long double);
   case MPI_LONG_LONG_INT:
-  case MPI_UNSIGNED_LONG_LONG:
     return sizeof (long long);
   default:
     SC_CHECK_NOT_REACHED ();
