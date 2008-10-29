@@ -56,6 +56,7 @@ AM_PROG_CC_C_O
 AC_PROG_RANLIB
 ACX_WITH_LINT
 ACX_C_RESTRICT
+AX_C_VERSION
 
 # Checks for libraries.
 echo "o---------------------------------------"
@@ -182,6 +183,7 @@ echo "o----------------------------------"
 echo "| Results are"
 echo "o----------------------------------"
 echo "| CC:          $CC"
+echo "| C_VERSION:   $C_VERSION"
 echo "| CFLAGS:      $CFLAGS"
 echo "| CPP:         $CPP"
 echo "| CPPFLAGS:    $CPPFLAGS"
