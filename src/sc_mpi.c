@@ -214,31 +214,26 @@ MPI_Wtime (void)
 size_t
 sc_mpi_sizeof (MPI_Datatype t)
 {
-  switch (t) {
-  case MPI_CHAR:
+  if (t == MPI_CHAR)
     return sizeof (char);
-  case MPI_BYTE:
+  if (t == MPI_BYTE)
     return 1;
-  case MPI_SHORT:
-  case MPI_UNSIGNED_SHORT:
+  if (t == MPI_SHORT || t == MPI_UNSIGNED_SHORT)
     return sizeof (short);
-  case MPI_INT:
-  case MPI_UNSIGNED:
+  if (t == MPI_INT || t == MPI_UNSIGNED)
     return sizeof (int);
-  case MPI_LONG:
-  case MPI_UNSIGNED_LONG:
+  if (t == MPI_LONG || t == MPI_UNSIGNED_LONG)
     return sizeof (long);
-  case MPI_FLOAT:
+  if (t == MPI_FLOAT)
     return sizeof (float);
-  case MPI_DOUBLE:
+  if (t == MPI_DOUBLE)
     return sizeof (double);
-  case MPI_LONG_DOUBLE:
+  if (t == MPI_LONG_DOUBLE)
     return sizeof (long double);
-  case MPI_LONG_LONG_INT:
+  if (t == MPI_LONG_LONG_INT)
     return sizeof (long long);
-  default:
-    SC_CHECK_NOT_REACHED ();
-  }
+
+  SC_CHECK_NOT_REACHED ();
 }
 
 /* EOF sc_mpi.c */
