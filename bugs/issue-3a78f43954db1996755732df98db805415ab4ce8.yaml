@@ -1,0 +1,20 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Use libsc logging in sc_options
+desc: |-
+  Currently sc_options and some test/example programs print to stdout.
+  Use the SC_LOG and friends macros for output.
+type: :bugfix
+component: libsc
+release: "0.6"
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :unstarted
+disposition: 
+creation_time: 2008-10-30 03:39:32.022184 Z
+references: []
+
+id: 3a78f43954db1996755732df98db805415ab4ce8
+log_events: 
+- - 2008-10-30 03:39:33.503538 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
