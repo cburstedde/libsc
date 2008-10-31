@@ -24,7 +24,7 @@ noinst_PROGRAMS =
 TESTS_ENVIRONMENT = @SC_MPI_TESTS_ENVIRONMENT@
 
 # handle toplevel directory
-EXTRA_DIST += bootstrap scindent config/git-version-gen
+EXTRA_DIST += bootstrap scindent config/git-version-gen bugs
 DISTCLEANFILES += _configs.sed src/sc_config.h
 MAINTAINERCLEANFILES += ChangeLog
 .PHONY: lint ChangeLog
