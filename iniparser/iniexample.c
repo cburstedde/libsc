@@ -28,7 +28,7 @@ void create_example_ini_file(void)
 {
 	FILE	*	ini ;
 
-	ini = fopen("example.ini", "w");
+	ini = fopen("example.ini", "wb");
 	fprintf(ini,
     "#\n"
     "# This is an example of ini file\n"

@@ -544,7 +544,7 @@ dictionary * iniparser_load(const char * ininame, FILE * f)
 
     dictionary * dict ;
 
-    if ((in=fopen(ininame, "r"))==NULL) {
+    if ((in=fopen(ininame, "rb"))==NULL) {
       if (f != NULL) {
         fprintf (f, "iniparser: cannot open %s\n", ininame);
       }
