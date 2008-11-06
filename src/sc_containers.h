@@ -135,6 +135,7 @@ void                sc_array_uniq (sc_array_t * array,
                                                   const void *));
 
 /** Performs a binary search on an array. The array must be sorted.
+ * \param [in] array   A sorted array to search in.
  * \param [in] key     An element to be searched for.
  * \param [in] compar  The comparison function to be used.
  * \return Returns the index into array for the item found, or -1.
@@ -143,6 +144,20 @@ ssize_t             sc_array_bsearch (sc_array_t * array,
                                       const void *key,
                                       int (*compar) (const void *,
                                                      const void *));
+
+/** Performs a binary search on a subset of a sorted array.
+ * \param [in] array   A sorted array to search in.
+ * \param [in] begin   Start index of search range.
+ * \param [in] end     End index of search range (exclusive!).
+ * \param [in] key     An element to be searched for.
+ * \param [in] compar  The comparison function to be used.
+ * \return Returns the index into array for the item found, or -1.
+ */
+ssize_t             sc_array_bsearch_range (sc_array_t * array,
+                                            size_t begin, size_t end,
+                                            const void *key,
+                                            int (*compar) (const void *,
+                                                           const void *));
 
 /** Computes the adler32 checksum of array data.
  * This is a faster checksum than crc32, and it works with zeros as data.
