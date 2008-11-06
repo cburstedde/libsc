@@ -62,7 +62,7 @@ main (int argc, char **argv)
 #else
   count = 3251;
 #endif
-  printf ("Test pqueue with count %d\n", count);
+  SC_INFOF ("Test pqueue with count %d\n", count);
 
   start = -MPI_Wtime ();
 
@@ -85,9 +85,9 @@ main (int argc, char **argv)
     total3 += s;
   }
   SC_CHECK_ABORT (swaps1 == 0 && total1 == 0, "pqueue_add");
-  printf ("   Swaps %lld %lld %lld Total %lld %lld %lld\n",
-          (long long) swaps1, (long long) swaps2, (long long) swaps3,
-          (long long) total1, (long long) total2, (long long) total3);
+  SC_VERBOSEF ("   Swaps %lld %lld %lld Total %lld %lld %lld\n",
+               (long long) swaps1, (long long) swaps2, (long long) swaps3,
+               (long long) total1, (long long) total2, (long long) total3);
 
   temp = 52;
   searched = sc_array_bsearch (a1, &temp, compar);
@@ -115,9 +115,9 @@ main (int argc, char **argv)
     SC_CHECK_ABORT (i3 >= i3last, "pqueue_pop");
     i3last = i3;
   }
-  printf ("   Swaps %lld %lld %lld Total %lld %lld %lld\n",
-          (long long) swaps1, (long long) swaps2, (long long) swaps3,
-          (long long) total1, (long long) total2, (long long) total3);
+  SC_VERBOSEF ("   Swaps %lld %lld %lld Total %lld %lld %lld\n",
+               (long long) swaps1, (long long) swaps2, (long long) swaps3,
+               (long long) total1, (long long) total2, (long long) total3);
 
   elapsed_pqueue = start + MPI_Wtime ();
 
@@ -125,7 +125,7 @@ main (int argc, char **argv)
   sc_array_destroy (a2);
   sc_array_destroy (a3);
 
-  printf ("Test array sort with count %d\n", count);
+  SC_INFOF ("Test array sort with count %d\n", count);
 
   start = -MPI_Wtime ();
 
@@ -145,8 +145,8 @@ main (int argc, char **argv)
   sc_array_resize (a4, 0);
 
   elapsed_qsort = start + MPI_Wtime ();
-  printf ("Test timings pqueue %g qsort %g\n",
-          elapsed_pqueue, 3. * elapsed_qsort);
+  SC_STATISTICSF ("Test timings pqueue %g qsort %g\n",
+                  elapsed_pqueue, 3. * elapsed_qsort);
 
   sc_array_destroy (a4);
   sc_finalize ();
