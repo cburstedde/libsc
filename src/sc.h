@@ -151,10 +151,11 @@
  */
 #define SC_BZERO(p,n) do { memset ((p), 0, (n) * sizeof (*(p))); } while (0)
 
-/* min and max helper macros */
+/* min, max and square helper macros */
 
 #define SC_MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define SC_MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define SC_SQR(a) ((a) * (a))
 
 /* hopefully fast binary logarithms and binary round up */
 
