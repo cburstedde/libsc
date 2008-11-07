@@ -57,7 +57,7 @@ AC_DEFUN([AX_C_VERSION], [
     AS_IF([test "x$ax_pgcc_version_option" != "no"],[
       AC_CACHE_CHECK([pgcc version],[ax_cv_pgcc_version],[
         # The sed part removes all new lines
-        ax_cv_pgcc_version="`$CC -V | sed -e :a -e '$!N; s/\n/ /; ta'`"
+        ax_cv_pgcc_version="`$CC -V 2>/dev/null | sed -e :a -e '$!N; s/\n/ /; ta'`"
         AS_IF([test "x$ax_cv_pgcc_version" = "x"],[
           ax_cv_pgcc_version=""
           ])

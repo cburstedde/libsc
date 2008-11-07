@@ -18,6 +18,36 @@ if test -z "$$1_ARG_NOT_GIVEN_DEFAULT" ; then
 fi
 ])
 
+dnl SC_ARG_OVERRIDE_ENABLE(PREFIX, TOKEN)
+dnl This function checks for the environment variable PREFIX_ENABLE_TOKEN
+dnl and if present uses it to override $enableval.
+dnl Otherwise PREFIX_ENABLE_TOKEN is set to $enableval.
+dnl
+AC_DEFUN([SC_ARG_OVERRIDE_ENABLE],
+[
+if test -z "$$1_ENABLE_$2" ; then
+  $1_ENABLE_$2="$enableval"
+else
+  enableval="$$1_ENABLE_$2"
+  echo "Option override $1_ENABLE_$2=$enableval"
+fi
+])
+
+dnl SC_ARG_OVERRIDE_WITH(PREFIX, TOKEN)
+dnl This function checks for the environment variable PREFIX_WITH_TOKEN
+dnl and if present uses it to override $withval.
+dnl Otherwise PREFIX_WITH_TOKEN is set to $withval.
+dnl
+AC_DEFUN([SC_ARG_OVERRIDE_WITH],
+[
+if test -z "$$1_WITH_$2" ; then
+  $1_WITH_$2="$withval"
+else
+  withval="$$1_WITH_$2"
+  echo "Option override $1_WITH_$2=$withval"
+fi
+])
+
 dnl SC_ARG_ENABLE_PREFIX(NAME, COMMENT, TOKEN, PREFIX, HELPEXTRA)
 dnl Check for --enable/disable-NAME using shell variable PREFIX_ENABLE_TOKEN
 dnl If shell variable is set beforehand it overrides the option
@@ -30,12 +60,7 @@ SC_ARG_NOT_GIVEN([$4], [no])
 AC_ARG_ENABLE([$1],
               [AS_HELP_STRING([--enable-$1$5], [$2])],,
               [enableval="$$4_ARG_NOT_GIVEN_DEFAULT"])
-if test -z "$$4_ENABLE_$3" ; then
-  $4_ENABLE_$3="$enableval"
-else
-  enableval="$$4_ENABLE_$3"
-  echo "Option override $4_ENABLE_$3=$enableval"
-fi
+SC_ARG_OVERRIDE_ENABLE([$4], [$3])
 if test "$enableval" != "no" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
@@ -57,12 +82,7 @@ SC_ARG_NOT_GIVEN([$4], [yes])
 AC_ARG_ENABLE([$1],
               [AS_HELP_STRING([--disable-$1$5], [$2])],,
               [enableval="$$4_ARG_NOT_GIVEN_DEFAULT"])
-if test -z "$$4_ENABLE_$3" ; then
-  $4_ENABLE_$3="$enableval"
-else
-  enableval="$$4_ENABLE_$3"
-  echo "Option override $4_ENABLE_$3=$enableval"
-fi
+SC_ARG_OVERRIDE_ENABLE([$4], [$3])
 if test "$enableval" != "no" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
@@ -84,12 +104,7 @@ SC_ARG_NOT_GIVEN([$4], [no])
 AC_ARG_WITH([$1],
             [AS_HELP_STRING([--with-$1$5], [$2])],,
             [withval="$$4_ARG_NOT_GIVEN_DEFAULT"])
-if test -z "$$4_WITH_$3" ; then
-  $4_WITH_$3="$withval"
-else
-  withval="$$4_WITH_$3"
-  echo "Option override $4_WITH_$3=$withval"
-fi
+SC_ARG_OVERRIDE_WITH([$4], [$3])
 if test "$withval" != "no" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
@@ -111,12 +126,7 @@ SC_ARG_NOT_GIVEN([$4], [yes])
 AC_ARG_WITH([$1],
             [AS_HELP_STRING([--without-$1$5], [$2])],,
             [withval="$$4_ARG_NOT_GIVEN_DEFAULT"])
-if test -z "$$4_WITH_$3" ; then
-  $4_WITH_$3="$withval"
-else
-  withval="$$4_WITH_$3"
-  echo "Option override $4_WITH_$3=$withval"
-fi
+SC_ARG_OVERRIDE_WITH([$4], [$3])
 if test "$withval" != "no" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
@@ -138,12 +148,7 @@ SC_ARG_NOT_GIVEN([$4], [no])
 AC_ARG_WITH([$1],
             [AS_HELP_STRING([--with-$1$5], [$2])],,
             [withval="$$4_ARG_NOT_GIVEN_DEFAULT"])
-if test -z "$$4_WITH_$3" ; then
-  $4_WITH_$3="$withval"
-else
-  withval="$$4_WITH_$3"
-  echo "Option override $4_WITH_$3=$withval"
-fi
+SC_ARG_OVERRIDE_WITH([$4], [$3])
 if test "$withval" = "yes" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
@@ -165,12 +170,7 @@ SC_ARG_NOT_GIVEN([$4], [yes])
 AC_ARG_WITH([$1],
             [AS_HELP_STRING([--without-$1$5], [$2])],,
             [withval="$$4_ARG_NOT_GIVEN_DEFAULT"])
-if test -z "$$4_WITH_$3" ; then
-  $4_WITH_$3="$withval"
-else
-  withval="$$4_WITH_$3"
-  echo "Option override $4_WITH_$3=$withval"
-fi
+SC_ARG_OVERRIDE_WITH([$4], [$3])
 if test "$withval" = "yes" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
