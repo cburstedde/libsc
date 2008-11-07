@@ -67,6 +67,15 @@ elif test "$enableval" != no ; then
   AC_MSG_ERROR([Please use --enable-mpi without an argument])
 fi
 
+SC_ARG_DISABLE([mpiio], [enable MPIIO], [MPIIO])
+if test "$enableval" = yes ; then
+  if test  "$HAVE_PKG_MPI" = yes ; then
+    HAVE_PKG_MPIIO=yes
+  fi
+elif test "$enableval" != no ; then
+  AC_MSG_ERROR([Please use --enable-mpiio without an argument])
+fi
+
 SC_ARG_NOT_GIVEN_DEFAULT="notgiven"
 SC_ARG_WITH([mpicc], [specify MPI C compiler, can be "no"],
             [MPICC], [=MPICC])
@@ -225,6 +234,13 @@ ACX_MPI_CONFIG([$1])
 AC_PROG_CC([$2])
 ACX_MPI_VERIFY
 ACX_MPI_INCLUDES
-ACX_MPI_C_COMPILE_AND_LINK( , [AC_MSG_ERROR([MPI C test failed])])
-ACX_MPIIO_C_COMPILE_AND_LINK([AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])] , )
+
+if test "$HAVE_PKG_MPI" = yes ; then
+  ACX_MPI_C_COMPILE_AND_LINK( , [AC_MSG_ERROR([MPI C test failed])])
+fi
+
+if test "$HAVE_PKG_MPIIO" = yes ; then
+  ACX_MPIIO_C_COMPILE_AND_LINK([AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])] , )
+fi
+
 ])
