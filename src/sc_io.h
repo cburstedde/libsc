@@ -68,6 +68,22 @@ void                sc_fwrite (const void *ptr, size_t size,
 void                sc_fread (void *ptr, size_t size,
                               size_t nmemb, FILE * file, const char *errmsg);
 
+#ifdef SC_MPIIO
+
+/** Write memory content to an MPI file.
+ * \param [in,out] mpifile      MPI file object opened for writing.
+ * \param [in] ptr      Data array to write to disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                This function aborts on MPI file and count errors.
+ */
+void                sc_mpi_write (MPI_File mpifile, const void *ptr,
+                                  size_t zcount, MPI_Datatype t,
+                                  const char *errmsg);
+
+#endif
+
 SC_EXTERN_C_END;
 
 #endif /* SC_IO_H */

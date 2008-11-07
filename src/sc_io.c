@@ -201,4 +201,27 @@ sc_fread (void *ptr, size_t size, size_t nmemb, FILE * file,
   SC_CHECK_ABORT (nread == nmemb, errmsg);
 }
 
+#ifdef SC_MPIIO
+
+void
+sc_mpi_write (MPI_File mpifile, const void *ptr, size_t zcount,
+              MPI_Datatype t, const char *errmsg)
+{
+#ifdef SC_DEBUG
+  int                 icount;
+#endif
+  int                 mpiret;
+  MPI_Status          mpistatus;
+
+  mpiret = MPI_File_write (mpifile, ptr, (int) zcount, t, &mpistatus);
+  SC_CHECK_ABORT (mpiret == MPI_SUCCESS, errmsg);
+
+#ifdef SC_DEBUG
+  MPI_Get_count (&mpistatus, t, &icount);
+  SC_CHECK_ABORT (icount == (int) zcount, errmsg);
+#endif
+}
+
+#endif
+
 /* EOF sc_io.c */
