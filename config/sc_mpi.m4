@@ -115,12 +115,14 @@ dnl Therefore all further checking uses the HAVE_PKG_MPIIO shell variable
 dnl and neither AC_DEFINE nor AM_CONDITIONAL are invoked at this point.
 AC_ARG_ENABLE([mpiio],
               [AS_HELP_STRING([--disable-mpiio], [don't use MPI I/O])],,
-              [enableval="$HAVE_PKG_MPI"])
+              [enableval=yes])
 SC_ARG_OVERRIDE_ENABLE([SC], [MPIIO])
 if test "$enableval" = yes ; then
-  HAVE_PKG_MPIIO=yes
+  if test "$HAVE_PKG_MPI" = yes ; then
+    HAVE_PKG_MPIIO=yes
+  fi
 elif test "$enableval" != no ; then
-  AC_MSG_ERROR([Please use --disable-mpi without an argument])
+  AC_MSG_ERROR([Please use --disable-mpiio without an argument])
 fi
 
 dnl Potentially override the MPI test environment
