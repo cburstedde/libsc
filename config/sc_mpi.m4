@@ -57,25 +57,26 @@ dnl
 AC_DEFUN([ACX_MPI_CONFIG],
 [
 HAVE_PKG_MPI=no
+HAVE_PKG_MPIIO=no
 MPI_CC_NONE=
 MPI_F77_NONE=
 
-SC_ARG_ENABLE([mpi], [enable MPI], [MPI])
+dnl The shell variable SC_ENABLE_MPI is set
+dnl unless it is provided by the environment.
+dnl MPI can also be enabled implicitly later.
+dnl Therefore all further checking uses the HAVE_PKG_MPI shell variable
+dnl and neither AC_DEFINE nor AM_CONDITIONAL are invoked at this point.
+AC_ARG_ENABLE([mpi],
+              [AS_HELP_STRING([--enable-mpi], [enable MPI])],,
+              [enableval=no])
+SC_ARG_OVERRIDE_ENABLE([SC], [MPI])
 if test "$enableval" = yes ; then
   HAVE_PKG_MPI=yes
 elif test "$enableval" != no ; then
   AC_MSG_ERROR([Please use --enable-mpi without an argument])
 fi
 
-SC_ARG_DISABLE([mpiio], [enable MPIIO], [MPIIO])
-if test "$enableval" = yes ; then
-  if test  "$HAVE_PKG_MPI" = yes ; then
-    HAVE_PKG_MPIIO=yes
-  fi
-elif test "$enableval" != no ; then
-  AC_MSG_ERROR([Please use --enable-mpiio without an argument])
-fi
-
+dnl Potentially override the mpi C compiler (and turn on MPI)
 SC_ARG_NOT_GIVEN_DEFAULT="notgiven"
 SC_ARG_WITH([mpicc], [specify MPI C compiler, can be "no"],
             [MPICC], [=MPICC])
@@ -89,6 +90,7 @@ elif test "$withval" != notgiven ; then
   AC_CHECK_PROG([MPI_CC], [$withval], [$withval], [false])
 fi
 
+dnl Potentially override the mpi Fortran compiler (and turn on MPI)
 SC_ARG_NOT_GIVEN_DEFAULT="notgiven"
 SC_ARG_WITH([mpif77], [specify MPI F77 compiler, can be "no"],
             [MPIF77], [=MPIF77])
@@ -102,6 +104,26 @@ elif test "$withval" != notgiven ; then
   AC_CHECK_PROG([MPI_F77], [$withval], [$withval], [false])
 fi
 
+dnl HAVE_PKG_MPI is now determined and will not be changed below
+AC_MSG_CHECKING([whether we are using MPI])
+AC_MSG_RESULT([$HAVE_PKG_MPI])
+
+dnl The shell variable SC_ENABLE_MPIIO is set
+dnl unless it is provided by the environment.
+dnl MPI I/O can be disabled by a compile/link check later.
+dnl Therefore all further checking uses the HAVE_PKG_MPIIO shell variable
+dnl and neither AC_DEFINE nor AM_CONDITIONAL are invoked at this point.
+AC_ARG_ENABLE([mpiio],
+              [AS_HELP_STRING([--disable-mpiio], [don't use MPI I/O])],,
+              [enableval="$HAVE_PKG_MPI"])
+SC_ARG_OVERRIDE_ENABLE([SC], [MPIIO])
+if test "$enableval" = yes ; then
+  HAVE_PKG_MPIIO=yes
+elif test "$enableval" != no ; then
+  AC_MSG_ERROR([Please use --disable-mpi without an argument])
+fi
+
+dnl Potentially override the MPI test environment
 SC_ARG_NOT_GIVEN_DEFAULT="yes"
 SC_ARG_WITH([mpitest], [use DRIVER to run MPI tests (default: mpirun -np 2)],
             [MPI_TESTS], [[[[[=DRIVER]]]]])
@@ -114,9 +136,8 @@ if test "$HAVE_PKG_MPI" = yes ; then
   AC_SUBST([$1_MPI_TESTS_ENVIRONMENT], [$withval])
 fi
 
-AC_MSG_CHECKING([whether we are using MPI])
-AC_MSG_RESULT([$HAVE_PKG_MPI])
-
+dnl Finalize the CC and F77 variables and run a C test program
+dnl Also determine if MPI I/O can be used safely
 if test "$HAVE_PKG_MPI" = yes ; then
   if test -z "$MPI_CC" -a -z "$MPI_CC_NONE" ; then
     MPI_CC=mpicc
@@ -135,12 +156,26 @@ if test "$HAVE_PKG_MPI" = yes ; then
   echo "                             MPI_CC set to $MPI_CC"
   echo "                            MPI_F77 set to $MPI_F77"
 
+  ACX_MPI_C_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI C test failed])])
   AC_DEFINE([MPI], 1, [Define to 1 if we are using MPI])
+
+  if test "$HAVE_PKG_MPIIO" = yes ; then
+    ACX_MPIIO_C_COMPILE_AND_LINK([AC_DEFINE([MPIIO], 1,
+                                   [Define to 1 if we are using MPI I/O])],
+                                 [HAVE_PKG_MPIIO=no])
+
+    dnl HAVE_PKG_MPIIO is now determined and will not be changed below
+    AC_MSG_CHECKING([whether we can use MPI I/O])
+    AC_MSG_RESULT([$HAVE_PKG_MPIIO])
+  fi
 else
   unset MPI_CC
+  unset MPI_F77
 fi
 
+dnl Set automake conditionals and return
 AM_CONDITIONAL([$1_MPI], [test "$HAVE_PKG_MPI" = yes])
+AM_CONDITIONAL([$1_MPIIO], [test "$HAVE_PKG_MPIIO" = yes])
 ])
 
 dnl ACX_MPI_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
@@ -170,22 +205,16 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM(
 [[#include <mpi.h>]], [[
 MPI_File fh;
 MPI_Init ((int *) 0, (char ***) 0);
+MPI_File_open (MPI_COMM_WORLD, "filename",
+               MPI_MODE_WRONLY | MPI_MODE_APPEND,
+               MPI_INFO_NULL, &fh);
+MPI_File_close (&fh);
 MPI_Finalize ();
 ]])],
 [AC_MSG_RESULT([successful])
  $1],
 [AC_MSG_RESULT([failed])
  $2])
-])
-
-dnl ACX_MPI_VERIFY
-dnl Verify MPI configuration (creating C test program)
-dnl
-AC_DEFUN([ACX_MPI_VERIFY],
-[
-if test "$HAVE_PKG_MPI" = yes ; then
-  ACX_MPI_C_COMPILE_AND_LINK( , [AC_MSG_ERROR([MPI C test failed])])
-fi
 ])
 
 dnl ACX_MPI_INCLUDES
@@ -232,15 +261,5 @@ AC_DEFUN([ACX_MPI],
 [
 ACX_MPI_CONFIG([$1])
 AC_PROG_CC([$2])
-ACX_MPI_VERIFY
 ACX_MPI_INCLUDES
-
-if test "$HAVE_PKG_MPI" = yes ; then
-  ACX_MPI_C_COMPILE_AND_LINK( , [AC_MSG_ERROR([MPI C test failed])])
-fi
-
-if test "$HAVE_PKG_MPIIO" = yes ; then
-  ACX_MPIIO_C_COMPILE_AND_LINK([AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])] , )
-fi
-
 ])
