@@ -151,6 +151,24 @@ MPI_Finalize ();
  $2])
 ])
 
+dnl ACX_MPIIO_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI I/O test program
+dnl
+AC_DEFUN([ACX_MPIIO_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for MPI I/O C program])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[#include <mpi.h>]], [[
+MPI_File fh;
+MPI_Init ((int *) 0, (char ***) 0);
+MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $1],
+[AC_MSG_RESULT([failed])
+ $2])
+])
+
 dnl ACX_MPI_VERIFY
 dnl Verify MPI configuration (creating C test program)
 dnl
@@ -207,4 +225,6 @@ ACX_MPI_CONFIG([$1])
 AC_PROG_CC([$2])
 ACX_MPI_VERIFY
 ACX_MPI_INCLUDES
+ACX_MPI_C_COMPILE_AND_LINK( , [AC_MSG_ERROR([MPI C test failed])])
+ACX_MPIIO_C_COMPILE_AND_LINK([AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])] , )
 ])
