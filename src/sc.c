@@ -80,8 +80,6 @@ static long         sc_vp_default_key[2];
 void               *SC_VP_DEFAULT  = (void *) &sc_vp_default_key[0];
 /*@access FILE@*/
 FILE               *SC_FP_KEEP     = (FILE *) &sc_vp_default_key[1];
-FILE               *sc_root_stdout = NULL;
-FILE               *sc_root_stderr = NULL;
 int                 sc_package_id  = -1;
 /* *INDENT-ON* */
 
@@ -597,8 +595,6 @@ sc_init (int identifier,
          sc_log_handler_t log_handler, int log_threshold)
 {
   sc_identifier = identifier;
-  sc_root_stdout = identifier > 0 ? NULL : stdout;
-  sc_root_stderr = identifier > 0 ? NULL : stderr;
 
   sc_set_abort_handler (abort_handler, abort_data);
 
@@ -622,7 +618,6 @@ sc_finalize (void)
   sc_set_abort_handler (NULL, NULL);
 
   sc_identifier = -1;
-  sc_root_stdout = sc_root_stderr = NULL;
 }
 
 /* EOF sc.c */

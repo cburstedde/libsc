@@ -277,8 +277,6 @@ typedef void        (*sc_log_handler_t) (const char *filename, int lineno,
 extern const int    sc_log2_lookup_table[256];
 extern void        *SC_VP_DEFAULT;      /* a unique void pointer value */
 extern FILE        *SC_FP_KEEP; /* a unique FILE pointer value */
-extern FILE        *sc_root_stdout;
-extern FILE        *sc_root_stderr;
 extern int          sc_package_id;
 
 /* memory allocation functions, handle NULL pointers gracefully */
