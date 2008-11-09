@@ -70,10 +70,20 @@ main (int argc, char **argv)
     SC_GLOBAL_INFO ("Option parsing successful\n");
 
     if (rank == 0) {
-      retval = sc_options_save (sc_package_id, SC_LP_INFO, opt,
-                                "output.ini");
+      retval = sc_options_save (sc_package_id, SC_LP_INFO, opt, "output.ini");
       if (retval) {
         SC_GLOBAL_INFO ("Option file output failed\n");
+      }
+      else {
+        retval = sc_options_load_args (sc_package_id, SC_LP_INFO, opt,
+                                       "output.ini");
+        if (retval) {
+          SC_GLOBAL_INFO ("Argument file input failed\n");
+        }
+        else {
+          sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
+          SC_GLOBAL_INFO ("Argument save load successful\n");
+        }
       }
     }
   }

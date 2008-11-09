@@ -23,6 +23,25 @@
 #include <sc_options.h>
 #include <iniparser.h>
 
+static void
+sc_options_free_args (sc_options_t * opt)
+{
+  int                 i;
+
+  if (opt->args_alloced) {
+    SC_ASSERT (opt->first_arg == 0);
+    for (i = 0; i < opt->argc; ++i) {
+      SC_FREE (opt->argv[i]);
+    }
+    SC_FREE (opt->argv);
+  }
+
+  opt->args_alloced = false;
+  opt->first_arg = 0;
+  opt->argc = 0;
+  opt->argv = NULL;
+}
+
 sc_options_t       *
 sc_options_new (const char *program_path)
 {
@@ -33,6 +52,7 @@ sc_options_new (const char *program_path)
   snprintf (opt->program_path, BUFSIZ, "%s", program_path);
   opt->program_name = basename (opt->program_path);
   opt->option_items = sc_array_new (sizeof (sc_option_item_t));
+  opt->args_alloced = false;
   opt->first_arg = -1;
   opt->argc = 0;
   opt->argv = NULL;
@@ -53,7 +73,9 @@ sc_options_destroy (sc_options_t * opt)
     SC_FREE (item->string_value);
   }
 
+  sc_options_free_args (opt);
   sc_array_destroy (opt->option_items);
+
   SC_FREE (opt);
 }
 
@@ -529,7 +551,8 @@ sc_options_save (int package_id, int err_priority,
     retval = fprintf (file, "        %d = %s\n",
                       i - opt->first_arg, opt->argv[i]);
     if (retval < 0) {
-      SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write argument failed\n");
+      SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
+              "Write argument failed\n");
       fclose (file);
       return -1;
     }
@@ -650,6 +673,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   /* free memory, assign results and return */
 
   SC_FREE (longopts);
+  sc_options_free_args (opt);
 
   opt->first_arg = (retval < 0 ? -1 : optind);
   opt->argc = argc;
@@ -661,6 +685,51 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   SC_CHECK_ABORT (0, "The libsc option parser is disabled.\n"
                   "Rerun ./configure without --disable-options.");
 #endif
+}
+
+int
+sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
+                      const char *inifile)
+{
+  int                 i, count;
+  dictionary         *dict;
+  const char         *s;
+  char                key[BUFSIZ];
+
+  dict = iniparser_load (inifile, NULL);
+  if (dict == NULL) {
+    return -1;
+  }
+
+  count = iniparser_getint (dict, "Arguments:count", -1);
+  if (count < 0) {
+    SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
+            "Invalid or missing argument count\n");
+    iniparser_freedict (dict);
+    return -1;
+  }
+
+  sc_options_free_args (opt);
+  opt->args_alloced = true;
+  opt->first_arg = 0;
+  opt->argc = count;
+  opt->argv = SC_ALLOC (char *, count);
+  memset (opt->argv, 0, count * sizeof (char *));
+
+  for (i = 0; i < count; ++i) {
+    snprintf (key, BUFSIZ, "Arguments:%d", i);
+    s = iniparser_getstring (dict, key, NULL);
+    if (s == NULL) {
+      SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
+              "Invalid or missing argument count\n");
+      iniparser_freedict (dict);
+      return -1;
+    }
+    opt->argv[i] = SC_STRDUP (s);
+  }
+
+  iniparser_freedict (dict);
+  return 0;
 }
 
 /* EOF sc_options.c */
