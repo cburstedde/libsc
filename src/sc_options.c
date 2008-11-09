@@ -281,7 +281,8 @@ void
 sc_options_print_summary (int package_id, int log_priority,
                           sc_options_t * opt)
 {
-  int                 i, printed;
+  int                 i;
+  int                 bvalue, printed;
   size_t              iz;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
@@ -303,7 +304,15 @@ sc_options_print_summary (int package_id, int log_priority,
       printed = snprintf (outbuf, BUFSIZ, "   %s: ", item->opt_name);
     }
     switch (item->opt_type) {
-    case SC_OPTION_SWITCH:     /* fall through no break */
+    case SC_OPTION_SWITCH:
+      bvalue = *(int *) item->opt_var;
+      if (bvalue <= 1)
+        printed += snprintf (outbuf + printed, BUFSIZ - printed,
+                             "%s", bvalue ? "true" : "false");
+      else
+        printed += snprintf (outbuf + printed, BUFSIZ - printed,
+                             "%d", bvalue);
+      break;
     case SC_OPTION_INT:
       printed += snprintf (outbuf + printed, BUFSIZ - printed,
                            "%d", *(int *) item->opt_var);
@@ -343,6 +352,7 @@ sc_options_load (int package_id, int err_priority,
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
   dictionary         *dict;
+  int                 bvalue;
   int                *ivalue;
   double             *dvalue;
   const char         *s, *key;
@@ -389,7 +399,17 @@ sc_options_load (int package_id, int err_priority,
 
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
-      *(int *) item->opt_var += iniparser_getboolean (dict, key, 0);
+      bvalue = iniparser_getboolean (dict, key, -1);
+      if (bvalue == -1) {
+        bvalue = iniparser_getint (dict, key, 0);
+        if (bvalue <= 0) {
+          SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                   "Invalid boolean %s in file: %s\n", key, inifile);
+          iniparser_freedict (dict);
+          return -1;
+        }
+      }
+      *(int *) item->opt_var = bvalue;
       break;
     case SC_OPTION_INT:
       ivalue = (int *) item->opt_var;
@@ -412,6 +432,115 @@ sc_options_load (int package_id, int err_priority,
   }
 
   iniparser_freedict (dict);
+  return 0;
+}
+
+int
+sc_options_save (int package_id, int err_priority,
+                 sc_options_t * opt, const char *inifile)
+{
+  int                 retval;
+  int                 i;
+  int                 bvalue;
+  size_t              iz;
+  sc_array_t         *items = opt->option_items;
+  size_t              count = items->elem_count;
+  sc_option_item_t   *item;
+  FILE               *file;
+
+  /* this routine must only be called after successful option parsing */
+  SC_ASSERT (opt->argc >= 0 && opt->first_arg >= 0);
+  SC_ASSERT (opt->first_arg <= opt->argc);
+
+  file = fopen (inifile, "wb");
+  if (file == NULL) {
+    SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "File open failed\n");
+    return -1;
+  }
+
+  retval = fprintf (file, "# written by sc_options_save\n[Options]\n");
+  if (retval < 0) {
+    SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write title 1 failed\n");
+    fclose (file);
+    return -1;
+  }
+
+  for (iz = 0; iz < count; ++iz) {
+    item = sc_array_index (items, iz);
+    if (item->opt_type == SC_OPTION_INIFILE) {
+      continue;
+    }
+    if (item->opt_type == SC_OPTION_STRING && item->string_value == NULL) {
+      continue;
+    }
+
+    retval = 0;
+    if (item->opt_name != NULL) {
+      retval = fprintf (file, "        %s = ", item->opt_name);
+    }
+    else if (item->opt_char != '\0') {
+      retval = fprintf (file, "        -%c = ", item->opt_char);
+    }
+    else {
+      SC_CHECK_NOT_REACHED ();
+    }
+    if (retval < 0) {
+      SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write key failed\n");
+      fclose (file);
+      return -1;
+    }
+
+    retval = 0;
+    switch (item->opt_type) {
+    case SC_OPTION_SWITCH:
+      bvalue = *(int *) item->opt_var;
+      if (bvalue <= 1)
+        retval = fprintf (file, "%s\n", bvalue ? "true" : "false");
+      else
+        retval = fprintf (file, "%d\n", bvalue);
+      break;
+    case SC_OPTION_INT:
+      retval = fprintf (file, "%d\n", *(int *) item->opt_var);
+      break;
+    case SC_OPTION_DOUBLE:
+      retval = fprintf (file, "%.16g\n", *(double *) item->opt_var);
+      break;
+    case SC_OPTION_STRING:
+      retval = fprintf (file, "%s\n", item->string_value);
+      break;
+    default:
+      SC_CHECK_NOT_REACHED ();
+    }
+    if (retval < 0) {
+      SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write value failed\n");
+      fclose (file);
+      return -1;
+    }
+  }
+
+  retval = fprintf (file, "[Arguments]\n        count = %d\n",
+                    opt->argc - opt->first_arg);
+  if (retval < 0) {
+    SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write title 2 failed\n");
+    fclose (file);
+    return -1;
+  }
+  for (i = opt->first_arg; i < opt->argc; ++i) {
+    retval = fprintf (file, "        %d = %s\n",
+                      i - opt->first_arg, opt->argv[i]);
+    if (retval < 0) {
+      SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write argument failed\n");
+      fclose (file);
+      return -1;
+    }
+  }
+
+  retval = fclose (file);
+  if (retval) {
+    SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "File close failed\n");
+    return -1;
+  }
+
   return 0;
 }
 

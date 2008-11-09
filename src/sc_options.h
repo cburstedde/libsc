@@ -163,14 +163,28 @@ void                sc_options_print_summary (int package_id,
                                               sc_options_t * opt);
 
 /**
- * Loads a file in .ini format and updates entries found under [Options].
+ * Load a file in .ini format and updates entries found under [Options].
  * \param [in] package_id       Registered package id or -1.
  * \param [in] err_priority     Error log priority according to sc.h.
  * \param [in] opt              The option structure.
- * \param [in] inifile          Filename if the ini file to load.
+ * \param [in] inifile          Filename of the ini file to load.
  * \return                      Returns 0 on success, -1 on failure.
  */
 int                 sc_options_load (int package_id, int err_priority,
+                                     sc_options_t * opt, const char *inifile);
+
+/**
+ * Save all options and arguments to a file in .ini format.
+ * This function must only be called after successful option parsing.
+ * This function should only be called on rank 0.
+ * This function will log errors with category SC_LC_GLOBAL.
+ * \param [in] package_id       Registered package id or -1.
+ * \param [in] err_priority     Error log priority according to sc.h.
+ * \param [in] opt              The option structure.
+ * \param [in] filename         Filename of the ini file to save.
+ * \return                      Returns 0 on success, -1 on failure.
+ */
+int                 sc_options_save (int package_id, int err_priority,
                                      sc_options_t * opt, const char *inifile);
 
 /**

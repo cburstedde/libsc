@@ -25,7 +25,7 @@
 int
 main (int argc, char **argv)
 {
-  int                 mpiret;
+  int                 mpiret, retval;
   int                 rank;
   int                 first_arg;
   int                 w;
@@ -68,6 +68,14 @@ main (int argc, char **argv)
   else {
     sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
     SC_GLOBAL_INFO ("Option parsing successful\n");
+
+    if (rank == 0) {
+      retval = sc_options_save (sc_package_id, SC_LP_INFO, opt,
+                                "output.ini");
+      if (retval) {
+        SC_GLOBAL_INFO ("Option file output failed\n");
+      }
+    }
   }
 
   sc_options_destroy (opt);
