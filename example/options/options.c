@@ -27,14 +27,12 @@ main (int argc, char **argv)
 {
   int                 mpiret;
   int                 rank;
-#ifdef SC_OPTIONS
   int                 first_arg;
   int                 w;
   int                 i1, i2;
   double              d;
   const char         *s1, *s2;
   sc_options_t       *opt;
-#endif
 
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -44,7 +42,6 @@ main (int argc, char **argv)
 
   sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
 
-#ifdef SC_OPTIONS
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'w', "switch", &w, "Switch");
   sc_options_add_int (opt, 'i', "integer1", &i1, 0, "Integer 1");
@@ -55,33 +52,25 @@ main (int argc, char **argv)
   sc_options_add_int (opt, '\0', "integer2", &i2, 7, "Integer 2");
 
   /* this is just to show off the load function */
-  if (!sc_options_load (opt, "preload.ini", NULL)) {
+  if (!sc_options_load (sc_package_id, SC_LP_INFO, opt, "preload.ini")) {
     SC_GLOBAL_INFO ("Preload successful\n");
   }
   else {
     SC_GLOBAL_INFO ("Preload not found or failed\n");
   }
 
-  first_arg = sc_options_parse (opt, argc, argv, sc_root_stderr);
+  first_arg = sc_options_parse (sc_package_id, SC_LP_INFO, opt, argc, argv);
   if (rank == 0) {
     if (first_arg < 0) {
-      sc_options_print_help (opt, 1, stdout);
+      sc_options_print_usage (sc_package_id, SC_LP_INFO, opt,
+                              "This is arg 1\nand this is arg 2");
     }
     else {
-      sc_options_print_summary (opt, stdout);
-      sc_options_print_arguments (opt, first_arg, argc, argv, stdout);
+      sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
     }
   }
 
   sc_options_destroy (opt);
-
-#else
-
-  SC_GLOBAL_INFO ("The libsc option parser is disabled.\n"
-                  "Rerun ./configure without --disable-options to enable\n"
-                  "this example.\n");
-
-#endif
 
   sc_finalize ();
 

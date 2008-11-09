@@ -23,8 +23,6 @@
 #include <sc_options.h>
 #include <iniparser.h>
 
-#ifdef SC_OPTIONS
-
 sc_options_t       *
 sc_options_new (const char *program_path)
 {
@@ -35,6 +33,9 @@ sc_options_new (const char *program_path)
   snprintf (opt->program_path, BUFSIZ, "%s", program_path);
   opt->program_name = basename (opt->program_path);
   opt->option_items = sc_array_new (sizeof (sc_option_item_t));
+  opt->first_arg = -1;
+  opt->argc = 0;
+  opt->argv = NULL;
 
   return opt;
 }
@@ -193,28 +194,27 @@ sc_options_add_inifile (sc_options_t * opt,
 }
 
 void
-sc_options_print_help (sc_options_t * opt, int include_args, FILE * nout)
+sc_options_print_usage (int package_id, int log_priority,
+                        sc_options_t * opt, const char *arg_usage)
 {
   int                 printed;
   size_t              iz;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
-  const char         *provide_args;
   const char         *provide_short;
   const char         *provide_long;
+  char                outbuf[BUFSIZ];
+  char               *copy, *tok;
 
-  if (nout == NULL)
-    return;
-
-  provide_args = include_args ? " <ARGUMENTS>" : "";
-  if (count == 0) {
-    fprintf (nout, "Usage: %s%s\n", opt->program_name, provide_args);
-    return;
+  SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+           "Usage: %s%s%s\n", opt->program_name,
+           count == 0 ? "" : " <OPTIONS>",
+           arg_usage == NULL ? "" : " <ARGUMENTS>");
+  if (count > 0) {
+    SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Options:\n");
   }
 
-  fprintf (nout, "Usage: %s <OPTIONS>%s\n", opt->program_name, provide_args);
-  fprintf (nout, "   OPTIONS:\n");
   for (iz = 0; iz < count; ++iz) {
     item = sc_array_index (items, iz);
     switch (item->opt_type) {
@@ -241,108 +241,102 @@ sc_options_print_help (sc_options_t * opt, int include_args, FILE * nout)
     default:
       SC_CHECK_NOT_REACHED ();
     }
+    outbuf[0] = '\0';
+    printed = 0;
     if (item->opt_char != '\0' && item->opt_name != NULL) {
-      printed = fprintf (nout, "      -%c%s | --%s%s",
-                         item->opt_char, provide_short,
-                         item->opt_name, provide_long);
+      printed = snprintf (outbuf, BUFSIZ, "   -%c%s | --%s%s",
+                          item->opt_char, provide_short,
+                          item->opt_name, provide_long);
     }
     else if (item->opt_char != '\0') {
-      printed = fprintf (nout, "      -%c%s", item->opt_char, provide_short);
+      printed = snprintf (outbuf, BUFSIZ, "   -%c%s",
+                          item->opt_char, provide_short);
     }
     else if (item->opt_name != NULL) {
-      printed = fprintf (nout, "      --%s%s", item->opt_name, provide_long);
+      printed = snprintf (outbuf, BUFSIZ, "   --%s%s",
+                          item->opt_name, provide_long);
     }
     else {
       SC_CHECK_NOT_REACHED ();
     }
     if (item->help_string != NULL) {
-      fprintf (nout, "%*s%s\n", SC_MAX (1, 48 - printed), "",
-               item->help_string);
+      snprintf (outbuf + printed, BUFSIZ - printed, "%*s%s",
+                SC_MAX (1, 48 - printed), "", item->help_string);
     }
+    SC_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
 
-#if 0
-  if (include_args) {
-    fprintf (nout, "   ARGUMENTS:\n");
+  if (arg_usage != NULL && arg_usage[0] != '\0') {
+    SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
+    copy = SC_STRDUP (arg_usage);
+    for (tok = strtok (copy, "\n\r"); tok != NULL;
+         tok = strtok (NULL, "\n\r")) {
+      SC_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %s\n", tok);
+    }
+    SC_FREE (copy);
   }
-#endif
 }
 
 void
-sc_options_print_summary (sc_options_t * opt, FILE * nout)
+sc_options_print_summary (int package_id, int log_priority,
+                          sc_options_t * opt)
 {
-  int                 printed;
+  int                 i, printed;
   size_t              iz;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
   const char         *string_val;
+  char                outbuf[BUFSIZ];
 
-  if (nout == NULL)
-    return;
+  SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Options:\n");
 
-  if (count == 0) {
-    fprintf (nout, "No command line options specified\n");
-    return;
-  }
-
-  fprintf (nout, "Summary:\n   OPTIONS:\n");
   for (iz = 0; iz < count; ++iz) {
     item = sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE) {
       continue;
     }
     if (item->opt_name == NULL) {
-      printed = fprintf (nout, "      -%c: ", item->opt_char);
+      printed = snprintf (outbuf, BUFSIZ, "   -%c: ", item->opt_char);
     }
     else {
-      printed = fprintf (nout, "      %s: ", item->opt_name);
+      printed = snprintf (outbuf, BUFSIZ, "   %s: ", item->opt_name);
     }
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:     /* fall through no break */
     case SC_OPTION_INT:
-      printed += fprintf (nout, "%d", *(int *) item->opt_var);
+      printed += snprintf (outbuf + printed, BUFSIZ - printed,
+                           "%d", *(int *) item->opt_var);
       break;
     case SC_OPTION_DOUBLE:
-      printed += fprintf (nout, "%g", *(double *) item->opt_var);
+      printed += snprintf (outbuf + printed, BUFSIZ - printed,
+                           "%g", *(double *) item->opt_var);
       break;
     case SC_OPTION_STRING:
       string_val = *(const char **) item->opt_var;
       if (string_val == NULL) {
         string_val = "<unspecified>";
       }
-      printed += fprintf (nout, "%s", string_val);
+      printed += snprintf (outbuf + printed, BUFSIZ - printed,
+                           "%s", string_val);
       break;
     default:
       SC_CHECK_NOT_REACHED ();
     }
-    fprintf (nout, "\n");
-  }
-}
-
-void
-sc_options_print_arguments (sc_options_t * opt,
-                            int first_arg, int argc, char **argv, FILE * nout)
-{
-  int                 i;
-
-  if (nout == NULL) {
-    return;
+    SC_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
 
-  if (first_arg == 0) {
-    fprintf (nout, "   ARGUMENTS: none\n");
-  }
-  else {
-    fprintf (nout, "   ARGUMENTS:\n");
-    for (i = first_arg; i < argc; ++i) {
-      fprintf (nout, "      %d: %s\n", i - first_arg, argv[i]);
-    }
+  SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
+
+  for (i = opt->first_arg; i < opt->argc; ++i) {
+    SC_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %d: %s\n",
+             i - opt->first_arg, opt->argv[i]);
   }
 }
 
 int
-sc_options_load (sc_options_t * opt, const char *inifile, FILE * nerr)
+sc_options_load (int package_id, int err_priority,
+                 sc_options_t * opt, const char *inifile)
 {
   size_t              iz;
   sc_array_t         *items = opt->option_items;
@@ -355,7 +349,7 @@ sc_options_load (sc_options_t * opt, const char *inifile, FILE * nerr)
   char                skey[BUFSIZ], lkey[BUFSIZ];
   int                 found_short, found_long;
 
-  dict = iniparser_load (inifile, nerr);
+  dict = iniparser_load (inifile, NULL);
   if (dict == NULL) {
     return -1;
   }
@@ -378,9 +372,8 @@ sc_options_load (sc_options_t * opt, const char *inifile, FILE * nerr)
       found_long = iniparser_find_entry (dict, lkey);
     }
     if (found_short && found_long) {
-      if (nerr != NULL) {
-        fprintf (nerr, "Duplicates %s %s in file: %s\n", skey, lkey, inifile);
-      }
+      SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+               "Duplicates %s %s in file: %s\n", skey, lkey, inifile);
       iniparser_freedict (dict);
       return -1;
     }
@@ -423,8 +416,10 @@ sc_options_load (sc_options_t * opt, const char *inifile, FILE * nerr)
 }
 
 int
-sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
+sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
+                  int argc, char **argv)
 {
+#ifdef SC_OPTIONS
   int                 retval;
   int                 position, printed;
   int                 c, option_index;
@@ -459,7 +454,7 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
     }
   }
 
-  /* run getopt loop */
+  /* run getopt_long loop */
 
   retval = 0;
   opterr = 0;
@@ -469,9 +464,8 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
       break;
     }
     if (c == '?') {             /* invalid option */
-      if (nerr != NULL) {
-        fprintf (nerr, "Encountered invalid option\n");
-      }
+      SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
+              "Encountered invalid option\n");
       retval = -1;
       break;
     }
@@ -489,9 +483,8 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
         }
       }
       if (iz == count) {
-        if (nerr != NULL) {
-          fprintf (nerr, "Encountered invalid short option: %c\n", c);
-        }
+        SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                 "Encountered invalid short option: %c\n", c);
         retval = -1;
         break;
       }
@@ -514,10 +507,9 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
         SC_STRDUP (optarg);
       break;
     case SC_OPTION_INIFILE:
-      if (sc_options_load (opt, optarg, nerr)) {
-        if (nerr != NULL) {
-          fprintf (nerr, "Error loading file: %s\n", optarg);
-        }
+      if (sc_options_load (package_id, err_priority, opt, optarg)) {
+        SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                 "Error loading file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
       break;
@@ -526,11 +518,20 @@ sc_options_parse (sc_options_t * opt, int argc, char **argv, FILE * nerr)
     }
   }
 
-  /* free memory and return */
-  SC_FREE (longopts);
-  return retval < 0 ? -1 : optind;
-}
+  /* free memory, assign results and return */
 
+  SC_FREE (longopts);
+
+  opt->first_arg = (retval < 0 ? -1 : optind);
+  opt->argc = argc;
+  opt->argv = argv;
+
+  return opt->first_arg;
+
+#else
+  SC_CHECK_ABORT (0, "The libsc option parser is disabled.\n"
+                  "Rerun ./configure without --disable-options.");
 #endif
+}
 
 /* EOF sc_options.c */

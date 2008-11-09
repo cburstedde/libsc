@@ -95,7 +95,10 @@ void                sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars,
                                           sc_statinfo_t * stats);
 
 /**
- * Print measured statistics. Should be called on 1 core only.
+ * Print measured statistics.
+ * This function uses the SC_LC_GLOBAL log category.
+ * That means the default action is to print only on rank 0.
+ * Applications can change that by providing a user-defined log handler.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] log_priority     Log priority for output according to sc.h.
  * \param [in] full             Print full information for every variable.

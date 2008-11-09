@@ -29,8 +29,6 @@
 
 SC_EXTERN_C_BEGIN;
 
-#ifdef SC_OPTIONS
-
 typedef enum
 {
   SC_OPTION_SWITCH,
@@ -58,6 +56,9 @@ typedef struct
   char                program_path[BUFSIZ];
   const char         *program_name;
   sc_array_t         *option_items;
+  int                 first_arg;
+  int                 argc;
+  char              **argv;
 }
 sc_options_t;
 
@@ -130,49 +131,61 @@ void                sc_options_add_inifile (sc_options_t * opt,
 
 /**
  * Print a usage message.
- * \param [in] include_args   Include the string <ARGS> in the message.
- * \param [in] nout           The stream to print to, may be NULL (silent).
+ * This function uses the SC_LC_GLOBAL log category.
+ * That means the default action is to print only on rank 0.
+ * Applications can change that by providing a user-defined log handler.
+ * \param [in] package_id       Registered package id or -1.
+ * \param [in] log_priority     Log priority for output according to sc.h.
+ * \param [in] opt              The option structure.
+ * \param [in] arg_usage        If not NULL, an <ARGUMENTS> string is appended
+ *                              to the usage line.  If the string is non-empty,
+ *                              it will be printed after the option summary
+ *                              and an "ARGUMENTS:\n" title line.  Line breaks
+ *                              are identified by strtok(3) and honored.
  */
-void                sc_options_print_help (sc_options_t * opt,
-                                           int include_args, FILE * nout);
+void                sc_options_print_usage (int package_id, int log_priority,
+                                            sc_options_t * opt,
+                                            const char *arg_usage);
 
 /**
  * Print a summary of all option values.
- * Produces the title "Summary:", the subtitle "OPTIONS:"
- *          and a line for every option.
+ * Prints the title "Options:" and a line for every option,
+ * then the title "Arguments:" and a line for every argument.
+ * This function uses the SC_LC_GLOBAL log category.
+ * That means the default action is to print only on rank 0.
+ * Applications can change that by providing a user-defined log handler.
+ * \param [in] package_id       Registered package id or -1.
+ * \param [in] log_priority     Log priority for output according to sc.h.
+ * \param [in] opt              The option structure.
  */
-void                sc_options_print_summary (sc_options_t * opt,
-                                              FILE * nout);
-
-/**
- * Print a summary of all non-option arguments.
- * Produces the subtitle "ARGUMENTS:" and a line for every argument.
- * \param [in] first_arg   Position of first non-option argument.
- */
-void                sc_options_print_arguments (sc_options_t * opt,
-                                                int first_arg,
-                                                int argc, char **argv,
-                                                FILE * nout);
+void                sc_options_print_summary (int package_id,
+                                              int log_priority,
+                                              sc_options_t * opt);
 
 /**
  * Loads a file in .ini format and updates entries found under [Options].
- * \param [in] nerr       Stream for error output, may be NULL (silent).
- * \return                Returns 0 on success, -1 on failure.
+ * \param [in] package_id       Registered package id or -1.
+ * \param [in] err_priority     Error log priority according to sc.h.
+ * \param [in] opt              The option structure.
+ * \param [in] inifile          Filename if the ini file to load.
+ * \return                      Returns 0 on success, -1 on failure.
  */
-int                 sc_options_load (sc_options_t * opt,
-                                     const char *inifile, FILE * nerr);
+int                 sc_options_load (int package_id, int err_priority,
+                                     sc_options_t * opt, const char *inifile);
 
 /**
  * Parse command line options.
- * \param [in,out] argv   The options may be moved before the non-options.
- * \param [in] nerr       Stream for error output, may be NULL (silent).
- * \return                Returns -1 on an invalid option, otherwise
- *                                the position of the first non-option argument.
+ * \param [in] package_id       Registered package id or -1.
+ * \param [in] err_priority     Error log priority according to sc.h.
+ * \param [in] opt              The option structure.
+ * \param [in] argc             Length of argument list.
+ * \param [in,out] argv         Argument list may be permuted.
+ * \return                      Returns -1 on an invalid option, otherwise
+ *                              the position of the first non-option argument.
  */
-int                 sc_options_parse (sc_options_t * opt,
-                                      int argc, char **argv, FILE * nerr);
-
-#endif /* SC_OPTIONS */
+int                 sc_options_parse (int package_id, int err_priority,
+                                      sc_options_t * opt, int argc,
+                                      char **argv);
 
 SC_EXTERN_C_END;
 
