@@ -6,4 +6,6 @@
 bin_PROGRAMS += example/options/sc_options
 example_options_sc_options_SOURCES = example/options/options.c
 
+EXTRA_DIST += example/options/options.ini
+
 LINT_CSOURCES += $(example_options_sc_options_SOURCES)

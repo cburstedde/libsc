@@ -60,14 +60,14 @@ main (int argc, char **argv)
   }
 
   first_arg = sc_options_parse (sc_package_id, SC_LP_INFO, opt, argc, argv);
-  if (rank == 0) {
-    if (first_arg < 0) {
-      sc_options_print_usage (sc_package_id, SC_LP_INFO, opt,
-                              "This is arg 1\nand this is arg 2");
-    }
-    else {
-      sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
-    }
+  if (first_arg < 0) {
+    sc_options_print_usage (sc_package_id, SC_LP_INFO, opt,
+                            "This is arg 1\nand this is arg 2");
+    SC_GLOBAL_INFO ("Option parsing failed\n");
+  }
+  else {
+    sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
+    SC_GLOBAL_INFO ("Option parsing successful\n");
   }
 
   sc_options_destroy (opt);
