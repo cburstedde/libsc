@@ -568,22 +568,20 @@ sc_package_unregister (int package_id)
 }
 
 void
-sc_package_summary (FILE * stream)
+sc_package_print_summary (int log_priority)
 {
   int                 i;
   sc_package_t       *p;
 
-  if (stream == NULL) {
-    return;
-  }
-
-  fprintf (stream, "Package summary (%d total)\n", sc_num_packages);
+  SC_LOGF (sc_package_id, SC_LC_GLOBAL, log_priority,
+           "Package summary (%d total):\n", sc_num_packages);
 
   /* sc_packages is static and thus initialized to all zeros */
   for (i = 0; i < SC_MAX_PACKAGES; ++i) {
     p = sc_packages + i;
     if (p->is_registered) {
-      fprintf (stream, "   %3d: %-15s +%d-%d   %s\n",
+      SC_LOGF (sc_package_id, SC_LC_GLOBAL, log_priority,
+               "   %3d: %-15s +%d-%d   %s\n",
                i, p->name, p->malloc_count, p->free_count, p->full);
     }
   }

@@ -64,9 +64,9 @@ check_matrix_vector (void)
   }
   sc_dmatrix_multiply (SC_NO_TRANS, SC_TRANS, 8., A, X4, -2., Y3a);
   printf ("0 =\n");
-  sc_dmatrix_print (Y3a, stdout);
+  sc_dmatrix_write (Y3a, stdout);
   printf ("0 =\n");
-  sc_dmatrix_print (Y3b, stdout);
+  sc_dmatrix_write (Y3b, stdout);
 
   sc_dmatrix_vector (SC_TRANS, SC_NO_TRANS, SC_NO_TRANS, 1., A, X3, 0., Y4a);
   sc_dmatrix_vector (SC_TRANS, SC_NO_TRANS, SC_NO_TRANS, 1., A, X3, 2., Y4a);
@@ -76,9 +76,9 @@ check_matrix_vector (void)
   }
   sc_dmatrix_multiply (SC_TRANS, SC_NO_TRANS, 3., A, X3, -1., Y4a);
   printf ("0 =\n");
-  sc_dmatrix_print (Y4a, stdout);
+  sc_dmatrix_write (Y4a, stdout);
   printf ("0 =\n");
-  sc_dmatrix_print (Y4b, stdout);
+  sc_dmatrix_write (Y4b, stdout);
 
   sc_dmatrix_destroy (A);
   sc_dmatrix_destroy (X3);
@@ -106,7 +106,7 @@ check_matrix_multiply ()
   A->e[2][0] = 5;
   A->e[2][1] = 6;
   printf ("A =\n");
-  sc_dmatrix_print (A, stdout);
+  sc_dmatrix_write (A, stdout);
 
   B->e[0][0] = 1;
   B->e[0][1] = 7;
@@ -115,36 +115,36 @@ check_matrix_multiply ()
   B->e[1][1] = 5;
   B->e[1][2] = 4;
   printf ("B =\n");
-  sc_dmatrix_print (B, stdout);
+  sc_dmatrix_write (B, stdout);
 
   alpha = 1.0;
   beta = 0.0;
 
   sc_dmatrix_multiply (SC_NO_TRANS, SC_NO_TRANS, alpha, A, B, beta, C);
   printf ("C =\n");
-  sc_dmatrix_print (C, stdout);
+  sc_dmatrix_write (C, stdout);
 
   D = sc_dmatrix_new (2, 3);
 
   sc_dmatrix_multiply (SC_TRANS, SC_NO_TRANS, alpha, A, C, beta, D);
   printf ("D =\n");
-  sc_dmatrix_print (D, stdout);
+  sc_dmatrix_write (D, stdout);
 
   E = sc_dmatrix_new (2, 2);
 
   sc_dmatrix_multiply (SC_NO_TRANS, SC_TRANS, alpha, D, B, beta, E);
   printf ("E =\n");
-  sc_dmatrix_print (E, stdout);
+  sc_dmatrix_write (E, stdout);
 
   vA = sc_dmatrix_view (3, 2, A->e[0]);
 
   sc_dmatrix_multiply (SC_NO_TRANS, SC_NO_TRANS, alpha, vA, B, beta, C);
   printf ("C =\n");
-  sc_dmatrix_print (C, stdout);
+  sc_dmatrix_write (C, stdout);
 
   sc_dmatrix_reshape (vA, 2, 3);
   printf ("reshape(2, 3, vA) =\n");
-  sc_dmatrix_print (vA, stdout);
+  sc_dmatrix_write (vA, stdout);
 
   sc_dmatrix_destroy (vA);
   sc_dmatrix_destroy (A);

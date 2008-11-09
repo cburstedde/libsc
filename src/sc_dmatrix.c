@@ -388,7 +388,7 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
 }
 
 void
-sc_dmatrix_print (const sc_dmatrix_t * dmatrix, FILE * fp)
+sc_dmatrix_write (const sc_dmatrix_t * dmatrix, FILE * fp)
 {
   sc_bint_t           i, j, m, n;
 

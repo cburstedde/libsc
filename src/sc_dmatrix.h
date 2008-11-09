@@ -135,12 +135,12 @@ void                sc_dmatrix_rdivide (sc_trans_t transb,
                                         const sc_dmatrix_t * B,
                                         sc_dmatrix_t * C);
 
-/** \brief Prints a matrix to \c fp
+/** \brief Writes a matrix to an opened stream.
  *
- *   \param dmatrix Pointer to matrix to print
- *   \param fp      Pointer to file to print to
+ *   \param dmatrix Pointer to matrix to write
+ *   \param fp      Pointer to file to write to
  */
-void                sc_dmatrix_print (const sc_dmatrix_t * dmatrix,
+void                sc_dmatrix_write (const sc_dmatrix_t * dmatrix,
                                       FILE * fp);
 
 /*

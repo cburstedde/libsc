@@ -66,7 +66,6 @@ sc_vtk_write_binary (FILE * vtkfile, char *numeric_data, size_t byte_length)
 
   SC_FREE (base_data);
   if (ferror (vtkfile)) {
-    fprintf (stderr, "sc_vtk: error encoding numeric data\n");
     return -1;
   }
   return 0;
@@ -175,7 +174,6 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
   SC_FREE (comp_data);
   SC_FREE (base_data);
   if (fseek1 != 0 || fseek2 != 0 || ferror (vtkfile)) {
-    fprintf (stderr, "sc_vtk: error compressing numeric data\n");
     return -1;
   }
   return 0;

@@ -340,9 +340,10 @@ bool                sc_package_is_registered (int package_id);
 void                sc_package_unregister (int package_id);
 
 /** Print a summary of all packages registered with SC.
- * \param [in] stream  Stream to print to. If NULL, nothing happens.
+ * Uses the SC_LP_GLOBAL log category which by default only prints on rank 0.
+ * \param [in] log_priority     Priority passed to sc log functions.
  */
-void                sc_package_summary (FILE * stream);
+void                sc_package_print_summary (int log_priority);
 
 /** Sets the global program identifier (e.g. the MPI rank) and abort handler.
  * This function is optional.
