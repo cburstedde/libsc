@@ -36,6 +36,7 @@ typedef enum
   SC_OPTION_DOUBLE,
   SC_OPTION_STRING,
   SC_OPTION_INIFILE,
+  SC_OPTION_CALLBACK
 }
 sc_option_type_t;
 
@@ -48,6 +49,7 @@ typedef struct
   int                 has_arg;
   const char         *help_string;
   char               *string_value;
+  void               *user_data;
 }
 sc_option_item_t;
 
@@ -62,6 +64,14 @@ typedef struct
   char              **argv;
 }
 sc_options_t;
+
+/** This callback can be invoked during sc_options_parse.
+ * \param [in] optarg   The option argument or NULL if there is none.
+ * \param [in] data     User-defined data passed to sc_options_add_callback.
+ * \return              Return 0 if successful, -1 on error.
+ */
+typedef int         (*sc_options_callback_t) (sc_options_t * opt,
+                                              const char *optarg, void *data);
 
 /**
  * Create an empty options structure.
@@ -129,6 +139,20 @@ void                sc_options_add_inifile (sc_options_t * opt,
                                             int opt_char,
                                             const char *opt_name,
                                             const char *help_string);
+
+/**
+ * Add an option that calls a user-defined function.
+ * \param [in] has_arg  Specify if the option needs an option argument.
+ * \param [in] fn       Function to call when this option is encountered.
+ * \param [in] data     User-defined data passed to the callback.
+ */
+void                sc_options_add_callback (sc_options_t * opt,
+                                             int opt_char,
+                                             const char *opt_name,
+                                             int has_arg,
+                                             sc_options_callback_t fn,
+                                             void *data,
+                                             const char *help_string);
 
 /**
  * Print a usage message.

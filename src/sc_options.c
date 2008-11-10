@@ -84,16 +84,12 @@ sc_options_add_switch (sc_options_t * opt, int opt_char,
                        const char *opt_name,
                        int *variable, const char *help_string)
 {
-  size_t              iz;
-  sc_array_t         *items = opt->option_items;
   sc_option_item_t   *item;
 
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  iz = items->elem_count;
-  sc_array_resize (items, iz + 1);
-  item = sc_array_index (items, iz);
+  item = sc_array_push (opt->option_items);
 
   item->opt_type = SC_OPTION_SWITCH;
   item->opt_char = opt_char;
@@ -102,25 +98,21 @@ sc_options_add_switch (sc_options_t * opt, int opt_char,
   item->has_arg = 0;
   item->help_string = help_string;
   item->string_value = NULL;
+  item->user_data = NULL;
 
   *variable = 0;
 }
 
 void
-sc_options_add_int (sc_options_t * opt, int opt_char,
-                    const char *opt_name,
+sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
                     int *variable, int init_value, const char *help_string)
 {
-  size_t              iz;
-  sc_array_t         *items = opt->option_items;
   sc_option_item_t   *item;
 
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  iz = items->elem_count;
-  sc_array_resize (items, iz + 1);
-  item = sc_array_index (items, iz);
+  item = sc_array_push (opt->option_items);
 
   item->opt_type = SC_OPTION_INT;
   item->opt_char = opt_char;
@@ -129,6 +121,7 @@ sc_options_add_int (sc_options_t * opt, int opt_char,
   item->has_arg = 1;
   item->help_string = help_string;
   item->string_value = NULL;
+  item->user_data = NULL;
 
   *variable = init_value;
 }
@@ -139,16 +132,12 @@ sc_options_add_double (sc_options_t * opt, int opt_char,
                        double *variable, double init_value,
                        const char *help_string)
 {
-  size_t              iz;
-  sc_array_t         *items = opt->option_items;
   sc_option_item_t   *item;
 
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  iz = items->elem_count;
-  sc_array_resize (items, iz + 1);
-  item = sc_array_index (items, iz);
+  item = sc_array_push (opt->option_items);
 
   item->opt_type = SC_OPTION_DOUBLE;
   item->opt_char = opt_char;
@@ -157,27 +146,22 @@ sc_options_add_double (sc_options_t * opt, int opt_char,
   item->has_arg = 1;
   item->help_string = help_string;
   item->string_value = NULL;
+  item->user_data = NULL;
 
   *variable = init_value;
 }
 
 void
-sc_options_add_string (sc_options_t * opt,
-                       int opt_char,
-                       const char *opt_name,
-                       const char **variable,
+sc_options_add_string (sc_options_t * opt, int opt_char,
+                       const char *opt_name, const char **variable,
                        const char *init_value, const char *help_string)
 {
-  size_t              iz;
-  sc_array_t         *items = opt->option_items;
   sc_option_item_t   *item;
 
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  iz = items->elem_count;
-  sc_array_resize (items, iz + 1);
-  item = sc_array_index (items, iz);
+  item = sc_array_push (opt->option_items);
 
   item->opt_type = SC_OPTION_STRING;
   item->opt_char = opt_char;
@@ -185,26 +169,22 @@ sc_options_add_string (sc_options_t * opt,
   item->opt_var = variable;
   item->has_arg = 1;
   item->help_string = help_string;
+  item->user_data = NULL;
 
   /* init_value may be NULL */
   *variable = item->string_value = SC_STRDUP (init_value);
 }
 
 void
-sc_options_add_inifile (sc_options_t * opt,
-                        int opt_char,
+sc_options_add_inifile (sc_options_t * opt, int opt_char,
                         const char *opt_name, const char *help_string)
 {
-  size_t              iz;
-  sc_array_t         *items = opt->option_items;
   sc_option_item_t   *item;
 
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  iz = items->elem_count;
-  sc_array_resize (items, iz + 1);
-  item = sc_array_index (items, iz);
+  item = sc_array_push (opt->option_items);
 
   item->opt_type = SC_OPTION_INIFILE;
   item->opt_char = opt_char;
@@ -213,6 +193,30 @@ sc_options_add_inifile (sc_options_t * opt,
   item->has_arg = 1;
   item->help_string = help_string;
   item->string_value = NULL;
+  item->user_data = NULL;
+}
+
+void
+sc_options_add_callback (sc_options_t * opt, int opt_char,
+                         const char *opt_name, int has_arg,
+                         sc_options_callback_t fn, void *data,
+                         const char *help_string)
+{
+  sc_option_item_t   *item;
+
+  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
+  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
+
+  item = sc_array_push (opt->option_items);
+
+  item->opt_type = SC_OPTION_CALLBACK;
+  item->opt_char = opt_char;
+  item->opt_name = opt_name;
+  item->opt_var = fn;
+  item->has_arg = has_arg;
+  item->help_string = help_string;
+  item->string_value = NULL;
+  item->user_data = data;
 }
 
 void
@@ -239,10 +243,10 @@ sc_options_print_usage (int package_id, int log_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = sc_array_index (items, iz);
+    provide_short = "";
+    provide_long = "";
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
-      provide_short = "";
-      provide_long = "";
       break;
     case SC_OPTION_INT:
       provide_short = " <INT>";
@@ -259,6 +263,12 @@ sc_options_print_usage (int package_id, int log_priority,
     case SC_OPTION_INIFILE:
       provide_short = " <INIFILE>";
       provide_long = "=<INIFILE>";
+      break;
+    case SC_OPTION_CALLBACK:
+      if (item->has_arg) {
+        provide_short = " <ARG>";
+        provide_long = "=<ARG>";
+      }
       break;
     default:
       SC_CHECK_NOT_REACHED ();
@@ -316,7 +326,8 @@ sc_options_print_summary (int package_id, int log_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = sc_array_index (items, iz);
-    if (item->opt_type == SC_OPTION_INIFILE) {
+    if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
     if (item->opt_name == NULL) {
@@ -388,7 +399,8 @@ sc_options_load (int package_id, int err_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = sc_array_index (items, iz);
-    if (item->opt_type == SC_OPTION_INIFILE) {
+    if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
 
@@ -489,7 +501,8 @@ sc_options_save (int package_id, int err_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = sc_array_index (items, iz);
-    if (item->opt_type == SC_OPTION_INIFILE) {
+    if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
     if (item->opt_type == SC_OPTION_STRING && item->string_value == NULL) {
@@ -582,6 +595,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   sc_option_item_t   *item;
   char                optstring[BUFSIZ];
   struct option      *longopts, *lo;
+  sc_options_callback_t fn;
 
   /* build getopt string and long option structures */
 
@@ -662,6 +676,14 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       if (sc_options_load (package_id, err_priority, opt, optarg)) {
         SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
                  "Error loading file: %s\n", optarg);
+        retval = -1;            /* this ends option processing */
+      }
+      break;
+    case SC_OPTION_CALLBACK:
+      fn = item->opt_var;
+      if (fn (opt, item->has_arg ? optarg : NULL, item->user_data)) {
+        SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "Error in callback\n");
         retval = -1;            /* this ends option processing */
       }
       break;
