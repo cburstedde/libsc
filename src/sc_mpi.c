@@ -166,10 +166,26 @@ MPI_Allreduce (void *p, void *q, int n, MPI_Datatype t,
 }
 
 int
+MPI_Recv (void *buf, int count, MPI_Datatype datatype, int source, int tag,
+          MPI_Comm comm, MPI_Status * status)
+{
+  SC_CHECK_ABORT (false, "MPI_Recv is not implemented");
+  return MPI_SUCCESS;
+}
+
+int
 MPI_Irecv (void *buf, int count, MPI_Datatype datatype, int source, int tag,
            MPI_Comm comm, MPI_Request * request)
 {
   SC_CHECK_ABORT (false, "MPI_Irecv is not implemented");
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Send (void *buf, int count, MPI_Datatype datatype,
+          int dest, int tag, MPI_Comm comm)
+{
+  SC_CHECK_ABORT (false, "MPI_Send is not implemented");
   return MPI_SUCCESS;
 }
 
@@ -182,10 +198,23 @@ MPI_Isend (void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 }
 
 int
-MPI_Send (void *buf, int count, MPI_Datatype datatype,
-          int dest, int tag, MPI_Comm comm)
+MPI_Probe (int source, int tag, MPI_Comm comm, MPI_Status *status)
 {
-  SC_CHECK_ABORT (false, "MPI_Send is not implemented");
+  SC_CHECK_ABORT (false, "MPI_Probe is not implemented");
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Iprobe (int source, int tag, MPI_Comm comm, int *flag, MPI_Status *status)
+{
+  SC_CHECK_ABORT (false, "MPI_Iprobe is not implemented");
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Get_count (MPI_Status *status, MPI_Datatype datatype, int *count)
+{
+  SC_CHECK_ABORT (false, "MPI_Get_count is not implemented");
   return MPI_SUCCESS;
 }
 

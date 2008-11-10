@@ -34,6 +34,10 @@ SC_EXTERN_C_BEGIN;
 #define MPI_COMM_WORLD          ((MPI_Comm) 0x44000000)
 #define MPI_COMM_SELF           ((MPI_Comm) 0x44000001)
 
+#define MPI_ANY_SOURCE          (-2)
+#define MPI_ANY_TAG             (-1)
+#define MPI_STATUSES_IGNORE     (MPI_Status *) 1
+
 #define MPI_REQUEST_NULL        ((MPI_Request) 0x2c000000)
 
 #define MPI_CHAR                ((MPI_Datatype) 0x4c000101)
@@ -102,16 +106,17 @@ int                 MPI_Allreduce (void *, void *, int, MPI_Datatype,
 
 double              MPI_Wtime (void);
 
-/* This function will abort. */
+/* These functions will abort. */
+int                 MPI_Recv (void*, int, MPI_Datatype, int, int, MPI_Comm,
+                              MPI_Status *);
 int                 MPI_Irecv (void *, int, MPI_Datatype, int, int, MPI_Comm,
                                MPI_Request *);
-
-/* This function will abort. */
+int                 MPI_Send (void *, int, MPI_Datatype, int, int, MPI_Comm);
 int                 MPI_Isend (void *, int, MPI_Datatype, int, int, MPI_Comm,
                                MPI_Request *);
-
-/* This function will abort. */
-int                 MPI_Send (void *, int, MPI_Datatype, int, int, MPI_Comm);
+int                 MPI_Probe (int, int, MPI_Comm, MPI_Status *);
+int                 MPI_Iprobe (int, int, MPI_Comm, int *, MPI_Status *);
+int                 MPI_Get_count (MPI_Status *, MPI_Datatype, int *);
 
 /* This function is only allowed to be called with zero size arrays. */
 int                 MPI_Waitall (int, MPI_Request *, MPI_Status *);
