@@ -116,7 +116,7 @@ compat_symbol (libc, _obstack_compat, _obstack, GLIBC_2_0);
       (*(void (*) (void *)) (h)->freefun) ((old_chunk)); \
   } while (0)
 
-
+
 /* Initialize an obstack H for use.  Specify chunk size SIZE (0 means default).
    Objects start on multiples of ALIGNMENT (0 means use default).
    CHUNKFUN is the function to use to allocate chunks,
@@ -320,7 +320,7 @@ _obstack_allocated_p (struct obstack *h, void *obj)
     }
   return lp != 0;
 }
-
+
 /* Free objects in obstack H, including OBJ and everything allocate
    more recently than OBJ.  If OBJ is zero, free everything in H.  */
 
@@ -362,7 +362,7 @@ obstack_free (struct obstack *h, void *obj)
    called by non-GCC compilers.  */
 strong_alias (obstack_free, _obstack_free)
 # endif
-
+
 int
 _obstack_memory_used (struct obstack *h)
 {
@@ -375,7 +375,7 @@ _obstack_memory_used (struct obstack *h)
     }
   return nbytes;
 }
-
+
 
 # ifdef _LIBC
 #  include <libio/iolibio.h>

@@ -2,7 +2,7 @@
 
 /* obstack.h - object stack macros
    Copyright (C) 1988-1994,1996-1999,2003,2004,2005
-	Free Software Foundation, Inc.
+   Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -113,7 +113,7 @@ Summary:
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+
 /* We need the type of a pointer subtraction.  If __PTRDIFF_TYPE__ is
    defined, as with GNU C, use that; that way we don't pollute the
    namespace with <stddef.h>'s symbols.  Otherwise, include <stddef.h>
@@ -191,7 +191,7 @@ extern int _obstack_memory_used (struct obstack *);
 
 void obstack_free (struct obstack *obstack, void *block);
 
-
+
 /* Error handler called when `obstack_chunk_alloc' failed to allocate
    more memory.  This can be set to a user defined function which
    should either abort gracefully or use longjump - but shouldn't
@@ -248,7 +248,7 @@ extern void (*obstack_alloc_failed_handler) (void);
 #define obstack_blank_fast(h,n) ((h)->next_free += (n))
 
 #define obstack_memory_used(h) _obstack_memory_used (h)
-
+
 #if defined __GNUC__ && defined __STDC__ && __STDC__
 /* NextStep 2.0 cc is really gcc 1.93 but it defines __GNUC__ = 2 and
    does not implement __extension__.  But that compiler doesn't define
@@ -400,7 +400,7 @@ __extension__								\
    if (__obj > (void *)__o->chunk && __obj < (void *)__o->chunk_limit)  \
      __o->next_free = __o->object_base = (char *)__obj;			\
    else (obstack_free) (__o, __obj); })
-
+
 #else /* not __GNUC__ or not __STDC__ */
 
 # define obstack_object_size(h) \
