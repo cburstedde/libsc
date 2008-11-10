@@ -1,0 +1,20 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Improve abort and signal semantics
+desc: |-
+  1. Provide a configure option to disable the print of backtrace.
+  2. Don't catch signals by default, use a special function for that.
+type: :bugfix
+component: libsc
+release: "0.6"
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :unstarted
+disposition: 
+creation_time: 2008-11-10 21:44:59.046839 Z
+references: []
+
+id: 0abee8bb980e793066eac95db0b2c5ac946ce949
+log_events: 
+- - 2008-11-10 21:45:00.406691 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
