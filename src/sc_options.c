@@ -212,7 +212,7 @@ sc_options_add_callback (sc_options_t * opt, int opt_char,
   item->opt_type = SC_OPTION_CALLBACK;
   item->opt_char = opt_char;
   item->opt_name = opt_name;
-  item->opt_var = fn;
+  item->opt_var = (void *) fn;
   item->has_arg = has_arg;
   item->help_string = help_string;
   item->string_value = NULL;
@@ -253,8 +253,8 @@ sc_options_print_usage (int package_id, int log_priority,
       provide_long = "=<INT>";
       break;
     case SC_OPTION_DOUBLE:
-      provide_short = " <DOUBLE>";
-      provide_long = "=<DOUBLE>";
+      provide_short = " <REAL>";
+      provide_long = "=<REAL>";
       break;
     case SC_OPTION_STRING:
       provide_short = " <STRING>";
@@ -293,7 +293,7 @@ sc_options_print_usage (int package_id, int log_priority,
     }
     if (item->help_string != NULL) {
       snprintf (outbuf + printed, BUFSIZ - printed, "%*s%s",
-                SC_MAX (1, 48 - printed), "", item->help_string);
+                SC_MAX (1, 40 - printed), "", item->help_string);
     }
     SC_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
@@ -680,7 +680,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       break;
     case SC_OPTION_CALLBACK:
-      fn = item->opt_var;
+      fn = (sc_options_callback_t) item->opt_var;
       if (fn (opt, item->has_arg ? optarg : NULL, item->user_data)) {
         SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
                 "Error in callback\n");
