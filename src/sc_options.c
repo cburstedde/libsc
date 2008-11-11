@@ -394,6 +394,8 @@ sc_options_load (int package_id, int err_priority,
 
   dict = iniparser_load (inifile, NULL);
   if (dict == NULL) {
+    SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
+            "Could not load or parse inifile\n");
     return -1;
   }
 
@@ -682,8 +684,10 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
     case SC_OPTION_CALLBACK:
       fn = (sc_options_callback_t) item->opt_var;
       if (fn (opt, item->has_arg ? optarg : NULL, item->user_data)) {
+#if 0
         SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
-                "Error in callback\n");
+                "Error in callback option\n");
+#endif
         retval = -1;            /* this ends option processing */
       }
       break;
@@ -720,6 +724,8 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
 
   dict = iniparser_load (inifile, NULL);
   if (dict == NULL) {
+    SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
+            "Could not load or parse inifile\n");
     return -1;
   }
 
