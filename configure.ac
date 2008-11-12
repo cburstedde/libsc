@@ -74,14 +74,17 @@ echo "| Checking BLAS, LAPACK and F77 support"
 echo "o---------------------------------------"
 
 dnl Try a default name mangling scheme without using F77.
-dgemv=dgemv_;dgemm=dgemm_
-dgecon=dgecon_;dpotri=dpotri_
+dgemm=dgemm_;dgecon=dgecon_
 extraf77=no
 
 echo "Checking BLAS without F77 support first"
 ACX_BLAS([$dgemm],
          [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
          [echo "Could not find BLAS without F77 support"])
+for CVAR in `set | awk -F= "/^ac_cv_.*${dgemm}/ { print \\$1 }"` ; do
+  # echo "Unset $CVAR"
+  unset $CVAR
+done
 # at this point $acx_blas_ok is either of: yes no disable
 if test "$acx_blas_ok" = no ; then
 
@@ -92,15 +95,13 @@ dnl Otherwise they are executed even if the test above fails.
 AC_PROG_F77([gfortran g77 fl32 f77 fort77 xlf f90 xlf90])
 AC_F77_WRAPPERS
 AC_F77_LIBRARY_LDFLAGS
-dgemv=;AC_F77_FUNC(dgemv)
-if test "$dgemv" = unknown ; then dgemv=dgemv_ ; fi
+dgemm=;AC_F77_FUNC(dgemm)
+if test "$dgemm" = unknown ; then dgemm=dgemm_ ; fi
 dgecon=;AC_F77_FUNC(dgecon)
 if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
-dpotri=;AC_F77_FUNC(dpotri)
-if test "$dpotri" = unknown ; then dpotri=dpotri_ ; fi
 
 echo "Checking BLAS with proper F77 support"
-ACX_BLAS([$dgemv],
+ACX_BLAS([$dgemm],
          [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
          [AC_MSG_ERROR([[\
 Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
@@ -118,6 +119,10 @@ echo "Checking LAPACK without F77 support first"
 ACX_LAPACK([$dgecon],
            [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
            [echo "Could not find LAPACK without F77 support"])
+for CVAR in `set | awk -F= "/^ac_cv_.*${dgecon}/ { print \\$1 }"` ; do
+  # echo "Unset $CVAR"
+  unset $CVAR
+done
 # at this point $acx_lapack_ok is either of: yes no disable
 if test "$acx_lapack_ok" = no ; then
 
@@ -128,15 +133,15 @@ dnl Otherwise they are executed even if the test above fails.
 AC_PROG_F77([gfortran g77 fl32 f77 fort77 xlf f90 xlf90])
 AC_F77_WRAPPERS
 AC_F77_LIBRARY_LDFLAGS
-dpotri=;AC_F77_FUNC(dpotri)
-if test "$dpotri" = unknown ; then dpotri=dpotri_ ; fi
+dgecon=;AC_F77_FUNC(dgecon)
+if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
 fi
 else acx_lapack_ok=no
 fi
 if test "$acx_lapack_ok" = no ; then
 
 echo "Checking LAPACK with proper F77 support"
-ACX_LAPACK([$dpotri],
+ACX_LAPACK([$dgecon],
            [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
            [AC_MSG_ERROR([[\
 Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
