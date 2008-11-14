@@ -36,6 +36,8 @@ SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
 SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
               [RESIZE_REALLOC])
+SC_ARG_ENABLE([alloc-page], [align memory on page boundaries], [ALLOC_PAGE])
+SC_ARG_ENABLE([alloc-line], [stripe memory with cache lines], [ALLOC_LINE])
 SC_ARG_DISABLE([sc-allgather], [use stock MPI_Allgather], [ALLGATHER])
 SC_ARG_DISABLE([options], [disable the libsc option parser],
               [OPTIONS])
@@ -45,6 +47,11 @@ SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],
                [PROVIDE_OBSTACK])
 SC_ARG_WITHOUT([zlib], [disable builtin zlib code, provide your own],
                [PROVIDE_ZLIB])
+
+if test "$SC_ENABLE_ALLOC_PAGE" != no -a \
+        "$SC_ENABLE_ALLOC_LINE" != no ; then
+  AC_MSG_ERROR([Please enable either alloc-page or alloc-line, not both.])
+fi
 
 # Checks for MPI C compiler and other programs (no F77 at this point!).
 echo "o---------------------------------------"
