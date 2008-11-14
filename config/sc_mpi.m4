@@ -158,26 +158,12 @@ if test "$HAVE_PKG_MPI" = yes ; then
   echo "                             MPI_CC set to $MPI_CC"
   echo "                            MPI_F77 set to $MPI_F77"
 
-  ACX_MPI_C_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI C test failed])])
   AC_DEFINE([MPI], 1, [Define to 1 if we are using MPI])
-
-  if test "$HAVE_PKG_MPIIO" = yes ; then
-    ACX_MPIIO_C_COMPILE_AND_LINK([AC_DEFINE([MPIIO], 1,
-                                   [Define to 1 if we are using MPI I/O])],
-                                 [HAVE_PKG_MPIIO=no])
-
-    dnl HAVE_PKG_MPIIO is now determined and will not be changed below
-    AC_MSG_CHECKING([whether we can use MPI I/O])
-    AC_MSG_RESULT([$HAVE_PKG_MPIIO])
-  fi
 else
   unset MPI_CC
   unset MPI_F77
 fi
-
-dnl Set automake conditionals and return
 AM_CONDITIONAL([$1_MPI], [test "$HAVE_PKG_MPI" = yes])
-AM_CONDITIONAL([$1_MPIIO], [test "$HAVE_PKG_MPIIO" = yes])
 ])
 
 dnl ACX_MPI_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
@@ -263,5 +249,23 @@ AC_DEFUN([ACX_MPI],
 [
 ACX_MPI_CONFIG([$1])
 AC_PROG_CC([$2])
+
+dnl compile and link tests must be done after the PROC_CC line
+if test "$HAVE_PKG_MPI" = yes ; then
+  ACX_MPI_C_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI C test failed])])
+
+  if test "$HAVE_PKG_MPIIO" = yes ; then
+    ACX_MPIIO_C_COMPILE_AND_LINK([AC_DEFINE([MPIIO], 1,
+                                 [Define to 1 if we are using MPI I/O])],
+                                 [HAVE_PKG_MPIIO=no])
+
+    dnl HAVE_PKG_MPIIO is now determined
+    AC_MSG_CHECKING([whether we can use MPI I/O])
+    AC_MSG_RESULT([$HAVE_PKG_MPIIO])
+  fi
+fi
+AM_CONDITIONAL([$1_MPIIO], [test "$HAVE_PKG_MPIIO" = yes])
+
+dnl figure out the MPI include directories
 ACX_MPI_INCLUDES
 ])
