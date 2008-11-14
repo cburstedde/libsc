@@ -681,136 +681,37 @@ sc_init (int identifier,
          sc_handler_t abort_handler, void *abort_data,
          sc_log_handler_t log_handler, int log_threshold)
 {
+  int                 w;
+  const char        **on, **ov;
+  const char         *overrides[] = { SC_OVERRIDES NULL, NULL };
+
   sc_identifier = identifier;
-
   sc_set_abort_handler (abort_handler, abort_data);
-
   sc_package_id = sc_package_register (log_handler, log_threshold,
                                        "libsc", "The SC Library");
 
-  SC_GLOBAL_PRODUCTION ("o----------------------------------\n");
-  SC_GLOBAL_PRODUCTIONF ("| %s\n", SC_PACKAGE_STRING);
-  SC_GLOBAL_PRODUCTION ("o----------------------------------\n");
-  SC_GLOBAL_PRODUCTIONF ("| CC:                 %s\n", SC_CC);
-  SC_GLOBAL_PRODUCTIONF ("| C_VERSION:          %s\n", SC_C_VERSION);
-  SC_GLOBAL_PRODUCTIONF ("| CFLAGS:             %s\n", SC_CFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("| CPP:                %s\n", SC_CPP);
-  SC_GLOBAL_PRODUCTIONF ("| CPPFLAGS:           %s\n", SC_CPPFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("| F77:                %s\n", SC_F77);
-  SC_GLOBAL_PRODUCTIONF ("| FFLAGS:             %s\n", SC_FFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("| LINK:               %s\n", SC_LINK);
-  SC_GLOBAL_PRODUCTIONF ("| LDFLAGS:            %s\n", SC_LDFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("| BLAS_LIBS:          %s\n", SC_BLAS_LIBS);
-  SC_GLOBAL_PRODUCTIONF ("| LAPACK_LIBS:        %s\n", SC_LAPACK_LIBS);
-  SC_GLOBAL_PRODUCTIONF ("| LIBS:               %s\n", SC_LIBS);
-  SC_GLOBAL_PRODUCTIONF ("| FLIBS:              %s\n", SC_FLIBS);
-  SC_GLOBAL_PRODUCTION ("| Defined macros:\n");
-#ifdef SC_ALLGATHER
-  SC_GLOBAL_PRODUCTION ("|                     SC_ALLGATHER\n");
-#endif
-#ifdef SC_ALLOC_LINE
-  SC_GLOBAL_PRODUCTION ("|                     SC_ALLOC_LINE\n");
-#endif
-#ifdef SC_ALLOC_PAGE
-  SC_GLOBAL_PRODUCTION ("|                     SC_ALLOC_PAGE\n");
-#endif
-#ifdef SC_BLAS
-  SC_GLOBAL_PRODUCTION ("|                     SC_BLAS\n");
-#endif
-#ifdef SC_HAVE_BACKTRACE
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_BACKTRACE\n");
-#endif
-#ifdef SC_HAVE_BACKTRACE_SYMBOLS
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_BACKTRACE_SYMBOLS\n");
-#endif
-#ifdef SC_HAVE_EXECINFO_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_EXECINFO_H\n");
-#endif
-#ifdef SC_HAVE_INTTYPES_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_INTTYPES_H\n");
-#endif
-#ifdef SC_HAVE_LIBM
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_LIBM\n");
-#endif
-#ifdef SC_HAVE_LIBZ
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_LIBZ\n");
-#endif
-#ifdef SC_HAVE_MEMORY_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_MEMORY_H\n");
-#endif
-#ifdef SC_HAVE_SIGNAL_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_SIGNAL_H\n");
-#endif
-#ifdef SC_HAVE_STDINT_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_STDINT_H\n");
-#endif
-#ifdef SC_HAVE_STDLIB_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_STDLIB_H\n");
-#endif
-#ifdef SC_HAVE_STRINGS_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_STRINGS_H\n");
-#endif
-#ifdef SC_HAVE_STRING_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_STRING_H\n");
-#endif
-#ifdef SC_HAVE_SYS_STAT_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_SYS_STAT_H\n");
-#endif
-#ifdef SC_HAVE_SYS_TIME_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_SYS_TIME_H\n");
-#endif
-#ifdef SC_HAVE_SYS_TYPES_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_SYS_TYPES_H\n");
-#endif
-#ifdef SC_HAVE_TGAMMA
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_TGAMMA\n");
-#endif
-#ifdef SC_HAVE_TIME_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_TIME_H\n");
-#endif
-#ifdef SC_HAVE_TRUNC
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_TRUNC\n");
-#endif
-#ifdef SC_HAVE_UNISTD_H
-  SC_GLOBAL_PRODUCTION ("|                     SC_HAVE_UNISTD_H\n");
-#endif
-#ifdef SC_LAPACK
-  SC_GLOBAL_PRODUCTION ("|                     SC_LAPACK\n");
-#endif
-#ifdef LOG_PRIORITY
-  SC_GLOBAL_PRODUCTION ("|                     SC_LOG_PRIORITY\n");
-#endif
-#ifdef SC_MPI
-  SC_GLOBAL_PRODUCTION ("|                     SC_MPI\n");
-#endif
-#ifdef SC_MPIIO
-  SC_GLOBAL_PRODUCTION ("|                     SC_MPIIO\n");
-#endif
-#ifdef SC_MPI_TESTS
-  SC_GLOBAL_PRODUCTION ("|                     SC_MPI_TESTS\n");
-#endif
-#ifdef SC_OPTIONS
-  SC_GLOBAL_PRODUCTION ("|                     SC_OPTIONS\n");
-#endif
-#ifdef SC_PAPI
-  SC_GLOBAL_PRODUCTION ("|                     SC_PAPI\n");
-#endif
-#ifdef SC_PROVIDE_GETOPT
-  SC_GLOBAL_PRODUCTION ("|                     SC_PROVIDE_GETOPT\n");
-#endif
-#ifdef SC_PROVIDE_OBSTACK
-  SC_GLOBAL_PRODUCTION ("|                     SC_PROVIDE_OBSTACK\n");
-#endif
-#ifdef SC_PROVIDE_ZLIB
-  SC_GLOBAL_PRODUCTION ("|                     SC_PROVIDE_ZLIB\n");
-#endif
-#ifdef SC_STDC_HEADERS
-  SC_GLOBAL_PRODUCTION ("|                     SC_STDC_HEADERS\n");
-#endif
-#ifdef WORDS_BIGENDIAN
-  SC_GLOBAL_PRODUCTION ("|                     WORDS_BIGENDIAN\n");
-#endif
-  SC_GLOBAL_PRODUCTION ("o----------------------------------\n");
+  w = 24;
+  SC_GLOBAL_PRODUCTIONF ("%s\n", SC_PACKAGE_STRING);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CC", SC_CC);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "C_VERSION", SC_C_VERSION);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CFLAGS", SC_CFLAGS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPP", SC_CPP);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPPFLAGS", SC_CPPFLAGS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "F77", SC_F77);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FFLAGS", SC_FFLAGS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LINK", SC_LINK);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LDFLAGS", SC_LDFLAGS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "BLAS_LIBS", SC_BLAS_LIBS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LAPACK_LIBS", SC_LAPACK_LIBS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LIBS", SC_LIBS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FLIBS", SC_FLIBS);
+
+  w = 32;
+  for (on = overrides; *on != NULL; on = ov + 1) {
+    ov = on + 1;
+    SC_CHECK_ABORT (*ov != NULL, "SC_OVERRIDES should contain pairs");
+    SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, *on, *ov);
+  }
 }
 
 void

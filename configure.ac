@@ -176,7 +176,9 @@ echo "| Checking functions"
 echo "o---------------------------------------"
 
 if test "$SC_WITH_PROVIDE_GETOPT" = "no" ; then
-  AC_CHECK_FUNC([getopt_long], ,AC_DEFINE([PROVIDE_GETOPT], 1, [Define to 1 if getopt is provided by sc]))
+  AC_CHECK_FUNC([getopt_long],,
+                [AC_DEFINE([PROVIDE_GETOPT], 1,
+                           [Define to 1 if getopt is provided by sc])])
 fi
 if test "$SC_WITH_PROVIDE_OBSTACK" = "no" ; then
   SC_REQUIRE_FUNCS([obstack_free])
@@ -196,21 +198,19 @@ AC_C_INLINE
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 
-AX_C_VERSION
-
-AC_DEFINE_UNQUOTED(CC,         "${CC}",          [C compiler])
-AC_DEFINE_UNQUOTED(C_VERSION,  "${C_VERSION}",   [C compiler version])
-AC_DEFINE_UNQUOTED(CFLAGS,     "${CFLAGS}",      [C compiler flags])
-AC_DEFINE_UNQUOTED(CPP,        "${CPP}",         [C preprocessor])
-AC_DEFINE_UNQUOTED(CPPFLAGS,   "${CPPFLAGS}",    [C preprocessor flags])
-AC_DEFINE_UNQUOTED(F77,        "${F77}",         [F77 compiler])
-AC_DEFINE_UNQUOTED(FFLAGS,     "${FFLAGS}",      [F77 compiler flags])
-AC_DEFINE_UNQUOTED(LINK,       "${LINK}",        [Linker])
-AC_DEFINE_UNQUOTED(LDFLAGS,    "${LDFLAGS}",     [Linker flags])
-AC_DEFINE_UNQUOTED(BLAS_LIBS,  "${BLAS_LIBS}",   [BLAS libs])
-AC_DEFINE_UNQUOTED(LAPACK_LIBS,"${LAPACK_LIBS}", [LAPACK libs])
-AC_DEFINE_UNQUOTED(LIBS,       "${LIBS}",        [Libs])
-AC_DEFINE_UNQUOTED(FLIBS,      "${FLIBS}",       [Fortran libs])
+AC_DEFINE_UNQUOTED(CC,          ["${CC}"],          [C compiler])
+AC_DEFINE_UNQUOTED(C_VERSION,   ["${C_VERSION}"],   [C compiler version])
+AC_DEFINE_UNQUOTED(CFLAGS,      ["${CFLAGS}"],      [C compiler flags])
+AC_DEFINE_UNQUOTED(CPP,         ["${CPP}"],         [C preprocessor])
+AC_DEFINE_UNQUOTED(CPPFLAGS,    ["${CPPFLAGS}"],    [C preprocessor flags])
+AC_DEFINE_UNQUOTED(F77,         ["${F77}"],         [F77 compiler])
+AC_DEFINE_UNQUOTED(FFLAGS,      ["${FFLAGS}"],      [F77 compiler flags])
+AC_DEFINE_UNQUOTED(LINK,        ["${LINK}"],        [Linker])
+AC_DEFINE_UNQUOTED(LDFLAGS,     ["${LDFLAGS}"],     [Linker flags])
+AC_DEFINE_UNQUOTED(BLAS_LIBS,   ["${BLAS_LIBS}"],   [BLAS libraries])
+AC_DEFINE_UNQUOTED(LAPACK_LIBS, ["${LAPACK_LIBS}"], [LAPACK libraries])
+AC_DEFINE_UNQUOTED(LIBS,        ["${LIBS}"],        [Libraries])
+AC_DEFINE_UNQUOTED(FLIBS,       ["${FLIBS}"],       [Fortran libraries])
 
 echo "o----------------------------------"
 echo "| Results are"
