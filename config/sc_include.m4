@@ -30,7 +30,8 @@ if test -z "$$1_ENABLE_$2" ; then
 else
   enableval="$$1_ENABLE_$2"
   echo "Option override $1_ENABLE_$2=$enableval"
-  echo "export $1_ENABLE_$2=\"$enableval\"" >> $1.override.pre
+  echo "export $1_ENABLE_$2=\"$enableval\"" \
+    | sed 's/\$/\\$/g' >> $1.override.pre
 fi
 $1_OVERRIDES="$$1_OVERRIDES \"$1_ENABLE_$2\", \"$$1_ENABLE_$2\","
 ])
@@ -47,7 +48,8 @@ if test -z "$$1_WITH_$2" ; then
 else
   withval="$$1_WITH_$2"
   echo "Option override $1_WITH_$2=$withval"
-  echo "export $1_WITH_$2=\"$withval\"" >> $1.override.pre
+  echo "export $1_WITH_$2=\"$withval\"" \
+    | sed 's/\$/\\$/g' >> $1.override.pre
 fi
 $1_OVERRIDES="$$1_OVERRIDES \"$1_WITH_$2\", \"$$1_WITH_$2\","
 ])
@@ -58,7 +60,8 @@ AC_DEFUN([SC_ARG_OVERRIDE_VAR],
 [
 if test -n "$$1_$2" ; then
   echo "Variable override $1_$2=$$1_$2"
-  echo "export $1_$2=\"$$1_$2\"" >> $1.override.pre
+  echo "export $1_$2=\"$$1_$2\"" \
+    | sed 's/\$/\\$/g'>> $1.override.pre
 fi
 $1_OVERRIDES="$$1_OVERRIDES \"$1_$2\", \"$$1_$2\","
 ])
