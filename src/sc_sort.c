@@ -22,6 +22,50 @@
 #include <sc.h>
 #include <sc_sort.h>
 
+typedef struct sc_psort
+{
+  MPI_Comm            mpicomm;
+  int                 num_procs, rank;
+  size_t              size;
+  size_t              my_lo, my_hi, total;
+  size_t             *gmemb;
+  char               *my_base;
+}
+sc_psort_t;
+
+/* qsort is not reentrant, so we do the inverse static */
+static int          (*sc_compare) (const void *, const void *);
+static int
+sc_icompare (const void *v1, const void *v2)
+{
+  return sc_compare (v2, v1);
+}
+
+static void
+sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
+{
+}
+
+static void
+sc_psort_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
+{
+  const size_t        n = hi - lo;
+
+  if (n > 1) {
+    if (lo >= pst->my_lo && hi <= pst->my_hi) {
+      qsort (pst->my_base + (lo - pst->my_lo) * pst->size,
+             n, pst->size, dir ? sc_compare : sc_icompare);
+    }
+    else {
+      const size_t        n2 = n / 2;
+
+      sc_psort_bitonic (pst, lo, lo + n2, !dir);
+      sc_psort_bitonic (pst, lo + n2, hi, dir);
+      sc_merge_bitonic (pst, lo, hi, dir);
+    }
+  }
+}
+
 /** Sort a distributed set of values in parallel.
  * This algorithm uses bitonic sort between processors and qsort locally.
  * The partition of the data can be arbitrary and is not changed.
@@ -36,13 +80,78 @@ sc_psort (MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
           int (*compar) (const void *, const void *))
 {
   int                 mpiret;
-  int                 rank, num_procs;
+  int                 num_procs, rank;
+  int                 i;
+  size_t             *gmemb;
+  sc_psort_t          pst;
+
+  SC_ASSERT (sc_compare == NULL);
 
   /* get basic MPI information */
-  mpiret = MPI_Comm_rank (mpicomm, &rank);
-  SC_CHECK_MPI (mpiret);
   mpiret = MPI_Comm_size (mpicomm, &num_procs);
   SC_CHECK_MPI (mpiret);
+  mpiret = MPI_Comm_rank (mpicomm, &rank);
+  SC_CHECK_MPI (mpiret);
+
+  /* alloc global offset array */
+  gmemb = SC_ALLOC (size_t, num_procs + 1);
+  gmemb[0] = 0;
+  for (i = 0; i < num_procs; ++i) {
+    gmemb[i + 1] = gmemb[i] + nmemb[i];
+  }
+
+  /* set up internal state and call recursion */
+  pst.mpicomm = mpicomm;
+  pst.num_procs = num_procs;
+  pst.rank = rank;
+  pst.size = size;
+  pst.my_lo = gmemb[rank];
+  pst.my_hi = gmemb[rank + 1];
+  pst.total = gmemb[num_procs];
+  pst.gmemb = gmemb;
+  pst.my_base = (char *) base;
+  sc_compare = compar;
+  SC_GLOBAL_LDEBUGF ("Total values to sort %lld\n", (long long) pst.total);
+  sc_psort_bitonic (&pst, 0, pst.total, true);
+
+  /* clean up and free memory */
+  sc_compare = NULL;
+  SC_FREE (gmemb);
 }
+
+/*
+    private void bitonicMerge(int lo, int n, boolean dir)
+    {
+        if (n>1)
+        {
+            int m=greatestPowerOfTwoLessThan(n);
+            for (int i=lo; i<lo+n-m; i++)
+                compare(i, i+m, dir);
+            bitonicMerge(lo, m, dir);
+            bitonicMerge(lo+m, n-m, dir);
+        }
+    }
+
+    private void compare(int i, int j, boolean dir)
+    {
+        if (dir==(a[i]>a[j]))
+            exchange(i, j);
+    }
+
+    private void exchange(int i, int j)
+    {
+        int t=a[i];
+        a[i]=a[j];
+        a[j]=t;
+    }
+
+    private int greatestPowerOfTwoLessThan(int n)
+    {
+        int k=1;
+        while (k<n)
+            k=k<<1;
+        return k>>1;
+    }
+*/
 
 /* EOF sc_sort.c */

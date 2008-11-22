@@ -54,6 +54,12 @@
   files from libgfortran, Copyright (C) 2004 Free Software Foundation, Inc.
 */
 
+/*
+  Thanks to Rahul Sampath for mentioning the bitonic sort algorithm and to
+  www.inf.fh-flensburg.de/lang/algorithmen/sortieren/bitonic/bitonicen.htm
+  for a nice description of the serial special case for arbitrary n.
+*/
+
 Contact:
 
 Carsten Burstedde <carsten@ices.utexas.edu>

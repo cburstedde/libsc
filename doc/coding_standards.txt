@@ -7,8 +7,8 @@ tries to adhere to.
    the main directory.  It calls GNU indent with some extra options.
    This does not apply for included third party code.
 
- * All bool parameters will not be checked with (a==true) or (a==false).  One
-   should follow the standard C convention where (a) is used to test true
+ * All bool parameters will not be checked with (a==true) or (a==false).  We
+   follow the standard C convention where (a) is used to test true
    and (!a) is used to test false.
 
  * Variable names that are not self-descriptive
@@ -20,7 +20,7 @@ tries to adhere to.
    We will have to wait until all compilers and some lint checkers
    understand printf ("%jd %ju", (intmax_t) i, (uintmax_t) u) since that
    is a nice way to accomodate 128bit integers without changing the printf
-   code.  In the mean time, we're using printf ("%lld %llu", (long long)
-   i, (unsigned long long) j) which is unsafe for 128 bit integers.
+   code.  In the mean time, we're using printf ("%lld %lld", (long long)
+   i, (long long) u) which loses 128bit integers and the high bit of uint64_t.
    This also holds for size_t since support for the following is still
    incomplete: printf ("%zd %zu", ssize_t_var, size_t_var).
