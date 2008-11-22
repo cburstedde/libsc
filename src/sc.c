@@ -412,7 +412,7 @@ sc_int16_compare (const void *v1, const void *v2)
   const int16_t       i1 = *(int16_t *) v1;
   const int16_t       i2 = *(int16_t *) v2;
 
-  return (i1 == i2) ? 0 : ((i1 < i2) ? -1 : +1);
+  return i1 == i2 ? 0 : i1 < i2 ? -1 : +1;
 }
 
 int
@@ -421,7 +421,7 @@ sc_int32_compare (const void *v1, const void *v2)
   const int32_t       i1 = *(int32_t *) v1;
   const int32_t       i2 = *(int32_t *) v2;
 
-  return (i1 == i2) ? 0 : ((i1 < i2) ? -1 : +1);
+  return i1 == i2 ? 0 : i1 < i2 ? -1 : +1;
 }
 
 int
@@ -430,7 +430,16 @@ sc_int64_compare (const void *v1, const void *v2)
   const int64_t       i1 = *(int64_t *) v1;
   const int64_t       i2 = *(int64_t *) v2;
 
-  return (i1 == i2) ? 0 : ((i1 < i2) ? -1 : +1);
+  return i1 == i2 ? 0 : i1 < i2 ? -1 : +1;
+}
+
+int
+sc_double_compare (const void *v1, const void *v2)
+{
+  const double        d1 = *(double *) v1;
+  const double        d2 = *(double *) v2;
+
+  return d1 < d2 ? -1 : d1 > d2 ? 1 : 0;
 }
 
 void

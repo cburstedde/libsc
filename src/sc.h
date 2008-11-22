@@ -294,6 +294,7 @@ int                 sc_int_compare (const void *v1, const void *v2);
 int                 sc_int16_compare (const void *v1, const void *v2);
 int                 sc_int32_compare (const void *v1, const void *v2);
 int                 sc_int64_compare (const void *v1, const void *v2);
+int                 sc_double_compare (const void *v1, const void *v2);
 
 /** Controls the default SC log behavior.
  * \param [in] log_handler   Set default SC log handler (NULL selects builtin).
