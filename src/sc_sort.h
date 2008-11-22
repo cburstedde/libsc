@@ -27,6 +27,10 @@
 
 SC_EXTERN_C_BEGIN;
 
+void                sc_psort (MPI_Comm mpicomm, void *base,
+                              size_t * nmemb, size_t size,
+                              int (*compar) (const void *, const void *));
+
 SC_EXTERN_C_END;
 
 #endif /* SC_SORT_H */
