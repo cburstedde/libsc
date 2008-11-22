@@ -44,6 +44,30 @@ sc_icompare (const void *v1, const void *v2)
 static void
 sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
 {
+  const size_t        n = hi - lo;
+
+  if (n > 1 && pst->my_hi > lo && pst->my_lo < hi) {
+    size_t              k, n2;
+    size_t              lo_end, hi_beg;
+
+    for (k = 1; k < n;) {
+      k = k << 1;
+    }
+    n2 = k >> 1;
+    SC_ASSERT (n2 >= n / 2 && n2 < n);
+
+    lo_end = lo + n - n2;
+    hi_beg = lo + n2;
+    SC_ASSERT (lo_end <= hi_beg && lo_end - lo == hi - hi_beg);
+
+    /*
+       for (int i=lo; i<lo+n-n2; i++)
+       compare(i, i+n2, dir);
+     */
+
+    sc_merge_bitonic (pst, lo, lo + n2, dir);
+    sc_merge_bitonic (pst, lo + n2, hi, dir);
+  }
 }
 
 static void
@@ -51,7 +75,7 @@ sc_psort_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
 {
   const size_t        n = hi - lo;
 
-  if (n > 1) {
+  if (n > 1 && pst->my_hi > lo && pst->my_lo < hi) {
     if (lo >= pst->my_lo && hi <= pst->my_hi) {
       qsort (pst->my_base + (lo - pst->my_lo) * pst->size,
              n, pst->size, dir ? sc_compare : sc_icompare);
@@ -120,18 +144,6 @@ sc_psort (MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
 }
 
 /*
-    private void bitonicMerge(int lo, int n, boolean dir)
-    {
-        if (n>1)
-        {
-            int m=greatestPowerOfTwoLessThan(n);
-            for (int i=lo; i<lo+n-m; i++)
-                compare(i, i+m, dir);
-            bitonicMerge(lo, m, dir);
-            bitonicMerge(lo+m, n-m, dir);
-        }
-    }
-
     private void compare(int i, int j, boolean dir)
     {
         if (dir==(a[i]>a[j]))
@@ -143,14 +155,6 @@ sc_psort (MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
         int t=a[i];
         a[i]=a[j];
         a[j]=t;
-    }
-
-    private int greatestPowerOfTwoLessThan(int n)
-    {
-        int k=1;
-        while (k<n)
-            k=k<<1;
-        return k>>1;
     }
 */
 
