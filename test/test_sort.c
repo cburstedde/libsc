@@ -36,10 +36,10 @@ main (int argc, char **argv)
   int                 i, isizet;
   int                 k, printed;
   int                *recvc, *displ;
+  bool                timing;
   size_t              zz;
   size_t              lcount, gtotal;
   size_t             *nmemb;
-  double              factor;
   double             *ldata, *gdata;
   MPI_Comm            mpicomm;
   char                buffer[BUFSIZ];
@@ -52,16 +52,19 @@ main (int argc, char **argv)
   mpiret = MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
 
-  srand ((unsigned) rank << 15);
   sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
 
-  factor = 16.;
   if (argc >= 2) {
-    factor = atof (argv[1]);
+    timing = true;
+    lcount = (size_t) strtol (argv[1], NULL, 0);
+  }
+  else {
+    timing = false;
+    srand ((unsigned) rank << 15);
+    lcount = 8 + (size_t) (16. * rand () / (RAND_MAX + 1.0));
   }
 
   /* create partition information */
-  lcount = 8 + (size_t) (factor * rand () / (RAND_MAX + 1.0));
   SC_INFOF ("Local values %d\n", (int) lcount);
   nmemb = SC_ALLOC (size_t, num_procs);
   isizet = (int) sizeof (size_t);
@@ -77,38 +80,43 @@ main (int argc, char **argv)
   sc_psort (mpicomm, ldata, nmemb, sizeof (double), sc_double_compare);
 
   /* output result */
-  sleep ((unsigned) rank);
-  for (zz = 0; zz < lcount;) {
-    printed = 0;
-    for (k = 0; zz < lcount && k < 8; ++zz, ++k) {
-      printed += snprintf (buffer + printed, BUFSIZ - printed,
-                           "%8.3g", ldata[zz]);
+  if (!timing) {
+    sleep ((unsigned) rank);
+    for (zz = 0; zz < lcount;) {
+      printed = 0;
+      for (k = 0; zz < lcount && k < 8; ++zz, ++k) {
+        printed += snprintf (buffer + printed, BUFSIZ - printed,
+                             "%8.3g", ldata[zz]);
+      }
+      SC_STATISTICSF ("%s\n", buffer);
     }
-    SC_STATISTICSF ("%s\n", buffer);
   }
 
   /* verify result */
-  gtotal = 0;
-  recvc = NULL;
-  displ = NULL;
-  gdata = NULL;
-  if (rank == 0) {
-    recvc = SC_ALLOC (int, num_procs);
-    displ = SC_ALLOC (int, num_procs + 1);
-    displ[0] = 0;
-    for (i = 0; i < num_procs; ++i) {
-      recvc[i] = (int) nmemb[i];
-      displ[i + 1] = displ[i] + recvc[i];
+  if (!timing || lcount < 1000) {
+    SC_GLOBAL_PRODUCTION ("Verifying\n");
+    gtotal = 0;
+    recvc = NULL;
+    displ = NULL;
+    gdata = NULL;
+    if (rank == 0) {
+      recvc = SC_ALLOC (int, num_procs);
+      displ = SC_ALLOC (int, num_procs + 1);
+      displ[0] = 0;
+      for (i = 0; i < num_procs; ++i) {
+        recvc[i] = (int) nmemb[i];
+        displ[i + 1] = displ[i] + recvc[i];
+      }
+      gtotal = (size_t) displ[num_procs];
+      gdata = SC_ALLOC (double, gtotal);
     }
-    gtotal = (size_t) displ[num_procs];
-    gdata = SC_ALLOC (double, gtotal);
-  }
-  mpiret = MPI_Gatherv (ldata, (int) lcount, MPI_DOUBLE,
-                        gdata, recvc, displ, MPI_DOUBLE, 0, mpicomm);
-  SC_CHECK_MPI (mpiret);
-  if (rank == 0) {
-    for (zz = 0; zz < gtotal - 1; ++zz) {
-      SC_CHECK_ABORT (gdata[zz] <= gdata[zz + 1], "Parallel sort failed");
+    mpiret = MPI_Gatherv (ldata, (int) lcount, MPI_DOUBLE,
+                          gdata, recvc, displ, MPI_DOUBLE, 0, mpicomm);
+    SC_CHECK_MPI (mpiret);
+    if (rank == 0) {
+      for (zz = 0; zz < gtotal - 1; ++zz) {
+        SC_CHECK_ABORT (gdata[zz] <= gdata[zz + 1], "Parallel sort failed");
+      }
     }
   }
 
