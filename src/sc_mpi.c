@@ -198,23 +198,33 @@ MPI_Isend (void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 }
 
 int
-MPI_Probe (int source, int tag, MPI_Comm comm, MPI_Status *status)
+MPI_Probe (int source, int tag, MPI_Comm comm, MPI_Status * status)
 {
   SC_CHECK_ABORT (false, "MPI_Probe is not implemented");
   return MPI_SUCCESS;
 }
 
 int
-MPI_Iprobe (int source, int tag, MPI_Comm comm, int *flag, MPI_Status *status)
+MPI_Iprobe (int source, int tag, MPI_Comm comm, int *flag,
+            MPI_Status * status)
 {
   SC_CHECK_ABORT (false, "MPI_Iprobe is not implemented");
   return MPI_SUCCESS;
 }
 
 int
-MPI_Get_count (MPI_Status *status, MPI_Datatype datatype, int *count)
+MPI_Get_count (MPI_Status * status, MPI_Datatype datatype, int *count)
 {
   SC_CHECK_ABORT (false, "MPI_Get_count is not implemented");
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Waitsome (int incount, MPI_Request * array_of_requests,
+              int *outcount, int *array_of_indices,
+              MPI_Status * array_of_statuses)
+{
+  SC_CHECK_ABORT (incount == 0, "MPI_Waitsome handles zero requests only");
   return MPI_SUCCESS;
 }
 
@@ -222,7 +232,7 @@ int
 MPI_Waitall (int count, MPI_Request * array_of_requests,
              MPI_Status * array_of_statuses)
 {
-  SC_CHECK_ABORT (count == 0, "MPI_Waitall handles only zero requests");
+  SC_CHECK_ABORT (count == 0, "MPI_Waitall handles zero requests only");
   return MPI_SUCCESS;
 }
 

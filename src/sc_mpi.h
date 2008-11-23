@@ -69,6 +69,8 @@ SC_EXTERN_C_BEGIN;
 #define MPI_MAXLOC              ((MPI_Op) 0x5800000c)
 #define MPI_REPLACE             ((MPI_Op) 0x5800000d)
 
+#define MPI_UNDEFINED           (-32766)
+
 typedef int         MPI_Comm;
 typedef int         MPI_Datatype;
 typedef int         MPI_Op;
@@ -107,7 +109,7 @@ int                 MPI_Allreduce (void *, void *, int, MPI_Datatype,
 double              MPI_Wtime (void);
 
 /* These functions will abort. */
-int                 MPI_Recv (void*, int, MPI_Datatype, int, int, MPI_Comm,
+int                 MPI_Recv (void *, int, MPI_Datatype, int, int, MPI_Comm,
                               MPI_Status *);
 int                 MPI_Irecv (void *, int, MPI_Datatype, int, int, MPI_Comm,
                                MPI_Request *);
@@ -118,7 +120,9 @@ int                 MPI_Probe (int, int, MPI_Comm, MPI_Status *);
 int                 MPI_Iprobe (int, int, MPI_Comm, int *, MPI_Status *);
 int                 MPI_Get_count (MPI_Status *, MPI_Datatype, int *);
 
-/* This function is only allowed to be called with zero size arrays. */
+/* These functions are only allowed to be called with zero size arrays. */
+int                 MPI_Waitsome (int, MPI_Request *,
+                                  int *, int *, MPI_Status *);
 int                 MPI_Waitall (int, MPI_Request *, MPI_Status *);
 
 #endif /* !SC_MPI */
