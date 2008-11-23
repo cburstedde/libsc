@@ -123,10 +123,40 @@ MPI_Gather (void *p, int np, MPI_Datatype tp,
 }
 
 int
+MPI_Gatherv (void *p, int np, MPI_Datatype tp,
+             void *q, int *recvc, int *displ,
+             MPI_Datatype tq, int rank, MPI_Comm comm)
+{
+  int                 nq;
+  size_t              lp, lq;
+
+  nq = recvc[0];
+  SC_ASSERT (rank == 0 && np >= 0 && nq >= 0);
+
+/* *INDENT-OFF* horrible indent bug */
+  lp = (size_t) np * sc_mpi_sizeof (tp);
+  lq = (size_t) nq * sc_mpi_sizeof (tq);
+/* *INDENT-ON* */
+
+  SC_ASSERT (lp == lq);
+  memcpy ((char *) q + displ[0] * sc_mpi_sizeof (tq), p, lp);
+
+  return MPI_SUCCESS;
+}
+
+int
 MPI_Allgather (void *p, int np, MPI_Datatype tp,
                void *q, int nq, MPI_Datatype tq, MPI_Comm comm)
 {
   return sc_allgather (p, np, tp, q, nq, tq, comm);
+}
+
+int
+MPI_Allgatherv (void *p, int np, MPI_Datatype tp,
+                void *q, int *recvc, int *displ,
+                MPI_Datatype tq, MPI_Comm comm)
+{
+  return MPI_Gatherv (p, np, tp, q, recvc, displ, tq, 0, comm);
 }
 
 int

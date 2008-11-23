@@ -27,6 +27,17 @@
 
 SC_EXTERN_C_BEGIN;
 
+typedef enum
+{
+  SC_TAG_AG_ALLTOALL = 's' + 'c',       /* anything really */
+  SC_TAG_AG_RECURSIVE_A,
+  SC_TAG_AG_RECURSIVE_B,
+  SC_TAG_AG_RECURSIVE_C,
+  SC_TAG_PSORT_LO,
+  SC_TAG_PSORT_HI
+}
+sc_tag_t;
+
 #ifndef SC_MPI
 
 #define MPI_SUCCESS 0
@@ -99,8 +110,12 @@ int                 MPI_Barrier (MPI_Comm);
 int                 MPI_Bcast (void *, int, MPI_Datatype, int, MPI_Comm);
 int                 MPI_Gather (void *, int, MPI_Datatype,
                                 void *, int, MPI_Datatype, int, MPI_Comm);
+int                 MPI_Gatherv (void *, int, MPI_Datatype, void *,
+                                 int *, int *, MPI_Datatype, int, MPI_Comm);
 int                 MPI_Allgather (void *, int, MPI_Datatype,
                                    void *, int, MPI_Datatype, MPI_Comm);
+int                 MPI_Allgatherv (void *, int, MPI_Datatype, void *,
+                                    int *, int *, MPI_Datatype, MPI_Comm);
 int                 MPI_Reduce (void *, void *, int, MPI_Datatype,
                                 MPI_Op, int, MPI_Comm);
 int                 MPI_Allreduce (void *, void *, int, MPI_Datatype,
