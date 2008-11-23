@@ -27,6 +27,15 @@
 
 SC_EXTERN_C_BEGIN;
 
+/** Sort a distributed set of values in parallel.
+ * This algorithm uses bitonic sort between processors and qsort locally.
+ * The partition of the data can be arbitrary and is not changed.
+ * \param [in] mpicomm          Communicator to use.
+ * \param [in] base             Pointer to the local subset of data.
+ * \param [in] nmemb            Array of mpisize counts of local data.
+ * \param [in] size             Size in bytes of each data value.
+ * \param [in] compar           Comparison function to use.
+ */
 void                sc_psort (MPI_Comm mpicomm, void *base,
                               size_t * nmemb, size_t size,
                               int (*compar) (const void *, const void *));
