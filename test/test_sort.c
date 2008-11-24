@@ -118,11 +118,12 @@ main (int argc, char **argv)
         SC_CHECK_ABORT (gdata[zz] <= gdata[zz + 1], "Parallel sort failed");
       }
     }
+    SC_FREE (gdata);
+    SC_FREE (displ);
+    SC_FREE (recvc);
   }
 
-  SC_FREE (gdata);
-  SC_FREE (displ);
-  SC_FREE (recvc);
+  /* clean up and exit */
   SC_FREE (ldata);
   SC_FREE (nmemb);
 
