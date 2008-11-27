@@ -1,0 +1,20 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Fix parallel sort.
+desc: |-
+  The bitonic sort algorithm has a problem.  It fails randomly
+  which can be reproduced with mpirun -np 3 test/sc_test_sortb.
+type: :bugfix
+component: libsc
+release: "0.6"
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :unstarted
+disposition: 
+creation_time: 2008-11-29 21:35:03.611981 Z
+references: []
+
+id: 2b229897e97d73ad3313b39f5043221e399996f1
+log_events: 
+- - 2008-11-29 21:35:04.235840 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
