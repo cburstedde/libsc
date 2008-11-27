@@ -38,7 +38,7 @@ typedef struct sc_psort
   MPI_Comm            mpicomm;
   int                 num_procs, rank;
   size_t              size;
-  size_t              my_lo, my_hi;
+  size_t              my_lo, my_hi, my_count;
   size_t             *gmemb;
   char               *my_base;
 }
@@ -161,6 +161,9 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
         mpiret = MPI_Irecv (peer->buffer, bytes, MPI_BYTE,
                             peer->prank, SC_TAG_PSORT_HI, pst->mpicomm, rreq);
         SC_CHECK_MPI (mpiret);
+
+        SC_ASSERT (lo_data >= pst->my_base);
+        SC_ASSERT (lo_data + bytes <= pst->my_base + pst->my_count * size);
         mpiret = MPI_Isend (lo_data, bytes, MPI_BYTE,
                             peer->prank, SC_TAG_PSORT_LO, pst->mpicomm, sreq);
         SC_CHECK_MPI (mpiret);
@@ -181,9 +184,13 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
         peer->length = max_length;
         peer->buffer = SC_ALLOC (char, bytes);
         peer->my_start = hi_data;
+
         mpiret = MPI_Irecv (peer->buffer, bytes, MPI_BYTE,
                             peer->prank, SC_TAG_PSORT_LO, pst->mpicomm, rreq);
         SC_CHECK_MPI (mpiret);
+
+        SC_ASSERT (hi_data >= pst->my_base);
+        SC_ASSERT (hi_data + bytes <= pst->my_base + pst->my_count * size);
         mpiret = MPI_Isend (hi_data, bytes, MPI_BYTE,
                             peer->prank, SC_TAG_PSORT_HI, pst->mpicomm, sreq);
         SC_CHECK_MPI (mpiret);
@@ -354,6 +361,8 @@ sc_psort (MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
   pst.size = size;
   pst.my_lo = gmemb[rank];
   pst.my_hi = gmemb[rank + 1];
+  pst.my_count = nmemb[rank];
+  SC_ASSERT (pst.my_lo + pst.my_count == pst.my_hi);
   pst.gmemb = gmemb;
   pst.my_base = (char *) base;
   sc_compare = compar;
