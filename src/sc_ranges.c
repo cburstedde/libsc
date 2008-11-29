@@ -191,16 +191,10 @@ sc_ranges_adaptive (int package_id,
   int                 nwin, maxwin, twomaxwin;
 
   /* get processor related information */
-  if (mpicomm == MPI_COMM_NULL) {
-    num_procs = 1;
-    rank = 0;
-  }
-  else {
-    mpiret = MPI_Comm_size (mpicomm, &num_procs);
-    SC_CHECK_MPI (mpiret);
-    mpiret = MPI_Comm_rank (mpicomm, &rank);
-    SC_CHECK_MPI (mpiret);
-  }
+  mpiret = MPI_Comm_size (mpicomm, &num_procs);
+  SC_CHECK_MPI (mpiret);
+  mpiret = MPI_Comm_rank (mpicomm, &rank);
+  SC_CHECK_MPI (mpiret);
   first_peer = *inout1;
   last_peer = *inout2;
 
@@ -214,13 +208,8 @@ sc_ranges_adaptive (int package_id,
                        first_peer, last_peer, num_ranges, ranges);
 
   /* communicate the maximum number of peers and ranges */
-  memcpy (global, local, 2 * sizeof (int));
-#ifdef SC_MPI
-  if (mpicomm != MPI_COMM_NULL) {
-    mpiret = MPI_Allreduce (local, global, 2, MPI_INT, MPI_MAX, mpicomm);
-    SC_CHECK_MPI (mpiret);
-  }
-#endif
+  mpiret = MPI_Allreduce (local, global, 2, MPI_INT, MPI_MAX, mpicomm);
+  SC_CHECK_MPI (mpiret);
   *inout1 = global[0];
   *inout2 = maxwin = global[1];
   twomaxwin = 2 * maxwin;
@@ -229,14 +218,9 @@ sc_ranges_adaptive (int package_id,
   /* distribute everybody's range information */
   if (global_ranges != NULL) {
     *global_ranges = SC_ALLOC (int, twomaxwin * num_procs);
-    memcpy (*global_ranges, ranges, twomaxwin * sizeof (int));
-#ifdef SC_MPI
-    if (mpicomm != MPI_COMM_NULL) {
-      mpiret = MPI_Allgather (ranges, twomaxwin, MPI_INT,
-                              *global_ranges, twomaxwin, MPI_INT, mpicomm);
-      SC_CHECK_MPI (mpiret);
-    }
-#endif
+    mpiret = MPI_Allgather (ranges, twomaxwin, MPI_INT,
+                            *global_ranges, twomaxwin, MPI_INT, mpicomm);
+    SC_CHECK_MPI (mpiret);
   }
 
   return nwin;

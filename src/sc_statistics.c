@@ -95,13 +95,8 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   MPI_Datatype        ctype;
 #endif
 
-  if (mpicomm == MPI_COMM_NULL) {
-    rank = 0;
-  }
-  else {
-    mpiret = MPI_Comm_rank (mpicomm, &rank);
-    SC_CHECK_MPI (mpiret);
-  }
+  mpiret = MPI_Comm_rank (mpicomm, &rank);
+  SC_CHECK_MPI (mpiret);
 
   flat = SC_ALLOC (double, 2 * 7 * nvars);
   flatin = flat;
@@ -121,27 +116,26 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     flatin[7 * i + 6] = (double) rank;  /* rank that attains maximum */
   }
 
+#ifndef SC_MPI
   memcpy (flatout, flatin, 7 * nvars * sizeof (*flatout));
-#ifdef SC_MPI
-  if (mpicomm != MPI_COMM_NULL) {
-    mpiret = MPI_Type_contiguous (7, MPI_DOUBLE, &ctype);
-    SC_CHECK_MPI (mpiret);
+#else
+  mpiret = MPI_Type_contiguous (7, MPI_DOUBLE, &ctype);
+  SC_CHECK_MPI (mpiret);
 
-    mpiret = MPI_Type_commit (&ctype);
-    SC_CHECK_MPI (mpiret);
+  mpiret = MPI_Type_commit (&ctype);
+  SC_CHECK_MPI (mpiret);
 
-    mpiret = MPI_Op_create (sc_statinfo_mpifunc, 1, &op);
-    SC_CHECK_MPI (mpiret);
+  mpiret = MPI_Op_create (sc_statinfo_mpifunc, 1, &op);
+  SC_CHECK_MPI (mpiret);
 
-    mpiret = MPI_Allreduce (flatin, flatout, nvars, ctype, op, mpicomm);
-    SC_CHECK_MPI (mpiret);
+  mpiret = MPI_Allreduce (flatin, flatout, nvars, ctype, op, mpicomm);
+  SC_CHECK_MPI (mpiret);
 
-    mpiret = MPI_Op_free (&op);
-    SC_CHECK_MPI (mpiret);
+  mpiret = MPI_Op_free (&op);
+  SC_CHECK_MPI (mpiret);
 
-    mpiret = MPI_Type_free (&ctype);
-    SC_CHECK_MPI (mpiret);
-  }
+  mpiret = MPI_Type_free (&ctype);
+  SC_CHECK_MPI (mpiret);
 #endif /* SC_MPI */
 
   for (i = 0; i < nvars; ++i) {
