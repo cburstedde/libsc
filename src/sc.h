@@ -139,7 +139,8 @@
 /* macros for memory allocation, will abort if out of memory */
 
 #define SC_ALLOC(t,n)         (t *) sc_malloc (sc_package_id, (n) * sizeof(t))
-#define SC_ALLOC_ZERO(t,n)    (t *) sc_calloc (sc_package_id, (n), sizeof(t))
+#define SC_ALLOC_ZERO(t,n)    (t *) sc_calloc (sc_package_id, \
+                                               (size_t) (n), sizeof(t))
 #define SC_REALLOC(p,t,n)     (t *) sc_realloc (sc_package_id,          \
                                              (p), (n) * sizeof(t))
 #define SC_STRDUP(s)                sc_strdup (sc_package_id, (s))
