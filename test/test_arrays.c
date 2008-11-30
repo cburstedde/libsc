@@ -42,6 +42,7 @@ main (int argc, char **argv)
     *pe = (i + N / 2) * (N - i);        /* can create duplicates */
   }
   sc_array_sort (a, sc_int_compare);
+  SC_CHECK_ABORT (sc_array_is_sorted (a, sc_int_compare), "Sort failed");
   for (i = 0; i < N; ++i) {
     s = (i + N / 2) * (N - i);
     result = sc_array_bsearch (a, &s, sc_int_compare);

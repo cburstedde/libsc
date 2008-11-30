@@ -120,11 +120,20 @@ void                sc_array_reset (sc_array_t * array);
 void                sc_array_resize (sc_array_t * array, size_t new_count);
 
 /** Sorts the array in ascending order wrt. the comparison function.
- * \param [in] compar The comparison function to be used.
+ * \param [in] array    The array to sort.
+ * \param [in] compar   The comparison function to be used.
  */
 void                sc_array_sort (sc_array_t * array,
                                    int (*compar) (const void *,
                                                   const void *));
+
+/** Check whether the array is sorted wrt. the comparison function.
+ * \param [in] array    The array to check.
+ * \param [in] compar   The comparison function to be used.
+ */
+bool                sc_array_is_sorted (sc_array_t * array,
+                                        int (*compar) (const void *,
+                                                       const void *));
 
 /** Removed duplicate entries from a sorted array.
  * \param [in,out] array  The array size will be reduced as necessary.

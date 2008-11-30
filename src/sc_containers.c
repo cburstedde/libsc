@@ -170,6 +170,30 @@ sc_array_sort (sc_array_t * array, int (*compar) (const void *, const void *))
   qsort (array->array, array->elem_count, array->elem_size, compar);
 }
 
+bool
+sc_array_is_sorted (sc_array_t * array,
+                    int (*compar) (const void *, const void *))
+{
+  const size_t        count = array->elem_count;
+  size_t              zz;
+  void               *vold, *vnew;
+
+  if (count <= 1) {
+    return true;
+  }
+
+  vold = sc_array_index (array, 0);
+  for (zz = 1; zz < count; ++zz) {
+    vnew = sc_array_index (array, zz);
+    if (compar (vold, vnew) > 0) {
+      return false;
+    }
+    vold = vnew;
+  }
+
+  return true;
+}
+
 void
 sc_array_uniq (sc_array_t * array, int (*compar) (const void *, const void *))
 {
