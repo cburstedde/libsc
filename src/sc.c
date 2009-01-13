@@ -57,10 +57,10 @@ sc_package_t;
 
 #ifdef SC_ALLOC_ALIGN
 static const size_t sc_page_bytes = 4096;
-static const size_t sc_line_bytes = 64;
-static const size_t sc_line_count = 4096 / 64;
 #endif
 #ifdef SC_ALLOC_LINE
+static const size_t sc_line_bytes = 64;
+static const size_t sc_line_count = 4096 / 64;
 static size_t       sc_line_no = 0;
 #endif
 
