@@ -36,10 +36,40 @@ sc_array_new (size_t elem_size)
   return array;
 }
 
+sc_array_t         *
+sc_array_new_view (sc_array_t * array, size_t offset, size_t length)
+{
+  sc_array_t         *view;
+
+  SC_ASSERT (offset + length <= array->elem_count);
+
+  view = sc_array_new (array->elem_size);
+  view->elem_count = length;
+  view->byte_alloc = -1;
+  view->array = array->array + array->elem_size * offset;
+
+  return view;
+}
+
+sc_array_t         *
+sc_array_new_data (void *base, size_t elem_size, size_t elem_count)
+{
+  sc_array_t         *view;
+
+  view = sc_array_new (elem_size);
+  view->elem_count = elem_count;
+  view->byte_alloc = -1;
+  view->array = base;
+
+  return view;
+}
+
 void
 sc_array_destroy (sc_array_t * array)
 {
-  SC_FREE (array->array);
+  if (SC_ARRAY_IS_OWNER (array)) {
+    SC_FREE (array->array);
+  }
   SC_FREE (array);
 }
 
@@ -57,7 +87,9 @@ sc_array_init (sc_array_t * array, size_t elem_size)
 void
 sc_array_reset (sc_array_t * array)
 {
-  SC_FREE (array->array);
+  if (SC_ARRAY_IS_OWNER (array)) {
+    SC_FREE (array->array);
+  }
   array->array = NULL;
 
   array->elem_count = 0;
@@ -76,6 +108,8 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   size_t              i, minoffs;
 #endif
 
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+
 #ifdef SC_DEBUG
   oldoffs = array->elem_count * array->elem_size;
 #endif
@@ -84,8 +118,9 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   roundup = SC_ROUNDUP2_32 (newoffs);
   SC_ASSERT (roundup >= newoffs && roundup <= 2 * newoffs);
 
-  if (newoffs > array->byte_alloc || roundup < array->byte_alloc) {
-    array->byte_alloc = roundup;
+  if (newoffs > (size_t) array->byte_alloc ||
+      roundup < (size_t) array->byte_alloc) {
+    array->byte_alloc = (ssize_t) roundup;
   }
   else {
 #ifdef SC_DEBUG
@@ -98,9 +133,9 @@ sc_array_resize (sc_array_t * array, size_t new_count)
 #endif
     return;
   }
-  SC_ASSERT (array->byte_alloc >= newoffs);
+  SC_ASSERT ((size_t) array->byte_alloc >= newoffs);
 
-  newsize = array->byte_alloc;
+  newsize = (size_t) array->byte_alloc;
   ptr = SC_REALLOC (array->array, char, newsize);
 
   array->array = ptr;
@@ -123,6 +158,8 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   size_t              i;
 #endif
 
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+
   if (new_count == 0) {
     sc_array_reset (array);
     return;
@@ -134,8 +171,8 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   roundup = (size_t) SC_ROUNDUP2_64 (newoffs);
   SC_ASSERT (roundup >= newoffs && roundup <= 2 * newoffs);
 
-  if (newoffs > array->byte_alloc) {
-    array->byte_alloc = roundup;
+  if (newoffs > (size_t) array->byte_alloc) {
+    array->byte_alloc = (ssize_t) roundup;
   }
   else {
 #ifdef SC_DEBUG
@@ -148,10 +185,10 @@ sc_array_resize (sc_array_t * array, size_t new_count)
 #endif
     return;
   }
-  SC_ASSERT (array->byte_alloc >= newoffs);
+  SC_ASSERT ((size_t) array->byte_alloc >= newoffs);
   SC_ASSERT (newoffs > oldoffs);
 
-  newsize = array->byte_alloc;
+  newsize = (size_t) array->byte_alloc;
   ptr = SC_ALLOC (char, newsize);
   memcpy (ptr, array->array, oldoffs);
   SC_FREE (array->array);
@@ -200,6 +237,8 @@ sc_array_uniq (sc_array_t * array, int (*compar) (const void *, const void *))
   size_t              incount, dupcount;
   size_t              i, j;
   void               *elem1, *elem2, *temp;
+
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
 
   incount = array->elem_count;
   if (incount == 0) {
@@ -301,7 +340,8 @@ sc_array_pqueue_add (sc_array_t * array, void *temp,
   const size_t        size = array->elem_size;
   void               *p, *c;
 
-  /* this works on a pre-allocated array */
+  /* this works on a pre-allocated array that is not a view */
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
   SC_ASSERT (array->elem_count > 0);
 
   swaps = 0;
@@ -342,7 +382,8 @@ sc_array_pqueue_pop (sc_array_t * array, void *result,
   void               *p, *c, *c1;
   void               *temp;
 
-  /* array must not be empty */
+  /* array must not be empty or a view */
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
   SC_ASSERT (array->elem_count > 0);
 
   swaps = 0;

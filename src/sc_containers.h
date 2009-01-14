@@ -85,16 +85,35 @@ typedef struct sc_array
   size_t              elem_count;       /* number of valid elements */
 
   /* implementation variables */
-  size_t              byte_alloc;       /* number of allocated bytes */
+  ssize_t             byte_alloc;       /* number of allocated bytes
+                                           or -1 if this is a view */
   char               *array;    /* linear array to store elements */
 }
 sc_array_t;
 
+#define SC_ARRAY_IS_OWNER(a) ((a)->byte_alloc >= 0)
+
 /** Creates a new array structure with 0 elements.
- * \param [in] elem_size  Size of one array element in bytes.
+ * \param [in] elem_size    Size of one array element in bytes.
  * \return Returns an allocated and initialized array.
  */
 sc_array_t         *sc_array_new (size_t elem_size);
+
+/** Creates a new view of an existing sc_array_t.
+ * \param [in] array    The array must not be resized while view is alive.
+ * \param [in] offset   The offset of the viewed section in element units.
+ * \param [in] length   The length of the viewed section in element units.
+ */
+sc_array_t         *sc_array_new_view (sc_array_t * array,
+                                       size_t offset, size_t length);
+
+/** Creates a new view of an existing plain C array.
+ * \param [in] base         The data must not be moved while view is alive.
+ * \param [in] elem_size    Size of one array element in bytes.
+ * \param [in] elem_count   The length of the view in element units.
+ */
+sc_array_t         *sc_array_new_data (void *base,
+                                       size_t elem_size, size_t elem_count);
 
 /** Destroys an array structure.
  * \param [in] array  The array to be destroyed.
@@ -108,6 +127,7 @@ void                sc_array_destroy (sc_array_t * array);
 void                sc_array_init (sc_array_t * array, size_t elem_size);
 
 /** Sets the array count to zero and frees all elements.
+ * This function turns a view into a newly initialized array.
  * \param [in,out]  array       Array structure to be resetted.
  * \note Calling sc_array_init, then any array operations,
  *       then sc_array_reset is memory neutral.
@@ -115,6 +135,7 @@ void                sc_array_init (sc_array_t * array, size_t elem_size);
 void                sc_array_reset (sc_array_t * array);
 
 /** Sets the element count to new_count.
+ * This function is not allowed for views.
  * Reallocation takes place only occasionally, so this function is usually fast.
  */
 void                sc_array_resize (sc_array_t * array, size_t new_count);
@@ -136,6 +157,7 @@ bool                sc_array_is_sorted (sc_array_t * array,
                                                        const void *));
 
 /** Removed duplicate entries from a sorted array.
+ * This function is not allowed for views.
  * \param [in,out] array  The array size will be reduced as necessary.
  * \param [in] compar     The comparison function to be used.
  */
@@ -176,6 +198,7 @@ ssize_t             sc_array_bsearch_range (sc_array_t * array,
 unsigned            sc_array_checksum (sc_array_t * array, size_t first_elem);
 
 /** Adds an element to a priority queue.
+ * This function is not allowed for views.
  * The priority queue is implemented as a heap in ascending order.
  * A heap is a binary tree where the children are not less than their parent.
  * Assumes that elements [0]..[elem_count-2] form a valid heap.
@@ -192,6 +215,7 @@ size_t              sc_array_pqueue_add (sc_array_t * array,
                                                         const void *));
 
 /** Pops the smallest element from a priority queue.
+ * This function is not allowed for views.
  * This function assumes that the array forms a valid heap in ascending order.
  * \param [out] result  Pointer to unused allocated memory of elem_size.
  * \param [in]  compar  The comparison function to be used.
@@ -264,7 +288,7 @@ sc_array_index_int16 (sc_array_t * array, int16_t i16)
 }
 
 /** Remove the last element from an array and return a pointer to it.
- *
+ * This function is not allowed for views.
  * \return                The pointer to the removed object.  Will be valid
  *                        as long as no other function is called on this array.
  */
@@ -272,19 +296,23 @@ sc_array_index_int16 (sc_array_t * array, int16_t i16)
 static inline void *
 sc_array_pop (sc_array_t * array)
 {
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
   SC_ASSERT (array->elem_count > 0);
 
   return (void *) (array->array + (array->elem_size * --array->elem_count));
 }
 
 /** Enlarge an array by one.  Grows the array if necessary.
+ * This function is not allowed for views.
  * \return Returns a pointer to the uninitialized newly added element.
  */
 /*@unused@*/
 static inline void *
 sc_array_push (sc_array_t * array)
 {
-  if (array->elem_size * (array->elem_count + 1) > array->byte_alloc) {
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+
+  if (array->elem_size * (array->elem_count + 1) > (size_t) array->byte_alloc) {
     const size_t        old_count = array->elem_count;
 
     sc_array_resize (array, old_count + 1);
@@ -295,6 +323,7 @@ sc_array_push (sc_array_t * array)
 }
 
 /** Enlarge a char array by a given number.  Grows the array if necessary.
+ * This function is not allowed for views.
  * \return Returns a pointer to the uninitialized newly added bytes.
  */
 /*@unused@*/
@@ -303,9 +332,10 @@ sc_array_push_bytes (sc_array_t * array, size_t bytes)
 {
   const size_t        old_count = array->elem_count;
 
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
   SC_ASSERT (array->elem_size == 1);
 
-  if (old_count + bytes > array->byte_alloc) {
+  if (old_count + bytes > (size_t) array->byte_alloc) {
     sc_array_resize (array, old_count + bytes);
   }
   else {

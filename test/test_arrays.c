@@ -22,6 +22,45 @@
 #include <sc.h>
 #include <sc_containers.h>
 
+static void
+test_new_view (sc_array_t * a)
+{
+  const size_t        N = a->elem_count;
+  sc_array_t         *v;
+
+  v = sc_array_new_view (a, 0, N);
+  SC_CHECK_ABORT (sc_array_is_sorted (v, sc_int_compare), "Sort failed");
+  sc_array_destroy (v);
+
+  v = sc_array_new_view (a, N / 2, N / 2);
+  SC_CHECK_ABORT (sc_array_is_sorted (v, sc_int_compare), "Sort failed");
+  sc_array_destroy (v);
+
+  v = sc_array_new_view (a, N / 5, 3 * N / 4);
+  SC_CHECK_ABORT (sc_array_is_sorted (v, sc_int_compare), "Sort failed");
+  sc_array_destroy (v);
+}
+
+static void
+test_new_data (sc_array_t * a)
+{
+  const size_t        s = a->elem_size;
+  const size_t        N = a->elem_count;
+  sc_array_t         *v;
+
+  v = sc_array_new_data (a->array, s, N);
+  SC_CHECK_ABORT (sc_array_is_sorted (v, sc_int_compare), "Sort failed");
+  sc_array_destroy (v);
+
+  v = sc_array_new_data (a->array + s * (N / 2), s, N / 2);
+  SC_CHECK_ABORT (sc_array_is_sorted (v, sc_int_compare), "Sort failed");
+  sc_array_destroy (v);
+
+  v = sc_array_new_data (a->array + s * (N / 5), s, 3 * N / 4);
+  SC_CHECK_ABORT (sc_array_is_sorted (v, sc_int_compare), "Sort failed");
+  sc_array_destroy (v);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -48,6 +87,9 @@ main (int argc, char **argv)
     result = sc_array_bsearch (a, &s, sc_int_compare);
     SC_CHECK_ABORT (0 <= result && result < (ssize_t) N, "Result failed");
   }
+
+  test_new_view (a);
+  test_new_data (a);
 
   for (i = 0; i < N; ++i) {
     pe = sc_array_index_int (a, i);
