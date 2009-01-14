@@ -22,6 +22,21 @@
 #include <sc.h>
 #include <sc_containers.h>
 
+static              ssize_t
+sc_array_bsearch_range (sc_array_t * array, size_t begin, size_t end,
+                        const void *key, int (*compar) (const void *,
+                                                        const void *))
+{
+  ssize_t             result;
+  sc_array_t         *view;
+
+  view = sc_array_new_view (array, begin, end - begin);
+  result = sc_array_bsearch (view, key, compar);
+  sc_array_destroy (view);
+
+  return result < 0 ? result : (ssize_t) begin + result;
+}
+
 static void
 test_new_view (sc_array_t * a)
 {

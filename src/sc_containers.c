@@ -288,45 +288,19 @@ sc_array_bsearch (sc_array_t * array, const void *key,
   return is;
 }
 
-ssize_t
-sc_array_bsearch_range (sc_array_t * array, size_t begin, size_t end,
-                        const void *key, int (*compar) (const void *,
-                                                        const void *))
-{
-  ssize_t             is = -1;
-  char               *retval;
-
-  SC_ASSERT (begin <= end && end <= array->elem_count);
-
-  retval = (char *)
-    bsearch (key, array->array + begin * array->elem_size, end - begin,
-             array->elem_size, compar);
-
-  if (retval != NULL) {
-    is = (ssize_t) ((retval - array->array) / array->elem_size);
-    SC_ASSERT (is >= (ssize_t) begin && is < (ssize_t) end);
-  }
-
-  return is;
-}
-
 unsigned
-sc_array_checksum (sc_array_t * array, size_t first_elem)
+sc_array_checksum (sc_array_t * array)
 {
-  size_t              first_byte;
   uInt                bytes;
   uLong               crc;
-
-  SC_ASSERT (first_elem <= array->elem_count);
 
   crc = adler32 (0L, Z_NULL, 0);
   if (array->elem_count == 0) {
     return (unsigned) crc;
   }
 
-  first_byte = first_elem * array->elem_size;
-  bytes = (uInt) ((array->elem_count - first_elem) * array->elem_size);
-  crc = adler32 (crc, (const Bytef *) (array->array + first_byte), bytes);
+  bytes = (uInt) (array->elem_count * array->elem_size);
+  crc = adler32 (crc, (const Bytef *) array->array, bytes);
 
   return (unsigned) crc;
 }
