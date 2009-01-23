@@ -21,6 +21,10 @@
 #ifndef SC_DMATRIX_H
 #define SC_DMATRIX_H
 
+#ifndef SC_H
+#error "sc.h should be included before this header file"
+#endif
+
 #include <sc_blas.h>
 #include <sc_containers.h>
 
@@ -41,8 +45,15 @@ sc_dmatrix_t;
 sc_dmatrix_t       *sc_dmatrix_new (sc_bint_t m, sc_bint_t n);
 sc_dmatrix_t       *sc_dmatrix_new_zero (sc_bint_t m, sc_bint_t n);
 sc_dmatrix_t       *sc_dmatrix_clone (const sc_dmatrix_t * dmatrix);
+
+/** Create a matrix view on an existing array.
+ * The array must be previously allocated with SC_ALLOC and friends.
+ * The array must not be deallocated while the view is in use.
+ */
 sc_dmatrix_t       *sc_dmatrix_view (sc_bint_t m, sc_bint_t n, double *data);
 
+/** Reshape a matrix to different m and n without changing m * n.
+ */
 void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m,
                                         sc_bint_t n);
 
