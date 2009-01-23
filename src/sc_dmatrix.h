@@ -57,6 +57,14 @@ sc_dmatrix_t       *sc_dmatrix_view (sc_bint_t m, sc_bint_t n, double *data);
 void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m,
                                         sc_bint_t n);
 
+/** Change the matrix dimensions.
+ * For views it must be known that the new size is permitted.
+ * For non-views the data will be realloced if necessary.
+ * The entries are unchanged to the minimum of the old and new sizes.
+ */
+void                sc_dmatrix_resize (sc_dmatrix_t * dmatrix,
+                                       sc_bint_t m, sc_bint_t n);
+
 void                sc_dmatrix_destroy (sc_dmatrix_t * dmatrix);
 
 /*

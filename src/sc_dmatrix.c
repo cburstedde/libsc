@@ -124,6 +124,29 @@ sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
 }
 
 void
+sc_dmatrix_resize (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
+{
+  double             *data;
+  sc_bint_t           size, newsize;
+
+  SC_ASSERT (dmatrix->e != NULL);
+  SC_ASSERT (m >= 0 && n >= 0);
+
+  size = dmatrix->m * dmatrix->n;
+  newsize = m * n;
+
+  if (!dmatrix->view && size != newsize) {
+    data = SC_REALLOC (dmatrix->e[0], double, newsize);
+  }
+  else {
+    /* for views you must know that data is large enough */
+    data = dmatrix->e[0];
+  }
+  SC_FREE (dmatrix->e);
+  sc_dmatrix_new_e (dmatrix, m, n, data);
+}
+
+void
 sc_dmatrix_destroy (sc_dmatrix_t * dmatrix)
 {
   if (!dmatrix->view) {
