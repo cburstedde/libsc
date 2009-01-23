@@ -110,20 +110,20 @@ AC_MSG_RESULT([$HAVE_PKG_MPI])
 
 dnl The shell variable SC_ENABLE_MPIIO is set
 dnl unless it is provided by the environment.
-dnl MPI I/O can be disabled by a compile/link check later.
-dnl Therefore all further checking uses the HAVE_PKG_MPIIO shell variable
-dnl and neither AC_DEFINE nor AM_CONDITIONAL are invoked at this point.
+dnl If enabled, MPI I/O will be verified by a compile/link test below.
 AC_ARG_ENABLE([mpiio],
-              [AS_HELP_STRING([--disable-mpiio], [don't use MPI I/O])],,
-              [enableval=yes])
+              [AS_HELP_STRING([--enable-mpiio], [enable MPI I/O])],,
+              [enableval=no])
 SC_ARG_OVERRIDE_ENABLE([SC], [MPIIO])
 if test "$enableval" = yes ; then
   if test "$HAVE_PKG_MPI" = yes ; then
     HAVE_PKG_MPIIO=yes
   fi
 elif test "$enableval" != no ; then
-  AC_MSG_ERROR([Please use --disable-mpiio without an argument])
+  AC_MSG_ERROR([Please use --enable-mpiio without an argument])
 fi
+AC_MSG_CHECKING([whether we are using MPI I/O])
+AC_MSG_RESULT([$HAVE_PKG_MPIIO])
 
 dnl Potentially override the MPI test environment
 SC_ARG_NOT_GIVEN_DEFAULT="yes"
@@ -255,13 +255,9 @@ if test "$HAVE_PKG_MPI" = yes ; then
   ACX_MPI_C_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI C test failed])])
 
   if test "$HAVE_PKG_MPIIO" = yes ; then
-    ACX_MPIIO_C_COMPILE_AND_LINK([AC_DEFINE([MPIIO], 1,
-                                 [Define to 1 if we are using MPI I/O])],
-                                 [HAVE_PKG_MPIIO=no])
-
-    dnl HAVE_PKG_MPIIO is now determined
-    AC_MSG_CHECKING([whether we can use MPI I/O])
-    AC_MSG_RESULT([$HAVE_PKG_MPIIO])
+    ACX_MPIIO_C_COMPILE_AND_LINK(
+      [AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])],
+      [AC_MSG_ERROR([MPI I/O specified but not found])])
   fi
 fi
 AM_CONDITIONAL([$1_MPIIO], [test "$HAVE_PKG_MPIIO" = yes])
