@@ -58,7 +58,9 @@ if LINT
 		$(LINT) $(ALL_LINT_FLAGS) $(top_srcdir)/$$f || \
 		echo "Lint check failed for $$f" ; \
 	done
-endif LINT
+else
+	@echo "Static source code check disabled by configure"
+endif
 
 ChangeLog:
 	@(GIT_DIR=@top_srcdir@/.git git log | @top_srcdir@/config/git2cl \

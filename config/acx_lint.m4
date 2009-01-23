@@ -42,17 +42,20 @@ AC_DEFUN([ACX_WITH_LINT],[
 
 # Allow checking code with lint, sparse, etc.
 AC_ARG_WITH([lint], [AS_HELP_STRING([--with-lint],
-            [use static source code checker (default: disabled)])],
-            [use_lint=$withval], [use_lint=no])
+            [use static source code checker (default: splint)])],
+            [use_lint=$withval], [use_lint=yes])
 if test "$use_lint" = yes ; then
   use_lint="splint"
 fi
 if test "$use_lint" != no ; then
-
-AC_PATH_PROG([LINT], [$use_lint], [no])
-if test "$LINT" = no ; then
-  AC_MSG_ERROR([Static source code checker $use_lint not found])
+  AC_PATH_PROG([LINT], [$use_lint], [no])
+  if test "$LINT" = no ; then
+    AC_MSG_WARN([Static source code checker $use_lint not found])
+    use_lint="no"
+  fi
 fi
+
+if test "$use_lint" != no ; then
 
 if test "$LINT_FLAGS" = "" ; then
     case $LINT in
