@@ -247,6 +247,7 @@ sc_malloc (int package, size_t size)
 #endif
 #ifdef SC_ALLOC_ALIGN
   SC_ASSERT (aligned >= (size_t) ret + sizeof (size_t));
+  SC_ASSERT (aligned <= (size_t) ret + sc_page_bytes);
   ((size_t *) aligned)[-1] = (size_t) ret;
   ret = (void *) aligned;
 #endif
@@ -291,6 +292,7 @@ sc_calloc (int package, size_t nmemb, size_t size)
 #endif
 #ifdef SC_ALLOC_ALIGN
   SC_ASSERT (aligned >= (size_t) ret + sizeof (size_t));
+  SC_ASSERT (aligned <= (size_t) ret + sc_page_bytes);
   ((size_t *) aligned)[-1] = (size_t) ret;
   ret = (void *) aligned;
 #endif
@@ -301,56 +303,43 @@ sc_calloc (int package, size_t nmemb, size_t size)
 void               *
 sc_realloc (int package, void *ptr, size_t size)
 {
-  void               *ret;
-
-#ifdef SC_ALLOC_ALIGN
-  size_t              aligned;
-
-  if (ptr != NULL) {
-    ptr = (void *) ((size_t *) ptr)[-1];
-  }
-  size += sc_page_bytes;
-#endif
-
-  ret = realloc (ptr, size);
-
   if (ptr == NULL) {
-    int                *malloc_count = sc_malloc_count (package);
-    if (size > 0) {
-      SC_CHECK_ABORT (ret != NULL, "Reallocation");
-      ++*malloc_count;
-    }
-    else {
-      *malloc_count += ((ret == NULL) ? 0 : 1);
-    }
+    return sc_malloc (package, size);
+  }
+  else if (size == 0) {
+    sc_free (package, ptr);
+    return NULL;
   }
   else {
-    int                *free_count = sc_free_count (package);
-    if (size > 0) {
-      SC_CHECK_ABORT (ret != NULL, "Reallocation");
-    }
-    else {
-      *free_count += ((ret == NULL) ? 1 : 0);
-    }
-  }
+    void               *ret;
 
-#ifdef SC_ALLOC_PAGE
-  aligned = (((size_t) ret + sizeof (size_t) + sc_page_bytes - 1) /
-             sc_page_bytes) * sc_page_bytes;
-#endif
-#ifdef SC_ALLOC_LINE
-  aligned = (((size_t) ret + sizeof (size_t) +
-              sc_page_bytes - sc_line_no * sc_line_bytes - 1) /
-             sc_page_bytes) * sc_page_bytes + sc_line_no * sc_line_bytes;
-  sc_line_no = (sc_line_no + 1) % sc_line_count;
-#endif
 #ifdef SC_ALLOC_ALIGN
-  SC_ASSERT (aligned >= (size_t) ret + sizeof (size_t));
-  ((size_t *) aligned)[-1] = (size_t) ret;
-  ret = (void *) aligned;
+    size_t              sptr;
+    size_t              shift;
+    size_t              aligned;
+
+    sptr = (size_t) ptr;
+    ptr = (void *) ((size_t *) ptr)[-1];
+    SC_ASSERT (ptr != NULL && sptr >= (size_t) ptr + sizeof (size_t));
+    shift = sptr - (size_t) ptr;
+
+    size += sc_page_bytes;
 #endif
 
-  return ret;
+    ret = realloc (ptr, size);
+    SC_CHECK_ABORT (ret != NULL, "Reallocation");
+
+#ifdef SC_ALLOC_ALIGN
+    aligned = (size_t) ret + shift;
+    SC_ASSERT (aligned >= (size_t) ret + sizeof (size_t));
+    SC_ASSERT (aligned <= (size_t) ret + sc_page_bytes);
+    SC_ASSERT (((size_t *) aligned)[-1] == (size_t) ptr);
+    ((size_t *) aligned)[-1] = (size_t) ret;
+    ret = (void *) aligned;
+#endif
+
+    return ret;
+  }
 }
 
 char               *
@@ -379,6 +368,7 @@ sc_free (int package, void *ptr)
 
 #ifdef SC_ALLOC_ALIGN
     ptr = (void *) ((size_t *) ptr)[-1];
+    SC_ASSERT (ptr != NULL);
 #endif
   }
   free (ptr);

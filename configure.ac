@@ -36,8 +36,6 @@ See sc.h for possible log priorities in --enable-logging=PRIO])
                esac])
 SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
-SC_ARG_ENABLE([resize-realloc], [use realloc in array resize],
-              [RESIZE_REALLOC])
 SC_ARG_ENABLE([alloc-page], [align memory on page boundaries], [ALLOC_PAGE])
 SC_ARG_ENABLE([alloc-line], [stripe memory with cache lines], [ALLOC_LINE])
 SC_ARG_DISABLE([sc-allgather], [use stock MPI_Allgather], [ALLGATHER])

@@ -280,7 +280,8 @@ extern void        *SC_VP_DEFAULT;      /* a unique void pointer value */
 extern FILE        *SC_FP_KEEP; /* a unique FILE pointer value */
 extern int          sc_package_id;
 
-/* memory allocation functions, handle NULL pointers gracefully */
+/* memory allocation functions, handle NULL pointers by internal abort
+   the sc_realloc function does not preserve alignment boundaries */
 
 void               *sc_malloc (int package, size_t size);
 void               *sc_calloc (int package, size_t nmemb, size_t size);
