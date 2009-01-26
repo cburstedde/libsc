@@ -35,7 +35,6 @@ typedef struct
   int                 p; /** Number of control points is p + 1 */
   int                 n; /** Polynomial degree is n >= 0 */
   int                 m; /** Number of knots is m + 1 =  n + p + 2 */
-  int                 b; /** Number of identical boundary knots b = n + 1 */
   int                 l; /** Number of internal intervals l = m - 2 * n > 0 */
   sc_dmatrix_t       *points;   /* (p + 1) x d array of points, not owned */
   double             *knots;    /* m + 1 array of knots, not owned */

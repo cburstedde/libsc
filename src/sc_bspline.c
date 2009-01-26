@@ -33,7 +33,6 @@ sc_bspline_knots_uniform (int n, sc_dmatrix_t * points)
   const int           d = points->n;
   const int           p = points->m - 1;
   const int           m = n + p + 1;
-  const int           b = n + 1;
   const int           l = m - 2 * n;
   int                 i;
   double             *knots;
@@ -42,12 +41,12 @@ sc_bspline_knots_uniform (int n, sc_dmatrix_t * points)
 
   knots = SC_ALLOC (double, m + 1);
 
-  for (i = 0; i < b; ++i) {
+  for (i = 0; i < n; ++i) {
     knots[i] = 0.;
     knots[m - i] = 1.;
   }
-  for (i = 0; i < l; ++i) {
-    knots[b + i] = (i + 1) / (double) l;
+  for (i = 0; i <= l; ++i) {
+    knots[n + i] = i / (double) l;
   }
 
   return knots;
@@ -63,7 +62,6 @@ sc_bspline_new (int n, sc_dmatrix_t * points, double *knots)
   bs->p = points->m - 1;
   bs->n = n;
   bs->m = bs->n + bs->p + 1;
-  bs->b = bs->n + 1;
   bs->l = bs->m - 2 * bs->n;
 
   SC_ASSERT (n >= 0 && bs->m >= 1 && bs->d >= 1 && bs->l >= 1);
@@ -94,13 +92,52 @@ sc_bspline_evaluate (sc_bspline_t * bs, double t, double *result)
   tm = bs->knots[bs->m];
   SC_ASSERT (t >= t0 && t <= tm);
 
-  iguess = (int) floor ((t - t0) / (tm - t0) * bs->l);
-  iguess = bs->n + SC_MIN (iguess, bs->l - 1);
+  if (t >= tm) {
+    iguess = bs->n + bs->l - 1;
+  }
+  else {
+    const int         nshift = 1;
+    double            ileft, iright;
+    double            tleft, tright;
 
-  /* SC_LDEBUGF ("Evaluate %g at guess %d\n", t, iguess); */
+    ileft = bs->n;
+    iright = bs->n + bs->l - 1;
+    iguess = bs->n + (int) floor ((t - t0) / (tm - t0) * bs->l);
+    iguess = SC_MAX (iguess, ileft);
+    iguess = SC_MIN (iguess, iright);
+
+    for (i = 0;; ++i) {
+      tleft = bs->knots[iguess];
+      tright = bs->knots[iguess + 1];
+      if (t < tleft) {
+        iright = iguess - 1;
+        if (i < nshift) {
+          iguess = iright;
+        }
+        else {
+          iguess = (ileft + iright + 1) / 2;
+        }
+      }
+      else if (t >= tright) {
+        ileft = iguess + 1;
+        if (i < nshift) {
+          iguess = ileft;
+        }
+        else {
+          iguess = (ileft + iright) / 2;
+        }
+      }
+      else {
+        if (i > 0) {
+          SC_LDEBUGF ("For %g needed %d search steps\n", t, i);
+        }
+        break;
+      }
+    }
+  }
   SC_CHECK_ABORT ((bs->knots[iguess] <= t && t < bs->knots[iguess + 1]) ||
                   (t >= tm && iguess == bs->n + bs->l - 1),
-                  "Non-uniform knot vectors not implemented yet");
+                  "Bug in determination of knot interval");
 
   toffset = 0;
   wfrom = wto = bs->points->e[iguess - bs->n];
