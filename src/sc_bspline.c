@@ -76,6 +76,7 @@ sc_bspline_new (int n, sc_dmatrix_t * points, double *knots)
     bs->knots = SC_ALLOC (double, bs->m + 1);
     memcpy (bs->knots, knots, sizeof (double) * (bs->m + 1));
   }
+  bs->works = sc_dmatrix_new (bs->n * (bs->n + 1) / 2, bs->d);
 
   return bs;
 }
@@ -83,16 +84,56 @@ sc_bspline_new (int n, sc_dmatrix_t * points, double *knots)
 void
 sc_bspline_evaluate (sc_bspline_t * bs, double t, double *result)
 {
-  int                 i;
+  int                 i, k, n;
+  int                 iguess;
+  int                 toffset;
+  double              t0, tm;
+  double             *wfrom, *wto;
 
-  for (i = 0; i < bs->d; ++i) {
-    result[i] = 0.;
+  t0 = bs->knots[0];
+  tm = bs->knots[bs->m];
+  SC_ASSERT (t >= t0 && t <= tm);
+
+  iguess = (int) floor ((t - t0) / (tm - t0) * bs->l);
+  iguess = bs->n + SC_MIN (iguess, bs->l - 1);
+
+  /* SC_LDEBUGF ("Evaluate %g at guess %d\n", t, iguess); */
+  SC_CHECK_ABORT ((bs->knots[iguess] <= t && t < bs->knots[iguess + 1]) ||
+                  (t >= tm && iguess == bs->n + bs->l - 1),
+                  "Non-uniform knot vectors not implemented yet");
+
+  toffset = 0;
+  wfrom = wto = bs->points->e[iguess - bs->n];
+  for (n = bs->n; n > 0; --n) {
+    wto = bs->works->e[toffset];
+
+    /* SC_LDEBUGF ("For %d at offset %d\n", n, toffset); */
+    for (i = 0; i < n; ++i) {
+      const double tleft = bs->knots[iguess + i - n + 1];
+      const double tright = bs->knots[iguess + i + 1];
+      const double tdiff = tright - tleft;
+      /* SC_LDEBUGF ("Tdiff %g %g %g\n", tleft, tright, tdiff); */
+      SC_ASSERT (tdiff > 0);
+      for (k = 0; k < bs->d; ++k) {
+        wto[bs->d * i + k] =
+          ((t - tleft) * wfrom[bs->d * (i + 1) + k] +
+           (tright - t) * wfrom[bs->d * i + k]) / tdiff;
+      }
+    }
+
+    wfrom = wto;
+    toffset += n;
   }
+  SC_ASSERT (toffset == bs->n * (bs->n + 1) / 2);
+
+  memcpy (result, wfrom, sizeof (double) * bs->d);
 }
 
 void
 sc_bspline_destroy (sc_bspline_t * bs)
 {
+  sc_dmatrix_destroy (bs->works);
+
   SC_FREE (bs->knots);
   SC_FREE (bs);
 }

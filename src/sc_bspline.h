@@ -39,6 +39,7 @@ typedef struct
   int                 l; /** Number of internal intervals l = m - 2 * n > 0 */
   sc_dmatrix_t       *points;   /* (p + 1) x d array of points, not owned */
   double             *knots;    /* m + 1 array of knots, not owned */
+  sc_dmatrix_t       *works;    /* Workspace (n * (n + 1) / 2) x d */
 }
 sc_bspline_t;
 
