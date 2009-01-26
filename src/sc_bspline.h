@@ -34,7 +34,9 @@ typedef struct
   int                 d; /** Dimensionality of control points */
   int                 p; /** Number of control points is p+1 */
   int                 m; /** Number of knots is m+1 */
-  int                 n; /** Degree is n = m -p - 1 */
+  int                 n; /** Degree is n = m - p - 1 */
+  int                 b; /** Number of identical boundary knots b = n + 1 */
+  int                 l; /** Number of internal intervals l = m - 2 * n */
   sc_dmatrix_t       *points;   /* (p+1) x d array of points, not owned */
   sc_dmatrix_t       *knots;    /* (m+1) x 1 array of knots, not owned */
 }

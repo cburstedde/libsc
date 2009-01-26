@@ -34,7 +34,11 @@ sc_bspline_new (sc_dmatrix_t * points, sc_dmatrix_t * knots)
   bs->p = points->m - 1;
   bs->m = knots->m - 1;
   bs->n = bs->m - bs->p - 1;
+  bs->b = bs->n + 1;
+  bs->l = bs->m - 2 * bs->n;
+
   SC_ASSERT (bs->n >= 0);
+  SC_ASSERT (bs->l >= 1);
 
   bs->points = points;
   bs->knots = knots;
