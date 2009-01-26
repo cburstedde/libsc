@@ -21,27 +21,61 @@
 #include <sc.h>
 #include <sc_bspline.h>
 
+int
+sc_bspline_min_number_points (int n)
+{
+  return 2 * n + 2;
+}
+
+double             *
+sc_bspline_knots_uniform (int n, sc_dmatrix_t * points)
+{
+  const int           d = points->n;
+  const int           p = points->m - 1;
+  const int           m = n + p + 1;
+  const int           b = n + 1;
+  const int           l = m - 2 * n;
+  int                 i;
+  double             *knots;
+
+  SC_ASSERT (n >= 0 && m >= 1 && d >= 1 && l >= 1);
+
+  knots = SC_ALLOC (double, m + 1);
+
+  for (i = 0; i < b; ++i) {
+    knots[i] = 0.;
+    knots[m - i] = 1.;
+  }
+  for (i = 0; i < l; ++i) {
+    knots[b + i] = (i + 1) / (double) l;
+  }
+
+  return knots;
+}
+
 sc_bspline_t       *
-sc_bspline_new (sc_dmatrix_t * points, sc_dmatrix_t * knots)
+sc_bspline_new (int n, sc_dmatrix_t * points, double *knots)
 {
   sc_bspline_t       *bs;
-
-  SC_ASSERT (points->m >= 1 && points->n >= 1);
-  SC_ASSERT (knots->m >= 2 && knots->n == 1);
 
   bs = SC_ALLOC_ZERO (sc_bspline_t, 1);
   bs->d = points->n;
   bs->p = points->m - 1;
-  bs->m = knots->m - 1;
-  bs->n = bs->m - bs->p - 1;
+  bs->n = n;
+  bs->m = bs->n + bs->p + 1;
   bs->b = bs->n + 1;
   bs->l = bs->m - 2 * bs->n;
 
-  SC_ASSERT (bs->n >= 0);
-  SC_ASSERT (bs->l >= 1);
+  SC_ASSERT (n >= 0 && bs->m >= 1 && bs->d >= 1 && bs->l >= 1);
 
   bs->points = points;
-  bs->knots = knots;
+  if (knots == NULL) {
+    bs->knots = sc_bspline_knots_uniform (n, points);
+  }
+  else {
+    bs->knots = SC_ALLOC (double, bs->m + 1);
+    memcpy (bs->knots, knots, sizeof (double) * (bs->m + 1));
+  }
 
   return bs;
 }
@@ -49,5 +83,6 @@ sc_bspline_new (sc_dmatrix_t * points, sc_dmatrix_t * knots)
 void
 sc_bspline_destroy (sc_bspline_t * bs)
 {
+  SC_FREE (bs->knots);
   SC_FREE (bs);
 }

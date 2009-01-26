@@ -32,22 +32,39 @@ SC_EXTERN_C_BEGIN;
 typedef struct
 {
   int                 d; /** Dimensionality of control points */
-  int                 p; /** Number of control points is p+1 */
-  int                 m; /** Number of knots is m+1 */
-  int                 n; /** Degree is n = m - p - 1 */
+  int                 p; /** Number of control points is p + 1 */
+  int                 n; /** Polynomial degree is n >= 0 */
+  int                 m; /** Number of knots is m + 1 =  n + p + 2 */
   int                 b; /** Number of identical boundary knots b = n + 1 */
-  int                 l; /** Number of internal intervals l = m - 2 * n */
-  sc_dmatrix_t       *points;   /* (p+1) x d array of points, not owned */
-  sc_dmatrix_t       *knots;    /* (m+1) x 1 array of knots, not owned */
+  int                 l; /** Number of internal intervals l = m - 2 * n > 0 */
+  sc_dmatrix_t       *points;   /* (p + 1) x d array of points, not owned */
+  double             *knots;    /* m + 1 array of knots, not owned */
 }
 sc_bspline_t;
 
-/** Create a new B-spline structure.
- * \param [in] points   (p+1) x d array of points in R^d.
- * \param [in] knots    (m+1) x 1 array of knots in R.
+/** Compute the minimum required number of points for a certain degree.
+ * \param [in] n    Polynomial degree of the spline functions, n >= 0.
+ * \return          Return minimum point number 2 * n + 2.
  */
-sc_bspline_t       *sc_bspline_new (sc_dmatrix_t * points,
-                                    sc_dmatrix_t * knots);
+int                 sc_bspline_min_number_points (int n);
+
+/** Create uniform B-spline knots array.
+ * \param [in] n        Polynomial degree of the spline functions, n >= 0.
+ * \param [in] points   (p + 1) x d array of points in R^d, p >= 0, d >= 1.
+ * \return              An SC_ALLOC'ed knot array with n + p + 2 entries.
+ */
+double             *sc_bspline_knots_uniform (int n, sc_dmatrix_t * points);
+
+/** Create a new B-spline structure.
+ * \param [in] n        Polynomial degree of the spline functions, n >= 0.
+ * \param [in] points   (p + 1) x d matrix of points in R^d, p >= 0, d >= 1.
+ *                      Matrix is not copied so it must not be altered
+ *                      while the B-spline structure is alive.
+ * \param [in] knots    n + p + 2 double array of knots.  A copy is made.
+ *                      If NULL the knots are computed equidistantly.
+ */
+sc_bspline_t       *sc_bspline_new (int n,
+                                    sc_dmatrix_t * points, double *knots);
 
 /** Destroy a B-spline structure.
  * The points and knots arrays are left alone.
