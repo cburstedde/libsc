@@ -66,6 +66,14 @@ double             *sc_bspline_knots_uniform (int n, sc_dmatrix_t * points);
 sc_bspline_t       *sc_bspline_new (int n,
                                     sc_dmatrix_t * points, double *knots);
 
+/** Evaluate a B-spline at a certain point.
+ * \param [in] bs       B-spline structure.
+ * \param [in] t        Value that must be within the range of the knots.
+ * \param [out] result  The computed point in R^d is placed here.
+ */
+void                sc_bspline_evaluate (sc_bspline_t * bs,
+                                         double t, double *result);
+
 /** Destroy a B-spline structure.
  * The points and knots arrays are left alone.
  */

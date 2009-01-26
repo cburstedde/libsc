@@ -81,6 +81,16 @@ sc_bspline_new (int n, sc_dmatrix_t * points, double *knots)
 }
 
 void
+sc_bspline_evaluate (sc_bspline_t * bs, double t, double *result)
+{
+  int                 i;
+
+  for (i = 0; i < bs->d; ++i) {
+    result[i] = 0.;
+  }
+}
+
+void
 sc_bspline_destroy (sc_bspline_t * bs)
 {
   SC_FREE (bs->knots);
