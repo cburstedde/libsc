@@ -38,7 +38,7 @@ typedef struct
   int                 l; /** Number of internal intervals l = m - 2 * n > 0 */
   sc_dmatrix_t       *points;   /* (p + 1) x d array of points, not owned */
   double             *knots;    /* m + 1 array of knots, not owned */
-  sc_dmatrix_t       *works;    /* Workspace (n * (n + 1)) x d */
+  sc_dmatrix_t       *works;    /* Workspace ((n + 1) * (n + 1)) x d */
 }
 sc_bspline_t;
 
@@ -58,7 +58,7 @@ double             *sc_bspline_knots_uniform (int n, sc_dmatrix_t * points);
 /** Create workspace for B-spline evaluation.
  * \param [in] n        Polynomial degree of the spline functions, n >= 0.
  * \param [in] d        Dimension of the control points in R^d, d >= 1.
- * \return              Workspace (n * (n + 1)) x d */
+ * \return              Workspace ((n + 1) * (n + 1)) x d */
 sc_dmatrix_t       *sc_bspline_workspace (int n, int d);
 
 /** Create a new B-spline structure.
@@ -68,11 +68,16 @@ sc_dmatrix_t       *sc_bspline_workspace (int n, int d);
  *                      while the B-spline structure is alive.
  * \param [in] knots    n + p + 2 double array of knots.  A copy is made.
  *                      If NULL the knots are computed equidistantly.
- * \param [in] works    Workspace (n * (n + 1)) x d.  A copy is made.
+ * \param [in] works    Workspace ((n + 1) * (n + 1)) x d.  A copy is made.
  *                      If NULL the workspace is allocated internally.
  */
 sc_bspline_t       *sc_bspline_new (int n, sc_dmatrix_t * points,
                                     double *knots, sc_dmatrix_t *works);
+
+/** Destroy a B-spline structure.
+ * The points and knots arrays are left alone.
+ */
+void                sc_bspline_destroy (sc_bspline_t * bs);
 
 /** Evaluate a B-spline at a certain point.
  * \param [in] bs       B-spline structure.
@@ -82,10 +87,13 @@ sc_bspline_t       *sc_bspline_new (int n, sc_dmatrix_t * points,
 void                sc_bspline_evaluate (sc_bspline_t * bs,
                                          double t, double *result);
 
-/** Destroy a B-spline structure.
- * The points and knots arrays are left alone.
+/** Evaluate a B-spline derivative at a certain point.
+ * \param [in] bs       B-spline structure.
+ * \param [in] t        Value that must be within the range of the knots.
+ * \param [out] result  The computed derivative in R^d is placed here.
  */
-void                sc_bspline_destroy (sc_bspline_t * bs);
+void                sc_bspline_derivative (sc_bspline_t * bs,
+                                           double t, double *result);
 
 SC_EXTERN_C_END;
 

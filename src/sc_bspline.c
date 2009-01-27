@@ -56,7 +56,7 @@ sc_dmatrix_t       *sc_bspline_workspace (int n, int d)
 {
   SC_ASSERT (n >= 0 && d >= 1);
 
-  return sc_dmatrix_new (n * (n + 1), d);
+  return sc_dmatrix_new ((n + 1) * (n + 1), d);
 }
 
 sc_bspline_t       *
@@ -86,12 +86,21 @@ sc_bspline_new (int n, sc_dmatrix_t * points,
     bs->works = sc_bspline_workspace (bs->n, bs->d);
   }
   else {
-    SC_ASSERT (works->m == bs->n * (bs->n + 1));
+    SC_ASSERT (works->m == (bs->n + 1) * (bs->n + 1));
     SC_ASSERT (works->n == bs->d);
     bs->works = sc_dmatrix_clone (works);
   }
 
   return bs;
+}
+
+void
+sc_bspline_destroy (sc_bspline_t * bs)
+{
+  sc_dmatrix_destroy (bs->works);
+
+  SC_FREE (bs->knots);
+  SC_FREE (bs);
 }
 
 static int
@@ -192,10 +201,47 @@ sc_bspline_evaluate (sc_bspline_t * bs, double t, double *result)
 }
 
 void
-sc_bspline_destroy (sc_bspline_t * bs)
+sc_bspline_derivative (sc_bspline_t * bs, double t, double *result)
 {
-  sc_dmatrix_destroy (bs->works);
+  int                 i, k, n;
+  int                 iguess;
+  int                 toffset;
+  double             *pfrom, *pto;
+  double             *qfrom, *qto;
 
-  SC_FREE (bs->knots);
-  SC_FREE (bs);
+  iguess = sc_bspline_find_interval (bs, t);
+
+  toffset = bs->n + 1;
+  pfrom = pto = bs->works->e[0];
+  qfrom = qto = bs->points->e[iguess - bs->n];
+  memset (pfrom, 0, toffset * bs->d * sizeof (double));
+  for (n = bs->n; n > 0; --n) {
+    pto = bs->works->e[toffset];
+    qto = bs->works->e[toffset + n];
+
+    /* SC_LDEBUGF ("For %d at offset %d\n", n, toffset); */
+    for (i = 0; i < n; ++i) {
+      const double tleft = bs->knots[iguess + i - n + 1];
+      const double tright = bs->knots[iguess + i + 1];
+      const double tdiff = tright - tleft;
+      /* SC_LDEBUGF ("Tdiff %g %g %g\n", tleft, tright, tdiff); */
+      SC_ASSERT (tdiff > 0);
+      for (k = 0; k < bs->d; ++k) {
+        pto[bs->d * i + k] =
+          ((t - tleft) * pfrom[bs->d * (i + 1) + k] +
+           (tright - t) * pfrom[bs->d * i + k] +
+           qfrom[bs->d * (i + 1) + k] - qfrom[bs->d * i + k]) / tdiff;
+        qto[bs->d * i + k] =
+          ((t - tleft) * qfrom[bs->d * (i + 1) + k] +
+           (tright - t) * qfrom[bs->d * i + k]) / tdiff;
+      }
+    }
+
+    pfrom = pto;
+    qfrom = qto;
+    toffset += 2 * n;
+  }
+  SC_ASSERT (toffset == (bs->n + 1) * (bs->n + 1));
+
+  memcpy (result, pfrom, sizeof (double) * bs->d);
 }
