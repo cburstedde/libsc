@@ -38,7 +38,7 @@ typedef struct
   int                 l; /** Number of internal intervals l = m - 2 * n > 0 */
   sc_dmatrix_t       *points;   /* (p + 1) x d array of points, not owned */
   double             *knots;    /* m + 1 array of knots, not owned */
-  sc_dmatrix_t       *works;    /* Workspace (n * (n + 1) / 2) x d */
+  sc_dmatrix_t       *works;    /* Workspace (n * (n + 1)) x d */
 }
 sc_bspline_t;
 
@@ -55,6 +55,12 @@ int                 sc_bspline_min_number_points (int n);
  */
 double             *sc_bspline_knots_uniform (int n, sc_dmatrix_t * points);
 
+/** Create workspace for B-spline evaluation.
+ * \param [in] n        Polynomial degree of the spline functions, n >= 0.
+ * \param [in] d        Dimension of the control points in R^d, d >= 1.
+ * \return              Workspace (n * (n + 1)) x d */
+sc_dmatrix_t       *sc_bspline_workspace (int n, int d);
+
 /** Create a new B-spline structure.
  * \param [in] n        Polynomial degree of the spline functions, n >= 0.
  * \param [in] points   (p + 1) x d matrix of points in R^d, p >= 0, d >= 1.
@@ -62,9 +68,11 @@ double             *sc_bspline_knots_uniform (int n, sc_dmatrix_t * points);
  *                      while the B-spline structure is alive.
  * \param [in] knots    n + p + 2 double array of knots.  A copy is made.
  *                      If NULL the knots are computed equidistantly.
+ * \param [in] works    Workspace (n * (n + 1)) x d.  A copy is made.
+ *                      If NULL the workspace is allocated internally.
  */
-sc_bspline_t       *sc_bspline_new (int n,
-                                    sc_dmatrix_t * points, double *knots);
+sc_bspline_t       *sc_bspline_new (int n, sc_dmatrix_t * points,
+                                    double *knots, sc_dmatrix_t *works);
 
 /** Evaluate a B-spline at a certain point.
  * \param [in] bs       B-spline structure.

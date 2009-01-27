@@ -52,8 +52,16 @@ sc_bspline_knots_uniform (int n, sc_dmatrix_t * points)
   return knots;
 }
 
+sc_dmatrix_t       *sc_bspline_workspace (int n, int d)
+{
+  SC_ASSERT (n >= 0 && d >= 1);
+
+  return sc_dmatrix_new (n * (n + 1), d);
+}
+
 sc_bspline_t       *
-sc_bspline_new (int n, sc_dmatrix_t * points, double *knots)
+sc_bspline_new (int n, sc_dmatrix_t * points,
+                double *knots, sc_dmatrix_t *works)
 {
   sc_bspline_t       *bs;
 
@@ -68,13 +76,20 @@ sc_bspline_new (int n, sc_dmatrix_t * points, double *knots)
 
   bs->points = points;
   if (knots == NULL) {
-    bs->knots = sc_bspline_knots_uniform (n, points);
+    bs->knots = sc_bspline_knots_uniform (bs->n, points);
   }
   else {
     bs->knots = SC_ALLOC (double, bs->m + 1);
     memcpy (bs->knots, knots, sizeof (double) * (bs->m + 1));
   }
-  bs->works = sc_dmatrix_new (bs->n * (bs->n + 1) / 2, bs->d);
+  if (works == NULL) {
+    bs->works = sc_bspline_workspace (bs->n, bs->d);
+  }
+  else {
+    SC_ASSERT (works->m == bs->n * (bs->n + 1));
+    SC_ASSERT (works->n == bs->d);
+    bs->works = sc_dmatrix_clone (works);
+  }
 
   return bs;
 }
