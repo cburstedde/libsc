@@ -94,14 +94,11 @@ sc_bspline_new (int n, sc_dmatrix_t * points,
   return bs;
 }
 
-void
-sc_bspline_evaluate (sc_bspline_t * bs, double t, double *result)
+static int
+sc_bspline_find_interval (sc_bspline_t * bs, double t)
 {
-  int                 i, k, n;
-  int                 iguess;
-  int                 toffset;
+  int                 i, iguess;
   double              t0, tm;
-  double             *wfrom, *wto;
 
   t0 = bs->knots[0];
   tm = bs->knots[bs->m];
@@ -152,7 +149,20 @@ sc_bspline_evaluate (sc_bspline_t * bs, double t, double *result)
   }
   SC_CHECK_ABORT ((bs->knots[iguess] <= t && t < bs->knots[iguess + 1]) ||
                   (t >= tm && iguess == bs->n + bs->l - 1),
-                  "Bug in determination of knot interval");
+                  "Bug in sc_bspline_find_interval");
+
+  return iguess;
+}
+
+void
+sc_bspline_evaluate (sc_bspline_t * bs, double t, double *result)
+{
+  int                 i, k, n;
+  int                 iguess;
+  int                 toffset;
+  double             *wfrom, *wto;
+
+  iguess = sc_bspline_find_interval (bs, t);
 
   toffset = 0;
   wfrom = wto = bs->points->e[iguess - bs->n];
