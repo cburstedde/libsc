@@ -36,6 +36,7 @@ typedef struct
   int                 n; /** Polynomial degree is n >= 0 */
   int                 m; /** Number of knots is m + 1 =  n + p + 2 */
   int                 l; /** Number of internal intervals l = m - 2 * n > 0 */
+  int                 cacheknot; /* previously evaluated knot interval */
   sc_dmatrix_t       *points;   /* (p + 1) x d array of points, not owned */
   sc_dmatrix_t       *knots;    /* m + 1 array of knots */
   bool                knots_owned;

@@ -123,6 +123,7 @@ sc_bspline_new (int n, sc_dmatrix_t * points,
   bs->n = n;
   bs->m = bs->n + bs->p + 1;
   bs->l = bs->m - 2 * bs->n;
+  bs->cacheknot = n;
 
   SC_ASSERT (n >= 0 && bs->m >= 1 && bs->d >= 1 && bs->l >= 1);
 
@@ -172,9 +173,13 @@ sc_bspline_find_interval (sc_bspline_t * bs, double t)
   t0 = knotse[0];
   tm = knotse[bs->m];
   SC_ASSERT (t >= t0 && t <= tm);
+  SC_ASSERT (bs->cacheknot >= bs->n && bs->cacheknot < bs->n + bs->l);
 
   if (t >= tm) {
     iguess = bs->n + bs->l - 1;
+  }
+  else if (knotse[bs->cacheknot] <= t && t < knotse[bs->cacheknot + 1]) {
+    iguess = bs->cacheknot;
   }
   else {
     const int         nshift = 1;
@@ -215,6 +220,7 @@ sc_bspline_find_interval (sc_bspline_t * bs, double t)
         break;
       }
     }
+    bs->cacheknot = iguess;
   }
   SC_CHECK_ABORT ((knotse[iguess] <= t && t < knotse[iguess + 1]) ||
                   (t >= tm && iguess == bs->n + bs->l - 1),
