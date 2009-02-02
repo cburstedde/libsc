@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC library provides support for parallel scientific applications.
 
-  Copyright (C) 2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -249,5 +249,3 @@ sc_ranges_statistics (int package_id, int log_priority,
            "Ranges %d nonpeer %g +- %g min/max %g %g\n",
            num_ranges, si.average, si.standev, si.min, si.max);
 }
-
-/* EOF sc_ranges.c */

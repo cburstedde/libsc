@@ -37,8 +37,9 @@ See sc.h for possible log priorities in --enable-logging=PRIO])
 SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
 SC_ARG_ENABLE([alloc-page], [align memory on page boundaries], [ALLOC_PAGE])
-SC_ARG_ENABLE([alloc-line], [stripe memory with cache lines], [ALLOC_LINE])
-SC_ARG_DISABLE([sc-allgather], [use stock MPI_Allgather], [ALLGATHER])
+SC_ARG_ENABLE([alloc-line], [stripe memory between cache lines], [ALLOC_LINE])
+SC_ARG_ENABLE([sc-allgather], [internally use replacement for MPI_Allgather],
+              [ALLGATHER])
 SC_ARG_DISABLE([options], [disable the libsc option parser],
               [OPTIONS])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
