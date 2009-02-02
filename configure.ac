@@ -40,10 +40,17 @@ SC_ARG_ENABLE([alloc-page], [align memory on page boundaries], [ALLOC_PAGE])
 SC_ARG_ENABLE([alloc-line], [stripe memory between cache lines], [ALLOC_LINE])
 SC_ARG_ENABLE([sc-allgather], [internally use replacement for MPI_Allgather],
               [ALLGATHER])
-SC_ARG_DISABLE([options], [disable the libsc option parser],
-              [OPTIONS])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
-SC_ARG_WITH([getopt], [enable builtin getopt code], [PROVIDE_GETOPT])
+
+# The getopt check and builtin fallback code can be ignored altogether
+AC_ARG_WITH([getopt], [AS_HELP_STRING([--without-getopt],
+              [assume external getopt code is found, don't check
+               (default: check and use builtin if necessary)])],,
+            [withval=yes])
+SC_ARG_OVERRIDE_WITH([SC], [GETOPT])
+if test "$withval" != "yes" -a "$withval" != "no" ; then
+  AC_MSG_ERROR([Please use --without-getopt without an argument])
+fi
 
 # The obstack check and builtin fallback code can be ignored altogether
 AC_ARG_WITH([obstack], [AS_HELP_STRING([--without-obstack],
@@ -88,6 +95,23 @@ echo "| Checking libraries"
 echo "o---------------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
+
+SC_PROVIDE_GETOPT="no"
+if test "$SC_WITH_GETOPT" = "yes" ; then
+  AC_MSG_CHECKING([for getopt])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[#include <getopt.h>]], [[
+int oi;
+struct option lo;
+getopt_long (0, 0, "abc:", &lo, &oi);
+]])], [AC_MSG_RESULT([successful])], [
+    AC_MSG_RESULT([failed])
+    AC_MSG_NOTICE([Did not find getopt. Activating builtin])
+    SC_PROVIDE_GETOPT="yes"
+    AC_DEFINE([PROVIDE_GETOPT], 1, [Use builtin getopt])
+  ])
+fi
+AM_CONDITIONAL([SC_PROVIDE_GETOPT], [test "$SC_PROVIDE_GETOPT" = "yes"])
 
 SC_PROVIDE_OBSTACK="no"
 if test "$SC_WITH_OBSTACK" = "yes" ; then
@@ -214,12 +238,6 @@ AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h time.h])
 echo "o---------------------------------------"
 echo "| Checking functions"
 echo "o---------------------------------------"
-
-if test "$SC_WITH_PROVIDE_GETOPT" = "no" ; then
-  AC_CHECK_FUNC([getopt_long],,
-                [AC_DEFINE([PROVIDE_GETOPT], 1,
-                           [Define to 1 if getopt is provided by sc])])
-fi
 
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
 AC_CHECK_FUNCS([tgamma trunc])

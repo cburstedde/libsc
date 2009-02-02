@@ -23,7 +23,7 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-/* renamed from glibc 2.7 to sc_getopt.h and modified */
+/* renamed from glibc 2.7 to sc_getopt.c and modified */
 
 /* This tells Alpha OSF/1 not to define a getopt prototype in <stdio.h>.
    Ditto for AIX 3.2 and <stdlib.h>.  */
@@ -34,8 +34,6 @@
 #include <sc.h>
 #include <sc_getopt.h>
 #include <sc_getopt_int.h>
-
-#ifdef SC_OPTIONS
 
 /* Comment out all this code if we are using the GNU C Library, and are not
    actually compiling the library itself.  This code is part of the GNU C
@@ -1124,8 +1122,6 @@ getopt (int argc, char *const *argv, const char *optstring)
 			   (int *) 0,
 			   0);
 }
-
-#endif
 
 #endif	/* Not ELIDE_CODE.  */
 

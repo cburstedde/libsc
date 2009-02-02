@@ -586,7 +586,6 @@ int
 sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
                   int argc, char **argv)
 {
-#ifdef SC_OPTIONS
   int                 retval;
   int                 position, printed;
   int                 c, option_index;
@@ -706,11 +705,6 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   opt->argv = argv;
 
   return opt->first_arg;
-
-#else
-  SC_CHECK_ABORT (0, "The libsc option parser is disabled.\n"
-                  "Rerun ./configure without --disable-options.");
-#endif
 }
 
 int

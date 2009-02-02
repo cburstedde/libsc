@@ -26,7 +26,7 @@ endif
 if SC_PROVIDE_GETOPT
   libsc_internal_headers +=  src/sc_getopt_int.h
   libsc_installed_headers += src/sc_getopt.h
-  libsc_compiled_sources +=  src/sc_getopt.c
+  libsc_compiled_sources +=  src/sc_getopt.c src/sc_getopt1.c
 endif
 if SC_PROVIDE_OBSTACK
   libsc_installed_headers += src/sc_obstack.h

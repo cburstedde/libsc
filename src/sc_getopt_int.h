@@ -29,8 +29,6 @@
 #error "sc.h should be included before this header file"
 #endif
 
-#ifdef SC_OPTIONS
-
 extern int _getopt_internal (int ___argc, char *const *___argv,
 			     const char *__shortopts,
 		             const struct option *__longopts, int *__longind,
@@ -136,8 +134,6 @@ extern int _getopt_long_only_r (int ___argc, char *const *___argv,
 				const struct option *__longopts,
 				int *__longind,
 				struct _getopt_data *__data);
-
-#endif
 
 #endif /* getopt_int.h */
 
