@@ -218,6 +218,24 @@ $4_ARG_NOT_GIVEN_DEFAULT=
 AC_DEFUN([SC_ARG_WITHOUT_YES],
          [SC_ARG_WITHOUT_YES_PREFIX([$1], [$2], [$3], [SC], [$4])])
 
+dnl SC_ARG_WITH_BUILTIN_PREFIX(NAME, TOKEN, PREFIX)
+dnl Check for --without-NAME using shell variable PREFIX_WITH_TOKEN
+dnl Only allowed values are yes or no, default is yes
+dnl
+AC_DEFUN([SC_ARG_WITH_BUILTIN_PREFIX],
+[
+AC_ARG_WITH([$1],
+            [AS_HELP_STRING([--without-$1], [assume external $1 code is found])
+AS_HELP_STRING(, [(default: check and use builtin if necessary)])],,
+            [withval=yes])
+SC_ARG_OVERRIDE_WITH([$3], [$2])
+if test "$withval" != "yes" -a "$withval" != "no" ; then
+  AC_MSG_ERROR([Please use --without-$1 without an argument])
+fi
+])
+AC_DEFUN([SC_ARG_WITH_BUILTIN],
+         [SC_ARG_WITH_BUILTIN_PREFIX([$1], [$2], [SC])])
+
 dnl SC_REQUIRE_LIB(LIBRARY, FUNCTION)
 dnl Check for FUNCTION in LIBRARY, exit with error if not found
 dnl

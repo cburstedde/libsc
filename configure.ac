@@ -41,36 +41,9 @@ SC_ARG_ENABLE([alloc-line], [stripe memory between cache lines], [ALLOC_LINE])
 SC_ARG_ENABLE([sc-allgather], [internally use replacement for MPI_Allgather],
               [ALLGATHER])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
-
-# The getopt check and builtin fallback code can be ignored altogether
-AC_ARG_WITH([getopt], [AS_HELP_STRING([--without-getopt],
-              [assume external getopt code is found, don't check
-               (default: check and use builtin if necessary)])],,
-            [withval=yes])
-SC_ARG_OVERRIDE_WITH([SC], [GETOPT])
-if test "$withval" != "yes" -a "$withval" != "no" ; then
-  AC_MSG_ERROR([Please use --without-getopt without an argument])
-fi
-
-# The obstack check and builtin fallback code can be ignored altogether
-AC_ARG_WITH([obstack], [AS_HELP_STRING([--without-obstack],
-              [assume external obstack code is found, don't check
-               (default: check and use builtin if necessary)])],,
-            [withval=yes])
-SC_ARG_OVERRIDE_WITH([SC], [OBSTACK])
-if test "$withval" != "yes" -a "$withval" != "no" ; then
-  AC_MSG_ERROR([Please use --without-obstack without an argument])
-fi
-
-# The zlib check and builtin fallback code can be ignored altogether
-AC_ARG_WITH([zlib], [AS_HELP_STRING([--without-zlib],
-              [assume external zlib code is found, don't check
-               (default: check and use builtin zlib if necessary)])],,
-            [withval=yes])
-SC_ARG_OVERRIDE_WITH([SC], [ZLIB])
-if test "$withval" != "yes" -a "$withval" != "no" ; then
-  AC_MSG_ERROR([Please use --without-zlib without an argument])
-fi
+SC_ARG_WITH_BUILTIN([getopt], [GETOPT])
+SC_ARG_WITH_BUILTIN([obstack], [OBSTACK])
+SC_ARG_WITH_BUILTIN([zlib], [ZLIB])
 
 if test "$SC_ENABLE_ALLOC_PAGE" != no -a \
         "$SC_ENABLE_ALLOC_LINE" != no ; then
@@ -106,7 +79,7 @@ struct option lo;
 getopt_long (0, 0, "abc:", &lo, &oi);
 ]])], [AC_MSG_RESULT([successful])], [
     AC_MSG_RESULT([failed])
-    AC_MSG_NOTICE([Did not find getopt. Activating builtin])
+    AC_MSG_NOTICE([did not find getopt. Activating builtin])
     SC_PROVIDE_GETOPT="yes"
     AC_DEFINE([PROVIDE_GETOPT], 1, [Use builtin getopt])
   ])
@@ -125,7 +98,7 @@ obstack_init (&ob);
 obstack_free (&ob, 0);
 ]])], [AC_MSG_RESULT([successful])], [
     AC_MSG_RESULT([failed])
-    AC_MSG_NOTICE([Did not find obstack. Activating builtin])
+    AC_MSG_NOTICE([did not find obstack. Activating builtin])
     SC_PROVIDE_OBSTACK="yes"
     AC_DEFINE([PROVIDE_OBSTACK], 1, [Use builtin obstack])
   ])
@@ -135,7 +108,7 @@ AM_CONDITIONAL([SC_PROVIDE_OBSTACK], [test "$SC_PROVIDE_OBSTACK" = "yes"])
 SC_PROVIDE_ZLIB="no"
 if test "$SC_WITH_ZLIB" = "yes" ; then
   AC_CHECK_LIB([z], [adler32_combine],, [
-    AC_MSG_NOTICE([Did not find a recent zlib. Activating builtin])
+    AC_MSG_NOTICE([did not find a recent zlib. Activating builtin])
     SC_PROVIDE_ZLIB="yes"
   ])
 fi
