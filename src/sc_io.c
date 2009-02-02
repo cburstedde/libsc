@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include <sc.h>
 #include <sc_io.h>
 #include <libb64.h>
+#include <zlib.h>
 
 int
 sc_vtk_write_binary (FILE * vtkfile, char *numeric_data, size_t byte_length)
@@ -221,5 +222,3 @@ sc_mpi_write (MPI_File mpifile, const void *ptr, size_t zcount,
 }
 
 #endif
-
-/* EOF sc_io.c */

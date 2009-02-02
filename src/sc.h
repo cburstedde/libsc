@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC library provides support for parallel scientific applications.
 
-  Copyright (C) 2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -77,15 +77,6 @@
 #include <sc_obstack.h>
 #else
 #include <obstack.h>
-#endif
-
-#ifdef SC_PROVIDE_ZLIB
-#ifdef ZLIB_H
-#error "zlib.h is included.  Include sc.h first or use --without-zlib".
-#endif
-#include <sc_zlib.h>
-#else
-#include <zlib.h>
 #endif
 
 #include <sc_c99_functions.h>

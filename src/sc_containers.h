@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -176,7 +176,7 @@ ssize_t             sc_array_bsearch (sc_array_t * array,
                                       int (*compar) (const void *,
                                                      const void *));
 
-/** Computes the adler32 checksum of array data.
+/** Computes the adler32 checksum of array data (see zlib documentation).
  * This is a faster checksum than crc32, and it works with zeros as data.
  */
 unsigned            sc_array_checksum (sc_array_t * array);

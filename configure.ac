@@ -46,8 +46,16 @@ SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 SC_ARG_WITH([getopt], [enable builtin getopt code], [PROVIDE_GETOPT])
 SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],
                [PROVIDE_OBSTACK])
-SC_ARG_WITHOUT([zlib], [disable builtin zlib code, provide your own],
-               [PROVIDE_ZLIB])
+
+# The zlib check and builtin fallback code can be ignored altogether
+AC_ARG_WITH([zlib], [AS_HELP_STRING([--without-zlib],
+              [assume external zlib code is found, don't check
+               (default: check and use builtin zlib if necessary)])],,
+            [withval=yes])
+SC_ARG_OVERRIDE_WITH([SC], [ZLIB])
+if test "$withval" != "yes" -a "$withval" != "no" ; then
+  AC_MSG_ERROR([Please use --without-zlib without an argument])
+fi
 
 if test "$SC_ENABLE_ALLOC_PAGE" != no -a \
         "$SC_ENABLE_ALLOC_LINE" != no ; then
@@ -72,9 +80,15 @@ echo "| Checking libraries"
 echo "o---------------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
-if test "$SC_WITH_PROVIDE_ZLIB" = "no" ; then
-  SC_REQUIRE_LIB([z], [adler32_combine])
+
+SC_PROVIDE_ZLIB="no"
+if test "$SC_WITH_ZLIB" = "yes" ; then
+  AC_CHECK_LIB([z], [adler32_combine],, [
+    AC_MSG_NOTICE([Did not find a recent zlib. Activating builtin])
+    SC_PROVIDE_ZLIB="yes"
+  ])
 fi
+AM_CONDITIONAL([SC_PROVIDE_ZLIB], [test "$SC_PROVIDE_ZLIB" = "yes"])
 
 # Checks for BLAS (and F77 environment only if necessary).
 echo "o---------------------------------------"

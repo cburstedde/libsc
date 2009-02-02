@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
 #include <sc_containers.h>
+#include <zlib.h>
 
 /* array routines */
 
@@ -1096,5 +1097,3 @@ sc_recycle_array_remove (sc_recycle_array_t * rec_array, size_t position)
 
   return sc_array_index (&rec_array->a, position);
 }
-
-/* EOF sc_containers.c */

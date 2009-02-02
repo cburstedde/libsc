@@ -3,8 +3,6 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* MODIFIED to include sc_zlib.h, see AUTHORS file in toplevel directory */
-
 /*
  * minigzip is a minimal implementation of the gzip utility. This is
  * only an example of using zlib and isn't meant to replace the
@@ -18,7 +16,7 @@
 /* @(#) $Id$ */
 
 #include <stdio.h>
-#include <sc_zlib.h>
+#include "zlib.h"
 
 #ifdef STDC
 #  include <string.h>

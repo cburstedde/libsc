@@ -547,7 +547,7 @@ char * ZEXPORT gzgets(file, buf, len)
 
     while (--len > 0 && gzread(file, buf, 1) == 1 && *buf++ != '\n') ;
     *buf = '\0';
-    return b == buf && len > 0 ? (char *) Z_NULL : b;
+    return b == buf && len > 0 ? Z_NULL : b;
 }
 
 

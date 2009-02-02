@@ -3,12 +3,10 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* MODIFIED to include sc_zlib.h, see AUTHORS file in toplevel directory */
-
 /* @(#) $Id$ */
 
 #include <stdio.h>
-#include <sc_zlib.h>
+#include "zlib.h"
 
 #ifdef STDC
 #  include <string.h>

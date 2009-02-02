@@ -32,9 +32,6 @@ if SC_PROVIDE_OBSTACK
   libsc_installed_headers += src/sc_obstack.h
   libsc_compiled_sources +=  src/sc_obstack.c
 endif
-if SC_PROVIDE_ZLIB
-  libsc_installed_headers += src/sc_zlib.h src/sc_zconf.h
-endif
 
 lib_LIBRARIES += src/libsc.a
 src_libsc_a_SOURCES = \
