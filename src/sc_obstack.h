@@ -110,6 +110,10 @@ Summary:
 #ifndef _OBSTACK_H
 #define _OBSTACK_H 1
 
+#ifndef SC_H
+#error "sc.h should be included before this header file"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

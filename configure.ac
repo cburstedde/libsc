@@ -44,8 +44,16 @@ SC_ARG_DISABLE([options], [disable the libsc option parser],
               [OPTIONS])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 SC_ARG_WITH([getopt], [enable builtin getopt code], [PROVIDE_GETOPT])
-SC_ARG_WITHOUT([obstack], [disable builtin obstack code, provide your own],
-               [PROVIDE_OBSTACK])
+
+# The obstack check and builtin fallback code can be ignored altogether
+AC_ARG_WITH([obstack], [AS_HELP_STRING([--without-obstack],
+              [assume external obstack code is found, don't check
+               (default: check and use builtin if necessary)])],,
+            [withval=yes])
+SC_ARG_OVERRIDE_WITH([SC], [OBSTACK])
+if test "$withval" != "yes" -a "$withval" != "no" ; then
+  AC_MSG_ERROR([Please use --without-obstack without an argument])
+fi
 
 # The zlib check and builtin fallback code can be ignored altogether
 AC_ARG_WITH([zlib], [AS_HELP_STRING([--without-zlib],
@@ -80,6 +88,25 @@ echo "| Checking libraries"
 echo "o---------------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
+
+SC_PROVIDE_OBSTACK="no"
+if test "$SC_WITH_OBSTACK" = "yes" ; then
+  AC_MSG_CHECKING([for obstack])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[#include <obstack.h>]], [[
+struct obstack ob;
+static void        *(*obstack_chunk_alloc) (size_t) = 0;
+static void         (*obstack_chunk_free) (void *) = 0;
+obstack_init (&ob);
+obstack_free (&ob, 0);
+]])], [AC_MSG_RESULT([successful])], [
+    AC_MSG_RESULT([failed])
+    AC_MSG_NOTICE([Did not find obstack. Activating builtin])
+    SC_PROVIDE_OBSTACK="yes"
+    AC_DEFINE([PROVIDE_OBSTACK], 1, [Use builtin obstack])
+  ])
+fi
+AM_CONDITIONAL([SC_PROVIDE_OBSTACK], [test "$SC_PROVIDE_OBSTACK" = "yes"])
 
 SC_PROVIDE_ZLIB="no"
 if test "$SC_WITH_ZLIB" = "yes" ; then
@@ -192,9 +219,6 @@ if test "$SC_WITH_PROVIDE_GETOPT" = "no" ; then
   AC_CHECK_FUNC([getopt_long],,
                 [AC_DEFINE([PROVIDE_GETOPT], 1,
                            [Define to 1 if getopt is provided by sc])])
-fi
-if test "$SC_WITH_PROVIDE_OBSTACK" = "no" ; then
-  SC_REQUIRE_FUNCS([obstack_free])
 fi
 
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
