@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC library provides support for parallel scientific applications.
 
-  Copyright (C) 2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@
 #ifdef SC_HAVE_TIME_H
 #include <time.h>
 #endif
-#include <sc_allgather.h>
 
 static inline void
 mpi_dummy_assert_op (MPI_Op op)
@@ -148,7 +147,7 @@ int
 MPI_Allgather (void *p, int np, MPI_Datatype tp,
                void *q, int nq, MPI_Datatype tq, MPI_Comm comm)
 {
-  return sc_allgather (p, np, tp, q, nq, tq, comm);
+  return MPI_Gather (p, np, tp, q, nq, tq, 0, comm);
 }
 
 int
@@ -181,18 +180,7 @@ int
 MPI_Allreduce (void *p, void *q, int n, MPI_Datatype t,
                MPI_Op op, MPI_Comm comm)
 {
-  size_t              l;
-
-  SC_ASSERT (n >= 0);
-  mpi_dummy_assert_op (op);
-
-/* *INDENT-OFF* horrible indent bug */
-  l = (size_t) n * sc_mpi_sizeof (t);
-/* *INDENT-ON* */
-
-  memcpy (q, p, l);
-
-  return MPI_SUCCESS;
+  return MPI_Reduce (p, q, n, t, op, 0, comm);
 }
 
 int
@@ -304,5 +292,3 @@ sc_mpi_sizeof (MPI_Datatype t)
 
   SC_CHECK_NOT_REACHED ();
 }
-
-/* EOF sc_mpi.c */
