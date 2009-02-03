@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,7 +22,9 @@
 #include <sc.h>
 #include <sc_dmatrix.h>
 
+#if defined(SC_BLAS) && defined(SC_LAPACK)
 static const double eps = 2.220446049250313e-16;
+#endif
 
 int
 main (int argc, char **argv)
@@ -126,5 +128,3 @@ main (int argc, char **argv)
 #endif
   return num_failed_tests;
 }
-
-/* EOF test_dmatrix.c */

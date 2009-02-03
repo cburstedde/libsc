@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -28,4 +28,14 @@ const char          sc_uplochar[] = { 'U', 'L', '?' };
 const char          sc_cmachchar[] =
   { 'E', 'S', 'B', 'P', 'N', 'R', 'M', 'U', 'L', 'O' };
 
-/* EOF sc_blas.c */
+#ifndef SC_BLAS
+
+int
+sc_blas_nonimplemented ()
+{
+  SC_CHECK_ABORT (false, "BLAS not compiled in this configuration");
+
+  return 0;
+}
+
+#endif

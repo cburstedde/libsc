@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -73,6 +73,8 @@ extern const char   sc_antitranschar[]; /* does not work for complex */
 extern const char   sc_uplochar[];
 extern const char   sc_cmachchar[];
 
+#ifdef SC_BLAS
+
 #ifndef SC_F77_FUNC
 #define SC_F77_FUNC(small,CAPS) small ## _
 #endif
@@ -112,6 +114,20 @@ void                BLAS_DGEMM (const char *transa, const char *transb,
                                 const double *b, const sc_bint_t * ldb,
                                 const double *beta, double *c,
                                 const sc_bint_t * ldc);
+
+#else /* !SC_BLAS */
+
+#define BLAS_DLAMCH (double) sc_blas_nonimplemented
+#define BLAS_DSCAL  (void)   sc_blas_nonimplemented
+#define BLAS_DCOPY  (void)   sc_blas_nonimplemented
+#define BLAS_DAXPY  (void)   sc_blas_nonimplemented
+#define BLAS_DDOT   (double) sc_blas_nonimplemented
+#define BLAS_DGEMM  (void)   sc_blas_nonimplemented
+#define BLAS_DGEMV  (void)   sc_blas_nonimplemented
+
+int                 sc_blas_nonimplemented ();
+
+#endif
 
 SC_EXTERN_C_END;
 

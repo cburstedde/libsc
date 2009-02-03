@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -34,6 +34,8 @@ typedef enum sc_jobz
 sc_jobz_t;
 
 extern const char   sc_jobzchar[];
+
+#ifdef SC_LAPACK
 
 #ifndef SC_F77_FUNC
 #define SC_F77_FUNC(small,CAPS) small ## _
@@ -78,6 +80,18 @@ int                 LAPACK_ILAENV (const sc_bint_t * ispec,
                                    const sc_bint_t * N4,
                                    sc_buint_t name_length,
                                    sc_buint_t opts_length);
+
+#else /* !SC_LAPACK */
+
+#define LAPACK_DGELS    (void) sc_lapack_nonimplemented
+#define LAPACK_DGETRF   (void) sc_lapack_nonimplemented
+#define LAPACK_DGETRS   (void) sc_lapack_nonimplemented
+#define LAPACK_DSTEV    (void) sc_lapack_nonimplemented
+#define LAPACK_ILAENV   (int)  sc_lapack_nonimplemented
+
+int                 sc_lapack_nonimplemented ();
+
+#endif
 
 SC_EXTERN_C_END;
 

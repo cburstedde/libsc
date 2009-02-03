@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,4 +24,14 @@
 
 const char          sc_jobzchar[] = { 'N', 'V', '?' };
 
-/* EOF sc_lapack.c */
+#ifndef SC_BLAS
+
+int
+sc_lapack_nonimplemented ()
+{
+  SC_CHECK_ABORT (false, "LAPACK not compiled in this configuration");
+
+  return 0;
+}
+
+#endif
