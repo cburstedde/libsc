@@ -183,7 +183,7 @@ sc_bspline_find_interval (sc_bspline_t * bs, double t)
   }
   else {
     const int           nshift = 1;
-    double              ileft, iright;
+    int                 ileft, iright;
     double              tleft, tright;
 
     ileft = bs->n;
