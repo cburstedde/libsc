@@ -5,7 +5,7 @@ desc: |-
   which can be reproduced with mpirun -np 3 test/sc_test_sortb.
 type: :bugfix
 component: libsc
-release: "0.6"
+release: 
 reporter: Carsten Burstedde <carsten@ices.utexas.edu>
 status: :unstarted
 disposition: 
@@ -18,3 +18,10 @@ log_events:
   - Carsten Burstedde <carsten@ices.utexas.edu>
   - created
   - ""
+- - 2009-02-03 22:31:42.534180 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - unassigned from release 0.6
+  - |-
+    Parallel sort is still buggy. Fix it for 0.7 hopefully.
+    Remember to remove the SC_DEBUG checks from test_sort.c and sc_sort.c
+    and to update documentation in sc_sort.h once the bug is fixed.
