@@ -111,16 +111,17 @@ sc_dmatrix_new_view (sc_bint_t m, sc_bint_t n, sc_dmatrix_t * orig)
 }
 
 sc_dmatrix_t       *
-sc_dmatrix_clone (const sc_dmatrix_t * dmatrix)
+sc_dmatrix_clone (const sc_dmatrix_t * X)
 {
-  sc_bint_t           totalsize, inc;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *Xdata = X->e[0];
+  double             *Ydata;
   sc_dmatrix_t       *clone;
 
-  totalsize = dmatrix->m * dmatrix->n;
-  clone = sc_dmatrix_new (dmatrix->m, dmatrix->n);
+  clone = sc_dmatrix_new (X->m, X->n);
+  Ydata = clone->e[0];
 
-  inc = 1;
-  BLAS_DCOPY (&totalsize, dmatrix->e[0], &inc, clone->e[0], &inc);
+  memcpy (Ydata, Xdata, totalsize * sizeof (double));
 
   return clone;
 }
@@ -196,73 +197,68 @@ sc_dmatrix_is_symmetric (const sc_dmatrix_t * A, double tolerance)
 }
 
 void
-sc_dmatrix_set_zero (sc_dmatrix_t * dmatrix)
+sc_dmatrix_set_zero (sc_dmatrix_t * X)
 {
-  sc_dmatrix_set_value (dmatrix, 0.0);
+  sc_dmatrix_set_value (X, 0.0);
 }
 
 void
-sc_dmatrix_set_value (sc_dmatrix_t * dmatrix, double value)
+sc_dmatrix_set_value (sc_dmatrix_t * X, double value)
 {
-  sc_bint_t           i, size;
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  double             *data = X->e[0];
 
-  size = dmatrix->m * dmatrix->n;
-  for (i = 0; i < size; ++i)
-    dmatrix->e[0][i] = value;
+  for (i = 0; i < totalsize; ++i)
+    data[i] = value;
 }
 
 void
 sc_dmatrix_scale (double alpha, sc_dmatrix_t * X)
 {
-  sc_bint_t           totalsize, inc;
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  double             *data = X->e[0];
 
-  totalsize = X->m * X->n;
-
-  inc = 1;
-  BLAS_DSCAL (&totalsize, &alpha, X->e[0], &inc);
+  for (i = 0; i < totalsize; ++i)
+    data[i] *= alpha;
 }
 
 void
 sc_dmatrix_dotmult (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
-  sc_bint_t           size, i;
-  const double       *Xdata;
-  double             *Ydata;
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *Xdata = X->e[0];
+  double             *Ydata = Y->e[0];
 
   SC_ASSERT (X->m == Y->m && X->n == Y->n);
 
-  size = X->n * X->m;
-  Xdata = X->e[0];
-  Ydata = Y->e[0];
-
-  for (i = 0; i < size; ++i)
+  for (i = 0; i < totalsize; ++i)
     Ydata[i] *= Xdata[i];
 }
 
 void
 sc_dmatrix_alphadotdivide (double alpha, sc_dmatrix_t * X)
 {
-  sc_bint_t           size, i;
-  double             *Xdata;
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  double             *Xdata = X->e[0];
 
-  size = X->n * X->m;
-  Xdata = X->e[0];
-
-  for (i = 0; i < size; ++i)
+  for (i = 0; i < totalsize; ++i)
     Xdata[i] = alpha / Xdata[i];
 }
 
 void
 sc_dmatrix_copy (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
-  sc_bint_t           totalsize, inc;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *Xdata = X->e[0];
+  double             *Ydata = Y->e[0];
 
-  SC_ASSERT ((X)->m == (Y)->m && (X)->n == (Y)->n);
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
 
-  totalsize = X->m * X->n;
-
-  inc = 1;
-  BLAS_DCOPY (&totalsize, X->e[0], &inc, Y->e[0], &inc);
+  memcpy (Ydata, Xdata, totalsize * sizeof (double));
 }
 
 void
@@ -272,7 +268,7 @@ sc_dmatrix_transpose (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
   double             *Ydata;
   const double       *Xdata = X->e[0];
 
-  SC_ASSERT ((X)->m == (Y)->n && (X)->n == (Y)->m);
+  SC_ASSERT (X->m == Y->n && X->n == Y->m);
 
   Xrows = X->m;
   Xcols = X->n;
@@ -292,7 +288,7 @@ sc_dmatrix_add (double alpha, const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           totalsize, inc;
 
-  SC_ASSERT ((X)->m == (Y)->m && (X)->n == (Y)->n);
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
 
   totalsize = X->m * X->n;
 
