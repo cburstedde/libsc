@@ -1,9 +1,22 @@
 /*
- * Copyright (c) 2008 Carsten Burstedde <carsten@ices.utexas.edu>
- *
- * May only be used with the Mangll, Rhea and P4est codes.
- * Any other use is prohibited.
- */
+  This file is part of the SC Library.
+  The SC Library provides support for parallel scientific applications.
+
+  Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
+
+  The SC Library is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  The SC Library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <sc.h>
 #include <sc_allgather.h>
@@ -86,7 +99,7 @@ main (int argc, char **argv)
   SC_GLOBAL_INFO ("Testing allgather and replacement\n");
 
   gettimeofday (&tv, NULL);
-  srand (tv.tv_usec + 1e6 * getpid ());
+  srand ((unsigned int) (tv.tv_usec + 1e6 * getpid ()));
   dsend = rand () / (RAND_MAX + 1.);
 
   mpiret = MPI_Barrier (mpicomm);
@@ -133,5 +146,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-/* EOF test_allgather.c */
