@@ -46,11 +46,19 @@ sc_dmatrix_t       *sc_dmatrix_new (sc_bint_t m, sc_bint_t n);
 sc_dmatrix_t       *sc_dmatrix_new_zero (sc_bint_t m, sc_bint_t n);
 sc_dmatrix_t       *sc_dmatrix_clone (const sc_dmatrix_t * dmatrix);
 
-/** Create a matrix view on an existing array.
- * The array must be previously allocated with SC_ALLOC and friends.
- * The array must not be deallocated while the view is in use.
+/** Create a matrix view on an existing data array.
+ * The data array must have been previously allocated and large enough.
+ * The data array must not be deallocated while the view is in use.
  */
-sc_dmatrix_t       *sc_dmatrix_view (sc_bint_t m, sc_bint_t n, double *data);
+sc_dmatrix_t       *sc_dmatrix_new_data (sc_bint_t m, sc_bint_t n,
+                                         double *data);
+
+/** Create a matrix view on an existing sc_dmatrix_t.
+ * The original matrix must have greater equal elements than the view.
+ * The original matrix must not be destroyed or resized while view is in use.
+ */
+sc_dmatrix_t       *sc_dmatrix_new_view (sc_bint_t m, sc_bint_t n,
+                                         sc_dmatrix_t * orig);
 
 /** Reshape a matrix to different m and n without changing m * n.
  */

@@ -70,7 +70,19 @@ sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, bool init_zero)
 }
 
 sc_dmatrix_t       *
-sc_dmatrix_view (sc_bint_t m, sc_bint_t n, double *data)
+sc_dmatrix_new (sc_bint_t m, sc_bint_t n)
+{
+  return sc_dmatrix_new_internal (m, n, false);
+}
+
+sc_dmatrix_t       *
+sc_dmatrix_new_zero (sc_bint_t m, sc_bint_t n)
+{
+  return sc_dmatrix_new_internal (m, n, true);
+}
+
+sc_dmatrix_t       *
+sc_dmatrix_new_data (sc_bint_t m, sc_bint_t n, double *data)
 {
   sc_dmatrix_t       *rdm;
 
@@ -84,15 +96,18 @@ sc_dmatrix_view (sc_bint_t m, sc_bint_t n, double *data)
 }
 
 sc_dmatrix_t       *
-sc_dmatrix_new (sc_bint_t m, sc_bint_t n)
+sc_dmatrix_new_view (sc_bint_t m, sc_bint_t n, sc_dmatrix_t * orig)
 {
-  return sc_dmatrix_new_internal (m, n, false);
-}
+  sc_dmatrix_t       *rdm;
 
-sc_dmatrix_t       *
-sc_dmatrix_new_zero (sc_bint_t m, sc_bint_t n)
-{
-  return sc_dmatrix_new_internal (m, n, true);
+  SC_ASSERT (m >= 0 && n >= 0);
+  SC_ASSERT (m * n <= orig->m * orig->n);
+
+  rdm = SC_ALLOC (sc_dmatrix_t, 1);
+  sc_dmatrix_new_e (rdm, m, n, orig->e[0]);
+  rdm->view = true;
+
+  return rdm;
 }
 
 sc_dmatrix_t       *

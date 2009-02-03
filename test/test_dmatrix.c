@@ -50,9 +50,9 @@ main (int argc, char **argv)
 
   sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
 
-  A = sc_dmatrix_view (3, 3, A_data);
-  b = sc_dmatrix_view (1, 3, b_data);
-  xexact = sc_dmatrix_view (1, 3, xexact_data);
+  A = sc_dmatrix_new_data (3, 3, A_data);
+  b = sc_dmatrix_new_data (1, 3, b_data);
+  xexact = sc_dmatrix_new_data (1, 3, xexact_data);
   x = sc_dmatrix_new (1, 3);
 
   sc_dmatrix_rdivide (SC_NO_TRANS, b, A, x);
@@ -89,7 +89,7 @@ main (int argc, char **argv)
     ++num_failed_tests;
   }
 
-  bT = sc_dmatrix_view (3, 1, b_data);
+  bT = sc_dmatrix_new_data (3, 1, b_data);
   xT = sc_dmatrix_new (3, 1);
   xTexact = sc_dmatrix_new (3, 1);
 
