@@ -113,7 +113,7 @@ sc_bspline_workspace_new (int n, int d)
 
 sc_bspline_t       *
 sc_bspline_new (int n, sc_dmatrix_t * points,
-                sc_dmatrix_t *knots, sc_dmatrix_t *works)
+                sc_dmatrix_t * knots, sc_dmatrix_t * works)
 {
   sc_bspline_t       *bs;
 
@@ -182,9 +182,9 @@ sc_bspline_find_interval (sc_bspline_t * bs, double t)
     iguess = bs->cacheknot;
   }
   else {
-    const int         nshift = 1;
-    double            ileft, iright;
-    double            tleft, tright;
+    const int           nshift = 1;
+    double              ileft, iright;
+    double              tleft, tright;
 
     ileft = bs->n;
     iright = bs->n + bs->l - 1;
@@ -247,9 +247,9 @@ sc_bspline_evaluate (sc_bspline_t * bs, double t, double *result)
 
     /* SC_LDEBUGF ("For %d at offset %d\n", n, toffset); */
     for (i = 0; i < n; ++i) {
-      const double tleft = knotse[iguess + i - n + 1];
-      const double tright = knotse[iguess + i + 1];
-      const double tdiff = tright - tleft;
+      const double        tleft = knotse[iguess + i - n + 1];
+      const double        tright = knotse[iguess + i + 1];
+      const double        tdiff = tright - tleft;
       /* SC_LDEBUGF ("Tdiff %g %g %g\n", tleft, tright, tdiff); */
       SC_ASSERT (tdiff > 0);
       for (k = 0; k < bs->d; ++k) {
@@ -289,9 +289,9 @@ sc_bspline_derivative (sc_bspline_t * bs, double t, double *result)
 
     /* SC_LDEBUGF ("For %d at offset %d\n", n, toffset); */
     for (i = 0; i < n; ++i) {
-      const double tleft = knotse[iguess + i - n + 1];
-      const double tright = knotse[iguess + i + 1];
-      const double tdiff = tright - tleft;
+      const double        tleft = knotse[iguess + i - n + 1];
+      const double        tright = knotse[iguess + i + 1];
+      const double        tdiff = tright - tleft;
       /* SC_LDEBUGF ("Tdiff %g %g %g\n", tleft, tright, tdiff); */
       SC_ASSERT (tdiff > 0);
       for (k = 0; k < bs->d; ++k) {
