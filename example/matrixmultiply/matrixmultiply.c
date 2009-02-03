@@ -48,7 +48,7 @@ matrixsetrandom (sc_dmatrix_t * A)
   int                 r, c;
   for (r = 0; r < gnr; r = r + 1) {
     for (c = 0; c < gnc; c = c + 1) {
-      matrixset (A, r, c, drand48 ());
+      matrixset (A, r, c, rand () / (RAND_MAX + 1.));
     }
   }
 }

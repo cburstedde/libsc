@@ -23,9 +23,9 @@
 #include <sc_options.h>
 
 static int
-callback (sc_options_t * opt, const char *optarg, void *data)
+callback (sc_options_t * opt, const char *theoptarg, void *data)
 {
-  SC_GLOBAL_INFOF ("%s with %s\n", (const char *) data, optarg);
+  SC_GLOBAL_INFOF ("%s with %s\n", (const char *) data, theoptarg);
   return 0;
 }
 

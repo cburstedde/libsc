@@ -86,8 +86,8 @@ main (int argc, char **argv)
   SC_GLOBAL_INFO ("Testing allgather and replacement\n");
 
   gettimeofday (&tv, NULL);
-  srand48 (tv.tv_usec + 1e6 * getpid ());
-  dsend = drand48 ();
+  srand (tv.tv_usec + 1e6 * getpid ());
+  dsend = rand () / (RAND_MAX + 1.);
 
   mpiret = MPI_Barrier (mpicomm);
   SC_CHECK_MPI (mpiret);
