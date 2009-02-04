@@ -30,7 +30,9 @@ sc_bspline_min_number_points (int n)
 sc_dmatrix_t       *
 sc_bspline_knots_new (int n, sc_dmatrix_t * points)
 {
+#ifdef SC_DEBUG
   const int           d = points->n;
+#endif
   const int           p = points->m - 1;
   const int           m = n + p + 1;
   const int           l = m - 2 * n;
