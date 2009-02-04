@@ -33,6 +33,7 @@ DISTCLEANFILES += \
 include src/Makefile.am
 include iniparser/Makefile.am
 include libb64/Makefile.am
+include lua/Makefile.am
 include zlib/Makefile.am
 include test/Makefile.am
 include example/bspline/Makefile.am

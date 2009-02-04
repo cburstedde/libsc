@@ -37,6 +37,11 @@
 */
 
 /*
+  The files under lua except lua/Makefile.am are copied from lua 5.1.4,
+  Copyright (C) 1994-2008 Lua.org, PUC-Rio.
+*/
+
+/*
   The source files under libb64 have been copied from libb64 and modified.
   libb64 is public domain software, see the LICENSE and AUTHORS files in
   that directory.
