@@ -33,16 +33,16 @@ base64_encode_value (char value_in)
 }
 
 size_t
-base64_encode_block (const char *plaintext_in, size_t length_in, char *code_out,
-                     base64_encodestate * state_in)
+base64_encode_block (const char *plaintext_in, size_t length_in,
+                     char *code_out, base64_encodestate * state_in)
 {
-  /*@unused@*/
+  /*@unused@ */
   const char         *plainchar = plaintext_in;
-  /*@unused@*/
+  /*@unused@ */
   const char         *const plaintextend = plaintext_in + length_in;
   char               *codechar = code_out;
   char                result;
-  /*@unused@*/
+  /*@unused@ */
   char                fragment;
 
   result = state_in->result;
@@ -120,5 +120,3 @@ base64_encode_blockend (char *code_out, base64_encodestate * state_in)
 
   return (size_t) (codechar - code_out);
 }
-
-/* EOF cencode.c */

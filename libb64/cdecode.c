@@ -40,10 +40,10 @@ size_t
 base64_decode_block (const char *code_in, size_t length_in,
                      char *plaintext_out, base64_decodestate * state_in)
 {
-  /*@unused@*/
+  /*@unused@ */
   const char         *codechar = code_in;
   char               *plainchar = plaintext_out;
-  /*@unused@*/
+  /*@unused@ */
   char                fragment;
 
   *plainchar = state_in->plainchar;
@@ -100,5 +100,3 @@ base64_decode_block (const char *code_in, size_t length_in,
   /* control should not reach here */
   return (size_t) (plainchar - plaintext_out);
 }
-
-/* EOF cdecode.c */

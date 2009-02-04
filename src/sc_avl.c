@@ -670,5 +670,3 @@ avl_to_array (avl_tree_t * avltree, sc_array_t * array)
 }
 
 #endif /* AVL_COUNT */
-
-/* EOF sc_avl.c */

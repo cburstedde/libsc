@@ -41,5 +41,3 @@ main (void)
 
   return 0;
 }
-
-/* EOF b64dec.c */

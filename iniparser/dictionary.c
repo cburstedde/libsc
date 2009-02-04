@@ -405,4 +405,4 @@ int main(int argc, char *argv[])
 }
 #endif
 
-/* EOF dictionary.c */
+/* *INDENT-ON* */

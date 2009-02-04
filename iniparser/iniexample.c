@@ -1,4 +1,3 @@
-
 /* *INDENT-OFF* */
 
 #include <stdio.h>
@@ -100,4 +99,4 @@ int parse_ini_file(char * ini_name)
 	return 0 ;
 }
 
-/* EOF iniexample.c */
+/* *INDENT-ON* */

@@ -656,6 +656,4 @@ void iniparser_freedict(dictionary * d)
     dictionary_del(d);
 }
 
-/* EOF iniparser.c */
-
 /* *INDENT-ON* */

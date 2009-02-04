@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -288,5 +288,3 @@ sc_amr_refine_search (int package_id, sc_amr_control_t * amr,
            "Estimated global number of elements = %ld\n",
            amr->num_total_estimated);
 }
-
-/* EOF sc_amr.c */

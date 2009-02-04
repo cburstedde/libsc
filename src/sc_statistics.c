@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -312,5 +312,3 @@ sc_flopinfo_stop (sc_flopinfo_t * fi)
 
   fi->seconds += MPI_Wtime ();
 }
-
-/* EOF sc_statistics.c */
