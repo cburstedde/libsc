@@ -21,7 +21,6 @@
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
 #include <sc_containers.h>
-#include <zlib.h>
 
 /* array routines */
 

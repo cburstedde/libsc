@@ -26,6 +26,9 @@
   Copyright (C) 1998  Michael H. Buselli <cosine@cosine.org>
   Copyright (C) 2000-2002  Wessel Dankers <wsl@nl.linux.org>
   and modified for the SC Library.
+
+  The files sc_zlib.h and sc_zconf.h have been copied from  zlib 1.2.3,
+  Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler, and modified.
 */
 
 /*

@@ -22,7 +22,6 @@
 #include <sc.h>
 #include <sc_io.h>
 #include <libb64.h>
-#include <zlib.h>
 
 int
 sc_vtk_write_binary (FILE * vtkfile, char *numeric_data, size_t byte_length)

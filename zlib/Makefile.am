@@ -23,6 +23,5 @@ zlib_compiled_sources = \
 src_libsc_a_SOURCES += \
         $(zlib_internal_headers) \
         $(zlib_compiled_sources)
-src_libsc_a_CPPFLAGS += -I@top_srcdir@/zlib
 
 endif

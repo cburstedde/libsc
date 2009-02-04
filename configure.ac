@@ -110,6 +110,7 @@ if test "$SC_WITH_ZLIB" = "yes" ; then
   AC_CHECK_LIB([z], [adler32_combine],, [
     AC_MSG_NOTICE([did not find a recent zlib. Activating builtin])
     SC_PROVIDE_ZLIB="yes"
+    AC_DEFINE([PROVIDE_ZLIB], 1, [Use builtin zlib])
   ])
 fi
 AM_CONDITIONAL([SC_PROVIDE_ZLIB], [test "$SC_PROVIDE_ZLIB" = "yes"])
