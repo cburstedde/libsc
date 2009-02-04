@@ -118,6 +118,7 @@ AM_CONDITIONAL([SC_PROVIDE_ZLIB], [test "$SC_PROVIDE_ZLIB" = "yes"])
 
 SC_PROVIDE_LUA="no"
 if test "$SC_WITH_LUA" = "yes" ; then
+  AC_CHECK_HEADERS([lua.h lua5.1/lua.h], [break])
   AC_SEARCH_LIBS([lua_createtable], [lua lua5 lua51 lua5.1],, [
     AC_MSG_NOTICE([did not find a recent lua. Activating builtin])
     SC_PROVIDE_LUA="yes"

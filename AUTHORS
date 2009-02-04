@@ -19,16 +19,18 @@
 */
 
 /*
-  The files sc_obstack* and sc_getopt* have been copied from GNU C library
-  2.7, Copyright (C) Free Software Foundation, Inc., and modified.
+  The files sc_obstack* and sc_getopt* are derived from the GNU C library
+  2.7, Copyright (C) Free Software Foundation, Inc.
 
-  The files sc_avl.{c,h} have been copied from libavl (Debian 0.3.5-2),
+  The files sc_avl.{c,h} are derived from libavl (Debian 0.3.5-2),
   Copyright (C) 1998  Michael H. Buselli <cosine@cosine.org>
-  Copyright (C) 2000-2002  Wessel Dankers <wsl@nl.linux.org>
-  and modified for the SC Library.
+  Copyright (C) 2000-2002  Wessel Dankers <wsl@nl.linux.org>.
 
-  The files sc_zlib.h and sc_zconf.h have been copied from  zlib 1.2.3,
-  Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler, and modified.
+  The files sc_zlib.h and sc_zconf.h are derived from zlib 1.2.3,
+  Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler.
+
+  The files in src/sc_builtin are copied from lua.
+  See Copyright information below.
 */
 
 /*
@@ -42,20 +44,19 @@
 */
 
 /*
-  The source files under libb64 have been copied from libb64 and modified.
-  libb64 is public domain software, see the LICENSE and AUTHORS files in
+  The source files under libb64 are derived from libb64.  libb64 is public
+  domain software, see the LICENSE and AUTHORS files in that directory.
+*/
+
+/*
+  The files under iniparser are derived from iniparser3.0b.  iniparser is
+  licensed unter the MIT license, see the LICENSE and AUTHORS files in
   that directory.
 */
 
 /*
-  The files under iniparser have been copied from iniparser3.0b
-  and modified.  iniparser is licensed unter the MIT license,
-  see the LICENSE and AUTHORS files in that directory.
-*/
-
-/*
-  The files src/sc_c99_protos.h and src/sc_c99_functions.c are based on
-  files from libgfortran, Copyright (C) 2004 Free Software Foundation, Inc.
+  The files src/sc_c99_protos.h and src/sc_c99_functions.c are derived
+  from libgfortran, Copyright (C) 2004 Free Software Foundation, Inc.
 */
 
 /*
