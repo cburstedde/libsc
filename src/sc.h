@@ -311,9 +311,9 @@ void                sc_logf (const char *filename, int lineno,
   __attribute__ ((format (printf, 6, 7)));
 
 /** Generic MPI abort handler. The data must point to a MPI_Comm object. */
-void                sc_generic_abort (void *data);
+void                sc_generic_abort_handler (void *data);
 
-/** Installs an abort handler and catches signals INT SEGV USR2. */
+/** Installs an abort handler and its callback data. */
 void                sc_set_abort_handler (sc_handler_t handler, void *data);
 
 /** Prints a stack trace, calls the abort handler and terminates. */
@@ -339,16 +339,23 @@ void                sc_package_unregister (int package_id);
  */
 void                sc_package_print_summary (int log_priority);
 
-/** Sets the global program identifier (e.g. the MPI rank) and abort handler.
+/** Sets the global program identifier (e.g. the MPI rank) and some flags.
  * This function is optional.
  * If this function is not called or called with log_handler == NULL,
  * the default SC log handler will be used.
  * If this function is not called or called with log_threshold == SC_LP_DEFAULT,
  * the default SC log threshold will be used.
  * The default SC log settings can be changed with sc_set_log_defaults ().
+ * \param [in] mpicomm          MPI communicator, can be MPI_COMM_NULL.
+ *                              If MPI_COMM_NULL, the identifier is set to -1.
+ *                              Otherwise, MPI_Init must have been called
+ *                              and the communicator is stored for later
+ *                              use from within sc_generic_abort_handler.
+ * \param [in] catch_signals    If true, signals INT SEGV USR2 are be caught.
+ * \param [in] print_backtrace  If true, sc_abort prints a backtrace.
  */
-void                sc_init (int identifier,
-                             sc_handler_t abort_handler, void *abort_data,
+void                sc_init (MPI_Comm mpicomm,
+                             bool catch_signals, bool print_backtrace,
                              sc_log_handler_t log_handler, int log_threshold);
 
 /** Unregisters all packages, runs the memory check, removes the

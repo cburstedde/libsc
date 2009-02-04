@@ -32,7 +32,6 @@ main (int argc, char **argv)
   int                 num_failed_tests = 0;
 #if defined(SC_BLAS) && defined(SC_LAPACK)
   int                 j;
-  int                 rank;
   int                 mpiret;
   sc_dmatrix_t       *A, *x, *xexact, *b, *bT, *xT, *xTexact;
   double              xmaxerror = 0.0;
@@ -45,10 +44,8 @@ main (int argc, char **argv)
 
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &rank);
-  SC_CHECK_MPI (mpiret);
 
-  sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_WORLD, true, true, NULL, SC_LP_DEFAULT);
 
   A = sc_dmatrix_new_data (3, 3, A_data);
   b = sc_dmatrix_new_data (1, 3, b_data);
@@ -124,7 +121,7 @@ main (int argc, char **argv)
 
   mpiret = MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
-
 #endif
+
   return num_failed_tests;
 }

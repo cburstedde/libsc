@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC library provides support for parallel scientific applications.
 
-  Copyright (C) 2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,16 +27,13 @@ main (int argc, char **argv)
 {
 #ifdef SC_BLAS
   int                 mpiret;
-  int                 rank;
   sc_dmatrix_pool_t  *p13, *p92;
   sc_dmatrix_t       *m1, *m2, *m3, *m4;
 
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &rank);
-  SC_CHECK_MPI (mpiret);
 
-  sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_WORLD, true, true, NULL, SC_LP_DEFAULT);
 
   p13 = sc_dmatrix_pool_new (1, 3);
   p92 = sc_dmatrix_pool_new (9, 2);
@@ -71,5 +68,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-/* EOF test_dmatrix_pool.c */

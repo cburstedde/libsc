@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ compar (const void *p1, const void *p2)
 int
 main (int argc, char **argv)
 {
-  int                 rank;
   int                 i, i1, i2, i3, i3last, i4, i4last, temp, count;
   size_t              s, swaps1, swaps2, swaps3, total1, total2, total3;
   ssize_t             searched;
@@ -47,10 +46,8 @@ main (int argc, char **argv)
 
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &rank);
-  SC_CHECK_MPI (mpiret);
 
-  sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_WORLD, true, true, NULL, SC_LP_DEFAULT);
 
   a1 = sc_array_new (sizeof (int));
   a2 = sc_array_new (sizeof (int));
@@ -156,5 +153,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-/* EOF test_pqueue.c */

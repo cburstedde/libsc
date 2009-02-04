@@ -100,6 +100,7 @@ static int          default_malloc_count = 0;
 static int          default_free_count = 0;
 
 static int          sc_identifier = -1;
+static MPI_Comm     sc_mpicomm = MPI_COMM_NULL;
 
 static int          sc_default_log_threshold = SC_LP_THRESHOLD;
 static sc_log_handler_t sc_default_log_handler = sc_log_handler;
@@ -107,11 +108,12 @@ static sc_log_handler_t sc_default_log_handler = sc_log_handler;
 static FILE        *sc_log_stream = NULL;
 static bool         sc_log_stream_set = false;
 
-static bool         signals_caught = false;
+static bool         sc_signals_caught = false;
 static sc_sig_t     system_int_handler = NULL;
 static sc_sig_t     system_segv_handler = NULL;
 static sc_sig_t     system_usr2_handler = NULL;
 
+static bool         sc_print_backtrace = false;
 static sc_handler_t sc_abort_handler = NULL;
 static void        *sc_abort_data = NULL;
 
@@ -148,6 +150,33 @@ sc_signal_handler (int sig)
   fprintf (stderr, "%sAbort: Signal %s\n", prefix, sigstr);
 
   sc_abort ();
+}
+
+/** Installs or removes a signal handler for INT SEGV USR2 that aborts.
+ * \param [in] catch    If true, catch signals INT SEGV USR2.
+ *                      If false, reinstate previous signal handler.
+ */
+static void
+sc_set_signal_handler (bool catch)
+{
+  if (catch && !sc_signals_caught) {
+    system_int_handler = signal (SIGINT, sc_signal_handler);
+    SC_CHECK_ABORT (system_int_handler != SIG_ERR, "catching INT");
+    system_segv_handler = signal (SIGSEGV, sc_signal_handler);
+    SC_CHECK_ABORT (system_segv_handler != SIG_ERR, "catching SEGV");
+    system_usr2_handler = signal (SIGUSR2, sc_signal_handler);
+    SC_CHECK_ABORT (system_usr2_handler != SIG_ERR, "catching USR2");
+    sc_signals_caught = true;
+  }
+  else if (!catch && sc_signals_caught) {
+    (void) signal (SIGINT, system_int_handler);
+    system_int_handler = NULL;
+    (void) signal (SIGSEGV, system_segv_handler);
+    system_segv_handler = NULL;
+    (void) signal (SIGUSR2, system_usr2_handler);
+    system_usr2_handler = NULL;
+    sc_signals_caught = false;
+  }
 }
 
 static void
@@ -490,13 +519,14 @@ sc_logf (const char *filename, int lineno,
 }
 
 void
-sc_generic_abort (void *data)
+sc_generic_abort_handler (void *data)
 {
   int                 rank;
   MPI_Comm           *mpicomm = data;
 
   if (mpicomm == NULL) {
-    fprintf (stderr, "Error: sc_generic_abort needs MPI_Comm* data!\n");
+    fprintf (stderr,
+             "Error: sc_generic_abort_handler needs MPI_Comm* data\n");
   }
   else {
     rank = -1;
@@ -511,37 +541,12 @@ sc_set_abort_handler (sc_handler_t handler, void *data)
 {
   sc_abort_handler = handler;
   sc_abort_data = data;
-
-  if (handler != NULL && !signals_caught) {
-    system_int_handler = signal (SIGINT, sc_signal_handler);
-    SC_CHECK_ABORT (system_int_handler != SIG_ERR, "catching INT");
-    system_segv_handler = signal (SIGSEGV, sc_signal_handler);
-    SC_CHECK_ABORT (system_segv_handler != SIG_ERR, "catching SEGV");
-    system_usr2_handler = signal (SIGUSR2, sc_signal_handler);
-    SC_CHECK_ABORT (system_usr2_handler != SIG_ERR, "catching USR2");
-    signals_caught = true;
-  }
-  else if (handler == NULL && signals_caught) {
-    (void) signal (SIGINT, system_int_handler);
-    system_int_handler = NULL;
-    (void) signal (SIGSEGV, system_segv_handler);
-    system_segv_handler = NULL;
-    (void) signal (SIGUSR2, system_usr2_handler);
-    system_usr2_handler = NULL;
-    signals_caught = false;
-  }
 }
 
 void
 sc_abort (void)
 {
   char                prefix[BUFSIZ];
-#ifdef SC_BACKTRACE
-  int                 i, bt_size;
-  void               *bt_buffer[SC_STACK_SIZE];
-  char              **bt_strings;
-  const char         *str;
-#endif
 
   if (sc_identifier >= 0) {
     snprintf (prefix, BUFSIZ, "[%d] ", sc_identifier);
@@ -550,29 +555,41 @@ sc_abort (void)
     prefix[0] = '\0';
   }
 
+  if (0) {
+  }
 #ifdef SC_BACKTRACE
-  bt_size = backtrace (bt_buffer, SC_STACK_SIZE);
-  bt_strings = backtrace_symbols (bt_buffer, bt_size);
+  else if (sc_print_backtrace) {
+    int                 i, bt_size;
+    void               *bt_buffer[SC_STACK_SIZE];
+    char              **bt_strings;
+    const char         *str;
 
-  fprintf (stderr, "%sAbort: Obtained %d stack frames\n", prefix, bt_size);
+    bt_size = backtrace (bt_buffer, SC_STACK_SIZE);
+    bt_strings = backtrace_symbols (bt_buffer, bt_size);
+
+    fprintf (stderr, "%sAbort: Obtained %d stack frames\n", prefix, bt_size);
 
 #ifdef SC_ADDRTOLINE
-  /* implement pipe connection to addr2line */
+    /* implement pipe connection to addr2line */
 #endif
 
-  for (i = 0; i < bt_size; i++) {
-    str = strrchr (bt_strings[i], '/');
-    if (str != NULL) {
-      ++str;
+    for (i = 0; i < bt_size; i++) {
+      str = strrchr (bt_strings[i], '/');
+      if (str != NULL) {
+        ++str;
+      }
+      else {
+        str = bt_strings[i];
+      }
+      /* fprintf (stderr, "   %p %s\n", bt_buffer[i], str); */
+      fprintf (stderr, "%s   %s\n", prefix, str);
     }
-    else {
-      str = bt_strings[i];
-    }
-    /* fprintf (stderr, "   %p %s\n", bt_buffer[i], str); */
-    fprintf (stderr, "%s   %s\n", prefix, str);
+    free (bt_strings);
   }
-  free (bt_strings);
-#endif /* SC_BACKTRACE */
+#endif
+  else {
+    fprintf (stderr, "%sAbort\n", prefix);
+  }
 
   fflush (stdout);
   fflush (stderr);
@@ -676,16 +693,28 @@ sc_package_print_summary (int log_priority)
 }
 
 void
-sc_init (int identifier,
-         sc_handler_t abort_handler, void *abort_data,
+sc_init (MPI_Comm mpicomm,
+         bool catch_signals, bool print_backtrace,
          sc_log_handler_t log_handler, int log_threshold)
 {
   int                 w;
   const char        **on, **ov;
   const char         *overrides[] = { SC_OVERRIDES NULL, NULL };
 
-  sc_identifier = identifier;
-  sc_set_abort_handler (abort_handler, abort_data);
+  sc_identifier = -1;
+  sc_mpicomm = MPI_COMM_NULL;
+  sc_print_backtrace = print_backtrace;
+
+  if (mpicomm != MPI_COMM_NULL) {
+    int                 mpiret;
+
+    sc_mpicomm = mpicomm;
+    sc_set_abort_handler (sc_generic_abort_handler, &sc_mpicomm);
+    mpiret = MPI_Comm_rank (sc_mpicomm, &sc_identifier);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  sc_set_signal_handler (catch_signals);
   sc_package_id = sc_package_register (log_handler, log_threshold,
                                        "libsc", "The SC Library");
 
@@ -726,7 +755,10 @@ sc_finalize (void)
   SC_ASSERT (sc_num_packages == 0);
   sc_memory_check (-1);
 
+  sc_set_signal_handler (false);
   sc_set_abort_handler (NULL, NULL);
+  sc_mpicomm = MPI_COMM_NULL;
 
+  sc_print_backtrace = false;
   sc_identifier = -1;
 }

@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC library provides support for parallel scientific applications.
 
-  Copyright (C) 2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ main (int argc, char **argv)
   mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &rank);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_WORLD, true, true, NULL, SC_LP_DEFAULT);
 
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'w', "switch", &w, "Switch");
@@ -106,5 +106,3 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-/* EOF options.c */
