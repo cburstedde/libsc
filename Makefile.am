@@ -10,7 +10,6 @@ DISTCLEANFILES =
 EXTRA_DIST =
 LDADD =
 LINT_CSOURCES =
-MAINTAINERCLEANFILES =
 TESTS =
 bin_PROGRAMS =
 check_PROGRAMS =
@@ -24,10 +23,10 @@ noinst_PROGRAMS =
 TESTS_ENVIRONMENT = @SC_MPI_TESTS_ENVIRONMENT@
 
 # handle toplevel directory
-EXTRA_DIST += bootstrap scindent config/git-version-gen bugs doc
+EXTRA_DIST += \
+        bootstrap scindent config/git-version-gen config/git2cl bugs doc
 DISTCLEANFILES += \
         _configs.sed src/sc_config.h SC.override.pre SC.override
-MAINTAINERCLEANFILES += ChangeLog
 .PHONY: lint ChangeLog
 
 # non-recursive build
@@ -63,12 +62,10 @@ else
 endif
 
 ChangeLog:
-	@(GIT_DIR=@top_srcdir@/.git git log | @top_srcdir@/config/git2cl \
-		> .ChangeLog.tmp && \
-		mv .ChangeLog.tmp ChangeLog; rm -f .ChangeLog.tmp) || \
-	(touch ChangeLog; \
-		echo 'Warning not in git dir; ChangeLog could be wrong.' >&2)
+	(GIT_DIR=@top_srcdir@/.git git log > .ChangeLog.tmp && \
+         cat .ChangeLog.tmp | @top_srcdir@/config/git2cl > ChangeLog) ; \
+        rm -f .ChangeLog.tmp
 
-dist-hook: ChangeLog
+dist-hook:
 	echo $(VERSION) > $(distdir)/.tarball-version
 	(test "x$(VERSION)" = "x`@top_srcdir@/config/git-version-gen @top_srcdir@/.tarball-version`" || (echo "Stale version;" && echo "Please run:" && echo "     cd @top_srcdir@ && ./bootstrap" && echo "before make dist" && exit 1 ))
