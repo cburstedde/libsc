@@ -1,0 +1,7 @@
+#! /bin/sh
+
+find lua -wholename 'lua/src/*.c' | sort
+echo
+find lua -wholename 'lua/src/*.h' | sort
+echo
+find lua | grep -vE '^lua/src/.*(\.c|\.h)$' | sort

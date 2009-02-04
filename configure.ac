@@ -44,6 +44,7 @@ SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 SC_ARG_WITH_BUILTIN([getopt], [GETOPT])
 SC_ARG_WITH_BUILTIN([obstack], [OBSTACK])
 SC_ARG_WITH_BUILTIN([zlib], [ZLIB])
+SC_ARG_WITH_BUILTIN([lua], [LUA])
 
 if test "$SC_ENABLE_ALLOC_PAGE" != no -a \
         "$SC_ENABLE_ALLOC_LINE" != no ; then
@@ -114,6 +115,16 @@ if test "$SC_WITH_ZLIB" = "yes" ; then
   ])
 fi
 AM_CONDITIONAL([SC_PROVIDE_ZLIB], [test "$SC_PROVIDE_ZLIB" = "yes"])
+
+SC_PROVIDE_LUA="no"
+if test "$SC_WITH_LUA" = "yes" ; then
+  AC_SEARCH_LIBS([lua_createtable], [lua lua5 lua51 lua5.1],, [
+    AC_MSG_NOTICE([did not find a recent lua. Activating builtin])
+    SC_PROVIDE_LUA="yes"
+    AC_DEFINE([PROVIDE_LUA], 1, [Use builtin lua])
+  ])
+fi
+AM_CONDITIONAL([SC_PROVIDE_LUA], [test "$SC_PROVIDE_LUA" = "yes"])
 
 # Checks for BLAS (and F77 environment only if necessary).
 echo "o---------------------------------------"
