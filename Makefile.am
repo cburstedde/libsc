@@ -35,8 +35,9 @@ include iniparser/Makefile.am
 include libb64/Makefile.am
 include zlib/Makefile.am
 include test/Makefile.am
-include example/logging/Makefile.am
+include example/bspline/Makefile.am
 include example/dmatrix/Makefile.am
+include example/logging/Makefile.am
 include example/matrixmultiply/Makefile.am
 include example/options/Makefile.am
 
