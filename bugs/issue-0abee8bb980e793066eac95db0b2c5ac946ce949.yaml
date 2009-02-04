@@ -7,8 +7,8 @@ type: :bugfix
 component: libsc
 release: "0.6"
 reporter: Carsten Burstedde <carsten@ices.utexas.edu>
-status: :unstarted
-disposition: 
+status: :closed
+disposition: :fixed
 creation_time: 2008-11-10 21:44:59.046839 Z
 references: []
 
@@ -18,3 +18,16 @@ log_events:
   - Carsten Burstedde <carsten@ices.utexas.edu>
   - created
   - ""
+- - 2009-02-04 00:45:21.011848 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - closed with disposition fixed
+  - |-
+    Remodeled sc_init. This breaks the API. Please update.
+    It takes a communicator argument now. If this is MPI_COMM_NULL,
+    the identifier (rank) is set to -1. Otherwise, the communicator
+    is stored for later use by sc_generic_abort_handler, which is
+    set as the abort handler, and the rank is retrieved and stored
+    as identifier.
+    The next two boolean arguments specify if the signals
+    INT, SEGV and USR2 are caught and trigger an sc_abort,
+    and if a backtrace is printed from within sc_abort.
