@@ -23,8 +23,9 @@
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
 #include <sc_getopt.h>
-#include <sc_lua.h>
+#include <sc_obstack.h>
 #include <sc_zlib.h>
+#include <sc_lua.h>
 
 static int
 test_getopt (int argc, char **argv)

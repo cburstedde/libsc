@@ -61,15 +61,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef SC_PROVIDE_OBSTACK
-#ifdef _OBSTACK_H
-#error "obstack.h is included.  Include sc.h first or use --without-obstack".
-#endif
-#include <sc_obstack.h>
-#else
-#include <obstack.h>
-#endif
-
 #include <sc_c99_functions.h>
 #include <sc_mpi.h>
 

@@ -15,7 +15,7 @@ libsc_installed_headers = \
         src/sc_amr.h src/sc_allgather.h src/sc_sort.h \
         src/sc_dmatrix.h src/sc_blas.h src/sc_lapack.h \
         src/sc_bspline.h \
-        src/sc_getopt.h src/sc_zlib.h src/sc_lua.h
+        src/sc_getopt.h src/sc_obstack.h src/sc_zlib.h src/sc_lua.h
 libsc_compiled_sources = \
         src/sc.c src/sc_mpi.c src/sc_containers.c src/sc_avl.c \
         src/sc_options.c src/sc_functions.c src/sc_statistics.c \
@@ -23,11 +23,7 @@ libsc_compiled_sources = \
         src/sc_amr.c src/sc_allgather.c src/sc_sort.c \
         src/sc_dmatrix.c src/sc_blas.c src/sc_lapack.c \
         src/sc_bspline.c \
-        src/sc_getopt.c src/sc_getopt1.c
-if SC_PROVIDE_OBSTACK
-  libsc_installed_headers += src/sc_obstack.h
-  libsc_compiled_sources +=  src/sc_obstack.c
-endif
+        src/sc_getopt.c src/sc_obstack.c src/sc_getopt1.c
 
 lib_LIBRARIES += src/libsc.a
 src_libsc_a_SOURCES = \

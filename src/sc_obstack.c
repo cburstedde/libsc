@@ -23,7 +23,9 @@
 /* renamed from glibc 2.7 to sc_obstack.h and modified */
 
 #include <sc.h>
-#include <sc_obstack.h>
+
+#ifdef SC_PROVIDE_OBSTACK
+#include "sc_builtin/obstack.h"
 
 /* NOTE BEFORE MODIFYING THIS FILE: This version number must be
    incremented whenever callers compiled using an old obstack.h can no
@@ -398,5 +400,7 @@ print_and_abort (void)
 }
 
 #endif	/* !ELIDE_CODE */
+
+#endif  /* SC_PROVIDE_OBSTACK */
 
 /* *INDENT-ON* */

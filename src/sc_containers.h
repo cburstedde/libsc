@@ -25,6 +25,8 @@
 #error "sc.h should be included before this header file"
 #endif
 
+#include <sc_obstack.h>
+
 SC_EXTERN_C_BEGIN;
 
 /* Hash macros from lookup3.c by Bob Jenkins, May 2006, public domain. */
