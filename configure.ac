@@ -227,5 +227,5 @@ echo "o----------------------------------"
 # Create output files.
 SC_ARG_OVERRIDE_SAVE([SC])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile Makefile.sc.mk])
 AC_OUTPUT

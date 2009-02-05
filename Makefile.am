@@ -18,6 +18,10 @@ lib_LIBRARIES =
 nodist_include_HEADERS =
 noinst_HEADERS =
 noinst_PROGRAMS =
+sysconf_DATA =
+
+# use this if you want to link in libsc without autotools
+sysconf_DATA += Makefile.sc.mk
 
 # set test environment
 TESTS_ENVIRONMENT = @SC_MPI_TESTS_ENVIRONMENT@
