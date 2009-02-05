@@ -79,15 +79,6 @@
 #include <obstack.h>
 #endif
 
-#ifdef SC_PROVIDE_ZLIB
-#ifdef ZLIB_H
-#error "zlib.h is included.  Include sc.h first or use --without-zlib".
-#endif
-#include <sc_zlib.h>
-#else
-#include <zlib.h>
-#endif
-
 #include <sc_c99_functions.h>
 #include <sc_mpi.h>
 

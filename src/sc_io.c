@@ -21,6 +21,7 @@
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
 #include <sc_io.h>
+#include <sc_zlib.h>
 #include <libb64.h>
 
 int

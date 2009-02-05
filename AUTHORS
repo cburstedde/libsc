@@ -26,10 +26,7 @@
   Copyright (C) 1998  Michael H. Buselli <cosine@cosine.org>
   Copyright (C) 2000-2002  Wessel Dankers <wsl@nl.linux.org>.
 
-  The files sc_zlib.h and sc_zconf.h are derived from zlib 1.2.3,
-  Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler.
-
-  The files in src/sc_builtin are copied from lua.
+  The files in src/sc_builtin are copied from zlib and lua, respectively.
   See Copyright information below.
 */
 

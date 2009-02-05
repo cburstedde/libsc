@@ -14,7 +14,7 @@ libsc_installed_headers = \
         src/sc_ranges.h src/sc_c99_functions.h src/sc_io.h \
         src/sc_amr.h src/sc_allgather.h src/sc_sort.h \
         src/sc_dmatrix.h src/sc_blas.h src/sc_lapack.h \
-        src/sc_bspline.h src/sc_lua.h
+        src/sc_bspline.h src/sc_zlib.h src/sc_lua.h
 libsc_compiled_sources = \
         src/sc.c src/sc_mpi.c src/sc_containers.c src/sc_avl.c \
         src/sc_options.c src/sc_functions.c src/sc_statistics.c \
@@ -31,9 +31,6 @@ endif
 if SC_PROVIDE_OBSTACK
   libsc_installed_headers += src/sc_obstack.h
   libsc_compiled_sources +=  src/sc_obstack.c
-endif
-if SC_PROVIDE_ZLIB
-  libsc_installed_headers += src/sc_zconf.h src/sc_zlib.h
 endif
 
 lib_LIBRARIES += src/libsc.a
