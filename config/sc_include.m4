@@ -1,6 +1,10 @@
+
+dnl sc_include.m4 - general custom macros
 dnl
-dnl SC acinclude.m4 - custom macros
+dnl This file is part of the SC Library.
+dnl The SC library provides support for parallel scientific applications.
 dnl
+dnl Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
 
 dnl Documentation for macro names: brackets indicate optional arguments
 
@@ -11,6 +15,7 @@ dnl PREFIX_ARG_NOT_GIVEN_DEFAULT is unset at the end of each SC_ARG_* macro.
 dnl
 dnl Here is an internal helper function to shorten the macros below.
 dnl SC_ARG_NOT_GIVEN(PREFIX, VALUE)
+dnl
 AC_DEFUN([SC_ARG_NOT_GIVEN],
 [
 if test -z "$$1_ARG_NOT_GIVEN_DEFAULT" ; then
@@ -218,37 +223,12 @@ $4_ARG_NOT_GIVEN_DEFAULT=
 AC_DEFUN([SC_ARG_WITHOUT_YES],
          [SC_ARG_WITHOUT_YES_PREFIX([$1], [$2], [$3], [SC], [$4])])
 
-dnl SC_ARG_WITH_BUILTIN_PREFIX(NAME, TOKEN, PREFIX)
-dnl Check for --without-NAME using shell variable PREFIX_WITH_TOKEN
-dnl Only allowed values are yes or no, default is yes
-dnl
-AC_DEFUN([SC_ARG_WITH_BUILTIN_PREFIX],
-[
-AC_ARG_WITH([$1],
-            [AS_HELP_STRING([--without-$1], [assume external $1 code is found])
-AS_HELP_STRING(, [(default: check and use builtin if necessary)])],,
-            [withval=yes])
-SC_ARG_OVERRIDE_WITH([$3], [$2])
-if test "$withval" != "yes" -a "$withval" != "no" ; then
-  AC_MSG_ERROR([Please use --without-$1 without an argument])
-fi
-])
-AC_DEFUN([SC_ARG_WITH_BUILTIN],
-         [SC_ARG_WITH_BUILTIN_PREFIX([$1], [$2], [SC])])
-
-dnl SC_REQUIRE_LIB(LIBRARY, FUNCTION)
+dnl SC_REQUIRE_LIB(LIBRARY LIST, FUNCTION)
 dnl Check for FUNCTION in LIBRARY, exit with error if not found
 dnl
 AC_DEFUN([SC_REQUIRE_LIB],
-    [AC_CHECK_LIB([$1], [$2], ,
-      [AC_MSG_ERROR([Could not find function $2 in library $1])])])
-
-dnl SC_REQUIRE_LIB_SEARCH(LIBRARY LIST, FUNCTION)
-dnl Check for FUNCTION in any of LIBRARY LIST, exit with error if not found
-dnl
-AC_DEFUN([SC_REQUIRE_LIB_SEARCH],
-    [AC_SEARCH_LIBS([$2], [$1], ,
-      [AC_MSG_ERROR([Could not find function $2 in any of $1])])])
+    [AC_SEARCH_LIBS([$2], [$1],,
+      [AC_MSG_ERROR([Could not find function $2 in $1])])])
 
 dnl SC_REQUIRE_FUNCS(FUNCTION LIST)
 dnl Check for all functions in FUNCTION LIST, exit with error if not found
@@ -307,5 +287,3 @@ if test -d "$$1_DIR/$2" ; then
   $1_CONFIG="$$1_DIR/$2"
 fi
 ])
-
-dnl EOF acinclude.m4

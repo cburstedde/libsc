@@ -16,7 +16,7 @@ AX_PREFIX_CONFIG_H([src/sc_config.h], [SC])
 
 # Process command line options.
 echo "o---------------------------------------"
-echo "| Processing options"
+echo "| Checking options"
 echo "o---------------------------------------"
 
 SC_ARG_OVERRIDE_LOAD([SC])
@@ -70,62 +70,20 @@ echo "o---------------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
 
-SC_PROVIDE_GETOPT="no"
-if test "$SC_WITH_GETOPT" = "yes" ; then
-  AC_MSG_CHECKING([for getopt])
-  AC_LINK_IFELSE([AC_LANG_PROGRAM(
-[[#include <getopt.h>]], [[
-int oi;
-struct option lo;
-getopt_long (0, 0, "abc:", &lo, &oi);
-]])], [AC_MSG_RESULT([successful])], [
-    AC_MSG_RESULT([failed])
-    AC_MSG_NOTICE([did not find getopt. Activating builtin])
-    SC_PROVIDE_GETOPT="yes"
-    AC_DEFINE([PROVIDE_GETOPT], 1, [Use builtin getopt])
-  ])
-fi
-AM_CONDITIONAL([SC_PROVIDE_GETOPT], [test "$SC_PROVIDE_GETOPT" = "yes"])
+# Checks for header files.
+echo "o---------------------------------------"
+echo "| Checking headers"
+echo "o---------------------------------------"
 
-SC_PROVIDE_OBSTACK="no"
-if test "$SC_WITH_OBSTACK" = "yes" ; then
-  AC_MSG_CHECKING([for obstack])
-  AC_LINK_IFELSE([AC_LANG_PROGRAM(
-[[#include <obstack.h>]], [[
-struct obstack ob;
-static void        *(*obstack_chunk_alloc) (size_t) = 0;
-static void         (*obstack_chunk_free) (void *) = 0;
-obstack_init (&ob);
-obstack_free (&ob, 0);
-]])], [AC_MSG_RESULT([successful])], [
-    AC_MSG_RESULT([failed])
-    AC_MSG_NOTICE([did not find obstack. Activating builtin])
-    SC_PROVIDE_OBSTACK="yes"
-    AC_DEFINE([PROVIDE_OBSTACK], 1, [Use builtin obstack])
-  ])
-fi
-AM_CONDITIONAL([SC_PROVIDE_OBSTACK], [test "$SC_PROVIDE_OBSTACK" = "yes"])
+AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h time.h])
 
-SC_PROVIDE_ZLIB="no"
-if test "$SC_WITH_ZLIB" = "yes" ; then
-  AC_CHECK_LIB([z], [adler32_combine],, [
-    AC_MSG_NOTICE([did not find a recent zlib. Activating builtin])
-    SC_PROVIDE_ZLIB="yes"
-    AC_DEFINE([PROVIDE_ZLIB], 1, [Use builtin zlib])
-  ])
-fi
-AM_CONDITIONAL([SC_PROVIDE_ZLIB], [test "$SC_PROVIDE_ZLIB" = "yes"])
+# Checks for functions.
+echo "o---------------------------------------"
+echo "| Checking functions"
+echo "o---------------------------------------"
 
-SC_PROVIDE_LUA="no"
-if test "$SC_WITH_LUA" = "yes" ; then
-  AC_CHECK_HEADERS([lua.h lua5.1/lua.h], [break])
-  AC_SEARCH_LIBS([lua_createtable], [lua lua5 lua51 lua5.1],, [
-    AC_MSG_NOTICE([did not find a recent lua. Activating builtin])
-    SC_PROVIDE_LUA="yes"
-    AC_DEFINE([PROVIDE_LUA], 1, [Use builtin lua])
-  ])
-fi
-AM_CONDITIONAL([SC_PROVIDE_LUA], [test "$SC_PROVIDE_LUA" = "yes"])
+AC_CHECK_FUNCS([backtrace backtrace_symbols])
+AC_CHECK_FUNCS([tgamma trunc])
 
 # Checks for BLAS (and F77 environment only if necessary).
 echo "o---------------------------------------"
@@ -213,20 +171,15 @@ if test "$acx_lapack_ok" = disable ; then
 fi
 AM_CONDITIONAL([SC_LAPACK], [test "$acx_lapack_ok" = yes])
 
-# Checks for header files.
+# Check for builtin third-party software.
 echo "o---------------------------------------"
-echo "| Checking headers"
-echo "o---------------------------------------"
-
-AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h time.h])
-
-# Checks for functions.
-echo "o---------------------------------------"
-echo "| Checking functions"
+echo "| Checking third-party software"
 echo "o---------------------------------------"
 
-AC_CHECK_FUNCS([backtrace backtrace_symbols])
-AC_CHECK_FUNCS([tgamma trunc])
+SC_BUILTIN_GETOPT
+SC_BUILTIN_OBSTACK
+SC_BUILTIN_ZLIB
+SC_BUILTIN_LUA
 
 # Checks for typedefs, structures, and compiler characteristics.
 echo "o---------------------------------------"
