@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,41 +19,31 @@
 */
 
 /*
-  The files sc_obstack* and sc_getopt* are derived from the GNU C library
-  2.7, Copyright (C) Free Software Foundation, Inc.
+  The files under src/sc_builtin are copied from the GNU C library,
+  zlib and lua, respectively.  See Copyright information below.
 
   The files sc_avl.{c,h} are derived from libavl (Debian 0.3.5-2),
   Copyright (C) 1998  Michael H. Buselli <cosine@cosine.org>
   Copyright (C) 2000-2002  Wessel Dankers <wsl@nl.linux.org>.
 
-  The files in src/sc_builtin are copied from zlib and lua, respectively.
-  See Copyright information below.
-*/
+  The files sc_c99_protos.h and sc_c99_functions.c are derived from
+  libgfortran, Copyright (C) 2004 Free Software Foundation, Inc.
 
-/*
+  The files sc_obstack.c and sc_getopt*.c are derived from the GNU C
+  library 2.7, Copyright (C) Free Software Foundation, Inc.
+
   The files under zlib except zlib/Makefile.am are copied from zlib 1.2.3,
   Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler.
-*/
 
-/*
   The files under lua except lua/Makefile.am are copied from lua 5.1.4,
   Copyright (C) 1994-2008 Lua.org, PUC-Rio.
-*/
 
-/*
   The source files under libb64 are derived from libb64.  libb64 is public
   domain software, see the LICENSE and AUTHORS files in that directory.
-*/
 
-/*
   The files under iniparser are derived from iniparser3.0b.  iniparser is
   licensed unter the MIT license, see the LICENSE and AUTHORS files in
   that directory.
-*/
-
-/*
-  The files src/sc_c99_protos.h and src/sc_c99_functions.c are derived
-  from libgfortran, Copyright (C) 2004 Free Software Foundation, Inc.
 */
 
 /*
