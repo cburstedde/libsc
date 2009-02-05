@@ -22,6 +22,7 @@
 
 /* sc.h comes first in every compilation unit */
 #include <sc.h>
+#include <sc_getopt.h>
 #include <sc_lua.h>
 #include <sc_zlib.h>
 

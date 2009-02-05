@@ -23,8 +23,10 @@
 /* renamed from glibc 2.7 to sc_getopt1.c and modified */
 
 #include <sc.h>
-#include <sc_getopt.h>
-#include <sc_getopt_int.h>
+
+#ifdef SC_PROVIDE_GETOPT
+#include "sc_builtin/getopt.h"
+#include "sc_builtin/getopt_int.h"
 
 /* Comment out all this code if we are using the GNU C Library, and are not
    actually compiling the library itself.  This code is part of the GNU C
@@ -82,5 +84,7 @@ _getopt_long_only_r (int argc, char *const *argv, const char *options,
 }
 
 #endif	/* Not ELIDE_CODE.  */
+
+#endif  /* SC_PROVIDE_GETOPT */
 
 /* *INDENT-ON* */

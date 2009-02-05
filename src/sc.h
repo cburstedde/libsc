@@ -61,15 +61,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#ifdef SC_PROVIDE_GETOPT
-#ifdef _GETOPT_H
-#error "getopt.h is included.  Include sc.h first or use --without-getopt".
-#endif
-#include <sc_getopt.h>
-#else
-#include <getopt.h>
-#endif
-
 #ifdef SC_PROVIDE_OBSTACK
 #ifdef _OBSTACK_H
 #error "obstack.h is included.  Include sc.h first or use --without-obstack".

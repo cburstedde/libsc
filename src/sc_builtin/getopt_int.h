@@ -1,5 +1,3 @@
-/* *INDENT-OFF* */
-
 /* Internal declarations for getopt.
    Copyright (C) 1989-1994,1996-1999,2001,2003,2004
    Free Software Foundation, Inc.
@@ -20,21 +18,15 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-/* renamed from glibc 2.7 to sc_getopt_int.h and modified */
-
 #ifndef _GETOPT_INT_H
 #define _GETOPT_INT_H	1
-
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
 
 extern int _getopt_internal (int ___argc, char *const *___argv,
 			     const char *__shortopts,
 		             const struct option *__longopts, int *__longind,
 			     int __long_only);
 
-
+
 /* Reentrant versions which can handle parsing multiple argument
    vectors at the same time.  */
 
@@ -136,5 +128,3 @@ extern int _getopt_long_only_r (int ___argc, char *const *___argv,
 				struct _getopt_data *__data);
 
 #endif /* getopt_int.h */
-
-/* *INDENT-ON* */
