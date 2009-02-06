@@ -6,6 +6,7 @@ ACLOCAL_AMFLAGS = -I config
 
 # initialize empty variables
 AM_CPPFLAGS =
+CLEANFILES =
 DISTCLEANFILES =
 EXTRA_DIST =
 LDADD =
@@ -22,6 +23,11 @@ sysconf_DATA =
 
 # use this if you want to link in libsc without autotools
 sysconf_DATA += Makefile.sc.mk
+CLEANFILES += Makefile.sc.mk
+Makefile.sc.mk : Makefile.sc.pre
+	cat $< | \
+        sed -e 's,{\(.*prefix\)},{sc_\1},g' \
+            -e 's,^\(.*prefix *=\),sc_\1,g' > $@
 
 # set test environment
 TESTS_ENVIRONMENT = @SC_MPI_TESTS_ENVIRONMENT@
