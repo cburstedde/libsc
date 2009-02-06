@@ -61,6 +61,8 @@
 #include <string.h>
 #include <unistd.h>
 
+/* these two headers are always included */
+
 #include <sc_c99_functions.h>
 #include <sc_mpi.h>
 

@@ -21,9 +21,7 @@
 #ifndef SC_IO_H
 #define SC_IO_H
 
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
+#include <sc.h>
 
 SC_EXTERN_C_BEGIN;
 

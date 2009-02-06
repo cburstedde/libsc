@@ -18,7 +18,6 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sc.h>
 #include <sc_bspline.h>
 
 int

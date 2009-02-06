@@ -21,9 +21,7 @@
 #ifndef SC_GETOPT_H
 #define SC_GETOPT_H
 
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
+#include <sc.h>
 
 #ifdef SC_PROVIDE_GETOPT
 #ifdef _GETOPT_H

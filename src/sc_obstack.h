@@ -21,9 +21,7 @@
 #ifndef SC_OBSTACK_H
 #define SC_OBSTACK_H
 
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
+#include <sc.h>
 
 #ifdef SC_PROVIDE_OBSTACK
 #ifdef _OBSTACK_H

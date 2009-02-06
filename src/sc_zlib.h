@@ -21,9 +21,7 @@
 #ifndef SC_ZLIB_H
 #define SC_ZLIB_H
 
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
+#include <sc.h>
 
 #ifdef SC_PROVIDE_ZLIB
 #ifdef ZLIB_H

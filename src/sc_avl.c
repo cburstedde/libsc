@@ -31,8 +31,6 @@
 
 /* renamed from avl.h to sc_avl.h for the SC Library and modified */
 
-/* sc.h comes first in every compilation unit */
-#include <sc.h>
 #include <sc_avl.h>
 
 static void avl_rebalance(avl_tree_t *, avl_node_t *);

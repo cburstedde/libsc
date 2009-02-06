@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC library provides support for parallel scientific applications.
 
-  Copyright (C) 2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@
 #ifndef SC_RANGES_H
 #define SC_RANGES_H
 
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
+#include <sc.h>
+
+SC_EXTERN_C_BEGIN;
 
 /** Compute the optimal ranges of processors to talk to.
  *
@@ -79,5 +79,7 @@ void                sc_ranges_statistics (int package_id, int log_priority,
                                           MPI_Comm mpicomm, int num_procs,
                                           int *procs, int rank,
                                           int num_ranges, int *ranges);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_RANGES_H */

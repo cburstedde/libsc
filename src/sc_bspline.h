@@ -21,10 +21,6 @@
 #ifndef SC_BSPLINE_H
 #define SC_BSPLINE_H
 
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
-
 #include <sc_dmatrix.h>
 
 SC_EXTERN_C_BEGIN;

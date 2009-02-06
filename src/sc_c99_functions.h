@@ -30,9 +30,7 @@ Boston, MA 02110-1301, USA.  */
 #ifndef SC_C99_FUNCTIONS_H
 #define SC_C99_FUNCTIONS_H
 
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
+#include <sc.h>
 
 /* Supply some C99 prototypes */
 #ifndef __cplusplus

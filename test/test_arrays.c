@@ -18,8 +18,6 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* sc.h comes first in every compilation unit */
-#include <sc.h>
 #include <sc_containers.h>
 
 static              ssize_t

@@ -18,7 +18,7 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* sc.h comes first in every compilation unit */
+/* including sc_mpi.h does not work here since sc_mpi.h is included by sc.h */
 #include <sc.h>
 
 #ifndef SC_MPI

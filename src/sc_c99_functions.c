@@ -34,8 +34,7 @@ Boston, MA 02110-1301, USA.  */
  * and got some non-functional changes.
  */
 
-/* sc.h comes first in every compilation unit */
-#include <sc.h>
+#include <sc_c99_functions.h>
 
 #ifndef SC_HAVE_TGAMMA
 #define SC_HAVE_TGAMMA 1

@@ -22,10 +22,11 @@
  * matrix matrix multiply optimizations.
  */
 
-/* sc.h comes first in every compilation unit */
-#include <sc.h>
 #include <sc_dmatrix.h>
+
+#ifdef SC_HAVE_TIME_H
 #include <time.h>
+#endif
 
 #define gnr 160
 #define gnc 160

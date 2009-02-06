@@ -18,13 +18,11 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* sc.h comes first in every compilation unit */
-#include <sc.h>
 #include <sc_lapack.h>
 
 const char          sc_jobzchar[] = { 'N', 'V', '?' };
 
-#ifndef SC_BLAS
+#ifndef SC_LAPACK
 
 int
 sc_lapack_nonimplemented ()

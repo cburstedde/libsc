@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2007-2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 #define SC_AMR_H
 
 #include <sc_statistics.h>
+
+SC_EXTERN_C_BEGIN;
 
 typedef struct sc_amr_control
 {
@@ -125,5 +127,7 @@ void                sc_amr_refine_search (int package_id,
                                           int max_binary_steps,
                                           sc_amr_count_refine_fn rfn,
                                           void *user_data);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_AMR_H */

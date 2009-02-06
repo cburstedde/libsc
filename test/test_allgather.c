@@ -18,7 +18,6 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sc.h>
 #include <sc_allgather.h>
 
 #ifdef SC_HAVE_SYS_TIME_H

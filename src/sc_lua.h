@@ -21,9 +21,7 @@
 #ifndef SC_LUA_H
 #define SC_LUA_H
 
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
+#include <sc.h>
 
 #define LUA_USE_LINUX
 
