@@ -51,37 +51,37 @@ AC_DEFUN([SC_C_VERSION], [
   C_VERSION=""
   AS_IF([test "x$C_VERSION" = "x"],[
     SC_C_CHECK_FLAG([-V],[],[],[
-      ax_pgcc_version_option=yes
+      sc_pgcc_version_option=yes
     ],[
-      ax_pgcc_version_option=no
+      sc_pgcc_version_option=no
     ])
-    AS_IF([test "x$ax_pgcc_version_option" != "xno"],[
-      AC_CACHE_CHECK([pgcc version],[ax_cv_pgcc_version],[
+    AS_IF([test "x$sc_pgcc_version_option" != "xno"],[
+      AC_CACHE_CHECK([pgcc version],[sc_cv_pgcc_version],[
         # The sed part removes all new lines
-        ax_cv_pgcc_version="`$CC -V 2>/dev/null | sed -e :a -e '$!N; s/\n/ /; ta'`"
-        AS_IF([test "x$ax_cv_pgcc_version" = "x"],[
-          ax_cv_pgcc_version=""
+        sc_cv_pgcc_version="`$CC -V 2>/dev/null | sed -e :a -e '$!N; s/\n/ /; ta'`"
+        AS_IF([test "x$sc_cv_pgcc_version" = "x"],[
+          sc_cv_pgcc_version=""
           ])
         ])
-      C_VERSION=$ax_cv_pgcc_version
+      C_VERSION=$sc_cv_pgcc_version
     ])
   ])
 
   AS_IF([test "x$C_VERSION" = "x"],[
     SC_C_CHECK_FLAG([-dumpversion],[],[],[
-      ax_gcc_version_option=yes
+      sc_gcc_version_option=yes
     ],[
-      ax_gcc_version_option=no
+      sc_gcc_version_option=no
     ])
-    AS_IF([test "x$ax_gcc_version_option" != "xno"],[
-      AC_CACHE_CHECK([gcc version],[ax_cv_gcc_version],[
+    AS_IF([test "x$sc_gcc_version_option" != "xno"],[
+      AC_CACHE_CHECK([gcc version],[sc_cv_gcc_version],[
         # The sed part removes all new lines
-        ax_cv_gcc_version="`$CC -dumpversion | sed -e :a -e '$!N; s/\n/ /; ta'`"
-        AS_IF([test "x$ax_cv_gcc_version" = "x"],[
-          ax_cv_gcc_version=""
+        sc_cv_gcc_version="`$CC -dumpversion | sed -e :a -e '$!N; s/\n/ /; ta'`"
+        AS_IF([test "x$sc_cv_gcc_version" = "x"],[
+          sc_cv_gcc_version=""
         ])
       ])
-      C_VERSION=$ax_cv_gcc_version
+      C_VERSION=$sc_cv_gcc_version
     ])
   ])
 

@@ -60,7 +60,7 @@ AC_DEFUN([SC_C_CHECK_FLAG],[
   flag=`echo "$1" | $SED 'y% .=/+-(){}<>:*,%_______________%'`
 
   AC_CACHE_CHECK([whether the C compiler accepts the $1 flag],
-    [ax_cv_c_check_flag_$flag],[
+    [sc_cv_c_check_flag_$flag],[
 
     AC_LANG_PUSH([C])
 
@@ -69,9 +69,9 @@ AC_DEFUN([SC_C_CHECK_FLAG],[
     AC_COMPILE_IFELSE([
       AC_LANG_PROGRAM([$2],[$3])
     ],[
-      eval "ax_cv_c_check_flag_$flag=yes"
+      eval "sc_cv_c_check_flag_$flag=yes"
     ],[
-      eval "ax_cv_c_check_flag_$flag=no"
+      eval "sc_cv_c_check_flag_$flag=no"
     ])
 
     CFLAGS="$save_CFLAGS"
@@ -80,7 +80,7 @@ AC_DEFUN([SC_C_CHECK_FLAG],[
 
   ])
 
-  AS_IF([eval "test \"`echo '$ax_cv_c_check_flag_'$flag`\" = yes"],[
+  AS_IF([eval "test \"`echo '$sc_cv_c_check_flag_'$flag`\" = yes"],[
     :
     $4
   ],[
