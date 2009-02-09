@@ -85,4 +85,8 @@ ChangeLog:
 
 dist-hook:
 	echo $(VERSION) > $(distdir)/.tarball-version
-	(test "x$(VERSION)" = "x`@top_srcdir@/config/git-version-gen @top_srcdir@/.tarball-version`" || (echo "Stale version;" && echo "Please run:" && echo "     cd @top_srcdir@ && ./bootstrap" && echo "before make dist" && exit 1 ))
+	test "x$(VERSION)" = "x`@top_srcdir@/config/git-version-gen\
+              @top_srcdir@/.tarball-version`" || \
+        ((echo "Stale version;" ; echo "Please run:" ; \
+          echo "     cd @top_srcdir@ && ./bootstrap" ; \
+          echo "before make dist") 1>&2 ; exit 1)
