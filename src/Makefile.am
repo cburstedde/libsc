@@ -3,10 +3,6 @@
 # Makefile.am in src
 # included non-recursively from toplevel directory
 
-EXTRA_DIST += \
-        src/sc_builtin
-
-libsc_internal_headers =
 libsc_generated_headers = src/sc_config.h
 libsc_installed_headers = \
         src/sc.h src/sc_mpi.h src/sc_containers.h src/sc_avl.h \
@@ -24,10 +20,15 @@ libsc_compiled_sources = \
         src/sc_dmatrix.c src/sc_blas.c src/sc_lapack.c \
         src/sc_bspline.c \
         src/sc_getopt.c src/sc_obstack.c src/sc_getopt1.c
+libsc_original_headers = \
+        src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h \
+        src/sc_builtin/obstack.h \
+        src/sc_builtin/lua.h src/sc_builtin/luaconf.h \
+        src/sc_builtin/lauxlib.h src/sc_builtin/lualib.h \
+        src/sc_builtin/zlib.h src/sc_builtin/zconf.h
 
 lib_LIBRARIES += src/libsc.a
 src_libsc_a_SOURCES = \
-        $(libsc_internal_headers) \
         $(libsc_installed_headers) \
         $(libsc_compiled_sources)
 src_libsc_a_CPPFLAGS = $(AM_CPPFLAGS)
@@ -35,16 +36,11 @@ src_libsc_a_CPPFLAGS = $(AM_CPPFLAGS)
 nodist_include_HEADERS += $(libsc_generated_headers)
 include_HEADERS += $(libsc_installed_headers)
 
+scbuiltindir = $(includedir)/sc_builtin
+scbuiltin_HEADERS = $(libsc_original_headers)
+
 AM_CPPFLAGS += -I@top_srcdir@/src
 
 LDADD += @top_builddir@/src/libsc.a
 
 LINT_CSOURCES += $(libsc_compiled_sources)
-
-install-data-local:
-	$(MKDIR_P) $(DESTDIR)$(includedir)/sc_builtin
-	$(INSTALL_DATA) @top_srcdir@/src/sc_builtin/*.h \
-                        $(DESTDIR)$(includedir)/sc_builtin
-
-uninstall-local:
-	rm -rf $(DESTDIR)$(includedir)/sc_builtin
