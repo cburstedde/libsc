@@ -1,10 +1,12 @@
 # ===========================================================================
 #            http://autoconf-archive.cryp.to/ax_c_check_flag.html
+# and renamed by Carsten Burstedde <carsten@ices.utexas.edu>
 # ===========================================================================
 #
 # SYNOPSIS
 #
-#   AX_C_CHECK_FLAG(FLAG-TO-CHECK,[PROLOGUE],[BODY],[ACTION-IF-SUCCESS],[ACTION-IF-FAILURE])
+#   SC_C_CHECK_FLAG(FLAG-TO-CHECK,
+#                   [PROLOGUE],[BODY],[ACTION-IF-SUCCESS],[ACTION-IF-FAILURE])
 #
 # DESCRIPTION
 #
@@ -18,7 +20,7 @@
 #
 # LAST MODIFICATION
 #
-#   2008-04-12
+#   2009-02-09
 #
 # COPYLEFT
 #
@@ -50,7 +52,7 @@
 #   distribute a modified version of the Autoconf Macro, you may extend this
 #   special exception to the GPL to apply to your modified version as well.
 
-AC_DEFUN([AX_C_CHECK_FLAG],[
+AC_DEFUN([SC_C_CHECK_FLAG],[
   AC_PREREQ([2.61])
   AC_REQUIRE([AC_PROG_CC])
   AC_REQUIRE([AC_PROG_SED])

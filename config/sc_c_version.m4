@@ -1,10 +1,11 @@
 # ===========================================================================
 #            From: http://autoconf-archive.cryp.to/ax_gcc_version.html
+# and renamed by Carsten Burstedde <carsten@ices.utexas.edu>
 # ===========================================================================
 #
 # SYNOPSIS
 #
-#   AX_C_VERSION  (Extension of AX_GCC_VERSION to more C compilers)
+#   SC_C_VERSION  (Extension of AX_GCC_VERSION to more C compilers)
 #
 # DESCRIPTION
 #
@@ -46,10 +47,10 @@
 #   distribute a modified version of the Autoconf Macro, you may extend this
 #   special exception to the GPL to apply to your modified version as well.
 
-AC_DEFUN([AX_C_VERSION], [
+AC_DEFUN([SC_C_VERSION], [
   C_VERSION=""
   AS_IF([test "x$C_VERSION" = "x"],[
-    AX_C_CHECK_FLAG([-V],[],[],[
+    SC_C_CHECK_FLAG([-V],[],[],[
       ax_pgcc_version_option=yes
     ],[
       ax_pgcc_version_option=no
@@ -67,7 +68,7 @@ AC_DEFUN([AX_C_VERSION], [
   ])
 
   AS_IF([test "x$C_VERSION" = "x"],[
-    AX_C_CHECK_FLAG([-dumpversion],[],[],[
+    SC_C_CHECK_FLAG([-dumpversion],[],[],[
       ax_gcc_version_option=yes
     ],[
       ax_gcc_version_option=no

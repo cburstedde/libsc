@@ -60,7 +60,7 @@ ACX_MPI([SC], [icc gcc cc])
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 ACX_WITH_LINT
-AX_C_VERSION
+SC_C_VERSION
 
 # Checks for libraries.
 echo "o---------------------------------------"
