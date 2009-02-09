@@ -94,15 +94,15 @@ dgemm=dgemm_;dgecon=dgecon_
 extraf77=no
 
 echo "Checking BLAS without F77 support first"
-ACX_BLAS([$dgemm],
-         [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
-         [echo "Could not find BLAS without F77 support"])
+SC_BLAS([$dgemm],
+        [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
+        [echo "Could not find BLAS without F77 support"])
 for CVAR in `set | awk -F= "/^ac_cv_.*${dgemm}/ { print \\$1 }"` ; do
   # echo "Unset $CVAR"
   unset $CVAR
 done
-# at this point $acx_blas_ok is either of: yes no disable
-if test "$acx_blas_ok" = no ; then
+# at this point $sc_blas_ok is either of: yes no disable
+if test "$sc_blas_ok" = no ; then
 
 extraf77=yes
 echo "Calling F77 autoconf macros"
@@ -117,30 +117,30 @@ dgecon=;AC_F77_FUNC(dgecon)
 if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
 
 echo "Checking BLAS with proper F77 support"
-ACX_BLAS([$dgemm],
-         [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
-         [AC_MSG_ERROR([[\
+SC_BLAS([$dgemm],
+        [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
+        [AC_MSG_ERROR([[\
 Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
  LIBS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB\
  (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
 fi
-# at this point $acx_blas_ok is either of: yes disable
-if test "$acx_blas_ok" = disable ; then
+# at this point $sc_blas_ok is either of: yes disable
+if test "$sc_blas_ok" = disable ; then
         echo "Not using BLAS"
 fi
-AM_CONDITIONAL([SC_BLAS], [test "$acx_blas_ok" = yes])
+AM_CONDITIONAL([SC_BLAS], [test "$sc_blas_ok" = yes])
 
 if test "$extraf77" = no ; then
 echo "Checking LAPACK without F77 support first"
-ACX_LAPACK([$dgecon],
-           [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
-           [echo "Could not find LAPACK without F77 support"])
+SC_LAPACK([$dgecon],
+          [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
+          [echo "Could not find LAPACK without F77 support"])
 for CVAR in `set | awk -F= "/^ac_cv_.*${dgecon}/ { print \\$1 }"` ; do
   # echo "Unset $CVAR"
   unset $CVAR
 done
-# at this point $acx_lapack_ok is either of: yes no disable
-if test "$acx_lapack_ok" = no ; then
+# at this point $sc_lapack_ok is either of: yes no disable
+if test "$sc_lapack_ok" = no ; then
 
 extraf77=yes
 echo "Calling F77 autoconf macros"
@@ -152,23 +152,23 @@ AC_F77_LIBRARY_LDFLAGS
 dgecon=;AC_F77_FUNC(dgecon)
 if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
 fi
-else acx_lapack_ok=no
+else sc_lapack_ok=no
 fi
-if test "$acx_lapack_ok" = no ; then
+if test "$sc_lapack_ok" = no ; then
 
 echo "Checking LAPACK with proper F77 support"
-ACX_LAPACK([$dgecon],
-           [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
-           [AC_MSG_ERROR([[\
+SC_LAPACK([$dgecon],
+          [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
+          [AC_MSG_ERROR([[\
 Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
  LIBS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB\
  (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
 fi
-# at this point $acx_lapack_ok is either of: yes disable
-if test "$acx_lapack_ok" = disable ; then
+# at this point $sc_lapack_ok is either of: yes disable
+if test "$sc_lapack_ok" = disable ; then
         echo "Not using LAPACK"
 fi
-AM_CONDITIONAL([SC_LAPACK], [test "$acx_lapack_ok" = yes])
+AM_CONDITIONAL([SC_LAPACK], [test "$sc_lapack_ok" = yes])
 
 # Check for builtin third-party software.
 echo "o---------------------------------------"
