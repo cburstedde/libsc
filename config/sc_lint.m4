@@ -25,8 +25,10 @@ dnl Except as contained in this notice, the name of a copyright holder
 dnl shall not be used in advertising or otherwise to promote the sale, use
 dnl or other dealings in this Software without prior written authorization
 dnl of the copyright holder.
+dnl
+dnl Renamed by Carsten Burstedde <carsten@ices.utexas.edu>
 
-# ACX_WITH_LINT()
+# SC_PROG_LINT()
 # ----------------
 # Minimum version: 1.1.0
 #
@@ -38,7 +40,7 @@ dnl of the copyright holder.
 #
 # Note that MPI_INCLUDE_PATH should be defined before this function is called.
 #
-AC_DEFUN([ACX_WITH_LINT],[
+AC_DEFUN([SC_PROG_LINT],[
 
 # Allow checking code with lint, sparse, etc.
 AC_ARG_WITH([lint], [AS_HELP_STRING([--with-lint],
@@ -74,7 +76,7 @@ fi
 
 case $LINT in
   splint|*/splint)
-    LINT_FLAGS="$LINT_FLAGS -DACX_SPLINT \
+    LINT_FLAGS="$LINT_FLAGS -DSC_SPLINT \
                 -systemdirs /usr/include:$MPI_INCLUDE_PATH"
     ;;
 esac
@@ -85,4 +87,4 @@ AC_SUBST(LINT)
 AC_SUBST(LINT_FLAGS)
 AM_CONDITIONAL(LINT, [test "$use_lint" != no])
 
-]) # ACX_WITH_LINT
+])

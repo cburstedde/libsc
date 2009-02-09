@@ -44,7 +44,7 @@ intmax_t            imaxabs (intmax_t);
 #endif /* !__cplusplus */
 
 /* Supply defines and prototypes that splint doesn't know about */
-#ifdef ACX_SPLINT
+#ifdef SC_SPLINT
 
 #ifndef UINT32_MAX
 #define UINT32_MAX  (4294967295U)
@@ -54,6 +54,6 @@ intmax_t            imaxabs (intmax_t);
 long long int       strtoll (const char *nptr, char **endptr, int base);
 intmax_t            imaxabs (intmax_t a);
 
-#endif /* ACX_SPLINT */
+#endif /* SC_SPLINT */
 
 #endif /* SC_C99_FUNCTIONS_H  */
