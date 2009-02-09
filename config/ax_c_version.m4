@@ -13,7 +13,7 @@
 #
 # LAST MODIFICATION
 #
-#   2008-08-17
+#   2009-02-09
 #
 # COPYLEFT
 #
@@ -54,7 +54,7 @@ AC_DEFUN([AX_C_VERSION], [
     ],[
       ax_pgcc_version_option=no
     ])
-    AS_IF([test "x$ax_pgcc_version_option" != "no"],[
+    AS_IF([test "x$ax_pgcc_version_option" != "xno"],[
       AC_CACHE_CHECK([pgcc version],[ax_cv_pgcc_version],[
         # The sed part removes all new lines
         ax_cv_pgcc_version="`$CC -V 2>/dev/null | sed -e :a -e '$!N; s/\n/ /; ta'`"
@@ -72,7 +72,7 @@ AC_DEFUN([AX_C_VERSION], [
     ],[
       ax_gcc_version_option=no
     ])
-    AS_IF([test "x$ax_gcc_version_option" != "no"],[
+    AS_IF([test "x$ax_gcc_version_option" != "xno"],[
       AC_CACHE_CHECK([gcc version],[ax_cv_gcc_version],[
         # The sed part removes all new lines
         ax_cv_gcc_version="`$CC -dumpversion | sed -e :a -e '$!N; s/\n/ /; ta'`"
