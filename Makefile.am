@@ -29,6 +29,11 @@ Makefile.sc.mk : Makefile.sc.pre
         sed -e 's,{\(.*prefix\)},{sc_\1},g' \
             -e 's,^\(.*prefix *=\),sc_\1,g' > $@
 
+# install libsc m4 macros in the correct directory
+scaclocaldir = $(datadir)/aclocal
+scaclocal_DATA = \
+        config/sc_builtin.m4 config/sc_include.m4 config/sc_mpi.m4
+
 # set test environment
 TESTS_ENVIRONMENT = @SC_MPI_TESTS_ENVIRONMENT@
 
