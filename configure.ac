@@ -60,7 +60,6 @@ ACX_MPI([SC], [icc gcc cc])
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 ACX_WITH_LINT
-ACX_C_RESTRICT
 AX_C_VERSION
 
 # Checks for libraries.
@@ -189,6 +188,7 @@ echo "o---------------------------------------"
 AC_C_BIGENDIAN
 AC_C_CONST
 AC_C_INLINE
+AC_C_RESTRICT
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 
