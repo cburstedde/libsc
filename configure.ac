@@ -56,7 +56,7 @@ echo "o---------------------------------------"
 echo "| Checking MPI and other programs"
 echo "o---------------------------------------"
 
-ACX_MPI([SC], [icc gcc cc])
+SC_MPI([SC], [icc gcc cc])
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 SC_PROG_LINT

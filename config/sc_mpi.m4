@@ -29,7 +29,7 @@ dnl ***********************************************************************
 dnl
 dnl Now almost nothing of the original code is left.
 dnl
-dnl @synopsis ACX_MPI(PREFIX, [list of non-MPI C compilers])
+dnl @synopsis SC_MPI(PREFIX, [list of non-MPI C compilers])
 dnl
 dnl This macro calls AC_PROG_CC.
 dnl
@@ -51,10 +51,10 @@ dnl
 dnl If MPI is turned on PREFIX_MPI will be defined for autoconf/automake
 dnl and MPI will be defined in the config header file.
 
-dnl ACX_MPI_CONFIG(PREFIX)
+dnl SC_MPI_CONFIG(PREFIX)
 dnl Figure out the MPI configuration
 dnl
-AC_DEFUN([ACX_MPI_CONFIG],
+AC_DEFUN([SC_MPI_CONFIG],
 [
 HAVE_PKG_MPI=no
 HAVE_PKG_MPIIO=no
@@ -166,10 +166,10 @@ fi
 AM_CONDITIONAL([$1_MPI], [test "$HAVE_PKG_MPI" = yes])
 ])
 
-dnl ACX_MPI_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl SC_MPI_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
 dnl Compile and link an MPI test program
 dnl
-AC_DEFUN([ACX_MPI_C_COMPILE_AND_LINK],
+AC_DEFUN([SC_MPI_C_COMPILE_AND_LINK],
 [
 AC_MSG_CHECKING([compile/link for MPI C program])
 AC_LINK_IFELSE([AC_LANG_PROGRAM(
@@ -183,10 +183,10 @@ MPI_Finalize ();
  $2])
 ])
 
-dnl ACX_MPIIO_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl SC_MPIIO_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
 dnl Compile and link an MPI I/O test program
 dnl
-AC_DEFUN([ACX_MPIIO_C_COMPILE_AND_LINK],
+AC_DEFUN([SC_MPIIO_C_COMPILE_AND_LINK],
 [
 AC_MSG_CHECKING([compile/link for MPI I/O C program])
 AC_LINK_IFELSE([AC_LANG_PROGRAM(
@@ -205,11 +205,11 @@ MPI_Finalize ();
  $2])
 ])
 
-dnl ACX_MPI_INCLUDES
+dnl SC_MPI_INCLUDES
 dnl Call the compiler with various --show* options
 dnl to figure out the MPI_INCLUDES and MPI_INCLUDE_PATH varables
 dnl
-AC_DEFUN([ACX_MPI_INCLUDES],
+AC_DEFUN([SC_MPI_INCLUDES],
 [
 MPI_INCLUDES=
 MPI_INCLUDE_PATH=
@@ -242,20 +242,20 @@ AC_SUBST([MPI_INCLUDES])
 AC_SUBST([MPI_INCLUDE_PATH])
 ])
 
-dnl ACX_MPI
+dnl SC_MPI
 dnl Configure MPI and check its C compiler in one line
 dnl
-AC_DEFUN([ACX_MPI],
+AC_DEFUN([SC_MPI],
 [
-ACX_MPI_CONFIG([$1])
+SC_MPI_CONFIG([$1])
 AC_PROG_CC([$2])
 
 dnl compile and link tests must be done after the PROC_CC line
 if test "$HAVE_PKG_MPI" = yes ; then
-  ACX_MPI_C_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI C test failed])])
+  SC_MPI_C_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI C test failed])])
 
   if test "$HAVE_PKG_MPIIO" = yes ; then
-    ACX_MPIIO_C_COMPILE_AND_LINK(
+    SC_MPIIO_C_COMPILE_AND_LINK(
       [AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])],
       [AC_MSG_ERROR([MPI I/O specified but not found])])
   fi
@@ -263,5 +263,5 @@ fi
 AM_CONDITIONAL([$1_MPIIO], [test "$HAVE_PKG_MPIIO" = yes])
 
 dnl figure out the MPI include directories
-ACX_MPI_INCLUDES
+SC_MPI_INCLUDES
 ])
