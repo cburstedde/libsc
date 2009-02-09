@@ -33,7 +33,8 @@ Makefile.sc.mk : Makefile.sc.pre
 scaclocaldir = $(datadir)/aclocal
 scaclocal_DATA = \
         config/sc_builtin.m4 config/sc_include.m4 config/sc_mpi.m4 \
-        config/sc_c_check_flag.m4 config/sc_c_version.m4
+        config/sc_c_check_flag.m4 config/sc_c_version.m4 \
+        config/sc_prefix_config_h.m4
 
 # set test environment
 TESTS_ENVIRONMENT = @SC_MPI_TESTS_ENVIRONMENT@

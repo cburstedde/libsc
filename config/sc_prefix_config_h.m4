@@ -1,10 +1,11 @@
 # ===========================================================================
 #           http://autoconf-archive.cryp.to/ax_prefix_config_h.html
+# and renamed by Carsten Burstedde <carsten@ices.utexas.edu>
 # ===========================================================================
 #
 # SYNOPSIS
 #
-#   AX_PREFIX_CONFIG_H [(OUTPUT-HEADER [,PREFIX [,ORIG-HEADER]])]
+#   SC_PREFIX_CONFIG_H [(OUTPUT-HEADER [,PREFIX [,ORIG-HEADER]])]
 #
 # DESCRIPTION
 #
@@ -29,20 +30,20 @@
 #
 #   Your configure.ac script should contain both macros in this order, and
 #   unlike the earlier variations of this prefix-macro it is okay to place
-#   the AX_PREFIX_CONFIG_H call before the AC_OUTPUT invokation.
+#   the SC_PREFIX_CONFIG_H call before the AC_OUTPUT invokation.
 #
 #   Example:
 #
 #     AC_INIT(config.h.in)        # config.h.in as created by "autoheader"
 #     AM_INIT_AUTOMAKE(testpkg, 0.1.1)    # makes #undef VERSION and PACKAGE
 #     AM_CONFIG_HEADER(config.h)          # prep config.h from config.h.in
-#     AX_PREFIX_CONFIG_H(mylib/_config.h) # prep mylib/_config.h from it..
+#     SC_PREFIX_CONFIG_H(mylib/_config.h) # prep mylib/_config.h from it..
 #     AC_MEMORY_H                         # makes "#undef NEED_MEMORY_H"
 #     AC_C_CONST_H                        # makes "#undef const"
 #     AC_OUTPUT(Makefile)                 # creates the "config.h" now
 #                                         # and also mylib/_config.h
 #
-#   if the argument to AX_PREFIX_CONFIG_H would have been omitted then the
+#   if the argument to SC_PREFIX_CONFIG_H would have been omitted then the
 #   default outputfile would have been called simply "testpkg-config.h", but
 #   even under the name "mylib/_config.h" it contains prefix-defines like
 #
@@ -89,7 +90,7 @@
 #
 # LAST MODIFICATION
 #
-#   2008-04-12
+#   2009-02-09
 #
 # COPYLEFT
 #
@@ -123,7 +124,7 @@
 #   distribute a modified version of the Autoconf Macro, you may extend this
 #   special exception to the GPL to apply to your modified version as well.
 
-AC_DEFUN([AX_PREFIX_CONFIG_H],[dnl
+AC_DEFUN([SC_PREFIX_CONFIG_H],[dnl
 AC_BEFORE([AC_CONFIG_HEADERS],[$0])dnl
 AC_CONFIG_COMMANDS([ifelse($1,,$PACKAGE-config.h,$1)],[dnl
 AS_VAR_PUSHDEF([_OUT],[ac_prefix_conf_OUT])dnl
