@@ -41,10 +41,7 @@ SC_ARG_ENABLE([alloc-line], [stripe memory between cache lines], [ALLOC_LINE])
 SC_ARG_ENABLE([sc-allgather], [internally use replacement for MPI_Allgather],
               [ALLGATHER])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
-SC_ARG_WITH_BUILTIN([getopt], [GETOPT])
-SC_ARG_WITH_BUILTIN([obstack], [OBSTACK])
-SC_ARG_WITH_BUILTIN([zlib], [ZLIB])
-SC_ARG_WITH_BUILTIN([lua], [LUA])
+SC_ARG_WITH_BUILTIN_ALL
 
 if test "$SC_ENABLE_ALLOC_PAGE" != no -a \
         "$SC_ENABLE_ALLOC_LINE" != no ; then
@@ -175,10 +172,7 @@ echo "o---------------------------------------"
 echo "| Checking third-party software"
 echo "o---------------------------------------"
 
-SC_BUILTIN_GETOPT
-SC_BUILTIN_OBSTACK
-SC_BUILTIN_ZLIB
-SC_BUILTIN_LUA
+SC_BUILTIN_ALL([true])
 
 # Checks for typedefs, structures, and compiler characteristics.
 echo "o---------------------------------------"
@@ -207,7 +201,7 @@ AC_DEFINE_UNQUOTED(LIBS,        ["${LIBS}"],        [Libraries])
 AC_DEFINE_UNQUOTED(FLIBS,       ["${FLIBS}"],       [Fortran libraries])
 
 echo "o----------------------------------"
-echo "| Results are"
+echo "| Results for libsc are"
 echo "o----------------------------------"
 echo "| CC:          $CC"
 echo "| C_VERSION:   $C_VERSION"

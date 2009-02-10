@@ -241,6 +241,23 @@ m4_foreach_w([sc_thefunc], [$1],
 Could not find function sc_thefunc])])])
 ])
 
+dnl SC_DETERMINE_INSTALL(PREFIX)
+dnl This function throws an error if the variable PREFIX_DIR does not exist.
+dnl Looks for PREFIX_DIR/{include,lib,bin} to determine installation status.
+dnl Set the shell variable PREFIX_INSTALL to "yes" or "no".
+dnl
+AC_DEFUN([SC_DETERMINE_INSTALL],
+[
+if test ! -d "$$1_DIR" ; then
+  AC_MSG_ERROR([Directory "$$1_DIR" does not exist])
+fi
+if test -d "$$1_DIR/include" -o -d "$$1_DIR/lib" -o -d "$$1_DIR/bin" ; then
+  $1_INSTALL="yes"
+else
+  $1_INSTALL="no"
+fi
+])
+
 dnl SC_DETERMINE_INCLUDE_PATH(PREFIX, CPPFLAGS)
 dnl This function expects the variable PREFIX_DIR to exist.
 dnl Looks for PREFIX_DIR/include and then PREFIX_DIR/src.
@@ -277,13 +294,18 @@ fi
 $1_LDADD="-L$$1_LIB $2"
 ])
 
-dnl SC_DETERMINE_CONFIG_PATH(PREFIX, CONFIG)
+dnl SC_DETERMINE_CONFIG_PATH(PREFIX)
 dnl This function expects the variable PREFIX_DIR to exist.
-dnl Looks for PREFIX_DIR/CONFIG and overrides PREFIX_CONFIG when found.
+dnl Looks for PREFIX_DIR/etc and then PREFIX_DIR/src.
+dnl If neither is found, throws an error.
 dnl
 AC_DEFUN([SC_DETERMINE_CONFIG_PATH],
 [
-if test -d "$$1_DIR/$2" ; then
-  $1_CONFIG="$$1_DIR/$2"
+$1_CONFIG="$$1_DIR/share/aclocal"
+if test ! -d "$$1_CONFIG" ; then
+  $1_CONFIG="$$1_DIR/config"
+fi
+if test ! -d "$$1_CONFIG" ; then
+  AC_MSG_ERROR([Config directories based on $$1_DIR not found])
 fi
 ])
