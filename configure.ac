@@ -91,7 +91,7 @@ dgemm=dgemm_;dgecon=dgecon_
 extraf77=no
 
 echo "Checking BLAS without F77 support first"
-SC_BLAS([$dgemm],
+SC_BLAS([SC], [$dgemm],
         [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
         [echo "Could not find BLAS without F77 support"])
 for CVAR in `set | awk -F= "/^ac_cv_.*${dgemm}/ { print \\$1 }"` ; do
@@ -114,7 +114,7 @@ dgecon=;AC_F77_FUNC(dgecon)
 if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
 
 echo "Checking BLAS with proper F77 support"
-SC_BLAS([$dgemm],
+SC_BLAS([SC], [$dgemm],
         [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
         [AC_MSG_ERROR([[\
 Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
@@ -129,7 +129,7 @@ AM_CONDITIONAL([SC_BLAS], [test "$sc_blas_ok" = yes])
 
 if test "$extraf77" = no ; then
 echo "Checking LAPACK without F77 support first"
-SC_LAPACK([$dgecon],
+SC_LAPACK([SC], [$dgecon],
           [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
           [echo "Could not find LAPACK without F77 support"])
 for CVAR in `set | awk -F= "/^ac_cv_.*${dgecon}/ { print \\$1 }"` ; do
@@ -154,7 +154,7 @@ fi
 if test "$sc_lapack_ok" = no ; then
 
 echo "Checking LAPACK with proper F77 support"
-SC_LAPACK([$dgecon],
+SC_LAPACK([SC], [$dgecon],
           [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
           [AC_MSG_ERROR([[\
 Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\

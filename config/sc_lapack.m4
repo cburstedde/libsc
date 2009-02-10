@@ -27,7 +27,8 @@ dnl Questions? Contact Michael A. Heroux (maherou@sandia.gov)
 dnl
 dnl ***********************************************************************
 dnl
-dnl @synopsis SC_LAPACK(DGECON_FUNCTION, [ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
+dnl @synopsis SC_LAPACK(PREFIX, DGECON_FUNCTION,
+dnl                     [ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
 dnl
 dnl This macro looks for a library that implements the LAPACK
 dnl linear-algebra interface (see http://www.netlib.org/lapack/).
@@ -72,7 +73,8 @@ dnl This way the SC_LAPACK macro can be called multiple times
 dnl with different Fortran environments to minimize F77 dependencies.
 dnl Replaced obsolete AC_TRY_LINK_FUNC macro.
 
-dnl The first argument of this macro should be a mangled DGECON function.
+dnl The first argument of this macro should be the package prefix.
+dnl The second argument of this macro should be a mangled DGECON function.
 AC_DEFUN([SC_LAPACK], [
 AC_REQUIRE([SC_BLAS])
 sc_lapack_ok=no
@@ -80,20 +82,18 @@ user_spec_lapack_failed=no
 
 AC_ARG_WITH([lapack], [AS_HELP_STRING([--with-lapack=<lib>],
             [change default LAPACK library to <lib>
-             or specify --without-lapack to use no LAPACK at all])])
-if test -n "$SC_WITH_LAPACK" ; then
-  echo "Option override SC_WITH_LAPACK=$SC_WITH_LAPACK"
-  with_lapack="$SC_WITH_LAPACK"
-fi
-case $with_lapack in
+             or specify --without-lapack to use no LAPACK at all])],,
+	     [withval="yes"])
+SC_ARG_OVERRIDE_WITH([$1], [LAPACK])
+case $withval in
         yes | "") ;;
         no) sc_lapack_ok=disable ;;
-        -* | */* | *.a | *.so | *.so.* | *.o) LAPACK_LIBS="$with_lapack" ;;
-        *) LAPACK_LIBS="-l$with_lapack" ;;
+        -* | */* | *.a | *.so | *.so.* | *.o) LAPACK_LIBS="$withval" ;;
+        *) LAPACK_LIBS="-l$withval" ;;
 esac
 
-dnl Expect the mangled DGECON function name to be in $1.
-sc_lapack_func="$1"
+dnl Expect the mangled DGECON function name to be in $2.
+sc_lapack_func="$2"
 
 # We cannot use LAPACK if BLAS is not found
 if test "$sc_blas_ok" = disable ; then
@@ -165,11 +165,12 @@ fi
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test "$sc_lapack_ok" = yes; then
-        ifelse([$2],,[AC_DEFINE(HAVE_LAPACK,1,[Define if you have LAPACK library.])],[$2])
+        ifelse([$3],,
+               [AC_DEFINE(HAVE_LAPACK,1,[Define if you have LAPACK library.])],[$3])
         :
 elif test "$sc_lapack_ok" != disable ; then
         sc_lapack_ok=no
-        $3
+        $4
 fi
 
 ])

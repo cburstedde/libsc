@@ -27,7 +27,8 @@ dnl Questions? Contact Michael A. Heroux (maherou@sandia.gov)
 dnl
 dnl ***********************************************************************
 dnl
-dnl @synopsis SC_BLAS(DGEMM-FUNCTION, [ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
+dnl @synopsis SC_BLAS(PREFIX, DGEMM-FUNCTION,
+dnl                   [ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
 dnl
 dnl This macro looks for a library that implements the BLAS
 dnl linear-algebra interface (see http://www.netlib.org/blas/).
@@ -75,7 +76,8 @@ dnl Replaced obsolete AC_TRY_LINK_FUNC macro.
 dnl Disabled the PhiPack test since it requires BLAS_LIBS anyway.
 dnl Fixed buggy generic Mac OS X library test.
 
-dnl The first argument of this macro should be a mangled DGEMM function.
+dnl The first argument of this macro should be the package prefix.
+dnl The second argument of this macro should be a mangled DGEMM function.
 AC_DEFUN([SC_BLAS], [
 AC_PREREQ(2.50)
 dnl Expect this to be called already.
@@ -86,20 +88,18 @@ user_spec_blas_failed=no
 
 AC_ARG_WITH([blas], [AS_HELP_STRING([--with-blas=<lib>],
             [change default BLAS library to <lib>
-             or specify --without-blas to use no BLAS and LAPACK at all])])
-if test -n "$SC_WITH_BLAS" ; then
-  echo "Option override SC_WITH_BLAS=$SC_WITH_BLAS"
-  with_blas="$SC_WITH_BLAS"
-fi
-case $with_blas in
+             or specify --without-blas to use no BLAS and LAPACK at all])],,
+	     [withval="yes"])
+SC_ARG_OVERRIDE_WITH([$1], [BLAS])
+case $withval in
 	yes | "") ;;
 	no) sc_blas_ok=disable ;;
-	-* | */* | *.a | *.so | *.so.* | *.o) BLAS_LIBS="$with_blas" ;;
-	*) BLAS_LIBS="-l$with_blas" ;;
+	-* | */* | *.a | *.so | *.so.* | *.o) BLAS_LIBS="$withval" ;;
+	*) BLAS_LIBS="-l$withval" ;;
 esac
 
-dnl Expect the mangled DGEMM function name to be in $1.
-sc_blas_func="$1"
+dnl Expect the mangled DGEMM function name to be in $2.
+sc_blas_func="$2"
 
 sc_blas_save_LIBS="$LIBS"
 LIBS="$LIBS $FLIBS"
@@ -240,11 +240,12 @@ fi
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test "$sc_blas_ok" = yes ; then
-        ifelse([$2],,[AC_DEFINE(HAVE_BLAS,1,[Define if you have a BLAS library.])],[$2])
+        ifelse([$3],,
+               [AC_DEFINE(HAVE_BLAS,1,[Define if you have a BLAS library.])],[$3])
         :
 elif test "$sc_blas_ok" != disable ; then
         sc_blas_ok=no
-        $3
+        $4
 fi
 
 ])

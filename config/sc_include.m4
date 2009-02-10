@@ -27,11 +27,14 @@ dnl SC_ARG_OVERRIDE_ENABLE(PREFIX, TOKEN)
 dnl This function checks for the environment variable PREFIX_ENABLE_TOKEN
 dnl and if present uses it to override $enableval.
 dnl Otherwise PREFIX_ENABLE_TOKEN is set to $enableval.
+dnl Make sure to set enableval in action-if-not-given beforehand.
+dnl This macro survives multiple invocation.
 dnl
 AC_DEFUN([SC_ARG_OVERRIDE_ENABLE],
 [
-if test -z "$$1_ENABLE_$2" ; then
+if test -z "$$1_ENABLE_$2" -o "$$1_ENABLE_$2_OVERRIDE" = "no" ; then
   $1_ENABLE_$2="$enableval"
+  $1_ENABLE_$2_OVERRIDE="no"
 else
   enableval="$$1_ENABLE_$2"
   echo "Option override $1_ENABLE_$2=$enableval"
@@ -45,11 +48,14 @@ dnl SC_ARG_OVERRIDE_WITH(PREFIX, TOKEN)
 dnl This function checks for the environment variable PREFIX_WITH_TOKEN
 dnl and if present uses it to override $withval.
 dnl Otherwise PREFIX_WITH_TOKEN is set to $withval.
+dnl Make sure to set withval in action-if-not-given beforehand.
+dnl This macro survives multiple invocation.
 dnl
 AC_DEFUN([SC_ARG_OVERRIDE_WITH],
 [
-if test -z "$$1_WITH_$2" ; then
+if test -z "$$1_WITH_$2" -o "$$1_WITH_$2_OVERRIDE" = "no" ; then
   $1_WITH_$2="$withval"
+  $1_WITH_$2_OVERRIDE="no"
 else
   withval="$$1_WITH_$2"
   echo "Option override $1_WITH_$2=$withval"
