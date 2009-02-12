@@ -128,7 +128,7 @@ AC_MSG_RESULT([$HAVE_PKG_MPIIO])
 dnl Potentially override the MPI test environment
 SC_ARG_NOT_GIVEN_DEFAULT="yes"
 SC_ARG_WITH([mpitest], [use DRIVER to run MPI tests (default: mpirun -np 2)],
-            [MPI_TESTS], [[[[[=DRIVER]]]]])
+            [MPI_TESTS], [[[=DRIVER]]])
 if test "$HAVE_PKG_MPI" = yes ; then
   if test "$withval" = yes ; then
     withval="mpirun -np 2"

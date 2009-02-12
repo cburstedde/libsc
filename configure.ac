@@ -193,7 +193,6 @@ AC_DEFINE_UNQUOTED(CPP,         ["${CPP}"],         [C preprocessor])
 AC_DEFINE_UNQUOTED(CPPFLAGS,    ["${CPPFLAGS}"],    [C preprocessor flags])
 AC_DEFINE_UNQUOTED(F77,         ["${F77}"],         [F77 compiler])
 AC_DEFINE_UNQUOTED(FFLAGS,      ["${FFLAGS}"],      [F77 compiler flags])
-AC_DEFINE_UNQUOTED(LINK,        ["${LINK}"],        [Linker])
 AC_DEFINE_UNQUOTED(LDFLAGS,     ["${LDFLAGS}"],     [Linker flags])
 AC_DEFINE_UNQUOTED(BLAS_LIBS,   ["${BLAS_LIBS}"],   [BLAS libraries])
 AC_DEFINE_UNQUOTED(LAPACK_LIBS, ["${LAPACK_LIBS}"], [LAPACK libraries])
@@ -210,7 +209,6 @@ echo "| CPP:         $CPP"
 echo "| CPPFLAGS:    $CPPFLAGS"
 echo "| F77:         $F77"
 echo "| FFLAGS:      $FFLAGS"
-echo "| LINK:        $LINK"
 echo "| LDFLAGS:     $LDFLAGS"
 echo "| BLAS_LIBS:   $BLAS_LIBS"
 echo "| LAPACK_LIBS: $LAPACK_LIBS"
