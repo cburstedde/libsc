@@ -257,7 +257,8 @@ AC_DEFUN([SC_DETERMINE_INSTALL],
 if test ! -d "$$1_DIR" ; then
   AC_MSG_ERROR([Directory "$$1_DIR" does not exist])
 fi
-if test -d "$$1_DIR/include" -o -d "$$1_DIR/lib" -o -d "$$1_DIR/bin" ; then
+if test -d "$$1_DIR/include" -o -d "$$1_DIR/lib" -o \
+        -d "$$1_DIR/bin" -o -d "$$1_DIR/share/aclocal" ; then
   $1_INSTALL="yes"
 else
   $1_INSTALL="no"
@@ -302,8 +303,9 @@ $1_LDADD="-L$$1_LIB $2"
 
 dnl SC_DETERMINE_CONFIG_PATH(PREFIX)
 dnl This function expects the variable PREFIX_DIR to exist.
-dnl Looks for PREFIX_DIR/etc and then PREFIX_DIR/src.
+dnl Looks for PREFIX_DIR/share/aclocal and then PREFIX_DIR/src.
 dnl If neither is found, throws an error.
+dnl Sets shell variables PREFIX_CONFIG and PREFIX_AMFLAGS.
 dnl
 AC_DEFUN([SC_DETERMINE_CONFIG_PATH],
 [
@@ -314,4 +316,5 @@ fi
 if test ! -d "$$1_CONFIG" ; then
   AC_MSG_ERROR([Config directories based on $$1_DIR not found])
 fi
+$1_AMFLAGS="-I $$1_CONFIG"
 ])
