@@ -173,7 +173,8 @@ AC_DEFUN([SC_MPI_C_COMPILE_AND_LINK],
 [
 AC_MSG_CHECKING([compile/link for MPI C program])
 AC_LINK_IFELSE([AC_LANG_PROGRAM(
-[[#include <mpi.h>]], [[
+[[#undef MPI
+#include <mpi.h>]], [[
 MPI_Init ((int *) 0, (char ***) 0);
 MPI_Finalize ();
 ]])],
@@ -190,7 +191,8 @@ AC_DEFUN([SC_MPIIO_C_COMPILE_AND_LINK],
 [
 AC_MSG_CHECKING([compile/link for MPI I/O C program])
 AC_LINK_IFELSE([AC_LANG_PROGRAM(
-[[#include <mpi.h>]], [[
+[[#undef MPI
+#include <mpi.h>]], [[
 MPI_File fh;
 MPI_Init ((int *) 0, (char ***) 0);
 MPI_File_open (MPI_COMM_WORLD, "filename",

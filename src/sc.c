@@ -123,7 +123,7 @@ static void
 sc_signal_handler (int sig)
 {
   char                prefix[BUFSIZ];
-  char               *sigstr;
+  const char         *sigstr;
 
   if (sc_identifier >= 0) {
     snprintf (prefix, BUFSIZ, "[%d] ", sc_identifier);
@@ -156,9 +156,9 @@ sc_signal_handler (int sig)
  *                      If false, reinstate previous signal handler.
  */
 static void
-sc_set_signal_handler (bool catch)
+sc_set_signal_handler (bool catch_signals)
 {
-  if (catch && !sc_signals_caught) {
+  if (catch_signals && !sc_signals_caught) {
     system_int_handler = signal (SIGINT, sc_signal_handler);
     SC_CHECK_ABORT (system_int_handler != SIG_ERR, "catching INT");
     system_segv_handler = signal (SIGSEGV, sc_signal_handler);
@@ -167,7 +167,7 @@ sc_set_signal_handler (bool catch)
     SC_CHECK_ABORT (system_usr2_handler != SIG_ERR, "catching USR2");
     sc_signals_caught = true;
   }
-  else if (!catch && sc_signals_caught) {
+  else if (!catch_signals && sc_signals_caught) {
     (void) signal (SIGINT, system_int_handler);
     system_int_handler = NULL;
     (void) signal (SIGSEGV, system_segv_handler);
@@ -381,7 +381,7 @@ sc_strdup (int package, const char *s)
   }
 
   len = strlen (s) + 1;
-  d = sc_malloc (package, len);
+  d = (char *) sc_malloc (package, len);
   memcpy (d, s, len);
 
   return d;
@@ -521,7 +521,7 @@ void
 sc_generic_abort_handler (void *data)
 {
   int                 rank;
-  MPI_Comm           *mpicomm = data;
+  MPI_Comm           *mpicomm = (MPI_Comm *) data;
 
   if (mpicomm == NULL) {
     fprintf (stderr,

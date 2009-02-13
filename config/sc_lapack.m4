@@ -150,8 +150,13 @@ if test "$sc_lapack_ok" = yes ; then
         sc_lapack_save_run_LIBS="$LIBS"
         LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
         AC_MSG_CHECKING([for LAPACK by running a C program])
-        AC_RUN_IFELSE([AC_LANG_PROGRAM(,
-[[
+        AC_RUN_IFELSE([AC_LANG_PROGRAM(
+[[#ifdef __cplusplus
+extern "C"
+char $sc_lapack_func (char *, int *, double *, int *, double *,
+                      double *, double *, int *, int *);
+#endif
+]],[[
 int     i = 1, info = 0, iwork[1];
 double  anorm = 1., rcond;
 double  A = 1., work[4];

@@ -35,6 +35,17 @@
 #define iniparser_getstr(d, k)  iniparser_getstring(d, k, NULL)
 #define iniparser_setstr        iniparser_setstring
 
+/*---------------------------------------------------------------------------
+  Save C++ compilation
+ ---------------------------------------------------------------------------*/
+
+#ifdef __cplusplus
+extern "C" {
+#if 0
+}
+#endif
+#endif
+
 /*-------------------------------------------------------------------------*/
 /**
   @brief    Get number of sections in a dictionary
@@ -271,6 +282,13 @@ dictionary * iniparser_load(const char * ininame, FILE * f);
  */
 /*--------------------------------------------------------------------------*/
 void iniparser_freedict(dictionary * d);
+
+#ifdef __cplusplus
+#if 0
+{
+#endif
+}
+#endif
 
 #endif
 
