@@ -256,7 +256,7 @@ sc_dmatrix_copy (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 
   SC_ASSERT (X->m == Y->m && X->n == Y->n);
 
-  memcpy (Ydata, Xdata, totalsize * sizeof (double));
+  memmove (Ydata, Xdata, totalsize * sizeof (double));
 }
 
 void
