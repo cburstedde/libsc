@@ -27,12 +27,12 @@
 
 /* provide extern C defines */
 
-#ifdef __cplusplus              /* enforce semicolon */
-#define SC_EXTERN_C_BEGIN       extern "C" {    void sc_extern_c_begin (void)
-#define SC_EXTERN_C_END         }               void sc_extern_cc_end (void)
+#ifdef __cplusplus
+#define SC_EXTERN_C_BEGIN       extern "C" {
+#define SC_EXTERN_C_END         }
 #else
-#define SC_EXTERN_C_BEGIN                       void sc_extern_c_begin (void)
-#define SC_EXTERN_C_END                         void sc_extern_c_end (void)
+#define SC_EXTERN_C_BEGIN
+#define SC_EXTERN_C_END
 #endif
 
 /* include MPI before stdio.h */
