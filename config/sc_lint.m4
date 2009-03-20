@@ -69,7 +69,7 @@ if test "$LINT_FLAGS" = "" ; then
         esac
         ;;
       splint|*/splint)
-        LINT_FLAGS="-weak -badflag -preproc -unixlib"
+        LINT_FLAGS="-weak -fixedformalarray -badflag -preproc -unixlib"
         ;;
     esac
 fi
