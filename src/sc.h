@@ -66,7 +66,8 @@
 #include <sc_c99_functions.h>
 #include <sc_mpi.h>
 
-/* Include math defines */
+/* include math defines */
+
 #ifndef M_E
 #define M_E 2.7182818284590452354       /* e */
 #endif
@@ -106,6 +107,9 @@
 #ifndef M_SQRT1_2
 #define M_SQRT1_2 0.70710678118654752440        /* 1/sqrt(2) */
 #endif
+
+#define SC_EPS               2.220446049250313e-16
+#define SC_1000_EPS (1000. * 2.220446049250313e-16)
 
 #if 0
 /*@ignore@*/
