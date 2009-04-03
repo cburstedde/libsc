@@ -71,9 +71,14 @@ void                sc_dmatrix_resize (sc_dmatrix_t * dmatrix,
 
 void                sc_dmatrix_destroy (sc_dmatrix_t * dmatrix);
 
-/*
- * Check matrix for symmetry.
- * The tolerance measures the absolute value of the maximum difference.
+/** Check whether a dmatrix is free of NaN entries.
+ * \return          true if the dmatrix does not contain any NaN entries.
+ */
+bool                sc_dmatrix_is_valid (const sc_dmatrix_t * A);
+
+/** Check a dmatrix for symmetry.
+ * \param [in] tolerance    measures the absolute value of the max difference.
+ * \return                  true if matrix is numerically symmetric.
  */
 bool                sc_dmatrix_is_symmetric (const sc_dmatrix_t * A,
                                              double tolerance);

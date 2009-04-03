@@ -178,6 +178,12 @@ sc_dmatrix_destroy (sc_dmatrix_t * dmatrix)
 }
 
 bool
+sc_dmatrix_is_valid (const sc_dmatrix_t * A)
+{
+  return sc_darray_is_valid (A->e[0], A->m * A->n);
+}
+
+bool
 sc_dmatrix_is_symmetric (const sc_dmatrix_t * A, double tolerance)
 {
   sc_bint_t           i, j;
