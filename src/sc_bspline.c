@@ -23,6 +23,12 @@
 int
 sc_bspline_min_number_points (int n)
 {
+  return n + 1;
+}
+
+int
+sc_bspline_min_number_knots (int n)
+{
   return 2 * n + 2;
 }
 
@@ -177,7 +183,7 @@ sc_bspline_find_interval (sc_bspline_t * bs, double t)
   SC_ASSERT (bs->cacheknot >= bs->n && bs->cacheknot < bs->n + bs->l);
 
   if (t >= tm) {
-    iguess = bs->n + bs->l - 1;
+    iguess = bs->cacheknot = bs->n + bs->l - 1;
   }
   else if (knotse[bs->cacheknot] <= t && t < knotse[bs->cacheknot + 1]) {
     iguess = bs->cacheknot;
@@ -223,6 +229,7 @@ sc_bspline_find_interval (sc_bspline_t * bs, double t)
     }
     bs->cacheknot = iguess;
   }
+  SC_ASSERT (iguess >= bs->n && iguess < bs->n + bs->l);
   SC_CHECK_ABORT ((knotse[iguess] <= t && t < knotse[iguess + 1]) ||
                   (t >= tm && iguess == bs->n + bs->l - 1),
                   "Bug in sc_bspline_find_interval");

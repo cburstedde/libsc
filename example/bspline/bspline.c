@@ -130,11 +130,13 @@ main (int argc, char **argv)
   sc_bspline_destroy (bs);
   sc_dmatrix_destroy (knots);
 
-  knots = sc_bspline_knots_new_length (n, points);
-  bs = sc_bspline_new (n, points, knots, works);
-  create_plot ("length", bs);
-  sc_bspline_destroy (bs);
-  sc_dmatrix_destroy (knots);
+  if (n > 0) {
+    knots = sc_bspline_knots_new_length (n, points);
+    bs = sc_bspline_new (n, points, knots, works);
+    create_plot ("length", bs);
+    sc_bspline_destroy (bs);
+    sc_dmatrix_destroy (knots);
+  }
 
   sc_dmatrix_destroy (works);
   sc_dmatrix_destroy (points);

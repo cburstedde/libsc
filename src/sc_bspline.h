@@ -43,9 +43,15 @@ sc_bspline_t;
 
 /** Compute the minimum required number of points for a certain degree.
  * \param [in] n    Polynomial degree of the spline functions, n >= 0.
- * \return          Return minimum point number 2 * n + 2.
+ * \return          Return minimum point number = p + 1 >= n + 1.
  */
 int                 sc_bspline_min_number_points (int n);
+
+/** Compute the minimum required number of knots for a certain degree.
+ * \param [in] n    Polynomial degree of the spline functions, n >= 0.
+ * \return          Return minimum knot number = m + 1 >= 2 * n + 2.
+ */
+int                 sc_bspline_min_number_knots (int n);
 
 /** Create a uniform B-spline knot vector.
  * \param [in] n        Polynomial degree of the spline functions, n >= 0.
