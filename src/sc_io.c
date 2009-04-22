@@ -210,7 +210,8 @@ sc_mpi_write (MPI_File mpifile, const void *ptr, size_t zcount,
   int                 mpiret;
   MPI_Status          mpistatus;
 
-  mpiret = MPI_File_write (mpifile, ptr, (int) zcount, t, &mpistatus);
+  mpiret = MPI_File_write (mpifile, (void *) ptr,
+                           (int) zcount, t, &mpistatus);
   SC_CHECK_ABORT (mpiret == MPI_SUCCESS, errmsg);
 
 #ifdef SC_DEBUG
