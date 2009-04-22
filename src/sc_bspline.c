@@ -281,6 +281,62 @@ sc_bspline_derivative (sc_bspline_t * bs, double t, double *result)
   int                 i, k, n;
   int                 iguess;
   int                 toffset;
+  double             *wfrom, *wto;
+  const double       *knotse = bs->knots->e[0];
+
+  if (bs->n == 0) {
+    memset (result, 0, sizeof (double) * bs->d);
+    return;
+  }
+
+  iguess = sc_bspline_find_interval (bs, t);
+
+  toffset = 0;
+  wfrom = wto = bs->points->e[iguess - bs->n];
+  for (n = bs->n; n > 0; --n) {
+    wto = bs->works->e[toffset];
+
+    /* SC_LDEBUGF ("For %d at offset %d\n", n, toffset); */
+    if (n == bs->n) {
+      for (i = 0; i < n; ++i) {
+        const double        tleft = knotse[iguess + i - n + 1];
+        const double        tright = knotse[iguess + i + 1];
+        const double        tfactor = n / (tright - tleft);
+
+        for (k = 0; k < bs->d; ++k) {
+          wto[bs->d * i + k] =
+            (wfrom[bs->d * (i + 1) + k] - wfrom[bs->d * i + k]) * tfactor;
+        }
+      }
+    }
+    else {
+      for (i = 0; i < n; ++i) {
+        const double        tleft = knotse[iguess + i - n + 1];
+        const double        tright = knotse[iguess + i + 1];
+        const double        tfactor = 1. / (tright - tleft);
+
+        for (k = 0; k < bs->d; ++k) {
+          wto[bs->d * i + k] =
+            ((t - tleft) * wfrom[bs->d * (i + 1) + k] +
+             (tright - t) * wfrom[bs->d * i + k]) * tfactor;
+        }
+      }
+    }
+
+    wfrom = wto;
+    toffset += n;
+  }
+  SC_ASSERT (toffset == bs->n * (bs->n + 1) / 2);
+
+  memcpy (result, wfrom, sizeof (double) * bs->d);
+}
+
+void
+sc_bspline_derivative2 (sc_bspline_t * bs, double t, double *result)
+{
+  int                 i, k, n;
+  int                 iguess;
+  int                 toffset;
   double             *pfrom, *pto;
   double             *qfrom, *qto;
   const double       *knotse = bs->knots->e[0];
