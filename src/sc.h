@@ -318,13 +318,6 @@ int                 sc_int32_compare (const void *v1, const void *v2);
 int                 sc_int64_compare (const void *v1, const void *v2);
 int                 sc_double_compare (const void *v1, const void *v2);
 
-/** Check whether an array is free of NaN entries.
- * \param [in] darray   Array of doubles.
- * \param [in] nelem    Number of doubles in the array.
- * \return              Return false if at least one entry is NaN.
- */
-bool                sc_darray_is_valid (const double *darray, size_t nelem);
-
 /** Controls the default SC log behavior.
  * \param [in] log_handler   Set default SC log handler (NULL selects builtin).
  * \param [in] log_threshold Set default SC log threshold (or SC_LP_DEFAULT).

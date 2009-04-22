@@ -21,6 +21,35 @@
 #include <sc_dmatrix.h>
 #include <sc_lapack.h>
 
+bool
+sc_darray_is_valid (const double *darray, size_t nelem)
+{
+  size_t              zz;
+
+  for (zz = 0; zz < nelem; ++zz) {
+    if (darray[zz] != darray[zz]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool
+sc_darray_is_range (const double *darray, size_t nelem,
+                    double low, double high)
+{
+  size_t              zz;
+
+  for (zz = 0; zz < nelem; ++zz) {
+    if (!(low <= darray[zz] && darray[zz] <= high)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 static void
 sc_dmatrix_new_e (sc_dmatrix_t * rdm, sc_bint_t m, sc_bint_t n, double *data)
 {

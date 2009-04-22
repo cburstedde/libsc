@@ -460,20 +460,6 @@ sc_double_compare (const void *v1, const void *v2)
   return d1 < d2 ? -1 : d1 > d2 ? 1 : 0;
 }
 
-bool
-sc_darray_is_valid (const double *darray, size_t nelem)
-{
-  size_t              zz;
-
-  for (zz = 0; zz < nelem; ++zz) {
-    if (darray[zz] != darray[zz]) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 void
 sc_set_log_defaults (sc_log_handler_t log_handler, int log_threshold,
                      FILE * log_stream)

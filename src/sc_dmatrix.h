@@ -34,6 +34,23 @@ typedef struct sc_dmatrix
 }
 sc_dmatrix_t;
 
+/** Check whether a double array is free of NaN entries.
+ * \param [in] darray   Array of doubles.
+ * \param [in] nelem    Number of doubles in the array.
+ * \return              Return false if at least one entry is NaN.
+ */
+bool                sc_darray_is_valid (const double *darray, size_t nelem);
+
+/** Check whether the values in a double array are in a certain range.
+ * \param [in] darray   Array of doubles.
+ * \param [in] nelem    Number of doubles in the array.
+ * \param [in] low      Lowest allowed value in the array.
+ * \param [in] high     Highest allowed value in the array.
+ * \return              Return false if at least one entry is out of range.
+ */
+bool                sc_darray_is_range (const double *darray, size_t nelem,
+                                        double low, double high);
+
 /*
  * The sc_dmatrix_new/clone functions abort on allocation errors.
  * There is no need to check the return value.
