@@ -253,17 +253,15 @@ sc_bspline_evaluate (sc_bspline_t * bs, double t, double *result)
   for (n = bs->n; n > 0; --n) {
     wto = bs->works->e[toffset];
 
-    /* SC_LDEBUGF ("For %d at offset %d\n", n, toffset); */
     for (i = 0; i < n; ++i) {
       const double        tleft = knotse[iguess + i - n + 1];
       const double        tright = knotse[iguess + i + 1];
-      const double        tdiff = tright - tleft;
-      /* SC_LDEBUGF ("Tdiff %g %g %g\n", tleft, tright, tdiff); */
-      SC_ASSERT (tdiff > 0);
+      const double        tfactor = 1. / (tright - tleft);
+
       for (k = 0; k < bs->d; ++k) {
         wto[bs->d * i + k] =
           ((t - tleft) * wfrom[bs->d * (i + 1) + k] +
-           (tright - t) * wfrom[bs->d * i + k]) / tdiff;
+           (tright - t) * wfrom[bs->d * i + k]) * tfactor;
       }
     }
 
@@ -296,7 +294,6 @@ sc_bspline_derivative (sc_bspline_t * bs, double t, double *result)
   for (n = bs->n; n > 0; --n) {
     wto = bs->works->e[toffset];
 
-    /* SC_LDEBUGF ("For %d at offset %d\n", n, toffset); */
     if (n == bs->n) {
       for (i = 0; i < n; ++i) {
         const double        tleft = knotse[iguess + i - n + 1];
@@ -351,21 +348,19 @@ sc_bspline_derivative2 (sc_bspline_t * bs, double t, double *result)
     pto = bs->works->e[toffset];
     qto = bs->works->e[toffset + n];
 
-    /* SC_LDEBUGF ("For %d at offset %d\n", n, toffset); */
     for (i = 0; i < n; ++i) {
       const double        tleft = knotse[iguess + i - n + 1];
       const double        tright = knotse[iguess + i + 1];
-      const double        tdiff = tright - tleft;
-      /* SC_LDEBUGF ("Tdiff %g %g %g\n", tleft, tright, tdiff); */
-      SC_ASSERT (tdiff > 0);
+      const double        tfactor = 1. / (tright - tleft);
+
       for (k = 0; k < bs->d; ++k) {
         pto[bs->d * i + k] =
           ((t - tleft) * pfrom[bs->d * (i + 1) + k] +
            (tright - t) * pfrom[bs->d * i + k] +
-           qfrom[bs->d * (i + 1) + k] - qfrom[bs->d * i + k]) / tdiff;
+           qfrom[bs->d * (i + 1) + k] - qfrom[bs->d * i + k]) * tfactor;
         qto[bs->d * i + k] =
           ((t - tleft) * qfrom[bs->d * (i + 1) + k] +
-           (tright - t) * qfrom[bs->d * i + k]) / tdiff;
+           (tright - t) * qfrom[bs->d * i + k]) * tfactor;
       }
     }
 
