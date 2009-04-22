@@ -81,6 +81,42 @@ create_plot (const char *name, sc_bspline_t * bs)
   SC_FREE (result);
 }
 
+static void
+check_derivatives (sc_bspline_t * bs)
+{
+  int                 i, k;
+  int                 nevals;
+  double              t, h, diff;
+  double              result1[2], result2[2], result3[2];
+
+  /* compare derivatives and finite difference approximation */
+  nevals = 150;
+  for (i = 0; i < nevals; ++i) {
+    t = i / (double) (nevals - 1);
+    sc_bspline_derivative (bs, t, result1);
+    sc_bspline_derivative2 (bs, t, result2);
+
+    diff = 0.;
+    for (k = 0; k < 2; ++k) {
+      diff += (result1[k] - result2[k]) * (result1[k] - result2[k]);
+    }
+    SC_CHECK_ABORT (diff < 1e-12, "Derivative mismatch");
+
+    if (i > 0 && i < nevals - 1) {
+      h = 1e-8;
+      sc_bspline_evaluate (bs, t - h, result2);
+      sc_bspline_evaluate (bs, t + h, result3);
+
+      diff = 0.;
+      for (k = 0; k < 2; ++k) {
+        result2[k] = (result3[k] - result2[k]) / (2. * h);
+        diff += (result1[k] - result2[k]) * (result1[k] - result2[k]);
+      }
+      SC_CHECK_ABORT (diff < 1e-6, "Difference mismatch");
+    }
+  }
+}
+
 int
 main (int argc, char **argv)
 {
@@ -134,6 +170,7 @@ main (int argc, char **argv)
     knots = sc_bspline_knots_new_length (n, points);
     bs = sc_bspline_new (n, points, knots, works);
     create_plot ("length", bs);
+    check_derivatives (bs);
     sc_bspline_destroy (bs);
     sc_dmatrix_destroy (knots);
   }
