@@ -276,13 +276,22 @@ sc_bspline_evaluate (sc_bspline_t * bs, double t, double *result)
 void
 sc_bspline_derivative (sc_bspline_t * bs, double t, double *result)
 {
+  sc_bspline_derivative_n (bs, 1, t, result);
+}
+
+void
+sc_bspline_derivative_n (sc_bspline_t * bs, int order,
+                         double t, double *result)
+{
   int                 i, k, n;
   int                 iguess;
   int                 toffset;
   double             *wfrom, *wto;
   const double       *knotse = bs->knots->e[0];
 
-  if (bs->n == 0) {
+  SC_ASSERT (order >= 0);
+
+  if (bs->n < order) {
     memset (result, 0, sizeof (double) * bs->d);
     return;
   }
@@ -294,7 +303,7 @@ sc_bspline_derivative (sc_bspline_t * bs, double t, double *result)
   for (n = bs->n; n > 0; --n) {
     wto = bs->works->e[toffset];
 
-    if (n == bs->n) {
+    if (bs->n < n + order) {
       for (i = 0; i < n; ++i) {
         const double        tleft = knotse[iguess + i - n + 1];
         const double        tright = knotse[iguess + i + 1];

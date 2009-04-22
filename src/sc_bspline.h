@@ -110,6 +110,15 @@ void                sc_bspline_evaluate (sc_bspline_t * bs,
 void                sc_bspline_derivative (sc_bspline_t * bs,
                                            double t, double *result);
 
+/** Evaluate any order B-spline derivative at a certain point.
+ * \param [in] bs       B-spline structure.
+ * \param [in] order    Order of the derivative >= 0.
+ * \param [in] t        Value that must be within the range of the knots.
+ * \param [out] result  The computed derivative in R^d is placed here.
+ */
+void                sc_bspline_derivative_n (sc_bspline_t * bs, int order,
+                                             double t, double *result);
+
 /** Evaluate a B-spline derivative at a certain point.  Obsolete.
  * \param [in] bs       B-spline structure.
  * \param [in] t        Value that must be within the range of the knots.

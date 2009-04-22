@@ -86,8 +86,8 @@ check_derivatives (sc_bspline_t * bs)
 {
   int                 i, k;
   int                 nevals;
-  double              t, h, diff;
-  double              result1[2], result2[2], result3[2];
+  double              t, h, diff, diff2;
+  double              result1[2], result2[2], result3[2], result4[2];
 
   /* compare derivatives and finite difference approximation */
   nevals = 150;
@@ -106,14 +106,22 @@ check_derivatives (sc_bspline_t * bs)
       h = 1e-8;
       sc_bspline_evaluate (bs, t - h, result2);
       sc_bspline_evaluate (bs, t + h, result3);
+      sc_bspline_derivative_n (bs, 0, t + h, result4);
 
-      diff = 0.;
+      diff = diff2 = 0.;
       for (k = 0; k < 2; ++k) {
         result2[k] = (result3[k] - result2[k]) / (2. * h);
         diff += (result1[k] - result2[k]) * (result1[k] - result2[k]);
+        diff2 += (result3[k] - result4[k]) * (result3[k] - result4[k]);
       }
       SC_CHECK_ABORT (diff < 1e-6, "Difference mismatch");
+      SC_CHECK_ABORT (diff2 < 1e-12, "Evaluation mismatch");
     }
+
+#if 0
+    sc_bspline_derivative_n (bs, 2, t, result1);
+    SC_LDEBUGF ("Second derivative %d %g %g\n", i, result1[0], result1[1]);
+#endif
   }
 }
 
