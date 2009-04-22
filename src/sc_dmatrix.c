@@ -183,7 +183,8 @@ sc_dmatrix_resize (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
     data = SC_REALLOC (dmatrix->e[0], double, newsize);
 #else
     data = SC_ALLOC (double, newsize);
-    memcpy (data, dmatrix->e[0], (size_t) SC_MIN (newsize, size));
+    memcpy (data, dmatrix->e[0],
+            (size_t) SC_MIN (newsize, size) * sizeof (double));
     SC_FREE (dmatrix->e[0]);
 #endif
   }
