@@ -123,7 +123,7 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   mpiret = MPI_Type_commit (&ctype);
   SC_CHECK_MPI (mpiret);
 
-  mpiret = MPI_Op_create (sc_statinfo_mpifunc, 1, &op);
+  mpiret = MPI_Op_create ((MPI_User_function *) sc_statinfo_mpifunc, 1, &op);
   SC_CHECK_MPI (mpiret);
 
   mpiret = MPI_Allreduce (flatin, flatout, nvars, ctype, op, mpicomm);
