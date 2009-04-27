@@ -42,6 +42,7 @@ typedef struct
   int                 opt_char;
   const char         *opt_name;
   void               *opt_var;
+  void                (*opt_fn) (void);
   int                 has_arg;
   const char         *help_string;
   char               *string_value;

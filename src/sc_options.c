@@ -211,7 +211,7 @@ sc_options_add_callback (sc_options_t * opt, int opt_char,
   item->opt_type = SC_OPTION_CALLBACK;
   item->opt_char = opt_char;
   item->opt_name = opt_name;
-  item->opt_var = (void *) fn;
+  item->opt_fn = (void (*)(void)) fn;
   item->has_arg = has_arg;
   item->help_string = help_string;
   item->string_value = NULL;
@@ -680,7 +680,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       break;
     case SC_OPTION_CALLBACK:
-      fn = (sc_options_callback_t) item->opt_var;
+      fn = (sc_options_callback_t) item->opt_fn;
       if (fn (opt, item->has_arg ? optarg : NULL, item->user_data)) {
 #if 0
         SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
