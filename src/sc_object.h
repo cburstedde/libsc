@@ -71,6 +71,9 @@ sc_void_function_t  sc_object_method_unregister (sc_object_system_t * s,
 
 sc_void_function_t  sc_object_method_lookup (sc_object_system_t * s,
                                              sc_void_function_t ifm, void *o);
+void                sc_object_method_override (sc_object_system_t * s,
+                                               sc_void_function_t ifm, void *o,
+                                               sc_void_function_t oinmi);
 
 /*********** these are the 2 virtual methods for sc_object ***********/
 void                sc_object_destroy (sc_object_t * o);

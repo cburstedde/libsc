@@ -109,7 +109,29 @@ sc_object_method_lookup (sc_object_system_t * s, sc_void_function_t ifm,
   found = sc_hash_lookup (s->methods, &omk, &om);
   SC_ASSERT (found);
 
-  return ((sc_object_method_t *) * om)->oinmi;
+  /* *INDENT-OFF* HORRIBLE indent bug */
+  return ((sc_object_method_t *) *om)->oinmi;
+  /* *INDENT-ON* */
+}
+
+void
+sc_object_method_override (sc_object_system_t * s, sc_void_function_t ifm,
+                           void *o, sc_void_function_t oinmi)
+{
+  bool                found;
+  void              **om;
+  sc_object_method_t  omk;
+
+  omk.ifm = ifm;
+  omk.o = o;
+  omk.oinmi = NULL;
+
+  found = sc_hash_lookup (s->methods, &omk, &om);
+  SC_ASSERT (found);
+
+  /* *INDENT-OFF* HORRIBLE indent bug */
+  ((sc_object_method_t *) *om)->oinmi = oinmi;
+  /* *INDENT-ON* */
 }
 
 void
