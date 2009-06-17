@@ -14,18 +14,25 @@ typedef struct Car
 {
   sc_object_t         object;
   float               speed;
+  float               wheelsize;
 }
 Car;
+
+/* virtual method prototypes */
+float               car_wheelsize_V (sc_object_t * o);
 
 /* construction */
 void                car_initialize (sc_object_system_t * s, Car * self);
 Car                *car_create (sc_object_system_t * s);
 
-/* methods for sc_object_t */
+/* implementation of virtual methods of sc_object_t */
 void                car_destroy (Car * self);
 void                car_print (Car * self, FILE * out);
 
-/* methods for vehicle */
+/* implementation of virtual methods of car */
+float               car_wheelsize (Car * self);
+
+/* implementation of interface methods of vehicle */
 void                car_accelerate (Car * self);
 
 #endif /* !CAR_H */

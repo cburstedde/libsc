@@ -5,6 +5,7 @@
 #include <sc.h>
 #include <sc_object.h>
 
-void                vehicle_accelerate (sc_object_t * o);
+/* interface method prototypes */
+void                vehicle_accelerate_I (sc_object_t * o);
 
 #endif /* !VEHICLE_H */

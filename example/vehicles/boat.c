@@ -19,11 +19,13 @@ boat_destroy (Boat * self)
 {
   /* we should know what methods self has registered, improve this */
   sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) sc_object_destroy, self);
+                               (sc_void_function_t) sc_object_destroy_V,
+                               self);
   sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) sc_object_print, self);
+                               (sc_void_function_t) sc_object_print_V, self);
   sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) vehicle_accelerate, self);
+                               (sc_void_function_t) vehicle_accelerate_I,
+                               self);
 
   SC_FREE (self);
 }
@@ -34,11 +36,11 @@ boat_create (sc_object_system_t * s)
   Boat               *self = SC_ALLOC (Boat, 1);
 
   self->object.s = s;
-  sc_object_method_register (s, (sc_void_function_t) sc_object_print,
+  sc_object_method_register (s, (sc_void_function_t) sc_object_print_V,
                              self, (sc_void_function_t) boat_print);
-  sc_object_method_register (s, (sc_void_function_t) sc_object_destroy,
+  sc_object_method_register (s, (sc_void_function_t) sc_object_destroy_V,
                              self, (sc_void_function_t) boat_destroy);
-  sc_object_method_register (s, (sc_void_function_t) vehicle_accelerate,
+  sc_object_method_register (s, (sc_void_function_t) vehicle_accelerate_I,
                              self, (sc_void_function_t) boat_accelerate);
 
   self->speed = 0.0f;

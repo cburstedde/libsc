@@ -21,9 +21,9 @@ main (int argc, char **argv)
 
   for (i = 0; i < 3; ++i) {
     o = os[i];
-    vehicle_accelerate (o);
-    sc_object_print (o, stdout);
-    sc_object_destroy (o);
+    vehicle_accelerate_I (o);
+    sc_object_print_V (o, stdout);
+    sc_object_destroy_V (o);
   }
 
   SC_ASSERT (scos->methods->elem_count == 0);

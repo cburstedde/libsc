@@ -13,6 +13,7 @@
 
   The hash key could be made up of the object memory address (unique)
   and the memory address of the method prototype (also unique).
+  (A string instead of the method prototype may be the better idea.)
 
   Say we want to register an implementation for the method obj_print
   for the object car with the function car_print.

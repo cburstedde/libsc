@@ -11,7 +11,8 @@ typedef struct sc_object
 }
 sc_object_t;
 
-void                sc_object_destroy (sc_object_t * o);
-void                sc_object_print (sc_object_t * o, FILE * f);
+/* virtual method prototypes */
+void                sc_object_destroy_V (sc_object_t * o);
+void                sc_object_print_V (sc_object_t * o, FILE * f);
 
 #endif /* !SC_OBJECT_H */
