@@ -3,14 +3,20 @@
 #define BOAT_H
 
 #include <sc.h>
+#include <sc_object.h>
 
-typedef struct BoatImpl *Boat;
+/*
+  boat is a subclass of sc_object_t
+  boat implements interface vehicle
+*/
 
-Boat                boat_create ();
-void                boat_destroy (Boat self);
-void                boat_print (Boat self, FILE * out);
+typedef struct Boat
+{
+  sc_object_t         object;
+  float               speed;
+}
+Boat;
 
-void                boat_accelerate (Boat self);
-float               boat_getSpeed (Boat self);
+Boat               *boat_create (sc_object_system_t * s);
 
 #endif /* !BOAT_H */

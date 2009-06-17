@@ -40,6 +40,7 @@ sc_object_system_t;
 
 typedef struct sc_object
 {
+  sc_object_system_t * s;
 }
 sc_object_t;
 
@@ -72,9 +73,7 @@ sc_void_function_t  sc_object_method_lookup (sc_object_system_t * s,
                                              sc_void_function_t ifm, void *o);
 
 /*********** these are the 2 virtual methods for sc_object ***********/
-void                sc_object_destroy (sc_object_system_t * s,
-                                       sc_object_t * o);
-void                sc_object_print (sc_object_system_t * s,
-                                     sc_object_t * o, FILE * f);
+void                sc_object_destroy (sc_object_t * o);
+void                sc_object_print (sc_object_t * o, FILE * f);
 
 #endif /* !SC_OBJECT_H */

@@ -60,7 +60,7 @@ void
 sc_object_method_register (sc_object_system_t * s, sc_void_function_t ifm,
                            void *o, sc_void_function_t oinmi)
 {
-  bool                found;
+  bool                added;
   sc_object_method_t *om;
 
   om = sc_mempool_alloc (s->mpool);
@@ -68,8 +68,8 @@ sc_object_method_register (sc_object_system_t * s, sc_void_function_t ifm,
   om->o = o;
   om->oinmi = oinmi;
 
-  found = sc_hash_insert_unique (s->methods, om, NULL);
-  SC_ASSERT (!found);
+  added = sc_hash_insert_unique (s->methods, om, NULL);
+  SC_ASSERT (added);
 }
 
 sc_void_function_t
@@ -113,22 +113,23 @@ sc_object_method_lookup (sc_object_system_t * s, sc_void_function_t ifm,
 }
 
 void
-sc_object_destroy (sc_object_system_t * s, sc_object_t * o)
+sc_object_destroy (sc_object_t * o)
 {
+  sc_object_system_t * s = o->s;
   sc_void_function_t  oinmi;
 
   /* get and remove the implementation of this method for this object */
-  oinmi =
-    sc_object_method_unregister (s, (sc_void_function_t) sc_object_destroy,
-                                 (void *) o);
+  oinmi = sc_object_method_lookup (s, (sc_void_function_t) sc_object_destroy,
+                                   (void *) o);
 
   /* cast object instance method implementation appropriately and call it */
   ((void (*)(sc_object_t *)) oinmi) (o);
 }
 
 void
-sc_object_print (sc_object_system_t * s, sc_object_t * o, FILE * f)
+sc_object_print (sc_object_t * o, FILE * f)
 {
+  sc_object_system_t *s = o->s;
   sc_void_function_t  oinmi;
 
   /* get the implementation of this method for this object */
