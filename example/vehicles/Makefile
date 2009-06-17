@@ -13,7 +13,7 @@ all: $(TARGETS)
 .c.o:
 	$(CC) -c $(CFLAGS) $<
 
-scobj2: scobj_main.o car.o boat.o
+scobj2: sc_object.o car.o boat.o scobj_main.o
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
 clean:
