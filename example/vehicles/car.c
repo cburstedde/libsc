@@ -22,17 +22,25 @@ car_accelerate (Car * self)
 }
 
 void
-car_destroy (Car * self)
+car_finalize (Car * self)
 {
   /* we should know what methods self has registered, improve this */
   sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) sc_object_destroy_V, self);
+                               (sc_void_function_t) sc_object_destroy_V,
+                               self);
   sc_object_method_unregister (self->object.s,
                                (sc_void_function_t) sc_object_print_V, self);
   sc_object_method_unregister (self->object.s,
                                (sc_void_function_t) car_wheelsize_V, self);
   sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) vehicle_accelerate_I, self);
+                               (sc_void_function_t) vehicle_accelerate_I,
+                               self);
+}
+
+void
+car_destroy (Car * self)
+{
+  car_finalize (self);
 
   SC_FREE (self);
 }
@@ -40,19 +48,22 @@ car_destroy (Car * self)
 void
 car_initialize (sc_object_system_t * s, Car * self)
 {
+  /* sc_object */
   self->object.s = s;
-
   sc_object_method_register (s, (sc_void_function_t) sc_object_destroy_V,
                              self, (sc_void_function_t) car_destroy);
   sc_object_method_register (s, (sc_void_function_t) sc_object_print_V,
                              self, (sc_void_function_t) car_print);
+
+  /* car */
   sc_object_method_register (s, (sc_void_function_t) car_wheelsize_V,
                              self, (sc_void_function_t) car_wheelsize);
-  sc_object_method_register (s, (sc_void_function_t) vehicle_accelerate_I,
-                             self, (sc_void_function_t) car_accelerate);
-
   self->speed = 0;
   self->wheelsize = 17;
+
+  /* vehicle */
+  sc_object_method_register (s, (sc_void_function_t) vehicle_accelerate_I,
+                             self, (sc_void_function_t) car_accelerate);
 }
 
 Car                *

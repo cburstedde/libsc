@@ -21,9 +21,10 @@ Car;
 /* virtual method prototypes */
 float               car_wheelsize_V (sc_object_t * o);
 
-/* construction */
-void                car_initialize (sc_object_system_t * s, Car * self);
+/* construction and destruction */
 Car                *car_create (sc_object_system_t * s);
+void                car_initialize (sc_object_system_t * s, Car * self);
+void                car_finalize (Car * self);
 
 /* implementation of virtual methods of sc_object_t */
 void                car_destroy (Car * self);
