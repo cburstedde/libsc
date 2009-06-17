@@ -23,10 +23,10 @@ tuned_car_initialize (sc_object_system_t * s, TunedCar * self, int faster)
 {
   car_initialize (s, &self->car);
 
-  sc_object_method_override (s, (sc_void_function_t) vehicle_accelerate,
-                             self, (sc_void_function_t) tuned_car_accelerate);
   sc_object_method_override (s, (sc_void_function_t) sc_object_print,
                              self, (sc_void_function_t) tuned_car_print);
+  sc_object_method_override (s, (sc_void_function_t) vehicle_accelerate,
+                             self, (sc_void_function_t) tuned_car_accelerate);
 
   self->faster = faster;
 }

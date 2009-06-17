@@ -29,4 +29,4 @@ void                tuned_car_print (TunedCar * self, FILE * out);
 /* methods for vehicle */
 void                tuned_car_accelerate (TunedCar * self);
 
-#endif /* !CAR_H */
+#endif /* !TUNEDCAR_H */

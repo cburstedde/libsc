@@ -51,19 +51,19 @@ void                sc_object_system_destroy (sc_object_system_t * s);
 
 /** register the implementation of an interface method for an object
  * \param[in] s     the object system context
- * \param[in] v     interface method
+ * \param[in] ifm   interface method
  * \param[in] o     object instance
- * \param[in] m     implementation of the interface method for this object
+ * \param[in] oinmi object instance method implementation
  */
 void                sc_object_method_register (sc_object_system_t * s,
                                                sc_void_function_t ifm,
-                                               void *o, sc_void_function_t m);
+                                               void *o, sc_void_function_t oinmi);
 
 /** unregister the implementation of an interface method for an object
  * \param[in] s     the object system context
- * \param[in] v     interface method
+ * \param[in] ifm   interface method
  * \param[in] o     object instance
- * \return          implementation of the interface method for this object
+ * \return          object instance method implementation
  */
 sc_void_function_t  sc_object_method_unregister (sc_object_system_t * s,
                                                  sc_void_function_t ifm,

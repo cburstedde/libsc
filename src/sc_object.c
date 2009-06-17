@@ -69,7 +69,7 @@ sc_object_method_register (sc_object_system_t * s, sc_void_function_t ifm,
   om->oinmi = oinmi;
 
   added = sc_hash_insert_unique (s->methods, om, NULL);
-  SC_ASSERT (added);
+  SC_CHECK_ABORT (added, "duplicate method registration attempt");
 }
 
 sc_void_function_t
@@ -86,7 +86,7 @@ sc_object_method_unregister (sc_object_system_t * s, sc_void_function_t ifm,
   omk.oinmi = NULL;
 
   found = sc_hash_remove (s->methods, &omk, &om);
-  SC_ASSERT (found);
+  SC_CHECK_ABORT (found, "nonexistent method unregister attempt");
 
   oinmi = ((sc_object_method_t *) om)->oinmi;
   sc_mempool_free (s->mpool, om);
@@ -107,7 +107,7 @@ sc_object_method_lookup (sc_object_system_t * s, sc_void_function_t ifm,
   omk.oinmi = NULL;
 
   found = sc_hash_lookup (s->methods, &omk, &om);
-  SC_ASSERT (found);
+  SC_CHECK_ABORT (found, "nonexistent method lookup attempt");
 
   /* *INDENT-OFF* HORRIBLE indent bug */
   return ((sc_object_method_t *) *om)->oinmi;
@@ -127,7 +127,7 @@ sc_object_method_override (sc_object_system_t * s, sc_void_function_t ifm,
   omk.oinmi = NULL;
 
   found = sc_hash_lookup (s->methods, &omk, &om);
-  SC_ASSERT (found);
+  SC_CHECK_ABORT (found, "nonexistent method override attempt");
 
   /* *INDENT-OFF* HORRIBLE indent bug */
   ((sc_object_method_t *) *om)->oinmi = oinmi;
@@ -140,7 +140,7 @@ sc_object_destroy (sc_object_t * o)
   sc_object_system_t * s = o->s;
   sc_void_function_t  oinmi;
 
-  /* get and remove the implementation of this method for this object */
+  /* get the implementation of this method for this object */
   oinmi = sc_object_method_lookup (s, (sc_void_function_t) sc_object_destroy,
                                    (void *) o);
 
