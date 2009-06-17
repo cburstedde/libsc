@@ -25,7 +25,7 @@ boat_destroy (Boat * self)
   sc_object_method_unregister (self->object.s,
                                (sc_void_function_t) vehicle_accelerate, self);
 
-  free (self);
+  SC_FREE (self);
 }
 
 Boat               *

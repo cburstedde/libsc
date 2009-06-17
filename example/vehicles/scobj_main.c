@@ -1,6 +1,7 @@
 
 #include <boat.h>
 #include <car.h>
+#include <tunedcar.h>
 #include <vehicle.h>
 #include <sc.h>
 #include <sc_object.h>
@@ -15,7 +16,7 @@ main (int argc, char **argv)
   scos = sc_object_system_new ();
 
   os[0] = &car_create (scos)->object;
-  os[1] = &car_create (scos)->object;
+  os[1] = &tuned_car_create (scos, 2)->car.object;
   os[2] = &boat_create (scos)->object;
 
   for (i = 0; i < 3; ++i) {
