@@ -1,5 +1,5 @@
 
-include $(HOME)/nosave/build/libsc/local/etc/Makefile.sc.mk
+include $(CCGO_LIBSC_ETC)/Makefile.sc.mk
 
 CC = $(SC_CC)
 CFLAGS = -Wall -g -O0 -rdynamic -I. $(SC_CPPFLAGS) $(SC_CFLAGS)
