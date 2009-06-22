@@ -94,6 +94,7 @@ sc_options_add_switch (sc_options_t * opt, int opt_char,
   item->opt_char = opt_char;
   item->opt_name = opt_name;
   item->opt_var = variable;
+  item->opt_fn = NULL;
   item->has_arg = 0;
   item->help_string = help_string;
   item->string_value = NULL;
@@ -117,6 +118,7 @@ sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
   item->opt_char = opt_char;
   item->opt_name = opt_name;
   item->opt_var = variable;
+  item->opt_fn = NULL;
   item->has_arg = 1;
   item->help_string = help_string;
   item->string_value = NULL;
@@ -142,6 +144,7 @@ sc_options_add_double (sc_options_t * opt, int opt_char,
   item->opt_char = opt_char;
   item->opt_name = opt_name;
   item->opt_var = variable;
+  item->opt_fn = NULL;
   item->has_arg = 1;
   item->help_string = help_string;
   item->string_value = NULL;
@@ -166,6 +169,7 @@ sc_options_add_string (sc_options_t * opt, int opt_char,
   item->opt_char = opt_char;
   item->opt_name = opt_name;
   item->opt_var = variable;
+  item->opt_fn = NULL;
   item->has_arg = 1;
   item->help_string = help_string;
   item->user_data = NULL;
@@ -189,6 +193,7 @@ sc_options_add_inifile (sc_options_t * opt, int opt_char,
   item->opt_char = opt_char;
   item->opt_name = opt_name;
   item->opt_var = NULL;
+  item->opt_fn = NULL;
   item->has_arg = 1;
   item->help_string = help_string;
   item->string_value = NULL;
@@ -211,6 +216,7 @@ sc_options_add_callback (sc_options_t * opt, int opt_char,
   item->opt_type = SC_OPTION_CALLBACK;
   item->opt_char = opt_char;
   item->opt_name = opt_name;
+  item->opt_var = NULL;
   item->opt_fn = (void (*)(void)) fn;
   item->has_arg = has_arg;
   item->help_string = help_string;
