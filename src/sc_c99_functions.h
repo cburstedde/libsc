@@ -35,10 +35,18 @@ Boston, MA 02110-1301, USA.  */
 /* Supply some C99 prototypes */
 #ifndef __cplusplus
 
+/* File function prototypes */
+int                 fsync (int fd);
+int                 fileno (FILE * stream);
+FILE               *fopen (const char *path, const char *mode);
+FILE               *fdopen (int fd, const char *mode);
+int                 mkstemp (char *template);
+
 /* Gamma-related prototypes */
 double              tgamma (double);
 double              trunc (double);
 
+/* Long size integer support */
 intmax_t            imaxabs (intmax_t);
 
 #endif /* !__cplusplus */
