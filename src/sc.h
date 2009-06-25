@@ -122,28 +122,22 @@
 
 /* check macros, always enabled */
 
-#define SC_NOOP() do { ; } while (0)
-#define SC_CHECK_ABORT(c,s)                        \
-  do {                                             \
-    if (!(c)) {                                    \
-      sleep (1);                                   \
-      fprintf (stderr, "Abort: %s\n   in %s:%d\n", \
-               (s), __FILE__, __LINE__);           \
-      sc_abort ();                                 \
-    }                                              \
-  } while (0)
+#define SC_NOOP() ((void) (0))
+#define SC_CHECK_ABORT(c,s)                                     \
+  ((void) ((!(c)) ? (                                           \
+             sleep (1),                                         \
+             fprintf (stderr, "Abort: %s\n   in %s:%d\n",       \
+                      (s), __FILE__, __LINE__),                 \
+             sc_abort (), 0) : 0))
 /* Only include the following define in C, not C++, since C++98
    does not allow variadic macros. */
 #ifndef __cplusplus
-#define SC_CHECK_ABORTF(c,fmt,...)                      \
-  do {                                                  \
-    if (!(c)) {                                         \
-      sleep (1);                                        \
-      fprintf (stderr, "Abort: " fmt "\n   in %s:%d\n", \
-               __VA_ARGS__, __FILE__, __LINE__);        \
-      sc_abort ();                                      \
-    }                                                   \
-  } while (0)
+#define SC_CHECK_ABORTF(c,fmt,...)                              \
+  ((void) ((!(c)) ? (                                           \
+             sleep (1),                                         \
+             fprintf (stderr, "Abort: " fmt "\n   in %s:%d\n",  \
+                      __VA_ARGS__, __FILE__, __LINE__),         \
+             sc_abort (), 0) : 0))
 #endif
 #define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI operation")
 #define SC_CHECK_NOT_REACHED() SC_CHECK_ABORT (0, "Unreachable code")
@@ -170,7 +164,7 @@
  * Sets n elements of a memory range to zero.
  * Assumes the pointer p is of the correct type.
  */
-#define SC_BZERO(p,n) do { memset ((p), 0, (n) * sizeof (*(p))); } while (0)
+#define SC_BZERO(p,n) ((void) memset ((p), 0, (n) * sizeof (*(p))))
 
 /* min, max and square helper macros */
 
@@ -225,12 +219,10 @@
 #ifndef __cplusplus
 
 #define SC_LOGF(package,category,priority,fmt,...)                      \
-  do {                                                                  \
-    if ((priority) >= SC_LP_THRESHOLD) {                                \
-      sc_logf (__FILE__, __LINE__, (package), (category), (priority),   \
-               (fmt), __VA_ARGS__);                                     \
-    }                                                                   \
-  } while (0)
+  ((void) (((priority) >= SC_LP_THRESHOLD) ? (                          \
+             sc_logf (__FILE__, __LINE__,                               \
+                      (package), (category), (priority),                \
+                      (fmt), __VA_ARGS__), 0) : 0))
 #define SC_LOG(g,c,p,s) SC_LOGF((g), (c), (p), "%s", (s))
 #define SC_GLOBAL_LOG(p,s) SC_LOG (sc_package_id, SC_LC_GLOBAL, (p), (s))
 #define SC_GLOBAL_LOGF(p,f,...) \

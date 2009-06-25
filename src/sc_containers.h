@@ -27,23 +27,21 @@ SC_EXTERN_C_BEGIN;
 
 /* Hash macros from lookup3.c by Bob Jenkins, May 2006, public domain. */
 #define sc_hash_rot(x,k) (((x) << (k)) | ((x) >> (32 - (k))))
-#define sc_hash_mix(a,b,c) do {                         \
-    a -= c; a ^= sc_hash_rot(c, 4); c += b;             \
-    b -= a; b ^= sc_hash_rot(a, 6); a += c;             \
-    c -= b; c ^= sc_hash_rot(b, 8); b += a;             \
-    a -= c; a ^= sc_hash_rot(c,16); c += b;             \
-    b -= a; b ^= sc_hash_rot(a,19); a += c;             \
-    c -= b; c ^= sc_hash_rot(b, 4); b += a;             \
-  } while (0)
-#define sc_hash_final(a,b,c) do {                       \
-    c ^= b; c -= sc_hash_rot(b,14);                     \
-    a ^= c; a -= sc_hash_rot(c,11);                     \
-    b ^= a; b -= sc_hash_rot(a,25);                     \
-    c ^= b; c -= sc_hash_rot(b,16);                     \
-    a ^= c; a -= sc_hash_rot(c, 4);                     \
-    b ^= a; b -= sc_hash_rot(a,14);                     \
-    c ^= b; c -= sc_hash_rot(b,24);                     \
-  } while (0)
+#define sc_hash_mix(a,b,c) ((void)                                      \
+                            (a -= c, a ^= sc_hash_rot(c, 4), c += b,    \
+                             b -= a, b ^= sc_hash_rot(a, 6), a += c,    \
+                             c -= b, c ^= sc_hash_rot(b, 8), b += a,    \
+                             a -= c, a ^= sc_hash_rot(c,16), c += b,    \
+                             b -= a, b ^= sc_hash_rot(a,19), a += c,    \
+                             c -= b, c ^= sc_hash_rot(b, 4), b += a))
+#define sc_hash_final(a,b,c) ((void)                            \
+                              (c ^= b, c -= sc_hash_rot(b,14),  \
+                               a ^= c, a -= sc_hash_rot(c,11),  \
+                               b ^= a, b -= sc_hash_rot(a,25),  \
+                               c ^= b, c -= sc_hash_rot(b,16),  \
+                               a ^= c, a -= sc_hash_rot(c, 4),  \
+                               b ^= a, b -= sc_hash_rot(a,14),  \
+                               c ^= b, c -= sc_hash_rot(b,24)))
 
 /** Function to compute a hash value of an object.
  * \param [in] v   The object to hash.
