@@ -6,7 +6,7 @@ CFLAGS = -Wall -g -O0 -rdynamic -I. $(SC_CPPFLAGS) $(SC_CFLAGS)
 LFLAGS = -Wall -g -O0 -rdynamic $(SC_CFLAGS) $(SC_LDFLAGS)
 LIBS = $(SC_LIBS)
 
-TARGETS = scobj2
+TARGETS = scobj22
 
 all: $(TARGETS)
 
@@ -15,6 +15,9 @@ all: $(TARGETS)
 
 scobj2: sc_object_system.o sc_object.o \
         vehicle.o car.o tunedcar.o boat.o scobj_main.o
+	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
+
+scobj22: sc_object_system.o sc_object.o car.o scobj_main2.o
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
 clean:

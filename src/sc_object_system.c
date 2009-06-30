@@ -99,11 +99,8 @@ sc_object_method_lookup (sc_object_system_t * s, sc_void_function_t ifm,
   omk.oinmi = NULL;
 
   found = sc_hash_lookup (s->methods, &omk, &om);
-  SC_CHECK_ABORT (found, "nonexistent method lookup attempt");
 
-  /* *INDENT-OFF* HORRIBLE indent bug */
-  return ((sc_object_method_t *) *om)->oinmi;
-  /* *INDENT-ON* */
+  return found ? (((sc_object_method_t *) *om)->oinmi) : NULL;
 }
 
 void

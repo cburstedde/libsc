@@ -1,91 +1,96 @@
 
 #include <car.h>
-#include <vehicle.h>
 
-void
-car_print (Car * self, FILE * out)
+const char         *car_type = "car";
+
+static void
+initialize_fn (sc_object_t * o)
 {
+  Car                *car;
+
+  SC_ASSERT (sc_object_is_type (o, car_type));
+  car = (Car *) o;
+
+  car->speed = 0;
+  car->wheelsize = 17;
+}
+
+static void
+write_fn (sc_object_t * o, FILE * out)
+{
+  Car                *car;
+
+  SC_ASSERT (sc_object_is_type (o, car_type));
+  car = (Car *) o;
+
   fprintf (out, "Car (wheel size %f) speeds at %f km/h\n",
-           self->wheelsize, self->speed);
+           car->wheelsize, car->speed);
+}
+
+static float
+wheelsize_fn (sc_object_t * o)
+{
+  Car                *car;
+
+  SC_ASSERT (sc_object_is_type (o, car_type));
+  car = (Car *) o;
+
+  return car->wheelsize;
+}
+
+sc_object_t        *
+car_new_klass (sc_object_system_t * s, sc_object_t * d, bool do_register)
+{
+  sc_object_t        *o;
+
+  if (s == NULL) {
+    SC_ASSERT (d != NULL);
+    s = d->s;
+  }
+  else if (d != NULL) {
+    SC_ASSERT (s == d->s);
+  }
+
+  o = sc_object_alloc (s, sizeof (Car));
+  sc_object_delegate_push (o, d);
+
+  if (do_register) {
+    ++o->num_regs;
+    sc_object_method_register (s, (sc_void_function_t) sc_object_initialize,
+                               o, (sc_void_function_t) initialize_fn);
+
+    ++o->num_regs;
+    sc_object_method_register (s, (sc_void_function_t) sc_object_write,
+                               o, (sc_void_function_t) write_fn);
+
+    ++o->num_regs;
+    sc_object_method_register (s, (sc_void_function_t) car_wheelsize,
+                               o, (sc_void_function_t) wheelsize_fn);
+  }
+
+  sc_object_initialize (o);
+
+  return o;
+}
+
+sc_object_t        *
+car_new (sc_object_t * d)
+{
+  SC_ASSERT (d != NULL);
+
+  return car_new_klass (NULL, d, false);
 }
 
 float
-car_wheelsize (Car * self)
+car_wheelsize (sc_object_t * o)
 {
-  return self->wheelsize;
-}
-
-void
-car_accelerate (Car * self)
-{
-  self->speed += 100;
-}
-
-void
-car_finalize (Car * self)
-{
-  /* we should know what methods self has registered, improve this */
-  sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) sc_object_destroy_V,
-                               self);
-  sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) sc_object_print_V, self);
-  sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) car_wheelsize_V, self);
-  sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) vehicle_accelerate_I,
-                               self);
-}
-
-void
-car_destroy (Car * self)
-{
-  car_finalize (self);
-
-  SC_FREE (self);
-}
-
-void
-car_initialize (sc_object_system_t * s, Car * self)
-{
-  /* sc_object */
-  self->object.s = s;
-  sc_object_method_register (s, (sc_void_function_t) sc_object_destroy_V,
-                             self, (sc_void_function_t) car_destroy);
-  sc_object_method_register (s, (sc_void_function_t) sc_object_print_V,
-                             self, (sc_void_function_t) car_print);
-
-  /* car */
-  sc_object_method_register (s, (sc_void_function_t) car_wheelsize_V,
-                             self, (sc_void_function_t) car_wheelsize);
-  self->speed = 0;
-  self->wheelsize = 17;
-
-  /* vehicle */
-  sc_object_method_register (s, (sc_void_function_t) vehicle_accelerate_I,
-                             self, (sc_void_function_t) car_accelerate);
-}
-
-Car                *
-car_create (sc_object_system_t * s)
-{
-  Car                *self = SC_ALLOC (Car, 1);
-
-  car_initialize (s, self);
-
-  return self;
-}
-
-float
-car_wheelsize_V (sc_object_t * o)
-{
-  sc_object_system_t *s = o->s;
   sc_void_function_t  oinmi;
 
-  /* get the implementation of this method for this object */
-  oinmi = sc_object_method_lookup (s, (sc_void_function_t) car_wheelsize_V,
-                                   (void *) o);
+  oinmi = sc_object_delegate_lookup (o, (sc_void_function_t) car_wheelsize);
 
-  /* cast object instance method implementation appropriately and call it */
-  return ((float (*)(sc_object_t *)) oinmi) (o);
+  if (oinmi != NULL) {
+    return ((float (*)(sc_object_t *)) oinmi) (o);
+  }
+
+  return 0;
 }

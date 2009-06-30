@@ -18,22 +18,14 @@ typedef struct Car
 }
 Car;
 
-/* virtual method prototypes */
-float               car_wheelsize_V (sc_object_t * o);
+extern const char  *car_type;
 
 /* construction and destruction */
-Car                *car_create (sc_object_system_t * s);
-void                car_initialize (sc_object_system_t * s, Car * self);
-void                car_finalize (Car * self);
+sc_object_t        *car_new_klass (sc_object_system_t * s,
+                                   sc_object_t * d, bool do_register);
+sc_object_t        *car_new (sc_object_t * d);
 
-/* implementation of virtual methods of sc_object_t */
-void                car_destroy (Car * self);
-void                car_print (Car * self, FILE * out);
-
-/* implementation of virtual methods of car */
-float               car_wheelsize (Car * self);
-
-/* implementation of interface methods of vehicle */
-void                car_accelerate (Car * self);
+/* virtual method prototypes */
+float               car_wheelsize (sc_object_t * o);
 
 #endif /* !CAR_H */
