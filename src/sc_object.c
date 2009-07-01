@@ -3,6 +3,14 @@
 
 const char         *sc_object_type = "sc_object";
 
+static const char *
+type_fn (sc_object_t * o)
+{
+  SC_LDEBUG ("sc_object_t type\n");
+
+  return sc_object_type;
+}
+
 static void
 finalize_fn (sc_object_t * o)
 {
@@ -106,26 +114,10 @@ sc_object_is_type (sc_object_t * o, const char * type)
   return true;
 }
 
-sc_object_t        *
-sc_object_alloc (sc_object_system_t * s, size_t allocation)
+void
+sc_object_register_methods (sc_object_t * o)
 {
-  sc_object_t        *o;
-
-  o = (sc_object_t *) sc_calloc (sc_package_id, 1, allocation);
-  o->s = s;
-  o->num_refs = 1;
-  o->num_regs = 0;
-  sc_array_init (&o->delegates, sizeof (sc_object_t *));
-
-  return o;
-}
-
-sc_object_t        *
-sc_object_new_klass (sc_object_system_t * s)
-{
-  sc_object_t        *o;
-
-  o = sc_object_alloc (s, sizeof (sc_object_t));
+  sc_object_system_t *s = o->s;
 
   ++o->num_regs;
   sc_object_method_register (s, (sc_void_function_t) sc_object_finalize,
@@ -135,20 +127,68 @@ sc_object_new_klass (sc_object_system_t * s)
   sc_object_method_register (s, (sc_void_function_t) sc_object_write,
                              o, (sc_void_function_t) write_fn);
 
+  ++o->num_regs;
+  sc_object_method_register (s, (sc_void_function_t) sc_object_type,
+                             o, (sc_void_function_t) type_fn);
+}
+
+sc_object_t        *
+sc_object_alloc (sc_object_system_t * s)
+{
+  sc_object_t        *o;
+
+  SC_ASSERT (s != NULL);
+
+  o = SC_ALLOC (sc_object_t, 1);
+  o->s = s;
+  o->num_refs = 1;
+  o->num_regs = 0;
+  sc_array_init (&o->delegates, sizeof (sc_object_t *));
+
   return o;
 }
 
 sc_object_t        *
-sc_object_new (sc_object_t * d)
+sc_object_klass_new (sc_object_system_t * s)
+{
+  sc_object_t        *o;
+
+  SC_ASSERT (s != NULL);
+
+  o = sc_object_alloc (s);
+  sc_object_register_methods (o);
+  sc_object_initialize (o);
+
+  return o;
+}
+
+sc_object_t        *
+sc_object_new_from_klass (sc_object_t * d)
 {
   sc_object_t        *o;
 
   SC_ASSERT (d != NULL);
 
-  o = sc_object_alloc (d->s, sizeof (sc_object_t));
+  o = sc_object_alloc (d->s);
   sc_object_delegate_push (o, d);
+  sc_object_initialize (o);
 
   return o;
+}
+
+const char         *
+sc_object_get_type (sc_object_t * o)
+{
+  sc_void_function_t  oinmi;
+
+  oinmi =
+    sc_object_delegate_lookup (o, (sc_void_function_t) sc_object_get_type);
+
+  if (oinmi != NULL) {
+    return ((const char * (*)(sc_object_t *)) oinmi) (o);
+  }
+
+  SC_CHECK_NOT_REACHED ();
 }
 
 void

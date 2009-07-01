@@ -10,6 +10,7 @@
   car implements interface vehicle
 */
 
+/*
 typedef struct Car
 {
   sc_object_t         object;
@@ -17,13 +18,15 @@ typedef struct Car
   float               wheelsize;
 }
 Car;
+*/
 
 extern const char  *car_type;
 
-/* construction and destruction */
-sc_object_t        *car_new_klass (sc_object_system_t * s,
-                                   sc_object_t * d, bool do_register);
-sc_object_t        *car_new (sc_object_t * d);
+/* method handling */
+void                car_register_methods (sc_object_t * o);
+
+/* construction */
+sc_object_t        *car_klass_new (sc_object_t * d);
 
 /* virtual method prototypes */
 float               car_wheelsize (sc_object_t * o);
