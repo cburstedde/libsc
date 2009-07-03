@@ -9,33 +9,22 @@
   How could an interface-based object system work?
 
   As in OBC, methods are registered at runtime in the constructor.
-  These method associations can be stored in hash tables.
+  We also allocate and register data for each object.
 
-  The hash key could be made up of the object memory address (unique)
-  and the memory address of the method prototype (also unique).
-  (A string instead of the method prototype may be the better idea.)
-
-  Say we want to register an implementation for the method obj_print
-  for the object car with the function car_print.
-
-  key = mix (&car, car_print)
-  value = {
-    void (*fn) (void)           the virtual function to call
-    void * self;                this is passed to fn as self
-  }
+  These associations can be stored in hash tables.
+  The hash key is derived from the object pointer.
 */
 
 /* generic virtual method prototype */
 typedef void        (*sc_void_function_t) (void);
 
-/* virtual method association stored in hash table */
-typedef struct sc_object_method
+/* storage associated for each object */
+typedef struct
 {
-  sc_void_function_t  ifm;      /* interface method */
-  void               *o;        /* object instance */
-  sc_void_function_t  oinmi;    /* object instance method implementation */
+  sc_array_t          methods;  /* holds sc_void_function_t */
+  sc_array_t          data;     /* holds void * */
 }
-sc_object_method_t;
+sc_object_entry_t;
 
 /*
   all object administrative information is stored here
@@ -43,9 +32,10 @@ sc_object_method_t;
 */
 typedef struct sc_object_system
 {
-  sc_hash_t          *methods;  /* hash table for method associations */
-  sc_mempool_t       *mpool;    /* memory pool for association values */
+  sc_hash_t          *entries;  /* hash table for object associations */
+  sc_mempool_t       *mpool;    /* memory pool for objects associations */
 }
+
 sc_object_system_t;
 
 sc_object_system_t *sc_object_system_new (void);

@@ -22,9 +22,6 @@ Car;
 
 extern const char  *car_type;
 
-/* method handling */
-void                car_register_methods (sc_object_t * o);
-
 /* construction */
 sc_object_t        *car_klass_new (sc_object_t * d);
 

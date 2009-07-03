@@ -8,7 +8,6 @@ main (int argc, char ** argv)
 {
   int                 i;
   float               wheelsize;
-  sc_object_system_t *s;
   sc_object_t        *object_klass;
   sc_object_t        *car_klass;
   sc_object_t        *o[3];
@@ -16,9 +15,7 @@ main (int argc, char ** argv)
 
   sc_init (MPI_COMM_NULL, true, true, NULL, SC_LP_DEFAULT);
 
-  s = sc_object_system_new ();
-
-  object_klass = sc_object_klass_new (s);
+  object_klass = sc_object_klass_new ();
 
   o[0] = sc_object_new_from_klass (object_klass);
   o[1] = sc_object_new_from_klass (object_klass);
@@ -31,19 +28,19 @@ main (int argc, char ** argv)
   sc_object_write (object_klass, stdout);
   sc_object_write (car_klass, stdout);
 
+  SC_ASSERT (sc_object_is_type (c[0], car_type));
   wheelsize = car_wheelsize (c[0]);
   SC_INFOF ("Wheelsize %f\n", wheelsize);
 
   SC_INFO ("Write and destroy objects\n");
   for (i = 0; i < 3; ++i) {
+    SC_ASSERT (sc_object_is_type (o[i], sc_object_type));
     sc_object_write (o[i], stdout);
     sc_object_unref (o[i]);
   }
 
   sc_object_unref (object_klass);
   sc_object_unref (car_klass);
-
-  sc_object_system_destroy (s);
 
   sc_finalize ();
 

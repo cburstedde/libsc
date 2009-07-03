@@ -4,13 +4,25 @@
 
 #include <sc.h>
 #include <sc_containers.h>
-#include <sc_object_system.h>
+
+typedef void        (*sc_object_method_t) (void);
+
+typedef struct sc_object_entry
+{
+  sc_object_method_t key;
+  union
+  {
+    sc_object_method_t  oinmi;
+    void               *odata;
+  }
+  v;
+}
+sc_object_entry_t;
 
 typedef struct sc_object
 {
-  sc_object_system_t *s;
   int                 num_refs; /* reference count */
-  int                 num_regs; /* registered methods */
+  sc_hash_t          *table;    /* contains sc_object_entry_t elements */
   sc_array_t          delegates;
 }
 sc_object_t;
@@ -21,21 +33,42 @@ extern const char  *sc_object_type;
 void                sc_object_ref (sc_object_t * o);
 void                sc_object_unref (sc_object_t * o);
 
+/** Register the implementation of an interface method for an object.
+ * If the method is already registered it is replaced.
+ * \param[in] o     object instance
+ * \param[in] ifm   interface method
+ * \param[in] oinmi object instance method implementation
+ * \return          true if the method did not exist and was added.
+ */
+bool                sc_object_method_register (sc_object_t * o,
+                                               sc_object_method_t ifm,
+                                               sc_object_method_t oinmi);
+
+/** Unregister the implementation of an interface method for an object.
+ * The method is required to exist.
+ * \param[in] o     object instance
+ * \param[in] ifm   interface method
+ */
+void                sc_object_method_unregister (sc_object_t * o,
+                                                 sc_object_method_t ifm);
+void                sc_object_method_unregister_all (sc_object_t * o);
+sc_object_method_t  sc_object_method_lookup (sc_object_t * o,
+                                             sc_object_method_t ifm);
+
 /* handle delegates */
 void                sc_object_delegate_push (sc_object_t * o,
                                              sc_object_t * d);
 void                sc_object_delegate_pop (sc_object_t * o);
-void                sc_object_delegate_popall (sc_object_t * o);
-sc_void_function_t  sc_object_delegate_lookup (sc_object_t * o,
-                                               sc_void_function_t ifm);
+void                sc_object_delegate_pop_all (sc_object_t * o);
+sc_object_method_t  sc_object_delegate_lookup (sc_object_t * o,
+                                               sc_object_method_t ifm);
 
-/* type and method handling */
-bool                sc_object_is_type (sc_object_t * o, const char * type);
-void                sc_object_register_methods (sc_object_t * o);
+/* type handling */
+bool                sc_object_is_type (sc_object_t * o, const char *type);
 
 /* construction */
-sc_object_t        *sc_object_alloc (sc_object_system_t * s);
-sc_object_t        *sc_object_klass_new (sc_object_system_t * s);
+sc_object_t        *sc_object_alloc (void);
+sc_object_t        *sc_object_klass_new (void);
 sc_object_t        *sc_object_new_from_klass (sc_object_t * d);
 
 /* virtual method prototypes */

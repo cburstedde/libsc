@@ -33,34 +33,25 @@ wheelsize_fn (sc_object_t * o)
   return 0; // car->wheelsize;
 }
 
-void
-car_register_methods (sc_object_t * o)
-{
-  sc_object_system_t *s = o->s;
-
-  ++o->num_regs;
-  sc_object_method_register (s, (sc_void_function_t) sc_object_initialize,
-                             o, (sc_void_function_t) initialize_fn);
-
-  ++o->num_regs;
-  sc_object_method_register (s, (sc_void_function_t) sc_object_write,
-                             o, (sc_void_function_t) write_fn);
-
-  ++o->num_regs;
-  sc_object_method_register (s, (sc_void_function_t) car_wheelsize,
-                             o, (sc_void_function_t) wheelsize_fn);
-}
-
 sc_object_t        *
 car_klass_new (sc_object_t * d)
 {
+  bool                a1, a2, a3;
   sc_object_t        *o;
 
   SC_ASSERT (d != NULL);
 
-  o = sc_object_alloc (d->s);
+  o = sc_object_alloc ();
   sc_object_delegate_push (o, d);
-  car_register_methods (o);
+
+  a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_initialize,
+                                  (sc_object_method_t) initialize_fn);
+  a2 = sc_object_method_register (o, (sc_object_method_t) sc_object_write,
+                                  (sc_object_method_t) write_fn);
+  a3 = sc_object_method_register (o, (sc_object_method_t) car_wheelsize,
+                                  (sc_object_method_t) wheelsize_fn);
+  SC_ASSERT (a1 && a2 && a3);
+
   sc_object_initialize (o);
 
   return o;
@@ -69,9 +60,9 @@ car_klass_new (sc_object_t * d)
 float
 car_wheelsize (sc_object_t * o)
 {
-  sc_void_function_t  oinmi;
+  sc_object_method_t  oinmi;
 
-  oinmi = sc_object_delegate_lookup (o, (sc_void_function_t) car_wheelsize);
+  oinmi = sc_object_delegate_lookup (o, (sc_object_method_t) car_wheelsize);
   SC_ASSERT (oinmi != NULL);
 
   return ((float (*)(sc_object_t *)) oinmi) (o);

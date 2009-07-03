@@ -3,14 +3,15 @@
 
 /* construct the hash key for an interface method and an object instance */
 static unsigned
-sc_object_method_hash (const void *v, const void *u)
+sc_object_hash (const void *v, const void *u)
 {
-  const sc_object_method_t *om = (sc_object_method_t *) v;
+  const unsigned long m = ((1UL << 32) - 1);
+  unsigned long       o = (unsigned long) v;
   uint32_t            a, b, c;
 
   /* this is very crude and probably not safe on all architectures */
-  a = (uint32_t) (((long) om->ifm) & 0xffffffff);
-  b = (uint32_t) (((long) om->o) & 0xffffffff);
+  a = (uint32_t) (o & m);
+  b = (uint32_t) ((o >> 32) & m);
   c = 0;
 
   sc_hash_mix (a, b, c);
@@ -19,12 +20,9 @@ sc_object_method_hash (const void *v, const void *u)
 }
 
 static              bool
-sc_object_method_equal (const void *v1, const void *v2, const void *u)
+sc_object_equal (const void *v1, const void *v2, const void *u)
 {
-  const sc_object_method_t *om1 = (sc_object_method_t *) v1;
-  const sc_object_method_t *om2 = (sc_object_method_t *) v2;
-
-  return om1->ifm == om2->ifm && om1->o == om2->o;
+  return v1 == v2;
 }
 
 sc_object_system_t *
@@ -33,9 +31,8 @@ sc_object_system_new (void)
   sc_object_system_t *s;
 
   s = SC_ALLOC (sc_object_system_t, 1);
-  s->methods = sc_hash_new (sc_object_method_hash,
-                            sc_object_method_equal, NULL, NULL);
-  s->mpool = sc_mempool_new (sizeof (sc_object_method_t));
+  s->entries = sc_hash_new (sc_object_hash, sc_object_equal, NULL, NULL);
+  s->mpool = sc_mempool_new (sizeof (sc_object_entry_t));
 
   return s;
 }
@@ -43,9 +40,16 @@ sc_object_system_new (void)
 void
 sc_object_system_destroy (sc_object_system_t * s)
 {
-  sc_hash_unlink_destroy (s->methods);
+  sc_hash_unlink_destroy (s->entries);
   sc_mempool_destroy (s->mpool);
+
   SC_FREE (s);
+}
+
+void
+sc_object_system_entry_new (sc_object_system_t * s, void * o)
+{
+  
 }
 
 void
