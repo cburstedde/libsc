@@ -197,6 +197,22 @@ sc_object_method_register (sc_object_t * o,
 }
 
 void
+sc_object_method_unregister (sc_object_t * o, sc_object_method_t ifm)
+{
+  bool                found;
+  void               *lookup;
+  sc_object_entry_t   se, *e = &se;
+
+  SC_ASSERT (o->table != NULL);
+
+  e->key = ifm;
+  found = sc_hash_remove (o->table, e, &lookup);
+  SC_ASSERT (found);
+
+  SC_FREE (lookup);
+}
+
+void
 sc_object_method_unregister_all (sc_object_t * o)
 {
   if (o->table != NULL) {
