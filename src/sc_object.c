@@ -4,6 +4,28 @@
 const char         *sc_object_type = "sc_object";
 
 static unsigned
+sc_object_hash (const void *v, const void *u)
+{
+  const unsigned long m = ((1UL << 32) - 1);
+  unsigned long       l = (unsigned long) v;
+  uint32_t            a, b, c;
+
+  a = (uint32_t) (l & m);
+  b = (uint32_t) ((l >> 32) & m);
+  c = 0;
+
+  sc_hash_mix (a, b, c);
+
+  return (unsigned) c;
+}
+
+static              bool
+sc_object_equal (const void *v1, const void *v2, const void *u)
+{
+  return v1 == v2;
+}
+
+static unsigned
 sc_object_entry_hash (const void *v, const void *u)
 {
   const sc_object_entry_t *e = v;
@@ -45,6 +67,12 @@ get_type_fn (sc_object_t * o)
   return sc_object_type;
 }
 
+static const char  *
+get_type_call (sc_object_method_t oinmi, sc_object_t * o)
+{
+  return ((const char *(*)(sc_object_t *)) oinmi) (o);
+}
+
 static void
 finalize_fn (sc_object_t * o)
 {
@@ -64,6 +92,57 @@ write_fn (sc_object_t * o, FILE * out)
   SC_ASSERT (sc_object_is_type (o, sc_object_type));
 
   fprintf (out, "sc_object_t write with %d refs\n", o->num_refs);
+}
+
+bool
+sc_object_recursion (sc_object_t * o, sc_object_recursion_context_t * rc)
+{
+  bool                toplevel, answered, added;
+  size_t              zz;
+  sc_object_method_t  oinmi;
+  sc_object_t        *d;
+  void               *v;
+
+  if (rc->visited == NULL) {
+    toplevel = true;
+    rc->visited = sc_hash_new (sc_object_hash, sc_object_equal, NULL, NULL);
+  }
+  else {
+    toplevel = false;
+  }
+
+  answered = false;
+  added = sc_hash_insert_unique (rc->visited, o, NULL);
+
+  if (added) {
+    if (rc->lookup != NULL && rc->callfn != NULL) {
+      oinmi = sc_object_method_lookup (o, rc->lookup);
+      if (oinmi != NULL) {
+        answered = rc->callfn (o, oinmi, rc->user_data);
+      }
+    }
+
+    if (!answered) {
+      for (zz = o->delegates.elem_count; zz > 0; --zz) {
+        v = sc_array_index (&o->delegates, zz - 1);
+        d = *((sc_object_t **) v);
+        answered = sc_object_recursion (d, rc);
+        if (answered) {
+          break;
+        }
+      }
+    }
+  }
+  else {
+    SC_LDEBUG ("Avoiding double recursion\n");
+  }
+
+  if (toplevel) {
+    sc_hash_destroy (rc->visited);
+    rc->visited = NULL;
+  }
+
+  return answered;
 }
 
 void
@@ -181,55 +260,67 @@ sc_object_delegate_pop_all (sc_object_t * o)
   sc_array_reset (&o->delegates);
 }
 
+typedef struct sc_object_delegate_lookup_data
+{
+  sc_object_method_t  oinmi;
+}
+sc_object_delegate_lookup_data_t;
+
+static              bool
+delegate_lookup_fn (sc_object_t * o,
+                    sc_object_method_t oinmi, void *user_data)
+{
+  ((sc_object_delegate_lookup_data_t *) user_data)->oinmi = oinmi;
+
+  return true;
+}
+
 sc_object_method_t
 sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm)
 {
-  sc_object_t        *d;
-  void               *v;
-  sc_object_method_t  oinmi;
-  size_t              zz;
+  sc_object_recursion_context_t src, *rc = &src;
+  sc_object_delegate_lookup_data_t sdld, *dld = &sdld;
 
-  oinmi = sc_object_method_lookup (o, ifm);
-  if (oinmi != NULL) {
-    return oinmi;
-  }
+  dld->oinmi = NULL;
 
-  for (zz = o->delegates.elem_count; zz > 0; --zz) {
-    v = sc_array_index (&o->delegates, zz - 1);
-    d = *((sc_object_t **) v);
-    oinmi = sc_object_delegate_lookup (d, ifm);
-    if (oinmi != NULL) {
-      return oinmi;
-    }
-  }
+  rc->visited = NULL;
+  rc->lookup = ifm;
+  rc->callfn = delegate_lookup_fn;
+  rc->user_data = dld;
 
-  return NULL;
+  (void) sc_object_recursion (o, rc);
+
+  return dld->oinmi;
+}
+
+typedef struct sc_object_is_type_data
+{
+  const char         *type;
+}
+sc_object_is_type_data_t;
+
+static              bool
+is_type_fn (sc_object_t * o, sc_object_method_t oinmi, void *user_data)
+{
+  sc_object_is_type_data_t *itd = user_data;
+
+  return !strcmp (get_type_call (oinmi, o), itd->type);
 }
 
 bool
 sc_object_is_type (sc_object_t * o, const char *type)
 {
-  sc_object_t        *d;
-  void               *v;
-  sc_object_method_t  oinmi;
-  size_t              zz;
+  sc_object_recursion_context_t src, *rc = &src;
+  sc_object_is_type_data_t sitd, *itd = &sitd;
 
-  oinmi = sc_object_method_lookup (o, (sc_object_method_t) sc_object_get_type);
-  if (oinmi != NULL) {
-    if (!strcmp (((const char *(*)(sc_object_t *)) oinmi) (o), type)) {
-      return true;
-    }
-  }
+  itd->type = type;
 
-  for (zz = o->delegates.elem_count; zz > 0; --zz) {
-    v = sc_array_index (&o->delegates, zz - 1);
-    d = *((sc_object_t **) v);
-    if (sc_object_is_type (d, type)) {
-      return true;
-    }
-  }
+  rc->visited = NULL;
+  rc->lookup = (sc_object_method_t) sc_object_get_type;
+  rc->callfn = is_type_fn;
+  rc->user_data = itd;
 
-  return false;
+  return sc_object_recursion (o, rc);
 }
 
 sc_object_t        *
@@ -289,7 +380,7 @@ sc_object_get_type (sc_object_t * o)
     sc_object_delegate_lookup (o, (sc_object_method_t) sc_object_get_type);
 
   if (oinmi != NULL) {
-    return ((const char *(*)(sc_object_t *)) oinmi) (o);
+    return get_type_call (oinmi, o);
   }
 
   SC_CHECK_NOT_REACHED ();

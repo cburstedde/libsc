@@ -9,7 +9,7 @@ typedef void        (*sc_object_method_t) (void);
 
 typedef struct sc_object_entry
 {
-  sc_object_method_t key;
+  sc_object_method_t  key;
   union
   {
     sc_object_method_t  oinmi;
@@ -27,11 +27,35 @@ typedef struct sc_object
 }
 sc_object_t;
 
+/* *INDENT-OFF* HORRIBLE indent bug */
+typedef struct sc_object_recursion_context
+{
+  sc_hash_t          *visited;
+  sc_object_method_t  lookup;
+  bool                (*callfn) (sc_object_t *, sc_object_method_t, void *);
+  void               *user_data;
+}
+sc_object_recursion_context_t;
+/* *INDENT-ON* */
+
 extern const char  *sc_object_type;
 
 /* reference counting */
 void                sc_object_ref (sc_object_t * o);
 void                sc_object_unref (sc_object_t * o);
+
+/** Look up a method recursively for all delegates and run a callback on it.
+ * Breaks recursion early on the first callback returning true.
+ * Ignores objects that have already been called.
+ * \param [in,out] o    The object to start looking.
+ * \param [in] rc       Recursion context with visited == NULL.
+ * \param [in] lookup   Can contain a method to look up, or NULL.
+ * \param [in] callfn   If not NULL will be called on successful lookup.
+ * \param [in] user_data    Is passed as third parameter to callfn.
+ * \return              True if any callfn returned true, false otherwise.
+ */
+bool                sc_object_recursion (sc_object_t * o,
+                                         sc_object_recursion_context_t * rc);
 
 /** Register the implementation of an interface method for an object.
  * If the method is already registered it is replaced.
@@ -63,7 +87,7 @@ void                sc_object_delegate_pop_all (sc_object_t * o);
 sc_object_method_t  sc_object_delegate_lookup (sc_object_t * o,
                                                sc_object_method_t ifm);
 
-/* type handling */
+/* handle types */
 bool                sc_object_is_type (sc_object_t * o, const char *type);
 
 /* construction */
