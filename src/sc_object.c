@@ -38,9 +38,9 @@ sc_object_entry_free (void **v, const void *u)
 }
 
 static const char  *
-type_fn (sc_object_t * o)
+get_type_fn (sc_object_t * o)
 {
-  SC_LDEBUG ("sc_object_t type\n");
+  SC_LDEBUG ("sc_object_t get_type\n");
 
   return sc_object_type;
 }
@@ -48,6 +48,8 @@ type_fn (sc_object_t * o)
 static void
 finalize_fn (sc_object_t * o)
 {
+  SC_ASSERT (sc_object_is_type (o, sc_object_type));
+
   SC_LDEBUG ("sc_object_t finalize\n");
 
   sc_object_delegate_pop_all (o);
@@ -59,6 +61,8 @@ finalize_fn (sc_object_t * o)
 static void
 write_fn (sc_object_t * o, FILE * out)
 {
+  SC_ASSERT (sc_object_is_type (o, sc_object_type));
+
   fprintf (out, "sc_object_t write with %d refs\n", o->num_refs);
 }
 
@@ -205,7 +209,27 @@ sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm)
 bool
 sc_object_is_type (sc_object_t * o, const char *type)
 {
-  return true;
+  sc_object_t        *d;
+  void               *v;
+  sc_object_method_t  oinmi;
+  size_t              zz;
+
+  oinmi = sc_object_method_lookup (o, (sc_object_method_t) sc_object_get_type);
+  if (oinmi != NULL) {
+    if (!strcmp (((const char *(*)(sc_object_t *)) oinmi) (o), type)) {
+      return true;
+    }
+  }
+
+  for (zz = o->delegates.elem_count; zz > 0; --zz) {
+    v = sc_array_index (&o->delegates, zz - 1);
+    d = *((sc_object_t **) v);
+    if (sc_object_is_type (d, type)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 sc_object_t        *
@@ -229,12 +253,12 @@ sc_object_klass_new (void)
 
   o = sc_object_alloc ();
 
-  a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_finalize,
+  a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_get_type,
+                                  (sc_object_method_t) get_type_fn);
+  a2 = sc_object_method_register (o, (sc_object_method_t) sc_object_finalize,
                                   (sc_object_method_t) finalize_fn);
-  a2 = sc_object_method_register (o, (sc_object_method_t) sc_object_write,
+  a3 = sc_object_method_register (o, (sc_object_method_t) sc_object_write,
                                   (sc_object_method_t) write_fn);
-  a3 = sc_object_method_register (o, (sc_object_method_t) sc_object_type,
-                                  (sc_object_method_t) type_fn);
   SC_ASSERT (a1 && a2 && a3);
 
   sc_object_initialize (o);
