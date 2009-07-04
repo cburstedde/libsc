@@ -54,7 +54,14 @@ sc_object_entry_equal (const void *v1, const void *v2, const void *u)
 static              bool
 sc_object_entry_free (void **v, const void *u)
 {
-  SC_FREE (*v);
+  /* *INDENT-OFF* HORRIBLE indent bug */
+  sc_object_entry_t  *e = (sc_object_entry_t *) * v;
+  /* *INDENT-ON* */
+
+  SC_ASSERT (e->oinmi == NULL || e->odata == NULL);
+
+  SC_FREE (e->odata);           /* legal to be NULL */
+  SC_FREE (e);
 
   return true;
 }
@@ -81,7 +88,12 @@ finalize_fn (sc_object_t * o)
   SC_LDEBUG ("sc_object_t finalize\n");
 
   sc_object_delegate_pop_all (o);
-  sc_object_method_unregister_all (o);
+
+  if (o->table != NULL) {
+    sc_hash_foreach (o->table, sc_object_entry_free);
+    sc_hash_destroy (o->table);
+    o->table = NULL;
+  }
 
   SC_FREE (o);
 }
@@ -169,7 +181,7 @@ sc_object_method_register (sc_object_t * o,
 {
   bool                added, first;
   void              **lookup;
-  sc_object_entry_t  *e;
+  sc_object_entry_t   se, *e = &se;
 
   if (o->table == NULL) {
     o->table =
@@ -180,18 +192,26 @@ sc_object_method_register (sc_object_t * o,
     first = false;
   }
 
-  e = SC_ALLOC (sc_object_entry_t, 1);
   e->key = ifm;
-  e->v.oinmi = oinmi;
   added = sc_hash_insert_unique (o->table, e, &lookup);
 
   if (!added) {
     SC_ASSERT (!first);
 
     /* replace existing method */
-    SC_FREE (*lookup);
+    /* *INDENT-OFF* HORRIBLE indent bug */
+    e = (sc_object_entry_t *) *lookup;
+    /* *INDENT-ON* */
+    SC_ASSERT (e->key == ifm && e->odata == NULL);
+  }
+  else {
+    e = SC_ALLOC (sc_object_entry_t, 1);
+    e->key = ifm;
+    e->odata = NULL;
     *lookup = e;
   }
+
+  e->oinmi = oinmi;
 
   return added;
 }
@@ -209,17 +229,10 @@ sc_object_method_unregister (sc_object_t * o, sc_object_method_t ifm)
   found = sc_hash_remove (o->table, e, &lookup);
   SC_ASSERT (found);
 
-  SC_FREE (lookup);
-}
+  e = (sc_object_entry_t *) lookup;
+  SC_ASSERT (e->oinmi != NULL && e->odata == NULL);
 
-void
-sc_object_method_unregister_all (sc_object_t * o)
-{
-  if (o->table != NULL) {
-    sc_hash_foreach (o->table, sc_object_entry_free);
-    sc_hash_destroy (o->table);
-    o->table = NULL;
-  }
+  SC_FREE (e);
 }
 
 sc_object_method_t
@@ -235,8 +248,18 @@ sc_object_method_lookup (sc_object_t * o, sc_object_method_t ifm)
 
   e->key = ifm;
   found = sc_hash_lookup (o->table, e, &lookup);
+  if (found) {
+    /* *INDENT-OFF* HORRIBLE indent bug */
+    e = (sc_object_entry_t *) *lookup;
+    /* *INDENT-ON* */
 
-  return found ? (((sc_object_entry_t *) * lookup)->v.oinmi) : NULL;
+    SC_ASSERT (e->key == ifm && e->oinmi != NULL && e->odata == NULL);
+
+    return e->oinmi;
+  }
+  else {
+    return NULL;
+  }
 }
 
 void
@@ -385,6 +408,46 @@ sc_object_new_from_klass (sc_object_t * d)
   sc_object_initialize (o);
 
   return o;
+}
+
+void               *
+sc_object_get_data (sc_object_t * o, sc_object_method_t ifm, size_t s)
+{
+  bool                added, first;
+  void              **lookup;
+  sc_object_entry_t   se, *e = &se;
+
+  if (o->table == NULL) {
+    o->table =
+      sc_hash_new (sc_object_entry_hash, sc_object_entry_equal, NULL, NULL);
+    first = true;
+  }
+  else {
+    first = false;
+  }
+
+  e->key = ifm;
+  added = sc_hash_insert_unique (o->table, e, &lookup);
+
+  if (!added) {
+    SC_ASSERT (!first);
+
+    /* get existing data */
+    /* *INDENT-OFF* HORRIBLE indent bug */
+    e = (sc_object_entry_t *) *lookup;
+    /* *INDENT-ON* */
+    SC_ASSERT (e->key == ifm && e->oinmi == NULL && e->odata != NULL);
+  }
+  else {
+    e = SC_ALLOC (sc_object_entry_t, 1);
+    e->key = ifm;
+    e->oinmi = NULL;
+    e->odata = sc_calloc (sc_package_id, 1, s);
+
+    *lookup = e;
+  }
+
+  return e->odata;
 }
 
 const char         *

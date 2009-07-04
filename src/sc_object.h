@@ -10,12 +10,8 @@ typedef void        (*sc_object_method_t) (void);
 typedef struct sc_object_entry
 {
   sc_object_method_t  key;
-  union
-  {
-    sc_object_method_t  oinmi;
-    void               *odata;
-  }
-  v;
+  sc_object_method_t  oinmi;
+  void               *odata;
 }
 sc_object_entry_t;
 
@@ -75,7 +71,6 @@ bool                sc_object_method_register (sc_object_t * o,
  */
 void                sc_object_method_unregister (sc_object_t * o,
                                                  sc_object_method_t ifm);
-void                sc_object_method_unregister_all (sc_object_t * o);
 sc_object_method_t  sc_object_method_lookup (sc_object_t * o,
                                              sc_object_method_t ifm);
 
@@ -94,6 +89,10 @@ bool                sc_object_is_type (sc_object_t * o, const char *type);
 sc_object_t        *sc_object_alloc (void);
 sc_object_t        *sc_object_klass_new (void);
 sc_object_t        *sc_object_new_from_klass (sc_object_t * d);
+
+/* handle object data */
+void               *sc_object_get_data (sc_object_t * o,
+                                        sc_object_method_t ifm, size_t s);
 
 /* virtual method prototypes */
 const char         *sc_object_get_type (sc_object_t * o);
