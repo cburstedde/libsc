@@ -95,6 +95,24 @@ sc_array_t;
  */
 sc_array_t         *sc_array_new (size_t elem_size);
 
+/** Initializes an already allocated view from an existing plain C array.
+ * \param [in,out] view  Array structure to be initialized.
+ * \param [in] base       The data must not be moved while view is alive.
+ * \param [in] elem_size  Size of one array element in bytes.
+ * \param [in] elem_count   The length of the view in element units.
+ */
+void                sc_array_init_data (sc_array_t * view, void *base,
+                                        size_t elem_size, size_t elem_count);
+
+/** Initializes an already allocated view from an existing sc_array_t.
+ * \param [in,out] view  Array structure to be initialized.
+ * \param [in] array     The array must not be resized while view is alive.
+ * \param [in] offset    The offset of the viewed section in element units.
+ * \param [in] length    The length of the view in element units.
+ */
+void                sc_array_init_view (sc_array_t * view, sc_array_t * array,
+                                        size_t offset, size_t length);
+
 /** Creates a new view of an existing sc_array_t.
  * \param [in] array    The array must not be resized while view is alive.
  * \param [in] offset   The offset of the viewed section in element units.
@@ -135,6 +153,12 @@ void                sc_array_reset (sc_array_t * array);
  * Reallocation takes place only occasionally, so this function is usually fast.
  */
 void                sc_array_resize (sc_array_t * array, size_t new_count);
+
+/** Sets the element count to new_count.
+ * The resize cannot make the view larger than it was initialized.
+ */
+void                sc_array_resize_view (sc_array_t * view,
+                                          size_t new_count);
 
 /** Sorts the array in ascending order wrt. the comparison function.
  * \param [in] array    The array to sort.

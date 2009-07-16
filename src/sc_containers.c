@@ -35,17 +35,36 @@ sc_array_new (size_t elem_size)
   return array;
 }
 
+void
+sc_array_init_data (sc_array_t * view, void *base, size_t elem_size,
+                    size_t elem_count)
+{
+  view->elem_size = elem_size;
+  view->elem_count = elem_count;
+  view->byte_alloc = -(elem_count * elem_size + 1);
+  view->array = base;
+}
+
+void
+sc_array_init_view (sc_array_t * view, sc_array_t * array, size_t offset,
+                    size_t length)
+{
+  SC_ASSERT (offset + length <= array->elem_count);
+
+  view->elem_size = array->elem_size;
+  view->elem_count = length;
+  view->byte_alloc = -(length * array->elem_size + 1);
+  view->array = array->array + offset * array->elem_size;
+}
+
 sc_array_t         *
 sc_array_new_view (sc_array_t * array, size_t offset, size_t length)
 {
   sc_array_t         *view;
 
-  SC_ASSERT (offset + length <= array->elem_count);
+  view = SC_ALLOC (sc_array_t, 1);
 
-  view = sc_array_new (array->elem_size);
-  view->elem_count = length;
-  view->byte_alloc = -1;
-  view->array = array->array + array->elem_size * offset;
+  sc_array_init_view (view, array, offset, length);
 
   return view;
 }
@@ -55,10 +74,9 @@ sc_array_new_data (void *base, size_t elem_size, size_t elem_count)
 {
   sc_array_t         *view;
 
-  view = sc_array_new (elem_size);
-  view->elem_count = elem_count;
-  view->byte_alloc = -1;
-  view->array = base;
+  view = SC_ALLOC (sc_array_t, 1);
+
+  sc_array_init_data (view, base, elem_size, elem_count);
 
   return view;
 }
@@ -93,6 +111,14 @@ sc_array_reset (sc_array_t * array)
 
   array->elem_count = 0;
   array->byte_alloc = 0;
+}
+
+void
+sc_array_resize_view (sc_array_t * view, size_t new_count)
+{
+  SC_ASSERT (!SC_ARRAY_IS_OWNER (view));
+  SC_ASSERT (new_count * view->elem_size <= -(view->byte_alloc + 1));
+  view->elem_count = new_count;
 }
 
 #ifdef SC_USE_REALLOC
