@@ -35,28 +35,6 @@ sc_array_new (size_t elem_size)
   return array;
 }
 
-void
-sc_array_init_data (sc_array_t * view, void *base, size_t elem_size,
-                    size_t elem_count)
-{
-  view->elem_size = elem_size;
-  view->elem_count = elem_count;
-  view->byte_alloc = -(elem_count * elem_size + 1);
-  view->array = base;
-}
-
-void
-sc_array_init_view (sc_array_t * view, sc_array_t * array, size_t offset,
-                    size_t length)
-{
-  SC_ASSERT (offset + length <= array->elem_count);
-
-  view->elem_size = array->elem_size;
-  view->elem_count = length;
-  view->byte_alloc = -(length * array->elem_size + 1);
-  view->array = array->array + offset * array->elem_size;
-}
-
 sc_array_t         *
 sc_array_new_view (sc_array_t * array, size_t offset, size_t length)
 {
@@ -102,6 +80,28 @@ sc_array_init (sc_array_t * array, size_t elem_size)
 }
 
 void
+sc_array_init_data (sc_array_t * view, void *base, size_t elem_size,
+                    size_t elem_count)
+{
+  view->elem_size = elem_size;
+  view->elem_count = elem_count;
+  view->byte_alloc = -(ssize_t) (elem_count * elem_size + 1);
+  view->array = base;
+}
+
+void
+sc_array_init_view (sc_array_t * view, sc_array_t * array, size_t offset,
+                    size_t length)
+{
+  SC_ASSERT (offset + length <= array->elem_count);
+
+  view->elem_size = array->elem_size;
+  view->elem_count = length;
+  view->byte_alloc = -(ssize_t) (length * array->elem_size + 1);
+  view->array = array->array + offset * array->elem_size;
+}
+
+void
 sc_array_reset (sc_array_t * array)
 {
   if (SC_ARRAY_IS_OWNER (array)) {
@@ -111,14 +111,6 @@ sc_array_reset (sc_array_t * array)
 
   array->elem_count = 0;
   array->byte_alloc = 0;
-}
-
-void
-sc_array_resize_view (sc_array_t * view, size_t new_count)
-{
-  SC_ASSERT (!SC_ARRAY_IS_OWNER (view));
-  SC_ASSERT (new_count * view->elem_size <= -(view->byte_alloc + 1));
-  view->elem_count = new_count;
 }
 
 #ifdef SC_USE_REALLOC
@@ -132,7 +124,12 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   size_t              i, minoffs;
 #endif
 
-  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+  if (!SC_ARRAY_IS_OWNER (array)) {
+    SC_ASSERT (new_count * array->elem_size <=
+               (size_t) -(array->byte_alloc + 1));
+    array->elem_count = new_count;
+    return;
+  }
 
 #ifdef SC_DEBUG
   oldoffs = array->elem_count * array->elem_size;
@@ -181,7 +178,12 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   size_t              i;
 #endif
 
-  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+  if (!SC_ARRAY_IS_OWNER (array)) {
+    SC_ASSERT (new_count * array->elem_size <=
+               (size_t) -(array->byte_alloc + 1));
+    array->elem_count = new_count;
+    return;
+  }
 
   if (new_count == 0) {
     sc_array_reset (array);
