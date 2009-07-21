@@ -1,0 +1,20 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Verify priority queue functions
+desc: |-
+  Check sc_containers for the pqueue functions.
+  Not sure if they are correct currently.
+type: :bugfix
+component: libsc
+release: 
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :unstarted
+disposition: 
+creation_time: 2009-07-21 21:13:31.461136 Z
+references: []
+
+id: 63fab9640a28e11bcebe98f9a18612aec9917cfa
+log_events: 
+- - 2009-07-21 21:13:32.508893 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
