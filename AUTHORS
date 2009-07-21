@@ -19,6 +19,15 @@
 */
 
 /*
+  Authors:
+  Carsten Burstedde <carsten@ices.utexas.edu>
+  Lucas Wilcox <lucasw@ices.utexas.edu>
+
+  Thanks to:
+  Toby Isaac <tisaac@ices.utexas.edu>
+*/
+
+/*
   The files under src/sc_builtin are copied from the GNU C library,
   zlib and lua, respectively.  See Copyright information below.
 
