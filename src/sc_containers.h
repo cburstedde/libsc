@@ -128,16 +128,6 @@ void                sc_array_destroy (sc_array_t * array);
  */
 void                sc_array_init (sc_array_t * array, size_t elem_size);
 
-/** Initializes an already allocated view from an existing plain C array.
- * \param [in,out] view  Array structure to be initialized.
- * \param [in] base         The data must not be moved while view is alive.
- * \param [in] elem_size    Size of one array element in bytes.
- * \param [in] elem_count   The length of the view in element units.
- *                          The view cannot be resized to exceed this length.
- */
-void                sc_array_init_data (sc_array_t * view, void *base,
-                                        size_t elem_size, size_t elem_count);
-
 /** Initializes an already allocated view from an existing sc_array_t.
  * \param [in,out] view  Array structure to be initialized.
  * \param [in] array     The array must not be resized while view is alive.
@@ -148,6 +138,16 @@ void                sc_array_init_data (sc_array_t * view, void *base,
  */
 void                sc_array_init_view (sc_array_t * view, sc_array_t * array,
                                         size_t offset, size_t length);
+
+/** Initializes an already allocated view from an existing plain C array.
+ * \param [in,out] view  Array structure to be initialized.
+ * \param [in] base         The data must not be moved while view is alive.
+ * \param [in] elem_size    Size of one array element in bytes.
+ * \param [in] elem_count   The length of the view in element units.
+ *                          The view cannot be resized to exceed this length.
+ */
+void                sc_array_init_data (sc_array_t * view, void *base,
+                                        size_t elem_size, size_t elem_count);
 
 /** Sets the array count to zero and frees all elements.
  * This function turns a view into a newly initialized array.

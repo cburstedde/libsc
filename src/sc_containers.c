@@ -80,16 +80,6 @@ sc_array_init (sc_array_t * array, size_t elem_size)
 }
 
 void
-sc_array_init_data (sc_array_t * view, void *base, size_t elem_size,
-                    size_t elem_count)
-{
-  view->elem_size = elem_size;
-  view->elem_count = elem_count;
-  view->byte_alloc = -(ssize_t) (elem_count * elem_size + 1);
-  view->array = base;
-}
-
-void
 sc_array_init_view (sc_array_t * view, sc_array_t * array, size_t offset,
                     size_t length)
 {
@@ -99,6 +89,18 @@ sc_array_init_view (sc_array_t * view, sc_array_t * array, size_t offset,
   view->elem_count = length;
   view->byte_alloc = -(ssize_t) (length * array->elem_size + 1);
   view->array = array->array + offset * array->elem_size;
+}
+
+void
+sc_array_init_data (sc_array_t * view, void *base, size_t elem_size,
+                    size_t elem_count)
+{
+  SC_ASSERT (elem_size > 0);
+
+  view->elem_size = elem_size;
+  view->elem_count = elem_count;
+  view->byte_alloc = -(ssize_t) (elem_count * elem_size + 1);
+  view->array = base;
 }
 
 void
@@ -125,8 +127,10 @@ sc_array_resize (sc_array_t * array, size_t new_count)
 #endif
 
   if (!SC_ARRAY_IS_OWNER (array)) {
+    /* *INDENT-OFF* HORRIBLE indent bug */
     SC_ASSERT (new_count * array->elem_size <=
                (size_t) -(array->byte_alloc + 1));
+    /* *INDENT-ON* */
     array->elem_count = new_count;
     return;
   }
@@ -179,8 +183,10 @@ sc_array_resize (sc_array_t * array, size_t new_count)
 #endif
 
   if (!SC_ARRAY_IS_OWNER (array)) {
+    /* *INDENT-OFF* HORRIBLE indent bug */
     SC_ASSERT (new_count * array->elem_size <=
                (size_t) -(array->byte_alloc + 1));
+    /* *INDENT-ON* */
     array->elem_count = new_count;
     return;
   }
