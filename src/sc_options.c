@@ -636,8 +636,14 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       break;
     }
     if (c == '?') {             /* invalid option */
-      SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
-              "Encountered invalid option\n");
+      if (optopt == 0) {
+        SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "Encountered invalid long option\n");
+      }
+      else {
+        SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                 "Encountered invalid short option: -%c\n", optopt);
+      }
       retval = -1;
       break;
     }
@@ -656,7 +662,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       if (iz == count) {
         SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                 "Encountered invalid short option: %c\n", c);
+                 "Encountered invalid short option: -%c\n", c);
         retval = -1;
         break;
       }

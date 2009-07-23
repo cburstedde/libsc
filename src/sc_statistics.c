@@ -229,13 +229,13 @@ sc_statinfo_print (int package_id, int log_priority,
       }
       if (si->average != 0.) {  /* ignore the comparison warning */
         SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                 "Mean value (std. dev.) %-28s %g (%.3g = %.3g%%)\n",
+                 "Mean (sigma) %-28s %g (%.3g = %.3g%%)\n",
                  buffer, si->average, si->standev,
                  100. * si->standev / fabs (si->average));
       }
       else {
         SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                 "Mean value (std. dev.) %-28s %g (%.3g)\n", buffer,
+                 "Mean (sigma) %-28s %g (%.3g)\n", buffer,
                  si->average, si->standev);
       }
     }
