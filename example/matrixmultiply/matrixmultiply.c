@@ -43,7 +43,8 @@ matrixget (sc_dmatrix_t * A, int r, int c)
   return A->e[0][r * gnc + c];
 }
 
-void
+#if 0
+static void
 matrixsetrandom (sc_dmatrix_t * A)
 {
   int                 r, c;
@@ -53,8 +54,9 @@ matrixsetrandom (sc_dmatrix_t * A)
     }
   }
 }
+#endif
 
-void
+static void
 matrixmultiply_nonopt (sc_dmatrix_t * A, sc_dmatrix_t * B, sc_dmatrix_t * C)
 {
   int                 r, c, n;
@@ -70,7 +72,7 @@ matrixmultiply_nonopt (sc_dmatrix_t * A, sc_dmatrix_t * B, sc_dmatrix_t * C)
   }
 }
 
-void
+static void
 matrixmultiply_sse (sc_dmatrix_t * A, sc_dmatrix_t * B, sc_dmatrix_t * C)
 {
   register int        r, c, n;
