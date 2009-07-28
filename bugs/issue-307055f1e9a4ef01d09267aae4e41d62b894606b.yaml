@@ -1,0 +1,20 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Build Shared Libraries
+desc: |-
+  We should provide the option to build shared library version
+  of libsc.
+type: :feature
+component: libsc
+release: 
+reporter: Lucas C Wilcox <lucasw@ices.utexas.edu>
+status: :unstarted
+disposition: 
+creation_time: 2009-07-28 21:41:03.783644 Z
+references: []
+
+id: 307055f1e9a4ef01d09267aae4e41d62b894606b
+log_events: 
+- - 2009-07-28 21:41:09.143433 Z
+  - Lucas C Wilcox <lucasw@ices.utexas.edu>
+  - created
+  - Initial commit
