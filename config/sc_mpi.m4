@@ -29,13 +29,16 @@ dnl ***********************************************************************
 dnl
 dnl Now almost nothing of the original code is left.
 dnl
-dnl @synopsis SC_MPI(PREFIX, [list of non-MPI C compilers])
+dnl @synopsis SC_MPI(PREFIX, [list of non-MPI C compilers],
+dnl                          [list of non-MPI CXX compilers])
 dnl
-dnl This macro calls AC_PROG_CC.
+dnl This macro calls AC_PROG_CC (and AC_PROG_CXX if above list is specified).
 dnl
 dnl --enable-mpi           Turn on MPI, use compilers mpicc and mpif77.
 dnl --with-mpicc=<...>     Specify MPI C compiler, can be "no".
 dnl --without-mpicc        Do not use a special MPI C compiler.
+dnl --with-mpicxx=<...>    Specify MPI CXX compiler, can be "no".
+dnl --without-mpicxx       Do not use a special MPI CXX compiler.
 dnl --with-mpif77=<...>    Specify MPI F77 compiler, can be "no".
 dnl --without-mpif77       Do not use a special MPI F77 compiler.
 dnl --with-mpitest=<...>   Use this as PREFIX_MPI_TESTS_ENVIRONMENT.
@@ -51,15 +54,18 @@ dnl
 dnl If MPI is turned on PREFIX_MPI will be defined for autoconf/automake
 dnl and MPI will be defined in the config header file.
 
-dnl SC_MPI_CONFIG(PREFIX)
-dnl Figure out the MPI configuration
+dnl SC_MPI_CONFIG(PREFIX, [TEST_CXX])
+dnl Figure out the MPI configuration.
+dnl If TEST_CXX is non-empty, the macro SC_CHECK_MPI_CXX is defined.
 dnl
 AC_DEFUN([SC_MPI_CONFIG],
 [
 HAVE_PKG_MPI=no
 HAVE_PKG_MPIIO=no
 MPI_CC_NONE=
+MPI_CXX_NONE=
 MPI_F77_NONE=
+m4_ifval([$2], [m4_define([SC_CHECK_MPI_CXX], [yes])])
 
 dnl The shell variable SC_ENABLE_MPI is set
 dnl unless it is provided by the environment.
@@ -89,6 +95,22 @@ elif test "$withval" != notgiven ; then
   HAVE_PKG_MPI=yes
   AC_CHECK_PROG([MPI_CC], [$withval], [$withval], [false])
 fi
+
+dnl Potentially override the mpi CXX compiler (and turn on MPI)
+m4_ifset([SC_CHECK_MPI_CXX], [
+SC_ARG_NOT_GIVEN_DEFAULT="notgiven"
+SC_ARG_WITH([mpicxx], [specify MPI CXX compiler, can be "no"],
+            [MPICXX], [=MPICXX])
+if test "$withval" = yes ; then
+  AC_MSG_ERROR([Please use --with-mpicxx=MPICXX with a valid mpi CXX compiler])
+elif test "$withval" = no ; then
+  HAVE_PKG_MPI=yes
+  MPI_CXX_NONE=yes
+elif test "$withval" != notgiven ; then
+  HAVE_PKG_MPI=yes
+  AC_CHECK_PROG([MPI_CXX], [$withval], [$withval], [false])
+fi
+])
 
 dnl Potentially override the mpi Fortran compiler (and turn on MPI)
 SC_ARG_NOT_GIVEN_DEFAULT="notgiven"
@@ -147,6 +169,17 @@ if test "$HAVE_PKG_MPI" = yes ; then
   if test -n "$MPI_CC" ; then
     CC="$MPI_CC"
   fi
+  echo "                             MPI_CC set to $MPI_CC"
+
+m4_ifset([SC_CHECK_MPI_CXX], [
+  if test -z "$MPI_CXX" -a -z "$MPI_CXX_NONE" ; then
+    MPI_CXX=mpicxx
+  fi
+  if test -n "$MPI_CXX" ; then
+    CXX="$MPI_CXX"
+  fi
+  echo "                            MPI_CXX set to $MPI_CXX"
+])
 
   if test -z "$MPI_F77" -a -z "$MPI_F77_NONE" ; then
     MPI_F77=mpif77
@@ -154,20 +187,19 @@ if test "$HAVE_PKG_MPI" = yes ; then
   if test -n "$MPI_F77" ; then
     F77="$MPI_F77"
   fi
-
-  echo "                             MPI_CC set to $MPI_CC"
   echo "                            MPI_F77 set to $MPI_F77"
 
   AC_DEFINE([MPI], 1, [Define to 1 if we are using MPI])
 else
   unset MPI_CC
+  unset MPI_CXX
   unset MPI_F77
 fi
 AM_CONDITIONAL([$1_MPI], [test "$HAVE_PKG_MPI" = yes])
 ])
 
 dnl SC_MPI_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
-dnl Compile and link an MPI test program
+dnl Compile and link an MPI C test program
 dnl
 AC_DEFUN([SC_MPI_C_COMPILE_AND_LINK],
 [
@@ -175,6 +207,26 @@ AC_MSG_CHECKING([compile/link for MPI C program])
 AC_LINK_IFELSE([AC_LANG_PROGRAM(
 [[#undef MPI
 #include <mpi.h>]], [[
+MPI_Init ((int *) 0, (char ***) 0);
+MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $1],
+[AC_MSG_RESULT([failed])
+ $2])
+])
+
+dnl SC_MPI_CXX_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI CXX test program
+dnl
+AC_DEFUN([SC_MPI_CXX_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for MPI CXX program])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[#undef MPI
+#include <mpi.h>
+#include <iostream>]], [[
+std::cout << "Hello C++ MPI" << std::endl;
 MPI_Init ((int *) 0, (char ***) 0);
 MPI_Finalize ();
 ]])],
@@ -245,17 +297,22 @@ AC_SUBST([MPI_INCLUDE_PATH])
 ])
 
 dnl SC_MPI
-dnl Configure MPI and check its C compiler in one line
+dnl Configure MPI and check its C (and optionally CXX) compiler in one line
 dnl
 AC_DEFUN([SC_MPI],
 [
-SC_MPI_CONFIG([$1])
+SC_MPI_CONFIG([$1], [$3])       dnl possibly defines macro SC_CHECK_MPI_CXX
 AC_PROG_CC([$2])
+m4_ifset([SC_CHECK_MPI_CXX], [AC_PROG_CXX([$3])])
 
 dnl compile and link tests must be done after the PROC_CC line
 if test "$HAVE_PKG_MPI" = yes ; then
   SC_MPI_C_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI C test failed])])
-
+  m4_ifset([SC_CHECK_MPI_CXX], [
+    AC_LANG_PUSH([C++])
+    SC_MPI_CXX_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI CXX test failed])])
+    AC_LANG_POP([C++])
+  ])
   if test "$HAVE_PKG_MPIIO" = yes ; then
     SC_MPIIO_C_COMPILE_AND_LINK(
       [AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])],
