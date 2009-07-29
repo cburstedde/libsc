@@ -64,7 +64,8 @@ static size_t       sc_line_no = 0;
 #endif
 
 /** The only log handler that comes with libsc. */
-static void         sc_log_handler (const char *filename, int lineno,
+static void         sc_log_handler (FILE * log_stream,
+                                    const char *filename, int lineno,
                                     int package, int category, int priority,
                                     const char *fmt, va_list ap);
 
@@ -92,8 +93,10 @@ static long         sc_vp_default_key[2];
 void               *SC_VP_DEFAULT  = (void *) &sc_vp_default_key[0];
 /*@access FILE@*/
 FILE               *SC_FP_KEEP     = (FILE *) &sc_vp_default_key[1];
-int                 sc_package_id  = -1;
 /* *INDENT-ON* */
+int                 sc_package_id = -1;
+FILE               *sc_trace_file = NULL;
+int                 sc_trace_prio = SC_LP_STATISTICS;
 
 static int          default_malloc_count = 0;
 static int          default_free_count = 0;
@@ -179,18 +182,11 @@ sc_set_signal_handler (bool catch_signals)
 }
 
 static void
-sc_log_handler (const char *filename, int lineno,
+sc_log_handler (FILE * log_stream, const char *filename, int lineno,
                 int package, int category, int priority,
                 const char *fmt, va_list ap)
 {
   bool                wp = false, wi = false;
-
-  if (sc_log_stream == NULL && !sc_log_stream_set) {
-    sc_log_stream = stdout;
-    sc_log_stream_set = true;
-  }
-  if (sc_log_stream == NULL)
-    return;
 
   if (package != -1) {
     SC_ASSERT (sc_package_is_registered (package));
@@ -199,14 +195,14 @@ sc_log_handler (const char *filename, int lineno,
   wi = (category == SC_LC_NORMAL && sc_identifier >= 0);
 
   if (wp || wi) {
-    fputc ('[', sc_log_stream);
+    fputc ('[', log_stream);
     if (wp)
-      fprintf (sc_log_stream, "%s", sc_packages[package].name);
+      fprintf (log_stream, "%s", sc_packages[package].name);
     if (wp && wi)
-      fputc (' ', sc_log_stream);
+      fputc (' ', log_stream);
     if (wi)
-      fprintf (sc_log_stream, "%d", sc_identifier);
-    fputs ("] ", sc_log_stream);
+      fprintf (log_stream, "%d", sc_identifier);
+    fputs ("] ", log_stream);
   }
 
   if (priority == SC_LP_TRACE) {
@@ -214,11 +210,11 @@ sc_log_handler (const char *filename, int lineno,
 
     snprintf (bn, BUFSIZ, "%s", filename);
     bp = basename (bn);
-    fprintf (sc_log_stream, "%s:%d ", bp, lineno);
+    fprintf (log_stream, "%s:%d ", bp, lineno);
   }
 
-  vfprintf (sc_log_stream, fmt, ap);
-  fflush (sc_log_stream);
+  vfprintf (log_stream, fmt, ap);
+  fflush (log_stream);
 }
 
 static int         *
@@ -507,13 +503,28 @@ sc_logf (const char *filename, int lineno,
   SC_ASSERT (category == SC_LC_NORMAL || category == SC_LC_GLOBAL);
   SC_ASSERT (priority >= SC_LP_NONE && priority < SC_LP_SILENT);
 
+  if (sc_trace_file != NULL && priority >= sc_trace_prio) {
+    va_start (ap, fmt);
+    log_handler (sc_trace_file, filename, lineno,
+                 package, category, priority, fmt, ap);
+    va_end (ap);
+  }
+
   if (category == SC_LC_GLOBAL && sc_identifier > 0)
     return;
   if (priority < log_threshold)
     return;
 
+  if (sc_log_stream == NULL && !sc_log_stream_set) {
+    sc_log_stream = stdout;
+    sc_log_stream_set = true;
+  }
+  if (sc_log_stream == NULL)
+    return;
+
   va_start (ap, fmt);
-  log_handler (filename, lineno, package, category, priority, fmt, ap);
+  log_handler (sc_log_stream, filename, lineno,
+               package, category, priority, fmt, ap);
   va_end (ap);
 }
 
@@ -699,6 +710,8 @@ sc_init (MPI_Comm mpicomm,
   int                 w;
   const char        **on, **ov;
   const char         *overrides[] = { SC_OVERRIDES NULL, NULL };
+  const char         *trace_file_name;
+  const char         *trace_file_prio;
 
   sc_identifier = -1;
   sc_mpicomm = MPI_COMM_NULL;
@@ -738,12 +751,53 @@ sc_init (MPI_Comm mpicomm,
     SC_CHECK_ABORT (*ov != NULL, "SC_OVERRIDES should contain pairs");
     SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, *on, *ov);
   }
+
+  trace_file_name = getenv ("SC_TRACE_FILE");
+  if (trace_file_name != NULL) {
+    char                buffer[BUFSIZ];
+
+    if (sc_identifier >= 0) {
+      snprintf (buffer, BUFSIZ, "%s.%d.log", trace_file_name, sc_identifier);
+    }
+    else {
+      snprintf (buffer, BUFSIZ, "%s.log", trace_file_name);
+    }
+    SC_CHECK_ABORT (sc_trace_file == NULL, "Trace file not NULL");
+    sc_trace_file = fopen (buffer, "wb");
+    SC_CHECK_ABORT (sc_trace_file != NULL, "Trace file open");
+
+    trace_file_prio = getenv ("SC_TRACE_LP");
+    if (trace_file_prio != NULL) {
+      if (!strcmp (trace_file_prio, "SC_LP_TRACE")) {
+        sc_trace_prio = SC_LP_TRACE;
+      }
+      else if (!strcmp (trace_file_prio, "SC_LP_DEBUG")) {
+        sc_trace_prio = SC_LP_DEBUG;
+      }
+      else if (!strcmp (trace_file_prio, "SC_LP_VERBOSE")) {
+        sc_trace_prio = SC_LP_VERBOSE;
+      }
+      else if (!strcmp (trace_file_prio, "SC_LP_INFO")) {
+        sc_trace_prio = SC_LP_INFO;
+      }
+      else if (!strcmp (trace_file_prio, "SC_LP_STATISTICS")) {
+        sc_trace_prio = SC_LP_STATISTICS;
+      }
+      else if (!strcmp (trace_file_prio, "SC_LP_PRODUCTION")) {
+        sc_trace_prio = SC_LP_PRODUCTION;
+      }
+      else {
+        SC_CHECK_ABORT (false, "Invalid trace priority");
+      }
+    }
+  }
 }
 
 void
 sc_finalize (void)
 {
   int                 i;
+  int                 retval;
 
   /* sc_packages is static and thus initialized to all zeros */
   for (i = 0; i < SC_MAX_PACKAGES; ++i)
@@ -759,4 +813,12 @@ sc_finalize (void)
 
   sc_print_backtrace = false;
   sc_identifier = -1;
+
+  /* close trace file */
+  if (sc_trace_file != NULL) {
+    retval = fclose (sc_trace_file);
+    SC_CHECK_ABORT (!retval, "Trace file close");
+
+    sc_trace_file = NULL;
+  }
 }

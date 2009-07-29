@@ -66,6 +66,10 @@
 #include <sc_c99_functions.h>
 #include <sc_mpi.h>
 
+/* control a trace file by environment variables (see sc_init) */
+extern FILE        *sc_trace_file;
+extern int          sc_trace_prio;
+
 /* include math defines */
 
 #ifndef M_E
@@ -280,7 +284,8 @@ SC_EXTERN_C_BEGIN;
 /* callback typedefs */
 
 typedef void        (*sc_handler_t) (void *data);
-typedef void        (*sc_log_handler_t) (const char *filename, int lineno,
+typedef void        (*sc_log_handler_t) (FILE * log_stream,
+                                         const char *filename, int lineno,
                                          int package, int category,
                                          int priority, const char *fmt,
                                          va_list ap);
