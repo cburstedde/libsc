@@ -210,7 +210,7 @@ extern int          sc_trace_prio;
 #define SC_LP_THRESHOLD SC_LOG_PRIORITY
 #else
 #ifdef SC_DEBUG
-#define SC_LP_THRESHOLD SC_LP_DEBUG
+#define SC_LP_THRESHOLD SC_LP_TRACE
 #else
 #define SC_LP_THRESHOLD SC_LP_INFO
 #endif
