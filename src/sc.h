@@ -198,7 +198,7 @@ extern int          sc_trace_prio;
 /* log priorities */
 
 #define SC_LP_DEFAULT   (-1)    /* this selects the SC default threshold */
-#define SC_LP_NONE        0
+#define SC_LP_ALWAYS      0     /* this will log everything */
 #define SC_LP_TRACE       1     /* this will prefix file and line number */
 #define SC_LP_DEBUG       2     /* any information on the internal state */
 #define SC_LP_VERBOSE     3     /* information on conditions, decisions */
@@ -293,8 +293,6 @@ typedef void        (*sc_log_handler_t) (FILE * log_stream,
 /* extern declarations */
 
 extern const int    sc_log2_lookup_table[256];
-extern void        *SC_VP_DEFAULT;      /* a unique void pointer value */
-extern FILE        *SC_FP_KEEP; /* a unique FILE pointer value */
 extern int          sc_package_id;
 
 /* memory allocation functions, handle NULL pointers by internal abort
@@ -316,20 +314,20 @@ int                 sc_int64_compare (const void *v1, const void *v2);
 int                 sc_double_compare (const void *v1, const void *v2);
 
 /** Controls the default SC log behavior.
+ * \param [in] log_stream    Set stream to use by sc_logf (or NULL for stdout).
  * \param [in] log_handler   Set default SC log handler (NULL selects builtin).
  * \param [in] log_threshold Set default SC log threshold (or SC_LP_DEFAULT).
- * \param [in] log_stream    Set stream to use by the builtin log handler.
- *                           This can be SC_FP_KEEP to keep the status quo
- *                           or NULL which silences the builtin log handler.
+ *                           May be SC_LP_ALWAYS or SC_LP_SILENT.
  */
-void                sc_set_log_defaults (sc_log_handler_t log_handler,
-                                         int log_thresold, FILE * log_stream);
+void                sc_set_log_defaults (FILE * log_stream,
+                                         sc_log_handler_t log_handler,
+                                         int log_thresold);
 
 /** The central log function to be called by all packages.
  * Dispatches the log calls by package and filters by category and priority.
  * \param [in] package   Must be a registered package id or -1.
  * \param [in] category  Must be SC_LC_NORMAL or SC_LC_GLOBAL.
- * \param [in] priority  Must be >= SC_LP_NONE and < SC_LP_SILENT.
+ * \param [in] priority  Must be > SC_LP_ALWAYS and < SC_LP_SILENT.
  */
 void                sc_logf (const char *filename, int lineno,
                              int package, int category, int priority,
@@ -347,10 +345,7 @@ void                sc_abort (void)
   __attribute__ ((noreturn));
 
 /** Register a software package with SC.
- * \param [in] log_handler   Custom log function, or NULL to select the
- *                           default SC log handler.
- * \param [in] log_threshold Minimal log priority required for output, or
- *                           SC_LP_DEFAULT to select the SC default threshold.
+ * The logging parameters are as in sc_set_log_defaults.
  * \return                   Returns a unique package id.
  */
 int                 sc_package_register (sc_log_handler_t log_handler,

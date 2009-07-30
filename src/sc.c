@@ -89,11 +89,6 @@ const int sc_log2_lookup_table[256] =
    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
 };
 
-static long         sc_vp_default_key[2];
-void               *SC_VP_DEFAULT  = (void *) &sc_vp_default_key[0];
-/*@access FILE@*/
-FILE               *SC_FP_KEEP     = (FILE *) &sc_vp_default_key[1];
-/* *INDENT-ON* */
 int                 sc_package_id = -1;
 FILE               *sc_trace_file = NULL;
 int                 sc_trace_prio = SC_LP_STATISTICS;
@@ -104,11 +99,9 @@ static int          default_free_count = 0;
 static int          sc_identifier = -1;
 static MPI_Comm     sc_mpicomm = MPI_COMM_NULL;
 
-static int          sc_default_log_threshold = SC_LP_THRESHOLD;
-static sc_log_handler_t sc_default_log_handler = sc_log_handler;
-
 static FILE        *sc_log_stream = NULL;
-static bool         sc_log_stream_set = false;
+static sc_log_handler_t sc_default_log_handler = sc_log_handler;
+static int          sc_default_log_threshold = SC_LP_THRESHOLD;
 
 static bool         sc_signals_caught = false;
 static sc_sig_t     system_int_handler = NULL;
@@ -457,24 +450,20 @@ sc_double_compare (const void *v1, const void *v2)
 }
 
 void
-sc_set_log_defaults (sc_log_handler_t log_handler, int log_threshold,
-                     FILE * log_stream)
+sc_set_log_defaults (FILE * log_stream,
+                     sc_log_handler_t log_handler, int log_threshold)
 {
-  sc_default_log_handler =
-    (log_handler == NULL ? sc_log_handler : log_handler);
+  sc_default_log_handler = log_handler ?: sc_log_handler;
 
   if (log_threshold == SC_LP_DEFAULT) {
     sc_default_log_threshold = SC_LP_THRESHOLD;
   }
   else {
-    SC_ASSERT (log_threshold >= SC_LP_NONE && log_threshold <= SC_LP_SILENT);
+    SC_ASSERT (log_threshold >= SC_LP_ALWAYS && log_threshold <= SC_LP_SILENT);
     sc_default_log_threshold = log_threshold;
   }
 
-  if (log_stream != SC_FP_KEEP) {
-    sc_log_stream = log_stream;
-    sc_log_stream_set = true;
-  }
+  sc_log_stream = log_stream;
 }
 
 void
@@ -501,7 +490,7 @@ sc_logf (const char *filename, int lineno,
       (p->log_handler == NULL) ? sc_default_log_handler : p->log_handler;
   }
   SC_ASSERT (category == SC_LC_NORMAL || category == SC_LC_GLOBAL);
-  SC_ASSERT (priority >= SC_LP_NONE && priority < SC_LP_SILENT);
+  SC_ASSERT (priority > SC_LP_ALWAYS && priority < SC_LP_SILENT);
 
   if (sc_trace_file != NULL && priority >= sc_trace_prio) {
     va_start (ap, fmt);
@@ -515,15 +504,8 @@ sc_logf (const char *filename, int lineno,
   if (priority < log_threshold)
     return;
 
-  if (sc_log_stream == NULL && !sc_log_stream_set) {
-    sc_log_stream = stdout;
-    sc_log_stream_set = true;
-  }
-  if (sc_log_stream == NULL)
-    return;
-
   va_start (ap, fmt);
-  log_handler (sc_log_stream, filename, lineno,
+  log_handler (sc_log_stream ?: stdout, filename, lineno,
                package, category, priority, fmt, ap);
   va_end (ap);
 }
@@ -620,7 +602,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
 
   SC_CHECK_ABORT (sc_num_packages < SC_MAX_PACKAGES, "Too many packages");
   SC_CHECK_ABORT (log_threshold == SC_LP_DEFAULT ||
-                  (log_threshold >= SC_LP_NONE
+                  (log_threshold >= SC_LP_ALWAYS
                    && log_threshold <= SC_LP_SILENT),
                   "Invalid package log threshold");
   SC_CHECK_ABORT (strcmp (name, "default"), "Package default forbidden");

@@ -53,24 +53,24 @@ main (int argc, char **argv)
   log_normal ();
   log_global ();
 
-  sc_set_log_defaults (NULL, SC_LP_VERBOSE, stdout);
+  sc_set_log_defaults (stdout, NULL, SC_LP_VERBOSE);
   log_normal ();
 
   sc_init (MPI_COMM_WORLD, true, true, NULL, SC_LP_DEFAULT);
 
   sc_package_print_summary (SC_LP_PRODUCTION);
 
-  sc_set_log_defaults (NULL, SC_LP_STATISTICS, stderr);
+  sc_set_log_defaults (stderr, NULL, SC_LP_STATISTICS);
   log_normal ();
   log_global ();
 
-  sc_set_log_defaults (NULL, SC_LP_TRACE, stdout);
+  sc_set_log_defaults (stdout, NULL, SC_LP_TRACE);
   log_normal ();
 
-  sc_set_log_defaults (NULL, SC_LP_TRACE, NULL);
+  sc_set_log_defaults (NULL, NULL, SC_LP_TRACE);
   log_global ();
 
-  sc_set_log_defaults (NULL, SC_LP_SILENT, stderr);
+  sc_set_log_defaults (stderr, NULL, SC_LP_SILENT);
   log_normal ();
 
   sc_finalize ();
