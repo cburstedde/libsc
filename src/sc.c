@@ -730,28 +730,6 @@ sc_init (MPI_Comm mpicomm,
   sc_package_id = sc_package_register (log_handler, log_threshold,
                                        "libsc", "The SC Library");
 
-  w = 24;
-  SC_GLOBAL_PRODUCTIONF ("%s\n", SC_PACKAGE_STRING);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CC", SC_CC);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "C_VERSION", SC_C_VERSION);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CFLAGS", SC_CFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPP", SC_CPP);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPPFLAGS", SC_CPPFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "F77", SC_F77);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FFLAGS", SC_FFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LDFLAGS", SC_LDFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "BLAS_LIBS", SC_BLAS_LIBS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LAPACK_LIBS", SC_LAPACK_LIBS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LIBS", SC_LIBS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FLIBS", SC_FLIBS);
-
-  w = 32;
-  for (on = overrides; *on != NULL; on = ov + 1) {
-    ov = on + 1;
-    SC_CHECK_ABORT (*ov != NULL, "SC_OVERRIDES should contain pairs");
-    SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, *on, *ov);
-  }
-
   trace_file_name = getenv ("SC_TRACE_FILE");
   if (trace_file_name != NULL) {
     char                buffer[BUFSIZ];
@@ -790,6 +768,28 @@ sc_init (MPI_Comm mpicomm,
         SC_CHECK_ABORT (false, "Invalid trace priority");
       }
     }
+  }
+
+  w = 24;
+  SC_GLOBAL_PRODUCTIONF ("%s\n", SC_PACKAGE_STRING);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CC", SC_CC);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "C_VERSION", SC_C_VERSION);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CFLAGS", SC_CFLAGS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPP", SC_CPP);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPPFLAGS", SC_CPPFLAGS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "F77", SC_F77);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FFLAGS", SC_FFLAGS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LDFLAGS", SC_LDFLAGS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "BLAS_LIBS", SC_BLAS_LIBS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LAPACK_LIBS", SC_LAPACK_LIBS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LIBS", SC_LIBS);
+  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FLIBS", SC_FLIBS);
+
+  w = 32;
+  for (on = overrides; *on != NULL; on = ov + 1) {
+    ov = on + 1;
+    SC_CHECK_ABORT (*ov != NULL, "SC_OVERRIDES should contain pairs");
+    SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, *on, *ov);
   }
 }
 
