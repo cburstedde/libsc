@@ -492,6 +492,9 @@ sc_logf (const char *filename, int lineno,
   SC_ASSERT (category == SC_LC_NORMAL || category == SC_LC_GLOBAL);
   SC_ASSERT (priority > SC_LP_ALWAYS && priority < SC_LP_SILENT);
 
+  if (category == SC_LC_GLOBAL && sc_identifier > 0)
+    return;
+
   if (sc_trace_file != NULL && priority >= sc_trace_prio) {
     va_start (ap, fmt);
     log_handler (sc_trace_file, filename, lineno,
@@ -499,15 +502,12 @@ sc_logf (const char *filename, int lineno,
     va_end (ap);
   }
 
-  if (category == SC_LC_GLOBAL && sc_identifier > 0)
-    return;
-  if (priority < log_threshold)
-    return;
-
-  va_start (ap, fmt);
-  log_handler (sc_log_stream ?: stdout, filename, lineno,
-               package, category, priority, fmt, ap);
-  va_end (ap);
+  if (priority >= log_threshold) {
+    va_start (ap, fmt);
+    log_handler (sc_log_stream ?: stdout, filename, lineno,
+                 package, category, priority, fmt, ap);
+    va_end (ap);
+  }
 }
 
 void
