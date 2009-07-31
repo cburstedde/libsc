@@ -31,8 +31,7 @@ const char          sc_cmachchar[] =
 int
 sc_blas_nonimplemented ()
 {
-  SC_CHECK_ABORT (false, "BLAS not compiled in this configuration");
-
+  SC_ABORT ("BLAS not compiled in this configuration");
   return 0;
 }
 

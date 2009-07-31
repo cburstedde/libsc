@@ -340,7 +340,7 @@ sc_psort (MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
   SC_ASSERT (sc_compare == NULL);
 
 #ifndef SC_DEBUG
-  SC_CHECK_ABORT (false, "sc_psort is still buggy, don't use it yet");
+  SC_ABORT ("sc_psort is still buggy, don't use it yet");
 #endif
 
   /* get basic MPI information */

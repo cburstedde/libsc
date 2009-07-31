@@ -276,7 +276,7 @@ sc_options_print_usage (int package_id, int log_priority,
       }
       break;
     default:
-      SC_CHECK_NOT_REACHED ();
+      SC_ABORT_NOT_REACHED ();
     }
     outbuf[0] = '\0';
     printed = 0;
@@ -294,7 +294,7 @@ sc_options_print_usage (int package_id, int log_priority,
                           item->opt_name, provide_long);
     }
     else {
-      SC_CHECK_NOT_REACHED ();
+      SC_ABORT_NOT_REACHED ();
     }
     if (item->help_string != NULL) {
       snprintf (outbuf + printed, BUFSIZ - printed, "%*s%s",
@@ -368,7 +368,7 @@ sc_options_print_summary (int package_id, int log_priority,
                            "%s", string_val);
       break;
     default:
-      SC_CHECK_NOT_REACHED ();
+      SC_ABORT_NOT_REACHED ();
     }
     SC_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
@@ -468,7 +468,7 @@ sc_options_load (int package_id, int err_priority,
       }
       break;
     default:
-      SC_CHECK_NOT_REACHED ();
+      SC_ABORT_NOT_REACHED ();
     }
   }
 
@@ -524,7 +524,7 @@ sc_options_save (int package_id, int err_priority,
       retval = fprintf (file, "        -%c = ", item->opt_char);
     }
     else {
-      SC_CHECK_NOT_REACHED ();
+      SC_ABORT_NOT_REACHED ();
     }
     if (retval < 0) {
       SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write key failed\n");
@@ -551,7 +551,7 @@ sc_options_save (int package_id, int err_priority,
       retval = fprintf (file, "%s\n", item->string_value);
       break;
     default:
-      SC_CHECK_NOT_REACHED ();
+      SC_ABORT_NOT_REACHED ();
     }
     if (retval < 0) {
       SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write value failed\n");
@@ -702,7 +702,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       break;
     default:
-      SC_CHECK_NOT_REACHED ();
+      SC_ABORT_NOT_REACHED ();
     }
   }
 

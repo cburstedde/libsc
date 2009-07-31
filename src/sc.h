@@ -127,24 +127,24 @@ extern int          sc_trace_prio;
 /* check macros, always enabled */
 
 #define SC_NOOP() ((void) (0))
-#define SC_CHECK_ABORT(c,s)                                     \
-  ((void) ((!(c)) ? (                                           \
-             sleep (1),                                         \
-             fprintf (stderr, "Abort: %s\n   in %s:%d\n",       \
-                      (s), __FILE__, __LINE__),                 \
-             sc_abort (), 0) : 0))
+#define SC_ABORT(s)                                     \
+  (fprintf (stderr, "Abort: %s\n   in %s:%d\n",         \
+            (s), __FILE__, __LINE__),                   \
+   sc_abort ())
+#define SC_CHECK_ABORT(c,s)                     \
+  ((c) ? (void) 0 : SC_ABORT (s))
 /* Only include the following define in C, not C++, since C++98
    does not allow variadic macros. */
 #ifndef __cplusplus
-#define SC_CHECK_ABORTF(c,fmt,...)                              \
-  ((void) ((!(c)) ? (                                           \
-             sleep (1),                                         \
-             fprintf (stderr, "Abort: " fmt "\n   in %s:%d\n",  \
-                      __VA_ARGS__, __FILE__, __LINE__),         \
-             sc_abort (), 0) : 0))
+#define SC_ABORTF(fmt,...)                              \
+  (fprintf (stderr, "Abort: " fmt "\n   in %s:%d\n",    \
+            __VA_ARGS__, __FILE__, __LINE__),           \
+   sc_abort ())
+#define SC_CHECK_ABORTF(c,fmt,...)              \
+  ((c) ? (void) 0 : SC_ABORTF (fmt,__VA_ARGS__))
 #endif
-#define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI operation")
-#define SC_CHECK_NOT_REACHED() SC_CHECK_ABORT (0, "Unreachable code")
+#define SC_ABORT_NOT_REACHED() SC_ABORT ("Unreachable code")
+#define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI error")
 
 /* assertions, only enabled in debug mode */
 

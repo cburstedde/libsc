@@ -747,7 +747,7 @@ sc_init (MPI_Comm mpicomm,
         sc_trace_prio = SC_LP_PRODUCTION;
       }
       else {
-        SC_CHECK_ABORT (false, "Invalid trace priority");
+        SC_ABORT ("Invalid trace priority");
       }
     }
   }

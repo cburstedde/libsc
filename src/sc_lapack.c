@@ -27,8 +27,7 @@ const char          sc_jobzchar[] = { 'N', 'V', '?' };
 int
 sc_lapack_nonimplemented ()
 {
-  SC_CHECK_ABORT (false, "LAPACK not compiled in this configuration");
-
+  SC_ABORT ("LAPACK not compiled in this configuration");
   return 0;
 }
 

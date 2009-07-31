@@ -139,8 +139,8 @@ main (int argc, char **argv)
 
   nargs = 2;
   if (argc != nargs) {
-    SC_PRODUCTIONF ("Usage: %s <degree>\n", argv[0]);
-    SC_CHECK_ABORT (false, "Usage error");
+    fprintf (stderr, "Usage: %s <degree>\n", argv[0]);
+    SC_ABORT ("Usage error");
   }
   n = atoi (argv[1]);
   SC_CHECK_ABORT (n >= 0, "Degree must be non-negative");
