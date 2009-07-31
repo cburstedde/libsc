@@ -27,7 +27,7 @@ sc_darray_is_valid (const double *darray, size_t nelem)
   size_t              zz;
 
   for (zz = 0; zz < nelem; ++zz) {
-    if (darray[zz] != darray[zz]) {
+    if (darray[zz] != darray[zz]) {     /* ignore the comparison warning */
       return false;
     }
   }

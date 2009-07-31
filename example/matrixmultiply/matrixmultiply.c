@@ -96,7 +96,7 @@ time_matrix_multiply ()
 {
   int                 Nloops, loop;
   sc_dmatrix_t       *A, *B, *C;
-  double              alpha, beta, a;
+  double              alpha, beta;
 
   long int            t0, t1;
 
@@ -114,7 +114,7 @@ time_matrix_multiply ()
   t1 = (long int) clock ();
 
   /* make sure the multiply gets done */
-  a = matrixget (C, 2, 2);
+  (void) matrixget (C, 2, 2);
 
   SC_PRODUCTIONF ("unoptimized time taken = %lg for %d x %d\n",
                   (double) (t1 - t0) / (Nloops * CLOCKS_PER_SEC), gnr, gnc);
@@ -125,7 +125,7 @@ time_matrix_multiply ()
   t1 = (long int) clock ();
 
   /* make sure the multiply gets done */
-  a = matrixget (C, 2, 2);
+  (void) matrixget (C, 2, 2);
 
   SC_PRODUCTIONF ("optimized time taken = %lg for %d x %d\n",
                   (double) (t1 - t0) / (Nloops * CLOCKS_PER_SEC), gnr, gnc);
@@ -139,7 +139,7 @@ time_matrix_multiply ()
   t1 = (long int) clock ();
 
   /* make sure the multiply gets done */
-  a = matrixget (C, 2, 2);
+  (void) matrixget (C, 2, 2);
 
   SC_PRODUCTIONF ("blas time taken = %lg for %d x %d\n",
                   (double) (t1 - t0) / (Nloops * CLOCKS_PER_SEC), gnr, gnc);
