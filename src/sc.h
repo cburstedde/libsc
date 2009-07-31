@@ -223,10 +223,9 @@ extern int          sc_trace_prio;
 #ifndef __cplusplus
 
 #define SC_LOGF(package,category,priority,fmt,...)                      \
-  ((void) (((priority) >= SC_LP_THRESHOLD) ? (                          \
-             sc_logf (__FILE__, __LINE__,                               \
-                      (package), (category), (priority),                \
-                      (fmt), __VA_ARGS__), 0) : 0))
+  ((priority) < SC_LP_THRESHOLD ? (void) 0 :                            \
+   sc_logf (__FILE__, __LINE__, (package), (category), (priority),      \
+            (fmt), __VA_ARGS__))
 #define SC_LOG(g,c,p,s) SC_LOGF((g), (c), (p), "%s", (s))
 #define SC_GLOBAL_LOG(p,s) SC_LOG (sc_package_id, SC_LC_GLOBAL, (p), (s))
 #define SC_GLOBAL_LOGF(p,f,...) \
