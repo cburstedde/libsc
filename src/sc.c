@@ -453,7 +453,8 @@ void
 sc_set_log_defaults (FILE * log_stream,
                      sc_log_handler_t log_handler, int log_threshold)
 {
-  sc_default_log_handler = log_handler ?: sc_log_handler;
+  sc_default_log_handler =
+    log_handler != NULL ? log_handler : sc_log_handler;
 
   if (log_threshold == SC_LP_DEFAULT) {
     sc_default_log_threshold = SC_LP_THRESHOLD;
@@ -504,8 +505,8 @@ sc_logf (const char *filename, int lineno,
 
   if (priority >= log_threshold) {
     va_start (ap, fmt);
-    log_handler (sc_log_stream ?: stdout, filename, lineno,
-                 package, category, priority, fmt, ap);
+    log_handler (sc_log_stream != NULL ? sc_log_stream : stdout,
+                 filename, lineno, package, category, priority, fmt, ap);
     va_end (ap);
   }
 }

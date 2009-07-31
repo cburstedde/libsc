@@ -140,13 +140,18 @@ sc_allgather (void *sendbuf, int sendcount, MPI_Datatype sendtype,
   int                 mpisize;
   int                 mpirank;
 #endif
-  size_t              datasize, datasize2;
+  size_t              datasize;
+#ifdef SC_DEBUG
+  size_t              datasize2;
+#endif
 
   SC_ASSERT (sendcount >= 0 && recvcount >= 0);
 
   /* *INDENT-OFF* HORRIBLE indent bug */
   datasize = (size_t) sendcount * sc_mpi_sizeof (sendtype);
+#ifdef SC_DEBUG
   datasize2 = (size_t) recvcount * sc_mpi_sizeof (recvtype);
+#endif
   /* *INDENT-ON* */
 
   SC_ASSERT (datasize == datasize2);
