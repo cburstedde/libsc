@@ -127,21 +127,17 @@ extern int          sc_trace_prio;
 /* check macros, always enabled */
 
 #define SC_NOOP() ((void) (0))
-#define SC_ABORT(s)                                     \
-  (fprintf (stderr, "Abort: %s\n   in %s:%d\n",         \
-            (s), __FILE__, __LINE__),                   \
-   sc_abort ())
+#define SC_ABORT(s)                             \
+  sc_abort_verbose (__FILE__, __LINE__, (s))
 #define SC_CHECK_ABORT(c,s)                     \
   ((c) ? (void) 0 : SC_ABORT (s))
 /* Only include the following define in C, not C++, since C++98
    does not allow variadic macros. */
 #ifndef __cplusplus
-#define SC_ABORTF(fmt,...)                              \
-  (fprintf (stderr, "Abort: " fmt "\n   in %s:%d\n",    \
-            __VA_ARGS__, __FILE__, __LINE__),           \
-   sc_abort ())
-#define SC_CHECK_ABORTF(c,fmt,...)              \
-  ((c) ? (void) 0 : SC_ABORTF (fmt,__VA_ARGS__))
+#define SC_ABORTF(fmt,...)                                      \
+  sc_abort_verbosef (__FILE__, __LINE__, (fmt), __VA_ARGS__)
+#define SC_CHECK_ABORTF(c,fmt,...)                      \
+  ((c) ? (void) 0 : SC_ABORTF (fmt, __VA_ARGS__))
 #endif
 #define SC_ABORT_NOT_REACHED() SC_ABORT ("Unreachable code")
 #define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI error")
@@ -342,6 +338,15 @@ void                sc_set_abort_handler (sc_handler_t handler, void *data);
 /** Prints a stack trace, calls the abort handler and terminates. */
 void                sc_abort (void)
   __attribute__ ((noreturn));
+
+/** Print a message to stderr and then call sc_abort (). */
+void                sc_abort_verbose (const char *filename, int lineno,
+                                      const char *msg)
+  __attribute__ ((noreturn));
+void                sc_abort_verbosef (const char *filename, int lineno,
+                                       const char *fmt, ...)
+  __attribute__ ((noreturn))
+  __attribute__ ((format (printf, 3, 4)));
 
 /** Register a software package with SC.
  * The logging parameters are as in sc_set_log_defaults.

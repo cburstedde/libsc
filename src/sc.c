@@ -593,6 +593,26 @@ sc_abort (void)
   abort ();
 }
 
+void
+sc_abort_verbose (const char * filename, int lineno, const char * msg)
+{
+  fprintf (stderr, "Abort: %s\n   in %s:%d\n", msg, filename, lineno);
+  sc_abort ();
+}
+
+void
+sc_abort_verbosef (const char * filename, int lineno, const char * fmt, ...)
+{
+  char                buffer[BUFSIZ];
+  va_list             ap;
+
+  va_start (ap, fmt);
+  snprintf (buffer, BUFSIZ, fmt, ap);
+  va_end (ap);
+
+  sc_abort_verbose (filename, lineno, buffer);
+}
+
 int
 sc_package_register (sc_log_handler_t log_handler, int log_threshold,
                      const char *name, const char *full)
