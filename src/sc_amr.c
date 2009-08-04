@@ -51,7 +51,7 @@ sc_amr_error_stats (MPI_Comm mpicomm, long num_elements,
   si->min = emin;
   si->max = emax;
   si->variable = NULL;
-  sc_statinfo_compute (mpicomm, 1, si);
+  sc_stats_compute (mpicomm, 1, si);
 
   amr->mpicomm = mpicomm;
   amr->num_procs_long = (long) mpisize;

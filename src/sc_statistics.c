@@ -23,8 +23,8 @@
 #ifdef SC_MPI
 
 static void
-sc_statinfo_mpifunc (void *invec, void *inoutvec, int *len,
-                     MPI_Datatype * datatype)
+sc_stats_mpifunc (void *invec, void *inoutvec, int *len,
+                  MPI_Datatype * datatype)
 {
   int                 i;
   double             *in = invec;
@@ -63,7 +63,7 @@ sc_statinfo_mpifunc (void *invec, void *inoutvec, int *len,
 #endif /* SC_MPI */
 
 void
-sc_statinfo_set1 (sc_statinfo_t * stats, double value, const char *variable)
+sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
 {
   stats->dirty = true;
   stats->count = 1;
@@ -75,7 +75,7 @@ sc_statinfo_set1 (sc_statinfo_t * stats, double value, const char *variable)
 }
 
 void
-sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
+sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 {
   int                 i;
   int                 mpiret;
@@ -119,7 +119,7 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   mpiret = MPI_Type_commit (&ctype);
   SC_CHECK_MPI (mpiret);
 
-  mpiret = MPI_Op_create ((MPI_User_function *) sc_statinfo_mpifunc, 1, &op);
+  mpiret = MPI_Op_create ((MPI_User_function *) sc_stats_mpifunc, 1, &op);
   SC_CHECK_MPI (mpiret);
 
   mpiret = MPI_Allreduce (flatin, flatout, nvars, ctype, op, mpicomm);
@@ -157,7 +157,7 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 }
 
 void
-sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
+sc_stats_compute1 (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 {
   int                 i;
   double              value;
@@ -171,12 +171,12 @@ sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     stats[i].max = value;
   }
 
-  sc_statinfo_compute (mpicomm, nvars, stats);
+  sc_stats_compute (mpicomm, nvars, stats);
 }
 
 void
-sc_statinfo_print (int package_id, int log_priority,
-                   int nvars, sc_statinfo_t * stats, bool full, bool summary)
+sc_stats_print (int package_id, int log_priority,
+                int nvars, sc_statinfo_t * stats, bool full, bool summary)
 {
   int                 i, count;
   sc_statinfo_t      *si;

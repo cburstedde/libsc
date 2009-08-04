@@ -241,8 +241,8 @@ sc_ranges_statistics (int package_id, int log_priority,
     }
   }
 
-  sc_statinfo_set1 (&si, (double) empties, NULL);
-  sc_statinfo_compute (mpicomm, 1, &si);
+  sc_stats_set1 (&si, (double) empties, NULL);
+  sc_stats_compute (mpicomm, 1, &si);
   SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
            "Ranges %d nonpeer %g +- %g min/max %g %g\n",
            num_ranges, si.average, si.standev, si.min, si.max);

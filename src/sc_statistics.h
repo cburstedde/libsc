@@ -40,8 +40,8 @@ sc_statinfo_t;
 /**
  * Populate a sc_statinfo_t structure assuming count=1 and mark it dirty.
  */
-void                sc_statinfo_set1 (sc_statinfo_t * stats,
-                                      double value, const char *variable);
+void                sc_stats_set1 (sc_statinfo_t * stats,
+                                   double value, const char *variable);
 
 /**
  * Compute global average and standard deviation.
@@ -64,8 +64,8 @@ void                sc_statinfo_set1 (sc_statinfo_t * stats,
  *    average, variance, standev   Global statistical measures.
  *    variance_mean, standev_mean  Statistical measures of the mean.
  */
-void                sc_statinfo_compute (MPI_Comm mpicomm, int nvars,
-                                         sc_statinfo_t * stats);
+void                sc_stats_compute (MPI_Comm mpicomm, int nvars,
+                                      sc_statinfo_t * stats);
 
 /**
  * Version of sc_statistics_statistics that assumes count=1.
@@ -73,8 +73,8 @@ void                sc_statinfo_compute (MPI_Comm mpicomm, int nvars,
  * and the field variable must contain a valid string or NULL.
  * Only updates dirty variables. Then removes the dirty flag.
  */
-void                sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars,
-                                          sc_statinfo_t * stats);
+void                sc_stats_compute1 (MPI_Comm mpicomm, int nvars,
+                                       sc_statinfo_t * stats);
 
 /**
  * Print measured statistics.
@@ -86,9 +86,9 @@ void                sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars,
  * \param [in] full             Print full information for every variable.
  * \param [in] summary          Print summary information all on 1 line.
  */
-void                sc_statinfo_print (int package_id, int log_priority,
-                                       int nvars, sc_statinfo_t * stats,
-                                       bool full, bool summary);
+void                sc_stats_print (int package_id, int log_priority,
+                                    int nvars, sc_statinfo_t * stats,
+                                    bool full, bool summary);
 
 SC_EXTERN_C_END;
 
