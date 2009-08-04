@@ -37,22 +37,6 @@ typedef struct sc_statinfo
 }
 sc_statinfo_t;
 
-typedef struct sc_flopinfo
-{
-  double              seconds;  /* time from MPI_Wtime() */
-
-  float               irtime;   /* input real time */
-  float               iptime;   /* input process time */
-  long long           iflpops;  /* input floating point operations */
-  float               imflops;  /* input MFlop/s rate */
-
-  float               rtime;    /* real time */
-  float               ptime;    /* process time */
-  long long           flpops;   /* floating point operations */
-  float               mflops;   /* MFlop/s rate */
-}
-sc_flopinfo_t;
-
 /**
  * Populate a sc_statinfo_t structure assuming count=1 and mark it dirty.
  */
@@ -105,50 +89,6 @@ void                sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars,
 void                sc_statinfo_print (int package_id, int log_priority,
                                        int nvars, sc_statinfo_t * stats,
                                        bool full, bool summary);
-
-/**
- * Start counting times and flops.
- * The semantic for sc_flopinfo_start and sc_flopinfo_stop
- * are changed so that
- *  sc_flopinfo_start (fi);
- *  ... flop work
- *  sc_flopinfo_stop (fi);
- * will only time the work in between start and stop.
- * \param [out] irtime    Not defined
- * \param [out] iptime    Not defined
- * \param [out] iflpops   Not defined
- * \param [out] imflops   Not defined
- */
-void                sc_papi_start (float *irtime, float *iptime,
-                                   long long *iflpops, float *imflops);
-
-/**
- * Start counting times and flops.
- * \param [out] fi   Members will be initialized.
- */
-void                sc_flopinfo_start (sc_flopinfo_t * fi);
-
-/**
- * Compute the times, flops and flop rate since the corresponding _start call.
- * The semantic for sc_flopinfo_start and sc_flopinfo_stop
- * are changed so that
- *  sc_flopinfo_start (fi);
- *  ... flop work
- *  sc_flopinfo_stop (fi);
- * will only time the work in between start and stop.
- * \param [out]    rtime    Real time.
- * \param [out]    ptime    Process time.
- * \param [out]    flpops   Floating point operations.
- * \param [out]    mflops   Flop/s rate.
- */
-void                sc_papi_stop (float *rtime, float *ptime,
-                                  long long *flpops, float *mflops);
-
-/**
- * Compute the times, flops and flop rate since the corresponding _start call.
- * \param [in,out] fi   Flop info structure.
- */
-void                sc_flopinfo_stop (sc_flopinfo_t * fi);
 
 SC_EXTERN_C_END;
 

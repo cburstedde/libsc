@@ -20,10 +20,6 @@
 
 #include <sc_statistics.h>
 
-#ifdef SC_PAPI
-#include <papi.h>
-#endif
-
 #ifdef SC_MPI
 
 static void
@@ -256,57 +252,4 @@ sc_statinfo_print (int package_id, int log_priority,
       SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Summary overflow\n");
     }
   }
-}
-
-void
-sc_papi_start (float *irtime, float *iptime, long long *iflpops,
-               float *imflops)
-{
-#ifdef SC_PAPI
-  static bool         init = false;
-  int                 retval;
-
-  retval = PAPI_flops (irtime, iptime, iflpops, imflops);
-  SC_CHECK_ABORT (retval == PAPI_OK, "Papi not happy");
-  if (!init) {
-    *irtime = *iptime = *imflops = 0.;
-    *iflpops = 0;
-    init = true;
-  }
-#else
-  *irtime = *iptime = *imflops = 0.;
-  *iflpops = 0;
-#endif
-}
-
-void
-sc_flopinfo_start (sc_flopinfo_t * fi)
-{
-  fi->seconds = -MPI_Wtime ();
-
-  sc_papi_start (&fi->irtime, &fi->iptime, &fi->iflpops, &fi->imflops);
-}
-
-void
-sc_papi_stop (float *rtime, float *ptime, long long *flpops, float *mflops)
-{
-#ifdef SC_PAPI
-  int                 retval;
-  retval = PAPI_flops (rtime, ptime, flpops, mflops);
-  SC_CHECK_ABORT (retval == PAPI_OK, "Papi not happy");
-#else
-  *rtime = *ptime = *mflops = 0.;
-  *flpops = 0;
-#endif
-}
-
-void
-sc_flopinfo_stop (sc_flopinfo_t * fi)
-{
-  sc_papi_stop (&fi->rtime, &fi->ptime, &fi->flpops, &fi->mflops);
-  fi->rtime -= fi->irtime;
-  fi->ptime -= fi->iptime;
-  fi->flpops -= fi->iflpops;
-
-  fi->seconds += MPI_Wtime ();
 }
