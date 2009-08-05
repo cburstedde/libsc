@@ -95,6 +95,7 @@ time_matrix_multiply (sc_flopinfo_t * fi)
   double              alpha, beta;
   sc_dmatrix_t       *A, *B, *C;
   sc_flopinfo_t       snapshot;
+  double              a, b, c;
 
   SC_ASSERT (gnr == gnc);
 
@@ -109,7 +110,7 @@ time_matrix_multiply (sc_flopinfo_t * fi)
     matrixmultiply_nonopt (A, B, C);
 
   /* make sure the multiply gets done */
-  (void) matrixget (C, 2, 2);
+  a = matrixget (C, 0, 0);
   sc_flops_snap (fi, &snapshot);
 
   SC_PRODUCTIONF ("flops %lld %g unoptimized time %g %g for %d x %d\n",
@@ -120,7 +121,7 @@ time_matrix_multiply (sc_flopinfo_t * fi)
     matrixmultiply_sse (A, B, C);
 
   /* make sure the multiply gets done */
-  (void) matrixget (C, 2, 2);
+  b = matrixget (C, 0, 0);
   sc_flops_count (fi);
 
   SC_PRODUCTIONF ("flops %lld %g optimized time %g %g for %d x %d\n",
@@ -134,7 +135,7 @@ time_matrix_multiply (sc_flopinfo_t * fi)
     sc_dmatrix_multiply (SC_NO_TRANS, SC_NO_TRANS, alpha, A, B, beta, C);
 
   /* make sure the multiply gets done */
-  (void) matrixget (C, 2, 2);
+  c = matrixget (C, 0, 0);
   sc_flops_shot (fi, &snapshot);
 
   SC_PRODUCTIONF ("flops %lld %g blas time %g %g for %d x %d\n",
@@ -146,6 +147,8 @@ time_matrix_multiply (sc_flopinfo_t * fi)
 
   SC_PRODUCTIONF ("Total wall time %g real time %g proc time %g\n",
                   fi->cwtime, fi->crtime, fi->cptime);
+
+  printf ("Values are %g %g %g\n", a, b, c);    /* ensure values are used */
 
   sc_dmatrix_destroy (C);
   sc_dmatrix_destroy (B);
