@@ -74,6 +74,27 @@ void                sc_flops_start (sc_flopinfo_t * fi);
  */
 void                sc_flops_count (sc_flopinfo_t * fi);
 
+/**
+ * Call sc_flops_count (fi) and copies fi into snapshot.
+ *
+ * \param [in,out] fi       Members will be updated.
+ * \param [out] snapshot    On output is a copy of fi.
+ */
+void                sc_flops_snap (sc_flopinfo_t * fi,
+                                   sc_flopinfo_t * snapshot);
+
+/**
+ * Call sc_flops_count (fi) and override snapshot interval timings
+ * with the differences since the previous call to sc_flops_snap.
+ * The interval mflop rate is computed by iflpops / 1e6 / irtime.
+ * The cumulative timings in snapshot are copied form fi.
+ *
+ * \param [in,out] fi       Members will be updated.
+ * \param [in,out] snapshot Interval timings measured since sc_flops_snap.
+ */
+void                sc_flops_shot (sc_flopinfo_t * fi,
+                                   sc_flopinfo_t * snapshot);
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_FLOPS_H */

@@ -84,3 +84,28 @@ sc_flops_count (sc_flopinfo_t * fi)
 #endif
   fi->seconds = seconds;
 }
+
+void
+sc_flops_snap (sc_flopinfo_t * fi, sc_flopinfo_t * snapshot)
+{
+  sc_flops_count (fi);
+  *snapshot = *fi;
+}
+
+void
+sc_flops_shot (sc_flopinfo_t * fi, sc_flopinfo_t * snapshot)
+{
+  sc_flops_count (fi);
+
+  snapshot->iwtime = fi->cwtime - snapshot->cwtime;
+  snapshot->irtime = fi->crtime - snapshot->crtime;
+  snapshot->iptime = fi->cptime - snapshot->cptime;
+  snapshot->iflpops = fi->cflpops - snapshot->cflpops;
+  snapshot->mflops =
+    (float) ((double) snapshot->iflpops / 1.e6 / snapshot->irtime);
+
+  snapshot->cwtime = fi->cwtime;
+  snapshot->crtime = fi->crtime;
+  snapshot->cptime = fi->cptime;
+  snapshot->cflpops = fi->cflpops;
+}
