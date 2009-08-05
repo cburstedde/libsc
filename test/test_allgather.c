@@ -20,14 +20,6 @@
 
 #include <sc_allgather.h>
 
-#ifdef SC_HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-
-#ifdef SC_HAVE_TIME_H
-#include <time.h>
-#endif
-
 int
 main (int argc, char **argv)
 {
@@ -46,7 +38,6 @@ main (int argc, char **argv)
   double             *ddata2;
   double              elapsed_allgather;
   double              elapsed_replacement;
-  struct timeval      tv;
 
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -97,9 +88,7 @@ main (int argc, char **argv)
 
   SC_GLOBAL_INFO ("Testing allgather and replacement\n");
 
-  gettimeofday (&tv, NULL);
-  srand ((unsigned int) (tv.tv_usec + 1e6 * getpid ()));
-  dsend = rand () / (RAND_MAX + 1.);
+  dsend = M_PI;
 
   mpiret = MPI_Barrier (mpicomm);
   SC_CHECK_MPI (mpiret);

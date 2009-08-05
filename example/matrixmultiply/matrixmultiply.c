@@ -19,14 +19,11 @@
 */
 
 /* Note this is based on an example provided by Tim Warburton to test
- * matrix matrix multiply optimizations.
+ * matrix-matrix multiply optimizations.
  */
 
 #include <sc_dmatrix.h>
-
-#ifdef SC_HAVE_TIME_H
-#include <time.h>
-#endif
+#include <sc_flops.h>
 
 #define gnr 160
 #define gnc 160
@@ -92,13 +89,11 @@ matrixmultiply_sse (sc_dmatrix_t * A, sc_dmatrix_t * B, sc_dmatrix_t * C)
 }
 
 static void
-time_matrix_multiply ()
+time_matrix_multiply (sc_flopinfo_t * fi)
 {
   int                 Nloops, loop;
   sc_dmatrix_t       *A, *B, *C;
   double              alpha, beta;
-
-  long int            t0, t1;
 
   SC_ASSERT (gnr == gnc);
 
@@ -108,41 +103,44 @@ time_matrix_multiply ()
   B = sc_dmatrix_new (gnr, gnc);
   C = sc_dmatrix_new (gnr, gnc);
 
-  t0 = (long int) clock ();
+  sc_flops_count (fi);
   for (loop = 0; loop < Nloops; ++loop)
     matrixmultiply_nonopt (A, B, C);
-  t1 = (long int) clock ();
 
   /* make sure the multiply gets done */
   (void) matrixget (C, 2, 2);
+  sc_flops_count (fi);
 
-  SC_PRODUCTIONF ("unoptimized time taken = %lg for %d x %d\n",
-                  (double) (t1 - t0) / (Nloops * CLOCKS_PER_SEC), gnr, gnc);
+  SC_PRODUCTIONF ("flops %lld %g unoptimized time = %g for %d x %d\n",
+                  fi->iflpops, fi->mflops, fi->irtime / (double) Nloops, gnr,
+                  gnc);
 
-  t0 = (long int) clock ();
+  sc_flops_count (fi);
   for (loop = 0; loop < Nloops; ++loop)
     matrixmultiply_sse (A, B, C);
-  t1 = (long int) clock ();
 
   /* make sure the multiply gets done */
   (void) matrixget (C, 2, 2);
+  sc_flops_count (fi);
 
-  SC_PRODUCTIONF ("optimized time taken = %lg for %d x %d\n",
-                  (double) (t1 - t0) / (Nloops * CLOCKS_PER_SEC), gnr, gnc);
+  SC_PRODUCTIONF ("flops %lld %g optimized time = %g for %d x %d\n",
+                  fi->iflpops, fi->mflops, fi->irtime / (double) Nloops, gnr,
+                  gnc);
 
   alpha = 1.0;
   beta = 0.0;
 
-  t0 = (long int) clock ();
+  sc_flops_count (fi);
   for (loop = 0; loop < Nloops; ++loop)
     sc_dmatrix_multiply (SC_NO_TRANS, SC_NO_TRANS, alpha, A, B, beta, C);
-  t1 = (long int) clock ();
 
   /* make sure the multiply gets done */
   (void) matrixget (C, 2, 2);
+  sc_flops_count (fi);
 
-  SC_PRODUCTIONF ("blas time taken = %lg for %d x %d\n",
-                  (double) (t1 - t0) / (Nloops * CLOCKS_PER_SEC), gnr, gnc);
+  SC_PRODUCTIONF ("flops %lld %g blas time = %g for %d x %d\n",
+                  fi->iflpops, fi->mflops, fi->irtime / (double) Nloops, gnr,
+                  gnc);
 
   sc_dmatrix_destroy (C);
   sc_dmatrix_destroy (B);
@@ -152,11 +150,21 @@ time_matrix_multiply ()
 int
 main (int argc, char **argv)
 {
+  int                 mpiret;
+  sc_flopinfo_t       fi;
+
+  mpiret = MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+
   sc_init (MPI_COMM_NULL, true, true, NULL, SC_LP_DEFAULT);
 
-  time_matrix_multiply ();
+  sc_flops_start (&fi);
+  time_matrix_multiply (&fi);
 
   sc_finalize ();
+
+  mpiret = MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
 
   return 0;
 }
