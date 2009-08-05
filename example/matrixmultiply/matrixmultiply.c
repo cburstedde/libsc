@@ -142,6 +142,9 @@ time_matrix_multiply (sc_flopinfo_t * fi)
                   fi->iflpops, fi->mflops, fi->irtime / (double) Nloops, gnr,
                   gnc);
 
+  SC_PRODUCTIONF ("Total wall time %g real time %g\n",
+                  fi->cwtime, (double) fi->crtime);
+
   sc_dmatrix_destroy (C);
   sc_dmatrix_destroy (B);
   sc_dmatrix_destroy (A);

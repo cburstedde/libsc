@@ -27,20 +27,22 @@ SC_EXTERN_C_BEGIN;
 
 typedef struct sc_flopinfo
 {
-  double              seconds;  /* time value from MPI_Wtime */
+  double              seconds;  /* current time from MPI_Wtime */
 
   /* these variables measure onward from from sc_flops_start */
+  double              cwtime;   /* cumulative wall time */
   float               crtime;   /* cumulative real time */
   float               cptime;   /* cumulative process time */
   long long           cflpops;  /* cumulative floating point operations */
 
   /* measure since sc_flops_start or the previous sc_flops_count */
+  double              iwtime;   /* interval wall time */
   float               irtime;   /* interval real time */
   float               iptime;   /* interval process time */
   long long           iflpops;  /* interval floating point operations */
   float               mflops;   /* MFlop/s rate in this interval */
 
-  /* without SC_PAPI only seconds, crtime and irtime are meaningful */
+  /* without SC_PAPI only seconds, ?wtime and ?rtime are meaningful */
 }
 sc_flopinfo_t;
 

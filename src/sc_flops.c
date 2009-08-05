@@ -47,9 +47,11 @@ sc_flops_start (sc_flopinfo_t * fi)
   fi->seconds = MPI_Wtime ();
   sc_flops_papi (&rtime, &ptime, &flpops, &mflops);     /* ignore results */
 
+  fi->cwtime = 0.;
   fi->crtime = fi->cptime = 0.;
   fi->cflpops = 0;
 
+  fi->iwtime = 0.;
   fi->irtime = fi->iptime = fi->mflops = 0.;
   fi->iflpops = 0;
 }
@@ -64,6 +66,9 @@ sc_flops_count (sc_flopinfo_t * fi)
   seconds = MPI_Wtime ();
   sc_flops_papi (&rtime, &ptime, &flpops, &fi->mflops);
 
+  fi->iwtime = seconds - fi->seconds;
+  fi->cwtime += fi->iwtime;
+
   fi->iptime = ptime - fi->cptime;
   fi->cptime = ptime;
 
@@ -74,8 +79,8 @@ sc_flops_count (sc_flopinfo_t * fi)
   fi->irtime = rtime - fi->crtime;
   fi->crtime = rtime;
 #else
-  fi->irtime = seconds - fi->seconds;
-  fi->crtime += fi->irtime;
+  fi->irtime = (float) fi->iwtime;
+  fi->crtime = (float) fi->cwtime;
 #endif
   fi->seconds = seconds;
 }
