@@ -92,8 +92,9 @@ static void
 time_matrix_multiply (sc_flopinfo_t * fi)
 {
   int                 Nloops, loop;
-  sc_dmatrix_t       *A, *B, *C;
   double              alpha, beta;
+  sc_dmatrix_t       *A, *B, *C;
+  sc_flopinfo_t       snapshot;
 
   SC_ASSERT (gnr == gnc);
 
@@ -109,11 +110,10 @@ time_matrix_multiply (sc_flopinfo_t * fi)
 
   /* make sure the multiply gets done */
   (void) matrixget (C, 2, 2);
-  sc_flops_count (fi);
+  sc_flops_snap (fi, &snapshot);
 
-  SC_PRODUCTIONF ("flops %lld %g unoptimized time = %g for %d x %d\n",
-                  fi->iflpops, fi->mflops, fi->irtime / (double) Nloops, gnr,
-                  gnc);
+  SC_PRODUCTIONF ("flops %lld %g unoptimized time %g %g for %d x %d\n",
+                  fi->iflpops, fi->mflops, fi->irtime, fi->iptime, gnr, gnc);
 
   sc_flops_count (fi);
   for (loop = 0; loop < Nloops; ++loop)
@@ -123,9 +123,8 @@ time_matrix_multiply (sc_flopinfo_t * fi)
   (void) matrixget (C, 2, 2);
   sc_flops_count (fi);
 
-  SC_PRODUCTIONF ("flops %lld %g optimized time = %g for %d x %d\n",
-                  fi->iflpops, fi->mflops, fi->irtime / (double) Nloops, gnr,
-                  gnc);
+  SC_PRODUCTIONF ("flops %lld %g optimized time %g %g for %d x %d\n",
+                  fi->iflpops, fi->mflops, fi->irtime, fi->iptime, gnr, gnc);
 
   alpha = 1.0;
   beta = 0.0;
@@ -136,14 +135,17 @@ time_matrix_multiply (sc_flopinfo_t * fi)
 
   /* make sure the multiply gets done */
   (void) matrixget (C, 2, 2);
-  sc_flops_count (fi);
+  sc_flops_shot (fi, &snapshot);
 
-  SC_PRODUCTIONF ("flops %lld %g blas time = %g for %d x %d\n",
-                  fi->iflpops, fi->mflops, fi->irtime / (double) Nloops, gnr,
-                  gnc);
+  SC_PRODUCTIONF ("flops %lld %g blas time %g %g for %d x %d\n",
+                  fi->iflpops, fi->mflops, fi->irtime, fi->iptime, gnr, gnc);
 
-  SC_PRODUCTIONF ("Total wall time %g real time %g\n",
-                  fi->cwtime, (double) fi->crtime);
+  SC_INFOF ("Optimized + blas flops %lld %g time %g %g %g\n",
+            snapshot.iflpops, snapshot.mflops,
+            snapshot.iwtime, snapshot.irtime, snapshot.iptime);
+
+  SC_PRODUCTIONF ("Total wall time %g real time %g proc time %g\n",
+                  fi->cwtime, fi->crtime, fi->cptime);
 
   sc_dmatrix_destroy (C);
   sc_dmatrix_destroy (B);
