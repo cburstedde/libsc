@@ -95,6 +95,12 @@ void                sc_flops_snap (sc_flopinfo_t * fi,
 void                sc_flops_shot (sc_flopinfo_t * fi,
                                    sc_flopinfo_t * snapshot);
 
+/**
+ * Call sc_flops_count (fi) and work on all arguments in the list
+ * of type sc_flopinfo_t * as in sc_flops_shot.  Last argument must be NULL.
+ */
+void                sc_flops_shotv (sc_flopinfo_t * fi, ...);
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_FLOPS_H */

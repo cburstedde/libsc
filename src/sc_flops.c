@@ -95,18 +95,31 @@ sc_flops_snap (sc_flopinfo_t * fi, sc_flopinfo_t * snapshot)
 void
 sc_flops_shot (sc_flopinfo_t * fi, sc_flopinfo_t * snapshot)
 {
+  sc_flops_shotv (fi, snapshot, NULL);
+}
+
+void
+sc_flops_shotv (sc_flopinfo_t * fi, ...)
+{
+  sc_flopinfo_t      *snapshot;
+  va_list             ap;
+
   sc_flops_count (fi);
 
-  snapshot->iwtime = fi->cwtime - snapshot->cwtime;
-  snapshot->irtime = fi->crtime - snapshot->crtime;
-  snapshot->iptime = fi->cptime - snapshot->cptime;
-  snapshot->iflpops = fi->cflpops - snapshot->cflpops;
-  snapshot->mflops =
-    (float) ((double) snapshot->iflpops / 1.e6 / snapshot->irtime);
+  va_start (ap, fi);
+  for (; (snapshot = va_arg (ap, sc_flopinfo_t *)) != NULL;) {
+    snapshot->iwtime = fi->cwtime - snapshot->cwtime;
+    snapshot->irtime = fi->crtime - snapshot->crtime;
+    snapshot->iptime = fi->cptime - snapshot->cptime;
+    snapshot->iflpops = fi->cflpops - snapshot->cflpops;
+    snapshot->mflops =
+      (float) ((double) snapshot->iflpops / 1.e6 / snapshot->irtime);
 
-  snapshot->seconds = fi->seconds;
-  snapshot->cwtime = fi->cwtime;
-  snapshot->crtime = fi->crtime;
-  snapshot->cptime = fi->cptime;
-  snapshot->cflpops = fi->cflpops;
+    snapshot->seconds = fi->seconds;
+    snapshot->cwtime = fi->cwtime;
+    snapshot->crtime = fi->crtime;
+    snapshot->cptime = fi->cptime;
+    snapshot->cflpops = fi->cflpops;
+  }
+  va_end (ap);
 }
