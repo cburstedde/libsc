@@ -104,6 +104,7 @@ sc_flops_shot (sc_flopinfo_t * fi, sc_flopinfo_t * snapshot)
   snapshot->mflops =
     (float) ((double) snapshot->iflpops / 1.e6 / snapshot->irtime);
 
+  snapshot->seconds = fi->seconds;
   snapshot->cwtime = fi->cwtime;
   snapshot->crtime = fi->crtime;
   snapshot->cptime = fi->cptime;
