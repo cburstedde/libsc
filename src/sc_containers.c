@@ -373,6 +373,7 @@ sc_array_split (sc_array_t * array, sc_array_t * offsets, size_t num_types,
   for (;;) {
     guess = low + (high - low) / 2;     /* By (7) low <= guess < high. */
     type = type_fn (array, guess, data);
+    SC_ASSERT (type < num_types);
     /** If type < step, then we can set low = guess + 1 and still satisfy
      * invariant (4).  Also, because guess < high, we are assured low <= high.
      */
