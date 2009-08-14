@@ -319,6 +319,103 @@ sc_array_bsearch (sc_array_t * array, const void *key,
   return is;
 }
 
+void
+sc_array_split (sc_array_t * array, sc_array_t * offsets, size_t num_types,
+                sc_array_type_t type_fn, void *data)
+{
+  const size_t        count = array->elem_count;
+  size_t              zi, *zp;
+  size_t              guess, low, high, type, step;
+
+  if (num_types == 0) {
+    return;
+  }
+
+  SC_ASSERT (offsets->elem_size == sizeof (size_t));
+
+  sc_array_resize (offsets, num_types + 1);
+
+  /** The point of this algorithm is to put offsets[i] into its final position
+   * for i = 0,...,num_types, where the final position of offsets[i] is the
+   * unique index k such that type_fn (array, j, data) < i for all j < k
+   * and type_fn (array, j, data) >= i for all j >= k.
+   *
+   * The invariants of the loop are:
+   *  1) if i < step, then offsets[i] <= low, and offsets[i] is final.
+   *  2) if i >= step, then low is less than or equal to the final value of
+   *     offsets[i].
+   *  3) for 0 <= i <= num_types, offsets[i] is greater than or equal to its
+   *     final value.
+   *  4) for every index k in the array with k < low,
+   *     type_fn (array, k, data) < step,
+   *  5) for 0 <= i < num_types,
+   *     for every index k in the array with k >= offsets[i],
+   *     type_fn (array, k, data) >= i.
+   *  6) if i < j, offsets[i] <= offsets[j].
+   *     
+   * Initializing offsets[0] = 0, offsets[i] = count for i > 0,
+   * low = 0, and step = 1, the invariants are trivially satisfied.
+   */
+  zp = sc_array_index (offsets, 0);
+  *zp = 0;
+  for (zi = 1; zi <= num_types; zi++) {
+    zp = sc_array_index (offsets, zi);
+    *zp = count;
+  }
+
+  if (count == 0 || num_types == 1) {
+    return;
+  }
+
+  /** Because count > 0 we can add another invariant:
+   *   7) if step < num_types, low < high = offsets[step].
+   */
+
+  low = 0;
+  high = count;                 /* high = offsets[step] */
+  step = 1;
+  for (;;) {
+    guess = low + (high - low) / 2;     /* By (7) low <= guess < high. */
+    type = type_fn (array, guess, data);
+    /** If type < step, then we can set low = guess + 1 and still satisfy
+     * invariant (4).  Also, because guess < high, we are assured low <= high.
+     */
+    if (type < step) {
+      low = guess + 1;
+    }
+    /** If type >= step, then setting offsets[i] = guess for i = step,..., type
+     * still satisfies invariant (5).  Because guess >= low, we are assured
+     * low <= high, and we maintain invariant (6).
+     */
+    else {
+      for (zi = step; zi <= type; zi++) {
+        zp = sc_array_index (offsets, zi);
+        *zp = guess;
+      }
+      high = guess;             /* high = offsets[step] */
+    }
+    /** If low = (high = offsets[step]), then by invariants (2) and (3)
+     * offsets[step] is in its final position, so we can increment step and
+     * still satisfy invariant (1).
+     */
+    while (low == high) {
+      /* By invariant (6), high cannot decrease here */
+      high = *((size_t *) sc_array_index (offsets, ++step));
+      /** If step = num_types, then by invariant (1) we have found the final
+       * positions for offsets[i] for i < num_types, and offsets[num_types] =
+       * count in all situations, so we are done.
+       */
+      if (step == num_types) {
+        return;
+      }
+    }
+    /** To reach this point it must be true that low < high, so we preserve
+     * invariant (7).
+     */
+  }
+
+}
+
 unsigned
 sc_array_checksum (sc_array_t * array)
 {
