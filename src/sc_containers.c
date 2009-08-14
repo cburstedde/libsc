@@ -327,10 +327,6 @@ sc_array_split (sc_array_t * array, sc_array_t * offsets, size_t num_types,
   size_t              zi, *zp;
   size_t              guess, low, high, type, step;
 
-  if (num_types == 0) {
-    return;
-  }
-
   SC_ASSERT (offsets->elem_size == sizeof (size_t));
 
   sc_array_resize (offsets, num_types + 1);
@@ -352,7 +348,7 @@ sc_array_split (sc_array_t * array, sc_array_t * offsets, size_t num_types,
    *     for every index k in the array with k >= offsets[i],
    *     type_fn (array, k, data) >= i.
    *  6) if i < j, offsets[i] <= offsets[j].
-   *     
+   *
    * Initializing offsets[0] = 0, offsets[i] = count for i > 0,
    * low = 0, and step = 1, the invariants are trivially satisfied.
    */
@@ -363,7 +359,7 @@ sc_array_split (sc_array_t * array, sc_array_t * offsets, size_t num_types,
     *zp = count;
   }
 
-  if (count == 0 || num_types == 1) {
+  if (count == 0 || num_types <= 1) {
     return;
   }
 
@@ -400,7 +396,8 @@ sc_array_split (sc_array_t * array, sc_array_t * offsets, size_t num_types,
      */
     while (low == high) {
       /* By invariant (6), high cannot decrease here */
-      high = *((size_t *) sc_array_index (offsets, ++step));
+      ++step;                   /* sc_array_index might be a macro */
+      high = *((size_t *) sc_array_index (offsets, step));
       /** If step = num_types, then by invariant (1) we have found the final
        * positions for offsets[i] for i < num_types, and offsets[num_types] =
        * count in all situations, so we are done.
@@ -413,7 +410,6 @@ sc_array_split (sc_array_t * array, sc_array_t * offsets, size_t num_types,
      * invariant (7).
      */
   }
-
 }
 
 unsigned
