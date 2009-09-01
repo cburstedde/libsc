@@ -462,7 +462,7 @@ sc_object_get_type (sc_object_t * o)
     return get_type_call (oinmi, o);
   }
 
-  SC_CHECK_NOT_REACHED ();
+  SC_ABORT_NOT_REACHED ();
 }
 
 void
