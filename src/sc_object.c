@@ -106,6 +106,27 @@ write_fn (sc_object_t * o, FILE * out)
   fprintf (out, "sc_object_t write with %d refs\n", o->num_refs);
 }
 
+void
+sc_object_recursion_init (sc_object_recursion_context_t * rc,
+                          sc_object_method_t ifm, sc_array_t * found)
+{
+  rc->visited = NULL;
+  rc->lookup = ifm;
+
+  if (found != NULL) {
+    sc_array_init (found, sizeof (sc_object_recursion_match_t));
+    rc->found = found;
+  }
+  else {
+    rc->found = NULL;
+  }
+
+  rc->accept_self = false;
+  rc->accept_delegate = false;
+  rc->callfn = NULL;
+  rc->user_data = NULL;
+}
+
 bool
 sc_object_recursion (sc_object_t * o, sc_object_recursion_context_t * rc)
 {
@@ -337,11 +358,7 @@ sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm)
 
   dld->oinmi = NULL;
 
-  rc->visited = NULL;
-  rc->lookup = ifm;
-  rc->found = NULL;
-  rc->accept_self = false;
-  rc->accept_delegate = false;
+  sc_object_recursion_init (rc, ifm, NULL);
   rc->callfn = delegate_lookup_fn;
   rc->user_data = dld;
 
@@ -372,11 +389,8 @@ sc_object_is_type (sc_object_t * o, const char *type)
 
   itd->type = type;
 
-  rc->visited = NULL;
-  rc->lookup = (sc_object_method_t) sc_object_get_type;
-  rc->found = NULL;
-  rc->accept_self = false;
-  rc->accept_delegate = false;
+  sc_object_recursion_init (rc, (sc_object_method_t) sc_object_get_type,
+                            NULL);
   rc->callfn = is_type_fn;
   rc->user_data = itd;
 

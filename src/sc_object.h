@@ -49,6 +49,16 @@ extern const char  *sc_object_type;
 void                sc_object_ref (sc_object_t * o);
 void                sc_object_unref (sc_object_t * o);
 
+/** Convenience function to create an empty sc_object_recursion_context_t.
+ * \param [in] rc           The recursion context to be initialized.
+ * \param [in] ifm          Interface method used as key for lookup.
+ * \param [in,out] found    If not NULL, call sc_array_init on \a found
+ *                          and set rc->found = found.
+ */
+void                sc_object_recursion_init (sc_object_recursion_context_t
+                                              * rc, sc_object_method_t ifm,
+                                              sc_array_t * found);
+
 /** Look up a method recursively for all delegates.
  * Search is in preorder.  Ignore objects that have already been searched.
  * Optionally all matches are pushed onto an array.
@@ -69,7 +79,7 @@ void                sc_object_unref (sc_object_t * o);
  *                      true if any match was found.  False otherwise.
  */
 bool                sc_object_recursion (sc_object_t * o,
-                                          sc_object_recursion_context_t * rc);
+                                         sc_object_recursion_context_t * rc);
 
 /** Register the implementation of an interface method for an object.
  * If the method is already registered it is replaced.
