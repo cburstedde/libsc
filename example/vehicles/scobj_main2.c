@@ -44,8 +44,8 @@ main (int argc, char **argv)
 
   SC_INFO ("Construct boats\n");
   boat_klass = boat_klass_new (object_klass);
-  o[4] = v[2] = b[0] = sc_object_new_from_klass (boat_klass, NULL);
-  o[5] = v[3] = b[1] = sc_object_new_from_klass (boat_klass, NULL);
+  o[4] = v[2] = b[0] = boat_new (boat_klass, "Julia");
+  o[5] = v[3] = b[1] = boat_new (boat_klass, "Hannah");
 
   SC_INFO ("Write klasses\n");
   sc_object_write (object_klass, stdout);

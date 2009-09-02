@@ -20,6 +20,11 @@ initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
   SC_LDEBUG ("boat initialize\n");
 
   boat->speed = 0;
+  boat->name = "<undefined>";
+
+  if (args != NULL) {
+    boat->name = sc_object_arguments_string (args, "name");
+  }
 }
 
 static void
@@ -27,7 +32,7 @@ write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 {
   Boat               *boat = boat_get_data (o);
 
-  fprintf (out, "Boat speeds at %f km/h\n", boat->speed);
+  fprintf (out, "Boat \"%s\" speeds at %f km/h\n", boat->name, boat->speed);
 }
 
 static void
@@ -68,6 +73,12 @@ boat_klass_new (sc_object_t * d)
   sc_object_initialize (o, NULL);
 
   return o;
+}
+
+sc_object_t        *
+boat_new (sc_object_t * d, const char *name)
+{
+  return sc_object_new_from_klass_values (d, "s:name", name, NULL);
 }
 
 Boat               *
