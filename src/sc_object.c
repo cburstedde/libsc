@@ -93,7 +93,7 @@ finalize_fn (sc_object_t * o)
 }
 
 static void
-write_fn (sc_object_t * o, FILE * out)
+write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 {
   SC_ASSERT (sc_object_is_type (o, sc_object_type));
 
@@ -350,7 +350,8 @@ delegate_lookup_fn (sc_object_t * o,
 }
 
 sc_object_method_t
-sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm)
+sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm,
+                           bool skip_top, sc_object_t ** m)
 {
   sc_object_recursion_context_t src, *rc = &src;
   sc_object_delegate_lookup_data_t sdld, *dld = &sdld;
@@ -358,10 +359,15 @@ sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm)
   dld->oinmi = NULL;
 
   sc_object_recursion_init (rc, ifm, NULL);
+  rc->skip_top = skip_top;
   rc->callfn = delegate_lookup_fn;
   rc->user_data = dld;
 
-  (void) sc_object_recursion (o, rc);
+  if (sc_object_recursion (o, rc)) {
+    SC_ASSERT (rc->last_match != NULL);
+    if (m != NULL)
+      *m = rc->last_match;
+  }
 
   return dld->oinmi;
 }
@@ -543,12 +549,14 @@ void
 sc_object_write (sc_object_t * o, FILE * out)
 {
   sc_object_method_t  oinmi;
+  sc_object_t        *m;
 
   SC_ASSERT (sc_object_is_type (o, sc_object_type));
 
-  oinmi = sc_object_delegate_lookup (o, (sc_object_method_t) sc_object_write);
+  oinmi = sc_object_delegate_lookup (o, (sc_object_method_t) sc_object_write,
+                                     false, &m);
 
   if (oinmi != NULL) {
-    ((void (*)(sc_object_t *, FILE *)) oinmi) (o, out);
+    ((void (*)(sc_object_t *, sc_object_t *, FILE *)) oinmi) (o, m, out);
   }
 }

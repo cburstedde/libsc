@@ -114,8 +114,16 @@ void                sc_object_delegate_push (sc_object_t * o,
                                              sc_object_t * d);
 void                sc_object_delegate_pop (sc_object_t * o);
 void                sc_object_delegate_pop_all (sc_object_t * o);
+
+/** Look up an object method recursively.
+ * \param [in] skip_top If true then the object o is not tested, only
+ *                      its delegates recursively.
+ * \param [out] f       If not NULL will be set to the matching object.
+ */
 sc_object_method_t  sc_object_delegate_lookup (sc_object_t * o,
-                                               sc_object_method_t ifm);
+                                               sc_object_method_t ifm,
+                                               bool skip_top,
+                                               sc_object_t ** m);
 
 /* construction */
 sc_object_t        *sc_object_alloc (void);
@@ -133,6 +141,7 @@ bool                sc_object_is_type (sc_object_t * o, const char *type);
 void                sc_object_initialize (sc_object_t * o);
 /* All delegate's methods are called in pre-order */
 void                sc_object_finalize (sc_object_t * o);
+/* Standard virtual methods get passed the match object, see sc_object.c */
 void                sc_object_write (sc_object_t * o, FILE * out);
 
 #endif /* !SC_OBJECT_H */

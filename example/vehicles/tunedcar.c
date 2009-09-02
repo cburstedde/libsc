@@ -26,7 +26,7 @@ initialize_fn (sc_object_t * o)
 }
 
 static void
-write_fn (sc_object_t * o, FILE * out)
+write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 {
   Car                *car = car_get_data (o);
   TunedCar           *tuned_car = tuned_car_get_data (o);
@@ -36,7 +36,7 @@ write_fn (sc_object_t * o, FILE * out)
 }
 
 static int
-tickets_fn (sc_object_t * o)
+tickets_fn (sc_object_t * o, sc_object_t * m)
 {
   TunedCar           *tuned_car = tuned_car_get_data (o);
 
@@ -44,7 +44,7 @@ tickets_fn (sc_object_t * o)
 }
 
 static void
-accelerate_fn (sc_object_t * o)
+accelerate_fn (sc_object_t * o, sc_object_t * m)
 {
   Car                *car = car_get_data (o);
 
@@ -100,12 +100,14 @@ int
 tuned_car_tickets (sc_object_t * o)
 {
   sc_object_method_t  oinmi;
+  sc_object_t        *m;
 
   SC_ASSERT (sc_object_is_type (o, tuned_car_type));
 
   oinmi =
-    sc_object_delegate_lookup (o, (sc_object_method_t) tuned_car_tickets);
+    sc_object_delegate_lookup (o, (sc_object_method_t) tuned_car_tickets,
+                               false, &m);
   SC_ASSERT (oinmi != NULL);
 
-  return ((int (*)(sc_object_t *)) oinmi) (o);
+  return ((int (*)(sc_object_t *, sc_object_t *)) oinmi) (o, m);
 }

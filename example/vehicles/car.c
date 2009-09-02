@@ -24,7 +24,7 @@ initialize_fn (sc_object_t * o)
 }
 
 static void
-write_fn (sc_object_t * o, FILE * out)
+write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 {
   Car                *car = car_get_data (o);
 
@@ -33,7 +33,7 @@ write_fn (sc_object_t * o, FILE * out)
 }
 
 static float
-wheelsize_fn (sc_object_t * o)
+wheelsize_fn (sc_object_t * o, sc_object_t * m)
 {
   Car                *car = car_get_data (o);
 
@@ -43,7 +43,7 @@ wheelsize_fn (sc_object_t * o)
 }
 
 static void
-accelerate_fn (sc_object_t * o)
+accelerate_fn (sc_object_t * o, sc_object_t * m)
 {
   Car                *car = car_get_data (o);
 
@@ -98,11 +98,13 @@ float
 car_wheelsize (sc_object_t * o)
 {
   sc_object_method_t  oinmi;
+  sc_object_t        *m;
 
   SC_ASSERT (sc_object_is_type (o, car_type));
 
-  oinmi = sc_object_delegate_lookup (o, (sc_object_method_t) car_wheelsize);
+  oinmi = sc_object_delegate_lookup (o, (sc_object_method_t) car_wheelsize,
+                                     false, &m);
   SC_ASSERT (oinmi != NULL);
 
-  return ((float (*)(sc_object_t *)) oinmi) (o);
+  return ((float (*)(sc_object_t *, sc_object_t *)) oinmi) (o, m);
 }
