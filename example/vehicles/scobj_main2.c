@@ -1,12 +1,14 @@
 
 #include <car.h>
+#include <boat.h>
 #include <tunedcar.h>
 #include <vehicle.h>
 
-#define NUM_OBJECTS     4
+#define NUM_OBJECTS     6
 #define NUM_CARS        2
 #define NUM_TUNED_CARS  1
-#define NUM_VEHICLES    2
+#define NUM_BOATS       2
+#define NUM_VEHICLES    4
 
 int
 main (int argc, char **argv)
@@ -17,9 +19,11 @@ main (int argc, char **argv)
   sc_object_t        *object_klass;
   sc_object_t        *car_klass;
   sc_object_t        *tuned_car_klass;
+  sc_object_t        *boat_klass;
   sc_object_t        *o[NUM_OBJECTS];
   sc_object_t        *c[NUM_CARS];
   sc_object_t        *t[NUM_TUNED_CARS];
+  sc_object_t        *b[NUM_BOATS];
   sc_object_t        *v[NUM_VEHICLES];
   CarKlass           *car_klass_data;
 
@@ -38,10 +42,16 @@ main (int argc, char **argv)
   tuned_car_klass = tuned_car_klass_new (car_klass);
   o[3] = v[1] = c[1] = t[0] = tuned_car_new (tuned_car_klass, 2);
 
+  SC_INFO ("Construct boats\n");
+  boat_klass = boat_klass_new (object_klass);
+  o[4] = v[2] = b[0] = sc_object_new_from_klass (boat_klass, NULL);
+  o[5] = v[3] = b[1] = sc_object_new_from_klass (boat_klass, NULL);
+
   SC_INFO ("Write klasses\n");
   sc_object_write (object_klass, stdout);
   sc_object_write (car_klass, stdout);
   sc_object_write (tuned_car_klass, stdout);
+  sc_object_write (boat_klass, stdout);
 
   SC_INFO ("Get wheel sizes\n");
   for (i = 0; i < NUM_CARS; ++i) {
@@ -77,6 +87,7 @@ main (int argc, char **argv)
   sc_object_unref (object_klass);
   sc_object_unref (tuned_car_klass);
   sc_object_unref (car_klass);
+  sc_object_unref (boat_klass);
 
   sc_finalize ();
 

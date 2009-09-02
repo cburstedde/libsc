@@ -2,47 +2,79 @@
 #include <boat.h>
 #include <vehicle.h>
 
-static void
-boat_print (Boat * self, FILE * out)
+const char         *boat_type = "boat";
+
+static              bool
+is_type_fn (sc_object_t * o, const char *type)
 {
-  fprintf (out, "Boat speeds at %f km/h\n", self->speed);
+  SC_LDEBUG ("boat is_type\n");
+
+  return !strcmp (type, boat_type) || !strcmp (type, vehicle_type);
 }
 
 static void
-boat_accelerate (Boat * self)
+initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
 {
-  self->speed += 10;
+  Boat               *boat = boat_get_data (o);
+
+  SC_LDEBUG ("boat initialize\n");
+
+  boat->speed = 0;
 }
 
 static void
-boat_destroy (Boat * self)
+write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 {
-  /* we should know what methods self has registered, improve this */
-  sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) sc_object_destroy_V,
-                               self);
-  sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) sc_object_print_V, self);
-  sc_object_method_unregister (self->object.s,
-                               (sc_void_function_t) vehicle_accelerate_I,
-                               self);
+  Boat               *boat = boat_get_data (o);
 
-  SC_FREE (self);
+  fprintf (out, "Boat speeds at %f km/h\n", boat->speed);
+}
+
+static void
+accelerate_fn (sc_object_t * o, sc_object_t * m)
+{
+  Boat               *boat = boat_get_data (o);
+
+  SC_LDEBUG ("boat accelerate\n");
+
+  boat->speed += 6;
+}
+
+sc_object_t        *
+boat_klass_new (sc_object_t * d)
+{
+  bool                a1, a2, a3, a4;
+  sc_object_t        *o;
+
+  SC_ASSERT (d != NULL);
+  SC_ASSERT (sc_object_is_type (d, sc_object_type));
+
+  o = sc_object_alloc ();
+  sc_object_delegate_push (o, d);
+
+  a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_is_type,
+                                  (sc_object_method_t) is_type_fn);
+  a2 =
+    sc_object_method_register (o, (sc_object_method_t) sc_object_initialize,
+                               (sc_object_method_t) initialize_fn);
+  a3 =
+    sc_object_method_register (o, (sc_object_method_t) sc_object_write,
+                               (sc_object_method_t) write_fn);
+  a4 =
+    sc_object_method_register (o, (sc_object_method_t) vehicle_accelerate,
+                               (sc_object_method_t) accelerate_fn);
+  SC_ASSERT (a1 && a2 && a3 && a4);
+
+  sc_object_initialize (o, NULL);
+
+  return o;
 }
 
 Boat               *
-boat_create (sc_object_system_t * s)
+boat_get_data (sc_object_t * o)
 {
-  Boat               *self = SC_ALLOC (Boat, 1);
+  SC_ASSERT (sc_object_is_type (o, boat_type));
 
-  self->object.s = s;
-  sc_object_method_register (s, (sc_void_function_t) sc_object_print_V,
-                             self, (sc_void_function_t) boat_print);
-  sc_object_method_register (s, (sc_void_function_t) sc_object_destroy_V,
-                             self, (sc_void_function_t) boat_destroy);
-  sc_object_method_register (s, (sc_void_function_t) vehicle_accelerate_I,
-                             self, (sc_void_function_t) boat_accelerate);
-
-  self->speed = 0.0f;
-  return self;
+  return (Boat *) sc_object_get_data (o, (sc_object_method_t) boat_get_data,
+                                      sizeof (Boat));
 }

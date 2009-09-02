@@ -12,11 +12,16 @@
 
 typedef struct Boat
 {
-  sc_object_t         object;
   float               speed;
 }
 Boat;
 
-Boat               *boat_create (sc_object_system_t * s);
+extern const char  *boat_type;
+
+/* construction */
+sc_object_t        *boat_klass_new (sc_object_t * d);
+
+/* data */
+Boat               *boat_get_data (sc_object_t * o);
 
 #endif /* !BOAT_H */
