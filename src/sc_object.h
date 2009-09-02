@@ -127,7 +127,9 @@ void               *sc_object_get_data (sc_object_t * o,
 
 /* virtual method prototypes */
 const char         *sc_object_get_type (sc_object_t * o);
+/* All delegate's methods are called in post-order */
 void                sc_object_initialize (sc_object_t * o);
+/* All delegate's methods are called in pre-order */
 void                sc_object_finalize (sc_object_t * o);
 void                sc_object_write (sc_object_t * o, FILE * out);
 

@@ -503,27 +503,53 @@ sc_object_get_type (sc_object_t * o)
 void
 sc_object_initialize (sc_object_t * o)
 {
+  size_t              zz;
+  sc_object_recursion_match_t *match;
+  sc_object_recursion_context_t src, *rc = &src;
   sc_object_method_t  oinmi;
+  sc_array_t          sfound, *found = &sfound;
 
-  oinmi =
-    sc_object_delegate_lookup (o, (sc_object_method_t) sc_object_initialize);
+  sc_object_recursion_init (rc, (sc_object_method_t) sc_object_initialize,
+                            found);
 
-  if (oinmi != NULL) {
-    ((void (*)(sc_object_t *)) oinmi) (o);
+  /* post-order */
+  if (sc_object_recursion (o, rc)) {
+    for (zz = found->elem_count; zz > 0; --zz) {
+      match = sc_array_index (found, zz - 1);
+      oinmi = match->oinmi;
+      SC_ASSERT (oinmi != NULL);
+
+      ((void (*)(sc_object_t *)) oinmi) (o);
+    }
   }
+
+  sc_array_reset (found);
 }
 
 void
 sc_object_finalize (sc_object_t * o)
 {
+  size_t              zz;
+  sc_object_recursion_match_t *match;
+  sc_object_recursion_context_t src, *rc = &src;
   sc_object_method_t  oinmi;
+  sc_array_t          sfound, *found = &sfound;
 
-  oinmi =
-    sc_object_delegate_lookup (o, (sc_object_method_t) sc_object_finalize);
+  sc_object_recursion_init (rc, (sc_object_method_t) sc_object_finalize,
+                            found);
 
-  if (oinmi != NULL) {
-    ((void (*)(sc_object_t *)) oinmi) (o);
+  /* pre-order */
+  if (sc_object_recursion (o, rc)) {
+    for (zz = 0; zz < found->elem_count; ++zz) {
+      match = sc_array_index (found, zz);
+      oinmi = match->oinmi;
+      SC_ASSERT (oinmi != NULL);
+
+      ((void (*)(sc_object_t *)) oinmi) (o);
+    }
   }
+
+  sc_array_reset (found);
 }
 
 void
