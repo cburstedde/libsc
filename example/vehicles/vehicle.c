@@ -1,17 +1,17 @@
 
 #include <vehicle.h>
 
+const char         *vehicle_type = "vehicle";
+
 void
-vehicle_accelerate_I (sc_object_t * o)
+vehicle_accelerate (sc_object_t * o)
 {
-  sc_object_system_t *s = o->s;
-  sc_void_function_t  oinmi;
+  sc_object_method_t  oinmi;
 
-  /* get the implementation of this method for this object */
   oinmi =
-    sc_object_method_lookup (s, (sc_void_function_t) vehicle_accelerate_I,
-                             (void *) o);
+    sc_object_delegate_lookup (o, (sc_object_method_t) vehicle_accelerate);
 
-  /* cast object instance method implementation appropriately and call it */
-  ((void (*)(sc_object_t *)) oinmi) (o);
+  if (oinmi != NULL) {
+    ((void (*)(sc_object_t *)) oinmi) (o);
+  }
 }

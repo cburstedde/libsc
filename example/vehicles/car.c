@@ -1,5 +1,6 @@
 
 #include <car.h>
+#include <vehicle.h>
 
 const char         *car_type = "car";
 
@@ -41,10 +42,20 @@ wheelsize_fn (sc_object_t * o)
   return car->wheelsize;
 }
 
+static void
+accelerate_fn (sc_object_t * o)
+{
+  Car                *car = car_get_data (o);
+
+  SC_LDEBUG ("car accelerate\n");
+
+  car->speed += 10;
+}
+
 sc_object_t        *
 car_klass_new (sc_object_t * d)
 {
-  bool                a1, a2, a3, a4;
+  bool                a1, a2, a3, a4, a5;
   sc_object_t        *o;
 
   SC_ASSERT (d != NULL);
@@ -63,7 +74,10 @@ car_klass_new (sc_object_t * d)
   a4 =
     sc_object_method_register (o, (sc_object_method_t) car_wheelsize,
                                (sc_object_method_t) wheelsize_fn);
-  SC_ASSERT (a1 && a2 && a3 && a4);
+  a5 =
+    sc_object_method_register (o, (sc_object_method_t) vehicle_accelerate,
+                               (sc_object_method_t) accelerate_fn);
+  SC_ASSERT (a1 && a2 && a3 && a4 && a5);
 
   sc_object_initialize (o);
 
