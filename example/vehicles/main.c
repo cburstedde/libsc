@@ -18,10 +18,10 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <car.h>
-#include <boat.h>
-#include <tunedcar.h>
-#include <vehicle.h>
+#include "boat.h"
+#include "car.h"
+#include "tunedcar.h"
+#include "vehicle.h"
 
 #define NUM_OBJECTS     6
 #define NUM_CARS        2

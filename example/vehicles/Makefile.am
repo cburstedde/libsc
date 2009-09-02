@@ -10,7 +10,5 @@ example_vehicles_sc_vehicles_SOURCES = \
         example/vehicles/tunedcar.h example/vehicles/tunedcar.c \
         example/vehicles/boat.h example/vehicles/boat.c \
         example/vehicles/main.c
-example_vehicles_sc_vehicles_CPPFLAGS = \
-        $(AM_CPPFLAGS) -I@top_srcdir@/example/vehicles
 
 LINT_CSOURCES += $(example_vehicles_sc_vehicles_SOURCES)

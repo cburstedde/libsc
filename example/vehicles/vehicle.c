@@ -18,7 +18,7 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <vehicle.h>
+#include "vehicle.h"
 
 const char         *vehicle_type = "vehicle";
 

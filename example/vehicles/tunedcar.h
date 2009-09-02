@@ -21,7 +21,6 @@
 #ifndef TUNED_CAR_H
 #define TUNED_CAR_H
 
-#include <car.h>
 #include <sc.h>
 #include <sc_object.h>
 

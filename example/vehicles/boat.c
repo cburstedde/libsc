@@ -18,8 +18,8 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <boat.h>
-#include <vehicle.h>
+#include "boat.h"
+#include "vehicle.h"
 
 const char         *boat_type = "boat";
 

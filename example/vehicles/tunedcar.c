@@ -18,8 +18,9 @@
   along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <tunedcar.h>
-#include <vehicle.h>
+#include "car.h"
+#include "tunedcar.h"
+#include "vehicle.h"
 
 const char         *tuned_car_type = "tuned_car";
 
