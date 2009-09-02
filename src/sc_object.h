@@ -114,6 +114,7 @@ void                sc_object_delegate_push (sc_object_t * o,
                                              sc_object_t * d);
 void                sc_object_delegate_pop (sc_object_t * o);
 void                sc_object_delegate_pop_all (sc_object_t * o);
+sc_object_t        *sc_object_delegate_index (sc_object_t * o, int i);
 
 /** Look up an object method recursively.
  * \param [in] skip_top If true then the object o is not tested, only

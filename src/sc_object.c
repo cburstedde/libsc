@@ -334,6 +334,14 @@ sc_object_delegate_pop_all (sc_object_t * o)
   sc_array_reset (&o->delegates);
 }
 
+sc_object_t        *
+sc_object_delegate_index (sc_object_t * o, int i)
+{
+  void               *v = sc_array_index_int (&o->delegates, i);
+
+  return *((sc_object_t **) v);
+}
+
 typedef struct sc_object_delegate_lookup_data
 {
   sc_object_method_t  oinmi;
