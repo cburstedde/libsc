@@ -17,7 +17,7 @@ scobj2: sc_object_system.o sc_object.o \
         vehicle.o car.o tunedcar.o boat.o scobj_main.o
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
-scobj22: sc_object.o vehicle.o car.o scobj_main2.o
+scobj22: sc_object.o vehicle.o car.o tunedcar.o scobj_main2.o
 	$(CC) $(LFLAGS) -o $@ $^ $(LIBS)
 
 clean:

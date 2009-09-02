@@ -2,95 +2,110 @@
 #include <tunedcar.h>
 #include <vehicle.h>
 
-void
-tuned_car_print (TunedCar * self, FILE * out)
+const char         *tuned_car_type = "tuned_car";
+
+static              bool
+is_type_fn (sc_object_t * o, const char *type)
 {
-  fprintf (out, "Tuned car (wheel size %f) speeds at %f km/h\n",
-           self->car.wheelsize, self->car.speed);
+  SC_LDEBUG ("tuned_car is_type\n");
+
+  return !strcmp (type, tuned_car_type) || !strcmp (type, vehicle_type);
 }
 
-void
-tuned_car_accelerate (TunedCar * self)
+static void
+initialize_fn (sc_object_t * o)
 {
-  int                 i;
+  Car                *car = car_get_data (o);
+  TunedCar           *tuned_car = tuned_car_get_data (o);
 
-  for (i = 0; i < self->faster; ++i) {
-    car_accelerate (&self->car);
-  }
+  SC_LDEBUG ("tuned_car initialize\n");
+
+  car->wheelsize = 21;
+  tuned_car->faster = 2;
+  tuned_car->tickets = 0;
 }
 
-int
-tuned_car_tickets (TunedCar * self)
+static void
+write_fn (sc_object_t * o, FILE * out)
 {
-  return self->tickets;
+  Car                *car = car_get_data (o);
+  TunedCar           *tuned_car = tuned_car_get_data (o);
+
+  fprintf (out, "Tuned car (wheel size %f tickets %d) speeds at %f km/h\n",
+           car->wheelsize, tuned_car->tickets, car->speed);
 }
 
-void
-tuned_car_finalize (TunedCar * self)
+static int
+tickets_fn (sc_object_t * o)
 {
-  sc_object_method_unregister (self->car.object.s,
-                               (sc_void_function_t) tuned_car_tickets_V,
-                               self);
+  TunedCar           *tuned_car = tuned_car_get_data (o);
 
-  /* post chain */
-  car_finalize (&self->car);
+  return tuned_car->tickets;
 }
 
-void
-tuned_car_destroy (TunedCar * self)
+static void
+accelerate_fn (sc_object_t * o)
 {
-  tuned_car_finalize (self);
+  Car                *car = car_get_data (o);
 
-  SC_FREE (self);
+  SC_LDEBUG ("tuned car accelerate\n");
+
+  car->speed += 20;
 }
 
-void
-tuned_car_initialize (sc_object_system_t * s, TunedCar * self, int faster)
+sc_object_t        *
+tuned_car_klass_new (sc_object_t * d)
 {
-  /* pre chain */
-  car_initialize (s, &self->car);
+  bool                a1, a2, a3, a4, a5;
+  sc_object_t        *o;
 
-  /* sc_object */
-  sc_object_method_override (s, (sc_void_function_t) sc_object_destroy_V,
-                             self, (sc_void_function_t) tuned_car_destroy);
-  sc_object_method_override (s, (sc_void_function_t) sc_object_print_V,
-                             self, (sc_void_function_t) tuned_car_print);
+  SC_ASSERT (d != NULL);
+  SC_ASSERT (sc_object_is_type (d, car_type));
 
-  /* car */
-  self->car.wheelsize = 21;
+  o = sc_object_alloc ();
+  sc_object_delegate_push (o, d);
 
-  /* tuned car */
-  sc_object_method_register (s, (sc_void_function_t) tuned_car_tickets_V,
-                             self, (sc_void_function_t) tuned_car_tickets);
-  self->faster = faster;
-  self->tickets = 0;
+  a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_is_type,
+                                  (sc_object_method_t) is_type_fn);
+  a2 =
+    sc_object_method_register (o, (sc_object_method_t) sc_object_initialize,
+                               (sc_object_method_t) initialize_fn);
+  a3 =
+    sc_object_method_register (o, (sc_object_method_t) sc_object_write,
+                               (sc_object_method_t) write_fn);
+  a4 =
+    sc_object_method_register (o, (sc_object_method_t) tuned_car_tickets,
+                               (sc_object_method_t) tickets_fn);
+  a5 =
+    sc_object_method_register (o, (sc_object_method_t) vehicle_accelerate,
+                               (sc_object_method_t) accelerate_fn);
+  SC_ASSERT (a1 && a2 && a3 && a4 && a5);
 
-  /* vehicle */
-  sc_object_method_override (s, (sc_void_function_t) vehicle_accelerate_I,
-                             self, (sc_void_function_t) tuned_car_accelerate);
+  sc_object_initialize (o);
+
+  return o;
 }
 
 TunedCar           *
-tuned_car_create (sc_object_system_t * s, int faster)
+tuned_car_get_data (sc_object_t * o)
 {
-  TunedCar           *self = SC_ALLOC (TunedCar, 1);
+  SC_ASSERT (sc_object_is_type (o, tuned_car_type));
 
-  tuned_car_initialize (s, self, faster);
-
-  return self;
+  return (TunedCar *) sc_object_get_data (o, (sc_object_method_t)
+                                          tuned_car_get_data,
+                                          sizeof (TunedCar));
 }
 
 int
-tuned_car_tickets_V (sc_object_t * o)
+tuned_car_tickets (sc_object_t * o)
 {
-  sc_object_system_t *s = o->s;
-  sc_void_function_t  oinmi;
+  sc_object_method_t  oinmi;
 
-  /* get the implementation of this method for this object */
+  SC_ASSERT (sc_object_is_type (o, tuned_car_type));
+
   oinmi =
-    sc_object_method_lookup (s, (sc_void_function_t) tuned_car_tickets_V,
-                             (void *) o);
+    sc_object_delegate_lookup (o, (sc_object_method_t) tuned_car_tickets);
+  SC_ASSERT (oinmi != NULL);
 
-  /* cast object instance method implementation appropriately and call it */
   return ((int (*)(sc_object_t *)) oinmi) (o);
 }

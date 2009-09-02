@@ -1,19 +1,26 @@
 
-#include <sc.h>
-#include <sc_object.h>
 #include <car.h>
+#include <tunedcar.h>
 #include <vehicle.h>
 
+#define NUM_OBJECTS     4
+#define NUM_CARS        2
+#define NUM_TUNED_CARS  1
+#define NUM_VEHICLES    2
+
 int
-main (int argc, char ** argv)
+main (int argc, char **argv)
 {
   int                 i;
+  int                 tickets;
   float               wheelsize;
   sc_object_t        *object_klass;
   sc_object_t        *car_klass;
-  sc_object_t        *o[3];
-  sc_object_t        *c[1];
-  sc_object_t        *v[1];
+  sc_object_t        *tuned_car_klass;
+  sc_object_t        *o[NUM_OBJECTS];
+  sc_object_t        *c[NUM_CARS];
+  sc_object_t        *t[NUM_TUNED_CARS];
+  sc_object_t        *v[NUM_VEHICLES];
 
   sc_init (MPI_COMM_NULL, true, true, NULL, SC_LP_DEFAULT);
 
@@ -26,27 +33,45 @@ main (int argc, char ** argv)
   car_klass = car_klass_new (object_klass);
   o[2] = v[0] = c[0] = sc_object_new_from_klass (car_klass);
 
+  SC_INFO ("Construct tuned cars\n");
+  tuned_car_klass = tuned_car_klass_new (car_klass);
+  o[3] = v[1] = c[1] = t[0] = sc_object_new_from_klass (tuned_car_klass);
+
   SC_INFO ("Write klasses\n");
   sc_object_write (object_klass, stdout);
   sc_object_write (car_klass, stdout);
+  sc_object_write (tuned_car_klass, stdout);
 
-  SC_INFO ("Get properties\n");
-  SC_ASSERT (sc_object_is_type (c[0], car_type));
-  wheelsize = car_wheelsize (c[0]);
-  SC_INFOF ("Wheelsize %f\n", wheelsize);
+  SC_INFO ("Get wheel sizes\n");
+  for (i = 0; i < NUM_CARS; ++i) {
+    SC_ASSERT (sc_object_is_type (c[i], car_type));
+    wheelsize = car_wheelsize (c[i]);
+    SC_INFOF ("Wheelsize of car[%d] is %f\n", i, wheelsize);
+  }
 
-  SC_INFO ("Accelerate a car\n");
-  sc_object_write (v[0], stdout);
-  vehicle_accelerate (v[0]);
+  SC_INFO ("Get tickets\n");
+  for (i = 0; i < NUM_TUNED_CARS; ++i) {
+    SC_ASSERT (sc_object_is_type (t[i], tuned_car_type));
+    tickets = tuned_car_tickets (t[i]);
+    SC_INFOF ("Tickets of tuned car[%d] are %d\n", i, tickets);
+  }
+
+  SC_INFO ("Accelerate vehicles\n");
+  for (i = 0; i < NUM_VEHICLES; ++i) {
+    SC_ASSERT (sc_object_is_type (v[i], vehicle_type));
+    sc_object_write (v[i], stdout);
+    vehicle_accelerate (v[i]);
+  }
 
   SC_INFO ("Write and destroy objects\n");
-  for (i = 0; i < 3; ++i) {
+  for (i = 0; i < NUM_OBJECTS; ++i) {
     SC_ASSERT (sc_object_is_type (o[i], sc_object_type));
     sc_object_write (o[i], stdout);
     sc_object_unref (o[i]);
   }
 
   sc_object_unref (object_klass);
+  sc_object_unref (tuned_car_klass);
   sc_object_unref (car_klass);
 
   sc_finalize ();
