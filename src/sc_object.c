@@ -39,7 +39,7 @@ sc_object_value_hash (const void *v, const void *u)
   hash ^= (hash >> 11);
   hash += (hash << 15);
 
-  return hash;
+  return (unsigned) hash;
 }
 
 static              bool
