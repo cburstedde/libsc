@@ -46,11 +46,24 @@ tickets_fn (sc_object_t * o, sc_object_t * m)
 static void
 accelerate_fn (sc_object_t * o, sc_object_t * m)
 {
-  Car                *car = car_get_data (o);
+  int                 i;
+  sc_object_method_t  oinmi;
+  sc_object_t        *r;
+  TunedCar           *tuned_car = tuned_car_get_data (o);
+
+  SC_ASSERT (m != NULL);
 
   SC_LDEBUG ("tuned car accelerate\n");
 
-  car->speed += 20;
+  oinmi =
+    sc_object_delegate_lookup (m, (sc_object_method_t) vehicle_accelerate,
+                               true, &r);
+  SC_ASSERT (sc_object_is_type (r, car_type));
+
+  if (oinmi != NULL) {
+    for (i = 0; i < tuned_car->faster; ++i)
+      ((void (*)(sc_object_t *, sc_object_t *)) oinmi) (o, r);
+  }
 }
 
 sc_object_t        *
