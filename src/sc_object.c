@@ -109,11 +109,17 @@ write_fn (sc_object_t * o, FILE * out)
 bool
 sc_object_recursion (sc_object_t * o, sc_object_recursion_context_t * rc)
 {
-  bool                toplevel, answered, added;
+  bool                toplevel, added, answered;
+  bool                found_self, found_delegate;
   size_t              zz;
   sc_object_method_t  oinmi;
+  sc_object_recursion_match_t *match;
   sc_object_t        *d;
   void               *v;
+
+  SC_ASSERT (rc->lookup != NULL);
+  SC_ASSERT (rc->found == NULL ||
+             rc->found->elem_size == sizeof (sc_object_recursion_match_t));
 
   if (rc->visited == NULL) {
     toplevel = true;
@@ -124,23 +130,32 @@ sc_object_recursion (sc_object_t * o, sc_object_recursion_context_t * rc)
   }
 
   answered = false;
+  found_self = found_delegate = false;
   added = sc_hash_insert_unique (rc->visited, o, NULL);
 
   if (added) {
-    if (rc->lookup != NULL && rc->callfn != NULL) {
-      oinmi = sc_object_method_lookup (o, rc->lookup);
-      if (oinmi != NULL) {
+    oinmi = sc_object_method_lookup (o, rc->lookup);
+    if (oinmi != NULL) {
+      if (rc->found != NULL) {
+        match = sc_array_push (rc->found);
+        match->oinmi = oinmi;
+        found_self = true;
+      }
+      if (rc->callfn != NULL) {
         answered = rc->callfn (o, oinmi, rc->user_data);
       }
     }
 
-    if (!answered) {
+    if (!answered && !(found_self && rc->accept_self)) {
       for (zz = o->delegates.elem_count; zz > 0; --zz) {
         v = sc_array_index (&o->delegates, zz - 1);
         d = *((sc_object_t **) v);
         answered = sc_object_recursion (d, rc);
         if (answered) {
-          break;
+          found_delegate = true;
+          if (rc->callfn != NULL || rc->accept_delegate) {
+            break;
+          }
         }
       }
     }
@@ -154,7 +169,7 @@ sc_object_recursion (sc_object_t * o, sc_object_recursion_context_t * rc)
     rc->visited = NULL;
   }
 
-  return answered;
+  return rc->callfn != NULL ? answered : found_self || found_delegate;
 }
 
 void
@@ -324,6 +339,9 @@ sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm)
 
   rc->visited = NULL;
   rc->lookup = ifm;
+  rc->found = NULL;
+  rc->accept_self = false;
+  rc->accept_delegate = false;
   rc->callfn = delegate_lookup_fn;
   rc->user_data = dld;
 
@@ -356,6 +374,9 @@ sc_object_is_type (sc_object_t * o, const char *type)
 
   rc->visited = NULL;
   rc->lookup = (sc_object_method_t) sc_object_get_type;
+  rc->found = NULL;
+  rc->accept_self = false;
+  rc->accept_delegate = false;
   rc->callfn = is_type_fn;
   rc->user_data = itd;
 

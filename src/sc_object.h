@@ -23,11 +23,20 @@ typedef struct sc_object
 }
 sc_object_t;
 
+typedef struct sc_object_recursion_match
+{
+  sc_object_method_t  oinmi;
+}
+sc_object_recursion_match_t;
+
 /* *INDENT-OFF* HORRIBLE indent bug */
 typedef struct sc_object_recursion_context
 {
   sc_hash_t          *visited;
   sc_object_method_t  lookup;
+  sc_array_t         *found;
+  bool                accept_self;
+  bool                accept_delegate;
   bool                (*callfn) (sc_object_t *, sc_object_method_t, void *);
   void               *user_data;
 }
@@ -40,18 +49,27 @@ extern const char  *sc_object_type;
 void                sc_object_ref (sc_object_t * o);
 void                sc_object_unref (sc_object_t * o);
 
-/** Look up a method recursively for all delegates and run a callback on it.
- * Breaks recursion early on the first callback returning true.
- * Ignores objects that have already been called.
+/** Look up a method recursively for all delegates.
+ * Search is in preorder.  Ignore objects that have already been searched.
+ * Optionally all matches are pushed onto an array.
+ * Optionally a callback is run on each match.
+ * Early-exit options are available, see descriptions of the fields in \a rc.
+ *
  * \param [in,out] o    The object to start looking.
- * \param [in] rc       Recursion context with visited == NULL.
- * \param [in] lookup   Can contain a method to look up, or NULL.
- * \param [in] callfn   If not NULL will be called on successful lookup.
- * \param [in] user_data    Is passed as third parameter to callfn.
- * \return              True if any callfn returned true, false otherwise.
+ * \param [in] rc       Recursion context with rc->visited == NULL initially.
+ *                      rc->lookup must contain a method to look up.
+ *                      If rc->found is init'ed to sc_object_recursion_entry
+ *                      all matches are pushed onto this array in preorder.
+ *                      rc->accept_self skips search in delegates on a match.
+ *                      rc->accept_delegate skips search in delegate siblings.
+ *                      If rc->callfn != NULL it is called on a match.
+ *                      If the call returns true the search is ended.
+ *                      rc->user_data is passed as third parameter to callfn.
+ * \return              True if a callback returns true.  If callfn == NULL,
+ *                      true if any match was found.  False otherwise.
  */
 bool                sc_object_recursion (sc_object_t * o,
-                                         sc_object_recursion_context_t * rc);
+                                          sc_object_recursion_context_t * rc);
 
 /** Register the implementation of an interface method for an object.
  * If the method is already registered it is replaced.
@@ -71,6 +89,9 @@ bool                sc_object_method_register (sc_object_t * o,
  */
 void                sc_object_method_unregister (sc_object_t * o,
                                                  sc_object_method_t ifm);
+
+/** Look up a method in an object.  This function is not recursive.
+ */
 sc_object_method_t  sc_object_method_lookup (sc_object_t * o,
                                              sc_object_method_t ifm);
 
