@@ -4,12 +4,12 @@
 
 const char         *car_type = "car";
 
-static const char  *
-get_type_fn (sc_object_t * o)
+static              bool
+is_type_fn (sc_object_t * o, const char *type)
 {
-  SC_LDEBUG ("car get_type\n");
+  SC_LDEBUG ("car is_type\n");
 
-  return car_type;
+  return !strcmp (type, car_type) || !strcmp (type, vehicle_type);
 }
 
 static void
@@ -59,12 +59,13 @@ car_klass_new (sc_object_t * d)
   sc_object_t        *o;
 
   SC_ASSERT (d != NULL);
+  SC_ASSERT (sc_object_is_type (d, sc_object_type));
 
   o = sc_object_alloc ();
   sc_object_delegate_push (o, d);
 
-  a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_get_type,
-                                  (sc_object_method_t) get_type_fn);
+  a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_is_type,
+                                  (sc_object_method_t) is_type_fn);
   a2 =
     sc_object_method_register (o, (sc_object_method_t) sc_object_initialize,
                                (sc_object_method_t) initialize_fn);
@@ -97,6 +98,8 @@ float
 car_wheelsize (sc_object_t * o)
 {
   sc_object_method_t  oinmi;
+
+  SC_ASSERT (sc_object_is_type (o, car_type));
 
   oinmi = sc_object_delegate_lookup (o, (sc_object_method_t) car_wheelsize);
   SC_ASSERT (oinmi != NULL);

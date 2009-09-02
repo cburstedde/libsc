@@ -113,9 +113,6 @@ void                sc_object_delegate_pop_all (sc_object_t * o);
 sc_object_method_t  sc_object_delegate_lookup (sc_object_t * o,
                                                sc_object_method_t ifm);
 
-/* handle types */
-bool                sc_object_is_type (sc_object_t * o, const char *type);
-
 /* construction */
 sc_object_t        *sc_object_alloc (void);
 sc_object_t        *sc_object_klass_new (void);
@@ -126,7 +123,8 @@ void               *sc_object_get_data (sc_object_t * o,
                                         sc_object_method_t ifm, size_t s);
 
 /* virtual method prototypes */
-const char         *sc_object_get_type (sc_object_t * o);
+/* All delegate's methods are called in pre-order until one returns true */
+bool                sc_object_is_type (sc_object_t * o, const char *type);
 /* All delegate's methods are called in post-order */
 void                sc_object_initialize (sc_object_t * o);
 /* All delegate's methods are called in pre-order */

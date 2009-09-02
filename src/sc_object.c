@@ -66,18 +66,12 @@ sc_object_entry_free (void **v, const void *u)
   return true;
 }
 
-static const char  *
-get_type_fn (sc_object_t * o)
+static              bool
+is_type_fn (sc_object_t * o, const char *type)
 {
-  SC_LDEBUG ("sc_object_t get_type\n");
+  SC_LDEBUG ("sc_object_t is_type\n");
 
-  return sc_object_type;
-}
-
-static const char  *
-get_type_call (sc_object_method_t oinmi, sc_object_t * o)
-{
-  return ((const char *(*)(sc_object_t *)) oinmi) (o);
+  return !strcmp (type, sc_object_type);
 }
 
 static void
@@ -367,36 +361,6 @@ sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm)
   return dld->oinmi;
 }
 
-typedef struct sc_object_is_type_data
-{
-  const char         *type;
-}
-sc_object_is_type_data_t;
-
-static              bool
-is_type_fn (sc_object_t * o, sc_object_method_t oinmi, void *user_data)
-{
-  sc_object_is_type_data_t *itd = user_data;
-
-  return !strcmp (get_type_call (oinmi, o), itd->type);
-}
-
-bool
-sc_object_is_type (sc_object_t * o, const char *type)
-{
-  sc_object_recursion_context_t src, *rc = &src;
-  sc_object_is_type_data_t sitd, *itd = &sitd;
-
-  itd->type = type;
-
-  sc_object_recursion_init (rc, (sc_object_method_t) sc_object_get_type,
-                            NULL);
-  rc->callfn = is_type_fn;
-  rc->user_data = itd;
-
-  return sc_object_recursion (o, rc);
-}
-
 sc_object_t        *
 sc_object_alloc (void)
 {
@@ -418,8 +382,8 @@ sc_object_klass_new (void)
 
   o = sc_object_alloc ();
 
-  a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_get_type,
-                                  (sc_object_method_t) get_type_fn);
+  a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_is_type,
+                                  (sc_object_method_t) is_type_fn);
   a2 = sc_object_method_register (o, (sc_object_method_t) sc_object_finalize,
                                   (sc_object_method_t) finalize_fn);
   a3 = sc_object_method_register (o, (sc_object_method_t) sc_object_write,
@@ -485,19 +449,33 @@ sc_object_get_data (sc_object_t * o, sc_object_method_t ifm, size_t s)
   return e->odata;
 }
 
-const char         *
-sc_object_get_type (sc_object_t * o)
+typedef struct sc_object_is_type_data
 {
-  sc_object_method_t  oinmi;
+  const char         *type;
+}
+sc_object_is_type_data_t;
 
-  oinmi =
-    sc_object_delegate_lookup (o, (sc_object_method_t) sc_object_get_type);
+static              bool
+is_type_call_fn (sc_object_t * o, sc_object_method_t oinmi, void *user_data)
+{
+  sc_object_is_type_data_t *itd = user_data;
 
-  if (oinmi != NULL) {
-    return get_type_call (oinmi, o);
-  }
+  return ((bool (*)(sc_object_t *, const char *)) oinmi) (o, itd->type);
+}
 
-  SC_ABORT_NOT_REACHED ();
+bool
+sc_object_is_type (sc_object_t * o, const char *type)
+{
+  sc_object_recursion_context_t src, *rc = &src;
+  sc_object_is_type_data_t sitd, *itd = &sitd;
+
+  itd->type = type;
+
+  sc_object_recursion_init (rc, (sc_object_method_t) sc_object_is_type, NULL);
+  rc->callfn = is_type_call_fn;
+  rc->user_data = itd;
+
+  return sc_object_recursion (o, rc);
 }
 
 void
@@ -508,6 +486,8 @@ sc_object_initialize (sc_object_t * o)
   sc_object_recursion_context_t src, *rc = &src;
   sc_object_method_t  oinmi;
   sc_array_t          sfound, *found = &sfound;
+
+  SC_ASSERT (sc_object_is_type (o, sc_object_type));
 
   sc_object_recursion_init (rc, (sc_object_method_t) sc_object_initialize,
                             found);
@@ -535,6 +515,8 @@ sc_object_finalize (sc_object_t * o)
   sc_object_method_t  oinmi;
   sc_array_t          sfound, *found = &sfound;
 
+  SC_ASSERT (sc_object_is_type (o, sc_object_type));
+
   sc_object_recursion_init (rc, (sc_object_method_t) sc_object_finalize,
                             found);
 
@@ -556,6 +538,8 @@ void
 sc_object_write (sc_object_t * o, FILE * out)
 {
   sc_object_method_t  oinmi;
+
+  SC_ASSERT (sc_object_is_type (o, sc_object_type));
 
   oinmi = sc_object_delegate_lookup (o, (sc_object_method_t) sc_object_write);
 

@@ -41,7 +41,6 @@ main (int argc, char ** argv)
 
   SC_INFO ("Write and destroy objects\n");
   for (i = 0; i < 3; ++i) {
-    SC_INFOF ("Object type is %s\n", sc_object_get_type (o[i]));
     SC_ASSERT (sc_object_is_type (o[i], sc_object_type));
     sc_object_write (o[i], stdout);
     sc_object_unref (o[i]);
