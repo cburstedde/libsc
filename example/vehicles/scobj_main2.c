@@ -21,6 +21,7 @@ main (int argc, char **argv)
   sc_object_t        *c[NUM_CARS];
   sc_object_t        *t[NUM_TUNED_CARS];
   sc_object_t        *v[NUM_VEHICLES];
+  CarKlass           *car_klass_data;
 
   sc_init (MPI_COMM_NULL, true, true, NULL, SC_LP_DEFAULT);
 
@@ -69,6 +70,9 @@ main (int argc, char **argv)
     sc_object_write (o[i], stdout);
     sc_object_unref (o[i]);
   }
+
+  car_klass_data = car_get_klass_data (car_klass);
+  SC_INFOF ("Car klass has %d repairs\n", car_klass_data->repairs);
 
   sc_object_unref (object_klass);
   sc_object_unref (tuned_car_klass);

@@ -46,10 +46,14 @@ static void
 accelerate_fn (sc_object_t * o, sc_object_t * m)
 {
   Car                *car = car_get_data (o);
+  CarKlass           *car_klass;
 
   SC_LDEBUG ("car accelerate\n");
 
   car->speed += 10;
+
+  car_klass = car_get_klass_data (m);
+  ++car_klass->repairs;
 }
 
 sc_object_t        *
@@ -57,6 +61,7 @@ car_klass_new (sc_object_t * d)
 {
   bool                a1, a2, a3, a4, a5;
   sc_object_t        *o;
+  CarKlass           *car_klass;
 
   SC_ASSERT (d != NULL);
   SC_ASSERT (sc_object_is_type (d, sc_object_type));
@@ -81,6 +86,8 @@ car_klass_new (sc_object_t * d)
   SC_ASSERT (a1 && a2 && a3 && a4 && a5);
 
   sc_object_initialize (o);
+  car_klass = car_get_klass_data (o);
+  car_klass->repairs = 0;
 
   return o;
 }
@@ -92,6 +99,16 @@ car_get_data (sc_object_t * o)
 
   return (Car *) sc_object_get_data (o, (sc_object_method_t) car_get_data,
                                      sizeof (Car));
+}
+
+CarKlass           *
+car_get_klass_data (sc_object_t * o)
+{
+  SC_ASSERT (sc_object_is_type (o, car_type));
+
+  return (CarKlass *) sc_object_get_data (o, (sc_object_method_t)
+                                          car_get_klass_data,
+                                          sizeof (CarKlass));
 }
 
 float
