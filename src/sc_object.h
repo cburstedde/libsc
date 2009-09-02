@@ -35,10 +35,12 @@ typedef struct sc_object_recursion_context
   sc_hash_t          *visited;
   sc_object_method_t  lookup;
   sc_array_t         *found;
+  bool                skip_top;
   bool                accept_self;
   bool                accept_delegate;
   bool                (*callfn) (sc_object_t *, sc_object_method_t, void *);
   void               *user_data;
+  sc_object_t        *last_match;
 }
 sc_object_recursion_context_t;
 /* *INDENT-ON* */
@@ -66,15 +68,17 @@ void                sc_object_recursion_init (sc_object_recursion_context_t
  * Early-exit options are available, see descriptions of the fields in \a rc.
  *
  * \param [in,out] o    The object to start looking.
- * \param [in] rc       Recursion context with rc->visited == NULL initially.
+ * \param [in,out] rc   Recursion context with rc->visited == NULL initially.
  *                      rc->lookup must contain a method to look up.
  *                      If rc->found is init'ed to sc_object_recursion_entry
  *                      all matches are pushed onto this array in preorder.
+ *                      rc->skip_top skips matching of the toplevel object.
  *                      rc->accept_self skips search in delegates on a match.
  *                      rc->accept_delegate skips search in delegate siblings.
- *                      If rc->callfn != NULL it is called on a match.
- *                      If the call returns true the search is ended.
+ *                      If rc->callfn != NULL it is called on a match, and
  *                      rc->user_data is passed as third parameter to callfn.
+ *                      If the call returns true the search is ended.
+ *                      rc->last_match points to the last object matched.
  * \return              True if a callback returns true.  If callfn == NULL,
  *                      true if any match was found.  False otherwise.
  */

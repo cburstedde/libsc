@@ -115,10 +115,12 @@ sc_object_recursion_init (sc_object_recursion_context_t * rc,
     rc->found = NULL;
   }
 
+  rc->skip_top = false;
   rc->accept_self = false;
   rc->accept_delegate = false;
   rc->callfn = NULL;
   rc->user_data = NULL;
+  rc->last_match = NULL;
 }
 
 bool
@@ -149,15 +151,18 @@ sc_object_recursion (sc_object_t * o, sc_object_recursion_context_t * rc)
   added = sc_hash_insert_unique (rc->visited, o, NULL);
 
   if (added) {
-    oinmi = sc_object_method_lookup (o, rc->lookup);
-    if (oinmi != NULL) {
-      if (rc->found != NULL) {
-        match = sc_array_push (rc->found);
-        match->oinmi = oinmi;
-        found_self = true;
-      }
-      if (rc->callfn != NULL) {
-        answered = rc->callfn (o, oinmi, rc->user_data);
+    if (!toplevel || !rc->skip_top) {
+      oinmi = sc_object_method_lookup (o, rc->lookup);
+      if (oinmi != NULL) {
+        if (rc->found != NULL) {
+          match = sc_array_push (rc->found);
+          match->oinmi = oinmi;
+          found_self = true;
+        }
+        if (rc->callfn != NULL) {
+          answered = rc->callfn (o, oinmi, rc->user_data);
+        }
+        rc->last_match = o;
       }
     }
 
