@@ -4,25 +4,32 @@
 const char         *sc_object_type = "sc_object";
 
 static unsigned
-sc_object_hash (const void *v, const void *u)
+sc_object_value_hash (const void *v, const void *u)
 {
-  const unsigned long m = ((1UL << 32) - 1);
-  unsigned long       l = (unsigned long) v;
-  uint32_t            a, b, c;
+  const sc_object_value_t *ov = v;
+  const char         *s;
+  uint32_t            hash;
 
-  a = (uint32_t) (l & m);
-  b = (uint32_t) ((l >> 32) & m);
-  c = 0;
+  hash = 0;
+  for (s = ov->key; *s; ++s) {
+    hash += *s;
+    hash += (hash << 10);
+    hash ^= (hash >> 6);
+  }
+  hash += (hash << 3);
+  hash ^= (hash >> 11);
+  hash += (hash << 15);
 
-  sc_hash_mix (a, b, c);
-
-  return (unsigned) c;
+  return hash;
 }
 
 static              bool
-sc_object_equal (const void *v1, const void *v2, const void *u)
+sc_object_value_equal (const void *v1, const void *v2, const void *u)
 {
-  return v1 == v2;
+  const sc_object_value_t *ov1 = v1;
+  const sc_object_value_t *ov2 = v2;
+
+  return !strcmp (ov1->key, ov2->key);
 }
 
 static unsigned
@@ -49,6 +56,28 @@ sc_object_entry_equal (const void *v1, const void *v2, const void *u)
   const sc_object_entry_t *e2 = v2;
 
   return e1->key == e2->key;
+}
+
+static unsigned
+sc_object_hash (const void *v, const void *u)
+{
+  const unsigned long m = ((1UL << 32) - 1);
+  unsigned long       l = (unsigned long) v;
+  uint32_t            a, b, c;
+
+  a = (uint32_t) (l & m);
+  b = (uint32_t) ((l >> 32) & m);
+  c = 0;
+
+  sc_hash_mix (a, b, c);
+
+  return (unsigned) c;
+}
+
+static              bool
+sc_object_equal (const void *v1, const void *v2, const void *u)
+{
+  return v1 == v2;
 }
 
 static              bool
@@ -378,6 +407,156 @@ sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm,
   }
 
   return dld->oinmi;
+}
+
+sc_object_arguments_t *
+sc_object_arguments_new (int dummy, ...)
+{
+  const char         *s;
+  bool                added;
+  void              **found;
+  va_list             ap;
+  sc_object_arguments_t *args;
+  sc_object_value_t  *value;
+
+  SC_ASSERT (dummy == 0);
+
+  args = SC_ALLOC (sc_object_arguments_t, 1);
+  args->hash = sc_hash_new (sc_object_value_hash, sc_object_value_equal,
+                            NULL, NULL);
+  args->value_allocator = sc_mempool_new (sizeof (sc_object_value_t));
+
+  va_start (ap, dummy);
+  for (;;) {
+    s = va_arg (ap, const char *);
+    if (s == NULL) {
+      break;
+    }
+    SC_ASSERT (s[0] != '\0' && s[1] == ':' && s[2] != '\0');
+    value = sc_mempool_alloc (args->value_allocator);
+    value->key = &s[2];
+    switch (s[0]) {
+    case 'i':
+      value->type = SC_OBJECT_VALUE_INT;
+      value->value.i = va_arg (ap, int);
+      break;
+    case 'g':
+      value->type = SC_OBJECT_VALUE_DOUBLE;
+      value->value.g = va_arg (ap, double);
+      break;
+    case 's':
+      value->type = SC_OBJECT_VALUE_STRING;
+      value->value.s = va_arg (ap, const char *);
+      break;
+    case 'v':
+      value->type = SC_OBJECT_VALUE_POINTER;
+      value->value.v = va_arg (ap, void *);
+      break;
+    default:
+      SC_ABORTF ("invalid argument character %c", s[0]);
+    }
+    added = sc_hash_insert_unique (args->hash, value, &found);
+    if (!added) {
+      sc_mempool_free (args->value_allocator, *found);
+      *found = value;
+    }
+  }
+  va_end (ap);
+
+  return args;
+}
+
+void
+sc_object_arguments_destroy (sc_object_arguments_t *args)
+{
+  sc_hash_destroy (args->hash);
+  sc_mempool_destroy (args->value_allocator);
+
+  SC_FREE (args);
+}
+
+int
+sc_object_arguments_int (sc_object_arguments_t * args, const char *key)
+{
+  bool                success;
+  void              **found;
+  sc_object_value_t   svalue, *pvalue = &svalue;
+  sc_object_value_t  *value;
+
+  SC_ASSERT (args != NULL);
+
+  pvalue->key = key;
+  pvalue->type = SC_OBJECT_VALUE_NONE;
+  success = sc_hash_lookup (args->hash, pvalue, &found);
+  SC_ASSERT (success);
+
+  value = (sc_object_value_t *) (*found);
+  SC_ASSERT (value->type == SC_OBJECT_VALUE_INT);
+
+  return value->value.i;
+}
+
+double
+sc_object_arguments_double (sc_object_arguments_t * args, const char *key)
+{
+  bool                success;
+  void              **found;
+  sc_object_value_t   svalue, *pvalue = &svalue;
+  sc_object_value_t  *value;
+
+  SC_ASSERT (args != NULL);
+
+  pvalue->key = key;
+  pvalue->type = SC_OBJECT_VALUE_NONE;
+  success = sc_hash_lookup (args->hash, pvalue, &found);
+  SC_ASSERT (success);
+
+  value = (sc_object_value_t *) (*found);
+  SC_ASSERT (value->type == SC_OBJECT_VALUE_DOUBLE);
+
+  return value->value.g;
+}
+
+const char         *
+sc_object_arguments_string (sc_object_arguments_t * args, const char *key)
+{
+  bool                success;
+  void              **found;
+  sc_object_value_t   svalue, *pvalue = &svalue;
+  sc_object_value_t  *value;
+
+  SC_ASSERT (args != NULL);
+
+  pvalue->key = key;
+  pvalue->type = SC_OBJECT_VALUE_NONE;
+  success = sc_hash_lookup (args->hash, pvalue, &found);
+  SC_ASSERT (success);
+
+  value = (sc_object_value_t *) (*found);
+  SC_ASSERT (value->type == SC_OBJECT_VALUE_STRING);
+
+  return value->value.s;
+}
+
+void               *
+sc_object_arguments_pointer (sc_object_arguments_t * args, const char *key)
+{
+  bool                success;
+  void              **found;
+  sc_object_value_t   svalue, *pvalue = &svalue;
+  sc_object_value_t  *value;
+
+  SC_ASSERT (args != NULL);
+
+  pvalue->key = key;
+  pvalue->type = SC_OBJECT_VALUE_NONE;
+  success = sc_hash_lookup (args->hash, pvalue, &found);
+  SC_ASSERT (success);
+
+  value = (sc_object_value_t *) (*found);
+  SC_ASSERT (value->type == SC_OBJECT_VALUE_POINTER);
+
+  return value->value.v;
 }
 
 sc_object_t        *
