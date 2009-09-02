@@ -7,7 +7,8 @@
 
 typedef void        (*sc_object_method_t) (void);
 
-typedef enum {
+typedef enum
+{
   SC_OBJECT_VALUE_NONE,
   SC_OBJECT_VALUE_INT,
   SC_OBJECT_VALUE_DOUBLE,
@@ -161,7 +162,8 @@ sc_object_method_t  sc_object_delegate_lookup (sc_object_t * o,
 /* Arguments come in pairs of 2: static string "type:key" and value;
    type is a letter like the identifier names in sc_object_value.value */
 sc_object_arguments_t *sc_object_arguments_new (int dummy, ...);
-void                sc_object_arguments_destroy (sc_object_arguments_t *args);
+void                sc_object_arguments_destroy (sc_object_arguments_t *
+                                                 args);
 int                 sc_object_arguments_int (sc_object_arguments_t * args,
                                              const char *key);
 double              sc_object_arguments_double (sc_object_arguments_t * args,
@@ -176,6 +178,7 @@ sc_object_t        *sc_object_alloc (void);
 sc_object_t        *sc_object_klass_new (void);
 sc_object_t        *sc_object_new_from_klass (sc_object_t * d,
                                               sc_object_arguments_t * args);
+sc_object_t        *sc_object_new_from_klass_values (sc_object_t * d, ...);
 
 /* handle object data */
 void               *sc_object_get_data (sc_object_t * o,

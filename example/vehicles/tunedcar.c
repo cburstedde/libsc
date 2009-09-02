@@ -104,16 +104,8 @@ tuned_car_klass_new (sc_object_t * d)
 sc_object_t        *
 tuned_car_new (sc_object_t * d, int faster)
 {
-  sc_object_t        *tuned_car;
-  sc_object_arguments_t *args;
-
-  args = sc_object_arguments_new (0, "g:wheelsize", 21.,
-                                  "i:faster", faster, NULL);
-
-  tuned_car = sc_object_new_from_klass (d, args);
-  sc_object_arguments_destroy (args);
-
-  return tuned_car;
+  return sc_object_new_from_klass_values (d, "g:wheelsize", 21.,
+                                          "i:faster", faster, NULL);
 }
 
 TunedCar           *

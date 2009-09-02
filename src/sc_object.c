@@ -409,24 +409,20 @@ sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm,
   return dld->oinmi;
 }
 
-sc_object_arguments_t *
-sc_object_arguments_new (int dummy, ...)
+static sc_object_arguments_t *
+sc_object_arguments_new_va (va_list ap)
 {
   const char         *s;
   bool                added;
   void              **found;
-  va_list             ap;
   sc_object_arguments_t *args;
   sc_object_value_t  *value;
-
-  SC_ASSERT (dummy == 0);
 
   args = SC_ALLOC (sc_object_arguments_t, 1);
   args->hash = sc_hash_new (sc_object_value_hash, sc_object_value_equal,
                             NULL, NULL);
   args->value_allocator = sc_mempool_new (sizeof (sc_object_value_t));
 
-  va_start (ap, dummy);
   for (;;) {
     s = va_arg (ap, const char *);
     if (s == NULL) {
@@ -461,13 +457,27 @@ sc_object_arguments_new (int dummy, ...)
       *found = value;
     }
   }
+
+  return args;
+}
+
+sc_object_arguments_t *
+sc_object_arguments_new (int dummy, ...)
+{
+  va_list             ap;
+  sc_object_arguments_t *args;
+
+  SC_ASSERT (dummy == 0);
+
+  va_start (ap, dummy);
+  args = sc_object_arguments_new_va (ap);
   va_end (ap);
 
   return args;
 }
 
 void
-sc_object_arguments_destroy (sc_object_arguments_t *args)
+sc_object_arguments_destroy (sc_object_arguments_t * args)
 {
   sc_hash_destroy (args->hash);
   sc_mempool_destroy (args->value_allocator);
@@ -603,6 +613,23 @@ sc_object_new_from_klass (sc_object_t * d, sc_object_arguments_t * args)
   o = sc_object_alloc ();
   sc_object_delegate_push (o, d);
   sc_object_initialize (o, args);
+
+  return o;
+}
+
+sc_object_t        *
+sc_object_new_from_klass_values (sc_object_t * d, ...)
+{
+  va_list             ap;
+  sc_object_t        *o;
+  sc_object_arguments_t *args;
+
+  va_start (ap, d);
+  args = sc_object_arguments_new_va (ap);
+  va_end (ap);
+
+  o = sc_object_new_from_klass (d, args);
+  sc_object_arguments_destroy (args);
 
   return o;
 }

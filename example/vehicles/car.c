@@ -99,15 +99,8 @@ car_klass_new (sc_object_t * d)
 sc_object_t        *
 car_new (sc_object_t * d, float wheelsize)
 {
-  sc_object_t        *car;
-  sc_object_arguments_t *args;
-
-  args = sc_object_arguments_new (0, "g:wheelsize", (double) wheelsize, NULL);
-
-  car = sc_object_new_from_klass (d, args);
-  sc_object_arguments_destroy (args);
-
-  return car;
+  return sc_object_new_from_klass_values (d, "g:wheelsize",
+                                          (double) wheelsize, NULL);
 }
 
 Car                *
