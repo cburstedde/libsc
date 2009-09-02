@@ -22,6 +22,7 @@ extern const char  *tuned_car_type;
 
 /* construction */
 sc_object_t        *tuned_car_klass_new (sc_object_t * d);
+sc_object_t        *tuned_car_new (sc_object_t * d, int faster);
 
 /* data */
 TunedCar           *tuned_car_get_data (sc_object_t * o);

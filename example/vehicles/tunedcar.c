@@ -13,16 +13,18 @@ is_type_fn (sc_object_t * o, const char *type)
 }
 
 static void
-initialize_fn (sc_object_t * o)
+initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
 {
-  Car                *car = car_get_data (o);
   TunedCar           *tuned_car = tuned_car_get_data (o);
 
   SC_LDEBUG ("tuned_car initialize\n");
 
-  car->wheelsize = 21;
-  tuned_car->faster = 2;
+  tuned_car->faster = 0;
   tuned_car->tickets = 0;
+
+  if (args != NULL) {
+    tuned_car->faster = sc_object_arguments_int (args, "faster");
+  }
 }
 
 static void
@@ -94,9 +96,24 @@ tuned_car_klass_new (sc_object_t * d)
                                (sc_object_method_t) accelerate_fn);
   SC_ASSERT (a1 && a2 && a3 && a4 && a5);
 
-  sc_object_initialize (o);
+  sc_object_initialize (o, NULL);
 
   return o;
+}
+
+sc_object_t        *
+tuned_car_new (sc_object_t * d, int faster)
+{
+  sc_object_t        *tuned_car;
+  sc_object_arguments_t *args;
+
+  args = sc_object_arguments_new (0, "g:wheelsize", 21.,
+                                  "i:faster", faster, NULL);
+
+  tuned_car = sc_object_new_from_klass (d, args);
+  sc_object_arguments_destroy (args);
+
+  return tuned_car;
 }
 
 TunedCar           *

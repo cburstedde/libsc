@@ -13,14 +13,18 @@ is_type_fn (sc_object_t * o, const char *type)
 }
 
 static void
-initialize_fn (sc_object_t * o)
+initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
 {
   Car                *car = car_get_data (o);
 
   SC_LDEBUG ("car initialize\n");
 
   car->speed = 0;
-  car->wheelsize = 17;
+  car->wheelsize = 0.;
+
+  if (args != NULL) {
+    car->wheelsize = (float) sc_object_arguments_double (args, "wheelsize");
+  }
 }
 
 static void
@@ -85,11 +89,25 @@ car_klass_new (sc_object_t * d)
                                (sc_object_method_t) accelerate_fn);
   SC_ASSERT (a1 && a2 && a3 && a4 && a5);
 
-  sc_object_initialize (o);
+  sc_object_initialize (o, NULL);
   car_klass = car_get_klass_data (o);
   car_klass->repairs = 0;
 
   return o;
+}
+
+sc_object_t        *
+car_new (sc_object_t * d, float wheelsize)
+{
+  sc_object_t        *car;
+  sc_object_arguments_t *args;
+
+  args = sc_object_arguments_new (0, "g:wheelsize", (double) wheelsize, NULL);
+
+  car = sc_object_new_from_klass (d, args);
+  sc_object_arguments_destroy (args);
+
+  return car;
 }
 
 Car                *

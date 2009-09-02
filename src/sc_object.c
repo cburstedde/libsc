@@ -588,13 +588,13 @@ sc_object_klass_new (void)
                                   (sc_object_method_t) write_fn);
   SC_ASSERT (a1 && a2 && a3);
 
-  sc_object_initialize (o);
+  sc_object_initialize (o, NULL);
 
   return o;
 }
 
 sc_object_t        *
-sc_object_new_from_klass (sc_object_t * d)
+sc_object_new_from_klass (sc_object_t * d, sc_object_arguments_t * args)
 {
   sc_object_t        *o;
 
@@ -602,7 +602,7 @@ sc_object_new_from_klass (sc_object_t * d)
 
   o = sc_object_alloc ();
   sc_object_delegate_push (o, d);
-  sc_object_initialize (o);
+  sc_object_initialize (o, args);
 
   return o;
 }
@@ -677,7 +677,7 @@ sc_object_is_type (sc_object_t * o, const char *type)
 }
 
 void
-sc_object_initialize (sc_object_t * o)
+sc_object_initialize (sc_object_t * o, sc_object_arguments_t * args)
 {
   size_t              zz;
   sc_object_recursion_match_t *match;
@@ -697,7 +697,7 @@ sc_object_initialize (sc_object_t * o)
       oinmi = match->oinmi;
       SC_ASSERT (oinmi != NULL);
 
-      ((void (*)(sc_object_t *)) oinmi) (o);
+      ((void (*)(sc_object_t *, sc_object_arguments_t *)) oinmi) (o, args);
     }
   }
 

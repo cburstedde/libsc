@@ -174,7 +174,8 @@ void               *sc_object_arguments_pointer (sc_object_arguments_t * args,
 /* construction */
 sc_object_t        *sc_object_alloc (void);
 sc_object_t        *sc_object_klass_new (void);
-sc_object_t        *sc_object_new_from_klass (sc_object_t * d);
+sc_object_t        *sc_object_new_from_klass (sc_object_t * d,
+                                              sc_object_arguments_t * args);
 
 /* handle object data */
 void               *sc_object_get_data (sc_object_t * o,
@@ -184,7 +185,8 @@ void               *sc_object_get_data (sc_object_t * o,
 /* All delegate's methods are called in pre-order until one returns true */
 bool                sc_object_is_type (sc_object_t * o, const char *type);
 /* All delegate's methods are called in post-order */
-void                sc_object_initialize (sc_object_t * o);
+void                sc_object_initialize (sc_object_t * o,
+                                          sc_object_arguments_t * args);
 /* All delegate's methods are called in pre-order */
 void                sc_object_finalize (sc_object_t * o);
 /* Standard virtual methods get passed the match object, see sc_object.c */

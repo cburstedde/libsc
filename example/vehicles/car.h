@@ -27,6 +27,7 @@ extern const char  *car_type;
 
 /* construction */
 sc_object_t        *car_klass_new (sc_object_t * d);
+sc_object_t        *car_new (sc_object_t * d, float wheelsize);
 
 /* data */
 Car                *car_get_data (sc_object_t * o);

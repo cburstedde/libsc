@@ -27,16 +27,16 @@ main (int argc, char **argv)
 
   SC_INFO ("Construct sc_object_ts\n");
   object_klass = sc_object_klass_new ();
-  o[0] = sc_object_new_from_klass (object_klass);
-  o[1] = sc_object_new_from_klass (object_klass);
+  o[0] = sc_object_new_from_klass (object_klass, NULL);
+  o[1] = sc_object_new_from_klass (object_klass, NULL);
 
   SC_INFO ("Construct cars\n");
   car_klass = car_klass_new (object_klass);
-  o[2] = v[0] = c[0] = sc_object_new_from_klass (car_klass);
+  o[2] = v[0] = c[0] = car_new (car_klass, 17.);
 
   SC_INFO ("Construct tuned cars\n");
   tuned_car_klass = tuned_car_klass_new (car_klass);
-  o[3] = v[1] = c[1] = t[0] = sc_object_new_from_klass (tuned_car_klass);
+  o[3] = v[1] = c[1] = t[0] = tuned_car_new (tuned_car_klass, 2);
 
   SC_INFO ("Write klasses\n");
   sc_object_write (object_klass, stdout);
