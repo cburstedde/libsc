@@ -54,16 +54,20 @@ sc_object_value_equal (const void *v1, const void *v2, const void *u)
 static unsigned
 sc_object_entry_hash (const void *v, const void *u)
 {
-  const sc_object_entry_t *e = v;
-  const unsigned long m = ((1UL << 32) - 1);
-  unsigned long       l = (unsigned long) e->key;
   uint32_t            a, b, c;
+  const sc_object_entry_t *e = v;
+  const unsigned long l = (unsigned long) e->key;
+#if SC_SIZEOF_UNSIGNED_LONG > 4
+  const unsigned long m = ((1UL << 32) - 1);
 
   a = (uint32_t) (l & m);
   b = (uint32_t) ((l >> 32) & m);
-  c = 0;
-
-  sc_hash_mix (a, b, c);
+#else
+  a = (uint32_t) l;
+  b = 0xb0defe1dU;
+#endif
+  c = 0xdeadbeefU;
+  sc_hash_final (a, b, c);
 
   return (unsigned) c;
 }
@@ -80,15 +84,19 @@ sc_object_entry_equal (const void *v1, const void *v2, const void *u)
 static unsigned
 sc_object_hash (const void *v, const void *u)
 {
-  const unsigned long m = ((1UL << 32) - 1);
-  unsigned long       l = (unsigned long) v;
   uint32_t            a, b, c;
+  const unsigned long l = (unsigned long) v;
+#if SC_SIZEOF_UNSIGNED_LONG > 4
+  const unsigned long m = ((1UL << 32) - 1);
 
   a = (uint32_t) (l & m);
   b = (uint32_t) ((l >> 32) & m);
-  c = 0;
-
-  sc_hash_mix (a, b, c);
+#else
+  a = (uint32_t) l;
+  b = 0xb0defe1dU;
+#endif
+  c = 0xdeadbeefU;
+  sc_hash_final (a, b, c);
 
   return (unsigned) c;
 }
