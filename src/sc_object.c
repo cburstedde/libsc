@@ -125,8 +125,6 @@ sc_object_entry_free (void **v, const void *u)
 static              bool
 is_type_fn (sc_object_t * o, const char *type)
 {
-  SC_LDEBUG ("sc_object_t is_type\n");
-
   return !strcmp (type, sc_object_type);
 }
 
@@ -134,8 +132,6 @@ static void
 finalize_fn (sc_object_t * o)
 {
   SC_ASSERT (sc_object_is_type (o, sc_object_type));
-
-  SC_LDEBUG ("sc_object_t finalize\n");
 
   sc_object_delegate_pop_all (o);
 
