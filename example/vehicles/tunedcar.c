@@ -43,7 +43,7 @@ initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
   tuned_car->tickets = 0;
 
   if (args != NULL) {
-    tuned_car->faster = sc_object_arguments_int (args, "faster");
+    tuned_car->faster = sc_object_arguments_int (args, "faster", 1);
   }
 }
 

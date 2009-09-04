@@ -28,7 +28,7 @@ typedef void        (*sc_object_method_t) (void);
 
 typedef enum
 {
-  SC_OBJECT_VALUE_NONE,
+  SC_OBJECT_VALUE_NONE = 0,
   SC_OBJECT_VALUE_INT,
   SC_OBJECT_VALUE_DOUBLE,
   SC_OBJECT_VALUE_STRING,
@@ -183,14 +183,20 @@ sc_object_method_t  sc_object_delegate_lookup (sc_object_t * o,
 sc_object_arguments_t *sc_object_arguments_new (int dummy, ...);
 void                sc_object_arguments_destroy (sc_object_arguments_t *
                                                  args);
+sc_object_value_type_t sc_object_arguments_exist (sc_object_arguments_t *
+                                                  args, const char *key);
+/* if the key is not present then dvalue is returned */
 int                 sc_object_arguments_int (sc_object_arguments_t * args,
-                                             const char *key);
+                                             const char *key, int dvalue);
 double              sc_object_arguments_double (sc_object_arguments_t * args,
-                                                const char *key);
+                                                const char *key,
+                                                double dvalue);
 const char         *sc_object_arguments_string (sc_object_arguments_t * args,
-                                                const char *key);
+                                                const char *key,
+                                                const char *dvalue);
 void               *sc_object_arguments_pointer (sc_object_arguments_t * args,
-                                                 const char *key);
+                                                 const char *key,
+                                                 void *dvalue);
 
 /* construction */
 sc_object_t        *sc_object_alloc (void);

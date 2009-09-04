@@ -508,10 +508,9 @@ sc_object_arguments_destroy (sc_object_arguments_t * args)
   SC_FREE (args);
 }
 
-int
-sc_object_arguments_int (sc_object_arguments_t * args, const char *key)
+sc_object_value_type_t
+sc_object_arguments_exist (sc_object_arguments_t * args, const char *key)
 {
-  bool                success;
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
   sc_object_value_t  *value;
@@ -520,19 +519,39 @@ sc_object_arguments_int (sc_object_arguments_t * args, const char *key)
 
   pvalue->key = key;
   pvalue->type = SC_OBJECT_VALUE_NONE;
-  success = sc_hash_lookup (args->hash, pvalue, &found);
-  SC_ASSERT (success);
+  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+    value = (sc_object_value_t *) (*found);
+    return value->type;
+  }
+  else
+    return SC_OBJECT_VALUE_NONE;
+}
 
-  value = (sc_object_value_t *) (*found);
-  SC_ASSERT (value->type == SC_OBJECT_VALUE_INT);
+int
+sc_object_arguments_int (sc_object_arguments_t * args, const char *key,
+                         int dvalue)
+{
+  void              **found;
+  sc_object_value_t   svalue, *pvalue = &svalue;
+  sc_object_value_t  *value;
 
-  return value->value.i;
+  SC_ASSERT (args != NULL);
+
+  pvalue->key = key;
+  pvalue->type = SC_OBJECT_VALUE_NONE;
+  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+    value = (sc_object_value_t *) (*found);
+    SC_ASSERT (value->type == SC_OBJECT_VALUE_INT);
+    return value->value.i;
+  }
+  else
+    return dvalue;
 }
 
 double
-sc_object_arguments_double (sc_object_arguments_t * args, const char *key)
+sc_object_arguments_double (sc_object_arguments_t * args, const char *key,
+                            double dvalue)
 {
-  bool                success;
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
   sc_object_value_t  *value;
@@ -541,19 +560,19 @@ sc_object_arguments_double (sc_object_arguments_t * args, const char *key)
 
   pvalue->key = key;
   pvalue->type = SC_OBJECT_VALUE_NONE;
-  success = sc_hash_lookup (args->hash, pvalue, &found);
-  SC_ASSERT (success);
-
-  value = (sc_object_value_t *) (*found);
-  SC_ASSERT (value->type == SC_OBJECT_VALUE_DOUBLE);
-
-  return value->value.g;
+  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+    value = (sc_object_value_t *) (*found);
+    SC_ASSERT (value->type == SC_OBJECT_VALUE_DOUBLE);
+    return value->value.g;
+  }
+  else
+    return dvalue;
 }
 
 const char         *
-sc_object_arguments_string (sc_object_arguments_t * args, const char *key)
+sc_object_arguments_string (sc_object_arguments_t * args, const char *key,
+                            const char *dvalue)
 {
-  bool                success;
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
   sc_object_value_t  *value;
@@ -562,19 +581,19 @@ sc_object_arguments_string (sc_object_arguments_t * args, const char *key)
 
   pvalue->key = key;
   pvalue->type = SC_OBJECT_VALUE_NONE;
-  success = sc_hash_lookup (args->hash, pvalue, &found);
-  SC_ASSERT (success);
-
-  value = (sc_object_value_t *) (*found);
-  SC_ASSERT (value->type == SC_OBJECT_VALUE_STRING);
-
-  return value->value.s;
+  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+    value = (sc_object_value_t *) (*found);
+    SC_ASSERT (value->type == SC_OBJECT_VALUE_STRING);
+    return value->value.s;
+  }
+  else
+    return dvalue;
 }
 
 void               *
-sc_object_arguments_pointer (sc_object_arguments_t * args, const char *key)
+sc_object_arguments_pointer (sc_object_arguments_t * args, const char *key,
+                             void *dvalue)
 {
-  bool                success;
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
   sc_object_value_t  *value;
@@ -583,13 +602,13 @@ sc_object_arguments_pointer (sc_object_arguments_t * args, const char *key)
 
   pvalue->key = key;
   pvalue->type = SC_OBJECT_VALUE_NONE;
-  success = sc_hash_lookup (args->hash, pvalue, &found);
-  SC_ASSERT (success);
-
-  value = (sc_object_value_t *) (*found);
-  SC_ASSERT (value->type == SC_OBJECT_VALUE_POINTER);
-
-  return value->value.p;
+  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+    value = (sc_object_value_t *) (*found);
+    SC_ASSERT (value->type == SC_OBJECT_VALUE_POINTER);
+    return value->value.p;
+  }
+  else
+    return dvalue;
 }
 
 sc_object_t        *

@@ -42,7 +42,9 @@ initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
   car->wheelsize = 0.;
 
   if (args != NULL) {
-    car->wheelsize = (float) sc_object_arguments_double (args, "wheelsize");
+    car->wheelsize =
+      (float) sc_object_arguments_double (args, "wheelsize", 0.);
+    SC_ASSERT (car->wheelsize > 0.);
   }
 }
 

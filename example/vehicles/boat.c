@@ -42,7 +42,8 @@ initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
   boat->name = "<undefined>";
 
   if (args != NULL) {
-    boat->name = sc_object_arguments_string (args, "name");
+    boat->name = sc_object_arguments_string (args, "name", NULL);
+    SC_ASSERT (boat->name != NULL);
   }
 }
 
