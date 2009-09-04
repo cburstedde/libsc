@@ -45,7 +45,7 @@ typedef struct sc_object_value
     int                 i;
     double              g;
     const char         *s;
-    void               *v;
+    void               *p;
   }
   value;
 }

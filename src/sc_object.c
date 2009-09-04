@@ -467,9 +467,9 @@ sc_object_arguments_new_va (va_list ap)
       value->type = SC_OBJECT_VALUE_STRING;
       value->value.s = va_arg (ap, const char *);
       break;
-    case 'v':
+    case 'p':
       value->type = SC_OBJECT_VALUE_POINTER;
-      value->value.v = va_arg (ap, void *);
+      value->value.p = va_arg (ap, void *);
       break;
     default:
       SC_ABORTF ("invalid argument character %c", s[0]);
@@ -589,7 +589,7 @@ sc_object_arguments_pointer (sc_object_arguments_t * args, const char *key)
   value = (sc_object_value_t *) (*found);
   SC_ASSERT (value->type == SC_OBJECT_VALUE_POINTER);
 
-  return value->value.v;
+  return value->value.p;
 }
 
 sc_object_t        *
