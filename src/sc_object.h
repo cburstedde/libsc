@@ -24,6 +24,8 @@
 #include <sc.h>
 #include <sc_containers.h>
 
+SC_EXTERN_C_BEGIN;
+
 typedef void        (*sc_object_method_t) (void);
 
 typedef enum
@@ -219,5 +221,7 @@ void                sc_object_initialize (sc_object_t * o,
 void                sc_object_finalize (sc_object_t * o);
 /* Standard virtual methods get passed the match object, see sc_object.c */
 void                sc_object_write (sc_object_t * o, FILE * out);
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_OBJECT_H */
