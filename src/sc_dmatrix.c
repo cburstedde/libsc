@@ -21,21 +21,21 @@
 #include <sc_dmatrix.h>
 #include <sc_lapack.h>
 
-bool
+int
 sc_darray_is_valid (const double *darray, size_t nelem)
 {
   size_t              zz;
 
   for (zz = 0; zz < nelem; ++zz) {
     if (darray[zz] != darray[zz]) {     /* ignore the comparison warning */
-      return false;
+      return 0;
     }
   }
 
-  return true;
+  return 1;
 }
 
-bool
+int
 sc_darray_is_range (const double *darray, size_t nelem,
                     double low, double high)
 {
@@ -43,11 +43,11 @@ sc_darray_is_range (const double *darray, size_t nelem,
 
   for (zz = 0; zz < nelem; ++zz) {
     if (!(low <= darray[zz] && darray[zz] <= high)) {
-      return false;
+      return 0;
     }
   }
 
-  return true;
+  return 1;
 }
 
 static void
@@ -73,7 +73,7 @@ sc_dmatrix_new_e (sc_dmatrix_t * rdm, sc_bint_t m, sc_bint_t n, double *data)
 }
 
 static sc_dmatrix_t *
-sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, bool init_zero)
+sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, int init_zero)
 {
   sc_dmatrix_t       *rdm;
   double             *data;
@@ -91,7 +91,7 @@ sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, bool init_zero)
   }
 
   sc_dmatrix_new_e (rdm, m, n, data);
-  rdm->view = false;
+  rdm->view = 0;
 
   return rdm;
 }
@@ -99,13 +99,13 @@ sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, bool init_zero)
 sc_dmatrix_t       *
 sc_dmatrix_new (sc_bint_t m, sc_bint_t n)
 {
-  return sc_dmatrix_new_internal (m, n, false);
+  return sc_dmatrix_new_internal (m, n, 0);
 }
 
 sc_dmatrix_t       *
 sc_dmatrix_new_zero (sc_bint_t m, sc_bint_t n)
 {
-  return sc_dmatrix_new_internal (m, n, true);
+  return sc_dmatrix_new_internal (m, n, 1);
 }
 
 sc_dmatrix_t       *
@@ -117,7 +117,7 @@ sc_dmatrix_new_data (sc_bint_t m, sc_bint_t n, double *data)
 
   rdm = SC_ALLOC (sc_dmatrix_t, 1);
   sc_dmatrix_new_e (rdm, m, n, data);
-  rdm->view = true;
+  rdm->view = 1;
 
   return rdm;
 }
@@ -132,7 +132,7 @@ sc_dmatrix_new_view (sc_bint_t m, sc_bint_t n, sc_dmatrix_t * orig)
 
   rdm = SC_ALLOC (sc_dmatrix_t, 1);
   sc_dmatrix_new_e (rdm, m, n, orig->e[0]);
-  rdm->view = true;
+  rdm->view = 1;
 
   return rdm;
 }
@@ -207,13 +207,13 @@ sc_dmatrix_destroy (sc_dmatrix_t * dmatrix)
   SC_FREE (dmatrix);
 }
 
-bool
+int
 sc_dmatrix_is_valid (const sc_dmatrix_t * A)
 {
   return sc_darray_is_valid (A->e[0], (size_t) A->m * (size_t) A->n);
 }
 
-bool
+int
 sc_dmatrix_is_symmetric (const sc_dmatrix_t * A, double tolerance)
 {
   sc_bint_t           i, j;
@@ -228,12 +228,12 @@ sc_dmatrix_is_symmetric (const sc_dmatrix_t * A, double tolerance)
 #ifdef SC_DEBUG
         fprintf (stderr, "sc dmatrix not symmetric by %g\n", diff);
 #endif
-        return false;
+        return 0;
       }
     }
   }
 
-  return true;
+  return 1;
 }
 
 void

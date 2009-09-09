@@ -55,7 +55,7 @@ typedef struct
   char                program_path[BUFSIZ];
   const char         *program_name;
   sc_array_t         *option_items;
-  bool                args_alloced;
+  int                 args_alloced;
   int                 first_arg;
   int                 argc;
   char              **argv;

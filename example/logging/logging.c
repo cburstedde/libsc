@@ -56,7 +56,7 @@ main (int argc, char **argv)
   sc_set_log_defaults (stdout, NULL, SC_LP_VERBOSE);
   log_normal ();
 
-  sc_init (MPI_COMM_WORLD, true, true, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   sc_package_print_summary (SC_LP_PRODUCTION);
 

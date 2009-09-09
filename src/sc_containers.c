@@ -238,7 +238,7 @@ sc_array_sort (sc_array_t * array, int (*compar) (const void *, const void *))
   qsort (array->array, array->elem_count, array->elem_size, compar);
 }
 
-bool
+int
 sc_array_is_sorted (sc_array_t * array,
                     int (*compar) (const void *, const void *))
 {
@@ -247,19 +247,19 @@ sc_array_is_sorted (sc_array_t * array,
   void               *vold, *vnew;
 
   if (count <= 1) {
-    return true;
+    return 1;
   }
 
   vold = sc_array_index (array, 0);
   for (zz = 1; zz < count; ++zz) {
     vnew = sc_array_index (array, zz);
     if (compar (vold, vnew) > 0) {
-      return false;
+      return 0;
     }
     vold = vnew;
   }
 
-  return true;
+  return 1;
 }
 
 void
@@ -944,7 +944,7 @@ sc_hash_unlink_destroy (sc_hash_t * hash)
   SC_FREE (hash);
 }
 
-bool
+int
 sc_hash_lookup (sc_hash_t * hash, void *v, void ***found)
 {
   size_t              hval;
@@ -960,16 +960,16 @@ sc_hash_lookup (sc_hash_t * hash, void *v, void ***found)
       if (found != NULL) {
         *found = &lynk->data;
       }
-      return true;
+      return 1;
     }
   }
-  return false;
+  return 0;
 }
 
-bool
+int
 sc_hash_insert_unique (sc_hash_t * hash, void *v, void ***found)
 {
-  bool                found_again;
+  int                 found_again;
   size_t              hval;
   sc_list_t          *list;
   sc_link_t          *lynk;
@@ -983,7 +983,7 @@ sc_hash_insert_unique (sc_hash_t * hash, void *v, void ***found)
       if (found != NULL) {
         *found = &lynk->data;
       }
-      return false;
+      return 0;
     }
   }
 
@@ -1003,10 +1003,10 @@ sc_hash_insert_unique (sc_hash_t * hash, void *v, void ***found)
     }
   }
 
-  return true;
+  return 1;
 }
 
-bool
+int
 sc_hash_remove (sc_hash_t * hash, void *v, void **found)
 {
   size_t              hval;
@@ -1030,11 +1030,11 @@ sc_hash_remove (sc_hash_t * hash, void *v, void **found)
       if (hash->elem_count % sc_hash_shrink_interval == 0) {
         sc_hash_maybe_resize (hash);
       }
-      return true;
+      return 1;
     }
     prev = lynk;
   }
-  return false;
+  return 0;
 }
 
 void
@@ -1097,7 +1097,7 @@ sc_hash_array_hash_fn (const void *v, const void *u)
   return internal_data->hash_fn (p, internal_data->user_data);
 }
 
-static              bool
+static int
 sc_hash_array_equal_fn (const void *v1, const void *v2, const void *u)
 {
   const sc_hash_array_data_t *internal_data = u;
@@ -1142,10 +1142,10 @@ sc_hash_array_destroy (sc_hash_array_t * hash_array)
   SC_FREE (hash_array);
 }
 
-bool
+int
 sc_hash_array_is_valid (sc_hash_array_t * hash_array)
 {
-  bool                found;
+  int                 found;
   size_t              zz, position;
   void               *v;
 
@@ -1153,11 +1153,11 @@ sc_hash_array_is_valid (sc_hash_array_t * hash_array)
     v = sc_array_index (&hash_array->a, zz);
     found = sc_hash_array_lookup (hash_array, v, &position);
     if (!found || position != zz) {
-      return false;
+      return 0;
     }
   }
 
-  return true;
+  return 1;
 }
 
 void
@@ -1167,11 +1167,11 @@ sc_hash_array_truncate (sc_hash_array_t * hash_array)
   sc_array_reset (&hash_array->a);
 }
 
-bool
+int
 sc_hash_array_lookup (sc_hash_array_t * hash_array, void *v,
                       size_t * position)
 {
-  bool                found;
+  int                 found;
   void              **found_void;
 
   hash_array->internal_data.current_item = v;
@@ -1182,10 +1182,10 @@ sc_hash_array_lookup (sc_hash_array_t * hash_array, void *v,
     if (position != NULL) {
       *position = (size_t) (*found_void);
     }
-    return true;
+    return 1;
   }
   else {
-    return false;
+    return 0;
   }
 }
 
@@ -1193,7 +1193,7 @@ void               *
 sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
                              size_t * position)
 {
-  bool                added;
+  int                 added;
   void              **found_void;
 
   SC_ASSERT (hash_array->a.elem_count == hash_array->h->elem_count);

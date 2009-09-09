@@ -65,7 +65,7 @@ sc_stats_mpifunc (void *invec, void *inoutvec, int *len,
 void
 sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
 {
-  stats->dirty = true;
+  stats->dirty = 1;
   stats->count = 1;
   stats->sum_values = value;
   stats->sum_squares = value * value;
@@ -150,7 +150,7 @@ sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     stats[i].variance_mean = stats[i].variance / cnt;
     stats[i].standev = sqrt (stats[i].variance);
     stats[i].standev_mean = sqrt (stats[i].variance_mean);
-    stats[i].dirty = false;
+    stats[i].dirty = 0;
   }
 
   SC_FREE (flat);
@@ -176,7 +176,7 @@ sc_stats_compute1 (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 
 void
 sc_stats_print (int package_id, int log_priority,
-                int nvars, sc_statinfo_t * stats, bool full, bool summary)
+                int nvars, sc_statinfo_t * stats, int full, int summary)
 {
   int                 i, count;
   sc_statinfo_t      *si;

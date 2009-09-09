@@ -35,7 +35,7 @@ sc_options_free_args (sc_options_t * opt)
     SC_FREE (opt->argv);
   }
 
-  opt->args_alloced = false;
+  opt->args_alloced = 0;
   opt->first_arg = 0;
   opt->argc = 0;
   opt->argv = NULL;
@@ -51,7 +51,7 @@ sc_options_new (const char *program_path)
   snprintf (opt->program_path, BUFSIZ, "%s", program_path);
   opt->program_name = basename (opt->program_path);
   opt->option_items = sc_array_new (sizeof (sc_option_item_t));
-  opt->args_alloced = false;
+  opt->args_alloced = 0;
   opt->first_arg = -1;
   opt->argc = 0;
   opt->argv = NULL;
@@ -743,7 +743,7 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
   }
 
   sc_options_free_args (opt);
-  opt->args_alloced = true;
+  opt->args_alloced = 1;
   opt->first_arg = 0;
   opt->argc = count;
   opt->argv = SC_ALLOC (char *, count);

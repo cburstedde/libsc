@@ -46,7 +46,7 @@ main (int argc, char **argv)
   mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &rank);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (MPI_COMM_WORLD, true, true, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'w', "switch", &w, "Switch");

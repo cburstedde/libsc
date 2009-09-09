@@ -35,9 +35,9 @@ typedef struct
   int                 cacheknot;        /* previously evaluated knot interval */
   sc_dmatrix_t       *points;   /* (p + 1) x d array of points, not owned */
   sc_dmatrix_t       *knots;    /* m + 1 array of knots */
-  bool                knots_owned;
+  int                 knots_owned;
   sc_dmatrix_t       *works;    /* Workspace ((n + 1) * (n + 1)) x d */
-  bool                works_owned;
+  int                 works_owned;
 }
 sc_bspline_t;
 

@@ -44,7 +44,7 @@ sc_amr_error_stats (MPI_Comm mpicomm, long num_elements,
     emin = SC_MIN (emin, errors[i]);
     emax = SC_MAX (emax, errors[i]);
   }
-  si->dirty = true;
+  si->dirty = 1;
   si->count = num_elements;
   si->sum_values = sum;
   si->sum_squares = squares;

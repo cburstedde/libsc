@@ -7,9 +7,10 @@ tries to adhere to.
    the main directory.  It calls GNU indent with some extra options.
    This does not apply for included third party code.
 
- * All bool parameters will not be checked with (a==true) or (a==false).  We
-   follow the standard C convention where (a) is used to test true
-   and (!a) is used to test false.
+ * All boolean parameters will not be checked with (a==true) or (a==false).
+   We follow the standard C convention where (a) is used to test true
+   and (!a) is used to test false.  The bool type is not used.
+   An exception is to test for pointers like (p == NULL) or (p != NULL).
 
  * Variable names that are not self-descriptive
    Loop variables of type int can be named as usual: i, j, etc.

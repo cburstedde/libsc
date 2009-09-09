@@ -44,7 +44,7 @@ typedef void        (*sc_sig_t) (int);
 
 typedef struct sc_package
 {
-  bool                is_registered;
+  int                 is_registered;
   sc_log_handler_t    log_handler;
   int                 log_threshold;
   int                 malloc_count;
@@ -104,12 +104,12 @@ static FILE        *sc_log_stream = NULL;
 static sc_log_handler_t sc_default_log_handler = sc_log_handler;
 static int          sc_default_log_threshold = SC_LP_THRESHOLD;
 
-static bool         sc_signals_caught = false;
+static int          sc_signals_caught = 0;
 static sc_sig_t     system_int_handler = NULL;
 static sc_sig_t     system_segv_handler = NULL;
 static sc_sig_t     system_usr2_handler = NULL;
 
-static bool         sc_print_backtrace = false;
+static int          sc_print_backtrace = 0;
 static sc_handler_t sc_abort_handler = NULL;
 static void        *sc_abort_data = NULL;
 
@@ -153,7 +153,7 @@ sc_signal_handler (int sig)
  *                      If false, reinstate previous signal handler.
  */
 static void
-sc_set_signal_handler (bool catch_signals)
+sc_set_signal_handler (int catch_signals)
 {
   if (catch_signals && !sc_signals_caught) {
     system_int_handler = signal (SIGINT, sc_signal_handler);
@@ -162,7 +162,7 @@ sc_set_signal_handler (bool catch_signals)
     SC_CHECK_ABORT (system_segv_handler != SIG_ERR, "catching SEGV");
     system_usr2_handler = signal (SIGUSR2, sc_signal_handler);
     SC_CHECK_ABORT (system_usr2_handler != SIG_ERR, "catching USR2");
-    sc_signals_caught = true;
+    sc_signals_caught = 1;
   }
   else if (!catch_signals && sc_signals_caught) {
     (void) signal (SIGINT, system_int_handler);
@@ -171,7 +171,7 @@ sc_set_signal_handler (bool catch_signals)
     system_segv_handler = NULL;
     (void) signal (SIGUSR2, system_usr2_handler);
     system_usr2_handler = NULL;
-    sc_signals_caught = false;
+    sc_signals_caught = 0;
   }
 }
 
@@ -180,11 +180,11 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
                 int package, int category, int priority,
                 const char *fmt, va_list ap)
 {
-  bool                wp = false, wi = false;
+  int                 wp = 0, wi = 0;
 
   if (package != -1) {
     SC_ASSERT (sc_package_is_registered (package));
-    wp = true;
+    wp = 1;
   }
   wi = (category == SC_LC_NORMAL && sc_identifier >= 0);
 
@@ -640,7 +640,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   for (i = 0; i < SC_MAX_PACKAGES; ++i) {
     p = sc_packages + i;
     if (!p->is_registered) {
-      p->is_registered = true;
+      p->is_registered = 1;
       p->log_handler = log_handler;
       p->log_threshold = log_threshold;
       p->malloc_count = p->free_count = 0;
@@ -657,7 +657,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   return i;
 }
 
-bool
+int
 sc_package_is_registered (int package_id)
 {
   SC_CHECK_ABORT (0 <= package_id && package_id < SC_MAX_PACKAGES,
@@ -677,7 +677,7 @@ sc_package_unregister (int package_id)
   sc_memory_check (package_id);
 
   p = sc_packages + package_id;
-  p->is_registered = false;
+  p->is_registered = 0;
   p->log_handler = NULL;
   p->log_threshold = SC_LP_DEFAULT;
   p->malloc_count = p->free_count = 0;
@@ -708,7 +708,7 @@ sc_package_print_summary (int log_priority)
 
 void
 sc_init (MPI_Comm mpicomm,
-         bool catch_signals, bool print_backtrace,
+         int catch_signals, int print_backtrace,
          sc_log_handler_t log_handler, int log_threshold)
 {
   int                 w;
@@ -811,11 +811,11 @@ sc_finalize (void)
   SC_ASSERT (sc_num_packages == 0);
   sc_memory_check (-1);
 
-  sc_set_signal_handler (false);
+  sc_set_signal_handler (0);
   sc_set_abort_handler (NULL, NULL);
   sc_mpicomm = MPI_COMM_NULL;
 
-  sc_print_backtrace = false;
+  sc_print_backtrace = 0;
   sc_identifier = -1;
 
   /* close trace file */

@@ -27,7 +27,7 @@ SC_EXTERN_C_BEGIN;
 
 typedef struct sc_statinfo
 {
-  bool                dirty;    /* only update stats if this is true */
+  int                 dirty;    /* only update stats if this is true */
   long                count;    /* inout, global count is 52bit accurate */
   double              sum_values, sum_squares, min, max;        /* inout */
   int                 min_at_rank, max_at_rank; /* out */
@@ -88,7 +88,7 @@ void                sc_stats_compute1 (MPI_Comm mpicomm, int nvars,
  */
 void                sc_stats_print (int package_id, int log_priority,
                                     int nvars, sc_statinfo_t * stats,
-                                    bool full, bool summary);
+                                    int full, int summary);
 
 SC_EXTERN_C_END;
 

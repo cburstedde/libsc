@@ -155,7 +155,7 @@ check_matrix_multiply ()
 int
 main (int argc, char **argv)
 {
-  sc_init (MPI_COMM_NULL, true, true, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
   check_matrix_vector ();
   check_matrix_multiply ();

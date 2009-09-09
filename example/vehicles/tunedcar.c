@@ -24,7 +24,7 @@
 
 const char         *tuned_car_type = "tuned_car";
 
-static              bool
+static int
 is_type_fn (sc_object_t * o, const char *type)
 {
   SC_LDEBUG ("tuned_car is_type\n");
@@ -79,7 +79,7 @@ accelerate_fn (sc_object_t * o, sc_object_t * m)
 
   oinmi =
     sc_object_delegate_lookup (m, (sc_object_method_t) vehicle_accelerate,
-                               true, &r);
+                               1, &r);
   SC_ASSERT (sc_object_is_type (r, car_type));
 
   if (oinmi != NULL) {
@@ -91,7 +91,7 @@ accelerate_fn (sc_object_t * o, sc_object_t * m)
 sc_object_t        *
 tuned_car_klass_new (sc_object_t * d)
 {
-  bool                a1, a2, a3, a4, a5;
+  int                 a1, a2, a3, a4, a5;
   sc_object_t        *o;
 
   SC_ASSERT (d != NULL);
@@ -148,7 +148,7 @@ tuned_car_tickets (sc_object_t * o)
 
   oinmi =
     sc_object_delegate_lookup (o, (sc_object_method_t) tuned_car_tickets,
-                               false, &m);
+                               0, &m);
   SC_ASSERT (oinmi != NULL);
 
   return ((int (*)(sc_object_t *, sc_object_t *)) oinmi) (o, m);

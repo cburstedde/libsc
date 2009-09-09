@@ -137,23 +137,23 @@ sc_bspline_new (int n, sc_dmatrix_t * points,
   bs->points = points;
   if (knots == NULL) {
     bs->knots = sc_bspline_knots_new (bs->n, points);
-    bs->knots_owned = true;
+    bs->knots_owned = 1;
   }
   else {
     SC_ASSERT (knots->m == bs->m + 1);
     SC_ASSERT (knots->n == 1);
     bs->knots = knots;
-    bs->knots_owned = false;
+    bs->knots_owned = 0;
   }
   if (works == NULL) {
     bs->works = sc_bspline_workspace_new (bs->n, bs->d);
-    bs->works_owned = true;
+    bs->works_owned = 1;
   }
   else {
     SC_ASSERT (works->m == (bs->n + 1) * (bs->n + 1));
     SC_ASSERT (works->n == bs->d);
     bs->works = works;
-    bs->works_owned = false;
+    bs->works_owned = 0;
   }
 
   return bs;

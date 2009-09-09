@@ -135,7 +135,7 @@ main (int argc, char **argv)
   sc_dmatrix_t       *points, *knots, *works;
   sc_bspline_t       *bs;
 
-  sc_init (MPI_COMM_NULL, true, true, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
   nargs = 2;
   if (argc != nargs) {

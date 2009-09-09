@@ -23,7 +23,7 @@
 
 const char         *boat_type = "boat";
 
-static              bool
+static int
 is_type_fn (sc_object_t * o, const char *type)
 {
   SC_LDEBUG ("boat is_type\n");
@@ -68,7 +68,7 @@ accelerate_fn (sc_object_t * o, sc_object_t * m)
 sc_object_t        *
 boat_klass_new (sc_object_t * d)
 {
-  bool                a1, a2, a3, a4;
+  int                 a1, a2, a3, a4;
   sc_object_t        *o;
 
   SC_ASSERT (d != NULL);

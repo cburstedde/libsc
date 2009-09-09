@@ -30,7 +30,7 @@ typedef struct sc_dmatrix
 {
   double            **e;
   sc_bint_t           m, n;
-  bool                view;
+  int                 view;
 }
 sc_dmatrix_t;
 
@@ -39,7 +39,7 @@ sc_dmatrix_t;
  * \param [in] nelem    Number of doubles in the array.
  * \return              Return false if at least one entry is NaN.
  */
-bool                sc_darray_is_valid (const double *darray, size_t nelem);
+int                 sc_darray_is_valid (const double *darray, size_t nelem);
 
 /** Check whether the values in a double array are in a certain range.
  * \param [in] darray   Array of doubles.
@@ -48,7 +48,7 @@ bool                sc_darray_is_valid (const double *darray, size_t nelem);
  * \param [in] high     Highest allowed value in the array.
  * \return              Return false if at least one entry is out of range.
  */
-bool                sc_darray_is_range (const double *darray, size_t nelem,
+int                 sc_darray_is_range (const double *darray, size_t nelem,
                                         double low, double high);
 
 /*
@@ -91,13 +91,13 @@ void                sc_dmatrix_destroy (sc_dmatrix_t * dmatrix);
 /** Check whether a dmatrix is free of NaN entries.
  * \return          true if the dmatrix does not contain any NaN entries.
  */
-bool                sc_dmatrix_is_valid (const sc_dmatrix_t * A);
+int                 sc_dmatrix_is_valid (const sc_dmatrix_t * A);
 
 /** Check a dmatrix for symmetry.
  * \param [in] tolerance    measures the absolute value of the max difference.
  * \return                  true if matrix is numerically symmetric.
  */
-bool                sc_dmatrix_is_symmetric (const sc_dmatrix_t * A,
+int                 sc_dmatrix_is_symmetric (const sc_dmatrix_t * A,
                                              double tolerance);
 
 void                sc_dmatrix_set_zero (sc_dmatrix_t * dmatrix);

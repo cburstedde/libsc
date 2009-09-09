@@ -84,7 +84,7 @@ main (int argc, char **argv)
   ssize_t             result, r1, r2, r3, t;
   sc_array_t         *a;
 
-  sc_init (MPI_COMM_NULL, true, true, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
   a = sc_array_new (sizeof (int));
   sc_array_resize (a, (size_t) N);

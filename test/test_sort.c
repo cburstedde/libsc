@@ -35,7 +35,7 @@ main (int argc, char **argv)
   int                 i, isizet;
   int                 k, printed;
   int                *recvc, *displ;
-  bool                timing;
+  int                 timing;
   size_t              zz;
   size_t              lcount, gtotal;
   size_t             *nmemb;
@@ -51,14 +51,14 @@ main (int argc, char **argv)
   mpiret = MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (mpicomm, true, true, NULL, SC_LP_DEFAULT);
+  sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
   if (argc >= 2) {
-    timing = true;
+    timing = 1;
     lcount = (size_t) strtol (argv[1], NULL, 0);
   }
   else {
-    timing = false;
+    timing = 0;
     srand ((unsigned) rank << 15);
     lcount = 8 + (size_t) (16. * rand () / (RAND_MAX + 1.0));
   }

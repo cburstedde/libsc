@@ -47,7 +47,7 @@ main (int argc, char **argv)
   mpiret = MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (mpicomm, true, true, NULL, SC_LP_DEFAULT);
+  sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
 #ifdef SC_MPI
   idata = SC_ALLOC (int, mpisize);

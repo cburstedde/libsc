@@ -46,7 +46,7 @@ main (int argc, char **argv)
   mpiret = MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (mpicomm, true, true, NULL, SC_LP_DEFAULT);
+  sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
   if (num_procs != 3) {
     SC_GLOBAL_PRODUCTION ("This test will test things only for np = 3\n");

@@ -164,7 +164,7 @@ main (int argc, char **argv)
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (MPI_COMM_NULL, true, true, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
   sc_flops_start (&fi);
   time_matrix_multiply (&fi);

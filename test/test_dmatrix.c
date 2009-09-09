@@ -43,7 +43,7 @@ main (int argc, char **argv)
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (MPI_COMM_WORLD, true, true, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   A = sc_dmatrix_new_data (3, 3, A_data);
   b = sc_dmatrix_new_data (1, 3, b_data);

@@ -54,16 +54,15 @@ typedef unsigned    (*sc_hash_function_t) (const void *v, const void *u);
  * \param [in] u   Arbitrary user data.
  * \return Returns false if *v1 is unequal *v2 and true otherwise.
  */
-typedef             bool (*sc_equal_function_t) (const void *v1,
-                                                 const void *v2,
-                                                 const void *u);
+typedef int         (*sc_equal_function_t) (const void *v1,
+                                            const void *v2, const void *u);
 
 /** Function to call on every data item of a hash table.
  * \param [in] v   The address of the pointer to the current object.
  * \param [in] u   Arbitrary user data.
  * \return Return true if the traversal should continue, false to stop.
  */
-typedef             bool (*sc_hash_foreach_t) (void **v, const void *u);
+typedef int         (*sc_hash_foreach_t) (void **v, const void *u);
 
 /** The sc_array object provides a large array of equal-size elements.
  * The array can be resized.
@@ -178,7 +177,7 @@ void                sc_array_sort (sc_array_t * array,
  * \param [in] array    The array to check.
  * \param [in] compar   The comparison function to be used.
  */
-bool                sc_array_is_sorted (sc_array_t * array,
+int                 sc_array_is_sorted (sc_array_t * array,
                                         int (*compar) (const void *,
                                                        const void *));
 
@@ -602,7 +601,7 @@ void                sc_hash_unlink_destroy (sc_hash_t * hash);
  *                     is found.  You can assign to **found to override.
  * \return Returns true if object is found, false otherwise.
  */
-bool                sc_hash_lookup (sc_hash_t * hash, void *v, void ***found);
+int                 sc_hash_lookup (sc_hash_t * hash, void *v, void ***found);
 
 /** Insert an object into a hash table if it is not contained already.
  * \param [in]  v      The object to be inserted.
@@ -611,7 +610,7 @@ bool                sc_hash_lookup (sc_hash_t * hash, void *v, void ***found);
  *                     the new object.  You can assign to **found to override.
  * \return Returns true if object is added, false if it is already contained.
  */
-bool                sc_hash_insert_unique (sc_hash_t * hash, void *v,
+int                 sc_hash_insert_unique (sc_hash_t * hash, void *v,
                                            void ***found);
 
 /** Remove an object from a hash table.
@@ -620,7 +619,7 @@ bool                sc_hash_insert_unique (sc_hash_t * hash, void *v,
                        that is removed if that exists.
  * \return Returns true if object is found, false if is not contained.
  */
-bool                sc_hash_remove (sc_hash_t * hash, void *v, void **found);
+int                 sc_hash_remove (sc_hash_t * hash, void *v, void **found);
 
 /** Invoke a callback for every member of the hash table.
  * The functions hash_fn and equal_fn are not called by this function.
@@ -671,7 +670,7 @@ void                sc_hash_array_destroy (sc_hash_array_t * hash_array);
 
 /** Check the internal consistency of a hash array.
  */
-bool                sc_hash_array_is_valid (sc_hash_array_t * hash_array);
+int                 sc_hash_array_is_valid (sc_hash_array_t * hash_array);
 
 /** Remove all elements from the hash array.
  * \param [in,out] hash_array   Hash array to truncate.
@@ -686,7 +685,7 @@ void                sc_hash_array_truncate (sc_hash_array_t * hash_array);
  *                         if found.
  * \return                 Returns true if object is found, false otherwise.
  */
-bool                sc_hash_array_lookup (sc_hash_array_t * hash_array,
+int                 sc_hash_array_lookup (sc_hash_array_t * hash_array,
                                           void *v, size_t * position);
 
 /** Insert an object into a hash array if it is not contained already.

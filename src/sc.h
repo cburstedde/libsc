@@ -53,7 +53,6 @@
 #include <libgen.h>
 #include <limits.h>
 #include <stdarg.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -355,7 +354,7 @@ void                sc_abort_verbosef (const char *filename, int lineno,
 int                 sc_package_register (sc_log_handler_t log_handler,
                                          int log_threshold,
                                          const char *name, const char *full);
-bool                sc_package_is_registered (int package_id);
+int                 sc_package_is_registered (int package_id);
 void                sc_package_unregister (int package_id);
 
 /** Print a summary of all packages registered with SC.
@@ -380,7 +379,7 @@ void                sc_package_print_summary (int log_priority);
  * \param [in] print_backtrace  If true, sc_abort prints a backtrace.
  */
 void                sc_init (MPI_Comm mpicomm,
-                             bool catch_signals, bool print_backtrace,
+                             int catch_signals, int print_backtrace,
                              sc_log_handler_t log_handler, int log_threshold);
 
 /** Unregisters all packages, runs the memory check, removes the

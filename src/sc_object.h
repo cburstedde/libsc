@@ -88,10 +88,10 @@ typedef struct sc_object_recursion_context
   sc_hash_t          *visited;
   sc_object_method_t  lookup;
   sc_array_t         *found;
-  bool                skip_top;
-  bool                accept_self;
-  bool                accept_delegate;
-  bool                (*callfn) (sc_object_t *, sc_object_method_t, void *);
+  int                 skip_top;
+  int                 accept_self;
+  int                 accept_delegate;
+  int                 (*callfn) (sc_object_t *, sc_object_method_t, void *);
   void               *user_data;
   sc_object_t        *last_match;
 }
@@ -135,7 +135,7 @@ void                sc_object_recursion_init (sc_object_recursion_context_t
  * \return              True if a callback returns true.  If callfn == NULL,
  *                      true if any match was found.  False otherwise.
  */
-bool                sc_object_recursion (sc_object_t * o,
+int                 sc_object_recursion (sc_object_t * o,
                                          sc_object_recursion_context_t * rc);
 
 /** Register the implementation of an interface method for an object.
@@ -145,7 +145,7 @@ bool                sc_object_recursion (sc_object_t * o,
  * \param[in] oinmi object instance method implementation
  * \return          true if the method did not exist and was added.
  */
-bool                sc_object_method_register (sc_object_t * o,
+int                 sc_object_method_register (sc_object_t * o,
                                                sc_object_method_t ifm,
                                                sc_object_method_t oinmi);
 
@@ -176,7 +176,7 @@ sc_object_t        *sc_object_delegate_index (sc_object_t * o, int i);
  */
 sc_object_method_t  sc_object_delegate_lookup (sc_object_t * o,
                                                sc_object_method_t ifm,
-                                               bool skip_top,
+                                               int skip_top,
                                                sc_object_t ** m);
 
 /* passing arguments */
@@ -213,7 +213,7 @@ void               *sc_object_get_data (sc_object_t * o,
 
 /* virtual method prototypes */
 /* All delegate's methods are called in pre-order until one returns true */
-bool                sc_object_is_type (sc_object_t * o, const char *type);
+int                 sc_object_is_type (sc_object_t * o, const char *type);
 /* All delegate's methods are called in post-order */
 void                sc_object_initialize (sc_object_t * o,
                                           sc_object_arguments_t * args);

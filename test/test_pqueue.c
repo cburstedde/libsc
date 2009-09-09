@@ -45,7 +45,7 @@ main (int argc, char **argv)
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (MPI_COMM_WORLD, true, true, NULL, SC_LP_DEFAULT);
+  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   a1 = sc_array_new (sizeof (int));
   a2 = sc_array_new (sizeof (int));

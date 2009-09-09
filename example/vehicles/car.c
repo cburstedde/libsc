@@ -23,7 +23,7 @@
 
 const char         *car_type = "car";
 
-static              bool
+static int
 is_type_fn (sc_object_t * o, const char *type)
 {
   SC_LDEBUG ("car is_type\n");
@@ -84,7 +84,7 @@ accelerate_fn (sc_object_t * o, sc_object_t * m)
 sc_object_t        *
 car_klass_new (sc_object_t * d)
 {
-  bool                a1, a2, a3, a4, a5;
+  int                 a1, a2, a3, a4, a5;
   sc_object_t        *o;
   CarKlass           *car_klass;
 
@@ -152,7 +152,7 @@ car_wheelsize (sc_object_t * o)
   SC_ASSERT (sc_object_is_type (o, car_type));
 
   oinmi = sc_object_delegate_lookup (o, (sc_object_method_t) car_wheelsize,
-                                     false, &m);
+                                     0, &m);
   SC_ASSERT (oinmi != NULL);
 
   return ((float (*)(sc_object_t *, sc_object_t *)) oinmi) (o, m);

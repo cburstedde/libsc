@@ -23,7 +23,7 @@
 
 typedef struct sc_psort_peer
 {
-  bool                received;
+  int                 received;
   int                 prank;
   size_t              length;
   char               *buffer;
@@ -89,7 +89,7 @@ sc_bsearch_cumulative (const size_t * cumulative, size_t nmemb,
 }
 
 static void
-sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
+sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
 {
   const size_t        n = hi - lo;
 
@@ -151,7 +151,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
         sreq = sc_array_push (ps);
         lo_data = pst->my_base + (lo + offset - pst->my_lo) * size;
 
-        peer->received = false;
+        peer->received = 0;
         peer->prank = hi_owner;
         peer->length = max_length;
         peer->buffer = SC_ALLOC (char, bytes);
@@ -177,7 +177,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
         sreq = sc_array_push (ps);
         hi_data = pst->my_base + (hi_beg + offset - pst->my_lo) * size;
 
-        peer->received = false;
+        peer->received = 0;
         peer->prank = lo_owner;
         peer->length = max_length;
         peer->buffer = SC_ALLOC (char, bytes);
@@ -286,7 +286,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
 
         /* close down this peer */
         SC_FREE (peer->buffer);
-        peer->received = true;
+        peer->received = 1;
       }
     }
     SC_ASSERT (remaining == 0);
@@ -310,7 +310,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
 }
 
 static void
-sc_psort_bitonic (sc_psort_t * pst, size_t lo, size_t hi, bool dir)
+sc_psort_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
 {
   const size_t        n = hi - lo;
 
@@ -373,7 +373,7 @@ sc_psort (MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
   sc_compare = compar;
   total = gmemb[num_procs];
   SC_GLOBAL_LDEBUGF ("Total values to sort %lld\n", (long long) total);
-  sc_psort_bitonic (&pst, 0, total, true);
+  sc_psort_bitonic (&pst, 0, total, 1);
 
   /* clean up and free memory */
   sc_compare = NULL;
