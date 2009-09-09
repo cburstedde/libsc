@@ -88,6 +88,7 @@ const int sc_log2_lookup_table[256] =
    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
 };
+/* *INDENT-ON* */
 
 int                 sc_package_id = -1;
 FILE               *sc_trace_file = NULL;
@@ -453,14 +454,14 @@ void
 sc_set_log_defaults (FILE * log_stream,
                      sc_log_handler_t log_handler, int log_threshold)
 {
-  sc_default_log_handler =
-    log_handler != NULL ? log_handler : sc_log_handler;
+  sc_default_log_handler = log_handler != NULL ? log_handler : sc_log_handler;
 
   if (log_threshold == SC_LP_DEFAULT) {
     sc_default_log_threshold = SC_LP_THRESHOLD;
   }
   else {
-    SC_ASSERT (log_threshold >= SC_LP_ALWAYS && log_threshold <= SC_LP_SILENT);
+    SC_ASSERT (log_threshold >= SC_LP_ALWAYS
+               && log_threshold <= SC_LP_SILENT);
     sc_default_log_threshold = log_threshold;
   }
 
@@ -595,14 +596,14 @@ sc_abort (void)
 }
 
 void
-sc_abort_verbose (const char * filename, int lineno, const char * msg)
+sc_abort_verbose (const char *filename, int lineno, const char *msg)
 {
   fprintf (stderr, "Abort: %s\n   in %s:%d\n", msg, filename, lineno);
   sc_abort ();
 }
 
 void
-sc_abort_verbosef (const char * filename, int lineno, const char * fmt, ...)
+sc_abort_verbosef (const char *filename, int lineno, const char *fmt, ...)
 {
   char                buffer[BUFSIZ];
   va_list             ap;
