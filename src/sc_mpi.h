@@ -101,6 +101,8 @@ int                 MPI_Finalize (void);
 int                 MPI_Abort (MPI_Comm, int)
   __attribute__ ((noreturn));
 
+int                 MPI_Comm_dup (MPI_Comm, MPI_Comm *);
+int                 MPI_Comm_free (MPI_Comm *);
 int                 MPI_Comm_size (MPI_Comm, int *);
 int                 MPI_Comm_rank (MPI_Comm, int *);
 

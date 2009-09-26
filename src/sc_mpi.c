@@ -73,6 +73,22 @@ MPI_Abort (MPI_Comm comm, int exitcode)
 }
 
 int
+MPI_Comm_dup (MPI_Comm comm, MPI_Comm * newcomm)
+{
+  *newcomm = comm;
+
+  return MPI_SUCCESS;
+}
+
+int
+MPI_Comm_free (MPI_Comm * comm)
+{
+  *comm = MPI_COMM_NULL;
+
+  return MPI_SUCCESS;
+}
+
+int
 MPI_Comm_size (MPI_Comm comm, int *size)
 {
   *size = 1;
