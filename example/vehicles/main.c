@@ -44,7 +44,7 @@ main (int argc, char **argv)
   sc_object_t        *t[NUM_TUNED_CARS];
   sc_object_t        *b[NUM_BOATS];
   sc_object_t        *v[NUM_VEHICLES];
-  sc_object_t        *bb;
+  sc_object_t        *bb, *tt;
   CarKlass           *car_klass_data;
 
   sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
@@ -67,9 +67,12 @@ main (int argc, char **argv)
   o[4] = v[2] = b[0] = boat_new (boat_klass, "Julia");
   o[5] = v[3] = b[1] = boat_new (boat_klass, "Hannah");
 
-  SC_INFO ("Deep copy and accelerate tuned car\n");
+  SC_INFO ("Deep copy, duplicate and destroy, and accelerate tuned car\n");
   o[6] = v[4] = c[2] = t[1] = sc_object_copy (t[0]);
-  vehicle_accelerate (t[1]);
+  tt = sc_object_dup (t[1]);
+  vehicle_accelerate (tt);
+  sc_object_write (tt, stdout);
+  sc_object_unref (tt);
 
   SC_INFO ("Write klasses\n");
   sc_object_write (object_klass, stdout);

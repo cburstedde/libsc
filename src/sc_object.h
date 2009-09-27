@@ -110,6 +110,14 @@ void                sc_object_ref (sc_object_t * o);
  */
 void                sc_object_unref (sc_object_t * o);
 
+/** Duplicate a pointer to an object.
+ * The duplicate and the original object are identical.
+ * Changes to one reflect immediately in the other.
+ * As usual the duplicate should be destroyed with sc_object_unref.
+ * \return          The object \a o with reference count increased by 1.
+ */
+sc_object_t        *sc_object_dup (sc_object_t * o);
+
 /** Convenience function to create an empty sc_object_recursion_context_t.
  * \param [in] rc           The recursion context to be initialized.
  * \param [in] ifm          Interface method used as key for lookup.

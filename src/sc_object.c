@@ -262,6 +262,14 @@ sc_object_unref (sc_object_t * o)
   }
 }
 
+sc_object_t        *
+sc_object_dup (sc_object_t * o)
+{
+  sc_object_ref (o);
+
+  return o;
+}
+
 int
 sc_object_method_register (sc_object_t * o,
                            sc_object_method_t ifm, sc_object_method_t oinmi)
