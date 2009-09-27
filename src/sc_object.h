@@ -100,8 +100,14 @@ sc_object_recursion_context_t;
 
 extern const char  *sc_object_type;
 
-/* reference counting */
+/** Increase the reference count of an object by 1.
+ */
 void                sc_object_ref (sc_object_t * o);
+
+/** Decrease the reference count of an object by 1.
+ * When the count reaches zero, sc_object_finalize is called
+ * and the object is freed.  This is the standard way of destroying objects.
+ */
 void                sc_object_unref (sc_object_t * o);
 
 /** Convenience function to create an empty sc_object_recursion_context_t.
@@ -162,7 +168,7 @@ void                sc_object_method_unregister (sc_object_t * o,
 sc_object_method_t  sc_object_method_lookup (sc_object_t * o,
                                              sc_object_method_t ifm);
 
-/* handle delegates */
+/* delegates */
 void                sc_object_delegate_push (sc_object_t * o,
                                              sc_object_t * d);
 void                sc_object_delegate_pop (sc_object_t * o);
@@ -207,19 +213,43 @@ sc_object_t        *sc_object_new_from_klass (sc_object_t * d,
                                               sc_object_arguments_t * args);
 sc_object_t        *sc_object_new_from_klass_values (sc_object_t * d, ...);
 
-/* handle object data */
+/* object data */
 void               *sc_object_get_data (sc_object_t * o,
                                         sc_object_method_t ifm, size_t s);
 
-/* virtual method prototypes */
-/* All delegate's methods are called in pre-order until one returns true */
+/** There are 4 different semantics for calling virtual methods:
+ * PRE-ALL          Call all methods in the delegate tree in pre-order.
+ *                  Ancestors are called after and recursively.
+ * PRE-BOOL         Call all methods in the delegate tree in pre-order
+ *                  until one returns true.  Then stop the recursion.
+ * PRE-FIRST        Call only the first method found in pre-order.
+ *                  The method gets passed both the object \a o
+ *                  and the object that contains the method that is called.
+ * POST-ALL         Call all methods in the delegate tree in post-order.
+ *                  Ancestors are called before and recursively.
+ */
+
+/** Determine whether an object is of a certain type.
+ * An object can have multiple types, e.g., types inherited from an ancestor
+ * or through implementation of interfaces which are understood as types.
+ * Recursion: PRE-BOOL.
+ */
 int                 sc_object_is_type (sc_object_t * o, const char *type);
-/* All delegate's methods are called in post-order */
+
+/** Initialize object data.
+ * Recursion: POST-ALL.
+ */
 void                sc_object_initialize (sc_object_t * o,
                                           sc_object_arguments_t * args);
-/* All delegate's methods are called in pre-order */
+
+/** Free object data.
+ * Recursion: PRE-ALL.
+ */
 void                sc_object_finalize (sc_object_t * o);
-/* Standard virtual methods get passed the match object, see sc_object.c */
+
+/** Write object data to file.
+ * Recursion: PRE-FIRST.
+ */
 void                sc_object_write (sc_object_t * o, FILE * out);
 
 SC_EXTERN_C_END;

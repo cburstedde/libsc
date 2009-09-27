@@ -749,10 +749,10 @@ void
 sc_object_initialize (sc_object_t * o, sc_object_arguments_t * args)
 {
   size_t              zz;
+  sc_array_t          sfound, *found = &sfound;
   sc_object_recursion_match_t *match;
   sc_object_recursion_context_t src, *rc = &src;
   sc_object_method_t  oinmi;
-  sc_array_t          sfound, *found = &sfound;
 
   SC_ASSERT (sc_object_is_type (o, sc_object_type));
 
@@ -777,10 +777,10 @@ void
 sc_object_finalize (sc_object_t * o)
 {
   size_t              zz;
+  sc_array_t          sfound, *found = &sfound;
   sc_object_recursion_match_t *match;
   sc_object_recursion_context_t src, *rc = &src;
   sc_object_method_t  oinmi;
-  sc_array_t          sfound, *found = &sfound;
 
   SC_ASSERT (sc_object_is_type (o, sc_object_type));
 
