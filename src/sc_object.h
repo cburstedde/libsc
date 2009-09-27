@@ -236,6 +236,15 @@ void               *sc_object_get_data (sc_object_t * o,
  */
 int                 sc_object_is_type (sc_object_t * o, const char *type);
 
+/** Make a deep copy of an object.
+ * This function installs the original \a o as delegate in the copy.
+ * The contents of the hash table and delegate array are not copied.
+ * Then it invokes the copy virtual method which should copy all data.
+ * This virtual method takes two arguments, the original and the copy.
+ * Recursion: POST-ALL.
+ */
+sc_object_t        *sc_object_copy (sc_object_t * o);
+
 /** Initialize object data.
  * Recursion: POST-ALL.
  */

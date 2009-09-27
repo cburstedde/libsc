@@ -745,6 +745,39 @@ sc_object_is_type (sc_object_t * o, const char *type)
   return sc_object_recursion (o, rc);
 }
 
+sc_object_t        *
+sc_object_copy (sc_object_t * o)
+{
+  size_t              zz;
+  sc_array_t          sfound, *found = &sfound;
+  sc_object_recursion_match_t *match;
+  sc_object_recursion_context_t src, *rc = &src;
+  sc_object_method_t  oinmi;
+  sc_object_t        *c;
+
+  SC_ASSERT (sc_object_is_type (o, sc_object_type));
+
+  c = sc_object_alloc ();
+  sc_object_delegate_push (c, o);
+
+  sc_object_recursion_init (rc, (sc_object_method_t) sc_object_copy, found);
+
+  /* post-order */
+  if (sc_object_recursion (o, rc)) {
+    for (zz = found->elem_count; zz > 0; --zz) {
+      match = sc_array_index (found, zz - 1);
+      oinmi = match->oinmi;
+      SC_ASSERT (oinmi != NULL);
+
+      ((void (*)(sc_object_t *, sc_object_t *)) oinmi) (o, c);
+    }
+  }
+
+  sc_array_reset (found);
+
+  return c;
+}
+
 void
 sc_object_initialize (sc_object_t * o, sc_object_arguments_t * args)
 {

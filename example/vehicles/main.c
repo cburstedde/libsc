@@ -23,11 +23,11 @@
 #include "tunedcar.h"
 #include "vehicle.h"
 
-#define NUM_OBJECTS     6
-#define NUM_CARS        2
-#define NUM_TUNED_CARS  1
+#define NUM_OBJECTS     7
+#define NUM_CARS        3
+#define NUM_TUNED_CARS  2
 #define NUM_BOATS       2
-#define NUM_VEHICLES    4
+#define NUM_VEHICLES    5
 
 int
 main (int argc, char **argv)
@@ -44,6 +44,7 @@ main (int argc, char **argv)
   sc_object_t        *t[NUM_TUNED_CARS];
   sc_object_t        *b[NUM_BOATS];
   sc_object_t        *v[NUM_VEHICLES];
+  sc_object_t        *bb;
   CarKlass           *car_klass_data;
 
   sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
@@ -65,6 +66,10 @@ main (int argc, char **argv)
   boat_klass = boat_klass_new (object_klass);
   o[4] = v[2] = b[0] = boat_new (boat_klass, "Julia");
   o[5] = v[3] = b[1] = boat_new (boat_klass, "Hannah");
+
+  SC_INFO ("Deep copy and accelerate tuned car\n");
+  o[6] = v[4] = c[2] = t[1] = sc_object_copy (t[0]);
+  vehicle_accelerate (t[1]);
 
   SC_INFO ("Write klasses\n");
   sc_object_write (object_klass, stdout);
@@ -92,6 +97,11 @@ main (int argc, char **argv)
     sc_object_write (v[i], stdout);
     vehicle_accelerate (v[i]);
   }
+
+  SC_INFO ("Copy, print and destroy boat\n");
+  bb = sc_object_copy (b[1]);
+  sc_object_write (bb, stdout);
+  sc_object_unref (bb);
 
   SC_INFO ("Write and destroy objects\n");
   for (i = 0; i < NUM_OBJECTS; ++i) {

@@ -32,6 +32,17 @@ is_type_fn (sc_object_t * o, const char *type)
 }
 
 static void
+copy_fn (sc_object_t * o, sc_object_t * c)
+{
+  const Car          *car_o = car_get_data (o);
+  Car                *car_c = car_get_data (c);
+
+  SC_LDEBUG ("car copy\n");
+
+  memcpy (car_c, car_o, sizeof (Car));
+}
+
+static void
 initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
 {
   Car                *car = car_get_data (o);
@@ -84,7 +95,7 @@ accelerate_fn (sc_object_t * o, sc_object_t * m)
 sc_object_t        *
 car_klass_new (sc_object_t * d)
 {
-  int                 a1, a2, a3, a4, a5;
+  int                 a1, a2, a3, a4, a5, a6;
   sc_object_t        *o;
   CarKlass           *car_klass;
 
@@ -96,19 +107,21 @@ car_klass_new (sc_object_t * d)
 
   a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_is_type,
                                   (sc_object_method_t) is_type_fn);
-  a2 =
+  a2 = sc_object_method_register (o, (sc_object_method_t) sc_object_copy,
+                                  (sc_object_method_t) copy_fn);
+  a3 =
     sc_object_method_register (o, (sc_object_method_t) sc_object_initialize,
                                (sc_object_method_t) initialize_fn);
-  a3 =
+  a4 =
     sc_object_method_register (o, (sc_object_method_t) sc_object_write,
                                (sc_object_method_t) write_fn);
-  a4 =
+  a5 =
     sc_object_method_register (o, (sc_object_method_t) car_wheelsize,
                                (sc_object_method_t) wheelsize_fn);
-  a5 =
+  a6 =
     sc_object_method_register (o, (sc_object_method_t) vehicle_accelerate,
                                (sc_object_method_t) accelerate_fn);
-  SC_ASSERT (a1 && a2 && a3 && a4 && a5);
+  SC_ASSERT (a1 && a2 && a3 && a4 && a5 && a6);
 
   sc_object_initialize (o, NULL);
   car_klass = car_get_klass_data (o);

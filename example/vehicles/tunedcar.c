@@ -33,6 +33,17 @@ is_type_fn (sc_object_t * o, const char *type)
 }
 
 static void
+copy_fn (sc_object_t * o, sc_object_t * c)
+{
+  const TunedCar     *tuned_car_o = tuned_car_get_data (o);
+  TunedCar           *tuned_car_c = tuned_car_get_data (c);
+
+  SC_LDEBUG ("tuned_car copy\n");
+
+  memcpy (tuned_car_c, tuned_car_o, sizeof (TunedCar));
+}
+
+static void
 initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
 {
   TunedCar           *tuned_car = tuned_car_get_data (o);
@@ -91,7 +102,7 @@ accelerate_fn (sc_object_t * o, sc_object_t * m)
 sc_object_t        *
 tuned_car_klass_new (sc_object_t * d)
 {
-  int                 a1, a2, a3, a4, a5;
+  int                 a1, a2, a3, a4, a5, a6;
   sc_object_t        *o;
 
   SC_ASSERT (d != NULL);
@@ -102,19 +113,21 @@ tuned_car_klass_new (sc_object_t * d)
 
   a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_is_type,
                                   (sc_object_method_t) is_type_fn);
-  a2 =
+  a2 = sc_object_method_register (o, (sc_object_method_t) sc_object_copy,
+                                  (sc_object_method_t) copy_fn);
+  a3 =
     sc_object_method_register (o, (sc_object_method_t) sc_object_initialize,
                                (sc_object_method_t) initialize_fn);
-  a3 =
+  a4 =
     sc_object_method_register (o, (sc_object_method_t) sc_object_write,
                                (sc_object_method_t) write_fn);
-  a4 =
+  a5 =
     sc_object_method_register (o, (sc_object_method_t) tuned_car_tickets,
                                (sc_object_method_t) tickets_fn);
-  a5 =
+  a6 =
     sc_object_method_register (o, (sc_object_method_t) vehicle_accelerate,
                                (sc_object_method_t) accelerate_fn);
-  SC_ASSERT (a1 && a2 && a3 && a4 && a5);
+  SC_ASSERT (a1 && a2 && a3 && a4 && a5 && a6);
 
   sc_object_initialize (o, NULL);
 

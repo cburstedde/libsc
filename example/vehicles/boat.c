@@ -32,6 +32,17 @@ is_type_fn (sc_object_t * o, const char *type)
 }
 
 static void
+copy_fn (sc_object_t * o, sc_object_t * c)
+{
+  const Boat         *boat_o = boat_get_data (o);
+  Boat               *boat_c = boat_get_data (c);
+
+  SC_LDEBUG ("boat copy\n");
+
+  memcpy (boat_c, boat_o, sizeof (Boat));
+}
+
+static void
 initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
 {
   Boat               *boat = boat_get_data (o);
@@ -68,7 +79,7 @@ accelerate_fn (sc_object_t * o, sc_object_t * m)
 sc_object_t        *
 boat_klass_new (sc_object_t * d)
 {
-  int                 a1, a2, a3, a4;
+  int                 a1, a2, a3, a4, a5;
   sc_object_t        *o;
 
   SC_ASSERT (d != NULL);
@@ -79,16 +90,18 @@ boat_klass_new (sc_object_t * d)
 
   a1 = sc_object_method_register (o, (sc_object_method_t) sc_object_is_type,
                                   (sc_object_method_t) is_type_fn);
-  a2 =
+  a2 = sc_object_method_register (o, (sc_object_method_t) sc_object_copy,
+                                  (sc_object_method_t) copy_fn);
+  a3 =
     sc_object_method_register (o, (sc_object_method_t) sc_object_initialize,
                                (sc_object_method_t) initialize_fn);
-  a3 =
+  a4 =
     sc_object_method_register (o, (sc_object_method_t) sc_object_write,
                                (sc_object_method_t) write_fn);
-  a4 =
+  a5 =
     sc_object_method_register (o, (sc_object_method_t) vehicle_accelerate,
                                (sc_object_method_t) accelerate_fn);
-  SC_ASSERT (a1 && a2 && a3 && a4);
+  SC_ASSERT (a1 && a2 && a3 && a4 && a5);
 
   sc_object_initialize (o, NULL);
 

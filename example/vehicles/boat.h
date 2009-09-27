@@ -32,7 +32,7 @@
 typedef struct Boat
 {
   float               speed;
-  const char         *name;
+  const char         *name;     /* names are static strings */
 }
 Boat;
 
