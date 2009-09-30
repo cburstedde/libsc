@@ -65,12 +65,18 @@
 #include <sc_c99_functions.h>
 #include <sc_mpi.h>
 
+SC_EXTERN_C_BEGIN;
+
+/* extern variables */
+
+extern const int    sc_log2_lookup_table[256];
+extern int          sc_package_id;
+
 /* control a trace file by environment variables (see sc_init) */
 extern FILE        *sc_trace_file;
 extern int          sc_trace_prio;
 
-/* include math defines */
-
+/* define math constants if necessary */
 #ifndef M_E
 #define M_E 2.7182818284590452354       /* e */
 #endif
@@ -273,8 +279,6 @@ extern int          sc_trace_prio;
 
 #endif /* !__cplusplus */
 
-SC_EXTERN_C_BEGIN;
-
 /* callback typedefs */
 
 typedef void        (*sc_handler_t) (void *data);
@@ -283,11 +287,6 @@ typedef void        (*sc_log_handler_t) (FILE * log_stream,
                                          int package, int category,
                                          int priority, const char *fmt,
                                          va_list ap);
-
-/* extern declarations */
-
-extern const int    sc_log2_lookup_table[256];
-extern int          sc_package_id;
 
 /* memory allocation functions, handle NULL pointers by internal abort
    the sc_realloc function does not preserve alignment boundaries */
@@ -342,10 +341,17 @@ void                sc_abort (void)
 void                sc_abort_verbose (const char *filename, int lineno,
                                       const char *msg)
   __attribute__ ((noreturn));
+
+/** Print a message to stderr and then call sc_abort (). */
 void                sc_abort_verbosef (const char *filename, int lineno,
                                        const char *fmt, ...)
-  __attribute__ ((noreturn))
-  __attribute__ ((format (printf, 3, 4)));
+  __attribute__ ((format (printf, 3, 4)))
+  __attribute__ ((noreturn));
+
+/** Print a message to stderr and then call sc_abort (). */
+void                sc_abort_verbosev (const char *filename, int lineno,
+                                       const char *fmt, va_list ap)
+  __attribute__ ((noreturn));
 
 /** Register a software package with SC.
  * The logging parameters are as in sc_set_log_defaults.

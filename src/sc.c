@@ -598,20 +598,37 @@ sc_abort (void)
 void
 sc_abort_verbose (const char *filename, int lineno, const char *msg)
 {
-  fprintf (stderr, "Abort: %s\n   in %s:%d\n", msg, filename, lineno);
+  char                prefix[BUFSIZ];
+
+  if (sc_identifier >= 0) {
+    snprintf (prefix, BUFSIZ, "[%d] ", sc_identifier);
+  }
+  else {
+    prefix[0] = '\0';
+  }
+  fprintf (stderr, "%sAbort: %s\n   in %s:%d\n",
+           prefix, msg, filename, lineno);
+
   sc_abort ();
 }
 
 void
 sc_abort_verbosef (const char *filename, int lineno, const char *fmt, ...)
 {
-  char                buffer[BUFSIZ];
   va_list             ap;
 
   va_start (ap, fmt);
-  snprintf (buffer, BUFSIZ, fmt, ap);
+  sc_abort_verbosev (filename, lineno, fmt, ap);
   va_end (ap);
+}
 
+void
+sc_abort_verbosev (const char *filename, int lineno,
+                   const char *fmt, va_list ap)
+{
+  char                buffer[BUFSIZ];
+
+  vsnprintf (buffer, BUFSIZ, fmt, ap);
   sc_abort_verbose (filename, lineno, buffer);
 }
 
