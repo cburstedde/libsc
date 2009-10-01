@@ -8,7 +8,7 @@
 #include <iniparser.h>
 
 static void create_example_ini_file(void);
-static int  parse_ini_file(char * ini_name);
+static int  parse_ini_file(const char * ini_name);
 
 int main(int argc, char * argv[])
 {
@@ -52,7 +52,7 @@ void create_example_ini_file(void)
 }
 
 
-int parse_ini_file(char * ini_name)
+int parse_ini_file(const char * ini_name)
 {
 	dictionary	*	ini ;
 
