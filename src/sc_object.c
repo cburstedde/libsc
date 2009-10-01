@@ -25,7 +25,7 @@ const char         *sc_object_type = "sc_object";
 static unsigned
 sc_object_value_hash (const void *v, const void *u)
 {
-  const sc_object_value_t *ov = v;
+  const sc_object_value_t *ov = (const sc_object_value_t *) v;
   const char         *s;
   uint32_t            hash;
 
@@ -45,8 +45,8 @@ sc_object_value_hash (const void *v, const void *u)
 static int
 sc_object_value_equal (const void *v1, const void *v2, const void *u)
 {
-  const sc_object_value_t *ov1 = v1;
-  const sc_object_value_t *ov2 = v2;
+  const sc_object_value_t *ov1 = (const sc_object_value_t *) v1;
+  const sc_object_value_t *ov2 = (const sc_object_value_t *) v2;
 
   return !strcmp (ov1->key, ov2->key);
 }
@@ -55,7 +55,7 @@ static unsigned
 sc_object_entry_hash (const void *v, const void *u)
 {
   uint32_t            a, b, c;
-  const sc_object_entry_t *e = v;
+  const sc_object_entry_t *e = (const sc_object_entry_t *) v;
   const unsigned long l = (unsigned long) e->key;
 #if SC_SIZEOF_UNSIGNED_LONG > 4
   const unsigned long m = ((1UL << 32) - 1);
@@ -75,8 +75,8 @@ sc_object_entry_hash (const void *v, const void *u)
 static int
 sc_object_entry_equal (const void *v1, const void *v2, const void *u)
 {
-  const sc_object_entry_t *e1 = v1;
-  const sc_object_entry_t *e2 = v2;
+  const sc_object_entry_t *e1 = (const sc_object_entry_t *) v1;
+  const sc_object_entry_t *e2 = (const sc_object_entry_t *) v2;
 
   return e1->key == e2->key;
 }
@@ -207,7 +207,7 @@ sc_object_recursion (sc_object_t * o, sc_object_recursion_context_t * rc)
       oinmi = sc_object_method_lookup (o, rc->lookup);
       if (oinmi != NULL) {
         if (rc->found != NULL) {
-          match = sc_array_push (rc->found);
+          match = (sc_object_recursion_match_t *) sc_array_push (rc->found);
           match->oinmi = oinmi;
           found_self = 1;
         }
@@ -460,7 +460,7 @@ sc_object_arguments_new_va (va_list ap)
       break;
     }
     SC_ASSERT (s[0] != '\0' && s[1] == ':' && s[2] != '\0');
-    value = sc_mempool_alloc (args->value_allocator);
+    value = (sc_object_value_t *) sc_mempool_alloc (args->value_allocator);
     value->key = &s[2];
     switch (s[0]) {
     case 'i':
@@ -733,7 +733,7 @@ sc_object_is_type_data_t;
 static int
 is_type_call_fn (sc_object_t * o, sc_object_method_t oinmi, void *user_data)
 {
-  sc_object_is_type_data_t *itd = user_data;
+  sc_object_is_type_data_t *itd = (sc_object_is_type_data_t *) user_data;
 
   return ((int (*)(sc_object_t *, const char *)) oinmi) (o, itd->type);
 }
@@ -773,7 +773,7 @@ sc_object_copy (sc_object_t * o)
   /* post-order */
   if (sc_object_recursion (o, rc)) {
     for (zz = found->elem_count; zz > 0; --zz) {
-      match = sc_array_index (found, zz - 1);
+      match = (sc_object_recursion_match_t *) sc_array_index (found, zz - 1);
       oinmi = match->oinmi;
       SC_ASSERT (oinmi != NULL);
 
@@ -803,7 +803,7 @@ sc_object_initialize (sc_object_t * o, sc_object_arguments_t * args)
   /* post-order */
   if (sc_object_recursion (o, rc)) {
     for (zz = found->elem_count; zz > 0; --zz) {
-      match = sc_array_index (found, zz - 1);
+      match = (sc_object_recursion_match_t *) sc_array_index (found, zz - 1);
       oinmi = match->oinmi;
       SC_ASSERT (oinmi != NULL);
 
@@ -831,7 +831,7 @@ sc_object_finalize (sc_object_t * o)
   /* pre-order */
   if (sc_object_recursion (o, rc)) {
     for (zz = 0; zz < found->elem_count; ++zz) {
-      match = sc_array_index (found, zz);
+      match = (sc_object_recursion_match_t *) sc_array_index (found, zz);
       oinmi = match->oinmi;
       SC_ASSERT (oinmi != NULL);
 

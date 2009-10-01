@@ -856,3 +856,86 @@ sc_finalize (void)
     sc_trace_file = NULL;
   }
 }
+
+#ifdef __cplusplus
+
+void
+SC_ABORTF (const char *fmt, ...)
+{
+  va_list             ap;
+
+  va_start (ap, fmt);
+  sc_abort_verbosev ("<unknown>", 0, fmt, ap);
+  va_end (ap);
+}
+
+void
+SC_CHECK_ABORTF (int success, const char *fmt, ...)
+{
+  va_list             ap;
+
+  if (!success) {
+    va_start (ap, fmt);
+    sc_abort_verbosev ("<unknown>", 0, fmt, ap);
+    va_end (ap);
+  }
+}
+
+void
+SC_LOGF (int package, int category, int priority, const char *fmt, ...)
+{
+  va_list             ap;
+
+  va_start (ap, fmt);
+  sc_logv ("<unknown>", 0, package, category, priority, fmt, ap);
+  va_end (ap);
+}
+
+void
+SC_GLOBAL_LOGF (int priority, const char *fmt, ...)
+{
+  va_list             ap;
+
+  va_start (ap, fmt);
+  sc_logv ("<unknown>", 0, sc_package_id, SC_LC_GLOBAL, priority, fmt, ap);
+  va_end (ap);
+}
+
+void
+SC_NORMAL_LOGF (int priority, const char *fmt, ...)
+{
+  va_list             ap;
+
+  va_start (ap, fmt);
+  sc_logv ("<unknown>", 0, sc_package_id, SC_LC_NORMAL, priority, fmt, ap);
+  va_end (ap);
+}
+
+#define SC_LOG_IMP(n,p)                                 \
+  void                                                  \
+  SC_GLOBAL_ ## n ## F (const char *fmt, ...)           \
+  {                                                     \
+    va_list             ap;                             \
+    va_start (ap, fmt);                                 \
+    sc_logv ("<unknown>", 0, sc_package_id,             \
+             SC_LC_GLOBAL, SC_LP_ ## p, fmt, ap);       \
+    va_end (ap);                                        \
+  }                                                     \
+  void                                                  \
+  SC_ ## n ## F (const char *fmt, ...)                  \
+  {                                                     \
+    va_list             ap;                             \
+    va_start (ap, fmt);                                 \
+    sc_logv ("<unknown>", 0, sc_package_id,             \
+             SC_LC_NORMAL, SC_LP_ ## p, fmt, ap);       \
+    va_end (ap);                                        \
+  }
+
+SC_LOG_IMP (TRACE, TRACE);
+SC_LOG_IMP (LDEBUG, DEBUG);
+SC_LOG_IMP (VERBOSE, VERBOSE);
+SC_LOG_IMP (INFO, INFO);
+SC_LOG_IMP (STATISTICS, STATISTICS);
+SC_LOG_IMP (PRODUCTION, PRODUCTION);
+
+#endif /* __cplusplus */

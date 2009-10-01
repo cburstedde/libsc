@@ -25,16 +25,6 @@
 
 #include <sc_config.h>
 
-/* provide extern C defines */
-
-#ifdef __cplusplus
-#define SC_EXTERN_C_BEGIN       extern "C" {
-#define SC_EXTERN_C_END         }
-#else
-#define SC_EXTERN_C_BEGIN
-#define SC_EXTERN_C_END
-#endif
-
 /* include MPI before stdio.h */
 
 #ifdef SC_MPI
@@ -47,6 +37,9 @@
 
 /* include system headers */
 
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS
+#endif
 #include <math.h>
 #include <ctype.h>
 #include <float.h>
@@ -60,7 +53,18 @@
 #include <string.h>
 #include <unistd.h>
 
-/* these two headers are always included */
+/* provide extern C defines */
+
+/* the hacks below enable semicolons after the SC_EXTERN_C_ macros. */
+#ifdef __cplusplus
+#define SC_EXTERN_C_BEGIN       extern "C" { void sc_extern_c_hack_1 (void)
+#define SC_EXTERN_C_END                    } void sc_extern_c_hack_2 (void)
+#else
+#define SC_EXTERN_C_BEGIN                    void sc_extern_c_hack_1 (void)
+#define SC_EXTERN_C_END                      void sc_extern_c_hack_1 (void)
+#endif
+
+/* these two libsc headers are always included */
 
 #include <sc_c99_functions.h>
 #include <sc_mpi.h>
@@ -136,13 +140,17 @@ extern int          sc_trace_prio;
   sc_abort_verbose (__FILE__, __LINE__, (s))
 #define SC_CHECK_ABORT(c,s)                     \
   ((c) ? (void) 0 : SC_ABORT (s))
-/* Only include the following define in C, not C++, since C++98
-   does not allow variadic macros. */
+/* C++98 does not allow variadic macros */
 #ifndef __cplusplus
 #define SC_ABORTF(fmt,...)                                      \
   sc_abort_verbosef (__FILE__, __LINE__, (fmt), __VA_ARGS__)
 #define SC_CHECK_ABORTF(c,fmt,...)                      \
   ((c) ? (void) 0 : SC_ABORTF (fmt, __VA_ARGS__))
+#else
+void                SC_ABORTF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
+  __attribute__ ((format (printf, 2, 3)));
 #endif
 #define SC_ABORT_NOT_REACHED() SC_ABORT ("Unreachable code")
 #define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI error")
@@ -218,66 +226,97 @@ extern int          sc_trace_prio;
 #endif
 
 /* generic log macros */
-
-/* Only include these logging macros in C, not C++, since C++99
-   does not allow variadic macros. */
+#define SC_LOG(g,c,p,s) SC_LOGF((g), (c), (p), "%s", (s))
+#define SC_GLOBAL_LOG(p,s) SC_LOG (sc_package_id, SC_LC_GLOBAL, (p), (s))
+#define SC_NORMAL_LOG(p,s) SC_LOG (sc_package_id, SC_LC_NORMAL, (p), (s))
 #ifndef __cplusplus
-
 #define SC_LOGF(package,category,priority,fmt,...)                      \
   ((priority) < SC_LP_THRESHOLD ? (void) 0 :                            \
    sc_logf (__FILE__, __LINE__, (package), (category), (priority),      \
             (fmt), __VA_ARGS__))
-#define SC_LOG(g,c,p,s) SC_LOGF((g), (c), (p), "%s", (s))
-#define SC_GLOBAL_LOG(p,s) SC_LOG (sc_package_id, SC_LC_GLOBAL, (p), (s))
-#define SC_GLOBAL_LOGF(p,f,...) \
+#define SC_GLOBAL_LOGF(p,f,...)                                 \
   SC_LOGF (sc_package_id, SC_LC_GLOBAL, (p), (f), __VA_ARGS__)
-#define SC_NORMAL_LOG(p,s) SC_LOG (sc_package_id, SC_LC_NORMAL, (p), (s))
-#define SC_NORMAL_LOGF(p,f,...) \
+#define SC_NORMAL_LOGF(p,f,...)                                 \
   SC_LOGF (sc_package_id, SC_LC_NORMAL, (p), (f), __VA_ARGS__)
+#else
+void                SC_LOGF (int package, int category, int priority,
+                             const char *fmt, ...)
+  __attribute__ ((format (printf, 4, 5)));
+void                SC_GLOBAL_LOGF (int priority, const char *fmt, ...)
+  __attribute__ ((format (printf, 2, 3)));
+void                SC_NORMAL_LOGF (int priority, const char *fmt, ...)
+  __attribute__ ((format (printf, 2, 3)));
+#endif
 
 /* convenience global log macros will only output if identifier <= 0 */
-
 #define SC_GLOBAL_TRACE(s) SC_GLOBAL_LOG (SC_LP_TRACE, (s))
-#define SC_GLOBAL_TRACEF(f,...) \
-  SC_GLOBAL_LOGF (SC_LP_TRACE, (f), __VA_ARGS__)
 #define SC_GLOBAL_LDEBUG(s) SC_GLOBAL_LOG (SC_LP_DEBUG, (s))
-#define SC_GLOBAL_LDEBUGF(f,...) \
-  SC_GLOBAL_LOGF (SC_LP_DEBUG, (f), __VA_ARGS__)
 #define SC_GLOBAL_VERBOSE(s) SC_GLOBAL_LOG (SC_LP_VERBOSE, (s))
-#define SC_GLOBAL_VERBOSEF(f,...) \
-  SC_GLOBAL_LOGF (SC_LP_VERBOSE, (f), __VA_ARGS__)
 #define SC_GLOBAL_INFO(s) SC_GLOBAL_LOG (SC_LP_INFO, (s))
-#define SC_GLOBAL_INFOF(f,...) \
-  SC_GLOBAL_LOGF (SC_LP_INFO, (f), __VA_ARGS__)
 #define SC_GLOBAL_STATISTICS(s) SC_GLOBAL_LOG (SC_LP_STATISTICS, (s))
-#define SC_GLOBAL_STATISTICSF(f,...) \
-  SC_GLOBAL_LOGF (SC_LP_STATISTICS, (f), __VA_ARGS__)
 #define SC_GLOBAL_PRODUCTION(s) SC_GLOBAL_LOG (SC_LP_PRODUCTION, (s))
-#define SC_GLOBAL_PRODUCTIONF(f,...) \
+#ifndef __cplusplus
+#define SC_GLOBAL_TRACEF(f,...)                         \
+  SC_GLOBAL_LOGF (SC_LP_TRACE, (f), __VA_ARGS__)
+#define SC_GLOBAL_LDEBUGF(f,...)                        \
+  SC_GLOBAL_LOGF (SC_LP_DEBUG, (f), __VA_ARGS__)
+#define SC_GLOBAL_VERBOSEF(f,...)                       \
+  SC_GLOBAL_LOGF (SC_LP_VERBOSE, (f), __VA_ARGS__)
+#define SC_GLOBAL_INFOF(f,...)                          \
+  SC_GLOBAL_LOGF (SC_LP_INFO, (f), __VA_ARGS__)
+#define SC_GLOBAL_STATISTICSF(f,...)                    \
+  SC_GLOBAL_LOGF (SC_LP_STATISTICS, (f), __VA_ARGS__)
+#define SC_GLOBAL_PRODUCTIONF(f,...)                    \
   SC_GLOBAL_LOGF (SC_LP_PRODUCTION, (f), __VA_ARGS__)
+#else
+void                SC_GLOBAL_TRACEF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_GLOBAL_LDEBUGF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_GLOBAL_VERBOSEF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_GLOBAL_INFOF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_GLOBAL_STATISTICSF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_GLOBAL_PRODUCTIONF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+#endif
 
 /* convenience log macros that output regardless of identifier */
-
 #define SC_TRACE(s) SC_NORMAL_LOG (SC_LP_TRACE, (s))
-#define SC_TRACEF(f,...) \
-  SC_NORMAL_LOGF (SC_LP_TRACE, (f), __VA_ARGS__)
 #define SC_LDEBUG(s) SC_NORMAL_LOG (SC_LP_DEBUG, (s))
-#define SC_LDEBUGF(f,...) \
-  SC_NORMAL_LOGF (SC_LP_DEBUG, (f), __VA_ARGS__)
 #define SC_VERBOSE(s) SC_NORMAL_LOG (SC_LP_VERBOSE, (s))
-#define SC_VERBOSEF(f,...) \
-  SC_NORMAL_LOGF (SC_LP_VERBOSE, (f), __VA_ARGS__)
 #define SC_INFO(s) SC_NORMAL_LOG (SC_LP_INFO, (s))
-#define SC_INFOF(f,...) \
-  SC_NORMAL_LOGF (SC_LP_INFO, (f), __VA_ARGS__)
 #define SC_STATISTICS(s) SC_NORMAL_LOG (SC_LP_STATISTICS, (s))
-#define SC_STATISTICSF(f,...) \
-  SC_NORMAL_LOGF (SC_LP_STATISTICS, (f), __VA_ARGS__)
 #define SC_PRODUCTION(s) SC_NORMAL_LOG (SC_LP_PRODUCTION, (s))
-#define SC_PRODUCTIONF(f,...) \
+#ifndef __cplusplus
+#define SC_TRACEF(f,...)                                \
+  SC_NORMAL_LOGF (SC_LP_TRACE, (f), __VA_ARGS__)
+#define SC_LDEBUGF(f,...)                               \
+  SC_NORMAL_LOGF (SC_LP_DEBUG, (f), __VA_ARGS__)
+#define SC_VERBOSEF(f,...)                              \
+  SC_NORMAL_LOGF (SC_LP_VERBOSE, (f), __VA_ARGS__)
+#define SC_INFOF(f,...)                                 \
+  SC_NORMAL_LOGF (SC_LP_INFO, (f), __VA_ARGS__)
+#define SC_STATISTICSF(f,...)                           \
+  SC_NORMAL_LOGF (SC_LP_STATISTICS, (f), __VA_ARGS__)
+#define SC_PRODUCTIONF(f,...)                           \
   SC_NORMAL_LOGF (SC_LP_PRODUCTION, (f), __VA_ARGS__)
-
-#endif /* !__cplusplus */
+#else
+void                SC_TRACEF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_LDEBUGF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_VERBOSEF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_INFOF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_STATISTICSF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_PRODUCTIONF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+#endif
 
 /* callback typedefs */
 

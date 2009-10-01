@@ -146,9 +146,9 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
         const int           bytes = (int) (max_length * size);
 
         /* receive high part, send low part */
-        peer = sc_array_push (pa);
-        rreq = sc_array_push (pr);
-        sreq = sc_array_push (ps);
+        peer = (sc_psort_peer_t *) sc_array_push (pa);
+        rreq = (MPI_Request *) sc_array_push (pr);
+        sreq = (MPI_Request *) sc_array_push (ps);
         lo_data = pst->my_base + (lo + offset - pst->my_lo) * size;
 
         peer->received = 0;
@@ -172,9 +172,9 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
         const int           bytes = (int) (max_length * size);
 
         /* receive low part, send high part */
-        peer = sc_array_push (pa);
-        rreq = sc_array_push (pr);
-        sreq = sc_array_push (ps);
+        peer = (sc_psort_peer_t *) sc_array_push (pa);
+        rreq = (MPI_Request *) sc_array_push (pr);
+        sreq = (MPI_Request *) sc_array_push (ps);
         hi_data = pst->my_base + (hi_beg + offset - pst->my_lo) * size;
 
         peer->received = 0;
@@ -255,7 +255,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
 #endif
 
         /* retrieve peer information */
-        peer = sc_array_index_int (pa, wait_indices[i]);
+        peer = (sc_psort_peer_t *) sc_array_index_int (pa, wait_indices[i]);
         SC_ASSERT (!peer->received);
         SC_ASSERT (peer->prank != rank);
         SC_ASSERT (peer->prank == jstatus->MPI_SOURCE);

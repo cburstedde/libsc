@@ -100,7 +100,7 @@ sc_array_init_data (sc_array_t * view, void *base, size_t elem_size,
   view->elem_size = elem_size;
   view->elem_count = elem_count;
   view->byte_alloc = -(ssize_t) (elem_count * elem_size + 1);
-  view->array = base;
+  view->array = (char *) base;
 }
 
 void
@@ -352,10 +352,10 @@ sc_array_split (sc_array_t * array, sc_array_t * offsets, size_t num_types,
    * Initializing offsets[0] = 0, offsets[i] = count for i > 0,
    * low = 0, and step = 1, the invariants are trivially satisfied.
    */
-  zp = sc_array_index (offsets, 0);
+  zp = (size_t *) sc_array_index (offsets, 0);
   *zp = 0;
   for (zi = 1; zi <= num_types; zi++) {
-    zp = sc_array_index (offsets, zi);
+    zp = (size_t *) sc_array_index (offsets, zi);
     *zp = count;
   }
 
@@ -386,7 +386,7 @@ sc_array_split (sc_array_t * array, sc_array_t * offsets, size_t num_types,
      */
     else {
       for (zi = step; zi <= type; zi++) {
-        zp = sc_array_index (offsets, zi);
+        zp = (size_t *) sc_array_index (offsets, zi);
         *zp = guess;
       }
       high = guess;             /* high = offsets[step] */
@@ -673,7 +673,7 @@ sc_list_prepend (sc_list_t * list, void *data)
 {
   sc_link_t          *lynk;
 
-  lynk = sc_mempool_alloc (list->allocator);
+  lynk = (sc_link_t *) sc_mempool_alloc (list->allocator);
   lynk->data = data;
   lynk->next = list->first;
   list->first = lynk;
@@ -689,7 +689,7 @@ sc_list_append (sc_list_t * list, void *data)
 {
   sc_link_t          *lynk;
 
-  lynk = sc_mempool_alloc (list->allocator);
+  lynk = (sc_link_t *) sc_mempool_alloc (list->allocator);
   lynk->data = data;
   lynk->next = NULL;
   if (list->last != NULL) {
@@ -710,7 +710,7 @@ sc_list_insert (sc_list_t * list, sc_link_t * pred, void *data)
 
   SC_ASSERT (pred != NULL);
 
-  lynk = sc_mempool_alloc (list->allocator);
+  lynk = (sc_link_t *) sc_mempool_alloc (list->allocator);
   lynk->data = data;
   lynk->next = pred->next;
   pred->next = lynk;
@@ -801,19 +801,19 @@ sc_hash_maybe_resize (sc_hash_t * hash)
   new_slots = sc_array_new (sizeof (sc_list_t));
   sc_array_resize (new_slots, new_size);
   for (i = 0; i < new_size; ++i) {
-    new_list = sc_array_index (new_slots, i);
+    new_list = (sc_list_t *) sc_array_index (new_slots, i);
     sc_list_init (new_list, hash->allocator);
   }
 
   /* go through the old slots and move data to the new slots */
   new_count = 0;
   for (i = 0; i < old_slots->elem_count; ++i) {
-    old_list = sc_array_index (old_slots, i);
+    old_list = (sc_list_t *) sc_array_index (old_slots, i);
     lynk = old_list->first;
     while (lynk != NULL) {
       /* insert data into new slot list */
       j = hash->hash_fn (lynk->data, hash->user_data) % new_size;
-      new_list = sc_array_index (new_slots, j);
+      new_list = (sc_list_t *) sc_array_index (new_slots, j);
       sc_list_prepend (new_list, lynk->data);
       ++new_count;
 
@@ -864,7 +864,7 @@ sc_hash_new (sc_hash_function_t hash_fn, sc_equal_function_t equal_fn,
   hash->slots = slots = sc_array_new (sizeof (sc_list_t));
   sc_array_resize (slots, sc_hash_minimal_size);
   for (i = 0; i < slots->elem_count; ++i) {
-    list = sc_array_index (slots, i);
+    list = (sc_list_t *) sc_array_index (slots, i);
     sc_list_init (list, hash->allocator);
   }
 
@@ -907,7 +907,7 @@ sc_hash_truncate (sc_hash_t * hash)
 
   /* return all list elements to the outside memory allocator */
   for (i = 0, count = 0; i < slots->elem_count; ++i) {
-    list = sc_array_index (slots, i);
+    list = (sc_list_t *) sc_array_index (slots, i);
     count += list->elem_count;
     sc_list_reset (list);
   }
@@ -924,7 +924,7 @@ sc_hash_unlink (sc_hash_t * hash)
   sc_array_t         *slots = hash->slots;
 
   for (i = 0, count = 0; i < slots->elem_count; ++i) {
-    list = sc_array_index (slots, i);
+    list = (sc_list_t *) sc_array_index (slots, i);
     count += list->elem_count;
     sc_list_unlink (list);
   }
@@ -952,7 +952,7 @@ sc_hash_lookup (sc_hash_t * hash, void *v, void ***found)
   sc_link_t          *lynk;
 
   hval = hash->hash_fn (v, hash->user_data) % hash->slots->elem_count;
-  list = sc_array_index (hash->slots, hval);
+  list = (sc_list_t *) sc_array_index (hash->slots, hval);
 
   for (lynk = list->first; lynk != NULL; lynk = lynk->next) {
     /* check if an equal object is contained in the hash table */
@@ -975,7 +975,7 @@ sc_hash_insert_unique (sc_hash_t * hash, void *v, void ***found)
   sc_link_t          *lynk;
 
   hval = hash->hash_fn (v, hash->user_data) % hash->slots->elem_count;
-  list = sc_array_index (hash->slots, hval);
+  list = (sc_list_t *) sc_array_index (hash->slots, hval);
 
   /* check if an equal object is already contained in the hash table */
   for (lynk = list->first; lynk != NULL; lynk = lynk->next) {
@@ -1014,7 +1014,7 @@ sc_hash_remove (sc_hash_t * hash, void *v, void **found)
   sc_link_t          *lynk, *prev;
 
   hval = hash->hash_fn (v, hash->user_data) % hash->slots->elem_count;
-  list = sc_array_index (hash->slots, hval);
+  list = (sc_list_t *) sc_array_index (hash->slots, hval);
 
   prev = NULL;
   for (lynk = list->first; lynk != NULL; lynk = lynk->next) {
@@ -1045,7 +1045,7 @@ sc_hash_foreach (sc_hash_t * hash, sc_hash_foreach_t fn)
   sc_link_t          *lynk;
 
   for (slot = 0; slot < hash->slots->elem_count; ++slot) {
-    list = sc_array_index (hash->slots, slot);
+    list = (sc_list_t *) sc_array_index (hash->slots, slot);
     for (lynk = list->first; lynk != NULL; lynk = lynk->next) {
       if (!fn (&lynk->data, hash->user_data)) {
         return;
@@ -1066,7 +1066,7 @@ sc_hash_print_statistics (int package_id, int log_priority, sc_hash_t * hash)
   sum = 0.;
   squaresum = 0.;
   for (i = 0; i < slots->elem_count; ++i) {
-    list = sc_array_index (slots, i);
+    list = (sc_list_t *) sc_array_index (slots, i);
     a = (double) list->elem_count;
     sum += a;
     squaresum += a * a;
@@ -1087,7 +1087,8 @@ sc_hash_print_statistics (int package_id, int log_priority, sc_hash_t * hash)
 static unsigned
 sc_hash_array_hash_fn (const void *v, const void *u)
 {
-  const sc_hash_array_data_t *internal_data = u;
+  const sc_hash_array_data_t *internal_data =
+    (const sc_hash_array_data_t *) u;
   long                l = (long) v;
   void               *p;
 
@@ -1100,7 +1101,8 @@ sc_hash_array_hash_fn (const void *v, const void *u)
 static int
 sc_hash_array_equal_fn (const void *v1, const void *v2, const void *u)
 {
-  const sc_hash_array_data_t *internal_data = u;
+  const sc_hash_array_data_t *internal_data =
+    (const sc_hash_array_data_t *) u;
   long                l1 = (long) v1;
   long                l2 = (long) v2;
   void               *p1, *p2;

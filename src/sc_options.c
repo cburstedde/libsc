@@ -68,7 +68,7 @@ sc_options_destroy (sc_options_t * opt)
   sc_option_item_t   *item;
 
   for (iz = 0; iz < count; ++iz) {
-    item = sc_array_index (items, iz);
+    item = (sc_option_item_t *) sc_array_index (items, iz);
     SC_FREE (item->string_value);
   }
 
@@ -88,7 +88,7 @@ sc_options_add_switch (sc_options_t * opt, int opt_char,
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  item = sc_array_push (opt->option_items);
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
 
   item->opt_type = SC_OPTION_SWITCH;
   item->opt_char = opt_char;
@@ -112,7 +112,7 @@ sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  item = sc_array_push (opt->option_items);
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
 
   item->opt_type = SC_OPTION_INT;
   item->opt_char = opt_char;
@@ -138,7 +138,7 @@ sc_options_add_double (sc_options_t * opt, int opt_char,
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  item = sc_array_push (opt->option_items);
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
 
   item->opt_type = SC_OPTION_DOUBLE;
   item->opt_char = opt_char;
@@ -163,7 +163,7 @@ sc_options_add_string (sc_options_t * opt, int opt_char,
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  item = sc_array_push (opt->option_items);
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
 
   item->opt_type = SC_OPTION_STRING;
   item->opt_char = opt_char;
@@ -187,7 +187,7 @@ sc_options_add_inifile (sc_options_t * opt, int opt_char,
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  item = sc_array_push (opt->option_items);
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
 
   item->opt_type = SC_OPTION_INIFILE;
   item->opt_char = opt_char;
@@ -211,7 +211,7 @@ sc_options_add_callback (sc_options_t * opt, int opt_char,
   SC_ASSERT (opt_char != '\0' || opt_name != NULL);
   SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
 
-  item = sc_array_push (opt->option_items);
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
 
   item->opt_type = SC_OPTION_CALLBACK;
   item->opt_char = opt_char;
@@ -247,7 +247,7 @@ sc_options_print_usage (int package_id, int log_priority,
   }
 
   for (iz = 0; iz < count; ++iz) {
-    item = sc_array_index (items, iz);
+    item = (sc_option_item_t *) sc_array_index (items, iz);
     provide_short = "";
     provide_long = "";
     switch (item->opt_type) {
@@ -330,7 +330,7 @@ sc_options_print_summary (int package_id, int log_priority,
   SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Options:\n");
 
   for (iz = 0; iz < count; ++iz) {
-    item = sc_array_index (items, iz);
+    item = (sc_option_item_t *) sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE ||
         item->opt_type == SC_OPTION_CALLBACK) {
       continue;
@@ -405,7 +405,7 @@ sc_options_load (int package_id, int err_priority,
   }
 
   for (iz = 0; iz < count; ++iz) {
-    item = sc_array_index (items, iz);
+    item = (sc_option_item_t *) sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE ||
         item->opt_type == SC_OPTION_CALLBACK) {
       continue;
@@ -507,7 +507,7 @@ sc_options_save (int package_id, int err_priority,
   }
 
   for (iz = 0; iz < count; ++iz) {
-    item = sc_array_index (items, iz);
+    item = (sc_option_item_t *) sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE ||
         item->opt_type == SC_OPTION_CALLBACK) {
       continue;
@@ -610,7 +610,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   lo = longopts;
   position = 0;
   for (iz = 0; iz < count; ++iz) {
-    item = sc_array_index (items, iz);
+    item = (sc_option_item_t *) sc_array_index (items, iz);
     if (item->opt_char != '\0') {
       printed = snprintf (optstring + position, BUFSIZ - position,
                           "%c%s", item->opt_char, item->has_arg ? ":" : "");
@@ -651,11 +651,11 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
     item = NULL;
     if (c == 0) {               /* long option */
       SC_ASSERT (item_index >= 0);
-      item = sc_array_index (items, (size_t) item_index);
+      item = (sc_option_item_t *) sc_array_index (items, (size_t) item_index);
     }
     else {                      /* short option */
       for (iz = 0; iz < count; ++iz) {
-        item = sc_array_index (items, iz);
+        item = (sc_option_item_t *) sc_array_index (items, iz);
         if (item->opt_char == c) {
           break;
         }

@@ -27,8 +27,8 @@ sc_stats_mpifunc (void *invec, void *inoutvec, int *len,
                   MPI_Datatype * datatype)
 {
   int                 i;
-  double             *in = invec;
-  double             *inout = inoutvec;
+  double             *in = (double *) invec;
+  double             *inout = (double *) inoutvec;
 
   for (i = 0; i < *len; ++i) {
     /* sum count, values and their squares */

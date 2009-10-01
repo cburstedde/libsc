@@ -23,6 +23,8 @@
 
 #include <sc.h>
 
+SC_EXTERN_C_BEGIN;
+
 #define LUA_USE_LINUX
 
 #ifdef SC_PROVIDE_LUA
@@ -44,5 +46,7 @@
 #include <lua5.1/lauxlib.h>
 #endif
 #endif
+
+SC_EXTERN_C_END;
 
 #endif /* !SC_LUA_H */

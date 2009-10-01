@@ -618,9 +618,9 @@ static void
 avl_to_array_foreach (void *item, void *data)
 {
   void              **pp;
-  avl_to_array_data_t *adata = data;
+  avl_to_array_data_t *adata = (avl_to_array_data_t *) data;
 
-  pp = sc_array_index (adata->array, adata->iz);
+  pp = (void **) sc_array_index (adata->array, adata->iz);
   *pp = item;
 
   ++adata->iz;

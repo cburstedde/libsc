@@ -87,7 +87,7 @@ main (int argc, char **argv)
   temp = 52;
   searched = sc_array_bsearch (a1, &temp, compar);
   SC_CHECK_ABORT (searched != -1, "array_bsearch_index");
-  pi = sc_array_index_ssize_t (a1, searched);
+  pi = (int *) sc_array_index_ssize_t (a1, searched);
   SC_CHECK_ABORT (*pi == temp, "array_bsearch");
 
   i3last = -1;

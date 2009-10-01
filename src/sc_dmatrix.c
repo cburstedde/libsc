@@ -503,7 +503,7 @@ sc_dmatrix_pool_destroy (sc_dmatrix_pool_t * dmpool)
   SC_ASSERT (dmpool->elem_count == 0);
 
   for (zz = 0; zz < dmpool->freed.elem_count; ++zz) {
-    pdm = sc_array_index (&dmpool->freed, zz);
+    pdm = (sc_dmatrix_t **) sc_array_index (&dmpool->freed, zz);
     sc_dmatrix_destroy (*pdm);
   }
   sc_array_reset (&dmpool->freed);

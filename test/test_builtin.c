@@ -109,7 +109,7 @@ test_zlib (void)
 static int
 test_lua (void)
 {
-  lua_State          *L = lua_open ();
+  lua_State          *L = (lua_State *) lua_open ();
 
   lua_close (L);
 

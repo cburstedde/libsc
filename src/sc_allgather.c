@@ -163,7 +163,7 @@ sc_allgather (void *sendbuf, int sendcount, MPI_Datatype sendtype,
   SC_CHECK_MPI (mpiret);
 
   memcpy (((char *) recvbuf) + mpirank * datasize, sendbuf, datasize);
-  sc_ag_recursive (mpicomm, recvbuf, (int) datasize,
+  sc_ag_recursive (mpicomm, (char *) recvbuf, (int) datasize,
                    mpisize, mpirank, mpirank);
 #else
   memcpy (recvbuf, sendbuf, datasize);

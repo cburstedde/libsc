@@ -71,7 +71,7 @@ sc_z (double x, double y, double z, void *data)
 double
 sc_sum (double x, double y, double z, void *data)
 {
-  sc_function3_meta_t *meta = data;
+  sc_function3_meta_t *meta = (sc_function3_meta_t *) data;
 
   SC_ASSERT (meta != NULL);
   return meta->f1 (x, y, z, meta->data) +
@@ -81,7 +81,7 @@ sc_sum (double x, double y, double z, void *data)
 double
 sc_product (double x, double y, double z, void *data)
 {
-  sc_function3_meta_t *meta = data;
+  sc_function3_meta_t *meta = (sc_function3_meta_t *) data;
 
   SC_ASSERT (meta != NULL);
   return meta->f1 (x, y, z, meta->data) *
@@ -91,7 +91,7 @@ sc_product (double x, double y, double z, void *data)
 double
 sc_tensor (double x, double y, double z, void *data)
 {
-  sc_function3_meta_t *meta = data;
+  sc_function3_meta_t *meta = (sc_function3_meta_t *) data;
 
   SC_ASSERT (meta != NULL);
   return meta->f1 (x, y, z, meta->data) *

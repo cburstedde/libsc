@@ -90,7 +90,7 @@ main (int argc, char **argv)
   sc_array_resize (a, (size_t) N);
 
   for (i = 0; i < N; ++i) {
-    pe = sc_array_index_int (a, i);
+    pe = (int *) sc_array_index_int (a, i);
     *pe = (i + N / 2) * (N - i);        /* can create duplicates */
   }
   sc_array_sort (a, sc_int_compare);
@@ -105,7 +105,7 @@ main (int argc, char **argv)
   test_new_data (a);
 
   for (i = 0; i < N; ++i) {
-    pe = sc_array_index_int (a, i);
+    pe = (int *) sc_array_index_int (a, i);
     *pe = 1 + i + i * i;        /* is already sorted */
   }
   for (i = 0; i < N; ++i) {
