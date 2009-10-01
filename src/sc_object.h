@@ -23,42 +23,11 @@
 
 #include <sc.h>
 #include <sc_containers.h>
+#include <sc_keyvalue.h>
 
 SC_EXTERN_C_BEGIN;
 
 typedef void        (*sc_object_method_t) (void);
-
-typedef enum
-{
-  SC_OBJECT_VALUE_NONE = 0,
-  SC_OBJECT_VALUE_INT,
-  SC_OBJECT_VALUE_DOUBLE,
-  SC_OBJECT_VALUE_STRING,
-  SC_OBJECT_VALUE_POINTER,
-}
-sc_object_value_type_t;
-
-typedef struct sc_object_value
-{
-  const char         *key;
-  sc_object_value_type_t type;
-  union
-  {
-    int                 i;
-    double              g;
-    const char         *s;
-    void               *p;
-  }
-  value;
-}
-sc_object_value_t;
-
-typedef struct sc_object_arguments
-{
-  sc_hash_t          *hash;
-  sc_mempool_t       *value_allocator;
-}
-sc_object_arguments_t;
 
 typedef struct sc_object_entry
 {
@@ -193,26 +162,7 @@ sc_object_method_t  sc_object_delegate_lookup (sc_object_t * o,
                                                int skip_top,
                                                sc_object_t ** m);
 
-/* passing arguments */
-/* Arguments come in pairs of 2: static string "type:key" and value;
-   type is a letter like the identifier names in sc_object_value.value */
-sc_object_arguments_t *sc_object_arguments_new (int dummy, ...);
-void                sc_object_arguments_destroy (sc_object_arguments_t *
-                                                 args);
-sc_object_value_type_t sc_object_arguments_exist (sc_object_arguments_t *
-                                                  args, const char *key);
-/* if the key is not present then dvalue is returned */
-int                 sc_object_arguments_int (sc_object_arguments_t * args,
-                                             const char *key, int dvalue);
-double              sc_object_arguments_double (sc_object_arguments_t * args,
-                                                const char *key,
-                                                double dvalue);
-const char         *sc_object_arguments_string (sc_object_arguments_t * args,
-                                                const char *key,
-                                                const char *dvalue);
-void               *sc_object_arguments_pointer (sc_object_arguments_t * args,
-                                                 const char *key,
-                                                 void *dvalue);
+
 
 /* construction */
 sc_object_t        *sc_object_alloc (void);
@@ -224,6 +174,8 @@ sc_object_t        *sc_object_new_from_klass_values (sc_object_t * d, ...);
 /* object data */
 void               *sc_object_get_data (sc_object_t * o,
                                         sc_object_method_t ifm, size_t s);
+
+
 
 /** There are 4 different semantics for calling virtual methods:
  * PRE-ALL          Call all methods in the delegate tree in pre-order.
