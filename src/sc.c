@@ -67,7 +67,7 @@ static size_t       sc_line_no = 0;
 static void         sc_log_handler (FILE * log_stream,
                                     const char *filename, int lineno,
                                     int package, int category, int priority,
-                                    const char *fmt, va_list ap);
+                                    const char *msg);
 
 /* *INDENT-OFF* */
 const int sc_log2_lookup_table[256] =
@@ -177,8 +177,7 @@ sc_set_signal_handler (int catch_signals)
 
 static void
 sc_log_handler (FILE * log_stream, const char *filename, int lineno,
-                int package, int category, int priority,
-                const char *fmt, va_list ap)
+                int package, int category, int priority, const char *msg)
 {
   int                 wp = 0, wi = 0;
 
@@ -207,7 +206,7 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
     fprintf (log_stream, "%s:%d ", bp, lineno);
   }
 
-  vfprintf (log_stream, fmt, ap);
+  fputs (msg, log_stream);
   fflush (log_stream);
 }
 
@@ -469,13 +468,12 @@ sc_set_log_defaults (FILE * log_stream,
 }
 
 void
-sc_logf (const char *filename, int lineno,
-         int package, int category, int priority, const char *fmt, ...)
+sc_log (const char *filename, int lineno,
+        int package, int category, int priority, const char *msg)
 {
   int                 log_threshold;
   sc_log_handler_t    log_handler;
   sc_package_t       *p;
-  va_list             ap;
 
   if (package == -1) {
     p = NULL;
@@ -497,19 +495,34 @@ sc_logf (const char *filename, int lineno,
   if (category == SC_LC_GLOBAL && sc_identifier > 0)
     return;
 
-  if (sc_trace_file != NULL && priority >= sc_trace_prio) {
-    va_start (ap, fmt);
+  if (sc_trace_file != NULL && priority >= sc_trace_prio)
     log_handler (sc_trace_file, filename, lineno,
-                 package, category, priority, fmt, ap);
-    va_end (ap);
-  }
+                 package, category, priority, msg);
 
-  if (priority >= log_threshold) {
-    va_start (ap, fmt);
+  if (priority >= log_threshold)
     log_handler (sc_log_stream != NULL ? sc_log_stream : stdout,
-                 filename, lineno, package, category, priority, fmt, ap);
-    va_end (ap);
-  }
+                 filename, lineno, package, category, priority, msg);
+}
+
+void
+sc_logf (const char *filename, int lineno,
+         int package, int category, int priority, const char *fmt, ...)
+{
+  va_list             ap;
+
+  va_start (ap, fmt);
+  sc_logv (filename, lineno, package, category, priority, fmt, ap);
+  va_end (ap);
+}
+
+void
+sc_logv (const char *filename, int lineno,
+         int package, int category, int priority, const char *fmt, va_list ap)
+{
+  char                buffer[BUFSIZ];
+
+  vsnprintf (buffer, BUFSIZ, fmt, ap);
+  sc_log (filename, lineno, package, category, priority, buffer);
 }
 
 void

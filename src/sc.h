@@ -285,8 +285,7 @@ typedef void        (*sc_handler_t) (void *data);
 typedef void        (*sc_log_handler_t) (FILE * log_stream,
                                          const char *filename, int lineno,
                                          int package, int category,
-                                         int priority, const char *fmt,
-                                         va_list ap);
+                                         int priority, const char *msg);
 
 /* memory allocation functions, handle NULL pointers by internal abort
    the sc_realloc function does not preserve alignment boundaries */
@@ -322,10 +321,16 @@ void                sc_set_log_defaults (FILE * log_stream,
  * \param [in] category  Must be SC_LC_NORMAL or SC_LC_GLOBAL.
  * \param [in] priority  Must be > SC_LP_ALWAYS and < SC_LP_SILENT.
  */
+void                sc_log (const char *filename, int lineno,
+                            int package, int category, int priority,
+                            const char *msg);
 void                sc_logf (const char *filename, int lineno,
                              int package, int category, int priority,
                              const char *fmt, ...)
   __attribute__ ((format (printf, 6, 7)));
+void                sc_logv (const char *filename, int lineno,
+                             int package, int category, int priority,
+                             const char *fmt, va_list ap);
 
 /** Generic MPI abort handler. The data must point to a MPI_Comm object. */
 void                sc_generic_abort_handler (void *data);
