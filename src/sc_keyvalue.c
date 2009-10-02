@@ -132,6 +132,19 @@ sc_keyvalue_newf (int dummy, ...)
   return args;
 }
 
+sc_keyvalue_t      *
+sc_keyvalue_new ()
+{
+  sc_keyvalue_t      *args;
+
+  args = SC_ALLOC (sc_keyvalue_t, 1);
+  args->hash = sc_hash_new (sc_keyvalue_entry_hash, sc_keyvalue_entry_equal,
+                            NULL, NULL);
+  args->value_allocator = sc_mempool_new (sizeof (sc_keyvalue_entry_t));
+
+  return args;
+}
+
 void
 sc_keyvalue_destroy (sc_keyvalue_t * args)
 {

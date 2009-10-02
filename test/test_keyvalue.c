@@ -63,7 +63,7 @@ main (int argc, char **argv)
   args = NULL;
 
   /* Create a new argument set using the sc_keyvalue_set functions */
-  args2 = sc_keyvalue_newf (0, NULL);
+  args2 = sc_keyvalue_new ();
 
   sc_keyvalue_set_int (args2, "intTest", -17);
   sc_keyvalue_set_double (args2, "doubleTest", 3.14159);
