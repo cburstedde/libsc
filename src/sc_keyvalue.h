@@ -28,28 +28,13 @@ SC_EXTERN_C_BEGIN;
 
 typedef enum
 {
-  SC_OBJECT_VALUE_NONE = 0,
-  SC_OBJECT_VALUE_INT,
-  SC_OBJECT_VALUE_DOUBLE,
-  SC_OBJECT_VALUE_STRING,
-  SC_OBJECT_VALUE_POINTER,
+  SC_KEYVALUE_ENTRY_NONE = 0,
+  SC_KEYVALUE_ENTRY_INT,
+  SC_KEYVALUE_ENTRY_DOUBLE,
+  SC_KEYVALUE_ENTRY_STRING,
+  SC_KEYVALUE_ENTRY_POINTER,
 }
-sc_object_value_type_t;
-
-typedef struct sc_object_value
-{
-  const char         *key;
-  sc_object_value_type_t type;
-  union
-  {
-    int                 i;
-    double              g;
-    const char         *s;
-    void               *p;
-  }
-  value;
-}
-sc_object_value_t;
+sc_keyvalue_entry_type_t;
 
 typedef struct sc_keyvalue
 {
@@ -60,13 +45,13 @@ sc_keyvalue_t;
 
 /* passing arguments */
 /* Arguments come in pairs of 2: static string "type:key" and value;
-   type is a letter like the identifier names in sc_object_value.value */
+   type is a letter like the identifier names in sc_keyvalue_entry.value */
 sc_keyvalue_t      *sc_keyvalue_new (int dummy, ...);
 sc_keyvalue_t      *sc_keyvalue_new_va (va_list ap);
 void                sc_keyvalue_destroy (sc_keyvalue_t * args);
 
-sc_object_value_type_t sc_keyvalue_exist (sc_keyvalue_t *
-                                          args, const char *key);
+sc_keyvalue_entry_type_t sc_keyvalue_exist (sc_keyvalue_t *
+                                            args, const char *key);
 
 /* Routines to extract values from keys */
 /* if the key is not present then dvalue is returned */
