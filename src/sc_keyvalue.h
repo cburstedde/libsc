@@ -56,7 +56,6 @@ sc_keyvalue_entry_type_t sc_keyvalue_exists (sc_keyvalue_t * kv,
                                              const char *key);
 
 /* Routine to remove an entry */
-/* typekey is a static string "type:key" to be removed */
 sc_keyvalue_entry_type_t sc_keyvalue_unset (sc_keyvalue_t * kv,
                                             const char *key);
 
