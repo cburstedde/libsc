@@ -71,13 +71,13 @@ sc_keyvalue_newv (va_list ap)
   const char         *s;
   int                 added;
   void              **found;
-  sc_keyvalue_t      *args;
+  sc_keyvalue_t      *kv;
   sc_keyvalue_entry_t *value;
 
-  args = SC_ALLOC (sc_keyvalue_t, 1);
-  args->hash = sc_hash_new (sc_keyvalue_entry_hash, sc_keyvalue_entry_equal,
-                            NULL, NULL);
-  args->value_allocator = sc_mempool_new (sizeof (sc_keyvalue_entry_t));
+  kv = SC_ALLOC (sc_keyvalue_t, 1);
+  kv->hash = sc_hash_new (sc_keyvalue_entry_hash, sc_keyvalue_entry_equal,
+                          NULL, NULL);
+  kv->value_allocator = sc_mempool_new (sizeof (sc_keyvalue_entry_t));
 
   for (;;) {
     s = va_arg (ap, const char *);
@@ -85,7 +85,7 @@ sc_keyvalue_newv (va_list ap)
       break;
     }
     SC_ASSERT (s[0] != '\0' && s[1] == ':' && s[2] != '\0');
-    value = (sc_keyvalue_entry_t *) sc_mempool_alloc (args->value_allocator);
+    value = (sc_keyvalue_entry_t *) sc_mempool_alloc (kv->value_allocator);
     value->key = &s[2];
     switch (s[0]) {
     case 'i':
@@ -107,66 +107,66 @@ sc_keyvalue_newv (va_list ap)
     default:
       SC_ABORTF ("invalid argument character %c", s[0]);
     }
-    added = sc_hash_insert_unique (args->hash, value, &found);
+    added = sc_hash_insert_unique (kv->hash, value, &found);
     if (!added) {
-      sc_mempool_free (args->value_allocator, *found);
+      sc_mempool_free (kv->value_allocator, *found);
       *found = value;
     }
   }
 
-  return args;
+  return kv;
 }
 
 sc_keyvalue_t      *
 sc_keyvalue_newf (int dummy, ...)
 {
   va_list             ap;
-  sc_keyvalue_t      *args;
+  sc_keyvalue_t      *kv;
 
   SC_ASSERT (dummy == 0);
 
   va_start (ap, dummy);
-  args = sc_keyvalue_newv (ap);
+  kv = sc_keyvalue_newv (ap);
   va_end (ap);
 
-  return args;
+  return kv;
 }
 
 sc_keyvalue_t      *
 sc_keyvalue_new ()
 {
-  sc_keyvalue_t      *args;
+  sc_keyvalue_t      *kv;
 
-  args = SC_ALLOC (sc_keyvalue_t, 1);
-  args->hash = sc_hash_new (sc_keyvalue_entry_hash, sc_keyvalue_entry_equal,
-                            NULL, NULL);
-  args->value_allocator = sc_mempool_new (sizeof (sc_keyvalue_entry_t));
+  kv = SC_ALLOC (sc_keyvalue_t, 1);
+  kv->hash = sc_hash_new (sc_keyvalue_entry_hash, sc_keyvalue_entry_equal,
+                          NULL, NULL);
+  kv->value_allocator = sc_mempool_new (sizeof (sc_keyvalue_entry_t));
 
-  return args;
+  return kv;
 }
 
 void
-sc_keyvalue_destroy (sc_keyvalue_t * args)
+sc_keyvalue_destroy (sc_keyvalue_t * kv)
 {
-  sc_hash_destroy (args->hash);
-  sc_mempool_destroy (args->value_allocator);
+  sc_hash_destroy (kv->hash);
+  sc_mempool_destroy (kv->value_allocator);
 
-  SC_FREE (args);
+  SC_FREE (kv);
 }
 
 sc_keyvalue_entry_type_t
-sc_keyvalue_exist (sc_keyvalue_t * args, const char *key)
+sc_keyvalue_exist (sc_keyvalue_t * kv, const char *key)
 {
   void              **found;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
-  SC_ASSERT (args != NULL);
+  SC_ASSERT (kv != NULL);
   SC_ASSERT (key != NULL);
 
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
-  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+  if (sc_hash_lookup (kv->hash, pvalue, &found)) {
     value = (sc_keyvalue_entry_t *) (*found);
     return value->type;
   }
@@ -175,7 +175,7 @@ sc_keyvalue_exist (sc_keyvalue_t * args, const char *key)
 }
 
 void
-sc_keyvalue_unset (sc_keyvalue_t * args, const char *typekey)
+sc_keyvalue_unset (sc_keyvalue_t * kv, const char *typekey)
 {
   void              **found;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
@@ -186,7 +186,7 @@ sc_keyvalue_unset (sc_keyvalue_t * args, const char *typekey)
   const char         *key;
   char                type;
 
-  SC_ASSERT (args != NULL);
+  SC_ASSERT (kv != NULL);
   SC_ASSERT (typekey != NULL);
 
   SC_ASSERT (typekey[0] != '\0' && typekey[1] == ':' && typekey[2] != '\0');
@@ -198,7 +198,7 @@ sc_keyvalue_unset (sc_keyvalue_t * args, const char *typekey)
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
 
   /* Remove this entry and ensure that it indeed existed */
-  remove_test = sc_hash_remove (args->hash, pvalue, found);
+  remove_test = sc_hash_remove (kv->hash, pvalue, found);
   SC_ASSERT (remove_test);
   SC_ASSERT (found);
 
@@ -225,22 +225,22 @@ sc_keyvalue_unset (sc_keyvalue_t * args, const char *typekey)
 #endif
 
   /* destroy the orignial hash entry */
-  sc_mempool_free (args->value_allocator, value);
+  sc_mempool_free (kv->value_allocator, value);
 }
 
 int
-sc_keyvalue_get_int (sc_keyvalue_t * args, const char *key, int dvalue)
+sc_keyvalue_get_int (sc_keyvalue_t * kv, const char *key, int dvalue)
 {
   void              **found;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
-  SC_ASSERT (args != NULL);
+  SC_ASSERT (kv != NULL);
   SC_ASSERT (key != NULL);
 
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
-  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+  if (sc_hash_lookup (kv->hash, pvalue, &found)) {
     value = (sc_keyvalue_entry_t *) (*found);
     SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_INT);
     return value->value.i;
@@ -250,18 +250,18 @@ sc_keyvalue_get_int (sc_keyvalue_t * args, const char *key, int dvalue)
 }
 
 double
-sc_keyvalue_get_double (sc_keyvalue_t * args, const char *key, double dvalue)
+sc_keyvalue_get_double (sc_keyvalue_t * kv, const char *key, double dvalue)
 {
   void              **found;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
-  SC_ASSERT (args != NULL);
+  SC_ASSERT (kv != NULL);
   SC_ASSERT (key != NULL);
 
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
-  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+  if (sc_hash_lookup (kv->hash, pvalue, &found)) {
     value = (sc_keyvalue_entry_t *) (*found);
     SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_DOUBLE);
     return value->value.g;
@@ -271,19 +271,19 @@ sc_keyvalue_get_double (sc_keyvalue_t * args, const char *key, double dvalue)
 }
 
 const char         *
-sc_keyvalue_get_string (sc_keyvalue_t * args, const char *key,
+sc_keyvalue_get_string (sc_keyvalue_t * kv, const char *key,
                         const char *dvalue)
 {
   void              **found;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
-  SC_ASSERT (args != NULL);
+  SC_ASSERT (kv != NULL);
   SC_ASSERT (key != NULL);
 
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
-  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+  if (sc_hash_lookup (kv->hash, pvalue, &found)) {
     value = (sc_keyvalue_entry_t *) (*found);
     SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_STRING);
     return value->value.s;
@@ -293,18 +293,18 @@ sc_keyvalue_get_string (sc_keyvalue_t * args, const char *key,
 }
 
 void               *
-sc_keyvalue_get_pointer (sc_keyvalue_t * args, const char *key, void *dvalue)
+sc_keyvalue_get_pointer (sc_keyvalue_t * kv, const char *key, void *dvalue)
 {
   void              **found;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
-  SC_ASSERT (args != NULL);
+  SC_ASSERT (kv != NULL);
   SC_ASSERT (key != NULL);
 
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
-  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+  if (sc_hash_lookup (kv->hash, pvalue, &found)) {
     value = (sc_keyvalue_entry_t *) (*found);
     SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_POINTER);
     return value->value.p;
@@ -314,19 +314,19 @@ sc_keyvalue_get_pointer (sc_keyvalue_t * args, const char *key, void *dvalue)
 }
 
 void
-sc_keyvalue_set_int (sc_keyvalue_t * args, const char *key, int newvalue)
+sc_keyvalue_set_int (sc_keyvalue_t * kv, const char *key, int newvalue)
 {
   void              **found;
   int                 added;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
-  SC_ASSERT (args != NULL);
+  SC_ASSERT (kv != NULL);
   SC_ASSERT (key != NULL);
 
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
-  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+  if (sc_hash_lookup (kv->hash, pvalue, &found)) {
     /* Key already exists in hash table */
     value = (sc_keyvalue_entry_t *) (*found);
     SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_INT);
@@ -335,32 +335,31 @@ sc_keyvalue_set_int (sc_keyvalue_t * args, const char *key, int newvalue)
   }
   else {
     /* Key does not exist and must be created */
-    value = (sc_keyvalue_entry_t *) sc_mempool_alloc (args->value_allocator);
+    value = (sc_keyvalue_entry_t *) sc_mempool_alloc (kv->value_allocator);
     value->key = key;
     value->type = SC_KEYVALUE_ENTRY_INT;
     value->value.i = newvalue;
 
     /* Insert value into the hash table */
-    added = sc_hash_insert_unique (args->hash, value, &found);
+    added = sc_hash_insert_unique (kv->hash, value, &found);
     SC_ASSERT (added);
   }
 }
 
 void
-sc_keyvalue_set_double (sc_keyvalue_t * args, const char *key,
-                        double newvalue)
+sc_keyvalue_set_double (sc_keyvalue_t * kv, const char *key, double newvalue)
 {
   void              **found;
   int                 added;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
-  SC_ASSERT (args != NULL);
+  SC_ASSERT (kv != NULL);
   SC_ASSERT (key != NULL);
 
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
-  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+  if (sc_hash_lookup (kv->hash, pvalue, &found)) {
     /* Key already exists in hash table */
     value = (sc_keyvalue_entry_t *) (*found);
     SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_DOUBLE);
@@ -369,19 +368,19 @@ sc_keyvalue_set_double (sc_keyvalue_t * args, const char *key,
   }
   else {
     /* Key does not exist and must be created */
-    value = (sc_keyvalue_entry_t *) sc_mempool_alloc (args->value_allocator);
+    value = (sc_keyvalue_entry_t *) sc_mempool_alloc (kv->value_allocator);
     value->key = key;
     value->type = SC_KEYVALUE_ENTRY_DOUBLE;
     value->value.g = newvalue;
 
     /* Insert value into the hash table */
-    added = sc_hash_insert_unique (args->hash, value, &found);
+    added = sc_hash_insert_unique (kv->hash, value, &found);
     SC_ASSERT (added);
   }
 }
 
 void
-sc_keyvalue_set_string (sc_keyvalue_t * args, const char *key,
+sc_keyvalue_set_string (sc_keyvalue_t * kv, const char *key,
                         const char *newvalue)
 {
   void              **found;
@@ -389,12 +388,12 @@ sc_keyvalue_set_string (sc_keyvalue_t * args, const char *key,
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
-  SC_ASSERT (args != NULL);
+  SC_ASSERT (kv != NULL);
   SC_ASSERT (key != NULL);
 
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
-  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+  if (sc_hash_lookup (kv->hash, pvalue, &found)) {
     /* Key already exists in hash table */
     value = (sc_keyvalue_entry_t *) (*found);
     SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_STRING);
@@ -403,32 +402,31 @@ sc_keyvalue_set_string (sc_keyvalue_t * args, const char *key,
   }
   else {
     /* Key does not exist and must be created */
-    value = (sc_keyvalue_entry_t *) sc_mempool_alloc (args->value_allocator);
+    value = (sc_keyvalue_entry_t *) sc_mempool_alloc (kv->value_allocator);
     value->key = key;
     value->type = SC_KEYVALUE_ENTRY_STRING;
     value->value.s = newvalue;
 
     /* Insert value into the hash table */
-    added = sc_hash_insert_unique (args->hash, value, &found);
+    added = sc_hash_insert_unique (kv->hash, value, &found);
     SC_ASSERT (added);
   }
 }
 
 void
-sc_keyvalue_set_pointer (sc_keyvalue_t * args, const char *key,
-                         void *newvalue)
+sc_keyvalue_set_pointer (sc_keyvalue_t * kv, const char *key, void *newvalue)
 {
   void              **found;
   int                 added;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
-  SC_ASSERT (args != NULL);
+  SC_ASSERT (kv != NULL);
   SC_ASSERT (key != NULL);
 
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
-  if (sc_hash_lookup (args->hash, pvalue, &found)) {
+  if (sc_hash_lookup (kv->hash, pvalue, &found)) {
     /* Key already exists in hash table */
     value = (sc_keyvalue_entry_t *) (*found);
     SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_POINTER);
@@ -437,13 +435,13 @@ sc_keyvalue_set_pointer (sc_keyvalue_t * args, const char *key,
   }
   else {
     /* Key does not exist and must be created */
-    value = (sc_keyvalue_entry_t *) sc_mempool_alloc (args->value_allocator);
+    value = (sc_keyvalue_entry_t *) sc_mempool_alloc (kv->value_allocator);
     value->key = key;
     value->type = SC_KEYVALUE_ENTRY_POINTER;
     value->value.p = (void *) newvalue;
 
     /* Insert value into the hash table */
-    added = sc_hash_insert_unique (args->hash, value, &found);
+    added = sc_hash_insert_unique (kv->hash, value, &found);
     SC_ASSERT (added);
   }
 }

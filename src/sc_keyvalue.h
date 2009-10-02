@@ -49,38 +49,38 @@ sc_keyvalue_t;
 sc_keyvalue_t      *sc_keyvalue_new ();
 sc_keyvalue_t      *sc_keyvalue_newf (int dummy, ...);
 sc_keyvalue_t      *sc_keyvalue_newv (va_list ap);
-void                sc_keyvalue_destroy (sc_keyvalue_t * args);
+void                sc_keyvalue_destroy (sc_keyvalue_t * kv);
 
 /* Routine to check existence of an entry */
-sc_keyvalue_entry_type_t sc_keyvalue_exist (sc_keyvalue_t *
-                                            args, const char *key);
+sc_keyvalue_entry_type_t sc_keyvalue_exist (sc_keyvalue_t * kv,
+                                            const char *key);
 
 /* Routine to remove an entry */
 /* typekey is a static string "type:key" to be removed */
-void                sc_keyvalue_unset (sc_keyvalue_t * args,
+void                sc_keyvalue_unset (sc_keyvalue_t * kv,
                                        const char *typekey);
 
 /* Routines to extract values from keys */
 /* if the key is not present then dvalue is returned */
-int                 sc_keyvalue_get_int (sc_keyvalue_t * args,
+int                 sc_keyvalue_get_int (sc_keyvalue_t * kv,
                                          const char *key, int dvalue);
-double              sc_keyvalue_get_double (sc_keyvalue_t * args,
+double              sc_keyvalue_get_double (sc_keyvalue_t * kv,
                                             const char *key, double dvalue);
-const char         *sc_keyvalue_get_string (sc_keyvalue_t * args,
+const char         *sc_keyvalue_get_string (sc_keyvalue_t * kv,
                                             const char *key,
                                             const char *dvalue);
-void               *sc_keyvalue_get_pointer (sc_keyvalue_t * args,
+void               *sc_keyvalue_get_pointer (sc_keyvalue_t * kv,
                                              const char *key, void *dvalue);
 
 /* Routines to set values for a given key */
-void                sc_keyvalue_set_int (sc_keyvalue_t * args,
+void                sc_keyvalue_set_int (sc_keyvalue_t * kv,
                                          const char *key, int newvalue);
-void                sc_keyvalue_set_double (sc_keyvalue_t * args,
+void                sc_keyvalue_set_double (sc_keyvalue_t * kv,
                                             const char *key, double newvalue);
-void                sc_keyvalue_set_string (sc_keyvalue_t * args,
+void                sc_keyvalue_set_string (sc_keyvalue_t * kv,
                                             const char *key,
                                             const char *newvalue);
-void                sc_keyvalue_set_pointer (sc_keyvalue_t * args,
+void                sc_keyvalue_set_pointer (sc_keyvalue_t * kv,
                                              const char *key, void *newvalue);
 
 SC_EXTERN_C_END;
