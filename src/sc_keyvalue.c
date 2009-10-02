@@ -118,7 +118,7 @@ sc_keyvalue_newv (va_list ap)
 }
 
 sc_keyvalue_t      *
-sc_keyvalue_new (int dummy, ...)
+sc_keyvalue_newf (int dummy, ...)
 {
   va_list             ap;
   sc_keyvalue_t      *args;

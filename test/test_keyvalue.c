@@ -36,11 +36,11 @@ main (int argc, char **argv)
   void               *pointerTest;
 
   /* Create a new argument set */
-  args = sc_keyvalue_new (0,
-                          "i:intTest", -17,
-                          "g:doubleTest", 3.14159,
-                          "s:stringTest", "Hello Test!",
-                          "p:pointerTest", (void *) dummy, NULL);
+  args = sc_keyvalue_newf (0,
+                           "i:intTest", -17,
+                           "g:doubleTest", 3.14159,
+                           "s:stringTest", "Hello Test!",
+                           "p:pointerTest", (void *) dummy, NULL);
 
   intTest = sc_keyvalue_get_int (args, "intTest", 0);
   doubleTest = sc_keyvalue_get_double (args, "doubleTest", 0.0);
@@ -63,7 +63,7 @@ main (int argc, char **argv)
   args = NULL;
 
   /* Create a new argument set using the sc_keyvalue_set functions */
-  args2 = sc_keyvalue_new (0, NULL);
+  args2 = sc_keyvalue_newf (0, NULL);
 
   sc_keyvalue_set_int (args2, "intTest", -17);
   sc_keyvalue_set_double (args2, "doubleTest", 3.14159);
