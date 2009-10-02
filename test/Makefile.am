@@ -12,7 +12,7 @@ sc_test_programs = \
         test/sc_test_allgather \
         test/sc_test_sort \
         test/sc_test_sortb \
-	test/sc_test_keyvalue
+        test/sc_test_keyvalue
 
 check_PROGRAMS += $(sc_test_programs)
 
@@ -37,4 +37,4 @@ LINT_CSOURCES += \
         $(test_sc_test_allgather_SOURCES) \
         $(test_sc_test_sort_SOURCES) \
         $(test_sc_test_sortb_SOURCES) \
-	$(test_sc_test_keyvalue_SOURCES)
+        $(test_sc_test_keyvalue_SOURCES)
