@@ -54,7 +54,7 @@ initialize_fn (sc_object_t * o, sc_keyvalue_t * args)
   tuned_car->tickets = 0;
 
   if (args != NULL) {
-    tuned_car->faster = sc_keyvalue_int (args, "faster", 1);
+    tuned_car->faster = sc_keyvalue_get_int (args, "faster", 1);
   }
 }
 

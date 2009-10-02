@@ -63,17 +63,20 @@ sc_keyvalue_t;
    type is a letter like the identifier names in sc_object_value.value */
 sc_keyvalue_t      *sc_keyvalue_new (int dummy, ...);
 void                sc_keyvalue_destroy (sc_keyvalue_t * args);
+
 sc_object_value_type_t sc_keyvalue_exist (sc_keyvalue_t *
                                           args, const char *key);
+
 /* if the key is not present then dvalue is returned */
-int                 sc_keyvalue_int (sc_keyvalue_t * args,
-                                     const char *key, int dvalue);
-double              sc_keyvalue_double (sc_keyvalue_t * args,
-                                        const char *key, double dvalue);
-const char         *sc_keyvalue_string (sc_keyvalue_t * args,
-                                        const char *key, const char *dvalue);
-void               *sc_keyvalue_pointer (sc_keyvalue_t * args,
-                                         const char *key, void *dvalue);
+int                 sc_keyvalue_get_int (sc_keyvalue_t * args,
+                                         const char *key, int dvalue);
+double              sc_keyvalue_get_double (sc_keyvalue_t * args,
+                                            const char *key, double dvalue);
+const char         *sc_keyvalue_get_string (sc_keyvalue_t * args,
+                                            const char *key,
+                                            const char *dvalue);
+void               *sc_keyvalue_get_pointer (sc_keyvalue_t * args,
+                                             const char *key, void *dvalue);
 
 /* Helper function for sc_keyvalue_new */
 sc_keyvalue_t      *sc_keyvalue_new_va (va_list ap);

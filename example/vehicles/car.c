@@ -53,7 +53,7 @@ initialize_fn (sc_object_t * o, sc_keyvalue_t * args)
   car->wheelsize = 0.;
 
   if (args != NULL) {
-    car->wheelsize = (float) sc_keyvalue_double (args, "wheelsize", 0.);
+    car->wheelsize = (float) sc_keyvalue_get_double (args, "wheelsize", 0.);
     SC_ASSERT (car->wheelsize > 0.);
   }
 }

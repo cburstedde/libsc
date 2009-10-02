@@ -146,7 +146,7 @@ sc_keyvalue_exist (sc_keyvalue_t * args, const char *key)
 }
 
 int
-sc_keyvalue_int (sc_keyvalue_t * args, const char *key, int dvalue)
+sc_keyvalue_get_int (sc_keyvalue_t * args, const char *key, int dvalue)
 {
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
@@ -166,7 +166,7 @@ sc_keyvalue_int (sc_keyvalue_t * args, const char *key, int dvalue)
 }
 
 double
-sc_keyvalue_double (sc_keyvalue_t * args, const char *key, double dvalue)
+sc_keyvalue_get_double (sc_keyvalue_t * args, const char *key, double dvalue)
 {
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
@@ -186,7 +186,8 @@ sc_keyvalue_double (sc_keyvalue_t * args, const char *key, double dvalue)
 }
 
 const char         *
-sc_keyvalue_string (sc_keyvalue_t * args, const char *key, const char *dvalue)
+sc_keyvalue_get_string (sc_keyvalue_t * args, const char *key,
+                        const char *dvalue)
 {
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
@@ -206,7 +207,7 @@ sc_keyvalue_string (sc_keyvalue_t * args, const char *key, const char *dvalue)
 }
 
 void               *
-sc_keyvalue_pointer (sc_keyvalue_t * args, const char *key, void *dvalue)
+sc_keyvalue_get_pointer (sc_keyvalue_t * args, const char *key, void *dvalue)
 {
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
