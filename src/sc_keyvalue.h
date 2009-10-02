@@ -62,6 +62,7 @@ sc_keyvalue_t;
 /* Arguments come in pairs of 2: static string "type:key" and value;
    type is a letter like the identifier names in sc_object_value.value */
 sc_keyvalue_t      *sc_keyvalue_new (int dummy, ...);
+sc_keyvalue_t      *sc_keyvalue_new_va (va_list ap);
 void                sc_keyvalue_destroy (sc_keyvalue_t * args);
 
 sc_object_value_type_t sc_keyvalue_exist (sc_keyvalue_t *
@@ -90,9 +91,6 @@ void                sc_keyvalue_set_string (sc_keyvalue_t * args,
 void                sc_keyvalue_set_pointer (sc_keyvalue_t * args,
                                              const char *key,
                                              const char *newvalue);
-
-/* Helper function for sc_keyvalue_new */
-sc_keyvalue_t      *sc_keyvalue_new_va (va_list ap);
 
 SC_EXTERN_C_END;
 

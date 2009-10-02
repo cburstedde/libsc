@@ -11,7 +11,8 @@ sc_test_programs = \
         test/sc_test_pqueue \
         test/sc_test_allgather \
         test/sc_test_sort \
-        test/sc_test_sortb
+        test/sc_test_sortb \
+	test/sc_test_keyvalue
 
 check_PROGRAMS += $(sc_test_programs)
 
@@ -23,6 +24,7 @@ test_sc_test_pqueue_SOURCES = test/test_pqueue.c
 test_sc_test_allgather_SOURCES = test/test_allgather.c
 test_sc_test_sort_SOURCES = test/test_sort.c
 test_sc_test_sortb_SOURCES = test/test_sortb.c
+test_sc_test_keyvalue_SOURCES = test/test_keyvalue.c
 
 TESTS += $(sc_test_programs)
 
@@ -34,4 +36,5 @@ LINT_CSOURCES += \
         $(test_sc_test_pqueue_SOURCES) \
         $(test_sc_test_allgather_SOURCES) \
         $(test_sc_test_sort_SOURCES) \
-        $(test_sc_test_sortb_SOURCES)
+        $(test_sc_test_sortb_SOURCES) \
+	$(test_sc_test_keyvalue_SOURCES)
