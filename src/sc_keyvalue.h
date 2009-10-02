@@ -52,8 +52,8 @@ sc_keyvalue_t      *sc_keyvalue_newv (va_list ap);
 void                sc_keyvalue_destroy (sc_keyvalue_t * kv);
 
 /* Routine to check existence of an entry */
-sc_keyvalue_entry_type_t sc_keyvalue_exist (sc_keyvalue_t * kv,
-                                            const char *key);
+sc_keyvalue_entry_type_t sc_keyvalue_exists (sc_keyvalue_t * kv,
+                                             const char *key);
 
 /* Routine to remove an entry */
 /* typekey is a static string "type:key" to be removed */

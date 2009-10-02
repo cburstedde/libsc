@@ -155,7 +155,7 @@ sc_keyvalue_destroy (sc_keyvalue_t * kv)
 }
 
 sc_keyvalue_entry_type_t
-sc_keyvalue_exist (sc_keyvalue_t * kv, const char *key)
+sc_keyvalue_exists (sc_keyvalue_t * kv, const char *key)
 {
   void              **found;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
