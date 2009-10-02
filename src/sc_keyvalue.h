@@ -43,12 +43,14 @@ typedef struct sc_keyvalue
 }
 sc_keyvalue_t;
 
-/* passing arguments */
+/* constructors / Destructors */
+sc_keyvalue_t      *sc_keyvalue_new ();
+
 /* Arguments come in pairs of 2: static string "type:key" and value;
    type is a letter like the identifier names in sc_keyvalue_entry.value */
-sc_keyvalue_t      *sc_keyvalue_new ();
 sc_keyvalue_t      *sc_keyvalue_newf (int dummy, ...);
 sc_keyvalue_t      *sc_keyvalue_newv (va_list ap);
+
 void                sc_keyvalue_destroy (sc_keyvalue_t * kv);
 
 /* Routine to check existence of an entry */
