@@ -191,6 +191,7 @@ sc_keyvalue_unset (sc_keyvalue_t * args, const char *typekey)
 
   value = (sc_keyvalue_entry_t *) (*found);
 
+#ifdef SC_DEBUG
   /* test that the declared type matches value->type */
   switch (type) {
   case 'i':
@@ -208,6 +209,7 @@ sc_keyvalue_unset (sc_keyvalue_t * args, const char *typekey)
   default:
     SC_ABORTF ("invalid argument character %c", type);
   }
+#endif
 
   /* destroy the orignial hash entry */
   sc_mempool_free (args->value_allocator, value);

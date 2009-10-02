@@ -50,6 +50,7 @@ sc_keyvalue_t      *sc_keyvalue_new (int dummy, ...);
 sc_keyvalue_t      *sc_keyvalue_new_va (va_list ap);
 void                sc_keyvalue_destroy (sc_keyvalue_t * args);
 
+/* Routine to check existence of an entry */
 sc_keyvalue_entry_type_t sc_keyvalue_exist (sc_keyvalue_t *
                                             args, const char *key);
 
