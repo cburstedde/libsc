@@ -67,6 +67,7 @@ void                sc_keyvalue_destroy (sc_keyvalue_t * args);
 sc_object_value_type_t sc_keyvalue_exist (sc_keyvalue_t *
                                           args, const char *key);
 
+/* Routines to extract values from keys */
 /* if the key is not present then dvalue is returned */
 int                 sc_keyvalue_get_int (sc_keyvalue_t * args,
                                          const char *key, int dvalue);
@@ -77,6 +78,18 @@ const char         *sc_keyvalue_get_string (sc_keyvalue_t * args,
                                             const char *dvalue);
 void               *sc_keyvalue_get_pointer (sc_keyvalue_t * args,
                                              const char *key, void *dvalue);
+
+/* Routines to set values for a given key */
+void                sc_keyvalue_set_int (sc_keyvalue_t * args,
+                                         const char *key, int newvalue);
+void                sc_keyvalue_set_double (sc_keyvalue_t * args,
+                                            const char *key, double newvalue);
+void                sc_keyvalue_set_string (sc_keyvalue_t * args,
+                                            const char *key,
+                                            const char *newvalue);
+void                sc_keyvalue_set_pointer (sc_keyvalue_t * args,
+                                             const char *key,
+                                             const char *newvalue);
 
 /* Helper function for sc_keyvalue_new */
 sc_keyvalue_t      *sc_keyvalue_new_va (va_list ap);
