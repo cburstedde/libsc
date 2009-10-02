@@ -143,6 +143,13 @@ main (int argc, char **argv)
   if (sc_keyvalue_exists (args2, "pointerTest"))
     num_failed_tests++;
 
+  /* Test empty cases for exists and unset */
+  if (sc_keyvalue_exists (args2, "notakey") != SC_KEYVALUE_ENTRY_NONE)
+    num_failed_tests++;
+
+  if (sc_keyvalue_unset (args2, "notanotherkey") != SC_KEYVALUE_ENTRY_NONE)
+    num_failed_tests++;
+
   sc_keyvalue_destroy (args2);
 
   /* Shutdown procedures */

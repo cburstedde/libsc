@@ -189,8 +189,14 @@ sc_keyvalue_unset (sc_keyvalue_t * kv, const char *key)
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
 
-  /* Remove this entry and ensure that it indeed existed */
+  /* Remove this entry */
   remove_test = sc_hash_remove (kv->hash, pvalue, found);
+
+  /* Check whether anything was removed */
+  if (!remove_test)
+    return SC_KEYVALUE_ENTRY_NONE;
+
+  /* Code reaching this point must have found something */
   SC_ASSERT (remove_test);
   SC_ASSERT (found);
 
