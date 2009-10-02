@@ -468,7 +468,7 @@ sc_object_new_from_klass_values (sc_object_t * d, ...)
   sc_keyvalue_t      *args;
 
   va_start (ap, d);
-  args = sc_keyvalue_new_va (ap);
+  args = sc_keyvalue_newv (ap);
   va_end (ap);
 
   o = sc_object_new_from_klass (d, args);

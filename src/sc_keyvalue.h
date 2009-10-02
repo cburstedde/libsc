@@ -47,7 +47,7 @@ sc_keyvalue_t;
 /* Arguments come in pairs of 2: static string "type:key" and value;
    type is a letter like the identifier names in sc_keyvalue_entry.value */
 sc_keyvalue_t      *sc_keyvalue_new (int dummy, ...);
-sc_keyvalue_t      *sc_keyvalue_new_va (va_list ap);
+sc_keyvalue_t      *sc_keyvalue_newv (va_list ap);
 void                sc_keyvalue_destroy (sc_keyvalue_t * args);
 
 /* Routine to check existence of an entry */

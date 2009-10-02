@@ -66,7 +66,7 @@ sc_keyvalue_entry_equal (const void *v1, const void *v2, const void *u)
 }
 
 sc_keyvalue_t      *
-sc_keyvalue_new_va (va_list ap)
+sc_keyvalue_newv (va_list ap)
 {
   const char         *s;
   int                 added;
@@ -126,7 +126,7 @@ sc_keyvalue_new (int dummy, ...)
   SC_ASSERT (dummy == 0);
 
   va_start (ap, dummy);
-  args = sc_keyvalue_new_va (ap);
+  args = sc_keyvalue_newv (ap);
   va_end (ap);
 
   return args;
