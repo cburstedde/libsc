@@ -50,16 +50,16 @@ sc_object_value_equal (const void *v1, const void *v2, const void *u)
   return !strcmp (ov1->key, ov2->key);
 }
 
-sc_object_arguments_t *
-sc_object_arguments_new_va (va_list ap)
+sc_keyvalue_t      *
+sc_keyvalue_new_va (va_list ap)
 {
   const char         *s;
   int                 added;
   void              **found;
-  sc_object_arguments_t *args;
+  sc_keyvalue_t      *args;
   sc_object_value_t  *value;
 
-  args = SC_ALLOC (sc_object_arguments_t, 1);
+  args = SC_ALLOC (sc_keyvalue_t, 1);
   args->hash = sc_hash_new (sc_object_value_hash, sc_object_value_equal,
                             NULL, NULL);
   args->value_allocator = sc_mempool_new (sizeof (sc_object_value_t));
@@ -102,23 +102,23 @@ sc_object_arguments_new_va (va_list ap)
   return args;
 }
 
-sc_object_arguments_t *
-sc_object_arguments_new (int dummy, ...)
+sc_keyvalue_t      *
+sc_keyvalue_new (int dummy, ...)
 {
   va_list             ap;
-  sc_object_arguments_t *args;
+  sc_keyvalue_t      *args;
 
   SC_ASSERT (dummy == 0);
 
   va_start (ap, dummy);
-  args = sc_object_arguments_new_va (ap);
+  args = sc_keyvalue_new_va (ap);
   va_end (ap);
 
   return args;
 }
 
 void
-sc_object_arguments_destroy (sc_object_arguments_t * args)
+sc_keyvalue_destroy (sc_keyvalue_t * args)
 {
   sc_hash_destroy (args->hash);
   sc_mempool_destroy (args->value_allocator);
@@ -127,7 +127,7 @@ sc_object_arguments_destroy (sc_object_arguments_t * args)
 }
 
 sc_object_value_type_t
-sc_object_arguments_exist (sc_object_arguments_t * args, const char *key)
+sc_keyvalue_exist (sc_keyvalue_t * args, const char *key)
 {
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
@@ -146,8 +146,7 @@ sc_object_arguments_exist (sc_object_arguments_t * args, const char *key)
 }
 
 int
-sc_object_arguments_int (sc_object_arguments_t * args, const char *key,
-                         int dvalue)
+sc_keyvalue_int (sc_keyvalue_t * args, const char *key, int dvalue)
 {
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
@@ -167,8 +166,7 @@ sc_object_arguments_int (sc_object_arguments_t * args, const char *key,
 }
 
 double
-sc_object_arguments_double (sc_object_arguments_t * args, const char *key,
-                            double dvalue)
+sc_keyvalue_double (sc_keyvalue_t * args, const char *key, double dvalue)
 {
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
@@ -188,8 +186,7 @@ sc_object_arguments_double (sc_object_arguments_t * args, const char *key,
 }
 
 const char         *
-sc_object_arguments_string (sc_object_arguments_t * args, const char *key,
-                            const char *dvalue)
+sc_keyvalue_string (sc_keyvalue_t * args, const char *key, const char *dvalue)
 {
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;
@@ -209,8 +206,7 @@ sc_object_arguments_string (sc_object_arguments_t * args, const char *key,
 }
 
 void               *
-sc_object_arguments_pointer (sc_object_arguments_t * args, const char *key,
-                             void *dvalue)
+sc_keyvalue_pointer (sc_keyvalue_t * args, const char *key, void *dvalue)
 {
   void              **found;
   sc_object_value_t   svalue, *pvalue = &svalue;

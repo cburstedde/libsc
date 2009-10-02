@@ -43,7 +43,7 @@ copy_fn (sc_object_t * o, sc_object_t * c)
 }
 
 static void
-initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
+initialize_fn (sc_object_t * o, sc_keyvalue_t * args)
 {
   Boat               *boat = boat_get_data (o);
 
@@ -53,7 +53,7 @@ initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
   boat->name = "<undefined>";
 
   if (args != NULL) {
-    boat->name = sc_object_arguments_string (args, "name", NULL);
+    boat->name = sc_keyvalue_string (args, "name", NULL);
     SC_ASSERT (boat->name != NULL);
   }
 }

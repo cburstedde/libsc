@@ -51,36 +51,32 @@ typedef struct sc_object_value
 }
 sc_object_value_t;
 
-typedef struct sc_object_arguments
+typedef struct sc_keyvalue
 {
   sc_hash_t          *hash;
   sc_mempool_t       *value_allocator;
 }
-sc_object_arguments_t;
+sc_keyvalue_t;
 
 /* passing arguments */
 /* Arguments come in pairs of 2: static string "type:key" and value;
    type is a letter like the identifier names in sc_object_value.value */
-sc_object_arguments_t *sc_object_arguments_new (int dummy, ...);
-void                sc_object_arguments_destroy (sc_object_arguments_t *
-                                                 args);
-sc_object_value_type_t sc_object_arguments_exist (sc_object_arguments_t *
-                                                  args, const char *key);
+sc_keyvalue_t      *sc_keyvalue_new (int dummy, ...);
+void                sc_keyvalue_destroy (sc_keyvalue_t * args);
+sc_object_value_type_t sc_keyvalue_exist (sc_keyvalue_t *
+                                          args, const char *key);
 /* if the key is not present then dvalue is returned */
-int                 sc_object_arguments_int (sc_object_arguments_t * args,
-                                             const char *key, int dvalue);
-double              sc_object_arguments_double (sc_object_arguments_t * args,
-                                                const char *key,
-                                                double dvalue);
-const char         *sc_object_arguments_string (sc_object_arguments_t * args,
-                                                const char *key,
-                                                const char *dvalue);
-void               *sc_object_arguments_pointer (sc_object_arguments_t * args,
-                                                 const char *key,
-                                                 void *dvalue);
+int                 sc_keyvalue_int (sc_keyvalue_t * args,
+                                     const char *key, int dvalue);
+double              sc_keyvalue_double (sc_keyvalue_t * args,
+                                        const char *key, double dvalue);
+const char         *sc_keyvalue_string (sc_keyvalue_t * args,
+                                        const char *key, const char *dvalue);
+void               *sc_keyvalue_pointer (sc_keyvalue_t * args,
+                                         const char *key, void *dvalue);
 
-/* Helper function for sc_object_arguments_new */
-sc_object_arguments_t *sc_object_arguments_new_va (va_list ap);
+/* Helper function for sc_keyvalue_new */
+sc_keyvalue_t      *sc_keyvalue_new_va (va_list ap);
 
 SC_EXTERN_C_END;
 

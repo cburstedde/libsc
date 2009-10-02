@@ -162,20 +162,16 @@ sc_object_method_t  sc_object_delegate_lookup (sc_object_t * o,
                                                int skip_top,
                                                sc_object_t ** m);
 
-
-
 /* construction */
 sc_object_t        *sc_object_alloc (void);
 sc_object_t        *sc_object_klass_new (void);
 sc_object_t        *sc_object_new_from_klass (sc_object_t * d,
-                                              sc_object_arguments_t * args);
+                                              sc_keyvalue_t * args);
 sc_object_t        *sc_object_new_from_klass_values (sc_object_t * d, ...);
 
 /* object data */
 void               *sc_object_get_data (sc_object_t * o,
                                         sc_object_method_t ifm, size_t s);
-
-
 
 /** There are 4 different semantics for calling virtual methods:
  * PRE-ALL          Call all methods in the delegate tree in pre-order.
@@ -209,7 +205,7 @@ sc_object_t        *sc_object_copy (sc_object_t * o);
  * Recursion: POST-ALL.
  */
 void                sc_object_initialize (sc_object_t * o,
-                                          sc_object_arguments_t * args);
+                                          sc_keyvalue_t * args);
 
 /** Free object data.
  * Recursion: PRE-ALL.

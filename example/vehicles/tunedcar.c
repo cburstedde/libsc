@@ -44,7 +44,7 @@ copy_fn (sc_object_t * o, sc_object_t * c)
 }
 
 static void
-initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
+initialize_fn (sc_object_t * o, sc_keyvalue_t * args)
 {
   TunedCar           *tuned_car = tuned_car_get_data (o);
 
@@ -54,7 +54,7 @@ initialize_fn (sc_object_t * o, sc_object_arguments_t * args)
   tuned_car->tickets = 0;
 
   if (args != NULL) {
-    tuned_car->faster = sc_object_arguments_int (args, "faster", 1);
+    tuned_car->faster = sc_keyvalue_int (args, "faster", 1);
   }
 }
 

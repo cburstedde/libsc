@@ -412,7 +412,6 @@ sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm,
   return dld->oinmi;
 }
 
-
 sc_object_t        *
 sc_object_alloc (void)
 {
@@ -448,7 +447,7 @@ sc_object_klass_new (void)
 }
 
 sc_object_t        *
-sc_object_new_from_klass (sc_object_t * d, sc_object_arguments_t * args)
+sc_object_new_from_klass (sc_object_t * d, sc_keyvalue_t * args)
 {
   sc_object_t        *o;
 
@@ -466,14 +465,14 @@ sc_object_new_from_klass_values (sc_object_t * d, ...)
 {
   va_list             ap;
   sc_object_t        *o;
-  sc_object_arguments_t *args;
+  sc_keyvalue_t      *args;
 
   va_start (ap, d);
-  args = sc_object_arguments_new_va (ap);
+  args = sc_keyvalue_new_va (ap);
   va_end (ap);
 
   o = sc_object_new_from_klass (d, args);
-  sc_object_arguments_destroy (args);
+  sc_keyvalue_destroy (args);
 
   return o;
 }
@@ -581,7 +580,7 @@ sc_object_copy (sc_object_t * o)
 }
 
 void
-sc_object_initialize (sc_object_t * o, sc_object_arguments_t * args)
+sc_object_initialize (sc_object_t * o, sc_keyvalue_t * args)
 {
   size_t              zz;
   sc_array_t          sfound, *found = &sfound;
@@ -601,7 +600,7 @@ sc_object_initialize (sc_object_t * o, sc_object_arguments_t * args)
       oinmi = match->oinmi;
       SC_ASSERT (oinmi != NULL);
 
-      ((void (*)(sc_object_t *, sc_object_arguments_t *)) oinmi) (o, args);
+      ((void (*)(sc_object_t *, sc_keyvalue_t *)) oinmi) (o, args);
     }
   }
 
