@@ -25,6 +25,8 @@ main (int argc, char **argv)
 {
   int                 num_failed_tests = 0;
 
+  int                 mpiret;
+
   sc_keyvalue_t      *args;
   sc_keyvalue_t      *args2;
 
@@ -34,6 +36,12 @@ main (int argc, char **argv)
   double              doubleTest;
   const char         *stringTest;
   void               *pointerTest;
+
+  /* Initialization stuff */
+  mpiret = MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+
+  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   /* Create a new argument set */
   args = sc_keyvalue_newf (0,
@@ -137,7 +145,11 @@ main (int argc, char **argv)
 
   sc_keyvalue_destroy (args2);
 
+  /* Shutdown procedures */
   sc_finalize ();
+
+  mpiret = MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
 
   return num_failed_tests ? 1 : 0;
 }
