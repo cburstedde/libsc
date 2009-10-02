@@ -53,6 +53,11 @@ void                sc_keyvalue_destroy (sc_keyvalue_t * args);
 sc_keyvalue_entry_type_t sc_keyvalue_exist (sc_keyvalue_t *
                                             args, const char *key);
 
+/* Routine to remove an entry */
+/* typekey is a static string "type:key" to be removed */
+void                sc_keyvalue_unset (sc_keyvalue_t * args,
+                                       const char *typekey);
+
 /* Routines to extract values from keys */
 /* if the key is not present then dvalue is returned */
 int                 sc_keyvalue_get_int (sc_keyvalue_t * args,
