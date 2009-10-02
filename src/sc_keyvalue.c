@@ -403,7 +403,7 @@ sc_keyvalue_set_string (sc_keyvalue_t * args, const char *key,
 
 void
 sc_keyvalue_set_pointer (sc_keyvalue_t * args, const char *key,
-                         const char *newvalue)
+                         void *newvalue)
 {
   void              **found;
   int                 added;

@@ -80,8 +80,7 @@ void                sc_keyvalue_set_string (sc_keyvalue_t * args,
                                             const char *key,
                                             const char *newvalue);
 void                sc_keyvalue_set_pointer (sc_keyvalue_t * args,
-                                             const char *key,
-                                             const char *newvalue);
+                                             const char *key, void *newvalue);
 
 SC_EXTERN_C_END;
 
