@@ -70,6 +70,16 @@ main (int argc, char **argv)
   sc_keyvalue_set_string (args2, "stringTest", "Hello Test!");
   sc_keyvalue_set_pointer (args2, "pointerTest", (void *) dummy);
 
+  /* Direct verification that these objects now exist */
+  if (!sc_keyvalue_exist (args2, "intTest"))
+    num_failed_tests++;
+  if (!sc_keyvalue_exist (args2, "doubleTest"))
+    num_failed_tests++;
+  if (!sc_keyvalue_exist (args2, "stringTest"))
+    num_failed_tests++;
+  if (!sc_keyvalue_exist (args2, "pointerTest"))
+    num_failed_tests++;
+
   intTest = sc_keyvalue_get_int (args2, "intTest", 0);
   doubleTest = sc_keyvalue_get_double (args2, "doubleTest", 0.0);
   stringTest = sc_keyvalue_get_string (args2, "stringTest", NULL);
@@ -85,6 +95,41 @@ main (int argc, char **argv)
     num_failed_tests++;
 
   if (pointerTest != (void *) dummy)
+    num_failed_tests++;
+
+  /* Test the unset functionality */
+  sc_keyvalue_unset (args2, "i:intTest");
+  sc_keyvalue_unset (args2, "g:doubleTest");
+  sc_keyvalue_unset (args2, "s:stringTest");
+  sc_keyvalue_unset (args2, "p:pointerTest");
+
+  intTest = sc_keyvalue_get_int (args2, "intTest", 12);
+  doubleTest = sc_keyvalue_get_double (args2, "doubleTest", 2.71828);
+  stringTest =
+    sc_keyvalue_get_string (args2, "stringTest", "Another test string?");
+  pointerTest =
+    sc_keyvalue_get_pointer (args2, "pointerTest", (void *) (&main));
+
+  if (intTest != 12)
+    num_failed_tests++;
+
+  if (doubleTest != 2.71828)
+    num_failed_tests++;
+
+  if (strcmp (stringTest, "Another test string?"))
+    num_failed_tests++;
+
+  if (pointerTest != (void *) (&main))
+    num_failed_tests++;
+
+  /* Direct verification that these objects no longer exist */
+  if (sc_keyvalue_exist (args2, "intTest"))
+    num_failed_tests++;
+  if (sc_keyvalue_exist (args2, "doubleTest"))
+    num_failed_tests++;
+  if (sc_keyvalue_exist (args2, "stringTest"))
+    num_failed_tests++;
+  if (sc_keyvalue_exist (args2, "pointerTest"))
     num_failed_tests++;
 
   sc_keyvalue_destroy (args2);
