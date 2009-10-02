@@ -74,11 +74,10 @@ sc_keyvalue_newv (va_list ap)
   sc_keyvalue_t      *kv;
   sc_keyvalue_entry_t *value;
 
-  kv = SC_ALLOC (sc_keyvalue_t, 1);
-  kv->hash = sc_hash_new (sc_keyvalue_entry_hash, sc_keyvalue_entry_equal,
-                          NULL, NULL);
-  kv->value_allocator = sc_mempool_new (sizeof (sc_keyvalue_entry_t));
+  /* Create the initial empty keyvalue object */
+  kv = sc_keyvalue_new ();
 
+  /* loop through the variable arguments to fill keyvalue */
   for (;;) {
     s = va_arg (ap, const char *);
     if (s == NULL) {
