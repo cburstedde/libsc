@@ -174,25 +174,18 @@ sc_keyvalue_exists (sc_keyvalue_t * kv, const char *key)
     return SC_KEYVALUE_ENTRY_NONE;
 }
 
-void
-sc_keyvalue_unset (sc_keyvalue_t * kv, const char *typekey)
+sc_keyvalue_entry_type_t
+sc_keyvalue_unset (sc_keyvalue_t * kv, const char *key)
 {
   void              **found;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
   int                 remove_test;
-
-  const char         *key;
-  char                type;
+  sc_keyvalue_entry_type_t type;
 
   SC_ASSERT (kv != NULL);
-  SC_ASSERT (typekey != NULL);
-
-  SC_ASSERT (typekey[0] != '\0' && typekey[1] == ':' && typekey[2] != '\0');
-
-  type = typekey[0];
-  key = &(typekey[2]);
+  SC_ASSERT (key != NULL);
 
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
@@ -204,28 +197,12 @@ sc_keyvalue_unset (sc_keyvalue_t * kv, const char *typekey)
 
   value = (sc_keyvalue_entry_t *) (*found);
 
-#ifdef SC_DEBUG
-  /* test that the declared type matches value->type */
-  switch (type) {
-  case 'i':
-    SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_INT);
-    break;
-  case 'g':
-    SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_DOUBLE);
-    break;
-  case 's':
-    SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_STRING);
-    break;
-  case 'p':
-    SC_ASSERT (value->type == SC_KEYVALUE_ENTRY_POINTER);
-    break;
-  default:
-    SC_ABORTF ("invalid argument character %c", type);
-  }
-#endif
+  type = value->type;
 
   /* destroy the orignial hash entry */
   sc_mempool_free (kv->value_allocator, value);
+
+  return type;
 }
 
 int

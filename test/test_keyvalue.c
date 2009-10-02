@@ -71,13 +71,13 @@ main (int argc, char **argv)
   sc_keyvalue_set_pointer (args2, "pointerTest", (void *) dummy);
 
   /* Direct verification that these objects now exist */
-  if (!sc_keyvalue_exists (args2, "intTest"))
+  if (sc_keyvalue_exists (args2, "intTest") != SC_KEYVALUE_ENTRY_INT)
     num_failed_tests++;
-  if (!sc_keyvalue_exists (args2, "doubleTest"))
+  if (sc_keyvalue_exists (args2, "doubleTest") != SC_KEYVALUE_ENTRY_DOUBLE)
     num_failed_tests++;
-  if (!sc_keyvalue_exists (args2, "stringTest"))
+  if (sc_keyvalue_exists (args2, "stringTest") != SC_KEYVALUE_ENTRY_STRING)
     num_failed_tests++;
-  if (!sc_keyvalue_exists (args2, "pointerTest"))
+  if (sc_keyvalue_exists (args2, "pointerTest") != SC_KEYVALUE_ENTRY_POINTER)
     num_failed_tests++;
 
   intTest = sc_keyvalue_get_int (args2, "intTest", 0);
@@ -98,10 +98,13 @@ main (int argc, char **argv)
     num_failed_tests++;
 
   /* Test the unset functionality */
-  sc_keyvalue_unset (args2, "i:intTest");
-  sc_keyvalue_unset (args2, "g:doubleTest");
-  sc_keyvalue_unset (args2, "s:stringTest");
-  sc_keyvalue_unset (args2, "p:pointerTest");
+  SC_ASSERT (sc_keyvalue_unset (args2, "intTest") == SC_KEYVALUE_ENTRY_INT);
+  SC_ASSERT (sc_keyvalue_unset (args2, "doubleTest") ==
+             SC_KEYVALUE_ENTRY_DOUBLE);
+  SC_ASSERT (sc_keyvalue_unset (args2, "stringTest") ==
+             SC_KEYVALUE_ENTRY_STRING);
+  SC_ASSERT (sc_keyvalue_unset (args2, "pointerTest") ==
+             SC_KEYVALUE_ENTRY_POINTER);
 
   intTest = sc_keyvalue_get_int (args2, "intTest", 12);
   doubleTest = sc_keyvalue_get_double (args2, "doubleTest", 2.71828);
