@@ -97,6 +97,14 @@ sc_array_t;
  */
 sc_array_t         *sc_array_new (size_t elem_size);
 
+/** Creates a new array structure with a given length (number of elements).
+ * \param [in] elem_size    Size of one array element in bytes.
+ * \param [in] elem_count   Initial number of array elements.
+ * \return                  Return an allocated array
+ *                          with allocated but uninitialized elements.
+ */
+sc_array_t         *sc_array_new_size (size_t elem_size, size_t elem_count);
+
 /** Creates a new view of an existing sc_array_t.
  * \param [in] array    The array must not be resized while view is alive.
  * \param [in] offset   The offset of the viewed section in element units.
@@ -126,6 +134,15 @@ void                sc_array_destroy (sc_array_t * array);
  * \param [in] elem_size  Size of one array element in bytes.
  */
 void                sc_array_init (sc_array_t * array, size_t elem_size);
+
+/** Initializes an already allocated (or static) array structure
+ * and allocates a given number of elements.
+ * \param [in,out]  array       Array structure to be initialized.
+ * \param [in] elem_size        Size of one array element in bytes.
+ * \param [in] elem_count       Number of initial array elements.
+ */
+void                sc_array_init_size (sc_array_t * array,
+                                        size_t elem_size, size_t elem_count);
 
 /** Initializes an already allocated view from an existing sc_array_t.
  * \param [in,out] view  Array structure to be initialized.
