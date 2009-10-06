@@ -176,7 +176,7 @@ sc_keyvalue_exists (sc_keyvalue_t * kv, const char *key)
 sc_keyvalue_entry_type_t
 sc_keyvalue_unset (sc_keyvalue_t * kv, const char *key)
 {
-  void              **found;
+  void               *found;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
@@ -190,7 +190,7 @@ sc_keyvalue_unset (sc_keyvalue_t * kv, const char *key)
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
 
   /* Remove this entry */
-  remove_test = sc_hash_remove (kv->hash, pvalue, found);
+  remove_test = sc_hash_remove (kv->hash, pvalue, &found);
 
   /* Check whether anything was removed */
   if (!remove_test)
@@ -198,10 +198,9 @@ sc_keyvalue_unset (sc_keyvalue_t * kv, const char *key)
 
   /* Code reaching this point must have found something */
   SC_ASSERT (remove_test);
-  SC_ASSERT (found);
+  SC_ASSERT (found != NULL);
 
-  value = (sc_keyvalue_entry_t *) (*found);
-
+  value = (sc_keyvalue_entry_t *) found;
   type = value->type;
 
   /* destroy the orignial hash entry */

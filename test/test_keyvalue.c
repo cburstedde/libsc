@@ -31,6 +31,7 @@ main (int argc, char **argv)
   sc_keyvalue_t      *args2;
 
   const char         *dummy = "I am a dummy string";
+  const char         *wrong = "I am the wrong string";
 
   int                 intTest;
   double              doubleTest;
@@ -52,20 +53,25 @@ main (int argc, char **argv)
 
   intTest = sc_keyvalue_get_int (args, "intTest", 0);
   doubleTest = sc_keyvalue_get_double (args, "doubleTest", 0.0);
-  stringTest = sc_keyvalue_get_string (args, "stringTest", NULL);
+  stringTest = sc_keyvalue_get_string (args, "stringTest", wrong);
   pointerTest = sc_keyvalue_get_pointer (args, "pointerTest", NULL);
 
-  if (intTest != -17)
+  if (intTest != -17) {
+    SC_VERBOSE ("Test 1 failure on int\n");
     num_failed_tests++;
-
-  if (doubleTest != 3.14159)
+  }
+  if (doubleTest != 3.14159) {
+    SC_VERBOSE ("Test 1 failure on double\n");
     num_failed_tests++;
-
-  if (strcmp (stringTest, "Hello Test!"))
+  }
+  if (strcmp (stringTest, "Hello Test!")) {
+    SC_VERBOSE ("Test 1 failure on string\n");
     num_failed_tests++;
-
-  if (pointerTest != (void *) dummy)
+  }
+  if (pointerTest != (void *) dummy) {
+    SC_VERBOSE ("Test 1 failure on pointer\n");
     num_failed_tests++;
+  }
 
   sc_keyvalue_destroy (args);
   args = NULL;
@@ -79,40 +85,62 @@ main (int argc, char **argv)
   sc_keyvalue_set_pointer (args2, "pointerTest", (void *) dummy);
 
   /* Direct verification that these objects now exist */
-  if (sc_keyvalue_exists (args2, "intTest") != SC_KEYVALUE_ENTRY_INT)
+  if (sc_keyvalue_exists (args2, "intTest") != SC_KEYVALUE_ENTRY_INT) {
+    SC_VERBOSE ("Test exist failure on int\n");
     num_failed_tests++;
-  if (sc_keyvalue_exists (args2, "doubleTest") != SC_KEYVALUE_ENTRY_DOUBLE)
+  }
+  if (sc_keyvalue_exists (args2, "doubleTest") != SC_KEYVALUE_ENTRY_DOUBLE) {
+    SC_VERBOSE ("Test exist failure on double\n");
     num_failed_tests++;
-  if (sc_keyvalue_exists (args2, "stringTest") != SC_KEYVALUE_ENTRY_STRING)
+  }
+  if (sc_keyvalue_exists (args2, "stringTest") != SC_KEYVALUE_ENTRY_STRING) {
+    SC_VERBOSE ("Test exist failure on string\n");
     num_failed_tests++;
-  if (sc_keyvalue_exists (args2, "pointerTest") != SC_KEYVALUE_ENTRY_POINTER)
+  }
+  if (sc_keyvalue_exists (args2, "pointerTest") != SC_KEYVALUE_ENTRY_POINTER) {
+    SC_VERBOSE ("Test exist failure on pointer\n");
     num_failed_tests++;
+  }
 
   intTest = sc_keyvalue_get_int (args2, "intTest", 0);
   doubleTest = sc_keyvalue_get_double (args2, "doubleTest", 0.0);
-  stringTest = sc_keyvalue_get_string (args2, "stringTest", NULL);
+  stringTest = sc_keyvalue_get_string (args2, "stringTest", wrong);
   pointerTest = sc_keyvalue_get_pointer (args2, "pointerTest", NULL);
 
-  if (intTest != -17)
+  if (intTest != -17) {
+    SC_VERBOSE ("Test 2 failure on int\n");
     num_failed_tests++;
-
-  if (doubleTest != 3.14159)
+  }
+  if (doubleTest != 3.14159) {
+    SC_VERBOSE ("Test 2 failure on double\n");
     num_failed_tests++;
-
-  if (strcmp (stringTest, "Hello Test!"))
+  }
+  if (strcmp (stringTest, "Hello Test!")) {
+    SC_VERBOSE ("Test 2 failure on string\n");
     num_failed_tests++;
-
-  if (pointerTest != (void *) dummy)
+  }
+  if (pointerTest != (void *) dummy) {
+    SC_VERBOSE ("Test 2 failure on pointer\n");
     num_failed_tests++;
+  }
 
   /* Test the unset functionality */
-  SC_ASSERT (sc_keyvalue_unset (args2, "intTest") == SC_KEYVALUE_ENTRY_INT);
-  SC_ASSERT (sc_keyvalue_unset (args2, "doubleTest") ==
-             SC_KEYVALUE_ENTRY_DOUBLE);
-  SC_ASSERT (sc_keyvalue_unset (args2, "stringTest") ==
-             SC_KEYVALUE_ENTRY_STRING);
-  SC_ASSERT (sc_keyvalue_unset (args2, "pointerTest") ==
-             SC_KEYVALUE_ENTRY_POINTER);
+  if (sc_keyvalue_unset (args2, "intTest") != SC_KEYVALUE_ENTRY_INT) {
+    SC_VERBOSE ("Test unset failure on int\n");
+    num_failed_tests++;
+  }
+  if (sc_keyvalue_unset (args2, "doubleTest") != SC_KEYVALUE_ENTRY_DOUBLE) {
+    SC_VERBOSE ("Test unset failure on double\n");
+    num_failed_tests++;
+  }
+  if (sc_keyvalue_unset (args2, "stringTest") != SC_KEYVALUE_ENTRY_STRING) {
+    SC_VERBOSE ("Test unset failure on string\n");
+    num_failed_tests++;
+  }
+  if (sc_keyvalue_unset (args2, "pointerTest") != SC_KEYVALUE_ENTRY_POINTER) {
+    SC_VERBOSE ("Test unset failure on pointer\n");
+    num_failed_tests++;
+  }
 
   intTest = sc_keyvalue_get_int (args2, "intTest", 12);
   doubleTest = sc_keyvalue_get_double (args2, "doubleTest", 2.71828);
@@ -121,34 +149,50 @@ main (int argc, char **argv)
   pointerTest =
     sc_keyvalue_get_pointer (args2, "pointerTest", (void *) (&main));
 
-  if (intTest != 12)
+  if (intTest != 12) {
+    SC_VERBOSE ("Test 3 failure on int\n");
     num_failed_tests++;
-
-  if (doubleTest != 2.71828)
+  }
+  if (doubleTest != 2.71828) {
+    SC_VERBOSE ("Test 3 failure on double\n");
     num_failed_tests++;
-
-  if (strcmp (stringTest, "Another test string?"))
+  }
+  if (strcmp (stringTest, "Another test string?")) {
+    SC_VERBOSE ("Test 3 failure on string\n");
     num_failed_tests++;
-
-  if (pointerTest != (void *) (&main))
+  }
+  if (pointerTest != (void *) (&main)) {
+    SC_VERBOSE ("Test 3 failure on pointer\n");
     num_failed_tests++;
+  }
 
   /* Direct verification that these objects no longer exist */
-  if (sc_keyvalue_exists (args2, "intTest"))
+  if (sc_keyvalue_exists (args2, "intTest")) {
+    SC_VERBOSE ("Test 4 failure on int\n");
     num_failed_tests++;
-  if (sc_keyvalue_exists (args2, "doubleTest"))
+  }
+  if (sc_keyvalue_exists (args2, "doubleTest")) {
+    SC_VERBOSE ("Test 4 failure on double\n");
     num_failed_tests++;
-  if (sc_keyvalue_exists (args2, "stringTest"))
+  }
+  if (sc_keyvalue_exists (args2, "stringTest")) {
+    SC_VERBOSE ("Test 4 failure on string\n");
     num_failed_tests++;
-  if (sc_keyvalue_exists (args2, "pointerTest"))
+  }
+  if (sc_keyvalue_exists (args2, "pointerTest")) {
+    SC_VERBOSE ("Test 4 failure on pointer\n");
     num_failed_tests++;
+  }
 
   /* Test empty cases for exists and unset */
-  if (sc_keyvalue_exists (args2, "notakey") != SC_KEYVALUE_ENTRY_NONE)
+  if (sc_keyvalue_exists (args2, "notakey") != SC_KEYVALUE_ENTRY_NONE) {
+    SC_VERBOSE ("Test failure on nonexist 1\n");
     num_failed_tests++;
-
-  if (sc_keyvalue_unset (args2, "notanotherkey") != SC_KEYVALUE_ENTRY_NONE)
+  }
+  if (sc_keyvalue_unset (args2, "notanotherkey") != SC_KEYVALUE_ENTRY_NONE) {
+    SC_VERBOSE ("Test failure on nonexist 2\n");
     num_failed_tests++;
+  }
 
   sc_keyvalue_destroy (args2);
 
