@@ -93,7 +93,7 @@ sc_array_t;
 
 /** Creates a new array structure with 0 elements.
  * \param [in] elem_size    Size of one array element in bytes.
- * \return Returns an allocated and initialized array.
+ * \return                  Return an allocated array of zero length.
  */
 sc_array_t         *sc_array_new (size_t elem_size);
 
@@ -125,13 +125,13 @@ sc_array_t         *sc_array_new_data (void *base,
                                        size_t elem_size, size_t elem_count);
 
 /** Destroys an array structure.
- * \param [in] array  The array to be destroyed.
+ * \param [in] array    The array to be destroyed.
  */
 void                sc_array_destroy (sc_array_t * array);
 
-/** Initializes an already allocated array structure.
+/** Initializes an already allocated (or static) array structure.
  * \param [in,out]  array       Array structure to be initialized.
- * \param [in] elem_size  Size of one array element in bytes.
+ * \param [in] elem_size        Size of one array element in bytes.
  */
 void                sc_array_init (sc_array_t * array, size_t elem_size);
 
@@ -144,7 +144,7 @@ void                sc_array_init (sc_array_t * array, size_t elem_size);
 void                sc_array_init_size (sc_array_t * array,
                                         size_t elem_size, size_t elem_count);
 
-/** Initializes an already allocated view from an existing sc_array_t.
+/** Initializes an already allocated (or static) view from existing sc_array_t.
  * \param [in,out] view  Array structure to be initialized.
  * \param [in] array     The array must not be resized while view is alive.
  * \param [in] offset    The offset of the viewed section in element units.
@@ -155,8 +155,8 @@ void                sc_array_init_size (sc_array_t * array,
 void                sc_array_init_view (sc_array_t * view, sc_array_t * array,
                                         size_t offset, size_t length);
 
-/** Initializes an already allocated view from an existing plain C array.
- * \param [in,out] view  Array structure to be initialized.
+/** Initializes an already allocated (or static) view from given plain C data.
+ * \param [in,out] view     Array structure to be initialized.
  * \param [in] base         The data must not be moved while view is alive.
  * \param [in] elem_size    Size of one array element in bytes.
  * \param [in] elem_count   The length of the view in element units.
