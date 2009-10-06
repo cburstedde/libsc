@@ -28,7 +28,7 @@ sc_array_new (size_t elem_size)
 {
   sc_array_t         *array;
 
-  array = SC_ALLOC_ZERO (sc_array_t, 1);
+  array = SC_ALLOC (sc_array_t, 1);
 
   sc_array_init (array, elem_size);
 
@@ -40,7 +40,7 @@ sc_array_new_size (size_t elem_size, size_t elem_count)
 {
   sc_array_t         *array;
 
-  array = SC_ALLOC_ZERO (sc_array_t, 1);
+  array = SC_ALLOC (sc_array_t, 1);
 
   sc_array_init_size (array, elem_size, elem_count);
 
@@ -583,7 +583,7 @@ sc_mempool_new (size_t elem_size)
   SC_ASSERT (elem_size > 0);
   SC_ASSERT (elem_size <= (size_t) INT_MAX);    /* obstack limited to int */
 
-  mempool = SC_ALLOC_ZERO (sc_mempool_t, 1);
+  mempool = SC_ALLOC (sc_mempool_t, 1);
 
   mempool->elem_size = elem_size;
   mempool->elem_count = 0;
@@ -619,7 +619,7 @@ sc_list_new (sc_mempool_t * allocator)
 {
   sc_list_t          *list;
 
-  list = SC_ALLOC_ZERO (sc_list_t, 1);
+  list = SC_ALLOC (sc_list_t, 1);
 
   list->elem_count = 0;
   list->first = NULL;
@@ -865,7 +865,7 @@ sc_hash_new (sc_hash_function_t hash_fn, sc_equal_function_t equal_fn,
   sc_list_t          *list;
   sc_array_t         *slots;
 
-  hash = SC_ALLOC_ZERO (sc_hash_t, 1);
+  hash = SC_ALLOC (sc_hash_t, 1);
 
   if (allocator != NULL) {
     SC_ASSERT (allocator->elem_size == sizeof (sc_link_t));
@@ -1144,7 +1144,7 @@ sc_hash_array_new (size_t elem_size, sc_hash_function_t hash_fn,
 {
   sc_hash_array_t    *hash_array;
 
-  hash_array = SC_ALLOC_ZERO (sc_hash_array_t, 1);
+  hash_array = SC_ALLOC (sc_hash_array_t, 1);
 
   sc_array_init (&hash_array->a, elem_size);
   hash_array->internal_data.pa = &hash_array->a;
