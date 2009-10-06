@@ -607,12 +607,12 @@ typedef struct avl_to_array_data
 }
 avl_to_array_data_t;
 
-typedef struct avl_foreach_recursion
+typedef struct avl_foreach_recursion_data
 {
   avl_foreach_t       callback;
   void               *data;
 }
-avl_foreach_recursion_t;
+avl_foreach_recursion_data_t;
 
 static void
 avl_to_array_foreach (void *item, void *data)
@@ -627,7 +627,7 @@ avl_to_array_foreach (void *item, void *data)
 }
 
 static void
-avl_foreach_recursion (avl_node_t * node, avl_foreach_recursion_t * rec)
+avl_foreach_recursion (avl_node_t * node, avl_foreach_recursion_data_t * rec)
 {
   if (node->left != NULL)
     avl_foreach_recursion (node->left, rec);
@@ -641,7 +641,7 @@ avl_foreach_recursion (avl_node_t * node, avl_foreach_recursion_t * rec)
 void
 avl_foreach (avl_tree_t * avltree, avl_foreach_t callback, void *data)
 {
-  avl_foreach_recursion_t rec;
+  avl_foreach_recursion_data_t rec;
 
   rec.callback = callback;
   rec.data = data;
