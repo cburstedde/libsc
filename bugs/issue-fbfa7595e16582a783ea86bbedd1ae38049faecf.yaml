@@ -1,0 +1,18 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Remove printf in favor of logging functions
+desc: There's a few occurences of printf left that print to stdout/stderr.
+type: :bugfix
+component: libsc
+release: "0.6"
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :unstarted
+disposition: 
+creation_time: 2009-10-07 20:32:07.149432 Z
+references: []
+
+id: fbfa7595e16582a783ea86bbedd1ae38049faecf
+log_events: 
+- - 2009-10-07 20:32:07.693302 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
