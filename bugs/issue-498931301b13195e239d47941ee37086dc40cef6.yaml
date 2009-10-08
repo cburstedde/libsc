@@ -14,8 +14,8 @@ type: :feature
 component: libsc
 release: 
 reporter: Lucas C Wilcox <lucasw@ices.utexas.edu>
-status: :unstarted
-disposition: 
+status: :closed
+disposition: :fixed
 creation_time: 2009-10-08 18:09:58.258892 Z
 references: []
 
@@ -25,3 +25,7 @@ log_events:
   - Lucas C Wilcox <lucasw@ices.utexas.edu>
   - created
   - Initial report
+- - 2009-10-08 18:42:50.628613 Z
+  - Lucas C Wilcox <lucasw@ices.utexas.edu>
+  - closed with disposition fixed
+  - Fixed
