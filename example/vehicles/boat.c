@@ -34,8 +34,8 @@ is_type_fn (sc_object_t * o, sc_object_t * m, const char *type)
 static void
 copy_fn (sc_object_t * o, sc_object_t * m, sc_object_t * c)
 {
-  const Boat         *boat_o = boat_get_data (o, 1);
-  Boat               *boat_c = boat_get_data (c, 0);
+  const Boat         *boat_o = boat_get_data (o);
+  Boat               *boat_c = boat_register_data (c);
 
   SC_LDEBUG ("boat copy\n");
 
@@ -45,7 +45,7 @@ copy_fn (sc_object_t * o, sc_object_t * m, sc_object_t * c)
 static void
 initialize_fn (sc_object_t * o, sc_object_t * m, sc_keyvalue_t * args)
 {
-  Boat               *boat = boat_get_data (o, 0);
+  Boat               *boat = boat_register_data (o);
 
   SC_LDEBUG ("boat initialize\n");
 
@@ -61,7 +61,7 @@ initialize_fn (sc_object_t * o, sc_object_t * m, sc_keyvalue_t * args)
 static void
 write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 {
-  Boat               *boat = boat_get_data (o, 1);
+  Boat               *boat = boat_get_data (o);
 
   fprintf (out, "Boat \"%s\" speeds at %f km/h\n", boat->name, boat->speed);
 }
@@ -69,7 +69,7 @@ write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 static void
 accelerate_fn (sc_object_t * o, sc_object_t * m)
 {
-  Boat               *boat = boat_get_data (o, 1);
+  Boat               *boat = boat_get_data (o);
 
   SC_LDEBUG ("boat accelerate\n");
 
@@ -115,10 +115,19 @@ boat_new (sc_object_t * d, const char *name)
 }
 
 Boat               *
-boat_get_data (sc_object_t * o, int exists)
+boat_register_data (sc_object_t * o)
 {
   SC_ASSERT (sc_object_is_type (o, boat_type));
 
-  return (Boat *) sc_object_get_data (o, (sc_object_method_t) boat_get_data,
-                                      0, exists, sizeof (Boat));
+  return (Boat *) sc_object_data_register (o, (sc_object_method_t)
+                                           boat_get_data, sizeof (Boat));
+}
+
+Boat               *
+boat_get_data (sc_object_t * o)
+{
+  SC_ASSERT (sc_object_is_type (o, boat_type));
+
+  return (Boat *) sc_object_data_lookup (o, (sc_object_method_t)
+                                         boat_get_data);
 }

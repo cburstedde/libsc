@@ -35,8 +35,8 @@ is_type_fn (sc_object_t * o, sc_object_t * m, const char *type)
 static void
 copy_fn (sc_object_t * o, sc_object_t * m, sc_object_t * c)
 {
-  const TunedCar     *tuned_car_o = tuned_car_get_data (o, 1);
-  TunedCar           *tuned_car_c = tuned_car_get_data (c, 0);
+  const TunedCar     *tuned_car_o = tuned_car_get_data (o);
+  TunedCar           *tuned_car_c = tuned_car_register_data (c);
 
   SC_LDEBUG ("tuned_car copy\n");
 
@@ -46,7 +46,7 @@ copy_fn (sc_object_t * o, sc_object_t * m, sc_object_t * c)
 static void
 initialize_fn (sc_object_t * o, sc_object_t * m, sc_keyvalue_t * args)
 {
-  TunedCar           *tuned_car = tuned_car_get_data (o, 0);
+  TunedCar           *tuned_car = tuned_car_register_data (o);
 
   SC_LDEBUG ("tuned_car initialize\n");
 
@@ -61,8 +61,8 @@ initialize_fn (sc_object_t * o, sc_object_t * m, sc_keyvalue_t * args)
 static void
 write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 {
-  Car                *car = car_get_data (o, 1);
-  TunedCar           *tuned_car = tuned_car_get_data (o, 1);
+  Car                *car = car_get_data (o);
+  TunedCar           *tuned_car = tuned_car_get_data (o);
 
   fprintf (out, "Tuned car (wheel size %f tickets %d) speeds at %f km/h\n",
            car->wheelsize, tuned_car->tickets, car->speed);
@@ -71,7 +71,7 @@ write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 static int
 tickets_fn (sc_object_t * o, sc_object_t * m)
 {
-  TunedCar           *tuned_car = tuned_car_get_data (o, 1);
+  TunedCar           *tuned_car = tuned_car_get_data (o);
 
   return tuned_car->tickets;
 }
@@ -82,7 +82,7 @@ accelerate_fn (sc_object_t * o, sc_object_t * m)
   int                 i;
   sc_object_method_t  oinmi;
   sc_object_t        *r;
-  TunedCar           *tuned_car = tuned_car_get_data (o, 1);
+  TunedCar           *tuned_car = tuned_car_get_data (o);
 
   SC_ASSERT (m != NULL);
 
@@ -141,13 +141,22 @@ tuned_car_new (sc_object_t * d, int faster)
 }
 
 TunedCar           *
-tuned_car_get_data (sc_object_t * o, int exists)
+tuned_car_register_data (sc_object_t * o)
 {
   SC_ASSERT (sc_object_is_type (o, tuned_car_type));
 
-  return (TunedCar *) sc_object_get_data (o, (sc_object_method_t)
-                                          tuned_car_get_data, 0, exists,
-                                          sizeof (TunedCar));
+  return (TunedCar *) sc_object_data_register (o, (sc_object_method_t)
+                                               tuned_car_get_data,
+                                               sizeof (TunedCar));
+}
+
+TunedCar           *
+tuned_car_get_data (sc_object_t * o)
+{
+  SC_ASSERT (sc_object_is_type (o, tuned_car_type));
+
+  return (TunedCar *) sc_object_data_lookup (o, (sc_object_method_t)
+                                             tuned_car_get_data);
 }
 
 int

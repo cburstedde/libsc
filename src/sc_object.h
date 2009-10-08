@@ -227,17 +227,6 @@ void               *sc_object_data_lookup (sc_object_t * o,
 void               *sc_object_data_search (sc_object_t * o,
                                            sc_object_method_t ifm,
                                            int skip_top, sc_object_t ** m);
-
-/** Convenience function to lookup, search or create object data.
- * \param [in] search   If true search recursively, otherwise look up only.
- * \param [in] exists   Must match the current status of the data.
- * \param [in] s        If exists is false, use this size for allocation.
- * \note                The combination (search && !exists) is forbidden.
- */
-void               *sc_object_get_data (sc_object_t * o,
-                                        sc_object_method_t ifm,
-                                        int search, int exists, size_t s);
-
 /**********************************************************************
  *                       Object construction                          *
  *                                                                    *

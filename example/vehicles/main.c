@@ -113,7 +113,7 @@ main (int argc, char **argv)
     sc_object_unref (o[i]);
   }
 
-  car_klass_data = car_get_klass_data (car_klass, 1);
+  car_klass_data = car_get_klass_data (car_klass);
   SC_INFOF ("Car klass has %d repairs\n", car_klass_data->repairs);
 
   sc_object_unref (object_klass);

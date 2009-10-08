@@ -491,23 +491,6 @@ sc_object_data_search (sc_object_t * o, sc_object_method_t ifm,
   return odata;
 }
 
-void               *
-sc_object_get_data (sc_object_t * o, sc_object_method_t ifm,
-                    int search, int exists, size_t s)
-{
-  if (exists) {
-    if (search)
-      return sc_object_data_search (o, ifm, 0, NULL);
-    else
-      return sc_object_data_lookup (o, ifm);
-  }
-  else {
-    SC_ASSERT (!search);
-
-    return sc_object_data_register (o, ifm, s);
-  }
-}
-
 sc_object_t        *
 sc_object_alloc (void)
 {
