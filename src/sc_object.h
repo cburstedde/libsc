@@ -87,6 +87,13 @@ void                sc_object_unref (sc_object_t * o);
  */
 sc_object_t        *sc_object_dup (sc_object_t * o);
 
+/* delegates */
+void                sc_object_delegate_push (sc_object_t * o,
+                                             sc_object_t * d);
+void                sc_object_delegate_pop (sc_object_t * o);
+void                sc_object_delegate_pop_all (sc_object_t * o);
+sc_object_t        *sc_object_delegate_index (sc_object_t * o, int i);
+
 /** Convenience function to create an empty sc_object_recursion_context_t.
  * \param [in] rc           The recursion context to be initialized.
  * \param [in] ifm          Interface method used as key for lookup.
@@ -145,13 +152,6 @@ void                sc_object_method_unregister (sc_object_t * o,
 sc_object_method_t  sc_object_method_lookup (sc_object_t * o,
                                              sc_object_method_t ifm);
 
-/* delegates */
-void                sc_object_delegate_push (sc_object_t * o,
-                                             sc_object_t * d);
-void                sc_object_delegate_pop (sc_object_t * o);
-void                sc_object_delegate_pop_all (sc_object_t * o);
-sc_object_t        *sc_object_delegate_index (sc_object_t * o, int i);
-
 /** Look up an object method recursively.
  * \param [in] skip_top If true then the object o is not tested, only
  *                      its delegates recursively.
@@ -162,16 +162,16 @@ sc_object_method_t  sc_object_delegate_lookup (sc_object_t * o,
                                                int skip_top,
                                                sc_object_t ** m);
 
+/* object data */
+void               *sc_object_get_data (sc_object_t * o,
+                                        sc_object_method_t ifm, size_t s);
+
 /* construction */
 sc_object_t        *sc_object_alloc (void);
 sc_object_t        *sc_object_klass_new (void);
 sc_object_t        *sc_object_new_from_klass (sc_object_t * d,
                                               sc_keyvalue_t * args);
 sc_object_t        *sc_object_new_from_klass_values (sc_object_t * d, ...);
-
-/* object data */
-void               *sc_object_get_data (sc_object_t * o,
-                                        sc_object_method_t ifm, size_t s);
 
 /** There are 4 different semantics for calling virtual methods:
  * PRE-ALL          Call all methods in the delegate tree in pre-order.

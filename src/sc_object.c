@@ -125,6 +125,77 @@ write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 }
 
 void
+sc_object_ref (sc_object_t * o)
+{
+  SC_ASSERT (o->num_refs > 0);
+
+  ++o->num_refs;
+}
+
+void
+sc_object_unref (sc_object_t * o)
+{
+  SC_ASSERT (o->num_refs > 0);
+
+  if (--o->num_refs == 0) {
+    sc_object_finalize (o);
+  }
+}
+
+sc_object_t        *
+sc_object_dup (sc_object_t * o)
+{
+  sc_object_ref (o);
+
+  return o;
+}
+
+void
+sc_object_delegate_push (sc_object_t * o, sc_object_t * d)
+{
+  void               *v;
+
+  sc_object_ref (d);
+  v = sc_array_push (&o->delegates);
+  *((sc_object_t **) v) = d;
+}
+
+void
+sc_object_delegate_pop (sc_object_t * o)
+{
+  sc_object_t        *d;
+  void               *v;
+
+  v = sc_array_pop (&o->delegates);
+  d = *((sc_object_t **) v);
+  sc_object_unref (d);
+}
+
+void
+sc_object_delegate_pop_all (sc_object_t * o)
+{
+  sc_object_t        *d;
+  void               *v;
+  size_t              zz;
+
+  for (zz = o->delegates.elem_count; zz > 0; --zz) {
+    v = sc_array_index (&o->delegates, zz - 1);
+    d = *((sc_object_t **) v);
+    sc_object_unref (d);
+  }
+
+  sc_array_reset (&o->delegates);
+}
+
+sc_object_t        *
+sc_object_delegate_index (sc_object_t * o, int i)
+{
+  void               *v = sc_array_index_int (&o->delegates, i);
+
+  return *((sc_object_t **) v);
+}
+
+void
 sc_object_recursion_init (sc_object_recursion_context_t * rc,
                           sc_object_method_t ifm, sc_array_t * found)
 {
@@ -216,31 +287,11 @@ sc_object_recursion (sc_object_t * o, sc_object_recursion_context_t * rc)
   return rc->callfn != NULL ? answered : found_self || found_delegate;
 }
 
-void
-sc_object_ref (sc_object_t * o)
+typedef struct sc_object_delegate_lookup_data
 {
-  SC_ASSERT (o->num_refs > 0);
-
-  ++o->num_refs;
+  sc_object_method_t  oinmi;
 }
-
-void
-sc_object_unref (sc_object_t * o)
-{
-  SC_ASSERT (o->num_refs > 0);
-
-  if (--o->num_refs == 0) {
-    sc_object_finalize (o);
-  }
-}
-
-sc_object_t        *
-sc_object_dup (sc_object_t * o)
-{
-  sc_object_ref (o);
-
-  return o;
-}
+sc_object_delegate_lookup_data_t;
 
 int
 sc_object_method_register (sc_object_t * o,
@@ -329,57 +380,6 @@ sc_object_method_lookup (sc_object_t * o, sc_object_method_t ifm)
   }
 }
 
-void
-sc_object_delegate_push (sc_object_t * o, sc_object_t * d)
-{
-  void               *v;
-
-  sc_object_ref (d);
-  v = sc_array_push (&o->delegates);
-  *((sc_object_t **) v) = d;
-}
-
-void
-sc_object_delegate_pop (sc_object_t * o)
-{
-  sc_object_t        *d;
-  void               *v;
-
-  v = sc_array_pop (&o->delegates);
-  d = *((sc_object_t **) v);
-  sc_object_unref (d);
-}
-
-void
-sc_object_delegate_pop_all (sc_object_t * o)
-{
-  sc_object_t        *d;
-  void               *v;
-  size_t              zz;
-
-  for (zz = o->delegates.elem_count; zz > 0; --zz) {
-    v = sc_array_index (&o->delegates, zz - 1);
-    d = *((sc_object_t **) v);
-    sc_object_unref (d);
-  }
-
-  sc_array_reset (&o->delegates);
-}
-
-sc_object_t        *
-sc_object_delegate_index (sc_object_t * o, int i)
-{
-  void               *v = sc_array_index_int (&o->delegates, i);
-
-  return *((sc_object_t **) v);
-}
-
-typedef struct sc_object_delegate_lookup_data
-{
-  sc_object_method_t  oinmi;
-}
-sc_object_delegate_lookup_data_t;
-
 static int
 delegate_lookup_fn (sc_object_t * o,
                     sc_object_method_t oinmi, void *user_data)
@@ -410,6 +410,46 @@ sc_object_delegate_lookup (sc_object_t * o, sc_object_method_t ifm,
   }
 
   return dld->oinmi;
+}
+
+void               *
+sc_object_get_data (sc_object_t * o, sc_object_method_t ifm, size_t s)
+{
+  int                 added, first;
+  void              **lookup;
+  sc_object_entry_t   se, *e = &se;
+
+  if (o->table == NULL) {
+    o->table =
+      sc_hash_new (sc_object_entry_hash, sc_object_entry_equal, NULL, NULL);
+    first = 1;
+  }
+  else {
+    first = 0;
+  }
+
+  e->key = ifm;
+  added = sc_hash_insert_unique (o->table, e, &lookup);
+
+  if (!added) {
+    SC_ASSERT (!first);
+
+    /* get existing data */
+    /* *INDENT-OFF* HORRIBLE indent bug */
+    e = (sc_object_entry_t *) *lookup;
+    /* *INDENT-ON* */
+    SC_ASSERT (e->key == ifm && e->oinmi == NULL && e->odata != NULL);
+  }
+  else {
+    e = SC_ALLOC (sc_object_entry_t, 1);
+    e->key = ifm;
+    e->oinmi = NULL;
+    e->odata = sc_calloc (sc_package_id, 1, s);
+
+    *lookup = e;
+  }
+
+  return e->odata;
 }
 
 sc_object_t        *
@@ -475,46 +515,6 @@ sc_object_new_from_klass_values (sc_object_t * d, ...)
   sc_keyvalue_destroy (args);
 
   return o;
-}
-
-void               *
-sc_object_get_data (sc_object_t * o, sc_object_method_t ifm, size_t s)
-{
-  int                 added, first;
-  void              **lookup;
-  sc_object_entry_t   se, *e = &se;
-
-  if (o->table == NULL) {
-    o->table =
-      sc_hash_new (sc_object_entry_hash, sc_object_entry_equal, NULL, NULL);
-    first = 1;
-  }
-  else {
-    first = 0;
-  }
-
-  e->key = ifm;
-  added = sc_hash_insert_unique (o->table, e, &lookup);
-
-  if (!added) {
-    SC_ASSERT (!first);
-
-    /* get existing data */
-    /* *INDENT-OFF* HORRIBLE indent bug */
-    e = (sc_object_entry_t *) *lookup;
-    /* *INDENT-ON* */
-    SC_ASSERT (e->key == ifm && e->oinmi == NULL && e->odata != NULL);
-  }
-  else {
-    e = SC_ALLOC (sc_object_entry_t, 1);
-    e->key = ifm;
-    e->oinmi = NULL;
-    e->odata = sc_calloc (sc_package_id, 1, s);
-
-    *lookup = e;
-  }
-
-  return e->odata;
 }
 
 typedef struct sc_object_is_type_data
