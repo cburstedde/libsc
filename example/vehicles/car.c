@@ -152,7 +152,7 @@ car_get_klass_data (sc_object_t * o, int exists)
 
   return (CarKlass *) sc_object_get_data (o, (sc_object_method_t)
                                           car_get_klass_data, 0, exists,
-                                          sizeof (Car));
+                                          sizeof (CarKlass));
 }
 
 float

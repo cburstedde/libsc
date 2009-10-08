@@ -281,7 +281,6 @@ sc_object_entry_search (sc_object_t * o, sc_object_entry_search_t * rc)
           found_self = 1;
         }
         if (rc->call_fn != NULL) {
-          SC_ASSERT (e->oinmi != NULL);
           answered = rc->call_fn (o, e, rc->user_data);
         }
         rc->last_match = o;
