@@ -95,13 +95,13 @@ sc_object_entry_free (void **v, const void *u)
 }
 
 static int
-is_type_fn (sc_object_t * o, const char *type)
+is_type_fn (sc_object_t * o, sc_object_t * m, const char *type)
 {
   return !strcmp (type, sc_object_type);
 }
 
 static void
-finalize_fn (sc_object_t * o)
+finalize_fn (sc_object_t * o, sc_object_t * m)
 {
   SC_ASSERT (sc_object_is_type (o, sc_object_type));
 
@@ -586,6 +586,7 @@ sc_object_new_from_klassv (sc_object_t * d, va_list ap)
 typedef struct sc_object_is_type_data
 {
   const char         *type;
+  sc_object_t        *o;        /* the original toplevel object */
 }
 sc_object_is_type_data_t;
 
@@ -594,7 +595,8 @@ is_type_call_fn (sc_object_t * o, sc_object_entry_t * e, void *user_data)
 {
   sc_object_is_type_data_t *itd = (sc_object_is_type_data_t *) user_data;
 
-  return ((int (*)(sc_object_t *, const char *)) e->oinmi) (o, itd->type);
+  return ((int (*)(sc_object_t *, sc_object_t *, const char *)) e->oinmi)
+    (itd->o, o, itd->type);
 }
 
 int
@@ -604,6 +606,7 @@ sc_object_is_type (sc_object_t * o, const char *type)
   sc_object_is_type_data_t sitd, *itd = &sitd;
 
   itd->type = type;
+  itd->o = o;
 
   sc_object_entry_search_init (rc, (sc_object_method_t) sc_object_is_type,
                                1, 0, NULL);
@@ -638,7 +641,8 @@ sc_object_copy (sc_object_t * o)
       oinmi = match->entry->oinmi;
       SC_ASSERT (oinmi != NULL);
 
-      ((void (*)(sc_object_t *, sc_object_t *)) oinmi) (o, c);
+      ((void (*)(sc_object_t *, sc_object_t *, sc_object_t *)) oinmi)
+        (o, match->match, c);
     }
   }
 
@@ -668,7 +672,8 @@ sc_object_initialize (sc_object_t * o, sc_keyvalue_t * args)
       oinmi = match->entry->oinmi;
       SC_ASSERT (oinmi != NULL);
 
-      ((void (*)(sc_object_t *, sc_keyvalue_t *)) oinmi) (o, args);
+      ((void (*)(sc_object_t *, sc_object_t *, sc_keyvalue_t *)) oinmi)
+        (o, match->match, args);
     }
   }
 
@@ -696,7 +701,7 @@ sc_object_finalize (sc_object_t * o)
       oinmi = match->entry->oinmi;
       SC_ASSERT (oinmi != NULL);
 
-      ((void (*)(sc_object_t *)) oinmi) (o);
+      ((void (*)(sc_object_t *, sc_object_t *)) oinmi) (o, match->match);
     }
   }
 

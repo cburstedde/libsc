@@ -24,7 +24,7 @@
 const char         *boat_type = "boat";
 
 static int
-is_type_fn (sc_object_t * o, const char *type)
+is_type_fn (sc_object_t * o, sc_object_t * m, const char *type)
 {
   SC_LDEBUG ("boat is_type\n");
 
@@ -32,7 +32,7 @@ is_type_fn (sc_object_t * o, const char *type)
 }
 
 static void
-copy_fn (sc_object_t * o, sc_object_t * c)
+copy_fn (sc_object_t * o, sc_object_t * m, sc_object_t * c)
 {
   const Boat         *boat_o = boat_get_data (o, 1);
   Boat               *boat_c = boat_get_data (c, 0);
@@ -43,7 +43,7 @@ copy_fn (sc_object_t * o, sc_object_t * c)
 }
 
 static void
-initialize_fn (sc_object_t * o, sc_keyvalue_t * args)
+initialize_fn (sc_object_t * o, sc_object_t * m, sc_keyvalue_t * args)
 {
   Boat               *boat = boat_get_data (o, 0);
 

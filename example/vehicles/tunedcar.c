@@ -25,7 +25,7 @@
 const char         *tuned_car_type = "tuned_car";
 
 static int
-is_type_fn (sc_object_t * o, const char *type)
+is_type_fn (sc_object_t * o, sc_object_t * m, const char *type)
 {
   SC_LDEBUG ("tuned_car is_type\n");
 
@@ -33,7 +33,7 @@ is_type_fn (sc_object_t * o, const char *type)
 }
 
 static void
-copy_fn (sc_object_t * o, sc_object_t * c)
+copy_fn (sc_object_t * o, sc_object_t * m, sc_object_t * c)
 {
   const TunedCar     *tuned_car_o = tuned_car_get_data (o, 1);
   TunedCar           *tuned_car_c = tuned_car_get_data (c, 0);
@@ -44,7 +44,7 @@ copy_fn (sc_object_t * o, sc_object_t * c)
 }
 
 static void
-initialize_fn (sc_object_t * o, sc_keyvalue_t * args)
+initialize_fn (sc_object_t * o, sc_object_t * m, sc_keyvalue_t * args)
 {
   TunedCar           *tuned_car = tuned_car_get_data (o, 0);
 

@@ -24,7 +24,7 @@
 const char         *car_type = "car";
 
 static int
-is_type_fn (sc_object_t * o, const char *type)
+is_type_fn (sc_object_t * o, sc_object_t * m, const char *type)
 {
   SC_LDEBUG ("car is_type\n");
 
@@ -32,7 +32,7 @@ is_type_fn (sc_object_t * o, const char *type)
 }
 
 static void
-copy_fn (sc_object_t * o, sc_object_t * c)
+copy_fn (sc_object_t * o, sc_object_t * m, sc_object_t * c)
 {
   const Car          *car_o = car_get_data (o, 1);
   Car                *car_c = car_get_data (c, 0);
@@ -43,7 +43,7 @@ copy_fn (sc_object_t * o, sc_object_t * c)
 }
 
 static void
-initialize_fn (sc_object_t * o, sc_keyvalue_t * args)
+initialize_fn (sc_object_t * o, sc_object_t * m, sc_keyvalue_t * args)
 {
   Car                *car = car_get_data (o, 0);
 
