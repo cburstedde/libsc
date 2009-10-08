@@ -2,7 +2,7 @@
   This file is part of the SC Library.
   The SC library provides support for parallel scientific applications.
 
-  Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2009 Carsten Burstedde, Lucas Wilcox.
 
   The SC Library is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -37,9 +37,11 @@
 
 using namespace     std;
 
-typedef             complex < float >sc_float_complex;
-typedef             complex < double >sc_double_complex;
-typedef             complex < long double >sc_long_double_complex;
+/* *INDENT-OFF* */
+typedef complex<float>          sc_float_complex_t;
+typedef complex<double>         sc_double_complex_t;
+typedef complex<long double>    sc_long_double_complex_t;
+/* *INDENT-ON* */
 
 #define fabs(x) abs(x)
 
@@ -47,13 +49,24 @@ typedef             complex < long double >sc_long_double_complex;
 
 #include <tgmath.h>
 
-typedef float complex sc_float_complex;
-typedef double complex sc_double_complex;
-typedef long double complex sc_long_double_complex;
+/* Splint doesn't know about these types */
+#ifdef SC_SPLINT
+typedef float       sc_float_complex_t;
+typedef double      sc_double_complex_t;
+typedef long double sc_long_double_complex_t;
+#define I                       (0.)
+#define creal(x)                (0.)
+#define cimag(x)                (0.)
+#define carg(x)                 (0.)
+#else
+typedef float complex sc_float_complex_t;
+typedef double complex sc_double_complex_t;
+typedef long double complex sc_long_double_complex_t;
+#endif
 
-#define sc_float_complex(r,i) ((float)(r) + ((float)(i))*I)
-#define sc_double_complex(r,i) ((double)(r) + ((double)(i))*I)
-#define sc_long_double_complex(r,i) ((long double)(r) + ((long double)(i))*I)
+#define sc_float_complex_t(r,i) ((float)(r) + ((float)(i))*I)
+#define sc_double_complex_t(r,i) ((double)(r) + ((double)(i))*I)
+#define sc_long_double_complex_t(r,i) ((long double)(r) + ((long double)(i))*I)
 
 #define real(x) creal(x)
 #define imag(x) cimag(x)
@@ -61,4 +74,4 @@ typedef long double complex sc_long_double_complex;
 
 #endif
 
-#endif
+#endif /* !SC_COMPLEX_H */

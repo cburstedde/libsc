@@ -24,18 +24,23 @@ int
 main (int argc, char **argv)
 {
   int                 num_errors = 0;
+  double              x;
+  sc_double_complex_t a, b, c;
 
   sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
-  sc_double_complex   a = sc_double_complex (1.0, 0.0);
-  sc_double_complex   b = sc_double_complex (0.0, 3.0);
+  a = sc_double_complex_t (1.2, 0.0);
+  b = sc_double_complex_t (0.0, 3.4);
+  c = a + b;
 
-  sc_double_complex   c = a + b;
-
-  if (fabs (real (c) - 1.0) > SC_EPS)
+  if (fabs (real (c) - 1.2) > SC_EPS)
     ++num_errors;
 
-  if (fabs (imag (c) - 3.0) > SC_EPS)
+  if (fabs (imag (c) - 3.4) > SC_EPS)
+    ++num_errors;
+
+  x = 3.56;
+  if (3.56 - fabs (x) > SC_EPS)
     ++num_errors;
 
   sc_finalize ();

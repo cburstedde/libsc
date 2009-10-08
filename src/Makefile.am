@@ -11,7 +11,8 @@ libsc_installed_headers = \
         src/sc_amr.h src/sc_allgather.h src/sc_sort.h \
         src/sc_dmatrix.h src/sc_blas.h src/sc_lapack.h \
         src/sc_bspline.h src/sc_flops.h src/sc_object.h \
-        src/sc_getopt.h src/sc_obstack.h src/sc_zlib.h src/sc_lua.h \
+        src/sc_getopt.h src/sc_obstack.h src/sc_zlib.h \
+        src/sc_lua.h src/sc_complex.h \
 	src/sc_keyvalue.h
 libsc_compiled_sources = \
         src/sc.c src/sc_mpi.c src/sc_containers.c src/sc_avl.c \
