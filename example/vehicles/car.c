@@ -34,8 +34,8 @@ is_type_fn (sc_object_t * o, const char *type)
 static void
 copy_fn (sc_object_t * o, sc_object_t * c)
 {
-  const Car          *car_o = car_get_data (o);
-  Car                *car_c = car_get_data (c);
+  const Car          *car_o = car_get_data (o, 1);
+  Car                *car_c = car_get_data (c, 0);
 
   SC_LDEBUG ("car copy\n");
 
@@ -45,7 +45,7 @@ copy_fn (sc_object_t * o, sc_object_t * c)
 static void
 initialize_fn (sc_object_t * o, sc_keyvalue_t * args)
 {
-  Car                *car = car_get_data (o);
+  Car                *car = car_get_data (o, 0);
 
   SC_LDEBUG ("car initialize\n");
 
@@ -61,7 +61,7 @@ initialize_fn (sc_object_t * o, sc_keyvalue_t * args)
 static void
 write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 {
-  Car                *car = car_get_data (o);
+  Car                *car = car_get_data (o, 1);
 
   fprintf (out, "Car (wheel size %f) speeds at %f km/h\n",
            car->wheelsize, car->speed);
@@ -70,7 +70,7 @@ write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 static float
 wheelsize_fn (sc_object_t * o, sc_object_t * m)
 {
-  Car                *car = car_get_data (o);
+  Car                *car = car_get_data (o, 1);
 
   SC_LDEBUG ("car wheelsize\n");
 
@@ -80,14 +80,14 @@ wheelsize_fn (sc_object_t * o, sc_object_t * m)
 static void
 accelerate_fn (sc_object_t * o, sc_object_t * m)
 {
-  Car                *car = car_get_data (o);
+  Car                *car = car_get_data (o, 1);
   CarKlass           *car_klass;
 
   SC_LDEBUG ("car accelerate\n");
 
   car->speed += 10;
 
-  car_klass = car_get_klass_data (m);
+  car_klass = car_get_klass_data (m, 1);
   ++car_klass->repairs;
 }
 
@@ -123,7 +123,7 @@ car_klass_new (sc_object_t * d)
   SC_ASSERT (a1 && a2 && a3 && a4 && a5 && a6);
 
   sc_object_initialize (o, NULL);
-  car_klass = car_get_klass_data (o);
+  car_klass = car_get_klass_data (o, 0);
   car_klass->repairs = 0;
 
   return o;
@@ -132,27 +132,27 @@ car_klass_new (sc_object_t * d)
 sc_object_t        *
 car_new (sc_object_t * d, float wheelsize)
 {
-  return sc_object_new_from_klass_values (d, "g:wheelsize",
-                                          (double) wheelsize, NULL);
+  return sc_object_new_from_klassf (d, "g:wheelsize", (double) wheelsize,
+                                    NULL);
 }
 
 Car                *
-car_get_data (sc_object_t * o)
+car_get_data (sc_object_t * o, int exists)
 {
   SC_ASSERT (sc_object_is_type (o, car_type));
 
   return (Car *) sc_object_get_data (o, (sc_object_method_t) car_get_data,
-                                     sizeof (Car));
+                                     0, exists, sizeof (Car));
 }
 
 CarKlass           *
-car_get_klass_data (sc_object_t * o)
+car_get_klass_data (sc_object_t * o, int exists)
 {
   SC_ASSERT (sc_object_is_type (o, car_type));
 
   return (CarKlass *) sc_object_get_data (o, (sc_object_method_t)
-                                          car_get_klass_data,
-                                          sizeof (CarKlass));
+                                          car_get_klass_data, 0, exists,
+                                          sizeof (Car));
 }
 
 float
@@ -163,8 +163,8 @@ car_wheelsize (sc_object_t * o)
 
   SC_ASSERT (sc_object_is_type (o, car_type));
 
-  oinmi = sc_object_delegate_lookup (o, (sc_object_method_t) car_wheelsize,
-                                     0, &m);
+  oinmi =
+    sc_object_method_search (o, (sc_object_method_t) car_wheelsize, 0, &m);
   SC_ASSERT (oinmi != NULL);
 
   return ((float (*)(sc_object_t *, sc_object_t *)) oinmi) (o, m);

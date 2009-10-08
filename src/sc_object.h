@@ -31,28 +31,29 @@ typedef void        (*sc_object_method_t) (void);
 
 typedef struct sc_object_entry
 {
-  sc_object_method_t  key;
-  sc_object_method_t  oinmi;
-  void               *odata;
+  sc_object_method_t  key;      /* search key for methods and data items */
+  sc_object_method_t  oinmi;    /* implementation registered under this key */
+  void               *odata;    /* allocated data registered under this key */
 }
 sc_object_entry_t;
 
 typedef struct sc_object
 {
-  int                 num_refs; /* reference count */
+  int                 num_refs; /* reference count of the object */
   sc_hash_t          *table;    /* contains sc_object_entry_t elements */
-  sc_array_t          delegates;
+  sc_array_t          delegates;        /* stack of delegate objects */
 }
 sc_object_t;
 
-typedef struct sc_object_recursion_match
+typedef struct sc_object_entry_match
 {
-  sc_object_method_t  oinmi;
+  sc_object_t        *match;    /* the object that contained the match */
+  sc_object_entry_t  *entry;    /* the matched entry of the object */
 }
-sc_object_recursion_match_t;
+sc_object_entry_match_t;
 
 /* *INDENT-OFF* HORRIBLE indent bug */
-typedef struct sc_object_recursion_context
+typedef struct sc_object_entry_search
 {
   sc_hash_t          *visited;
   sc_object_method_t  lookup;
@@ -60,14 +61,20 @@ typedef struct sc_object_recursion_context
   int                 skip_top;
   int                 accept_self;
   int                 accept_delegate;
-  int                 (*callfn) (sc_object_t *, sc_object_method_t, void *);
+  int                 allow_oinmi;
+  int                 allow_odata;
+  int                 (*call_fn) (sc_object_t *, sc_object_entry_t *, void *);
   void               *user_data;
   sc_object_t        *last_match;
 }
-sc_object_recursion_context_t;
+sc_object_entry_search_t;
 /* *INDENT-ON* */
 
 extern const char  *sc_object_type;
+
+/**********************************************************************
+ *                     Object reference counting                      *
+ **********************************************************************/
 
 /** Increase the reference count of an object by 1.
  */
@@ -87,46 +94,71 @@ void                sc_object_unref (sc_object_t * o);
  */
 sc_object_t        *sc_object_dup (sc_object_t * o);
 
-/* delegates */
+/**********************************************************************
+ *                     Managing delegate objects                      *
+ *                                                                    *
+ * The delegate array is understood as a stack.                       *
+ * The delegate that was pushed last is searched first for entries.   *
+ **********************************************************************/
+
 void                sc_object_delegate_push (sc_object_t * o,
                                              sc_object_t * d);
 void                sc_object_delegate_pop (sc_object_t * o);
 void                sc_object_delegate_pop_all (sc_object_t * o);
 sc_object_t        *sc_object_delegate_index (sc_object_t * o, int i);
 
-/** Convenience function to create an empty sc_object_recursion_context_t.
- * \param [in] rc           The recursion context to be initialized.
- * \param [in] ifm          Interface method used as key for lookup.
- * \param [in,out] found    If not NULL, call sc_array_init on \a found
- *                          and set rc->found = found.
- */
-void                sc_object_recursion_init (sc_object_recursion_context_t
-                                              * rc, sc_object_method_t ifm,
-                                              sc_array_t * found);
+/**********************************************************************
+ *             Lookup and recursion in the delegate tree              *
+ **********************************************************************/
 
-/** Look up a method recursively for all delegates.
- * Search is in preorder.  Ignore objects that have already been searched.
+/** Lookup an entry in an object's hash table.  Not recursive.
+ * \return          Pointer to the entry if found, NULL otherwise.
+ */
+sc_object_entry_t  *sc_object_entry_lookup (sc_object_t * o,
+                                            sc_object_method_t ifm);
+
+/** Convenience function to create an empty sc_object_entry_search_t.
+ * \param [in] rc           The search context to be initialized.
+ * \param [in] ifm          Interface method used as key for lookup.
+ * \param [in] allow_oinmi  Allow matches to have non-NULL oinmi members.
+ * \param [in] allow_odata  Allow matches to have non-NULL odata members.
+ * \param [in,out] found    If not NULL, call sc_array_init on \a found
+ *                          for type sc_object_entry_match_t and
+ *                          set rc->found = found.  Requires non-NULL oinmi.
+ */
+void                sc_object_entry_search_init (sc_object_entry_search_t
+                                                 * rc, sc_object_method_t ifm,
+                                                 int allow_oinmi,
+                                                 int allow_odata,
+                                                 sc_array_t * found);
+
+/** Search for an entry recursively in all delegates.  Search is in preorder.
+ * Ignore objects that have already been searched (avoids circles).
  * Optionally all matches are pushed onto an array.
  * Optionally a callback is run on each match.
  * Early-exit options are available, see descriptions of the fields in \a rc.
  *
  * \param [in,out] o    The object to start looking.
- * \param [in,out] rc   Recursion context with rc->visited == NULL initially.
- *                      rc->lookup must contain a method to look up.
- *                      If rc->found is init'ed to sc_object_recursion_entry
+ * \param [in,out] rc   Search context with rc->visited == NULL initially.
+ *                      rc->lookup must contain a method to search.
+ *                      If rc->found is init'ed to sc_object_entry_match_t
  *                      all matches are pushed onto this array in preorder.
  *                      rc->skip_top skips matching of the toplevel object.
  *                      rc->accept_self skips search in delegates on a match.
  *                      rc->accept_delegate skips search in delegate siblings.
- *                      If rc->callfn != NULL it is called on a match, and
- *                      rc->user_data is passed as third parameter to callfn.
+ *                      If rc->call_fn != NULL it is called on a match, and
+ *                      rc->user_data is passed as third parameter to call_fn.
  *                      If the call returns true the search is ended.
  *                      rc->last_match points to the last object matched.
- * \return              True if a callback returns true.  If callfn == NULL,
+ * \return              True if a callback returns true.  If call_fn == NULL,
  *                      true if any match was found.  False otherwise.
  */
-int                 sc_object_recursion (sc_object_t * o,
-                                         sc_object_recursion_context_t * rc);
+int                 sc_object_entry_search (sc_object_t * o,
+                                            sc_object_entry_search_t * rc);
+
+/**********************************************************************
+ *                  Registration of object methods                    *
+ **********************************************************************/
 
 /** Register the implementation of an interface method for an object.
  * If the method is already registered it is replaced.
@@ -148,30 +180,81 @@ void                sc_object_method_unregister (sc_object_t * o,
                                                  sc_object_method_t ifm);
 
 /** Look up a method in an object.  This function is not recursive.
+ * \return          NULL if the method is not found.
  */
 sc_object_method_t  sc_object_method_lookup (sc_object_t * o,
                                              sc_object_method_t ifm);
 
-/** Look up an object method recursively.
- * \param [in] skip_top If true then the object o is not tested, only
- *                      its delegates recursively.
- * \param [out] f       If not NULL will be set to the matching object.
+/** Search for an object method recursively.
+ * \param [in] skip_top If true then the object o is not tested,
+ *                      only its delegates recursively.
+ * \param [out] m       If not NULL will be set to the matching object.
+ * \return              NULL if the method is not found.
  */
-sc_object_method_t  sc_object_delegate_lookup (sc_object_t * o,
-                                               sc_object_method_t ifm,
-                                               int skip_top,
-                                               sc_object_t ** m);
+sc_object_method_t  sc_object_method_search (sc_object_t * o,
+                                             sc_object_method_t ifm,
+                                             int skip_top, sc_object_t ** m);
 
-/* object data */
+/**********************************************************************
+ *                       Managing object data                         *
+ **********************************************************************/
+
+/** Create a data entry in an object.  The entry must not yet exist.
+ *
+ * \param [in] s    Storage size of the data in bytes.
+ * \return          Newly allocated entry.  Freed automatically by finalize.
+ */
+void               *sc_object_data_register (sc_object_t * o,
+                                             sc_object_method_t ifm,
+                                             size_t s);
+
+/** Look up a data entry in an object (non-recursive).
+ * The entry is required to exist.
+ *
+ * \return          The data required to exist.
+ */
+void               *sc_object_data_lookup (sc_object_t * o,
+                                           sc_object_method_t ifm);
+
+/** Search a data entry recursively in an object hierarchy.
+ * The entry is required to exist.
+ *
+ * \param [in] skip_top If true then the object o is not tested,
+ *                      only its delegates recursively.
+ * \param [out] m       If not NULL will be set to the matching object.
+ * \return              The data required to exist.
+ */
+void               *sc_object_data_search (sc_object_t * o,
+                                           sc_object_method_t ifm,
+                                           int skip_top, sc_object_t ** m);
+
+/** Convenience function to lookup, search or create object data.
+ * \param [in] search   If true search recursively, otherwise look up only.
+ * \param [in] exists   Must match the current status of the data.
+ * \param [in] s        If exists is false, use this size for allocation.
+ * \note                The combination (search && !exists) is forbidden.
+ */
 void               *sc_object_get_data (sc_object_t * o,
-                                        sc_object_method_t ifm, size_t s);
+                                        sc_object_method_t ifm,
+                                        int search, int exists, size_t s);
 
-/* construction */
+/**********************************************************************
+ *                       Object construction                          *
+ *                                                                    *
+ * By convention a klass is nothing special, just an object that is   *
+ * used as a delegate for a number of other objects.                  *
+ **********************************************************************/
+
 sc_object_t        *sc_object_alloc (void);
 sc_object_t        *sc_object_klass_new (void);
 sc_object_t        *sc_object_new_from_klass (sc_object_t * d,
                                               sc_keyvalue_t * args);
-sc_object_t        *sc_object_new_from_klass_values (sc_object_t * d, ...);
+sc_object_t        *sc_object_new_from_klassf (sc_object_t * d, ...);
+sc_object_t        *sc_object_new_from_klassv (sc_object_t * d, va_list ap);
+
+/**********************************************************************
+ *                         Virtual methods                            *
+ **********************************************************************/
 
 /** There are 4 different semantics for calling virtual methods:
  * PRE-ALL          Call all methods in the delegate tree in pre-order.

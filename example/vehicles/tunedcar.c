@@ -35,8 +35,8 @@ is_type_fn (sc_object_t * o, const char *type)
 static void
 copy_fn (sc_object_t * o, sc_object_t * c)
 {
-  const TunedCar     *tuned_car_o = tuned_car_get_data (o);
-  TunedCar           *tuned_car_c = tuned_car_get_data (c);
+  const TunedCar     *tuned_car_o = tuned_car_get_data (o, 1);
+  TunedCar           *tuned_car_c = tuned_car_get_data (c, 0);
 
   SC_LDEBUG ("tuned_car copy\n");
 
@@ -46,7 +46,7 @@ copy_fn (sc_object_t * o, sc_object_t * c)
 static void
 initialize_fn (sc_object_t * o, sc_keyvalue_t * args)
 {
-  TunedCar           *tuned_car = tuned_car_get_data (o);
+  TunedCar           *tuned_car = tuned_car_get_data (o, 0);
 
   SC_LDEBUG ("tuned_car initialize\n");
 
@@ -61,8 +61,8 @@ initialize_fn (sc_object_t * o, sc_keyvalue_t * args)
 static void
 write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 {
-  Car                *car = car_get_data (o);
-  TunedCar           *tuned_car = tuned_car_get_data (o);
+  Car                *car = car_get_data (o, 1);
+  TunedCar           *tuned_car = tuned_car_get_data (o, 1);
 
   fprintf (out, "Tuned car (wheel size %f tickets %d) speeds at %f km/h\n",
            car->wheelsize, tuned_car->tickets, car->speed);
@@ -71,7 +71,7 @@ write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 static int
 tickets_fn (sc_object_t * o, sc_object_t * m)
 {
-  TunedCar           *tuned_car = tuned_car_get_data (o);
+  TunedCar           *tuned_car = tuned_car_get_data (o, 1);
 
   return tuned_car->tickets;
 }
@@ -82,15 +82,14 @@ accelerate_fn (sc_object_t * o, sc_object_t * m)
   int                 i;
   sc_object_method_t  oinmi;
   sc_object_t        *r;
-  TunedCar           *tuned_car = tuned_car_get_data (o);
+  TunedCar           *tuned_car = tuned_car_get_data (o, 1);
 
   SC_ASSERT (m != NULL);
 
   SC_LDEBUG ("tuned car accelerate\n");
 
-  oinmi =
-    sc_object_delegate_lookup (m, (sc_object_method_t) vehicle_accelerate,
-                               1, &r);
+  oinmi = sc_object_method_search (m, (sc_object_method_t) vehicle_accelerate,
+                                   1, &r);
   SC_ASSERT (sc_object_is_type (r, car_type));
 
   if (oinmi != NULL) {
@@ -137,17 +136,17 @@ tuned_car_klass_new (sc_object_t * d)
 sc_object_t        *
 tuned_car_new (sc_object_t * d, int faster)
 {
-  return sc_object_new_from_klass_values (d, "g:wheelsize", 21.,
-                                          "i:faster", faster, NULL);
+  return sc_object_new_from_klassf (d, "g:wheelsize", 21., "i:faster", faster,
+                                    NULL);
 }
 
 TunedCar           *
-tuned_car_get_data (sc_object_t * o)
+tuned_car_get_data (sc_object_t * o, int exists)
 {
   SC_ASSERT (sc_object_is_type (o, tuned_car_type));
 
   return (TunedCar *) sc_object_get_data (o, (sc_object_method_t)
-                                          tuned_car_get_data,
+                                          tuned_car_get_data, 0, exists,
                                           sizeof (TunedCar));
 }
 
@@ -160,8 +159,8 @@ tuned_car_tickets (sc_object_t * o)
   SC_ASSERT (sc_object_is_type (o, tuned_car_type));
 
   oinmi =
-    sc_object_delegate_lookup (o, (sc_object_method_t) tuned_car_tickets,
-                               0, &m);
+    sc_object_method_search (o, (sc_object_method_t) tuned_car_tickets, 0,
+                             &m);
   SC_ASSERT (oinmi != NULL);
 
   return ((int (*)(sc_object_t *, sc_object_t *)) oinmi) (o, m);

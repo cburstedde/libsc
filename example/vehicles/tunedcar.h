@@ -43,7 +43,7 @@ sc_object_t        *tuned_car_klass_new (sc_object_t * d);
 sc_object_t        *tuned_car_new (sc_object_t * d, int faster);
 
 /* data */
-TunedCar           *tuned_car_get_data (sc_object_t * o);
+TunedCar           *tuned_car_get_data (sc_object_t * o, int exists);
 
 /* virtual method prototypes */
 int                 tuned_car_tickets (sc_object_t * o);

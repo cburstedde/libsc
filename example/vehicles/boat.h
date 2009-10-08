@@ -43,6 +43,6 @@ sc_object_t        *boat_klass_new (sc_object_t * d);
 sc_object_t        *boat_new (sc_object_t * d, const char *name);
 
 /* data */
-Boat               *boat_get_data (sc_object_t * o);
+Boat               *boat_get_data (sc_object_t * o, int exists);
 
 #endif /* !BOAT_H */

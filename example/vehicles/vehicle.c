@@ -30,10 +30,8 @@ vehicle_accelerate (sc_object_t * o)
 
   SC_ASSERT (sc_object_is_type (o, vehicle_type));
 
-  oinmi =
-    sc_object_delegate_lookup (o, (sc_object_method_t) vehicle_accelerate,
-                               0, &m);
-
+  oinmi = sc_object_method_search (o, (sc_object_method_t) vehicle_accelerate,
+                                   0, &m);
   if (oinmi != NULL) {
     ((void (*)(sc_object_t *, sc_object_t *)) oinmi) (o, m);
   }
