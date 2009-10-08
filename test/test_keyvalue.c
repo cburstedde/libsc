@@ -32,6 +32,7 @@ main (int argc, char **argv)
 
   const char         *dummy = "I am a dummy string";
   const char         *wrong = "I am the wrong string";
+  const char         *again = "Try this all over again";
 
   int                 intTest;
   double              doubleTest;
@@ -147,7 +148,7 @@ main (int argc, char **argv)
   stringTest =
     sc_keyvalue_get_string (args2, "stringTest", "Another test string?");
   pointerTest =
-    sc_keyvalue_get_pointer (args2, "pointerTest", (void *) (&main));
+    sc_keyvalue_get_pointer (args2, "pointerTest", (void *) again);
 
   if (intTest != 12) {
     SC_VERBOSE ("Test 3 failure on int\n");
@@ -161,7 +162,7 @@ main (int argc, char **argv)
     SC_VERBOSE ("Test 3 failure on string\n");
     num_failed_tests++;
   }
-  if (pointerTest != (void *) (&main)) {
+  if (pointerTest != again) {
     SC_VERBOSE ("Test 3 failure on pointer\n");
     num_failed_tests++;
   }
