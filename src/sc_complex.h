@@ -35,12 +35,10 @@
 #include <cmath>
 #include <complex>
 
-using namespace     std;
-
 /* *INDENT-OFF* */
-typedef complex<float>          sc_float_complex_t;
-typedef complex<double>         sc_double_complex_t;
-typedef complex<long double>    sc_long_double_complex_t;
+typedef std::complex<float>          sc_float_complex_t;
+typedef std::complex<double>         sc_double_complex_t;
+typedef std::complex<long double>    sc_long_double_complex_t;
 /* *INDENT-ON* */
 
 #define fabs(x) abs(x)
