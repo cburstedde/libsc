@@ -41,7 +41,11 @@ typedef std::complex<double>         sc_double_complex_t;
 typedef std::complex<long double>    sc_long_double_complex_t;
 /* *INDENT-ON* */
 
-#define fabs(x) abs(x)
+template < typename T > inline std::complex < T > fabs (const std::complex <
+                                                        T > &x)
+{
+  return abs (x);
+}
 
 #else
 
