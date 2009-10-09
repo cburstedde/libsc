@@ -215,7 +215,7 @@ sc_object_entry_lookup (sc_object_t * o, sc_object_method_t ifm)
 }
 
 void
-sc_object_entry_search_init (sc_object_entry_search_t * rc,
+sc_object_entry_search_init (sc_object_search_context_t * rc,
                              sc_object_method_t ifm, int allow_oinmi,
                              int allow_odata, sc_array_t * found)
 {
@@ -241,7 +241,7 @@ sc_object_entry_search_init (sc_object_entry_search_t * rc,
 }
 
 int
-sc_object_entry_search (sc_object_t * o, sc_object_entry_search_t * rc)
+sc_object_entry_search (sc_object_t * o, sc_object_search_context_t * rc)
 {
   int                 toplevel, added, answered;
   int                 found_self, found_delegate;
@@ -406,7 +406,7 @@ sc_object_method_t
 sc_object_method_search (sc_object_t * o, sc_object_method_t ifm,
                          int skip_top, sc_object_t ** m)
 {
-  sc_object_entry_search_t src, *rc = &src;
+  sc_object_search_context_t src, *rc = &src;
   sc_object_method_search_data_t smsd, *msd = &smsd;
 
   msd->oinmi = NULL;
@@ -473,8 +473,8 @@ void               *
 sc_object_data_search (sc_object_t * o, sc_object_method_t ifm,
                        int skip_top, sc_object_t ** m)
 {
+  sc_object_search_context_t src, *rc = &src;
   int                 found;
-  sc_object_entry_search_t src, *rc = &src;
   void               *odata;
 
   sc_object_entry_search_init (rc, ifm, 0, 1, NULL);
@@ -584,7 +584,7 @@ is_type_call_fn (sc_object_t * o, sc_object_entry_t * e, void *user_data)
 int
 sc_object_is_type (sc_object_t * o, const char *type)
 {
-  sc_object_entry_search_t src, *rc = &src;
+  sc_object_search_context_t src, *rc = &src;
   sc_object_is_type_data_t sitd, *itd = &sitd;
 
   itd->type = type;
@@ -603,8 +603,8 @@ sc_object_copy (sc_object_t * o)
 {
   size_t              zz;
   sc_array_t          sfound, *found = &sfound;
+  sc_object_search_context_t src, *rc = &src;
   sc_object_entry_match_t *match;
-  sc_object_entry_search_t src, *rc = &src;
   sc_object_method_t  oinmi;
   sc_object_t        *c;
 
@@ -638,8 +638,8 @@ sc_object_initialize (sc_object_t * o, sc_keyvalue_t * args)
 {
   size_t              zz;
   sc_array_t          sfound, *found = &sfound;
+  sc_object_search_context_t src, *rc = &src;
   sc_object_entry_match_t *match;
-  sc_object_entry_search_t src, *rc = &src;
   sc_object_method_t  oinmi;
 
   SC_ASSERT (sc_object_is_type (o, sc_object_type));
@@ -667,8 +667,8 @@ sc_object_finalize (sc_object_t * o)
 {
   size_t              zz;
   sc_array_t          sfound, *found = &sfound;
+  sc_object_search_context_t src, *rc = &src;
   sc_object_entry_match_t *match;
-  sc_object_entry_search_t src, *rc = &src;
   sc_object_method_t  oinmi;
 
   SC_ASSERT (sc_object_is_type (o, sc_object_type));

@@ -53,7 +53,7 @@ typedef struct sc_object_entry_match
 sc_object_entry_match_t;
 
 /* *INDENT-OFF* HORRIBLE indent bug */
-typedef struct sc_object_entry_search
+typedef struct sc_object_search_context
 {
   sc_hash_t          *visited;
   sc_object_method_t  lookup;
@@ -67,7 +67,7 @@ typedef struct sc_object_entry_search
   void               *user_data;
   sc_object_t        *last_match;
 }
-sc_object_entry_search_t;
+sc_object_search_context_t;
 /* *INDENT-ON* */
 
 extern const char  *sc_object_type;
@@ -117,7 +117,7 @@ sc_object_t        *sc_object_delegate_index (sc_object_t * o, int i);
 sc_object_entry_t  *sc_object_entry_lookup (sc_object_t * o,
                                             sc_object_method_t ifm);
 
-/** Convenience function to create an empty sc_object_entry_search_t.
+/** Convenience function to create an empty sc_object_search_context_t.
  * \param [in] rc           The search context to be initialized.
  * \param [in] ifm          Interface method used as key for lookup.
  * \param [in] allow_oinmi  Allow matches to have non-NULL oinmi members.
@@ -126,7 +126,7 @@ sc_object_entry_t  *sc_object_entry_lookup (sc_object_t * o,
  *                          for type sc_object_entry_match_t and
  *                          set rc->found = found.  Requires non-NULL oinmi.
  */
-void                sc_object_entry_search_init (sc_object_entry_search_t
+void                sc_object_entry_search_init (sc_object_search_context_t
                                                  * rc, sc_object_method_t ifm,
                                                  int allow_oinmi,
                                                  int allow_odata,
@@ -154,7 +154,7 @@ void                sc_object_entry_search_init (sc_object_entry_search_t
  *                      true if any match was found.  False otherwise.
  */
 int                 sc_object_entry_search (sc_object_t * o,
-                                            sc_object_entry_search_t * rc);
+                                            sc_object_search_context_t * rc);
 
 /**********************************************************************
  *                  Registration of object methods                    *
