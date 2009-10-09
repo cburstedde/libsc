@@ -44,7 +44,7 @@ typedef std::complex<long double>    sc_long_double_complex_t;
 template < typename T > inline std::complex < T > fabs (const std::complex <
                                                         T > &x)
 {
-  return abs (x);
+  return std::abs (x);
 }
 
 #else
