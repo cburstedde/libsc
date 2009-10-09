@@ -3,21 +3,26 @@ This file describes a list of coding standards that the SC Library
 tries to adhere to.
 
  * Indentation
+
    All .c and .h files must be indented with the scindent script in
    the main directory.  It calls GNU indent with some extra options.
    This does not apply for included third party code.
 
- * All boolean parameters will not be checked with (a==true) or (a==false).
+ * Boolean variables
+
+   All boolean parameters will not be checked with (a==true) or (a==false).
    We follow the standard C convention where (a) is used to test true
    and (!a) is used to test false.  The bool type is not used.
    An exception is to test for pointers like (p == NULL) or (p != NULL).
 
  * Variable names that are not self-descriptive
+
    Loop variables of type int can be named as usual: i, j, etc.
    Loop variables of type size_t should be named iz, jz, etc.
    Loop variables of type ssize_t should be named is, js, etc.
 
  * Printf and friends on 64bit integers, size_t, etc.
+
    We will have to wait until all compilers and some lint checkers
    understand printf ("%jd %ju", (intmax_t) i, (uintmax_t) u) since that
    is a nice way to accomodate 128bit integers without changing the printf

@@ -1,23 +1,24 @@
-Initial document concerning error policy decisions
 
-   * ASSERT 
-   
-	Primarily used for internal development, failure on these
-        asserts indicates a likely internal bug that requires
-        modification of the library code by the developers.  These
-        checks are only performed in debug mode.
+This document describes some policies on error handling.
+The SC library does not yet implement the SC_ASSERT distinctions.
 
-   * ASSERT_VERBOSE (does not yet exist...)
+ * SC_ASSERT
 
-        Used for checks that do not depend on third party software,
-	but are likely caused by improper use of the library by the
-	user.  The verbose error message and likely failure cause
-	should be transparent to the user, without knowledge of the
-	library internals.  These checks are only performed in debug
-	mode.
+   Primarily used for internal development, failure on these asserts
+   indicates a likely internal bug that requires modification of the
+   library code by the developers.  These checks are only performed in
+   debug mode.
 
-   * CHECK_ABORT
+ * SC_ASSERT_VERBOSE (does not yet exist...)
 
-        Used when we are depending on third party software, and
-        updates to their code or different builds of the same code
-        could generate errors.  These should always be checked.
+   Used for checks that do not depend on third party software, but are
+   likely caused by improper use of the library by the user.  The verbose
+   error message and likely failure cause should be transparent to the
+   user, without knowledge of the library internals.  These checks are
+   only performed in debug mode.
+
+ * SC_CHECK_ABORT
+
+   Used when we are depending on third party software, such as MPI or
+   Trilinos, and updates to their code or different builds of the same
+   code could generate errors.  These should always be checked.
