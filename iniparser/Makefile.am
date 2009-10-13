@@ -9,9 +9,10 @@ iniparser_sc_iniexample_CPPFLAGS = $(AM_CPPFLAGS) -I@top_srcdir@/iniparser
 
 iniparser_internal_headers = iniparser/dictionary.h iniparser/iniparser.h
 iniparser_compiled_sources = iniparser/dictionary.c iniparser/iniparser.c
-src_libsc_a_SOURCES += \
-	$(iniparser_internal_headers) $(iniparser_compiled_sources)
-src_libsc_a_CPPFLAGS += -I@top_srcdir@/iniparser
+
+libsc_internal_headers += $(iniparser_internal_headers)
+libsc_compiled_sources += $(iniparser_compiled_sources)
+LIBSC_CPPFLAGS += -I@top_srcdir@/iniparser
 
 EXTRA_DIST += iniparser/AUTHORS iniparser/LICENSE iniparser/twisted.ini
 

@@ -3,6 +3,7 @@
 # Makefile.am in src
 # included non-recursively from toplevel directory
 
+# append to these variables in subdirectories as necessary
 libsc_generated_headers = src/sc_config.h
 libsc_installed_headers = \
         src/sc.h src/sc_mpi.h src/sc_containers.h src/sc_avl.h \
@@ -14,6 +15,7 @@ libsc_installed_headers = \
         src/sc_getopt.h src/sc_obstack.h src/sc_zlib.h \
         src/sc_lua.h src/sc_complex.h \
 	src/sc_keyvalue.h
+libsc_internal_headers =
 libsc_compiled_sources = \
         src/sc.c src/sc_mpi.c src/sc_containers.c src/sc_avl.c \
         src/sc_options.c src/sc_functions.c src/sc_statistics.c \
@@ -29,12 +31,24 @@ libsc_original_headers = \
         src/sc_builtin/lua.h src/sc_builtin/luaconf.h \
         src/sc_builtin/lauxlib.h src/sc_builtin/lualib.h \
         src/sc_builtin/zlib.h src/sc_builtin/zconf.h
+LIBSC_CPPFLAGS =
 
+# build static library
 lib_LIBRARIES += src/libsc.a
 src_libsc_a_SOURCES = \
         $(libsc_installed_headers) \
+        $(libsc_internal_headers) \
         $(libsc_compiled_sources)
-src_libsc_a_CPPFLAGS = $(AM_CPPFLAGS)
+src_libsc_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
+
+# build dynamic library
+if SC_SHARED
+lib_LTLIBRARIES += src/libsc.la
+src_libsc_la_SOURCES = \
+        $(libsc_internal_headers) \
+        $(libsc_compiled_sources)
+src_libsc_la_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
+endif
 
 nodist_include_HEADERS += $(libsc_generated_headers)
 include_HEADERS += $(libsc_installed_headers)
@@ -44,6 +58,6 @@ scbuiltin_HEADERS = $(libsc_original_headers)
 
 AM_CPPFLAGS += -I@top_srcdir@/src
 
-LDADD += @top_builddir@/src/libsc.a
+LDADD += @top_builddir@/src/libsc.@SC_LIB_SUFFIX@
 
 LINT_CSOURCES += $(libsc_compiled_sources)
