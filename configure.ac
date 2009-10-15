@@ -12,16 +12,7 @@ AC_CONFIG_AUX_DIR([config])
 AC_PREFIX_DEFAULT([$PWD/local])
 AM_INIT_AUTOMAKE([subdir-objects])
 SC_PREFIX_CONFIG_H([src/sc_config.h], [SC])
-
-# Disable shared libraries by default, provides --enable-shared flag
-LT_INIT([disable-shared])
-if test "$enable_shared" != no ; then
-  SC_LIB_SUFFIX="la"
-else
-  SC_LIB_SUFFIX="a"
-fi
-AC_SUBST([SC_LIB_SUFFIX])
-AM_CONDITIONAL([SC_SHARED], [test "$enable_shared" != no])
+SC_LIBTOOL([SC])
 
 # Process command line options.
 echo "o---------------------------------------"
