@@ -98,8 +98,8 @@ sc_array_init_size (sc_array_t * array, size_t elem_size, size_t elem_count)
 
   array->elem_size = elem_size;
   array->elem_count = elem_count;
-  array->byte_alloc = elem_size * elem_count;
-  array->array = SC_ALLOC (char, array->byte_alloc);
+  array->byte_alloc = (ssize_t) (elem_size * elem_count);
+  array->array = SC_ALLOC (char, (size_t) array->byte_alloc);
 }
 
 void
