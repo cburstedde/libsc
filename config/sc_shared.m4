@@ -14,10 +14,12 @@ AC_DEFUN([SC_LIBTOOL],
 [
 LT_INIT([disable-shared])
 if test "$enable_shared" != no ; then
+  $1_ENABLE_SHARED="yes"
   $1_LIB_SUFFIX="la"
 else
+  $1_ENABLE_SHARED="no"
   $1_LIB_SUFFIX="a"
 fi
-AC_SUBST([$1_LIB_SUFFIX])
+AC_SUBST([$1_LIB_SUFFIX])   dnl use with care: confuses automake dependencies
 AM_CONDITIONAL([$1_SHARED], [test "$enable_shared" != no])
 ])

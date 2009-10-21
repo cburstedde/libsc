@@ -41,13 +41,16 @@ src_libsc_a_SOURCES = \
         $(libsc_compiled_sources)
 src_libsc_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
 
-# build dynamic library
+# build shared library
 if SC_SHARED
 lib_LTLIBRARIES += src/libsc.la
 src_libsc_la_SOURCES = \
         $(libsc_internal_headers) \
         $(libsc_compiled_sources)
 src_libsc_la_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
+LDADD += @top_builddir@/src/libsc.la
+else
+LDADD += @top_builddir@/src/libsc.a
 endif
 
 nodist_include_HEADERS += $(libsc_generated_headers)
@@ -57,7 +60,5 @@ scbuiltindir = $(includedir)/sc_builtin
 scbuiltin_HEADERS = $(libsc_original_headers)
 
 AM_CPPFLAGS += -I@top_srcdir@/src
-
-LDADD += @top_builddir@/src/libsc.@SC_LIB_SUFFIX@
 
 LINT_CSOURCES += $(libsc_compiled_sources)

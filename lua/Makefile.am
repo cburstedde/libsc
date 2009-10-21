@@ -33,6 +33,6 @@ lua_compiled_sources = \
 src_libsc_a_SOURCES += \
         $(lua_internal_headers) \
         $(lua_compiled_sources)
-src_libsc_a_CPPFLAGS += -DLUA_USE_LINUX
+LIBSC_CPPFLAGS += -DLUA_USE_LINUX
 
 endif
