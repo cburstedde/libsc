@@ -78,6 +78,11 @@ sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, int init_zero)
   sc_dmatrix_t       *rdm;
   double             *data;
   size_t              size = (size_t) (m * n);
+#ifdef SC_DEBUG
+  double              zero = 0.0;       /* no const to avoid warning */
+  const double        anan = 0.0 / zero;
+  size_t              zz;
+#endif
 
   SC_ASSERT (m >= 0 && n >= 0);
 
@@ -88,6 +93,12 @@ sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, int init_zero)
   }
   else {
     data = SC_ALLOC (double, size);
+#ifdef SC_DEBUG
+    /* In debug mode initialize the memory to NaN. */
+    for (zz = 0; zz < size; ++zz) {
+      data[zz] = anan;
+    }
+#endif
   }
 
   sc_dmatrix_new_e (rdm, m, n, data);
