@@ -857,7 +857,27 @@ sc_finalize (void)
   }
 }
 
-#ifdef __cplusplus
+/* enable logging for files compiled with C++ */
+
+#ifndef __cplusplus
+#undef SC_ABORTF
+#undef SC_CHECK_ABORTF
+#undef SC_LOGF
+#undef SC_GLOBAL_LOGF
+#undef SC_NORMAL_LOGF
+#undef SC_GLOBAL_TRACEF
+#undef SC_GLOBAL_LDEBUGF
+#undef SC_GLOBAL_VERBOSEF
+#undef SC_GLOBAL_INFOF
+#undef SC_GLOBAL_STATISTICSF
+#undef SC_GLOBAL_PRODUCTIONF
+#undef SC_TRACEF
+#undef SC_LDEBUGF
+#undef SC_VERBOSEF
+#undef SC_INFOF
+#undef SC_STATISTICSF
+#undef SC_PRODUCTIONF
+#endif
 
 void
 SC_ABORTF (const char *fmt, ...)
@@ -937,5 +957,3 @@ SC_LOG_IMP (VERBOSE, VERBOSE);
 SC_LOG_IMP (INFO, INFO);
 SC_LOG_IMP (STATISTICS, STATISTICS);
 SC_LOG_IMP (PRODUCTION, PRODUCTION);
-
-#endif /* __cplusplus */
