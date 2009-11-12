@@ -75,9 +75,9 @@ sc_amr_coarsen_specify (int package_id,
   }
   else {
     amr->coarsen_threshold = coarsen_threshold;
-    SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-             "Set coarsen threshold %g assuming %ld refinements\n",
-             amr->coarsen_threshold, amr->num_total_refine);
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+                 "Set coarsen threshold %g assuming %ld refinements\n",
+                 amr->coarsen_threshold, amr->num_total_refine);
 
     local_coarsen = cfn (amr, user_data);
     mpiret = MPI_Allreduce (&local_coarsen, &global_coarsen, 1, MPI_LONG,
@@ -89,8 +89,9 @@ sc_amr_coarsen_specify (int package_id,
   amr->num_total_estimated =
     amr->num_total_elements + amr->num_total_refine - global_coarsen;
 
-  SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-           "Global number of coarsenings = %ld\n", amr->num_total_coarsen);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+               "Global number of coarsenings = %ld\n",
+               amr->num_total_coarsen);
 }
 
 void
@@ -108,9 +109,9 @@ sc_amr_coarsen_search (int package_id, sc_amr_control_t * amr,
   long                num_total_high, num_total_estimated;
   double              coarsen_threshold_low;
 
-  SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-           "Search for coarsen threshold assuming %ld refinements\n",
-           num_total_refine);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+               "Search for coarsen threshold assuming %ld refinements\n",
+               num_total_refine);
 
   /* assign initial threshold range and check */
   coarsen_threshold_low = errors->min;
@@ -118,9 +119,9 @@ sc_amr_coarsen_search (int package_id, sc_amr_control_t * amr,
       coarsen_threshold_low >= coarsen_threshold_high ||
       num_total_elements + num_total_refine <= num_total_low) {
 
-    SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-             "Search for coarsening skipped with low = %g, up = %g\n",
-             coarsen_threshold_low, coarsen_threshold_high);
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+                 "Search for coarsening skipped with low = %g, up = %g\n",
+                 coarsen_threshold_low, coarsen_threshold_high);
 
     amr->coarsen_threshold = errors->min;
     amr->num_total_coarsen = 0;
@@ -130,9 +131,9 @@ sc_amr_coarsen_search (int package_id, sc_amr_control_t * amr,
 
   /* fix range of acceptable total element counts */
   num_total_high = (long) (num_total_low / target_window);
-  SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_INFO,
-           "Range of acceptable total element counts %ld %ld\n",
-           num_total_low, num_total_high);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_INFO,
+               "Range of acceptable total element counts %ld %ld\n",
+               num_total_low, num_total_high);
 
   /* start binary search at the upper end */
   amr->coarsen_threshold = coarsen_threshold_high;
@@ -145,10 +146,10 @@ sc_amr_coarsen_search (int package_id, sc_amr_control_t * amr,
     SC_CHECK_MPI (mpiret);
     num_total_estimated =
       num_total_elements + num_total_refine - global_coarsen;
-    SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-             "At %g total %ld estimated %ld coarsen %ld\n",
-             amr->coarsen_threshold, num_total_elements,
-             num_total_estimated, global_coarsen);
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+                 "At %g total %ld estimated %ld coarsen %ld\n",
+                 amr->coarsen_threshold, num_total_elements,
+                 num_total_estimated, global_coarsen);
 
     /* check loop condition */
     if (binary_count == max_binary_steps) {
@@ -168,9 +169,10 @@ sc_amr_coarsen_search (int package_id, sc_amr_control_t * amr,
     else {                      /* binary search sucessful */
       break;
     }
-    SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-             "Binary search for %ld elements at low = %g, up = %g\n",
-             num_total_low, coarsen_threshold_low, coarsen_threshold_high);
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+                 "Binary search for %ld elements at low = %g, up = %g\n",
+                 num_total_low, coarsen_threshold_low,
+                 coarsen_threshold_high);
 
     /* compute next guess for binary search */
     amr->coarsen_threshold =
@@ -180,14 +182,15 @@ sc_amr_coarsen_search (int package_id, sc_amr_control_t * amr,
   amr->num_total_estimated = num_total_estimated;
 
   /* binary search is ended */
-  SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-           "Search for coarsen stopped after %d steps with threshold %g\n",
-           binary_count, amr->coarsen_threshold);
-  SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-           "Global number of coarsenings = %ld\n", amr->num_total_coarsen);
-  SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_INFO,
-           "Estimated global number of elements = %ld\n",
-           amr->num_total_estimated);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+               "Search for coarsen stopped after %d steps with threshold %g\n",
+               binary_count, amr->coarsen_threshold);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+               "Global number of coarsenings = %ld\n",
+               amr->num_total_coarsen);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_INFO,
+               "Estimated global number of elements = %ld\n",
+               amr->num_total_estimated);
 }
 
 void
@@ -205,9 +208,9 @@ sc_amr_refine_search (int package_id, sc_amr_control_t * amr,
   long                num_total_low, num_total_estimated;
   double              refine_threshold_high;
 
-  SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-           "Search for refine threshold assuming %ld coarsenings\n",
-           num_total_coarsen);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+               "Search for refine threshold assuming %ld coarsenings\n",
+               num_total_coarsen);
 
   /* assign initial threshold range and check */
   refine_threshold_high = errors->max;
@@ -215,9 +218,9 @@ sc_amr_refine_search (int package_id, sc_amr_control_t * amr,
       refine_threshold_low >= refine_threshold_high ||
       num_total_elements - num_total_coarsen >= num_total_high) {
 
-    SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-             "Search for refinement skipped with low = %g, up = %g\n",
-             refine_threshold_low, refine_threshold_high);
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+                 "Search for refinement skipped with low = %g, up = %g\n",
+                 refine_threshold_low, refine_threshold_high);
 
     amr->refine_threshold = errors->max;
     amr->num_total_refine = 0;
@@ -227,9 +230,9 @@ sc_amr_refine_search (int package_id, sc_amr_control_t * amr,
 
   /* fix range of acceptable total element counts */
   num_total_low = (long) (num_total_high * target_window);
-  SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_INFO,
-           "Range of acceptable total element counts %ld %ld\n",
-           num_total_low, num_total_high);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_INFO,
+               "Range of acceptable total element counts %ld %ld\n",
+               num_total_low, num_total_high);
 
   /* start binary search at the lower end */
   amr->refine_threshold = refine_threshold_low;
@@ -242,10 +245,10 @@ sc_amr_refine_search (int package_id, sc_amr_control_t * amr,
     SC_CHECK_MPI (mpiret);
     num_total_estimated =
       num_total_elements + global_refine - num_total_coarsen;
-    SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-             "At %g total %ld estimated %ld refine %ld\n",
-             amr->refine_threshold, num_total_elements,
-             num_total_estimated, global_refine);
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+                 "At %g total %ld estimated %ld refine %ld\n",
+                 amr->refine_threshold, num_total_elements,
+                 num_total_estimated, global_refine);
 
     /* check loop condition */
     if (binary_count == max_binary_steps) {
@@ -265,9 +268,9 @@ sc_amr_refine_search (int package_id, sc_amr_control_t * amr,
     else {                      /* binary search sucessful */
       break;
     }
-    SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-             "Binary search for %ld elements at low = %g, up = %g\n",
-             num_total_high, refine_threshold_low, refine_threshold_high);
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+                 "Binary search for %ld elements at low = %g, up = %g\n",
+                 num_total_high, refine_threshold_low, refine_threshold_high);
 
     /* compute next guess for binary search */
     amr->refine_threshold =
@@ -277,12 +280,12 @@ sc_amr_refine_search (int package_id, sc_amr_control_t * amr,
   amr->num_total_estimated = num_total_estimated;
 
   /* binary search is ended */
-  SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-           "Search for refine stopped after %d steps with threshold %g\n",
-           binary_count, amr->refine_threshold);
-  SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
-           "Global number of refinements = %ld\n", amr->num_total_refine);
-  SC_LOGF (package_id, SC_LC_GLOBAL, SC_LP_INFO,
-           "Estimated global number of elements = %ld\n",
-           amr->num_total_estimated);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+               "Search for refine stopped after %d steps with threshold %g\n",
+               binary_count, amr->refine_threshold);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
+               "Global number of refinements = %ld\n", amr->num_total_refine);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_INFO,
+               "Estimated global number of elements = %ld\n",
+               amr->num_total_estimated);
 }

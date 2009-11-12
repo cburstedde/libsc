@@ -139,8 +139,8 @@ extern int          sc_trace_prio;
 #define SC_ABORT(s)                             \
   sc_abort_verbose (__FILE__, __LINE__, (s))
 #define SC_ABORT_NOT_REACHED() SC_ABORT ("Unreachable code")
-#define SC_CHECK_ABORT(c,s)                     \
-  ((c) ? (void) 0 : SC_ABORT (s))
+#define SC_CHECK_ABORT(q,s)                     \
+  ((q) ? (void) 0 : SC_ABORT (s))
 #define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI error")
 
 /*
@@ -156,8 +156,8 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #ifndef __cplusplus
 #define SC_ABORTF(fmt,...)                                      \
   sc_abort_verbosef (__FILE__, __LINE__, (fmt), __VA_ARGS__)
-#define SC_CHECK_ABORTF(c,fmt,...)                      \
-  ((c) ? (void) 0 : SC_ABORTF (fmt, __VA_ARGS__))
+#define SC_CHECK_ABORTF(q,fmt,...)                      \
+  ((q) ? (void) 0 : SC_ABORTF (fmt, __VA_ARGS__))
 #endif
 
 /* assertions, only enabled in debug mode */
@@ -231,25 +231,27 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #endif
 
 /* generic log macros */
-#define SC_LOG(g,c,p,s) SC_LOGF((g), (c), (p), "%s", (s))
-#define SC_GLOBAL_LOG(p,s) SC_LOG (sc_package_id, SC_LC_GLOBAL, (p), (s))
-#define SC_NORMAL_LOG(p,s) SC_LOG (sc_package_id, SC_LC_NORMAL, (p), (s))
-void                SC_LOGF (int package, int category, int priority,
-                             const char *fmt, ...)
+#define SC_GEN_LOG(package,category,priority,s)                         \
+  ((priority) < SC_LP_THRESHOLD ? (void) 0 :                            \
+   sc_log (__FILE__, __LINE__, (package), (category), (priority), (s)))
+#define SC_GLOBAL_LOG(p,s) SC_GEN_LOG (sc_package_id, SC_LC_GLOBAL, (p), (s))
+#define SC_LOG(p,s) SC_GEN_LOG (sc_package_id, SC_LC_NORMAL, (p), (s))
+void                SC_GEN_LOGF (int package, int category, int priority,
+                                 const char *fmt, ...)
   __attribute__ ((format (printf, 4, 5)));
 void                SC_GLOBAL_LOGF (int priority, const char *fmt, ...)
   __attribute__ ((format (printf, 2, 3)));
-void                SC_NORMAL_LOGF (int priority, const char *fmt, ...)
+void                SC_LOGF (int priority, const char *fmt, ...)
   __attribute__ ((format (printf, 2, 3)));
 #ifndef __cplusplus
-#define SC_LOGF(package,category,priority,fmt,...)                      \
+#define SC_GEN_LOGF(package,category,priority,fmt,...)                  \
   ((priority) < SC_LP_THRESHOLD ? (void) 0 :                            \
    sc_logf (__FILE__, __LINE__, (package), (category), (priority),      \
             (fmt), __VA_ARGS__))
-#define SC_GLOBAL_LOGF(p,f,...)                                 \
-  SC_LOGF (sc_package_id, SC_LC_GLOBAL, (p), (f), __VA_ARGS__)
-#define SC_NORMAL_LOGF(p,f,...)                                 \
-  SC_LOGF (sc_package_id, SC_LC_NORMAL, (p), (f), __VA_ARGS__)
+#define SC_GLOBAL_LOGF(p,fmt,...)                                       \
+  SC_GEN_LOGF (sc_package_id, SC_LC_GLOBAL, (p), (fmt), __VA_ARGS__)
+#define SC_LOGF(p,fmt,...)                                              \
+  SC_GEN_LOGF (sc_package_id, SC_LC_NORMAL, (p), (fmt), __VA_ARGS__)
 #endif
 
 /* convenience global log macros will only output if identifier <= 0 */
@@ -272,27 +274,27 @@ void                SC_GLOBAL_STATISTICSF (const char *fmt, ...)
 void                SC_GLOBAL_PRODUCTIONF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 #ifndef __cplusplus
-#define SC_GLOBAL_TRACEF(f,...)                         \
-  SC_GLOBAL_LOGF (SC_LP_TRACE, (f), __VA_ARGS__)
-#define SC_GLOBAL_LDEBUGF(f,...)                        \
-  SC_GLOBAL_LOGF (SC_LP_DEBUG, (f), __VA_ARGS__)
-#define SC_GLOBAL_VERBOSEF(f,...)                       \
-  SC_GLOBAL_LOGF (SC_LP_VERBOSE, (f), __VA_ARGS__)
-#define SC_GLOBAL_INFOF(f,...)                          \
-  SC_GLOBAL_LOGF (SC_LP_INFO, (f), __VA_ARGS__)
-#define SC_GLOBAL_STATISTICSF(f,...)                    \
-  SC_GLOBAL_LOGF (SC_LP_STATISTICS, (f), __VA_ARGS__)
-#define SC_GLOBAL_PRODUCTIONF(f,...)                    \
-  SC_GLOBAL_LOGF (SC_LP_PRODUCTION, (f), __VA_ARGS__)
+#define SC_GLOBAL_TRACEF(fmt,...)                         \
+  SC_GLOBAL_LOGF (SC_LP_TRACE, (fmt), __VA_ARGS__)
+#define SC_GLOBAL_LDEBUGF(fmt,...)                        \
+  SC_GLOBAL_LOGF (SC_LP_DEBUG, (fmt), __VA_ARGS__)
+#define SC_GLOBAL_VERBOSEF(fmt,...)                       \
+  SC_GLOBAL_LOGF (SC_LP_VERBOSE, (fmt), __VA_ARGS__)
+#define SC_GLOBAL_INFOF(fmt,...)                          \
+  SC_GLOBAL_LOGF (SC_LP_INFO, (fmt), __VA_ARGS__)
+#define SC_GLOBAL_STATISTICSF(fmt,...)                    \
+  SC_GLOBAL_LOGF (SC_LP_STATISTICS, (fmt), __VA_ARGS__)
+#define SC_GLOBAL_PRODUCTIONF(fmt,...)                    \
+  SC_GLOBAL_LOGF (SC_LP_PRODUCTION, (fmt), __VA_ARGS__)
 #endif
 
 /* convenience log macros that output regardless of identifier */
-#define SC_TRACE(s) SC_NORMAL_LOG (SC_LP_TRACE, (s))
-#define SC_LDEBUG(s) SC_NORMAL_LOG (SC_LP_DEBUG, (s))
-#define SC_VERBOSE(s) SC_NORMAL_LOG (SC_LP_VERBOSE, (s))
-#define SC_INFO(s) SC_NORMAL_LOG (SC_LP_INFO, (s))
-#define SC_STATISTICS(s) SC_NORMAL_LOG (SC_LP_STATISTICS, (s))
-#define SC_PRODUCTION(s) SC_NORMAL_LOG (SC_LP_PRODUCTION, (s))
+#define SC_TRACE(s) SC_LOG (SC_LP_TRACE, (s))
+#define SC_LDEBUG(s) SC_LOG (SC_LP_DEBUG, (s))
+#define SC_VERBOSE(s) SC_LOG (SC_LP_VERBOSE, (s))
+#define SC_INFO(s) SC_LOG (SC_LP_INFO, (s))
+#define SC_STATISTICS(s) SC_LOG (SC_LP_STATISTICS, (s))
+#define SC_PRODUCTION(s) SC_LOG (SC_LP_PRODUCTION, (s))
 void                SC_TRACEF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 void                SC_LDEBUGF (const char *fmt, ...)
@@ -306,18 +308,18 @@ void                SC_STATISTICSF (const char *fmt, ...)
 void                SC_PRODUCTIONF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 #ifndef __cplusplus
-#define SC_TRACEF(f,...)                                \
-  SC_NORMAL_LOGF (SC_LP_TRACE, (f), __VA_ARGS__)
-#define SC_LDEBUGF(f,...)                               \
-  SC_NORMAL_LOGF (SC_LP_DEBUG, (f), __VA_ARGS__)
-#define SC_VERBOSEF(f,...)                              \
-  SC_NORMAL_LOGF (SC_LP_VERBOSE, (f), __VA_ARGS__)
-#define SC_INFOF(f,...)                                 \
-  SC_NORMAL_LOGF (SC_LP_INFO, (f), __VA_ARGS__)
-#define SC_STATISTICSF(f,...)                           \
-  SC_NORMAL_LOGF (SC_LP_STATISTICS, (f), __VA_ARGS__)
-#define SC_PRODUCTIONF(f,...)                           \
-  SC_NORMAL_LOGF (SC_LP_PRODUCTION, (f), __VA_ARGS__)
+#define SC_TRACEF(fmt,...)                      \
+  SC_LOGF (SC_LP_TRACE, (fmt), __VA_ARGS__)
+#define SC_LDEBUGF(fmt,...)                     \
+  SC_LOGF (SC_LP_DEBUG, (fmt), __VA_ARGS__)
+#define SC_VERBOSEF(fmt,...)                    \
+  SC_LOGF (SC_LP_VERBOSE, (fmt), __VA_ARGS__)
+#define SC_INFOF(fmt,...)                       \
+  SC_LOGF (SC_LP_INFO, (fmt), __VA_ARGS__)
+#define SC_STATISTICSF(fmt,...)                         \
+  SC_LOGF (SC_LP_STATISTICS, (fmt), __VA_ARGS__)
+#define SC_PRODUCTIONF(fmt,...)                         \
+  SC_LOGF (SC_LP_PRODUCTION, (fmt), __VA_ARGS__)
 #endif
 
 /* callback typedefs */

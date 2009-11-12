@@ -82,8 +82,9 @@ sc_ranges_compute (int package_id, int num_procs, int *procs,
     }
     if (prev < j - 1) {
       length = j - 1 - prev;
-      SC_LOGF (package_id, SC_LC_NORMAL, SC_LP_DEBUG,
-               "found empty range prev %d j %d length %d\n", prev, j, length);
+      SC_GEN_LOGF (package_id, SC_LC_NORMAL, SC_LP_DEBUG,
+                   "found empty range prev %d j %d length %d\n",
+                   prev, j, length);
 
       /* claim unused range */
       for (i = 0; i < num_ranges; ++i) {
@@ -137,9 +138,9 @@ sc_ranges_compute (int package_id, int num_procs, int *procs,
     SC_ASSERT (ranges[2 * i + 1] == -2);
   }
   for (i = 0; i < nwin; ++i) {
-    SC_LOGF (package_id, SC_LC_NORMAL, SC_LP_DEBUG,
-             "empty range %d from %d to %d\n",
-             i, ranges[2 * i], ranges[2 * i + 1]);
+    SC_GEN_LOGF (package_id, SC_LC_NORMAL, SC_LP_DEBUG,
+                 "empty range %d from %d to %d\n",
+                 i, ranges[2 * i], ranges[2 * i + 1]);
   }
 #endif
 
@@ -169,8 +170,9 @@ sc_ranges_compute (int package_id, int num_procs, int *procs,
     }
   }
   for (i = 0; i < nwin; ++i) {
-    SC_LOGF (package_id, SC_LC_NORMAL, SC_LP_DEBUG,
-             "range %d from %d to %d\n", i, ranges[2 * i], ranges[2 * i + 1]);
+    SC_GEN_LOGF (package_id, SC_LC_NORMAL, SC_LP_DEBUG,
+                 "range %d from %d to %d\n", i,
+                 ranges[2 * i], ranges[2 * i + 1]);
   }
 #endif
 
@@ -243,7 +245,7 @@ sc_ranges_statistics (int package_id, int log_priority,
 
   sc_stats_set1 (&si, (double) empties, NULL);
   sc_stats_compute (mpicomm, 1, &si);
-  SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-           "Ranges %d nonpeer %g +- %g min/max %g %g\n",
-           num_ranges, si.average, si.standev, si.min, si.max);
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+               "Ranges %d nonpeer %g +- %g min/max %g %g\n",
+               num_ranges, si.average, si.standev, si.min, si.max);
 }

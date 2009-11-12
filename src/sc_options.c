@@ -238,12 +238,12 @@ sc_options_print_usage (int package_id, int log_priority,
   char                outbuf[BUFSIZ];
   char               *copy, *tok;
 
-  SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-           "Usage: %s%s%s\n", opt->program_name,
-           count == 0 ? "" : " <OPTIONS>",
-           arg_usage == NULL ? "" : " <ARGUMENTS>");
+  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+               "Usage: %s%s%s\n", opt->program_name,
+               count == 0 ? "" : " <OPTIONS>",
+               arg_usage == NULL ? "" : " <ARGUMENTS>");
   if (count > 0) {
-    SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Options:\n");
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Options:\n");
   }
 
   for (iz = 0; iz < count; ++iz) {
@@ -300,15 +300,15 @@ sc_options_print_usage (int package_id, int log_priority,
       snprintf (outbuf + printed, BUFSIZ - printed, "%*s%s",
                 SC_MAX (1, 40 - printed), "", item->help_string);
     }
-    SC_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
 
   if (arg_usage != NULL && arg_usage[0] != '\0') {
-    SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
     copy = SC_STRDUP (arg_usage);
     for (tok = strtok (copy, "\n\r"); tok != NULL;
          tok = strtok (NULL, "\n\r")) {
-      SC_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %s\n", tok);
+      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %s\n", tok);
     }
     SC_FREE (copy);
   }
@@ -327,7 +327,7 @@ sc_options_print_summary (int package_id, int log_priority,
   const char         *string_val;
   char                outbuf[BUFSIZ];
 
-  SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Options:\n");
+  SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Options:\n");
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
@@ -370,14 +370,14 @@ sc_options_print_summary (int package_id, int log_priority,
     default:
       SC_ABORT_NOT_REACHED ();
     }
-    SC_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
 
-  SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
+  SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
 
   for (i = opt->first_arg; i < opt->argc; ++i) {
-    SC_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %d: %s\n",
-             i - opt->first_arg, opt->argv[i]);
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %d: %s\n",
+                 i - opt->first_arg, opt->argv[i]);
   }
 }
 
@@ -399,8 +399,8 @@ sc_options_load (int package_id, int err_priority,
 
   dict = iniparser_load (inifile, NULL);
   if (dict == NULL) {
-    SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
-            "Could not load or parse inifile\n");
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "Could not load or parse inifile\n");
     return -1;
   }
 
@@ -423,8 +423,8 @@ sc_options_load (int package_id, int err_priority,
       found_long = iniparser_find_entry (dict, lkey);
     }
     if (found_short && found_long) {
-      SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-               "Duplicates %s %s in file: %s\n", skey, lkey, inifile);
+      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                   "Duplicates %s %s in file: %s\n", skey, lkey, inifile);
       iniparser_freedict (dict);
       return -1;
     }
@@ -444,8 +444,8 @@ sc_options_load (int package_id, int err_priority,
       if (bvalue == -1) {
         bvalue = iniparser_getint (dict, key, 0);
         if (bvalue <= 0) {
-          SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                   "Invalid boolean %s in file: %s\n", key, inifile);
+          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                       "Invalid boolean %s in file: %s\n", key, inifile);
           iniparser_freedict (dict);
           return -1;
         }
@@ -495,13 +495,14 @@ sc_options_save (int package_id, int err_priority,
 
   file = fopen (inifile, "wb");
   if (file == NULL) {
-    SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "File open failed\n");
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority, "File open failed\n");
     return -1;
   }
 
   retval = fprintf (file, "# written by sc_options_save\n[Options]\n");
   if (retval < 0) {
-    SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write title 1 failed\n");
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "Write title 1 failed\n");
     fclose (file);
     return -1;
   }
@@ -527,7 +528,8 @@ sc_options_save (int package_id, int err_priority,
       SC_ABORT_NOT_REACHED ();
     }
     if (retval < 0) {
-      SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write key failed\n");
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                  "Write key failed\n");
       fclose (file);
       return -1;
     }
@@ -554,7 +556,8 @@ sc_options_save (int package_id, int err_priority,
       SC_ABORT_NOT_REACHED ();
     }
     if (retval < 0) {
-      SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write value failed\n");
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                  "Write value failed\n");
       fclose (file);
       return -1;
     }
@@ -563,7 +566,8 @@ sc_options_save (int package_id, int err_priority,
   retval = fprintf (file, "[Arguments]\n        count = %d\n",
                     opt->argc - opt->first_arg);
   if (retval < 0) {
-    SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "Write title 2 failed\n");
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "Write title 2 failed\n");
     fclose (file);
     return -1;
   }
@@ -571,8 +575,8 @@ sc_options_save (int package_id, int err_priority,
     retval = fprintf (file, "        %d = %s\n",
                       i - opt->first_arg, opt->argv[i]);
     if (retval < 0) {
-      SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
-              "Write argument failed\n");
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                  "Write argument failed\n");
       fclose (file);
       return -1;
     }
@@ -580,7 +584,8 @@ sc_options_save (int package_id, int err_priority,
 
   retval = fclose (file);
   if (retval) {
-    SC_LOG (package_id, SC_LC_GLOBAL, err_priority, "File close failed\n");
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "File close failed\n");
     return -1;
   }
 
@@ -637,12 +642,12 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
     }
     if (c == '?') {             /* invalid option */
       if (optopt == 0) {
-        SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
-                "Encountered invalid long option\n");
+        SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                    "Encountered invalid long option\n");
       }
       else {
-        SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                 "Encountered invalid short option: -%c\n", optopt);
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Encountered invalid short option: -%c\n", optopt);
       }
       retval = -1;
       break;
@@ -661,8 +666,8 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
         }
       }
       if (iz == count) {
-        SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                 "Encountered invalid short option: -%c\n", c);
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Encountered invalid short option: -%c\n", c);
         retval = -1;
         break;
       }
@@ -686,8 +691,8 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       break;
     case SC_OPTION_INIFILE:
       if (sc_options_load (package_id, err_priority, opt, optarg)) {
-        SC_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                 "Error loading file: %s\n", optarg);
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Error loading file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
       break;
@@ -695,8 +700,8 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       fn = (sc_options_callback_t) item->opt_fn;
       if (fn (opt, item->has_arg ? optarg : NULL, item->user_data)) {
 #if 0
-        SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
-                "Error in callback option\n");
+        SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                    "Error in callback option\n");
 #endif
         retval = -1;            /* this ends option processing */
       }
@@ -729,15 +734,15 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
 
   dict = iniparser_load (inifile, NULL);
   if (dict == NULL) {
-    SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
-            "Could not load or parse inifile\n");
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "Could not load or parse inifile\n");
     return -1;
   }
 
   count = iniparser_getint (dict, "Arguments:count", -1);
   if (count < 0) {
-    SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
-            "Invalid or missing argument count\n");
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "Invalid or missing argument count\n");
     iniparser_freedict (dict);
     return -1;
   }
@@ -753,8 +758,8 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
     snprintf (key, BUFSIZ, "Arguments:%d", i);
     s = iniparser_getstring (dict, key, NULL);
     if (s == NULL) {
-      SC_LOG (package_id, SC_LC_GLOBAL, err_priority,
-              "Invalid or missing argument count\n");
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                  "Invalid or missing argument count\n");
       iniparser_freedict (dict);
       return -1;
     }

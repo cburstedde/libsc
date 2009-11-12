@@ -186,32 +186,32 @@ sc_stats_print (int package_id, int log_priority,
     for (i = 0; i < nvars; ++i) {
       si = &stats[i];
       if (si->variable != NULL) {
-        SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                 "Statistics for %s\n", si->variable);
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "Statistics for %s\n", si->variable);
       }
       else {
-        SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                 "Statistics for %d\n", i);
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "Statistics for %d\n", i);
       }
-      SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-               "   Global number of values: %5ld\n", si->count);
+      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                   "   Global number of values: %5ld\n", si->count);
       if (si->average != 0.) {  /* ignore the comparison warning */
-        SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                 "   Mean value (std. dev.):         %g (%.3g = %.3g%%)\n",
-                 si->average, si->standev,
-                 100. * si->standev / fabs (si->average));
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "   Mean value (std. dev.):         %g (%.3g = %.3g%%)\n",
+                     si->average, si->standev,
+                     100. * si->standev / fabs (si->average));
       }
       else {
-        SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                 "   Mean value (std. dev.):         %g (%.3g)\n",
-                 si->average, si->standev);
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "   Mean value (std. dev.):         %g (%.3g)\n",
+                     si->average, si->standev);
       }
-      SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-               "   Minimum attained at rank %5d: %g\n",
-               si->min_at_rank, si->min);
-      SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-               "   Maximum attained at rank %5d: %g\n",
-               si->max_at_rank, si->max);
+      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                   "   Minimum attained at rank %5d: %g\n",
+                   si->min_at_rank, si->min);
+      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                   "   Maximum attained at rank %5d: %g\n",
+                   si->max_at_rank, si->max);
     }
   }
   else {
@@ -224,15 +224,15 @@ sc_stats_print (int package_id, int log_priority,
         snprintf (buffer, BUFSIZ, "for %d:", i);
       }
       if (si->average != 0.) {  /* ignore the comparison warning */
-        SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                 "Mean (sigma) %-28s %g (%.3g = %.3g%%)\n",
-                 buffer, si->average, si->standev,
-                 100. * si->standev / fabs (si->average));
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "Mean (sigma) %-28s %g (%.3g = %.3g%%)\n",
+                     buffer, si->average, si->standev,
+                     100. * si->standev / fabs (si->average));
       }
       else {
-        SC_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                 "Mean (sigma) %-28s %g (%.3g)\n", buffer,
-                 si->average, si->standev);
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "Mean (sigma) %-28s %g (%.3g)\n", buffer,
+                     si->average, si->standev);
       }
     }
   }
@@ -246,10 +246,11 @@ sc_stats_print (int package_id, int log_priority,
     }
     if (count >= 0 && (size_t) count < BUFSIZ) {
       snprintf (buffer + count, BUFSIZ - count, "%s", " ];\n");
-      SC_LOG (package_id, SC_LC_GLOBAL, log_priority, buffer);
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, buffer);
     }
     else {
-      SC_LOG (package_id, SC_LC_GLOBAL, log_priority, "Summary overflow\n");
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
+                  "Summary overflow\n");
     }
   }
 }

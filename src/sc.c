@@ -722,16 +722,16 @@ sc_package_print_summary (int log_priority)
   int                 i;
   sc_package_t       *p;
 
-  SC_LOGF (sc_package_id, SC_LC_GLOBAL, log_priority,
-           "Package summary (%d total):\n", sc_num_packages);
+  SC_GEN_LOGF (sc_package_id, SC_LC_GLOBAL, log_priority,
+               "Package summary (%d total):\n", sc_num_packages);
 
   /* sc_packages is static and thus initialized to all zeros */
   for (i = 0; i < SC_MAX_PACKAGES; ++i) {
     p = sc_packages + i;
     if (p->is_registered) {
-      SC_LOGF (sc_package_id, SC_LC_GLOBAL, log_priority,
-               "   %3d: %-15s +%d-%d   %s\n",
-               i, p->name, p->malloc_count, p->free_count, p->full);
+      SC_GEN_LOGF (sc_package_id, SC_LC_GLOBAL, log_priority,
+                   "   %3d: %-15s +%d-%d   %s\n",
+                   i, p->name, p->malloc_count, p->free_count, p->full);
     }
   }
 }
@@ -862,9 +862,9 @@ sc_finalize (void)
 #ifndef __cplusplus
 #undef SC_ABORTF
 #undef SC_CHECK_ABORTF
-#undef SC_LOGF
+#undef SC_GEN_LOGF
 #undef SC_GLOBAL_LOGF
-#undef SC_NORMAL_LOGF
+#undef SC_LOGF
 #undef SC_GLOBAL_TRACEF
 #undef SC_GLOBAL_LDEBUGF
 #undef SC_GLOBAL_VERBOSEF
@@ -902,7 +902,7 @@ SC_CHECK_ABORTF (int success, const char *fmt, ...)
 }
 
 void
-SC_LOGF (int package, int category, int priority, const char *fmt, ...)
+SC_GEN_LOGF (int package, int category, int priority, const char *fmt, ...)
 {
   va_list             ap;
 
@@ -922,7 +922,7 @@ SC_GLOBAL_LOGF (int priority, const char *fmt, ...)
 }
 
 void
-SC_NORMAL_LOGF (int priority, const char *fmt, ...)
+SC_LOGF (int priority, const char *fmt, ...)
 {
   va_list             ap;
 

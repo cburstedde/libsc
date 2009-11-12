@@ -1100,11 +1100,11 @@ sc_hash_print_statistics (int package_id, int log_priority, sc_hash_t * hash)
   avg = sum / divide;
   sqr = squaresum / divide - avg * avg;
   std = sqrt (sqr);
-  SC_LOGF (package_id, SC_LC_NORMAL, log_priority,
-           "Hash size %lu avg %.3g std %.3g checks %lu %lu\n",
-           (unsigned long) slots->elem_count, avg, std,
-           (unsigned long) hash->resize_checks,
-           (unsigned long) hash->resize_actions);
+  SC_GEN_LOGF (package_id, SC_LC_NORMAL, log_priority,
+               "Hash size %lu avg %.3g std %.3g checks %lu %lu\n",
+               (unsigned long) slots->elem_count, avg, std,
+               (unsigned long) hash->resize_checks,
+               (unsigned long) hash->resize_actions);
 }
 
 static unsigned
