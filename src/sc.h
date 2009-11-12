@@ -159,6 +159,30 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_CHECK_ABORTF(q,fmt,...)                      \
   ((q) ? (void) 0 : SC_ABORTF (fmt, __VA_ARGS__))
 #endif
+#define SC_ABORT1(fmt,a)                                \
+  sc_abort_verbosef (__FILE__, __LINE__, (fmt), (a))
+#define SC_ABORT2(fmt,a,b)                                      \
+  sc_abort_verbosef (__FILE__, __LINE__, (fmt), (a), (b))
+#define SC_ABORT3(fmt,a,b,c)                                    \
+  sc_abort_verbosef (__FILE__, __LINE__, (fmt), (a), (b), (c))
+#define SC_ABORT4(fmt,a,b,c,d)                                          \
+  sc_abort_verbosef (__FILE__, __LINE__, (fmt), (a), (b), (c), (d))
+#define SC_ABORT5(fmt,a,b,c,d,e)                                        \
+  sc_abort_verbosef (__FILE__, __LINE__, (fmt), (a), (b), (c), (d), (e))
+#define SC_ABORT6(fmt,a,b,c,d,e,f)                                      \
+  sc_abort_verbosef (__FILE__, __LINE__, (fmt), (a), (b), (c), (d), (e), (f))
+#define SC_CHECK_ABORT1(q,fmt,a)                \
+  ((q) ? (void) 0 : SC_ABORT1 ((fmt), (a)))
+#define SC_CHECK_ABORT2(q,fmt,a,b)                      \
+  ((q) ? (void) 0 : SC_ABORT2 ((fmt), (a), (b)))
+#define SC_CHECK_ABORT3(q,fmt,a,b,c)                    \
+  ((q) ? (void) 0 : SC_ABORT3 ((fmt), (a), (b), (c)))
+#define SC_CHECK_ABORT4(q,fmt,a,b,c,d)                          \
+  ((q) ? (void) 0 : SC_ABORT4 ((fmt), (a), (b), (c), (d)))
+#define SC_CHECK_ABORT5(q,fmt,a,b,c,d,e)                        \
+  ((q) ? (void) 0 : SC_ABORT5 ((fmt), (a), (b), (c), (d), (e)))
+#define SC_CHECK_ABORT6(q,fmt,a,b,c,d,e,f)                              \
+  ((q) ? (void) 0 : SC_ABORT6 ((fmt), (a), (b), (c), (d), (e), (f)))
 
 /* assertions, only enabled in debug mode */
 
