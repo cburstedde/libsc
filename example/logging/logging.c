@@ -23,11 +23,11 @@
 static void
 log_normal (void)
 {
-  SC_TRACE ("Trace normal\n");
+  SC_TRACEF ("Trace normal %d\n", 1);
   SC_LDEBUG ("Debug normal\n");
-  SC_VERBOSE ("Verbose normal\n");
+  SC_VERBOSEF ("Verbose normal %d\n", 2);
   SC_INFO ("Info normal\n");
-  SC_STATISTICS ("Statistics normal\n");
+  SC_STATISTICSF ("Statistics normal %d\n", 3);
   SC_PRODUCTION ("Production normal\n");
 }
 
@@ -35,11 +35,11 @@ static void
 log_global (void)
 {
   SC_GLOBAL_TRACE ("Trace global\n");
-  SC_GLOBAL_LDEBUG ("Debug global\n");
+  SC_GLOBAL_LDEBUGF ("Debug global %d\n", 4);
   SC_GLOBAL_VERBOSE ("Verbose global\n");
-  SC_GLOBAL_INFO ("Info global\n");
+  SC_GLOBAL_INFOF ("Info global %d\n", 5);
   SC_GLOBAL_STATISTICS ("Statistics global\n");
-  SC_GLOBAL_PRODUCTION ("Production global\n");
+  SC_GLOBAL_PRODUCTIONF ("Production global %d\n", 6);
 }
 
 int
