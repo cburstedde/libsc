@@ -694,7 +694,7 @@ void
 sc_object_write (sc_object_t * o, FILE * out)
 {
   sc_object_method_t  oinmi;
-  sc_object_t        *m;
+  sc_object_t        *m = NULL;
 
   SC_ASSERT (sc_object_is_type (o, sc_object_type));
 
