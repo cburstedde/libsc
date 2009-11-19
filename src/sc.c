@@ -526,7 +526,7 @@ sc_generic_abort_handler (void *data)
   if (mpicomm == NULL) {
     SC_LERROR ("Invalid mpicomm for sc_generic_abort_handler\n");
   }
-  else {
+  else if (*mpicomm != MPI_COMM_NULL) {
     SC_LERROR ("Calling MPI_Abort from sc_generic_abort_handler\n");
     MPI_Abort (*mpicomm, 1);    /* terminate all MPI processes */
   }
@@ -580,7 +580,7 @@ sc_abort (void)
 
   fflush (stdout);
   fflush (stderr);
-  sleep (1);
+  sleep (1);                    /* allow time for pending output */
 
   if (sc_abort_handler != NULL) {
     sc_abort_handler (sc_abort_data);
@@ -591,7 +591,8 @@ sc_abort (void)
 void
 sc_abort_verbose (const char *filename, int lineno, const char *msg)
 {
-  SC_LERRORF ("Abort in %s:%d: %s\n", filename, lineno, msg);
+  SC_LERRORF ("Abort: %s\n", msg);
+  SC_LERRORF ("Abort: %s:%d\n", filename, lineno);
   sc_abort ();
 }
 
