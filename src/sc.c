@@ -119,15 +119,7 @@ static sc_package_t sc_packages[SC_MAX_PACKAGES];
 static void
 sc_signal_handler (int sig)
 {
-  char                prefix[BUFSIZ];
   const char         *sigstr;
-
-  if (sc_identifier >= 0) {
-    snprintf (prefix, BUFSIZ, "[%d] ", sc_identifier);
-  }
-  else {
-    prefix[0] = '\0';
-  }
 
   switch (sig) {
   case SIGINT:
@@ -143,7 +135,7 @@ sc_signal_handler (int sig)
     sigstr = "<unknown>";
     break;
   }
-  fprintf (stderr, "%sAbort: Signal %s\n", prefix, sigstr);
+  SC_LERRORF ("Caught signal %s\n", sigstr);
 
   sc_abort ();
 }
@@ -528,19 +520,17 @@ sc_logv (const char *filename, int lineno,
 void
 sc_generic_abort_handler (void *data)
 {
-  int                 rank;
+#ifdef SC_MPI
   MPI_Comm           *mpicomm = (MPI_Comm *) data;
 
   if (mpicomm == NULL) {
-    fprintf (stderr,
-             "Error: sc_generic_abort_handler needs MPI_Comm* data\n");
+    SC_LERROR ("Invalid mpicomm for sc_generic_abort_handler\n");
   }
   else {
-    rank = -1;
-    MPI_Comm_rank (*mpicomm, &rank);
-    fprintf (stderr, "[%d] generic MPI abort handler\n", rank);
-    MPI_Abort (*mpicomm, 1);
+    SC_LERROR ("Calling MPI_Abort from sc_generic_abort_handler\n");
+    MPI_Abort (*mpicomm, 1);    /* terminate all MPI processes */
   }
+#endif
 }
 
 void
@@ -553,15 +543,6 @@ sc_set_abort_handler (sc_handler_t handler, void *data)
 void
 sc_abort (void)
 {
-  char                prefix[BUFSIZ];
-
-  if (sc_identifier >= 0) {
-    snprintf (prefix, BUFSIZ, "[%d] ", sc_identifier);
-  }
-  else {
-    prefix[0] = '\0';
-  }
-
   if (0) {
   }
 #ifdef SC_BACKTRACE
@@ -574,7 +555,7 @@ sc_abort (void)
     bt_size = backtrace (bt_buffer, SC_STACK_SIZE);
     bt_strings = backtrace_symbols (bt_buffer, bt_size);
 
-    fprintf (stderr, "%sAbort: Obtained %d stack frames\n", prefix, bt_size);
+    SC_LERRORF ("Abort: Obtained %d stack frames\n", bt_size);
 
 #ifdef SC_ADDRTOLINE
     /* implement pipe connection to addr2line */
@@ -588,14 +569,13 @@ sc_abort (void)
       else {
         str = bt_strings[i];
       }
-      /* fprintf (stderr, "   %p %s\n", bt_buffer[i], str); */
-      fprintf (stderr, "%s   %s\n", prefix, str);
+      SC_LERRORF ("Stack %d: %s\n", i, str);
     }
     free (bt_strings);
   }
 #endif
   else {
-    fprintf (stderr, "%sAbort\n", prefix);
+    SC_LERROR ("Abort\n");
   }
 
   fflush (stdout);
@@ -611,17 +591,7 @@ sc_abort (void)
 void
 sc_abort_verbose (const char *filename, int lineno, const char *msg)
 {
-  char                prefix[BUFSIZ];
-
-  if (sc_identifier >= 0) {
-    snprintf (prefix, BUFSIZ, "[%d] ", sc_identifier);
-  }
-  else {
-    prefix[0] = '\0';
-  }
-  fprintf (stderr, "%sAbort: %s\n   in %s:%d\n",
-           prefix, msg, filename, lineno);
-
+  SC_LERRORF ("Abort in %s:%d: %s\n", filename, lineno, msg);
   sc_abort ();
 }
 

@@ -236,9 +236,8 @@ sc_dmatrix_is_symmetric (const sc_dmatrix_t * A, double tolerance)
     for (j = i + 1; j < A->n; ++j) {
       diff = fabs (A->e[i][j] - A->e[j][i]);
       if (diff > tolerance) {
-#ifdef SC_DEBUG
-        fprintf (stderr, "sc dmatrix not symmetric by %g\n", diff);
-#endif
+        SC_LDEBUGF ("sc_dmatrix not symmetric by %g\n", diff);
+
         return 0;
       }
     }

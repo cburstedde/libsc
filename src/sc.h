@@ -392,7 +392,7 @@ void                sc_generic_abort_handler (void *data);
 /** Installs an abort handler and its callback data. */
 void                sc_set_abort_handler (sc_handler_t handler, void *data);
 
-/** Prints a stack trace, calls the abort handler and terminates. */
+/** Print a stack trace, call the abort handler and then call abort (). */
 void                sc_abort (void)
   __attribute__ ((noreturn));
 
