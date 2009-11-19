@@ -175,12 +175,10 @@ void
 sc_object_delegate_pop_all (sc_object_t * o)
 {
   sc_object_t        *d;
-  void               *v;
   size_t              zz;
 
   for (zz = o->delegates.elem_count; zz > 0; --zz) {
-    v = sc_array_index (&o->delegates, zz - 1);
-    d = *((sc_object_t **) v);
+    d = sc_object_delegate_index (o, zz - 1);
     sc_object_unref (d);
   }
 
@@ -188,9 +186,9 @@ sc_object_delegate_pop_all (sc_object_t * o)
 }
 
 sc_object_t        *
-sc_object_delegate_index (sc_object_t * o, int i)
+sc_object_delegate_index (sc_object_t * o, size_t iz)
 {
-  void               *v = sc_array_index_int (&o->delegates, i);
+  void               *v = sc_array_index (&o->delegates, iz);
 
   return *((sc_object_t **) v);
 }
@@ -249,7 +247,6 @@ sc_object_entry_search (sc_object_t * o, sc_object_search_context_t * rc)
   sc_object_entry_t  *e;
   sc_object_entry_match_t *match;
   sc_object_t        *d;
-  void               *v;
 
   SC_ASSERT (rc->lookup != NULL);
   SC_ASSERT (rc->found == NULL ||
@@ -289,8 +286,7 @@ sc_object_entry_search (sc_object_t * o, sc_object_search_context_t * rc)
 
     if (!answered && !(found_self && rc->accept_self)) {
       for (zz = o->delegates.elem_count; zz > 0; --zz) {
-        v = sc_array_index (&o->delegates, zz - 1);
-        d = *((sc_object_t **) v);
+        d = sc_object_delegate_index (o, zz - 1);
         answered = sc_object_entry_search (d, rc);
         if (answered) {
           found_delegate = 1;
