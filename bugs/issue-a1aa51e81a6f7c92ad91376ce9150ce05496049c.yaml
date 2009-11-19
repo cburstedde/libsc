@@ -7,8 +7,8 @@ type: :bugfix
 component: libsc
 release: "0.6"
 reporter: Carsten Burstedde <carsten@ices.utexas.edu>
-status: :unstarted
-disposition: 
+status: :closed
+disposition: :fixed
 creation_time: 2009-10-07 20:30:56.280039 Z
 references: []
 
@@ -18,3 +18,9 @@ log_events:
   - Carsten Burstedde <carsten@ices.utexas.edu>
   - created
   - ""
+- - 2009-11-19 21:46:02.140022 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - closed with disposition fixed
+  - |-
+    Uses SC_LP_ERROR log level.
+    The functions sc_is_root and sc_abort_root have been added.

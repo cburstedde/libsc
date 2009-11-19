@@ -438,6 +438,10 @@ void                sc_abort_verbosev (const char *filename, int lineno,
                                        const char *fmt, va_list ap)
   __attribute__ ((noreturn));
 
+/** Collective abort where only root calls sc_abort and prints a message */
+void                sc_abort_collective (const char *msg)
+  __attribute__ ((noreturn));
+
 /** Register a software package with SC.
  * The logging parameters are as in sc_set_log_defaults.
  * \return                   Returns a unique package id.
@@ -479,6 +483,14 @@ void                sc_init (MPI_Comm mpicomm,
  * This function does not require sc_init to be called first.
  */
 void                sc_finalize (void);
+
+/** Identify the root process.
+ * Only meaningful between sc_init and sc_finalize and
+ * with a communicator that is not MPI_COMM_NULL (otherwise always true).
+ *
+ * \return          Return true for the root process and false otherwise.
+ */
+int                 sc_is_root (void);
 
 SC_EXTERN_C_END;
 

@@ -128,6 +128,8 @@ check_derivatives (sc_bspline_t * bs)
 int
 main (int argc, char **argv)
 {
+  MPI_Comm            mpicomm;
+  int                 mpiret, mpisize;
   int                 retval, nargs;
   int                 minpoints;
   int                 d, p, n;
@@ -135,11 +137,20 @@ main (int argc, char **argv)
   sc_dmatrix_t       *points, *knots, *works;
   sc_bspline_t       *bs;
 
-  sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
+  mpiret = MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+
+  mpicomm = MPI_COMM_WORLD;
+  sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
+
+  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  if (mpisize != 1)
+    sc_abort_collective ("This program runs in serial only");
 
   nargs = 2;
   if (argc != nargs) {
-    fprintf (stderr, "Usage: %s <degree>\n", argv[0]);
+    SC_LERRORF ("Usage: %s <degree>\n", argv[0]);
     SC_ABORT ("Usage error");
   }
   n = atoi (argv[1]);
@@ -187,6 +198,9 @@ main (int argc, char **argv)
   sc_dmatrix_destroy (points);
 
   sc_finalize ();
+
+  mpiret = MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
 
   return 0;
 }

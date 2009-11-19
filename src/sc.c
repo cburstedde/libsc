@@ -616,6 +616,17 @@ sc_abort_verbosev (const char *filename, int lineno,
   sc_abort_verbose (filename, lineno, buffer);
 }
 
+void
+sc_abort_collective (const char *msg)
+{
+  if (sc_is_root ())
+    SC_ABORT (msg);
+  else {
+    sleep (3);                  /* wait for root rank's MPI_Abort ()... */
+    abort ();                   /* ... otherwise this may call MPI_Abort () */
+  }
+}
+
 int
 sc_package_register (sc_log_handler_t log_handler, int log_threshold,
                      const char *name, const char *full)
@@ -829,6 +840,12 @@ sc_finalize (void)
 
     sc_trace_file = NULL;
   }
+}
+
+int
+sc_is_root (void)
+{
+  return sc_identifier <= 0;
 }
 
 /* enable logging for files compiled with C++ */
