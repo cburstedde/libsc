@@ -55,7 +55,7 @@
 
 /* provide extern C defines */
 
-/* the hacks below enable semicolons after the SC_EXTERN_C_ macros. */
+/* the hacks below enable semicolons after the SC_EXTERN_C_ macros */
 #ifdef __cplusplus
 #define SC_EXTERN_C_BEGIN       extern "C" { void sc_extern_c_hack_1 (void)
 #define SC_EXTERN_C_END                    } void sc_extern_c_hack_2 (void)
@@ -192,7 +192,8 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_ASSERT(c) SC_NOOP ()
 #endif
 
-/* macros for memory allocation, will abort if out of memory */
+/* macros for memory allocation, will abort if out of memory
+   with --enable-alloc-line sc_malloc and sc_calloc are NOT thread-safe */
 
 #define SC_ALLOC(t,n)         (t *) sc_malloc (sc_package_id, (n) * sizeof(t))
 #define SC_ALLOC_ZERO(t,n)    (t *) sc_calloc (sc_package_id, \
@@ -365,7 +366,8 @@ typedef void        (*sc_log_handler_t) (FILE * log_stream,
                                          int package, int category,
                                          int priority, const char *msg);
 
-/* memory allocation functions, handle NULL pointers by internal abort
+/* memory allocation functions, will abort if out of memory
+   with --enable-alloc-line sc_malloc and sc_calloc are NOT thread-safe
    the sc_realloc function does not preserve alignment boundaries */
 
 void               *sc_malloc (int package, size_t size);
