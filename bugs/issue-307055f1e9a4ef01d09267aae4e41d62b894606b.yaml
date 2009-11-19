@@ -7,8 +7,8 @@ type: :feature
 component: libsc
 release: 
 reporter: Lucas C Wilcox <lucasw@ices.utexas.edu>
-status: :unstarted
-disposition: 
+status: :closed
+disposition: :fixed
 creation_time: 2009-07-28 21:41:03.783644 Z
 references: []
 
@@ -18,3 +18,7 @@ log_events:
   - Lucas C Wilcox <lucasw@ices.utexas.edu>
   - created
   - Initial commit
+- - 2009-11-19 19:00:11.266583 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - closed with disposition fixed
+  - This seems to be working.
