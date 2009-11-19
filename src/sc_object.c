@@ -607,9 +607,15 @@ sc_object_copy (sc_object_t * o)
 
   SC_ASSERT (sc_object_is_type (o, sc_object_type));
 
+  /* allocate copy */
   c = sc_object_alloc ();
-  sc_object_delegate_push (c, o);
 
+  /* copy all delegate pointers from original */
+  for (zz = 0; zz < o->delegates.elem_count; ++zz) {
+    sc_object_delegate_push (c, sc_object_delegate_index (o, zz));
+  }
+
+  /* prepare recursion */
   sc_object_entry_search_init (rc, (sc_object_method_t) sc_object_copy,
                                1, 0, found);
 
