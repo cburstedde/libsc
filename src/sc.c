@@ -798,6 +798,9 @@ sc_init (MPI_Comm mpicomm,
       else if (!strcmp (trace_file_prio, "SC_LP_PRODUCTION")) {
         sc_trace_prio = SC_LP_PRODUCTION;
       }
+      else if (!strcmp (trace_file_prio, "SC_LP_ERROR")) {
+        sc_trace_prio = SC_LP_ERROR;
+      }
       else {
         SC_ABORT ("Invalid trace priority");
       }
@@ -871,12 +874,14 @@ sc_finalize (void)
 #undef SC_GLOBAL_INFOF
 #undef SC_GLOBAL_STATISTICSF
 #undef SC_GLOBAL_PRODUCTIONF
+#undef SC_GLOBAL_LERRORF
 #undef SC_TRACEF
 #undef SC_LDEBUGF
 #undef SC_VERBOSEF
 #undef SC_INFOF
 #undef SC_STATISTICSF
 #undef SC_PRODUCTIONF
+#undef SC_LERRORF
 #endif
 
 void
@@ -957,3 +962,4 @@ SC_LOG_IMP (VERBOSE, VERBOSE);
 SC_LOG_IMP (INFO, INFO);
 SC_LOG_IMP (STATISTICS, STATISTICS);
 SC_LOG_IMP (PRODUCTION, PRODUCTION);
+SC_LOG_IMP (LERROR, ERROR);

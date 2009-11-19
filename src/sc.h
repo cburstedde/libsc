@@ -219,7 +219,8 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_LP_INFO        4     /* the main things a function is doing */
 #define SC_LP_STATISTICS  5     /* important for consistency or performance */
 #define SC_LP_PRODUCTION  6     /* a few lines for a major api function */
-#define SC_LP_SILENT      7     /* this will never log anything */
+#define SC_LP_ERROR       7     /* this will log errors only */
+#define SC_LP_SILENT      8     /* this will never log anything */
 #ifdef SC_LOG_PRIORITY
 #define SC_LP_THRESHOLD SC_LOG_PRIORITY
 #else
@@ -261,6 +262,7 @@ void                SC_LOGF (int priority, const char *fmt, ...)
 #define SC_GLOBAL_INFO(s) SC_GLOBAL_LOG (SC_LP_INFO, (s))
 #define SC_GLOBAL_STATISTICS(s) SC_GLOBAL_LOG (SC_LP_STATISTICS, (s))
 #define SC_GLOBAL_PRODUCTION(s) SC_GLOBAL_LOG (SC_LP_PRODUCTION, (s))
+#define SC_GLOBAL_LERROR(s) SC_GLOBAL_LOG (SC_LP_ERROR, (s))
 void                SC_GLOBAL_TRACEF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 void                SC_GLOBAL_LDEBUGF (const char *fmt, ...)
@@ -273,19 +275,23 @@ void                SC_GLOBAL_STATISTICSF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 void                SC_GLOBAL_PRODUCTIONF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
+void                SC_GLOBAL_LERRORF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
 #ifndef __cplusplus
-#define SC_GLOBAL_TRACEF(fmt,...)                         \
+#define SC_GLOBAL_TRACEF(fmt,...)                       \
   SC_GLOBAL_LOGF (SC_LP_TRACE, (fmt), __VA_ARGS__)
-#define SC_GLOBAL_LDEBUGF(fmt,...)                        \
+#define SC_GLOBAL_LDEBUGF(fmt,...)                      \
   SC_GLOBAL_LOGF (SC_LP_DEBUG, (fmt), __VA_ARGS__)
-#define SC_GLOBAL_VERBOSEF(fmt,...)                       \
+#define SC_GLOBAL_VERBOSEF(fmt,...)                     \
   SC_GLOBAL_LOGF (SC_LP_VERBOSE, (fmt), __VA_ARGS__)
-#define SC_GLOBAL_INFOF(fmt,...)                          \
+#define SC_GLOBAL_INFOF(fmt,...)                        \
   SC_GLOBAL_LOGF (SC_LP_INFO, (fmt), __VA_ARGS__)
-#define SC_GLOBAL_STATISTICSF(fmt,...)                    \
+#define SC_GLOBAL_STATISTICSF(fmt,...)                  \
   SC_GLOBAL_LOGF (SC_LP_STATISTICS, (fmt), __VA_ARGS__)
-#define SC_GLOBAL_PRODUCTIONF(fmt,...)                    \
+#define SC_GLOBAL_PRODUCTIONF(fmt,...)                  \
   SC_GLOBAL_LOGF (SC_LP_PRODUCTION, (fmt), __VA_ARGS__)
+#define SC_GLOBAL_LERRORF(fmt,...)                      \
+  SC_GLOBAL_LOGF (SC_LP_ERROR, (fmt), __VA_ARGS__)
 #endif
 
 /* convenience log macros that output regardless of identifier */
@@ -295,6 +301,7 @@ void                SC_GLOBAL_PRODUCTIONF (const char *fmt, ...)
 #define SC_INFO(s) SC_LOG (SC_LP_INFO, (s))
 #define SC_STATISTICS(s) SC_LOG (SC_LP_STATISTICS, (s))
 #define SC_PRODUCTION(s) SC_LOG (SC_LP_PRODUCTION, (s))
+#define SC_LERROR(s) SC_LOG (SC_LP_ERROR, (s))
 void                SC_TRACEF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 void                SC_LDEBUGF (const char *fmt, ...)
@@ -306,6 +313,8 @@ void                SC_INFOF (const char *fmt, ...)
 void                SC_STATISTICSF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 void                SC_PRODUCTIONF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_LERRORF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 #ifndef __cplusplus
 #define SC_TRACEF(fmt,...)                      \
@@ -320,6 +329,8 @@ void                SC_PRODUCTIONF (const char *fmt, ...)
   SC_LOGF (SC_LP_STATISTICS, (fmt), __VA_ARGS__)
 #define SC_PRODUCTIONF(fmt,...)                         \
   SC_LOGF (SC_LP_PRODUCTION, (fmt), __VA_ARGS__)
+#define SC_LERRORF(fmt,...)                             \
+  SC_LOGF (SC_LP_ERROR, (fmt), __VA_ARGS__)
 #endif
 
 /* callback typedefs */
