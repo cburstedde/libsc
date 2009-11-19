@@ -121,7 +121,7 @@ write_fn (sc_object_t * o, sc_object_t * m, FILE * out)
 {
   SC_ASSERT (sc_object_is_type (o, sc_object_type));
 
-  fprintf (out, "sc_object_t write with %d refs\n", o->num_refs);
+  fprintf (out, "sc_object_t refs %d data %p\n", o->num_refs, o->data);
 }
 
 void
@@ -500,6 +500,7 @@ sc_object_alloc (void)
   o->num_refs = 1;
   sc_array_init (&o->delegates, sizeof (sc_object_t *));
   o->table = NULL;
+  o->data = NULL;
 
   return o;
 }

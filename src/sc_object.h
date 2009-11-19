@@ -42,6 +42,7 @@ typedef struct sc_object
   int                 num_refs; /* reference count of the object */
   sc_hash_t          *table;    /* contains sc_object_entry_t elements */
   sc_array_t          delegates;        /* stack of delegate objects */
+  void               *data;     /* provided for application use */
 }
 sc_object_t;
 
@@ -197,6 +198,9 @@ sc_object_method_t  sc_object_method_search (sc_object_t * o,
 
 /**********************************************************************
  *                       Managing object data                         *
+ *                                                                    *
+ * An object can store an arbitrary number of data indexed by a key.  *
+ * This is more flexible but also slower than using object->data.     *
  **********************************************************************/
 
 /** Create a data entry in an object.  The entry must not yet exist.
@@ -211,7 +215,7 @@ void               *sc_object_data_register (sc_object_t * o,
 /** Look up a data entry in an object (non-recursive).
  * The entry is required to exist.
  *
- * \return          The data required to exist.
+ * \return          The data is required to exist.
  */
 void               *sc_object_data_lookup (sc_object_t * o,
                                            sc_object_method_t ifm);
@@ -222,7 +226,7 @@ void               *sc_object_data_lookup (sc_object_t * o,
  * \param [in] skip_top If true then the object o is not tested,
  *                      only its delegates recursively.
  * \param [out] m       If not NULL will be set to the matching object.
- * \return              The data required to exist.
+ * \return              The data is required to exist.
  */
 void               *sc_object_data_search (sc_object_t * o,
                                            sc_object_method_t ifm,
