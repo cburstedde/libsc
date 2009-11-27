@@ -25,6 +25,8 @@
 
 SC_EXTERN_C_BEGIN;
 
+typedef double      (*sc_function1_t) (double x, void *data);
+
 typedef double      (*sc_function3_t) (double x, double y, double z,
                                        void *data);
 
@@ -46,6 +48,12 @@ typedef struct sc_function3_meta
 }
 sc_function3_meta_t;
 
+/* Evaluate the inverse function with regula falsi: x = func^{-1}(y) */
+double              sc_function1_invert (sc_function1_t func, void *data,
+                                         double x_low, double x_high,
+                                         double y, double rtol);
+
+/* Some basic 3D functions */
 double              sc_zero3 (double x, double y, double z, void *data);
 double              sc_one3 (double x, double y, double z, void *data);
 double              sc_two3 (double x, double y, double z, void *data);

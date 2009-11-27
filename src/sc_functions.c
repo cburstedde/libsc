@@ -21,6 +21,53 @@
 #include <sc_functions.h>
 
 double
+sc_function1_invert (sc_function1_t func, void *data,
+                     double x_low, double x_high, double y, double rtol)
+{
+  const int           k_max = 100;
+  int                 k;
+  double              x, sign;
+  double              y_target, y_low, y_high, y_tol;
+
+  SC_ASSERT (x_low < x_high && rtol > 0.);
+
+  y_target = y;
+  if (func == NULL)
+    return y_target;
+
+  y_low = func (x_low, data);
+  y_high = func (x_high, data);
+  y_tol = rtol * fabs (y_high - y_low);
+  sign = (y_low <= y_high) ? 1. : -1.;
+
+  SC_ASSERT ((sign > 0. && y_low <= y_target && y_target <= y_high) ||
+             (sign < 0. && y_high <= y_target && y_target <= y_low));
+
+  for (k = 0; k < k_max; ++k) {
+    x = x_low + (x_high - x_low) * (y_target - y_low) / (y_high - y_low);
+    if (x <= x_low) {
+      return x_low;
+    }
+    if (x >= x_high) {
+      return x_high;
+    }
+
+    y = func (x, data);
+    if (sign * (y - y_target) < -y_tol) {
+      x_low = x;
+      y_low = y;
+    }
+    else if (sign * (y - y_target) > y_tol) {
+      x_high = x;
+      y_high = y;
+    }
+    else
+      return x;
+  }
+  SC_ABORTF ("sc_function1_invert did not converge after %d iterations", k);
+}
+
+double
 sc_zero3 (double x, double y, double z, void *data)
 {
   return 0.;

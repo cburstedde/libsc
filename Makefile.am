@@ -57,6 +57,7 @@ include zlib/Makefile.am
 include test/Makefile.am
 include example/bspline/Makefile.am
 include example/dmatrix/Makefile.am
+include example/function/Makefile.am
 include example/logging/Makefile.am
 include example/matrixmultiply/Makefile.am
 include example/options/Makefile.am
