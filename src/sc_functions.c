@@ -21,55 +21,55 @@
 #include <sc_functions.h>
 
 double
-sc_zero (double x, double y, double z, void *data)
+sc_zero3 (double x, double y, double z, void *data)
 {
   return 0.;
 }
 
 double
-sc_one (double x, double y, double z, void *data)
+sc_one3 (double x, double y, double z, void *data)
 {
   return 1.;
 }
 
 double
-sc_two (double x, double y, double z, void *data)
+sc_two3 (double x, double y, double z, void *data)
 {
   return 2.;
 }
 
 double
-sc_ten (double x, double y, double z, void *data)
+sc_ten3 (double x, double y, double z, void *data)
 {
   return 10.;
 }
 
 double
-sc_constant (double x, double y, double z, void *data)
+sc_constant3 (double x, double y, double z, void *data)
 {
   return *(double *) data;
 }
 
 double
-sc_x (double x, double y, double z, void *data)
+sc_x3 (double x, double y, double z, void *data)
 {
   return x;
 }
 
 double
-sc_y (double x, double y, double z, void *data)
+sc_y3 (double x, double y, double z, void *data)
 {
   return y;
 }
 
 double
-sc_z (double x, double y, double z, void *data)
+sc_z3 (double x, double y, double z, void *data)
 {
   return z;
 }
 
 double
-sc_sum (double x, double y, double z, void *data)
+sc_sum3 (double x, double y, double z, void *data)
 {
   sc_function3_meta_t *meta = (sc_function3_meta_t *) data;
 
@@ -79,7 +79,7 @@ sc_sum (double x, double y, double z, void *data)
 }
 
 double
-sc_product (double x, double y, double z, void *data)
+sc_product3 (double x, double y, double z, void *data)
 {
   sc_function3_meta_t *meta = (sc_function3_meta_t *) data;
 
@@ -89,7 +89,7 @@ sc_product (double x, double y, double z, void *data)
 }
 
 double
-sc_tensor (double x, double y, double z, void *data)
+sc_tensor3 (double x, double y, double z, void *data)
 {
   sc_function3_meta_t *meta = (sc_function3_meta_t *) data;
 

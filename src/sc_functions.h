@@ -25,7 +25,8 @@
 
 SC_EXTERN_C_BEGIN;
 
-typedef double      (*sc_function3_t) (double, double, double, void *);
+typedef double      (*sc_function3_t) (double x, double y, double z,
+                                       void *data);
 
 /*
  * this structure is used as data element for the meta functions.
@@ -45,23 +46,23 @@ typedef struct sc_function3_meta
 }
 sc_function3_meta_t;
 
-double              sc_zero (double x, double y, double z, void *data);
-double              sc_one (double x, double y, double z, void *data);
-double              sc_two (double x, double y, double z, void *data);
-double              sc_ten (double x, double y, double z, void *data);
+double              sc_zero3 (double x, double y, double z, void *data);
+double              sc_one3 (double x, double y, double z, void *data);
+double              sc_two3 (double x, double y, double z, void *data);
+double              sc_ten3 (double x, double y, double z, void *data);
 
 /**
  * \param data   needs to be *double with the value of the constant.
  */
-double              sc_constant (double x, double y, double z, void *data);
+double              sc_constant3 (double x, double y, double z, void *data);
 
-double              sc_x (double x, double y, double z, void *data);
-double              sc_y (double x, double y, double z, void *data);
-double              sc_z (double x, double y, double z, void *data);
+double              sc_x3 (double x, double y, double z, void *data);
+double              sc_y3 (double x, double y, double z, void *data);
+double              sc_z3 (double x, double y, double z, void *data);
 
-double              sc_sum (double x, double y, double z, void *data);
-double              sc_product (double x, double y, double z, void *data);
-double              sc_tensor (double x, double y, double z, void *data);
+double              sc_sum3 (double x, double y, double z, void *data);
+double              sc_product3 (double x, double y, double z, void *data);
+double              sc_tensor3 (double x, double y, double z, void *data);
 
 SC_EXTERN_C_END;
 
