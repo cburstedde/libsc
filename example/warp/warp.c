@@ -24,6 +24,7 @@ int
 main (void)
 {
   double              round1[3];
+  double              round2[3];
   sc_warp_interval_t *root;
 
   sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
@@ -33,8 +34,14 @@ main (void)
   round1[0] = .3;
   round1[1] = .58;
   round1[2] = .86;
-  sc_warp_update (root, 3, round1, 0.15, 7);
-  sc_warp_update (root, 3, round1, 0.20, 7);
+  sc_warp_update (root, 3, round1, 0.10, 7);
+  sc_warp_write (root, stdout);
+
+  round2[0] = .3;
+  round2[1] = .86;
+  round2[2] = .92;
+  sc_warp_update (root, 3, round2, 0.15, 7);
+  sc_warp_write (root, stdout);
 
   sc_warp_destroy (root);
 

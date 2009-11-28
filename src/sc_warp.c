@@ -186,3 +186,18 @@ sc_warp_update (sc_warp_interval_t * root, int num_points, double *r_points,
   /* call interval recursion */
   sc_warp_update_interval (root, 0, num_points, r_points, r_tol, max_level);
 }
+
+void
+sc_warp_write (sc_warp_interval_t * root, FILE * nout)
+{
+  if (root->left == NULL) {
+    SC_ASSERT (root->right == NULL);
+    fprintf (nout, "Warp interval level %d [%g %g] length %g\n",
+             root->level, root->r_low, root->r_high,
+             root->r_high - root->r_low);
+  }
+  else {
+    sc_warp_write (root->left, nout);
+    sc_warp_write (root->right, nout);
+  }
+}
