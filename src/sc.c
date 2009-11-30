@@ -824,7 +824,7 @@ sc_finalize (void)
   int                 retval;
 
   /* sc_packages is static and thus initialized to all zeros */
-  for (i = 0; i < SC_MAX_PACKAGES; ++i)
+  for (i = SC_MAX_PACKAGES - 1; i >= 0; --i)
     if (sc_packages[i].is_registered)
       sc_package_unregister (i);
 
