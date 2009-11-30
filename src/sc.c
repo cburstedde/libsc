@@ -174,8 +174,10 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
   int                 wp = 0, wi = 0;
 
   if (package != -1) {
-    SC_ASSERT (sc_package_is_registered (package));
-    wp = 1;
+    if (!sc_package_is_registered (package))
+      package = -1;
+    else
+      wp = 1;
   }
   wi = (category == SC_LC_NORMAL && sc_identifier >= 0);
 
@@ -467,13 +469,15 @@ sc_log (const char *filename, int lineno,
   sc_log_handler_t    log_handler;
   sc_package_t       *p;
 
+  if (package != -1 && !sc_package_is_registered (package)) {
+    package = -1;
+  }
   if (package == -1) {
     p = NULL;
     log_threshold = sc_default_log_threshold;
     log_handler = sc_default_log_handler;
   }
   else {
-    SC_ASSERT (sc_package_is_registered (package));
     p = sc_packages + package;
     log_threshold =
       (p->log_threshold ==
@@ -481,9 +485,10 @@ sc_log (const char *filename, int lineno,
     log_handler =
       (p->log_handler == NULL) ? sc_default_log_handler : p->log_handler;
   }
-  SC_ASSERT (category == SC_LC_NORMAL || category == SC_LC_GLOBAL);
-  SC_ASSERT (priority > SC_LP_ALWAYS && priority < SC_LP_SILENT);
-
+  if (!(category == SC_LC_NORMAL || category == SC_LC_GLOBAL))
+    return;
+  if (!(priority > SC_LP_ALWAYS && priority < SC_LP_SILENT))
+    return;
   if (category == SC_LC_GLOBAL && sc_identifier > 0)
     return;
 
