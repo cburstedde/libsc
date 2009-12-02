@@ -43,7 +43,7 @@ typedef struct sc_keyvalue
 }
 sc_keyvalue_t;
 
-/* constructors / Destructors */
+/* Constructors / destructors */
 sc_keyvalue_t      *sc_keyvalue_new ();
 
 /* Arguments come in pairs of 2: static string "type:key" and value;
@@ -53,16 +53,18 @@ sc_keyvalue_t      *sc_keyvalue_newv (va_list ap);
 
 void                sc_keyvalue_destroy (sc_keyvalue_t * kv);
 
-/* Routine to check existence of an entry */
+/* Routine to check existence of an entry
+   returns the type if found, and SC_KEYVALUE_ENTRY_NONE otherwise */
 sc_keyvalue_entry_type_t sc_keyvalue_exists (sc_keyvalue_t * kv,
                                              const char *key);
 
-/* Routine to remove an entry */
+/* Routine to remove an entry
+   returne type if found and removed, SC_KEYVALUE_ENTRY_NONE otherwise */
 sc_keyvalue_entry_type_t sc_keyvalue_unset (sc_keyvalue_t * kv,
                                             const char *key);
 
-/* Routines to extract values from keys */
-/* if the key is not present then dvalue is returned */
+/* Routines to extract values from keys
+   if the key is not present then dvalue is returned */
 int                 sc_keyvalue_get_int (sc_keyvalue_t * kv,
                                          const char *key, int dvalue);
 double              sc_keyvalue_get_double (sc_keyvalue_t * kv,
