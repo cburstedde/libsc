@@ -254,3 +254,74 @@ sc_stats_print (int package_id, int log_priority,
     }
   }
 }
+
+sc_statistics_t    *
+sc_statistics_new (MPI_Comm mpicomm)
+{
+  sc_statistics_t    *stats;
+
+  stats = SC_ALLOC (sc_statistics_t, 1);
+  stats->mpicomm = mpicomm;
+  stats->kv = sc_keyvalue_new ();
+  stats->sarray = sc_array_new (sizeof (sc_statinfo_t));
+
+  return stats;
+}
+
+void
+sc_statistics_destroy (sc_statistics_t * stats)
+{
+  sc_keyvalue_destroy (stats->kv);
+  sc_array_destroy (stats->sarray);
+
+  SC_FREE (stats);
+}
+
+void
+sc_statistics_add (sc_statistics_t * stats, const char *name)
+{
+  int                 i;
+  sc_statinfo_t      *si;
+
+  /* always check for wrong usage and output adequate error message */
+  SC_CHECK_ABORTF (!sc_keyvalue_exists (stats->kv, name),
+                   "Statistics variable \"%s\" exists already", name);
+
+  i = (int) stats->sarray->elem_count;
+  si = (sc_statinfo_t *) sc_array_push (stats->sarray);
+  sc_stats_set1 (si, 0, name);
+
+  sc_keyvalue_set_int (stats->kv, name, i);
+}
+
+void
+sc_statistics_set (sc_statistics_t * stats, const char *name, double value)
+{
+  int                 i;
+  sc_statinfo_t      *si;
+
+  i = sc_keyvalue_get_int (stats->kv, name, -1);
+
+  /* always check for wrong usage and output adequate error message */
+  SC_CHECK_ABORTF (i >= 0, "Statistics variable \"%s\" does not exist", name);
+
+  si = (sc_statinfo_t *) sc_array_index_int (stats->sarray, i);
+
+  sc_stats_set1 (si, value, name);
+}
+
+void
+sc_statistics_compute (sc_statistics_t * stats)
+{
+  sc_stats_compute (stats->mpicomm, (int) stats->sarray->elem_count,
+                    (sc_statinfo_t *) stats->sarray->array);
+}
+
+void
+sc_statistics_print (sc_statistics_t * stats,
+                     int package_id, int log_priority, int full, int summary)
+{
+  sc_stats_print (package_id, log_priority,
+                  (int) stats->sarray->elem_count,
+                  (sc_statinfo_t *) stats->sarray->array, full, summary);
+}

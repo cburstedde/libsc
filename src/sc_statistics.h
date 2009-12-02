@@ -22,9 +22,11 @@
 #define SC_STATISTICS_H
 
 #include <sc.h>
+#include <sc_keyvalue.h>
 
 SC_EXTERN_C_BEGIN;
 
+/* sc_statinfo_t stores information for one random variable */
 typedef struct sc_statinfo
 {
   int                 dirty;    /* only update stats if this is true */
@@ -36,6 +38,15 @@ typedef struct sc_statinfo
   const char         *variable; /* name of the variable for output */
 }
 sc_statinfo_t;
+
+/* sc_statistics_t allows dynamically adding random variables */
+typedef struct sc_stats
+{
+  MPI_Comm            mpicomm;
+  sc_keyvalue_t      *kv;
+  sc_array_t         *sarray;
+}
+sc_statistics_t;
 
 /**
  * Populate a sc_statinfo_t structure assuming count=1 and mark it dirty.
@@ -89,6 +100,34 @@ void                sc_stats_compute1 (MPI_Comm mpicomm, int nvars,
 void                sc_stats_print (int package_id, int log_priority,
                                     int nvars, sc_statinfo_t * stats,
                                     int full, int summary);
+
+/** Create a new statistics structure that can grow dynamically.
+ */
+sc_statistics_t    *sc_statistics_new (MPI_Comm mpicomm);
+void                sc_statistics_destroy (sc_statistics_t * stats);
+
+/** Register a statistics variable by name and set its value to 0.
+ * This variable must not exist already.
+ */
+void                sc_statistics_add (sc_statistics_t * stats,
+                                       const char *name);
+
+/** Set the value of a statistics variable, see sc_stats_set1.
+ * The variable must previously be added with sc_statistics_add.
+ * This assumes count=1 as in the sc_stats_set1 function above.
+ */
+void                sc_statistics_set (sc_statistics_t * stats,
+                                       const char *name, double value);
+
+/** Compute statistics for all variables, see sc_stats_compute.
+ */
+void                sc_statistics_compute (sc_statistics_t * stats);
+
+/** Print all statistics variables, see sc_stats_print.
+ */
+void                sc_statistics_print (sc_statistics_t * stats,
+                                         int package_id, int log_priority,
+                                         int full, int summary);
 
 SC_EXTERN_C_END;
 
