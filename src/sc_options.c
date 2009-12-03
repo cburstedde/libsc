@@ -373,8 +373,12 @@ sc_options_print_summary (int package_id, int log_priority,
     SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
 
-  SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
-
+  if (opt->first_arg == opt->argc) {
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments: none\n");
+  }
+  else {
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
+  }
   for (i = opt->first_arg; i < opt->argc; ++i) {
     SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %d: %s\n",
                  i - opt->first_arg, opt->argv[i]);
