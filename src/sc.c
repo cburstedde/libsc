@@ -877,6 +877,8 @@ sc_is_root (void)
 #undef SC_LERRORF
 #endif
 
+#ifndef SC_SPLINT
+
 void
 SC_ABORTF (const char *fmt, ...)
 {
@@ -956,3 +958,5 @@ SC_LOG_IMP (INFO, INFO);
 SC_LOG_IMP (STATISTICS, STATISTICS);
 SC_LOG_IMP (PRODUCTION, PRODUCTION);
 SC_LOG_IMP (LERROR, ERROR);
+
+#endif
