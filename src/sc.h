@@ -150,7 +150,8 @@ extern int          sc_trace_prio;
  * This loses __FILE__ and __LINE__ in the C++ ..F log functions
  */
 void                SC_ABORTF (const char *fmt, ...)
-  __attribute__ ((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)))
+  __attribute__ ((noreturn));
 void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
   __attribute__ ((format (printf, 2, 3)));
 #ifndef __cplusplus
