@@ -785,6 +785,9 @@ sc_init (MPI_Comm mpicomm,
       else if (!strcmp (trace_file_prio, "SC_LP_PRODUCTION")) {
         sc_trace_prio = SC_LP_PRODUCTION;
       }
+      else if (!strcmp (trace_file_prio, "SC_LP_ESSENTIAL")) {
+        sc_trace_prio = SC_LP_ESSENTIAL;
+      }
       else if (!strcmp (trace_file_prio, "SC_LP_ERROR")) {
         sc_trace_prio = SC_LP_ERROR;
       }
@@ -795,7 +798,7 @@ sc_init (MPI_Comm mpicomm,
   }
 
   w = 24;
-  SC_GLOBAL_PRODUCTIONF ("%s\n", SC_PACKAGE_STRING);
+  SC_GLOBAL_ESSENTIALF ("This is %s.\n", SC_PACKAGE_STRING);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CC", SC_CC);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "C_VERSION", SC_C_VERSION);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CFLAGS", SC_CFLAGS);
@@ -867,6 +870,7 @@ sc_is_root (void)
 #undef SC_GLOBAL_INFOF
 #undef SC_GLOBAL_STATISTICSF
 #undef SC_GLOBAL_PRODUCTIONF
+#undef SC_GLOBAL_ESSENTIALF
 #undef SC_GLOBAL_LERRORF
 #undef SC_TRACEF
 #undef SC_LDEBUGF
@@ -874,6 +878,7 @@ sc_is_root (void)
 #undef SC_INFOF
 #undef SC_STATISTICSF
 #undef SC_PRODUCTIONF
+#undef SC_ESSENTIALF
 #undef SC_LERRORF
 #endif
 
@@ -957,6 +962,7 @@ SC_LOG_IMP (VERBOSE, VERBOSE);
 SC_LOG_IMP (INFO, INFO);
 SC_LOG_IMP (STATISTICS, STATISTICS);
 SC_LOG_IMP (PRODUCTION, PRODUCTION);
+SC_LOG_IMP (ESSENTIAL, ESSENTIAL);
 SC_LOG_IMP (LERROR, ERROR);
 
 #endif

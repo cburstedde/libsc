@@ -235,8 +235,14 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_LC_GLOBAL      1     /* log only for master process */
 #define SC_LC_NORMAL      2     /* log for every process */
 
-/* log priorities */
-
+/* log priorities
+ *
+ * Priorities TRACE to VERBOSE are appropriate when all parallel processes
+ * contribute log messages.  INFO and above must not clutter the output of
+ * large parallel runs.  STATISTICS can be used for important measurements.
+ * PRODUCTION is meant for rudimentary information on the program flow.
+ * ESSENTIAL can be used for one-time messages, say at program startup.
+ */
 #define SC_LP_DEFAULT   (-1)    /* this selects the SC default threshold */
 #define SC_LP_ALWAYS      0     /* this will log everything */
 #define SC_LP_TRACE       1     /* this will prefix file and line number */
@@ -245,8 +251,9 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_LP_INFO        4     /* the main things a function is doing */
 #define SC_LP_STATISTICS  5     /* important for consistency or performance */
 #define SC_LP_PRODUCTION  6     /* a few lines for a major api function */
-#define SC_LP_ERROR       7     /* this will log errors only */
-#define SC_LP_SILENT      8     /* this will never log anything */
+#define SC_LP_ESSENTIAL   7     /* this logs a few lines max per program */
+#define SC_LP_ERROR       8     /* this logs errors only */
+#define SC_LP_SILENT      9     /* this never logs anything */
 #ifdef SC_LOG_PRIORITY
 #define SC_LP_THRESHOLD SC_LOG_PRIORITY
 #else
@@ -288,6 +295,7 @@ void                SC_LOGF (int priority, const char *fmt, ...)
 #define SC_GLOBAL_INFO(s) SC_GLOBAL_LOG (SC_LP_INFO, (s))
 #define SC_GLOBAL_STATISTICS(s) SC_GLOBAL_LOG (SC_LP_STATISTICS, (s))
 #define SC_GLOBAL_PRODUCTION(s) SC_GLOBAL_LOG (SC_LP_PRODUCTION, (s))
+#define SC_GLOBAL_ESSENTIAL(s) SC_GLOBAL_LOG (SC_LP_ESSENTIAL, (s))
 #define SC_GLOBAL_LERROR(s) SC_GLOBAL_LOG (SC_LP_ERROR, (s))
 void                SC_GLOBAL_TRACEF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
@@ -300,6 +308,8 @@ void                SC_GLOBAL_INFOF (const char *fmt, ...)
 void                SC_GLOBAL_STATISTICSF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 void                SC_GLOBAL_PRODUCTIONF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_GLOBAL_ESSENTIALF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 void                SC_GLOBAL_LERRORF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
@@ -316,6 +326,8 @@ void                SC_GLOBAL_LERRORF (const char *fmt, ...)
   SC_GLOBAL_LOGF (SC_LP_STATISTICS, (fmt), __VA_ARGS__)
 #define SC_GLOBAL_PRODUCTIONF(fmt,...)                  \
   SC_GLOBAL_LOGF (SC_LP_PRODUCTION, (fmt), __VA_ARGS__)
+#define SC_GLOBAL_ESSENTIALF(fmt,...)                   \
+  SC_GLOBAL_LOGF (SC_LP_ESSENTIAL, (fmt), __VA_ARGS__)
 #define SC_GLOBAL_LERRORF(fmt,...)                      \
   SC_GLOBAL_LOGF (SC_LP_ERROR, (fmt), __VA_ARGS__)
 #endif
@@ -327,6 +339,7 @@ void                SC_GLOBAL_LERRORF (const char *fmt, ...)
 #define SC_INFO(s) SC_LOG (SC_LP_INFO, (s))
 #define SC_STATISTICS(s) SC_LOG (SC_LP_STATISTICS, (s))
 #define SC_PRODUCTION(s) SC_LOG (SC_LP_PRODUCTION, (s))
+#define SC_ESSENTIAL(s) SC_LOG (SC_LP_ESSENTIAL, (s))
 #define SC_LERROR(s) SC_LOG (SC_LP_ERROR, (s))
 void                SC_TRACEF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
@@ -339,6 +352,8 @@ void                SC_INFOF (const char *fmt, ...)
 void                SC_STATISTICSF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 void                SC_PRODUCTIONF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+void                SC_ESSENTIALF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 void                SC_LERRORF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
@@ -355,7 +370,9 @@ void                SC_LERRORF (const char *fmt, ...)
   SC_LOGF (SC_LP_STATISTICS, (fmt), __VA_ARGS__)
 #define SC_PRODUCTIONF(fmt,...)                         \
   SC_LOGF (SC_LP_PRODUCTION, (fmt), __VA_ARGS__)
-#define SC_LERRORF(fmt,...)                             \
+#define SC_ESSENTIALF(fmt,...)                  \
+  SC_LOGF (SC_LP_ESSENTIAL, (fmt), __VA_ARGS__)
+#define SC_LERRORF(fmt,...)                     \
   SC_LOGF (SC_LP_ERROR, (fmt), __VA_ARGS__)
 #endif
 
