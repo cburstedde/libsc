@@ -6,7 +6,7 @@ desc: |-
   How to deal with feature test macros for glibc?
 type: :bugfix
 component: libsc
-release: "0.6"
+release: 
 reporter: Carsten Burstedde <carsten@ices.utexas.edu>
 status: :unstarted
 disposition: 
@@ -23,3 +23,7 @@ log_events:
   - Carsten Burstedde <carsten@ices.utexas.edu>
   - assigned to release 0.6 from unassigned
   - ""
+- - 2010-01-22 17:33:37.936420 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - unassigned from release 0.6
+  - Also remove tgmath.h from sc_complex.h for portability.

@@ -6,7 +6,7 @@ desc: |-
   Change this so that it can e.g. easily emulate a string option.
 type: :bugfix
 component: libsc
-release: "0.6"
+release: 
 reporter: Carsten Burstedde <carsten@ices.utexas.edu>
 status: :unstarted
 disposition: 
@@ -18,4 +18,8 @@ log_events:
 - - 2009-12-04 04:36:39.870061 Z
   - Carsten Burstedde <carsten@ices.utexas.edu>
   - created
+  - ""
+- - 2010-01-22 17:33:58.809291 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - unassigned from release 0.6
   - ""
