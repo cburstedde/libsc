@@ -72,7 +72,7 @@ sc_warp_update_interval (sc_warp_interval_t * iv,
 
   if (iv->left != NULL) {
     SC_ASSERT (iv->right != NULL);
-    SC_ASSERT (iv->left->r_high == iv->right->r_low);
+    SC_ASSERT (iv->left->r_high == iv->right->r_low);   /* ignore warning */
 
     /* find highest point with r < r_mid, which need not exist */
     r_mid = iv->left->r_high;
