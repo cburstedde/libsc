@@ -30,9 +30,8 @@ lua_compiled_sources = \
         lua/src/lstrlib.c lua/src/ltable.c lua/src/ltablib.c lua/src/ltm.c \
         lua/src/lundump.c lua/src/lvm.c lua/src/lzio.c
 
-src_libsc_a_SOURCES += \
-        $(lua_internal_headers) \
-        $(lua_compiled_sources)
+libsc_internal_headers += $(lua_internal_headers)
+libsc_compiled_sources += $(lua_compiled_sources)
 LIBSC_CPPFLAGS += -DLUA_USE_LINUX
 
 endif

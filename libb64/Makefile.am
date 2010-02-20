@@ -20,6 +20,5 @@ EXTRA_DIST += \
 	libb64/AUTHORS libb64/CHANGELOG libb64/LICENSE libb64/README
 
 LINT_CSOURCES += \
-	$(libb64_compiled_sources) \
 	$(libb64_sc_b64enc_SOURCES) \
 	$(libb64_sc_b64dec_SOURCES)

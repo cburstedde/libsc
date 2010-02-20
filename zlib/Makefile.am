@@ -20,8 +20,7 @@ zlib_compiled_sources = \
         zlib/uncompr.c zlib/deflate.c zlib/trees.c zlib/zutil.c \
         zlib/inflate.c zlib/infback.c zlib/inftrees.c zlib/inffast.c
 
-src_libsc_a_SOURCES += \
-        $(zlib_internal_headers) \
-        $(zlib_compiled_sources)
+libsc_internal_headers += $(zlib_internal_headers)
+libsc_compiled_sources += $(zlib_compiled_sources)
 
 endif
