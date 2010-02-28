@@ -25,6 +25,18 @@
 
 SC_EXTERN_C_BEGIN;
 
+/** Find lowest position k in a sorted array such that array[k] >= target.
+ * \param [in]  target  The target lower bound to binary search for.
+ * \param [in]  array   The 64bit integer array to binary search in.
+ * \param [in]  size    The number of int64_t's in the array.
+ * \param [in]  guess   Initial array position to look at.
+ * \return  Returns the matching position
+ *          or -1 if array[size-1] < target or if size == 0.
+ */
+ssize_t             sc_search_lower_bound64 (int64_t target,
+                                             const int64_t * array,
+                                             size_t size, size_t guess);
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_SEARCH_H */
