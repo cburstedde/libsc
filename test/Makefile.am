@@ -11,6 +11,7 @@ sc_test_programs = \
         test/sc_test_dmatrix_pool \
         test/sc_test_pqueue \
         test/sc_test_allgather \
+        test/sc_test_search \
         test/sc_test_sort \
         test/sc_test_sortb \
         test/sc_test_keyvalue
@@ -24,6 +25,7 @@ test_sc_test_dmatrix_SOURCES = test/test_dmatrix.c
 test_sc_test_dmatrix_pool_SOURCES = test/test_dmatrix_pool.c
 test_sc_test_pqueue_SOURCES = test/test_pqueue.c
 test_sc_test_allgather_SOURCES = test/test_allgather.c
+test_sc_test_search_SOURCES = test/test_search.c
 test_sc_test_sort_SOURCES = test/test_sort.c
 test_sc_test_sortb_SOURCES = test/test_sortb.c
 test_sc_test_keyvalue_SOURCES = test/test_keyvalue.c
@@ -38,6 +40,7 @@ LINT_CSOURCES += \
         $(test_sc_test_dmatrix_pool_SOURCES) \
         $(test_sc_test_pqueue_SOURCES) \
         $(test_sc_test_allgather_SOURCES) \
+        $(test_sc_test_search_SOURCES) \
         $(test_sc_test_sort_SOURCES) \
         $(test_sc_test_sortb_SOURCES) \
         $(test_sc_test_keyvalue_SOURCES)

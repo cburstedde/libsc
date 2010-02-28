@@ -25,6 +25,16 @@
 
 SC_EXTERN_C_BEGIN;
 
+/** Find the branch of a tree that is biased towards a target.
+ * We assume a binary tree of depth maxlevel and 0 <= target < 2**maxlevel.
+ * We search the branch towards the target on 0 <= level <= maxlevel.
+ * The branch number on level is specified by 0 <= interval < 2**level.
+ *
+ * \return          Branch position with 0 <= position <= 2**maxlevel.
+ */
+int                 sc_search_bias (int maxlevel, int level,
+				    int interval, int target);
+
 /** Find lowest position k in a sorted array such that array[k] >= target.
  * \param [in]  target  The target lower bound to binary search for.
  * \param [in]  array   The 64bit integer array to binary search in.

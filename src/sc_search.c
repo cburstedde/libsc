@@ -20,6 +20,26 @@
 
 #include <sc_search.h>
 
+int
+sc_search_bias (int maxlevel, int level, int interval, int target)
+{
+  const int           left = interval << (maxlevel - level);
+  const int           right = left + (1 << (maxlevel - level));
+  int                 result;
+
+  SC_ASSERT (0 <= level && level <= maxlevel);
+  SC_ASSERT (0 <= interval && interval < 1 << level);
+  SC_ASSERT (0 <= left && left < right && right <= 1 << maxlevel);
+
+  result = target < left ? left : target >= right ? right - 1 :
+    left + (target & ((1 << (maxlevel - level)) - 1));
+
+  SC_ASSERT (left <= result && result < right);
+  SC_ASSERT (0 <= result && result < 1 << maxlevel);
+
+  return result;
+}
+
 ssize_t
 sc_search_lower_bound64 (int64_t target, const int64_t * array,
                          size_t size, size_t guess)
