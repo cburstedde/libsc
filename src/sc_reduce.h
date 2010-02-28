@@ -27,13 +27,23 @@
 #define SC_RED_ALLTOALL_MAX     5
 #endif
 
+typedef void        (*sc_reduce_t) (void *sendbuf, void *recvbuf,
+                                    int sendcount, MPI_Datatype sendtype);
+
 SC_EXTERN_C_BEGIN;
+
+/** Custom reduce operation.
+ */
+int                 sc_reduce_custom (void *sendbuf, void *recvbuf,
+                                      int sendcount, MPI_Datatype sendtype,
+                                      sc_reduce_t reduce_fn,
+                                      int rank, MPI_Comm mpicomm);
 
 /** Drop-in MPI_Reduce replacement.
  */
 int                 sc_reduce (void *sendbuf, void *recvbuf, int sendcount,
-			       MPI_Datatype sendtype, MPI_Op operation,
-			       int rank, MPI_Comm mpicomm);
+                               MPI_Datatype sendtype, MPI_Op operation,
+                               int rank, MPI_Comm mpicomm);
 
 SC_EXTERN_C_END;
 

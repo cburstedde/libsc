@@ -26,7 +26,7 @@ main (int argc, char ** argv)
   int                 mpiret;
   int                 mpirank, mpisize;
   int                 i;
-  double              value, result;
+  long                value, result;
   MPI_Comm            mpicomm;
 
   mpiret = MPI_Init (&argc, &argv);
@@ -41,11 +41,13 @@ main (int argc, char ** argv)
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
   for (i = 0; i < mpisize; ++i) {
-    value = (double) mpirank;
+    value = (long) mpirank;
     sc_reduce (&value, &result, 1, MPI_DOUBLE, MPI_MAX, i, mpicomm);
 
-    if (i == mpirank) {
-      SC_LDEBUGF ("Reduced on %d to %g\n", i, result);
+    /* currently reduce does allreduce instead */
+    if (i == mpirank || 1) {
+      /* SC_LDEBUGF ("Reduced on %d to %ld\n", i, result); */
+      SC_CHECK_ABORT (result == (long) (mpisize - 1), "Reduce mismatch");
     }
   }
 
