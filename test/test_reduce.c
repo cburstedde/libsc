@@ -25,12 +25,12 @@ main (int argc, char ** argv)
 {
   int                 mpiret;
   int                 mpirank, mpisize;
-  int                 i;
+  int                 i, j;
   char                cvalue, cresult;
   int                 ivalue, iresult;
   unsigned short      usvalue, usresult;
   long                lvalue, lresult;
-  float               fvalue, fresult;
+  float               fvalue[3], fresult[3], fexpect[3];
   double              dvalue, dresult;
   MPI_Comm            mpicomm;
 
@@ -51,12 +51,19 @@ main (int argc, char ** argv)
   SC_CHECK_ABORT (iresult == mpisize - 1, "Allreduce mismatch");
 
   /* test reduce float max */
-  fvalue = (float) mpirank;
+  fvalue[0] = (float) mpirank;
+  fexpect[0] = (float) (mpisize - 1);
+  fvalue[1] = (float) (mpirank % 9 - 4);
+  fexpect[1] = (float) (mpisize >= 9 ? 4 : (mpisize - 1) % 9 - 4);
+  fvalue[2] = (float) (mpirank % 6);
+  fexpect[2] = (float) (mpisize >= 6 ? 5 : (mpisize - 1) % 6);
   for (i = 0; i < mpisize; ++i) {
-    sc_reduce (&fvalue, &fresult, 1, MPI_FLOAT, MPI_MAX, i, mpicomm);
+    sc_reduce (fvalue, fresult, 3, MPI_FLOAT, MPI_MAX, i, mpicomm);
     if (i == mpirank) {
-      SC_CHECK_ABORT (fresult == (float) (mpisize - 1),         /* ok */
-		      "Reduce mismatch");
+      for (j = 0; j < 3; ++j) {
+	SC_CHECK_ABORTF (fresult[j] == fexpect[j],         /* ok */
+			 "Reduce mismatch in %d", j);
+      }
     }
   }
 
