@@ -27,8 +27,10 @@ main (int argc, char ** argv)
   int                 mpirank, mpisize;
   int                 i;
   char                cvalue, cresult;
+  int                 ivalue, iresult;
   unsigned short      usvalue, usresult;
   long                lvalue, lresult;
+  float               fvalue, fresult;
   double              dvalue, dresult;
   MPI_Comm            mpicomm;
 
@@ -43,17 +45,17 @@ main (int argc, char ** argv)
 
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
-  /* test allreduce long max */
-  lvalue = (long) mpirank;
-  sc_allreduce (&lvalue, &lresult, 1, MPI_LONG, MPI_MAX, mpicomm);
-  SC_CHECK_ABORT (lresult == (long) (mpisize - 1), "Allreduce mismatch");
+  /* test allreduce int max */
+  ivalue = mpirank;
+  sc_allreduce (&ivalue, &iresult, 1, MPI_INT, MPI_MAX, mpicomm);
+  SC_CHECK_ABORT (iresult == mpisize - 1, "Allreduce mismatch");
 
-  /* test reduce double max */
-  dvalue = (double) mpirank;
+  /* test reduce float max */
+  fvalue = (float) mpirank;
   for (i = 0; i < mpisize; ++i) {
-    sc_reduce (&dvalue, &dresult, 1, MPI_DOUBLE, MPI_MAX, i, mpicomm);
+    sc_reduce (&fvalue, &fresult, 1, MPI_FLOAT, MPI_MAX, i, mpicomm);
     if (i == mpirank) {
-      SC_CHECK_ABORT (dresult == (double) (mpisize - 1),        /* ok */
+      SC_CHECK_ABORT (fresult == (float) (mpisize - 1),         /* ok */
 		      "Reduce mismatch");
     }
   }
@@ -69,6 +71,23 @@ main (int argc, char ** argv)
     sc_reduce (&usvalue, &usresult, 1, MPI_UNSIGNED_SHORT, MPI_MIN, i, mpicomm);
     if (i == mpirank) {
       SC_CHECK_ABORT (usresult == 0, "Reduce mismatch");
+    }
+  }
+
+  /* test allreduce long sum */
+  lvalue = (long) mpirank;
+  sc_allreduce (&lvalue, &lresult, 1, MPI_LONG, MPI_SUM, mpicomm);
+  SC_CHECK_ABORT (lresult == ((long) (mpisize - 1)) * mpisize / 2,
+		  "Allreduce mismatch");
+
+  /* test reduce double sum */
+  dvalue = (double) mpirank;
+  for (i = 0; i < mpisize; ++i) {
+    sc_reduce (&dvalue, &dresult, 1, MPI_DOUBLE, MPI_SUM, i, mpicomm);
+    if (i == mpirank) {
+      SC_CHECK_ABORT (dresult ==
+		      ((double) (mpisize - 1)) * mpisize / 2.,  /* ok */
+		      "Reduce mismatch");
     }
   }
 
