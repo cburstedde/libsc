@@ -297,14 +297,14 @@ sc_mpi_sizeof (MPI_Datatype t)
     return sizeof (int);
   if (t == MPI_LONG || t == MPI_UNSIGNED_LONG)
     return sizeof (long);
+  if (t == MPI_LONG_LONG_INT)
+    return sizeof (long long);
   if (t == MPI_FLOAT)
     return sizeof (float);
   if (t == MPI_DOUBLE)
     return sizeof (double);
   if (t == MPI_LONG_DOUBLE)
     return sizeof (long double);
-  if (t == MPI_LONG_LONG_INT)
-    return sizeof (long long);
 
   SC_ABORT_NOT_REACHED ();
 }

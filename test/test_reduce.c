@@ -49,7 +49,6 @@ main (int argc, char ** argv)
   for (i = 0; i < mpisize; ++i) {
     sc_reduce (&value, &result, 1, MPI_LONG, MPI_MAX, i, mpicomm);
     if (i == mpirank) {
-      SC_LDEBUGF ("Result %d %d %d is %ld\n", mpirank, mpisize, i, result);
       SC_CHECK_ABORT (result == (long) (mpisize - 1), "Reduce mismatch");
     }
   }

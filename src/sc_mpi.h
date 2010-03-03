@@ -60,10 +60,10 @@ sc_tag_t;
 #define MPI_UNSIGNED            ((MPI_Datatype) 0x4c000406)
 #define MPI_LONG                ((MPI_Datatype) 0x4c000407)
 #define MPI_UNSIGNED_LONG       ((MPI_Datatype) 0x4c000408)
+#define MPI_LONG_LONG_INT       ((MPI_Datatype) 0x4c000809)
 #define MPI_FLOAT               ((MPI_Datatype) 0x4c00040a)
 #define MPI_DOUBLE              ((MPI_Datatype) 0x4c00080b)
 #define MPI_LONG_DOUBLE         ((MPI_Datatype) 0x4c000c0c)
-#define MPI_LONG_LONG_INT       ((MPI_Datatype) 0x4c000809)
 
 #define MPI_MAX                 ((MPI_Op) 0x58000001)
 #define MPI_MIN                 ((MPI_Op) 0x58000002)
