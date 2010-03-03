@@ -23,6 +23,7 @@
 
 #include <sc.h>
 
+/* highest level that uses all-to-all instead of recursion */
 #ifndef SC_REDUCE_ALLTOALL_LEVEL
 #define SC_REDUCE_ALLTOALL_LEVEL        3
 #endif

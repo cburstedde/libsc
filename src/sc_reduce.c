@@ -24,6 +24,114 @@
 #ifdef SC_MPI
 
 static void
+sc_reduce_alltoall (MPI_Comm mpicomm,
+		    char *data, int count, MPI_Datatype datatype,
+		    int groupsize, int target,
+		    int maxlevel, int level, int branch,
+		    sc_reduce_t reduce_fn)
+{
+  int                 i, l;
+  int                 mpiret;
+  int                 orig_target, doall, allcount;
+  int                 myrank, peer, peer2;
+  int                 shift;
+  char               *alldata;
+  size_t              datasize;
+  MPI_Request        *request, *rrequest, *srequest;
+
+  orig_target = target;
+  doall = 0;
+  if (target == -1) {
+    doall = 1;
+    target = 0;
+  }
+
+  SC_ASSERT (0 <= target && target < groupsize);
+
+  myrank = sc_search_bias (maxlevel, level, branch, target);
+
+  SC_ASSERT (0 <= myrank && myrank < groupsize);
+  SC_ASSERT (reduce_fn != NULL);
+
+  /* *INDENT-OFF* HORRIBLE indent bug */
+  datasize = (size_t) count * sc_mpi_sizeof (datatype);
+  /* *INDENT-ON* */
+
+  if (doall || target == myrank) {
+    allcount = 1 << level;
+
+    alldata = SC_ALLOC (char, allcount * datasize);
+    request = SC_ALLOC (MPI_Request, 2 * allcount);
+    rrequest = request;
+    srequest = request + allcount;
+
+    for (i = 0; i < allcount; ++i) {
+      peer = sc_search_bias (maxlevel, level, i, target);
+
+      /* communicate with existing peers */
+      if (peer == myrank) {
+	memcpy (alldata + i * datasize, data, datasize);
+	rrequest[i] = srequest[i] = MPI_REQUEST_NULL;
+      }
+      else {
+	if (peer < groupsize) {
+	  mpiret = MPI_Irecv (alldata + i * datasize, datasize, MPI_BYTE,
+			      peer, SC_TAG_REDUCE, mpicomm, rrequest + i);
+	  SC_CHECK_MPI (mpiret);
+	  if (doall) {
+	    mpiret = MPI_Isend (data, datasize, MPI_BYTE,
+				peer, SC_TAG_REDUCE, mpicomm, srequest + i);
+	    SC_CHECK_MPI (mpiret);
+	  }
+	  else {
+	    srequest[i] = MPI_REQUEST_NULL;     /* unused */
+	  }
+	}
+	else {
+	  /* ignore non-existing ranks greater or equal mpisize */
+	  rrequest[i] = srequest[i] = MPI_REQUEST_NULL;
+	}
+      }
+    }
+
+    /* complete receive operations */
+    mpiret = MPI_Waitall (allcount, rrequest, MPI_STATUSES_IGNORE);
+    SC_CHECK_MPI (mpiret);
+
+    /* process received data in the same order as sc_reduce_recursive */
+    for (shift = 0, l = level - 1; l >= 0; ++shift, --l) {
+      for (i = 0; i < 1 << l; ++i) {
+#ifdef SC_DEBUG
+	peer = sc_search_bias (maxlevel, l + 1, 2 * i, target);
+#endif
+	peer2 = sc_search_bias (maxlevel, l + 1, 2 * i + 1, target);
+	SC_ASSERT (peer < peer2);
+
+	if (peer2 < groupsize) {
+	  reduce_fn (alldata + ((2 * i + 1) << shift) * datasize,
+		     alldata + ((2 * i) << shift) * datasize,
+		     count, datatype);
+	}
+      }
+    }
+    memcpy (data, alldata, datasize);
+    SC_FREE (alldata);  /* alldata is not used in send buffers */
+
+    /* wait for sends only after computation is done */
+    if (doall) {
+      mpiret = MPI_Waitall (allcount, srequest, MPI_STATUSES_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+    SC_FREE (request);
+  }
+  else {
+    mpiret = MPI_Send (data, datasize, MPI_BYTE,
+		       target, SC_TAG_REDUCE, mpicomm);
+    SC_CHECK_MPI (mpiret);
+  }
+}
+
+static void
 sc_reduce_recursive (MPI_Comm mpicomm,
                      char *data, int count, MPI_Datatype datatype,
                      int groupsize, int target,
@@ -31,9 +139,8 @@ sc_reduce_recursive (MPI_Comm mpicomm,
                      sc_reduce_t reduce_fn)
 {
   int                 mpiret;
-  int                 orig_target;
+  int                 orig_target, doall;
   int                 myrank, peer, higher;
-  int                 doall;
   char               *peerdata;
   size_t              datasize;
   MPI_Status          rstatus;
@@ -54,6 +161,12 @@ sc_reduce_recursive (MPI_Comm mpicomm,
 
   if (level == 0) {
     /* result is in data */
+  }
+  else if (level <= SC_REDUCE_ALLTOALL_LEVEL) {
+    /* all-to-all communication */
+    sc_reduce_alltoall (mpicomm, data, count, datatype,
+			groupsize, orig_target,
+			maxlevel, level, branch, reduce_fn);
   }
   else {
     /* *INDENT-OFF* HORRIBLE indent bug */
