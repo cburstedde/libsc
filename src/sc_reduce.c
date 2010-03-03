@@ -219,6 +219,118 @@ sc_reduce_max (void *sendbuf, void *recvbuf,
   }
 }
 
+static void
+sc_reduce_min (void *sendbuf, void *recvbuf,
+               int sendcount, MPI_Datatype sendtype)
+{
+  int                 i;
+
+  switch (sendtype) {
+  case MPI_CHAR:
+  case MPI_BYTE:
+    {
+      const char         *s = (char *) sendbuf;
+      char               *r = (char *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] < r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_SHORT:
+    {
+      const short        *s = (short *) sendbuf;
+      short              *r = (short *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] < r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_UNSIGNED_SHORT:
+    {
+      const unsigned short *s = (unsigned short *) sendbuf;
+      unsigned short     *r = (unsigned short *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] < r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_INT:
+    {
+      const int          *s = (int *) sendbuf;
+      int                *r = (int *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] < r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_UNSIGNED:
+    {
+      const unsigned     *s = (unsigned *) sendbuf;
+      unsigned           *r = (unsigned *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] < r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_LONG:
+    {
+      const long         *s = (long *) sendbuf;
+      long               *r = (long *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] < r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_UNSIGNED_LONG:
+    {
+      const unsigned long *s = (unsigned long *) sendbuf;
+      unsigned long      *r = (unsigned long *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] < r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_LONG_LONG_INT:
+    {
+      const long long    *s = (long long *) sendbuf;
+      long long          *r = (long long *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] < r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_FLOAT:
+    {
+      const float        *s = (float *) sendbuf;
+      float              *r = (float *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] < r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_DOUBLE:
+    {
+      const double       *s = (double *) sendbuf;
+      double             *r = (double *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] < r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_LONG_DOUBLE:
+    {
+      const long double  *s = (long double *) sendbuf;
+      long double        *r = (long double *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] < r[i])
+          r[i] = s[i];
+      break;
+    }
+  default:
+    SC_ABORT ("Unsupported MPI datatype in sc_reduce_min");
+  }
+}
+
 static int
 sc_reduce_custom_dispatch (void *sendbuf, void *recvbuf, int sendcount,
                            MPI_Datatype sendtype, sc_reduce_t reduce_fn,
@@ -286,6 +398,9 @@ sc_reduce_dispatch (void *sendbuf, void *recvbuf, int sendcount,
   switch (operation) {
   case MPI_MAX:
     reduce_fn = sc_reduce_max;
+    break;
+  case MPI_MIN:
+    reduce_fn = sc_reduce_min;
     break;
   default:
     reduce_fn = NULL;
