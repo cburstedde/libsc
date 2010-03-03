@@ -40,13 +40,16 @@ main (int argc, char ** argv)
 
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
-  for (i = 0; i < mpisize; ++i) {
-    value = (long) mpirank;
-    sc_reduce (&value, &result, 1, MPI_DOUBLE, MPI_MAX, i, mpicomm);
+  /* test allreduce */
+  value = (long) mpirank;
+  sc_allreduce (&value, &result, 1, MPI_LONG, MPI_MAX, mpicomm);
+  SC_CHECK_ABORT (result == (long) (mpisize - 1), "Allreduce mismatch");
 
-    /* currently reduce does allreduce instead */
-    if (i == mpirank || 1) {
-      /* SC_LDEBUGF ("Reduced on %d to %ld\n", i, result); */
+  /* test reduce */
+  for (i = 0; i < mpisize; ++i) {
+    sc_reduce (&value, &result, 1, MPI_LONG, MPI_MAX, i, mpicomm);
+    if (i == mpirank) {
+      SC_LDEBUGF ("Result %d %d %d is %ld\n", mpirank, mpisize, i, result);
       SC_CHECK_ABORT (result == (long) (mpisize - 1), "Reduce mismatch");
     }
   }

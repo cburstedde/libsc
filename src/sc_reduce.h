@@ -23,8 +23,8 @@
 
 #include <sc.h>
 
-#ifndef SC_RED_ALLTOALL_MAX
-#define SC_RED_ALLTOALL_MAX     5
+#ifndef SC_REDUCE_ALLTOALL_LEVEL
+#define SC_REDUCE_ALLTOALL_LEVEL        3
 #endif
 
 typedef void        (*sc_reduce_t) (void *sendbuf, void *recvbuf,
@@ -32,18 +32,33 @@ typedef void        (*sc_reduce_t) (void *sendbuf, void *recvbuf,
 
 SC_EXTERN_C_BEGIN;
 
+/** Custom allreduce operation.
+ */
+int                 sc_allreduce_custom (void *sendbuf, void *recvbuf,
+                                         int sendcount, MPI_Datatype sendtype,
+                                         sc_reduce_t reduce_fn,
+                                         MPI_Comm mpicomm);
+
 /** Custom reduce operation.
+ * \param [in] target   The MPI rank that obtains the result.
  */
 int                 sc_reduce_custom (void *sendbuf, void *recvbuf,
                                       int sendcount, MPI_Datatype sendtype,
                                       sc_reduce_t reduce_fn,
-                                      int rank, MPI_Comm mpicomm);
+                                      int target, MPI_Comm mpicomm);
+
+/** Drop-in MPI_Allreduce replacement.
+ */
+int                 sc_allreduce (void *sendbuf, void *recvbuf, int sendcount,
+                                  MPI_Datatype sendtype, MPI_Op operation,
+                                  MPI_Comm mpicomm);
 
 /** Drop-in MPI_Reduce replacement.
+ * \param [in] target   The MPI rank that obtains the result.
  */
 int                 sc_reduce (void *sendbuf, void *recvbuf, int sendcount,
                                MPI_Datatype sendtype, MPI_Op operation,
-                               int rank, MPI_Comm mpicomm);
+                               int target, MPI_Comm mpicomm);
 
 SC_EXTERN_C_END;
 
