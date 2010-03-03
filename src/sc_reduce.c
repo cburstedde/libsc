@@ -105,6 +105,8 @@ sc_reduce_recursive (MPI_Comm mpicomm,
   }
 }
 
+#endif /* SC_MPI */
+
 static void
 sc_reduce_max (void *sendbuf, void *recvbuf,
                int sendcount, MPI_Datatype sendtype)
@@ -131,6 +133,15 @@ sc_reduce_max (void *sendbuf, void *recvbuf,
           r[i] = s[i];
       break;
     }
+  case MPI_UNSIGNED_SHORT:
+    {
+      const unsigned short *s = (unsigned short *) sendbuf;
+      unsigned short     *r = (unsigned short *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] > r[i])
+          r[i] = s[i];
+      break;
+    }
   case MPI_INT:
     {
       const int          *s = (int *) sendbuf;
@@ -140,10 +151,37 @@ sc_reduce_max (void *sendbuf, void *recvbuf,
           r[i] = s[i];
       break;
     }
+  case MPI_UNSIGNED:
+    {
+      const unsigned     *s = (unsigned *) sendbuf;
+      unsigned           *r = (unsigned *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] > r[i])
+          r[i] = s[i];
+      break;
+    }
   case MPI_LONG:
     {
       const long         *s = (long *) sendbuf;
       long               *r = (long *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] > r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_UNSIGNED_LONG:
+    {
+      const unsigned long *s = (unsigned long *) sendbuf;
+      unsigned long      *r = (unsigned long *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] > r[i])
+          r[i] = s[i];
+      break;
+    }
+  case MPI_LONG_LONG_INT:
+    {
+      const long long    *s = (long long *) sendbuf;
+      long long          *r = (long long *) recvbuf;
       for (i = 0; i < sendcount; ++i)
         if (s[i] > r[i])
           r[i] = s[i];
@@ -167,12 +205,19 @@ sc_reduce_max (void *sendbuf, void *recvbuf,
           r[i] = s[i];
       break;
     }
+  case MPI_LONG_DOUBLE:
+    {
+      const long double  *s = (long double *) sendbuf;
+      long double        *r = (long double *) recvbuf;
+      for (i = 0; i < sendcount; ++i)
+        if (s[i] > r[i])
+          r[i] = s[i];
+      break;
+    }
   default:
     SC_ABORT ("Unsupported MPI datatype in sc_reduce_max");
   }
 }
-
-#endif /* SC_MPI */
 
 static int
 sc_reduce_custom_dispatch (void *sendbuf, void *recvbuf, int sendcount,
