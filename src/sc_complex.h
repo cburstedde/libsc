@@ -66,13 +66,13 @@ typedef std::complex<long double>    sc_long_double_complex_t;
 
 #else
 
-#include <complex.h>
-
 /* Splint doesn't know about these types */
 #ifdef SC_SPLINT
+
 typedef float       sc_float_complex_t;
 typedef double      sc_double_complex_t;
 typedef long double sc_long_double_complex_t;
+
 #define I                       (0.)
 #define cabs(x)                 (0.)
 #define creal(x)                (0.)
@@ -80,11 +80,15 @@ typedef long double sc_long_double_complex_t;
 #define carg(x)                 (0.)
 #define csqrt(x)                (0.)
 #define cpow(x,e)               (0.)
-#define
+
 #else
+
+#include <complex.h>
+
 typedef float complex sc_float_complex_t;
 typedef double complex sc_double_complex_t;
 typedef long double complex sc_long_double_complex_t;
+
 #endif
 
 #define sc_float_complex_t(r,i) ((float)(r) + ((float)(i))*I)
