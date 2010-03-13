@@ -41,15 +41,20 @@ typedef std::complex<double>         sc_double_complex_t;
 typedef std::complex<long double>    sc_long_double_complex_t;
 /* *INDENT-ON* */
 
-template < typename T > inline std::complex < T > fabs (const std::complex <
-                                                        T > &x)
-{
-  return std::abs (x);
-}
+/* Using cabs on a double does NOT work right */
+#define cabs(x)     (abs(x))
+#define creal(x)    (real(x))
+#define cimag(x)    (imag(x))
+#define cabsf(x)    (abs(x))
+#define crealf(x)   (real(x))
+#define cimagf(x)   (imag(x))
+#define cabsl(x)    (abs(x))
+#define creall(x)   (real(x))
+#define cimagl(x)   (imag(x))
 
 #else
 
-#include <tgmath.h>
+#include <complex.h>
 
 /* Splint doesn't know about these types */
 #ifdef SC_SPLINT
@@ -69,10 +74,6 @@ typedef long double complex sc_long_double_complex_t;
 #define sc_float_complex_t(r,i) ((float)(r) + ((float)(i))*I)
 #define sc_double_complex_t(r,i) ((double)(r) + ((double)(i))*I)
 #define sc_long_double_complex_t(r,i) ((long double)(r) + ((long double)(i))*I)
-
-#define real(x) creal(x)
-#define imag(x) cimag(x)
-#define arg(x) carg(x)
 
 #endif
 

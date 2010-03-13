@@ -25,6 +25,12 @@
 
 #include <sc_config.h>
 
+/* use this in case mpi.h includes stdint.h */
+
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS
+#endif
+
 /* include MPI before stdio.h */
 
 #ifdef SC_MPI
@@ -37,9 +43,6 @@
 
 /* include system headers */
 
-#ifndef __STDC_LIMIT_MACROS
-#define __STDC_LIMIT_MACROS
-#endif
 #include <math.h>
 #include <ctype.h>
 #include <float.h>

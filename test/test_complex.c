@@ -24,8 +24,7 @@ int
 main (int argc, char **argv)
 {
   int                 num_errors = 0;
-  double              x;
-  sc_double_complex_t a, b, c;
+  sc_double_complex_t a, b, c, d;
 
   sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
@@ -33,15 +32,25 @@ main (int argc, char **argv)
   b = sc_double_complex_t (0.0, 3.4);
   c = a + b;
 
-  if (fabs (real (c) - 1.2) > SC_EPS)
+  if (fabs (creal (c) - 1.2) > SC_EPS) {
+    SC_LERROR ("Error 1\n");
     ++num_errors;
+  }
 
-  if (fabs (imag (c) - 3.4) > SC_EPS)
+  if (fabs (cimag (c) - 3.4) > SC_EPS) {
+    SC_LERROR ("Error 2\n");
     ++num_errors;
+  }
 
-  x = 3.56;
-  if (3.56 - fabs (x) > SC_EPS)
+  d = 3.56;
+  if (fabs (3.56 - cabs (d)) > SC_EPS) {
+    SC_LERROR ("Error 3\n");
     ++num_errors;
+  }
+
+  if (num_errors > 0) {
+    SC_LERRORF ("Error(s) %d in test_complex\n", num_errors);
+  }
 
   sc_finalize ();
 
