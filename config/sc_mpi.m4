@@ -25,9 +25,23 @@ dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 dnl USA
 dnl Questions? Contact Michael A. Heroux (maherou@sandia.gov)
 dnl
+dnl Almost nothing of the original code is left.  DON'T contact M. Heroux!
+dnl
 dnl ***********************************************************************
 dnl
-dnl Now almost nothing of the original code is left.
+dnl                   Major problem with this approach
+dnl
+dnl The configure script starts testing for compilers before SC_MPI runs.
+dnl This means it requires a CC=... option if the default compiler is bad.
+dnl The macro SC_MPI sets CC=mpicc or whatever is in MPI_CC at a later time.
+dnl So when default C compiler and mpicc are incompatible the configure
+dnl checks may be inconsistent.  The solution here would be to set CC=mpicc
+dnl on the configure line, and setting both CC and MPI_CC when some other
+dnl MPI compiler should be used.  This is tedious.  Repeat for CXX and F77.
+dnl
+dnl Maybe we should ditch most of this file and go by CC=... exclusively.
+dnl
+dnl ***********************************************************************
 dnl
 dnl @synopsis SC_MPI(PREFIX, [list of non-MPI C compilers],
 dnl                          [list of non-MPI CXX compilers])
@@ -43,11 +57,11 @@ dnl --with-mpif77=<...>    Specify MPI F77 compiler, can be "no".
 dnl --without-mpif77       Do not use a special MPI F77 compiler.
 dnl --with-mpitest=<...>   Use this as PREFIX_MPI_TESTS_ENVIRONMENT.
 dnl
-dnl All --with* options turn on MPI, so --enable-mpi is then not needed.
+dnl All --with* options enable MPI, so --enable-mpi is then not needed.
 dnl
-dnl Order of precedence for the selection of MPI compilers
-dnl 1. environment variables MPI_CC, MPI_F77
-dnl 2. --with-mpicc=<...>, --with-mpif77=<...>
+dnl Order of precedence for the selection of MPI compilers when enabled:
+dnl 1. --with-mpicc=<...>, --with-mpif77=<...>
+dnl 2. environment variables MPI_CC, MPI_F77
 dnl 3. environment variables CC, F77
 dnl 4. mpicc, mpif77 unless --without-mpicc, --without-mpif77
 dnl
