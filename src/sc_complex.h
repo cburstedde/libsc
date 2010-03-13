@@ -42,15 +42,27 @@ typedef std::complex<long double>    sc_long_double_complex_t;
 /* *INDENT-ON* */
 
 /* Using cabs on a double does NOT work right */
-#define cabs(x)     (abs(x))
-#define creal(x)    (real(x))
-#define cimag(x)    (imag(x))
+/* float */
 #define cabsf(x)    (abs(x))
 #define crealf(x)   (real(x))
 #define cimagf(x)   (imag(x))
+#define cargf(x)    (arg(x))
+#define csqrtf(x)   (sqrt(x))
+#define cpowf(x,e)  (pow(x,e))
+/* double */
+#define cabs(x)     (abs(x))
+#define creal(x)    (real(x))
+#define cimag(x)    (imag(x))
+#define carg(x)     (arg(x))
+#define csqrt(x)    (sqrt(x))
+#define cpow(x,e)   (pow(x,e))
+/* long double */
 #define cabsl(x)    (abs(x))
 #define creall(x)   (real(x))
 #define cimagl(x)   (imag(x))
+#define cargl(x)    (arg(x))
+#define csqrtl(x)   (sqrt(x))
+#define cpowl(x,e)  (pow(x,e))
 
 #else
 
@@ -62,9 +74,13 @@ typedef float       sc_float_complex_t;
 typedef double      sc_double_complex_t;
 typedef long double sc_long_double_complex_t;
 #define I                       (0.)
+#define cabs(x)                 (0.)
 #define creal(x)                (0.)
 #define cimag(x)                (0.)
 #define carg(x)                 (0.)
+#define csqrt(x)                (0.)
+#define cpow(x,e)               (0.)
+#define
 #else
 typedef float complex sc_float_complex_t;
 typedef double complex sc_double_complex_t;
