@@ -28,12 +28,13 @@ if test "$withval" != "no" ; then
   if test "$$1_ENABLE_SHARED" != "no" ; then
     AC_MSG_ERROR([--with-nvcc does not yet work with --enable-shared])
   fi
-fi
 
-AC_MSG_NOTICE([$1_NVCC_NAME is $$1_NVCC_NAME])
-AC_MSG_NOTICE([$1_NVCC is $$1_NVCC])
-AC_MSG_NOTICE([NVCCFLAGS is $NVCCFLAGS])
-AC_MSG_NOTICE([NVCCLIBS is $NVCCLIBS])
+  # print some variables
+  AC_MSG_NOTICE([$1_NVCC_NAME is $$1_NVCC_NAME])
+  AC_MSG_NOTICE([$1_NVCC is $$1_NVCC])
+  AC_MSG_NOTICE([NVCCFLAGS is $NVCCFLAGS])
+  AC_MSG_NOTICE([NVCCLIBS is $NVCCLIBS])
+fi
 
 AC_SUBST([$1_NVCC])
 AC_SUBST([NVCCFLAGS])
