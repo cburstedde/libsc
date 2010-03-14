@@ -9,8 +9,8 @@ dnl
 AC_DEFUN([SC_CUDA],
 [
 # check --with-nvcc[=NAME] command line option
-SC_ARG_WITH([nvcc], [enable CUDA and specify compiler (default: nvcc)],
-            [CUDA], [[[=NAME]]])
+SC_ARG_WITH_PREFIX([nvcc], [enable CUDA and specify compiler (default: nvcc)],
+                   [CUDA], [$1], [[[=NAME]]])
 if test "$withval" != "no" ; then
   # determine name of CUDA compiler in variable PREFIX_NVCC_NAME
   $1_NVCC_NAME="nvcc"
