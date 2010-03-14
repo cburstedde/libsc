@@ -10,8 +10,7 @@
 #include <string.h>
 #include <math.h>
 
-#include <cutil_inline.h>
-
+#include <cuda.h>
 #include "prac5.h"
 
 //
