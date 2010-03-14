@@ -56,6 +56,7 @@ include lua/Makefile.am
 include zlib/Makefile.am
 include test/Makefile.am
 include example/bspline/Makefile.am
+include example/cuda/Makefile.am
 include example/dmatrix/Makefile.am
 include example/function/Makefile.am
 include example/logging/Makefile.am
@@ -71,10 +72,10 @@ endif
 LDADD += @BLAS_LIBS@ @FLIBS@
 endif
 
+# lint static syntax checker
 ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
                  $(MPI_INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) \
                  $(src_libsc_a_CPPFLAGS)
-
 lint:
 if LINT
 	for f in $(LINT_CSOURCES) ; do \
@@ -85,6 +86,7 @@ else
 	@echo "Static source code check disabled by configure"
 endif
 
+# revision control and ChangeLog
 ChangeLog:
 	(GIT_DIR=@top_srcdir@/.git git log > .ChangeLog.tmp && \
          cat .ChangeLog.tmp | @top_srcdir@/config/git2cl > ChangeLog) ; \
@@ -97,3 +99,14 @@ dist-hook:
         ((echo "Stale version;" ; echo "Please run:" ; \
           echo "     cd @top_srcdir@ && ./bootstrap" ; \
           echo "before make dist") 1>&2 ; exit 1)
+
+# CUDA support
+if SC_CUDA
+.cu.o:
+	$(SC_NVCC) -o $@ -c $< @NVCCFLAGS@
+if SC_SHARED
+# This does not work yet
+#.cu.lo:
+#	$(top_srcdir)/config/sc_nvccwrap.py $@ $(SC_NVCC) -c @NVCCFLAGS@ $<
+endif
+endif

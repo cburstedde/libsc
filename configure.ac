@@ -174,6 +174,7 @@ echo "o---------------------------------------"
 echo "| Checking third-party software"
 echo "o---------------------------------------"
 
+SC_CUDA([SC])
 SC_BUILTIN_ALL([true])
 
 # Checks for typedefs, structures, and compiler characteristics.
