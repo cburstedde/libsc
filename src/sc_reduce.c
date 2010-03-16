@@ -25,10 +25,10 @@
 
 static void
 sc_reduce_alltoall (MPI_Comm mpicomm,
-		    char *data, int count, MPI_Datatype datatype,
-		    int groupsize, int target,
-		    int maxlevel, int level, int branch,
-		    sc_reduce_t reduce_fn)
+                    char *data, int count, MPI_Datatype datatype,
+                    int groupsize, int target,
+                    int maxlevel, int level, int branch,
+                    sc_reduce_t reduce_fn)
 {
   int                 i, l;
   int                 mpiret;
@@ -70,27 +70,27 @@ sc_reduce_alltoall (MPI_Comm mpicomm,
 
       /* communicate with existing peers */
       if (peer == myrank) {
-	memcpy (alldata + i * datasize, data, datasize);
-	rrequest[i] = srequest[i] = MPI_REQUEST_NULL;
+        memcpy (alldata + i * datasize, data, datasize);
+        rrequest[i] = srequest[i] = MPI_REQUEST_NULL;
       }
       else {
-	if (peer < groupsize) {
-	  mpiret = MPI_Irecv (alldata + i * datasize, datasize, MPI_BYTE,
-			      peer, SC_TAG_REDUCE, mpicomm, rrequest + i);
-	  SC_CHECK_MPI (mpiret);
-	  if (doall) {
-	    mpiret = MPI_Isend (data, datasize, MPI_BYTE,
-				peer, SC_TAG_REDUCE, mpicomm, srequest + i);
-	    SC_CHECK_MPI (mpiret);
-	  }
-	  else {
-	    srequest[i] = MPI_REQUEST_NULL;     /* unused */
-	  }
-	}
-	else {
-	  /* ignore non-existing ranks greater or equal mpisize */
-	  rrequest[i] = srequest[i] = MPI_REQUEST_NULL;
-	}
+        if (peer < groupsize) {
+          mpiret = MPI_Irecv (alldata + i * datasize, datasize, MPI_BYTE,
+                              peer, SC_TAG_REDUCE, mpicomm, rrequest + i);
+          SC_CHECK_MPI (mpiret);
+          if (doall) {
+            mpiret = MPI_Isend (data, datasize, MPI_BYTE,
+                                peer, SC_TAG_REDUCE, mpicomm, srequest + i);
+            SC_CHECK_MPI (mpiret);
+          }
+          else {
+            srequest[i] = MPI_REQUEST_NULL;     /* unused */
+          }
+        }
+        else {
+          /* ignore non-existing ranks greater or equal mpisize */
+          rrequest[i] = srequest[i] = MPI_REQUEST_NULL;
+        }
       }
     }
 
@@ -102,20 +102,20 @@ sc_reduce_alltoall (MPI_Comm mpicomm,
     for (shift = 0, l = level - 1; l >= 0; ++shift, --l) {
       for (i = 0; i < 1 << l; ++i) {
 #ifdef SC_DEBUG
-	peer = sc_search_bias (maxlevel, l + 1, 2 * i, target);
+        peer = sc_search_bias (maxlevel, l + 1, 2 * i, target);
 #endif
-	peer2 = sc_search_bias (maxlevel, l + 1, 2 * i + 1, target);
-	SC_ASSERT (peer < peer2);
+        peer2 = sc_search_bias (maxlevel, l + 1, 2 * i + 1, target);
+        SC_ASSERT (peer < peer2);
 
-	if (peer2 < groupsize) {
-	  reduce_fn (alldata + ((2 * i + 1) << shift) * datasize,
-		     alldata + ((2 * i) << shift) * datasize,
-		     count, datatype);
-	}
+        if (peer2 < groupsize) {
+          reduce_fn (alldata + ((2 * i + 1) << shift) * datasize,
+                     alldata + ((2 * i) << shift) * datasize,
+                     count, datatype);
+        }
       }
     }
     memcpy (data, alldata, datasize);
-    SC_FREE (alldata);  /* alldata is not used in send buffers */
+    SC_FREE (alldata);          /* alldata is not used in send buffers */
 
     /* wait for sends only after computation is done */
     if (doall) {
@@ -126,7 +126,7 @@ sc_reduce_alltoall (MPI_Comm mpicomm,
   }
   else {
     mpiret = MPI_Send (data, datasize, MPI_BYTE,
-		       target, SC_TAG_REDUCE, mpicomm);
+                       target, SC_TAG_REDUCE, mpicomm);
     SC_CHECK_MPI (mpiret);
   }
 }
@@ -165,8 +165,8 @@ sc_reduce_recursive (MPI_Comm mpicomm,
   else if (level <= SC_REDUCE_ALLTOALL_LEVEL) {
     /* all-to-all communication */
     sc_reduce_alltoall (mpicomm, data, count, datatype,
-			groupsize, orig_target,
-			maxlevel, level, branch, reduce_fn);
+                        groupsize, orig_target,
+                        maxlevel, level, branch, reduce_fn);
   }
   else {
     /* *INDENT-OFF* HORRIBLE indent bug */
