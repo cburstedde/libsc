@@ -104,11 +104,14 @@ AC_DEFUN([SC_BUILTIN_ZLIB_PREFIX],
 [
 $1_PROVIDE_ZLIB="no"
 if test "$$1_WITH_ZLIB" = "yes" ; then
-  AC_SEARCH_LIBS([adler32_combine], [z],, [
-    AC_MSG_NOTICE([did not find a recent zlib. Activating builtin])
-    $1_PROVIDE_ZLIB="yes"
-    AC_DEFINE([PROVIDE_ZLIB], 1, [Use builtin zlib])
-  ])
+  AC_MSG_NOTICE([Using builtin zlib 1.2.4 until that version is commonplace])
+  $1_PROVIDE_ZLIB="yes"
+  AC_DEFINE([PROVIDE_ZLIB], 1, [Use builtin zlib])
+  dnl AC_SEARCH_LIBS([adler32_combine], [z],, [
+  dnl   AC_MSG_NOTICE([did not find a recent zlib. Activating builtin])
+  dnl   $1_PROVIDE_ZLIB="yes"
+  dnl   AC_DEFINE([PROVIDE_ZLIB], 1, [Use builtin zlib])
+  dnl ])
 fi
 AM_CONDITIONAL([$1_PROVIDE_ZLIB], [test "$$1_PROVIDE_ZLIB" = "yes"])
 ])
