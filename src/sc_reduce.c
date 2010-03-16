@@ -25,7 +25,7 @@
 
 static void
 sc_reduce_alltoall (MPI_Comm mpicomm,
-                    char *data, int count, MPI_Datatype datatype,
+                    void *data, int count, MPI_Datatype datatype,
                     int groupsize, int target,
                     int maxlevel, int level, int branch,
                     sc_reduce_t reduce_fn)
@@ -133,7 +133,7 @@ sc_reduce_alltoall (MPI_Comm mpicomm,
 
 static void
 sc_reduce_recursive (MPI_Comm mpicomm,
-                     char *data, int count, MPI_Datatype datatype,
+                     void *data, int count, MPI_Datatype datatype,
                      int groupsize, int target,
                      int maxlevel, int level, int branch,
                      sc_reduce_t reduce_fn)
