@@ -3,7 +3,7 @@
 # Makefile.am in cuda
 # included non-recursively from toplevel directory
 
-if SC_CUDA
+if SC_WITH_CUDA
 
 bin_PROGRAMS += example/cuda/sc_prac5
 

@@ -44,7 +44,7 @@ src_libsc_a_SOURCES = \
 src_libsc_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
 
 # build shared library
-if SC_SHARED
+if SC_ENABLE_SHARED
 lib_LTLIBRARIES += src/libsc.la
 src_libsc_la_SOURCES = \
         $(libsc_internal_headers) \

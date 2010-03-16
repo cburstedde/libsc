@@ -101,10 +101,10 @@ dist-hook:
           echo "before make dist") 1>&2 ; exit 1)
 
 # CUDA support
-if SC_CUDA
+if SC_WITH_CUDA
 .cu.o:
 	$(SC_NVCC) -o $@ -c $< @NVCCFLAGS@
-if SC_SHARED
+if SC_ENABLE_SHARED
 # This does not work yet
 #.cu.lo:
 #	$(top_srcdir)/config/sc_nvccwrap.py $@ $(SC_NVCC) -c @NVCCFLAGS@ $<

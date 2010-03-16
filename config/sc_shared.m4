@@ -21,5 +21,5 @@ else
   $1_LIB_SUFFIX="a"
 fi
 AC_SUBST([$1_LIB_SUFFIX])   dnl use with care: confuses automake dependencies
-AM_CONDITIONAL([$1_SHARED], [test "$enable_shared" != no])
+AM_CONDITIONAL([$1_ENABLE_SHARED], [test "$enable_shared" != no])
 ])
