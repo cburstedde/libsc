@@ -50,14 +50,22 @@ if test "$$1_WITH_TRILINOS" != "no" ; then
     if test ! -d "$$1_TRILINOS_DIR/lib" ; then
       AC_MSG_ERROR([$$1_TRILINOS_DIR/lib not found])
     fi
-    if test -f "$$1_TRILINOS_DIR/include/Makefile.export.epetra" ; then
-      $1_TRILINOS_VERSION=9
-    else
+    TRILINOS_HEADER="$$1_TRILINOS_DIR/include/Trilinos_version.h"
+    if test ! -f "$TRILINOS_HEADER" ; then
+      AC_MSG_ERROR([Header file $TRILINOS_HEADER not found])
+    fi
+    if grep -qs 'TRILINOS_MAJOR_VERSION[[[:space:]+]]10' "$TRILINOS_HEADER"
+    then
       $1_TRILINOS_VERSION=10
       $1_TRILINOS_CPPFLAGS="-I$$1_TRILINOS_DIR/include"
       AC_SUBST([$1_TRILINOS_CPPFLAGS])
       $1_TRILINOS_LDFLAGS="-L$$1_TRILINOS_DIR/lib"
       AC_SUBST([$1_TRILINOS_LDFLAGS])
+    elif grep -qs 'TRILINOS_MAJOR_VERSION[[[:space:]+]]9' "$TRILINOS_HEADER"
+    then
+      $1_TRILINOS_VERSION=9
+    else
+      AC_MSG_ERROR([Trilinos version not recognized])
     fi
     SC_TRILINOS_CHECK_MK([epetra], [Epetra], [EPETRA], [$1])
     SC_TRILINOS_CHECK_MK([teuchos], [Teuchos], [TEUCHOS], [$1])
