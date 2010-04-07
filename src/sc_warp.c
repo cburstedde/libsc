@@ -201,3 +201,19 @@ sc_warp_write (sc_warp_interval_t * root, FILE * nout)
     sc_warp_write (root->right, nout);
   }
 }
+
+void
+sc_warp_print (int package_id, int log_priority, sc_warp_interval_t * root)
+{
+  if (root->left == NULL) {
+    SC_ASSERT (root->right == NULL);
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                 "Warp interval level %d [%g %g] length %g\n",
+                 root->level, root->r_low, root->r_high,
+                 root->r_high - root->r_low);
+  }
+  else {
+    sc_warp_print (package_id, log_priority, root->left);
+    sc_warp_print (package_id, log_priority, root->right);
+   }
+}

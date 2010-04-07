@@ -45,6 +45,8 @@ void                sc_warp_destroy (sc_warp_interval_t * root);
 void                sc_warp_update (sc_warp_interval_t * root,
                                     int num_points, double *r_points,
                                     double r_tol, int max_level);
+void                sc_warp_print (int package_id, int log_priority,
+                                   sc_warp_interval_t * root);
 void                sc_warp_write (sc_warp_interval_t * root, FILE * nout);
 
 SC_EXTERN_C_END;
