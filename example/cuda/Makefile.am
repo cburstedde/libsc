@@ -5,11 +5,10 @@
 
 if SC_WITH_CUDA
 
-bin_PROGRAMS += example/cuda/sc_prac5
+# bin_PROGRAMS += example/cuda/sc_aprog
 
-example_cuda_sc_prac5_SOURCES = example/cuda/main.c \
-        example/cuda/prac5.h example/cuda/prac5.cu
+# example_cuda_sc_aprog_SOURCES = example/cuda/aprog.c
 
-example_cuda_sc_prac5_LDADD = @NVCCLIBS@
+# example_cuda_sc_aprog_LDADD = @NVCCLIBS@
 
 endif
