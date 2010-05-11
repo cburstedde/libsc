@@ -13,7 +13,7 @@ libsc_installed_headers = \
         src/sc_dmatrix.h src/sc_blas.h src/sc_lapack.h \
         src/sc_bspline.h src/sc_flops.h src/sc_object.h \
         src/sc_getopt.h src/sc_obstack.h src/sc_zlib.h \
-        src/sc_lua.h src/sc_complex.h \
+        src/sc_lua.h \
 	src/sc_keyvalue.h src/sc_warp.h \
         src/sc_allgather.h src/sc_reduce.h
 libsc_internal_headers =
