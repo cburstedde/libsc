@@ -39,7 +39,7 @@
   The files sc_obstack.c and sc_getopt*.c are derived from the GNU C
   library 2.7, Copyright (C) Free Software Foundation, Inc.
 
-  The files under zlib except zlib/Makefile.am are copied from zlib 1.2.3,
+  The files under zlib except zlib/Makefile.am are copied from zlib 1.2.4,
   Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler.
 
   The files under lua except lua/Makefile.am are copied from lua 5.1.4,
