@@ -20,7 +20,7 @@ libsc_internal_headers =
 libsc_compiled_sources = \
         src/sc.c src/sc_mpi.c src/sc_containers.c src/sc_avl.c \
         src/sc_options.c src/sc_functions.c src/sc_statistics.c \
-        src/sc_ranges.c src/sc_c99_functions.c src/sc_io.c \
+        src/sc_ranges.c src/sc_io.c \
         src/sc_amr.c src/sc_search.c src/sc_sort.c \
         src/sc_dmatrix.c src/sc_blas.c src/sc_lapack.c \
         src/sc_bspline.c src/sc_flops.c src/sc_object.c \
