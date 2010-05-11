@@ -28,8 +28,8 @@ main (int argc, char **argv)
 
   sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
-  a = sc_double_complex_t (1.2, 0.0);
-  b = sc_double_complex_t (0.0, 3.4);
+  a = 1.2 + 0.0 * I;
+  b = 0.0 + 3.4 * I;
   c = a + b;
 
   if (fabs (creal (c) - 1.2) > SC_EPS) {

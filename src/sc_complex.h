@@ -1,21 +1,23 @@
 /*
   This file is part of the SC Library.
-  The SC library provides support for parallel scientific applications.
+  The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2009 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2010 The University of Texas System
 
-  The SC Library is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  The SC Library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
 
   The SC Library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public
+  License along with the SC Library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  02110-1301 USA.
 */
 
 /* This header can be included by either C99 or ANSI C++ programs to allow
@@ -89,12 +91,8 @@ typedef float complex sc_float_complex_t;
 typedef double complex sc_double_complex_t;
 typedef long double complex sc_long_double_complex_t;
 
-#endif
+#endif /* !SC_SPLINT */
 
-#define sc_float_complex_t(r,i) ((float)(r) + ((float)(i))*I)
-#define sc_double_complex_t(r,i) ((double)(r) + ((double)(i))*I)
-#define sc_long_double_complex_t(r,i) ((long double)(r) + ((long double)(i))*I)
-
-#endif
+#endif /* !__cplusplus */
 
 #endif /* !SC_COMPLEX_H */
