@@ -46,6 +46,7 @@ typedef struct
   void               *opt_var;
   void                (*opt_fn) (void);
   int                 has_arg;
+  int                 called;
   const char         *help_string;
   char               *string_value;
   void               *user_data;

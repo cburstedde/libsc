@@ -98,6 +98,7 @@ sc_options_add_switch (sc_options_t * opt, int opt_char,
   item->opt_var = variable;
   item->opt_fn = NULL;
   item->has_arg = 0;
+  item->called = 0;
   item->help_string = help_string;
   item->string_value = NULL;
   item->user_data = NULL;
@@ -122,6 +123,7 @@ sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
   item->opt_var = variable;
   item->opt_fn = NULL;
   item->has_arg = 1;
+  item->called = 0;
   item->help_string = help_string;
   item->string_value = NULL;
   item->user_data = NULL;
@@ -148,6 +150,7 @@ sc_options_add_double (sc_options_t * opt, int opt_char,
   item->opt_var = variable;
   item->opt_fn = NULL;
   item->has_arg = 1;
+  item->called = 0;
   item->help_string = help_string;
   item->string_value = NULL;
   item->user_data = NULL;
@@ -173,6 +176,7 @@ sc_options_add_string (sc_options_t * opt, int opt_char,
   item->opt_var = variable;
   item->opt_fn = NULL;
   item->has_arg = 1;
+  item->called = 0;
   item->help_string = help_string;
   item->user_data = NULL;
 
@@ -197,6 +201,7 @@ sc_options_add_inifile (sc_options_t * opt, int opt_char,
   item->opt_var = NULL;
   item->opt_fn = NULL;
   item->has_arg = 1;
+  item->called = 0;
   item->help_string = help_string;
   item->string_value = NULL;
   item->user_data = NULL;
@@ -221,6 +226,7 @@ sc_options_add_callback (sc_options_t * opt, int opt_char,
   item->opt_var = NULL;
   item->opt_fn = (void (*)(void)) fn;
   item->has_arg = has_arg;
+  item->called = 0;
   item->help_string = help_string;
   item->string_value = NULL;
   item->user_data = data;
@@ -444,6 +450,7 @@ sc_options_load (int package_id, int err_priority,
       continue;
     }
 
+    ++item->called;
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
       bvalue = iniparser_getboolean (dict, key, -1);
@@ -680,6 +687,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
     }
     SC_ASSERT (item != NULL);
 
+    ++item->called;
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
       ++*(int *) item->opt_var;
