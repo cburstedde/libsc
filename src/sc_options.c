@@ -339,8 +339,7 @@ sc_options_print_summary (int package_id, int log_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
-    if (item->opt_type == SC_OPTION_INIFILE ||
-        item->opt_type == SC_OPTION_CALLBACK) {
+    if (item->opt_type == SC_OPTION_INIFILE) {
       continue;
     }
     if (item->opt_name == NULL) {
@@ -375,6 +374,16 @@ sc_options_print_summary (int package_id, int log_priority,
       printed += snprintf (outbuf + printed, BUFSIZ - printed,
                            "%s", string_val);
       break;
+    case SC_OPTION_CALLBACK:
+      if (item->called) {
+        string_val = item->has_arg ? item->string_value : "true";
+      }
+      else {
+        string_val = "<unspecified>";
+      }
+      printed += snprintf (outbuf + printed, BUFSIZ - printed,
+                           "%s", string_val);
+      break;
     default:
       SC_ABORT_NOT_REACHED ();
     }
@@ -397,6 +406,8 @@ int
 sc_options_load (int package_id, int err_priority,
                  sc_options_t * opt, const char *inifile)
 {
+  int                 retval;
+  int                 found_short, found_long;
   size_t              iz;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
@@ -407,7 +418,7 @@ sc_options_load (int package_id, int err_priority,
   double             *dvalue;
   const char         *s, *key;
   char                skey[BUFSIZ], lkey[BUFSIZ];
-  int                 found_short, found_long;
+  sc_options_callback_t fn;
 
   dict = iniparser_load (inifile, NULL);
   if (dict == NULL) {
@@ -418,8 +429,7 @@ sc_options_load (int package_id, int err_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
-    if (item->opt_type == SC_OPTION_INIFILE ||
-        item->opt_type == SC_OPTION_CALLBACK) {
+    if (item->opt_type == SC_OPTION_INIFILE) {
       continue;
     }
 
@@ -480,6 +490,27 @@ sc_options_load (int package_id, int err_priority,
         *(const char **) item->opt_var = item->string_value = SC_STRDUP (s);
       }
       break;
+    case SC_OPTION_CALLBACK:
+      if (item->has_arg) {
+        s = iniparser_getstring (dict, key, NULL);
+        if (s == NULL) {
+          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                       "Invalid string %s in file: %s\n", key, inifile);
+          iniparser_freedict (dict);
+          return -1;
+        }
+        SC_FREE (item->string_value);   /* deals with NULL */
+        item->string_value = SC_STRDUP (s);
+      }
+      else {
+        s = NULL;
+      }
+      fn = (sc_options_callback_t) item->opt_fn;
+      if (fn (opt, s, item->user_data)) {
+        iniparser_freedict (dict);
+        retval = -1;
+      }
+      break;
     default:
       SC_ABORT_NOT_REACHED ();
     }
@@ -522,11 +553,13 @@ sc_options_save (int package_id, int err_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
-    if (item->opt_type == SC_OPTION_INIFILE ||
-        item->opt_type == SC_OPTION_CALLBACK) {
+    if (item->opt_type == SC_OPTION_STRING && item->string_value == NULL) {
       continue;
     }
-    if (item->opt_type == SC_OPTION_STRING && item->string_value == NULL) {
+    if (item->opt_type == SC_OPTION_INIFILE) {
+      continue;
+    }
+    if (item->opt_type == SC_OPTION_CALLBACK && !item->called) {
       continue;
     }
 
@@ -564,6 +597,15 @@ sc_options_save (int package_id, int err_priority,
       break;
     case SC_OPTION_STRING:
       retval = fprintf (file, "%s\n", item->string_value);
+      break;
+    case SC_OPTION_CALLBACK:
+      if (item->has_arg) {
+        SC_ASSERT (item->string_value != NULL);
+        retval = fprintf (file, "%s\n", item->string_value);
+      }
+      else {
+        retval = fprintf (file, "%s\n", "true");
+      }
       break;
     default:
       SC_ABORT_NOT_REACHED ();
@@ -711,6 +753,10 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       break;
     case SC_OPTION_CALLBACK:
+      if (item->has_arg) {
+        SC_FREE (item->string_value);   /* deals with NULL */
+        item->string_value = SC_STRDUP (optarg);
+      }
       fn = (sc_options_callback_t) item->opt_fn;
       if (fn (opt, item->has_arg ? optarg : NULL, item->user_data)) {
 #if 0

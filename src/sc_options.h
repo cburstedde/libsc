@@ -142,6 +142,8 @@ void                sc_options_add_inifile (sc_options_t * opt,
 
 /**
  * Add an option that calls a user-defined function.
+ * The callback function should be implemented to allow multiple calls
+ * where the last call determines the effect independent of previous ones.
  * \param [in] has_arg  Specify if the option needs an option argument.
  * \param [in] fn       Function to call when this option is encountered.
  * \param [in] data     User-defined data passed to the callback.
