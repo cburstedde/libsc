@@ -25,7 +25,13 @@
 static int
 callback (sc_options_t * opt, const char *theoptarg, void *data)
 {
-  SC_GLOBAL_INFOF ("%s with %s\n", (const char *) data, theoptarg);
+  if (theoptarg == NULL) {
+    SC_GLOBAL_INFOF ("%s without argument\n", (const char *) data);
+  }
+  else {
+    SC_GLOBAL_INFOF ("%s with %s\n", (const char *) data, theoptarg);
+  }
+
   return 0;
 }
 
@@ -55,8 +61,10 @@ main (int argc, char **argv)
   sc_options_add_int (opt, 'i', "integer1", &i1, 0, "Integer 1");
   sc_options_add_double (opt, 'd', "double", &d, 0., "Double");
   sc_options_add_string (opt, 's', "string", &s1, NULL, "String 1");
-  sc_options_add_callback (opt, 'c', "call", 1, callback, (void *) cd,
-                           "Callback");
+  sc_options_add_callback (opt, 'c', "call1", 1, callback, (void *) cd,
+                           "Callback 1");
+  sc_options_add_callback (opt, 'C', "call2", 0, callback, (void *) cd,
+                           "Callback 2");
   sc_options_add_string (opt, 't', NULL, &s2, NULL, "String 2");
   sc_options_add_inifile (opt, 'f', "inifile", ".ini file");
   sc_options_add_int (opt, '\0', "integer2", &i2, 7, "Integer 2");
@@ -76,8 +84,8 @@ main (int argc, char **argv)
     SC_GLOBAL_INFO ("Option parsing failed\n");
   }
   else {
-    sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
     SC_GLOBAL_INFO ("Option parsing successful\n");
+    sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
 
     if (rank == 0) {
       retval = sc_options_save (sc_package_id, SC_LP_INFO, opt, "output.ini");
