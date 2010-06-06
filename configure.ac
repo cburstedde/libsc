@@ -67,6 +67,8 @@ echo "| Checking libraries"
 echo "o---------------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
+AC_SEARCH_LIBS([dlopen], [dl])
+AM_CONDITIONAL([SC_HAVE_DLOPEN], [test "$ac_cv_search_dlopen" != "no"])
 
 # Checks for header files.
 echo "o---------------------------------------"
@@ -81,7 +83,6 @@ echo "| Checking functions"
 echo "o---------------------------------------"
 
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
-AC_CHECK_FUNCS([tgamma trunc])
 
 # Checks for BLAS (and F77 environment only if necessary).
 echo "o---------------------------------------"

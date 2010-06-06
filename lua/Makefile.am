@@ -8,7 +8,6 @@
 
 EXTRA_DIST += \
         lua/COPYRIGHT lua/HISTORY lua/INSTALL lua/Makefile lua/README \
-        lua/src/lua.c lua/src/luac.c lua/src/print.c \
         lua/doc lua/etc lua/test
 
 if SC_PROVIDE_LUA
@@ -33,5 +32,13 @@ lua_compiled_sources = \
 libsc_internal_headers += $(lua_internal_headers)
 libsc_compiled_sources += $(lua_compiled_sources)
 LIBSC_CPPFLAGS += -DLUA_USE_LINUX
+
+if SC_HAVE_DLOPEN
+
+bin_PROGRAMS += lua/sc_lua lua/sc_luac
+lua_sc_lua_SOURCES = lua/src/lua.c
+lua_sc_luac_SOURCES = lua/src/luac.c lua/src/print.c
+
+endif
 
 endif
