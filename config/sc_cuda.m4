@@ -25,7 +25,7 @@ if test "$withval" != "no" ; then
   fi
 
   # cuda does not yet work with libtool
-  if test "$$1_ENABLE_SHARED" != "no" ; then
+  if test -n "$$1_ENABLE_SHARED" -a "$$1_ENABLE_SHARED" != "no" ; then
     AC_MSG_ERROR([--with-nvcc does not yet work with --enable-shared])
   fi
 
