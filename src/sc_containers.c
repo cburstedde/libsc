@@ -25,6 +25,13 @@
 
 /* array routines */
 
+size_t
+sc_array_memory_used (sc_array_t * array, int is_dynamic)
+{
+  return (is_dynamic ? sizeof (sc_array_t) : 0) +
+    (SC_ARRAY_IS_OWNER (array) ? array->byte_alloc : 0);
+}
+
 sc_array_t         *
 sc_array_new (size_t elem_size)
 {
@@ -563,11 +570,20 @@ sc_array_pqueue_pop (sc_array_t * array, void *result,
 
 /* mempool routines */
 
+size_t
+sc_mempool_memory_used (sc_mempool_t * mempool)
+{
+  return sizeof (sc_mempool_t) +
+    obstack_memory_used (&mempool->obstack) +
+    sc_array_memory_used (&mempool->freed, 0);
+}
+
 static void        *
 sc_containers_malloc (size_t n)
 {
   return sc_malloc (sc_package_id, n);
 }
+
 static void        *(*obstack_chunk_alloc) (size_t) = sc_containers_malloc;
 
 static void
@@ -575,6 +591,7 @@ sc_containers_free (void *p)
 {
   sc_free (sc_package_id, p);
 }
+
 static void         (*obstack_chunk_free) (void *) = sc_containers_free;
 
 sc_mempool_t       *
@@ -615,6 +632,13 @@ sc_mempool_truncate (sc_mempool_t * mempool)
 }
 
 /* list routines */
+
+size_t
+sc_list_memory_used (sc_list_t * list, int is_dynamic)
+{
+  return (is_dynamic ? sizeof (sc_list_t) : 0) +
+    (list->allocator_owned ? sc_mempool_memory_used (list->allocator) : 0);
+}
 
 sc_list_t          *
 sc_list_new (sc_mempool_t * allocator)
@@ -791,6 +815,14 @@ sc_list_pop (sc_list_t * list)
 }
 
 /* hash table routines */
+
+size_t
+sc_hash_memory_used (sc_hash_t * hash)
+{
+  return sizeof (sc_hash_t) +
+    sc_array_memory_used (hash->slots, 1) +
+    (hash->allocator_owned ? sc_mempool_memory_used (hash->allocator) : 0);
+}
 
 static const size_t sc_hash_minimal_size = (size_t) ((1 << 8) - 1);
 static const size_t sc_hash_shrink_interval = (size_t) (1 << 8);
@@ -1107,6 +1139,15 @@ sc_hash_print_statistics (int package_id, int log_priority, sc_hash_t * hash)
                (unsigned long) slots->elem_count, avg, std,
                (unsigned long) hash->resize_checks,
                (unsigned long) hash->resize_actions);
+}
+
+/* hash array routines */
+
+size_t
+sc_hash_array_memory_used (sc_hash_array_t * ha)
+{
+  return sizeof (sc_hash_array_t) +
+    sc_array_memory_used (&ha->a, 0) + sc_hash_memory_used (ha->h);
 }
 
 static unsigned

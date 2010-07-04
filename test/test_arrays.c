@@ -108,6 +108,13 @@ main (int argc, char **argv)
   a = sc_array_new (sizeof (int));
   sc_array_resize (a, (size_t) N);
 
+  SC_GLOBAL_INFOF ("Sizeof size_t %lld long %lld sc_array_t %lld\n",
+                   (long long) sizeof (size_t),
+                   (long long) sizeof (long),
+                   (long long) sizeof (sc_array_t));
+  SC_GLOBAL_INFOF ("Array byte size %lld\n", (long long)
+                   sc_array_memory_used (a, 1));
+
   for (i = 0; i < N; ++i) {
     pe = (int *) sc_array_index_int (a, i);
     *pe = (i + N / 2) * (N - i);        /* can create duplicates */

@@ -93,6 +93,14 @@ sc_array_t;
 
 #define SC_ARRAY_IS_OWNER(a) ((a)->byte_alloc >= 0)
 
+/** Calculate the memory used by an array.
+ * \param [in] array       The array.
+ * \param [in] is_dynamic  True if created with sc_array_new,
+ *                         false if initialized with sc_array_init
+ * \return                 Memory used in bytes.
+ */
+size_t              sc_array_memory_used (sc_array_t * array, int is_dynamic);
+
 /** Creates a new array structure with 0 elements.
  * \param [in] elem_size    Size of one array element in bytes.
  * \return                  Return an allocated array of zero length.
@@ -419,6 +427,12 @@ typedef struct sc_mempool
 }
 sc_mempool_t;
 
+/** Calculate the memory used by a memory pool.
+ * \param [in] array       The memory pool.
+ * \return                 Memory used in bytes.
+ */
+size_t              sc_mempool_memory_used (sc_mempool_t * mempool);
+
 /** Creates a new mempool structure.
  * \param [in] elem_size  Size of one element in bytes.
  * \return Returns an allocated and initialized memory pool.
@@ -505,6 +519,14 @@ typedef struct sc_list
 }
 sc_list_t;
 
+/** Calculate the memory used by a list.
+ * \param [in] list        The list.
+ * \param [in] is_dynamic  True if created with sc_list_new,
+ *                         false if initialized with sc_list_init
+ * \return                 Memory used in bytes.
+ */
+size_t              sc_list_memory_used (sc_list_t * list, int is_dynamic);
+
 /** Allocate a linked list structure.
  * \param [in] allocator Memory allocator for sc_link_t, can be NULL.
  */
@@ -573,6 +595,12 @@ typedef struct sc_hash
   sc_mempool_t       *allocator;        /* must allocate sc_link_t */
 }
 sc_hash_t;
+
+/** Calculate the memory used by a hash table.
+ * \param [in] hash        The hash table.
+ * \return                 Memory used in bytes.
+ */
+size_t              sc_hash_memory_used (sc_hash_t * hash);
 
 /** Create a new hash table.
  * The number of hash slots is chosen dynamically.
@@ -672,6 +700,12 @@ typedef struct sc_hash_array
   sc_hash_t          *h;
 }
 sc_hash_array_t;
+
+/** Calculate the memory used by a hash array.
+ * \param [in] ha          The hash array.
+ * \return                 Memory used in bytes.
+ */
+size_t              sc_hash_array_memory_used (sc_hash_array_t * ha);
 
 /** Create a new hash array.
  * \param [in] elem_size   Size of one array element in bytes.
