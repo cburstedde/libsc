@@ -76,7 +76,7 @@ echo "o---------------------------------------"
 echo "| Checking headers"
 echo "o---------------------------------------"
 
-AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h time.h])
+AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h sys/types.h time.h])
 
 # Checks for functions.
 echo "o---------------------------------------"

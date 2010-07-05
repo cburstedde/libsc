@@ -23,6 +23,9 @@
 #include <sc_flops.h>
 
 #ifdef SC_PAPI
+#ifdef SC_HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 #include <papi.h>
 #endif
 
