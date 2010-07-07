@@ -100,7 +100,7 @@ $1_OVERRIDES=
 dnl SC_ARG_ENABLE_PREFIX(NAME, COMMENT, TOKEN, PREFIX, HELPEXTRA)
 dnl Check for --enable/disable-NAME using shell variable PREFIX_ENABLE_TOKEN
 dnl If shell variable is set beforehand it overrides the option
-dnl If enabled, define TOKEN to 1 and set conditional PREFIX_TOKEN
+dnl If enabled, define TOKEN to 1 and set conditional PREFIX_ENABLE_TOKEN
 dnl Default is disabled
 dnl
 AC_DEFUN([SC_ARG_ENABLE_PREFIX],
@@ -122,7 +122,7 @@ AC_DEFUN([SC_ARG_ENABLE],
 dnl SC_ARG_DISABLE_PREFIX(NAME, COMMENT, TOKEN, PREFIX, HELPEXTRA)
 dnl Check for --enable/disable-NAME using shell variable PREFIX_ENABLE_TOKEN
 dnl If shell variable is set beforehand it overrides the option
-dnl If enabled, define TOKEN to 1 and set conditional PREFIX_TOKEN
+dnl If enabled, define TOKEN to 1 and set conditional PREFIX_ENABLE_TOKEN
 dnl Default is enabled
 dnl
 AC_DEFUN([SC_ARG_DISABLE_PREFIX],
@@ -144,7 +144,7 @@ AC_DEFUN([SC_ARG_DISABLE],
 dnl SC_ARG_WITH_PREFIX(NAME, COMMENT, TOKEN, PREFIX, HELPEXTRA)
 dnl Check for --with/without-NAME using shell variable PREFIX_WITH_TOKEN
 dnl If shell variable is set beforehand it overrides the option
-dnl If with, define TOKEN to 1 and set conditional PREFIX_TOKEN
+dnl If with, define TOKEN to 1 and set conditional PREFIX_WITH_TOKEN
 dnl Default is without
 dnl
 AC_DEFUN([SC_ARG_WITH_PREFIX],
@@ -166,7 +166,7 @@ AC_DEFUN([SC_ARG_WITH],
 dnl SC_ARG_WITHOUT_PREFIX(NAME, COMMENT, TOKEN, PREFIX, HELPEXTRA)
 dnl Check for --with/without-NAME using shell variable PREFIX_WITH_TOKEN
 dnl If shell variable is set beforehand it overrides the option
-dnl If with, define TOKEN to 1 and set conditional PREFIX_TOKEN
+dnl If with, define TOKEN to 1 and set conditional PREFIX_WITH_TOKEN
 dnl Default is with
 dnl
 AC_DEFUN([SC_ARG_WITHOUT_PREFIX],
@@ -188,7 +188,7 @@ AC_DEFUN([SC_ARG_WITHOUT],
 dnl SC_ARG_WITH_YES_PREFIX(NAME, COMMENT, TOKEN, PREFIX, HELPEXTRA)
 dnl Check for --with/without-NAME using shell variable PREFIX_WITH_TOKEN
 dnl If shell variable is set beforehand it overrides the option
-dnl If with = yes, define TOKEN to 1 and set conditional PREFIX_TOKEN
+dnl If with = yes, define TOKEN to 1 and set conditional PREFIX_WITH_TOKEN
 dnl Default is no
 dnl
 AC_DEFUN([SC_ARG_WITH_YES_PREFIX],
@@ -210,7 +210,7 @@ AC_DEFUN([SC_ARG_WITH_YES],
 dnl SC_ARG_WITHOUT_YES_PREFIX(NAME, COMMENT, TOKEN, PREFIX, HELPEXTRA)
 dnl Check for --with/without-NAME using shell variable PREFIX_WITH_TOKEN
 dnl If shell variable is set beforehand it overrides the option
-dnl If with = yes, define TOKEN to 1 and set conditional PREFIX_TOKEN
+dnl If with = yes, define TOKEN to 1 and set conditional PREFIX_WITH_TOKEN
 dnl Default is yes
 dnl
 AC_DEFUN([SC_ARG_WITHOUT_YES_PREFIX],
