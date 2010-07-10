@@ -85,6 +85,7 @@ sc_keyvalue_newv (va_list ap)
     if (s == NULL) {
       break;
     }
+    /* if this assertion blows then the type prefix might be missing */
     SC_ASSERT (s[0] != '\0' && s[1] == ':' && s[2] != '\0');
     value = (sc_keyvalue_entry_t *) sc_mempool_alloc (kv->value_allocator);
     value->key = &s[2];
