@@ -10,6 +10,7 @@ CLEANFILES =
 DISTCLEANFILES =
 EXTRA_DIST =
 LDADD =
+LDADD_STATIC =
 LINT_CSOURCES =
 TESTS =
 bin_PROGRAMS =
@@ -68,8 +69,10 @@ include example/warp/Makefile.am
 if SC_BLAS
 if SC_LAPACK
 LDADD += @LAPACK_LIBS@
+LDADD_STATIC += @LAPACK_LIBS@
 endif
 LDADD += @BLAS_LIBS@ @FLIBS@
+LDADD_STATIC += @BLAS_LIBS@ @FLIBS@
 endif
 
 # lint static syntax checker

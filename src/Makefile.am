@@ -54,6 +54,7 @@ LDADD += @top_builddir@/src/libsc.la
 else
 LDADD += @top_builddir@/src/libsc.a
 endif
+LDADD_STATIC += @top_builddir@/src/libsc.a
 
 nodist_include_HEADERS += $(libsc_generated_headers)
 include_HEADERS += $(libsc_installed_headers)
