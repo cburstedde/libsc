@@ -800,7 +800,7 @@ sc_init (MPI_Comm mpicomm,
   }
 
   w = 24;
-  SC_GLOBAL_ESSENTIALF ("This is %s.\n", SC_PACKAGE_STRING);
+  SC_GLOBAL_ESSENTIALF ("This is %s\n", SC_PACKAGE_STRING);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CC", SC_CC);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "C_VERSION", SC_C_VERSION);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CFLAGS", SC_CFLAGS);
