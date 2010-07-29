@@ -12,7 +12,6 @@ AC_CONFIG_AUX_DIR([config])
 AC_PREFIX_DEFAULT([$PWD/local])
 AM_INIT_AUTOMAKE([subdir-objects])
 SC_PREFIX_CONFIG_H([src/sc_config.h], [SC])
-SC_LIBTOOL([SC])
 
 # Process command line options.
 echo "o---------------------------------------"
@@ -55,7 +54,9 @@ echo "o---------------------------------------"
 echo "| Checking MPI and other programs"
 echo "o---------------------------------------"
 
-SC_MPI([SC], [icc gcc cc])
+SC_MPI_CONFIG([SC])
+SC_MPI_ENGAGE([SC])
+SC_LIBTOOL([SC])
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 SC_PROG_LINT

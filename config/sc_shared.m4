@@ -9,6 +9,7 @@ dnl Copyright (C) 2009 Carsten Burstedde, Lucas Wilcox.
 dnl SC_LIBTOOL(PREFIX)
 dnl Initialize libtool and check for --enable-shared option.
 dnl Shared builds are disabled by default.
+dnl This seems to call AC_PROG_CC. Call this macro after CC has been set.
 dnl
 AC_DEFUN([SC_LIBTOOL],
 [

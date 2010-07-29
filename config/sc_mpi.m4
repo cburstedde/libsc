@@ -1,89 +1,33 @@
-dnl This started off as a modified version of the Teuchos config dir
-dnl from Trilinos with the following license.
 dnl
-dnl ***********************************************************************
+dnl SC_MPI_CONFIG(PREFIX[, true])
 dnl
-dnl                    Teuchos: Common Tools Package
-dnl                 Copyright (2004) Sandia Corporation
+dnl If the second argument is given, also includes configuration for C++.
+dnl Checks the configure options
+dnl --enable-mpi    If enabled, set AC_DEFINE and AC_CONDITIONAL.
+dnl                 If enabled and CC is not set, do export CC=mpicc.
+dnl                 This may be "too late" if AC_PROG_CC was called earlier.
+dnl                 In that case you need to set CC=mpicc (or other compiler)
+dnl                 on the configure command line. Same for F77, CXX.
+dnl --enable-mpiio  Enables AC_DEFINE and test for MPI I/O.
+dnl --with-mpitest=...  Specify alternate test driver (default mpirun -np 2).
 dnl
-dnl Under terms of Contract DE-AC04-94AL85000, there is a non-exclusive
-dnl license for use of this work by or on behalf of the U.S. Government.
+dnl SC_MPI_ENGAGE(PREFIX)
 dnl
-dnl This library is free software; you can redistribute it and/or modify
-dnl it under the terms of the GNU Lesser General Public License as
-dnl published by the Free Software Foundation; either version 2.1 of the
-dnl License, or (at your option) any later version.
+dnl Relies on SC_MPI_CONFIG to be called before.
+dnl Calls AC_PROG_CC and AC_PROG_CXX if C++ configuration is enabled.
+dnl Does compile tests for MPI and MPI I/O if this is enabled.
 dnl
-dnl This library is distributed in the hope that it will be useful, but
-dnl WITHOUT ANY WARRANTY; without even the implied warranty of
-dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-dnl Lesser General Public License for more details.
-dnl
-dnl You should have received a copy of the GNU Lesser General Public
-dnl License along with this library; if not, write to the Free Software
-dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-dnl USA
-dnl Questions? Contact Michael A. Heroux (maherou@sandia.gov)
-dnl
-dnl Almost nothing of the original code is left.  DON'T contact M. Heroux!
-dnl
-dnl ***********************************************************************
-dnl
-dnl                   Major problem with this approach
-dnl
-dnl The configure script starts testing for compilers before SC_MPI runs.
-dnl This means it requires a CC=... option if the default compiler is bad.
-dnl The macro SC_MPI sets CC=mpicc or whatever is in MPI_CC at a later time.
-dnl So when default C compiler and mpicc are incompatible the configure
-dnl checks may be inconsistent.  The solution here would be to set CC=mpicc
-dnl on the configure line, and setting both CC and MPI_CC when some other
-dnl MPI compiler should be used.  This is tedious.  Repeat for CXX and F77.
-dnl
-dnl Maybe we should ditch most of this file and go by CC=... exclusively.
-dnl
-dnl ***********************************************************************
-dnl
-dnl @synopsis SC_MPI(PREFIX, [list of non-MPI C compilers],
-dnl                          [list of non-MPI CXX compilers])
-dnl
-dnl This macro calls AC_PROG_CC (and AC_PROG_CXX if above list is specified).
-dnl
-dnl --enable-mpi           Turn on MPI, use compilers mpicc and mpif77.
-dnl --with-mpicc=<...>     Specify MPI C compiler, can be "no".
-dnl --without-mpicc        Do not use a special MPI C compiler.
-dnl --with-mpicxx=<...>    Specify MPI CXX compiler, can be "no".
-dnl --without-mpicxx       Do not use a special MPI CXX compiler.
-dnl --with-mpif77=<...>    Specify MPI F77 compiler, can be "no".
-dnl --without-mpif77       Do not use a special MPI F77 compiler.
-dnl --with-mpitest=<...>   Use this as PREFIX_MPI_TESTS_ENVIRONMENT.
-dnl
-dnl All --with* options enable MPI, so --enable-mpi is then not needed.
-dnl
-dnl Order of precedence for the selection of MPI compilers when enabled:
-dnl 1. --with-mpicc=<...>, --with-mpif77=<...>
-dnl 2. environment variables MPI_CC, MPI_F77
-dnl 3. environment variables CC, F77
-dnl 4. mpicc, mpif77 unless --without-mpicc, --without-mpif77
-dnl
-dnl If MPI is turned on PREFIX_MPI will be defined for autoconf/automake
-dnl and MPI will be defined in the config header file.
+dnl These macros are separate because AC_REQUIRE(AC_PROG_CC) will expand
+dnl the AC_PROG_CC macro before entering SC_MPI_ENGAGE.
 
-dnl SC_MPI_CONFIG(PREFIX, [TEST_CXX])
-dnl Figure out the MPI configuration.
-dnl If TEST_CXX is non-empty, the macro SC_CHECK_MPI_CXX is defined.
-dnl
 AC_DEFUN([SC_MPI_CONFIG],
 [
 HAVE_PKG_MPI=no
 HAVE_PKG_MPIIO=no
-MPI_CC_NONE=
-MPI_CXX_NONE=
-MPI_F77_NONE=
 m4_ifval([$2], [m4_define([SC_CHECK_MPI_CXX], [yes])])
 
 dnl The shell variable SC_ENABLE_MPI is set
 dnl unless it is provided by the environment.
-dnl MPI can also be enabled implicitly later.
 dnl Therefore all further checking uses the HAVE_PKG_MPI shell variable
 dnl and neither AC_DEFINE nor AM_CONDITIONAL are invoked at this point.
 AC_ARG_ENABLE([mpi],
@@ -95,52 +39,6 @@ if test "$enableval" = yes ; then
 elif test "$enableval" != no ; then
   AC_MSG_ERROR([Please use --enable-mpi without an argument])
 fi
-
-dnl Potentially override the mpi C compiler (and turn on MPI)
-SC_ARG_NOT_GIVEN_DEFAULT="notgiven"
-SC_ARG_WITH([mpicc], [specify MPI C compiler, can be "no"],
-            [MPICC], [=MPICC])
-if test "$withval" = yes ; then
-  AC_MSG_ERROR([Please use --with-mpicc=MPICC with a valid mpi C compiler])
-elif test "$withval" = no ; then
-  HAVE_PKG_MPI=yes
-  MPI_CC_NONE=yes
-elif test "$withval" != notgiven ; then
-  HAVE_PKG_MPI=yes
-  AC_CHECK_PROG([MPI_CC], [$withval], [$withval], [false])
-fi
-
-dnl Potentially override the mpi CXX compiler (and turn on MPI)
-m4_ifset([SC_CHECK_MPI_CXX], [
-SC_ARG_NOT_GIVEN_DEFAULT="notgiven"
-SC_ARG_WITH([mpicxx], [specify MPI CXX compiler, can be "no"],
-            [MPICXX], [=MPICXX])
-if test "$withval" = yes ; then
-  AC_MSG_ERROR([Please use --with-mpicxx=MPICXX with a valid mpi CXX compiler])
-elif test "$withval" = no ; then
-  HAVE_PKG_MPI=yes
-  MPI_CXX_NONE=yes
-elif test "$withval" != notgiven ; then
-  HAVE_PKG_MPI=yes
-  AC_CHECK_PROG([MPI_CXX], [$withval], [$withval], [false])
-fi
-])
-
-dnl Potentially override the mpi Fortran compiler (and turn on MPI)
-SC_ARG_NOT_GIVEN_DEFAULT="notgiven"
-SC_ARG_WITH([mpif77], [specify MPI F77 compiler, can be "no"],
-            [MPIF77], [=MPIF77])
-if test "$withval" = yes ; then
-  AC_MSG_ERROR([Please use --with-mpif77=MPIF77 with a valid mpi F77 compiler])
-elif test "$withval" = no ; then
-  HAVE_PKG_MPI=yes
-  MPI_F77_NONE=yes
-elif test "$withval" != notgiven ; then
-  HAVE_PKG_MPI=yes
-  AC_CHECK_PROG([MPI_F77], [$withval], [$withval], [false])
-fi
-
-dnl HAVE_PKG_MPI is now determined and will not be changed below
 AC_MSG_CHECKING([whether we are using MPI])
 AC_MSG_RESULT([$HAVE_PKG_MPI])
 
@@ -174,42 +72,27 @@ if test "$HAVE_PKG_MPI" = yes ; then
   AC_SUBST([$1_MPI_TESTS_ENVIRONMENT], [$withval])
 fi
 
-dnl Finalize the CC and F77 variables and run a C test program
-dnl Also determine if MPI I/O can be used safely
+dnl Set compilers if not already set and set define and conditionals
 if test "$HAVE_PKG_MPI" = yes ; then
-  if test -z "$MPI_CC" -a -z "$MPI_CC_NONE" ; then
-    MPI_CC=mpicc
+  if test -z "$CC" ; then
+    export CC=mpicc
   fi
-  if test -n "$MPI_CC" ; then
-    CC="$MPI_CC"
-  fi
-  echo "                             MPI_CC set to $MPI_CC"
-
+  echo "                             CC set to $CC"
 m4_ifset([SC_CHECK_MPI_CXX], [
-  if test -z "$MPI_CXX" -a -z "$MPI_CXX_NONE" ; then
-    MPI_CXX=mpicxx
+  if test -z "$CXX" ; then
+    export CXX=mpicxx
   fi
-  if test -n "$MPI_CXX" ; then
-    CXX="$MPI_CXX"
-  fi
-  echo "                            MPI_CXX set to $MPI_CXX"
+  echo "                            CXX set to $CXX"
 ])
-
-  if test -z "$MPI_F77" -a -z "$MPI_F77_NONE" ; then
-    MPI_F77=mpif77
+  if test -z "$F77" ; then
+    export F77=mpif77
   fi
-  if test -n "$MPI_F77" ; then
-    F77="$MPI_F77"
-  fi
-  echo "                            MPI_F77 set to $MPI_F77"
-
+  echo "                            F77 set to $F77"
   AC_DEFINE([MPI], 1, [Define to 1 if we are using MPI])
-else
-  unset MPI_CC
-  unset MPI_CXX
-  unset MPI_F77
+  AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])
 fi
 AM_CONDITIONAL([$1_MPI], [test "$HAVE_PKG_MPI" = yes])
+AM_CONDITIONAL([$1_MPIIO], [test "$HAVE_PKG_MPIIO" = yes])
 ])
 
 dnl SC_MPI_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
@@ -316,16 +199,13 @@ AC_SUBST([MPI_INCLUDES])
 AC_SUBST([MPI_INCLUDE_PATH])
 ])
 
-dnl SC_MPI
-dnl Configure MPI and check its C (and optionally CXX) compiler in one line
-dnl
-AC_DEFUN([SC_MPI],
+AC_DEFUN([SC_MPI_ENGAGE],
 [
-SC_MPI_CONFIG([$1], [$3])       dnl possibly defines macro SC_CHECK_MPI_CXX
-AC_PROG_CC([$2])
-m4_ifset([SC_CHECK_MPI_CXX], [AC_PROG_CXX([$3])])
+dnl determine compilers
+AC_REQUIRE([AC_PROG_CC])
+m4_ifset([SC_CHECK_MPI_CXX], [AC_REQUIRE([AC_PROG_CXX])])
 
-dnl compile and link tests must be done after the PROC_CC line
+dnl compile and link tests must be done after the AC_PROC_CC lines
 if test "$HAVE_PKG_MPI" = yes ; then
   SC_MPI_C_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI C test failed])])
   m4_ifset([SC_CHECK_MPI_CXX], [
@@ -339,7 +219,6 @@ if test "$HAVE_PKG_MPI" = yes ; then
       [AC_MSG_ERROR([MPI I/O specified but not found])])
   fi
 fi
-AM_CONDITIONAL([$1_MPIIO], [test "$HAVE_PKG_MPIIO" = yes])
 
 dnl figure out the MPI include directories
 SC_MPI_INCLUDES
