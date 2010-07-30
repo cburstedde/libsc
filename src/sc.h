@@ -65,8 +65,8 @@
 #define SC_EXTERN_C_BEGIN       extern "C" { void sc_extern_c_hack_1 (void)
 #define SC_EXTERN_C_END                    } void sc_extern_c_hack_2 (void)
 #else
-#define SC_EXTERN_C_BEGIN                    void sc_extern_c_hack_1 (void)
-#define SC_EXTERN_C_END                      void sc_extern_c_hack_1 (void)
+#define SC_EXTERN_C_BEGIN                    void sc_extern_c_hack_3 (void)
+#define SC_EXTERN_C_END                      void sc_extern_c_hack_4 (void)
 #endif
 
 /* these two libsc headers are always included */
