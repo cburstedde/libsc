@@ -224,11 +224,11 @@ LIBS="$sc_blas_save_LIBS"
 if test "$sc_blas_ok" = yes ; then
         sc_blas_save_run_LIBS="$LIBS"
         LIBS="$BLAS_LIBS $LIBS $FLIBS"
-        AC_MSG_CHECKING([for BLAS by running a C program])
-        AC_RUN_IFELSE([AC_LANG_PROGRAM(
+        AC_MSG_CHECKING([for BLAS by linking a C program])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(dnl
 [[#ifdef __cplusplus
 extern "C"
-char $sc_blas_func (char *, char *, int *, int *, int *, double *, double *,
+void $sc_blas_func (char *, char *, int *, int *, int *, double *, double *,
                     int *, double *, int *, double *, double *, int *);
 #endif
 ]],[[
@@ -238,8 +238,7 @@ double  A = 1., B = 1., C = 1.;
 $sc_blas_func ("N", "N", &i, &i, &i, &alpha, &A, &i, &B, &i, &beta, &C, &i);
 ]])],
 [AC_MSG_RESULT([successful])],
-[AC_MSG_RESULT([failed]); sc_blas_ok=no],
-:)
+[AC_MSG_RESULT([failed]); sc_blas_ok=no])
         LIBS="$sc_blas_save_run_LIBS"
 fi
 
