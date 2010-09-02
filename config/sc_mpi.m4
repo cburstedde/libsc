@@ -89,7 +89,9 @@ m4_ifset([SC_CHECK_MPI_CXX], [
   fi
   echo "                            F77 set to $F77"
   AC_DEFINE([MPI], 1, [Define to 1 if we are using MPI])
-  AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])
+  if test "$HAVE_PKG_MPIIO" = yes ; then
+    AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])
+  fi
 fi
 AM_CONDITIONAL([$1_MPI], [test "$HAVE_PKG_MPI" = yes])
 AM_CONDITIONAL([$1_MPIIO], [test "$HAVE_PKG_MPIIO" = yes])
