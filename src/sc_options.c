@@ -53,6 +53,7 @@ sc_options_new (const char *program_path)
   snprintf (opt->program_path, BUFSIZ, "%s", program_path);
   opt->program_name = basename (opt->program_path);
   opt->option_items = sc_array_new (sizeof (sc_option_item_t));
+  opt->subopt_names = sc_array_new (sizeof (char *));
   opt->args_alloced = 0;
   opt->first_arg = -1;
   opt->argc = 0;
@@ -68,6 +69,8 @@ sc_options_destroy (sc_options_t * opt)
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
+  sc_array_t         *names = opt->subopt_names;
+  char               *name;
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
@@ -76,6 +79,13 @@ sc_options_destroy (sc_options_t * opt)
 
   sc_options_free_args (opt);
   sc_array_destroy (opt->option_items);
+
+  count = names->elem_count;
+  for (iz = 0; iz < count; iz++) {
+    name = *((char **) sc_array_index (names, iz));
+    SC_FREE (name);
+  }
+  sc_array_destroy (opt->subopt_names);
 
   SC_FREE (opt);
 }
@@ -230,6 +240,66 @@ sc_options_add_callback (sc_options_t * opt, int opt_char,
   item->help_string = help_string;
   item->string_value = NULL;
   item->user_data = data;
+}
+
+void
+sc_options_add_suboptions (sc_options_t * opt,
+                           sc_options_t * subopt, const char *prefix)
+{
+  sc_array_t         *subopt_names = opt->subopt_names;
+  sc_array_t         *items = subopt->option_items;
+  size_t              count = items->elem_count;
+  sc_option_item_t   *item;
+  size_t              iz;
+  int                 prefixlen = strlen (prefix);
+  int                 namelen;
+  char              **name;
+
+  for (iz = 0; iz < count; iz++) {
+    item = (sc_option_item_t *) sc_array_index (items, iz);
+
+    namelen = prefixlen +
+      ((item->opt_name != NULL) ? (strlen (item->opt_name) + 2) : 4);
+    name = (char **) sc_array_push (subopt_names);
+    *name = SC_ALLOC (char, namelen);
+    (*name)[namelen - 1] = '\0';
+
+    if (item->opt_name != NULL) {
+      sprintf (*name, "%s:%s", prefix, item->opt_name);
+    }
+    else {
+      sprintf (*name, "%s:-%c", prefix, item->opt_char);
+    }
+
+    switch (item->opt_type) {
+    case SC_OPTION_SWITCH:
+      sc_options_add_switch (opt, '\0', *name, item->opt_var,
+                             item->help_string);
+      break;
+    case SC_OPTION_INT:
+      sc_options_add_int (opt, '\0', *name, item->opt_var,
+                          *((int *) item->opt_var), item->help_string);
+      break;
+    case SC_OPTION_DOUBLE:
+      sc_options_add_double (opt, '\0', *name, item->opt_var,
+                             *((double *) item->opt_var), item->help_string);
+      break;
+    case SC_OPTION_STRING:
+      sc_options_add_string (opt, '\0', *name, item->opt_var,
+                             item->string_value, item->help_string);
+      break;
+    case SC_OPTION_INIFILE:
+      sc_options_add_inifile (opt, '\0', *name, item->help_string);
+      break;
+    case SC_OPTION_CALLBACK:
+      sc_options_add_callback (opt, '\0', *name, item->has_arg,
+                               (sc_options_callback_t) item->opt_fn,
+                               item->user_data, item->help_string);
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  }
 }
 
 void
@@ -441,7 +511,14 @@ sc_options_load (int package_id, int err_priority,
       found_short = iniparser_find_entry (dict, skey);
     }
     if (item->opt_name != NULL) {
-      snprintf (lkey, BUFSIZ, "Options:%s", item->opt_name);
+      /* if the name contains a section prefix, don't add "Options:" */
+      if (strchr (item->opt_name, ':') != NULL) {
+        SC_ASSERT (item->opt_char == '\0');
+        snprintf (lkey, BUFSIZ, "%s", item->opt_name);
+      }
+      else {
+        snprintf (lkey, BUFSIZ, "Options:%s", item->opt_name);
+      }
       found_long = iniparser_find_entry (dict, lkey);
     }
     if (found_short && found_long) {
@@ -532,6 +609,12 @@ sc_options_save (int package_id, int err_priority,
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
   FILE               *file;
+  const char          default_prefix[] = "Options";
+  const char         *last_prefix;
+  const char         *this_prefix;
+  const char         *base_name;
+  int                 last_n;
+  int                 this_n;
 
   /* this routine must only be called after successful option parsing */
   SC_ASSERT (opt->argc >= 0 && opt->first_arg >= 0);
@@ -543,13 +626,16 @@ sc_options_save (int package_id, int err_priority,
     return -1;
   }
 
-  retval = fprintf (file, "# written by sc_options_save\n[Options]\n");
+  retval = fprintf (file, "# written by sc_options_save\n");
   if (retval < 0) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
                 "Write title 1 failed\n");
     fclose (file);
     return -1;
   }
+
+  last_prefix = NULL;
+  last_n = 0;
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
@@ -563,9 +649,38 @@ sc_options_save (int package_id, int err_priority,
       continue;
     }
 
-    retval = 0;
+    base_name = NULL;
     if (item->opt_name != NULL) {
-      retval = fprintf (file, "        %s = ", item->opt_name);
+      this_prefix = strrchr (item->opt_name, ':');
+      if (this_prefix == NULL) {
+        base_name = item->opt_name;
+        this_prefix = default_prefix;
+        this_n = 7;
+      }
+      else {
+        /* base name is whatever is to the right of the last colon */
+        base_name = this_prefix + 1;
+        this_n = this_prefix - item->opt_name;
+        this_prefix = item->opt_name;
+      }
+    }
+
+    if (last_prefix == NULL || this_n != last_n ||
+        strncmp (this_prefix, last_prefix, this_n) != 0) {
+      retval = fprintf (file, "[%.*s]\n", this_n, this_prefix);
+      if (retval < 0) {
+        SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                    "Write section heading failed\n");
+        fclose (file);
+        return -1;
+      }
+      last_prefix = this_prefix;
+      last_n = this_n;
+    }
+
+    retval = 0;
+    if (base_name != NULL) {
+      retval = fprintf (file, "        %s = ", base_name);
     }
     else if (item->opt_char != '\0') {
       retval = fprintf (file, "        -%c = ", item->opt_char);

@@ -62,6 +62,7 @@ typedef struct
   int                 first_arg;
   int                 argc;
   char              **argv;
+  sc_array_t         *subopt_names;
 }
 sc_options_t;
 
@@ -157,6 +158,20 @@ void                sc_options_add_callback (sc_options_t * opt,
                                              const char *help_string);
 
 /**
+ * Copy one set of options to another as a subset, with a prefix.
+ * \param [in,out] opt  A set of options.
+ * \param [in]  subopt  Another set of options to be copied.
+ * \param [in]  prefix  The prefix to add to option names as they are copied.
+ *                      If an option has a long name "name" in subopt, its
+ *                      name in opt is "prefix:name"; if an option only has a
+ *                      character 'c' in subopt, its name in opt is
+ *                      "prefix:-c".
+ */
+void                sc_options_add_suboptions (sc_options_t * opt,
+                                               sc_options_t * subopt,
+                                               const char *prefix);
+
+/**
  * Print a usage message.
  * This function uses the SC_LC_GLOBAL log category.
  * That means the default action is to print only on rank 0.
@@ -190,7 +205,9 @@ void                sc_options_print_summary (int package_id,
                                               sc_options_t * opt);
 
 /**
- * Load a file in .ini format and updates entries found under [Options].
+ * Load a file in .ini format and updates entries found under [Options].  An
+ * option whose name contains a colon such as "prefix:basename" will be
+ * updated by a "basename =" entry in a [prefix] section.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] err_priority     Error log priority according to sc.h.
  * \param [in] opt              The option structure.
@@ -205,6 +222,8 @@ int                 sc_options_load (int package_id, int err_priority,
  * This function must only be called after successful option parsing.
  * This function should only be called on rank 0.
  * This function will log errors with category SC_LC_GLOBAL.
+ * An options whose name contains a colon such as "prefix:basename" will be
+ * written in a section titled [prefix] as "basename =".
  * \param [in] package_id       Registered package id or -1.
  * \param [in] err_priority     Error log priority according to sc.h.
  * \param [in] opt              The option structure.

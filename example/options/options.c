@@ -42,11 +42,11 @@ main (int argc, char **argv)
   int                 rank;
   int                 first_arg;
   int                 w;
-  int                 i1, i2;
-  double              d;
-  const char         *s1, *s2;
+  int                 i1, i2, si1;
+  double              d, sd;
+  const char         *s1, *s2, *ss1, *ss2;
   const char         *cd = "Callback example";
-  sc_options_t       *opt;
+  sc_options_t       *opt, *subopt;
 
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -68,6 +68,15 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 't', NULL, &s2, NULL, "String 2");
   sc_options_add_inifile (opt, 'f', "inifile", ".ini file");
   sc_options_add_int (opt, '\0', "integer2", &i2, 7, "Integer 2");
+
+  subopt = sc_options_new (argv[0]);
+  sc_options_add_int (subopt, 'i', "integer", &si1, 0, "Subset integer");
+  sc_options_add_double (subopt, 'd', "double", &sd, 0., "Subset double");
+  sc_options_add_string (subopt, 's', NULL, &ss1, NULL, "Subset string 1");
+  sc_options_add_string (subopt, '\0', "string2", &ss2, NULL,
+                         "Subset string 1");
+
+  sc_options_add_suboptions (opt, subopt, "Subset");
 
   /* this is just to show off the load function */
   if (!sc_options_load (sc_package_id, SC_LP_INFO, opt, "preload.ini")) {
@@ -107,6 +116,7 @@ main (int argc, char **argv)
   }
 
   sc_options_destroy (opt);
+  sc_options_destroy (subopt);
 
   sc_finalize ();
 
