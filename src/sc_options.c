@@ -609,12 +609,12 @@ sc_options_save (int package_id, int err_priority,
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
   FILE               *file;
-  const char          default_prefix[] = "Options";
+  const char         *default_prefix = "Options";
   const char         *last_prefix;
   const char         *this_prefix;
   const char         *base_name;
-  int                 last_n;
-  int                 this_n;
+  size_t              last_n;
+  size_t              this_n;
 
   /* this routine must only be called after successful option parsing */
   SC_ASSERT (opt->argc >= 0 && opt->first_arg >= 0);
@@ -655,7 +655,7 @@ sc_options_save (int package_id, int err_priority,
       if (this_prefix == NULL) {
         base_name = item->opt_name;
         this_prefix = default_prefix;
-        this_n = 7;
+        this_n = strlen (default_prefix);
       }
       else {
         /* base name is whatever is to the right of the last colon */
@@ -667,7 +667,7 @@ sc_options_save (int package_id, int err_priority,
 
     if (last_prefix == NULL || this_n != last_n ||
         strncmp (this_prefix, last_prefix, this_n) != 0) {
-      retval = fprintf (file, "[%.*s]\n", this_n, this_prefix);
+      retval = fprintf (file, "[%.*s]\n", (int) this_n, this_prefix);
       if (retval < 0) {
         SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
                     "Write section heading failed\n");
