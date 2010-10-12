@@ -273,19 +273,19 @@ sc_options_add_suboptions (sc_options_t * opt,
 
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
-      sc_options_add_switch (opt, '\0', *name, item->opt_var,
+      sc_options_add_switch (opt, '\0', *name, (int *) item->opt_var,
                              item->help_string);
       break;
     case SC_OPTION_INT:
-      sc_options_add_int (opt, '\0', *name, item->opt_var,
+      sc_options_add_int (opt, '\0', *name, (int *) item->opt_var,
                           *((int *) item->opt_var), item->help_string);
       break;
     case SC_OPTION_DOUBLE:
-      sc_options_add_double (opt, '\0', *name, item->opt_var,
+      sc_options_add_double (opt, '\0', *name, (double *) item->opt_var,
                              *((double *) item->opt_var), item->help_string);
       break;
     case SC_OPTION_STRING:
-      sc_options_add_string (opt, '\0', *name, item->opt_var,
+      sc_options_add_string (opt, '\0', *name, (const char **) item->opt_var,
                              item->string_value, item->help_string);
       break;
     case SC_OPTION_INIFILE:
