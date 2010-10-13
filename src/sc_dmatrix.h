@@ -75,6 +75,17 @@ sc_dmatrix_t       *sc_dmatrix_new_data (sc_bint_t m, sc_bint_t n,
 sc_dmatrix_t       *sc_dmatrix_new_view (sc_bint_t m, sc_bint_t n,
                                          sc_dmatrix_t * orig);
 
+/** Create a matrix view on an existing sc_dmatrix_t.
+ * The start of the view is offset by a number of rows.
+ * The original matrix must have greater equal elements than the view end.
+ * The original matrix must not be destroyed or resized while view is in use.
+ * \param[in] o     Number of rows that the view is offset.
+ *                  Requires (o + m) * n <= orig->m * orig->n.
+ */
+sc_dmatrix_t       *sc_dmatrix_new_view_offset (sc_bint_t o,
+                                                sc_bint_t m, sc_bint_t n,
+                                                sc_dmatrix_t * orig);
+
 /** Reshape a matrix to different m and n without changing m * n.
  */
 void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m,

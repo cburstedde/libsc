@@ -138,13 +138,20 @@ sc_dmatrix_new_data (sc_bint_t m, sc_bint_t n, double *data)
 sc_dmatrix_t       *
 sc_dmatrix_new_view (sc_bint_t m, sc_bint_t n, sc_dmatrix_t * orig)
 {
+  return sc_dmatrix_new_view_offset (0, m, n, orig);
+}
+
+sc_dmatrix_t       *
+sc_dmatrix_new_view_offset (sc_bint_t o, sc_bint_t m, sc_bint_t n,
+                            sc_dmatrix_t * orig)
+{
   sc_dmatrix_t       *rdm;
 
-  SC_ASSERT (m >= 0 && n >= 0);
-  SC_ASSERT (m * n <= orig->m * orig->n);
+  SC_ASSERT (o >= 0 && m >= 0 && n >= 0);
+  SC_ASSERT ((o + m) * n <= orig->m * orig->n);
 
   rdm = SC_ALLOC (sc_dmatrix_t, 1);
-  sc_dmatrix_new_e (rdm, m, n, orig->e[0]);
+  sc_dmatrix_new_e (rdm, m, n, orig->e[0] + o * n);
   rdm->view = 1;
 
   return rdm;
