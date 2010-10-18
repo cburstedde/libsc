@@ -71,6 +71,39 @@ sc_dmatrix_t       *sc_bspline_knots_new (int n, sc_dmatrix_t * points);
 sc_dmatrix_t       *sc_bspline_knots_new_length (int n,
                                                  sc_dmatrix_t * points);
 
+/** Create a uniform B-spline knot vector for a periodic B-spline.
+ * \param [in] n        Polynomial degree of the spline functions, n >= 0.
+ * \param [in] points   (p + 1) x d array of points in R^d, p >= 0, d >= 1.
+ * \return              (n + p + 2) x 1 array of knots.
+ */
+sc_dmatrix_t       *sc_bspline_knots_new_periodic (int n,
+                                                   sc_dmatrix_t * points);
+
+/** Create a B-spline knots array roughly proportional to the arc length for a
+ * periodic B-spline.
+ * This works only for at least linear B-splines, n >= 1.
+ * \param [in] n        Polynomial degree of the spline functions, n >= 1.
+ * \param [in] points   (p + 1) x d array of points in R^d, p >= 0, d >= 1.
+ * \return              (n + p + 2) x 1 array of knots.
+ */
+sc_dmatrix_t       *sc_bspline_knots_new_length_periodic (int n,
+                                                          sc_dmatrix_t *
+                                                          points);
+
+/** Take a vector of points and make them appropriate for a periodic B-spine.
+ * \param [in] n          Polynomial degree of the spline functions, n >= 0.
+ * \param [in,out] points On input, an (l x d) array of points in R^d, l > 0,
+ *                        d >= 1.  If n is odd, these points are associated
+ *                        with the left endpoints of the intervals over
+ *                        which the B-spline is fully defined; if n is odd,
+ *                        they are associated with the midpoints.
+ *                        On output, points is a (l + n) x d, array of points
+ *                        appropriate for use as control points for a periodic
+ *                        B-spline.
+ */
+void                sc_bspline_make_points_periodic (int n, sc_dmatrix_t *
+                                                     points);
+
 /** Create workspace for B-spline evaluation.
  * \param [in] n        Polynomial degree of the spline functions, n >= 0.
  * \param [in] d        Dimension of the control points in R^d, d >= 1.

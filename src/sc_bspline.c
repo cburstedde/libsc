@@ -113,6 +113,127 @@ sc_bspline_knots_new_length (int n, sc_dmatrix_t * points)
 }
 
 sc_dmatrix_t       *
+sc_bspline_knots_new_periodic (int n, sc_dmatrix_t * points)
+{
+#ifdef SC_DEBUG
+  const int           d = points->n;
+#endif
+  const int           p = points->m - 1;
+  const int           m = n + p + 1;
+  const int           l = m - 2 * n;
+  int                 i;
+  sc_dmatrix_t       *knots;
+  double             *knotse;
+
+  SC_ASSERT (n >= 0 && m >= 1 && d >= 1 && l >= 1);
+
+  knots = sc_dmatrix_new (m + 1, 1);
+  knotse = knots->e[0];
+
+  for (i = 0; i <= m; ++i) {
+    knotse[i] = (i - n) / (double) l;
+  }
+
+  return knots;
+}
+
+sc_dmatrix_t       *
+sc_bspline_knots_new_length_periodic (int n, sc_dmatrix_t * points)
+{
+  const int           d = points->n;
+  const int           p = points->m - 1;
+  const int           m = n + p + 1;
+  const int           l = m - 2 * n;
+  int                 i, k;
+  double              distsqr, distsum, distalln;
+  double             *knotse;
+  sc_dmatrix_t       *knots;
+
+  SC_ASSERT (n >= 1);
+  SC_ASSERT (n >= 0 && m >= 1 && d >= 1 && l >= 1);
+
+  knots = sc_dmatrix_new_zero (m + 1, 1);
+  knotse = knots->e[0];
+
+  /* compute cumulative distance from P_0 and hide inside knots */
+  distsum = 0.;
+  for (i = 0; i < p; ++i) {
+    SC_ASSERT (n + i + 2 >= 0 && n + i + 2 <= m);
+    distsqr = 0.;
+    for (k = 0; k < d; ++k) {
+      distsqr += SC_SQR (points->e[i + 1][k] - points->e[i][k]);
+    }
+    knotse[n + i + 2] = distsum += sqrt (distsqr);
+  }
+  distalln = distsum * n;
+
+  /* assign average cumulative distance to knot value */
+  knotse[n] = 0.;
+  for (i = 1; i < l; ++i) {
+    distsum = 0.;
+    for (k = 0; k < n; ++k) {
+      SC_ASSERT (n + i + k + 1 <= m);
+      distsum += knotse[n + i + k + 1];
+    }
+    knotse[n + i] = distsum / distalln;
+  }
+  knotse[n + l] = 1.;
+
+  /* fill in the beginning and end values */
+  for (i = 0; i < n; ++i) {
+    knotse[i] = knotse[i + l] - 1.;
+    knotse[m - i] = knotse[2 * n - i] + 1.;
+  }
+
+  return knots;
+}
+
+void
+sc_bspline_make_points_periodic (int n, sc_dmatrix_t * points)
+{
+  const int           d = points->n;
+  const int           l = points->m;
+  const int           p = n + l - 1;
+  const int           shift = (n / 2);
+  int                 i, j;
+
+  SC_ASSERT (d > 0 && n >= 0 && l > 0);
+
+  if (!n) {
+    /* already periodic */
+    return;
+  }
+
+  sc_dmatrix_resize (points, p + 1, d);
+
+  /* shift to make room for the starting points */
+  for (i = l - 1; i >= 0; i--) {
+    for (j = 0; j < d; j++) {
+      SC_ASSERT (i + shift <= p);
+      points->e[i + shift][j] = points->e[i][j];
+    }
+  }
+
+  /* copy the starting points */
+  for (i = 0; i < shift; i++) {
+    for (j = 0; j < d; j++) {
+      SC_ASSERT (i + l <= p);
+      points->e[i][j] = points->e[i + l][j];
+    }
+  }
+
+  /* copy the ending points */
+  for (i = shift + l; i <= p; i++) {
+    for (j = 0; j < d; j++) {
+      SC_ASSERT (i - l >= 0);
+      points->e[i][j] = points->e[i - l][j];
+    }
+  }
+
+  SC_ASSERT (sc_dmatrix_is_valid (points));
+}
+
+sc_dmatrix_t       *
 sc_bspline_workspace_new (int n, int d)
 {
   SC_ASSERT (n >= 0 && d >= 1);
@@ -176,15 +297,15 @@ static int
 sc_bspline_find_interval (sc_bspline_t * bs, double t)
 {
   int                 i, iguess;
-  double              t0, tm;
+  double              t0, t1;
   const double       *knotse = bs->knots->e[0];
 
-  t0 = knotse[0];
-  tm = knotse[bs->m];
-  SC_ASSERT (t >= t0 && t <= tm);
+  t0 = knotse[bs->n];
+  t1 = knotse[bs->n + bs->l];
+  SC_ASSERT (t >= t0 && t <= t1);
   SC_ASSERT (bs->cacheknot >= bs->n && bs->cacheknot < bs->n + bs->l);
 
-  if (t >= tm) {
+  if (t >= t1) {
     iguess = bs->cacheknot = bs->n + bs->l - 1;
   }
   else if (knotse[bs->cacheknot] <= t && t < knotse[bs->cacheknot + 1]) {
@@ -197,7 +318,7 @@ sc_bspline_find_interval (sc_bspline_t * bs, double t)
 
     ileft = bs->n;
     iright = bs->n + bs->l - 1;
-    iguess = bs->n + (int) floor ((t - t0) / (tm - t0) * bs->l);
+    iguess = bs->n + (int) floor ((t - t0) / (t1 - t0) * bs->l);
     iguess = SC_MAX (iguess, ileft);
     iguess = SC_MIN (iguess, iright);
 
@@ -233,7 +354,7 @@ sc_bspline_find_interval (sc_bspline_t * bs, double t)
   }
   SC_ASSERT (iguess >= bs->n && iguess < bs->n + bs->l);
   SC_CHECK_ABORT ((knotse[iguess] <= t && t < knotse[iguess + 1]) ||
-                  (t >= tm && iguess == bs->n + bs->l - 1),
+                  (t >= t1 && iguess == bs->n + bs->l - 1),
                   "Bug in sc_bspline_find_interval");
 
   return iguess;
