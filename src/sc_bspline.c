@@ -163,7 +163,10 @@ sc_bspline_knots_new_length_periodic (int n, sc_dmatrix_t * points)
     for (k = 0; k < d; ++k) {
       distsqr += SC_SQR (points->e[i + 1][k] - points->e[i][k]);
     }
-    knotse[n + i + 2] = distsum += sqrt (distsqr);
+    knotse[n + i + 2] = sqrt (distsqr);
+    if (i < l) {
+      distsum += knotse[n + i + 2];
+    }
   }
   distalln = distsum * n;
 
@@ -175,7 +178,7 @@ sc_bspline_knots_new_length_periodic (int n, sc_dmatrix_t * points)
       SC_ASSERT (n + i + k + 1 <= m);
       distsum += knotse[n + i + k + 1];
     }
-    knotse[n + i] = distsum / distalln;
+    knotse[n + i] = knotse[n + i - 1] + distsum / distalln;
   }
   knotse[n + l] = 1.;
 
