@@ -77,6 +77,34 @@ sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
 }
 
 void
+sc_stats_init (sc_statinfo_t * stats, const char *variable)
+{
+  stats->dirty = 1;
+  stats->count = 0;
+  stats->variable = variable;
+}
+
+void
+sc_stats_accumulate (sc_statinfo_t * stats, double value)
+{
+  SC_ASSERT (stats->dirty);
+  if (stats->count) {
+    stats->count++;
+    stats->sum_values += value;
+    stats->sum_squares += value * value;
+    stats->min = SC_MIN (stats->min, value);
+    stats->max = SC_MAX (stats->max, value);
+  }
+  else {
+    stats->count = 1;
+    stats->sum_values = value;
+    stats->sum_squares = value * value;
+    stats->min = value;
+    stats->max = value;
+  }
+}
+
+void
 sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 {
   int                 i;
@@ -140,6 +168,9 @@ sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     }
     cnt = flatout[7 * i + 0];
     stats[i].count = (long) cnt;
+    if (!cnt) {
+      continue;
+    }
     stats[i].sum_values = flatout[7 * i + 1];
     stats[i].sum_squares = flatout[7 * i + 2];
     stats[i].min = flatout[7 * i + 3];
@@ -197,6 +228,9 @@ sc_stats_print (int package_id, int log_priority,
       }
       SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
                    "   Global number of values: %5ld\n", si->count);
+      if (!si->count) {
+        continue;
+      }
       if (si->average != 0.) {  /* ignore the comparison warning */
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
                      "   Mean value (std. dev.):         %g (%.3g = %.3g%%)\n",
@@ -310,6 +344,40 @@ sc_statistics_set (sc_statistics_t * stats, const char *name, double value)
   si = (sc_statinfo_t *) sc_array_index_int (stats->sarray, i);
 
   sc_stats_set1 (si, value, name);
+}
+
+void
+sc_statistics_add_empty (sc_statistics_t * stats, const char *name)
+{
+  int                 i;
+  sc_statinfo_t      *si;
+
+  /* always check for wrong usage and output adequate error message */
+  SC_CHECK_ABORTF (!sc_keyvalue_exists (stats->kv, name),
+                   "Statistics variable \"%s\" exists already", name);
+
+  i = (int) stats->sarray->elem_count;
+  si = (sc_statinfo_t *) sc_array_push (stats->sarray);
+  sc_stats_init (si, name);
+
+  sc_keyvalue_set_int (stats->kv, name, i);
+}
+
+void
+sc_statistics_accumulate (sc_statistics_t * stats, const char *name,
+                          double value)
+{
+  int                 i;
+  sc_statinfo_t      *si;
+
+  i = sc_keyvalue_get_int (stats->kv, name, -1);
+
+  /* always check for wrong usage and output adequate error message */
+  SC_CHECK_ABORTF (i >= 0, "Statistics variable \"%s\" does not exist", name);
+
+  si = (sc_statinfo_t *) sc_array_index_int (stats->sarray, i);
+
+  sc_stats_accumulate (si, value);
 }
 
 void

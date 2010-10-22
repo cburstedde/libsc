@@ -57,6 +57,19 @@ void                sc_stats_set1 (sc_statinfo_t * stats,
                                    double value, const char *variable);
 
 /**
+ * Initialize a sc_statinfo_t structure assuming count=0 and mark it dirty.
+ * This is useful if \a stats will be used to accumulate instances locally
+ * before global statistics are computed.
+ */
+void                sc_stats_init (sc_statinfo_t * stats,
+                                   const char *variable);
+
+/**
+ * Add an instance of the random variable.
+ */
+void                sc_stats_accumulate (sc_statinfo_t * stats, double value);
+
+/**
  * Compute global average and standard deviation.
  * Only updates dirty variables. Then removes the dirty flag.
  * \param [in]     mpicomm   MPI communicator to use.
@@ -114,12 +127,24 @@ void                sc_statistics_destroy (sc_statistics_t * stats);
 void                sc_statistics_add (sc_statistics_t * stats,
                                        const char *name);
 
+/** Register a statistics variable by name and set its count to 0.
+ * This variable must not exist already.
+ */
+void                sc_statistics_add_empty (sc_statistics_t * stats,
+                                             const char *name);
+
 /** Set the value of a statistics variable, see sc_stats_set1.
  * The variable must previously be added with sc_statistics_add.
  * This assumes count=1 as in the sc_stats_set1 function above.
  */
 void                sc_statistics_set (sc_statistics_t * stats,
                                        const char *name, double value);
+
+/** Add an instance of a statistics variable, see sc_stats_accumulate
+ * The variable must previously be added with sc_statistics_add_empty.
+ */
+void                sc_statistics_accumulate (sc_statistics_t * stats,
+                                              const char *name, double value);
 
 /** Compute statistics for all variables, see sc_stats_compute.
  */
