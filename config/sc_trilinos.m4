@@ -33,6 +33,7 @@ dnl Currently only ML is recognized.
 dnl
 AC_DEFUN([SC_TRILINOS],
 [
+$1_TRILINOS_VERSION=
 SC_ARG_WITH_PREFIX([trilinos], [set <dir> to Trilinos installation],
                    [TRILINOS], [$1], [=<dir>])
 if test "$$1_WITH_TRILINOS" != "no" ; then
@@ -75,9 +76,9 @@ if test "$$1_WITH_TRILINOS" != "no" ; then
       fi
     ])
     AC_MSG_RESULT([version $$1_TRILINOS_VERSION])
-    AM_CONDITIONAL([$1_TRILINOS_9], [test "$$1_TRILINOS_VERSION" = 9])
-    AM_CONDITIONAL([$1_TRILINOS_10], [test "$$1_TRILINOS_VERSION" = 10])
   fi
 fi
+AM_CONDITIONAL([$1_TRILINOS_9], [test "$$1_TRILINOS_VERSION" = 9])
+AM_CONDITIONAL([$1_TRILINOS_10], [test "$$1_TRILINOS_VERSION" = 10])
 AM_CONDITIONAL([$1_TRILINOS_ML], [test -n "$$1_TRILINOS_MK_ML"])
 ])
