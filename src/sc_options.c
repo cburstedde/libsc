@@ -634,8 +634,9 @@ sc_options_save (int package_id, int err_priority,
     return -1;
   }
 
+  this_prefix = NULL;
   last_prefix = NULL;
-  last_n = 0;
+  this_n = last_n = 0;
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
@@ -665,8 +666,9 @@ sc_options_save (int package_id, int err_priority,
       }
     }
 
-    if (last_prefix == NULL || this_n != last_n ||
-        strncmp (this_prefix, last_prefix, this_n) != 0) {
+    if (this_prefix != NULL &&
+        (last_prefix == NULL || this_n != last_n ||
+         strncmp (this_prefix, last_prefix, this_n) != 0)) {
       retval = fprintf (file, "[%.*s]\n", (int) this_n, this_prefix);
       if (retval < 0) {
         SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
