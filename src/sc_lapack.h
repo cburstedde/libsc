@@ -47,6 +47,7 @@ extern const char   sc_jobzchar[];
 #define LAPACK_DGETRF  SC_F77_FUNC(dgetrf,DGETRF)
 #define LAPACK_DGETRS  SC_F77_FUNC(dgetrs,DGETRS)
 #define LAPACK_DSTEV   SC_F77_FUNC(dstev,DSTEV)
+#define LAPACK_DTRSM   SC_F77_FUNC(dtrsm,DTRSM)
 #define LAPACK_ILAENV  SC_F77_FUNC(ilaenv,ILAENV)
 
 void                LAPACK_DGELS (const char *trans,
@@ -72,6 +73,17 @@ void                LAPACK_DSTEV (const char *jobz,
                                   double *z,
                                   const sc_bint_t * ldz,
                                   double *work, sc_bint_t * info);
+
+void                LAPACK_DTRSM (const char *side,
+                                  const char *uplo,
+                                  const char *transa,
+                                  const char *diag,
+                                  const sc_bint_t * m,
+                                  const sc_bint_t * n,
+                                  const double *alpha,
+                                  const double *a,
+                                  const sc_bint_t * lda,
+                                  const *b, const sc_bint_t * ldb);
 
 int                 LAPACK_ILAENV (const sc_bint_t * ispec,
                                    const char *name,
