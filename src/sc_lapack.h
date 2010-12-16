@@ -112,6 +112,8 @@ int                 LAPACK_ILAENV (const sc_bint_t * ispec,
 #define LAPACK_DGETRF   (void) sc_lapack_nonimplemented
 #define LAPACK_DGETRS   (void) sc_lapack_nonimplemented
 #define LAPACK_DSTEV    (void) sc_lapack_nonimplemented
+#define LAPACK_DTRSM    (void) sc_lapack_nonimplemented
+#define LAPACK_DLAIC1   (void) sc_lapack_nonimplemented
 #define LAPACK_ILAENV   (int)  sc_lapack_nonimplemented
 
 int                 sc_lapack_nonimplemented ();
