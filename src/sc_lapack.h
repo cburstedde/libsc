@@ -86,7 +86,7 @@ void                LAPACK_DTRSM (const char *side,
                                   const sc_bint_t * lda,
                                   const double *b, const sc_bint_t * ldb);
 
-void                LAPACK_DLAIC1 (const char *job,
+void                LAPACK_DLAIC1 (const int *job,
                                    const int *j,
                                    const double *x,
                                    const double *sest,
