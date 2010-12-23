@@ -111,3 +111,27 @@ sc_polynom_scale (sc_polynom_t * p, int exponent, double factor)
     }
   }
 }
+
+void
+sc_polynom_add (sc_polynom_t * p, const sc_polynom_t * q)
+{
+  sc_polynom_AXPY (1., q, p);
+}
+
+void
+sc_polynom_sub (sc_polynom_t * p, const sc_polynom_t * q)
+{
+  sc_polynom_AXPY (-1., q, p);
+}
+
+void
+sc_polynom_AXPY (double A, const sc_polynom_t * X, sc_polynom_t * Y)
+{
+  int                 i;
+
+  sc_polynom_set_degree (Y, SC_MAX (Y->degree, X->degree));
+  for (i = 0; i <= X->degree; ++i) {
+    *((double *) sc_array_index_int (Y->c, i)) +=
+      A * *((double *) sc_array_index_int (X->c, i));
+  }
+}

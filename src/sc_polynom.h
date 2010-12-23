@@ -57,12 +57,12 @@ sc_polynom_t       *sc_polynom_new_from_lagrange (int degree, int which,
 
 /* Alternate constructors using other polynoms */
 
-sc_polynom_t       *sc_polynom_new_from_scale (sc_polynom_t * a,
+sc_polynom_t       *sc_polynom_new_from_scale (const sc_polynom_t * a,
                                                int exponent, double factor);
-sc_polynom_t       *sc_polynom_new_from_sum (sc_polynom_t * a,
-                                             sc_polynom_t * b);
-sc_polynom_t       *sc_polynom_new_from_product (sc_polynom_t * a,
-                                                 sc_polynom_t * b);
+sc_polynom_t       *sc_polynom_new_from_sum (const sc_polynom_t * a,
+                                             const sc_polynom_t * b);
+sc_polynom_t       *sc_polynom_new_from_product (const sc_polynom_t * a,
+                                                 const sc_polynom_t * b);
 
 /* Manipulating a polynom */
 
@@ -80,6 +80,26 @@ void                sc_polynom_set_value (sc_polynom_t * p, double value);
  */
 void                sc_polynom_scale (sc_polynom_t * p,
                                       int exponent, double factor);
+
+/** Modify a polynom by adding another.
+ * \param[in,out] p     The polynom p will be set to p + q.
+ * \param[in] q         The polynom that is added to p; it is not changed.
+ */
+void                sc_polynom_add (sc_polynom_t * p, const sc_polynom_t * q);
+
+/** Modify a polynom by substracting another.
+ * \param[in,out] p     The polynom p will be set to p - q.
+ * \param[in] q         The polynom that is substracted from p; not changed.
+ */
+void                sc_polynom_sub (sc_polynom_t * p, const sc_polynom_t * q);
+
+/** Perform the well-known BLAS-type operation Y := A * X + Y.
+ * \param[in] A         The factor for multiplication.
+ * \param[in] X         The polynom X is used as input only.
+ * \param[in,out] Y     The polynom that A * X is added to in-place.
+ */
+void                sc_polynom_AXPY (double A, const sc_polynom_t * X,
+                                     sc_polynom_t * Y);
 
 SC_EXTERN_C_END;
 
