@@ -57,12 +57,13 @@ sc_polynom_t       *sc_polynom_new_from_lagrange (int degree, int which,
 
 /* Alternate constructors using other polynoms */
 
-sc_polynom_t       *sc_polynom_new_from_scale (const sc_polynom_t * a,
+sc_polynom_t       *sc_polynom_new_from_polynom (const sc_polynom_t * q);
+sc_polynom_t       *sc_polynom_new_from_scale (const sc_polynom_t * q,
                                                int exponent, double factor);
-sc_polynom_t       *sc_polynom_new_from_sum (const sc_polynom_t * a,
-                                             const sc_polynom_t * b);
-sc_polynom_t       *sc_polynom_new_from_product (const sc_polynom_t * a,
-                                                 const sc_polynom_t * b);
+sc_polynom_t       *sc_polynom_new_from_sum (const sc_polynom_t * q,
+                                             const sc_polynom_t * r);
+sc_polynom_t       *sc_polynom_new_from_product (const sc_polynom_t * q,
+                                                 const sc_polynom_t * r);
 
 /* Manipulating a polynom */
 
@@ -74,12 +75,26 @@ sc_polynom_t       *sc_polynom_new_from_product (const sc_polynom_t * a,
 void                sc_polynom_set_degree (sc_polynom_t * p, int degree);
 void                sc_polynom_set_value (sc_polynom_t * p, double value);
 
+/** Shift a polynom by (i.e., add) a monomial.
+ * \param[in] exponent  Exponent of the monomial, >= 0.
+ * \param[in] factor    Prefactor of the monomial.
+ */
+void                sc_polynom_shift (sc_polynom_t * p,
+                                      int exponent, double factor);
+
 /** Scale a polynom by a monomial.
  * \param[in] exponent  Exponent of the monomial, >= 0.
  * \param[in] factor    Prefactor of the monomial.
  */
 void                sc_polynom_scale (sc_polynom_t * p,
                                       int exponent, double factor);
+
+/** Set a polynom to another.
+ * \param[in,out] p A polynom that is set to q.
+ * \param[in] q     The polynom that is used as the new value for p.
+ */
+void                sc_polynom_assign (sc_polynom_t * p,
+                                       const sc_polynom_t * q);
 
 /** Modify a polynom by adding another.
  * \param[in,out] p     The polynom p will be set to p + q.
@@ -100,6 +115,13 @@ void                sc_polynom_sub (sc_polynom_t * p, const sc_polynom_t * q);
  */
 void                sc_polynom_AXPY (double A, const sc_polynom_t * X,
                                      sc_polynom_t * Y);
+
+/** Modify a polynom by multiplying another.
+ * \param[in,out] p     The polynom p will be set to p * q.
+ * \param[in] q         The polynom that is multiplied with p; not changed.
+ */
+void                sc_polynom_multiply (sc_polynom_t * p,
+                                         const sc_polynom_t * q);
 
 SC_EXTERN_C_END;
 

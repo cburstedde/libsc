@@ -22,6 +22,20 @@
 
 #include <sc_polynom.h>
 
+static sc_polynom_t *
+sc_polynom_new_uninitialized (int degree)
+{
+  sc_polynom_t       *p;
+
+  SC_ASSERT (degree >= 0);
+
+  p = SC_ALLOC (sc_polynom_t, 1);
+  p->degree = degree;
+  p->c = sc_array_new_size (sizeof (double), (size_t) degree + 1);
+
+  return p;
+}
+
 sc_polynom_t       *
 sc_polynom_new (void)
 {
@@ -42,18 +56,79 @@ sc_polynom_destroy (sc_polynom_t * p)
 sc_polynom_t       *
 sc_polynom_new_from_coefficients (int degree, const double *coefficients)
 {
-  int                 i;
-  double             *d;
   sc_polynom_t       *p;
 
-  SC_ASSERT (degree >= 0);
+  p = sc_polynom_new_uninitialized (degree);
+  memcpy (p->c->array, coefficients, p->c->elem_size * p->c->elem_count);
 
-  p = SC_ALLOC (sc_polynom_t, 1);
-  p->c = sc_array_new_size (sizeof (double), (size_t) degree + 1);
+  return p;
+}
 
+sc_polynom_t       *
+sc_polynom_new_from_polynom (const sc_polynom_t * q)
+{
+  return sc_polynom_new_from_coefficients (q->degree, (double *) q->c->array);
+}
+
+sc_polynom_t       *
+sc_polynom_new_from_shift (const sc_polynom_t * q,
+                           int exponent, double factor)
+{
+  sc_polynom_t       *p;
+
+  p = sc_polynom_new_from_polynom (q);
+  sc_polynom_shift (p, exponent, factor);
+
+  return p;
+}
+
+sc_polynom_t       *
+sc_polynom_new_from_scale (const sc_polynom_t * q,
+                           int exponent, double factor)
+{
+  sc_polynom_t       *p;
+
+  p = sc_polynom_new_from_polynom (q);
+  sc_polynom_scale (p, exponent, factor);
+
+  return p;
+}
+
+sc_polynom_t       *
+sc_polynom_new_from_sum (const sc_polynom_t * q, const sc_polynom_t * r)
+{
+  sc_polynom_t       *p;
+
+  if (q->degree >= r->degree) {
+    p = sc_polynom_new_from_polynom (q);
+    sc_polynom_add (p, r);
+  }
+  else {
+    p = sc_polynom_new_from_polynom (r);
+    sc_polynom_add (p, q);
+  }
+
+  return p;
+}
+
+sc_polynom_t       *
+sc_polynom_new_from_product (const sc_polynom_t * q, const sc_polynom_t * r)
+{
+  const int           degree = q->degree + r->degree;
+  const double       *qca = (const double *) q->c->array;
+  const double       *rca = (const double *) r->c->array;
+  int                 i, j, k;
+  double              sum;
+  sc_polynom_t       *p;
+
+  p = sc_polynom_new_uninitialized (degree);
   for (i = 0; i <= degree; ++i) {
-    d = (double *) sc_array_index_int (p->c, i);
-    *d = coefficients[i];
+    sum = 0.;
+    k = SC_MIN (i, q->degree);
+    for (j = SC_MAX (0, i - r->degree); j <= k; ++j) {
+      sum += qca[j] * rca[i - j];
+    }
+    *((double *) sc_array_index_int (p->c, i)) = sum;
   }
 
   return p;
@@ -87,6 +162,17 @@ sc_polynom_set_value (sc_polynom_t * p, double value)
 }
 
 void
+sc_polynom_shift (sc_polynom_t * p, int exponent, double factor)
+{
+  SC_ASSERT (exponent >= 0);
+
+  if (exponent > p->degree) {
+    sc_polynom_set_degree (p, exponent);
+  }
+  *((double *) sc_array_index_int (p->c, exponent)) += factor;
+}
+
+void
 sc_polynom_scale (sc_polynom_t * p, int exponent, double factor)
 {
   const int           degree = p->degree;
@@ -113,6 +199,13 @@ sc_polynom_scale (sc_polynom_t * p, int exponent, double factor)
 }
 
 void
+sc_polynom_assign (sc_polynom_t * p, const sc_polynom_t * q)
+{
+  sc_polynom_set_degree (p, q->degree);
+  memcpy (p->c->array, q->c->array, p->c->elem_size * p->c->elem_count);
+}
+
+void
 sc_polynom_add (sc_polynom_t * p, const sc_polynom_t * q)
 {
   sc_polynom_AXPY (1., q, p);
@@ -134,4 +227,14 @@ sc_polynom_AXPY (double A, const sc_polynom_t * X, sc_polynom_t * Y)
     *((double *) sc_array_index_int (Y->c, i)) +=
       A * *((double *) sc_array_index_int (X->c, i));
   }
+}
+
+void
+sc_polynom_multiply (sc_polynom_t * p, const sc_polynom_t * q)
+{
+  sc_polynom_t       *prod;
+
+  prod = sc_polynom_new_from_product (p, q);
+  sc_polynom_assign (p, prod);
+  sc_polynom_destroy (prod);
 }
