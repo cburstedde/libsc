@@ -92,7 +92,7 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
   blocksize = (size_t) (1 << 15);       /* 32768 */
   lastsize = byte_length % blocksize;
   numregularblocks = byte_length / blocksize;
-  numfullblocks = numregularblocks + ((lastsize > 0) ? 1 : 0);
+  numfullblocks = numregularblocks + (lastsize > 0 ? 1 : 0);
 
   /* allocate compression and base64 arrays */
   code_length = 2 * blocksize;
@@ -104,7 +104,8 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
   compression_header = SC_ALLOC (uint32_t, header_entries);
   compression_header[0] = (uint32_t) numfullblocks;
   compression_header[1] = (uint32_t) blocksize;
-  compression_header[2] = (uint32_t) lastsize;
+  compression_header[2] = (uint32_t)
+    (lastsize > 0 || byte_length == 0 ? lastsize : blocksize);
   for (iz = 3; iz < header_entries; ++iz) {
     compression_header[iz] = 0;
   }
