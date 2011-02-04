@@ -69,7 +69,7 @@ sc_dmatrix_t       *sc_dmatrix_new_data (sc_bint_t m, sc_bint_t n,
                                          double *data);
 
 /** Create a matrix view on an existing sc_dmatrix_t.
- * The original matrix must have greater equal elements than the view.
+ * The original matrix must have greater equal as many elements as the view.
  * The original matrix must not be destroyed or resized while view is in use.
  */
 sc_dmatrix_t       *sc_dmatrix_new_view (sc_bint_t m, sc_bint_t n,
@@ -77,7 +77,7 @@ sc_dmatrix_t       *sc_dmatrix_new_view (sc_bint_t m, sc_bint_t n,
 
 /** Create a matrix view on an existing sc_dmatrix_t.
  * The start of the view is offset by a number of rows.
- * The original matrix must have greater equal elements than the view end.
+ * The original matrix must have greater equal as many elements as view end.
  * The original matrix must not be destroyed or resized while view is in use.
  * \param[in] o     Number of rows that the view is offset.
  *                  Requires (o + m) * n <= orig->m * orig->n.
@@ -99,6 +99,7 @@ void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m,
 void                sc_dmatrix_resize (sc_dmatrix_t * dmatrix,
                                        sc_bint_t m, sc_bint_t n);
 
+/** Destroy a dmatrix and all allocated memory */
 void                sc_dmatrix_destroy (sc_dmatrix_t * dmatrix);
 
 /** Check whether a dmatrix is free of NaN entries.
@@ -106,7 +107,7 @@ void                sc_dmatrix_destroy (sc_dmatrix_t * dmatrix);
  */
 int                 sc_dmatrix_is_valid (const sc_dmatrix_t * A);
 
-/** Check a dmatrix for symmetry.
+/** Check a square dmatrix for symmetry.
  * \param [in] tolerance    measures the absolute value of the max difference.
  * \return                  true if matrix is numerically symmetric.
  */
@@ -119,12 +120,12 @@ void                sc_dmatrix_set_value (sc_dmatrix_t * dmatrix,
 
 void                sc_dmatrix_scale (double alpha, sc_dmatrix_t * X);
 
-/** Perform elementwise multiplcations Y = Y .* X.
+/** Perform element-wise multiplcations, Y := Y .* X.
  */
 void                sc_dmatrix_dotmult (const sc_dmatrix_t * X,
                                         sc_dmatrix_t * Y);
 
-/** Perform elementwise divison from a scalar X = alpha ./ X.
+/** Perform element-wise divison with a scalar, X := alpha ./ X.
  */
 void                sc_dmatrix_alphadotdivide (double alpha,
                                                sc_dmatrix_t * X);
@@ -135,7 +136,7 @@ void                sc_dmatrix_copy (const sc_dmatrix_t * X,
 void                sc_dmatrix_transpose (const sc_dmatrix_t * X,
                                           sc_dmatrix_t * Y);
 
-/*! \brief Matrix Matrix Add (AXPY)  \c Y = alpha X + Y
+/*! \brief Matrix Matrix Add (AXPY)  \c Y := alpha X + Y
  */
 void                sc_dmatrix_add (double alpha, const sc_dmatrix_t * X,
                                     sc_dmatrix_t * Y);
@@ -155,7 +156,7 @@ void                sc_dmatrix_vector (sc_trans_t transa,
                                        const sc_dmatrix_t * X, double beta,
                                        sc_dmatrix_t * Y);
 
-/*! \brief Matrix Matrix Multiply  \c C = alpha * A * B + beta * C
+/*! \brief Matrix Matrix Multiply  \c C := alpha * A * B + beta * C
  *
  *   \param A matrix
  *   \param B matrix
