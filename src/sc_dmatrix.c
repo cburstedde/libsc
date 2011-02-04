@@ -277,10 +277,21 @@ sc_dmatrix_scale (double alpha, sc_dmatrix_t * X)
 {
   sc_bint_t           i;
   const sc_bint_t     totalsize = X->m * X->n;
-  double             *data = X->e[0];
+  double             *Xdata = X->e[0];
 
   for (i = 0; i < totalsize; ++i)
-    data[i] *= alpha;
+    Xdata[i] *= alpha;
+}
+
+void
+sc_dmatrix_alphadivide (double alpha, sc_dmatrix_t * X)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  double             *Xdata = X->e[0];
+
+  for (i = 0; i < totalsize; ++i)
+    Xdata[i] = alpha / Xdata[i];
 }
 
 void
@@ -327,7 +338,7 @@ sc_dmatrix_lessequal (const sc_dmatrix_t * X, double bound, sc_dmatrix_t * Y)
 }
 
 void
-sc_dmatrix_dotmult (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
+sc_dmatrix_dotmultiply (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           i;
   const sc_bint_t     totalsize = X->m * X->n;
@@ -352,17 +363,6 @@ sc_dmatrix_dotdivide (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 
   for (i = 0; i < totalsize; ++i)
     Ydata[i] /= Xdata[i];
-}
-
-void
-sc_dmatrix_alphadotdivide (double alpha, sc_dmatrix_t * X)
-{
-  sc_bint_t           i;
-  const sc_bint_t     totalsize = X->m * X->n;
-  double             *Xdata = X->e[0];
-
-  for (i = 0; i < totalsize; ++i)
-    Xdata[i] = alpha / Xdata[i];
 }
 
 void

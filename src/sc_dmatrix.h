@@ -118,7 +118,14 @@ void                sc_dmatrix_set_zero (sc_dmatrix_t * dmatrix);
 void                sc_dmatrix_set_value (sc_dmatrix_t * dmatrix,
                                           double value);
 
+/** Perform element-wise multiplication with a scalar, X := alpha .* X.
+ */
 void                sc_dmatrix_scale (double alpha, sc_dmatrix_t * X);
+
+/** Perform element-wise divison with a scalar, X := alpha ./ X.
+ */
+void                sc_dmatrix_alphadivide (double alpha,
+                                            sc_dmatrix_t * X);
 
 /** Extract the elemnt-wise sign of a matrix, Y := (X >= 0 ? 1 : -1)
  */
@@ -137,18 +144,13 @@ void                sc_dmatrix_lessequal (const sc_dmatrix_t * X,
 
 /** Perform element-wise multiplcations, Y := Y .* X.
  */
-void                sc_dmatrix_dotmult (const sc_dmatrix_t * X,
-                                        sc_dmatrix_t * Y);
+void                sc_dmatrix_dotmultiply (const sc_dmatrix_t * X,
+                                            sc_dmatrix_t * Y);
 
 /** Perform element-wise divisions, Y := Y ./ X.
  */
 void                sc_dmatrix_dotdivide (const sc_dmatrix_t * X,
                                           sc_dmatrix_t * Y);
-
-/** Perform element-wise divison with a scalar, X := alpha ./ X.
- */
-void                sc_dmatrix_alphadotdivide (double alpha,
-                                               sc_dmatrix_t * X);
 
 void                sc_dmatrix_copy (const sc_dmatrix_t * X,
                                      sc_dmatrix_t * Y);
