@@ -120,10 +120,30 @@ void                sc_dmatrix_set_value (sc_dmatrix_t * dmatrix,
 
 void                sc_dmatrix_scale (double alpha, sc_dmatrix_t * X);
 
+/** Extract the elemnt-wise sign of a matrix, Y := (X >= 0 ? 1 : -1)
+ */
+void                sc_dmatrix_getsign (const sc_dmatrix_t * X,
+                                        sc_dmatrix_t * Y);
+
+/** Compare a matrix elemnt-wise against a bound, Y := (X >= bound ? 1 : 0)
+ */
+void                sc_dmatrix_greaterequal (const sc_dmatrix_t * X,
+                                             double bound, sc_dmatrix_t * Y);
+
+/** Compare a matrix elemnt-wise against a bound, Y := (X <= bound ? 1 : 0)
+ */
+void                sc_dmatrix_lessequal (const sc_dmatrix_t * X,
+                                          double bound, sc_dmatrix_t * Y);
+
 /** Perform element-wise multiplcations, Y := Y .* X.
  */
 void                sc_dmatrix_dotmult (const sc_dmatrix_t * X,
                                         sc_dmatrix_t * Y);
+
+/** Perform element-wise divisions, Y := Y ./ X.
+ */
+void                sc_dmatrix_dotdivide (const sc_dmatrix_t * X,
+                                          sc_dmatrix_t * Y);
 
 /** Perform element-wise divison with a scalar, X := alpha ./ X.
  */

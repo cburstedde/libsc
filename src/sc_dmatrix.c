@@ -284,6 +284,49 @@ sc_dmatrix_scale (double alpha, sc_dmatrix_t * X)
 }
 
 void
+sc_dmatrix_getsign (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *indata = X->e[0];
+  double             *outdata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i)
+    outdata[i] = (indata[i] >= 0. ? 1 : -1);
+}
+
+void
+sc_dmatrix_greaterequal (const sc_dmatrix_t * X, double bound,
+                         sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *indata = X->e[0];
+  double             *outdata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i)
+    outdata[i] = (indata[i] >= bound ? 1 : 0);
+}
+
+void
+sc_dmatrix_lessequal (const sc_dmatrix_t * X, double bound, sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *indata = X->e[0];
+  double             *outdata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i)
+    outdata[i] = (indata[i] <= bound ? 1 : 0);
+}
+
+void
 sc_dmatrix_dotmult (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           i;
@@ -295,6 +338,20 @@ sc_dmatrix_dotmult (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 
   for (i = 0; i < totalsize; ++i)
     Ydata[i] *= Xdata[i];
+}
+
+void
+sc_dmatrix_dotdivide (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *Xdata = X->e[0];
+  double             *Ydata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i)
+    Ydata[i] /= Xdata[i];
 }
 
 void
