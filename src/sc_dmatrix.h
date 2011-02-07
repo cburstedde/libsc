@@ -127,47 +127,47 @@ void                sc_dmatrix_scale (double alpha, sc_dmatrix_t * X);
 void                sc_dmatrix_alphadivide (double alpha,
                                             sc_dmatrix_t * X);
 
-/** Extract the elemnt-wise sign of a matrix, Y := (X >= 0 ? 1 : -1)
+/** Perform element-wise absolute value, Y := fabs(X).
+ */
+void                sc_dmatrix_fabs (const sc_dmatrix_t * X,
+				     sc_dmatrix_t * Y);
+
+/** Perform element-wise square root, Y := sqrt(X).
+ */
+void                sc_dmatrix_sqrt (const sc_dmatrix_t * X,
+				     sc_dmatrix_t * Y);
+
+/** Extract the element-wise sign of a matrix, Y := (X >= 0 ? 1 : -1)
  */
 void                sc_dmatrix_getsign (const sc_dmatrix_t * X,
                                         sc_dmatrix_t * Y);
 
-/** Compare a matrix elemnt-wise, Y_i := (X_i >= Y_i ? X_i : Y_i)
- */
-void                sc_dmatrix_vecgreaterequal (const sc_dmatrix_t * X,
-						sc_dmatrix_t * Y);
-
-/** Compare a matrix elemnt-wise against a bound, Y := (X >= bound ? 1 : 0)
+/** Compare a matrix element-wise against a bound, Y := (X >= bound ? 1 : 0)
  */
 void                sc_dmatrix_greaterequal (const sc_dmatrix_t * X,
                                              double bound, sc_dmatrix_t * Y);
 
-/** Compare a matrix elemnt-wise, Y_i := (X_i <= Y_i ? X_i : Y_i)
- */
-void                sc_dmatrix_veclessequal (const sc_dmatrix_t * X,
-                                          sc_dmatrix_t * Y);
-
-/** Compare a matrix elemnt-wise against a bound, Y := (X <= bound ? 1 : 0)
+/** Compare a matrix element-wise against a bound, Y := (X <= bound ? 1 : 0)
  */
 void                sc_dmatrix_lessequal (const sc_dmatrix_t * X,
                                           double bound, sc_dmatrix_t * Y);
 
-/** Perform element-wise multiplcations, Y := Y .* X.
+/** Assign element-wise maximum, Y_i := (X_i > Y_i ? X_i : Y_i)
+ */
+void                sc_dmatrix_maximum (const sc_dmatrix_t * X,
+				        sc_dmatrix_t * Y);
+
+/** Assign element-wise minimum, Y_i := (X_i < Y_i ? X_i : Y_i)
+ */
+void                sc_dmatrix_minimum (const sc_dmatrix_t * X,
+                                        sc_dmatrix_t * Y);
+
+/** Perform element-wise multiplication, Y := Y .* X.
  */
 void                sc_dmatrix_dotmultiply (const sc_dmatrix_t * X,
                                             sc_dmatrix_t * Y);
 
-/** Perform element-wise square root, Y := abs(X).
- */
-void                sc_dmatrix_absolute (const sc_dmatrix_t * X,
-					 sc_dmatrix_t * Y);
-
-/** Perform element-wise square root, Y := sqrt(X).
- */
-void                sc_dmatrix_squareroot (const sc_dmatrix_t * X,
-					   sc_dmatrix_t * Y);
-
-/** Perform element-wise divisions, Y := Y ./ X.
+/** Perform element-wise division, Y := Y ./ X.
  */
 void                sc_dmatrix_dotdivide (const sc_dmatrix_t * X,
                                           sc_dmatrix_t * Y);
