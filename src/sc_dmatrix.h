@@ -132,10 +132,20 @@ void                sc_dmatrix_alphadivide (double alpha,
 void                sc_dmatrix_getsign (const sc_dmatrix_t * X,
                                         sc_dmatrix_t * Y);
 
+/** Compare a matrix elemnt-wise, Y_i := (X_i >= Y_i ? X_i : Y_i)
+ */
+void                sc_dmatrix_vecgreaterequal (const sc_dmatrix_t * X,
+						sc_dmatrix_t * Y);
+
 /** Compare a matrix elemnt-wise against a bound, Y := (X >= bound ? 1 : 0)
  */
 void                sc_dmatrix_greaterequal (const sc_dmatrix_t * X,
                                              double bound, sc_dmatrix_t * Y);
+
+/** Compare a matrix elemnt-wise, Y_i := (X_i <= Y_i ? X_i : Y_i)
+ */
+void                sc_dmatrix_veclessequal (const sc_dmatrix_t * X,
+                                          sc_dmatrix_t * Y);
 
 /** Compare a matrix elemnt-wise against a bound, Y := (X <= bound ? 1 : 0)
  */
@@ -146,6 +156,16 @@ void                sc_dmatrix_lessequal (const sc_dmatrix_t * X,
  */
 void                sc_dmatrix_dotmultiply (const sc_dmatrix_t * X,
                                             sc_dmatrix_t * Y);
+
+/** Perform element-wise square root, Y := abs(X).
+ */
+void                sc_dmatrix_absolute (const sc_dmatrix_t * X,
+					 sc_dmatrix_t * Y);
+
+/** Perform element-wise square root, Y := sqrt(X).
+ */
+void                sc_dmatrix_squareroot (const sc_dmatrix_t * X,
+					   sc_dmatrix_t * Y);
 
 /** Perform element-wise divisions, Y := Y ./ X.
  */
