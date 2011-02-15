@@ -99,6 +99,16 @@ void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m,
 void                sc_dmatrix_resize (sc_dmatrix_t * dmatrix,
                                        sc_bint_t m, sc_bint_t n);
 
+/** Change the matrix dimensions, while keeping the subscripts in place, i.e.
+ * dmatrix->e[i][j] will have the same value before and after, as long as
+ * (i, j) is still a valid subscript.
+ * This is not valid for views.
+ * For non-views the data will be realloced if necessary.
+ * The entries are unchanged to the minimum of the old and new sizes.
+ */
+void                sc_dmatrix_resize_in_place (sc_dmatrix_t * dmatrix,
+                                                sc_bint_t m, sc_bint_t n);
+
 /** Destroy a dmatrix and all allocated memory */
 void                sc_dmatrix_destroy (sc_dmatrix_t * dmatrix);
 
@@ -124,18 +134,17 @@ void                sc_dmatrix_scale (double alpha, sc_dmatrix_t * X);
 
 /** Perform element-wise divison with a scalar, X := alpha ./ X.
  */
-void                sc_dmatrix_alphadivide (double alpha,
-                                            sc_dmatrix_t * X);
+void                sc_dmatrix_alphadivide (double alpha, sc_dmatrix_t * X);
 
 /** Perform element-wise absolute value, Y := fabs(X).
  */
 void                sc_dmatrix_fabs (const sc_dmatrix_t * X,
-				     sc_dmatrix_t * Y);
+                                     sc_dmatrix_t * Y);
 
 /** Perform element-wise square root, Y := sqrt(X).
  */
 void                sc_dmatrix_sqrt (const sc_dmatrix_t * X,
-				     sc_dmatrix_t * Y);
+                                     sc_dmatrix_t * Y);
 
 /** Extract the element-wise sign of a matrix, Y := (X >= 0 ? 1 : -1)
  */
@@ -155,7 +164,7 @@ void                sc_dmatrix_lessequal (const sc_dmatrix_t * X,
 /** Assign element-wise maximum, Y_i := (X_i > Y_i ? X_i : Y_i)
  */
 void                sc_dmatrix_maximum (const sc_dmatrix_t * X,
-				        sc_dmatrix_t * Y);
+                                        sc_dmatrix_t * Y);
 
 /** Assign element-wise minimum, Y_i := (X_i < Y_i ? X_i : Y_i)
  */

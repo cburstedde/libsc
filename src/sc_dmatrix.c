@@ -217,6 +217,46 @@ sc_dmatrix_resize (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
 }
 
 void
+sc_dmatrix_resize_in_place (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
+{
+  double             *data;
+  sc_bint_t           size, newsize;
+  sc_bint_t           i;
+  sc_bint_t           old_n = dmatrix->n;
+  sc_bint_t           min_m = SC_MIN (m, dmatrix->m);
+
+  SC_ASSERT (dmatrix->e != NULL);
+  SC_ASSERT (m >= 0 && n >= 0);
+  SC_ASSERT (!dmatrix->view);
+
+  size = dmatrix->m * dmatrix->n;
+  newsize = m * n;
+  data = dmatrix->e[0];
+  if (n < old_n) {
+    for (i = 1; i < min_m; i++) {
+      memmove (data + i * n, data + i * old_n, n * sizeof (double));
+    }
+  }
+  if (newsize != size) {
+#ifdef SC_USE_REALLOC
+    data = SC_REALLOC (dmatrix->e[0], double, newsize);
+#else
+    data = SC_ALLOC (double, newsize);
+    memcpy (data, dmatrix->e[0],
+            (size_t) SC_MIN (newsize, size) * sizeof (double));
+    SC_FREE (dmatrix->e[0]);
+#endif
+  }
+  if (n > old_n) {
+    for (i = min_m - 1; i > 0; i--) {
+      memmove (data + i * n, data + i * old_n, old_n * sizeof (double));
+    }
+  }
+  SC_FREE (dmatrix->e);
+  sc_dmatrix_new_e (dmatrix, m, n, data);
+}
+
+void
 sc_dmatrix_destroy (sc_dmatrix_t * dmatrix)
 {
   if (!dmatrix->view) {
