@@ -26,6 +26,26 @@
 static const double eps = 2.220446049250313e-16;
 #endif
 
+static void
+test_zero_sizes (void)
+{
+  sc_dmatrix_t      *m1, *m2, *m3;
+
+  m1 = sc_dmatrix_new (0, 3);
+  sc_dmatrix_set_value (m1, -5.);
+
+  m2 = sc_dmatrix_clone (m1);
+  sc_dmatrix_fabs (m1, m2);
+  sc_dmatrix_resize (m2, 3, 0);
+
+  m3 = sc_dmatrix_new (0, 0);
+  sc_dmatrix_multiply (SC_NO_TRANS, SC_NO_TRANS, 1., m1, m2, 0., m3);
+
+  sc_dmatrix_destroy (m1);
+  sc_dmatrix_destroy (m2);
+  sc_dmatrix_destroy (m3);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -116,6 +136,8 @@ main (int argc, char **argv)
   sc_dmatrix_destroy (b);
   sc_dmatrix_destroy (x);
   sc_dmatrix_destroy (xexact);
+
+  test_zero_sizes ();
 
   sc_finalize ();
 
