@@ -429,3 +429,39 @@ sc_keyvalue_set_pointer (sc_keyvalue_t * kv, const char *key, void *newvalue)
     SC_ASSERT (added);
   }
 }
+
+typedef struct sc_kv_hash_data
+{
+  sc_keyvalue_foreach_t fn;
+  void               *data;
+}
+sc_kv_hash_data_t;
+
+static int
+sc_kv_hash_fn (void **v, const void *u)
+{
+  const sc_kv_hash_data_t *hdata = (const sc_kv_hash_data_t *) u;
+  sc_keyvalue_entry_t *hentry = (sc_keyvalue_entry_t *) * v;
+  const char         *key = hentry->key;
+  sc_keyvalue_entry_type_t type = hentry->type;
+  void               *entry = &(hentry->value.p);
+
+  return hdata->fn (key, type, entry, hdata->data);
+}
+
+void
+sc_keyvalue_foreach (sc_keyvalue_t * kv, sc_keyvalue_foreach_t fn,
+                     void *user_data)
+{
+  sc_kv_hash_data_t   hdata;
+
+  hdata.fn = fn;
+  hdata.data = user_data;
+
+  SC_ASSERT (kv->hash->user_data == NULL);
+  kv->hash->user_data = &hdata;
+
+  sc_hash_foreach (kv->hash, sc_kv_hash_fn);
+
+  kv->hash->user_data = NULL;
+}

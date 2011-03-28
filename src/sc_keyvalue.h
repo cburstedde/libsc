@@ -88,6 +88,21 @@ void                sc_keyvalue_set_string (sc_keyvalue_t * kv,
 void                sc_keyvalue_set_pointer (sc_keyvalue_t * kv,
                                              const char *key, void *newvalue);
 
+/** Function to call on every key value pair
+ * \param [in] key   The key for this pair
+ * \param [in] type  The type of entry
+ * \param [in] entry Pointer to the entry
+ * \param [in] u     Arbitrary user data.
+ * \return Return true if the traversal should continue, false to stop.
+ */
+typedef int         (*sc_keyvalue_foreach_t) (const char *key,
+                                              const sc_keyvalue_entry_type_t
+                                              type, void *entry,
+                                              const void *u);
+
+void                sc_keyvalue_foreach (sc_keyvalue_t * kv,
+                                         sc_keyvalue_foreach_t fn,
+                                         void *user_data);
 SC_EXTERN_C_END;
 
 #endif /* !SC_KEYVALUE_H */
