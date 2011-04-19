@@ -97,11 +97,13 @@ int
 main (int argc, char **argv)
 {
   const int           N = 29;
-  int                 i, s, c;
+  int                 i, j, s, c;
   int                *pe;
   size_t              b1, b2;
   ssize_t             result, r1, r2, r3, t;
-  sc_array_t         *a;
+  sc_array_t         *a, *p;
+  size_t             *perm;
+  int                *data;
 
   sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
@@ -166,6 +168,54 @@ main (int argc, char **argv)
   }
 
   sc_array_destroy (a);
+
+  /* test permute in place */
+
+  data = SC_ALLOC (int, 2 * N);
+
+  memset (data, -1, 2 * N * sizeof (int));
+
+  /* create permuted pairs */
+
+  data[0] = 0;
+  data[1] = 1;
+  for (i = 1; i < N; i++) {
+    j = (int) (rand () % (i + 1));
+    data[2 * i] = data[2 * j];
+    data[2 * i + 1] = data[2 * j + 1];
+    data[2 * j] = 2 * i;
+    data[2 * j + 1] = 2 * i + 1;
+  }
+
+  for (i = 0; i < N; i++) {
+    SC_ASSERT (data[2 * i] >= 0);
+    SC_ASSERT (data[2 * i + 1] >= 0);
+    SC_ASSERT (data[2 * i + 1] - data[2 * i] == 1);
+  }
+
+  a = sc_array_new_data (data, 2 * sizeof (int), (size_t) N);
+
+  perm = SC_ALLOC (size_t, N);
+
+  /* perm everything back to its proper place */
+
+  for (i = 0; i < N; i++) {
+    perm[i] = (size_t) data[2 * i] / 2;
+  }
+
+  p = sc_array_new_data (perm, sizeof (size_t), (size_t) N);
+  sc_array_permute (a, p, 0);
+
+  for (i = 0; i < N; i++) {
+    SC_CHECK_ABORT (data[2 * i] == 2 * i, "Permutation failure");
+    SC_CHECK_ABORT (data[2 * i + 1] == 2 * i + 1, "Permutation failure");
+    SC_CHECK_ABORT (perm[i] == i, "Permutation failure");
+  }
+
+  sc_array_destroy (p);
+  sc_array_destroy (a);
+  SC_FREE (perm);
+  SC_FREE (data);
 
   sc_finalize ();
 

@@ -445,6 +445,98 @@ sc_array_split (sc_array_t * array, sc_array_t * offsets, size_t num_types,
   }
 }
 
+int
+sc_array_is_permutation (sc_array_t * newindices)
+{
+  size_t              count = newindices->elem_count;
+  int                *counted = SC_ALLOC_ZERO (int, count);
+  size_t              zi;
+  size_t              zj;
+  size_t             *newind;
+
+  SC_ASSERT (newindices->elem_size == sizeof (size_t));
+  newind = (size_t *) sc_array_index (newindices, 0);
+
+  for (zi = 0; zi < count; zi++) {
+    zj = newind[zi];
+    if (zj < 0 || zj >= count) {
+      SC_FREE (counted);
+      return 0;
+    }
+    counted[zj]++;
+  }
+
+  for (zi = 0; zi < count; zi++) {
+    if (counted[zi] != 1) {
+      SC_FREE (counted);
+      return 0;
+    }
+  }
+
+  SC_FREE (counted);
+  return 1;
+}
+
+/** permute an array in place.  newind[i] is the new index for the data that
+ * is currently at index i. entries in newind will be altered by this
+ * procedure */
+void
+sc_array_permute (sc_array_t * array, sc_array_t * newindices, int keepperm)
+{
+  size_t              zi, zj, zk;
+  char               *temp = SC_ALLOC (char, array->elem_size);
+  char               *carray = array->array;
+  size_t              esize = array->elem_size * sizeof (char);
+  size_t              count = array->elem_count;
+  size_t             *newind;
+
+  SC_ASSERT (newindices->elem_size == sizeof (size_t));
+  SC_ASSERT (newindices->elem_count == count);
+  SC_ASSERT (sc_array_is_permutation (newindices));
+
+  if (!keepperm) {
+    newind = (size_t *) sc_array_index (newindices, 0);
+  }
+  else {
+    newind = SC_ALLOC (size_t, count);
+    memcpy (newind, sc_array_index (newindices, 0), count * sizeof (size_t));
+  }
+
+  zi = 0;
+  zj = 0;
+
+  while (zi < count) {
+    /* zi is the index of the current pivot slot */
+    /* zj is the old index of the data in the pivot */
+    /* zk is the new index for what is in the pivot */
+    zk = newind[zj];
+    SC_ASSERT (zk >= 0 && zk < count);
+    while (zk != zi) {
+      /* vacate zk */
+      memcpy (temp, carray + esize * zk, esize);
+      /* copy pivot to zk */
+      memcpy (carray + esize * zk, carray + esize * zi, esize);
+      /* copy zk to pivot */
+      memcpy (carray + esize * zi, temp, esize);
+      /* what was in zk is now in the pivot zi */
+      zj = zk;
+      zk = newind[zk];
+      SC_ASSERT (zk >= 0 && zk < count);
+      /* change newind to reflect the fact that what is now in zj is what is
+       * supposed to be in zj */
+      newind[zj] = zj;
+    }
+    newind[zi] = zi;
+    zj = (++zi);
+  }
+
+  if (keepperm) {
+    SC_FREE (newind);
+  }
+
+  SC_FREE (temp);
+}
+
 unsigned
 sc_array_checksum (sc_array_t * array)
 {

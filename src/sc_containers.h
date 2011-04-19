@@ -256,6 +256,29 @@ void                sc_array_split (sc_array_t * array, sc_array_t * offsets,
                                     size_t num_types, sc_array_type_t type_fn,
                                     void *data);
 
+/** Determine whether \a array is an array of size_t's whose entries include
+ * every integer 0 <= i < array->elem_count.
+ * \param [in] array         An array.
+ * \return                   Returns 1 if array contains size_t elements whose
+ *                           entries include every integer
+ *                           0 <= i < \a array->elem_count, 0 otherwise.
+ */
+int                 sc_array_is_permutation (sc_array_t * array);
+
+/** Given permutation \a newindices, permute \a array in place.  The data that
+ * on input is contained in \a array[i] will be contained in \a
+ * array[newindices[i]] on output.  The entries of newindices will be altered
+ * unless \a keepperm is true.
+ * \param [in,out] array      An array.
+ * \param [in,out] newindices Permutation array (see sc_array_is_permutation).
+ * \param [in]     keepperm   If true, \a newindices will be unchanged by the
+ *                            algorithm; if false, \a newindices will be the
+ *                            identity permutation on output, but the
+ *                            algorithm will only use O(1) space.
+ */
+void                sc_array_permute (sc_array_t * array,
+                                      sc_array_t * newindices, int keepperm);
+
 /** Computes the adler32 checksum of array data (see zlib documentation).
  * This is a faster checksum than crc32, and it works with zeros as data.
  */
