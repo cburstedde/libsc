@@ -1,0 +1,20 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Remove const from hash user data
+desc: |-
+  The user_data of sc_hash_t in sc_containers is declared const.
+  This may be overly restrictive.  Remove this and clean up accordingly.
+type: :bugfix
+component: libsc
+release: 
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :unstarted
+disposition: 
+creation_time: 2011-04-20 00:03:51.993552 Z
+references: []
+
+id: 5af792eb4766555f1204743970c5d6a3e5e1eaf2
+log_events: 
+- - 2011-04-20 00:03:53.154710 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
