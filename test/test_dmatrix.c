@@ -23,8 +23,8 @@
 #include <sc_dmatrix.h>
 
 #if defined(SC_BLAS) && defined(SC_LAPACK)
+
 static const double eps = 2.220446049250313e-16;
-#endif
 
 static void
 test_zero_sizes (void)
@@ -45,6 +45,8 @@ test_zero_sizes (void)
   sc_dmatrix_destroy (m2);
   sc_dmatrix_destroy (m3);
 }
+
+#endif
 
 int
 main (int argc, char **argv)
