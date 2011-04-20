@@ -510,7 +510,7 @@ sc_array_permute (sc_array_t * array, sc_array_t * newindices, int keepperm)
     /* zj is the old index of the data in the pivot */
     /* zk is the new index for what is in the pivot */
     zk = newind[zj];
-    SC_ASSERT (zk >= 0 && zk < count);
+    SC_ASSERT (zk < count);
     while (zk != zi) {
       /* vacate zk */
       memcpy (temp, carray + esize * zk, esize);
@@ -521,7 +521,7 @@ sc_array_permute (sc_array_t * array, sc_array_t * newindices, int keepperm)
       /* what was in zk is now in the pivot zi */
       zj = zk;
       zk = newind[zk];
-      SC_ASSERT (zk >= 0 && zk < count);
+      SC_ASSERT (zk < count);
       /* change newind to reflect the fact that what is now in zj is what is
        * supposed to be in zj */
       newind[zj] = zj;
