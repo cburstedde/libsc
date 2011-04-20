@@ -209,7 +209,7 @@ main (int argc, char **argv)
   for (i = 0; i < N; i++) {
     SC_CHECK_ABORT (data[2 * i] == 2 * i, "Permutation failure");
     SC_CHECK_ABORT (data[2 * i + 1] == 2 * i + 1, "Permutation failure");
-    SC_CHECK_ABORT (perm[i] == i, "Permutation failure");
+    SC_CHECK_ABORT ((int) perm[i] == i, "Permutation failure");
   }
 
   sc_array_destroy (p);

@@ -459,7 +459,7 @@ sc_array_is_permutation (sc_array_t * newindices)
 
   for (zi = 0; zi < count; zi++) {
     zj = newind[zi];
-    if (zj < 0 || zj >= count) {
+    if (zj >= count) {
       SC_FREE (counted);
       return 0;
     }
