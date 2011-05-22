@@ -554,9 +554,11 @@ sc_dmatrix_multiply (sc_trans_t transa, sc_trans_t transb, double alpha,
   SC_ASSERT (transa == SC_NO_TRANS || transa == SC_TRANS);
   SC_ASSERT (transb == SC_NO_TRANS || transb == SC_TRANS);
 
-  BLAS_DGEMM (&sc_transchar[transb], &sc_transchar[transa], &Ccols,
-              &Crows, &Acols, &alpha, B->e[0], &B->n, A->e[0], &A->n, &beta,
-              C->e[0], &C->n);
+  if (Acols > 0 && Crows > 0 && Ccols > 0) {
+    BLAS_DGEMM (&sc_transchar[transb], &sc_transchar[transa], &Ccols,
+                &Crows, &Acols, &alpha, B->e[0], &B->n, A->e[0], &A->n, &beta,
+                C->e[0], &C->n);
+  }
 }
 
 void
