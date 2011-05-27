@@ -38,10 +38,7 @@ if test -z "$$1_ENABLE_$2" -o "$$1_ENABLE_$2_OVERRIDE" = "no" ; then
 else
   enableval="$$1_ENABLE_$2"
   echo "Option override $1_ENABLE_$2=$enableval"
-  echo "export $1_ENABLE_$2=\"$enableval\"" \
-    | sed 's/\$/\\$/g' >> $1.override.pre
 fi
-$1_OVERRIDES="$$1_OVERRIDES \"$1_ENABLE_$2\", \"$$1_ENABLE_$2\","
 ])
 
 dnl SC_ARG_OVERRIDE_WITH(PREFIX, TOKEN)
@@ -59,42 +56,7 @@ if test -z "$$1_WITH_$2" -o "$$1_WITH_$2_OVERRIDE" = "no" ; then
 else
   withval="$$1_WITH_$2"
   echo "Option override $1_WITH_$2=$withval"
-  echo "export $1_WITH_$2=\"$withval\"" \
-    | sed 's/\$/\\$/g' >> $1.override.pre
 fi
-$1_OVERRIDES="$$1_OVERRIDES \"$1_WITH_$2\", \"$$1_WITH_$2\","
-])
-
-dnl SC_ARG_OVERRIDE_VAR(PREFIX, VARNAME)
-dnl
-AC_DEFUN([SC_ARG_OVERRIDE_VAR],
-[
-if test -n "$$1_$2" ; then
-  echo "Variable override $1_$2=$$1_$2"
-  echo "export $1_$2=\"$$1_$2\"" \
-    | sed 's/\$/\\$/g'>> $1.override.pre
-fi
-$1_OVERRIDES="$$1_OVERRIDES \"$1_$2\", \"$$1_$2\","
-])
-
-dnl SC_ARG_OVERRIDE_SAVE(PREFIX)
-dnl
-AC_DEFUN([SC_ARG_OVERRIDE_SAVE],
-[
-if test -f $1.override.pre ; then
-  mv -f $1.override.pre $1.override
-fi
-AC_DEFINE_UNQUOTED([OVERRIDES], [$$1_OVERRIDES], [$1 argument overrides])
-])
-
-dnl SC_ARG_OVERRIDE_LOAD([PREFIX])
-dnl
-AC_DEFUN([SC_ARG_OVERRIDE_LOAD],
-[
-if test -f $1.override ; then
-  . $1.override
-fi
-$1_OVERRIDES=
 ])
 
 dnl SC_ARG_ENABLE_PREFIX(NAME, COMMENT, TOKEN, PREFIX, HELPEXTRA)

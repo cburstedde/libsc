@@ -18,8 +18,6 @@ echo "o---------------------------------------"
 echo "| Checking options"
 echo "o---------------------------------------"
 
-SC_ARG_OVERRIDE_LOAD([SC])
-
 AC_ARG_ENABLE([logging],
               [AS_HELP_STRING([--enable-logging=PRIO], [\
 change log threshold (see sc.h for possible values)])],
@@ -224,7 +222,5 @@ echo "| FLIBS:       $FLIBS"
 echo "o----------------------------------"
 
 # Create output files.
-SC_ARG_OVERRIDE_SAVE([SC])
-
 AC_CONFIG_FILES([Makefile Makefile.sc.pre])
 AC_OUTPUT

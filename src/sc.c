@@ -731,8 +731,6 @@ sc_init (MPI_Comm mpicomm,
          sc_log_handler_t log_handler, int log_threshold)
 {
   int                 w;
-  const char        **on, **ov;
-  const char         *overrides[] = { SC_OVERRIDES NULL, NULL };
   const char         *trace_file_name;
   const char         *trace_file_prio;
 
@@ -813,13 +811,6 @@ sc_init (MPI_Comm mpicomm,
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LAPACK_LIBS", SC_LAPACK_LIBS);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LIBS", SC_LIBS);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FLIBS", SC_FLIBS);
-
-  w = 32;
-  for (on = overrides; *on != NULL; on = ov + 1) {
-    ov = on + 1;
-    SC_CHECK_ABORT (*ov != NULL, "SC_OVERRIDES should contain pairs");
-    SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, *on, *ov);
-  }
 }
 
 void

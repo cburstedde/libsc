@@ -47,7 +47,7 @@ TESTS_ENVIRONMENT = @SC_MPI_TESTS_ENVIRONMENT@
 EXTRA_DIST += \
         bootstrap scindent config/git-version-gen config/git2cl bugs doc
 DISTCLEANFILES += \
-        _configs.sed src/sc_config.h SC.override.pre SC.override
+        _configs.sed src/sc_config.h
 .PHONY: lint ChangeLog
 
 # non-recursive build
