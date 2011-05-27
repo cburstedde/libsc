@@ -119,6 +119,9 @@ main (int argc, char **argv)
 
   for (i = 0; i < N; ++i) {
     pe = (int *) sc_array_index_int (a, i);
+    SC_CHECK_ABORT (sc_array_position (a, pe) == (size_t) i,
+                    "Position failed");
+
     *pe = (i + N / 2) * (N - i);        /* can create duplicates */
   }
   sc_array_sort (a, sc_int_compare);

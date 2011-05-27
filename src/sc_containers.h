@@ -374,6 +374,23 @@ sc_array_index_int16 (sc_array_t * array, int16_t i16)
   return (void *) (array->array + (array->elem_size * (size_t) i16));
 }
 
+/** Return the index of an object in an array identified by a pointer.
+ * \param [in] element needs to be the address of an element in array.
+ */
+static inline size_t
+sc_array_position (sc_array_t * array, void * element)
+{
+  size_t             position;
+
+  SC_ASSERT (array->array <= (char *) element);
+  SC_ASSERT (((char *) element - array->array) % array->elem_size == 0);
+ 
+  position = ((char *) element - array->array) / array->elem_size;
+  SC_ASSERT (position < array->elem_count);
+
+  return position;
+}
+
 /** Remove the last element from an array and return a pointer to it.
  * This function is not allowed for views.
  * \return                The pointer to the removed object.  Will be valid
