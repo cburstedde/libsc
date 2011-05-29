@@ -220,6 +220,7 @@ void                sc_dmatrix_multiply (sc_trans_t transa,
                                          sc_dmatrix_t * C);
 
 /** \brief Left Divide \c A \ \c B.
+ * The matrices cannot have 0 rows or columns.
  * Solves  \c A \c C = \c B or \c A' \c C = \c B.
  *
  *   \param transa Use the transpose of \c A
@@ -233,6 +234,7 @@ void                sc_dmatrix_ldivide (sc_trans_t transa,
                                         sc_dmatrix_t * C);
 
 /** \brief Right Divide \c A / \c B.
+ * The matrices cannot have 0 rows or columns.
  * Solves  \c A = \c C \c B or \c A = \c C \c B'.
  *
  *   \param transb Use the transpose of \c B

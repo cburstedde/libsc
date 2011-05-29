@@ -505,7 +505,9 @@ sc_dmatrix_add (double alpha, const sc_dmatrix_t * X, sc_dmatrix_t * Y)
   totalsize = X->m * X->n;
 
   inc = 1;
-  BLAS_DAXPY (&totalsize, &alpha, X->e[0], &inc, Y->e[0], &inc);
+  if (totalsize > 0) {
+    BLAS_DAXPY (&totalsize, &alpha, X->e[0], &inc, Y->e[0], &inc);
+  }
 }
 
 void
@@ -528,8 +530,13 @@ sc_dmatrix_vector (sc_trans_t transa, sc_trans_t transx, sc_trans_t transy,
   SC_ASSERT (Acols == dimX && Arows == dimY);
   SC_ASSERT (dimX1 == 1 && dimY1 == 1);
 
-  BLAS_DGEMV (&sc_antitranschar[transa], &A->n, &A->m, &alpha,
-              A->e[0], &A->n, X->e[0], &inc, &beta, Y->e[0], &inc);
+  if (A->n > 0 && A->m > 0) {
+    BLAS_DGEMV (&sc_antitranschar[transa], &A->n, &A->m, &alpha,
+                A->e[0], &A->n, X->e[0], &inc, &beta, Y->e[0], &inc);
+  }
+  else if (beta != 1.) {
+    sc_dmatrix_scale (beta, Y);
+  }
 }
 
 void
@@ -612,6 +619,7 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
 
   SC_ASSERT ((C_nrows == A_nrows) && (B_nrows == C_ncols)
              && (B_ncols == A_ncols));
+  SC_ASSERT (N > 0 && Nrhs > 0);
 
   if (M == N) {
     sc_dmatrix_t       *lu = sc_dmatrix_clone (B);
