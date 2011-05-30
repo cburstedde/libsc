@@ -23,7 +23,7 @@
 #include <sc_search.h>
 
 int
-main (int argc, char ** argv)
+main (int argc, char **argv)
 {
   int                 mpiret;
   int                 mpirank, mpisize;
@@ -48,9 +48,9 @@ main (int argc, char ** argv)
 
       for (i = 0; i < 1 << level; ++i) {
 
-	position = sc_search_bias (maxlevel, level, i, target);
-	SC_LDEBUGF ("Levels %d %d index %d target %d position %d\n",
-		    maxlevel, level, i, target, position);
+        position = sc_search_bias (maxlevel, level, i, target);
+        SC_LDEBUGF ("Levels %d %d index %d target %d position %d\n",
+                    maxlevel, level, i, target, position);
       }
     }
   }

@@ -29,7 +29,7 @@ static const double eps = 2.220446049250313e-16;
 static void
 test_zero_sizes (void)
 {
-  sc_dmatrix_t      *m1, *m2, *m3;
+  sc_dmatrix_t       *m1, *m2, *m3;
 
   m1 = sc_dmatrix_new (0, 3);
   sc_dmatrix_set_value (m1, -5.);

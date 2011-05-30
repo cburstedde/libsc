@@ -23,7 +23,7 @@
 #include <sc_reduce.h>
 
 int
-main (int argc, char ** argv)
+main (int argc, char **argv)
 {
   int                 mpiret;
   int                 mpirank, mpisize;
@@ -63,8 +63,8 @@ main (int argc, char ** argv)
     sc_reduce (fvalue, fresult, 3, MPI_FLOAT, MPI_MAX, i, mpicomm);
     if (i == mpirank) {
       for (j = 0; j < 3; ++j) {
-	SC_CHECK_ABORTF (fresult[j] == fexpect[j],         /* ok */
-			 "Reduce mismatch in %d", j);
+        SC_CHECK_ABORTF (fresult[j] == fexpect[j],      /* ok */
+                         "Reduce mismatch in %d", j);
       }
     }
   }
@@ -77,7 +77,8 @@ main (int argc, char ** argv)
   /* test reduce unsigned short min */
   usvalue = (unsigned short) (mpirank % 32767);
   for (i = 0; i < mpisize; ++i) {
-    sc_reduce (&usvalue, &usresult, 1, MPI_UNSIGNED_SHORT, MPI_MIN, i, mpicomm);
+    sc_reduce (&usvalue, &usresult, 1, MPI_UNSIGNED_SHORT, MPI_MIN, i,
+               mpicomm);
     if (i == mpirank) {
       SC_CHECK_ABORT (usresult == 0, "Reduce mismatch");
     }
@@ -87,16 +88,15 @@ main (int argc, char ** argv)
   lvalue = (long) mpirank;
   sc_allreduce (&lvalue, &lresult, 1, MPI_LONG, MPI_SUM, mpicomm);
   SC_CHECK_ABORT (lresult == ((long) (mpisize - 1)) * mpisize / 2,
-		  "Allreduce mismatch");
+                  "Allreduce mismatch");
 
   /* test reduce double sum */
   dvalue = (double) mpirank;
   for (i = 0; i < mpisize; ++i) {
     sc_reduce (&dvalue, &dresult, 1, MPI_DOUBLE, MPI_SUM, i, mpicomm);
     if (i == mpirank) {
-      SC_CHECK_ABORT (dresult ==
-		      ((double) (mpisize - 1)) * mpisize / 2.,  /* ok */
-		      "Reduce mismatch");
+      SC_CHECK_ABORT (dresult == ((double) (mpisize - 1)) * mpisize / 2.,       /* ok */
+                      "Reduce mismatch");
     }
   }
 

@@ -217,5 +217,5 @@ sc_warp_print (int package_id, int log_priority, sc_warp_interval_t * root)
   else {
     sc_warp_print (package_id, log_priority, root->left);
     sc_warp_print (package_id, log_priority, root->right);
-   }
+  }
 }

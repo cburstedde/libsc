@@ -35,7 +35,7 @@ SC_EXTERN_C_BEGIN;
  * \return          Branch position with 0 <= position <= 2**maxlevel.
  */
 int                 sc_search_bias (int maxlevel, int level,
-				    int interval, int target);
+                                    int interval, int target);
 
 /** Find lowest position k in a sorted array such that array[k] >= target.
  * \param [in]  target  The target lower bound to binary search for.

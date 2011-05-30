@@ -92,9 +92,7 @@ void                LAPACK_DLAIC1 (const int *job,
                                    const double *sest,
                                    const double *w,
                                    const double *gamma,
-                                   double *sestpr,
-                                   double *s,
-                                   double *c);
+                                   double *sestpr, double *s, double *c);
 
 int                 LAPACK_ILAENV (const sc_bint_t * ispec,
                                    const char *name,
