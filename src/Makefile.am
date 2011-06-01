@@ -15,7 +15,7 @@ libsc_installed_headers = \
         src/sc_getopt.h src/sc_obstack.h src/sc_zlib.h \
         src/sc_lua.h \
 	src/sc_keyvalue.h src/sc_warp.h \
-        src/sc_allgather.h src/sc_reduce.h
+        src/sc_allgather.h src/sc_reduce.h src/sc_notify.h
 libsc_internal_headers =
 libsc_compiled_sources = \
         src/sc.c src/sc_mpi.c src/sc_containers.c src/sc_avl.c \
@@ -26,7 +26,7 @@ libsc_compiled_sources = \
         src/sc_bspline.c src/sc_flops.c src/sc_object.c \
         src/sc_getopt.c src/sc_obstack.c src/sc_getopt1.c \
 	src/sc_keyvalue.c src/sc_warp.c \
-        src/sc_allgather.c src/sc_reduce.c
+        src/sc_allgather.c src/sc_reduce.c src/sc_notify.c
 libsc_original_headers = \
         src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h \
         src/sc_builtin/obstack.h \
