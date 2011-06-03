@@ -35,25 +35,27 @@ sc_stats_mpifunc (void *invec, void *inoutvec, int *len,
   for (i = 0; i < *len; ++i) {
     /* sum count, values and their squares */
     inout[0] += in[0];
-    inout[1] += in[1];
-    inout[2] += in[2];
+    if (in[0]) {                /* ignore statistics when no count */
+      inout[1] += in[1];
+      inout[2] += in[2];
 
-    /* compute minimum and its rank */
-    if (in[3] < inout[3]) {
-      inout[3] = in[3];
-      inout[5] = in[5];
-    }
-    else if (in[3] == inout[3]) {       /* ignore the comparison warning */
-      inout[5] = SC_MIN (in[5], inout[5]);
-    }
+      /* compute minimum and its rank */
+      if (in[3] < inout[3]) {
+        inout[3] = in[3];
+        inout[5] = in[5];
+      }
+      else if (in[3] == inout[3]) {     /* ignore the comparison warning */
+        inout[5] = SC_MIN (in[5], inout[5]);
+      }
 
-    /* compute maximum and its rank */
-    if (in[4] > inout[4]) {
-      inout[4] = in[4];
-      inout[6] = in[6];
-    }
-    else if (in[4] == inout[4]) {       /* ignore the comparison warning */
-      inout[6] = SC_MIN (in[6], inout[6]);
+      /* compute maximum and its rank */
+      if (in[4] > inout[4]) {
+        inout[4] = in[4];
+        inout[6] = in[6];
+      }
+      else if (in[4] == inout[4]) {     /* ignore the comparison warning */
+        inout[6] = SC_MIN (in[6], inout[6]);
+      }
     }
 
     /* advance to next data set */
