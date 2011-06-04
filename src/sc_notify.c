@@ -23,6 +23,59 @@
 #include <sc_containers.h>
 #include <sc_notify.h>
 
+int
+sc_notify_allgather (int *receivers, int num_receivers,
+                     int *senders, int *num_senders, MPI_Comm mpicomm)
+{
+  int                 i, j;
+  int                 found_num_senders;
+  int                 mpiret;
+  int                 mpisize, mpirank;
+  int                 total_num_receivers;
+  int                *procs_num_receivers;
+  int                *offsets_num_receivers;
+  int                *all_receivers;
+
+  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = MPI_Comm_rank (mpicomm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  procs_num_receivers = SC_ALLOC (int, mpisize);
+  mpiret = MPI_Allgather (&num_receivers, 1, MPI_INT,
+                          procs_num_receivers, 1, MPI_INT, mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  offsets_num_receivers = SC_ALLOC (int, mpisize);
+  total_num_receivers = 0;
+  for (i = 0; i < mpisize; ++i) {
+    offsets_num_receivers[i] = total_num_receivers;
+    total_num_receivers += procs_num_receivers[i];
+  }
+  all_receivers = SC_ALLOC (int, total_num_receivers);
+  mpiret = MPI_Allgatherv (receivers, num_receivers, MPI_INT,
+                           all_receivers, procs_num_receivers,
+                           offsets_num_receivers, MPI_INT, mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  SC_ASSERT (procs_num_receivers[mpirank] == num_receivers);
+  found_num_senders = 0;
+  for (i = 0; i < mpisize; ++i) {
+    for (j = 0; j < procs_num_receivers[i]; ++j) {
+      if (all_receivers[offsets_num_receivers[i] + j] == mpirank) {
+        senders[found_num_senders++] = i;
+        break;
+      }
+    }
+  }
+  *num_senders = found_num_senders;
+  SC_FREE (procs_num_receivers);
+  SC_FREE (offsets_num_receivers);
+  SC_FREE (all_receivers);
+
+  return MPI_SUCCESS;
+}
+
 /** Internally used function to execute the sc_notify recursion.
  * The internal data format of the input and output arrays is as follows:
  * forall(torank): (torank, howmanyfroms, listoffromranks).

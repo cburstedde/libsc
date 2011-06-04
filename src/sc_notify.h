@@ -28,6 +28,21 @@
 SC_EXTERN_C_BEGIN;
 
 /** Collective call to notify a set of receiver ranks of current rank.
+ * This version uses one call to MPI_Allgather and one to MPI_Allgatherv.
+ * \see sc_notify
+ * \param [in] receivers        Array of MPI ranks to inform.
+ * \param [in] num_receivers    Count of ranks contained in receivers.
+ * \param [in,out] senders      Array of at least size MPI_Comm_size.
+ *                              On output it contains the notifying ranks.
+ * \param [out] num_senders     On output the number of notifying ranks.
+ * \param [in] mpicomm          MPI communicator to use.
+ * \return                      Aborts on MPI error or returns MPI_SUCCESS.
+ */
+int                 sc_notify_allgather (int *receivers, int num_receivers,
+                                         int *senders, int *num_senders,
+                                         MPI_Comm mpicomm);
+
+/** Collective call to notify a set of receiver ranks of current rank.
  * \param [in] receivers        Sorted and unique array of MPI ranks to inform.
  * \param [in] num_receivers    Count of ranks contained in receivers.
  * \param [in,out] senders      Array of at least size MPI_Comm_size.
