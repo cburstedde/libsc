@@ -167,6 +167,11 @@ sc_array_resize (sc_array_t * array, size_t new_count)
     return;
   }
 
+  if (new_count == 0) {
+    sc_array_reset (array);
+    return;
+  }
+
 #ifdef SC_DEBUG
   oldoffs = array->elem_count * array->elem_size;
 #endif
