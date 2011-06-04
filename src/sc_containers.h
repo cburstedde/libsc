@@ -406,7 +406,30 @@ sc_array_pop (sc_array_t * array)
   return (void *) (array->array + (array->elem_size * --array->elem_count));
 }
 
-/** Enlarge an array by one.  Grows the array if necessary.
+/** Enlarge an array by a number of elements.  Grows the array if necessary.
+ * This function is not allowed for views.
+ * \return Returns a pointer to the uninitialized newly added elements.
+ */
+/*@unused@*/
+static inline void *
+sc_array_push_count (sc_array_t * array, size_t add_count)
+{
+  const size_t        old_count = array->elem_count;
+  const size_t        new_count = old_count + add_count;
+
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+
+  if (array->elem_size * new_count > (size_t) array->byte_alloc) {
+    sc_array_resize (array, new_count);
+  }
+  else {
+    array->elem_count = new_count;
+  }
+
+  return (void *) (array->array + array->elem_size * old_count);
+}
+
+/** Enlarge an array by one element.  Grows the array if necessary.
  * This function is not allowed for views.
  * \return Returns a pointer to the uninitialized newly added element.
  */
@@ -414,39 +437,7 @@ sc_array_pop (sc_array_t * array)
 static inline void *
 sc_array_push (sc_array_t * array)
 {
-  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
-
-  if (array->elem_size * (array->elem_count + 1) > (size_t) array->byte_alloc) {
-    const size_t        old_count = array->elem_count;
-
-    sc_array_resize (array, old_count + 1);
-    return (void *) (array->array + (array->elem_size * old_count));
-  }
-
-  return (void *) (array->array + (array->elem_size * array->elem_count++));
-}
-
-/** Enlarge a char array by a given number.  Grows the array if necessary.
- * This function is not allowed for views.
- * \return Returns a pointer to the uninitialized newly added bytes.
- */
-/*@unused@*/
-static inline char *
-sc_array_push_bytes (sc_array_t * array, size_t bytes)
-{
-  const size_t        old_count = array->elem_count;
-
-  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
-  SC_ASSERT (array->elem_size == 1);
-
-  if (old_count + bytes > (size_t) array->byte_alloc) {
-    sc_array_resize (array, old_count + bytes);
-  }
-  else {
-    array->elem_count += bytes;
-  }
-
-  return array->array + old_count;
+  return sc_array_push_count (array, 1);
 }
 
 /** The sc_mempool object provides a large pool of equal-size elements.
