@@ -67,7 +67,7 @@ main (int argc, char **argv)
     ldata[zz] = (char) (-50. + (300. * rand () / (RAND_MAX + 1.0)));
   }
   sc_psort (mpicomm, ldata, nmemb, size, the_compare);
-  // qsort (ldata, nmemb[rank], size, the_compare);
+  /* qsort (ldata, nmemb[rank], size, the_compare); */
 
   for (zz = 1; zz < lsize; ++zz) {
     SC_CHECK_ABORT (the_compare (ldata + size * (zz - 1),

@@ -625,12 +625,12 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
     sc_dmatrix_t       *lu = sc_dmatrix_clone (B);
     sc_bint_t          *ipiv = SC_ALLOC (sc_bint_t, N);
 
-    // Perform an LU factorization of B.
+    /* Perform an LU factorization of B. */
     LAPACK_DGETRF (&N, &N, lu->e[0], &N, ipiv, &info);
 
     SC_ASSERT (info == 0);
 
-    // Solve the linear system.
+    /* Solve the linear system. */
     sc_dmatrix_copy (A, C);
     LAPACK_DGETRS (&sc_transchar[transb], &N, &Nrhs, lu->e[0], &N,
                    ipiv, C->e[0], &N, &info);
