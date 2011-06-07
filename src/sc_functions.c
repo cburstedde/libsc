@@ -72,36 +72,29 @@ sc_function1_invert (sc_function1_t func, void *data,
 void
 sc_srand (unsigned int seed)
 {
-  int                 i;
-  unsigned int        mpiseed;
-
-  int                 mpirank;
   int                 mpiret;
+  int                 mpirank;
 
   mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  mpiseed = seed;
-  for (i = 0; i < mpirank; i++)
-    mpiseed *= seed;
-
-  srand (mpiseed);
+  srand (seed ^ (unsigned int) mpirank);
 }
 
 double
-sc_rand_uniform ()
+sc_rand_uniform (void)
 {
   return rand () / (RAND_MAX + 1.0);
 }
 
 double
-sc_rand_normal ()
+sc_rand_normal (void)
 {
   double              u, v, s;
 
   do {
-    u = 2.0 * (sc_rand_uniform () - 0.5);       /* uniform on [-1,1] */
-    v = 2.0 * (sc_rand_uniform () - 0.5);       /* uniform on [-1,1] */
+    u = 2.0 * (sc_rand_uniform () - 0.5);       /* uniform on [-1,1) */
+    v = 2.0 * (sc_rand_uniform () - 0.5);       /* uniform on [-1,1) */
     s = u * u + v * v;
   } while (s > 1.0 || s <= 0.0);
 

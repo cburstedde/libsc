@@ -55,25 +55,25 @@ double              sc_function1_invert (sc_function1_t func, void *data,
                                          double x_low, double x_high,
                                          double y, double rtol);
 
-/** Seed the random number generator based on mpirank
- * Seeds each process with seed^mpirank
+/** Seed the random number generator differently on each process.
+ * Seeds each process with seed^mpirank from MPI_COMM_WORLD.
  *
- * \param [in]    seed  deterministic seed for random number generator
+ * \param [in] seed Seed for random number generator, calls srand ().
  */
 void                sc_srand (unsigned int seed);
 
-/** Sample a uniform value from [0,1)
+/** Sample a uniform value from [0,1) via rand ().
  *
  * \return    randum number from uniform distribution on [0,1)
  */
-double              sc_rand_uniform ();
+double              sc_rand_uniform (void);
 
-/** Sample a (gaussian) standard normal distribution
- * Implements polar form of the Box Muller Transform
+/** Sample a (gaussian) standard normal distribution.
+ * Implements polar form of the Box Muller transform based on rand ().
  *
  * \return    random number from a univariate standard normal distribution
  */
-double              sc_rand_normal ();
+double              sc_rand_normal (void);
 
 /* Some basic 3D functions */
 double              sc_zero3 (double x, double y, double z, void *data);
