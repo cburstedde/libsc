@@ -192,6 +192,13 @@ void                sc_array_reset (sc_array_t * array);
  */
 void                sc_array_resize (sc_array_t * array, size_t new_count);
 
+/** Copy the contents of an array into another.
+ * Both arrays must have equal element sizes.
+ * \param [in] dest Array (not a view) will be resized and get new data.
+ * \param [in] src  Array used as source of new data, will not be changed.
+ */
+void                sc_array_copy (sc_array_t * dest, sc_array_t * src);
+
 /** Sorts the array in ascending order wrt. the comparison function.
  * \param [in] array    The array to sort.
  * \param [in] compar   The comparison function to be used.
@@ -203,10 +210,20 @@ void                sc_array_sort (sc_array_t * array,
 /** Check whether the array is sorted wrt. the comparison function.
  * \param [in] array    The array to check.
  * \param [in] compar   The comparison function to be used.
+ * \return              True if array is sorted, false otherwise.
  */
 int                 sc_array_is_sorted (sc_array_t * array,
                                         int (*compar) (const void *,
                                                        const void *));
+
+/** Check whether two arrays have equal size, count, and content.
+ * Either array may be a view.  Both arrays will not be changed.
+ * \param [in] array   One array to be compared.
+ * \param [in] other   A second array to be compared.
+ * \return              True if array and other are equal, false otherwise.
+ */
+int                 sc_array_is_equal (sc_array_t * array,
+                                       sc_array_t * other);
 
 /** Removed duplicate entries from a sorted array.
  * This function is not allowed for views.

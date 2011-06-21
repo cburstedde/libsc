@@ -270,6 +270,16 @@ sc_array_resize (sc_array_t * array, size_t new_count)
 #endif /* !SC_USE_REALLOC */
 
 void
+sc_array_copy (sc_array_t * dest, sc_array_t * src)
+{
+  SC_ASSERT (SC_ARRAY_IS_OWNER (dest));
+  SC_ASSERT (dest->elem_size == src->elem_size);
+
+  sc_array_resize (dest, src->elem_count);
+  memcpy (dest->array, src->array, src->elem_count * src->elem_size);
+}
+
+void
 sc_array_sort (sc_array_t * array, int (*compar) (const void *, const void *))
 {
   qsort (array->array, array->elem_count, array->elem_size, compar);
@@ -297,6 +307,17 @@ sc_array_is_sorted (sc_array_t * array,
   }
 
   return 1;
+}
+
+int
+sc_array_is_equal (sc_array_t * array, sc_array_t * other)
+{
+  if (array->elem_size != other->elem_size ||
+      array->elem_count != other->elem_count) {
+    return 0;
+  }
+  return !memcmp (array->array, other->array,
+                  array->elem_size * array->elem_count);
 }
 
 void
