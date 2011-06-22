@@ -49,6 +49,7 @@ sc_tag_t;
 
 #define MPI_ANY_SOURCE          (-2)
 #define MPI_ANY_TAG             (-1)
+#define MPI_STATUS_IGNORE       (MPI_Status *) 1
 #define MPI_STATUSES_IGNORE     (MPI_Status *) 1
 
 #define MPI_REQUEST_NULL        ((MPI_Request) 0x2c000000)
@@ -140,6 +141,7 @@ int                 MPI_Iprobe (int, int, MPI_Comm, int *, MPI_Status *);
 int                 MPI_Get_count (MPI_Status *, MPI_Datatype, int *);
 
 /* These functions are only allowed to be called with zero size arrays. */
+int                 MPI_Wait (MPI_Request *, MPI_Status *);
 int                 MPI_Waitsome (int, MPI_Request *,
                                   int *, int *, MPI_Status *);
 int                 MPI_Waitall (int, MPI_Request *, MPI_Status *);

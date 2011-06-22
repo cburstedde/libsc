@@ -256,6 +256,13 @@ MPI_Get_count (MPI_Status * status, MPI_Datatype datatype, int *count)
 }
 
 int
+MPI_Wait (MPI_Request * request, MPI_Status * status)
+{
+  SC_ABORT ("MPI_Wait is not implemented");
+  return MPI_SUCCESS;
+}
+
+int
 MPI_Waitsome (int incount, MPI_Request * array_of_requests,
               int *outcount, int *array_of_indices,
               MPI_Status * array_of_statuses)
