@@ -79,13 +79,12 @@ sc_notify_allgather (int *receivers, int num_receivers,
 /** Internally used function to merge two data arrays.
  * The internal data format of the arrays is as follows:
  * forall(torank): (torank, howmanyfroms, listoffromranks).
+ * \param [in,out] output   Output array, must initially be empty.
  * \param [in] input        Input array.  Records torank = -1 are ignored.
  * \param [in] second       Second input array, valid records only.
- * \param [in,out] output   Output array, must initially be empty.
  */
 static void
-sc_notify_merge (sc_array_t * input, sc_array_t * second,
-                 sc_array_t * output)
+sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second)
 {
   int                 i, ir, j, jr, k;
   int                 torank, numfroms;
@@ -319,7 +318,7 @@ sc_notify_recursive (MPI_Comm mpicomm, int start, int me, int length,
       if (peer2 >= 0) {
         /* merge the temparr and recvbuf arrays */
         morebuf = sc_array_new (sizeof (int));
-        sc_notify_merge (temparr, recvbuf, morebuf);
+        sc_notify_merge (morebuf, temparr, recvbuf);
 
         /* receive second message */
         source = (source == peer2 ? peer : peer2);
@@ -333,12 +332,12 @@ sc_notify_recursive (MPI_Comm mpicomm, int start, int me, int length,
         SC_CHECK_MPI (mpiret);
 
         /* merge the second received array */
-        sc_notify_merge (morebuf, recvbuf, output);
+        sc_notify_merge (output, morebuf, recvbuf);
         sc_array_destroy (morebuf);
       }
     }
     if (peer2 == -1) {
-      sc_notify_merge (temparr, recvbuf, output);
+      sc_notify_merge (output, temparr, recvbuf);
     }
     sc_array_destroy (recvbuf);
     sc_array_destroy (temparr);
