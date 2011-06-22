@@ -76,6 +76,130 @@ sc_notify_allgather (int *receivers, int num_receivers,
   return MPI_SUCCESS;
 }
 
+/** Internally used function to merge two data arrays.
+ * The internal data format of the arrays is as follows:
+ * forall(torank): (torank, howmanyfroms, listoffromranks).
+ * \param [in] input        Input array.  Records torank = -1 are ignored.
+ * \param [in] second       Second input array, valid records only.
+ * \param [in,out] output   Output array, must initially be empty.
+ */
+static void
+sc_notify_merge (sc_array_t * input, sc_array_t * second,
+                 sc_array_t * output)
+{
+  int                 i, ir, j, jr, k;
+  int                 torank, numfroms;
+  int                *pint, *psec, *pout;
+  
+  SC_ASSERT (input->elem_size == sizeof (int));
+  SC_ASSERT (second->elem_size == sizeof (int));
+  SC_ASSERT (output->elem_size == sizeof (int));
+  SC_ASSERT (output->elem_count == 0);
+
+  i = ir = 0;
+  torank = -1;
+  for (;;) {
+    pint = psec = NULL;
+    while (i < (int) input->elem_count) {
+      /* ignore data that was sent to the peer earlier */
+      pint = (int *) sc_array_index_int (input, i);
+      if (pint[0] == -1) {
+        i += 2 + pint[1];
+        SC_ASSERT (i <= (int) input->elem_count);
+        pint = NULL;
+      }
+      else {
+        break;
+      }
+    }
+    if (ir < (int) second->elem_count) {
+      psec = (int *) sc_array_index_int (second, ir);
+    }
+    if (pint == NULL && psec == NULL) {
+      /* all data is processed and we are done */
+      break;
+    }
+    else if (pint != NULL && psec == NULL) {
+      /* copy input to output */
+    }
+    else if (pint == NULL && psec != NULL) {
+      /* copy second to output */
+    }
+    else {
+      /* both arrays have remaining elements and need to be compared */
+      if (pint[0] < psec[0]) {
+        /* copy input to output */
+        psec = NULL;
+      }
+      else if (pint[0] > psec[0]) {
+        /* copy second to output */
+        pint = NULL;
+      }
+      else {
+        /* both arrays have data for the same processor */
+        SC_ASSERT (torank < pint[0] && pint[0] == psec[0]);
+        torank = pint[0];
+        SC_ASSERT (pint[1] > 0 && psec[1] > 0);
+        SC_ASSERT (i + 2 + pint[1] <= (int) input->elem_count);
+        SC_ASSERT (ir + 2 + psec[1] <= (int) second->elem_count);
+        numfroms = pint[1] + psec[1];
+        pout = (int *) sc_array_push_count (output, 2 + numfroms);
+        pout[0] = torank;
+        pout[1] = numfroms;
+        k = 2;
+        j = jr = 0;
+    
+        SC_LDEBUGF ("Before while with iir %d %d\n", i, ir);
+
+        while (j < pint[1] || jr < psec[1]) {
+          SC_ASSERT (j >= pint[1] || jr >= psec[1]
+                     || pint[2 + j] != psec[2 + jr]);
+          if (j < pint[1] &&
+              (jr >= psec[1] || pint[2 + j] < psec[2 + jr])) {
+            pout[k++] = pint[2 + j++];
+          }
+          else {
+            SC_ASSERT (jr < psec[1]);
+            pout[k++] = psec[2 + jr++];
+          }
+        }
+        SC_ASSERT (k == 2 + numfroms);
+        i += 2 + pint[1];
+        ir += 2 + psec[1];
+        continue;
+      }
+    }
+
+    SC_LDEBUGF ("Between with iir %d %d\n", i, ir);
+
+    /* we need to copy exactly one buffer to the output array */
+    if (psec == NULL) {
+      SC_ASSERT (pint != NULL);
+      SC_ASSERT (torank < pint[0]);
+      torank = pint[0];
+      SC_ASSERT (i + 2 + pint[1] <= (int) input->elem_count);
+      numfroms = pint[1];
+      SC_ASSERT (numfroms > 0);
+      pout = (int *) sc_array_push_count (output, 2 + numfroms);
+      memcpy (pout, pint, (2 + numfroms) * sizeof (int));
+      i += 2 + numfroms;
+    }
+    else {
+      SC_ASSERT (pint == NULL);
+      SC_ASSERT (torank < psec[0]);
+      torank = psec[0];
+      SC_ASSERT (ir + 2 + psec[1] <= (int) second->elem_count);
+      numfroms = psec[1];
+      SC_ASSERT (numfroms > 0);
+      pout = (int *) sc_array_push_count (output, 2 + numfroms);
+      memcpy (pout, psec, (2 + numfroms) * sizeof (int));
+      ir += 2 + numfroms;
+    }
+  }
+  SC_ASSERT (i == (int) input->elem_count);
+  SC_ASSERT (ir == (int) second->elem_count);
+}
+
 /** Internally used function to execute the sc_notify recursion.
  * The internal data format of the input and output arrays is as follows:
  * forall(torank): (torank, howmanyfroms, listoffromranks).
@@ -92,14 +216,14 @@ sc_notify_recursive (int start, int end, int me, int length,
                      sc_array_t * input, sc_array_t * output,
                      MPI_Comm mpicomm)
 {
-  int                 i, ir, j, jr, k;
+  int                 i, j;
   int                 mpiret;
   int                 num_ta, num_out;
   int                 length2, half;
   int                 torank, fromrank, numfroms;
   int                 peer;
   int                 count;
-  int                *pint, *pout, *precv;
+  int                *pint, *pout;
   sc_array_t         *temparr;
   sc_array_t         *sendbuf, *recvbuf;
   MPI_Request         outrequest;
@@ -181,105 +305,7 @@ sc_notify_recursive (int start, int end, int me, int length,
       SC_CHECK_MPI (mpiret);
 
       /* merge the temparr and recvbuf arrays */
-      i = ir = 0;
-      torank = -1;
-      for (;;) {
-        pint = precv = NULL;
-        while (i < (int) temparr->elem_count) {
-          /* ignore data that was sent to the peer earlier */
-          pint = (int *) sc_array_index_int (temparr, i);
-          if (pint[0] == -1) {
-            i += 2 + pint[1];
-            SC_ASSERT (i <= (int) temparr->elem_count);
-            pint = NULL;
-          }
-          else {
-            break;
-          }
-        }
-        if (ir < (int) recvbuf->elem_count) {
-          precv = (int *) sc_array_index_int (recvbuf, ir);
-        }
-        if (pint == NULL && precv == NULL) {
-          /* all data is processed and we are done */
-          break;
-        }
-        else if (pint != NULL && precv == NULL) {
-          /* copy temparr to output */
-        }
-        else if (pint == NULL && precv != NULL) {
-          /* copy recvbuf to output */
-        }
-        else {
-          /* both arrays have remaining elements and need to be compared */
-          if (pint[0] < precv[0]) {
-            /* copy temparr to output */
-            precv = NULL;
-          }
-          else if (pint[0] > precv[0]) {
-            /* copy recvbuf to output */
-            pint = NULL;
-          }
-          else {
-            /* both arrays have data for the same processor */
-            SC_ASSERT (torank < pint[0] && pint[0] == precv[0]);
-            torank = pint[0];
-            SC_ASSERT (pint[1] > 0 && precv[1] > 0);
-            SC_ASSERT (i + 2 + pint[1] <= (int) temparr->elem_count);
-            SC_ASSERT (ir + 2 + precv[1] <= (int) recvbuf->elem_count);
-            numfroms = pint[1] + precv[1];
-            pout = (int *) sc_array_push_count (output, 2 + numfroms);
-            pout[0] = torank;
-            pout[1] = numfroms;
-            k = 2;
-            j = jr = 0;
-            while (j < pint[1] || jr < precv[1]) {
-              SC_ASSERT (j >= pint[1] || jr >= precv[1]
-                         || pint[2 + j] != precv[2 + jr]);
-              if (j < pint[1] &&
-                  (jr >= precv[1] || pint[2 + j] < precv[2 + jr])) {
-                pout[k++] = pint[2 + j++];
-              }
-              else {
-                SC_ASSERT (jr < precv[1]);
-                pout[k++] = precv[2 + jr++];
-              }
-            }
-            SC_ASSERT (k == 2 + numfroms);
-            i += 2 + pint[1];
-            ir += 2 + precv[1];
-            continue;
-          }
-        }
-
-        SC_LDEBUGF ("Between with iir %d %d\n", i, ir);
-
-        /* we need to copy exactly one buffer to the output array */
-        if (precv == NULL) {
-          SC_ASSERT (pint != NULL);
-          SC_ASSERT (torank < pint[0]);
-          torank = pint[0];
-          SC_ASSERT (i + 2 + pint[1] <= (int) temparr->elem_count);
-          numfroms = pint[1];
-          SC_ASSERT (numfroms > 0);
-          pout = (int *) sc_array_push_count (output, 2 + numfroms);
-          memcpy (pout, pint, (2 + numfroms) * sizeof (int));
-          i += 2 + numfroms;
-        }
-        else {
-          SC_ASSERT (pint == NULL);
-          SC_ASSERT (torank < precv[0]);
-          torank = precv[0];
-          SC_ASSERT (ir + 2 + precv[1] <= (int) recvbuf->elem_count);
-          numfroms = precv[1];
-          SC_ASSERT (numfroms > 0);
-          pout = (int *) sc_array_push_count (output, 2 + numfroms);
-          memcpy (pout, precv, (2 + numfroms) * sizeof (int));
-          ir += 2 + numfroms;
-        }
-      }
-      SC_ASSERT (i == (int) temparr->elem_count);
-      SC_ASSERT (ir == (int) recvbuf->elem_count);
+      sc_notify_merge (temparr, recvbuf, output);
       sc_array_destroy (recvbuf);
 
       /* complete send call */
