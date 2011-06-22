@@ -216,11 +216,14 @@ sc_notify_recursive (int start, int end, int me, int length,
                      sc_array_t * input, sc_array_t * output,
                      MPI_Comm mpicomm)
 {
-  int                 i, j;
+  int                 i;
   int                 mpiret;
-  int                 num_ta, num_out;
+  int                 num_ta;
   int                 length2, half;
-  int                 torank, fromrank, numfroms;
+  int                 torank, numfroms;
+#ifdef SC_DEBUG
+  int                 j, fromrank, num_out;
+#endif
   int                 peer;
   int                 count;
   int                *pint, *pout;
@@ -327,6 +330,8 @@ sc_notify_recursive (int start, int end, int me, int length,
 
   SC_LDEBUGF ("Into verify start %d end %d length %d\n", start, end, length);
 
+
+#ifdef SC_DEBUG
   /* verify recursion invariant */
   num_out = (int) output->elem_count;
   torank = -1;
@@ -344,6 +349,7 @@ sc_notify_recursive (int start, int end, int me, int length,
     }
     i += 2 + numfroms;
   }
+#endif
 
   SC_LDEBUGF ("Done verify start %d end %d length %d\n", start, end, length);
 }
