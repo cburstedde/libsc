@@ -149,8 +149,6 @@ sc_notify_merge (sc_array_t * input, sc_array_t * second,
         k = 2;
         j = jr = 0;
     
-        SC_LDEBUGF ("Before while with iir %d %d\n", i, ir);
-
         while (j < pint[1] || jr < psec[1]) {
           SC_ASSERT (j >= pint[1] || jr >= psec[1]
                      || pint[2 + j] != psec[2 + jr]);
@@ -169,8 +167,6 @@ sc_notify_merge (sc_array_t * input, sc_array_t * second,
         continue;
       }
     }
-
-    SC_LDEBUGF ("Between with iir %d %d\n", i, ir);
 
     /* we need to copy exactly one buffer to the output array */
     if (psec == NULL) {
@@ -204,7 +200,7 @@ sc_notify_merge (sc_array_t * input, sc_array_t * second,
  * The internal data format of the input and output arrays is as follows:
  * forall(torank): (torank, howmanyfroms, listoffromranks).
  * \param [in] start        Offset of range of ranks.
- * \param [in] end          End (exclusive) of range of ranks.
+ * \param [in] end          End (exclusive) of global range of ranks.
  * \param [in] me           Current MPI process in range of ranks.
  * \param [in] length       Next-biggest or equal power of 2 for (end - start).
  * \param [in,out] input    Array of integers.  Overwritten for work space.
@@ -224,21 +220,18 @@ sc_notify_recursive (int start, int end, int me, int length,
 #ifdef SC_DEBUG
   int                 j, fromrank, num_out;
 #endif
-  int                 peer;
-  int                 count;
+  int                 peer, peer2, source;
+  int                 tag, count;
   int                *pint, *pout;
-  sc_array_t         *temparr;
+  sc_array_t         *temparr, *morebuf;
   sc_array_t         *sendbuf, *recvbuf;
   MPI_Request         outrequest;
   MPI_Status          instatus;
 
-  SC_LDEBUGF ("Call recursion start %d end %d length %d\n",
-              start, end, length);
-
+  tag = SC_TAG_NOTIFY_RECURSIVE + SC_LOG2_32 (length);
   length2 = length / 2;
-  SC_ASSERT (start <= me && me < end);
+  SC_ASSERT (start <= me && me < start + length && me < end);
   SC_ASSERT (start % length == 0);
-  SC_ASSERT (start < end && end <= start + length);
   SC_ASSERT (input->elem_size == sizeof (int));
   SC_ASSERT (output->elem_size == sizeof (int));
   SC_ASSERT (output->elem_count == 0);
@@ -248,7 +241,7 @@ sc_notify_recursive (int start, int end, int me, int length,
     temparr = sc_array_new (sizeof (int));
     if (me < start + length2) {
       half = 0;
-      sc_notify_recursive (start, start + length2, me, length2,
+      sc_notify_recursive (start, end, me, length2,
                            input, temparr, mpicomm);
     }
     else {
@@ -258,18 +251,33 @@ sc_notify_recursive (int start, int end, int me, int length,
     }
     /* the input array is now invalid and all data is in temparr */
 
-    SC_LDEBUGF ("Done recursion start %d end %d length %d\n", start, end,
-                length);
-
-    /* communicate results */
+    /* determine communication pattern */
     peer = me ^ length2;
     SC_ASSERT (start <= peer && peer < start + length);
     if (peer < end) {
+      /* peer exists even when mpisize is not a power of 2 */
       SC_ASSERT ((!half && me < peer) || (half && me > peer));
-      num_ta = (int) temparr->elem_count;
-      sendbuf = sc_array_new (sizeof (int));
+    }
+    else {
+      /* peer does not exist; send to a lower processor if nonnegative */
+      SC_ASSERT (!half && me < peer);
+      peer -= length;
+      SC_ASSERT (start - length2 <= peer && peer < start);
+    }
+    peer2 = me + length2;
+    if (half && peer2 < end && (peer2 ^ length2) >= end) {
+      /* we will receive from peer2 who has no peer itself */
+      SC_ASSERT (start + length <= peer2 && !(peer2 & length2));
+    }
+    else {
+      peer2 = -1;
+    }
+    SC_ASSERT (peer >= 0 || peer2 == -1);
 
-      /* fill send buffer */
+    sendbuf = sc_array_new (sizeof (int));
+    if (peer >= 0) {
+      /* send one message */
+      num_ta = (int) temparr->elem_count;
       torank = -1;
       for (i = 0; i < num_ta;) {
         pint = (int *) sc_array_index_int (temparr, i);
@@ -290,46 +298,63 @@ sc_notify_recursive (int start, int end, int me, int length,
         }
         i += 2 + numfroms;
       }
-
-      /* send message non-blocking */
       mpiret = MPI_Isend (sendbuf->array, (int) sendbuf->elem_count, MPI_INT,
-                          peer, SC_TAG_NOTIFY_RECURSIVE, mpicomm,
-                          &outrequest);
+                          peer, tag, mpicomm, &outrequest);
       SC_CHECK_MPI (mpiret);
+    }
 
-      /* receive message */
-      mpiret = MPI_Probe (peer, SC_TAG_NOTIFY_RECURSIVE, mpicomm, &instatus);
+    recvbuf = sc_array_new (sizeof (int));
+    if (peer >= start) {
+      /* receive one message */
+      mpiret = MPI_Probe (MPI_ANY_SOURCE, tag, mpicomm, &instatus);
       SC_CHECK_MPI (mpiret);
+      source = instatus.MPI_SOURCE;
+      SC_ASSERT (source >= 0 && (source == peer || source == peer2));
       mpiret = MPI_Get_count (&instatus, MPI_INT, &count);
       SC_CHECK_MPI (mpiret);
-      recvbuf = sc_array_new_size (sizeof (int), (size_t) count);
-      mpiret = MPI_Recv (recvbuf->array, count, MPI_INT, peer,
-                         SC_TAG_NOTIFY_RECURSIVE, mpicomm, MPI_STATUS_IGNORE);
+      sc_array_resize (recvbuf, (size_t) count);
+      mpiret = MPI_Recv (recvbuf->array, count, MPI_INT, source,
+                         tag, mpicomm, MPI_STATUS_IGNORE);
       SC_CHECK_MPI (mpiret);
 
-      /* merge the temparr and recvbuf arrays */
-      sc_notify_merge (temparr, recvbuf, output);
-      sc_array_destroy (recvbuf);
+      if (peer2 >= 0) {
+        /* merge the temparr and recvbuf arrays */
+        morebuf = sc_array_new (sizeof (int));
+        sc_notify_merge (temparr, recvbuf, morebuf);
 
+        /* receive second message */
+        source = (source == peer2 ? peer : peer2);
+        mpiret = MPI_Probe (source, tag, mpicomm, &instatus);
+        SC_CHECK_MPI (mpiret);
+        mpiret = MPI_Get_count (&instatus, MPI_INT, &count);
+        SC_CHECK_MPI (mpiret);
+        sc_array_resize (recvbuf, (size_t) count);
+        mpiret = MPI_Recv (recvbuf->array, count, MPI_INT, source,
+                           tag, mpicomm, MPI_STATUS_IGNORE);
+        SC_CHECK_MPI (mpiret);
+
+        /* merge the second received array */
+        sc_notify_merge (morebuf, recvbuf, output);
+        sc_array_destroy (morebuf);
+      }
+    }
+    if (peer2 == -1) {
+      sc_notify_merge (temparr, recvbuf, output);
+    }
+    sc_array_destroy (recvbuf);
+    sc_array_destroy (temparr);
+
+    if (peer >= 0) {
       /* complete send call */
       mpiret = MPI_Wait (&outrequest, MPI_STATUS_IGNORE);
       SC_CHECK_MPI (mpiret);
-      sc_array_destroy (sendbuf);
     }
-    else {
-      /* the length is not a power of two and there is no valid peer */
-      SC_ASSERT (!half && me < peer);
-      sc_array_copy (output, temparr);
-    }
-    sc_array_destroy (temparr);
+    sc_array_destroy (sendbuf);
   }
   else {
     /* end of recursion: copy input to output unchanged */
     sc_array_copy (output, input);
   }
-
-  SC_LDEBUGF ("Into verify start %d end %d length %d\n", start, end, length);
-
 
 #ifdef SC_DEBUG
   /* verify recursion invariant */
@@ -350,8 +375,6 @@ sc_notify_recursive (int start, int end, int me, int length,
     i += 2 + numfroms;
   }
 #endif
-
-  SC_LDEBUGF ("Done verify start %d end %d length %d\n", start, end, length);
 }
 
 int
