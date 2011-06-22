@@ -199,18 +199,17 @@ sc_notify_merge (sc_array_t * input, sc_array_t * second,
 /** Internally used function to execute the sc_notify recursion.
  * The internal data format of the input and output arrays is as follows:
  * forall(torank): (torank, howmanyfroms, listoffromranks).
+ * \param [in] mpicomm      Communicator to use.
  * \param [in] start        Offset of range of ranks.
- * \param [in] end          End (exclusive) of global range of ranks.
  * \param [in] me           Current MPI process in range of ranks.
- * \param [in] length       Next-biggest or equal power of 2 for (end - start).
+ * \param [in] length       Next-biggest or equal power of 2 for range.
+ * \param [in] groupsize    Global count of ranks.
  * \param [in,out] input    Array of integers.  Overwritten for work space.
  * \param [in,out] output   Array of integers, must initially be empty.
- * \param [in] mpicomm      Communicator to use.
  */
 static void
-sc_notify_recursive (int start, int end, int me, int length,
-                     sc_array_t * input, sc_array_t * output,
-                     MPI_Comm mpicomm)
+sc_notify_recursive (MPI_Comm mpicomm, int start, int me, int length,
+                     int groupsize, sc_array_t * input, sc_array_t * output)
 {
   int                 i;
   int                 mpiret;
@@ -230,7 +229,7 @@ sc_notify_recursive (int start, int end, int me, int length,
 
   tag = SC_TAG_NOTIFY_RECURSIVE + SC_LOG2_32 (length);
   length2 = length / 2;
-  SC_ASSERT (start <= me && me < start + length && me < end);
+  SC_ASSERT (start <= me && me < start + length && me < groupsize);
   SC_ASSERT (start % length == 0);
   SC_ASSERT (input->elem_size == sizeof (int));
   SC_ASSERT (output->elem_size == sizeof (int));
@@ -241,20 +240,20 @@ sc_notify_recursive (int start, int end, int me, int length,
     temparr = sc_array_new (sizeof (int));
     if (me < start + length2) {
       half = 0;
-      sc_notify_recursive (start, end, me, length2,
-                           input, temparr, mpicomm);
+      sc_notify_recursive (mpicomm, start, me, length2,
+                           groupsize, input, temparr);
     }
     else {
       half = 1;
-      sc_notify_recursive (start + length2, end, me, length2,
-                           input, temparr, mpicomm);
+      sc_notify_recursive (mpicomm, start + length2, me, length2,
+                           groupsize, input, temparr);
     }
     /* the input array is now invalid and all data is in temparr */
 
     /* determine communication pattern */
     peer = me ^ length2;
     SC_ASSERT (start <= peer && peer < start + length);
-    if (peer < end) {
+    if (peer < groupsize) {
       /* peer exists even when mpisize is not a power of 2 */
       SC_ASSERT ((!half && me < peer) || (half && me > peer));
     }
@@ -265,7 +264,7 @@ sc_notify_recursive (int start, int end, int me, int length,
       SC_ASSERT (start - length2 <= peer && peer < start);
     }
     peer2 = me + length2;
-    if (half && peer2 < end && (peer2 ^ length2) >= end) {
+    if (half && peer2 < groupsize && (peer2 ^ length2) >= groupsize) {
       /* we will receive from peer2 who has no peer itself */
       SC_ASSERT (start + length <= peer2 && !(peer2 & length2));
     }
@@ -414,8 +413,8 @@ sc_notify (int *receivers, int num_receivers,
     pint[2] = mpirank;
   }
 
-  sc_notify_recursive (0, mpisize, mpirank, pow2length, &input, &output,
-                       mpicomm);
+  sc_notify_recursive (mpicomm, 0, mpirank, pow2length,
+                       mpisize, &input, &output);
   sc_array_reset (&input);
 
   found_num_senders = 0;
