@@ -100,7 +100,7 @@ static int          default_malloc_count = 0;
 static int          default_free_count = 0;
 
 static int          sc_identifier = -1;
-static MPI_Comm     sc_mpicomm = MPI_COMM_NULL;
+static MPI_Comm     sc_mpicomm = MPI_COMM_WORLD;
 
 static FILE        *sc_log_stream = NULL;
 static sc_log_handler_t sc_default_log_handler = sc_log_handler;
@@ -112,8 +112,6 @@ static sc_sig_t     system_segv_handler = NULL;
 static sc_sig_t     system_usr2_handler = NULL;
 
 static int          sc_print_backtrace = 0;
-static sc_handler_t sc_abort_handler = NULL;
-static void        *sc_abort_data = NULL;
 
 static int          sc_num_packages = 0;
 static sc_package_t sc_packages[SC_MAX_PACKAGES];
@@ -525,29 +523,6 @@ sc_logv (const char *filename, int lineno,
 }
 
 void
-sc_generic_abort_handler (void *data)
-{
-#ifdef SC_MPI
-  MPI_Comm           *mpicomm = (MPI_Comm *) data;
-
-  if (mpicomm == NULL) {
-    SC_LERROR ("Invalid mpicomm for sc_generic_abort_handler\n");
-  }
-  else if (*mpicomm != MPI_COMM_NULL) {
-    SC_LERROR ("Calling MPI_Abort from sc_generic_abort_handler\n");
-    MPI_Abort (*mpicomm, 1);    /* terminate all MPI processes */
-  }
-#endif
-}
-
-void
-sc_set_abort_handler (sc_handler_t handler, void *data)
-{
-  sc_abort_handler = handler;
-  sc_abort_data = data;
-}
-
-void
 sc_abort (void)
 {
   if (0) {
@@ -589,10 +564,8 @@ sc_abort (void)
   fflush (stderr);
   sleep (1);                    /* allow time for pending output */
 
-  if (sc_abort_handler != NULL) {
-    sc_abort_handler (sc_abort_data);
-  }
-  abort ();
+  MPI_Abort (sc_mpicomm, 1);    /* terminate all MPI processes */
+  abort ();                     /* should not be necessary */
 }
 
 void
@@ -626,8 +599,16 @@ sc_abort_verbosev (const char *filename, int lineno,
 void
 sc_abort_collective (const char *msg)
 {
-  if (sc_is_root ())
+#ifdef SC_MPI
+  int               mpiret;
+
+  mpiret = MPI_Barrier (sc_mpicomm);
+  SC_CHECK_MPI (mpiret);
+#endif
+  
+  if (sc_is_root ()) {
     SC_ABORT (msg);
+  }
   else {
     sleep (3);                  /* wait for root rank's MPI_Abort ()... */
     abort ();                   /* ... otherwise this may call MPI_Abort () */
@@ -731,21 +712,20 @@ sc_init (MPI_Comm mpicomm,
          sc_log_handler_t log_handler, int log_threshold)
 {
   int                 w;
+#ifdef SC_MPI
+  int                 mpiret;
+#endif
   const char         *trace_file_name;
   const char         *trace_file_prio;
 
   sc_identifier = -1;
-  sc_mpicomm = MPI_COMM_NULL;
   sc_print_backtrace = print_backtrace;
 
-  if (mpicomm != MPI_COMM_NULL) {
-    int                 mpiret;
-
-    sc_mpicomm = mpicomm;
-    sc_set_abort_handler (sc_generic_abort_handler, &sc_mpicomm);
-    mpiret = MPI_Comm_rank (sc_mpicomm, &sc_identifier);
-    SC_CHECK_MPI (mpiret);
-  }
+  /* the parameter mpicomm is ignored */
+#ifdef SC_MPI
+  mpiret = MPI_Comm_rank (sc_mpicomm, &sc_identifier);
+  SC_CHECK_MPI (mpiret);
+#endif
 
   sc_set_signal_handler (catch_signals);
   sc_package_id = sc_package_register (log_handler, log_threshold,
@@ -828,8 +808,6 @@ sc_finalize (void)
   sc_memory_check (-1);
 
   sc_set_signal_handler (0);
-  sc_set_abort_handler (NULL, NULL);
-  sc_mpicomm = MPI_COMM_NULL;
 
   sc_print_backtrace = 0;
   sc_identifier = -1;

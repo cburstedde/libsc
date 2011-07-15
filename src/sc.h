@@ -435,12 +435,6 @@ void                sc_logv (const char *filename, int lineno,
                              int package, int category, int priority,
                              const char *fmt, va_list ap);
 
-/** Generic MPI abort handler. The data must point to a MPI_Comm object. */
-void                sc_generic_abort_handler (void *data);
-
-/** Installs an abort handler and its callback data. */
-void                sc_set_abort_handler (sc_handler_t handler, void *data);
-
 /** Print a stack trace, call the abort handler and then call abort (). */
 void                sc_abort (void)
   __attribute__ ((noreturn));
@@ -461,7 +455,7 @@ void                sc_abort_verbosev (const char *filename, int lineno,
                                        const char *fmt, va_list ap)
   __attribute__ ((noreturn));
 
-/** Collective abort where only root calls sc_abort and prints a message */
+/** Collective abort where only root prints a message */
 void                sc_abort_collective (const char *msg)
   __attribute__ ((noreturn));
 
@@ -488,11 +482,8 @@ void                sc_package_print_summary (int log_priority);
  * If this function is not called or called with log_threshold == SC_LP_DEFAULT,
  * the default SC log threshold will be used.
  * The default SC log settings can be changed with sc_set_log_defaults ().
- * \param [in] mpicomm          MPI communicator, can be MPI_COMM_NULL.
- *                              If MPI_COMM_NULL, the identifier is set to -1.
- *                              Otherwise, MPI_Init must have been called
- *                              and the communicator is stored for later
- *                              use from within sc_generic_abort_handler.
+ * \param [in] mpicomm          MPI communicator.
+ *                              Unused in favor of MPI_COMM_WORLD.
  * \param [in] catch_signals    If true, signals INT SEGV USR2 are be caught.
  * \param [in] print_backtrace  If true, sc_abort prints a backtrace.
  */
@@ -501,16 +492,14 @@ void                sc_init (MPI_Comm mpicomm,
                              sc_log_handler_t log_handler, int log_threshold);
 
 /** Unregisters all packages, runs the memory check, removes the
- * abort and signal handlers and resets sc_identifier and sc_root_*.
+ * signal handlers and resets sc_identifier and sc_root_*.
  * This function is optional.
  * This function does not require sc_init to be called first.
  */
 void                sc_finalize (void);
 
 /** Identify the root process.
- * Only meaningful between sc_init and sc_finalize and
- * with a communicator that is not MPI_COMM_NULL (otherwise always true).
- *
+ * Only meaningful between sc_init and sc_finalize (otherwise always true).
  * \return          Return true for the root process and false otherwise.
  */
 int                 sc_is_root (void);
