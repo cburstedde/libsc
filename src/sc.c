@@ -100,7 +100,7 @@ static int          default_malloc_count = 0;
 static int          default_free_count = 0;
 
 static int          sc_identifier = -1;
-static MPI_Comm     sc_mpicomm = MPI_COMM_WORLD;
+static MPI_Comm     sc_mpicomm = MPI_COMM_NULL;
 
 static FILE        *sc_log_stream = NULL;
 static sc_log_handler_t sc_default_log_handler = sc_log_handler;
@@ -564,8 +564,10 @@ sc_abort (void)
   fflush (stderr);
   sleep (1);                    /* allow time for pending output */
 
-  MPI_Abort (sc_mpicomm, 1);    /* terminate all MPI processes */
-  abort ();                     /* should not be necessary */
+  if (sc_mpicomm != MPI_COMM_NULL) {
+    MPI_Abort (sc_mpicomm, 1);  /* terminate all MPI processes */
+  }
+  abort ();
 }
 
 void
@@ -599,13 +601,13 @@ sc_abort_verbosev (const char *filename, int lineno,
 void
 sc_abort_collective (const char *msg)
 {
-#ifdef SC_MPI
-  int               mpiret;
+  int                 mpiret;
 
-  mpiret = MPI_Barrier (sc_mpicomm);
-  SC_CHECK_MPI (mpiret);
-#endif
-  
+  if (sc_mpicomm != MPI_COMM_NULL) {
+    mpiret = MPI_Barrier (sc_mpicomm);
+    SC_CHECK_MPI (mpiret);
+  }
+
   if (sc_is_root ()) {
     SC_ABORT (msg);
   }
@@ -712,20 +714,20 @@ sc_init (MPI_Comm mpicomm,
          sc_log_handler_t log_handler, int log_threshold)
 {
   int                 w;
-#ifdef SC_MPI
-  int                 mpiret;
-#endif
   const char         *trace_file_name;
   const char         *trace_file_prio;
 
   sc_identifier = -1;
+  sc_mpicomm = MPI_COMM_NULL;
   sc_print_backtrace = print_backtrace;
 
-  /* the parameter mpicomm is ignored */
-#ifdef SC_MPI
-  mpiret = MPI_Comm_rank (sc_mpicomm, &sc_identifier);
-  SC_CHECK_MPI (mpiret);
-#endif
+  if (mpicomm != MPI_COMM_NULL) {
+    int                 mpiret;
+
+    sc_mpicomm = mpicomm;
+    mpiret = MPI_Comm_rank (sc_mpicomm, &sc_identifier);
+    SC_CHECK_MPI (mpiret);
+  }
 
   sc_set_signal_handler (catch_signals);
   sc_package_id = sc_package_register (log_handler, log_threshold,
@@ -808,6 +810,7 @@ sc_finalize (void)
   sc_memory_check (-1);
 
   sc_set_signal_handler (0);
+  sc_mpicomm = MPI_COMM_NULL;
 
   sc_print_backtrace = 0;
   sc_identifier = -1;

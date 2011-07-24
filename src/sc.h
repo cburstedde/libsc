@@ -482,8 +482,9 @@ void                sc_package_print_summary (int log_priority);
  * If this function is not called or called with log_threshold == SC_LP_DEFAULT,
  * the default SC log threshold will be used.
  * The default SC log settings can be changed with sc_set_log_defaults ().
- * \param [in] mpicomm          MPI communicator.
- *                              Unused in favor of MPI_COMM_WORLD.
+ * \param [in] mpicomm          MPI communicator, can be MPI_COMM_NULL.
+ *                              If MPI_COMM_NULL, the identifier is set to -1.
+ *                              Otherwise, MPI_Init must have been called.
  * \param [in] catch_signals    If true, signals INT SEGV USR2 are be caught.
  * \param [in] print_backtrace  If true, sc_abort prints a backtrace.
  */
@@ -499,7 +500,9 @@ void                sc_init (MPI_Comm mpicomm,
 void                sc_finalize (void);
 
 /** Identify the root process.
- * Only meaningful between sc_init and sc_finalize (otherwise always true).
+ * Only meaningful between sc_init and sc_finalize and
+ * with a communicator that is not MPI_COMM_NULL (otherwise always true).
+ *
  * \return          Return true for the root process and false otherwise.
  */
 int                 sc_is_root (void);
