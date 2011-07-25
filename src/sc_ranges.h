@@ -76,6 +76,28 @@ int                 sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
                                         int num_ranges, int *ranges,
                                         int **global_ranges);
 
+/** Determine an array of receivers and an array of senders from ranges.
+ * This function is intended for compatibility and debugging only.
+ * In particular, sc_ranges_adaptive may include non-receiving processors.
+ * It is generally more efficient to use sc_notify instead of sc_ranges.
+ *
+ * \param [in] num_procs    The number of parallel processors (aka mpisize).
+ * \param [in] rank         Number of this processors (aka mpirank).
+ *                          Rank is excluded from receiver and sender output.
+ * \param [in] max_ranges   Global maximum of filled range windows as
+ *                          returned in inout2 by sc_ranges_adaptive.
+ * \param [in] global_ranges    All processor ranges from sc_ranges_adaptive.
+ * \param [out] num_receivers   Number of receiver ranks.  Greater/equal to
+ *                              number of nonzero procs in sc_ranges_compute.
+ * \param [in,out] receiver_ranks   Array of at least mpisize for output.
+ * \param [out] num_senders         Number of senders to this processor.
+ * \paarm [in,out] sender_ranks     Array of at least mpisize for output.
+ */
+void                sc_ranges_decode (int num_procs, int rank,
+                                      int max_ranges, const int *global_ranges,
+                                      int *num_receivers, int *receiver_ranks,
+                                      int *num_senders, int *sender_ranks);
+
 /** Compute global statistical information on the ranges.
  *
  * \param [in] package_id       Registered package id or -1.

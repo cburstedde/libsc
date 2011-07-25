@@ -229,6 +229,86 @@ sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
 }
 
 void
+sc_ranges_decode (int num_procs, int rank,
+                  int max_ranges, const int *global_ranges,
+                  int *num_receivers, int *receiver_ranks,
+                  int *num_senders, int *sender_ranks)
+{
+  int             i, j;
+  int             nr, ns;
+  const int      *the_ranges;
+
+#ifdef SC_DEBUG
+  int             done;
+
+  /* verify consistency of ranges */
+  for (j = 0; j < num_procs; ++j) {
+    the_ranges = global_ranges + 2 * max_ranges * j;
+    done = 0;
+    for (i = 0; i < max_ranges; ++i) {
+      if (the_ranges[2 * i] < 0) {
+        done = 1;
+      }
+      if (!done) {
+        SC_ASSERT (the_ranges[2 * i] <= the_ranges[2 * i + 1]);
+        SC_ASSERT (i == 0 ||
+                   the_ranges[2 * (i - 1) + 1] + 1 < the_ranges[2 * i]);
+      }
+      else {
+        SC_ASSERT (the_ranges[2 * i] == -1 && the_ranges[2 * i + 1] == -2);
+      }
+    }
+  }
+#endif
+  
+  /* identify receivers */
+  nr = 0;
+  the_ranges = global_ranges + 2 * max_ranges * rank;
+  for (i = 0; i < max_ranges; ++i) {
+    if (the_ranges[2 * i] < 0) {
+      /* this processor uses less ranges than the maximum */
+      break;
+    }
+    for (j = the_ranges[2 * i]; j <= the_ranges[2 * i + 1]; ++j) {
+      SC_ASSERT (0 <= j && j < num_procs);
+
+      /* exclude self */
+      if (j == rank) {
+        continue;
+      }
+      receiver_ranks[nr++] = j;
+    }
+  }
+  *num_receivers = nr;
+
+  /* identify senders */
+  ns = 0;
+  for (j = 0; j < num_procs; ++j) {
+    /* exclude self */
+    if (j == rank) {
+      continue;
+    }
+
+    /* look through that processor's ranges */
+    the_ranges = global_ranges + 2 * max_ranges * j;
+    for (i = 0; i < max_ranges; ++i) {
+      if (the_ranges[2 * i] < 0) {
+        /* processor j uses less ranges than the maximum */
+        break;
+      }
+      if (rank <= the_ranges[2 * i + 1]) {
+        if (rank >= the_ranges[2 * i]) {
+          /* processor j is a potential sender to rank */
+          sender_ranks[ns++] = j;
+        }
+        break;
+      }
+    }
+  }
+  *num_senders = ns;
+}
+
+void
 sc_ranges_statistics (int package_id, int log_priority,
                       MPI_Comm mpicomm, int num_procs, const int *procs,
                       int rank, int num_ranges, int *ranges)
