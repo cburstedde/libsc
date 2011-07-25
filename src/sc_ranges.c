@@ -35,7 +35,7 @@ sc_ranges_compare (const void *v1, const void *v2)
 }
 
 int
-sc_ranges_compute (int package_id, int num_procs, int *procs,
+sc_ranges_compute (int package_id, int num_procs, const int *procs,
                    int rank, int first_peer, int last_peer,
                    int num_ranges, int *ranges)
 {
@@ -182,8 +182,8 @@ sc_ranges_compute (int package_id, int num_procs, int *procs,
 }
 
 int
-sc_ranges_adaptive (int package_id,
-                    MPI_Comm mpicomm, int *procs, int *inout1, int *inout2,
+sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
+                    const int *procs, int *inout1, int *inout2,
                     int num_ranges, int *ranges, int **global_ranges)
 {
   int                 mpiret;
@@ -230,7 +230,7 @@ sc_ranges_adaptive (int package_id,
 
 void
 sc_ranges_statistics (int package_id, int log_priority,
-                      MPI_Comm mpicomm, int num_procs, int *procs,
+                      MPI_Comm mpicomm, int num_procs, const int *procs,
                       int rank, int num_ranges, int *ranges)
 {
   int                 i, j;
