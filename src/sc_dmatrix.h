@@ -140,6 +140,10 @@ void                sc_dmatrix_shift (double alpha, sc_dmatrix_t * X);
  */
 void                sc_dmatrix_alphadivide (double alpha, sc_dmatrix_t * X);
 
+/** Perform element-wise exponentiation with a scalar, X := X ^ alpha.
+ */
+void                sc_dmatrix_pow (double exponent, sc_dmatrix_t * X);
+
 /** Perform element-wise absolute value, Y := fabs(X).
  */
 void                sc_dmatrix_fabs (const sc_dmatrix_t * X,
