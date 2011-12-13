@@ -324,6 +324,17 @@ sc_dmatrix_scale (double alpha, sc_dmatrix_t * X)
 }
 
 void
+sc_dmatrix_shift (double alpha, sc_dmatrix_t * X)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  double             *Xdata = X->e[0];
+
+  for (i = 0; i < totalsize; ++i)
+    Xdata[i] += alpha;
+}
+
+void
 sc_dmatrix_alphadivide (double alpha, sc_dmatrix_t * X)
 {
   sc_bint_t           i;
