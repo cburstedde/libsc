@@ -21,6 +21,7 @@
 */
 
 #include <sc_functions.h>
+#include <time.h>
 
 double
 sc_function1_invert (sc_function1_t func, void *data,
@@ -78,7 +79,21 @@ sc_srand (unsigned int seed)
   mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
-  srand (seed ^ (unsigned int) mpirank);
+  /* mpirank + seed * large_prime */
+  srand ((unsigned int) mpirank + seed * 393919);
+}
+
+void
+sc_srand_time ()
+{
+  int                 mpiret;
+  int                 mpirank;
+
+  mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  /* time + mpirank * small_prime */
+  srand ((unsigned int) time (NULL) + mpirank * 353);
 }
 
 double
