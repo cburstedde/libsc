@@ -132,7 +132,7 @@ void                sc_dmatrix_set_value (sc_dmatrix_t * dmatrix,
  */
 void                sc_dmatrix_scale (double alpha, sc_dmatrix_t * X);
 
-/** Perform element-wise addition with a scale, X := X + alpha.
+/** Perform element-wise addition with a scalar, X := X + alpha.
  */
 void                sc_dmatrix_shift (double alpha, sc_dmatrix_t * X);
 
