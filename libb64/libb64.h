@@ -87,7 +87,6 @@ typedef struct
 base64_encodestate;
 
 void                base64_init_encodestate (base64_encodestate * state_in);
-char                base64_encode_value (char value_in);
 size_t              base64_encode_block (const char *plaintext_in,
                                          size_t length_in, char *code_out,
                                          base64_encodestate * state_in);
