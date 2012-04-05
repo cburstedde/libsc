@@ -36,16 +36,20 @@ sc_vtk_write_binary (FILE * vtkfile, char *numeric_data, size_t byte_length)
   /* VTK format used 32bit header info */
   SC_ASSERT (byte_length <= (size_t) UINT32_MAX);
 
+  /* This value may be changed although this is not tested with VTK */
   chunksize = (size_t) 1 << 15; /* 32768 */
   int_header = (uint32_t) byte_length;
 
-  code_length = 2 * chunksize;
+  /* Allocate sufficient memory for base64 encoder */
+  code_length = 2 * SC_MAX (chunksize, sizeof (int_header));
+  code_length = SC_MAX (code_length, 4) + 1;
   base_data = SC_ALLOC (char, code_length);
 
   base64_init_encodestate (&encode_state);
   base_length =
     base64_encode_block ((char *) &int_header, sizeof (int_header), base_data,
                          &encode_state);
+  SC_ASSERT (base_length < code_length);
   base_data[base_length] = '\0';
   (void) fwrite (base_data, 1, base_length, vtkfile);
 
@@ -55,14 +59,16 @@ sc_vtk_write_binary (FILE * vtkfile, char *numeric_data, size_t byte_length)
     writenow = SC_MIN (remaining, chunksize);
     base_length = base64_encode_block (numeric_data + chunks * chunksize,
                                        writenow, base_data, &encode_state);
-    base_data[base_length] = '\0';
     SC_ASSERT (base_length < code_length);
+    base_data[base_length] = '\0';
     (void) fwrite (base_data, 1, base_length, vtkfile);
     remaining -= writenow;
     ++chunks;
   }
 
   base_length = base64_encode_blockend (base_data, &encode_state);
+  SC_ASSERT (base_length < code_length);
+  base_data[base_length] = '\0';
   (void) fwrite (base_data, 1, base_length, vtkfile);
 
   SC_FREE (base_data);
@@ -80,7 +86,7 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
   size_t              iz;
   size_t              blocksize, lastsize;
   size_t              theblock, numregularblocks, numfullblocks;
-  size_t              header_entries;
+  size_t              header_entries, header_size;
   size_t              code_length, base_length;
   long                header_pos, final_pos;
   char               *comp_data, *base_data;
@@ -93,14 +99,15 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
   lastsize = byte_length % blocksize;
   numregularblocks = byte_length / blocksize;
   numfullblocks = numregularblocks + (lastsize > 0 ? 1 : 0);
+  header_entries = 3 + numfullblocks;
+  header_size = header_entries * sizeof (uint32_t);
 
   /* allocate compression and base64 arrays */
-  code_length = 2 * blocksize;
+  code_length = 2 * SC_MAX (blocksize, header_size) + 4 + 1;
   comp_data = SC_ALLOC (char, code_length);
   base_data = SC_ALLOC (char, code_length);
 
   /* figure out the size of the header and write a dummy */
-  header_entries = 3 + numfullblocks;
   compression_header = SC_ALLOC (uint32_t, header_entries);
   compression_header[0] = (uint32_t) numfullblocks;
   compression_header[1] = (uint32_t) blocksize;
@@ -111,13 +118,11 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
   }
   base64_init_encodestate (&encode_state);
   base_length = base64_encode_block ((char *) compression_header,
-                                     sizeof (*compression_header) *
-                                     header_entries, base_data,
-                                     &encode_state);
+                                     header_size, base_data, &encode_state);
   base_length +=
     base64_encode_blockend (base_data + base_length, &encode_state);
-  base_data[base_length] = '\0';
   SC_ASSERT (base_length < code_length);
+  base_data[base_length] = '\0';
   header_pos = ftell (vtkfile);
   (void) fwrite (base_data, 1, base_length, vtkfile);
 
@@ -132,8 +137,8 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
     compression_header[3 + theblock] = comp_length;
     base_length = base64_encode_block (comp_data, comp_length,
                                        base_data, &encode_state);
-    base_data[base_length] = '\0';
     SC_ASSERT (base_length < code_length);
+    base_data[base_length] = '\0';
     (void) fwrite (base_data, 1, base_length, vtkfile);
   }
 
@@ -147,26 +152,26 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
     compression_header[3 + theblock] = comp_length;
     base_length = base64_encode_block (comp_data, comp_length,
                                        base_data, &encode_state);
-    base_data[base_length] = '\0';
     SC_ASSERT (base_length < code_length);
+    base_data[base_length] = '\0';
     (void) fwrite (base_data, 1, base_length, vtkfile);
   }
 
   /* write base64 end block */
   base_length = base64_encode_blockend (base_data, &encode_state);
+  SC_ASSERT (base_length < code_length);
+  base_data[base_length] = '\0';
   (void) fwrite (base_data, 1, base_length, vtkfile);
 
   /* seek back, write header block, seek forward */
   final_pos = ftell (vtkfile);
   base64_init_encodestate (&encode_state);
   base_length = base64_encode_block ((char *) compression_header,
-                                     sizeof (*compression_header) *
-                                     header_entries, base_data,
-                                     &encode_state);
+                                     header_size, base_data, &encode_state);
   base_length +=
     base64_encode_blockend (base_data + base_length, &encode_state);
-  base_data[base_length] = '\0';
   SC_ASSERT (base_length < code_length);
+  base_data[base_length] = '\0';
   fseek1 = fseek (vtkfile, header_pos, SEEK_SET);
   (void) fwrite (base_data, 1, base_length, vtkfile);
   fseek2 = fseek (vtkfile, final_pos, SEEK_SET);
