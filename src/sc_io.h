@@ -54,11 +54,11 @@ sc_io_sink_type_t;
 
 typedef struct sc_io_sink
 {
-  sc_io_sink_type_t stype;
-  sc_io_mode_t mode;
-  sc_io_encode_t encode;
-  sc_array_t *buffer;
-  FILE *file;
+  sc_io_sink_type_t   stype;
+  sc_io_mode_t        mode;
+  sc_io_encode_t      encode;
+  sc_array_t         *buffer;
+  FILE               *file;
 }
 sc_io_sink_t;
 
@@ -84,7 +84,7 @@ sc_io_sink_t       *sc_io_sink_new (sc_io_sink_type_t stype,
  * \param [in] sink             The sink object to free.  All data are flushed.
  * \return                      0 on success, nonzero number on system error.
  */
-int                 sc_io_sink_destroy (sc_io_sink_t *sink);
+int                 sc_io_sink_destroy (sc_io_sink_t * sink);
 
 /** Write data to a sink.
  * \param [in,out] sink         The sink object to write to.

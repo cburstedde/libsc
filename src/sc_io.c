@@ -28,8 +28,8 @@ sc_io_sink_t       *
 sc_io_sink_new (sc_io_sink_type_t stype, sc_io_mode_t mode,
                 sc_io_encode_t encode, ...)
 {
-  sc_io_sink_t *sink;
-  va_list ap;
+  sc_io_sink_t       *sink;
+  va_list             ap;
 
   SC_ASSERT (0 <= stype && stype < SC_IO_SINK_LAST);
   SC_ASSERT (0 <= mode && mode < SC_IO_MODE_LAST);
@@ -49,7 +49,7 @@ sc_io_sink_new (sc_io_sink_type_t stype, sc_io_mode_t mode,
     }
   }
   else if (stype == SC_IO_SINK_FILENAME) {
-    const char *filename = va_arg (ap, const char *);
+    const char         *filename = va_arg (ap, const char *);
 
     sink->file = fopen (filename,
                         sink->mode == SC_IO_MODE_WRITE ? "wb" : "ab");
@@ -74,7 +74,7 @@ sc_io_sink_new (sc_io_sink_type_t stype, sc_io_mode_t mode,
 }
 
 int
-sc_io_sink_destroy (sc_io_sink_t *sink)
+sc_io_sink_destroy (sc_io_sink_t * sink)
 {
   int                 retval;
 
@@ -95,11 +95,11 @@ sc_io_sink_destroy (sc_io_sink_t *sink)
 int
 sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes)
 {
-  size_t nwritten;
+  size_t              nwritten;
 
   nwritten = bytes;
   if (sink->stype == SC_IO_SINK_BUFFER) {
-    void *start;
+    void               *start;
 
     SC_ASSERT (sink->buffer != NULL);
     start = sc_array_push_count (sink->buffer, bytes);

@@ -26,13 +26,14 @@
 int
 main (int argc, char **argv)
 {
-  int           mpiret, retval;
-  int           first;
-  const char *  filename;
-  const char    input[] = "This is a string for sinking and sourcing.\n";
-  sc_options_t *opt;
-  sc_array_t   *buffer;
-  sc_io_sink_t *sink;
+  int                 mpiret, retval;
+  int                 first;
+  const char         *filename;
+  const char          input[] =
+    "This is a string for sinking and sourcing.\n";
+  sc_options_t       *opt;
+  sc_array_t         *buffer;
+  sc_io_sink_t       *sink;
 
   mpiret = MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
