@@ -72,6 +72,9 @@ main (int argc, char **argv)
 
   sc_options_destroy (opt);
   sc_finalize ();
+  
+  retval = MPI_Finalize ();
+  SC_CHECK_MPI (retval);
 
   return 0;
 }
