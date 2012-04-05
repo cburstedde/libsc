@@ -24,8 +24,76 @@
 #define SC_IO_H
 
 #include <sc.h>
+#include <sc_containers.h>
 
 SC_EXTERN_C_BEGIN;
+
+typedef enum
+{
+  SC_IO_MODE_WRITE,     /**< Semantics as "w" in fopen. */
+  SC_IO_MODE_APPEND,    /**< Semantics as "a" in fopen. */
+  SC_IO_MODE_LAST       /**< Invalid entry to close list */
+}
+sc_io_mode_t;
+
+typedef enum
+{
+  SC_IO_ENCODE_NONE,
+  SC_IO_ENCODE_LAST     /**< Invalid entry to close list */
+}
+sc_io_encode_t;
+
+typedef enum
+{
+  SC_IO_SINK_BUFFER,
+  SC_IO_SINK_FILENAME,
+  SC_IO_SINK_FILEFILE,
+  SC_IO_SINK_LAST       /**< Invalid entry to close list */
+}
+sc_io_sink_type_t;
+
+typedef struct sc_io_sink
+{
+  sc_io_sink_type_t stype;
+  sc_io_mode_t mode;
+  sc_io_encode_t encode;
+  sc_array_t *buffer;
+  FILE *file;
+}
+sc_io_sink_t;
+
+/** Create a generic data sink.
+ * \param [in] stype            Type of the sink.
+ *                              Depending on stype, varargs must follow:
+ *                              BUFFER: sc_array_t * (existing non-view array).
+ *                              FILENAME: const char * (name of file to open).
+ *                              FILEFILE: FILE * (file open for writing).
+ * \param [in] mode             Mode to add data to sink.
+ *                              For type FILEFILE, data is always appended.
+ * \param [in] encode           Type of data encoding.
+ * \return                      Newly allocated sink, or NULL on system error.
+ */
+sc_io_sink_t       *sc_io_sink_new (sc_io_sink_type_t stype,
+                                    sc_io_mode_t mode,
+                                    sc_io_encode_t encode, ...);
+
+/** Flush and free data sink.
+ * Actions taken depend on the stype.
+ * BUFFER, FILEFILE: none.
+ * FILENAME: call fclose on sink->file.
+ * \param [in] sink             The sink object to free.  All data are flushed.
+ * \return                      0 on success, nonzero number on system error.
+ */
+int                 sc_io_sink_destroy (sc_io_sink_t *sink);
+
+/** Write data to a sink.
+ * \param [in,out] sink         The sink object to write to.
+ * \param [in] data             Data to be written.
+ * \param [in] bytes            Number of bytes to be written.
+ * \return                      0 if all bytes are written, nonzero on error.
+ */
+int                 sc_io_sink_write (sc_io_sink_t * sink,
+                                      const void *data, size_t bytes);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream openened for writing.

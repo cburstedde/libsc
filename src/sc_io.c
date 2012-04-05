@@ -24,6 +24,96 @@
 #include <sc_zlib.h>
 #include <libb64.h>
 
+sc_io_sink_t       *
+sc_io_sink_new (sc_io_sink_type_t stype, sc_io_mode_t mode,
+                sc_io_encode_t encode, ...)
+{
+  sc_io_sink_t *sink;
+  va_list ap;
+
+  SC_ASSERT (0 <= stype && stype < SC_IO_SINK_LAST);
+  SC_ASSERT (0 <= mode && mode < SC_IO_MODE_LAST);
+  SC_ASSERT (0 <= encode && encode < SC_IO_ENCODE_LAST);
+
+  sink = SC_ALLOC_ZERO (sc_io_sink_t, 1);
+  sink->stype = stype;
+  sink->mode = mode;
+  sink->encode = encode;
+
+  va_start (ap, encode);
+  if (stype == SC_IO_SINK_BUFFER) {
+    sink->buffer = va_arg (ap, sc_array_t *);
+    SC_ASSERT (SC_ARRAY_IS_OWNER (sink->buffer));
+    if (sink->mode == SC_IO_MODE_WRITE) {
+      sc_array_reset (sink->buffer);
+    }
+  }
+  else if (stype == SC_IO_SINK_FILENAME) {
+    const char *filename = va_arg (ap, const char *);
+
+    sink->file = fopen (filename,
+                        sink->mode == SC_IO_MODE_WRITE ? "wb" : "ab");
+    if (sink->file == NULL) {
+      SC_FREE (sink);
+      return NULL;
+    }
+  }
+  else if (stype == SC_IO_SINK_FILEFILE) {
+    sink->file = va_arg (ap, FILE *);
+    if (ferror (sink->file)) {
+      SC_FREE (sink);
+      return NULL;
+    }
+  }
+  else {
+    SC_ABORT_NOT_REACHED ();
+  }
+  va_end (ap);
+
+  return sink;
+}
+
+int
+sc_io_sink_destroy (sc_io_sink_t *sink)
+{
+  int                 retval;
+
+  retval = 0;
+  if (sink->stype == SC_IO_SINK_FILENAME) {
+    SC_ASSERT (sink->file != NULL);
+    retval = fclose (sink->file);
+  }
+  else if (sink->stype == SC_IO_SINK_FILEFILE) {
+    SC_ASSERT (sink->file != NULL);
+    retval = fflush (sink->file);
+  }
+  SC_FREE (sink);
+
+  return retval;
+}
+
+int
+sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes)
+{
+  size_t nwritten;
+
+  nwritten = bytes;
+  if (sink->stype == SC_IO_SINK_BUFFER) {
+    void *start;
+
+    SC_ASSERT (sink->buffer != NULL);
+    start = sc_array_push_count (sink->buffer, bytes);
+    memcpy (start, data, bytes);
+  }
+  else if (sink->stype == SC_IO_SINK_FILENAME ||
+           sink->stype == SC_IO_SINK_FILEFILE) {
+    SC_ASSERT (sink->file != NULL);
+    nwritten = fwrite (data, 1, bytes, sink->file);
+  }
+
+  return nwritten != bytes;
+}
+
 int
 sc_vtk_write_binary (FILE * vtkfile, char *numeric_data, size_t byte_length)
 {
