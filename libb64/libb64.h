@@ -39,7 +39,6 @@ typedef struct
 base64_decodestate;
 
 void                base64_init_decodestate (base64_decodestate * state_in);
-int                 base64_decode_value (char value_in);
 size_t              base64_decode_block (const char *code_in,
                                          size_t length_in,
                                          char *plaintext_out,
