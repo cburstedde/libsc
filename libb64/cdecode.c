@@ -25,7 +25,7 @@ base64_decode_value (char value_in)
   static const char   decoding_size = (char) sizeof (decoding);
 
   value_in -= 43;
-  return (value_in < 0 || value_in > decoding_size) ?
+  return (value_in < 0 || value_in >= decoding_size) ?
     -1 : decoding[(int) value_in];
 }
 
