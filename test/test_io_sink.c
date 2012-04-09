@@ -23,30 +23,15 @@
 #include <sc_io.h>
 #include <sc_options.h>
 
-int
-main (int argc, char **argv)
+void
+the_test (const char *filename)
 {
-  int                 mpiret, retval;
-  int                 first;
-  const char         *filename;
+  int                 retval;
+  size_t              bytes_in, bytes_out;
   const char          input[] =
     "This is a string for sinking and sourcing.\n";
-  sc_options_t       *opt;
   sc_array_t         *buffer;
   sc_io_sink_t       *sink;
-
-  mpiret = MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
-
-  opt = sc_options_new (argv[0]);
-  sc_options_add_string (opt, 'f', "filename", &filename, NULL,
-                         "File to write");
-  first = sc_options_parse (sc_package_id, SC_LP_INFO, opt, argc, argv);
-  if (first < 0) {
-    sc_options_print_usage (sc_package_id, SC_LP_INFO, opt, NULL);
-    sc_abort_collective ("Usage error");
-  }
 
   buffer = NULL;
   if (filename == NULL) {
@@ -63,18 +48,49 @@ main (int argc, char **argv)
   retval = sc_io_sink_write (sink, input, strlen (input));
   SC_CHECK_ABORT (retval == 0, "Sink write");
 
+  retval = sc_io_sink_flush (sink, &bytes_in, &bytes_out);
+  SC_CHECK_ABORT (retval == 0, "Sink flush");
+  SC_GLOBAL_INFOF ("Bytes in %lld out %lld\n",
+                   (long long) bytes_in, (long long) bytes_out);
+
   retval = sc_io_sink_destroy (sink);
   SC_CHECK_ABORT (retval == 0, "Sink destroy");
 
   if (filename == NULL) {
     sc_array_destroy (buffer);
   }
+}
+
+int
+main (int argc, char **argv)
+{
+  int                 mpiret;
+  int                 first;
+  const char         *filename;
+  sc_options_t       *opt;
+
+  mpiret = MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+
+  opt = sc_options_new (argv[0]);
+  sc_options_add_string (opt, 'f', "filename", &filename, NULL,
+                         "File to write");
+  first = sc_options_parse (sc_package_id, SC_LP_INFO, opt, argc, argv);
+  if (first < 0) {
+    sc_options_print_usage (sc_package_id, SC_LP_INFO, opt, NULL);
+    sc_abort_collective ("Usage error");
+  }
+
+  if (sc_is_root ()) {
+    the_test (filename);
+  }
 
   sc_options_destroy (opt);
   sc_finalize ();
-  
-  retval = MPI_Finalize ();
-  SC_CHECK_MPI (retval);
+
+  mpiret = MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
 
   return 0;
 }
