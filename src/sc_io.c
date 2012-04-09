@@ -78,14 +78,13 @@ sc_io_sink_destroy (sc_io_sink_t * sink)
 {
   int                 retval;
 
-  retval = 0;
+  retval = sc_io_sink_flush (sink, NULL, NULL);
+
   if (sink->stype == SC_IO_SINK_FILENAME) {
     SC_ASSERT (sink->file != NULL);
-    retval = fclose (sink->file);
-  }
-  else if (sink->stype == SC_IO_SINK_FILEFILE) {
-    SC_ASSERT (sink->file != NULL);
-    retval = fflush (sink->file);
+
+    /* Attempt close even on flush error */
+    retval = fclose (sink->file) || retval;
   }
   SC_FREE (sink);
 
@@ -93,25 +92,58 @@ sc_io_sink_destroy (sc_io_sink_t * sink)
 }
 
 int
-sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes)
+sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_data)
 {
-  size_t              nwritten;
+  int                 retval;
+  size_t              bytes_out;
 
-  nwritten = bytes;
+  retval = 0;
+  bytes_out = 0;
+
   if (sink->stype == SC_IO_SINK_BUFFER) {
     void               *start;
 
     SC_ASSERT (sink->buffer != NULL);
-    start = sc_array_push_count (sink->buffer, bytes);
-    memcpy (start, data, bytes);
+    start = sc_array_push_count (sink->buffer, bytes_data);
+    memcpy (start, data, bytes_data);
+    bytes_out = bytes_data;
   }
   else if (sink->stype == SC_IO_SINK_FILENAME ||
            sink->stype == SC_IO_SINK_FILEFILE) {
     SC_ASSERT (sink->file != NULL);
-    nwritten = fwrite (data, 1, bytes, sink->file);
+    bytes_out = fwrite (data, 1, bytes_data, sink->file);
+    retval = bytes_out != bytes_data;
+  }
+  else {
+    SC_ABORT_NOT_REACHED ();
   }
 
-  return nwritten != bytes;
+  sink->bytes_in += bytes_data;
+  sink->bytes_out += bytes_out;
+
+  return retval;
+}
+
+int
+sc_io_sink_flush (sc_io_sink_t * sink, size_t * bytes_in, size_t * bytes_out)
+{
+  int                 retval;
+
+  retval = 0;
+  if (sink->stype == SC_IO_SINK_FILEFILE) {
+    SC_ASSERT (sink->file != NULL);
+    retval = fflush (sink->file);
+  }
+
+  if (bytes_in != NULL) {
+    *bytes_in = sink->bytes_in;
+  }
+  if (bytes_out != NULL) {
+    *bytes_out = sink->bytes_out;
+  }
+  sink->bytes_in = sink->bytes_out = 0;
+
+  return retval;
 }
 
 int

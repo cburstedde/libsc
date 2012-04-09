@@ -59,6 +59,8 @@ typedef struct sc_io_sink
   sc_io_encode_t      encode;
   sc_array_t         *buffer;
   FILE               *file;
+  size_t              bytes_in;
+  size_t              bytes_out;
 }
 sc_io_sink_t;
 
@@ -71,29 +73,45 @@ sc_io_sink_t;
  * \param [in] mode             Mode to add data to sink.
  *                              For type FILEFILE, data is always appended.
  * \param [in] encode           Type of data encoding.
- * \return                      Newly allocated sink, or NULL on system error.
+ * \return                      Newly allocated sink, or NULL on error.
  */
 sc_io_sink_t       *sc_io_sink_new (sc_io_sink_type_t stype,
                                     sc_io_mode_t mode,
                                     sc_io_encode_t encode, ...);
 
-/** Flush and free data sink.
- * Actions taken depend on the stype.
- * BUFFER, FILEFILE: none.
- * FILENAME: call fclose on sink->file.
- * \param [in] sink             The sink object to free.  All data are flushed.
- * \return                      0 on success, nonzero number on system error.
+/** Free data sink.
+ * Calls sc_io_sink_flush and discards the final output byte count.
+ * Call sc_io_sink_flush yourself if bytes_out is of interest.
+ * \param [in] sink             The sink object to flush and free.
+ * \return                      0 on success, nonzero on error.
  */
 int                 sc_io_sink_destroy (sc_io_sink_t * sink);
 
 /** Write data to a sink.
  * \param [in,out] sink         The sink object to write to.
- * \param [in] data             Data to be written.
- * \param [in] bytes            Number of bytes to be written.
- * \return                      0 if all bytes are written, nonzero on error.
+ * \param [in] data             Data passed into sink.
+ * \param [in] bytes            Number of data bytes passed in.
+ * \return                      0 on success, nonzero on error.
  */
 int                 sc_io_sink_write (sc_io_sink_t * sink,
                                       const void *data, size_t bytes);
+
+/** Flush all buffered output data to sink.
+ * The updated value of bytes read and written is returned in bytes_in/out.
+ * The sink status is reset as if the sink has just been created.
+ * In particular, the bytes counters are reset to zero.
+ * The sink actions taken depend on its type.
+ * BUFFER, FILEFILE: none.
+ * FILENAME: call fclose on sink->file.
+ * \param [in,out] sink         The sink object to write to.
+ * \param [out] bytes_in        Bytes received since the last new or flush
+ *                              call.  May be NULL.
+ * \param [out] bytes_in        Bytes written since the last new or flush
+ *                              call.  May be NULL.
+ * \return                      0 if flush is completed, nonzero on error.
+ */
+int                 sc_io_sink_flush (sc_io_sink_t * sink,
+                                      size_t * bytes_in, size_t * bytes_out);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream openened for writing.
