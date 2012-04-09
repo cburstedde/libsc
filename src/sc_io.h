@@ -45,16 +45,16 @@ sc_io_encode_t;
 
 typedef enum
 {
-  SC_IO_SINK_BUFFER,
-  SC_IO_SINK_FILENAME,
-  SC_IO_SINK_FILEFILE,
-  SC_IO_SINK_LAST       /**< Invalid entry to close list */
+  SC_IO_TYPE_BUFFER,
+  SC_IO_TYPE_FILENAME,
+  SC_IO_TYPE_FILEFILE,
+  SC_IO_TYPE_LAST       /**< Invalid entry to close list */
 }
-sc_io_sink_type_t;
+sc_io_type_t;
 
 typedef struct sc_io_sink
 {
-  sc_io_sink_type_t   stype;
+  sc_io_type_t        iotype;
   sc_io_mode_t        mode;
   sc_io_encode_t      encode;
   sc_array_t         *buffer;
@@ -65,8 +65,8 @@ typedef struct sc_io_sink
 sc_io_sink_t;
 
 /** Create a generic data sink.
- * \param [in] stype            Type of the sink.
- *                              Depending on stype, varargs must follow:
+ * \param [in] iotype           Type of the sink.
+ *                              Depending on iotype, varargs must follow:
  *                              BUFFER: sc_array_t * (existing non-view array).
  *                              FILENAME: const char * (name of file to open).
  *                              FILEFILE: FILE * (file open for writing).
@@ -75,7 +75,7 @@ sc_io_sink_t;
  * \param [in] encode           Type of data encoding.
  * \return                      Newly allocated sink, or NULL on error.
  */
-sc_io_sink_t       *sc_io_sink_new (sc_io_sink_type_t stype,
+sc_io_sink_t       *sc_io_sink_new (sc_io_type_t iotype,
                                     sc_io_mode_t mode,
                                     sc_io_encode_t encode, ...);
 

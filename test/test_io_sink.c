@@ -36,11 +36,11 @@ the_test (const char *filename)
   buffer = NULL;
   if (filename == NULL) {
     buffer = sc_array_new (sizeof (char));
-    sink = sc_io_sink_new (SC_IO_SINK_BUFFER, SC_IO_MODE_WRITE,
+    sink = sc_io_sink_new (SC_IO_TYPE_BUFFER, SC_IO_MODE_WRITE,
                            SC_IO_ENCODE_NONE, buffer);
   }
   else {
-    sink = sc_io_sink_new (SC_IO_SINK_FILENAME, SC_IO_MODE_WRITE,
+    sink = sc_io_sink_new (SC_IO_TYPE_FILENAME, SC_IO_MODE_WRITE,
                            SC_IO_ENCODE_NONE, filename);
   }
   SC_CHECK_ABORT (sink != NULL, "Sink create");

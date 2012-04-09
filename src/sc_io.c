@@ -25,30 +25,30 @@
 #include <libb64.h>
 
 sc_io_sink_t       *
-sc_io_sink_new (sc_io_sink_type_t stype, sc_io_mode_t mode,
+sc_io_sink_new (sc_io_type_t iotype, sc_io_mode_t mode,
                 sc_io_encode_t encode, ...)
 {
   sc_io_sink_t       *sink;
   va_list             ap;
 
-  SC_ASSERT (0 <= stype && stype < SC_IO_SINK_LAST);
+  SC_ASSERT (0 <= iotype && iotype < SC_IO_TYPE_LAST);
   SC_ASSERT (0 <= mode && mode < SC_IO_MODE_LAST);
   SC_ASSERT (0 <= encode && encode < SC_IO_ENCODE_LAST);
 
   sink = SC_ALLOC_ZERO (sc_io_sink_t, 1);
-  sink->stype = stype;
+  sink->iotype = iotype;
   sink->mode = mode;
   sink->encode = encode;
 
   va_start (ap, encode);
-  if (stype == SC_IO_SINK_BUFFER) {
+  if (iotype == SC_IO_TYPE_BUFFER) {
     sink->buffer = va_arg (ap, sc_array_t *);
     SC_ASSERT (SC_ARRAY_IS_OWNER (sink->buffer));
     if (sink->mode == SC_IO_MODE_WRITE) {
       sc_array_reset (sink->buffer);
     }
   }
-  else if (stype == SC_IO_SINK_FILENAME) {
+  else if (iotype == SC_IO_TYPE_FILENAME) {
     const char         *filename = va_arg (ap, const char *);
 
     sink->file = fopen (filename,
@@ -58,7 +58,7 @@ sc_io_sink_new (sc_io_sink_type_t stype, sc_io_mode_t mode,
       return NULL;
     }
   }
-  else if (stype == SC_IO_SINK_FILEFILE) {
+  else if (iotype == SC_IO_TYPE_FILEFILE) {
     sink->file = va_arg (ap, FILE *);
     if (ferror (sink->file)) {
       SC_FREE (sink);
@@ -80,7 +80,7 @@ sc_io_sink_destroy (sc_io_sink_t * sink)
 
   retval = sc_io_sink_flush (sink, NULL, NULL);
 
-  if (sink->stype == SC_IO_SINK_FILENAME) {
+  if (sink->iotype == SC_IO_TYPE_FILENAME) {
     SC_ASSERT (sink->file != NULL);
 
     /* Attempt close even on flush error */
@@ -100,7 +100,7 @@ sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_data)
   retval = 0;
   bytes_out = 0;
 
-  if (sink->stype == SC_IO_SINK_BUFFER) {
+  if (sink->iotype == SC_IO_TYPE_BUFFER) {
     void               *start;
 
     SC_ASSERT (sink->buffer != NULL);
@@ -108,8 +108,8 @@ sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_data)
     memcpy (start, data, bytes_data);
     bytes_out = bytes_data;
   }
-  else if (sink->stype == SC_IO_SINK_FILENAME ||
-           sink->stype == SC_IO_SINK_FILEFILE) {
+  else if (sink->iotype == SC_IO_TYPE_FILENAME ||
+           sink->iotype == SC_IO_TYPE_FILEFILE) {
     SC_ASSERT (sink->file != NULL);
     bytes_out = fwrite (data, 1, bytes_data, sink->file);
     retval = bytes_out != bytes_data;
@@ -130,7 +130,7 @@ sc_io_sink_flush (sc_io_sink_t * sink, size_t * bytes_in, size_t * bytes_out)
   int                 retval;
 
   retval = 0;
-  if (sink->stype == SC_IO_SINK_FILEFILE) {
+  if (sink->iotype == SC_IO_TYPE_FILEFILE) {
     SC_ASSERT (sink->file != NULL);
     retval = fflush (sink->file);
   }
