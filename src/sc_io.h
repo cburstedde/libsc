@@ -65,6 +65,18 @@ typedef struct sc_io_sink
 }
 sc_io_sink_t;
 
+typedef struct sc_io_source
+{
+  sc_io_type_t        iotype;
+  sc_io_encode_t      encode;
+  sc_array_t         *buffer;
+  size_t              buffer_bytes;    /**< distinguish from array elems */
+  FILE               *file;
+  size_t              bytes_in;
+  size_t              bytes_out;
+}
+sc_io_source_t;
+
 /** Create a generic data sink.
  * \param [in] iotype           Type of the sink.
  *                              Depending on iotype, varargs must follow:
@@ -115,6 +127,59 @@ int                 sc_io_sink_write (sc_io_sink_t * sink,
 int                 sc_io_sink_complete (sc_io_sink_t * sink,
                                          size_t * bytes_in,
                                          size_t * bytes_out);
+
+/** Create a generic data source.
+ * \param [in] iotype           Type of the source.
+ *                              Depending on iotype, varargs must follow:
+ *                              BUFFER: sc_array_t * (existing array).
+ *                              FILENAME: const char * (name of file to open).
+ *                              FILEFILE: FILE * (file open for writing).
+ * \param [in] encode           Type of data encoding.
+ * \return                      Newly allocated source, or NULL on error.
+ */
+sc_io_source_t     *sc_io_source_new (sc_io_type_t iotype,
+                                      sc_io_encode_t encode, ...);
+
+/** Free data source.
+ * Calls sc_io_source_is_complete and requires it to return true.
+ * This is to avoid discarding buffered data that has not been passed to read.
+ * \param [in,out] source       The source object to free.
+ * \return                      0 on success.  Nonzero if an error is
+ *                              encountered or is_complete returns false.
+ */
+int                 sc_io_source_destroy (sc_io_source_t * source);
+
+/** Read data from a source.
+ * Data is read until the data buffer has not enough room anymore, or source
+ * becomes empty.  It is possible that data already read internally remains
+ * in the source object for the next call.  Call sc_io_source_is_complete
+ * to find out.
+ * \param [in,out] source       The source object to read from.
+ * \param [in] data             Data buffer for reading from sink.
+ * \param [in] bytes_avail      Number of bytes available in data buffer.
+ * \param [in,out] bytes_out    If not NULL, byte count read into data buffer.
+ * \return                      0 on success, nonzero on error.
+ */
+int                 sc_io_source_read (sc_io_source_t * source,
+                                       void *data, size_t bytes_avail,
+                                       size_t * bytes_out);
+
+/** Determine whether all data buffered from source has been returned by read.
+ * If the call returns true, the internal counters source->bytes_in and
+ * source->bytes_out are returned to the caller if requested, and reset to 0.
+ * If the call returns false, another call to sc_io_source_read is required.
+ *
+ * \param [in,out] source       The source object to read from.
+ * \param [in,out] bytes_in     If not NULL and true is returned,
+ *                              the total size of the data sourced.
+ * \param [in,out] bytes_out    If not NULL and true is returned,
+ *                              total bytes passed out by source_read.
+ * \return                      False if buffered data is remaining.
+ *                              Otherwise, return true and reset counters.
+ */
+int                 sc_io_source_is_complete (sc_io_source_t * source,
+                                              size_t * bytes_in,
+                                              size_t * bytes_out);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream openened for writing.

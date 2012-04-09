@@ -158,6 +158,125 @@ sc_io_sink_complete (sc_io_sink_t * sink,
   return retval;
 }
 
+sc_io_source_t     *
+sc_io_source_new (sc_io_type_t iotype, sc_io_encode_t encode, ...)
+{
+  sc_io_source_t     *source;
+  va_list             ap;
+
+  SC_ASSERT (0 <= iotype && iotype < SC_IO_TYPE_LAST);
+  SC_ASSERT (0 <= encode && encode < SC_IO_ENCODE_LAST);
+
+  source = SC_ALLOC_ZERO (sc_io_source_t, 1);
+  source->iotype = iotype;
+  source->encode = encode;
+
+  va_start (ap, encode);
+  if (iotype == SC_IO_TYPE_BUFFER) {
+    source->buffer = va_arg (ap, sc_array_t *);
+  }
+  else if (iotype == SC_IO_TYPE_FILENAME) {
+    const char         *filename = va_arg (ap, const char *);
+
+    source->file = fopen (filename, "rb");
+    if (source->file == NULL) {
+      SC_FREE (source);
+      return NULL;
+    }
+  }
+  else if (iotype == SC_IO_TYPE_FILEFILE) {
+    source->file = va_arg (ap, FILE *);
+    if (ferror (source->file)) {
+      SC_FREE (source);
+      return NULL;
+    }
+  }
+  else {
+    SC_ABORT_NOT_REACHED ();
+  }
+  va_end (ap);
+
+  return source;
+}
+
+int
+sc_io_source_destroy (sc_io_source_t * source)
+{
+  int                 retval;
+
+  retval = !sc_io_source_is_complete (source, NULL, NULL);
+  if (source->iotype == SC_IO_TYPE_FILENAME) {
+    SC_ASSERT (source->file != NULL);
+
+    /* Attempt close even on complete error */
+    retval = fclose (source->file) || retval;
+  }
+  SC_FREE (source);
+
+  return retval;
+}
+
+int
+sc_io_source_read (sc_io_source_t * source, void *data,
+                   size_t bytes_avail, size_t * bytes_out)
+{
+  int                 retval;
+  size_t              bbytes_out;
+
+  retval = 0;
+  bbytes_out = 0;
+
+  if (source->iotype == SC_IO_TYPE_BUFFER) {
+    SC_ASSERT (source->buffer != NULL);
+    bbytes_out = SC_ARRAY_BYTE_ALLOC (source->buffer);
+    SC_ASSERT (bbytes_out >= source->buffer_bytes);
+    bbytes_out -= source->buffer_bytes;
+    bbytes_out = SC_MIN (bbytes_out, bytes_avail);
+
+    memcpy (data, source->buffer->array + source->buffer_bytes, bbytes_out);
+    source->buffer_bytes += bbytes_out;
+  }
+  else if (source->iotype == SC_IO_TYPE_FILENAME ||
+           source->iotype == SC_IO_TYPE_FILEFILE) {
+    SC_ASSERT (source->file != NULL);
+    bbytes_out = fread (data, 1, bytes_avail, source->file);
+    if (bbytes_out < bytes_avail) {
+      retval = !(feof (source->file) && !ferror (source->file));
+    };
+  }
+
+  if (bytes_out != NULL) {
+    *bytes_out = bbytes_out;
+  }
+  source->bytes_in += bbytes_out;
+  source->bytes_out += bbytes_out;
+
+  return retval;
+}
+
+int
+sc_io_source_is_complete (sc_io_source_t * source,
+                          size_t * bytes_in, size_t * bytes_out)
+{
+  if (source->iotype == SC_IO_TYPE_BUFFER) {
+    SC_ASSERT (source->buffer != NULL);
+    source->buffer_bytes = 0;
+  }
+  else {
+    SC_ASSERT (source->buffer_bytes == 0);
+  }
+
+  if (bytes_in != NULL) {
+    *bytes_in = source->bytes_in;
+  }
+  if (bytes_out != NULL) {
+    *bytes_out = source->bytes_out;
+  }
+  source->bytes_in = source->bytes_out = 0;
+
+  return 1;
+}
+
 int
 sc_vtk_write_binary (FILE * vtkfile, char *numeric_data, size_t byte_length)
 {
