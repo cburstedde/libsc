@@ -38,7 +38,21 @@ typedef struct
 }
 base64_decodestate;
 
+/** This function needs to be called to initialize the internal decoder state.
+ * Does not allocate any memory so no cleanup function is necessary after use.
+ * \param [out] state_in        Internal state of decoder.
+ */
 void                base64_init_decodestate (base64_decodestate * state_in);
+
+/** Decode a chunk of data.
+ * This function can be called multiple times for the same state_in.
+ * \param [in] code_in          Data in base64 encoding.
+ * \param [in] length_in        Length of code_in in bytes.
+ * \param [out] plaintext_out   Memory of at least length_in bytes that will
+ *                              contain the plaintext on output.
+ * \param [in,out] state_in     Internal state of decoder.
+ * \return                      Byte length of decoded data in plaintext_out.
+ */
 size_t              base64_decode_block (const char *code_in,
                                          size_t length_in,
                                          char *plaintext_out,
