@@ -92,6 +92,8 @@ typedef struct sc_array
 sc_array_t;
 
 #define SC_ARRAY_IS_OWNER(a) ((a)->byte_alloc >= 0)
+#define SC_ARRAY_BYTE_ALLOC(a) ((size_t) \
+         (SC_ARRAY_IS_OWNER (a) ? (a)->byte_alloc : -((a)->byte_alloc + 1)))
 
 /** Calculate the memory used by an array.
  * \param [in] array       The array.

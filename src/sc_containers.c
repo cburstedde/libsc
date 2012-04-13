@@ -167,6 +167,7 @@ sc_array_resize (sc_array_t * array, size_t new_count)
     return;
   }
 
+  /* We know that this array is not a view now so we can call reset. */
   if (new_count == 0) {
     sc_array_reset (array);
     return;
@@ -228,6 +229,7 @@ sc_array_resize (sc_array_t * array, size_t new_count)
     return;
   }
 
+  /* We know that this array is not a view now so we can call reset. */
   if (new_count == 0) {
     sc_array_reset (array);
     return;
