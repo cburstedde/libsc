@@ -48,8 +48,8 @@ the_test (const char *filename)
   retval = sc_io_sink_write (sink, input, strlen (input));
   SC_CHECK_ABORT (retval == 0, "Sink write");
 
-  retval = sc_io_sink_flush (sink, &bytes_in, &bytes_out);
-  SC_CHECK_ABORT (retval == 0, "Sink flush");
+  retval = sc_io_sink_complete (sink, &bytes_in, &bytes_out);
+  SC_CHECK_ABORT (retval == 0, "Sink complete");
   SC_GLOBAL_INFOF ("Bytes in %lld out %lld\n",
                    (long long) bytes_in, (long long) bytes_out);
 

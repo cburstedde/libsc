@@ -43,9 +43,8 @@ sc_io_sink_new (sc_io_type_t iotype, sc_io_mode_t mode,
   va_start (ap, encode);
   if (iotype == SC_IO_TYPE_BUFFER) {
     sink->buffer = va_arg (ap, sc_array_t *);
-    SC_ASSERT (SC_ARRAY_IS_OWNER (sink->buffer));
     if (sink->mode == SC_IO_MODE_WRITE) {
-      sc_array_reset (sink->buffer);
+      sc_array_resize (sink->buffer, 0);
     }
   }
   else if (iotype == SC_IO_TYPE_FILENAME) {
@@ -78,12 +77,11 @@ sc_io_sink_destroy (sc_io_sink_t * sink)
 {
   int                 retval;
 
-  retval = sc_io_sink_flush (sink, NULL, NULL);
-
+  retval = sc_io_sink_complete (sink, NULL, NULL);
   if (sink->iotype == SC_IO_TYPE_FILENAME) {
     SC_ASSERT (sink->file != NULL);
 
-    /* Attempt close even on flush error */
+    /* Attempt close even on complete error */
     retval = fclose (sink->file) || retval;
   }
   SC_FREE (sink);
@@ -92,45 +90,59 @@ sc_io_sink_destroy (sc_io_sink_t * sink)
 }
 
 int
-sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_data)
+sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_avail)
 {
-  int                 retval;
   size_t              bytes_out;
 
-  retval = 0;
   bytes_out = 0;
 
   if (sink->iotype == SC_IO_TYPE_BUFFER) {
-    void               *start;
+    size_t              elem_size, new_count;
 
     SC_ASSERT (sink->buffer != NULL);
-    start = sc_array_push_count (sink->buffer, bytes_data);
-    memcpy (start, data, bytes_data);
-    bytes_out = bytes_data;
+    elem_size = sink->buffer->elem_size;
+    new_count =
+      (sink->buffer_bytes + bytes_avail + elem_size - 1) / elem_size;
+    sc_array_resize (sink->buffer, new_count);
+    /* For a view sufficient size is asserted only in debug mode. */
+    if (new_count * elem_size > SC_ARRAY_BYTE_ALLOC (sink->buffer)) {
+      return -1;
+    }
+
+    memcpy (sink->buffer->array + sink->buffer_bytes, data, bytes_avail);
+    sink->buffer_bytes += bytes_avail;
+    bytes_out = bytes_avail;
   }
   else if (sink->iotype == SC_IO_TYPE_FILENAME ||
            sink->iotype == SC_IO_TYPE_FILEFILE) {
     SC_ASSERT (sink->file != NULL);
-    bytes_out = fwrite (data, 1, bytes_data, sink->file);
-    retval = bytes_out != bytes_data;
-  }
-  else {
-    SC_ABORT_NOT_REACHED ();
+    bytes_out = fwrite (data, 1, bytes_avail, sink->file);
+    if (bytes_out != bytes_avail) {
+      return -1;
+    }
   }
 
-  sink->bytes_in += bytes_data;
+  sink->bytes_in += bytes_avail;
   sink->bytes_out += bytes_out;
 
-  return retval;
+  return 0;
 }
 
 int
-sc_io_sink_flush (sc_io_sink_t * sink, size_t * bytes_in, size_t * bytes_out)
+sc_io_sink_complete (sc_io_sink_t * sink,
+                     size_t * bytes_in, size_t * bytes_out)
 {
   int                 retval;
 
   retval = 0;
-  if (sink->iotype == SC_IO_TYPE_FILEFILE) {
+  if (sink->iotype == SC_IO_TYPE_BUFFER) {
+    if (sink->buffer_bytes % sink->buffer->elem_size != 0) {
+      retval = -1;
+    }
+    sink->buffer_bytes = 0;
+  }
+  else if (sink->iotype == SC_IO_TYPE_FILENAME ||
+           sink->iotype == SC_IO_TYPE_FILEFILE) {
     SC_ASSERT (sink->file != NULL);
     retval = fflush (sink->file);
   }
