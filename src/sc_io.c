@@ -77,6 +77,7 @@ sc_io_sink_destroy (sc_io_sink_t * sink)
 {
   int                 retval;
 
+  /* The error value SC_IO_ERROR_AGAIN is turned into FATAL */
   retval = sc_io_sink_complete (sink, NULL, NULL);
   if (sink->iotype == SC_IO_TYPE_FILENAME) {
     SC_ASSERT (sink->file != NULL);
@@ -86,7 +87,7 @@ sc_io_sink_destroy (sc_io_sink_t * sink)
   }
   SC_FREE (sink);
 
-  return retval;
+  return retval ? SC_IO_ERROR_FATAL : SC_IO_ERROR_NONE;
 }
 
 int
@@ -106,7 +107,7 @@ sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_avail)
     sc_array_resize (sink->buffer, new_count);
     /* For a view sufficient size is asserted only in debug mode. */
     if (new_count * elem_size > SC_ARRAY_BYTE_ALLOC (sink->buffer)) {
-      return -1;
+      return SC_IO_ERROR_FATAL;
     }
 
     memcpy (sink->buffer->array + sink->buffer_bytes, data, bytes_avail);
@@ -118,14 +119,14 @@ sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_avail)
     SC_ASSERT (sink->file != NULL);
     bytes_out = fwrite (data, 1, bytes_avail, sink->file);
     if (bytes_out != bytes_avail) {
-      return -1;
+      return SC_IO_ERROR_FATAL;
     }
   }
 
   sink->bytes_in += bytes_avail;
   sink->bytes_out += bytes_out;
 
-  return 0;
+  return SC_IO_ERROR_NONE;
 }
 
 int
@@ -136,8 +137,9 @@ sc_io_sink_complete (sc_io_sink_t * sink,
 
   retval = 0;
   if (sink->iotype == SC_IO_TYPE_BUFFER) {
+    SC_ASSERT (sink->buffer != NULL);
     if (sink->buffer_bytes % sink->buffer->elem_size != 0) {
-      retval = -1;
+      return SC_IO_ERROR_AGAIN;
     }
     sink->buffer_bytes = 0;
   }
@@ -145,6 +147,9 @@ sc_io_sink_complete (sc_io_sink_t * sink,
            sink->iotype == SC_IO_TYPE_FILEFILE) {
     SC_ASSERT (sink->file != NULL);
     retval = fflush (sink->file);
+  }
+  if (retval) {
+    return SC_IO_ERROR_FATAL;
   }
 
   if (bytes_in != NULL) {
@@ -155,7 +160,7 @@ sc_io_sink_complete (sc_io_sink_t * sink,
   }
   sink->bytes_in = sink->bytes_out = 0;
 
-  return retval;
+  return SC_IO_ERROR_NONE;
 }
 
 sc_io_source_t     *
@@ -204,7 +209,8 @@ sc_io_source_destroy (sc_io_source_t * source)
 {
   int                 retval;
 
-  retval = !sc_io_source_is_complete (source, NULL, NULL);
+  /* The error value SC_IO_ERROR_AGAIN is turned into FATAL */
+  retval = sc_io_source_complete (source, NULL, NULL);
   if (source->iotype == SC_IO_TYPE_FILENAME) {
     SC_ASSERT (source->file != NULL);
 
@@ -213,7 +219,7 @@ sc_io_source_destroy (sc_io_source_t * source)
   }
   SC_FREE (source);
 
-  return retval;
+  return retval ? SC_IO_ERROR_FATAL : SC_IO_ERROR_NONE;
 }
 
 int
@@ -244,6 +250,12 @@ sc_io_source_read (sc_io_source_t * source, void *data,
       retval = !(feof (source->file) && !ferror (source->file));
     };
   }
+  if (retval) {
+    return SC_IO_ERROR_FATAL;
+  }
+  if (bytes_out == NULL && bbytes_out < bytes_avail) {
+    return SC_IO_ERROR_FATAL;
+  }
 
   if (bytes_out != NULL) {
     *bytes_out = bbytes_out;
@@ -251,15 +263,18 @@ sc_io_source_read (sc_io_source_t * source, void *data,
   source->bytes_in += bbytes_out;
   source->bytes_out += bbytes_out;
 
-  return retval;
+  return SC_IO_ERROR_NONE;
 }
 
 int
-sc_io_source_is_complete (sc_io_source_t * source,
-                          size_t * bytes_in, size_t * bytes_out)
+sc_io_source_complete (sc_io_source_t * source,
+                       size_t * bytes_in, size_t * bytes_out)
 {
   if (source->iotype == SC_IO_TYPE_BUFFER) {
     SC_ASSERT (source->buffer != NULL);
+    if (source->buffer_bytes % source->buffer->elem_size != 0) {
+      return SC_IO_ERROR_AGAIN;
+    }
     source->buffer_bytes = 0;
   }
   else {
@@ -274,7 +289,7 @@ sc_io_source_is_complete (sc_io_source_t * source,
   }
   source->bytes_in = source->bytes_out = 0;
 
-  return 1;
+  return SC_IO_ERROR_NONE;
 }
 
 int

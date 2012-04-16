@@ -28,6 +28,17 @@
 
 SC_EXTERN_C_BEGIN;
 
+/** Error values for io.
+ */
+typedef enum
+{
+  SC_IO_ERROR_NONE,     /**< The value of zero means no error. */
+  SC_IO_ERROR_FATAL = -1,       /**< The io object is now disfunctional. */
+  SC_IO_ERROR_AGAIN = -2        /**< Another io operation may resolve it.
+                                The function just returned was a noop. */
+}
+sc_io_error_t;
+
 typedef enum
 {
   SC_IO_MODE_WRITE,     /**< Semantics as "w" in fopen. */
@@ -95,6 +106,7 @@ sc_io_sink_t       *sc_io_sink_new (sc_io_type_t iotype,
 
 /** Free data sink.
  * Calls sc_io_sink_complete and discards the final counts.
+ * Errors from complete lead to SC_IO_ERROR_FATAL returned from this function.
  * Call sc_io_sink_complete yourself if bytes_out is of interest.
  * \param [in,out] sink         The sink object to complete and free.
  * \return                      0 on success, nonzero on error.
@@ -111,9 +123,11 @@ int                 sc_io_sink_write (sc_io_sink_t * sink,
                                       const void *data, size_t bytes_avail);
 
 /** Flush all buffered output data to sink.
- * The updated value of bytes read and written is returned in bytes_in/out.
- * The sink status is reset as if the sink had just been created.
- * In particular, the bytes counters are reset to zero.
+ * This function may return SC_IO_ERROR_AGAIN if another write is required.
+ * Currently this may happen if BUFFER requires an integer multiple of bytes.
+ * If successful, the updated value of bytes read and written is returned
+ * in bytes_in/out, and the sink status is reset as if the sink had just
+ * been created.  In particular, the bytes counters are reset to zero.
  * The sink actions taken depend on its type.
  * BUFFER, FILEFILE: none.
  * FILENAME: call fclose on sink->file.
@@ -141,23 +155,25 @@ sc_io_source_t     *sc_io_source_new (sc_io_type_t iotype,
                                       sc_io_encode_t encode, ...);
 
 /** Free data source.
- * Calls sc_io_source_is_complete and requires it to return true.
+ * Calls sc_io_source_complete and requires it to return no error.
  * This is to avoid discarding buffered data that has not been passed to read.
  * \param [in,out] source       The source object to free.
  * \return                      0 on success.  Nonzero if an error is
- *                              encountered or is_complete returns false.
+ *                              encountered or is_complete returns one.
  */
 int                 sc_io_source_destroy (sc_io_source_t * source);
 
 /** Read data from a source.
  * Data is read until the data buffer has not enough room anymore, or source
  * becomes empty.  It is possible that data already read internally remains
- * in the source object for the next call.  Call sc_io_source_is_complete
- * to find out.
+ * in the source object for the next call.  Call sc_io_source_complete and
+ * check its return value to find out.
+ * Returns an error if bytes_out is NULL and less than bytes_avail are read.
  * \param [in,out] source       The source object to read from.
  * \param [in] data             Data buffer for reading from sink.
  * \param [in] bytes_avail      Number of bytes available in data buffer.
  * \param [in,out] bytes_out    If not NULL, byte count read into data buffer.
+ *                              Otherwise, requires to read exactly bytes_avail.
  * \return                      0 on success, nonzero on error.
  */
 int                 sc_io_source_read (sc_io_source_t * source,
@@ -165,21 +181,21 @@ int                 sc_io_source_read (sc_io_source_t * source,
                                        size_t * bytes_out);
 
 /** Determine whether all data buffered from source has been returned by read.
- * If the call returns true, the internal counters source->bytes_in and
+ * If the call returns no error, the internal counters source->bytes_in and
  * source->bytes_out are returned to the caller if requested, and reset to 0.
- * If the call returns false, another call to sc_io_source_read is required.
+ * If it returns SC_IO_ERROR_AGAIN, another sc_io_source_read is required.
  *
  * \param [in,out] source       The source object to read from.
  * \param [in,out] bytes_in     If not NULL and true is returned,
  *                              the total size of the data sourced.
  * \param [in,out] bytes_out    If not NULL and true is returned,
  *                              total bytes passed out by source_read.
- * \return                      False if buffered data is remaining.
- *                              Otherwise, return true and reset counters.
+ * \return                      SC_IO_ERROR_AGAIN if buffered data remaining.
+ *                              Otherwise return ERROR_NONE and reset counters.
  */
-int                 sc_io_source_is_complete (sc_io_source_t * source,
-                                              size_t * bytes_in,
-                                              size_t * bytes_out);
+int                 sc_io_source_complete (sc_io_source_t * source,
+                                           size_t * bytes_in,
+                                           size_t * bytes_out);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream openened for writing.
