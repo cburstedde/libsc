@@ -396,6 +396,7 @@ sc_array_index_int16 (sc_array_t * array, int16_t i16)
 /** Return the index of an object in an array identified by a pointer.
  * \param [in] element needs to be the address of an element in array.
  */
+/*@unused@*/
 static inline       size_t
 sc_array_position (sc_array_t * array, void *element)
 {
