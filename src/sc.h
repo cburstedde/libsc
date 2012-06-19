@@ -403,6 +403,7 @@ void                sc_memory_check (int package);
 /* comparison functions for various integer sizes */
 
 int                 sc_int_compare (const void *v1, const void *v2);
+int                 sc_int8_compare (const void *v1, const void *v2);
 int                 sc_int16_compare (const void *v1, const void *v2);
 int                 sc_int32_compare (const void *v1, const void *v2);
 int                 sc_int64_compare (const void *v1, const void *v2);

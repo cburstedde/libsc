@@ -411,6 +411,15 @@ sc_int_compare (const void *v1, const void *v2)
 }
 
 int
+sc_int8_compare (const void *v1, const void *v2)
+{
+  const int8_t        i1 = *(int8_t *) v1;
+  const int8_t        i2 = *(int8_t *) v2;
+
+  return i1 == i2 ? 0 : i1 < i2 ? -1 : +1;
+}
+
+int
 sc_int16_compare (const void *v1, const void *v2)
 {
   const int16_t       i1 = *(int16_t *) v1;
