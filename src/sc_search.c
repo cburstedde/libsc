@@ -89,3 +89,54 @@ sc_search_lower_bound64 (int64_t target, const int64_t * array,
   SC_ASSERT (guess == 0 || array[guess - 1] < target);
   return (ssize_t) guess;
 }
+
+size_t
+sc_bsearch_range (const void *key, const void *base, size_t nmemb,
+                  size_t size, int (*compar) (const void *, const void *))
+{
+  const char         *ckey = (char *) key;
+  const char         *cbase = (char *) base;
+  size_t              k_low, k_high, guess;
+
+  if (nmemb == 0) {
+    /* we need at least two array elements, nmemb >= 1, to search */
+    return nmemb;
+  }
+
+  k_low = 0;
+  k_high = nmemb - 1;
+  guess = nmemb / 2;
+  for (;;) {
+    SC_ASSERT (k_low <= k_high);
+    SC_ASSERT (k_low <= guess && guess <= k_high);
+    SC_ASSERT (k_low < nmemb && k_high < nmemb);
+
+    /* check if we have to search lower */
+    if (compar (ckey, cbase + guess * size) < 0) {
+      if (guess == k_low) {
+        return nmemb;
+      }
+      k_high = guess - 1;
+      guess = (k_low + k_high + 1) / 2;
+      continue;
+    }
+
+    /* check if we have to search higher */
+    if (compar (cbase + (guess + 1) * size, ckey) <= 0) {
+      if (guess == k_high) {
+        return nmemb;
+      }
+      k_low = guess + 1;
+      guess = (k_low + k_high) / 2;
+      continue;
+    }
+
+    /* otherwise guess is the correct position */
+    break;
+  }
+
+  SC_ASSERT (guess < nmemb);
+  SC_ASSERT (compar (cbase + guess * size, ckey) <= 0);
+  SC_ASSERT (compar (ckey, cbase + (guess + 1) * size) < 0);
+  return guess;
+}
