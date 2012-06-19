@@ -404,7 +404,10 @@ sc_memory_check (int package)
 int
 sc_int_compare (const void *v1, const void *v2)
 {
-  return *(int *) v1 - *(int *) v2;
+  const int           i1 = *(int *) v1;
+  const int           i2 = *(int *) v2;
+
+  return i1 == i2 ? 0 : i1 < i2 ? -1 : +1;
 }
 
 int
