@@ -247,7 +247,7 @@ sc_io_source_read (sc_io_source_t * source, void *data,
     SC_ASSERT (source->file != NULL);
     bbytes_out = fread (data, 1, bytes_avail, source->file);
     if (bbytes_out < bytes_avail) {
-      retval = !(feof (source->file) && !ferror (source->file));
+      retval = !feof (source->file) || ferror (source->file);
     };
   }
   if (retval) {
