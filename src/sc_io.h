@@ -147,7 +147,7 @@ int                 sc_io_sink_complete (sc_io_sink_t * sink,
  *                              Depending on iotype, varargs must follow:
  *                              BUFFER: sc_array_t * (existing array).
  *                              FILENAME: const char * (name of file to open).
- *                              FILEFILE: FILE * (file open for writing).
+ *                              FILEFILE: FILE * (file open for reading).
  * \param [in] encode           Type of data encoding.
  * \return                      Newly allocated source, or NULL on error.
  */
