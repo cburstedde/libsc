@@ -114,6 +114,7 @@ sc_io_sink_t       *sc_io_sink_new (sc_io_type_t iotype,
 int                 sc_io_sink_destroy (sc_io_sink_t * sink);
 
 /** Write data to a sink.  Data may be buffered and sunk in a later call.
+ * The internal counters sink->bytes_in and sink->bytes_out are updated.
  * \param [in,out] sink         The sink object to write to.
  * \param [in] data             Data passed into sink.
  * \param [in] bytes_avail      Number of data bytes passed in.;
@@ -128,6 +129,8 @@ int                 sc_io_sink_write (sc_io_sink_t * sink,
  * If successful, the updated value of bytes read and written is returned
  * in bytes_in/out, and the sink status is reset as if the sink had just
  * been created.  In particular, the bytes counters are reset to zero.
+ * The internal state of the sink is not changed otherwise.
+ * It is legal to continue writing to the sink hereafter.
  * The sink actions taken depend on its type.
  * BUFFER, FILEFILE: none.
  * FILENAME: call fclose on sink->file.
@@ -164,6 +167,7 @@ sc_io_source_t     *sc_io_source_new (sc_io_type_t iotype,
 int                 sc_io_source_destroy (sc_io_source_t * source);
 
 /** Read data from a source.
+ * The internal counters source->bytes_in and source->bytes_out are updated.
  * Data is read until the data buffer has not enough room anymore, or source
  * becomes empty.  It is possible that data already read internally remains
  * in the source object for the next call.  Call sc_io_source_complete and
@@ -182,9 +186,11 @@ int                 sc_io_source_read (sc_io_source_t * source,
                                        size_t * bytes_out);
 
 /** Determine whether all data buffered from source has been returned by read.
+ * If it returns SC_IO_ERROR_AGAIN, another sc_io_source_read is required.
  * If the call returns no error, the internal counters source->bytes_in and
  * source->bytes_out are returned to the caller if requested, and reset to 0.
- * If it returns SC_IO_ERROR_AGAIN, another sc_io_source_read is required.
+ * The internal state of the source is not changed otherwise.
+ * It is legal to continue reading from the source hereafter.
  *
  * \param [in,out] source       The source object to read from.
  * \param [in,out] bytes_in     If not NULL and true is returned,

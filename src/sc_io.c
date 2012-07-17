@@ -141,7 +141,6 @@ sc_io_sink_complete (sc_io_sink_t * sink,
     if (sink->buffer_bytes % sink->buffer->elem_size != 0) {
       return SC_IO_ERROR_AGAIN;
     }
-    sink->buffer_bytes = 0;
   }
   else if (sink->iotype == SC_IO_TYPE_FILENAME ||
            sink->iotype == SC_IO_TYPE_FILEFILE) {
@@ -283,10 +282,6 @@ sc_io_source_complete (sc_io_source_t * source,
     if (source->buffer_bytes % source->buffer->elem_size != 0) {
       return SC_IO_ERROR_AGAIN;
     }
-    source->buffer_bytes = 0;
-  }
-  else {
-    SC_ASSERT (source->buffer_bytes == 0);
   }
 
   if (bytes_in != NULL) {
