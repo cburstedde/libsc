@@ -171,6 +171,7 @@ int                 sc_io_source_destroy (sc_io_source_t * source);
  * Returns an error if bytes_out is NULL and less than bytes_avail are read.
  * \param [in,out] source       The source object to read from.
  * \param [in] data             Data buffer for reading from sink.
+ *                              If NULL the output data will be thrown away.
  * \param [in] bytes_avail      Number of bytes available in data buffer.
  * \param [in,out] bytes_out    If not NULL, byte count read into data buffer.
  *                              Otherwise, requires to read exactly bytes_avail.

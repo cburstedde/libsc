@@ -239,16 +239,24 @@ sc_io_source_read (sc_io_source_t * source, void *data,
     bbytes_out -= source->buffer_bytes;
     bbytes_out = SC_MIN (bbytes_out, bytes_avail);
 
-    memcpy (data, source->buffer->array + source->buffer_bytes, bbytes_out);
+    if (data != NULL) {
+      memcpy (data, source->buffer->array + source->buffer_bytes, bbytes_out);
+    }
     source->buffer_bytes += bbytes_out;
   }
   else if (source->iotype == SC_IO_TYPE_FILENAME ||
            source->iotype == SC_IO_TYPE_FILEFILE) {
     SC_ASSERT (source->file != NULL);
-    bbytes_out = fread (data, 1, bytes_avail, source->file);
-    if (bbytes_out < bytes_avail) {
-      retval = !feof (source->file) || ferror (source->file);
-    };
+    if (data != NULL) {
+      bbytes_out = fread (data, 1, bytes_avail, source->file);
+      if (bbytes_out < bytes_avail) {
+        retval = !feof (source->file) || ferror (source->file);
+      }
+    }
+    else {
+      retval = fseek (source->file, (long) bytes_avail, SEEK_CUR);
+      bbytes_out = bytes_avail;
+    }
   }
   if (retval) {
     return SC_IO_ERROR_FATAL;
