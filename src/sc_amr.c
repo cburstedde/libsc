@@ -24,7 +24,7 @@
 
 void
 sc_amr_error_stats (MPI_Comm mpicomm, long num_elements,
-                    const double *_sc_restrict errors, sc_amr_control_t * amr)
+                    const double *errors, sc_amr_control_t * amr)
 {
   sc_statinfo_t      *si = &amr->estats;
   int                 mpiret;
