@@ -8,6 +8,18 @@ dnl Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
 
 dnl Documentation for macro names: brackets indicate optional arguments
 
+dnl SC_VERSION(PREFIX)
+dnl Expose major, minor, and point version numbers as CPP defines.
+dnl The PREFIX is currently unused since we rely on sc_prefix_config_h.m4.
+dnl
+AC_DEFUN([SC_VERSION],
+[
+  AX_SPLIT_VERSION
+  AC_DEFINE_UNQUOTED([VERSION_MAJOR],[$AX_MAJOR_VERSION],[Package major version])
+  AC_DEFINE_UNQUOTED([VERSION_MINOR],[$AX_MINOR_VERSION],[Package minor version])
+  AC_DEFINE_UNQUOTED([VERSION_POINT],[$AX_POINT_VERSION],[Package point version])
+])
+
 dnl The shell variable PREFIX_ARG_NOT_GIVEN_DEFAULT can be set.
 dnl If the argument is not given and PREFIX_ARG_NOT_GIVEN_DEFAULT is nonempty,
 dnl it will override the enableval/withval variable.
