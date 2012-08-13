@@ -1,11 +1,10 @@
 # ===========================================================================
-#           http://autoconf-archive.cryp.to/ax_prefix_config_h.html
-# and renamed by Carsten Burstedde <carsten@ices.utexas.edu>
+#    http://www.gnu.org/software/autoconf-archive/ax_prefix_config_h.html
 # ===========================================================================
 #
 # SYNOPSIS
 #
-#   SC_PREFIX_CONFIG_H [(OUTPUT-HEADER [,PREFIX [,ORIG-HEADER]])]
+#   AX_PREFIX_CONFIG_H [(OUTPUT-HEADER [,PREFIX [,ORIG-HEADER]])]
 #
 # DESCRIPTION
 #
@@ -30,20 +29,20 @@
 #
 #   Your configure.ac script should contain both macros in this order, and
 #   unlike the earlier variations of this prefix-macro it is okay to place
-#   the SC_PREFIX_CONFIG_H call before the AC_OUTPUT invokation.
+#   the AX_PREFIX_CONFIG_H call before the AC_OUTPUT invokation.
 #
 #   Example:
 #
 #     AC_INIT(config.h.in)        # config.h.in as created by "autoheader"
 #     AM_INIT_AUTOMAKE(testpkg, 0.1.1)    # makes #undef VERSION and PACKAGE
 #     AM_CONFIG_HEADER(config.h)          # prep config.h from config.h.in
-#     SC_PREFIX_CONFIG_H(mylib/_config.h) # prep mylib/_config.h from it..
+#     AX_PREFIX_CONFIG_H(mylib/_config.h) # prep mylib/_config.h from it..
 #     AC_MEMORY_H                         # makes "#undef NEED_MEMORY_H"
 #     AC_C_CONST_H                        # makes "#undef const"
 #     AC_OUTPUT(Makefile)                 # creates the "config.h" now
 #                                         # and also mylib/_config.h
 #
-#   if the argument to SC_PREFIX_CONFIG_H would have been omitted then the
+#   if the argument to AX_PREFIX_CONFIG_H would have been omitted then the
 #   default outputfile would have been called simply "testpkg-config.h", but
 #   even under the name "mylib/_config.h" it contains prefix-defines like
 #
@@ -69,10 +68,10 @@
 #   it by itself". You might want to clean up about these - consider an
 #   extra mylib/conf.h that reads something like:
 #
-#      #include <mylib/_config.h>
-#      #ifndef _testpkg_const
-#      #define _testpkg_const const
-#      #endif
+#     #include <mylib/_config.h>
+#     #ifndef _testpkg_const
+#     #define _testpkg_const const
+#     #endif
 #
 #   and then start using _testpkg_const in the header files. That is also a
 #   good thing to differentiate whether some library-user has starting to
@@ -88,11 +87,7 @@
 #     #define _testpkg_const const
 #     #endif
 #
-# LAST MODIFICATION
-#
-#   2009-02-09
-#
-# COPYLEFT
+# LICENSE
 #
 #   Copyright (c) 2008 Guido U. Draheim <guidod@gmx.de>
 #   Copyright (c) 2008 Marten Svantesson
@@ -100,7 +95,7 @@
 #
 #   This program is free software; you can redistribute it and/or modify it
 #   under the terms of the GNU General Public License as published by the
-#   Free Software Foundation; either version 2 of the License, or (at your
+#   Free Software Foundation; either version 3 of the License, or (at your
 #   option) any later version.
 #
 #   This program is distributed in the hope that it will be useful, but
@@ -120,11 +115,14 @@
 #   all other use of the material that constitutes the Autoconf Macro.
 #
 #   This special exception to the GPL applies to versions of the Autoconf
-#   Macro released by the Autoconf Macro Archive. When you make and
-#   distribute a modified version of the Autoconf Macro, you may extend this
-#   special exception to the GPL to apply to your modified version as well.
+#   Macro released by the Autoconf Archive. When you make and distribute a
+#   modified version of the Autoconf Macro, you may extend this special
+#   exception to the GPL to apply to your modified version as well.
 
-AC_DEFUN([SC_PREFIX_CONFIG_H],[dnl
+#serial 11
+
+AC_DEFUN([AX_PREFIX_CONFIG_H],[dnl
+AC_PREREQ([2.62])
 AC_BEFORE([AC_CONFIG_HEADERS],[$0])dnl
 AC_CONFIG_COMMANDS([ifelse($1,,$PACKAGE-config.h,$1)],[dnl
 AS_VAR_PUSHDEF([_OUT],[ac_prefix_conf_OUT])dnl
@@ -166,16 +164,16 @@ else
   if test ! -f "$_INP" ; then if test -f "$srcdir/$_INP" ; then
      _INP="$srcdir/$_INP"
   fi fi
-  AC_MSG_NOTICE([creating $_OUT from $_INP (prefix $_UPP)])
+  AC_MSG_NOTICE(creating $_OUT - prefix $_UPP for $_INP defines)
   if test -f $_INP ; then
-    echo "s/^@%:@undef  *\\(@<:@m4_cr_LETTERS[]_@:>@\\)/@%:@undef $_UPP""_\\1/" > _script
-dnl    echo "s/^@%:@undef  *\\(@<:@m4_cr_letters@:>@\\)/@%:@undef $_LOW""_\\1/" >> _script
-    echo "s/^@%:@def[]ine  *\\(@<:@m4_cr_LETTERS[]_@:>@@<:@_symbol@:>@*\\)\\(.*\\)/@%:@ifndef $_UPP""_\\1 \\" >> _script
-    echo "@%:@def[]ine $_UPP""_\\1\\2 \\" >> _script
-    echo "@%:@endif/" >>_script
-dnl    echo "s/^@%:@def[]ine  *\\(@<:@m4_cr_letters@:>@@<:@_symbol@:>@*\\)\\(.*\\)/@%:@ifndef $_LOW""_\\1 \\" >> _script
-dnl    echo "@%:@define $_LOW""_\\1\\2 \\" >> _script
-dnl    echo "@%:@endif/" >> _script
+    AS_ECHO(["s/^@%:@undef  *\\(@<:@m4_cr_LETTERS[]_@:>@\\)/@%:@undef $_UPP""_\\1/"]) > _script
+    AS_ECHO(["s/^@%:@undef  *\\(@<:@m4_cr_letters@:>@\\)/@%:@undef $_LOW""_\\1/"]) >> _script
+    AS_ECHO(["s/^@%:@def[]ine  *\\(@<:@m4_cr_LETTERS[]_@:>@@<:@_symbol@:>@*\\)\\(.*\\)/@%:@ifndef $_UPP""_\\1\\"]) >> _script
+    AS_ECHO(["@%:@def[]ine $_UPP""_\\1\\2\\"]) >> _script
+    AS_ECHO(["@%:@endif/"]) >> _script
+    AS_ECHO(["s/^@%:@def[]ine  *\\(@<:@m4_cr_letters@:>@@<:@_symbol@:>@*\\)\\(.*\\)/@%:@ifndef $_LOW""_\\1\\"]) >> _script
+    AS_ECHO(["@%:@define $_LOW""_\\1\\2\\"]) >> _script
+    AS_ECHO(["@%:@endif/"]) >> _script
     # now executing _script on _DEF input to create _OUT output file
     echo "@%:@ifndef $_DEF"      >$tmp/pconfig.h
     echo "@%:@def[]ine $_DEF 1" >>$tmp/pconfig.h
@@ -209,12 +207,3 @@ AS_VAR_POPDEF([_PKG])dnl
 AS_VAR_POPDEF([_DEF])dnl
 AS_VAR_POPDEF([_OUT])dnl
 ],[PACKAGE="$PACKAGE"])])
-
-dnl implementation note: a bug report (31.5.2005) from Marten Svantesson points
-dnl out a problem where `echo "\1"` results in a Control-A. The unix standard
-dnl    http://www.opengroup.org/onlinepubs/000095399/utilities/echo.html
-dnl defines all backslash-sequences to be inherently non-portable asking
-dnl for replacement with printf. Some old systems had problems with that
-dnl one either. However, the latest libtool (!) release does export an $ECHO
-dnl (and $echo) that does the right thing - just one question is left: what
-dnl was the first version to have it? Is it greater 2.58 ?

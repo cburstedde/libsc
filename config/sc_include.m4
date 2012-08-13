@@ -10,7 +10,7 @@ dnl Documentation for macro names: brackets indicate optional arguments
 
 dnl SC_VERSION(PREFIX)
 dnl Expose major, minor, and point version numbers as CPP defines.
-dnl The PREFIX is currently unused since we rely on sc_prefix_config_h.m4.
+dnl The PREFIX is currently unused since we rely on ax_prefix_config_h.m4.
 dnl
 AC_DEFUN([SC_VERSION],
 [

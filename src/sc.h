@@ -26,6 +26,9 @@
 /* include the sc_config header first */
 
 #include <sc_config.h>
+#ifndef _sc_restrict
+#define _sc_restrict restrict
+#endif
 
 /* use this in case mpi.h includes stdint.h */
 

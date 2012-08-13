@@ -11,7 +11,7 @@ AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR([config])
 AC_PREFIX_DEFAULT([$PWD/local])
 AM_INIT_AUTOMAKE([subdir-objects])
-SC_PREFIX_CONFIG_H([src/sc_config.h], [SC])
+AX_PREFIX_CONFIG_H([src/sc_config.h], [SC])
 SC_VERSION([SC])
 
 # Process command line options.
