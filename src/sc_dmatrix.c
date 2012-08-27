@@ -52,6 +52,19 @@ sc_darray_is_range (const double *darray, size_t nelem,
   return 1;
 }
 
+size_t
+sc_dmatrix_memory_used (sc_dmatrix_t *dm)
+{
+  size_t              mem = sizeof (sc_dmatrix_t);
+
+  mem += (dm->m + 1) * sizeof (double *);
+  if (!dm->view) {
+    mem += dm->m * dm->n * sizeof (double);
+  }
+
+  return mem;
+}
+
 static void
 sc_dmatrix_new_e (sc_dmatrix_t * rdm, sc_bint_t m, sc_bint_t n, double *data)
 {

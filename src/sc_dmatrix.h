@@ -53,6 +53,12 @@ int                 sc_darray_is_valid (const double *darray, size_t nelem);
 int                 sc_darray_is_range (const double *darray, size_t nelem,
                                         double low, double high);
 
+/** Calculate the memory used by a dmatrix.
+ * \param [in] array       The dmatrix.
+ * \return                 Memory used in bytes.
+ */
+size_t              sc_dmatrix_memory_used (sc_dmatrix_t * dmatrix);
+
 /*
  * The sc_dmatrix_new/clone functions abort on allocation errors.
  * There is no need to check the return value.
