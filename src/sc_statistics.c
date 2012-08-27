@@ -83,6 +83,8 @@ sc_stats_init (sc_statinfo_t * stats, const char *variable)
 {
   stats->dirty = 1;
   stats->count = 0;
+  stats->sum_values = stats->sum_squares = 0.;
+  stats->min = stats->max = 0.;
   stats->variable = variable;
 }
 
