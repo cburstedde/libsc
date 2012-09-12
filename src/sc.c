@@ -623,6 +623,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   int                 i;
   sc_package_t       *p;
   sc_package_t       *new_package = NULL;
+  int                 new_package_id;
 
   SC_CHECK_ABORT (log_threshold == SC_LP_DEFAULT ||
                   (log_threshold >= SC_LP_ALWAYS
@@ -644,6 +645,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
     p = sc_packages + i;
     if (!p->is_registered) {
       new_package = p;
+      new_package_id = i;
       break;
     }
   }
@@ -654,6 +656,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
                 (2 * sc_num_packages_alloc + 1) * sizeof(sc_package_t));
     SC_CHECK_ABORT (sc_packages, "Failed to allocate memory");
     new_package = sc_packages + i;
+    new_package_id = i;
     sc_num_packages_alloc = 2 * sc_num_packages_alloc + 1;
 
     /* initialize new packages */
@@ -680,7 +683,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   ++sc_num_packages;
   SC_ASSERT (sc_num_packages <= sc_num_packages_alloc);
 
-  return i;
+  return new_package_id;
 }
 
 int
