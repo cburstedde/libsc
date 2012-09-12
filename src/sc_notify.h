@@ -40,7 +40,7 @@ SC_EXTERN_C_BEGIN;
  */
 int                 sc_notify_allgather (int *receivers, int num_receivers,
                                          int *senders, int *num_senders,
-                                         MPI_Comm mpicomm);
+                                         sc_MPI_Comm mpicomm);
 
 /** Collective call to notify a set of receiver ranks of current rank.
  * \param [in] receivers        Sorted and unique array of MPI ranks to inform.
@@ -53,7 +53,7 @@ int                 sc_notify_allgather (int *receivers, int num_receivers,
  */
 int                 sc_notify (int *receivers, int num_receivers,
                                int *senders, int *num_senders,
-                               MPI_Comm mpicomm);
+                               sc_MPI_Comm mpicomm);
 
 SC_EXTERN_C_END;
 

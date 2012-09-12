@@ -100,7 +100,7 @@ static int          default_malloc_count = 0;
 static int          default_free_count = 0;
 
 static int          sc_identifier = -1;
-static MPI_Comm     sc_mpicomm = MPI_COMM_NULL;
+static sc_MPI_Comm  sc_mpicomm = sc_MPI_COMM_NULL;
 
 static FILE        *sc_log_stream = NULL;
 static sc_log_handler_t sc_default_log_handler = sc_log_handler;
@@ -564,8 +564,8 @@ sc_abort (void)
   fflush (stderr);
   sleep (1);                    /* allow time for pending output */
 
-  if (sc_mpicomm != MPI_COMM_NULL) {
-    MPI_Abort (sc_mpicomm, 1);  /* terminate all MPI processes */
+  if (sc_mpicomm != sc_MPI_COMM_NULL) {
+    sc_MPI_Abort (sc_mpicomm, 1);  /* terminate all MPI processes */
   }
   abort ();
 }
@@ -603,8 +603,8 @@ sc_abort_collective (const char *msg)
 {
   int                 mpiret;
 
-  if (sc_mpicomm != MPI_COMM_NULL) {
-    mpiret = MPI_Barrier (sc_mpicomm);
+  if (sc_mpicomm != sc_MPI_COMM_NULL) {
+    mpiret = sc_MPI_Barrier (sc_mpicomm);
     SC_CHECK_MPI (mpiret);
   }
 
@@ -709,7 +709,7 @@ sc_package_print_summary (int log_priority)
 }
 
 void
-sc_init (MPI_Comm mpicomm,
+sc_init (sc_MPI_Comm mpicomm,
          int catch_signals, int print_backtrace,
          sc_log_handler_t log_handler, int log_threshold)
 {
@@ -718,14 +718,14 @@ sc_init (MPI_Comm mpicomm,
   const char         *trace_file_prio;
 
   sc_identifier = -1;
-  sc_mpicomm = MPI_COMM_NULL;
+  sc_mpicomm = sc_MPI_COMM_NULL;
   sc_print_backtrace = print_backtrace;
 
-  if (mpicomm != MPI_COMM_NULL) {
+  if (mpicomm != sc_MPI_COMM_NULL) {
     int                 mpiret;
 
     sc_mpicomm = mpicomm;
-    mpiret = MPI_Comm_rank (sc_mpicomm, &sc_identifier);
+    mpiret = sc_MPI_Comm_rank (sc_mpicomm, &sc_identifier);
     SC_CHECK_MPI (mpiret);
   }
 
@@ -810,7 +810,7 @@ sc_finalize (void)
   sc_memory_check (-1);
 
   sc_set_signal_handler (0);
-  sc_mpicomm = MPI_COMM_NULL;
+  sc_mpicomm = sc_MPI_COMM_NULL;
 
   sc_print_backtrace = 0;
   sc_identifier = -1;

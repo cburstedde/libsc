@@ -26,7 +26,7 @@
 
 static void
 sc_stats_mpifunc (void *invec, void *inoutvec, int *len,
-                  MPI_Datatype * datatype)
+                  sc_MPI_Datatype * datatype)
 {
   int                 i;
   double             *in = (double *) invec;
@@ -107,7 +107,7 @@ sc_stats_accumulate (sc_statinfo_t * stats, double value)
 }
 
 void
-sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
+sc_stats_compute (sc_MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 {
   int                 i;
   int                 mpiret;
@@ -117,11 +117,11 @@ sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   double             *flatin;
   double             *flatout;
 #ifdef SC_MPI
-  MPI_Op              op;
-  MPI_Datatype        ctype;
+  sc_MPI_Op           op;
+  sc_MPI_Datatype     ctype;
 #endif
 
-  mpiret = MPI_Comm_rank (mpicomm, &rank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
 
   flat = SC_ALLOC (double, 2 * 7 * nvars);
@@ -145,22 +145,22 @@ sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 #ifndef SC_MPI
   memcpy (flatout, flatin, 7 * nvars * sizeof (*flatout));
 #else
-  mpiret = MPI_Type_contiguous (7, MPI_DOUBLE, &ctype);
+  mpiret = sc_MPI_Type_contiguous (7, sc_MPI_DOUBLE, &ctype);
   SC_CHECK_MPI (mpiret);
 
-  mpiret = MPI_Type_commit (&ctype);
+  mpiret = sc_MPI_Type_commit (&ctype);
   SC_CHECK_MPI (mpiret);
 
-  mpiret = MPI_Op_create ((MPI_User_function *) sc_stats_mpifunc, 1, &op);
+  mpiret = sc_MPI_Op_create ((MPI_User_function *) sc_stats_mpifunc, 1, &op);
   SC_CHECK_MPI (mpiret);
 
-  mpiret = MPI_Allreduce (flatin, flatout, nvars, ctype, op, mpicomm);
+  mpiret = sc_MPI_Allreduce (flatin, flatout, nvars, ctype, op, mpicomm);
   SC_CHECK_MPI (mpiret);
 
-  mpiret = MPI_Op_free (&op);
+  mpiret = sc_MPI_Op_free (&op);
   SC_CHECK_MPI (mpiret);
 
-  mpiret = MPI_Type_free (&ctype);
+  mpiret = sc_MPI_Type_free (&ctype);
   SC_CHECK_MPI (mpiret);
 #endif /* SC_MPI */
 
@@ -192,7 +192,7 @@ sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 }
 
 void
-sc_stats_compute1 (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
+sc_stats_compute1 (sc_MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 {
   int                 i;
   double              value;
@@ -294,7 +294,7 @@ sc_stats_print (int package_id, int log_priority,
 }
 
 sc_statistics_t    *
-sc_statistics_new (MPI_Comm mpicomm)
+sc_statistics_new (sc_MPI_Comm mpicomm)
 {
   sc_statistics_t    *stats;
 

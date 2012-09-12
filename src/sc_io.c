@@ -204,21 +204,21 @@ sc_fread (void *ptr, size_t size, size_t nmemb, FILE * file,
 #ifdef SC_MPIIO
 
 void
-sc_mpi_write (MPI_File mpifile, const void *ptr, size_t zcount,
-              MPI_Datatype t, const char *errmsg)
+sc_mpi_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
+              sc_MPI_Datatype t, const char *errmsg)
 {
 #ifdef SC_DEBUG
   int                 icount;
 #endif
   int                 mpiret;
-  MPI_Status          mpistatus;
+  sc_MPI_Status       mpistatus;
 
-  mpiret = MPI_File_write (mpifile, (void *) ptr,
+  mpiret = sc_MPI_File_write (mpifile, (void *) ptr,
                            (int) zcount, t, &mpistatus);
-  SC_CHECK_ABORT (mpiret == MPI_SUCCESS, errmsg);
+  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
 
 #ifdef SC_DEBUG
-  MPI_Get_count (&mpistatus, t, &icount);
+  sc_MPI_Get_count (&mpistatus, t, &icount);
   SC_CHECK_ABORT (icount == (int) zcount, errmsg);
 #endif
 }

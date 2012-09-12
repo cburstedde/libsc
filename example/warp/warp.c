@@ -29,7 +29,7 @@ main (void)
   double              round2[3];
   sc_warp_interval_t *root;
 
-  sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
   root = sc_warp_new (0., 1.);
 

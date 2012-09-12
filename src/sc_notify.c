@@ -25,7 +25,7 @@
 
 int
 sc_notify_allgather (int *receivers, int num_receivers,
-                     int *senders, int *num_senders, MPI_Comm mpicomm)
+                     int *senders, int *num_senders, sc_MPI_Comm mpicomm)
 {
   int                 i, j;
   int                 found_num_senders;
@@ -36,14 +36,14 @@ sc_notify_allgather (int *receivers, int num_receivers,
   int                *offsets_num_receivers;
   int                *all_receivers;
 
-  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &mpirank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   procs_num_receivers = SC_ALLOC (int, mpisize);
-  mpiret = MPI_Allgather (&num_receivers, 1, MPI_INT,
-                          procs_num_receivers, 1, MPI_INT, mpicomm);
+  mpiret = sc_MPI_Allgather (&num_receivers, 1, sc_MPI_INT,
+                          procs_num_receivers, 1, sc_MPI_INT, mpicomm);
   SC_CHECK_MPI (mpiret);
 
   offsets_num_receivers = SC_ALLOC (int, mpisize);
@@ -53,9 +53,9 @@ sc_notify_allgather (int *receivers, int num_receivers,
     total_num_receivers += procs_num_receivers[i];
   }
   all_receivers = SC_ALLOC (int, total_num_receivers);
-  mpiret = MPI_Allgatherv (receivers, num_receivers, MPI_INT,
+  mpiret = sc_MPI_Allgatherv (receivers, num_receivers, sc_MPI_INT,
                            all_receivers, procs_num_receivers,
-                           offsets_num_receivers, MPI_INT, mpicomm);
+                           offsets_num_receivers, sc_MPI_INT, mpicomm);
   SC_CHECK_MPI (mpiret);
 
   SC_ASSERT (procs_num_receivers[mpirank] == num_receivers);
@@ -73,7 +73,7 @@ sc_notify_allgather (int *receivers, int num_receivers,
   SC_FREE (offsets_num_receivers);
   SC_FREE (all_receivers);
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 /** Internally used function to merge two data arrays.
@@ -207,7 +207,7 @@ sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second)
  * \param [in,out] output   Array of integers, must initially be empty.
  */
 static void
-sc_notify_recursive (MPI_Comm mpicomm, int start, int me, int length,
+sc_notify_recursive (sc_MPI_Comm mpicomm, int start, int me, int length,
                      int groupsize, sc_array_t * input, sc_array_t * output)
 {
   int                 i;
@@ -223,8 +223,8 @@ sc_notify_recursive (MPI_Comm mpicomm, int start, int me, int length,
   int                *pint, *pout;
   sc_array_t         *temparr, *morebuf;
   sc_array_t         *sendbuf, *recvbuf;
-  MPI_Request         outrequest;
-  MPI_Status          instatus;
+  sc_MPI_Request      outrequest;
+  sc_MPI_Status          instatus;
 
   tag = SC_TAG_NOTIFY_RECURSIVE + SC_LOG2_32 (length);
   length2 = length / 2;
@@ -296,7 +296,7 @@ sc_notify_recursive (MPI_Comm mpicomm, int start, int me, int length,
         }
         i += 2 + numfroms;
       }
-      mpiret = MPI_Isend (sendbuf->array, (int) sendbuf->elem_count, MPI_INT,
+      mpiret = sc_MPI_Isend (sendbuf->array, (int) sendbuf->elem_count, sc_MPI_INT,
                           peer, tag, mpicomm, &outrequest);
       SC_CHECK_MPI (mpiret);
     }
@@ -304,15 +304,15 @@ sc_notify_recursive (MPI_Comm mpicomm, int start, int me, int length,
     recvbuf = sc_array_new (sizeof (int));
     if (peer >= start) {
       /* receive one message */
-      mpiret = MPI_Probe (MPI_ANY_SOURCE, tag, mpicomm, &instatus);
+      mpiret = sc_MPI_Probe (sc_MPI_ANY_SOURCE, tag, mpicomm, &instatus);
       SC_CHECK_MPI (mpiret);
-      source = instatus.MPI_SOURCE;
+      source = instatus.sc_MPI_SOURCE;
       SC_ASSERT (source >= 0 && (source == peer || source == peer2));
-      mpiret = MPI_Get_count (&instatus, MPI_INT, &count);
+      mpiret = sc_MPI_Get_count (&instatus, sc_MPI_INT, &count);
       SC_CHECK_MPI (mpiret);
       sc_array_resize (recvbuf, (size_t) count);
-      mpiret = MPI_Recv (recvbuf->array, count, MPI_INT, source,
-                         tag, mpicomm, MPI_STATUS_IGNORE);
+      mpiret = sc_MPI_Recv (recvbuf->array, count, sc_MPI_INT, source,
+                         tag, mpicomm, sc_MPI_STATUS_IGNORE);
       SC_CHECK_MPI (mpiret);
 
       if (peer2 >= 0) {
@@ -322,13 +322,13 @@ sc_notify_recursive (MPI_Comm mpicomm, int start, int me, int length,
 
         /* receive second message */
         source = (source == peer2 ? peer : peer2);
-        mpiret = MPI_Probe (source, tag, mpicomm, &instatus);
+        mpiret = sc_MPI_Probe (source, tag, mpicomm, &instatus);
         SC_CHECK_MPI (mpiret);
-        mpiret = MPI_Get_count (&instatus, MPI_INT, &count);
+        mpiret = sc_MPI_Get_count (&instatus, sc_MPI_INT, &count);
         SC_CHECK_MPI (mpiret);
         sc_array_resize (recvbuf, (size_t) count);
-        mpiret = MPI_Recv (recvbuf->array, count, MPI_INT, source,
-                           tag, mpicomm, MPI_STATUS_IGNORE);
+        mpiret = sc_MPI_Recv (recvbuf->array, count, sc_MPI_INT, source,
+                           tag, mpicomm, sc_MPI_STATUS_IGNORE);
         SC_CHECK_MPI (mpiret);
 
         /* merge the second received array */
@@ -344,7 +344,7 @@ sc_notify_recursive (MPI_Comm mpicomm, int start, int me, int length,
 
     if (peer >= 0) {
       /* complete send call */
-      mpiret = MPI_Wait (&outrequest, MPI_STATUS_IGNORE);
+      mpiret = sc_MPI_Wait (&outrequest, sc_MPI_STATUS_IGNORE);
       SC_CHECK_MPI (mpiret);
     }
     sc_array_destroy (sendbuf);
@@ -377,7 +377,7 @@ sc_notify_recursive (MPI_Comm mpicomm, int start, int me, int length,
 
 int
 sc_notify (int *receivers, int num_receivers,
-           int *senders, int *num_senders, MPI_Comm mpicomm)
+           int *senders, int *num_senders, sc_MPI_Comm mpicomm)
 {
   int                 i;
   int                 mpiret;
@@ -388,9 +388,9 @@ sc_notify (int *receivers, int num_receivers,
   int                *pint;
   sc_array_t          input, output;
 
-  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &mpirank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   pow2length = SC_ROUNDUP2_32 (mpisize);
@@ -430,5 +430,5 @@ sc_notify (int *receivers, int num_receivers,
   *num_senders = found_num_senders;
   sc_array_reset (&output);
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }

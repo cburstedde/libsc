@@ -23,7 +23,7 @@
 #include <sc_amr.h>
 
 void
-sc_amr_error_stats (MPI_Comm mpicomm, long num_elements,
+sc_amr_error_stats (sc_MPI_Comm mpicomm, long num_elements,
                     const double *restrict errors, sc_amr_control_t * amr)
 {
   sc_statinfo_t      *si = &amr->estats;
@@ -32,7 +32,7 @@ sc_amr_error_stats (MPI_Comm mpicomm, long num_elements,
   long                i;
   double              sum, squares, emin, emax;
 
-  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
 
   amr->errors = errors;
@@ -82,8 +82,8 @@ sc_amr_coarsen_specify (int package_id,
                  amr->coarsen_threshold, amr->num_total_refine);
 
     local_coarsen = cfn (amr, user_data);
-    mpiret = MPI_Allreduce (&local_coarsen, &global_coarsen, 1, MPI_LONG,
-                            MPI_SUM, amr->mpicomm);
+    mpiret = sc_MPI_Allreduce (&local_coarsen, &global_coarsen, 1, sc_MPI_LONG,
+                            sc_MPI_SUM, amr->mpicomm);
     SC_CHECK_MPI (mpiret);
   }
 
@@ -143,8 +143,8 @@ sc_amr_coarsen_search (int package_id, sc_amr_control_t * amr,
 
     /* call back to count the elements to coarsen locally */
     local_coarsen = cfn (amr, user_data);
-    mpiret = MPI_Allreduce (&local_coarsen, &global_coarsen, 1, MPI_LONG,
-                            MPI_SUM, amr->mpicomm);
+    mpiret = sc_MPI_Allreduce (&local_coarsen, &global_coarsen, 1, sc_MPI_LONG,
+                            sc_MPI_SUM, amr->mpicomm);
     SC_CHECK_MPI (mpiret);
     num_total_estimated =
       num_total_elements + num_total_refine - global_coarsen;
@@ -242,8 +242,8 @@ sc_amr_refine_search (int package_id, sc_amr_control_t * amr,
 
     /* call back to count the elements to refine locally */
     local_refine = rfn (amr, user_data);
-    mpiret = MPI_Allreduce (&local_refine, &global_refine, 1, MPI_LONG,
-                            MPI_SUM, amr->mpicomm);
+    mpiret = sc_MPI_Allreduce (&local_refine, &global_refine, 1, sc_MPI_LONG,
+                            sc_MPI_SUM, amr->mpicomm);
     SC_CHECK_MPI (mpiret);
     num_total_estimated =
       num_total_elements + global_refine - num_total_coarsen;

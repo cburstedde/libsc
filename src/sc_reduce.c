@@ -26,8 +26,8 @@
 #ifdef SC_MPI
 
 static void
-sc_reduce_alltoall (MPI_Comm mpicomm,
-                    void *data, int count, MPI_Datatype datatype,
+sc_reduce_alltoall (sc_MPI_Comm mpicomm,
+                    void *data, int count, sc_MPI_Datatype datatype,
                     int groupsize, int target,
                     int maxlevel, int level, int branch,
                     sc_reduce_t reduce_fn)
@@ -39,7 +39,7 @@ sc_reduce_alltoall (MPI_Comm mpicomm,
   int                 shift;
   char               *alldata;
   size_t              datasize;
-  MPI_Request        *request, *rrequest, *srequest;
+  sc_MPI_Request     *request, *rrequest, *srequest;
 
   orig_target = target;
   doall = 0;
@@ -63,7 +63,7 @@ sc_reduce_alltoall (MPI_Comm mpicomm,
     allcount = 1 << level;
 
     alldata = SC_ALLOC (char, allcount * datasize);
-    request = SC_ALLOC (MPI_Request, 2 * allcount);
+    request = SC_ALLOC (sc_MPI_Request, 2 * allcount);
     rrequest = request;
     srequest = request + allcount;
 
@@ -73,31 +73,31 @@ sc_reduce_alltoall (MPI_Comm mpicomm,
       /* communicate with existing peers */
       if (peer == myrank) {
         memcpy (alldata + i * datasize, data, datasize);
-        rrequest[i] = srequest[i] = MPI_REQUEST_NULL;
+        rrequest[i] = srequest[i] = sc_MPI_REQUEST_NULL;
       }
       else {
         if (peer < groupsize) {
-          mpiret = MPI_Irecv (alldata + i * datasize, datasize, MPI_BYTE,
+          mpiret = sc_MPI_Irecv (alldata + i * datasize, datasize, sc_MPI_BYTE,
                               peer, SC_TAG_REDUCE, mpicomm, rrequest + i);
           SC_CHECK_MPI (mpiret);
           if (doall) {
-            mpiret = MPI_Isend (data, datasize, MPI_BYTE,
+            mpiret = sc_MPI_Isend (data, datasize, sc_MPI_BYTE,
                                 peer, SC_TAG_REDUCE, mpicomm, srequest + i);
             SC_CHECK_MPI (mpiret);
           }
           else {
-            srequest[i] = MPI_REQUEST_NULL;     /* unused */
+            srequest[i] = sc_MPI_REQUEST_NULL;     /* unused */
           }
         }
         else {
           /* ignore non-existing ranks greater or equal mpisize */
-          rrequest[i] = srequest[i] = MPI_REQUEST_NULL;
+          rrequest[i] = srequest[i] = sc_MPI_REQUEST_NULL;
         }
       }
     }
 
     /* complete receive operations */
-    mpiret = MPI_Waitall (allcount, rrequest, MPI_STATUSES_IGNORE);
+    mpiret = sc_MPI_Waitall (allcount, rrequest, sc_MPI_STATUSES_IGNORE);
     SC_CHECK_MPI (mpiret);
 
     /* process received data in the same order as sc_reduce_recursive */
@@ -121,21 +121,21 @@ sc_reduce_alltoall (MPI_Comm mpicomm,
 
     /* wait for sends only after computation is done */
     if (doall) {
-      mpiret = MPI_Waitall (allcount, srequest, MPI_STATUSES_IGNORE);
+      mpiret = sc_MPI_Waitall (allcount, srequest, sc_MPI_STATUSES_IGNORE);
       SC_CHECK_MPI (mpiret);
     }
     SC_FREE (request);
   }
   else {
-    mpiret = MPI_Send (data, datasize, MPI_BYTE,
+    mpiret = sc_MPI_Send (data, datasize, sc_MPI_BYTE,
                        target, SC_TAG_REDUCE, mpicomm);
     SC_CHECK_MPI (mpiret);
   }
 }
 
 static void
-sc_reduce_recursive (MPI_Comm mpicomm,
-                     void *data, int count, MPI_Datatype datatype,
+sc_reduce_recursive (sc_MPI_Comm mpicomm,
+                     void *data, int count, sc_MPI_Datatype datatype,
                      int groupsize, int target,
                      int maxlevel, int level, int branch,
                      sc_reduce_t reduce_fn)
@@ -145,7 +145,7 @@ sc_reduce_recursive (MPI_Comm mpicomm,
   int                 myrank, peer, higher;
   char               *peerdata;
   size_t              datasize;
-  MPI_Status          rstatus;
+  sc_MPI_Status       rstatus;
 
   orig_target = target;
   doall = 0;
@@ -183,7 +183,7 @@ sc_reduce_recursive (MPI_Comm mpicomm,
         /* temporary data to compare against peer */
         peerdata = SC_ALLOC (char, datasize);
 
-        mpiret = MPI_Recv (peerdata, datasize, MPI_BYTE,
+        mpiret = sc_MPI_Recv (peerdata, datasize, sc_MPI_BYTE,
                            peer, SC_TAG_REDUCE, mpicomm, &rstatus);
         SC_CHECK_MPI (mpiret);
 
@@ -199,19 +199,19 @@ sc_reduce_recursive (MPI_Comm mpicomm,
 
       if (doall && peer < groupsize) {
         /* if allreduce send back result of reduction */
-        mpiret = MPI_Send (data, datasize, MPI_BYTE,
+        mpiret = sc_MPI_Send (data, datasize, sc_MPI_BYTE,
                            peer, SC_TAG_REDUCE, mpicomm);
         SC_CHECK_MPI (mpiret);
       }
     }
     else {
       if (peer < groupsize) {
-        mpiret = MPI_Send (data, datasize, MPI_BYTE,
+        mpiret = sc_MPI_Send (data, datasize, sc_MPI_BYTE,
                            peer, SC_TAG_REDUCE, mpicomm);
         SC_CHECK_MPI (mpiret);
         if (doall) {
           /* if allreduce receive back result of reduction */
-          mpiret = MPI_Recv (data, datasize, MPI_BYTE,
+          mpiret = sc_MPI_Recv (data, datasize, sc_MPI_BYTE,
                              peer, SC_TAG_REDUCE, mpicomm, &rstatus);
           SC_CHECK_MPI (mpiret);
         }
@@ -224,81 +224,81 @@ sc_reduce_recursive (MPI_Comm mpicomm,
 
 static void
 sc_reduce_max (void *sendbuf, void *recvbuf,
-               int sendcount, MPI_Datatype sendtype)
+               int sendcount, sc_MPI_Datatype sendtype)
 {
   int                 i;
 
-  if (sendtype == MPI_CHAR || sendtype == MPI_BYTE) {
+  if (sendtype == sc_MPI_CHAR || sendtype == sc_MPI_BYTE) {
     const char         *s = (char *) sendbuf;
     char               *r = (char *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] > r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_SHORT) {
+  else if (sendtype == sc_MPI_SHORT) {
     const short        *s = (short *) sendbuf;
     short              *r = (short *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] > r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_UNSIGNED_SHORT) {
+  else if (sendtype == sc_MPI_UNSIGNED_SHORT) {
     const unsigned short *s = (unsigned short *) sendbuf;
     unsigned short     *r = (unsigned short *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] > r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_INT) {
+  else if (sendtype == sc_MPI_INT) {
     const int          *s = (int *) sendbuf;
     int                *r = (int *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] > r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_UNSIGNED) {
+  else if (sendtype == sc_MPI_UNSIGNED) {
     const unsigned     *s = (unsigned *) sendbuf;
     unsigned           *r = (unsigned *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] > r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_LONG) {
+  else if (sendtype == sc_MPI_LONG) {
     const long         *s = (long *) sendbuf;
     long               *r = (long *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] > r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_UNSIGNED_LONG) {
+  else if (sendtype == sc_MPI_UNSIGNED_LONG) {
     const unsigned long *s = (unsigned long *) sendbuf;
     unsigned long      *r = (unsigned long *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] > r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_LONG_LONG_INT) {
+  else if (sendtype == sc_MPI_LONG_LONG_INT) {
     const long long    *s = (long long *) sendbuf;
     long long          *r = (long long *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] > r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_FLOAT) {
+  else if (sendtype == sc_MPI_FLOAT) {
     const float        *s = (float *) sendbuf;
     float              *r = (float *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] > r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_DOUBLE) {
+  else if (sendtype == sc_MPI_DOUBLE) {
     const double       *s = (double *) sendbuf;
     double             *r = (double *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] > r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_LONG_DOUBLE) {
+  else if (sendtype == sc_MPI_LONG_DOUBLE) {
     const long double  *s = (long double *) sendbuf;
     long double        *r = (long double *) recvbuf;
     for (i = 0; i < sendcount; ++i)
@@ -312,81 +312,81 @@ sc_reduce_max (void *sendbuf, void *recvbuf,
 
 static void
 sc_reduce_min (void *sendbuf, void *recvbuf,
-               int sendcount, MPI_Datatype sendtype)
+               int sendcount, sc_MPI_Datatype sendtype)
 {
   int                 i;
 
-  if (sendtype == MPI_CHAR || sendtype == MPI_BYTE) {
+  if (sendtype == sc_MPI_CHAR || sendtype == sc_MPI_BYTE) {
     const char         *s = (char *) sendbuf;
     char               *r = (char *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] < r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_SHORT) {
+  else if (sendtype == sc_MPI_SHORT) {
     const short        *s = (short *) sendbuf;
     short              *r = (short *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] < r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_UNSIGNED_SHORT) {
+  else if (sendtype == sc_MPI_UNSIGNED_SHORT) {
     const unsigned short *s = (unsigned short *) sendbuf;
     unsigned short     *r = (unsigned short *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] < r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_INT) {
+  else if (sendtype == sc_MPI_INT) {
     const int          *s = (int *) sendbuf;
     int                *r = (int *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] < r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_UNSIGNED) {
+  else if (sendtype == sc_MPI_UNSIGNED) {
     const unsigned     *s = (unsigned *) sendbuf;
     unsigned           *r = (unsigned *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] < r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_LONG) {
+  else if (sendtype == sc_MPI_LONG) {
     const long         *s = (long *) sendbuf;
     long               *r = (long *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] < r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_UNSIGNED_LONG) {
+  else if (sendtype == sc_MPI_UNSIGNED_LONG) {
     const unsigned long *s = (unsigned long *) sendbuf;
     unsigned long      *r = (unsigned long *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] < r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_LONG_LONG_INT) {
+  else if (sendtype == sc_MPI_LONG_LONG_INT) {
     const long long    *s = (long long *) sendbuf;
     long long          *r = (long long *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] < r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_FLOAT) {
+  else if (sendtype == sc_MPI_FLOAT) {
     const float        *s = (float *) sendbuf;
     float              *r = (float *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] < r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_DOUBLE) {
+  else if (sendtype == sc_MPI_DOUBLE) {
     const double       *s = (double *) sendbuf;
     double             *r = (double *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       if (s[i] < r[i])
         r[i] = s[i];
   }
-  else if (sendtype == MPI_LONG_DOUBLE) {
+  else if (sendtype == sc_MPI_LONG_DOUBLE) {
     const long double  *s = (long double *) sendbuf;
     long double        *r = (long double *) recvbuf;
     for (i = 0; i < sendcount; ++i)
@@ -400,71 +400,71 @@ sc_reduce_min (void *sendbuf, void *recvbuf,
 
 static void
 sc_reduce_sum (void *sendbuf, void *recvbuf,
-               int sendcount, MPI_Datatype sendtype)
+               int sendcount, sc_MPI_Datatype sendtype)
 {
   int                 i;
 
-  if (sendtype == MPI_CHAR || sendtype == MPI_BYTE) {
+  if (sendtype == sc_MPI_CHAR || sendtype == sc_MPI_BYTE) {
     const char         *s = (char *) sendbuf;
     char               *r = (char *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       r[i] += s[i];
   }
-  else if (sendtype == MPI_SHORT) {
+  else if (sendtype == sc_MPI_SHORT) {
     const short        *s = (short *) sendbuf;
     short              *r = (short *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       r[i] += s[i];
   }
-  else if (sendtype == MPI_UNSIGNED_SHORT) {
+  else if (sendtype == sc_MPI_UNSIGNED_SHORT) {
     const unsigned short *s = (unsigned short *) sendbuf;
     unsigned short     *r = (unsigned short *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       r[i] += s[i];
   }
-  else if (sendtype == MPI_INT) {
+  else if (sendtype == sc_MPI_INT) {
     const int          *s = (int *) sendbuf;
     int                *r = (int *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       r[i] += s[i];
   }
-  else if (sendtype == MPI_UNSIGNED) {
+  else if (sendtype == sc_MPI_UNSIGNED) {
     const unsigned     *s = (unsigned *) sendbuf;
     unsigned           *r = (unsigned *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       r[i] += s[i];
   }
-  else if (sendtype == MPI_LONG) {
+  else if (sendtype == sc_MPI_LONG) {
     const long         *s = (long *) sendbuf;
     long               *r = (long *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       r[i] += s[i];
   }
-  else if (sendtype == MPI_UNSIGNED_LONG) {
+  else if (sendtype == sc_MPI_UNSIGNED_LONG) {
     const unsigned long *s = (unsigned long *) sendbuf;
     unsigned long      *r = (unsigned long *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       r[i] += s[i];
   }
-  else if (sendtype == MPI_LONG_LONG_INT) {
+  else if (sendtype == sc_MPI_LONG_LONG_INT) {
     const long long    *s = (long long *) sendbuf;
     long long          *r = (long long *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       r[i] += s[i];
   }
-  else if (sendtype == MPI_FLOAT) {
+  else if (sendtype == sc_MPI_FLOAT) {
     const float        *s = (float *) sendbuf;
     float              *r = (float *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       r[i] += s[i];
   }
-  else if (sendtype == MPI_DOUBLE) {
+  else if (sendtype == sc_MPI_DOUBLE) {
     const double       *s = (double *) sendbuf;
     double             *r = (double *) recvbuf;
     for (i = 0; i < sendcount; ++i)
       r[i] += s[i];
   }
-  else if (sendtype == MPI_LONG_DOUBLE) {
+  else if (sendtype == sc_MPI_LONG_DOUBLE) {
     const long double  *s = (long double *) sendbuf;
     long double        *r = (long double *) recvbuf;
     for (i = 0; i < sendcount; ++i)
@@ -477,8 +477,8 @@ sc_reduce_sum (void *sendbuf, void *recvbuf,
 
 static int
 sc_reduce_custom_dispatch (void *sendbuf, void *recvbuf, int sendcount,
-                           MPI_Datatype sendtype, sc_reduce_t reduce_fn,
-                           int target, MPI_Comm mpicomm)
+                           sc_MPI_Datatype sendtype, sc_reduce_t reduce_fn,
+                           int target, sc_MPI_Comm mpicomm)
 {
 #ifdef SC_MPI
   int                 mpiret;
@@ -496,9 +496,9 @@ sc_reduce_custom_dispatch (void *sendbuf, void *recvbuf, int sendcount,
   memcpy (recvbuf, sendbuf, datasize);
 
 #ifdef SC_MPI
-  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &mpirank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   SC_ASSERT (-1 <= target && target < mpisize);
@@ -508,13 +508,13 @@ sc_reduce_custom_dispatch (void *sendbuf, void *recvbuf, int sendcount,
                        target, maxlevel, maxlevel, mpirank, reduce_fn);
 #endif
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
 sc_allreduce_custom (void *sendbuf, void *recvbuf, int sendcount,
-                     MPI_Datatype sendtype, sc_reduce_t reduce_fn,
-                     MPI_Comm mpicomm)
+                     sc_MPI_Datatype sendtype, sc_reduce_t reduce_fn,
+                     sc_MPI_Comm mpicomm)
 {
   return sc_reduce_custom_dispatch (sendbuf, recvbuf, sendcount,
                                     sendtype, reduce_fn, -1, mpicomm);
@@ -522,8 +522,8 @@ sc_allreduce_custom (void *sendbuf, void *recvbuf, int sendcount,
 
 int
 sc_reduce_custom (void *sendbuf, void *recvbuf, int sendcount,
-                  MPI_Datatype sendtype, sc_reduce_t reduce_fn,
-                  int target, MPI_Comm mpicomm)
+                  sc_MPI_Datatype sendtype, sc_reduce_t reduce_fn,
+                  int target, sc_MPI_Comm mpicomm)
 {
   SC_CHECK_ABORT (target >= 0,
                   "sc_reduce_custom requires non-negative target");
@@ -534,16 +534,16 @@ sc_reduce_custom (void *sendbuf, void *recvbuf, int sendcount,
 
 static int
 sc_reduce_dispatch (void *sendbuf, void *recvbuf, int sendcount,
-                    MPI_Datatype sendtype, MPI_Op operation,
-                    int target, MPI_Comm mpicomm)
+                    sc_MPI_Datatype sendtype, sc_MPI_Op operation,
+                    int target, sc_MPI_Comm mpicomm)
 {
   sc_reduce_t         reduce_fn;
 
-  if (operation == MPI_MAX)
+  if (operation == sc_MPI_MAX)
     reduce_fn = sc_reduce_max;
-  else if (operation == MPI_MIN)
+  else if (operation == sc_MPI_MIN)
     reduce_fn = sc_reduce_min;
-  else if (operation == MPI_SUM)
+  else if (operation == sc_MPI_SUM)
     reduce_fn = sc_reduce_sum;
   else
     SC_ABORT ("Unsupported operation in sc_allreduce or sc_reduce");
@@ -554,7 +554,7 @@ sc_reduce_dispatch (void *sendbuf, void *recvbuf, int sendcount,
 
 int
 sc_allreduce (void *sendbuf, void *recvbuf, int sendcount,
-              MPI_Datatype sendtype, MPI_Op operation, MPI_Comm mpicomm)
+              sc_MPI_Datatype sendtype, sc_MPI_Op operation, sc_MPI_Comm mpicomm)
 {
   return sc_reduce_dispatch (sendbuf, recvbuf, sendcount,
                              sendtype, operation, -1, mpicomm);
@@ -562,8 +562,8 @@ sc_allreduce (void *sendbuf, void *recvbuf, int sendcount,
 
 int
 sc_reduce (void *sendbuf, void *recvbuf, int sendcount,
-           MPI_Datatype sendtype, MPI_Op operation,
-           int target, MPI_Comm mpicomm)
+           sc_MPI_Datatype sendtype, sc_MPI_Op operation,
+           int target, sc_MPI_Comm mpicomm)
 {
   SC_CHECK_ABORT (target >= 0, "sc_reduce requires non-negative target");
 
