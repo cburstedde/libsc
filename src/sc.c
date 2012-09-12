@@ -42,8 +42,6 @@ typedef void        (*sc_sig_t) (int);
 #endif
 #endif
 
-#define SC_MAX_PACKAGES 128
-
 typedef struct sc_package
 {
   int                 is_registered;
@@ -114,7 +112,8 @@ static sc_sig_t     system_usr2_handler = NULL;
 static int          sc_print_backtrace = 0;
 
 static int          sc_num_packages = 0;
-static sc_package_t sc_packages[SC_MAX_PACKAGES];
+static int          sc_num_packages_alloc = 0;
+static sc_package_t *sc_packages = NULL;
 
 static void
 sc_signal_handler (int sig)
@@ -623,8 +622,8 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
 {
   int                 i;
   sc_package_t       *p;
+  sc_package_t       *new_package = NULL;
 
-  SC_CHECK_ABORT (sc_num_packages < SC_MAX_PACKAGES, "Too many packages");
   SC_CHECK_ABORT (log_threshold == SC_LP_DEFAULT ||
                   (log_threshold >= SC_LP_ALWAYS
                    && log_threshold <= SC_LP_SILENT),
@@ -634,27 +633,52 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
                   "Packages name contains spaces");
 
   /* sc_packages is static and thus initialized to all zeros */
-  for (i = 0; i < SC_MAX_PACKAGES; ++i) {
+  for (i = 0; i < sc_num_packages_alloc; ++i) {
     p = sc_packages + i;
     SC_CHECK_ABORTF (!p->is_registered || strcmp (p->name, name),
                      "Package %s is already registered", name);
   }
-  for (i = 0; i < SC_MAX_PACKAGES; ++i) {
+
+  /* Try to find unused space in sc_packages  */
+  for (i = 0; i < sc_num_packages_alloc; ++i) {
     p = sc_packages + i;
     if (!p->is_registered) {
-      p->is_registered = 1;
-      p->log_handler = log_handler;
-      p->log_threshold = log_threshold;
-      p->malloc_count = p->free_count = 0;
-      p->name = name;
-      p->full = full;
+      new_package = p;
       break;
     }
   }
-  SC_ASSERT (i < SC_MAX_PACKAGES);
+
+  /* realloc if the space in sc_packages is used up */
+  if (i == sc_num_packages_alloc) {
+    sc_packages = (sc_package_t *) realloc (sc_packages,
+                (2 * sc_num_packages_alloc + 1) * sizeof(sc_package_t));
+    SC_CHECK_ABORT (sc_packages, "Failed to allocate memory");
+    new_package = sc_packages + i;
+    sc_num_packages_alloc = 2 * sc_num_packages_alloc + 1;
+
+    /* initialize new packages */
+    for (; i < sc_num_packages_alloc; i++) {
+      p = sc_packages + i;
+      p->is_registered = 0;
+      p->log_handler = NULL;
+      p->log_threshold = NULL;
+      p->malloc_count = 0;
+      p->free_count = 0;
+      p->name = NULL;
+      p->full = NULL;
+    }
+  }
+
+  new_package->is_registered = 1;
+  new_package->log_handler = log_handler;
+  new_package->log_threshold = log_threshold;
+  new_package->malloc_count = 0;
+  new_package->free_count = 0;
+  new_package->name = name;
+  new_package->full = full;
 
   ++sc_num_packages;
-  SC_ASSERT (sc_num_packages <= SC_MAX_PACKAGES);
+  SC_ASSERT (sc_num_packages <= sc_num_packages_alloc);
 
   return i;
 }
@@ -662,11 +686,10 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
 int
 sc_package_is_registered (int package_id)
 {
-  SC_CHECK_ABORT (0 <= package_id && package_id < SC_MAX_PACKAGES,
-                  "Invalid package id");
+  SC_CHECK_ABORT (0 <= package_id, "Invalid package id");
 
-  /* sc_packages is static and thus initialized to all zeros */
-  return sc_packages[package_id].is_registered;
+  return (package_id < sc_num_packages_alloc &&
+                sc_packages[package_id].is_registered);
 }
 
 void
@@ -698,7 +721,7 @@ sc_package_print_summary (int log_priority)
                "Package summary (%d total):\n", sc_num_packages);
 
   /* sc_packages is static and thus initialized to all zeros */
-  for (i = 0; i < SC_MAX_PACKAGES; ++i) {
+  for (i = 0; i < sc_num_packages_alloc; ++i) {
     p = sc_packages + i;
     if (p->is_registered) {
       SC_GEN_LOGF (sc_package_id, SC_LC_GLOBAL, log_priority,
@@ -802,12 +825,15 @@ sc_finalize (void)
   int                 retval;
 
   /* sc_packages is static and thus initialized to all zeros */
-  for (i = SC_MAX_PACKAGES - 1; i >= 0; --i)
+  for (i = sc_num_packages_alloc - 1; i >= 0; --i)
     if (sc_packages[i].is_registered)
       sc_package_unregister (i);
 
   SC_ASSERT (sc_num_packages == 0);
   sc_memory_check (-1);
+
+  free(sc_packages);
+  sc_packages = NULL;
 
   sc_set_signal_handler (0);
   sc_mpicomm = MPI_COMM_NULL;
