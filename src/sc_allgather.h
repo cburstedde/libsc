@@ -36,14 +36,14 @@ SC_EXTERN_C_BEGIN;
 /** Allgather by direct point-to-point communication.
  * Only makes sense for small group sizes.
  */
-void                sc_ag_alltoall (MPI_Comm mpicomm, char *data,
+void                sc_ag_alltoall (sc_MPI_Comm mpicomm, char *data,
                                     int datasize, int groupsize, int myoffset,
                                     int myrank);
 
 /** Performs recursive bisection allgather.
  * When size becomes small enough, calls sc_ag_alltoall.
  */
-void                sc_ag_recursive (MPI_Comm mpicomm, char *data,
+void                sc_ag_recursive (sc_MPI_Comm mpicomm, char *data,
                                      int datasize, int groupsize,
                                      int myoffset, int myrank);
 
@@ -52,9 +52,9 @@ void                sc_ag_recursive (MPI_Comm mpicomm, char *data,
 /** Drop-in allgather replacement.
  */
 int                 sc_allgather (void *sendbuf, int sendcount,
-                                  MPI_Datatype sendtype, void *recvbuf,
-                                  int recvcount, MPI_Datatype recvtype,
-                                  MPI_Comm mpicomm);
+                                  sc_MPI_Datatype sendtype, void *recvbuf,
+                                  int recvcount, sc_MPI_Datatype recvtype,
+                                  sc_MPI_Comm mpicomm);
 
 SC_EXTERN_C_END;
 

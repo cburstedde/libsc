@@ -31,7 +31,7 @@ typedef struct sc_amr_control
 {
   const double       *restrict errors;
   sc_statinfo_t       estats;
-  MPI_Comm            mpicomm;
+  sc_MPI_Comm         mpicomm;
   long                num_procs_long;
   long                num_total_elements;
   double              coarsen_threshold;
@@ -49,7 +49,7 @@ sc_amr_control_t;
  * \param [in] errors         The error values, one per local element.
  * \param [out] amr           Structure will be initialized and estats filled.
  */
-void                sc_amr_error_stats (MPI_Comm mpicomm,
+void                sc_amr_error_stats (sc_MPI_Comm mpicomm,
                                         long num_local_elements,
                                         const double *restrict errors,
                                         sc_amr_control_t * amr);

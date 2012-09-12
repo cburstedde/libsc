@@ -75,7 +75,7 @@ sc_srand (unsigned int seed)
   int                 mpiret;
   int                 mpirank;
 
-  mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &mpirank);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   srand (seed ^ (unsigned int) mpirank);

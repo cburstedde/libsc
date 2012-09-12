@@ -49,7 +49,7 @@ sc_flops_start (sc_flopinfo_t * fi)
   float               rtime, ptime, mflops;
   long long           flpops;
 
-  fi->seconds = MPI_Wtime ();
+  fi->seconds = sc_MPI_Wtime ();
   sc_flops_papi (&rtime, &ptime, &flpops, &mflops);     /* ignore results */
 
   fi->cwtime = 0.;
@@ -68,7 +68,7 @@ sc_flops_count (sc_flopinfo_t * fi)
   float               rtime, ptime;
   long long           flpops;
 
-  seconds = MPI_Wtime ();
+  seconds = sc_MPI_Wtime ();
   sc_flops_papi (&rtime, &ptime, &flpops, &fi->mflops);
 
   fi->iwtime = seconds - fi->seconds;

@@ -37,7 +37,7 @@ SC_EXTERN_C_BEGIN;
  * \param [in] size             Size in bytes of each data value.
  * \param [in] compar           Comparison function to use.
  */
-void                sc_psort (MPI_Comm mpicomm, void *base,
+void                sc_psort (sc_MPI_Comm mpicomm, void *base,
                               size_t * nmemb, size_t size,
                               int (*compar) (const void *, const void *));
 

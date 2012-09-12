@@ -78,8 +78,8 @@ void                sc_fread (void *ptr, size_t size,
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
  * \note                This function aborts on MPI file and count errors.
  */
-void                sc_mpi_write (MPI_File mpifile, const void *ptr,
-                                  size_t zcount, MPI_Datatype t,
+void                sc_mpi_write (sc_MPI_File mpifile, const void *ptr,
+                                  size_t zcount, sc_MPI_Datatype t,
                                   const char *errmsg);
 
 #endif

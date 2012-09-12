@@ -146,7 +146,7 @@ extern int          sc_trace_prio;
 #define SC_ABORT_NOT_REACHED() SC_ABORT ("Unreachable code")
 #define SC_CHECK_ABORT(q,s)                     \
   ((q) ? (void) 0 : SC_ABORT (s))
-#define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI error")
+#define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == sc_MPI_SUCCESS, "MPI error")
 
 /*
  * C++98 does not allow variadic macros
@@ -488,7 +488,7 @@ void                sc_package_print_summary (int log_priority);
  * \param [in] catch_signals    If true, signals INT SEGV USR2 are be caught.
  * \param [in] print_backtrace  If true, sc_abort prints a backtrace.
  */
-void                sc_init (MPI_Comm mpicomm,
+void                sc_init (sc_MPI_Comm mpicomm,
                              int catch_signals, int print_backtrace,
                              sc_log_handler_t log_handler, int log_threshold);
 
