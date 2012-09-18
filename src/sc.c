@@ -635,7 +635,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   int                 i;
   sc_package_t       *p;
   sc_package_t       *new_package = NULL;
-  int                 new_package_id;
+  int                 new_package_id = -1;
 
   SC_CHECK_ABORT (log_threshold == SC_LP_DEFAULT ||
                   (log_threshold >= SC_LP_ALWAYS
@@ -676,7 +676,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
       p = sc_packages + i;
       p->is_registered = 0;
       p->log_handler = NULL;
-      p->log_threshold = NULL;
+      p->log_threshold = SC_LP_SILENT;
       p->malloc_count = 0;
       p->free_count = 0;
       p->name = NULL;
@@ -694,6 +694,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
 
   ++sc_num_packages;
   SC_ASSERT (sc_num_packages <= sc_num_packages_alloc);
+  SC_ASSERT (0 <= new_package_id && new_package_id < sc_num_packages);
 
   return new_package_id;
 }
@@ -847,8 +848,9 @@ sc_finalize (void)
   SC_ASSERT (sc_num_packages == 0);
   sc_memory_check (-1);
 
-  free(sc_packages);
+  free (sc_packages);
   sc_packages = NULL;
+  sc_num_packages_alloc = 0;
 
   sc_set_signal_handler (0);
   sc_mpicomm = MPI_COMM_NULL;
