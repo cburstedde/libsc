@@ -262,13 +262,11 @@ sc_options_add_suboptions (sc_options_t * opt,
       ((item->opt_name != NULL) ? (strlen (item->opt_name) + 2) : 4);
     name = (char **) sc_array_push (subopt_names);
     *name = SC_ALLOC (char, namelen);
-    (*name)[namelen - 1] = '\0';
-
     if (item->opt_name != NULL) {
-      sprintf (*name, "%s:%s", prefix, item->opt_name);
+      snprintf (*name, namelen, "%s:%s", prefix, item->opt_name);
     }
     else {
-      sprintf (*name, "%s:-%c", prefix, item->opt_char);
+      snprintf (*name, namelen, "%s:-%c", prefix, item->opt_char);
     }
 
     switch (item->opt_type) {
