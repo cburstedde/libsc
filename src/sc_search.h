@@ -56,8 +56,8 @@ ssize_t             sc_search_lower_bound64 (int64_t target,
  * \param [in]  nmemb   Number of entries in the array MINUS ONE.
  *                      Thus the array always contains at least one element.
  * \param [in]  size    Size of one entry in the array in bytes.
- * \param [in]  compar  Comparison function to return -1 for less than,
- *                      0 for equal, and +1 for greater between the arguments.
+ * \param [in]  compar  Comparison function to return < 0 for less than,
+ *                      0 for equal, and > 0 for greater between the arguments.
  * \return              The matching array position if found, or nmemb if not,
  *                      i.e., if target < array[0] or target >= array[nmemb].
  */
