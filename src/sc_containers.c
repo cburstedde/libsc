@@ -965,7 +965,7 @@ sc_hash_function_string (const void *s, const void *u)
       sc_hash_mix (a, b, c);
       if (!*sp) {
         sc_hash_final (a, b, c);
-        return a;
+        return c;
       }
       j = 0;
       h = 0;
