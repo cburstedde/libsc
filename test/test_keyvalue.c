@@ -47,6 +47,18 @@ main (int argc, char **argv)
 
   sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
+  /* Print some funny stuff */
+  SC_GLOBAL_LDEBUGF ("Hash of empty string: %x\n",
+                     sc_hash_function_string ("", NULL));
+  SC_GLOBAL_LDEBUGF ("Hash of ABCDEFGHIJKL: %x\n",
+                     sc_hash_function_string ("ABCDEFGHIJKL", NULL));
+  SC_GLOBAL_LDEBUGF ("Hash of dummy: %x\n",
+                     sc_hash_function_string (dummy, NULL));
+  SC_GLOBAL_LDEBUGF ("Hash of dummy: %x\n",
+                     sc_hash_function_string (wrong, NULL));
+  SC_GLOBAL_LDEBUGF ("Hash of dummy: %x\n",
+                     sc_hash_function_string (again, NULL));
+
   /* Create a new argument set */
   args = sc_keyvalue_newf (0,
                            "i:intTest", -17,

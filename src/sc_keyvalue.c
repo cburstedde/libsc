@@ -41,20 +41,8 @@ static unsigned
 sc_keyvalue_entry_hash (const void *v, const void *u)
 {
   const sc_keyvalue_entry_t *ov = (const sc_keyvalue_entry_t *) v;
-  const char         *s;
-  uint32_t            hash;
 
-  hash = 0;
-  for (s = ov->key; *s; ++s) {
-    hash += *s;
-    hash += (hash << 10);
-    hash ^= (hash >> 6);
-  }
-  hash += (hash << 3);
-  hash ^= (hash >> 11);
-  hash += (hash << 15);
-
-  return (unsigned) hash;
+  return sc_hash_function_string (ov->key, NULL);
 }
 
 static int
