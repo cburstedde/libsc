@@ -647,6 +647,14 @@ typedef struct sc_hash
 }
 sc_hash_t;
 
+/** Compute a hash value from a null-terminated string.
+ * This hash function is NOT cryptographically safe! Use libcrypt then.
+ * \param [in] s        Null-terminated string to be hashed.
+ * \param [in] u        Not used.
+ * \return              The computed hash value as an unsigned integer.
+ */
+unsigned            sc_hash_function_string (const void *s, const void *u);
+
 /** Calculate the memory used by a hash table.
  * \param [in] hash        The hash table.
  * \return                 Memory used in bytes.

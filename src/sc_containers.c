@@ -936,6 +936,46 @@ sc_list_pop (sc_list_t * list)
 
 /* hash table routines */
 
+unsigned
+sc_hash_function_string (const void *s, const void *u)
+{
+  int                 j;
+  unsigned            h;
+  unsigned            a, b, c;
+  const char         *sp = (const char *) s;
+
+  j = 0;
+  h = 0;
+  a = b = c = 0;
+  for (;;) {
+    if (*sp) {
+      h += *sp++;
+    }
+
+    if (++j == 4) {
+      a += h;
+      h = 0;
+    }
+    else if (j == 8) {
+      b += h;
+      h = 0;
+    }
+    else if (j == 12) {
+      c += h;
+      sc_hash_mix (a, b, c);
+      if (!*sp) {
+        sc_hash_final (a, b, c);
+        return a;
+      }
+      j = 0;
+      h = 0;
+    }
+    else {
+      h <<= 8;
+    }
+  }
+}
+
 size_t
 sc_hash_memory_used (sc_hash_t * hash)
 {
