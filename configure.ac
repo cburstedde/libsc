@@ -55,6 +55,8 @@ echo "o---------------------------------------"
 
 SC_MPI_CONFIG([SC])
 SC_MPI_ENGAGE([SC])
+# This is needed for compatibility with automake >= 1.12
+m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
 SC_LIBTOOL([SC])
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
