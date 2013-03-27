@@ -13,6 +13,7 @@ AC_PREFIX_DEFAULT([$PWD/local])
 AM_INIT_AUTOMAKE([subdir-objects])
 AX_PREFIX_CONFIG_H([src/sc_config.h], [SC])
 SC_VERSION([SC])
+AM_SILENT_RULES
 
 # Process command line options.
 echo "o---------------------------------------"
