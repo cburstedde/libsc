@@ -36,7 +36,9 @@ libsc_original_headers = \
 LIBSC_CPPFLAGS =
 
 # build static library
+if SC_ENABLE_STATIC
 lib_LIBRARIES += src/libsc.a
+endif
 src_libsc_a_SOURCES = \
         $(libsc_installed_headers) \
         $(libsc_internal_headers) \

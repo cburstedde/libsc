@@ -17,10 +17,15 @@ LT_INIT([disable-shared])
 if test "$enable_shared" != no ; then
   $1_ENABLE_SHARED="yes"
   $1_LIB_SUFFIX="la"
+  if test "$enable_static" == no; then
+    $1_ENABLE_STATIC="no"
+  fi
 else
+  $1_ENABLE_STATIC="yes"
   $1_ENABLE_SHARED="no"
   $1_LIB_SUFFIX="a"
 fi
 AC_SUBST([$1_LIB_SUFFIX])   dnl use with care: confuses automake dependencies
 AM_CONDITIONAL([$1_ENABLE_SHARED], [test "$enable_shared" != no])
+AM_CONDITIONAL([$1_ENABLE_STATIC], [test "$enable_static" != no])
 ])
