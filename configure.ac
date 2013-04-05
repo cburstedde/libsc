@@ -96,7 +96,7 @@ dnl Try a default name mangling scheme without using F77.
 dgemm=dgemm_;dgecon=dgecon_
 extraf77=no
 
-echo "Checking BLAS without F77 support first"
+AC_MSG_NOTICE([Checking BLAS without F77 support first])
 SC_BLAS([SC], [$dgemm],
         [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
         [echo "Could not find BLAS without F77 support"])
@@ -108,7 +108,7 @@ done
 if test "$sc_blas_ok" = no ; then
 
 extraf77=yes
-echo "Calling F77 autoconf macros"
+AC_MSG_NOTICE([Calling F77 autoconf macros])
 dnl For some strange reason these wrappers need to be toplevel.
 dnl Otherwise they are executed even if the test above fails.
 AC_PROG_F77([gfortran g77 fl32 f77 fort77 xlf f90 xlf90])
@@ -119,7 +119,7 @@ if test "$dgemm" = unknown ; then dgemm=dgemm_ ; fi
 dgecon=;AC_F77_FUNC(dgecon)
 if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
 
-echo "Checking BLAS with proper F77 support"
+AC_MSG_NOTICE([Checking BLAS with proper F77 support])
 SC_BLAS([SC], [$dgemm],
         [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
         [AC_MSG_ERROR([[\
@@ -129,12 +129,12 @@ Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
 fi
 # at this point $sc_blas_ok is either of: yes disable
 if test "$sc_blas_ok" = disable ; then
-        echo "Not using BLAS"
+        AC_MSG_NOTICE([Not using BLAS])
 fi
 AM_CONDITIONAL([SC_BLAS], [test "$sc_blas_ok" = yes])
 
 if test "$extraf77" = no ; then
-echo "Checking LAPACK without F77 support first"
+AC_MSG_NOTICE([Checking LAPACK without F77 support first])
 SC_LAPACK([SC], [$dgecon],
           [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
           [echo "Could not find LAPACK without F77 support"])
@@ -146,7 +146,7 @@ done
 if test "$sc_lapack_ok" = no ; then
 
 extraf77=yes
-echo "Calling F77 autoconf macros"
+AC_MSG_NOTICE([Calling F77 autoconf macros])
 dnl For some strange reason these wrappers need to be toplevel.
 dnl Otherwise they are executed even if the test above fails.
 AC_PROG_F77([gfortran g77 fl32 f77 fort77 xlf f90 xlf90])
@@ -159,7 +159,7 @@ else sc_lapack_ok=no
 fi
 if test "$sc_lapack_ok" = no ; then
 
-echo "Checking LAPACK with proper F77 support"
+AC_MSG_NOTICE([Checking LAPACK with proper F77 support])
 SC_LAPACK([SC], [$dgecon],
           [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
           [AC_MSG_ERROR([[\
@@ -169,7 +169,7 @@ Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
 fi
 # at this point $sc_lapack_ok is either of: yes disable
 if test "$sc_lapack_ok" = disable ; then
-        echo "Not using LAPACK"
+        AC_MSG_NOTICE([Not using LAPACK])
 fi
 AM_CONDITIONAL([SC_LAPACK], [test "$sc_lapack_ok" = yes])
 

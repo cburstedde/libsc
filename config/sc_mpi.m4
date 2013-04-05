@@ -77,17 +77,17 @@ if test "$HAVE_PKG_MPI" = yes ; then
   if test -z "$CC" ; then
     export CC=mpicc
   fi
-  echo "                             CC set to $CC"
+AC_MSG_NOTICE([                             CC set to $CC])
 m4_ifset([SC_CHECK_MPI_CXX], [
   if test -z "$CXX" ; then
     export CXX=mpicxx
   fi
-  echo "                            CXX set to $CXX"
+AC_MSG_NOTICE([                            CXX set to $CXX])
 ])
   if test -z "$F77" ; then
     export F77=mpif77
   fi
-  echo "                            F77 set to $F77"
+AC_MSG_NOTICE([                            F77 set to $F77])
   AC_DEFINE([MPI], 1, [Define to 1 if we are using MPI])
   if test "$HAVE_PKG_MPIIO" = yes ; then
     AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])
@@ -173,28 +173,28 @@ AC_DEFUN([SC_MPI_INCLUDES],
 MPI_INCLUDES=
 MPI_INCLUDE_PATH=
 if test "$HAVE_PKG_MPI" = yes ; then
-  echo "Trying to determine MPI_INCLUDES"
+  AC_MSG_NOTICE([Trying to determine MPI_INCLUDES])
   for SHOW in -showme:compile -showme:incdirs -showme -show ; do
     if test -z "$MPI_INCLUDES" ; then
-      echo -n "   Trying compile argument $SHOW... "
+      AC_MSG_CHECKING([$SHOW])
       if MPI_CC_RESULT=`$CC $SHOW 2> /dev/null` ; then
-        echo "Successful"
+        AC_MSG_RESULT([Successful])
         for CCARG in $MPI_CC_RESULT ; do
           MPI_INCLUDES="$MPI_INCLUDES `echo $CCARG | grep '^-I'`"
         done
       else
-        echo "Failed"
+        AC_MSG_RESULT([Failed])
       fi
     fi
   done
   if test -n "$MPI_INCLUDES" ; then
     MPI_INCLUDES=`echo $MPI_INCLUDES | sed -e 's/^ *//' -e 's/  */ /g'`
-    echo "   Found MPI_INCLUDES $MPI_INCLUDES"
+    AC_MSG_NOTICE([   Found MPI_INCLUDES $MPI_INCLUDES])
   fi
   if test -n "$MPI_INCLUDES" ; then
     MPI_INCLUDE_PATH=`echo $MPI_INCLUDES | sed -e 's/^-I//'`
     MPI_INCLUDE_PATH=`echo $MPI_INCLUDE_PATH | sed -e 's/-I/:/g'`
-    echo "   Found MPI_INCLUDE_PATH $MPI_INCLUDE_PATH"
+    AC_MSG_NOTICE([   Found MPI_INCLUDE_PATH $MPI_INCLUDE_PATH])
   fi
 fi
 AC_SUBST([MPI_INCLUDES])
