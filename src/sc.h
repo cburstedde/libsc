@@ -404,6 +404,7 @@ void               *sc_calloc (int package, size_t nmemb, size_t size);
 void               *sc_realloc (int package, void *ptr, size_t size);
 char               *sc_strdup (int package, const char *s);
 void                sc_free (int package, void *ptr);
+int                 sc_memory_status (int package);
 void                sc_memory_check (int package);
 
 /* comparison functions for various integer sizes */

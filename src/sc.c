@@ -384,6 +384,21 @@ sc_free (int package, void *ptr)
   free (ptr);
 }
 
+int
+sc_memory_status (int package)
+{
+  sc_package_t       *p;
+
+  if (package == -1) {
+    return (default_malloc_count - default_free_count);
+  }
+  else {
+    SC_ASSERT (sc_package_is_registered (package));
+    p = sc_packages + package;
+    return (p->malloc_count - p->free_count);
+  }
+}
+
 void
 sc_memory_check (int package)
 {
@@ -665,7 +680,8 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   /* realloc if the space in sc_packages is used up */
   if (i == sc_num_packages_alloc) {
     sc_packages = (sc_package_t *) realloc (sc_packages,
-                (2 * sc_num_packages_alloc + 1) * sizeof(sc_package_t));
+                                            (2 * sc_num_packages_alloc +
+                                             1) * sizeof (sc_package_t));
     SC_CHECK_ABORT (sc_packages, "Failed to allocate memory");
     new_package = sc_packages + i;
     new_package_id = i;
@@ -705,7 +721,7 @@ sc_package_is_registered (int package_id)
   SC_CHECK_ABORT (0 <= package_id, "Invalid package id");
 
   return (package_id < sc_num_packages_alloc &&
-                sc_packages[package_id].is_registered);
+          sc_packages[package_id].is_registered);
 }
 
 void
