@@ -37,7 +37,7 @@ dnl for Trilinos 9, use PACKAGE_{INCLUDES,LIBS}
     $3_$2_LDFLAGS=""
     $3_$2_LIBS="\$($2_LIBS)"
   else
-    echo "TRILINOS_MINOR_VERSION $$3_TRILINOS_MINOR_VERSION"
+    AC_MSG_NOTICE([TRILINOS_MINOR_VERSION $$3_TRILINOS_MINOR_VERSION])
     case "$$3_TRILINOS_MINOR_VERSION" in
 dnl 0 and 2 are the only official releases with all-caps
     0[[0-2]])
@@ -96,7 +96,7 @@ if test "$$1_WITH_TRILINOS" != "no" ; then
       $1_TRILINOS_LDFLAGS="-L$$1_TRILINOS_DIR/lib"
       AC_SUBST([$1_TRILINOS_LDFLAGS])
       $1_TRILINOS_MINOR_VERSION=`grep -o 'TRILINOS_MAJOR_MINOR_VERSION 10[[0-9]]\{2\}' "$TRILINOS_HEADER" | sed "s/.* 10//"`
-      echo "TRILINOS_MINOR_VERSION $$1_TRILINOS_MINOR_VERSION"
+      AC_MSG_NOTICE([TRILINOS_MINOR_VERSION $$1_TRILINOS_MINOR_VERSION])
     elif grep -qs 'TRILINOS_MAJOR_VERSION[[[:space:]+]]9' "$TRILINOS_HEADER"
     then
       $1_TRILINOS_VERSION=9
