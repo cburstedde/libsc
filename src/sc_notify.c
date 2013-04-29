@@ -89,7 +89,7 @@ sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second)
   int                 i, ir, j, jr, k;
   int                 torank, numfroms;
   int                *pint, *psec, *pout;
-  
+
   SC_ASSERT (input->elem_size == sizeof (int));
   SC_ASSERT (second->elem_size == sizeof (int));
   SC_ASSERT (output->elem_size == sizeof (int));
@@ -147,12 +147,11 @@ sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second)
         pout[1] = numfroms;
         k = 2;
         j = jr = 0;
-    
+
         while (j < pint[1] || jr < psec[1]) {
           SC_ASSERT (j >= pint[1] || jr >= psec[1]
                      || pint[2 + j] != psec[2 + jr]);
-          if (j < pint[1] &&
-              (jr >= psec[1] || pint[2 + j] < psec[2 + jr])) {
+          if (j < pint[1] && (jr >= psec[1] || pint[2 + j] < psec[2 + jr])) {
             pout[k++] = pint[2 + j++];
           }
           else {

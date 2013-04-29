@@ -229,12 +229,12 @@ sc_ranges_decode (int num_procs, int rank,
                   int *num_receivers, int *receiver_ranks,
                   int *num_senders, int *sender_ranks)
 {
-  int             i, j;
-  int             nr, ns;
-  const int      *the_ranges;
+  int                 i, j;
+  int                 nr, ns;
+  const int          *the_ranges;
 
 #ifdef SC_DEBUG
-  int             done;
+  int                 done;
 
   /* verify consistency of ranges */
   for (j = 0; j < num_procs; ++j) {
@@ -255,7 +255,7 @@ sc_ranges_decode (int num_procs, int rank,
     }
   }
 #endif
-  
+
   /* identify receivers */
   nr = 0;
   the_ranges = global_ranges + 2 * max_ranges * rank;

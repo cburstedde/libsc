@@ -94,7 +94,8 @@ int                 sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
  * \paarm [in,out] sender_ranks     Array of at least mpisize for output.
  */
 void                sc_ranges_decode (int num_procs, int rank,
-                                      int max_ranges, const int *global_ranges,
+                                      int max_ranges,
+                                      const int *global_ranges,
                                       int *num_receivers, int *receiver_ranks,
                                       int *num_senders, int *sender_ranks);
 

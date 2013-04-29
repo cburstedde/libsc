@@ -53,7 +53,7 @@ sc_darray_is_range (const double *darray, size_t nelem,
 }
 
 size_t
-sc_dmatrix_memory_used (sc_dmatrix_t *dm)
+sc_dmatrix_memory_used (sc_dmatrix_t * dm)
 {
   size_t              mem = sizeof (sc_dmatrix_t);
 
