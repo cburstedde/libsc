@@ -35,19 +35,8 @@ See sc.h for possible log priorities in --enable-logging=PRIO])
                esac])
 SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
-SC_ARG_ENABLE([realloc], [use realloc in array and dmatrix resize],
-              [USE_REALLOC])
-SC_ARG_ENABLE([alloc-page], [align memory on page boundaries], [ALLOC_PAGE])
-SC_ARG_ENABLE([alloc-line], [stripe memory between cache lines], [ALLOC_LINE])
-SC_ARG_ENABLE([sc-allgather], [internally use replacement for MPI_Allgather],
-              [ALLGATHER])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 SC_ARG_WITH_BUILTIN_ALL
-
-if test "$SC_ENABLE_ALLOC_PAGE" != no -a \
-        "$SC_ENABLE_ALLOC_LINE" != no ; then
-  AC_MSG_ERROR([Please enable either alloc-page or alloc-line, not both.])
-fi
 
 # Checks for MPI C compiler and other programs (no F77 at this point!).
 echo "o---------------------------------------"

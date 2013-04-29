@@ -23,11 +23,6 @@
 #include <sc_ranges.h>
 #include <sc_statistics.h>
 
-#ifdef SC_ALLGATHER
-#include <sc_allgather.h>
-#define MPI_Allgather sc_allgather
-#endif
-
 static int
 sc_ranges_compare (const void *v1, const void *v2)
 {

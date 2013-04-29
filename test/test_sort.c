@@ -23,11 +23,6 @@
 #include <sc_allgather.h>
 #include <sc_sort.h>
 
-#ifdef SC_ALLGATHER
-#include <sc_allgather.h>
-#define MPI_Allgather sc_allgather
-#endif
-
 int
 main (int argc, char **argv)
 {

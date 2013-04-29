@@ -22,10 +22,6 @@
 
 #include <sc.h>
 
-#if defined SC_ALLOC_PAGE || defined SC_ALLOC_LINE
-#define SC_ALLOC_ALIGN
-#endif
-
 #ifdef SC_HAVE_SIGNAL_H
 #include <signal.h>
 #endif
@@ -53,15 +49,6 @@ typedef struct sc_package
   const char         *full;
 }
 sc_package_t;
-
-#ifdef SC_ALLOC_ALIGN
-static const size_t sc_page_bytes = 4096;
-#endif
-#ifdef SC_ALLOC_LINE
-static const size_t sc_line_bytes = 64;
-static const size_t sc_line_count = 4096 / 64;
-static size_t       sc_line_no = 0;
-#endif
 
 /** The only log handler that comes with libsc. */
 static void         sc_log_handler (FILE * log_stream,
@@ -229,12 +216,6 @@ sc_malloc (int package, size_t size)
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
 
-#ifdef SC_ALLOC_ALIGN
-  size_t              aligned;
-
-  size += sc_page_bytes;
-#endif
-
   ret = malloc (size);
 
   if (size > 0) {
@@ -245,23 +226,6 @@ sc_malloc (int package, size_t size)
     *malloc_count += ((ret == NULL) ? 0 : 1);
   }
 
-#ifdef SC_ALLOC_PAGE
-  aligned = (((size_t) ret + sizeof (size_t) + sc_page_bytes - 1) /
-             sc_page_bytes) * sc_page_bytes;
-#endif
-#ifdef SC_ALLOC_LINE
-  aligned = (((size_t) ret + sizeof (size_t) +
-              sc_page_bytes - sc_line_no * sc_line_bytes - 1) /
-             sc_page_bytes) * sc_page_bytes + sc_line_no * sc_line_bytes;
-  sc_line_no = (sc_line_no + 1) % sc_line_count;
-#endif
-#ifdef SC_ALLOC_ALIGN
-  SC_ASSERT (aligned >= (size_t) ret + sizeof (size_t));
-  SC_ASSERT (aligned <= (size_t) ret + sc_page_bytes);
-  ((size_t *) aligned)[-1] = (size_t) ret;
-  ret = (void *) aligned;
-#endif
-
   return ret;
 }
 
@@ -270,15 +234,6 @@ sc_calloc (int package, size_t nmemb, size_t size)
 {
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
-
-#ifdef SC_ALLOC_ALIGN
-  size_t              aligned;
-
-  if (size == 0) {
-    return NULL;
-  }
-  nmemb += (sc_page_bytes + size - 1) / size;
-#endif
 
   ret = calloc (nmemb, size);
 
@@ -289,23 +244,6 @@ sc_calloc (int package, size_t nmemb, size_t size)
   else {
     *malloc_count += ((ret == NULL) ? 0 : 1);
   }
-
-#ifdef SC_ALLOC_PAGE
-  aligned = (((size_t) ret + sizeof (size_t) + sc_page_bytes - 1) /
-             sc_page_bytes) * sc_page_bytes;
-#endif
-#ifdef SC_ALLOC_LINE
-  aligned = (((size_t) ret + sizeof (size_t) +
-              sc_page_bytes - sc_line_no * sc_line_bytes - 1) /
-             sc_page_bytes) * sc_page_bytes + sc_line_no * sc_line_bytes;
-  sc_line_no = (sc_line_no + 1) % sc_line_count;
-#endif
-#ifdef SC_ALLOC_ALIGN
-  SC_ASSERT (aligned >= (size_t) ret + sizeof (size_t));
-  SC_ASSERT (aligned <= (size_t) ret + sc_page_bytes);
-  ((size_t *) aligned)[-1] = (size_t) ret;
-  ret = (void *) aligned;
-#endif
 
   return ret;
 }
@@ -323,30 +261,8 @@ sc_realloc (int package, void *ptr, size_t size)
   else {
     void               *ret;
 
-#ifdef SC_ALLOC_ALIGN
-    size_t              sptr;
-    size_t              shift;
-    size_t              aligned;
-
-    sptr = (size_t) ptr;
-    ptr = (void *) ((size_t *) ptr)[-1];
-    SC_ASSERT (ptr != NULL && sptr >= (size_t) ptr + sizeof (size_t));
-    shift = sptr - (size_t) ptr;
-
-    size += sc_page_bytes;
-#endif
-
     ret = realloc (ptr, size);
     SC_CHECK_ABORT (ret != NULL, "Reallocation");
-
-#ifdef SC_ALLOC_ALIGN
-    aligned = (size_t) ret + shift;
-    SC_ASSERT (aligned >= (size_t) ret + sizeof (size_t));
-    SC_ASSERT (aligned <= (size_t) ret + sc_page_bytes);
-    SC_ASSERT (((size_t *) aligned)[-1] == (size_t) ptr);
-    ((size_t *) aligned)[-1] = (size_t) ret;
-    ret = (void *) aligned;
-#endif
 
     return ret;
   }
@@ -374,12 +290,8 @@ sc_free (int package, void *ptr)
 {
   if (ptr != NULL) {
     int                *free_count = sc_free_count (package);
-    ++*free_count;
 
-#ifdef SC_ALLOC_ALIGN
-    ptr = (void *) ((size_t *) ptr)[-1];
-    SC_ASSERT (ptr != NULL);
-#endif
+    ++*free_count;
   }
   free (ptr);
 }
