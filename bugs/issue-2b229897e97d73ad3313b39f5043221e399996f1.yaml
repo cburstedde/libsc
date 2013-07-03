@@ -25,3 +25,9 @@ log_events:
     Parallel sort is still buggy. Fix it for 0.7 hopefully.
     Remember to remove the SC_DEBUG checks from test_sort.c and sc_sort.c
     and to update documentation in sc_sort.h once the bug is fixed.
+- - 2013-07-03 13:42:44.561485 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - commented
+  - |-
+    The sc_sort function has been fixed somewhat, but test_sc_sort is still
+    not happy for np >= 18.
