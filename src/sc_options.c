@@ -474,7 +474,6 @@ int
 sc_options_load (int package_id, int err_priority,
                  sc_options_t * opt, const char *inifile)
 {
-  int                 retval;
   int                 found_short, found_long;
   size_t              iz;
   sc_array_t         *items = opt->option_items;
@@ -583,7 +582,7 @@ sc_options_load (int package_id, int err_priority,
       fn = (sc_options_callback_t) item->opt_fn;
       if (fn (opt, s, item->user_data)) {
         iniparser_freedict (dict);
-        retval = -1;
+        return -1;
       }
       break;
     default:

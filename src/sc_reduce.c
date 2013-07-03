@@ -34,14 +34,13 @@ sc_reduce_alltoall (MPI_Comm mpicomm,
 {
   int                 i, l;
   int                 mpiret;
-  int                 orig_target, doall, allcount;
+  int                 doall, allcount;
   int                 myrank, peer, peer2;
   int                 shift;
   char               *alldata;
   size_t              datasize;
   MPI_Request        *request, *rrequest, *srequest;
 
-  orig_target = target;
   doall = 0;
   if (target == -1) {
     doall = 1;

@@ -312,11 +312,6 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
         for (i = 0; i < outcount2; ++i) {
           size_t              zz;
           char               *lo_data, *hi_data;
-#ifdef SC_DEBUG
-          MPI_Status         *jstatus;
-
-          jstatus = &recv_statuses[i];
-#endif
 
           /* retrieve peer information */
           peer =
