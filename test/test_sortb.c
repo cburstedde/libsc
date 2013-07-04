@@ -61,7 +61,7 @@ main (int argc, char **argv)
   lsize = nmemb[rank];
   total = nmemb[0] + nmemb[1] + nmemb[2];
 
-  srand (17);
+  srand (17 + (int) total);
   ldata = SC_ALLOC (char, lsize * size);
   for (zz = 0; zz < lsize * size; ++zz) {
     ldata[zz] = (char) (-50. + (300. * rand () / (RAND_MAX + 1.0)));

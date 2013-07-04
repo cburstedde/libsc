@@ -65,6 +65,10 @@ test_getopt (int argc, char **argv)
       return 1;
     }
   }
+  if (anint == 1234567) {
+    fprintf (stderr, "Test with %d %d\n", aflag, anint);
+  }
+
   return 0;
 }
 
@@ -82,6 +86,7 @@ test_obstack (void)
   mem = obstack_alloc (&obst, 47);
   mem = obstack_alloc (&obst, 47135);
   mem = obstack_alloc (&obst, 473);
+  *(char *) mem = '\0';
   obstack_free (&obst, NULL);
 
   return 0;
