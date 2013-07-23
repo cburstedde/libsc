@@ -266,7 +266,9 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
 
           /* retrieve peer information */
           peer = (sc_psort_peer_t *) sc_array_index_int (pa, wait_indices[i]);
-          if (peer->sent) {     /*only overwrite date, if made sure it has already been sent to the other process */
+          if (peer->sent) {
+            /* only overwrite data,
+             * if made sure it has already been sent to the other process */
             SC_ASSERT (!peer->received);
             SC_ASSERT (peer->prank != rank);
             SC_ASSERT (peer->prank == jstatus->MPI_SOURCE);
