@@ -249,6 +249,8 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
          remaining > 0 || remaining2 > 0;
          remaining -= outcount, remaining2 -= outcount2) {
       int                 i;
+      outcount = 0;
+      outcount2 = 0;
       if (remaining > 0) {
         mpiret = MPI_Waitsome (num_peers, (MPI_Request *) pr->array,
                                &outcount, wait_indices, recv_statuses);
@@ -354,6 +356,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
       }
     }
     SC_ASSERT (remaining == 0);
+    SC_ASSERT (remaining2 == 0);
     SC_FREE (recv_statuses);
     SC_FREE (wait_indices);
     SC_FREE (recv_statuses2);
