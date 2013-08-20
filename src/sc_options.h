@@ -30,6 +30,7 @@ SC_EXTERN_C_BEGIN;
 typedef enum
 {
   SC_OPTION_SWITCH,
+  SC_OPTION_BOOL,
   SC_OPTION_INT,
   SC_OPTION_DOUBLE,
   SC_OPTION_STRING,
@@ -99,6 +100,17 @@ void                sc_options_add_switch (sc_options_t * opt,
                                            const char *opt_name,
                                            int *variable,
                                            const char *help_string);
+
+/**
+ * Add a boolean option. It can be initialized to true or false in the C sense.
+ * A use without argument sets it to true.  The argument 0/f/F/n/N sets it
+ * to false (0).  The argument 1/t/T/y/Y sets it to true (not 0).
+ */
+void                sc_options_add_bool (sc_options_t * opt,
+                                         int opt_char,
+                                         const char *opt_name,
+                                         int *variable, int init_value,
+                                         const char *help_string);
 
 /**
  * Add an option that takes an integer argument.
