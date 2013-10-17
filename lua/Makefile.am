@@ -36,12 +36,8 @@ LIBSC_CPPFLAGS += -DLUA_USE_LINUX
 if SC_HAVE_DLOPEN
 
 bin_PROGRAMS += lua/sc_lua lua/sc_luac
-
 lua_sc_lua_SOURCES = lua/src/lua.c
-lua_sc_lua_LDADD = $(LDADD_STATIC)
-
 lua_sc_luac_SOURCES = lua/src/luac.c lua/src/print.c
-lua_sc_luac_LDADD = $(LDADD_STATIC)
 
 endif
 

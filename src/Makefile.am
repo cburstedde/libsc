@@ -42,7 +42,6 @@ src_libsc_la_SOURCES = \
         $(libsc_compiled_sources)
 src_libsc_la_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
 LDADD += @top_builddir@/src/libsc.la
-LDADD_STATIC += @top_builddir@/src/libsc.la
 
 nodist_include_HEADERS += $(libsc_generated_headers)
 include_HEADERS += $(libsc_installed_headers)
