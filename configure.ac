@@ -8,12 +8,13 @@ AC_INIT([libsc],
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([src/pre_config.h])
 AC_CONFIG_SRCDIR([src/sc.h])
-AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_MACRO_DIR([config])
 AC_PREFIX_DEFAULT([$PWD/local])
-AM_INIT_AUTOMAKE([subdir-objects])
 AX_PREFIX_CONFIG_H([src/sc_config.h], [SC])
-SC_VERSION([SC])
+AM_INIT_AUTOMAKE([subdir-objects])
 AM_SILENT_RULES
+SC_VERSION([SC])
 
 # Process command line options.
 echo "o---------------------------------------"
@@ -48,7 +49,6 @@ SC_MPI_ENGAGE([SC])
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
 AM_PROG_CC_C_O
-AC_PROG_RANLIB
 SC_PROG_LINT
 SC_C_VERSION
 LT_INIT
