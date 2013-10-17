@@ -59,6 +59,7 @@ echo "| Checking libraries"
 echo "o---------------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
+SC_REQUIRE_LIB([z], [adler32_combine])
 AC_SEARCH_LIBS([dlopen], [dl])
 AM_CONDITIONAL([SC_HAVE_DLOPEN], [test "$ac_cv_search_dlopen" != "no"])
 

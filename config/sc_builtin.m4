@@ -32,7 +32,6 @@ AC_DEFUN([SC_ARG_WITH_BUILTIN_ALL_PREFIX],
 [
 SC_ARG_WITH_BUILTIN_PREFIX([getopt], [GETOPT], [$1])
 SC_ARG_WITH_BUILTIN_PREFIX([obstack], [OBSTACK], [$1])
-SC_ARG_WITH_BUILTIN_PREFIX([zlib], [ZLIB], [$1])
 SC_ARG_WITH_BUILTIN_PREFIX([lua], [LUA], [$1])
 ])
 AC_DEFUN([SC_ARG_WITH_BUILTIN_ALL], [SC_ARG_WITH_BUILTIN_ALL_PREFIX([SC])])
@@ -93,29 +92,6 @@ AM_CONDITIONAL([$1_PROVIDE_OBSTACK], [test "$$1_PROVIDE_OBSTACK" = "yes"])
 ])
 AC_DEFUN([SC_BUILTIN_OBSTACK], [SC_BUILTIN_OBSTACK_PREFIX([SC])])
 
-dnl SC_BUILTIN_ZLIB_PREFIX(PREFIX)
-dnl This function only activates if PREFIX_WITH_ZLIB is "yes".
-dnl This function checks if adler32_combine can be linked against.
-dnl The shell variable PREFIX_PROVIDE_ZLIB is set to "yes" or "no".
-dnl Both a define and automake conditional are set.
-dnl
-AC_DEFUN([SC_BUILTIN_ZLIB_PREFIX],
-[
-$1_PROVIDE_ZLIB="no"
-if test "$$1_WITH_ZLIB" = "yes" ; then
-  AC_MSG_NOTICE([Using builtin zlib 1.2.4 until that version is commonplace])
-  $1_PROVIDE_ZLIB="yes"
-  AC_DEFINE([PROVIDE_ZLIB], 1, [Use builtin zlib])
-  dnl AC_SEARCH_LIBS([adler32_combine], [z],, [
-  dnl   AC_MSG_NOTICE([did not find a recent zlib. Activating builtin])
-  dnl   $1_PROVIDE_ZLIB="yes"
-  dnl   AC_DEFINE([PROVIDE_ZLIB], 1, [Use builtin zlib])
-  dnl ])
-fi
-AM_CONDITIONAL([$1_PROVIDE_ZLIB], [test "$$1_PROVIDE_ZLIB" = "yes"])
-])
-AC_DEFUN([SC_BUILTIN_ZLIB], [SC_BUILTIN_ZLIB_PREFIX([SC])])
-
 dnl SC_BUILTIN_LUA_PREFIX(PREFIX)
 dnl This function only activates if PREFIX_WITH_LUA is "yes".
 dnl This function checks if lua_createtable can be linked against.
@@ -148,12 +124,10 @@ AC_DEFUN([SC_BUILTIN_ALL_PREFIX],
 if !($2) ; then
   $1_WITH_GETOPT=no
   $1_WITH_OBSTACK=no
-  $1_WITH_ZLIB=no
   $1_WITH_LUA=no
 fi
 SC_BUILTIN_GETOPT_PREFIX([$1])
 SC_BUILTIN_OBSTACK_PREFIX([$1])
-SC_BUILTIN_ZLIB_PREFIX([$1])
 SC_BUILTIN_LUA_PREFIX([$1])
 ])
 AC_DEFUN([SC_BUILTIN_ALL], [SC_BUILTIN_ALL_PREFIX([SC], [$1])])
