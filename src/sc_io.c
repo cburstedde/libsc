@@ -21,8 +21,8 @@
 */
 
 #include <sc_io.h>
-#include <sc_zlib.h>
 #include <libb64.h>
+#include <zlib.h>
 
 sc_io_sink_t       *
 sc_io_sink_new (sc_io_type_t iotype, sc_io_mode_t mode,

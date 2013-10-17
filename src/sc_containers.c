@@ -21,7 +21,7 @@
 */
 
 #include <sc_containers.h>
-#include <sc_zlib.h>
+#include <zlib.h>
 
 /* array routines */
 

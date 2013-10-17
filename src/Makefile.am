@@ -12,7 +12,7 @@ libsc_installed_headers = \
         src/sc_amr.h src/sc_search.h src/sc_sort.h \
         src/sc_dmatrix.h src/sc_blas.h src/sc_lapack.h \
         src/sc_bspline.h src/sc_flops.h src/sc_object.h \
-        src/sc_getopt.h src/sc_obstack.h src/sc_zlib.h \
+        src/sc_getopt.h src/sc_obstack.h \
         src/sc_lua.h \
 	src/sc_keyvalue.h src/sc_warp.h \
         src/sc_allgather.h src/sc_reduce.h src/sc_notify.h
@@ -31,8 +31,8 @@ libsc_original_headers = \
         src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h \
         src/sc_builtin/obstack.h \
         src/sc_builtin/lua.h src/sc_builtin/luaconf.h \
-        src/sc_builtin/lauxlib.h src/sc_builtin/lualib.h \
-        src/sc_builtin/zlib.h src/sc_builtin/zconf.h
+        src/sc_builtin/lauxlib.h src/sc_builtin/lualib.h
+
 LIBSC_CPPFLAGS =
 
 lib_LTLIBRARIES += src/libsc.la
