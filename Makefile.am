@@ -10,6 +10,7 @@ CLEANFILES =
 DISTCLEANFILES =
 EXTRA_DIST =
 LDADD =
+## unused except for the lua subdirectory, which will be removed
 LDADD_STATIC =
 LINT_CSOURCES =
 TESTS =
@@ -107,9 +108,4 @@ dist-hook:
 if SC_WITH_CUDA
 .cu.o:
 	$(SC_NVCC) -o $@ -c $< @NVCCFLAGS@
-if SC_ENABLE_SHARED
-# This does not work yet
-#.cu.lo:
-#	$(top_srcdir)/config/sc_nvccwrap.py $@ $(SC_NVCC) -c @NVCCFLAGS@ $<
-endif
 endif

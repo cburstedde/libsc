@@ -35,28 +35,14 @@ libsc_original_headers = \
         src/sc_builtin/zlib.h src/sc_builtin/zconf.h
 LIBSC_CPPFLAGS =
 
-# build static library
-if SC_ENABLE_STATIC
-lib_LIBRARIES += src/libsc.a
-endif
-src_libsc_a_SOURCES = \
-        $(libsc_installed_headers) \
-        $(libsc_internal_headers) \
-        $(libsc_compiled_sources)
-src_libsc_a_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
-
-# build shared library
-if SC_ENABLE_SHARED
 lib_LTLIBRARIES += src/libsc.la
 src_libsc_la_SOURCES = \
+        $(libsc_installed_headers) \
         $(libsc_internal_headers) \
         $(libsc_compiled_sources)
 src_libsc_la_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
 LDADD += @top_builddir@/src/libsc.la
-else
-LDADD += @top_builddir@/src/libsc.a
-endif
-LDADD_STATIC += @top_builddir@/src/libsc.a
+LDADD_STATIC += @top_builddir@/src/libsc.la
 
 nodist_include_HEADERS += $(libsc_generated_headers)
 include_HEADERS += $(libsc_installed_headers)
