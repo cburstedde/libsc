@@ -84,7 +84,6 @@ AC_ARG_WITH([lapack], [AS_HELP_STRING([--with-lapack=<lib>],
             [change default LAPACK library to <lib>
              or specify --without-lapack to use no LAPACK at all])],,
 	     [withval="yes"])
-SC_ARG_OVERRIDE_WITH([$1], [LAPACK])
 case $withval in
         yes | "") ;;
         no) sc_lapack_ok=disable ;;

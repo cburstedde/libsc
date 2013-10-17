@@ -90,7 +90,6 @@ AC_ARG_WITH([blas], [AS_HELP_STRING([--with-blas=<lib>],
             [change default BLAS library to <lib>
              or specify --without-blas to use no BLAS and LAPACK at all])],,
 	     [withval="yes"])
-SC_ARG_OVERRIDE_WITH([$1], [BLAS])
 case $withval in
 	yes | "") ;;
 	no) sc_blas_ok=disable ;;

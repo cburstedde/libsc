@@ -33,7 +33,6 @@ dnl and neither AC_DEFINE nor AM_CONDITIONAL are invoked at this point.
 AC_ARG_ENABLE([mpi],
               [AS_HELP_STRING([--enable-mpi], [enable MPI])],,
               [enableval=no])
-SC_ARG_OVERRIDE_ENABLE([$1], [MPI])
 if test "$enableval" = yes ; then
   HAVE_PKG_MPI=yes
 elif test "$enableval" != no ; then
@@ -48,7 +47,6 @@ dnl If enabled, MPI I/O will be verified by a compile/link test below.
 AC_ARG_ENABLE([mpiio],
               [AS_HELP_STRING([--enable-mpiio], [enable MPI I/O])],,
               [enableval=no])
-SC_ARG_OVERRIDE_ENABLE([$1], [MPIIO])
 if test "$enableval" = yes ; then
   if test "$HAVE_PKG_MPI" = yes ; then
     HAVE_PKG_MPIIO=yes

@@ -18,7 +18,6 @@ AC_ARG_WITH([$1],
             [AS_HELP_STRING([--without-$1], [assume external $1 code is found])
 AS_HELP_STRING(, [(default: check and use builtin if necessary)])],,
             [withval=yes])
-SC_ARG_OVERRIDE_WITH([$3], [$2])
 if test "$withval" != "yes" -a "$withval" != "no" ; then
   AC_MSG_ERROR([Please use --without-$1 without an argument])
 fi
