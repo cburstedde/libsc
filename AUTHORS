@@ -49,8 +49,8 @@
 */
 
 /*
-  The files under src/sc_builtin are copied from the GNU C library,
-  zlib and lua, respectively.  See Copyright information below.
+  The files under src/sc_builtin are copied from the GNU C library.
+  See copyright information below.
 
   The files sc_avl.{c,h} are derived from libavl (Debian 0.3.5-2),
   Copyright (C) 1998  Michael H. Buselli <cosine@cosine.org>
@@ -58,12 +58,6 @@
 
   The files sc_obstack.c and sc_getopt*.c are derived from the GNU C
   library 2.7, Copyright (C) Free Software Foundation, Inc.
-
-  The files under zlib except zlib/Makefile.am are copied from zlib 1.2.4,
-  Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler.
-
-  The files under lua except lua/Makefile.am are copied from lua 5.1.4,
-  Copyright (C) 1994-2008 Lua.org, PUC-Rio.
 
   The source files under libb64 are derived from libb64.  libb64 is public
   domain software, see the LICENSE and AUTHORS files in that directory.
