@@ -22,7 +22,9 @@
 
 #include <sc_io.h>
 #include <libb64.h>
+#ifdef SC_HAVE_ZLIB
 #include <zlib.h>
+#endif
 
 sc_io_sink_t       *
 sc_io_sink_new (sc_io_type_t iotype, sc_io_mode_t mode,
@@ -353,6 +355,7 @@ int
 sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
                          size_t byte_length)
 {
+#ifdef SC_HAVE_ZLIB
   int                 retval, fseek1, fseek2;
   size_t              iz;
   size_t              blocksize, lastsize;
@@ -454,6 +457,10 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
   if (fseek1 != 0 || fseek2 != 0 || ferror (vtkfile)) {
     return -1;
   }
+#else
+  SC_GLOBAL_LERROR("Configure did not find a recent enough zlib.  Abort.\n");
+#endif
+
   return 0;
 }
 

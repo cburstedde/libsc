@@ -59,7 +59,7 @@ echo "| Checking libraries"
 echo "o---------------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
-SC_REQUIRE_LIB([z], [adler32_combine])
+SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [SC])
 AC_SEARCH_LIBS([dlopen], [dl])
 AM_CONDITIONAL([SC_HAVE_DLOPEN], [test "$ac_cv_search_dlopen" != "no"])
 
@@ -218,3 +218,13 @@ echo "o----------------------------------"
 # Create output files.
 AC_CONFIG_FILES([Makefile Makefile.sc.pre])
 AC_OUTPUT
+
+# Final notifications.
+if test x$SC_HAVE_ZLIB = x; then
+AC_MSG_NOTICE([
+----------------------------------------------------------------------
+We did not find a recent zlib containing the function adler32_combine.
+Calling any functions using zlib functionality will abort the program.
+You can fix this by compiling a working zlib and pointing LIBS to it.
+])
+fi

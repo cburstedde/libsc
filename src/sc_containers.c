@@ -21,7 +21,9 @@
 */
 
 #include <sc_containers.h>
+#ifdef SC_HAVE_ZLIB
 #include <zlib.h>
+#endif
 
 /* array routines */
 
@@ -503,6 +505,7 @@ sc_array_permute (sc_array_t * array, sc_array_t * newindices, int keepperm)
 unsigned
 sc_array_checksum (sc_array_t * array)
 {
+#ifdef SC_HAVE_ZLIB
   uInt                bytes;
   uLong               crc;
 
@@ -515,6 +518,11 @@ sc_array_checksum (sc_array_t * array)
   crc = adler32 (crc, (const Bytef *) array->array, bytes);
 
   return (unsigned) crc;
+#else
+  SC_GLOBAL_LERROR("Configure did not find a recent enough zlib.  Abort.\n");
+
+  return 0;
+#endif
 }
 
 size_t

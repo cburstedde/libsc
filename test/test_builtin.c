@@ -25,7 +25,9 @@
 #include <sc_getopt.h>
 #include <sc_obstack.h>
 #include <sc_lua.h>
+#ifdef SC_HAVE_ZLIB
 #include <zlib.h>
+#endif
 
 static int
 test_getopt (int argc, char **argv)
@@ -92,6 +94,8 @@ test_obstack (void)
   return 0;
 }
 
+#ifdef SC_HAVE_ZLIB
+
 static int
 test_zlib (void)
 {
@@ -113,6 +117,8 @@ test_zlib (void)
   return adler3a != adler3b;
 }
 
+#endif /* SC_HAVE_ZLIB */
+
 static int
 test_lua (void)
 {
@@ -132,7 +138,9 @@ main (int argc, char **argv)
 
   num_errors += test_getopt (argc, argv);
   num_errors += test_obstack ();
+#ifdef SC_HAVE_ZLIB
   num_errors += test_zlib ();
+#endif
   num_errors += test_lua ();
 
   sc_finalize ();
