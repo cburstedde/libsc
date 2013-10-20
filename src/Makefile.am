@@ -29,9 +29,7 @@ libsc_compiled_sources = \
         src/sc_allgather.c src/sc_reduce.c src/sc_notify.c
 libsc_original_headers = \
         src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h \
-        src/sc_builtin/obstack.h \
-        src/sc_builtin/lua.h src/sc_builtin/luaconf.h \
-        src/sc_builtin/lauxlib.h src/sc_builtin/lualib.h
+        src/sc_builtin/obstack.h
 
 LIBSC_CPPFLAGS =
 

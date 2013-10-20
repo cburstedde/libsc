@@ -22,11 +22,17 @@
 
 /* this test checks the possibly builtin third-party libraries */
 
+
 #include <sc_getopt.h>
 #include <sc_obstack.h>
-#include <sc_lua.h>
+
+/* truthfully, the libraries below are not builtin anymore */
+#include <sc_config.h>
 #ifdef SC_HAVE_ZLIB
 #include <zlib.h>
+#endif
+#ifdef SC_HAVE_LUA
+#include <sc_lua.h>
 #endif
 
 static int
@@ -119,15 +125,19 @@ test_zlib (void)
 
 #endif /* SC_HAVE_ZLIB */
 
+#ifdef SC_HAVE_LUA
+
 static int
 test_lua (void)
 {
-  lua_State          *L = (lua_State *) lua_open ();
+  lua_State          *L = luaL_newstate ();
 
   lua_close (L);
 
   return 0;
 }
+
+#endif /* SC_HAVE_LUA */
 
 int
 main (int argc, char **argv)
@@ -141,7 +151,9 @@ main (int argc, char **argv)
 #ifdef SC_HAVE_ZLIB
   num_errors += test_zlib ();
 #endif
+#ifdef SC_HAVE_LUA
   num_errors += test_lua ();
+#endif
 
   sc_finalize ();
 

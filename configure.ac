@@ -60,8 +60,8 @@ echo "o---------------------------------------"
 
 SC_REQUIRE_LIB([m], [fabs])
 SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [SC])
-AC_SEARCH_LIBS([dlopen], [dl])
-AM_CONDITIONAL([SC_HAVE_DLOPEN], [test "$ac_cv_search_dlopen" != "no"])
+SC_CHECK_LIB([lua52 lua5.2 lua51 lua5.1 lua lua5], [lua_createtable],
+	     [LUA], [SC])
 
 # Checks for header files.
 echo "o---------------------------------------"
@@ -69,6 +69,7 @@ echo "| Checking headers"
 echo "o---------------------------------------"
 
 AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h sys/types.h time.h])
+AC_CHECK_HEADERS([lua.h lua5.1/lua.h lua5.2/lua.h])
 
 # Checks for functions.
 echo "o---------------------------------------"
@@ -226,5 +227,13 @@ AC_MSG_NOTICE([
 We did not find a recent zlib containing the function adler32_combine.
 Calling any functions using zlib functionality will abort the program.
 You can fix this by compiling a working zlib and pointing LIBS to it.
+])
+fi
+if test x$SC_HAVE_LUA = x; then
+AC_MSG_NOTICE([
+---------------------------------------------------------------------
+We did not find a recent lua containing the function lua_createtable.
+Including sc_lua.h will abort the compilation.
+You can fix this by compiling a working lua and pointing LIBS to it.
 ])
 fi

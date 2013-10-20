@@ -10,7 +10,6 @@ CLEANFILES =
 DISTCLEANFILES =
 EXTRA_DIST =
 LDADD =
-## unused except for the lua subdirectory, which will be removed
 LINT_CSOURCES =
 TESTS =
 bin_PROGRAMS =
@@ -54,7 +53,6 @@ DISTCLEANFILES += \
 include src/Makefile.am
 include iniparser/Makefile.am
 include libb64/Makefile.am
-include lua/Makefile.am
 include test/Makefile.am
 include example/bspline/Makefile.am
 include example/cuda/Makefile.am

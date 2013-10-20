@@ -25,30 +25,32 @@
 
 #include <sc.h>
 
+#ifdef SC_HAVE_LUA
+
 SC_EXTERN_C_BEGIN;
 
-#define LUA_USE_LINUX
-
-#ifdef SC_PROVIDE_LUA
-#ifdef lua_h
-#error "lua.h is included.  Include sc.h first or use --without-lua".
-#endif
-#include "sc_builtin/lua.h"
-#include "sc_builtin/lualib.h"
-#include "sc_builtin/lauxlib.h"
+#ifdef SC_HAVE_LUA5_2_LUA_H
+#include <lua5.2/lua.h>
+#include <lua5.2/lualib.h>
+#include <lua5.2/lauxlib.h>
+#else
+#ifdef SC_HAVE_LUA5_1_LUA_H
+#include <lua5.1/lua.h>
+#include <lua5.1/lualib.h>
+#include <lua5.1/lauxlib.h>
 #else
 #ifdef SC_HAVE_LUA_H
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
 #endif
-#ifdef SC_HAVE_LUA5_1_LUA_H
-#include <lua5.1/lua.h>
-#include <lua5.1/lualib.h>
-#include <lua5.1/lauxlib.h>
 #endif
 #endif
 
 SC_EXTERN_C_END;
+
+#else
+#error "We did not find a recent lua library that provides lua_createtable."
+#endif
 
 #endif /* !SC_LUA_H */

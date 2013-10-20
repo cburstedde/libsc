@@ -32,7 +32,6 @@ AC_DEFUN([SC_ARG_WITH_BUILTIN_ALL_PREFIX],
 [
 SC_ARG_WITH_BUILTIN_PREFIX([getopt], [GETOPT], [$1])
 SC_ARG_WITH_BUILTIN_PREFIX([obstack], [OBSTACK], [$1])
-SC_ARG_WITH_BUILTIN_PREFIX([lua], [LUA], [$1])
 ])
 AC_DEFUN([SC_ARG_WITH_BUILTIN_ALL], [SC_ARG_WITH_BUILTIN_ALL_PREFIX([SC])])
 
@@ -92,28 +91,6 @@ AM_CONDITIONAL([$1_PROVIDE_OBSTACK], [test "$$1_PROVIDE_OBSTACK" = "yes"])
 ])
 AC_DEFUN([SC_BUILTIN_OBSTACK], [SC_BUILTIN_OBSTACK_PREFIX([SC])])
 
-dnl SC_BUILTIN_LUA_PREFIX(PREFIX)
-dnl This function only activates if PREFIX_WITH_LUA is "yes".
-dnl This function checks if lua_createtable can be linked against.
-dnl The shell variable PREFIX_PROVIDE_LUA is set to "yes" or "no".
-dnl Both a define and automake conditional are set.
-dnl Must not be called conditionally since it uses AM_CONDITIONAL.
-dnl
-AC_DEFUN([SC_BUILTIN_LUA_PREFIX],
-[
-$1_PROVIDE_LUA="no"
-if test "$$1_WITH_LUA" = "yes" ; then
-  AC_CHECK_HEADERS([lua.h lua5.1/lua.h], [break])
-  AC_SEARCH_LIBS([lua_createtable], [lua lua5 lua51 lua5.1],, [
-    AC_MSG_NOTICE([did not find a recent lua. Activating builtin])
-    $1_PROVIDE_LUA="yes"
-    AC_DEFINE([PROVIDE_LUA], 1, [Use builtin lua])
-  ])
-fi
-AM_CONDITIONAL([$1_PROVIDE_LUA], [test "$$1_PROVIDE_LUA" = "yes"])
-])
-AC_DEFUN([SC_BUILTIN_LUA], [SC_BUILTIN_LUA_PREFIX([SC])])
-
 dnl SC_BUILTIN_ALL_PREFIX(PREFIX, CONDITION)
 dnl Aggregate all checks from this file for convenience.
 dnl If CONDITION is false, the PREFIX_WITH_* variables are set to "no".
@@ -124,10 +101,8 @@ AC_DEFUN([SC_BUILTIN_ALL_PREFIX],
 if !($2) ; then
   $1_WITH_GETOPT=no
   $1_WITH_OBSTACK=no
-  $1_WITH_LUA=no
 fi
 SC_BUILTIN_GETOPT_PREFIX([$1])
 SC_BUILTIN_OBSTACK_PREFIX([$1])
-SC_BUILTIN_LUA_PREFIX([$1])
 ])
 AC_DEFUN([SC_BUILTIN_ALL], [SC_BUILTIN_ALL_PREFIX([SC], [$1])])
