@@ -168,6 +168,21 @@ AC_DEFUN([SC_REQUIRE_LIB],
     [AC_SEARCH_LIBS([$2], [$1],,
       [AC_MSG_ERROR([Could not find function $2 in $1])])])
 
+dnl SC_CHECK_LIB(LIBRARY LIST, FUNCTION, TOKEN, PREFIX)
+dnl Check for FUNCTION first as is, then in each of the libraries.
+dnl Set shell variable PREFIX_HAVE_TOKEN to nonempty if found.
+dnl Call AM_CONDITIONAL with PREFIX_HAVE_TOKEN.
+dnl Call AC_DEFINE with HAVE_TOKEN if found.
+AC_DEFUN([SC_CHECK_LIB], [
+AC_SEARCH_LIBS([$2], [$1])
+AM_CONDITIONAL([$4_HAVE_$3], [test x$ac_cv_search_$2 != xno])
+$4_HAVE_$3=
+if test x$ac_cv_search_$2 != xno ; then
+AC_DEFINE([HAVE_$3], [1], [Have we found function $2.])
+$4_HAVE_$3=yes
+fi
+])
+
 dnl SC_REQUIRE_FUNCS(FUNCTION LIST)
 dnl Check for all functions in FUNCTION LIST, exit with error if not found
 dnl
