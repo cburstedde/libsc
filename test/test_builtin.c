@@ -22,7 +22,6 @@
 
 /* this test checks the possibly builtin third-party libraries */
 
-
 #include <sc_getopt.h>
 #include <sc_obstack.h>
 
