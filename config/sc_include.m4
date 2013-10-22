@@ -20,21 +20,6 @@ AC_DEFUN([SC_VERSION],
   AC_DEFINE_UNQUOTED([VERSION_POINT],[$AX_POINT_VERSION],[Package point version])
 ])
 
-dnl The shell variable PREFIX_ARG_NOT_GIVEN_DEFAULT can be set.
-dnl If the argument is not given and PREFIX_ARG_NOT_GIVEN_DEFAULT is nonempty,
-dnl it will override the enableval/withval variable.
-dnl PREFIX_ARG_NOT_GIVEN_DEFAULT is unset at the end of each SC_ARG_* macro.
-dnl
-dnl Here is an internal helper function to shorten the macros below.
-dnl SC_ARG_NOT_GIVEN(PREFIX, VALUE)
-dnl
-AC_DEFUN([SC_ARG_NOT_GIVEN],
-[
-if test -z "$$1_ARG_NOT_GIVEN_DEFAULT" ; then
-  $1_ARG_NOT_GIVEN_DEFAULT="$2"
-fi
-])
-
 dnl SC_ARG_ENABLE_PREFIX(NAME, COMMENT, TOKEN, PREFIX, HELPEXTRA)
 dnl Check for --enable/disable-NAME using shell variable PREFIX_ENABLE_TOKEN
 dnl If shell variable is set beforehand it overrides the option
@@ -43,15 +28,13 @@ dnl Default is disabled
 dnl
 AC_DEFUN([SC_ARG_ENABLE_PREFIX],
 [
-SC_ARG_NOT_GIVEN([$4], [no])
 AC_ARG_ENABLE([$1],
               [AS_HELP_STRING([--enable-$1$5], [$2])],,
-              [enableval="$$4_ARG_NOT_GIVEN_DEFAULT"])
+              [enableval=no])
 if test "$enableval" != "no" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
 AM_CONDITIONAL([$4_ENABLE_$3], [test "$enableval" != "no"])
-$4_ARG_NOT_GIVEN_DEFAULT=
 ])
 AC_DEFUN([SC_ARG_ENABLE],
          [SC_ARG_ENABLE_PREFIX([$1], [$2], [$3], [SC], [$4])])
@@ -64,15 +47,13 @@ dnl Default is enabled
 dnl
 AC_DEFUN([SC_ARG_DISABLE_PREFIX],
 [
-SC_ARG_NOT_GIVEN([$4], [yes])
 AC_ARG_ENABLE([$1],
               [AS_HELP_STRING([--disable-$1$5], [$2])],,
-              [enableval="$$4_ARG_NOT_GIVEN_DEFAULT"])
+              [enableval=yes])
 if test "$enableval" != "no" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
 AM_CONDITIONAL([$4_ENABLE_$3], [test "$enableval" != "no"])
-$4_ARG_NOT_GIVEN_DEFAULT=
 ])
 AC_DEFUN([SC_ARG_DISABLE],
          [SC_ARG_DISABLE_PREFIX([$1], [$2], [$3], [SC], [$4])])
@@ -85,15 +66,13 @@ dnl Default is without
 dnl
 AC_DEFUN([SC_ARG_WITH_PREFIX],
 [
-SC_ARG_NOT_GIVEN([$4], [no])
 AC_ARG_WITH([$1],
             [AS_HELP_STRING([--with-$1$5], [$2])],,
-            [withval="$$4_ARG_NOT_GIVEN_DEFAULT"])
+            [withval=no])
 if test "$withval" != "no" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
 AM_CONDITIONAL([$4_WITH_$3], [test "$withval" != "no"])
-$4_ARG_NOT_GIVEN_DEFAULT=
 ])
 AC_DEFUN([SC_ARG_WITH],
          [SC_ARG_WITH_PREFIX([$1], [$2], [$3], [SC], [$4])])
@@ -106,15 +85,13 @@ dnl Default is with
 dnl
 AC_DEFUN([SC_ARG_WITHOUT_PREFIX],
 [
-SC_ARG_NOT_GIVEN([$4], [yes])
 AC_ARG_WITH([$1],
             [AS_HELP_STRING([--without-$1$5], [$2])],,
-            [withval="$$4_ARG_NOT_GIVEN_DEFAULT"])
+            [withval=yes])
 if test "$withval" != "no" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
 AM_CONDITIONAL([$4_WITH_$3], [test "$withval" != "no"])
-$4_ARG_NOT_GIVEN_DEFAULT=
 ])
 AC_DEFUN([SC_ARG_WITHOUT],
          [SC_ARG_WITHOUT_PREFIX([$1], [$2], [$3], [SC], [$4])])
@@ -127,15 +104,13 @@ dnl Default is no
 dnl
 AC_DEFUN([SC_ARG_WITH_YES_PREFIX],
 [
-SC_ARG_NOT_GIVEN([$4], [no])
 AC_ARG_WITH([$1],
             [AS_HELP_STRING([--with-$1$5], [$2])],,
-            [withval="$$4_ARG_NOT_GIVEN_DEFAULT"])
+            [withval=no])
 if test "$withval" = "yes" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
 AM_CONDITIONAL([$4_WITH_$3], [test "$withval" = "yes"])
-$4_ARG_NOT_GIVEN_DEFAULT=
 ])
 AC_DEFUN([SC_ARG_WITH_YES],
          [SC_ARG_WITH_YES_PREFIX([$1], [$2], [$3], [SC], [$4])])
@@ -148,15 +123,13 @@ dnl Default is yes
 dnl
 AC_DEFUN([SC_ARG_WITHOUT_YES_PREFIX],
 [
-SC_ARG_NOT_GIVEN([$4], [yes])
 AC_ARG_WITH([$1],
             [AS_HELP_STRING([--without-$1$5], [$2])],,
-            [withval="$$4_ARG_NOT_GIVEN_DEFAULT"])
+            [withval=yes])
 if test "$withval" = "yes" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
 AM_CONDITIONAL([$4_WITH_$3], [test "$withval" = "yes"])
-$4_ARG_NOT_GIVEN_DEFAULT=
 ])
 AC_DEFUN([SC_ARG_WITHOUT_YES],
          [SC_ARG_WITHOUT_YES_PREFIX([$1], [$2], [$3], [SC], [$4])])
