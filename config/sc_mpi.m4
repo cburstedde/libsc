@@ -57,18 +57,24 @@ fi
 AC_MSG_CHECKING([whether we are using MPI I/O])
 AC_MSG_RESULT([$HAVE_PKG_MPIIO])
 
-dnl Potentially override the MPI test environment
-SC_ARG_NOT_GIVEN_DEFAULT="yes"
-SC_ARG_WITH([mpitest], [use DRIVER to run MPI tests (default: mpirun -np 2)],
-            [MPI_TESTS], [[[=DRIVER]]])
+dnl Establish the MPI test environment
+$1_MPIRUN=
+$1_MPI_TEST_FLAGS=
 if test "$HAVE_PKG_MPI" = yes ; then
-  if test "$withval" = yes ; then
-    withval="mpirun -np 2"
-  elif test "$withval" = no ; then
-    withval=""
-  fi
-  AC_SUBST([$1_MPI_TESTS_ENVIRONMENT], [$withval])
+AC_CHECK_PROGS([$1_MPIRUN], [mpiexec mpirun])
+if test x$$1_MPIRUN = xmpiexec ; then
+  $1_MPIRUN="mpiexec"
+  $1_MPI_TEST_FLAGS="-n 2"
+elif test x$$1_MPIRUN = xmpirun ; then
+  $1_MPIRUN="mpirun"
+  $1_MPI_TEST_FLAGS="-np 2"
+else
+  $1_MPIRUN=
 fi
+AC_SUBST([$1_MPIRUN])
+AC_SUBST([$1_MPI_TEST_FLAGS])
+fi
+AM_CONDITIONAL([$1_MPIRUN], [test -n "$$1_MPIRUN"])
 
 dnl Set compilers if not already set and set define and conditionals
 if test "$HAVE_PKG_MPI" = yes ; then

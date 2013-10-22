@@ -12,7 +12,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([config])
 AC_PREFIX_DEFAULT([$PWD/local])
 AX_PREFIX_CONFIG_H([src/sc_config.h], [SC])
-AM_INIT_AUTOMAKE([subdir-objects])
+AM_INIT_AUTOMAKE([parallel-tests subdir-objects])
 AM_SILENT_RULES
 SC_VERSION([SC])
 

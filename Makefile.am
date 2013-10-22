@@ -39,8 +39,11 @@ dist_scaclocal_DATA = \
         config/ax_prefix_config_h.m4 config/ax_split_version.m4 \
         config/sc_package.m4 config/sc_trilinos.m4
 
-# set test environment
-TESTS_ENVIRONMENT = @SC_MPI_TESTS_ENVIRONMENT@
+# setup test environment
+if SC_MPIRUN
+LOG_COMPILER = @SC_MPIRUN@
+AM_LOG_FLAGS = @SC_MPI_TEST_FLAGS@
+endif
 
 # handle toplevel directory
 EXTRA_DIST += \
