@@ -49,7 +49,7 @@ SC_MPI_ENGAGE([SC])
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
 SC_PROG_LINT
-SC_C_VERSION
+dnl SC_C_VERSION
 LT_INIT
 
 # Checks for libraries.
@@ -203,18 +203,20 @@ AC_DEFINE_UNQUOTED(FLIBS,       ["${FLIBS}"],       [Fortran libraries])
 echo "o----------------------------------"
 echo "| Results for libsc are"
 echo "o----------------------------------"
-echo "| CC:          $CC"
-echo "| C_VERSION:   $C_VERSION"
-echo "| CFLAGS:      $CFLAGS"
-echo "| CPP:         $CPP"
-echo "| CPPFLAGS:    $CPPFLAGS"
 echo "| F77:         $F77"
 echo "| FFLAGS:      $FFLAGS"
+echo "| CPP:         $CPP"
+echo "| CPPFLAGS:    $CPPFLAGS"
+echo "| CC:          $CC"
+dnl echo "| C_VERSION:   $C_VERSION"
+echo "| CFLAGS:      $CFLAGS"
+echo "| CXX:         $CXX"
+echo "| CXXFLAGS:    $CXXFLAGS"
 echo "| LDFLAGS:     $LDFLAGS"
-echo "| BLAS_LIBS:   $BLAS_LIBS"
-echo "| LAPACK_LIBS: $LAPACK_LIBS"
 echo "| LIBS:        $LIBS"
 echo "| FLIBS:       $FLIBS"
+echo "| BLAS_LIBS:   $BLAS_LIBS"
+echo "| LAPACK_LIBS: $LAPACK_LIBS"
 echo "o----------------------------------"
 
 # Create output files.
