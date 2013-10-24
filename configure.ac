@@ -37,7 +37,6 @@ See sc.h for possible log priorities in --enable-logging=PRIO])
 SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
-SC_ARG_WITH_BUILTIN_ALL
 
 # Checks for MPI C compiler and other programs (no F77 at this point!).
 echo "o---------------------------------------"
@@ -170,7 +169,7 @@ echo "| Checking third-party software"
 echo "o---------------------------------------"
 
 SC_CUDA([SC])
-SC_BUILTIN_ALL([true])
+SC_BUILTIN_ALL
 
 # Checks for typedefs, structures, and compiler characteristics.
 echo "o---------------------------------------"

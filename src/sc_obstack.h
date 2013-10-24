@@ -27,7 +27,7 @@
 
 #ifdef SC_PROVIDE_OBSTACK
 #ifdef _OBSTACK_H
-#error "obstack.h is included.  Include sc.h first or use --without-obstack".
+#error "obstack.h is included.  Please #include sc.h first."
 #endif
 #include "sc_builtin/obstack.h"
 #else

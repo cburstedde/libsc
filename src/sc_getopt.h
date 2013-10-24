@@ -27,7 +27,7 @@
 
 #ifdef SC_PROVIDE_GETOPT
 #ifdef _GETOPT_H
-#error "getopt.h is included.  Include sc.h first or use --without-getopt".
+#error "getopt.h is included.  Please #include sc.h first."
 #endif
 #include "sc_builtin/getopt.h"
 #else
