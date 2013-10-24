@@ -1,21 +1,24 @@
 dnl
-dnl SC_MPI_CONFIG(PREFIX[, true])
+dnl SC_MPI_CONFIG(PREFIX, , )
 dnl
-dnl If the second argument is given, also includes configuration for C++.
+dnl If the second argument is nonempty, also includes configuration for F77.
+dnl If the third argument is nonempty, also includes configuration for CXX.
 dnl Checks the configure options
 dnl --enable-mpi    If enabled, set AC_DEFINE and AC_CONDITIONAL.
 dnl                 If enabled and CC is not set, do export CC=mpicc.
 dnl                 This may be "too late" if AC_PROG_CC was called earlier.
 dnl                 In that case you need to set CC=mpicc (or other compiler)
-dnl                 on the configure command line. Same for F77, CXX.
-dnl --enable-mpiio  Enables AC_DEFINE and test for MPI I/O.
-dnl --with-mpitest=...  Specify alternate test driver (default mpirun -np 2).
+dnl                 on the configure command line.
+dnl                 Likewise for F77/CXX if enabled in SC_MPI_CONFIG.
+dnl --enable-mpiio  Enables AC_DEFINE and AM_CONDITIONAL for MPI I/O.
 dnl
 dnl SC_MPI_ENGAGE(PREFIX)
 dnl
 dnl Relies on SC_MPI_CONFIG to be called before.
-dnl Calls AC_PROG_CC and AC_PROG_CXX if C++ configuration is enabled.
-dnl Does compile tests for MPI and MPI I/O if this is enabled.
+dnl Calls AC_PROG_CC and other macros related to the C compiler
+dnl Calls AC_PROG_F77 and others if F77 is enabled in SC_MPI_CONFIG.
+dnl Calls AC_PROG_CXX and others if CXX is enabled in SC_MPI_CONFIG.
+dnl Does compile/link tests for MPI, and MPI I/O if it is enabled.
 dnl
 dnl These macros are separate because AC_REQUIRE(AC_PROG_CC) will expand
 dnl the AC_PROG_CC macro before entering SC_MPI_ENGAGE.
@@ -24,10 +27,10 @@ AC_DEFUN([SC_MPI_CONFIG],
 [
 HAVE_PKG_MPI=no
 HAVE_PKG_MPIIO=no
-m4_ifval([$2], [m4_define([SC_CHECK_MPI_CXX], [yes])])
+m4_ifval([$2], [m4_define([SC_CHECK_MPI_F77], [yes])])
+m4_ifval([$3], [m4_define([SC_CHECK_MPI_CXX], [yes])])
 
-dnl The shell variable SC_ENABLE_MPI is set
-dnl unless it is provided by the environment.
+dnl The shell variable SC_ENABLE_MPI is set if --enable-mpi is given.
 dnl Therefore all further checking uses the HAVE_PKG_MPI shell variable
 dnl and neither AC_DEFINE nor AM_CONDITIONAL are invoked at this point.
 AC_ARG_ENABLE([mpi],
@@ -78,20 +81,22 @@ AM_CONDITIONAL([$1_MPIRUN], [test -n "$$1_MPIRUN"])
 
 dnl Set compilers if not already set and set define and conditionals
 if test "$HAVE_PKG_MPI" = yes ; then
+m4_ifset([SC_CHECK_MPI_F77], [
+  if test -z "$F77" ; then
+    export F77=mpif77
+  fi
+  AC_MSG_NOTICE([                            F77 set to $F77])
+])
   if test -z "$CC" ; then
     export CC=mpicc
   fi
-AC_MSG_NOTICE([                             CC set to $CC])
+  AC_MSG_NOTICE([                             CC set to $CC])
 m4_ifset([SC_CHECK_MPI_CXX], [
   if test -z "$CXX" ; then
     export CXX=mpicxx
   fi
-AC_MSG_NOTICE([                            CXX set to $CXX])
+  AC_MSG_NOTICE([                            CXX set to $CXX])
 ])
-  if test -z "$F77" ; then
-    export F77=mpif77
-  fi
-AC_MSG_NOTICE([                            F77 set to $F77])
   AC_DEFINE([MPI], 1, [Define to 1 if we are using MPI])
   if test "$HAVE_PKG_MPIIO" = yes ; then
     AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])
@@ -208,8 +213,19 @@ AC_SUBST([MPI_INCLUDE_PATH])
 AC_DEFUN([SC_MPI_ENGAGE],
 [
 dnl determine compilers
+m4_ifset([SC_CHECK_MPI_F77], [
+AC_REQUIRE([AC_PROG_F77])
+AC_PROG_F77_C_O
+AC_F77_LIBRARY_LDFLAGS
+AC_F77_WRAPPERS
+])
 AC_REQUIRE([AC_PROG_CC])
-m4_ifset([SC_CHECK_MPI_CXX], [AC_REQUIRE([AC_PROG_CXX])])
+AC_PROG_CC_C_O
+AM_PROG_CC_C_O
+m4_ifset([SC_CHECK_MPI_CXX], [
+AC_REQUIRE([AC_PROG_CXX])
+AC_PROG_CXX_C_O
+])
 
 dnl compile and link tests must be done after the AC_PROC_CC lines
 if test "$HAVE_PKG_MPI" = yes ; then

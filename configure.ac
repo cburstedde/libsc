@@ -43,11 +43,11 @@ echo "o---------------------------------------"
 echo "| Checking MPI and other programs"
 echo "o---------------------------------------"
 
-SC_MPI_CONFIG([SC])
+dnl A nonempty second/third argument causes to check F77/CXX, respectively.
+SC_MPI_CONFIG([SC], [], [])
 SC_MPI_ENGAGE([SC])
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
-AM_PROG_CC_C_O
 SC_PROG_LINT
 SC_C_VERSION
 LT_INIT
