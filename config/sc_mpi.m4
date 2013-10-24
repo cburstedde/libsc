@@ -15,13 +15,12 @@ dnl
 dnl SC_MPI_ENGAGE(PREFIX)
 dnl
 dnl Relies on SC_MPI_CONFIG to be called before.
-dnl Calls AC_PROG_CC and other macros related to the C compiler
+dnl Calls AC_PROG_CC and other macros related to the C compiler.
 dnl Calls AC_PROG_F77 and others if F77 is enabled in SC_MPI_CONFIG.
 dnl Calls AC_PROG_CXX and others if CXX is enabled in SC_MPI_CONFIG.
-dnl Does compile/link tests for MPI, and MPI I/O if it is enabled.
+dnl Performs compile/link tests for MPI, and MPI I/O if it is enabled.
 dnl
-dnl These macros are separate because AC_REQUIRE(AC_PROG_CC) will expand
-dnl the AC_PROG_CC macro before entering SC_MPI_ENGAGE.
+dnl These macros are separate because of the AC_REQUIRE logic inside autoconf.
 
 AC_DEFUN([SC_MPI_CONFIG],
 [
@@ -101,6 +100,15 @@ m4_ifset([SC_CHECK_MPI_CXX], [
   if test "$HAVE_PKG_MPIIO" = yes ; then
     AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])
   fi
+else
+m4_ifset([SC_CHECK_MPI_F77], [
+  if test -z "$F77" ; then
+    AC_CHECK_PROGS([$1_F77_COMPILER], [gfortran g77 f77 ifort])
+    if test -n "$$1_F77_COMPILER" ; then
+      F77="$$1_F77_COMPILER"
+    fi
+  fi
+], [:])
 fi
 AM_CONDITIONAL([$1_MPI], [test "$HAVE_PKG_MPI" = yes])
 AM_CONDITIONAL([$1_MPIIO], [test "$HAVE_PKG_MPIIO" = yes])
@@ -216,8 +224,6 @@ dnl determine compilers
 m4_ifset([SC_CHECK_MPI_F77], [
 AC_REQUIRE([AC_PROG_F77])
 AC_PROG_F77_C_O
-AC_F77_LIBRARY_LDFLAGS
-AC_F77_WRAPPERS
 ])
 AC_REQUIRE([AC_PROG_CC])
 AC_PROG_CC_C_O

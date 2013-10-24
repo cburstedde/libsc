@@ -43,8 +43,8 @@ echo "o---------------------------------------"
 echo "| Checking MPI and other programs"
 echo "o---------------------------------------"
 
-dnl A nonempty second/third argument causes to check F77/CXX, respectively.
-SC_MPI_CONFIG([SC], [], [])
+dnl A nonempty second/third argument causes to enable F77/CXX, respectively.
+SC_MPI_CONFIG([SC], [yes], [])
 SC_MPI_ENGAGE([SC])
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
@@ -82,6 +82,12 @@ echo "o---------------------------------------"
 echo "| Checking BLAS, LAPACK and F77 support"
 echo "o---------------------------------------"
 
+m4_ifset([SC_CHECK_MPI_F77], [
+AC_F77_LIBRARY_LDFLAGS
+AC_F77_WRAPPERS
+]) 
+
+m4_ifset([SC_BLA_BOGUS], [
 dnl Try a default name mangling scheme without using F77.
 dgemm=dgemm_;dgecon=dgecon_
 extraf77=no
@@ -162,6 +168,7 @@ if test "$sc_lapack_ok" = disable ; then
         AC_MSG_NOTICE([Not using LAPACK])
 fi
 AM_CONDITIONAL([SC_LAPACK], [test "$sc_lapack_ok" = yes])
+])
 
 # Check for builtin third-party software.
 echo "o---------------------------------------"
