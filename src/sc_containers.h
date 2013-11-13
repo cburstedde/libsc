@@ -179,7 +179,7 @@ void                sc_array_init_data (sc_array_t * view, void *base,
 
 /** Sets the array count to zero and frees all elements.
  * This function turns a view into a newly initialized array.
- * \param [in,out]  array       Array structure to be resetted.
+ * \param [in,out]  array       Array structure to be reset.
  * \note Calling sc_array_init, then any array operations,
  *       then sc_array_reset is memory neutral.
  */
