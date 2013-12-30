@@ -148,6 +148,19 @@ sc_array_reset (sc_array_t * array)
 }
 
 void
+sc_array_truncate (sc_array_t * array)
+{
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+
+  array->elem_count = 0;
+
+#if SC_DEBUG
+  SC_ASSERT (array->byte_alloc >= 0);
+  memset (array->array, -1, array->byte_alloc);
+#endif
+}
+
+void
 sc_array_resize (sc_array_t * array, size_t new_count)
 {
   size_t              newoffs, roundup, newsize;

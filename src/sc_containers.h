@@ -192,7 +192,7 @@ void                sc_array_reset (sc_array_t * array);
  * buffer, where the "high water mark" of the buffer is preserved, so that
  * O(log (max n)) reallocs occur over the life of the buffer.
  */
-static inline void  sc_array_truncate (sc_array_t * array);
+void                sc_array_truncate (sc_array_t * array);
 
 /** Sets the element count to new_count.
  * If this a view, new_count cannot be greater than the elem_count of
@@ -433,19 +433,6 @@ sc_array_pop (sc_array_t * array)
   SC_ASSERT (array->elem_count > 0);
 
   return (void *) (array->array + (array->elem_size * --array->elem_count));
-}
-
-static inline void
-sc_array_truncate (sc_array_t * array)
-{
-  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
-
-  array->elem_count = 0;
-
-#if SC_DEBUG
-  SC_ASSERT (array->byte_alloc >= 0);
-  memset (array->array, -1, array->byte_alloc);
-#endif
 }
 
 /** Enlarge an array by a number of elements.  Grows the array if necessary.
