@@ -313,6 +313,7 @@ void                sc_array_permute (sc_array_t * array,
 unsigned            sc_array_checksum (sc_array_t * array);
 
 /** Adds an element to a priority queue.
+ * PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
  * This function is not allowed for views.
  * The priority queue is implemented as a heap in ascending order.
  * A heap is a binary tree where the children are not less than their parent.
@@ -330,6 +331,7 @@ size_t              sc_array_pqueue_add (sc_array_t * array,
                                                         const void *));
 
 /** Pops the smallest element from a priority queue.
+ * PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
  * This function is not allowed for views.
  * This function assumes that the array forms a valid heap in ascending order.
  * \param [out] result  Pointer to unused allocated memory of elem_size.

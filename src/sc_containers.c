@@ -543,6 +543,9 @@ sc_array_pqueue_add (sc_array_t * array, void *temp,
   SC_ASSERT (SC_ARRAY_IS_OWNER (array));
   SC_ASSERT (array->elem_count > 0);
 
+  /* PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED. */
+  SC_ABORT_NOT_REACHED ();
+
   swaps = 0;
   child = array->elem_count - 1;
   c = array->array + (size * child);
@@ -584,6 +587,9 @@ sc_array_pqueue_pop (sc_array_t * array, void *result,
   /* array must not be empty or a view */
   SC_ASSERT (SC_ARRAY_IS_OWNER (array));
   SC_ASSERT (array->elem_count > 0);
+
+  /* PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED. */
+  SC_ABORT_NOT_REACHED ();
 
   swaps = 0;
   new_count = array->elem_count - 1;
