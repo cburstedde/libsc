@@ -186,6 +186,7 @@ void                sc_array_init_data (sc_array_t * view, void *base,
 void                sc_array_reset (sc_array_t * array);
 
 /** Sets the array count to zero, but does not free elements.
+ * Not allowed for views.
  * \param [in,out]  array       Array structure to be truncated.
  * \note This is intended to allow an sc_array to be used as a reusable
  * buffer, where the "high water mark" of the buffer is preserved, so that
@@ -437,11 +438,13 @@ sc_array_pop (sc_array_t * array)
 static inline void
 sc_array_truncate (sc_array_t * array)
 {
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+
   array->elem_count = 0;
+
 #if SC_DEBUG
-  if (SC_ARRAY_IS_OWNER (array) && array->byte_alloc) {
-    memset (array->array, -1, array->byte_alloc);
-  }
+  SC_ASSERT (array->byte_alloc >= 0);
+  memset (array->array, -1, array->byte_alloc);
 #endif
 }
 
