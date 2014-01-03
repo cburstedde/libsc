@@ -57,7 +57,7 @@ include iniparser/Makefile.am
 include libb64/Makefile.am
 include test/Makefile.am
 include example/bspline/Makefile.am
-include example/cuda/Makefile.am
+## include example/cuda/Makefile.am
 include example/dmatrix/Makefile.am
 include example/function/Makefile.am
 include example/logging/Makefile.am
@@ -101,8 +101,8 @@ dist-hook:
           echo "     cd @top_srcdir@ && ./bootstrap" ; \
           echo "before make dist") 1>&2 ; exit 1)
 
-# CUDA support
-if SC_WITH_CUDA
-.cu.o:
-	$(SC_NVCC) -o $@ -c $< @NVCCFLAGS@
-endif
+## # CUDA support
+## if SC_WITH_CUDA
+## .cu.o:
+## 	$(SC_NVCC) -o $@ -c $< @NVCCFLAGS@
+## endif

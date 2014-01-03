@@ -170,7 +170,7 @@ echo "o---------------------------------------"
 echo "| Checking third-party software"
 echo "o---------------------------------------"
 
-SC_CUDA([SC])
+dnl SC_CUDA([SC])
 SC_BUILTIN_ALL
 
 # Checks for typedefs, structures, and compiler characteristics.
