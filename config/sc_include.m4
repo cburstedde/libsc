@@ -241,4 +241,7 @@ if test "$sc_lapack_ok" = disable ; then
         AC_MSG_NOTICE([Not using LAPACK])
 fi
 AM_CONDITIONAL([$1_LAPACK], [test "$sc_lapack_ok" = yes])
+
+# Append the necessary blas/lapack and fortran libraries to LIBS
+LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $LAPACK_FLIBS $BLAS_FLIBS"
 ])

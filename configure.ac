@@ -108,10 +108,10 @@ AC_DEFINE_UNQUOTED(CPPFLAGS,    ["${CPPFLAGS}"],    [C preprocessor flags])
 AC_DEFINE_UNQUOTED(F77,         ["${F77}"],         [F77 compiler])
 AC_DEFINE_UNQUOTED(FFLAGS,      ["${FFLAGS}"],      [F77 compiler flags])
 AC_DEFINE_UNQUOTED(LDFLAGS,     ["${LDFLAGS}"],     [Linker flags])
-AC_DEFINE_UNQUOTED(BLAS_LIBS,   ["${BLAS_LIBS}"],   [BLAS libraries])
-AC_DEFINE_UNQUOTED(LAPACK_LIBS, ["${LAPACK_LIBS}"], [LAPACK libraries])
 AC_DEFINE_UNQUOTED(LIBS,        ["${LIBS}"],        [Libraries])
-AC_DEFINE_UNQUOTED(FLIBS,       ["${FLIBS}"],       [Fortran libraries])
+dnl AC_DEFINE_UNQUOTED(BLAS_LIBS,   ["${BLAS_LIBS}"],   [BLAS libraries])
+dnl AC_DEFINE_UNQUOTED(LAPACK_LIBS, ["${LAPACK_LIBS}"], [LAPACK libraries])
+dnl AC_DEFINE_UNQUOTED(FLIBS,       ["${FLIBS}"],       [Fortran libraries])
 
 echo "o----------------------------------"
 echo "| Results for libsc are"
@@ -127,9 +127,9 @@ echo "| CXX:         $CXX"
 echo "| CXXFLAGS:    $CXXFLAGS"
 echo "| LDFLAGS:     $LDFLAGS"
 echo "| LIBS:        $LIBS"
-echo "| FLIBS:       $FLIBS"
-echo "| BLAS_LIBS:   $BLAS_LIBS"
-echo "| LAPACK_LIBS: $LAPACK_LIBS"
+dnl echo "| FLIBS:       $FLIBS"
+dnl echo "| BLAS_LIBS:   $BLAS_LIBS"
+dnl echo "| LAPACK_LIBS: $LAPACK_LIBS"
 echo "o----------------------------------"
 
 # Create output files.

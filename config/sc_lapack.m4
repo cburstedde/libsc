@@ -160,7 +160,7 @@ for lapack in lapack lapack_rs6k; do
         fi
 done
 
-AC_SUBST(LAPACK_LIBS)
+dnl AC_SUBST(LAPACK_LIBS)
 
 fi # If the user specified library wasn't found, we skipped the remaining
    # checks.

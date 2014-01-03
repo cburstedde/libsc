@@ -65,14 +65,6 @@ include example/options/Makefile.am
 include example/vehicles/Makefile.am
 include example/warp/Makefile.am
 
-## # TODO fix this
-## if SC_BLAS
-## if SC_LAPACK
-## LDADD += @LAPACK_LIBS@
-## endif
-## LDADD += @BLAS_LIBS@ @FLIBS@
-## endif
-
 # lint static syntax checker
 ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
                  $(MPI_INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) \

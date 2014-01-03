@@ -233,7 +233,7 @@ if test $sc_blas_ok = no; then
 	AC_CHECK_LIB(blas, $sc_blas_func, [sc_blas_ok=yes; BLAS_LIBS="-lblas"])
 fi
 
-AC_SUBST(BLAS_LIBS)
+dnl AC_SUBST(BLAS_LIBS)
 
 fi # If the user specified library wasn't found, we skipped the remaining
    # checks.
