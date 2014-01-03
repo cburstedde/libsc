@@ -65,10 +65,10 @@ $1_MPI_TEST_FLAGS=
 if test "$HAVE_PKG_MPI" = yes ; then
 AC_CHECK_PROGS([$1_MPIRUN], [mpiexec mpirun])
 if test x$$1_MPIRUN = xmpiexec ; then
-  $1_MPIRUN="mpiexec"
+  # $1_MPIRUN="mpiexec"
   $1_MPI_TEST_FLAGS="-n 2"
 elif test x$$1_MPIRUN = xmpirun ; then
-  $1_MPIRUN="mpirun"
+  # $1_MPIRUN="mpirun"
   $1_MPI_TEST_FLAGS="-np 2"
 else
   $1_MPIRUN=
@@ -113,6 +113,31 @@ fi
 AM_CONDITIONAL([$1_MPI], [test "$HAVE_PKG_MPI" = yes])
 AM_CONDITIONAL([$1_MPIIO], [test "$HAVE_PKG_MPIIO" = yes])
 ])
+
+dnl SC_MPI_F77_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI F77 test program
+dnl
+dnl DEACTIVATED since it triggers a bug in autoconf:
+dnl AC_LANG_PROGRAM(Fortran 77): ignoring PROLOGUE: [
+dnl
+dnl AC_DEFUN([SC_MPI_F77_COMPILE_AND_LINK],
+dnl [
+dnl AC_MSG_CHECKING([compile/link for MPI F77 program])
+dnl AC_LINK_IFELSE([AC_LANG_PROGRAM(
+dnl [[
+dnl       include "mpif.h"
+dnl ]], [[
+dnl       call MPI_INIT (ierror)
+dnl       call MPI_COMM_SIZE (MPI_COMM_WORLD, isize, ierror)
+dnl       call MPI_COMM_RANK (MPI_COMM_WORLD, irank, ierror)
+dnl       print*, isize, irank, ': Hello world'
+dnl       call MPI_FINALIZE (ierror)
+dnl ]])],
+dnl [AC_MSG_RESULT([successful])
+dnl  $1],
+dnl [AC_MSG_RESULT([failed])
+dnl  $2])
+dnl ])
 
 dnl SC_MPI_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
 dnl Compile and link an MPI C test program
@@ -237,6 +262,11 @@ AC_PROG_CXX_C_O
 
 dnl compile and link tests must be done after the AC_PROC_CC lines
 if test "$HAVE_PKG_MPI" = yes ; then
+dnl  m4_ifset([SC_CHECK_MPI_F77], [
+dnl    AC_LANG_PUSH([Fortran 77])
+dnl    SC_MPI_F77_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI F77 test failed])])
+dnl    AC_LANG_POP([Fortran 77])
+dnl  ])
   SC_MPI_C_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI C test failed])])
   m4_ifset([SC_CHECK_MPI_CXX], [
     AC_LANG_PUSH([C++])
