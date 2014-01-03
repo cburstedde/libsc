@@ -16,7 +16,6 @@ AM_INIT_AUTOMAKE([parallel-tests subdir-objects])
 AM_SILENT_RULES
 SC_VERSION([SC])
 
-# Process command line options.
 echo "o---------------------------------------"
 echo "| Checking options"
 echo "o---------------------------------------"
@@ -38,9 +37,8 @@ SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 
-# Checks for MPI C compiler and other programs (no F77 at this point!).
 echo "o---------------------------------------"
-echo "| Checking MPI and other programs"
+echo "| Checking MPI and related programs"
 echo "o---------------------------------------"
 
 dnl A nonempty second/third argument causes to enable F77/CXX, respectively.
@@ -52,7 +50,6 @@ SC_PROG_LINT
 dnl SC_C_VERSION
 LT_INIT
 
-# Checks for libraries.
 echo "o---------------------------------------"
 echo "| Checking libraries"
 echo "o---------------------------------------"
@@ -62,7 +59,6 @@ SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [SC])
 SC_CHECK_LIB([lua52 lua5.2 lua51 lua5.1 lua lua5], [lua_createtable],
 	     [LUA], [SC])
 
-# Checks for header files.
 echo "o---------------------------------------"
 echo "| Checking headers"
 echo "o---------------------------------------"
@@ -70,21 +66,18 @@ echo "o---------------------------------------"
 AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h sys/types.h time.h])
 AC_CHECK_HEADERS([lua.h lua5.1/lua.h lua5.2/lua.h])
 
-# Checks for functions.
 echo "o---------------------------------------"
 echo "| Checking functions"
 echo "o---------------------------------------"
 
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
 
-# Checks for BLAS (and F77 environment only if necessary).
 echo "o---------------------------------------"
 echo "| Checking BLAS, LAPACK and F77 support"
 echo "o---------------------------------------"
 
 SC_CHECK_BLAS_LAPACK([SC])
 
-# Check for builtin third-party software.
 echo "o---------------------------------------"
 echo "| Checking third-party software"
 echo "o---------------------------------------"
@@ -92,7 +85,6 @@ echo "o---------------------------------------"
 dnl SC_CUDA([SC])
 SC_BUILTIN_ALL
 
-# Checks for typedefs, structures, and compiler characteristics.
 echo "o---------------------------------------"
 echo "| Checking keywords and types"
 echo "o---------------------------------------"
