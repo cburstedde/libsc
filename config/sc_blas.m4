@@ -76,6 +76,27 @@ dnl Replaced obsolete AC_TRY_LINK_FUNC macro.
 dnl Disabled the PhiPack test since it requires BLAS_LIBS anyway.
 dnl Fixed buggy generic Mac OS X library test.
 
+dnl Subroutine to link a program using blas
+dnl SC_BLAS_LINK (<added to CHECKING message>)
+AC_DEFUN([SC_BLAS_LINK], [
+        AC_MSG_CHECKING([for BLAS by linking a C program$1])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(dnl
+[[
+#ifdef __cplusplus
+extern "C"
+void $sc_blas_func (char *, char *, int *, int *, int *, double *, double *,
+                    int *, double *, int *, double *, double *, int *);
+#endif
+]], [[
+int     i = 1;
+double  alpha = 1., beta = 1.;
+double  A = 1., B = 1., C = 1.;
+$sc_blas_func ("N", "N", &i, &i, &i, &alpha, &A, &i, &B, &i, &beta, &C, &i);
+]])],
+[AC_MSG_RESULT([successful])],
+[AC_MSG_RESULT([failed]); sc_blas_ok=no])
+])
+
 dnl The first argument of this macro should be the package prefix.
 dnl The second argument of this macro should be a mangled DGEMM function.
 AC_DEFUN([SC_BLAS], [
@@ -218,28 +239,26 @@ fi # If the user specified library wasn't found, we skipped the remaining
    # checks.
 
 LIBS="$sc_blas_save_LIBS"
+BLAS_FLIBS=
 
-# Test link and run a BLAS program
-if test "$sc_blas_ok" = yes ; then
+# Test link a BLAS program
+if test x$sc_blas_ok = xyes ; then
+    dnl Link without FLIBS first
+    sc_blas_save_run_LIBS="$LIBS"
+    LIBS="$BLAS_LIBS $LIBS"
+    SC_BLAS_LINK([ without FLIBS])
+    LIBS="$sc_blas_save_run_LIBS"
+
+    if test x$sc_blas_ok = xno ; then
+        dnl Link with FLIBS it didn't work without
         sc_blas_save_run_LIBS="$LIBS"
         LIBS="$BLAS_LIBS $LIBS $FLIBS"
-        AC_MSG_CHECKING([for BLAS by linking a C program])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(dnl
-[[#ifdef __cplusplus
-extern "C"
-void $sc_blas_func (char *, char *, int *, int *, int *, double *, double *,
-                    int *, double *, int *, double *, double *, int *);
-#endif
-]],[[
-int     i = 1;
-double  alpha = 1., beta = 1.;
-double  A = 1., B = 1., C = 1.;
-$sc_blas_func ("N", "N", &i, &i, &i, &alpha, &A, &i, &B, &i, &beta, &C, &i);
-]])],
-[AC_MSG_RESULT([successful])],
-[AC_MSG_RESULT([failed]); sc_blas_ok=no])
+        SC_BLAS_LINK([ with FLIBS])
         LIBS="$sc_blas_save_run_LIBS"
+        BLAS_FLIBS="$FLIBS"
+    fi
 fi
+dnl Now BLAS_FLIBS may be set or not
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test "$sc_blas_ok" = yes ; then
