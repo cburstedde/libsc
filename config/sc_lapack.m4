@@ -110,7 +110,7 @@ if test "x$LAPACK_LIBS" != x; then
                        [sc_lapack_ok=yes], [user_spec_lapack_failed=yes])
         AC_MSG_RESULT($sc_lapack_ok)
         LIBS="$save_LIBS"
-        if test sc_lapack_ok = no; then
+        if test x$sc_lapack_ok = xno; then
                 LAPACK_LIBS=""
         fi
 fi
@@ -120,10 +120,10 @@ fi
 # halt the search process rather than risk finding a LAPACK library that
 # the user did not specify.
 
-if test "x$user_spec_lapack_failed" != xyes; then
+if test x$user_spec_lapack_failed != xyes; then
 
 # LAPACK linked to by default?  (is sometimes included in BLAS lib)
-if test $sc_lapack_ok = no; then
+if test x$sc_lapack_ok = xno; then
         save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS $FLIBS"
         AC_CHECK_FUNC($sc_lapack_func, [sc_lapack_ok=yes])
         LIBS="$save_LIBS"
@@ -131,7 +131,7 @@ fi
 
 # Generic LAPACK library?
 for lapack in lapack lapack_rs6k; do
-        if test $sc_lapack_ok = no; then
+        if test x$sc_lapack_ok = xno; then
                 save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS"
                 AC_CHECK_LIB($lapack, $sc_lapack_func,
                     [sc_lapack_ok=yes; LAPACK_LIBS="-l$lapack"], [], [$FLIBS])
@@ -145,7 +145,7 @@ fi # If the user specified library wasn't found, we skipped the remaining
    # checks.
 
 # Test link and run a LAPACK program
-if test "$sc_lapack_ok" = yes ; then
+if test x$sc_lapack_ok = xyes ; then
         sc_lapack_save_run_LIBS="$LIBS"
         LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
         AC_MSG_CHECKING([for LAPACK by linking a C program])
@@ -167,11 +167,11 @@ $sc_lapack_func ("1", &i, &A, &i, &anorm, &rcond, work, iwork, &info);
 fi
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test "$sc_lapack_ok" = yes; then
+if test x$sc_lapack_ok = xyes; then
         ifelse([$3],,
                [AC_DEFINE(HAVE_LAPACK,1,[Define if you have LAPACK library.])],[$3])
         :
-elif test "$sc_lapack_ok" != disable ; then
+elif test x$sc_lapack_ok != xdisable ; then
         sc_lapack_ok=no
         $4
 fi
