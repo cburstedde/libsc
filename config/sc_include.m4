@@ -200,3 +200,45 @@ if test ! -d "$$1_CONFIG" ; then
 fi
 $1_AMFLAGS="-I $$1_CONFIG"
 ])
+
+dnl SC_CHECK_BLAS_LAPACK(PREFIX)
+dnl This function uses SC_BLAS and SC_LAPACK.
+dnl It requires previous configure macros for F77 support.
+dnl
+AC_DEFUN([SC_CHECK_BLAS_LAPACK],
+[
+
+dgemm=;AC_F77_FUNC(dgemm)
+if test "$dgemm" = unknown ; then dgemm=dgemm_ ; fi
+
+AC_MSG_NOTICE([Checking BLAS])
+SC_BLAS([$1], [$dgemm],
+        [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
+        [AC_MSG_ERROR([[\
+Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
+ LIBS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB\
+ (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
+
+# at this point $sc_blas_ok is either of: yes disable
+if test "$sc_blas_ok" = disable ; then
+        AC_MSG_NOTICE([Not using BLAS])
+fi
+AM_CONDITIONAL([$1_BLAS], [test x$sc_blas_ok = xyes])
+
+dgecon=;AC_F77_FUNC(dgecon)
+if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
+
+AC_MSG_NOTICE([Checking LAPACK])
+SC_LAPACK([$1], [$dgecon],
+          [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
+          [AC_MSG_ERROR([[\
+Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
+ LIBS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB\
+ (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
+
+# at this point $sc_lapack_ok is either of: yes disable
+if test "$sc_lapack_ok" = disable ; then
+        AC_MSG_NOTICE([Not using LAPACK])
+fi
+AM_CONDITIONAL([$1_LAPACK], [test "$sc_lapack_ok" = yes])
+])
