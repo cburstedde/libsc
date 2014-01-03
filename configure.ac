@@ -82,88 +82,39 @@ echo "o---------------------------------------"
 echo "| Checking BLAS, LAPACK and F77 support"
 echo "o---------------------------------------"
 
-m4_ifset([SC_BLA_BOGUS], [
-dnl Try a default name mangling scheme without using F77.
-dgemm=dgemm_;dgecon=dgecon_
-extraf77=no
-
-AC_MSG_NOTICE([Checking BLAS without F77 support first])
-SC_BLAS([SC], [$dgemm],
-        [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
-        [echo "Could not find BLAS without F77 support"])
-for CVAR in `set | awk -F= "/^ac_cv_.*${dgemm}/ { print \\$1 }"` ; do
-  # echo "Unset $CVAR"
-  unset $CVAR
-done
-# at this point $sc_blas_ok is either of: yes no disable
-if test "$sc_blas_ok" = no ; then
-
-extraf77=yes
-AC_MSG_NOTICE([Calling F77 autoconf macros])
-dnl For some strange reason these wrappers need to be toplevel.
-dnl Otherwise they are executed even if the test above fails.
-AC_PROG_F77([gfortran g77 fl32 f77 fort77 xlf f90 xlf90])
-AC_F77_WRAPPERS
-AC_F77_LIBRARY_LDFLAGS
 dgemm=;AC_F77_FUNC(dgemm)
 if test "$dgemm" = unknown ; then dgemm=dgemm_ ; fi
-dgecon=;AC_F77_FUNC(dgecon)
-if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
 
-AC_MSG_NOTICE([Checking BLAS with proper F77 support])
+AC_MSG_NOTICE([Checking BLAS])
 SC_BLAS([SC], [$dgemm],
         [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
         [AC_MSG_ERROR([[\
 Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
  LIBS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB\
  (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
-fi
+
 # at this point $sc_blas_ok is either of: yes disable
 if test "$sc_blas_ok" = disable ; then
         AC_MSG_NOTICE([Not using BLAS])
 fi
-AM_CONDITIONAL([SC_BLAS], [test "$sc_blas_ok" = yes])
+AM_CONDITIONAL([SC_BLAS], [test x$sc_blas_ok = xyes])
 
-if test "$extraf77" = no ; then
-AC_MSG_NOTICE([Checking LAPACK without F77 support first])
-SC_LAPACK([SC], [$dgecon],
-          [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
-          [echo "Could not find LAPACK without F77 support"])
-for CVAR in `set | awk -F= "/^ac_cv_.*${dgecon}/ { print \\$1 }"` ; do
-  # echo "Unset $CVAR"
-  unset $CVAR
-done
-# at this point $sc_lapack_ok is either of: yes no disable
-if test "$sc_lapack_ok" = no ; then
-
-extraf77=yes
-AC_MSG_NOTICE([Calling F77 autoconf macros])
-dnl For some strange reason these wrappers need to be toplevel.
-dnl Otherwise they are executed even if the test above fails.
-AC_PROG_F77([gfortran g77 fl32 f77 fort77 xlf f90 xlf90])
-AC_F77_WRAPPERS
-AC_F77_LIBRARY_LDFLAGS
 dgecon=;AC_F77_FUNC(dgecon)
 if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
-fi
-else sc_lapack_ok=no
-fi
-if test "$sc_lapack_ok" = no ; then
 
-AC_MSG_NOTICE([Checking LAPACK with proper F77 support])
+AC_MSG_NOTICE([Checking LAPACK])
 SC_LAPACK([SC], [$dgecon],
           [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
           [AC_MSG_ERROR([[\
 Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
  LIBS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB\
  (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
-fi
+
 # at this point $sc_lapack_ok is either of: yes disable
 if test "$sc_lapack_ok" = disable ; then
         AC_MSG_NOTICE([Not using LAPACK])
 fi
 AM_CONDITIONAL([SC_LAPACK], [test "$sc_lapack_ok" = yes])
-])
 
 # Check for builtin third-party software.
 echo "o---------------------------------------"
