@@ -100,6 +100,8 @@ AC_CHECK_SIZEOF([unsigned long long])
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 
+# Print summary.
+
 AC_DEFINE_UNQUOTED(CC,          ["${CC}"],          [C compiler])
 AC_DEFINE_UNQUOTED(C_VERSION,   ["${C_VERSION}"],   [C compiler version])
 AC_DEFINE_UNQUOTED(CFLAGS,      ["${CFLAGS}"],      [C compiler flags])

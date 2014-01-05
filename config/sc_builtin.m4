@@ -60,14 +60,12 @@ AM_CONDITIONAL([$1_PROVIDE_OBSTACK], [test "$$1_PROVIDE_OBSTACK" = "yes"])
 ])
 AC_DEFUN([SC_BUILTIN_OBSTACK], [SC_BUILTIN_OBSTACK_PREFIX([SC])])
 
-dnl SC_BUILTIN_ALL_PREFIX(PREFIX, CONDITION)
+dnl SC_BUILTIN_ALL_PREFIX(PREFIX)
 dnl Aggregate all checks from this file for convenience.
-dnl If CONDITION is false, the PREFIX_WITH_* variables are set to "no".
-dnl Must not be called conditionally since it uses AM_CONDITIONAL.
 dnl
 AC_DEFUN([SC_BUILTIN_ALL_PREFIX],
 [
 SC_BUILTIN_GETOPT_PREFIX([$1])
 SC_BUILTIN_OBSTACK_PREFIX([$1])
 ])
-AC_DEFUN([SC_BUILTIN_ALL], [SC_BUILTIN_ALL_PREFIX([SC], [$1])])
+AC_DEFUN([SC_BUILTIN_ALL], [SC_BUILTIN_ALL_PREFIX([SC])])

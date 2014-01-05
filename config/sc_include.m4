@@ -202,8 +202,9 @@ $1_AMFLAGS="-I $$1_CONFIG"
 ])
 
 dnl SC_CHECK_BLAS_LAPACK(PREFIX)
-dnl This function uses SC_BLAS and SC_LAPACK.
-dnl It requires previous configure macros for F77 support.
+dnl This function uses the macros SC_BLAS and SC_LAPACK.
+dnl It requires previous configure macros for F77 support,
+dnl which are called by SC_MPI_CONFIG/SC_MPI_ENGAGE.
 dnl
 AC_DEFUN([SC_CHECK_BLAS_LAPACK],
 [
