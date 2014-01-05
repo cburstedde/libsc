@@ -13,4 +13,4 @@ SC_CFLAGS = @CFLAGS@
 # These pull in everything needed by libsc
 SC_CPPFLAGS = @CPPFLAGS@ -I@includedir@
 SC_LDFLAGS = @LDFLAGS@ -L@libdir@
-SC_LIBS = -lsc @LAPACK_LIBS@ @BLAS_LIBS@ @FLIBS@ @LIBS@
+SC_LIBS = -lsc @LIBS@
