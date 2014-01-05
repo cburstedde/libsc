@@ -54,10 +54,7 @@ echo "o---------------------------------------"
 echo "| Checking libraries"
 echo "o---------------------------------------"
 
-SC_REQUIRE_LIB([m], [fabs])
-SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [SC])
-SC_CHECK_LIB([lua52 lua5.2 lua51 lua5.1 lua lua5], [lua_createtable],
-	     [LUA], [SC])
+SC_CHECK_LIBRARIES([SC])
 
 echo "o---------------------------------------"
 echo "| Checking headers"
@@ -71,19 +68,6 @@ echo "| Checking functions"
 echo "o---------------------------------------"
 
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
-
-echo "o---------------------------------------"
-echo "| Checking BLAS, LAPACK and F77 support"
-echo "o---------------------------------------"
-
-SC_CHECK_BLAS_LAPACK([SC])
-
-echo "o---------------------------------------"
-echo "| Checking third-party software"
-echo "o---------------------------------------"
-
-dnl SC_CUDA([SC])
-SC_BUILTIN_ALL
 
 echo "o---------------------------------------"
 echo "| Checking keywords and types"
@@ -139,19 +123,4 @@ AC_CONFIG_FILES([Makefile Makefile.sc.pre])
 AC_OUTPUT
 
 # Final notifications.
-if test x$SC_HAVE_ZLIB = x; then
-AC_MSG_NOTICE([
-----------------------------------------------------------------------
-We did not find a recent zlib containing the function adler32_combine.
-Calling any functions using zlib functionality will abort the program.
-You can fix this by compiling a working zlib and pointing LIBS to it.
-])
-fi
-if test x$SC_HAVE_LUA = x; then
-AC_MSG_NOTICE([
----------------------------------------------------------------------
-We did not find a recent lua containing the function lua_createtable.
-Including sc_lua.h will abort the compilation.
-You can fix this by compiling a working lua and pointing LIBS to it.
-])
-fi
+SC_FINAL_MESSAGES([SC])

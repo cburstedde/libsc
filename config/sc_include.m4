@@ -246,3 +246,42 @@ AM_CONDITIONAL([$1_LAPACK], [test "$sc_lapack_ok" = yes])
 # Append the necessary blas/lapack and fortran libraries to LIBS
 LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $LAPACK_FLIBS $BLAS_FLIBS"
 ])
+
+dnl SC_CHECK_LIBRARIES(PREFIX)
+dnl This macro bundles the checks for all libraries and link tests
+dnl that are required by libsc.  It can be used by other packages that
+dnl link to libsc to add appropriate options to LIBS.
+dnl
+AC_DEFUN([SC_CHECK_LIBRARIES],
+[
+SC_REQUIRE_LIB([m], [fabs])
+SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [$1])
+SC_CHECK_LIB([lua52 lua5.2 lua51 lua5.1 lua lua5], [lua_createtable],
+	     [LUA], [$1])
+SC_CHECK_BLAS_LAPACK([$1])
+SC_BUILTIN_ALL_PREFIX([$1])
+dnl SC_CUDA([$1])
+])
+
+dnl SC_FINAL_MESSAGES(PREFIX)
+dnl This macro prints messages at the end of the configure run.
+dnl
+AC_DEFUN([SC_FINAL_MESSAGES],
+[
+if test x$$1_HAVE_ZLIB = x; then
+AC_MSG_NOTICE([
+----------------------------------------------------------------------
+We did not find a recent zlib containing the function adler32_combine.
+Calling any functions using zlib functionality will abort the program.
+You can fix this by compiling a working zlib and pointing LIBS to it.
+])
+fi
+if test x$$1_HAVE_LUA = x; then
+AC_MSG_NOTICE([
+---------------------------------------------------------------------
+We did not find a recent lua containing the function lua_createtable.
+Including sc_lua.h will abort the compilation.
+You can fix this by compiling a working lua and pointing LIBS to it.
+])
+fi
+])
