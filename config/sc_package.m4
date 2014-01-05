@@ -91,6 +91,7 @@ AC_DEFUN([SC_AS_SUBPACKAGE],
 [
 $1_SC_SUBDIR=
 $1_SC_MK_USE=
+$1_DISTCLEAN="$$1_DISTCLEAN $1_SC_SOURCE.log"
 
 SC_ARG_WITH_PREFIX([sc], [path to installed libsc (optional)], [SC], [$1])
 
@@ -113,9 +114,16 @@ else
 
   # Prepare for a build using sc sources
   if test -z "$$1_SC_SOURCE" ; then
-    $1_SC_SOURCE="sc"
-    $1_SC_SUBDIR="sc"
-    AC_CONFIG_SUBDIRS([sc])
+    if test -f "$1_SC_SOURCE.log" ; then
+      $1_SC_SOURCE=`cat $1_SC_SOURCE.log`
+    else
+      $1_SC_SOURCE="sc"
+      $1_SC_SUBDIR="sc"
+      AC_CONFIG_SUBDIRS([sc])
+    fi
+  else
+    AC_CONFIG_COMMANDS([$1_SC_SOURCE.log],
+                       [echo "$$1_SC_SOURCE" >$1_SC_SOURCE.log])
   fi
   $1_SC_AMFLAGS="-I \$(top_srcdir)/$$1_SC_SOURCE/config"
   $1_SC_MK_INCLUDE="include \${$2_sysconfdir}/Makefile.sc.mk"
