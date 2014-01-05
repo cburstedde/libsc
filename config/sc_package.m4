@@ -20,6 +20,9 @@ dnl Set the shell variable PREFIX_INSTALL to "yes."
 dnl
 AC_DEFUN([SC_CHECK_INSTALL],
 [
+if test x$$1_DIR = xyes ; then
+  AC_MSG_ERROR([Please provide an argument as in --with-PACKAGE=<directory>])
+fi
 if test ! -d "$$1_DIR" ; then
   AC_MSG_ERROR([Directory "$$1_DIR" does not exist])
 fi
