@@ -86,13 +86,15 @@ AC_TYPE_SSIZE_T
 
 # Print summary.
 
-AC_DEFINE_UNQUOTED(CC,          ["${CC}"],          [C compiler])
-AC_DEFINE_UNQUOTED(C_VERSION,   ["${C_VERSION}"],   [C compiler version])
-AC_DEFINE_UNQUOTED(CFLAGS,      ["${CFLAGS}"],      [C compiler flags])
-AC_DEFINE_UNQUOTED(CPP,         ["${CPP}"],         [C preprocessor])
-AC_DEFINE_UNQUOTED(CPPFLAGS,    ["${CPPFLAGS}"],    [C preprocessor flags])
 AC_DEFINE_UNQUOTED(F77,         ["${F77}"],         [F77 compiler])
 AC_DEFINE_UNQUOTED(FFLAGS,      ["${FFLAGS}"],      [F77 compiler flags])
+AC_DEFINE_UNQUOTED(CPP,         ["${CPP}"],         [C preprocessor])
+AC_DEFINE_UNQUOTED(CPPFLAGS,    ["${CPPFLAGS}"],    [C preprocessor flags])
+AC_DEFINE_UNQUOTED(CC,          ["${CC}"],          [C compiler])
+dnl AC_DEFINE_UNQUOTED(C_VERSION,   ["${C_VERSION}"],   [C compiler version])
+AC_DEFINE_UNQUOTED(CFLAGS,      ["${CFLAGS}"],      [C compiler flags])
+AC_DEFINE_UNQUOTED(CXX,         ["${CXX}"],         [CXX compiler])
+AC_DEFINE_UNQUOTED(CXXFLAGS,    ["${CXXFLAGS}"],    [CXX compiler flags])
 AC_DEFINE_UNQUOTED(LDFLAGS,     ["${LDFLAGS}"],     [Linker flags])
 AC_DEFINE_UNQUOTED(LIBS,        ["${LIBS}"],        [Libraries])
 dnl AC_DEFINE_UNQUOTED(BLAS_LIBS,   ["${BLAS_LIBS}"],   [BLAS libraries])
