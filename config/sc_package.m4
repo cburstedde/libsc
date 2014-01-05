@@ -4,18 +4,50 @@ dnl
 dnl This file is part of the SC Library.
 dnl The SC library provides support for parallel scientific applications.
 dnl
-dnl Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
+dnl Copyright (C) 2008,2009,2014 Carsten Burstedde, Lucas C. Wilcox.
 
 dnl Documentation for macro names: brackets indicate optional arguments
 
-dnl SC_PACKAGE_SPECIFY(PREFIX, REQUIRE_INCLUDE, REQUIRE_LDADD,
-dnl                    REQUIRE_CONFIG, REQUIRE_ETC)
+dnl SC_CHECK_INSTALL(PREFIX, REQUIRE_INCLUDE, REQUIRE_LDADD,
+dnl                  REQUIRE_CONFIG, REQUIRE_ETC)
+dnl The REQUIRE_* arguments can be either "true" or "false" (without quotes).
+dnl This function throws an error if the variable PREFIX_DIR does not exist.
+dnl The package must have been make install'd in that directory.
+dnl Optionally require include, lib, config, and etc subdirectories.
+dnl Set the shell variable PREFIX_INSTALL to "yes."
+dnl
+AC_DEFUN([SC_CHECK_INSTALL],
+[
+if test ! -d "$$1_DIR" ; then
+  AC_MSG_ERROR([Directory "$$1_DIR" does not exist])
+fi
+$1_INSTALL="yes"
+$1_INC="$$1_DIR/include"
+$1_LIB="$$1_DIR/lib"
+$1_CFG="$$1_DIR/share/aclocal"
+$1_ETC="$$1_DIR/etc"
+if $2 && test ! -d "$$1_INC" ; then
+  AC_MSG_ERROR([Specified installation path $$1_INC not found])
+fi
+if $3 && test ! -d "$$1_LIB" ; then
+  AC_MSG_ERROR([Specified installation path $$1_LIB not found])
+fi
+if $4 && test ! -d "$$1_CFG" ; then
+  AC_MSG_ERROR([Specified installation path $$1_CFG not found])
+fi
+if $5 && test ! -d "$$1_ETC" ; then
+  AC_MSG_ERROR([Specified installation path $$1_ETC not found])
+fi
+])
+
+dnl SC_CHECK_PACKAGE(PREFIX, REQUIRE_INCLUDE, REQUIRE_LDADD,
+dnl                  REQUIRE_CONFIG, REQUIRE_ETC)
 dnl The REQUIRE_* arguments can be either "true" or "false" (without quotes).
 dnl This function throws an error if the variable PREFIX_DIR does not exist.
 dnl Looks for PREFIX_DIR/src to identify a source distribution.
 dnl If not found, package must have been `make install`ed, in this case
-dnl optionally require include, lib, config and etc directories.
-dnl Set the shell variable PREFIX_INSTALL to "yes" or "no".
+dnl optionally require include, lib, config, and etc directories.
+dnl Set the shell variable PREFIX_INSTALL to "yes" or "no."
 dnl
 AC_DEFUN([SC_CHECK_PACKAGE],
 [
@@ -32,22 +64,6 @@ if test -d "$$1_DIR/src" ; then
     AC_MSG_ERROR([Specified source path $$1_CFG not found])
   fi
 else
-  $1_INSTALL="yes"
-  $1_INC="$$1_DIR/include"
-  $1_LIB="$$1_DIR/lib"
-  $1_CFG="$$1_DIR/share/aclocal"
-  $1_ETC="$$1_DIR/etc"
-  if $2 && test ! -d "$$1_INC" ; then
-    AC_MSG_ERROR([Specified installation path $$1_INC not found])
-  fi
-  if $3 && test ! -d "$$1_LIB" ; then
-    AC_MSG_ERROR([Specified installation path $$1_LIB not found])
-  fi
-  if $4 && test ! -d "$$1_CFG" ; then
-    AC_MSG_ERROR([Specified installation path $$1_CFG not found])
-  fi
-  if $5 && test ! -d "$$1_ETC" ; then
-    AC_MSG_ERROR([Specified installation path $$1_ETC not found])
-  fi
+  SC_CHECK_INSTALL([$1], [$2], [$3], [$4], [$5])
 fi
 ])
