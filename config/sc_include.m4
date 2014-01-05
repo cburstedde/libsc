@@ -35,6 +35,7 @@ if test "$enableval" != "no" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
 AM_CONDITIONAL([$4_ENABLE_$3], [test "$enableval" != "no"])
+$4_ENABLE_$3="$enableval"
 ])
 AC_DEFUN([SC_ARG_ENABLE],
          [SC_ARG_ENABLE_PREFIX([$1], [$2], [$3], [SC], [$4])])
@@ -54,6 +55,7 @@ if test "$enableval" != "no" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
 AM_CONDITIONAL([$4_ENABLE_$3], [test "$enableval" != "no"])
+$4_ENABLE_$3="$enableval"
 ])
 AC_DEFUN([SC_ARG_DISABLE],
          [SC_ARG_DISABLE_PREFIX([$1], [$2], [$3], [SC], [$4])])
@@ -73,6 +75,7 @@ if test "$withval" != "no" ; then
   AC_DEFINE([$3], 1, [$2])
 fi
 AM_CONDITIONAL([$4_WITH_$3], [test "$withval" != "no"])
+$4_WITH_$3="$withval"
 ])
 AC_DEFUN([SC_ARG_WITH],
          [SC_ARG_WITH_PREFIX([$1], [$2], [$3], [SC], [$4])])
@@ -92,6 +95,7 @@ if test "$withval" != "no" ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
 AM_CONDITIONAL([$4_WITH_$3], [test "$withval" != "no"])
+$4_WITH_$3="$withval"
 ])
 AC_DEFUN([SC_ARG_WITHOUT],
          [SC_ARG_WITHOUT_PREFIX([$1], [$2], [$3], [SC], [$4])])
