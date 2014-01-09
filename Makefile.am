@@ -91,7 +91,10 @@ dist-hook:
               @top_srcdir@/.tarball-version`" || \
         ((echo "Stale version;" ; echo "Please run:" ; \
           echo "     cd @top_srcdir@ && ./bootstrap" ; \
-          echo "before make dist") 1>&2 ; exit 1)
+          echo "before make dist") 1>&2 ; rm -r $(distdir) ; exit 1)
+
+clean-local:
+	rm -f ChangeLog
 
 ## # CUDA support
 ## if SC_WITH_CUDA
