@@ -431,6 +431,10 @@ sc_array_is_permutation (sc_array_t * newindices)
   size_t             *newind;
 
   SC_ASSERT (newindices->elem_size == sizeof (size_t));
+  if (!newindices->elem_count) {
+    SC_FREE (counted);
+    return 1;
+  }
   newind = (size_t *) sc_array_index (newindices, 0);
 
   for (zi = 0; zi < count; zi++) {
@@ -469,6 +473,10 @@ sc_array_permute (sc_array_t * array, sc_array_t * newindices, int keepperm)
   SC_ASSERT (newindices->elem_size == sizeof (size_t));
   SC_ASSERT (newindices->elem_count == count);
   SC_ASSERT (sc_array_is_permutation (newindices));
+  if (!count) {
+    SC_FREE (temp);
+    return;
+  }
 
   if (!keepperm) {
     newind = (size_t *) sc_array_index (newindices, 0);
