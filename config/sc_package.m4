@@ -20,13 +20,13 @@ dnl Set the shell variable PREFIX_INSTALL to "yes."
 dnl
 AC_DEFUN([SC_CHECK_INSTALL],
 [
-if test x$$1_DIR = xyes ; then
+if test "x$$1_DIR" = xyes ; then
   AC_MSG_ERROR([Please provide an argument as in --with-PACKAGE=<directory>])
 fi
 if test ! -d "$$1_DIR" ; then
   AC_MSG_ERROR([Directory "$$1_DIR" does not exist])
 fi
-$1_INSTALL="yes"
+$1_INSTALL=yes
 $1_INC="$$1_DIR/include"
 $1_LIB="$$1_DIR/lib"
 $1_CFG="$$1_DIR/share/aclocal"
@@ -60,7 +60,7 @@ if test ! -d "$$1_DIR" ; then
   AC_MSG_ERROR([Directory "$$1_DIR" does not exist])
 fi
 if test -d "$$1_DIR/src" ; then
-  $1_INSTALL="no"
+  $1_INSTALL=no
   $1_INC="$$1_DIR/src"
   $1_LIB="$$1_DIR/src"
   $1_CFG="$$1_DIR/config"
@@ -88,7 +88,7 @@ dnl share/aclocal, which are routinely created by libsc's make install.
 dnl
 dnl SC_AS_SUBPACKAGE(PREFIX, prefix)
 dnl Call from a package that is using libsc as a subpackage.
-dnl Sets PREFIX_DIST_DENY="yes" if sc is make install'd.
+dnl Sets PREFIX_DIST_DENY=yes if sc is make install'd.
 dnl
 AC_DEFUN([SC_AS_SUBPACKAGE],
 [
@@ -98,17 +98,17 @@ $1_DISTCLEAN="$$1_DISTCLEAN $1_SC_SOURCE.log"
 
 SC_ARG_WITH_PREFIX([sc], [path to installed libsc (optional)], [SC], [$1])
 
-if test x$$1_WITH_SC != xno ; then
+if test "x$$1_WITH_SC" != xno ; then
   AC_MSG_NOTICE([Using make installed libsc])
 
   # Verify that we are using a libsc installation
-  $1_DIST_DENY="yes"
+  $1_DIST_DENY=yes
   $1_SC_DIR="$$1_WITH_SC"
   SC_CHECK_INSTALL([$1_SC], [true], [true], [true], [true])
 
   # Set variables for using the subpackage
   $1_SC_AMFLAGS="-I $$1_SC_CFG"
-  $1_SC_MK_USE="yes"
+  $1_SC_MK_USE=yes
   $1_SC_MK_INCLUDE="include $$1_SC_ETC/Makefile.sc.mk"
   $1_SC_CPPFLAGS="\$(SC_CPPFLAGS)"
   $1_SC_LDADD="\$(SC_LDFLAGS) -lsc"
@@ -116,7 +116,7 @@ else
   AC_MSG_NOTICE([Building with sc source])
 
   # Prepare for a build using sc sources
-  if test -z "$$1_SC_SOURCE" ; then
+  if test "x$$1_SC_SOURCE" = x ; then
     if test -f "$1_SC_SOURCE.log" ; then
       $1_SC_SOURCE=`cat $1_SC_SOURCE.log`
     else
@@ -142,7 +142,7 @@ dnl We call make in this subdirectory if not empty
 AC_SUBST([$1_SC_SUBDIR])
 
 dnl We will need these variables to compile and link with libsc
-AM_CONDITIONAL([$1_SC_MK_USE], [test -n "$$1_SC_MK_USE"])
+AM_CONDITIONAL([$1_SC_MK_USE], [test "x$$1_SC_MK_USE" != x])
 AC_SUBST([$1_SC_MK_INCLUDE])
 AC_SUBST([$1_SC_CPPFLAGS])
 AC_SUBST([$1_SC_LDADD])
