@@ -75,75 +75,76 @@ fi
 
 dnl---------------------- HOW SUBPACKAGES WORK ---------------------------
 dnl
-dnl A program PROG relies on libsc.  In a build from source, libsc usually
-dnl resides in PROG's subdirectory sc.  This location can be overridden by
-dnl the environment variable PROG_SC_SOURCE; this situation can arise when
-dnl both PROG and libsc are subpackages to yet another software.  The
-dnl path in PROG_SC_SOURCE must be relative to PROG's toplevel directory.
+dnl A program PROG relies on libsc (or another package called ME, which
+dnl could itself be using libsc).  In a build from source, me usually
+dnl resides in PROG's subdirectory me.  This location can be overridden by
+dnl the environment variable PROG_ME_SOURCE; this situation can arise when
+dnl both PROG and me are subpackages to yet another software.  The
+dnl path in PROG_ME_SOURCE must be relative to PROG's toplevel directory.
 dnl All of this works without specifying a configure command line option.
-dnl However, if libsc is already make install'd in the system and should
-dnl be used from there, use --with-sc=<path to libsc install directory>.
+dnl However, if me is already make install'd in the system and should
+dnl be used from there, use --with-me=<path to me's install directory>.
 dnl In this case, PROG expects subdirectories etc, include, lib, and
-dnl share/aclocal, which are routinely created by libsc's make install.
+dnl share/aclocal, which are routinely created by me's make install.
 dnl
-dnl SC_AS_SUBPACKAGE(PREFIX, prefix)
-dnl Call from a package that is using libsc as a subpackage.
-dnl Sets PREFIX_DIST_DENY=yes if sc is make install'd.
+dnl SC_ME_AS_SUBPACKAGE(PREFIX, prefix, ME, me)
+dnl Call from a package that is using this package ME as a subpackage.
+dnl Sets PREFIX_DIST_DENY=yes if me is make install'd.
 dnl
-AC_DEFUN([SC_AS_SUBPACKAGE],
+AC_DEFUN([SC_ME_AS_SUBPACKAGE],
 [
-$1_SC_SUBDIR=
-$1_SC_MK_USE=
-$1_DISTCLEAN="$$1_DISTCLEAN $1_SC_SOURCE.log"
+$1_$3_SUBDIR=
+$1_$3_MK_USE=
+$1_DISTCLEAN="$$1_DISTCLEAN $1_$3_SOURCE.log"
 
-SC_ARG_WITH_PREFIX([sc], [path to installed libsc (optional)], [SC], [$1])
+SC_ARG_WITH_PREFIX([$4], [path to installed package $4 (optional)], [$3], [$1])
 
-if test "x$$1_WITH_SC" != xno ; then
-  AC_MSG_NOTICE([Using make installed libsc])
+if test "x$$1_WITH_$3" != xno ; then
+  AC_MSG_NOTICE([Using make installed package $4])
 
-  # Verify that we are using a libsc installation
+  # Verify that we are using a me installation
   $1_DIST_DENY=yes
-  $1_SC_DIR="$$1_WITH_SC"
-  SC_CHECK_INSTALL([$1_SC], [true], [true], [true], [true])
+  $1_$3_DIR="$$1_WITH_$3"
+  SC_CHECK_INSTALL([$1_$3], [true], [true], [true], [true])
 
   # Set variables for using the subpackage
-  $1_SC_AMFLAGS="-I $$1_SC_CFG"
-  $1_SC_MK_USE=yes
-  $1_SC_MK_INCLUDE="include $$1_SC_ETC/Makefile.sc.mk"
-  $1_SC_CPPFLAGS="\$(SC_CPPFLAGS)"
-  $1_SC_LDADD="\$(SC_LDFLAGS) -lsc"
+  $1_$3_AMFLAGS="-I $$1_$3_CFG"
+  $1_$3_MK_USE=yes
+  $1_$3_MK_INCLUDE="include $$1_$3_ETC/Makefile.$4.mk"
+  $1_$3_CPPFLAGS="\$($3_CPPFLAGS)"
+  $1_$3_LDADD="\$($3_LDFLAGS) -l$4"
 else
-  AC_MSG_NOTICE([Building with sc source])
+  AC_MSG_NOTICE([Building with source of package $4])
 
-  # Prepare for a build using sc sources
-  if test "x$$1_SC_SOURCE" = x ; then
-    if test -f "$1_SC_SOURCE.log" ; then
-      $1_SC_SOURCE=`cat $1_SC_SOURCE.log`
+  # Prepare for a build using me sources
+  if test "x$$1_$3_SOURCE" = x ; then
+    if test -f "$1_$3_SOURCE.log" ; then
+      $1_$3_SOURCE=`cat $1_$3_SOURCE.log`
     else
-      $1_SC_SOURCE="sc"
-      $1_SC_SUBDIR="sc"
-      AC_CONFIG_SUBDIRS([sc])
+      $1_$3_SOURCE="$4"
+      $1_$3_SUBDIR="$4"
+      AC_CONFIG_SUBDIRS([$4])
     fi
   else
-    AC_CONFIG_COMMANDS([$1_SC_SOURCE.log],
-                       [echo "$$1_SC_SOURCE" >$1_SC_SOURCE.log])
+    AC_CONFIG_COMMANDS([$1_$3_SOURCE.log],
+                       [echo "$$1_$3_SOURCE" >$1_$3_SOURCE.log])
   fi
-  $1_SC_AMFLAGS="-I \$(top_srcdir)/$$1_SC_SOURCE/config"
-  $1_SC_MK_INCLUDE="include \${$2_sysconfdir}/Makefile.sc.mk"
-  $1_SC_CPPFLAGS="-I\$(top_builddir)/$$1_SC_SOURCE/src \
--I\$(top_srcdir)/$$1_SC_SOURCE/src"
-  $1_SC_LDADD="\$(top_builddir)/$$1_SC_SOURCE/src/libsc.la"
+  $1_$3_AMFLAGS="-I \$(top_srcdir)/$$1_$3_SOURCE/config"
+  $1_$3_MK_INCLUDE="include \${$2_sysconfdir}/Makefile.$4.mk"
+  $1_$3_CPPFLAGS="-I\$(top_builddir)/$$1_$3_SOURCE/src \
+-I\$(top_srcdir)/$$1_$3_SOURCE/src"
+  $1_$3_LDADD="\$(top_builddir)/$$1_$3_SOURCE/src/lib$4.la"
 fi
 
-dnl Make sure we find the m4 macros provided by libsc
-AC_SUBST([$1_SC_AMFLAGS])
+dnl Make sure we find the m4 macros provided by me
+AC_SUBST([$1_$3_AMFLAGS])
 
 dnl We call make in this subdirectory if not empty
-AC_SUBST([$1_SC_SUBDIR])
+AC_SUBST([$1_$3_SUBDIR])
 
-dnl We will need these variables to compile and link with libsc
-AM_CONDITIONAL([$1_SC_MK_USE], [test "x$$1_SC_MK_USE" != x])
-AC_SUBST([$1_SC_MK_INCLUDE])
-AC_SUBST([$1_SC_CPPFLAGS])
-AC_SUBST([$1_SC_LDADD])
+dnl We will need these variables to compile and link with me
+AM_CONDITIONAL([$1_$3_MK_USE], [test "x$$1_$3_MK_USE" != x])
+AC_SUBST([$1_$3_MK_INCLUDE])
+AC_SUBST([$1_$3_CPPFLAGS])
+AC_SUBST([$1_$3_LDADD])
 ])
