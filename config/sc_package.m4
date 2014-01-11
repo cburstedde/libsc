@@ -112,7 +112,7 @@ if test "x$$1_WITH_$3" != xno ; then
   $1_$3_MK_USE=yes
   $1_$3_MK_INCLUDE="include $$1_$3_ETC/Makefile.$4.mk"
   $1_$3_CPPFLAGS="\$($3_CPPFLAGS)"
-  $1_$3_LDADD="\$($3_LDFLAGS) -l$4"
+  $1_$3_LDADD="$$1_$3_DIR/lib/lib$4.la"
 else
   AC_MSG_NOTICE([Building with source of package $4])
 
@@ -131,9 +131,8 @@ else
   fi
   $1_$3_AMFLAGS="-I \$(top_srcdir)/$$1_$3_SOURCE/config"
   $1_$3_MK_INCLUDE="include \${$2_sysconfdir}/Makefile.$4.mk"
-  $1_$3_CPPFLAGS="-I\$(top_builddir)/$$1_$3_SOURCE/src \
--I\$(top_srcdir)/$$1_$3_SOURCE/src"
-  $1_$3_LDADD="\$(top_builddir)/$$1_$3_SOURCE/src/lib$4.la"
+  $1_$3_CPPFLAGS="-I$$1_$3_SOURCE/src -I\$(top_srcdir)/$$1_$3_SOURCE/src"
+  $1_$3_LDADD="$$1_$3_SOURCE/src/lib$4.la"
 fi
 
 dnl Make sure we find the m4 macros provided by me
