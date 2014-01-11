@@ -35,9 +35,9 @@ dnl and neither AC_DEFINE nor AM_CONDITIONAL are invoked at this point.
 AC_ARG_ENABLE([mpi],
               [AS_HELP_STRING([--enable-mpi], [enable MPI])],,
               [enableval=no])
-if test "$enableval" = yes ; then
+if test "x$enableval" = xyes ; then
   HAVE_PKG_MPI=yes
-elif test "$enableval" != no ; then
+elif test "x$enableval" != xno ; then
   AC_MSG_ERROR([Please use --enable-mpi without an argument])
 fi
 AC_MSG_CHECKING([whether we are using MPI])
@@ -49,11 +49,11 @@ dnl If enabled, MPI I/O will be verified by a compile/link test below.
 AC_ARG_ENABLE([mpiio],
               [AS_HELP_STRING([--enable-mpiio], [enable MPI I/O])],,
               [enableval=no])
-if test "$enableval" = yes ; then
-  if test "$HAVE_PKG_MPI" = yes ; then
+if test "x$enableval" = xyes ; then
+  if test "x$HAVE_PKG_MPI" = xyes ; then
     HAVE_PKG_MPIIO=yes
   fi
-elif test "$enableval" != no ; then
+elif test "x$enableval" != xno ; then
   AC_MSG_ERROR([Please use --enable-mpiio without an argument])
 fi
 AC_MSG_CHECKING([whether we are using MPI I/O])
@@ -62,13 +62,13 @@ AC_MSG_RESULT([$HAVE_PKG_MPIIO])
 dnl Establish the MPI test environment
 $1_MPIRUN=
 $1_MPI_TEST_FLAGS=
-if test "$HAVE_PKG_MPI" = yes ; then
+if test "x$HAVE_PKG_MPI" = xyes ; then
 AC_CHECK_PROGS([$1_MPIRUN], [mpiexec mpirun])
-if test x$$1_MPIRUN = xmpiexec ; then
-  # $1_MPIRUN="mpiexec"
+if test "x$$1_MPIRUN" = xmpiexec ; then
+  # $1_MPIRUN=mpiexec
   $1_MPI_TEST_FLAGS="-n 2"
-elif test x$$1_MPIRUN = xmpirun ; then
-  # $1_MPIRUN="mpirun"
+elif test "x$$1_MPIRUN" = xmpirun ; then
+  # $1_MPIRUN=mpirun
   $1_MPI_TEST_FLAGS="-np 2"
 else
   $1_MPIRUN=
@@ -76,42 +76,42 @@ fi
 AC_SUBST([$1_MPIRUN])
 AC_SUBST([$1_MPI_TEST_FLAGS])
 fi
-AM_CONDITIONAL([$1_MPIRUN], [test -n "$$1_MPIRUN"])
+AM_CONDITIONAL([$1_MPIRUN], [test "x$$1_MPIRUN" != x])
 
 dnl Set compilers if not already set and set define and conditionals
-if test "$HAVE_PKG_MPI" = yes ; then
+if test "x$HAVE_PKG_MPI" = xyes ; then
 m4_ifset([SC_CHECK_MPI_F77], [
-  if test -z "$F77" ; then
+  if test "x$F77" = x ; then
     export F77=mpif77
   fi
   AC_MSG_NOTICE([                            F77 set to $F77])
 ])
-  if test -z "$CC" ; then
+  if test "x$CC" = x ; then
     export CC=mpicc
   fi
   AC_MSG_NOTICE([                             CC set to $CC])
 m4_ifset([SC_CHECK_MPI_CXX], [
-  if test -z "$CXX" ; then
+  if test "x$CXX" = x ; then
     export CXX=mpicxx
   fi
   AC_MSG_NOTICE([                            CXX set to $CXX])
 ])
   AC_DEFINE([MPI], 1, [Define to 1 if we are using MPI])
-  if test "$HAVE_PKG_MPIIO" = yes ; then
+  if test "x$HAVE_PKG_MPIIO" = xyes ; then
     AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])
   fi
 else
 m4_ifset([SC_CHECK_MPI_F77], [
-  if test -z "$F77" ; then
+  if test "x$F77" = x ; then
     AC_CHECK_PROGS([$1_F77_COMPILER], [gfortran g77 f77 ifort])
-    if test -n "$$1_F77_COMPILER" ; then
+    if test "x$$1_F77_COMPILER" != x ; then
       F77="$$1_F77_COMPILER"
     fi
   fi
 ], [:])
 fi
-AM_CONDITIONAL([$1_MPI], [test "$HAVE_PKG_MPI" = yes])
-AM_CONDITIONAL([$1_MPIIO], [test "$HAVE_PKG_MPIIO" = yes])
+AM_CONDITIONAL([$1_MPI], [test "x$HAVE_PKG_MPI" = xyes])
+AM_CONDITIONAL([$1_MPIIO], [test "x$HAVE_PKG_MPIIO" = xyes])
 ])
 
 dnl SC_MPI_F77_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
@@ -214,10 +214,10 @@ AC_DEFUN([SC_MPI_INCLUDES],
 [
 MPI_INCLUDES=
 MPI_INCLUDE_PATH=
-if test "$HAVE_PKG_MPI" = yes ; then
+if test "x$HAVE_PKG_MPI" = xyes ; then
   AC_MSG_NOTICE([Trying to determine MPI_INCLUDES])
   for SHOW in -showme:compile -showme:incdirs -showme -show ; do
-    if test -z "$MPI_INCLUDES" ; then
+    if test "x$MPI_INCLUDES" = x ; then
       AC_MSG_CHECKING([$SHOW])
       if MPI_CC_RESULT=`$CC $SHOW 2> /dev/null` ; then
         AC_MSG_RESULT([Successful])
@@ -229,11 +229,11 @@ if test "$HAVE_PKG_MPI" = yes ; then
       fi
     fi
   done
-  if test -n "$MPI_INCLUDES" ; then
+  if test "x$MPI_INCLUDES" != x; then
     MPI_INCLUDES=`echo $MPI_INCLUDES | sed -e 's/^ *//' -e 's/  */ /g'`
     AC_MSG_NOTICE([   Found MPI_INCLUDES $MPI_INCLUDES])
   fi
-  if test -n "$MPI_INCLUDES" ; then
+  if test "x$MPI_INCLUDES" != x ; then
     MPI_INCLUDE_PATH=`echo $MPI_INCLUDES | sed -e 's/^-I//'`
     MPI_INCLUDE_PATH=`echo $MPI_INCLUDE_PATH | sed -e 's/-I/:/g'`
     AC_MSG_NOTICE([   Found MPI_INCLUDE_PATH $MPI_INCLUDE_PATH])
@@ -261,7 +261,7 @@ AC_PROG_CXX_C_O
 ])
 
 dnl compile and link tests must be done after the AC_PROC_CC lines
-if test "$HAVE_PKG_MPI" = yes ; then
+if test "x$HAVE_PKG_MPI" = xyes ; then
 dnl  m4_ifset([SC_CHECK_MPI_F77], [
 dnl    AC_LANG_PUSH([Fortran 77])
 dnl    SC_MPI_F77_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI F77 test failed])])
@@ -273,7 +273,7 @@ dnl  ])
     SC_MPI_CXX_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI CXX test failed])])
     AC_LANG_POP([C++])
   ])
-  if test "$HAVE_PKG_MPIIO" = yes ; then
+  if test "x$HAVE_PKG_MPIIO" = xyes ; then
     SC_MPIIO_C_COMPILE_AND_LINK(
       [AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])],
       [AC_MSG_ERROR([MPI I/O specified but not found])])
