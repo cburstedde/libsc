@@ -31,11 +31,11 @@ libsc_original_headers = \
         src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h \
         src/sc_builtin/obstack.h
 
+# this variable is used for headers that are not publicly installed
 LIBSC_CPPFLAGS =
 
 lib_LTLIBRARIES += src/libsc.la
 src_libsc_la_SOURCES = \
-        $(libsc_installed_headers) \
         $(libsc_internal_headers) \
         $(libsc_compiled_sources)
 src_libsc_la_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
