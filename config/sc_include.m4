@@ -31,10 +31,10 @@ AC_DEFUN([SC_ARG_ENABLE_PREFIX],
 AC_ARG_ENABLE([$1],
               [AS_HELP_STRING([--enable-$1$5], [$2])],,
               [enableval=no])
-if test "$enableval" != "no" ; then
+if test "x$enableval" != xno ; then
   AC_DEFINE([$3], 1, [$2])
 fi
-AM_CONDITIONAL([$4_ENABLE_$3], [test "$enableval" != "no"])
+AM_CONDITIONAL([$4_ENABLE_$3], [test "x$enableval" != xno])
 $4_ENABLE_$3="$enableval"
 ])
 AC_DEFUN([SC_ARG_ENABLE],
@@ -51,10 +51,10 @@ AC_DEFUN([SC_ARG_DISABLE_PREFIX],
 AC_ARG_ENABLE([$1],
               [AS_HELP_STRING([--disable-$1$5], [$2])],,
               [enableval=yes])
-if test "$enableval" != "no" ; then
+if test "x$enableval" != xno ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
-AM_CONDITIONAL([$4_ENABLE_$3], [test "$enableval" != "no"])
+AM_CONDITIONAL([$4_ENABLE_$3], [test "x$enableval" != xno])
 $4_ENABLE_$3="$enableval"
 ])
 AC_DEFUN([SC_ARG_DISABLE],
@@ -71,10 +71,10 @@ AC_DEFUN([SC_ARG_WITH_PREFIX],
 AC_ARG_WITH([$1],
             [AS_HELP_STRING([--with-$1$5], [$2])],,
             [withval=no])
-if test "$withval" != "no" ; then
+if test "x$withval" != xno ; then
   AC_DEFINE([$3], 1, [$2])
 fi
-AM_CONDITIONAL([$4_WITH_$3], [test "$withval" != "no"])
+AM_CONDITIONAL([$4_WITH_$3], [test "x$withval" != xno])
 $4_WITH_$3="$withval"
 ])
 AC_DEFUN([SC_ARG_WITH],
@@ -91,10 +91,10 @@ AC_DEFUN([SC_ARG_WITHOUT_PREFIX],
 AC_ARG_WITH([$1],
             [AS_HELP_STRING([--without-$1$5], [$2])],,
             [withval=yes])
-if test "$withval" != "no" ; then
+if test "x$withval" != xno ; then
   AC_DEFINE([$3], 1, [Undefine if: $2])
 fi
-AM_CONDITIONAL([$4_WITH_$3], [test "$withval" != "no"])
+AM_CONDITIONAL([$4_WITH_$3], [test "x$withval" != xno])
 $4_WITH_$3="$withval"
 ])
 AC_DEFUN([SC_ARG_WITHOUT],
@@ -114,9 +114,9 @@ dnl Call AM_CONDITIONAL with PREFIX_HAVE_TOKEN.
 dnl Call AC_DEFINE with HAVE_TOKEN if found.
 AC_DEFUN([SC_CHECK_LIB], [
 AC_SEARCH_LIBS([$2], [$1])
-AM_CONDITIONAL([$4_HAVE_$3], [test x$ac_cv_search_$2 != xno])
+AM_CONDITIONAL([$4_HAVE_$3], [test "x$ac_cv_search_$2" != xno])
 $4_HAVE_$3=
-if test x$ac_cv_search_$2 != xno ; then
+if test "x$ac_cv_search_$2" != xno ; then
 AC_DEFINE([HAVE_$3], [1], [Have we found function $2.])
 $4_HAVE_$3=yes
 fi
@@ -143,11 +143,11 @@ AC_DEFUN([SC_DETERMINE_INSTALL],
 if test ! -d "$$1_DIR" ; then
   AC_MSG_ERROR([Directory "$$1_DIR" does not exist])
 fi
-if test -d "$$1_DIR/include" -o -d "$$1_DIR/lib" -o \
-        -d "$$1_DIR/bin" -o -d "$$1_DIR/share/aclocal" ; then
-  $1_INSTALL="yes"
+if test -d "$$1_DIR/include" || test -d "$$1_DIR/lib" || \
+   test -d "$$1_DIR/bin" || test -d "$$1_DIR/share/aclocal" ; then
+  $1_INSTALL=yes
 else
-  $1_INSTALL="no"
+  $1_INSTALL=no
 fi
 ])
 
@@ -214,7 +214,7 @@ AC_DEFUN([SC_CHECK_BLAS_LAPACK],
 [
 
 dgemm=;AC_F77_FUNC(dgemm)
-if test "$dgemm" = unknown ; then dgemm=dgemm_ ; fi
+if test "x$dgemm" = xunknown ; then dgemm=dgemm_ ; fi
 
 AC_MSG_NOTICE([Checking BLAS])
 SC_BLAS([$1], [$dgemm],
@@ -225,13 +225,13 @@ Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
  (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
 
 # at this point $sc_blas_ok is either of: yes disable
-if test "$sc_blas_ok" = disable ; then
+if test "x$sc_blas_ok" = xdisable ; then
         AC_MSG_NOTICE([Not using BLAS])
 fi
-AM_CONDITIONAL([$1_BLAS], [test x$sc_blas_ok = xyes])
+AM_CONDITIONAL([$1_BLAS], [test "x$sc_blas_ok" = xyes])
 
 dgecon=;AC_F77_FUNC(dgecon)
-if test "$dgecon" = unknown ; then dgecon=dgecon_ ; fi
+if test "x$dgecon" = xunknown ; then dgecon=dgecon_ ; fi
 
 AC_MSG_NOTICE([Checking LAPACK])
 SC_LAPACK([$1], [$dgecon],
@@ -242,10 +242,10 @@ Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
  (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
 
 # at this point $sc_lapack_ok is either of: yes disable
-if test "$sc_lapack_ok" = disable ; then
+if test "x$sc_lapack_ok" = xdisable ; then
         AC_MSG_NOTICE([Not using LAPACK])
 fi
-AM_CONDITIONAL([$1_LAPACK], [test "$sc_lapack_ok" = yes])
+AM_CONDITIONAL([$1_LAPACK], [test "x$sc_lapack_ok" = xyes])
 
 # Append the necessary blas/lapack and fortran libraries to LIBS
 LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $LAPACK_FLIBS $BLAS_FLIBS"
@@ -272,7 +272,7 @@ dnl This macro prints messages at the end of the configure run.
 dnl
 AC_DEFUN([SC_FINAL_MESSAGES],
 [
-if test x$$1_HAVE_ZLIB = x; then
+if test "x$$1_HAVE_ZLIB" = x; then
 AC_MSG_NOTICE([
 - $1 --------------------------------------------------------------
 We did not find a recent zlib containing the function adler32_combine.
@@ -280,7 +280,7 @@ Calling any functions using zlib functionality will abort the program.
 You can fix this by compiling a working zlib and pointing LIBS to it.
 ])
 fi
-if test x$$1_HAVE_LUA = x; then
+if test "x$$1_HAVE_LUA" = x; then
 AC_MSG_NOTICE([
 - $1 -------------------------------------------------------------
 We did not find a recent lua containing the function lua_createtable.
