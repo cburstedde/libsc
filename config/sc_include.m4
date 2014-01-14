@@ -279,17 +279,15 @@ dnl This macro prints messages at the end of the configure run.
 dnl
 AC_DEFUN([SC_FINAL_MESSAGES],
 [
-if test "x$$1_HAVE_ZLIB" = x; then
-AC_MSG_NOTICE([
-- $1 --------------------------------------------------------------
+if test "x$$1_HAVE_ZLIB" = x ; then
+AC_MSG_NOTICE([- $1 -------------------------------------------------
 We did not find a recent zlib containing the function adler32_combine.
 Calling any functions using zlib functionality will abort the program.
 You can fix this by compiling a working zlib and pointing LIBS to it.
 ])
 fi
-if test "x$$1_HAVE_LUA" = x; then
-AC_MSG_NOTICE([
-- $1 -------------------------------------------------------------
+if test "x$$1_HAVE_LUA" = x ; then
+AC_MSG_NOTICE([- $1 -------------------------------------------------
 We did not find a recent lua containing the function lua_createtable.
 Including sc_lua.h will abort the compilation.
 You can fix this by compiling a working lua and pointing LIBS to it.
