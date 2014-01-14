@@ -46,7 +46,7 @@ endif
 
 # handle toplevel directory
 EXTRA_DIST += \
-        bootstrap scindent config/git-version-gen config/git2cl bugs doc
+        bootstrap scindent build-aux/git-version-gen build-aux/git2cl bugs doc
 DISTCLEANFILES += \
         _configs.sed src/sc_config.h
 .PHONY: lint ChangeLog
@@ -82,12 +82,12 @@ endif
 # revision control and ChangeLog
 ChangeLog:
 	(GIT_DIR=@top_srcdir@/.git git log > .ChangeLog.tmp && \
-         cat .ChangeLog.tmp | @top_srcdir@/config/git2cl > ChangeLog) ; \
+         cat .ChangeLog.tmp | @top_srcdir@/build-aux/git2cl > ChangeLog) ; \
         rm -f .ChangeLog.tmp
 
 dist-hook:
 	echo $(VERSION) > $(distdir)/.tarball-version
-	test "x$(VERSION)" = "x`@top_srcdir@/config/git-version-gen\
+	test "x$(VERSION)" = "x`@top_srcdir@/build-aux/git-version-gen\
               @top_srcdir@/.tarball-version`" || \
         ((echo "Stale version;" ; echo "Please run:" ; \
           echo "     cd @top_srcdir@ && ./bootstrap" ; \
