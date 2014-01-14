@@ -8,7 +8,9 @@ test may get confused by strings to compare that start with ! or - .
 This is the reason for using test "x$ABC" = xyes .
 
 test may not recognize -a or -o.  Use separate test calls instead,
-test 1 || { test 2 && test 3 }
+if test 1 || { test 2 && test 3 ; } ; then
+  :
+fi
 
 test may not recognize -z or -n.  Use a string check instead,
 test "x$ABC" = x
