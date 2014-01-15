@@ -150,6 +150,19 @@ sc_array_reset (sc_array_t * array)
 }
 
 void
+sc_array_truncate (sc_array_t * array)
+{
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+
+  array->elem_count = 0;
+
+#if SC_DEBUG
+  SC_ASSERT (array->byte_alloc >= 0);
+  memset (array->array, -1, array->byte_alloc);
+#endif
+}
+
+void
 sc_array_resize (sc_array_t * array, size_t new_count)
 {
   size_t              newoffs, roundup, newsize;
@@ -420,6 +433,10 @@ sc_array_is_permutation (sc_array_t * newindices)
   size_t             *newind;
 
   SC_ASSERT (newindices->elem_size == sizeof (size_t));
+  if (!newindices->elem_count) {
+    SC_FREE (counted);
+    return 1;
+  }
   newind = (size_t *) sc_array_index (newindices, 0);
 
   for (zi = 0; zi < count; zi++) {
@@ -458,6 +475,10 @@ sc_array_permute (sc_array_t * array, sc_array_t * newindices, int keepperm)
   SC_ASSERT (newindices->elem_size == sizeof (size_t));
   SC_ASSERT (newindices->elem_count == count);
   SC_ASSERT (sc_array_is_permutation (newindices));
+  if (!count) {
+    SC_FREE (temp);
+    return;
+  }
 
   if (!keepperm) {
     newind = (size_t *) sc_array_index (newindices, 0);
@@ -539,6 +560,9 @@ sc_array_pqueue_add (sc_array_t * array, void *temp,
   SC_ASSERT (SC_ARRAY_IS_OWNER (array));
   SC_ASSERT (array->elem_count > 0);
 
+  /* PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED. */
+  SC_ABORT_NOT_REACHED ();
+
   swaps = 0;
   child = array->elem_count - 1;
   c = array->array + (size * child);
@@ -580,6 +604,9 @@ sc_array_pqueue_pop (sc_array_t * array, void *result,
   /* array must not be empty or a view */
   SC_ASSERT (SC_ARRAY_IS_OWNER (array));
   SC_ASSERT (array->elem_count > 0);
+
+  /* PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED. */
+  SC_ABORT_NOT_REACHED ();
 
   swaps = 0;
   new_count = array->elem_count - 1;

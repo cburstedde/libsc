@@ -179,11 +179,20 @@ void                sc_array_init_data (sc_array_t * view, void *base,
 
 /** Sets the array count to zero and frees all elements.
  * This function turns a view into a newly initialized array.
- * \param [in,out]  array       Array structure to be resetted.
+ * \param [in,out]  array       Array structure to be reset.
  * \note Calling sc_array_init, then any array operations,
  *       then sc_array_reset is memory neutral.
  */
 void                sc_array_reset (sc_array_t * array);
+
+/** Sets the array count to zero, but does not free elements.
+ * Not allowed for views.
+ * \param [in,out]  array       Array structure to be truncated.
+ * \note This is intended to allow an sc_array to be used as a reusable
+ * buffer, where the "high water mark" of the buffer is preserved, so that
+ * O(log (max n)) reallocs occur over the life of the buffer.
+ */
+void                sc_array_truncate (sc_array_t * array);
 
 /** Sets the element count to new_count.
  * If this a view, new_count cannot be greater than the elem_count of
@@ -304,6 +313,7 @@ void                sc_array_permute (sc_array_t * array,
 unsigned            sc_array_checksum (sc_array_t * array);
 
 /** Adds an element to a priority queue.
+ * PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
  * This function is not allowed for views.
  * The priority queue is implemented as a heap in ascending order.
  * A heap is a binary tree where the children are not less than their parent.
@@ -321,6 +331,7 @@ size_t              sc_array_pqueue_add (sc_array_t * array,
                                                         const void *));
 
 /** Pops the smallest element from a priority queue.
+ * PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
  * This function is not allowed for views.
  * This function assumes that the array forms a valid heap in ascending order.
  * \param [out] result  Pointer to unused allocated memory of elem_size.

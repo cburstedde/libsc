@@ -117,6 +117,32 @@ sc_options_add_switch (sc_options_t * opt, int opt_char,
 }
 
 void
+sc_options_add_bool (sc_options_t * opt, int opt_char,
+                     const char *opt_name,
+                     int *variable, int init_value, const char *help_string)
+{
+  sc_option_item_t   *item;
+
+  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
+  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
+
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
+
+  item->opt_type = SC_OPTION_BOOL;
+  item->opt_char = opt_char;
+  item->opt_name = opt_name;
+  item->opt_var = variable;
+  item->opt_fn = NULL;
+  item->has_arg = 2;
+  item->called = 0;
+  item->help_string = help_string;
+  item->string_value = NULL;
+  item->user_data = NULL;
+
+  *variable = init_value;
+}
+
+void
 sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
                     int *variable, int init_value, const char *help_string)
 {
@@ -274,6 +300,10 @@ sc_options_add_suboptions (sc_options_t * opt,
       sc_options_add_switch (opt, '\0', *name, (int *) item->opt_var,
                              item->help_string);
       break;
+    case SC_OPTION_BOOL:
+      sc_options_add_bool (opt, '\0', *name, (int *) item->opt_var,
+                           *((int *) item->opt_var), item->help_string);
+      break;
     case SC_OPTION_INT:
       sc_options_add_int (opt, '\0', *name, (int *) item->opt_var,
                           *((int *) item->opt_var), item->help_string);
@@ -328,6 +358,10 @@ sc_options_print_usage (int package_id, int log_priority,
     provide_long = "";
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
+      break;
+    case SC_OPTION_BOOL:
+      provide_short = " [0fFnN1tTyY]";
+      provide_long = "[=0fFnN1tTyY]";
       break;
     case SC_OPTION_INT:
       provide_short = " <INT>";
@@ -425,6 +459,10 @@ sc_options_print_summary (int package_id, int log_priority,
       else
         printed += snprintf (outbuf + printed, BUFSIZ - printed,
                              "%d", bvalue);
+      break;
+    case SC_OPTION_BOOL:
+      printed += snprintf (outbuf + printed, BUFSIZ - printed,
+                           "%s", *(int *) item->opt_var ? "true" : "false");
       break;
     case SC_OPTION_INT:
       printed += snprintf (outbuf + printed, BUFSIZ - printed,
@@ -542,10 +580,20 @@ sc_options_load (int package_id, int err_priority,
         bvalue = iniparser_getint (dict, key, 0);
         if (bvalue <= 0) {
           SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                       "Invalid boolean %s in file: %s\n", key, inifile);
+                       "Invalid switch %s in file: %s\n", key, inifile);
           iniparser_freedict (dict);
           return -1;
         }
+      }
+      *(int *) item->opt_var = bvalue;
+      break;
+    case SC_OPTION_BOOL:
+      bvalue = iniparser_getboolean (dict, key, -1);
+      if (bvalue == -1) {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid boolean %s in file: %s\n", key, inifile);
+        iniparser_freedict (dict);
+        return -1;
       }
       *(int *) item->opt_var = bvalue;
       break;
@@ -703,6 +751,10 @@ sc_options_save (int package_id, int err_priority,
       else
         retval = fprintf (file, "%d\n", bvalue);
       break;
+    case SC_OPTION_BOOL:
+      retval = fprintf (file, "%s\n",
+                        *(int *) item->opt_var ? "true" : "false");
+      break;
     case SC_OPTION_INT:
       retval = fprintf (file, "%d\n", *(int *) item->opt_var);
       break;
@@ -787,7 +839,8 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
     item = (sc_option_item_t *) sc_array_index (items, iz);
     if (item->opt_char != '\0') {
       printed = snprintf (optstring + position, BUFSIZ - position,
-                          "%c%s", item->opt_char, item->has_arg ? ":" : "");
+                          "%c%s", item->opt_char, item->has_arg ?
+                          item->has_arg == 2 ? "::" : ":" : "");
       SC_ASSERT (printed > 0);
       position += printed;
     }
@@ -847,6 +900,22 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
       ++*(int *) item->opt_var;
+      break;
+    case SC_OPTION_BOOL:
+      if (optarg == NULL) {
+        *(int *) item->opt_var = 1;
+      }
+      else if (strspn (optarg, "1tTyY") > 0) {
+        *(int *) item->opt_var = 1;
+      }
+      else if (strspn (optarg, "0fFnN") > 0) {
+        *(int *) item->opt_var = 0;
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Error parsing boolean: %s\n", optarg);
+        retval = -1;            /* this ends option processing */
+      }
       break;
     case SC_OPTION_INT:
       *(int *) item->opt_var = strtol (optarg, NULL, 0);
