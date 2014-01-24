@@ -466,7 +466,9 @@ sc_log_indent_push_count (int package, int count)
 {
   SC_ASSERT (package < sc_num_packages);
 
-  sc_packages[package].log_indent += SC_MAX (0, count);
+  if (package >= 0) {
+    sc_packages[package].log_indent += SC_MAX (0, count);
+  }
 }
 
 void
@@ -476,8 +478,10 @@ sc_log_indent_pop_count (int package, int count)
 
   SC_ASSERT (package < sc_num_packages);
 
-  new_indent = sc_packages[package].log_indent - SC_MAX (0, count);
-  sc_packages[package].log_indent = SC_MAX (0, new_indent);
+  if (package >= 0) {
+    new_indent = sc_packages[package].log_indent - SC_MAX (0, count);
+    sc_packages[package].log_indent = SC_MAX (0, new_indent);
+  }
 }
 
 void
