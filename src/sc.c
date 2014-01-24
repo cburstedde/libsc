@@ -43,6 +43,7 @@ typedef struct sc_package
   int                 is_registered;
   sc_log_handler_t    log_handler;
   int                 log_threshold;
+  int                 log_indent;
   int                 malloc_count;
   int                 free_count;
   const char         *name;
@@ -175,7 +176,7 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
       fputc (' ', log_stream);
     if (wi)
       fprintf (log_stream, "%d", sc_identifier);
-    fputs ("] ", log_stream);
+    fprintf (log_stream, "] %*s", sc_packages[package].log_indent, "");
   }
 
   if (priority == SC_LP_TRACE) {
@@ -461,6 +462,25 @@ sc_logv (const char *filename, int lineno,
 }
 
 void
+sc_log_indent_push_count (int package, int count)
+{
+  SC_ASSERT (package < sc_num_packages);
+
+  sc_packages[package].log_indent += SC_MAX (0, count);
+}
+
+void
+sc_log_indent_pop_count (int package, int count)
+{
+  int                 new_indent;
+
+  SC_ASSERT (package < sc_num_packages);
+
+  new_indent = sc_packages[package].log_indent - SC_MAX (0, count);
+  sc_packages[package].log_indent = SC_MAX (0, new_indent);
+}
+
+void
 sc_abort (void)
 {
   if (0) {
@@ -605,6 +625,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
       p->is_registered = 0;
       p->log_handler = NULL;
       p->log_threshold = SC_LP_SILENT;
+      p->log_indent = 0;
       p->malloc_count = 0;
       p->free_count = 0;
       p->name = NULL;
@@ -615,6 +636,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   new_package->is_registered = 1;
   new_package->log_handler = log_handler;
   new_package->log_threshold = log_threshold;
+  new_package->log_indent = 0;
   new_package->malloc_count = 0;
   new_package->free_count = 0;
   new_package->name = name;
