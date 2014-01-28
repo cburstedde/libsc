@@ -1148,7 +1148,6 @@ sc_hash_lookup (sc_hash_t * hash, void *v, void ***found)
 int
 sc_hash_insert_unique (sc_hash_t * hash, void *v, void ***found)
 {
-  int                 found_again;
   size_t              hval;
   sc_list_t          *list;
   sc_link_t          *lynk;
@@ -1177,8 +1176,7 @@ sc_hash_insert_unique (sc_hash_t * hash, void *v, void ***found)
   if (hash->elem_count % hash->slots->elem_count == 0) {
     sc_hash_maybe_resize (hash);
     if (found != NULL) {
-      found_again = sc_hash_lookup (hash, v, found);
-      SC_ASSERT (found_again);
+      SC_EXECUTE_ASSERT_TRUE (sc_hash_lookup (hash, v, found));
     }
   }
 

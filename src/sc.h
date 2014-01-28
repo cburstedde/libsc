@@ -153,6 +153,7 @@ extern int          sc_trace_prio;
 #define SC_CHECK_ABORT(q,s)                     \
   ((q) ? (void) 0 : SC_ABORT (s))
 #define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI error")
+#define SC_CHECK_ZLIB(r) SC_CHECK_ABORT ((r) == Z_OK, "zlib error")
 
 /*
  * C++98 does not allow variadic macros
@@ -200,8 +201,16 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 
 #ifdef SC_DEBUG
 #define SC_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
+#define SC_EXECUTE_ASSERT_FALSE(expression) \
+  do { int _sc_i = (int) (expression); SC_ASSERT (!_sc_i); } while (0)
+#define SC_EXECUTE_ASSERT_TRUE(expression) \
+  do { int _sc_i = (int) (expression); SC_ASSERT (_sc_i); } while (0)
 #else
 #define SC_ASSERT(c) SC_NOOP ()
+#define SC_EXECUTE_ASSERT_FALSE(expression) \
+  do { (void) (expression); } while (0)
+#define SC_EXECUTE_ASSERT_TRUE(expression) \
+  do { (void) (expression); } while (0)
 #endif
 
 /* macros for memory allocation, will abort if out of memory

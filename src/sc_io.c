@@ -404,7 +404,7 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
     retval = compress2 ((Bytef *) comp_data, &comp_length,
                         (const Bytef *) (numeric_data + theblock * blocksize),
                         (uLong) blocksize, Z_BEST_COMPRESSION);
-    SC_ASSERT (retval == Z_OK);
+    SC_CHECK_ZLIB (retval);
     compression_header[3 + theblock] = comp_length;
     base_length = base64_encode_block (comp_data, comp_length,
                                        base_data, &encode_state);
@@ -419,7 +419,7 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
     retval = compress2 ((Bytef *) comp_data, &comp_length,
                         (const Bytef *) (numeric_data + theblock * blocksize),
                         (uLong) lastsize, Z_BEST_COMPRESSION);
-    SC_ASSERT (retval == Z_OK);
+    SC_CHECK_ZLIB (retval);
     compression_header[3 + theblock] = comp_length;
     base_length = base64_encode_block (comp_data, comp_length,
                                        base_data, &encode_state);
