@@ -159,12 +159,15 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
                 int package, int category, int priority, const char *msg)
 {
   int                 wp = 0, wi = 0;
+  int                 lindent = 0;
 
   if (package != -1) {
     if (!sc_package_is_registered (package))
       package = -1;
-    else
+    else {
       wp = 1;
+      lindent = sc_packages[package].log_indent;
+    }
   }
   wi = (category == SC_LC_NORMAL && sc_identifier >= 0);
 
@@ -176,7 +179,7 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
       fputc (' ', log_stream);
     if (wi)
       fprintf (log_stream, "%d", sc_identifier);
-    fprintf (log_stream, "] %*s", sc_packages[package].log_indent, "");
+    fprintf (log_stream, "] %*s", lindent, "");
   }
 
   if (priority == SC_LP_TRACE) {
