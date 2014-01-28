@@ -462,6 +462,18 @@ sc_logv (const char *filename, int lineno,
 }
 
 void
+sc_log_indent_push (void)
+{
+  sc_log_indent_push_count (sc_package_id, 1);
+}
+
+void
+sc_log_indent_pop (void)
+{
+  sc_log_indent_pop_count (sc_package_id, 1);
+}
+
+void
 sc_log_indent_push_count (int package, int count)
 {
   SC_ASSERT (package < sc_num_packages);

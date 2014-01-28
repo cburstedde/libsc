@@ -442,22 +442,18 @@ void                sc_logf (const char *filename, int lineno,
 void                sc_logv (const char *filename, int lineno,
                              int package, int category, int priority,
                              const char *fmt, va_list ap);
-/** Add space to the start of a package's log format */
+
+/** Add spaces to the start of a package's default log format. */
 void                sc_log_indent_push_count (int package, int count);
-/** Remove space to the start of a package's log format */
+
+/** Remove spaces from the start of a package's default log format. */
 void                sc_log_indent_pop_count (int package, int count);
 
-static inline void
-sc_log_indent_push ()
-{
-  sc_log_indent_push_count (sc_package_id, 1);
-}
+/** Add one space to the start of sc's default log format. */
+void                sc_log_indent_push (void);
 
-static inline void
-sc_log_indent_pop ()
-{
-  sc_log_indent_pop_count (sc_package_id, 1);
-}
+/** Remove one space from the start of a sc's default log format. */
+void                sc_log_indent_pop (void);
 
 /** Print a stack trace, call the abort handler and then call abort (). */
 void                sc_abort (void)
