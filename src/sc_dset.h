@@ -779,4 +779,6 @@ struct sc_dset_comm
   sc_array_t         *recv_requests;
 };
 
+SC_EXTERN_C_END;
+
 #endif /* !SC_DSET_H */
