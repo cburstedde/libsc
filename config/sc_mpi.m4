@@ -274,8 +274,7 @@ dnl  ])
     AC_LANG_POP([C++])
   ])
   if test "x$HAVE_PKG_MPIIO" = xyes ; then
-    SC_MPIIO_C_COMPILE_AND_LINK(
-      [AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])],
+    SC_MPIIO_C_COMPILE_AND_LINK(,
       [AC_MSG_ERROR([MPI I/O specified but not found])])
   fi
 fi
