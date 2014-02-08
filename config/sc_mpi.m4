@@ -41,7 +41,8 @@ dnl The shell variable SC_ENABLE_MPI is set if --enable-mpi is given.
 dnl Therefore all further checking uses the HAVE_PKG_MPI shell variable
 dnl and neither AC_DEFINE nor AM_CONDITIONAL are invoked at this point.
 AC_ARG_ENABLE([mpi],
-              [AS_HELP_STRING([--enable-mpi], [enable MPI])],,
+              [AS_HELP_STRING([--enable-mpi],
+                              [enable MPI (force serial code otherwise)])],,
               [enableval=no])
 if test "x$enableval" = xyes ; then
   HAVE_PKG_MPI=yes
@@ -54,7 +55,8 @@ AC_MSG_RESULT([$HAVE_PKG_MPI])
 dnl The shell variable SC_ENABLE_MPIIO is set if --disable-mpiio is not given.
 dnl If not disabled, MPI I/O will be verified by a compile/link test below.
 AC_ARG_ENABLE([mpiio],
-              [AS_HELP_STRING([--disable-mpiio], [disable MPI I/O])],,
+              [AS_HELP_STRING([--disable-mpiio],
+                              [disable MPI I/O (even if MPI is enabled)])],,
               [enableval=yes])
 if test "x$enableval" = xyes ; then
   if test "x$HAVE_PKG_MPI" = xyes ; then
