@@ -3,14 +3,18 @@ dnl SC_MPI_CONFIG(PREFIX, , )
 dnl
 dnl If the second argument is nonempty, also includes configuration for F77.
 dnl If the third argument is nonempty, also includes configuration for CXX.
+dnl
 dnl Checks the configure options
-dnl --enable-mpi    If enabled, set AC_DEFINE and AC_CONDITIONAL.
-dnl                 If enabled and CC is not set, do export CC=mpicc.
-dnl                 This may be "too late" if AC_PROG_CC was called earlier.
-dnl                 In that case you need to set CC=mpicc (or other compiler)
-dnl                 on the configure command line.
-dnl                 Likewise for F77/CXX if enabled in SC_MPI_CONFIG.
-dnl --enable-mpiio  Enables AC_DEFINE and AM_CONDITIONAL for MPI I/O.
+dnl --enable-mpi      If enabled and CC is not set, do export CC=mpicc.
+dnl                   This may be "too late" if AC_PROG_CC was called earlier.
+dnl                   In that case you need to set CC=mpicc (or other compiler)
+dnl                   on the configure command line.
+dnl                   Likewise for F77 and CXX if enabled in SC_MPI_CONFIG.
+dnl --disable-mpiio   Only effective if --enable-mpi is given.  In this case,
+dnl                   disables MPI I/O and its compile-and-link test.
+dnl
+dnl If MPI is enabled, set AC_DEFINE and AC_CONDITIONAL for PREFIX_MPI.
+dnl If MPI I/O is not disabled, set these for PREFIX_MPIIO.
 dnl
 dnl SC_MPI_ENGAGE(PREFIX)
 dnl
@@ -18,7 +22,11 @@ dnl Relies on SC_MPI_CONFIG to be called before.
 dnl Calls AC_PROG_CC and other macros related to the C compiler.
 dnl Calls AC_PROG_F77 and others if F77 is enabled in SC_MPI_CONFIG.
 dnl Calls AC_PROG_CXX and others if CXX is enabled in SC_MPI_CONFIG.
-dnl Performs compile/link tests for MPI, and MPI I/O if it is enabled.
+dnl
+dnl If MPI is enabled, a compile-and-link test is performed.  It aborts
+dnl configuration on failure.
+dnl If MPI is enabled and I/O is not disabled, a compile-and-link test
+dnl for MPI I/O is performed.  It aborts configuration on failure.
 dnl
 dnl These macros are separate because of the AC_REQUIRE logic inside autoconf.
 
@@ -43,18 +51,17 @@ fi
 AC_MSG_CHECKING([whether we are using MPI])
 AC_MSG_RESULT([$HAVE_PKG_MPI])
 
-dnl The shell variable SC_ENABLE_MPIIO is set
-dnl unless it is provided by the environment.
-dnl If enabled, MPI I/O will be verified by a compile/link test below.
+dnl The shell variable SC_ENABLE_MPIIO is set if --disable-mpiio is not given.
+dnl If not disabled, MPI I/O will be verified by a compile/link test below.
 AC_ARG_ENABLE([mpiio],
-              [AS_HELP_STRING([--enable-mpiio], [enable MPI I/O])],,
-              [enableval=no])
+              [AS_HELP_STRING([--disable-mpiio], [disable MPI I/O])],,
+              [enableval=yes])
 if test "x$enableval" = xyes ; then
   if test "x$HAVE_PKG_MPI" = xyes ; then
     HAVE_PKG_MPIIO=yes
   fi
 elif test "x$enableval" != xno ; then
-  AC_MSG_ERROR([Please use --enable-mpiio without an argument])
+  AC_MSG_ERROR([Please don't use --enable-mpiio; it's the default now])
 fi
 AC_MSG_CHECKING([whether we are using MPI I/O])
 AC_MSG_RESULT([$HAVE_PKG_MPIIO])
@@ -275,7 +282,7 @@ dnl  ])
   ])
   if test "x$HAVE_PKG_MPIIO" = xyes ; then
     SC_MPIIO_C_COMPILE_AND_LINK(,
-      [AC_MSG_ERROR([MPI I/O specified but not found])])
+      [AC_MSG_ERROR([MPI I/O not found; you may try --disable-mpiio])])
   fi
 fi
 
