@@ -153,6 +153,7 @@ extern int          sc_trace_prio;
 #define SC_CHECK_ABORT(q,s)                     \
   ((q) ? (void) 0 : SC_ABORT (s))
 #define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI error")
+#define SC_CHECK_ZLIB(r) SC_CHECK_ABORT ((r) == Z_OK, "zlib error")
 
 /*
  * C++98 does not allow variadic macros
@@ -200,8 +201,20 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 
 #ifdef SC_DEBUG
 #define SC_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
+#define SC_EXECUTE_ASSERT_FALSE(expression)                             \
+  do { int _sc_i = (int) (expression);                                  \
+       SC_CHECK_ABORT (!_sc_i, "Expected false: '" #expression "'");    \
+  } while (0)
+#define SC_EXECUTE_ASSERT_TRUE(expression)                              \
+  do { int _sc_i = (int) (expression);                                  \
+       SC_CHECK_ABORT (_sc_i, "Expected true: '" #expression "'");      \
+  } while (0)
 #else
 #define SC_ASSERT(c) SC_NOOP ()
+#define SC_EXECUTE_ASSERT_FALSE(expression) \
+  do { (void) (expression); } while (0)
+#define SC_EXECUTE_ASSERT_TRUE(expression) \
+  do { (void) (expression); } while (0)
 #endif
 
 /* macros for memory allocation, will abort if out of memory
@@ -442,6 +455,18 @@ void                sc_logf (const char *filename, int lineno,
 void                sc_logv (const char *filename, int lineno,
                              int package, int category, int priority,
                              const char *fmt, va_list ap);
+
+/** Add spaces to the start of a package's default log format. */
+void                sc_log_indent_push_count (int package, int count);
+
+/** Remove spaces from the start of a package's default log format. */
+void                sc_log_indent_pop_count (int package, int count);
+
+/** Add one space to the start of sc's default log format. */
+void                sc_log_indent_push (void);
+
+/** Remove one space from the start of a sc's default log format. */
+void                sc_log_indent_pop (void);
 
 /** Print a stack trace, call the abort handler and then call abort (). */
 void                sc_abort (void)

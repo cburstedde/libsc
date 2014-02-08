@@ -289,7 +289,6 @@ void
 sc_keyvalue_set_int (sc_keyvalue_t * kv, const char *key, int newvalue)
 {
   void              **found;
-  int                 added;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
@@ -313,8 +312,7 @@ sc_keyvalue_set_int (sc_keyvalue_t * kv, const char *key, int newvalue)
     value->value.i = newvalue;
 
     /* Insert value into the hash table */
-    added = sc_hash_insert_unique (kv->hash, value, &found);
-    SC_ASSERT (added);
+    SC_EXECUTE_ASSERT_TRUE (sc_hash_insert_unique (kv->hash, value, &found));
   }
 }
 
@@ -322,7 +320,6 @@ void
 sc_keyvalue_set_double (sc_keyvalue_t * kv, const char *key, double newvalue)
 {
   void              **found;
-  int                 added;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
@@ -346,8 +343,7 @@ sc_keyvalue_set_double (sc_keyvalue_t * kv, const char *key, double newvalue)
     value->value.g = newvalue;
 
     /* Insert value into the hash table */
-    added = sc_hash_insert_unique (kv->hash, value, &found);
-    SC_ASSERT (added);
+    SC_EXECUTE_ASSERT_TRUE (sc_hash_insert_unique (kv->hash, value, &found));
   }
 }
 
@@ -356,7 +352,6 @@ sc_keyvalue_set_string (sc_keyvalue_t * kv, const char *key,
                         const char *newvalue)
 {
   void              **found;
-  int                 added;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
@@ -380,8 +375,7 @@ sc_keyvalue_set_string (sc_keyvalue_t * kv, const char *key,
     value->value.s = newvalue;
 
     /* Insert value into the hash table */
-    added = sc_hash_insert_unique (kv->hash, value, &found);
-    SC_ASSERT (added);
+    SC_EXECUTE_ASSERT_TRUE (sc_hash_insert_unique (kv->hash, value, &found));
   }
 }
 
@@ -389,7 +383,6 @@ void
 sc_keyvalue_set_pointer (sc_keyvalue_t * kv, const char *key, void *newvalue)
 {
   void              **found;
-  int                 added;
   sc_keyvalue_entry_t svalue, *pvalue = &svalue;
   sc_keyvalue_entry_t *value;
 
@@ -413,8 +406,7 @@ sc_keyvalue_set_pointer (sc_keyvalue_t * kv, const char *key, void *newvalue)
     value->value.p = (void *) newvalue;
 
     /* Insert value into the hash table */
-    added = sc_hash_insert_unique (kv->hash, value, &found);
-    SC_ASSERT (added);
+    SC_EXECUTE_ASSERT_TRUE (sc_hash_insert_unique (kv->hash, value, &found));
   }
 }
 
