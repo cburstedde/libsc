@@ -128,8 +128,8 @@ AC_DEFUN([SC_BUILTIN_LUA_PREFIX],
 [
 $1_PROVIDE_LUA="no"
 if test "$$1_WITH_LUA" = "yes" ; then
-  AC_CHECK_HEADERS([lua.h lua5.1/lua.h], [break])
-  AC_SEARCH_LIBS([lua_createtable], [lua lua5 lua51 lua5.1],, [
+  AC_CHECK_HEADERS([lua.h lua5.2/lua.h lua5.1/lua.h], [break])
+  AC_SEARCH_LIBS([lua_createtable], [lua lua52 lua5.2 lua51 lua5.1 lua5],, [
     AC_MSG_NOTICE([did not find a recent lua. Activating builtin])
     $1_PROVIDE_LUA="yes"
     AC_DEFINE([PROVIDE_LUA], 1, [Use builtin lua])

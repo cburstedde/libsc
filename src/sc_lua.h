@@ -47,6 +47,11 @@ SC_EXTERN_C_BEGIN;
 #include <lua5.1/lualib.h>
 #include <lua5.1/lauxlib.h>
 #endif
+#ifdef SC_HAVE_LUA5_2_LUA_H
+#include <lua5.2/lua.h>
+#include <lua5.2/lualib.h>
+#include <lua5.2/lauxlib.h>
+#endif
 #endif
 
 SC_EXTERN_C_END;
