@@ -201,10 +201,14 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 
 #ifdef SC_DEBUG
 #define SC_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
-#define SC_EXECUTE_ASSERT_FALSE(expression) \
-  do { int _sc_i = (int) (expression); SC_ASSERT (!_sc_i); } while (0)
-#define SC_EXECUTE_ASSERT_TRUE(expression) \
-  do { int _sc_i = (int) (expression); SC_ASSERT (_sc_i); } while (0)
+#define SC_EXECUTE_ASSERT_FALSE(expression)                             \
+  do { int _sc_i = (int) (expression);                                  \
+       SC_CHECK_ABORT (!_sc_i, "Expected false: '" #expression "'");    \
+  } while (0)
+#define SC_EXECUTE_ASSERT_TRUE(expression)                              \
+  do { int _sc_i = (int) (expression);                                  \
+       SC_CHECK_ABORT (_sc_i, "Expected true: '" #expression "'");      \
+  } while (0)
 #else
 #define SC_ASSERT(c) SC_NOOP ()
 #define SC_EXECUTE_ASSERT_FALSE(expression) \
