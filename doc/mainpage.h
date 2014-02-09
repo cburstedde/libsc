@@ -38,7 +38,7 @@
  *  * The library provides MPI wrappers in case it is configured without
  *    MPI.  They implement initialize/finalize and collective calls as
  *    noops, which means that these do not have to be protected with the
- *    #ifdef SC_MPI construct in the code.
+ *    `#ifdef SC_MPI` construct in the code.
  *  * The library provides a logging framework that can be adapted by other
  *    packages.  Multiple log levels are available, as well as options to
  *    output on just one or all MPI processes.
@@ -49,13 +49,18 @@
  * procedure of the GNU autotools.  The configure script takes the following
  * options:
  *
- * * --enable-debug   lowers the log level for increased verbosity and
- *                    activates the SC_ASSERT macro for consistency checks.
- * * --enable-mpi     pulls in the mpi.h include file and activates the MPI
+ * * `--enable-debug`   lowers the log level for increased verbosity and
+ *                    activates the `SC_ASSERT` macro for consistency checks.
+ * * `--enable-mpi`     pulls in the mpi.h include file and activates the MPI
  *                    compiler wrappers.  If this option is not given, wrappers
  *                    for MPI routines are used instead and the code is compiled
  *                    in serial only.
- * * --disable-mpiio  may be used to avoid using MPI_File based calls.
+ * * `--disable-mpiio`  may be used to avoid using `MPI_File` based calls.
+ *
+ * A typical development configure line looks as follows:
+ * > `relative/path/to/configure CFLAGS="-Wall -O0 -g" --enable-mpi --enable-debug`
+ * A typical production configure line looks as follows:
+ * > `relative/path/to/configure CFLAGS="-Wall -O2" --enable-mpi`
  *
  * \see http://www.p4est.org/
  * \see http://www.gnu.org/licenses/licenses.html
