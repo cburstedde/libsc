@@ -113,3 +113,12 @@ if SC_ENABLE_SHARED
 #	$(top_srcdir)/config/sc_nvccwrap.py $@ $(SC_NVCC) -c @NVCCFLAGS@ $<
 endif
 endif
+
+# Doxygen convenience target
+doxygen: Doxyfile
+	doxygen
+
+maintainer-clean-local:
+	rm -rf doxygen
+
+.PHONY: doxygen
