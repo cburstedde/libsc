@@ -63,6 +63,12 @@ MPI_Init (int *argc, char ***argv)
 }
 
 int
+MPI_Init_thread (int *argc, char ***argv, int required, int *provided)
+{
+  return MPI_SUCCESS;
+}
+
+int
 MPI_Finalize (void)
 {
   return MPI_SUCCESS;
