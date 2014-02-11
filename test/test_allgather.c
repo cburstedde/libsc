@@ -52,28 +52,28 @@ main (int argc, char **argv)
   idata = SC_ALLOC (int, mpisize);
 
   if (mpisize <= 64) {
-    SC_GLOBAL_INFO ("Testing sc_ag_alltoall\n");
+    SC_GLOBAL_INFO ("Testing sc_allgather_alltoall\n");
 
     for (i = 0; i < mpisize; ++i) {
       idata[i] = (i == mpirank) ? mpirank : -1;
     }
     elapsed_alltoall = -sc_MPI_Wtime ();
-    sc_ag_alltoall (mpicomm, (char *) idata, (int) sizeof (int),
-                    mpisize, mpirank, mpirank);
+    sc_allgather_alltoall (mpicomm, (char *) idata, (int) sizeof (int),
+                           mpisize, mpirank, mpirank);
     elapsed_alltoall += sc_MPI_Wtime ();
     for (i = 0; i < mpisize; ++i) {
       SC_ASSERT (idata[i] == i);
     }
   }
 
-  SC_GLOBAL_INFO ("Testing sc_ag_recursive\n");
+  SC_GLOBAL_INFO ("Testing sc_allgather_recursive\n");
 
   for (i = 0; i < mpisize; ++i) {
     idata[i] = (i == mpirank) ? mpirank : -1;
   }
   elapsed_recursive = -sc_MPI_Wtime ();
-  sc_ag_recursive (mpicomm, (char *) idata, (int) sizeof (int),
-                   mpisize, mpirank, mpirank);
+  sc_allgather_recursive (mpicomm, (char *) idata, (int) sizeof (int),
+                          mpisize, mpirank, mpirank);
   elapsed_recursive += sc_MPI_Wtime ();
   for (i = 0; i < mpisize; ++i) {
     SC_ASSERT (idata[i] == i);
