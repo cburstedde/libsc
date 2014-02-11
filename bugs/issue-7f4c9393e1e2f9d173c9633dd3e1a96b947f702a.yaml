@@ -21,3 +21,9 @@ log_events:
   - Carsten Burstedde <carsten@ices.utexas.edu>
   - created
   - ""
+- - 2014-02-11 11:17:49.662565 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - commented
+  - |-
+    The ENABLE_ and DISABLE_ defines are in place.
+    The old ones are deprecated and need to be phased out in the code.

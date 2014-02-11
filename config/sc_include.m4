@@ -33,7 +33,8 @@ AC_ARG_ENABLE([$1],
               [AS_HELP_STRING([--enable-$1$5], [$2])],,
               [enableval=no])
 if test "x$enableval" != xno ; then
-  AC_DEFINE([$3], 1, [$2])
+  AC_DEFINE([$3], 1, [DEPRECATED (use $4_ENABLE_$3 instead)])
+  AC_DEFINE([ENABLE_$3], 1, [$2])
 fi
 AM_CONDITIONAL([$4_ENABLE_$3], [test "x$enableval" != xno])
 $4_ENABLE_$3="$enableval"
@@ -53,7 +54,8 @@ AC_ARG_ENABLE([$1],
               [AS_HELP_STRING([--disable-$1$5], [$2])],,
               [enableval=yes])
 if test "x$enableval" != xno ; then
-  AC_DEFINE([$3], 1, [Undefine if: $2])
+  AC_DEFINE([$3], 1, [DEPRECATED (use $4_ENABLE_$3 instead)])
+  AC_DEFINE([ENABLE_$3], 1, [Undefine if: $2])
 fi
 AM_CONDITIONAL([$4_ENABLE_$3], [test "x$enableval" != xno])
 $4_ENABLE_$3="$enableval"
@@ -73,7 +75,8 @@ AC_ARG_WITH([$1],
             [AS_HELP_STRING([--with-$1$5], [$2])],,
             [withval=no])
 if test "x$withval" != xno ; then
-  AC_DEFINE([$3], 1, [$2])
+  AC_DEFINE([$3], 1, [DEPRECATED (use $4_WITH_$3 instead)])
+  AC_DEFINE([WITH_$3], 1, [$2])
 fi
 AM_CONDITIONAL([$4_WITH_$3], [test "x$withval" != xno])
 $4_WITH_$3="$withval"
@@ -93,7 +96,8 @@ AC_ARG_WITH([$1],
             [AS_HELP_STRING([--without-$1$5], [$2])],,
             [withval=yes])
 if test "x$withval" != xno ; then
-  AC_DEFINE([$3], 1, [Undefine if: $2])
+  AC_DEFINE([$3], 1, [DEPRECATED (use $4_WITH_$3 instead)])
+  AC_DEFINE([WITH_$3], 1, [Undefine if: $2])
 fi
 AM_CONDITIONAL([$4_WITH_$3], [test "x$withval" != xno])
 $4_WITH_$3="$withval"
