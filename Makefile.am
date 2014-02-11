@@ -103,22 +103,16 @@ dist-hook:
           echo "     cd @top_srcdir@ && ./bootstrap" ; \
           echo "before make dist") 1>&2 ; exit 1)
 
-# CUDA support
-if SC_WITH_CUDA
-.cu.o:
-	$(SC_NVCC) -o $@ -c $< @NVCCFLAGS@
-if SC_ENABLE_SHARED
-# This does not work yet
-#.cu.lo:
-#	$(top_srcdir)/config/sc_nvccwrap.py $@ $(SC_NVCC) -c @NVCCFLAGS@ $<
-endif
-endif
-
-# Doxygen convenience target
-doxygen: Doxyfile
-	doxygen
-
 maintainer-clean-local:
 	rm -rf doxygen
 
+doxygen: Doxyfile
+	doxygen
+
 .PHONY: doxygen
+
+## # CUDA support
+## if SC_WITH_CUDA
+## .cu.o:
+## 	$(SC_NVCC) -o $@ -c $< @NVCCFLAGS@
+## endif
