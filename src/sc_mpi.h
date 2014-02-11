@@ -38,8 +38,8 @@
  * Some send and receive routines are wrapped.  They can thus be used
  * in code outside of `#ifdef SC_ENABLE_MPI` even though they will abort.  If
  * no messages are sent to the same processor when mpisize == 1, such aborts
- * will occur.  The `MPI_Wait*` routines are safe to call as long as no or only
- * MPI_REQUEST_NULL requests are passed in.
+ * will not occur.  The `MPI_Wait*` routines are safe to call as long as no or
+ * only MPI_REQUEST_NULL requests are passed in.
  */
 
 #ifndef SC_MPI_H
