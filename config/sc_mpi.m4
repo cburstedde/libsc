@@ -13,8 +13,8 @@ dnl                   Likewise for F77 and CXX if enabled in SC_MPI_CONFIG.
 dnl --disable-mpiio   Only effective if --enable-mpi is given.  In this case,
 dnl                   disables MPI I/O and its compile-and-link test.
 dnl
-dnl If MPI is enabled, set AC_DEFINE and AC_CONDITIONAL for PREFIX_MPI.
-dnl If MPI I/O is not disabled, set these for PREFIX_MPIIO.
+dnl If MPI is enabled, set AC_DEFINE and AC_CONDITIONAL for PREFIX_ENABLE_MPI.
+dnl If MPI I/O is not disabled, set these for PREFIX_ENABLE_MPIIO.
 dnl
 dnl SC_MPI_ENGAGE(PREFIX)
 dnl
@@ -105,9 +105,11 @@ m4_ifset([SC_CHECK_MPI_CXX], [
   fi
   AC_MSG_NOTICE([                            CXX set to $CXX])
 ])
-  AC_DEFINE([MPI], 1, [Define to 1 if we are using MPI])
+  AC_DEFINE([MPI], 1, [DEPRECATED (use $1_ENABLE_MPI instead)])
+  AC_DEFINE([ENABLE_MPI], 1, [Define to 1 if we are using MPI])
   if test "x$HAVE_PKG_MPIIO" = xyes ; then
-    AC_DEFINE([MPIIO], 1, [Define to 1 if we are using MPI I/O])
+    AC_DEFINE([MPIIO], 1, [DEPRECATED (use $1_ENABLE_MPIIO instead)])
+    AC_DEFINE([ENABLE_MPIIO], 1, [Define to 1 if we are using MPI I/O])
   fi
 else
 m4_ifset([SC_CHECK_MPI_F77], [
@@ -119,8 +121,8 @@ m4_ifset([SC_CHECK_MPI_F77], [
   fi
 ], [:])
 fi
-AM_CONDITIONAL([$1_MPI], [test "x$HAVE_PKG_MPI" = xyes])
-AM_CONDITIONAL([$1_MPIIO], [test "x$HAVE_PKG_MPIIO" = xyes])
+AM_CONDITIONAL([$1_ENABLE_MPI], [test "x$HAVE_PKG_MPI" = xyes])
+AM_CONDITIONAL([$1_ENABRE_MPIIO], [test "x$HAVE_PKG_MPIIO" = xyes])
 ])
 
 dnl SC_MPI_F77_COMPILE_AND_LINK([action-if-successful], [action-if-failed])

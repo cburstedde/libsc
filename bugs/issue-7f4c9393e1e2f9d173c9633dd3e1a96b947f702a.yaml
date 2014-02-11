@@ -27,3 +27,9 @@ log_events:
   - |-
     The ENABLE_ and DISABLE_ defines are in place.
     The old ones are deprecated and need to be phased out in the code.
+- - 2014-02-11 11:26:20.998555 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - commented
+  - |-
+    The AM_CONDITIONAL has been changed over.
+    Use of old conditionals will throw errors and force the fix.
