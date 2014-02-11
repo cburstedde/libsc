@@ -121,7 +121,7 @@ dnl echo "| LAPACK_LIBS: $LAPACK_LIBS"
 echo "o----------------------------------"
 
 # Create output files.
-AC_CONFIG_FILES([Makefile Makefile.sc.pre])
+AC_CONFIG_FILES([Makefile Makefile.sc.pre Doxyfile])
 AC_OUTPUT
 
 # Final notifications.

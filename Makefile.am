@@ -96,6 +96,14 @@ dist-hook:
 clean-local:
 	rm -f ChangeLog
 
+maintainer-clean-local:
+	rm -rf doxygen
+
+doxygen: Doxyfile
+	doxygen
+
+.PHONY: doxygen
+
 ## # CUDA support
 ## if SC_WITH_CUDA
 ## .cu.o:

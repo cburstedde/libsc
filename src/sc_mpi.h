@@ -47,6 +47,11 @@ sc_tag_t;
 #define MPI_COMM_WORLD          ((MPI_Comm) 0x44000000)
 #define MPI_COMM_SELF           ((MPI_Comm) 0x44000001)
 
+#define MPI_THREAD_SINGLE       0
+#define MPI_THREAD_FUNNELED     1
+#define MPI_THREAD_SERIALIZED   2
+#define MPI_THREAD_MULTIPLE     3
+
 #define MPI_ANY_SOURCE          (-2)
 #define MPI_ANY_TAG             (-1)
 #define MPI_STATUS_IGNORE       (MPI_Status *) 1
@@ -102,6 +107,9 @@ MPI_Status;
 /* These functions are valid and functional for a single process. */
 
 int                 MPI_Init (int *, char ***);
+int                 MPI_Init_thread (int *argc, char ***argv,
+                                     int required, int *provided);
+
 int                 MPI_Finalize (void);
 int                 MPI_Abort (MPI_Comm, int)
   __attribute__ ((noreturn));
