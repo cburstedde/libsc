@@ -56,7 +56,7 @@ double              sc_function1_invert (sc_function1_t func, void *data,
                                          double y, double rtol);
 
 /** Seed the random number generator differently on each process.
- * Seeds each process with seed and mpirank from MPI_COMM_WORLD.
+ * Seeds each process with seed and mpirank from sc_MPI_COMM_WORLD.
  *    ( mpirank + seed * large_prime )
  *
  * \param [in] seed Seed for random number generator, calls srand ().
@@ -64,7 +64,7 @@ double              sc_function1_invert (sc_function1_t func, void *data,
 void                sc_srand (unsigned int seed);
 
 /** Seed the random number generator differently on each process.
- * Seeds each process with time and mpirank from MPI_COMM_WORLD.
+ * Seeds each process with time and mpirank from sc_MPI_COMM_WORLD.
  *    ( time + mpirank * small_prime )
  */
 void                sc_srand_time ();

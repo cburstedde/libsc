@@ -23,7 +23,7 @@
 /* including sc_mpi.h does not work here since sc_mpi.h is included by sc.h */
 #include <sc.h>
 
-#ifndef SC_MPI
+#ifndef SC_ENABLE_MPI
 
 /* gettimeofday is in either of these two */
 #ifdef SC_HAVE_SYS_TIME_H
@@ -34,22 +34,22 @@
 #endif
 
 static inline void
-mpi_dummy_assert_op (MPI_Op op)
+mpi_dummy_assert_op (sc_MPI_Op op)
 {
   switch (op) {
-  case MPI_MAX:
-  case MPI_MIN:
-  case MPI_SUM:
-  case MPI_PROD:
-  case MPI_LAND:
-  case MPI_BAND:
-  case MPI_LOR:
-  case MPI_BOR:
-  case MPI_LXOR:
-  case MPI_BXOR:
-  case MPI_MINLOC:
-  case MPI_MAXLOC:
-  case MPI_REPLACE:
+  case sc_MPI_MAX:
+  case sc_MPI_MIN:
+  case sc_MPI_SUM:
+  case sc_MPI_PROD:
+  case sc_MPI_LAND:
+  case sc_MPI_BAND:
+  case sc_MPI_LOR:
+  case sc_MPI_BOR:
+  case sc_MPI_LXOR:
+  case sc_MPI_BXOR:
+  case sc_MPI_MINLOC:
+  case sc_MPI_MAXLOC:
+  case sc_MPI_REPLACE:
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -57,78 +57,79 @@ mpi_dummy_assert_op (MPI_Op op)
 }
 
 int
-MPI_Init (int *argc, char ***argv)
+sc_MPI_Init (int *argc, char ***argv)
 {
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Init_thread (int *argc, char ***argv, int required, int *provided)
+sc_MPI_Init_thread (int *argc, char ***argv, int required, int *provided)
 {
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Finalize (void)
+sc_MPI_Finalize (void)
 {
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Abort (MPI_Comm comm, int exitcode)
+sc_MPI_Abort (sc_MPI_Comm comm, int exitcode)
 {
   abort ();
 }
 
 int
-MPI_Comm_dup (MPI_Comm comm, MPI_Comm * newcomm)
+sc_MPI_Comm_dup (sc_MPI_Comm comm, sc_MPI_Comm * newcomm)
 {
   *newcomm = comm;
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Comm_free (MPI_Comm * comm)
+sc_MPI_Comm_free (sc_MPI_Comm * comm)
 {
-  *comm = MPI_COMM_NULL;
+  *comm = sc_MPI_COMM_NULL;
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Comm_size (MPI_Comm comm, int *size)
+sc_MPI_Comm_size (sc_MPI_Comm comm, int *size)
 {
   *size = 1;
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Comm_rank (MPI_Comm comm, int *rank)
+sc_MPI_Comm_rank (sc_MPI_Comm comm, int *rank)
 {
   *rank = 0;
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Barrier (MPI_Comm comm)
+sc_MPI_Barrier (sc_MPI_Comm comm)
 {
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Bcast (void *p, int n, MPI_Datatype t, int rank, MPI_Comm comm)
+sc_MPI_Bcast (void *p, int n, sc_MPI_Datatype t, int rank, sc_MPI_Comm comm)
 {
   SC_ASSERT (rank == 0);
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Gather (void *p, int np, MPI_Datatype tp,
-            void *q, int nq, MPI_Datatype tq, int rank, MPI_Comm comm)
+sc_MPI_Gather (void *p, int np, sc_MPI_Datatype tp,
+               void *q, int nq, sc_MPI_Datatype tq, int rank,
+               sc_MPI_Comm comm)
 {
   size_t              lp, lq;
 
@@ -142,13 +143,13 @@ MPI_Gather (void *p, int np, MPI_Datatype tp,
   SC_ASSERT (lp == lq);
   memcpy (q, p, lp);
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Gatherv (void *p, int np, MPI_Datatype tp,
-             void *q, int *recvc, int *displ,
-             MPI_Datatype tq, int rank, MPI_Comm comm)
+sc_MPI_Gatherv (void *p, int np, sc_MPI_Datatype tp,
+                void *q, int *recvc, int *displ,
+                sc_MPI_Datatype tq, int rank, sc_MPI_Comm comm)
 {
   int                 nq;
   size_t              lp, lq;
@@ -164,27 +165,27 @@ MPI_Gatherv (void *p, int np, MPI_Datatype tp,
   SC_ASSERT (lp == lq);
   memcpy ((char *) q + displ[0] * sc_mpi_sizeof (tq), p, lp);
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Allgather (void *p, int np, MPI_Datatype tp,
-               void *q, int nq, MPI_Datatype tq, MPI_Comm comm)
+sc_MPI_Allgather (void *p, int np, sc_MPI_Datatype tp,
+                  void *q, int nq, sc_MPI_Datatype tq, sc_MPI_Comm comm)
 {
-  return MPI_Gather (p, np, tp, q, nq, tq, 0, comm);
+  return sc_MPI_Gather (p, np, tp, q, nq, tq, 0, comm);
 }
 
 int
-MPI_Allgatherv (void *p, int np, MPI_Datatype tp,
-                void *q, int *recvc, int *displ,
-                MPI_Datatype tq, MPI_Comm comm)
+sc_MPI_Allgatherv (void *p, int np, sc_MPI_Datatype tp,
+                   void *q, int *recvc, int *displ,
+                   sc_MPI_Datatype tq, sc_MPI_Comm comm)
 {
-  return MPI_Gatherv (p, np, tp, q, recvc, displ, tq, 0, comm);
+  return sc_MPI_Gatherv (p, np, tp, q, recvc, displ, tq, 0, comm);
 }
 
 int
-MPI_Reduce (void *p, void *q, int n, MPI_Datatype t,
-            MPI_Op op, int rank, MPI_Comm comm)
+sc_MPI_Reduce (void *p, void *q, int n, sc_MPI_Datatype t,
+               sc_MPI_Op op, int rank, sc_MPI_Comm comm)
 {
   size_t              l;
 
@@ -197,96 +198,97 @@ MPI_Reduce (void *p, void *q, int n, MPI_Datatype t,
 
   memcpy (q, p, l);
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Allreduce (void *p, void *q, int n, MPI_Datatype t,
-               MPI_Op op, MPI_Comm comm)
+sc_MPI_Allreduce (void *p, void *q, int n, sc_MPI_Datatype t,
+                  sc_MPI_Op op, sc_MPI_Comm comm)
 {
-  return MPI_Reduce (p, q, n, t, op, 0, comm);
+  return sc_MPI_Reduce (p, q, n, t, op, 0, comm);
 }
 
 int
-MPI_Recv (void *buf, int count, MPI_Datatype datatype, int source, int tag,
-          MPI_Comm comm, MPI_Status * status)
+sc_MPI_Recv (void *buf, int count, sc_MPI_Datatype datatype, int source,
+             int tag, sc_MPI_Comm comm, sc_MPI_Status * status)
 {
-  SC_ABORT ("MPI_Recv is not implemented");
-  return MPI_SUCCESS;
+  SC_ABORT ("non-MPI MPI_Recv is not implemented");
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Irecv (void *buf, int count, MPI_Datatype datatype, int source, int tag,
-           MPI_Comm comm, MPI_Request * request)
+sc_MPI_Irecv (void *buf, int count, sc_MPI_Datatype datatype, int source,
+              int tag, sc_MPI_Comm comm, sc_MPI_Request * request)
 {
-  SC_ABORT ("MPI_Irecv is not implemented");
-  return MPI_SUCCESS;
+  SC_ABORT ("non-MPI MPI_Irecv is not implemented");
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Send (void *buf, int count, MPI_Datatype datatype,
-          int dest, int tag, MPI_Comm comm)
+sc_MPI_Send (void *buf, int count, sc_MPI_Datatype datatype,
+             int dest, int tag, sc_MPI_Comm comm)
 {
-  SC_ABORT ("MPI_Send is not implemented");
-  return MPI_SUCCESS;
+  SC_ABORT ("non-MPI MPI_Send is not implemented");
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Isend (void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-           MPI_Comm comm, MPI_Request * request)
+sc_MPI_Isend (void *buf, int count, sc_MPI_Datatype datatype, int dest,
+              int tag, sc_MPI_Comm comm, sc_MPI_Request * request)
 {
-  SC_ABORT ("MPI_Isend is not implemented");
-  return MPI_SUCCESS;
+  SC_ABORT ("non-MPI MPI_Isend is not implemented");
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Probe (int source, int tag, MPI_Comm comm, MPI_Status * status)
+sc_MPI_Probe (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status * status)
 {
-  SC_ABORT ("MPI_Probe is not implemented");
-  return MPI_SUCCESS;
+  SC_ABORT ("non-MPI MPI_Probe is not implemented");
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Iprobe (int source, int tag, MPI_Comm comm, int *flag,
-            MPI_Status * status)
+sc_MPI_Iprobe (int source, int tag, sc_MPI_Comm comm, int *flag,
+               sc_MPI_Status * status)
 {
-  SC_ABORT ("MPI_Iprobe is not implemented");
-  return MPI_SUCCESS;
+  SC_ABORT ("non-MPI MPI_Iprobe is not implemented");
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Get_count (MPI_Status * status, MPI_Datatype datatype, int *count)
+sc_MPI_Get_count (sc_MPI_Status * status, sc_MPI_Datatype datatype,
+                  int *count)
 {
-  SC_ABORT ("MPI_Get_count is not implemented");
-  return MPI_SUCCESS;
+  SC_ABORT ("non-MPI MPI_Get_count is not implemented");
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Wait (MPI_Request * request, MPI_Status * status)
+sc_MPI_Wait (sc_MPI_Request * request, sc_MPI_Status * status)
 {
-  SC_ABORT ("MPI_Wait is not implemented");
-  return MPI_SUCCESS;
+  SC_ABORT ("non-MPI sc_MPI_Wait is not implemented");
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Waitsome (int incount, MPI_Request * array_of_requests,
-              int *outcount, int *array_of_indices,
-              MPI_Status * array_of_statuses)
+sc_MPI_Waitsome (int incount, sc_MPI_Request * array_of_requests,
+                 int *outcount, int *array_of_indices,
+                 sc_MPI_Status * array_of_statuses)
 {
-  SC_CHECK_ABORT (incount == 0, "MPI_Waitsome handles zero requests only");
-  return MPI_SUCCESS;
+  SC_CHECK_ABORT (incount == 0, "sc_MPI_Waitsome handles zero requests only");
+  return sc_MPI_SUCCESS;
 }
 
 int
-MPI_Waitall (int count, MPI_Request * array_of_requests,
-             MPI_Status * array_of_statuses)
+sc_MPI_Waitall (int count, sc_MPI_Request * array_of_requests,
+                sc_MPI_Status * array_of_statuses)
 {
-  SC_CHECK_ABORT (count == 0, "MPI_Waitall handles zero requests only");
-  return MPI_SUCCESS;
+  SC_CHECK_ABORT (count == 0, "sc_MPI_Waitall handles zero requests only");
+  return sc_MPI_SUCCESS;
 }
 
 double
-MPI_Wtime (void)
+sc_MPI_Wtime (void)
 {
   int                 retval;
   struct timeval      tv;
@@ -297,28 +299,28 @@ MPI_Wtime (void)
   return (double) tv.tv_sec + 1.e-6 * tv.tv_usec;
 }
 
-#endif /* !SC_MPI */
+#endif /* !SC_ENABLE_MPI */
 
 size_t
-sc_mpi_sizeof (MPI_Datatype t)
+sc_mpi_sizeof (sc_MPI_Datatype t)
 {
-  if (t == MPI_CHAR)
+  if (t == sc_MPI_CHAR)
     return sizeof (char);
-  if (t == MPI_BYTE)
+  if (t == sc_MPI_BYTE)
     return 1;
-  if (t == MPI_SHORT || t == MPI_UNSIGNED_SHORT)
+  if (t == sc_MPI_SHORT || t == sc_MPI_UNSIGNED_SHORT)
     return sizeof (short);
-  if (t == MPI_INT || t == MPI_UNSIGNED)
+  if (t == sc_MPI_INT || t == sc_MPI_UNSIGNED)
     return sizeof (int);
-  if (t == MPI_LONG || t == MPI_UNSIGNED_LONG)
+  if (t == sc_MPI_LONG || t == sc_MPI_UNSIGNED_LONG)
     return sizeof (long);
-  if (t == MPI_LONG_LONG_INT)
+  if (t == sc_MPI_LONG_LONG_INT)
     return sizeof (long long);
-  if (t == MPI_FLOAT)
+  if (t == sc_MPI_FLOAT)
     return sizeof (float);
-  if (t == MPI_DOUBLE)
+  if (t == sc_MPI_DOUBLE)
     return sizeof (double);
-  if (t == MPI_LONG_DOUBLE)
+  if (t == sc_MPI_LONG_DOUBLE)
     return sizeof (long double);
 
   SC_ABORT_NOT_REACHED ();

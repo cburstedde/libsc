@@ -42,10 +42,10 @@ main (int argc, char **argv)
   void               *pointerTest;
 
   /* Initialization stuff */
-  mpiret = MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   /* Print some funny stuff */
   SC_GLOBAL_LDEBUGF ("Hash of empty string: %x\n",
@@ -214,7 +214,7 @@ main (int argc, char **argv)
   /* Shutdown procedures */
   sc_finalize ();
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
   return num_failed_tests ? 1 : 0;

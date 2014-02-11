@@ -44,10 +44,10 @@ main (int argc, char **argv)
   int                 mpiret;
   double              start, elapsed_pqueue, elapsed_qsort;
 
-  mpiret = MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   a1 = sc_array_new (sizeof (int));
   a2 = sc_array_new (sizeof (int));
@@ -61,7 +61,7 @@ main (int argc, char **argv)
 #endif
   SC_INFOF ("Test pqueue with count %d\n", count);
 
-  start = -MPI_Wtime ();
+  start = -sc_MPI_Wtime ();
 
   swaps1 = swaps2 = swaps3 = 0;
   total1 = total2 = total3 = 0;
@@ -116,7 +116,7 @@ main (int argc, char **argv)
                (long long) swaps1, (long long) swaps2, (long long) swaps3,
                (long long) total1, (long long) total2, (long long) total3);
 
-  elapsed_pqueue = start + MPI_Wtime ();
+  elapsed_pqueue = start + sc_MPI_Wtime ();
 
   sc_array_destroy (a1);
   sc_array_destroy (a2);
@@ -124,7 +124,7 @@ main (int argc, char **argv)
 
   SC_INFOF ("Test array sort with count %d\n", count);
 
-  start = -MPI_Wtime ();
+  start = -sc_MPI_Wtime ();
 
   /* the resize is done to be comparable with the above procedure */
   for (i = 0; i < count; ++i) {
@@ -141,14 +141,14 @@ main (int argc, char **argv)
   }
   sc_array_resize (a4, 0);
 
-  elapsed_qsort = start + MPI_Wtime ();
+  elapsed_qsort = start + sc_MPI_Wtime ();
   SC_STATISTICSF ("Test timings pqueue %g qsort %g\n",
                   elapsed_pqueue, 3. * elapsed_qsort);
 
   sc_array_destroy (a4);
   sc_finalize ();
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
   return 0;

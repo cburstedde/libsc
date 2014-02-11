@@ -177,7 +177,7 @@ sc_ranges_compute (int package_id, int num_procs, const int *procs,
 }
 
 int
-sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
+sc_ranges_adaptive (int package_id, sc_MPI_Comm mpicomm,
                     const int *procs, int *inout1, int *inout2,
                     int num_ranges, int *ranges, int **global_ranges)
 {
@@ -188,9 +188,9 @@ sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
   int                 nwin, maxwin, twomaxwin;
 
   /* get processor related information */
-  mpiret = MPI_Comm_size (mpicomm, &num_procs);
+  mpiret = sc_MPI_Comm_size (mpicomm, &num_procs);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &rank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
   first_peer = *inout1;
   last_peer = *inout2;
@@ -205,7 +205,8 @@ sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
                        first_peer, last_peer, num_ranges, ranges);
 
   /* communicate the maximum number of peers and ranges */
-  mpiret = MPI_Allreduce (local, global, 2, MPI_INT, MPI_MAX, mpicomm);
+  mpiret =
+    sc_MPI_Allreduce (local, global, 2, sc_MPI_INT, sc_MPI_MAX, mpicomm);
   SC_CHECK_MPI (mpiret);
   *inout1 = global[0];
   *inout2 = maxwin = global[1];
@@ -215,8 +216,9 @@ sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
   /* distribute everybody's range information */
   if (global_ranges != NULL) {
     *global_ranges = SC_ALLOC (int, twomaxwin * num_procs);
-    mpiret = MPI_Allgather (ranges, twomaxwin, MPI_INT,
-                            *global_ranges, twomaxwin, MPI_INT, mpicomm);
+    mpiret = sc_MPI_Allgather (ranges, twomaxwin, sc_MPI_INT,
+                               *global_ranges, twomaxwin, sc_MPI_INT,
+                               mpicomm);
     SC_CHECK_MPI (mpiret);
   }
 
@@ -305,7 +307,7 @@ sc_ranges_decode (int num_procs, int rank,
 
 void
 sc_ranges_statistics (int package_id, int log_priority,
-                      MPI_Comm mpicomm, int num_procs, const int *procs,
+                      sc_MPI_Comm mpicomm, int num_procs, const int *procs,
                       int rank, int num_ranges, int *ranges)
 {
   int                 i, j;

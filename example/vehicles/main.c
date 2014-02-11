@@ -49,7 +49,7 @@ main (int argc, char **argv)
   sc_object_t        *bb, *tt;
   CarKlass           *car_klass_data;
 
-  sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
   SC_INFO ("Construct sc_object_ts\n");
   object_klass = sc_object_klass_new ();

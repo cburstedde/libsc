@@ -245,7 +245,7 @@ void                sc_fwrite (const void *ptr, size_t size,
 void                sc_fread (void *ptr, size_t size,
                               size_t nmemb, FILE * file, const char *errmsg);
 
-#ifdef SC_MPIIO
+#ifdef SC_ENABLE_MPIIO
 
 /** Write memory content to an MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
@@ -256,7 +256,7 @@ void                sc_fread (void *ptr, size_t size,
  * \note                This function aborts on MPI file and count errors.
  */
 void                sc_mpi_write (MPI_File mpifile, const void *ptr,
-                                  size_t zcount, MPI_Datatype t,
+                                  size_t zcount, sc_MPI_Datatype t,
                                   const char *errmsg);
 
 #endif

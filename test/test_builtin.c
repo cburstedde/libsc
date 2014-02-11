@@ -143,7 +143,7 @@ main (int argc, char **argv)
 {
   int                 num_errors = 0;
 
-  sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
   num_errors += test_getopt (argc, argv);
   num_errors += test_obstack ();

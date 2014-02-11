@@ -29,7 +29,7 @@ SC_EXTERN_C_BEGIN;
 
 typedef struct sc_flopinfo
 {
-  double              seconds;  /* current time from MPI_Wtime */
+  double              seconds;  /* current time from sc_MPI_Wtime */
 
   /* these variables measure onward from from sc_flops_start */
   double              cwtime;   /* cumulative wall time */

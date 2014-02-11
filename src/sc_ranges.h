@@ -70,7 +70,7 @@ int                 sc_ranges_compute (int package_id, int num_procs,
  *     Size will be 2 * inout2 * num_procs.  Must be freed with SC_FREE ().
  * \return                  Returns the number of locally filled ranges.
  */
-int                 sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
+int                 sc_ranges_adaptive (int package_id, sc_MPI_Comm mpicomm,
                                         const int *procs,
                                         int *inout1, int *inout2,
                                         int num_ranges, int *ranges,
@@ -105,7 +105,7 @@ void                sc_ranges_decode (int num_procs, int rank,
  * \param [in] log_priority     Priority to use for logging.
  */
 void                sc_ranges_statistics (int package_id, int log_priority,
-                                          MPI_Comm mpicomm, int num_procs,
+                                          sc_MPI_Comm mpicomm, int num_procs,
                                           const int *procs, int rank,
                                           int num_ranges, int *ranges);
 

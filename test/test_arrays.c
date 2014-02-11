@@ -110,7 +110,7 @@ main (int argc, char **argv)
   size_t             *perm;
   int                *data;
 
-  sc_init (MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
   a = sc_array_new (sizeof (int));
   sc_array_resize (a, (size_t) N);

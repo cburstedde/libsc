@@ -64,10 +64,10 @@ main (int argc, char **argv)
   double              b_data[] = { 1.0, 2.0, 3.0 };
   double              xexact_data[] = { -0.1 / 3.0, 1.4 / 3.0, -0.1 / 3.0 };
 
-  mpiret = MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   A = sc_dmatrix_new_data (3, 3, A_data);
   b = sc_dmatrix_new_data (1, 3, b_data);
@@ -143,7 +143,7 @@ main (int argc, char **argv)
 
   sc_finalize ();
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 #endif
 

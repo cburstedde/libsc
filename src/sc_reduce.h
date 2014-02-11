@@ -30,38 +30,39 @@
 #define SC_REDUCE_ALLTOALL_LEVEL        3
 #endif
 
-typedef void        (*sc_reduce_t) (void *sendbuf, void *recvbuf,
-                                    int sendcount, MPI_Datatype sendtype);
-
 SC_EXTERN_C_BEGIN;
+
+typedef void        (*sc_reduce_t) (void *sendbuf, void *recvbuf,
+                                    int sendcount, sc_MPI_Datatype sendtype);
 
 /** Custom allreduce operation.
  */
 int                 sc_allreduce_custom (void *sendbuf, void *recvbuf,
-                                         int sendcount, MPI_Datatype sendtype,
+                                         int sendcount,
+                                         sc_MPI_Datatype sendtype,
                                          sc_reduce_t reduce_fn,
-                                         MPI_Comm mpicomm);
+                                         sc_MPI_Comm mpicomm);
 
 /** Custom reduce operation.
  * \param [in] target   The MPI rank that obtains the result.
  */
 int                 sc_reduce_custom (void *sendbuf, void *recvbuf,
-                                      int sendcount, MPI_Datatype sendtype,
+                                      int sendcount, sc_MPI_Datatype sendtype,
                                       sc_reduce_t reduce_fn,
-                                      int target, MPI_Comm mpicomm);
+                                      int target, sc_MPI_Comm mpicomm);
 
 /** Drop-in MPI_Allreduce replacement.
  */
 int                 sc_allreduce (void *sendbuf, void *recvbuf, int sendcount,
-                                  MPI_Datatype sendtype, MPI_Op operation,
-                                  MPI_Comm mpicomm);
+                                  sc_MPI_Datatype sendtype,
+                                  sc_MPI_Op operation, sc_MPI_Comm mpicomm);
 
 /** Drop-in MPI_Reduce replacement.
  * \param [in] target   The MPI rank that obtains the result.
  */
 int                 sc_reduce (void *sendbuf, void *recvbuf, int sendcount,
-                               MPI_Datatype sendtype, MPI_Op operation,
-                               int target, MPI_Comm mpicomm);
+                               sc_MPI_Datatype sendtype, sc_MPI_Op operation,
+                               int target, sc_MPI_Comm mpicomm);
 
 SC_EXTERN_C_END;
 

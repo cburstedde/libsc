@@ -130,7 +130,7 @@ check_derivatives (sc_bspline_t * bs)
 int
 main (int argc, char **argv)
 {
-  MPI_Comm            mpicomm;
+  sc_MPI_Comm         mpicomm;
   int                 mpiret, mpisize;
   int                 retval, nargs;
   int                 minpoints;
@@ -139,13 +139,13 @@ main (int argc, char **argv)
   sc_dmatrix_t       *points, *knots, *works;
   sc_bspline_t       *bs;
 
-  mpiret = MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  mpicomm = MPI_COMM_WORLD;
+  mpicomm = sc_MPI_COMM_WORLD;
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
-  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
   if (mpisize != 1)
     sc_abort_collective ("This program runs in serial only");
@@ -201,7 +201,7 @@ main (int argc, char **argv)
 
   sc_finalize ();
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
   return 0;
