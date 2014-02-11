@@ -25,7 +25,7 @@
 int
 main (int argc, char **argv)
 {
-#ifdef SC_BLAS
+#ifdef SC_WITH_BLAS
   int                 mpiret;
   sc_dmatrix_pool_t  *p13, *p92;
   sc_dmatrix_t       *m1, *m2, *m3, *m4;
@@ -64,7 +64,7 @@ main (int argc, char **argv)
 
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
-#endif
+#endif /* !SC_WITH_BLAS */
 
   return 0;
 }

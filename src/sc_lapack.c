@@ -24,7 +24,7 @@
 
 const char          sc_jobzchar[] = { 'N', 'V', '?' };
 
-#ifndef SC_LAPACK
+#ifndef SC_WITH_LAPACK
 
 int
 sc_lapack_nonimplemented ()
@@ -33,4 +33,4 @@ sc_lapack_nonimplemented ()
   return 0;
 }
 
-#endif
+#endif /* !SC_WITH_LAPACK */

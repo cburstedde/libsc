@@ -22,7 +22,7 @@
 
 #include <sc_dmatrix.h>
 
-#if defined(SC_BLAS) && defined(SC_LAPACK)
+#if defined(SC_WITH_BLAS) && defined(SC_WITH_LAPACK)
 
 static const double eps = 2.220446049250313e-16;
 
@@ -52,7 +52,7 @@ int
 main (int argc, char **argv)
 {
   int                 num_failed_tests = 0;
-#if defined(SC_BLAS) && defined(SC_LAPACK)
+#if defined(SC_WITH_BLAS) && defined(SC_WITH_LAPACK)
   int                 j;
   int                 mpiret;
   sc_dmatrix_t       *A, *x, *xexact, *b, *bT, *xT, *xTexact;

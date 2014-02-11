@@ -527,7 +527,7 @@ sc_dmatrix_add (double alpha, const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 
   inc = 1;
   if (totalsize > 0) {
-    BLAS_DAXPY (&totalsize, &alpha, X->e[0], &inc, Y->e[0], &inc);
+    SC_BLAS_DAXPY (&totalsize, &alpha, X->e[0], &inc, Y->e[0], &inc);
   }
 }
 
@@ -552,8 +552,8 @@ sc_dmatrix_vector (sc_trans_t transa, sc_trans_t transx, sc_trans_t transy,
   SC_ASSERT (dimX1 == 1 && dimY1 == 1);
 
   if (A->n > 0 && A->m > 0) {
-    BLAS_DGEMV (&sc_antitranschar[transa], &A->n, &A->m, &alpha,
-                A->e[0], &A->n, X->e[0], &inc, &beta, Y->e[0], &inc);
+    SC_BLAS_DGEMV (&sc_antitranschar[transa], &A->n, &A->m, &alpha,
+                   A->e[0], &A->n, X->e[0], &inc, &beta, Y->e[0], &inc);
   }
   else if (beta != 1.) {
     sc_dmatrix_scale (beta, Y);
@@ -584,9 +584,9 @@ sc_dmatrix_multiply (sc_trans_t transa, sc_trans_t transb, double alpha,
 
   if (Crows > 0 && Ccols > 0) {
     if (Acols > 0) {
-      BLAS_DGEMM (&sc_transchar[transb], &sc_transchar[transa], &Ccols,
-                  &Crows, &Acols, &alpha, B->e[0], &B->n, A->e[0], &A->n,
-                  &beta, C->e[0], &C->n);
+      SC_BLAS_DGEMM (&sc_transchar[transb], &sc_transchar[transa], &Ccols,
+                     &Crows, &Acols, &alpha, B->e[0], &B->n, A->e[0], &A->n,
+                     &beta, C->e[0], &C->n);
     }
     else if (beta != 1.0) {     /* ignore comparison warning */
       sc_dmatrix_scale (beta, C);
@@ -647,14 +647,14 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
     sc_bint_t          *ipiv = SC_ALLOC (sc_bint_t, N);
 
     /* Perform an LU factorization of B. */
-    LAPACK_DGETRF (&N, &N, lu->e[0], &N, ipiv, &info);
+    SC_LAPACK_DGETRF (&N, &N, lu->e[0], &N, ipiv, &info);
 
     SC_ASSERT (info == 0);
 
     /* Solve the linear system. */
     sc_dmatrix_copy (A, C);
-    LAPACK_DGETRS (&sc_transchar[transb], &N, &Nrhs, lu->e[0], &N,
-                   ipiv, C->e[0], &N, &info);
+    SC_LAPACK_DGETRS (&sc_transchar[transb], &N, &Nrhs, lu->e[0], &N,
+                      ipiv, C->e[0], &N, &info);
 
     SC_ASSERT (info == 0);
 

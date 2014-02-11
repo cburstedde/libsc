@@ -73,57 +73,57 @@ extern const char   sc_antitranschar[]; /* does not work for complex */
 extern const char   sc_uplochar[];
 extern const char   sc_cmachchar[];
 
-#ifdef SC_BLAS
+#ifdef SC_WITH_BLAS
 
 #ifndef SC_F77_FUNC
 #define SC_F77_FUNC(small,CAPS) small ## _
 #endif
 
-#define BLAS_DLAMCH  SC_F77_FUNC(dlamch,DLAMCH)
-#define BLAS_DSCAL   SC_F77_FUNC(dscal,DSCAL)
-#define BLAS_DCOPY   SC_F77_FUNC(dcopy,DCOPY)
-#define BLAS_DAXPY   SC_F77_FUNC(daxpy,DAXPY)
-#define BLAS_DDOT    SC_F77_FUNC(ddot,DDOT)
-#define BLAS_DGEMV   SC_F77_FUNC(dgemv,DGEMV)
-#define BLAS_DGEMM   SC_F77_FUNC(dgemm,DGEMM)
+#define SC_BLAS_DLAMCH  SC_F77_FUNC(dlamch,DLAMCH)
+#define SC_BLAS_DSCAL   SC_F77_FUNC(dscal,DSCAL)
+#define SC_BLAS_DCOPY   SC_F77_FUNC(dcopy,DCOPY)
+#define SC_BLAS_DAXPY   SC_F77_FUNC(daxpy,DAXPY)
+#define SC_BLAS_DDOT    SC_F77_FUNC(ddot,DDOT)
+#define SC_BLAS_DGEMV   SC_F77_FUNC(dgemv,DGEMV)
+#define SC_BLAS_DGEMM   SC_F77_FUNC(dgemm,DGEMM)
 
-double              BLAS_DLAMCH (const char *cmach);
-void                BLAS_DSCAL (const sc_bint_t * n, const double *alpha,
-                                double *X, const sc_bint_t * incx);
-void                BLAS_DCOPY (const sc_bint_t * n,
-                                const double *X, const sc_bint_t * incx,
-                                double *Y, const sc_bint_t * incy);
-void                BLAS_DAXPY (const sc_bint_t * n, const double *alpha,
-                                const double *X, const sc_bint_t * incx,
-                                double *Y, const sc_bint_t * incy);
-double              BLAS_DDOT (const sc_bint_t * n, const double *X,
-                               const sc_bint_t * incx, const double *Y,
-                               const sc_bint_t * incy);
+double              SC_BLAS_DLAMCH (const char *cmach);
+void                SC_BLAS_DSCAL (const sc_bint_t * n, const double *alpha,
+                                   double *X, const sc_bint_t * incx);
+void                SC_BLAS_DCOPY (const sc_bint_t * n,
+                                   const double *X, const sc_bint_t * incx,
+                                   double *Y, const sc_bint_t * incy);
+void                SC_BLAS_DAXPY (const sc_bint_t * n, const double *alpha,
+                                   const double *X, const sc_bint_t * incx,
+                                   double *Y, const sc_bint_t * incy);
+double              SC_BLAS_DDOT (const sc_bint_t * n, const double *X,
+                                  const sc_bint_t * incx, const double *Y,
+                                  const sc_bint_t * incy);
 
-void                BLAS_DGEMV (const char *transa, const sc_bint_t * m,
-                                const sc_bint_t * n, const double *alpha,
-                                const double *a, const sc_bint_t * lda,
-                                const double *x, const sc_bint_t * incx,
-                                const double *beta, double *y,
-                                const sc_bint_t * incy);
+void                SC_BLAS_DGEMV (const char *transa, const sc_bint_t * m,
+                                   const sc_bint_t * n, const double *alpha,
+                                   const double *a, const sc_bint_t * lda,
+                                   const double *x, const sc_bint_t * incx,
+                                   const double *beta, double *y,
+                                   const sc_bint_t * incy);
 
-void                BLAS_DGEMM (const char *transa, const char *transb,
-                                const sc_bint_t * m, const sc_bint_t * n,
-                                const sc_bint_t * k, const double *alpha,
-                                const double *a, const sc_bint_t * lda,
-                                const double *b, const sc_bint_t * ldb,
-                                const double *beta, double *c,
-                                const sc_bint_t * ldc);
+void                SC_BLAS_DGEMM (const char *transa, const char *transb,
+                                   const sc_bint_t * m, const sc_bint_t * n,
+                                   const sc_bint_t * k, const double *alpha,
+                                   const double *a, const sc_bint_t * lda,
+                                   const double *b, const sc_bint_t * ldb,
+                                   const double *beta, double *c,
+                                   const sc_bint_t * ldc);
 
-#else /* !SC_BLAS */
+#else /* !SC_WITH_BLAS */
 
-#define BLAS_DLAMCH (double) sc_blas_nonimplemented
-#define BLAS_DSCAL  (void)   sc_blas_nonimplemented
-#define BLAS_DCOPY  (void)   sc_blas_nonimplemented
-#define BLAS_DAXPY  (void)   sc_blas_nonimplemented
-#define BLAS_DDOT   (double) sc_blas_nonimplemented
-#define BLAS_DGEMM  (void)   sc_blas_nonimplemented
-#define BLAS_DGEMV  (void)   sc_blas_nonimplemented
+#define SC_BLAS_DLAMCH (double) sc_blas_nonimplemented
+#define SC_BLAS_DSCAL  (void)   sc_blas_nonimplemented
+#define SC_BLAS_DCOPY  (void)   sc_blas_nonimplemented
+#define SC_BLAS_DAXPY  (void)   sc_blas_nonimplemented
+#define SC_BLAS_DDOT   (double) sc_blas_nonimplemented
+#define SC_BLAS_DGEMM  (void)   sc_blas_nonimplemented
+#define SC_BLAS_DGEMV  (void)   sc_blas_nonimplemented
 
 int                 sc_blas_nonimplemented ();
 

@@ -223,7 +223,7 @@ if test "x$dgemm" = xunknown ; then dgemm=dgemm_ ; fi
 
 AC_MSG_NOTICE([Checking BLAS])
 SC_BLAS([$1], [$dgemm],
-        [AC_DEFINE([BLAS], 1, [Define to 1 if BLAS is used])],
+        [AC_DEFINE([WITH_BLAS], 1, [Define to 1 if BLAS is used])],
         [AC_MSG_ERROR([[\
 Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
  LIBS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB\
@@ -233,14 +233,14 @@ Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
 if test "x$sc_blas_ok" = xdisable ; then
         AC_MSG_NOTICE([Not using BLAS])
 fi
-AM_CONDITIONAL([$1_BLAS], [test "x$sc_blas_ok" = xyes])
+AM_CONDITIONAL([$1_WITH_BLAS], [test "x$sc_blas_ok" = xyes])
 
 dgecon=;AC_F77_FUNC(dgecon)
 if test "x$dgecon" = xunknown ; then dgecon=dgecon_ ; fi
 
 AC_MSG_NOTICE([Checking LAPACK])
 SC_LAPACK([$1], [$dgecon],
-          [AC_DEFINE([LAPACK], 1, [Define to 1 if LAPACK is used])],
+          [AC_DEFINE([WITH_LAPACK], 1, [Define to 1 if LAPACK is used])],
           [AC_MSG_ERROR([[\
 Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
  LIBS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB\
@@ -250,7 +250,7 @@ Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
 if test "x$sc_lapack_ok" = xdisable ; then
         AC_MSG_NOTICE([Not using LAPACK])
 fi
-AM_CONDITIONAL([$1_LAPACK], [test "x$sc_lapack_ok" = xyes])
+AM_CONDITIONAL([$1_WITH_LAPACK], [test "x$sc_lapack_ok" = xyes])
 
 # Append the necessary blas/lapack and fortran libraries to LIBS
 LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $LAPACK_FLIBS $BLAS_FLIBS"

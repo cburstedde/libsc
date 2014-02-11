@@ -28,7 +28,7 @@ const char          sc_uplochar[] = { 'U', 'L', '?' };
 const char          sc_cmachchar[] =
   { 'E', 'S', 'B', 'P', 'N', 'R', 'M', 'U', 'L', 'O' };
 
-#ifndef SC_BLAS
+#ifndef SC_WITH_BLAS
 
 int
 sc_blas_nonimplemented ()
@@ -37,4 +37,4 @@ sc_blas_nonimplemented ()
   return 0;
 }
 
-#endif
+#endif /* !SC_WITH_BLAS */
