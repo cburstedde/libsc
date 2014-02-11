@@ -270,10 +270,10 @@ int                 sc_MPI_Iprobe (int, int, sc_MPI_Comm, int *,
                                    sc_MPI_Status *);
 int                 sc_MPI_Get_count (sc_MPI_Status *, sc_MPI_Datatype,
                                       int *);
+
+/* These functions are only allowed to be called with NULL requests. */
+
 int                 sc_MPI_Wait (sc_MPI_Request *, sc_MPI_Status *);
-
-/* These functions are only allowed to be called with zero size arrays. */
-
 int                 sc_MPI_Waitsome (int, sc_MPI_Request *,
                                      int *, int *, sc_MPI_Status *);
 int                 sc_MPI_Waitall (int, sc_MPI_Request *, sc_MPI_Status *);

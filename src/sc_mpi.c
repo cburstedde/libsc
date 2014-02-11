@@ -266,7 +266,8 @@ sc_MPI_Get_count (sc_MPI_Status * status, sc_MPI_Datatype datatype,
 int
 sc_MPI_Wait (sc_MPI_Request * request, sc_MPI_Status * status)
 {
-  SC_ABORT ("non-MPI sc_MPI_Wait is not implemented");
+  SC_CHECK_ABORT (*request == sc_MPI_REQUEST_NULL,
+                  "non-MPI MPI_Wait handles NULL request only");
   return sc_MPI_SUCCESS;
 }
 
@@ -275,7 +276,14 @@ sc_MPI_Waitsome (int incount, sc_MPI_Request * array_of_requests,
                  int *outcount, int *array_of_indices,
                  sc_MPI_Status * array_of_statuses)
 {
-  SC_CHECK_ABORT (incount == 0, "sc_MPI_Waitsome handles zero requests only");
+  int                 i;
+
+  for (i = 0; i < incount; ++i) {
+    SC_CHECK_ABORT (array_of_requests[i] == sc_MPI_REQUEST_NULL,
+                    "non-MPI MPI_Waitsome handles NULL requests only");
+  }
+  *outcount = 0;
+
   return sc_MPI_SUCCESS;
 }
 
@@ -283,7 +291,12 @@ int
 sc_MPI_Waitall (int count, sc_MPI_Request * array_of_requests,
                 sc_MPI_Status * array_of_statuses)
 {
-  SC_CHECK_ABORT (count == 0, "sc_MPI_Waitall handles zero requests only");
+  int                 i;
+
+  for (i = 0; i < count; ++i) {
+    SC_CHECK_ABORT (array_of_requests[i] == sc_MPI_REQUEST_NULL,
+                    "non-MPI MPI_Waitall handles NULL requests only");
+  }
   return sc_MPI_SUCCESS;
 }
 
