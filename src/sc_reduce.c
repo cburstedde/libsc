@@ -23,8 +23,6 @@
 #include <sc_reduce.h>
 #include <sc_search.h>
 
-#ifdef SC_ENABLE_MPI
-
 static void
 sc_reduce_alltoall (sc_MPI_Comm mpicomm,
                     void *data, int count, sc_MPI_Datatype datatype,
@@ -220,8 +218,6 @@ sc_reduce_recursive (sc_MPI_Comm mpicomm,
     }
   }
 }
-
-#endif /* SC_ENABLE_MPI */
 
 static void
 sc_reduce_max (void *sendbuf, void *recvbuf,
@@ -481,12 +477,10 @@ sc_reduce_custom_dispatch (void *sendbuf, void *recvbuf, int sendcount,
                            sc_MPI_Datatype sendtype, sc_reduce_t reduce_fn,
                            int target, sc_MPI_Comm mpicomm)
 {
-#ifdef SC_ENABLE_MPI
   int                 mpiret;
   int                 mpisize;
   int                 mpirank;
   int                 maxlevel;
-#endif
   size_t              datasize;
 
   SC_ASSERT (sendcount >= 0);
@@ -496,7 +490,6 @@ sc_reduce_custom_dispatch (void *sendbuf, void *recvbuf, int sendcount,
   /* *INDENT-ON* */
   memcpy (recvbuf, sendbuf, datasize);
 
-#ifdef SC_ENABLE_MPI
   mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
@@ -507,7 +500,6 @@ sc_reduce_custom_dispatch (void *sendbuf, void *recvbuf, int sendcount,
   maxlevel = SC_LOG2_32 (mpisize - 1) + 1;
   sc_reduce_recursive (mpicomm, recvbuf, sendcount, sendtype, mpisize,
                        target, maxlevel, maxlevel, mpirank, reduce_fn);
-#endif
 
   return sc_MPI_SUCCESS;
 }

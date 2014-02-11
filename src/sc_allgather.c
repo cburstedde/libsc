@@ -22,8 +22,6 @@
 
 #include <sc_allgather.h>
 
-#ifdef SC_ENABLE_MPI
-
 void
 sc_ag_alltoall (sc_MPI_Comm mpicomm, char *data, int datasize,
                 int groupsize, int myoffset, int myrank)
@@ -130,18 +128,14 @@ sc_ag_recursive (sc_MPI_Comm mpicomm, char *data, int datasize,
   }
 }
 
-#endif /* SC_ENABLE_MPI */
-
 int
 sc_allgather (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
               void *recvbuf, int recvcount, sc_MPI_Datatype recvtype,
               sc_MPI_Comm mpicomm)
 {
-#ifdef SC_ENABLE_MPI
   int                 mpiret;
   int                 mpisize;
   int                 mpirank;
-#endif
   size_t              datasize;
 #ifdef SC_DEBUG
   size_t              datasize2;
@@ -158,7 +152,6 @@ sc_allgather (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
 
   SC_ASSERT (datasize == datasize2);
 
-#ifdef SC_ENABLE_MPI
   mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
@@ -167,9 +160,6 @@ sc_allgather (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
   memcpy (((char *) recvbuf) + mpirank * datasize, sendbuf, datasize);
   sc_ag_recursive (mpicomm, (char *) recvbuf, (int) datasize,
                    mpisize, mpirank, mpirank);
-#else
-  memcpy (recvbuf, sendbuf, datasize);
-#endif
 
   return sc_MPI_SUCCESS;
 }

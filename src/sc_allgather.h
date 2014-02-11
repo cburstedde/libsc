@@ -31,8 +31,6 @@
 
 SC_EXTERN_C_BEGIN;
 
-#ifdef SC_ENABLE_MPI
-
 /** Allgather by direct point-to-point communication.
  * Only makes sense for small group sizes.
  */
@@ -46,8 +44,6 @@ void                sc_ag_alltoall (sc_MPI_Comm mpicomm, char *data,
 void                sc_ag_recursive (sc_MPI_Comm mpicomm, char *data,
                                      int datasize, int groupsize,
                                      int myoffset, int myrank);
-
-#endif /* SC_ENABLE_MPI */
 
 /** Drop-in allgather replacement.
  */

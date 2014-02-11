@@ -30,11 +30,9 @@ main (int argc, char **argv)
   int                 mpisize;
   int                 mpirank;
   int                 i;
-#ifdef SC_ENABLE_MPI
   int                *idata;
   double              elapsed_alltoall = 0.;
   double              elapsed_recursive;
-#endif
   double              dsend;
   double             *ddata1;
   double             *ddata2;
@@ -51,7 +49,6 @@ main (int argc, char **argv)
 
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
-#ifdef SC_ENABLE_MPI
   idata = SC_ALLOC (int, mpisize);
 
   if (mpisize <= 64) {
@@ -83,7 +80,6 @@ main (int argc, char **argv)
   }
 
   SC_FREE (idata);
-#endif
 
   ddata1 = SC_ALLOC (double, mpisize);
   ddata2 = SC_ALLOC (double, mpisize);
@@ -122,10 +118,8 @@ main (int argc, char **argv)
 
   SC_GLOBAL_STATISTICSF ("Timings with threshold %d on %d cores\n",
                          SC_AG_ALLTOALL_MAX, mpisize);
-#ifdef SC_ENABLE_MPI
   SC_GLOBAL_STATISTICSF ("   alltoall %g\n", elapsed_alltoall);
   SC_GLOBAL_STATISTICSF ("   recursive %g\n", elapsed_recursive);
-#endif
   SC_GLOBAL_STATISTICSF ("   allgather %g\n", elapsed_allgather);
   SC_GLOBAL_STATISTICSF ("   replacement %g\n", elapsed_replacement);
 
