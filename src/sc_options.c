@@ -496,15 +496,22 @@ sc_options_print_summary (int package_id, int log_priority,
     SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
 
-  if (opt->first_arg == opt->argc) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments: none\n");
+  if (opt->first_arg < 0) {
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
+                "Arguments: not parsed\n");
   }
   else {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
-  }
-  for (i = opt->first_arg; i < opt->argc; ++i) {
-    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %d: %s\n",
-                 i - opt->first_arg, opt->argv[i]);
+    if (opt->first_arg == opt->argc) {
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
+                  "Arguments: none\n");
+    }
+    else {
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
+    }
+    for (i = opt->first_arg; i < opt->argc; ++i) {
+      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %d: %s\n",
+                   i - opt->first_arg, opt->argv[i]);
+    }
   }
 }
 
