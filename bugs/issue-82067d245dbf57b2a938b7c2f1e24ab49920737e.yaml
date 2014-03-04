@@ -18,3 +18,7 @@ log_events:
   - Carsten Burstedde <burstedde@ins.uni-bonn.de>
   - created
   - ""
+- - 2014-03-04 18:00:38.668209 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - commented
+  - We also should add range checks to sc_options.c.

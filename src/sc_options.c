@@ -925,7 +925,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       break;
     case SC_OPTION_INT:
-      *(int *) item->opt_var = strtol (optarg, NULL, 0);
+      *(int *) item->opt_var = (int) strtol (optarg, NULL, 0);
       break;
     case SC_OPTION_DOUBLE:
       *(double *) item->opt_var = strtod (optarg, NULL);
