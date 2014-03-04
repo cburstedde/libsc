@@ -74,7 +74,7 @@ echo "o---------------------------------------"
 echo "| Checking functions"
 echo "o---------------------------------------"
 
-AC_CHECK_FUNCS([backtrace backtrace_symbols])
+AC_CHECK_FUNCS([backtrace backtrace_symbols strtol strtoll])
 
 # Checks for BLAS (and F77 environment only if necessary).
 echo "o---------------------------------------"
@@ -180,7 +180,9 @@ AC_C_CONST
 AC_C_INLINE
 AC_C_RESTRICT
 AC_CHECK_SIZEOF([long])
+AC_CHECK_SIZEOF([long long])
 AC_CHECK_SIZEOF([unsigned long])
+AC_CHECK_SIZEOF([unsigned long long])
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 
