@@ -32,6 +32,7 @@ typedef enum
   SC_OPTION_SWITCH,
   SC_OPTION_BOOL,
   SC_OPTION_INT,
+  SC_OPTION_SIZE_T,
   SC_OPTION_DOUBLE,
   SC_OPTION_STRING,
   SC_OPTION_INIFILE,
@@ -121,6 +122,18 @@ void                sc_options_add_int (sc_options_t * opt,
                                         const char *opt_name,
                                         int *variable, int init_value,
                                         const char *help_string);
+
+/**
+ * Add an option that takes a size_t argument.
+ * This function is currently LIMITED to the range of INT, at least
+ * for reading options from a file.  Command line parsing should be fine.
+ * \param [in] init_value   The initial value of the variable.
+ */
+void                sc_options_add_size_t (sc_options_t * opt,
+                                           int opt_char,
+                                           const char *opt_name,
+                                           size_t *variable, size_t init_value,
+                                           const char *help_string);
 
 /**
  * Add an option that takes a double argument.
