@@ -168,6 +168,32 @@ sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
 }
 
 void
+sc_options_add_size_t (sc_options_t * opt, int opt_char, const char *opt_name,
+                       size_t *variable, size_t init_value,
+                       const char *help_string)
+{
+  sc_option_item_t   *item;
+
+  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
+  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
+
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
+
+  item->opt_type = SC_OPTION_SIZE_T;
+  item->opt_char = opt_char;
+  item->opt_name = opt_name;
+  item->opt_var = variable;
+  item->opt_fn = NULL;
+  item->has_arg = 1;
+  item->called = 0;
+  item->help_string = help_string;
+  item->string_value = NULL;
+  item->user_data = NULL;
+
+  *variable = init_value;
+}
+
+void
 sc_options_add_double (sc_options_t * opt, int opt_char,
                        const char *opt_name,
                        double *variable, double init_value,
@@ -308,6 +334,10 @@ sc_options_add_suboptions (sc_options_t * opt,
       sc_options_add_int (opt, '\0', *name, (int *) item->opt_var,
                           *((int *) item->opt_var), item->help_string);
       break;
+    case SC_OPTION_SIZE_T:
+      sc_options_add_size_t (opt, '\0', *name, (size_t *) item->opt_var,
+                             *((size_t *) item->opt_var), item->help_string);
+      break;
     case SC_OPTION_DOUBLE:
       sc_options_add_double (opt, '\0', *name, (double *) item->opt_var,
                              *((double *) item->opt_var), item->help_string);
@@ -366,6 +396,10 @@ sc_options_print_usage (int package_id, int log_priority,
     case SC_OPTION_INT:
       provide_short = " <INT>";
       provide_long = "=<INT>";
+      break;
+    case SC_OPTION_SIZE_T:
+      provide_short = " <SIZE_T>";
+      provide_long = "=<SIZE_T>";
       break;
     case SC_OPTION_DOUBLE:
       provide_short = " <REAL>";
@@ -468,6 +502,10 @@ sc_options_print_summary (int package_id, int log_priority,
       printed += snprintf (outbuf + printed, BUFSIZ - printed,
                            "%d", *(int *) item->opt_var);
       break;
+    case SC_OPTION_SIZE_T:
+      printed += snprintf (outbuf + printed, BUFSIZ - printed, "%llu",
+                           (unsigned long long) *(size_t *) item->opt_var);
+      break;
     case SC_OPTION_DOUBLE:
       printed += snprintf (outbuf + printed, BUFSIZ - printed,
                            "%g", *(double *) item->opt_var);
@@ -496,15 +534,22 @@ sc_options_print_summary (int package_id, int log_priority,
     SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
 
-  if (opt->first_arg == opt->argc) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments: none\n");
+  if (opt->first_arg < 0) {
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
+                "Arguments: not parsed\n");
   }
   else {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
-  }
-  for (i = opt->first_arg; i < opt->argc; ++i) {
-    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %d: %s\n",
-                 i - opt->first_arg, opt->argv[i]);
+    if (opt->first_arg == opt->argc) {
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
+                  "Arguments: none\n");
+    }
+    else {
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
+    }
+    for (i = opt->first_arg; i < opt->argc; ++i) {
+      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %d: %s\n",
+                   i - opt->first_arg, opt->argv[i]);
+    }
   }
 }
 
@@ -521,6 +566,7 @@ sc_options_load (int package_id, int err_priority,
   int                 bvalue;
   int                *ivalue;
   double             *dvalue;
+  size_t             *zvalue;
   const char         *s, *key;
   char                skey[BUFSIZ], lkey[BUFSIZ];
   sc_options_callback_t fn;
@@ -600,6 +646,10 @@ sc_options_load (int package_id, int err_priority,
     case SC_OPTION_INT:
       ivalue = (int *) item->opt_var;
       *ivalue = iniparser_getint (dict, key, *ivalue);
+      break;
+    case SC_OPTION_SIZE_T:
+      zvalue = (size_t *) item->opt_var;
+      *zvalue = (size_t) iniparser_getint (dict, key, (int) *zvalue);
       break;
     case SC_OPTION_DOUBLE:
       dvalue = (double *) item->opt_var;
@@ -758,6 +808,10 @@ sc_options_save (int package_id, int err_priority,
     case SC_OPTION_INT:
       retval = fprintf (file, "%d\n", *(int *) item->opt_var);
       break;
+    case SC_OPTION_SIZE_T:
+      retval = fprintf (file, "%llu\n",
+                        (unsigned long long) *(size_t *) item->opt_var);
+      break;
     case SC_OPTION_DOUBLE:
       retval = fprintf (file, "%.16g\n", *(double *) item->opt_var);
       break;
@@ -822,6 +876,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   int                 c, option_index;
   int                 item_index = -1;
   size_t              iz;
+  long long           ilonglong;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
@@ -918,7 +973,22 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       break;
     case SC_OPTION_INT:
-      *(int *) item->opt_var = strtol (optarg, NULL, 0);
+      *(int *) item->opt_var = (int) strtol (optarg, NULL, 0);
+      break;
+    case SC_OPTION_SIZE_T:
+#ifndef SC_HAVE_STRTOLL
+      ilonglong = (long long) strtol (optarg, NULL, 0);
+#else
+      ilonglong = strtoll (optarg, NULL, 0);
+#endif
+      if (ilonglong < 0LL) {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Error parsing size_t: %s\n", optarg);
+        retval = -1;            /* this ends option processing */
+      }
+      else {
+        *(size_t *) item->opt_var = (size_t) ilonglong;
+      }
       break;
     case SC_OPTION_DOUBLE:
       *(double *) item->opt_var = strtod (optarg, NULL);

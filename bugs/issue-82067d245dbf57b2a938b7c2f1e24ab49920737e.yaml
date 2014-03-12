@@ -1,0 +1,24 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Upgrade iniparser library to latest version
+desc: |-
+  There is version 3.1 on https://github.com/ndevilla/iniparser.
+  It still does not have getlong, but should be upgraded anyway.
+type: :bugfix
+component: libsc
+release: 
+reporter: Carsten Burstedde <burstedde@ins.uni-bonn.de>
+status: :unstarted
+disposition: 
+creation_time: 2014-03-04 17:42:12.260299 Z
+references: []
+
+id: 82067d245dbf57b2a938b7c2f1e24ab49920737e
+log_events: 
+- - 2014-03-04 17:42:13.933059 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - created
+  - ""
+- - 2014-03-04 18:00:38.668209 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - commented
+  - We also should add range checks to sc_options.c.

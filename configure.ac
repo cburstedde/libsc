@@ -67,7 +67,7 @@ echo "o---------------------------------------"
 echo "| Checking functions"
 echo "o---------------------------------------"
 
-AC_CHECK_FUNCS([backtrace backtrace_symbols])
+AC_CHECK_FUNCS([backtrace backtrace_symbols strtol strtoll])
 
 echo "o---------------------------------------"
 echo "| Checking keywords and types"
