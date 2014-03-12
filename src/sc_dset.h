@@ -24,13 +24,12 @@
 #define SC_DSET_H
 
 #include <sc_containers.h>
-#include <sc_mpi.h>
 
 SC_EXTERN_C_BEGIN;
 
 /** Typedef for process-local indices. */
 typedef int32_t     sc_locidx_t;
-#define p4est_locidx_compare sc_int32_compare
+#define sc_locidx_compare sc_int32_compare
 #define SC_MPI_LOCIDX MPI_INT
 #define SC_VTK_LOCIDX "Int32"
 #define SC_LOCIDX_MIN INT32_MIN
@@ -74,17 +73,23 @@ typedef int64_t     sc_gloidx_t;
  * The array global_indices is not stored, because the global index of an
  * owned object can be computed as global_index = (local_index + \a first_owned),
  * where \a offset is the global index of the first object owned by this
- * process.  A local-to-global table is only needed for not-owned objects.
+ * process.  A local-to-global table is only needed for non-owned objects.
  */
 typedef struct sc_dset sc_dset_t;
 
 /** Create a new dset from a known number of indices owned by this process.
  * This routines initializes the dset with no overlaps between processes.
+ *
+ * This functions calls MPI_Allgather on num_local.  This can be avoided by
+ * using \a sc_dset_new_from_partition instead, if the partition information is
+ * already available.
  */
 sc_dset_t          *sc_dset_new (MPI_Comm comm, sc_locidx_t num_local);
 
 /** Create a new dset from a known number of global indices.
  * This routines initializes the dset with no overlaps between processes.
+ *
+ * TODO: The number of local nodes is unknown; how can it be obtained?
  */
 sc_dset_t          *sc_dset_new_from_num_global (MPI_Comm comm,
                                                  sc_gloidx_t num_global);
@@ -116,7 +121,7 @@ sc_gloidx_t         sc_dset_first_owned (sc_dset_t * dset);
 sc_locidx_t         sc_dset_num_owned_by_rank (sc_dset_t * dset, int rank);
 
 /** Get the first global index owned by another process */
-sc_locidx_t         sc_dset_first_owned_by_rank (sc_dset_t * dset, int rank);
+sc_gloidx_t         sc_dset_first_owned_by_rank (sc_dset_t * dset, int rank);
 
 /** Compute a global index from any process's local index.  The returned value
  * is only valid if the resulting global index is owned by \a rank, otherwise
@@ -170,17 +175,23 @@ int                 sc_dset_is_valid_allgather (sc_dset_t * dset);
  *                                 // synchronize the overlaps described
  *                                 // on all processes
  *
+ * TODO: Could it be desirable to call both sync_gather and sync_allgather,
+ * and if yes, would it be advantageous to write a function sync_all?
+ *
  * finally, exit setup
  *
  *     sc_dset_setup_end (dset);
  *   #ifdef DEBUG
- *     sc_dset_setup_end (dset);
  *     assert (sc_dset_is_valid_gather (dset));
  *     //   or sc_dset_is_valid_allgather (dset)
  *   #endif
  */
 
-/** Begin modification of the dsets overlap information */
+/** Begin modification of the dsets overlap information.
+ * The modifications by the sc_dset_add_overlap_* need not by consistent
+ * between processors.  Consistency is established explicitly by calling
+ * the sc_dset_sync_* functions.
+ */
 void                sc_dset_setup_begin (sc_dset_t * dset);
 
 /** Add an overlap: a global index that is owned by the current process and
@@ -225,11 +236,11 @@ sc_locidx_t         sc_dset_num_local (sc_dset_t * dset);
 /** The number of borrowed indices: only valid if not in set up. */
 sc_locidx_t         sc_dset_num_borrowed (sc_dset_t * dset);
 
-/** The number of indices owned by this process that are lent with other
+/** The number of indices owned by this process that are lent to other
  * processes */
 sc_locidx_t         sc_dset_num_lent (sc_dset_t * dset);
 
-/** Returen the global indices of a local index.  If lidx is less than the
+/** Return the global indices of a local index.  If lidx is less than the
  * number owned by this process, then the return value is valid even during
  * setup.  Returns -1 if lidx is greater than the number of local nodes. If
  * lidx is greater than the number owned by this process, then it returns the
@@ -239,14 +250,17 @@ sc_gloidx_t         sc_dset_local_to_global (sc_dset_t * dset,
                                              sc_locidx_t lidx);
 
 /** Compute a local index from a global index.  Returns -1 if the global
- * index does not have a local index. O(log(num_borrowed)). */
+ * index does not have a local index.
+ * O(1) for owned local indices, O(log(num_borrowed)) otherwise.
+ */
 sc_locidx_t         sc_dset_global_to_local (sc_dset_t * dset,
                                              sc_gloidx_t gidx);
 
 /** Get a list of all borrowed global indices */
 void                sc_dset_get_borrowed (sc_dset_t * dset,
                                           const sc_gloidx_t ** borrowed);
-/** Restore a list of all borrowed global indices */
+/** Restore a list of all borrowed global indices.
+ * TODO: What is the purpose of this function? */
 void                sc_dset_restore_borrowed (sc_dset_t * dset,
                                               const sc_gloidx_t ** borrowed);
 
@@ -254,11 +268,12 @@ void                sc_dset_restore_borrowed (sc_dset_t * dset,
 void                sc_dset_get_lent (sc_dset_t * dset,
                                       const sc_locidx_t ** lent);
 
-/** Restore a list of all lent local indices */
+/** Restore a list of all lent local indices.
+ * TODO: What is the purpose of this function? */
 void                sc_dset_restore_lent (sc_dset_t * dset,
                                           const sc_locidx_t ** lent);
 
-/** The number of other processes whose local indices overlap this processes
+/** The number of other processes whose local indices overlap this process'
  * local indices */
 sc_locidx_t         sc_dset_num_comm_ranks (sc_dset_t * dset);
 
@@ -266,7 +281,8 @@ sc_locidx_t         sc_dset_num_comm_ranks (sc_dset_t * dset);
 void                sc_dset_get_comm_ranks (sc_dset_t * dset,
                                             const int **ranks);
 
-/** Restore a list of all overlapping processes */
+/** Restore a list of all overlapping processes.
+ * TODO: What is the purpose of this function? */
 void                sc_dset_restore_comm_ranks (sc_dset_t * dset,
                                                 const int **ranks);
 
@@ -284,7 +300,8 @@ sc_locidx_t         sc_dset_rank_num_lent (sc_dset_t * dset, int rank);
 void                sc_dset_rank_get_lent (sc_dset_t * dset, int rank,
                                            const sc_locidx_t ** lent);
 
-/** Retore the set of local indices that are lent ot \a rank */
+/** Retore the set of local indices that are lent ot \a rank.
+ * TODO: What is the purpose of this function? */
 void                sc_dset_rank_restore_lent (sc_dset_t * dset, int rank,
                                                const sc_locidx_t ** lent);
 
@@ -296,14 +313,15 @@ sc_locidx_t         sc_dset_rank_num_mutual (sc_dset_t * dset, int rank);
 void                sc_dset_rank_get_mutual (sc_dset_t * dset, int rank,
                                              const sc_locidx_t ** mutual);
 
-/** Restore the local indices overlapped with \a rank */
+/** Restore the local indices overlapped with \a rank.
+ * TODO: What is the purpose of this function? */
 void                sc_dset_rank_restore_mutual (sc_dset_t * dset, int rank,
                                                  const sc_locidx_t ** mutual);
 
 /** The communication modes enabled by a dset */
 typedef enum
 {
-  SC_DSET_COMM_SCATTER = 0,     /* send data of all owned indices to all
+  SC_DSET_COMM_SCATTER,         /* send data of all owned indices to all
                                    overlapping processes */
   SC_DSET_COMM_GATHER,          /* gather data of all owned indices from all
                                    overlapping processes */
@@ -319,7 +337,10 @@ typedef enum
 }
 sc_dset_comm_type_t;
 
-/** sc_dset_comm_t handles individual communication instances */
+/** sc_dset_comm_t handles individual communication instances.
+ *
+ * TODO: explain
+ */
 typedef struct sc_dset_comm sc_dset_comm_t;
 
 /** returns true and set id of a receive buffer if one remains, otherwise
@@ -327,17 +348,23 @@ typedef struct sc_dset_comm sc_dset_comm_t;
 int                 sc_dset_comm_recv_waitany (sc_dset_comm_t * comm,
                                                int *id);
 /** Get a receive buffer, and the local indices it references,
- * from an id.  returns the rank that the data was received from */
+ * from an id.
+ * Returns the rank that the data was received from (TODO: rank is a parameter)
+ */
 int                 sc_dset_comm_get_recv (sc_dset_comm_t * comm,
                                            int id, int *rank,
                                            sc_array_t ** recv,
                                            const sc_locidx_t ** indices);
-/** Restore a receive buffer and indices */
+
+/** Restore a receive buffer and indices.
+ * TODO: Unclear what "restore" means.
+ */
 void                sc_dset_comm_restore_recv (sc_dset_comm_t * comm,
                                                int id,
                                                sc_array_t ** recv,
                                                const sc_locidx_t ** indices);
-/** Wait for all scheduled sends and receives to finis */
+
+/** Wait for all scheduled sends and receives to finish */
 void                sc_dset_comm_waitall (sc_dset_comm_t * comm);
 void                sc_dset_comm_destroy (sc_dset_comm_t * comm);
 
@@ -350,13 +377,16 @@ void                sc_dset_comm_destroy (sc_dset_comm_t * comm);
  *   sc_array_t *owned_data;
  *   sc_array_t *borrowed_data;
  *
- *   // ... setup dset
+ *   // ... setup
  *
  *   nowned = sc_dset_num_owned (dset);
  *   nborrowed = sc_dset_num_borrowed (dset);
  *
  *   owned_data = sc_array_new_size (sizeof (data_type_t), nowned);
  *   borrowed_data = sc_array_new_size (sizeof (data_type_t), nborrowed);
+ *   // Note: It is also possible to use sc_array_{new,init}_{view,data}
+ *   //       to avoid copying already existing data arrays.
+ *   //       See sc/src/sc_containers.h for the prototypes.
  *
  *   // changes to owned_data that needed to be duplicated on other processes
  *
@@ -376,7 +406,9 @@ void                sc_dset_comm_destroy (sc_dset_comm_t * comm);
  *   sc_array_t *borrowed_data, *borrowed_data2;
  *   sc_dset_comm_t *comm;
  *
- *   // ... setup
+ *   // ... setup dset
+ *
+ *   // TODO: setup comm (prototype?)
  *
  *   sc_dset_scatter_sendrecv (dset, owned_data, borrowed_data, &comm);
  *
@@ -407,7 +439,7 @@ void                sc_dset_comm_destroy (sc_dset_comm_t * comm);
  *
  *   sc_dset_scatter_isend (dset, owned_data, &comm);
  *
- *   // ... overlapping computation, owned_data can be read but should not be
+ *   // ... overlapping computation, owned_data can be read but must not be
  *   // changed, that would cause undefined behavior
  *
  *   // now we need to read borrowed_data or change owned_data, so we have to
@@ -449,6 +481,8 @@ void                sc_dset_scatter_isend (sc_dset_t * dset,
  *
  *   sc_dset_gather_sendrecv (dset, owned_data, borrowed_data, &comm);
  *
+ *   // TODO: There is no prototype for this function.
+ *   // TODO: Example programs should show off all possible use cases.
  *   ncomm = sc_dset_comm_num_recv (comm);
  *   for (i = 0; i < ncomm; i++) {
  *     const sc_locidx_t *indices;
@@ -470,6 +504,7 @@ void                sc_dset_scatter_isend (sc_dset_t * dset,
  *
  *       // process value ...
  *     }
+ *     // TODO: explain
  *     sc_dset_comm_restore_recv (comm, i, &recv, &indices);
  *   }
  *
@@ -502,6 +537,7 @@ void                sc_dset_scatter_isend (sc_dset_t * dset,
  *   }
  *
  *   // wait for all messages to complete
+ *   // TODO: The waitall only refers to the sent messages now?  Expose in API?
  *   sc_dset_comm_waitall (comm);
  *   sc_dset_comm_destroy (comm);
  */
@@ -518,6 +554,8 @@ void                sc_dset_gather_isend (sc_dset_t * dset,
                                           sc_dset_t ** comm);
 
 /** reduce examples
+ *
+ * TODO: make it clear what the role of vec1 and vec2 is.
  *
  * nonblocking:
  *
@@ -714,7 +752,7 @@ typedef struct sc_dset_rank
   int                 other_rank;       /* the rank of the other
                                            process */
 
-  sc_locidx_t         num_borrowed;     /* the number the indices in
+  sc_locidx_t         num_borrowed;     /* the number of the indices in
                                            the dset->borrowed array
                                            that are owned by the
                                            other rank */
@@ -722,11 +760,12 @@ typedef struct sc_dset_rank
 
   sc_locidx_t         num_lent; /* the number of indices
                                    owned by this process
-                                   that are shared with the
+                                   that are shared with
                                    the other process */
   sc_locidx_t        *lent;     /* the owned indices shared
                                    with the other process */
 
+  /* TODO: These we only need for allgather/allreduce? */
   sc_locidx_t         num_shared;       /* the number of indices
                                            that are borrowed by both
                                            this process and the
