@@ -62,6 +62,7 @@ include example/dmatrix/Makefile.am
 include example/function/Makefile.am
 include example/logging/Makefile.am
 include example/options/Makefile.am
+include example/pthread/Makefile.am
 include example/vehicles/Makefile.am
 include example/warp/Makefile.am
 
