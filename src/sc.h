@@ -493,6 +493,7 @@ void                sc_abort_collective (const char *msg)
   __attribute__ ((noreturn));
 
 /** Register a software package with SC.
+ * This function must only be called before additional threads are created.
  * The logging parameters are as in sc_set_log_defaults.
  * \return                   Returns a unique package id.
  */
@@ -500,6 +501,10 @@ int                 sc_package_register (sc_log_handler_t log_handler,
                                          int log_threshold,
                                          const char *name, const char *full);
 int                 sc_package_is_registered (int package_id);
+
+/** Unregister a software package with SC.
+ * This function must only be called after additional threads are finished.
+ */
 void                sc_package_unregister (int package_id);
 
 /** Print a summary of all packages registered with SC.
@@ -510,6 +515,7 @@ void                sc_package_print_summary (int log_priority);
 
 /** Sets the global program identifier (e.g. the MPI rank) and some flags.
  * This function is optional.
+ * This function must only be called before additional threads are created.
  * If this function is not called or called with log_handler == NULL,
  * the default SC log handler will be used.
  * If this function is not called or called with log_threshold == SC_LP_DEFAULT,

@@ -38,6 +38,10 @@ typedef void        (*sc_sig_t) (int);
 #endif
 #endif
 
+#ifdef SC_ENABLE_PTHREAD
+#include <pthread.h>
+#endif
+
 typedef struct sc_package
 {
   int                 is_registered;
@@ -48,6 +52,9 @@ typedef struct sc_package
   int                 free_count;
   const char         *name;
   const char         *full;
+#ifdef SC_ENABLE_PTHREAD
+  pthread_mutex_t     mutex;
+#endif
 }
 sc_package_t;
 
@@ -102,6 +109,44 @@ static int          sc_print_backtrace = 0;
 static int          sc_num_packages = 0;
 static int          sc_num_packages_alloc = 0;
 static sc_package_t *sc_packages = NULL;
+
+#ifdef SC_ENABLE_PTHREAD
+
+static pthread_mutex_t sc_default_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static inline pthread_mutex_t *
+sc_package_mutex (int package)
+{
+  if (package == -1) {
+    return &sc_default_mutex;
+  }
+  else {
+    SC_ASSERT (sc_package_is_registered (package));
+    return &sc_packages[package].mutex;
+  }
+}
+
+static inline void
+sc_package_lock (int package)
+{
+  pthread_mutex_t    *mutex = sc_package_mutex (package);
+  int                 pth;
+
+  pth = pthread_mutex_lock (mutex);
+  SC_CHECK_ABORTF (pth == 0, "Mutex lock failed for package %d", package);
+}
+
+static inline void
+sc_package_unlock (int package)
+{
+  pthread_mutex_t    *mutex = sc_package_mutex (package);
+  int                 pth;
+
+  pth = pthread_mutex_unlock (mutex);
+  SC_CHECK_ABORTF (pth == 0, "Mutex unlock failed for package %d", package);
+}
+
+#endif /* SC_ENABLE_PTHREAD */
 
 static void
 sc_signal_handler (int sig)
@@ -222,6 +267,9 @@ sc_malloc (int package, size_t size)
 
   ret = malloc (size);
 
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_lock (package);
+#endif
   if (size > 0) {
     SC_CHECK_ABORT (ret != NULL, "Allocation");
     ++*malloc_count;
@@ -229,6 +277,9 @@ sc_malloc (int package, size_t size)
   else {
     *malloc_count += ((ret == NULL) ? 0 : 1);
   }
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_unlock (package);
+#endif
 
   return ret;
 }
@@ -241,6 +292,9 @@ sc_calloc (int package, size_t nmemb, size_t size)
 
   ret = calloc (nmemb, size);
 
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_lock (package);
+#endif
   if (nmemb * size > 0) {
     SC_CHECK_ABORT (ret != NULL, "Allocation");
     ++*malloc_count;
@@ -248,6 +302,9 @@ sc_calloc (int package, size_t nmemb, size_t size)
   else {
     *malloc_count += ((ret == NULL) ? 0 : 1);
   }
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_unlock (package);
+#endif
 
   return ret;
 }
@@ -295,7 +352,13 @@ sc_free (int package, void *ptr)
   if (ptr != NULL) {
     int                *free_count = sc_free_count (package);
 
+#ifdef SC_ENABLE_PTHREAD
+    sc_package_lock (package);
+#endif
     ++*free_count;
+#ifdef SC_ENABLE_PTHREAD
+    sc_package_unlock (package);
+#endif
   }
   free (ptr);
 }
@@ -434,6 +497,9 @@ sc_log (const char *filename, int lineno,
   if (category == SC_LC_GLOBAL && sc_identifier > 0)
     return;
 
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_lock (package);
+#endif
   if (sc_trace_file != NULL && priority >= sc_trace_prio)
     log_handler (sc_trace_file, filename, lineno,
                  package, category, priority, msg);
@@ -441,6 +507,9 @@ sc_log (const char *filename, int lineno,
   if (priority >= log_threshold)
     log_handler (sc_log_stream != NULL ? sc_log_stream : stdout,
                  filename, lineno, package, category, priority, msg);
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_unlock (package);
+#endif
 }
 
 void
@@ -479,16 +548,21 @@ sc_log_indent_pop (void)
 void
 sc_log_indent_push_count (int package, int count)
 {
+  /* TODO: figure out a version that makes sense with threads */
+#ifndef SC_ENABLE_PTHREAD
   SC_ASSERT (package < sc_num_packages);
 
   if (package >= 0) {
     sc_packages[package].log_indent += SC_MAX (0, count);
   }
+#endif
 }
 
 void
 sc_log_indent_pop_count (int package, int count)
 {
+  /* TODO: figure out a version that makes sense with threads */
+#ifndef SC_ENABLE_PTHREAD
   int                 new_indent;
 
   SC_ASSERT (package < sc_num_packages);
@@ -497,6 +571,7 @@ sc_log_indent_pop_count (int package, int count)
     new_indent = sc_packages[package].log_indent - SC_MAX (0, count);
     sc_packages[package].log_indent = SC_MAX (0, new_indent);
   }
+#endif
 }
 
 void
@@ -660,6 +735,10 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   new_package->free_count = 0;
   new_package->name = name;
   new_package->full = full;
+#ifdef SC_ENABLE_PTHREAD
+  i = pthread_mutex_init (&new_package->mutex, NULL);
+  SC_CHECK_ABORTF (i == 0, "Mutex init failed for package %s", name);
+#endif
 
   ++sc_num_packages;
   SC_ASSERT (sc_num_packages <= sc_num_packages_alloc);
@@ -680,6 +759,9 @@ sc_package_is_registered (int package_id)
 void
 sc_package_unregister (int package_id)
 {
+#ifdef SC_ENABLE_PTHREAD
+  int                 i;
+#endif
   sc_package_t       *p;
 
   SC_CHECK_ABORT (sc_package_is_registered (package_id),
@@ -691,6 +773,10 @@ sc_package_unregister (int package_id)
   p->log_handler = NULL;
   p->log_threshold = SC_LP_DEFAULT;
   p->malloc_count = p->free_count = 0;
+#ifdef SC_ENABLE_PTHREAD
+  i = pthread_mutex_destroy (&p->mutex);
+  SC_CHECK_ABORTF (i == 0, "Mutex destroy failed for package %s", p->name);
+#endif
   p->name = p->full = NULL;
 
   --sc_num_packages;
