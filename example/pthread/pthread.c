@@ -29,11 +29,32 @@ start_thread (void *v)
   int                 i = *(int *) v;
   int                 j;
   int                *p;
+  int                 mpiret;
+  int                 mpisize;
+  sc_MPI_Comm         mpicomm;
 
   SC_INFOF ("This is thread %d\n", i);
+
+  /* create some data */
   p = SC_ALLOC (int, 1000);
   for (j = 0; j < 1000; ++j) {
     p[j] = j;
+  }
+
+  /* duplicate communicator and execute a collective MPI call */
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_dup (sc_MPI_COMM_WORLD, &mpicomm);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Allreduce (p, p + 500, 500, sc_MPI_INT, sc_MPI_SUM,
+                             mpicomm);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_free (&mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  /* check the results and free data */
+  for (j = 500; j < 1000; ++j) {
+    SC_CHECK_ABORT (p[j] == (j - 500) * mpisize, "Communication mismatch");
   }
   SC_FREE (p);
 
@@ -82,11 +103,12 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
+  int                 mpithr;
   int                 first_arg;
   int                 N;
   sc_options_t       *opt;
 
-  mpiret = sc_MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init_thread (&argc, &argv, sc_MPI_THREAD_MULTIPLE, &mpithr);
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
@@ -103,7 +125,12 @@ main (int argc, char **argv)
     sc_options_print_summary (sc_package_id, SC_LP_PRODUCTION, opt);
   }
 
-  test_threads (N);
+  if (mpithr < sc_MPI_THREAD_MULTIPLE) {
+    SC_GLOBAL_PRODUCTIONF ("MPI thread support is only %d\n", mpithr);
+  }
+  else {
+    test_threads (N);
+  }
 
   sc_options_destroy (opt);
   sc_finalize ();
