@@ -288,14 +288,17 @@ AC_DEFUN([SC_FINAL_MESSAGES],
 if test "x$$1_HAVE_ZLIB" = x ; then
 AC_MSG_NOTICE([- $1 -------------------------------------------------
 We did not find a recent zlib containing the function adler32_combine.
-Calling any functions using zlib functionality will abort the program.
+This is OK if the following does not matter to you:
+Calling any sc functions that rely on zlib will abort your program.
+These functions include sc_array_checksum and sc_vtk_write_compressed.
 You can fix this by compiling a working zlib and pointing LIBS to it.
 ])
 fi
 if test "x$$1_HAVE_LUA" = x ; then
 AC_MSG_NOTICE([- $1 -------------------------------------------------
 We did not find a recent lua containing the function lua_createtable.
-Including sc_lua.h will abort the compilation.
+This is OK if the following does not matter to you:
+Including sc_lua.h in your code will abort the compilation.
 You can fix this by compiling a working lua and pointing LIBS to it.
 ])
 fi
