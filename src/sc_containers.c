@@ -540,8 +540,7 @@ sc_array_checksum (sc_array_t * array)
 
   return (unsigned) crc;
 #else
-  sc_abort_collective
-    ("Configure did not find a recent enough zlib.  Abort.\n");
+  SC_ABORT ("Configure did not find a recent enough zlib.  Abort.\n");
 
   return 0;
 #endif

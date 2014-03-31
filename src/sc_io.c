@@ -458,8 +458,7 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
     return -1;
   }
 #else
-  sc_abort_collective
-    ("Configure did not find a recent enough zlib.  Abort.\n");
+  SC_ABORT ("Configure did not find a recent enough zlib.  Abort.\n");
 #endif
 
   return 0;
