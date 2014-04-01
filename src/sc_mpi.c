@@ -65,6 +65,9 @@ sc_MPI_Init (int *argc, char ***argv)
 int
 sc_MPI_Init_thread (int *argc, char ***argv, int required, int *provided)
 {
+  if (provided != NULL) {
+    *provided = sc_MPI_THREAD_SINGLE;
+  }
   return sc_MPI_SUCCESS;
 }
 

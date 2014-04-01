@@ -122,7 +122,7 @@ m4_ifset([SC_CHECK_MPI_F77], [
 ], [:])
 fi
 AM_CONDITIONAL([$1_ENABLE_MPI], [test "x$HAVE_PKG_MPI" = xyes])
-AM_CONDITIONAL([$1_ENABRE_MPIIO], [test "x$HAVE_PKG_MPIIO" = xyes])
+AM_CONDITIONAL([$1_ENABLE_MPIIO], [test "x$HAVE_PKG_MPIIO" = xyes])
 ])
 
 dnl SC_MPI_F77_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
