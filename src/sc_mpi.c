@@ -315,7 +315,22 @@ sc_MPI_Wtime (void)
   return (double) tv.tv_sec + 1.e-6 * tv.tv_usec;
 }
 
-#endif /* !SC_ENABLE_MPI */
+#else /* SC_ENABLE_MPI */
+#ifndef SC_ENABLE_MPITHREAD
+
+/* default to non-threaded operation */
+
+int
+sc_MPI_Init_thread (int *argc, char ***argv, int required, int *provided)
+{
+  if (provided != NULL) {
+    *provided = sc_MPI_THREAD_SINGLE;
+  }
+  return sc_MPI_Init (argc, argv);
+}
+
+#endif /* !SC_ENABLE_MPITHREAD */
+#endif /* SC_ENABLE_MPI */
 
 size_t
 sc_mpi_sizeof (sc_MPI_Datatype t)

@@ -12,9 +12,12 @@ dnl                   on the configure command line.
 dnl                   Likewise for F77 and CXX if enabled in SC_MPI_CONFIG.
 dnl --disable-mpiio   Only effective if --enable-mpi is given.  In this case,
 dnl                   disables MPI I/O and its compile-and-link test.
+dnl --disable-mpithread Only effective if --enable-mpi is given.  In this case,
+dnl                   disables MPI_Init_thread () and its compile-and-link test.
 dnl
 dnl If MPI is enabled, set AC_DEFINE and AC_CONDITIONAL for PREFIX_ENABLE_MPI.
 dnl If MPI I/O is not disabled, set these for PREFIX_ENABLE_MPIIO.
+dnl If MPI_Init_thread is not disabled, set these for PREFIX_ENABLE_MPITHREAD.
 dnl
 dnl SC_MPI_ENGAGE(PREFIX)
 dnl
@@ -27,6 +30,8 @@ dnl If MPI is enabled, a compile-and-link test is performed.  It aborts
 dnl configuration on failure.
 dnl If MPI is enabled and I/O is not disabled, a compile-and-link test
 dnl for MPI I/O is performed.  It aborts configuration on failure.
+dnl If MPI is enabled and MPITHREAD is not disabled, a compile-and-link test
+dnl for MPI_Init_thread is performed.  It aborts configuration on failure.
 dnl
 dnl These macros are separate because of the AC_REQUIRE logic inside autoconf.
 
@@ -34,6 +39,7 @@ AC_DEFUN([SC_MPI_CONFIG],
 [
 HAVE_PKG_MPI=no
 HAVE_PKG_MPIIO=no
+HAVE_PKG_MPITHREAD=no
 m4_ifval([$2], [m4_define([SC_CHECK_MPI_F77], [yes])])
 m4_ifval([$3], [m4_define([SC_CHECK_MPI_CXX], [yes])])
 
@@ -67,6 +73,22 @@ elif test "x$enableval" != xno ; then
 fi
 AC_MSG_CHECKING([whether we are using MPI I/O])
 AC_MSG_RESULT([$HAVE_PKG_MPIIO])
+
+dnl The variable SC_ENABLE_MPITHREAD is set if --disable-mpithread not given.
+dnl If not disabled, MPI_Init_thread will be verified by a compile/link test.
+AC_ARG_ENABLE([mpithread],
+              [AS_HELP_STRING([--disable-mpithread],
+                              [disable MPI_Init_thread (even if MPI is enabled)])],,
+              [enableval=yes])
+if test "x$enableval" = xyes ; then
+  if test "x$HAVE_PKG_MPI" = xyes ; then
+    HAVE_PKG_MPITHREAD=yes
+  fi
+elif test "x$enableval" != xno ; then
+  AC_MSG_ERROR([Please don't use --enable-mpithread; it's the default now])
+fi
+AC_MSG_CHECKING([whether we are using MPI_Init_thread])
+AC_MSG_RESULT([$HAVE_PKG_MPITHREAD])
 
 dnl Establish the MPI test environment
 $1_MPIRUN=
@@ -111,6 +133,9 @@ m4_ifset([SC_CHECK_MPI_CXX], [
     AC_DEFINE([MPIIO], 1, [DEPRECATED (use $1_ENABLE_MPIIO instead)])
     AC_DEFINE([ENABLE_MPIIO], 1, [Define to 1 if we are using MPI I/O])
   fi
+  if test "x$HAVE_PKG_MPITHREAD" = xyes ; then
+    AC_DEFINE([ENABLE_MPITHREAD], 1, [Define to 1 if we are using MPI_Init_thread])
+  fi
 else
 m4_ifset([SC_CHECK_MPI_F77], [
   if test "x$F77" = x ; then
@@ -123,6 +148,7 @@ m4_ifset([SC_CHECK_MPI_F77], [
 fi
 AM_CONDITIONAL([$1_ENABLE_MPI], [test "x$HAVE_PKG_MPI" = xyes])
 AM_CONDITIONAL([$1_ENABLE_MPIIO], [test "x$HAVE_PKG_MPIIO" = xyes])
+AM_CONDITIONAL([$1_ENABLE_MPITHREAD], [test "x$HAVE_PKG_MPITHREAD" = xyes])
 ])
 
 dnl SC_MPI_F77_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
@@ -217,6 +243,29 @@ MPI_Finalize ();
  $2])
 ])
 
+dnl SC_MPITHREAD_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI_Init_thread test program
+dnl
+AC_DEFUN([SC_MPITHREAD_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for MPI_Init_thread C program])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+int mpiret;
+int mpithr;
+mpiret = MPI_Init_thread ((int *) 0, (char ***) 0,
+                          MPI_THREAD_MULTIPLE, &mpithr);
+mpiret = MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $1],
+[AC_MSG_RESULT([failed])
+ $2])
+])
+
 dnl SC_MPI_INCLUDES
 dnl Call the compiler with various --show* options
 dnl to figure out the MPI_INCLUDES and MPI_INCLUDE_PATH varables
@@ -287,6 +336,10 @@ dnl  ])
   if test "x$HAVE_PKG_MPIIO" = xyes ; then
     SC_MPIIO_C_COMPILE_AND_LINK(,
       [AC_MSG_ERROR([MPI I/O not found; you may try --disable-mpiio])])
+  fi
+  if test "x$HAVE_PKG_MPITHREAD" = xyes ; then
+    SC_MPITHREAD_C_COMPILE_AND_LINK(,
+      [AC_MSG_ERROR([MPI_Init_thread not found; you may try --disable-mpithread])])
   fi
 fi
 

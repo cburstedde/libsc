@@ -71,11 +71,6 @@ sc_tag_t;
 #define sc_MPI_COMM_WORLD          MPI_COMM_WORLD
 #define sc_MPI_COMM_SELF           MPI_COMM_SELF
 
-#define sc_MPI_THREAD_SINGLE       MPI_THREAD_SINGLE
-#define sc_MPI_THREAD_FUNNELED     MPI_THREAD_FUNNELED
-#define sc_MPI_THREAD_SERIALIZED   MPI_THREAD_SERIALIZED
-#define sc_MPI_THREAD_MULTIPLE     MPI_THREAD_MULTIPLE
-
 #define sc_MPI_ANY_SOURCE          MPI_ANY_SOURCE
 #define sc_MPI_ANY_TAG             MPI_ANY_TAG
 #define sc_MPI_STATUS_IGNORE       MPI_STATUS_IGNORE
@@ -125,7 +120,7 @@ sc_tag_t;
 /* functions */
 
 #define sc_MPI_Init                MPI_Init
-#define sc_MPI_Init_thread         MPI_Init_thread
+/*      sc_MPI_Init_thread is handled below */
 #define sc_MPI_Finalize            MPI_Finalize
 #define sc_MPI_Abort               MPI_Abort
 #define sc_MPI_Comm_dup            MPI_Comm_dup
@@ -160,11 +155,6 @@ sc_tag_t;
 #define sc_MPI_COMM_NULL           ((sc_MPI_Comm) 0x04000000)
 #define sc_MPI_COMM_WORLD          ((sc_MPI_Comm) 0x44000000)
 #define sc_MPI_COMM_SELF           ((sc_MPI_Comm) 0x44000001)
-
-#define sc_MPI_THREAD_SINGLE       0
-#define sc_MPI_THREAD_FUNNELED     1
-#define sc_MPI_THREAD_SERIALIZED   2
-#define sc_MPI_THREAD_MULTIPLE     3
 
 #define sc_MPI_ANY_SOURCE          (-2)
 #define sc_MPI_ANY_TAG             (-1)
@@ -223,8 +213,7 @@ sc_MPI_Status;
 /* These functions are valid and functional for a single process. */
 
 int                 sc_MPI_Init (int *, char ***);
-int                 sc_MPI_Init_thread (int *argc, char ***argv,
-                                        int required, int *provided);
+/*                  sc_MPI_Init_thread is handled below */
 
 int                 sc_MPI_Finalize (void);
 int                 sc_MPI_Abort (sc_MPI_Comm, int)
@@ -279,6 +268,27 @@ int                 sc_MPI_Waitsome (int, sc_MPI_Request *,
 int                 sc_MPI_Waitall (int, sc_MPI_Request *, sc_MPI_Status *);
 
 #endif /* !SC_ENABLE_MPI */
+
+#if defined SC_ENABLE_MPI && defined SC_ENABLE_MPITHREAD
+
+#define sc_MPI_THREAD_SINGLE       MPI_THREAD_SINGLE
+#define sc_MPI_THREAD_FUNNELED     MPI_THREAD_FUNNELED
+#define sc_MPI_THREAD_SERIALIZED   MPI_THREAD_SERIALIZED
+#define sc_MPI_THREAD_MULTIPLE     MPI_THREAD_MULTIPLE
+
+#define sc_MPI_Init_thread         MPI_Init_thread
+
+#else
+
+#define sc_MPI_THREAD_SINGLE       0
+#define sc_MPI_THREAD_FUNNELED     1
+#define sc_MPI_THREAD_SERIALIZED   2
+#define sc_MPI_THREAD_MULTIPLE     3
+
+int                 sc_MPI_Init_thread (int *argc, char ***argv,
+                                        int required, int *provided);
+
+#endif /* !(SC_ENABLE_MPI && SC_ENABLE_MPITHREAD) */
 
 /** Return the size of MPI data types.
  * \param [in] t    MPI data type.
