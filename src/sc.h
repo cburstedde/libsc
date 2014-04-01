@@ -217,8 +217,7 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
   do { (void) (expression); } while (0)
 #endif
 
-/* macros for memory allocation, will abort if out of memory
-   with --enable-alloc-line sc_malloc and sc_calloc are NOT thread-safe */
+/* macros for memory allocation, will abort if out of memory */
 
 #define SC_ALLOC(t,n)         (t *) sc_malloc (sc_package_id, (n) * sizeof(t))
 #define SC_ALLOC_ZERO(t,n)    (t *) sc_calloc (sc_package_id, \
@@ -408,9 +407,7 @@ typedef void        (*sc_log_handler_t) (FILE * log_stream,
                                          int package, int category,
                                          int priority, const char *msg);
 
-/* memory allocation functions, will abort if out of memory
-   with --enable-alloc-line sc_malloc and sc_calloc are NOT thread-safe
-   the sc_realloc function does not preserve alignment boundaries */
+/* memory allocation functions, will abort if out of memory */
 
 void               *sc_malloc (int package, size_t size);
 void               *sc_calloc (int package, size_t nmemb, size_t size);
