@@ -11,9 +11,9 @@ dnl                   In that case you need to set CC=mpicc (or other compiler)
 dnl                   on the configure command line.
 dnl                   Likewise for F77 and CXX if enabled in SC_MPI_CONFIG.
 dnl --disable-mpiio   Only effective if --enable-mpi is given.  In this case,
-dnl                   disables MPI I/O and its compile-and-link test.
+dnl                   do not use MPI I/O in sc and skip the compile-and-link test.
 dnl --disable-mpithread Only effective if --enable-mpi is given.  In this case,
-dnl                   disables MPI_Init_thread () and its compile-and-link test.
+dnl                   do not use MPI_Init_thread () and skip compile-and-link test.
 dnl
 dnl If MPI is enabled, set AC_DEFINE and AC_CONDITIONAL for PREFIX_ENABLE_MPI.
 dnl If MPI I/O is not disabled, set these for PREFIX_ENABLE_MPIIO.
@@ -48,7 +48,7 @@ dnl Therefore all further checking uses the HAVE_PKG_MPI shell variable
 dnl and neither AC_DEFINE nor AM_CONDITIONAL are invoked at this point.
 AC_ARG_ENABLE([mpi],
               [AS_HELP_STRING([--enable-mpi],
-                              [enable MPI (force serial code otherwise)])],,
+               [enable MPI (force serial code otherwise)])],,
               [enableval=no])
 if test "x$enableval" = xyes ; then
   HAVE_PKG_MPI=yes
@@ -62,7 +62,7 @@ dnl The shell variable SC_ENABLE_MPIIO is set if --disable-mpiio is not given.
 dnl If not disabled, MPI I/O will be verified by a compile/link test below.
 AC_ARG_ENABLE([mpiio],
               [AS_HELP_STRING([--disable-mpiio],
-                              [disable MPI I/O (even if MPI is enabled)])],,
+               [do not use MPI I/O (even if MPI is enabled)])],,
               [enableval=yes])
 if test "x$enableval" = xyes ; then
   if test "x$HAVE_PKG_MPI" = xyes ; then
@@ -78,7 +78,7 @@ dnl The variable SC_ENABLE_MPITHREAD is set if --disable-mpithread not given.
 dnl If not disabled, MPI_Init_thread will be verified by a compile/link test.
 AC_ARG_ENABLE([mpithread],
               [AS_HELP_STRING([--disable-mpithread],
-                              [disable MPI_Init_thread (even if MPI is enabled)])],,
+               [do not use MPI_Init_thread (even if MPI is enabled)])],,
               [enableval=yes])
 if test "x$enableval" = xyes ; then
   if test "x$HAVE_PKG_MPI" = xyes ; then
