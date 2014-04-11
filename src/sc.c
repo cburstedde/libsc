@@ -115,10 +115,10 @@ static sc_package_t *sc_packages = NULL;
 static pthread_mutex_t sc_default_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void
-sc_check_abort_thread (int condition, const char *message)
+sc_check_abort_thread (int condition, int package, const char *message)
 {
   if (!condition) {
-    printf ("[libsc] sc_check_abort_thread: %s\n", message);
+    printf ("[libsc] sc_check_abort_thread %d %s\n", package, message);
     abort ();
   }
 }
@@ -132,7 +132,7 @@ sc_package_mutex (int package)
   else {
 #ifdef SC_ENABLE_DEBUG
     sc_check_abort_thread (sc_package_is_registered (package),
-                           "sc_package_mutex");
+                           package, "sc_package_mutex");
 #endif
     return &sc_packages[package].mutex;
   }
@@ -145,7 +145,7 @@ sc_package_lock (int package)
   int                 pth;
 
   pth = pthread_mutex_lock (mutex);
-  sc_check_abort_thread (pth == 0, "sc_package_lock");
+  sc_check_abort_thread (pth == 0, package, "sc_package_lock");
 }
 
 static inline void
@@ -155,7 +155,7 @@ sc_package_unlock (int package)
   int                 pth;
 
   pth = pthread_mutex_unlock (mutex);
-  sc_check_abort_thread (pth == 0, "sc_package_unlock");
+  sc_check_abort_thread (pth == 0, package, "sc_package_unlock");
 }
 
 #endif /* SC_ENABLE_PTHREAD */
