@@ -23,38 +23,44 @@
 #include <pthread.h>
 #include <sc_options.h>
 
+typedef struct thread_data
+{
+  pthread_t           thread;
+  int                 id;
+  MPI_Comm            mpicomm;
+}
+thread_data_t;
+
 static void        *
 start_thread (void *v)
 {
-  int                 i = *(int *) v;
+  thread_data_t      *td = (thread_data_t *) v;
   int                 j;
   int                *p;
   int                 mpiret;
   int                 mpisize;
-  sc_MPI_Comm         mpicomm;
 
-  SC_INFOF ("This is thread %d\n", i);
+  /* randomize thread startup time */
+  sleep (4. * rand () / (RAND_MAX + 1.));
+  SC_INFOF ("This is thread %d\n", td->id);
 
   /* create some data */
   p = SC_ALLOC (int, 1000);
   for (j = 0; j < 1000; ++j) {
-    p[j] = j;
+    p[j] = j + 17 * td->id;
   }
 
   /* duplicate communicator and execute a collective MPI call */
-  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_dup (sc_MPI_COMM_WORLD, &mpicomm);
+  mpiret = sc_MPI_Comm_size (td->mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Allreduce (p, p + 500, 500, sc_MPI_INT, sc_MPI_SUM,
-                             mpicomm);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_free (&mpicomm);
+                             td->mpicomm);
   SC_CHECK_MPI (mpiret);
 
   /* check the results and free data */
   for (j = 500; j < 1000; ++j) {
-    SC_CHECK_ABORT (p[j] == (j - 500) * mpisize, "Communication mismatch");
+    SC_CHECK_ABORT (p[j] == (j - 500 + 17 * td->id) * mpisize,
+                    "Communication mismatch");
   }
   SC_FREE (p);
 
@@ -65,15 +71,15 @@ start_thread (void *v)
 static void
 test_threads (int N)
 {
+  int                 mpiret;
   int                 i;
   int                 pth;
-  int                *ids;
   void               *exitval;
   pthread_attr_t      attr;
-  pthread_t          *threads;
+  thread_data_t      *td;
 
-  ids = SC_ALLOC (int, N);
-  threads = SC_ALLOC (pthread_t, N);
+  /* allocate thread data */
+  td = SC_ALLOC (thread_data_t, N);
 
   /* create and run threads */
   pth = pthread_attr_init (&attr);
@@ -81,22 +87,26 @@ test_threads (int N)
   pth = pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_JOINABLE);
   SC_CHECK_ABORT (pth == 0, "Fail in pthread_attr_setdetachstate");
   for (i = 0; i < N; ++i) {
-    ids[i] = i;
-    pth = pthread_create (&threads[i], &attr, &start_thread, &ids[i]);
+    mpiret = sc_MPI_Comm_dup (sc_MPI_COMM_WORLD, &td[i].mpicomm);
+    SC_CHECK_MPI (mpiret);
+    td[i].id = i;
+    pth = pthread_create (&td[i].thread, &attr, &start_thread, &td[i]);
     SC_CHECK_ABORT (pth == 0, "Fail in pthread_create");
   }
-  pth = pthread_attr_destroy (&attr);
-  SC_CHECK_ABORT (pth == 0, "Fail in pthread_attr_destroy");
 
   /* wait for threads to finish */
   for (i = 0; i < N; ++i) {
-    pth = pthread_join (threads[i], &exitval);
+    pth = pthread_join (td[i].thread, &exitval);
     SC_CHECK_ABORT (pth == 0, "Fail in pthread_join");
-    SC_ASSERT (exitval == &ids[i]);
+    SC_ASSERT (exitval == &td[i]);
+    mpiret = sc_MPI_Comm_free (&td[i].mpicomm);
+    SC_CHECK_MPI (mpiret);
   }
 
-  SC_FREE (threads);
-  SC_FREE (ids);
+  /* destroy attribute and thread data */
+  pth = pthread_attr_destroy (&attr);
+  SC_CHECK_ABORT (pth == 0, "Fail in pthread_attr_destroy");
+  SC_FREE (td);
 }
 
 int
