@@ -114,6 +114,15 @@ static sc_package_t *sc_packages = NULL;
 
 static pthread_mutex_t sc_default_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+static void
+sc_check_abort_thread (int condition, const char *message)
+{
+  if (!condition) {
+    printf ("[libsc] sc_check_abort_thread: %s\n", message);
+    abort ();
+  }
+}
+
 static inline pthread_mutex_t *
 sc_package_mutex (int package)
 {
@@ -121,7 +130,10 @@ sc_package_mutex (int package)
     return &sc_default_mutex;
   }
   else {
-    SC_ASSERT (sc_package_is_registered (package));
+#ifdef SC_ENABLE_DEBUG
+    sc_check_abort_thread (sc_package_is_registered (package),
+                           "sc_package_mutex");
+#endif
     return &sc_packages[package].mutex;
   }
 }
@@ -133,7 +145,7 @@ sc_package_lock (int package)
   int                 pth;
 
   pth = pthread_mutex_lock (mutex);
-  SC_CHECK_ABORTF (pth == 0, "Mutex lock failed for package %d", package);
+  sc_check_abort_thread (pth == 0, "sc_package_lock");
 }
 
 static inline void
@@ -143,7 +155,7 @@ sc_package_unlock (int package)
   int                 pth;
 
   pth = pthread_mutex_unlock (mutex);
-  SC_CHECK_ABORTF (pth == 0, "Mutex unlock failed for package %d", package);
+  sc_check_abort_thread (pth == 0, "sc_package_unlock");
 }
 
 #endif /* SC_ENABLE_PTHREAD */
@@ -266,12 +278,14 @@ sc_malloc (int package, size_t size)
   int                *malloc_count = sc_malloc_count (package);
 
   ret = malloc (size);
+  if (size > 0) {
+    SC_CHECK_ABORT (ret != NULL, "Allocation");
+  }
 
 #ifdef SC_ENABLE_PTHREAD
   sc_package_lock (package);
 #endif
   if (size > 0) {
-    SC_CHECK_ABORT (ret != NULL, "Allocation");
     ++*malloc_count;
   }
   else {
@@ -291,12 +305,14 @@ sc_calloc (int package, size_t nmemb, size_t size)
   int                *malloc_count = sc_malloc_count (package);
 
   ret = calloc (nmemb, size);
+  if (nmemb * size > 0) {
+    SC_CHECK_ABORT (ret != NULL, "Allocation");
+  }
 
 #ifdef SC_ENABLE_PTHREAD
   sc_package_lock (package);
 #endif
   if (nmemb * size > 0) {
-    SC_CHECK_ABORT (ret != NULL, "Allocation");
     ++*malloc_count;
   }
   else {
