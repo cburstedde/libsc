@@ -117,6 +117,7 @@ static void
 condvar_setup (global_data_t * g)
 {
   int                 i;
+  int                 pth;
   thread_data_t      *td;
 
   /*
@@ -145,7 +146,8 @@ condvar_setup (global_data_t * g)
     td->id = i;
     td->gd = g;
     td->working = td->done = 0;
-    pthread_create (&td->thread, &g->attr, &start_thread, td);
+    pth = pthread_create (&td->thread, &g->attr, &start_thread, td);
+    SC_CHECK_ABORTF (pth == 0, "pthread_create error %d", pth);
   }
 
   SC_INFO ("Main setup waiting\n");
@@ -153,7 +155,8 @@ condvar_setup (global_data_t * g)
   /* wait until the threads have done their setup */
   pthread_mutex_lock (&g->mutex);
   while (g->setup < g->N) {
-    pthread_cond_wait (&g->cond_setup, &g->mutex);
+    pth = pthread_cond_wait (&g->cond_setup, &g->mutex);
+    SC_CHECK_ABORT (pth == 0, "pthread_cond_wait");
   }
   pthread_mutex_unlock (&g->mutex);
 

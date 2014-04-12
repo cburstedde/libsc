@@ -91,7 +91,7 @@ test_threads (int N)
     SC_CHECK_MPI (mpiret);
     td[i].id = i;
     pth = pthread_create (&td[i].thread, &attr, &start_thread, &td[i]);
-    SC_CHECK_ABORT (pth == 0, "Fail in pthread_create");
+    SC_CHECK_ABORTF (pth == 0, "pthread_create error %d", pth);
   }
 
   /* wait for threads to finish */
