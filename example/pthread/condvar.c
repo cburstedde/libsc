@@ -48,34 +48,12 @@ struct global_data
   thread_data_t      *td;
 };
 
-#if 0
-
-void               *
-thr_func1 (void *arg)
-{
-  /* thread code blocks here until MAX_COUNT is reached */
-  pthread_mutex_lock (&count_lock);
-  while (count < MAX_COUNT) {
-    pthread_cond_wait (&count_cond, &count_lock);
-  }
-  pthread_mutex_unlock (&count_lock);
-  /* proceed with thread execution */
-
-  pthread_exit (NULL);
-}
-
-#endif
-
 static void        *
 start_thread (void *v)
 {
   thread_data_t      *td = (thread_data_t *) v;
   global_data_t      *g = td->gd;
-  int                 oldstate, oldtype;
   int                 j;
-
-  pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, &oldstate);
-  pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, &oldtype);
 
   /* setup phase do work here depending on td->i */
   SC_INFOF ("T%02d setup working\n", td->id);
@@ -99,6 +77,10 @@ start_thread (void *v)
       pthread_cond_wait (&g->cond_start, &g->mutex);
     }
     SC_INFOF ("T%02d task skip cond_wait\n", td->id);
+    if (g->task == -2) {
+      pthread_mutex_unlock (&g->mutex);
+      pthread_exit (NULL);
+    }
     SC_ASSERT (0 <= g->task && g->task < g->N);
     td = &g->td[g->task];
     SC_ASSERT (td->done == 0);
@@ -172,6 +154,7 @@ condvar_setup (global_data_t * g)
   SC_INFO ("Main setup done\n");
 }
 
+#if 0
 static void
 condvar_work (global_data_t * g)
 {
@@ -212,6 +195,7 @@ condvar_work (global_data_t * g)
     /* main thread does some stuff */
   }
 }
+#endif
 
 static void
 condvar_teardown (global_data_t * g)
@@ -223,17 +207,19 @@ condvar_teardown (global_data_t * g)
 
   SC_INFO ("Main teardown begin\n");
 
+  pthread_mutex_lock (&g->mutex);
+  g->task = -2;
+  pthread_mutex_unlock (&g->mutex);
+  pthread_cond_broadcast (&g->cond_start);
+
   /* wait for all threads to terminate */
   for (i = 0; i < g->N; ++i) {
     td = &g->td[i];
-    SC_INFOF ("Main teardown cancel %02d\n", i);
-    pth = pthread_cancel (td->thread);
-    SC_CHECK_ABORT (pth == 0, "pthread_cancel");
     SC_INFOF ("Main teardown join %02d\n", i);
     pth = pthread_join (td->thread, &exitval);
     SC_CHECK_ABORT (pth == 0, "pthread_join");
     SC_INFOF ("Main teardown done %02d\n", i);
-    SC_ASSERT (exitval == PTHREAD_CANCELED);
+    SC_ASSERT (exitval == NULL);
     SC_ASSERT (td->working == 0);
     SC_ASSERT (td->done == 0);
   }
@@ -256,7 +242,9 @@ static void
 condvar_run (global_data_t * g)
 {
   condvar_setup (g);
+#if 0
   condvar_work (g);
+#endif
   condvar_teardown (g);
 }
 
