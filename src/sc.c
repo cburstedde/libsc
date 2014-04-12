@@ -113,13 +113,17 @@ static sc_package_t *sc_packages = NULL;
 #ifdef SC_ENABLE_PTHREAD
 
 static pthread_mutex_t sc_default_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t sc_error_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void
 sc_check_abort_thread (int condition, int package, const char *message)
 {
   if (!condition) {
+    pthread_mutex_lock (&sc_error_mutex);
     printf ("[libsc] sc_check_abort_thread %d %s\n", package, message);
     abort ();
+    /* abort () will not return */
+    pthread_mutex_unlock (&sc_error_mutex);
   }
 }
 
@@ -545,7 +549,13 @@ sc_logv (const char *filename, int lineno,
 {
   char                buffer[BUFSIZ];
 
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_lock (package);
+#endif
   vsnprintf (buffer, BUFSIZ, fmt, ap);
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_unlock (package);
+#endif
   sc_log (filename, lineno, package, category, priority, buffer);
 }
 
