@@ -28,10 +28,8 @@ typedef struct global_data global_data_t;
 typedef struct thread_data
 {
   int                 id;
-  int                 working;
-  int                 done;
+  int                 working, done;
   pthread_t           thread;
-  pthread_cond_t      cond_stop;
   global_data_t      *gd;
 }
 thread_data_t;
@@ -40,10 +38,11 @@ struct global_data
 {
   int                 N, T;
   int                 setup;
-  int                 task;
+  int                 scheduled, started;
   pthread_mutex_t     mutex;
   pthread_cond_t      cond_setup;
   pthread_cond_t      cond_start;
+  pthread_cond_t      cond_stop;
   pthread_attr_t      attr;
   thread_data_t      *td;
 };
@@ -70,23 +69,30 @@ start_thread (void *v)
 
     SC_INFOF ("T%02d task waiting\n", td->id);
 
-    /* task phase begin: wait for start signal */
+    /* task phase begin: wait for start or exit signal */
     pthread_mutex_lock (&g->mutex);
-    while (g->task == -1) {
-      SC_INFOF ("T%02d task into cond_wait\n", td->id);
+    while (g->scheduled == g->started) {
+      SC_INFOF ("T%02d task into cond_wait with %d\n", td->id, g->scheduled);
       pthread_cond_wait (&g->cond_start, &g->mutex);
     }
     SC_INFOF ("T%02d task skip cond_wait\n", td->id);
-    if (g->task == -2) {
+    if (g->scheduled == -1) {
+      SC_INFOF ("T%02d task to exit\n", td->id);
       pthread_mutex_unlock (&g->mutex);
       pthread_exit (NULL);
     }
-    SC_ASSERT (0 <= g->task && g->task < g->N);
-    td = &g->td[g->task];
-    SC_ASSERT (td->done == 0);
+
+    /* set this task to work */
+    SC_ASSERT (0 <= g->started);
+    SC_ASSERT (g->started < g->scheduled);
+    SC_ASSERT (g->scheduled <= g->N);
+    SC_INFOF ("T%02d task now is id %d\n", td->id, g->started);
+
+    /* this thread picks the next scheduled id */
+    td = &g->td[g->started++];
     SC_ASSERT (td->working == 0);
+    SC_ASSERT (td->done == 0);
     td->working = 1;
-    g->task = -1;
     pthread_mutex_unlock (&g->mutex);
 
     /* task phase do work here depending on td->i */
@@ -99,7 +105,7 @@ start_thread (void *v)
     td->done = 1;
     td->working = 0;
     pthread_mutex_unlock (&g->mutex);
-    pthread_cond_signal (&td->cond_stop);
+    pthread_cond_signal (&g->cond_stop);
 
     SC_INFOF ("T%02d task done\n", td->id);
   }
@@ -126,10 +132,11 @@ condvar_setup (global_data_t * g)
 
   /* start threads */
   g->setup = 0;
-  g->task = -1;
+  g->scheduled = g->started = 0;
   pthread_mutex_init (&g->mutex, NULL);
   pthread_cond_init (&g->cond_setup, NULL);
   pthread_cond_init (&g->cond_start, NULL);
+  pthread_cond_init (&g->cond_stop, NULL);
   pthread_attr_init (&g->attr);
   pthread_attr_setdetachstate (&g->attr, PTHREAD_CREATE_JOINABLE);
   g->td = SC_ALLOC (thread_data_t, g->N);
@@ -138,7 +145,6 @@ condvar_setup (global_data_t * g)
     td->id = i;
     td->gd = g;
     td->working = td->done = 0;
-    pthread_cond_init (&td->cond_stop, NULL);
     pthread_create (&td->thread, &g->attr, &start_thread, td);
   }
 
@@ -154,7 +160,6 @@ condvar_setup (global_data_t * g)
   SC_INFO ("Main setup done\n");
 }
 
-#if 0
 static void
 condvar_work (global_data_t * g)
 {
@@ -164,38 +169,50 @@ condvar_work (global_data_t * g)
   for (j = 0; j < g->T; ++j) {
 
     /* main thread does some stuff */
+    SC_INFOF ("Main cycle %d start\n", j);
+    pthread_mutex_lock (&g->mutex);
+    SC_ASSERT (g->scheduled == 0 && g->started == 0);
+    pthread_mutex_unlock (&g->mutex);
 
     for (i = 0; i < g->N; ++i) {
-      td = &g->td[i];
-
-      /* main thread signals task work phase to begin */
+      /* signal for some task to start working */
       pthread_mutex_lock (&g->mutex);
-      g->task = i;
-      SC_ASSERT (td->done == 0);
-      SC_ASSERT (td->working == 0);
+      SC_ASSERT (g->scheduled == i);
+      ++g->scheduled;
       pthread_mutex_unlock (&g->mutex);
       pthread_cond_signal (&g->cond_start);
+
+      /* main thread does some stuff */
     }
 
+    SC_INFOF ("Main cycle %d waiting\n", j);
     /* main thread does some stuff */
 
     for (i = g->N - 1; i >= 0; --i) {
       td = &g->td[i];
 
-      /* main thread waits for task work phase to end */
+      /* main thread waits for tasks to end in reverse order */
       pthread_mutex_lock (&g->mutex);
       while (td->done != 1) {
-        pthread_cond_wait (&td->cond_stop, &g->mutex);
+        pthread_cond_wait (&g->cond_stop, &g->mutex);
       }
       SC_ASSERT (td->working == 0);
       td->done = 0;
       pthread_mutex_unlock (&g->mutex);
+
+      /* main thread does some stuff */
     }
 
     /* main thread does some stuff */
+    SC_INFOF ("Main cycle %d stop\n", j);
+
+    /* reset thread schedule after task is processed */
+    pthread_mutex_lock (&g->mutex);
+    SC_ASSERT (g->scheduled == g->N && g->started == g->N);
+    g->scheduled = g->started = 0;
+    pthread_mutex_unlock (&g->mutex);
   }
 }
-#endif
 
 static void
 condvar_teardown (global_data_t * g)
@@ -207,10 +224,14 @@ condvar_teardown (global_data_t * g)
 
   SC_INFO ("Main teardown begin\n");
 
+  /* signal all threads to exit */
   pthread_mutex_lock (&g->mutex);
-  g->task = -2;
+  g->scheduled = -1;
   pthread_mutex_unlock (&g->mutex);
-  pthread_cond_broadcast (&g->cond_start);
+  pth = pthread_cond_broadcast (&g->cond_start);
+  SC_CHECK_ABORT (pth == 0, "pthread_cond_broadcast");
+
+  SC_INFO ("Main teardown join\n");
 
   /* wait for all threads to terminate */
   for (i = 0; i < g->N; ++i) {
@@ -227,11 +248,8 @@ condvar_teardown (global_data_t * g)
   SC_INFO ("Main teardown done\n");
 
   /* cleanup storage */
-  for (i = 0; i < g->N; ++i) {
-    td = &g->td[i];
-    pthread_cond_destroy (&td->cond_stop);
-  }
   pthread_attr_destroy (&g->attr);
+  pthread_cond_destroy (&g->cond_stop);
   pthread_cond_destroy (&g->cond_start);
   pthread_cond_destroy (&g->cond_setup);
   pthread_mutex_destroy (&g->mutex);
@@ -242,9 +260,7 @@ static void
 condvar_run (global_data_t * g)
 {
   condvar_setup (g);
-#if 0
   condvar_work (g);
-#endif
   condvar_teardown (g);
 }
 
