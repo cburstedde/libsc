@@ -292,6 +292,20 @@ sc_stats_print (int package_id, int log_priority,
       SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
                   "Summary overflow\n");
     }
+    count = snprintf (buffer, BUFSIZ, "Maximum = ");
+    for (i = 0; i < nvars && count >= 0 && (size_t) count < BUFSIZ; ++i) {
+      si = &stats[i];
+      count += snprintf (buffer + count, BUFSIZ - count,
+                         "%s%g", i == 0 ? "[ " : " ", si->max);
+    }
+    if (count >= 0 && (size_t) count < BUFSIZ) {
+      snprintf (buffer + count, BUFSIZ - count, "%s", " ];\n");
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, buffer);
+    }
+    else {
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
+                  "Maximum overflow\n");
+    }
   }
 }
 
