@@ -251,7 +251,7 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_ROUNDUP2_32(x)                               \
   (((x) <= 0) ? 0 : (1 << (SC_LOG2_32 ((x) - 1) + 1)))
 #define SC_ROUNDUP2_64(x)                               \
-  (((x) <= 0) ? 0 : (1 << (SC_LOG2_64 ((x) - 1LL) + 1)))
+  (((x) <= 0) ? 0 : (1LL << (SC_LOG2_64 ((x) - 1LL) + 1)))
 
 /* log categories */
 
