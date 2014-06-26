@@ -1,7 +1,7 @@
 dnl
 dnl SC_MPI_CONFIG(PREFIX, , )
 dnl
-dnl If the second argument is nonempty, also includes configuration for F77.
+dnl If the second argument is nonempty, also includes configuration for F77 and FC.
 dnl If the third argument is nonempty, also includes configuration for CXX.
 dnl
 dnl Checks the configure options
@@ -9,7 +9,7 @@ dnl --enable-mpi      If enabled and CC is not set, do export CC=mpicc.
 dnl                   This may be "too late" if AC_PROG_CC was called earlier.
 dnl                   In that case you need to set CC=mpicc (or other compiler)
 dnl                   on the configure command line.
-dnl                   Likewise for F77 and CXX if enabled in SC_MPI_CONFIG.
+dnl                   Likewise for F77, FC and CXX if enabled in SC_MPI_CONFIG.
 dnl --disable-mpiio   Only effective if --enable-mpi is given.  In this case,
 dnl                   do not use MPI I/O in sc and skip the compile-and-link test.
 dnl --disable-mpithread Only effective if --enable-mpi is given.  In this case,
@@ -24,6 +24,7 @@ dnl
 dnl Relies on SC_MPI_CONFIG to be called before.
 dnl Calls AC_PROG_CC and other macros related to the C compiler.
 dnl Calls AC_PROG_F77 and others if F77 is enabled in SC_MPI_CONFIG.
+dnl Calls AC_PROG_FC and others if FC is enabled in SC_MPI_CONFIG.
 dnl Calls AC_PROG_CXX and others if CXX is enabled in SC_MPI_CONFIG.
 dnl
 dnl If MPI is enabled, a compile-and-link test is performed.  It aborts
@@ -41,6 +42,7 @@ HAVE_PKG_MPI=no
 HAVE_PKG_MPIIO=no
 HAVE_PKG_MPITHREAD=no
 m4_ifval([$2], [m4_define([SC_CHECK_MPI_F77], [yes])])
+m4_ifval([$2], [m4_define([SC_CHECK_MPI_FC], [yes])])
 m4_ifval([$3], [m4_define([SC_CHECK_MPI_CXX], [yes])])
 
 dnl The shell variable SC_ENABLE_MPI is set if --enable-mpi is given.
@@ -117,6 +119,12 @@ m4_ifset([SC_CHECK_MPI_F77], [
   fi
   AC_MSG_NOTICE([                            F77 set to $F77])
 ])
+m4_ifset([SC_CHECK_MPI_FC], [
+  if test "x$FC" = x ; then
+    export FC=mpif90
+  fi
+  AC_MSG_NOTICE([                            FC set to $FC])
+])
   if test "x$CC" = x ; then
     export CC=mpicc
   fi
@@ -145,6 +153,14 @@ m4_ifset([SC_CHECK_MPI_F77], [
     fi
   fi
 ], [:])
+m4_ifset([SC_CHECK_MPI_FC], [
+  if test "x$FC" = x ; then
+    AC_CHECK_PROGS([$1_FC_COMPILER], [gfortran ifort])
+    if test "x$$1_FC_COMPILER" != x ; then
+      FC="$$1_FC_COMPILER"
+    fi
+  fi
+], [:])
 fi
 AM_CONDITIONAL([$1_ENABLE_MPI], [test "x$HAVE_PKG_MPI" = xyes])
 AM_CONDITIONAL([$1_ENABLE_MPIIO], [test "x$HAVE_PKG_MPIIO" = xyes])
@@ -163,6 +179,31 @@ dnl AC_MSG_CHECKING([compile/link for MPI F77 program])
 dnl AC_LINK_IFELSE([AC_LANG_PROGRAM(
 dnl [[
 dnl       include "mpif.h"
+dnl ]], [[
+dnl       call MPI_INIT (ierror)
+dnl       call MPI_COMM_SIZE (MPI_COMM_WORLD, isize, ierror)
+dnl       call MPI_COMM_RANK (MPI_COMM_WORLD, irank, ierror)
+dnl       print*, isize, irank, ': Hello world'
+dnl       call MPI_FINALIZE (ierror)
+dnl ]])],
+dnl [AC_MSG_RESULT([successful])
+dnl  $1],
+dnl [AC_MSG_RESULT([failed])
+dnl  $2])
+dnl ])
+
+dnl SC_MPI_FC_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI FC test program
+dnl
+dnl DEACTIVATED since it triggers a bug in autoconf:
+dnl AC_LANG_PROGRAM(Fortran): ignoring PROLOGUE: [
+dnl
+dnl AC_DEFUN([SC_MPI_FC_COMPILE_AND_LINK],
+dnl [
+dnl AC_MSG_CHECKING([compile/link for MPI FC program])
+dnl AC_LINK_IFELSE([AC_LANG_PROGRAM(
+dnl [[
+dnl       include "mpif90.h"
 dnl ]], [[
 dnl       call MPI_INIT (ierror)
 dnl       call MPI_COMM_SIZE (MPI_COMM_WORLD, isize, ierror)
@@ -312,6 +353,12 @@ AC_PROG_F77_C_O
 AC_REQUIRE([AC_F77_LIBRARY_LDFLAGS])
 AC_F77_WRAPPERS
 ])
+m4_ifset([SC_CHECK_MPI_FC], [
+AC_REQUIRE([AC_PROG_FC])
+AC_PROG_FC_C_O
+AC_REQUIRE([AC_FC_LIBRARY_LDFLAGS])
+AC_FC_WRAPPERS
+])
 AC_REQUIRE([AC_PROG_CC])
 AC_PROG_CC_C_O
 AM_PROG_CC_C_O
@@ -326,6 +373,11 @@ dnl  m4_ifset([SC_CHECK_MPI_F77], [
 dnl    AC_LANG_PUSH([Fortran 77])
 dnl    SC_MPI_F77_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI F77 test failed])])
 dnl    AC_LANG_POP([Fortran 77])
+dnl  ])
+dnl  m4_ifset([SC_CHECK_MPI_FC], [
+dnl    AC_LANG_PUSH([Fortran])
+dnl    SC_MPI_FC_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI FC test failed])])
+dnl    AC_LANG_POP([Fortran])
 dnl  ])
   SC_MPI_C_COMPILE_AND_LINK(, [AC_MSG_ERROR([MPI C test failed])])
   m4_ifset([SC_CHECK_MPI_CXX], [
