@@ -123,7 +123,7 @@ m4_ifset([SC_CHECK_MPI_FC], [
   if test "x$FC" = x ; then
     export FC=mpif90
   fi
-  AC_MSG_NOTICE([                            FC set to $FC])
+  AC_MSG_NOTICE([                             FC set to $FC])
 ])
   if test "x$CC" = x ; then
     export CC=mpicc

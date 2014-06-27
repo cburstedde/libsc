@@ -41,7 +41,7 @@ echo "o---------------------------------------"
 echo "| Checking MPI and related programs"
 echo "o---------------------------------------"
 
-dnl A nonempty second/third argument causes to enable F77/FC/CXX, respectively.
+dnl A nonempty second/third argument causes to enable F77+FC/CXX, respectively.
 SC_MPI_CONFIG([SC], [yes], [yes])
 SC_MPI_ENGAGE([SC])
 # This is needed for compatibility with automake >= 1.12
