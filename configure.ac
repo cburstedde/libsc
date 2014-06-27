@@ -108,13 +108,8 @@ echo "| Results for libsc are"
 echo "o----------------------------------"
 echo "| F77:         $F77"
 echo "| FFLAGS:      $FFLAGS"
-<<<<<<< HEAD
-echo "| FC:         $FC"
-echo "| FCFLAGS:      $FCFLAGS"
-=======
 echo "| FC:          $FC"
 echo "| FCFLAGS:     $FCFLAGS"
->>>>>>> 9be9dec... Added Fortran90 support
 echo "| CPP:         $CPP"
 echo "| CPPFLAGS:    $CPPFLAGS"
 echo "| CC:          $CC"
