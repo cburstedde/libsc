@@ -88,8 +88,8 @@ AC_TYPE_SSIZE_T
 
 AC_DEFINE_UNQUOTED(F77,         ["${F77}"],         [F77 compiler])
 AC_DEFINE_UNQUOTED(FFLAGS,      ["${FFLAGS}"],      [F77 compiler flags])
-AC_DEFINE_UNQUOTED(FC,         ["${FC}"],         [FC compiler])
-AC_DEFINE_UNQUOTED(FCFLAGS,      ["${FCFLAGS}"],      [FC compiler flags])
+AC_DEFINE_UNQUOTED(FC,          ["${FC}"],          [FC compiler])
+AC_DEFINE_UNQUOTED(FCFLAGS,     ["${FCFLAGS}"],     [FC compiler flags])
 AC_DEFINE_UNQUOTED(CPP,         ["${CPP}"],         [C preprocessor])
 AC_DEFINE_UNQUOTED(CPPFLAGS,    ["${CPPFLAGS}"],    [C preprocessor flags])
 AC_DEFINE_UNQUOTED(CC,          ["${CC}"],          [C compiler])
@@ -108,8 +108,13 @@ echo "| Results for libsc are"
 echo "o----------------------------------"
 echo "| F77:         $F77"
 echo "| FFLAGS:      $FFLAGS"
+<<<<<<< HEAD
 echo "| FC:         $FC"
 echo "| FCFLAGS:      $FCFLAGS"
+=======
+echo "| FC:          $FC"
+echo "| FCFLAGS:     $FCFLAGS"
+>>>>>>> 9be9dec... Added Fortran90 support
 echo "| CPP:         $CPP"
 echo "| CPPFLAGS:    $CPPFLAGS"
 echo "| CC:          $CC"
