@@ -11,7 +11,7 @@ libsc_installed_headers = \
         src/sc_ranges.h src/sc_c99_functions.h src/sc_io.h \
         src/sc_amr.h src/sc_search.h src/sc_sort.h \
         src/sc_dmatrix.h src/sc_blas.h src/sc_lapack.h \
-        src/sc_bspline.h src/sc_flops.h src/sc_object.h \
+        src/sc_bspline.h src/sc_flops.h \
         src/sc_getopt.h src/sc_obstack.h \
         src/sc_lua.h \
 	src/sc_keyvalue.h src/sc_warp.h \
@@ -23,7 +23,7 @@ libsc_compiled_sources = \
         src/sc_ranges.c src/sc_io.c \
         src/sc_amr.c src/sc_search.c src/sc_sort.c \
         src/sc_dmatrix.c src/sc_blas.c src/sc_lapack.c \
-        src/sc_bspline.c src/sc_flops.c src/sc_object.c \
+        src/sc_bspline.c src/sc_flops.c \
         src/sc_getopt.c src/sc_obstack.c src/sc_getopt1.c \
 	src/sc_keyvalue.c src/sc_warp.c \
         src/sc_allgather.c src/sc_reduce.c src/sc_notify.c
