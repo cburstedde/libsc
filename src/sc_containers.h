@@ -23,6 +23,20 @@
 #ifndef SC_CONTAINERS_H
 #define SC_CONTAINERS_H
 
+/** \file sc_containers.h
+ *
+ * Defines lists, arrays, hash tables, etc.
+ *
+ * \ingroup containers
+ */
+
+/** \defgroup containers containers
+ *
+ * Defines lists, arrays, hash tables, etc.
+ *
+ * \ingroup sc
+ */
+
 #include <sc_obstack.h>
 
 SC_EXTERN_C_BEGIN;
@@ -78,20 +92,22 @@ typedef int         (*sc_hash_foreach_t) (void **v, const void *u);
 typedef struct sc_array
 {
   /* interface variables */
-  size_t              elem_size;        /* size of a single element */
-  size_t              elem_count;       /* number of valid elements */
+  size_t              elem_size;        /**< size of a single element */
+  size_t              elem_count;       /**< number of valid elements */
 
   /* implementation variables */
-  ssize_t             byte_alloc;       /* number of allocated bytes
+  ssize_t             byte_alloc;       /**< number of allocated bytes
                                            or -(number of viewed bytes + 1)
                                            if this is a view: the "+ 1"
                                            distinguishes an array of size 0
                                            from a view of size 0 */
-  char               *array;    /* linear array to store elements */
+  char               *array;    /**< linear array to store elements */
 }
 sc_array_t;
 
+/** test whether the sc_array_t owns its \a array */
 #define SC_ARRAY_IS_OWNER(a) ((a)->byte_alloc >= 0)
+/** the allocated size of the array */
 #define SC_ARRAY_BYTE_ALLOC(a) ((size_t) \
          (SC_ARRAY_IS_OWNER (a) ? (a)->byte_alloc : -((a)->byte_alloc + 1)))
 
@@ -480,12 +496,12 @@ sc_array_push (sc_array_t * array)
 typedef struct sc_mempool
 {
   /* interface variables */
-  size_t              elem_size;        /* size of a single element */
-  size_t              elem_count;       /* number of valid elements */
+  size_t              elem_size;        /**< size of a single element */
+  size_t              elem_count;       /**< number of valid elements */
 
   /* implementation variables */
-  struct obstack      obstack;  /* holds the allocated elements */
-  sc_array_t          freed;    /* buffers the freed elements */
+  struct obstack      obstack;  /**< holds the allocated elements */
+  sc_array_t          freed;    /**< buffers the freed elements */
 }
 sc_mempool_t;
 
@@ -645,16 +661,16 @@ void               *sc_list_pop (sc_list_t * list);
 typedef struct sc_hash
 {
   /* interface variables */
-  size_t              elem_count;       /* total number of objects contained */
+  size_t              elem_count;       /**< total number of objects contained */
 
   /* implementation variables */
-  sc_array_t         *slots;    /* the slot count is slots->elem_count */
-  void               *user_data;        /* user data passed to hash function */
+  sc_array_t         *slots;    /**< the slot count is slots->elem_count */
+  void               *user_data;        /**< user data passed to hash function */
   sc_hash_function_t  hash_fn;
   sc_equal_function_t equal_fn;
   size_t              resize_checks, resize_actions;
   int                 allocator_owned;
-  sc_mempool_t       *allocator;        /* must allocate sc_link_t */
+  sc_mempool_t       *allocator;        /**< must allocate sc_link_t */
 }
 sc_hash_t;
 

@@ -20,6 +20,16 @@
   02110-1301, USA.
 */
 
+/** \file sc.h
+ *
+ * Support for process management (memory allocation, logging, etc.)
+ */
+
+/** \defgroup sc libsc
+ *
+ * The SC Library provides support for parallel scientific applications.
+ */
+
 #ifndef SC_H
 #define SC_H
 
@@ -255,28 +265,39 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 
 /* log categories */
 
-#define SC_LC_GLOBAL      1     /* log only for master process */
-#define SC_LC_NORMAL      2     /* log for every process */
+#define SC_LC_GLOBAL      1     /**< log only for master process */
+#define SC_LC_NORMAL      2     /**< log for every process */
 
-/* log priorities
+/** \defgroup logpriorities log priorities
+ *
+ * Numbers designating the level of logging output.
  *
  * Priorities TRACE to VERBOSE are appropriate when all parallel processes
  * contribute log messages.  INFO and above must not clutter the output of
  * large parallel runs.  STATISTICS can be used for important measurements.
  * PRODUCTION is meant for rudimentary information on the program flow.
  * ESSENTIAL can be used for one-time messages, say at program startup.
+ *
+ * \ingroup sc
  */
-#define SC_LP_DEFAULT   (-1)    /* this selects the SC default threshold */
-#define SC_LP_ALWAYS      0     /* this will log everything */
-#define SC_LP_TRACE       1     /* this will prefix file and line number */
-#define SC_LP_DEBUG       2     /* any information on the internal state */
-#define SC_LP_VERBOSE     3     /* information on conditions, decisions */
-#define SC_LP_INFO        4     /* the main things a function is doing */
-#define SC_LP_STATISTICS  5     /* important for consistency or performance */
-#define SC_LP_PRODUCTION  6     /* a few lines for a major api function */
-#define SC_LP_ESSENTIAL   7     /* this logs a few lines max per program */
-#define SC_LP_ERROR       8     /* this logs errors only */
-#define SC_LP_SILENT      9     /* this never logs anything */
+/*@{ \ingroup logpriorities */
+/* log priorities */
+#define SC_LP_DEFAULT   (-1)    /**< this selects the SC default threshold */
+#define SC_LP_ALWAYS      0     /**< this will log everything */
+#define SC_LP_TRACE       1     /**< this will prefix file and line number */
+#define SC_LP_DEBUG       2     /**< any information on the internal state */
+#define SC_LP_VERBOSE     3     /**< information on conditions, decisions */
+#define SC_LP_INFO        4     /**< the main things a function is doing */
+#define SC_LP_STATISTICS  5     /**< important for consistency/performance */
+#define SC_LP_PRODUCTION  6     /**< a few lines for a major api function */
+#define SC_LP_ESSENTIAL   7     /**< this logs a few lines max per program */
+#define SC_LP_ERROR       8     /**< this logs errors only */
+#define SC_LP_SILENT      9     /**< this never logs anything */
+/*@}*/
+
+/** The log priority for the sc package.
+ *
+ */
 #ifdef SC_LOG_PRIORITY
 #define SC_LP_THRESHOLD SC_LOG_PRIORITY
 #else
