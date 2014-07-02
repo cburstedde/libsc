@@ -20,7 +20,7 @@ log_events:
   - ""
 - - 2009-02-03 22:31:42.534180 Z
   - Carsten Burstedde <carsten@ices.utexas.edu>
-  - unassigned from release 0.6
+  - unassigned from release 1.6
   - |-
     Parallel sort is still buggy. Fix it for 0.7 hopefully.
     Remember to remove the SC_DEBUG checks from test_sort.c and sc_sort.c

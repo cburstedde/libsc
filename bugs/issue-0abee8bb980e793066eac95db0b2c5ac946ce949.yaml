@@ -5,7 +5,7 @@ desc: |-
   2. Don't catch signals by default, use a special function for that.
 type: :bugfix
 component: libsc
-release: "0.6"
+release: "1.6"
 reporter: Carsten Burstedde <carsten@ices.utexas.edu>
 status: :closed
 disposition: :fixed
