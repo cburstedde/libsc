@@ -42,18 +42,18 @@ dist_scaclocal_DATA = \
 scinidir = $(datadir)/ini
 dist_scini_DATA =
 
-# setup test environment
-if SC_MPIRUN
-LOG_COMPILER = @SC_MPIRUN@
-AM_LOG_FLAGS = @SC_MPI_TEST_FLAGS@
-endif
-
 # handle toplevel directory
 EXTRA_DIST += \
         bootstrap scindent build-aux/git-version-gen build-aux/git2cl bugs doc
 DISTCLEANFILES += \
         _configs.sed src/sc_config.h
 .PHONY: lint ChangeLog
+
+# setup test environment
+if SC_MPIRUN
+LOG_COMPILER = @SC_MPIRUN@
+AM_LOG_FLAGS = @SC_MPI_TEST_FLAGS@
+endif
 
 # non-recursive build
 include src/Makefile.am
