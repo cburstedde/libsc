@@ -29,7 +29,7 @@ Makefile.sc.mk : Makefile.sc.pre
         sed -e 's,{\(.*prefix\)},{sc_\1},g' \
             -e 's,^\(.*prefix *=\),sc_\1,g' > $@
 
-# install libsc m4 macros in the correct directory
+# install libsc m4 macros in a dedicated directory
 scaclocaldir = $(datadir)/aclocal
 dist_scaclocal_DATA = \
         config/sc_blas.m4 config/sc_builtin.m4 config/sc_c_check_flag.m4 \
@@ -37,6 +37,10 @@ dist_scaclocal_DATA = \
         config/sc_lapack.m4 config/sc_lint.m4 config/sc_mpi.m4 \
         config/ax_prefix_config_h.m4 config/ax_split_version.m4 \
         config/sc_package.m4 config/sc_trilinos.m4
+
+# install example .ini files in a dedicated directory
+scinidir = $(datadir)/ini
+dist_scini_DATA =
 
 # setup test environment
 if SC_MPIRUN
