@@ -43,6 +43,7 @@ main (int argc, char **argv)
   int                 first_arg;
   int                 w;
   int                 i1, i2, si1;
+  size_t              z;
   double              d, sd;
   const char         *s1, *s2, *ss1, *ss2;
   const char         *cd = "Callback example";
@@ -68,6 +69,7 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 't', NULL, &s2, NULL, "String 2");
   sc_options_add_inifile (opt, 'f', "inifile", ".ini file");
   sc_options_add_int (opt, '\0', "integer2", &i2, 7, "Integer 2");
+  sc_options_add_size_t (opt, 'z', "sizet", &z, (size_t) 7000000000ULL, "Size_t");
 
   subopt = sc_options_new (argv[0]);
   sc_options_add_int (subopt, 'i', "integer", &si1, 0, "Subset integer");

@@ -125,8 +125,7 @@ void                sc_options_add_int (sc_options_t * opt,
 
 /**
  * Add an option that takes a size_t argument.
- * This function is currently LIMITED to the range of INT, at least
- * for reading options from a file.  Command line parsing should be fine.
+ * The value of the size_t must not be greater than LLONG_MAX.
  * \param [in] init_value   The initial value of the variable.
  */
 void                sc_options_add_size_t (sc_options_t * opt,

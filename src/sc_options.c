@@ -24,6 +24,32 @@
 #include <sc_options.h>
 #include <iniparser.h>
 
+#include <errno.h>
+
+static char        *sc_iniparser_invalid_key = (char *) -1;
+static const size_t sc_sizet_invalid = ((size_t) LLONG_MAX) + 1;
+
+static              size_t
+sc_iniparser_getsizet (dictionary * d, const char *key, size_t notfound)
+{
+  char               *str;
+  long long           ll;
+
+  str = iniparser_getstring (d, key, sc_iniparser_invalid_key);
+  if (str == sc_iniparser_invalid_key) {
+    return notfound;
+  }
+#ifndef SC_HAVE_STRTOLL
+  ll = (long long) strtol (str, NULL, 0);
+#else
+  ll = strtoll (str, NULL, 0);
+#endif
+  if (ll < 0LL || errno == ERANGE) {
+    return sc_sizet_invalid;
+  }
+  return (size_t) ll;
+}
+
 static void
 sc_options_free_args (sc_options_t * opt)
 {
@@ -169,7 +195,7 @@ sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
 
 void
 sc_options_add_size_t (sc_options_t * opt, int opt_char, const char *opt_name,
-                       size_t *variable, size_t init_value,
+                       size_t * variable, size_t init_value,
                        const char *help_string)
 {
   sc_option_item_t   *item;
@@ -649,7 +675,13 @@ sc_options_load (int package_id, int err_priority,
       break;
     case SC_OPTION_SIZE_T:
       zvalue = (size_t *) item->opt_var;
-      *zvalue = (size_t) iniparser_getint (dict, key, (int) *zvalue);
+      *zvalue = sc_iniparser_getsizet (dict, key, *zvalue);
+      if (*zvalue == sc_sizet_invalid) {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid size_t %s in file: %s\n", key, inifile);
+        iniparser_freedict (dict);
+        return -1;
+      }
       break;
     case SC_OPTION_DOUBLE:
       dvalue = (double *) item->opt_var;
@@ -981,7 +1013,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
 #else
       ilonglong = strtoll (optarg, NULL, 0);
 #endif
-      if (ilonglong < 0LL) {
+      if (ilonglong < 0LL || errno == ERANGE) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
                      "Error parsing size_t: %s\n", optarg);
         retval = -1;            /* this ends option processing */
