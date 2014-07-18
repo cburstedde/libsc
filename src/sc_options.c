@@ -27,10 +27,38 @@
 #include <errno.h>
 
 static char        *sc_iniparser_invalid_key = (char *) -1;
-static const size_t sc_sizet_invalid = ((size_t) LLONG_MAX) + 1;
 
 static              size_t
-sc_iniparser_getsizet (dictionary * d, const char *key, size_t notfound)
+sc_iniparser_getint (dictionary * d, const char *key, int notfound, int *iserror)
+{
+  char               *str;
+  long                l;
+
+  str = iniparser_getstring (d, key, sc_iniparser_invalid_key);
+  if (str == sc_iniparser_invalid_key) {
+    return notfound;
+  }
+  l = strtol (str, NULL, 0);
+  if (iserror != NULL) {
+    *iserror = (errno == ERANGE);
+  }
+  if (l < (long) INT_MIN) {
+    if (iserror != NULL) {
+      *iserror = 1;
+    }
+    return INT_MIN;
+  }
+  if (l > (long) INT_MAX) {
+    if (iserror != NULL) {
+      *iserror = 1;
+    }
+    return INT_MAX;
+  }
+  return (int) l;
+}
+
+static              size_t
+sc_iniparser_getsizet (dictionary * d, const char *key, size_t notfound, int * iserror)
 {
   char               *str;
   long long           ll;
@@ -44,8 +72,14 @@ sc_iniparser_getsizet (dictionary * d, const char *key, size_t notfound)
 #else
   ll = strtoll (str, NULL, 0);
 #endif
-  if (ll < 0LL || errno == ERANGE) {
-    return sc_sizet_invalid;
+  if (iserror != NULL) {
+    *iserror = (errno == ERANGE);
+  }
+  if (ll < 0LL) {
+    if (iserror != NULL) {
+      *iserror = 1;
+    }
+    return 0;
   }
   return (size_t) ll;
 }
@@ -589,6 +623,7 @@ sc_options_load (int package_id, int err_priority,
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
   dictionary         *dict;
+  int                 iserror;
   int                 bvalue;
   int                *ivalue;
   double             *dvalue;
@@ -649,8 +684,8 @@ sc_options_load (int package_id, int err_priority,
     case SC_OPTION_SWITCH:
       bvalue = iniparser_getboolean (dict, key, -1);
       if (bvalue == -1) {
-        bvalue = iniparser_getint (dict, key, 0);
-        if (bvalue <= 0) {
+        bvalue = sc_iniparser_getint (dict, key, 0, &iserror);
+        if (bvalue <= 0 || iserror) {
           SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
                        "Invalid switch %s in file: %s\n", key, inifile);
           iniparser_freedict (dict);
@@ -671,12 +706,18 @@ sc_options_load (int package_id, int err_priority,
       break;
     case SC_OPTION_INT:
       ivalue = (int *) item->opt_var;
-      *ivalue = iniparser_getint (dict, key, *ivalue);
+      *ivalue = sc_iniparser_getint (dict, key, *ivalue, &iserror);
+      if (iserror) {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid int %s in file: %s\n", key, inifile);
+        iniparser_freedict (dict);
+        return -1;
+      }
       break;
     case SC_OPTION_SIZE_T:
       zvalue = (size_t *) item->opt_var;
-      *zvalue = sc_iniparser_getsizet (dict, key, *zvalue);
-      if (*zvalue == sc_sizet_invalid) {
+      *zvalue = sc_iniparser_getsizet (dict, key, *zvalue, &iserror);
+      if (iserror) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
                      "Invalid size_t %s in file: %s\n", key, inifile);
         iniparser_freedict (dict);
@@ -908,6 +949,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   int                 c, option_index;
   int                 item_index = -1;
   size_t              iz;
+  long                ilong;
   long long           ilonglong;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
@@ -1005,7 +1047,15 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       break;
     case SC_OPTION_INT:
-      *(int *) item->opt_var = (int) strtol (optarg, NULL, 0);
+      ilong = strtol (optarg, NULL, 0);
+      if (ilong < (long) INT_MIN || ilong > (long) INT_MAX || errno == ERANGE) {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Error parsing int: %s\n", optarg);
+        retval = -1;            /* this ends option processing */
+      }
+      else {
+        *(int *) item->opt_var = (int) ilong;
+      }
       break;
     case SC_OPTION_SIZE_T:
 #ifndef SC_HAVE_STRTOLL
@@ -1073,6 +1123,7 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
                       const char *inifile)
 {
   int                 i, count;
+  int                 iserror;
   dictionary         *dict;
   const char         *s;
   char                key[BUFSIZ];
@@ -1084,8 +1135,8 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
     return -1;
   }
 
-  count = iniparser_getint (dict, "Arguments:count", -1);
-  if (count < 0) {
+  count = sc_iniparser_getint (dict, "Arguments:count", -1, &iserror);
+  if (count < 0 || iserror) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
                 "Invalid or missing argument count\n");
     iniparser_freedict (dict);
