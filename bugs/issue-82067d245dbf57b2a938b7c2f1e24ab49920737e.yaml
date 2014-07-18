@@ -22,3 +22,9 @@ log_events:
   - Carsten Burstedde <burstedde@ins.uni-bonn.de>
   - commented
   - We also should add range checks to sc_options.c.
+- - 2014-07-18 15:51:14.832663 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - commented
+  - |-
+    Iniparser is now at 3.1.
+    Range checks for double are still missing.
