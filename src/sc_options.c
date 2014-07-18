@@ -571,7 +571,7 @@ sc_options_load (int package_id, int err_priority,
   char                skey[BUFSIZ], lkey[BUFSIZ];
   sc_options_callback_t fn;
 
-  dict = iniparser_load (inifile, NULL);
+  dict = iniparser_load (inifile);
   if (dict == NULL) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
                 "Could not load or parse inifile\n");
@@ -1045,7 +1045,7 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
   const char         *s;
   char                key[BUFSIZ];
 
-  dict = iniparser_load (inifile, NULL);
+  dict = iniparser_load (inifile);
   if (dict == NULL) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
                 "Could not load or parse inifile\n");
