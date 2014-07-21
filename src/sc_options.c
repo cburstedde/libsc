@@ -28,8 +28,9 @@
 
 static char        *sc_iniparser_invalid_key = (char *) -1;
 
-static              size_t
-sc_iniparser_getint (dictionary * d, const char *key, int notfound, int *iserror)
+static int
+sc_iniparser_getint (dictionary * d, const char *key, int notfound,
+                     int *iserror)
 {
   char               *str;
   long                l;
@@ -58,7 +59,8 @@ sc_iniparser_getint (dictionary * d, const char *key, int notfound, int *iserror
 }
 
 static              size_t
-sc_iniparser_getsizet (dictionary * d, const char *key, size_t notfound, int * iserror)
+sc_iniparser_getsizet (dictionary * d, const char *key, size_t notfound,
+                       int *iserror)
 {
   char               *str;
   long long           ll;
