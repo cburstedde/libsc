@@ -137,6 +137,7 @@ void                sc_options_add_size_t (sc_options_t * opt,
 
 /**
  * Add an option that takes a double argument.
+ * The double must be in the legal range.  "inf" and "nan" are legal too.
  */
 void                sc_options_add_double (sc_options_t * opt,
                                            int opt_char,

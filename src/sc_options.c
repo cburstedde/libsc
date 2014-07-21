@@ -86,6 +86,24 @@ sc_iniparser_getsizet (dictionary * d, const char *key, size_t notfound,
   return (size_t) ll;
 }
 
+static double
+sc_iniparser_getdouble (dictionary * d, const char *key, double notfound,
+                        int *iserror)
+{
+  char               *str;
+  double              dbl;
+
+  str = iniparser_getstring (d, key, sc_iniparser_invalid_key);
+  if (str == sc_iniparser_invalid_key) {
+    return notfound;
+  }
+  dbl = strtod (str, NULL);
+  if (iserror != NULL) {
+    *iserror = (errno == ERANGE);
+  }
+  return dbl;
+}
+
 static void
 sc_options_free_args (sc_options_t * opt)
 {
@@ -728,7 +746,13 @@ sc_options_load (int package_id, int err_priority,
       break;
     case SC_OPTION_DOUBLE:
       dvalue = (double *) item->opt_var;
-      *dvalue = iniparser_getdouble (dict, key, *dvalue);
+      *dvalue = sc_iniparser_getdouble (dict, key, *dvalue, &iserror);
+      if (iserror) {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid double %s in file: %s\n", key, inifile);
+        iniparser_freedict (dict);
+        return -1;
+      }
       break;
     case SC_OPTION_STRING:
       s = iniparser_getstring (dict, key, NULL);
@@ -953,6 +977,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   size_t              iz;
   long                ilong;
   long long           ilonglong;
+  double              dbl;
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
@@ -1075,7 +1100,15 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       break;
     case SC_OPTION_DOUBLE:
-      *(double *) item->opt_var = strtod (optarg, NULL);
+      dbl = strtod (optarg, NULL);
+      if (errno == ERANGE) {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Error parsing double: %s\n", optarg);
+        retval = -1;            /* this ends option processing */
+      }
+      else {
+        *(double *) item->opt_var = dbl;
+      }
       break;
     case SC_OPTION_STRING:
       SC_FREE (item->string_value);     /* deals with NULL */
