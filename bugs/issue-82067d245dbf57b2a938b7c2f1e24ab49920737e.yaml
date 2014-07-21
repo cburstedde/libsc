@@ -7,8 +7,8 @@ type: :bugfix
 component: libsc
 release: 
 reporter: Carsten Burstedde <burstedde@ins.uni-bonn.de>
-status: :unstarted
-disposition: 
+status: :closed
+disposition: :fixed
 creation_time: 2014-03-04 17:42:12.260299 Z
 references: []
 
@@ -28,3 +28,7 @@ log_events:
   - |-
     Iniparser is now at 3.1.
     Range checks for double are still missing.
+- - 2014-07-21 08:54:28.765810 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - closed with disposition fixed
+  - Some of these changes may benefit iniparser -- will see who has time.
