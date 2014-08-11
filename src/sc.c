@@ -223,7 +223,8 @@ sc_malloc (int package, size_t size)
   ret = malloc (size);
 
   if (size > 0) {
-    SC_CHECK_ABORT (ret != NULL, "Allocation");
+    SC_CHECK_ABORTF (ret != NULL, "Allocation (malloc size %lli)",
+                     (long long int) size);
     ++*malloc_count;
   }
   else {
@@ -242,7 +243,8 @@ sc_calloc (int package, size_t nmemb, size_t size)
   ret = calloc (nmemb, size);
 
   if (nmemb * size > 0) {
-    SC_CHECK_ABORT (ret != NULL, "Allocation");
+    SC_CHECK_ABORTF (ret != NULL, "Allocation (calloc size %lli",
+                     (long long int) size);
     ++*malloc_count;
   }
   else {
@@ -266,7 +268,8 @@ sc_realloc (int package, void *ptr, size_t size)
     void               *ret;
 
     ret = realloc (ptr, size);
-    SC_CHECK_ABORT (ret != NULL, "Reallocation");
+    SC_CHECK_ABORTF (ret != NULL, "Reallocation (realloc size %lli",
+                     (long long int) size);
 
     return ret;
   }
