@@ -76,8 +76,12 @@ extern const char   sc_cmachchar[];
 #ifdef SC_BLAS
 
 #ifndef SC_F77_FUNC
+#ifdef __bgq__
+#define SC_F77_FUNC(small,CAPS) small
+#else
 #define SC_F77_FUNC(small,CAPS) small ## _
 #endif
+#endif /* SC_F77_FUNC */
 
 #define BLAS_DLAMCH  SC_F77_FUNC(dlamch,DLAMCH)
 #define BLAS_DSCAL   SC_F77_FUNC(dscal,DSCAL)
