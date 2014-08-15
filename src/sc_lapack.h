@@ -40,8 +40,12 @@ extern const char   sc_jobzchar[];
 #ifdef SC_WITH_LAPACK
 
 #ifndef SC_F77_FUNC
+#ifdef __bgq__
+#define SC_F77_FUNC(small,CAPS) small
+#else
 #define SC_F77_FUNC(small,CAPS) small ## _
 #endif
+#endif /* SC_F77_FUNC */
 
 #define SC_LAPACK_DGELS   SC_F77_FUNC(dgels,DGELS)
 #define SC_LAPACK_DGETRF  SC_F77_FUNC(dgetrf,DGETRF)
