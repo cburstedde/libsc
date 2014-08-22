@@ -73,7 +73,7 @@ echo "o---------------------------------------"
 echo "| Checking keywords and types"
 echo "o---------------------------------------"
 
-AC_C_BIGENDIAN
+AC_C_BIGENDIAN([AC_DEFINE([IS_BIGENDIAN], 1, [Define to 1 on a bigendian machine])])
 AC_C_CONST
 AC_C_INLINE
 AC_C_RESTRICT
