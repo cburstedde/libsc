@@ -26,6 +26,11 @@
   Carsten Burstedde <burstedde@ins.uni-bonn.de>
   Lucas C. Wilcox <lucasw@ices.utexas.edu>
   Tobin Isaac <tisaac@ices.utexas.edu>
+*/
+
+/*
+  Contributors:
+
   James Martin <jmartin@ices.utexas.edu>
   Tan Bui-Thanh <tanbui@ices.utexas.edu>
   Adrian Seyboldt <adrian.seyboldt@gmail.com>
@@ -81,13 +86,3 @@
   www.inf.fh-flensburg.de/lang/algorithmen/sortieren/bitonic/bitonicen.htm
   for a nice description of the serial special case for arbitrary n.
 */
-
-Contact:
-
-Carsten Burstedde <carsten@ices.utexas.edu>
-Lucas C. Wilcox <lucasw@ices.utexas.edu>
-
-ICES, The University of Texas at Austin
-1 University Station C0200
-Austin, TX 78712
-USA
