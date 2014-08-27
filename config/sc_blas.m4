@@ -253,6 +253,7 @@ if test "x$sc_blas_ok" = xyes ; then
         dnl Link with FLIBS it didn't work without
         sc_blas_save_run_LIBS="$LIBS"
         LIBS="$BLAS_LIBS $LIBS $FLIBS"
+        sc_blas_ok=yes
         SC_BLAS_LINK([ with FLIBS])
         LIBS="$sc_blas_save_run_LIBS"
         BLAS_FLIBS="$FLIBS"
