@@ -85,9 +85,7 @@
 #define SC_EXTERN_C_END                      void sc_extern_c_hack_4 (void)
 #endif
 
-/* these two libsc headers are always included */
-
-#include <sc_c99_functions.h>
+/* this libsc header is always included */
 #include <sc_mpi.h>
 
 SC_EXTERN_C_BEGIN;

@@ -8,7 +8,7 @@ libsc_generated_headers = src/sc_config.h
 libsc_installed_headers = \
         src/sc.h src/sc_mpi.h src/sc_containers.h src/sc_avl.h \
         src/sc_options.h src/sc_functions.h src/sc_statistics.h \
-        src/sc_ranges.h src/sc_c99_functions.h src/sc_io.h \
+        src/sc_ranges.h src/sc_io.h \
         src/sc_amr.h src/sc_search.h src/sc_sort.h \
         src/sc_dmatrix.h src/sc_blas.h src/sc_lapack.h \
         src/sc_bspline.h src/sc_flops.h \
