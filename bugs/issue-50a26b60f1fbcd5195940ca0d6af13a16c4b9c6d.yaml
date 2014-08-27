@@ -1,0 +1,20 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Static syntax checkers
+desc: |-
+  The current lint/splint support is outdated and does not work.
+  We should probably reconsider the tools we support.
+type: :bugfix
+component: libsc
+release: 
+reporter: Carsten Burstedde <burstedde@ins.uni-bonn.de>
+status: :unstarted
+disposition: 
+creation_time: 2014-08-27 10:31:01.070640 Z
+references: []
+
+id: 50a26b60f1fbcd5195940ca0d6af13a16c4b9c6d
+log_events: 
+- - 2014-08-27 10:31:01.966370 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - created
+  - ""
