@@ -179,6 +179,7 @@ if test "x$sc_lapack_ok" = xyes ; then
         dnl Link with FLIBS it didn't work without
         sc_lapack_save_run_LIBS="$LIBS"
         LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
+        sc_lapack_ok=yes
         SC_LAPACK_LINK([ with FLIBS])
         LIBS="$sc_lapack_save_run_LIBS"
         LAPACK_FLIBS="$FLIBS"
