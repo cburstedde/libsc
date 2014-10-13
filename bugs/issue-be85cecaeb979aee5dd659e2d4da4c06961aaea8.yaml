@@ -1,0 +1,31 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Unify integration of builtin packages
+desc: |-
+  Currently getopt, obstack and zlib are optional builtin packages.
+  Still they are handled differently wrt. configure logic.
+  The ideal behaviour would be to have:
+  1. The exact same configure look and feel and
+  2. A reliable configure check to decide if the builtin version is used.
+type: :bugfix
+component: libsc
+release: "1.6"
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :closed
+disposition: :fixed
+creation_time: 2008-11-09 18:27:27.275961 Z
+references: []
+
+id: be85cecaeb979aee5dd659e2d4da4c06961aaea8
+log_events: 
+- - 2008-11-09 18:27:29.547963 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
+- - 2009-02-03 00:00:07.493402 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - closed with disposition fixed
+  - |-
+    Default action is to check for the package and use a builtin replacement
+    if the check fails.  If the --without-* option is given, no checks are
+    performed and the builtin code is not used.  In this case the user needs
+    to ensure presence of the package or the libsc will not compile or link.

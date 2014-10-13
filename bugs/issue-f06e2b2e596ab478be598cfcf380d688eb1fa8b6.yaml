@@ -1,0 +1,34 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Builtin getopt segfaults on the mac
+desc: |-
+  The getopt in libsc fails on the mac.
+  
+  For example :
+    ./example/options/sc_options -d 2
+    [libsc] Preload not found or failed
+    [1]    69474 bus error  ./example/options/sc_options -d 2
+  
+  The backtrace I get from gdb is:
+  
+  The workaround is to pass --without-getopt to configure.
+type: :bugfix
+component: libsc
+release: "1.6"
+reporter: Lucas C Wilcox <lucasw@ices.utexas.edu>
+status: :closed
+disposition: :wontfix
+creation_time: 2008-10-17 16:58:25.336995 Z
+references: []
+
+id: f06e2b2e596ab478be598cfcf380d688eb1fa8b6
+log_events: 
+- - 2008-10-17 16:58:37.529171 Z
+  - Lucas C Wilcox <lucasw@ices.utexas.edu>
+  - created
+  - Initial report
+- - 2008-10-28 21:46:56.521206 Z
+  - Lucas C Wilcox <lucasw@ices.utexas.edu>
+  - closed with disposition wontfix
+  - |-
+    The segfault was curcumvented by not including sc's getopt on
+    systems that have getopt_long.

@@ -1,39 +1,45 @@
-/* *INDENT-OFF* */
 
 /*-------------------------------------------------------------------------*/
 /**
    @file    iniparser.h
    @author  N. Devillard
-   @date    Sep 2007
-   @version 3.0
    @brief   Parser for ini files.
 */
 /*--------------------------------------------------------------------------*/
-
-/*
-	$Id: iniparser.h,v 1.24 2007-11-23 21:38:19 ndevilla Exp $
-	$Revision: 1.24 $
-*/
 
 #ifndef _INIPARSER_H_
 #define _INIPARSER_H_
 
 /*---------------------------------------------------------------------------
-  Includes
+                                Includes
  ---------------------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <dictionary.h>
+/*
+ * The following #include is necessary on many Unixes but not Linux.
+ * It is not needed for Windows platforms.
+ * Uncomment it if needed.
+ */
+#include <sc_config.h>
+#ifdef SC_HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#include "dictionary.h"
 
 /*---------------------------------------------------------------------------
-  Macros
+                                Protect C++ compilation
  ---------------------------------------------------------------------------*/
-/** For backwards compatibility only */
-#define iniparser_getstr(d, k)  iniparser_getstring(d, k, NULL)
-#define iniparser_setstr        iniparser_setstring
+
+#ifdef __cplusplus
+extern "C" {
+#if 0
+}
+#endif
+#endif
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -91,6 +97,21 @@ void iniparser_dump_ini(dictionary * d, FILE * f);
 
 /*-------------------------------------------------------------------------*/
 /**
+  @brief    Save a dictionary section to a loadable ini file
+  @param    d   Dictionary to dump
+  @param    s   Section name of dictionary to dump
+  @param    f   Opened file pointer to dump to
+  @return   void
+
+  This function dumps a given section of a given dictionary into a loadable ini
+  file.  It is Ok to specify @c stderr or @c stdout as output files.
+ */
+/*--------------------------------------------------------------------------*/
+
+void iniparser_dumpsection_ini(dictionary * d, char * s, FILE * f);
+
+/*-------------------------------------------------------------------------*/
+/**
   @brief    Dump a dictionary to an opened file pointer.
   @param    d   Dictionary to dump.
   @param    f   Opened file pointer to dump to.
@@ -103,6 +124,32 @@ void iniparser_dump_ini(dictionary * d, FILE * f);
  */
 /*--------------------------------------------------------------------------*/
 void iniparser_dump(dictionary * d, FILE * f);
+
+/*-------------------------------------------------------------------------*/
+/**
+  @brief    Get the number of keys in a section of a dictionary.
+  @param    d   Dictionary to examine
+  @param    s   Section name of dictionary to examine
+  @return   Number of keys in section
+ */
+/*--------------------------------------------------------------------------*/
+int iniparser_getsecnkeys(dictionary * d, char * s);
+
+/*-------------------------------------------------------------------------*/
+/**
+  @brief    Get the number of keys in a section of a dictionary.
+  @param    d   Dictionary to examine
+  @param    s   Section name of dictionary to examine
+  @return   pointer to statically allocated character strings
+
+  This function queries a dictionary and finds all keys in a given section.
+  Each pointer in the returned char pointer-to-pointer is pointing to
+  a string allocated in the dictionary; do not free or modify them.
+
+  This function returns NULL in case of error.
+ */
+/*--------------------------------------------------------------------------*/
+char ** iniparser_getseckeys(dictionary * d, char * s);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -213,7 +260,7 @@ int iniparser_getboolean(dictionary * d, const char * key, int notfound);
   It is Ok to set val to NULL.
  */
 /*--------------------------------------------------------------------------*/
-int iniparser_setstring(dictionary * ini, const char * entry, char * val);
+int iniparser_set(dictionary * ini, const char * entry, const char * val);
 
 
 /*-------------------------------------------------------------------------*/
@@ -240,13 +287,12 @@ void iniparser_unset(dictionary * ini, const char * entry);
   of querying for the presence of sections in a dictionary.
  */
 /*--------------------------------------------------------------------------*/
-int iniparser_find_entry(dictionary * ini, char * entry) ;
+int iniparser_find_entry(dictionary * ini, const char * entry) ;
 
 /*-------------------------------------------------------------------------*/
 /**
   @brief    Parse an ini file and return an allocated dictionary object
   @param    ininame Name of the ini file to read.
-  @param    f   Opened file pointer for error messages.
   @return   Pointer to newly allocated dictionary
 
   This is the parser for ini files. This function is called, providing
@@ -257,7 +303,7 @@ int iniparser_find_entry(dictionary * ini, char * entry) ;
   The returned dictionary must be freed using iniparser_freedict().
  */
 /*--------------------------------------------------------------------------*/
-dictionary * iniparser_load(const char * ininame, FILE * f);
+dictionary * iniparser_load(const char * ininame);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -272,6 +318,11 @@ dictionary * iniparser_load(const char * ininame, FILE * f);
 /*--------------------------------------------------------------------------*/
 void iniparser_freedict(dictionary * d);
 
+#ifdef __cplusplus
+#if 0
+{
+#endif
+}
 #endif
 
-/* *INDENT-ON* */
+#endif

@@ -1,36 +1,59 @@
 /*
   This file is part of the SC Library.
-  The SC library provides support for parallel scientific applications.
+  The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2010 The University of Texas System
 
-  The SC Library is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  The SC Library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
 
   The SC Library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public
+  License along with the SC Library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  02110-1301, USA.
 */
 
-/* sc.h comes first in every compilation unit */
-#include <sc.h>
 #include <sc_dmatrix.h>
 
+#if defined(SC_WITH_BLAS) && defined(SC_WITH_LAPACK)
+
 static const double eps = 2.220446049250313e-16;
+
+static void
+test_zero_sizes (void)
+{
+  sc_dmatrix_t       *m1, *m2, *m3;
+
+  m1 = sc_dmatrix_new (0, 3);
+  sc_dmatrix_set_value (m1, -5.);
+
+  m2 = sc_dmatrix_clone (m1);
+  sc_dmatrix_fabs (m1, m2);
+  sc_dmatrix_resize (m2, 3, 0);
+
+  m3 = sc_dmatrix_new (0, 0);
+  sc_dmatrix_multiply (SC_NO_TRANS, SC_NO_TRANS, 1., m1, m2, 0., m3);
+
+  sc_dmatrix_destroy (m1);
+  sc_dmatrix_destroy (m2);
+  sc_dmatrix_destroy (m3);
+}
+
+#endif
 
 int
 main (int argc, char **argv)
 {
   int                 num_failed_tests = 0;
-#if defined(SC_BLAS) && defined(SC_LAPACK)
+#if defined(SC_WITH_BLAS) && defined(SC_WITH_LAPACK)
   int                 j;
-  int                 rank;
   int                 mpiret;
   sc_dmatrix_t       *A, *x, *xexact, *b, *bT, *xT, *xTexact;
   double              xmaxerror = 0.0;
@@ -41,16 +64,14 @@ main (int argc, char **argv)
   double              b_data[] = { 1.0, 2.0, 3.0 };
   double              xexact_data[] = { -0.1 / 3.0, 1.4 / 3.0, -0.1 / 3.0 };
 
-  mpiret = MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (rank, NULL, NULL, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
-  A = sc_dmatrix_view (3, 3, A_data);
-  b = sc_dmatrix_view (1, 3, b_data);
-  xexact = sc_dmatrix_view (1, 3, xexact_data);
+  A = sc_dmatrix_new_data (3, 3, A_data);
+  b = sc_dmatrix_new_data (1, 3, b_data);
+  xexact = sc_dmatrix_new_data (1, 3, xexact_data);
   x = sc_dmatrix_new (1, 3);
 
   sc_dmatrix_rdivide (SC_NO_TRANS, b, A, x);
@@ -87,7 +108,7 @@ main (int argc, char **argv)
     ++num_failed_tests;
   }
 
-  bT = sc_dmatrix_view (3, 1, b_data);
+  bT = sc_dmatrix_new_data (3, 1, b_data);
   xT = sc_dmatrix_new (3, 1);
   xTexact = sc_dmatrix_new (3, 1);
 
@@ -118,13 +139,13 @@ main (int argc, char **argv)
   sc_dmatrix_destroy (x);
   sc_dmatrix_destroy (xexact);
 
+  test_zero_sizes ();
+
   sc_finalize ();
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
-
 #endif
+
   return num_failed_tests;
 }
-
-/* EOF test_dmatrix.c */

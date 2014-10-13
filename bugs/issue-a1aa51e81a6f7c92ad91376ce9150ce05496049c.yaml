@@ -1,0 +1,26 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Improve sc_abort
+desc: |-
+  1. Make sc_abort use log functions for its output.
+  2. Provide a way of aborting a program with logging only on rank 0.
+type: :bugfix
+component: libsc
+release: "1.6"
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :closed
+disposition: :fixed
+creation_time: 2009-10-07 20:30:56.280039 Z
+references: []
+
+id: a1aa51e81a6f7c92ad91376ce9150ce05496049c
+log_events: 
+- - 2009-10-07 20:30:57.935925 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
+- - 2009-11-19 21:46:02.140022 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - closed with disposition fixed
+  - |-
+    Uses SC_LP_ERROR log level.
+    The functions sc_is_root and sc_abort_root have been added.

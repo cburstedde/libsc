@@ -2,28 +2,28 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2010 The University of Texas System
 
-  The SC Library is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  The SC Library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
 
   The SC Library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public
+  License along with the SC Library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  02110-1301, USA.
 */
 
 #ifndef SC_BLAS_H
 #define SC_BLAS_H
 
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
+#include <sc.h>
 
 SC_EXTERN_C_BEGIN;
 
@@ -73,45 +73,61 @@ extern const char   sc_antitranschar[]; /* does not work for complex */
 extern const char   sc_uplochar[];
 extern const char   sc_cmachchar[];
 
+#ifdef SC_WITH_BLAS
+
 #ifndef SC_F77_FUNC
 #define SC_F77_FUNC(small,CAPS) small ## _
 #endif
 
-#define BLAS_DLAMCH  SC_F77_FUNC(dlamch,DLAMCH)
-#define BLAS_DSCAL   SC_F77_FUNC(dscal,DSCAL)
-#define BLAS_DCOPY   SC_F77_FUNC(dcopy,DCOPY)
-#define BLAS_DAXPY   SC_F77_FUNC(daxpy,DAXPY)
-#define BLAS_DDOT    SC_F77_FUNC(ddot,DDOT)
-#define BLAS_DGEMV   SC_F77_FUNC(dgemv,DGEMV)
-#define BLAS_DGEMM   SC_F77_FUNC(dgemm,DGEMM)
+#define SC_BLAS_DLAMCH  SC_F77_FUNC(dlamch,DLAMCH)
+#define SC_BLAS_DSCAL   SC_F77_FUNC(dscal,DSCAL)
+#define SC_BLAS_DCOPY   SC_F77_FUNC(dcopy,DCOPY)
+#define SC_BLAS_DAXPY   SC_F77_FUNC(daxpy,DAXPY)
+#define SC_BLAS_DDOT    SC_F77_FUNC(ddot,DDOT)
+#define SC_BLAS_DGEMV   SC_F77_FUNC(dgemv,DGEMV)
+#define SC_BLAS_DGEMM   SC_F77_FUNC(dgemm,DGEMM)
 
-double              BLAS_DLAMCH (const char *cmach);
-void                BLAS_DSCAL (const sc_bint_t * n, const double *alpha,
-                                double *X, const sc_bint_t * incx);
-void                BLAS_DCOPY (const sc_bint_t * n,
-                                const double *X, const sc_bint_t * incx,
-                                double *Y, const sc_bint_t * incy);
-void                BLAS_DAXPY (const sc_bint_t * n, const double *alpha,
-                                const double *X, const sc_bint_t * incx,
-                                double *Y, const sc_bint_t * incy);
-double              BLAS_DDOT (const sc_bint_t * n, const double *X,
-                               const sc_bint_t * incx, const double *Y,
-                               const sc_bint_t * incy);
+double              SC_BLAS_DLAMCH (const char *cmach);
+void                SC_BLAS_DSCAL (const sc_bint_t * n, const double *alpha,
+                                   double *X, const sc_bint_t * incx);
+void                SC_BLAS_DCOPY (const sc_bint_t * n,
+                                   const double *X, const sc_bint_t * incx,
+                                   double *Y, const sc_bint_t * incy);
+void                SC_BLAS_DAXPY (const sc_bint_t * n, const double *alpha,
+                                   const double *X, const sc_bint_t * incx,
+                                   double *Y, const sc_bint_t * incy);
+double              SC_BLAS_DDOT (const sc_bint_t * n, const double *X,
+                                  const sc_bint_t * incx, const double *Y,
+                                  const sc_bint_t * incy);
 
-void                BLAS_DGEMV (const char *transa, const sc_bint_t * m,
-                                const sc_bint_t * n, const double *alpha,
-                                const double *a, const sc_bint_t * lda,
-                                const double *x, const sc_bint_t * incx,
-                                const double *beta, double *y,
-                                const sc_bint_t * incy);
+void                SC_BLAS_DGEMV (const char *transa, const sc_bint_t * m,
+                                   const sc_bint_t * n, const double *alpha,
+                                   const double *a, const sc_bint_t * lda,
+                                   const double *x, const sc_bint_t * incx,
+                                   const double *beta, double *y,
+                                   const sc_bint_t * incy);
 
-void                BLAS_DGEMM (const char *transa, const char *transb,
-                                const sc_bint_t * m, const sc_bint_t * n,
-                                const sc_bint_t * k, const double *alpha,
-                                const double *a, const sc_bint_t * lda,
-                                const double *b, const sc_bint_t * ldb,
-                                const double *beta, double *c,
-                                const sc_bint_t * ldc);
+void                SC_BLAS_DGEMM (const char *transa, const char *transb,
+                                   const sc_bint_t * m, const sc_bint_t * n,
+                                   const sc_bint_t * k, const double *alpha,
+                                   const double *a, const sc_bint_t * lda,
+                                   const double *b, const sc_bint_t * ldb,
+                                   const double *beta, double *c,
+                                   const sc_bint_t * ldc);
+
+#else /* !SC_WITH_BLAS */
+
+#define SC_BLAS_DLAMCH (double) sc_blas_nonimplemented
+#define SC_BLAS_DSCAL  (void)   sc_blas_nonimplemented
+#define SC_BLAS_DCOPY  (void)   sc_blas_nonimplemented
+#define SC_BLAS_DAXPY  (void)   sc_blas_nonimplemented
+#define SC_BLAS_DDOT   (double) sc_blas_nonimplemented
+#define SC_BLAS_DGEMM  (void)   sc_blas_nonimplemented
+#define SC_BLAS_DGEMV  (void)   sc_blas_nonimplemented
+
+int                 sc_blas_nonimplemented ();
+
+#endif
 
 SC_EXTERN_C_END;
 

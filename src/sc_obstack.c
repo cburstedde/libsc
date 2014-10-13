@@ -23,30 +23,9 @@
 /* renamed from glibc 2.7 to sc_obstack.h and modified */
 
 #include <sc.h>
-#include <sc_obstack.h>
 
-/* NOTE BEFORE MODIFYING THIS FILE: This version number must be
-   incremented whenever callers compiled using an old obstack.h can no
-   longer properly call the functions in this obstack.c.  */
-#define OBSTACK_INTERFACE_VERSION 1
-
-/* Comment out all this code if we are using the GNU C Library, and are not
-   actually compiling the library itself, and the installed library
-   supports the same library interface we do.  This code is part of the GNU
-   C Library, but also included in many other GNU distributions.  Compiling
-   and linking in this code is a waste when using the GNU C library
-   (especially if it is a shared library).  Rather than having every GNU
-   program understand `configure --with-gnu-libc' and omit the object
-   files, it is simpler to just do this in the source for each such file.  */
-
-#if !defined _LIBC && defined __GNU_LIBRARY__ && __GNU_LIBRARY__ > 1
-# include <gnu-versions.h>
-# if _GNU_OBSTACK_INTERFACE_VERSION == OBSTACK_INTERFACE_VERSION
-#  define ELIDE_CODE
-# endif
-#endif
-
-#ifndef ELIDE_CODE
+#ifdef SC_PROVIDE_OBSTACK
+#include "sc_builtin/obstack.h"
 
 /* Determine default alignment.  */
 union fooround
@@ -116,7 +95,7 @@ compat_symbol (libc, _obstack_compat, _obstack, GLIBC_2_0);
       (*(void (*) (void *)) (h)->freefun) ((old_chunk)); \
   } while (0)
 
-
+
 /* Initialize an obstack H for use.  Specify chunk size SIZE (0 means default).
    Objects start on multiples of ALIGNMENT (0 means use default).
    CHUNKFUN is the function to use to allocate chunks,
@@ -320,7 +299,7 @@ _obstack_allocated_p (struct obstack *h, void *obj)
     }
   return lp != 0;
 }
-
+
 /* Free objects in obstack H, including OBJ and everything allocate
    more recently than OBJ.  If OBJ is zero, free everything in H.  */
 
@@ -362,7 +341,7 @@ obstack_free (struct obstack *h, void *obj)
    called by non-GCC compilers.  */
 strong_alias (obstack_free, _obstack_free)
 # endif
-
+
 int
 _obstack_memory_used (struct obstack *h)
 {
@@ -375,7 +354,7 @@ _obstack_memory_used (struct obstack *h)
     }
   return nbytes;
 }
-
+
 
 # ifdef _LIBC
 #  include <libio/iolibio.h>
@@ -397,6 +376,6 @@ print_and_abort (void)
   SC_CHECK_ABORT (0, "Obstack memory allocation");
 }
 
-#endif	/* !ELIDE_CODE */
+#endif /* SC_PROVIDE_OBSTACK */
 
 /* *INDENT-ON* */

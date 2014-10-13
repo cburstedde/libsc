@@ -5,7 +5,7 @@
    "Keep this file name-space clean" means, talk to drepper@gnu.org
    before changing it!
    Copyright (C) 1987,88,89,90,91,92,93,94,95,96,98,99,2000,2001,2002,2003,2004
-   	Free Software Foundation, Inc.
+   Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -23,7 +23,7 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-/* renamed from glibc 2.7 to sc_getopt.h and modified */
+/* renamed from glibc 2.7 to sc_getopt.c and modified */
 
 /* This tells Alpha OSF/1 not to define a getopt prototype in <stdio.h>.
    Ditto for AIX 3.2 and <stdlib.h>.  */
@@ -32,28 +32,10 @@
 #endif
 
 #include <sc.h>
-#include <sc_getopt.h>
-#include <sc_getopt_int.h>
 
-#ifdef SC_OPTIONS
-
-/* Comment out all this code if we are using the GNU C Library, and are not
-   actually compiling the library itself.  This code is part of the GNU C
-   Library, but also included in many other GNU distributions.  Compiling
-   and linking in this code is a waste when using the GNU C library
-   (especially if it is a shared library).  Rather than having every GNU
-   program understand `configure --with-gnu-libc' and omit the object files,
-   it is simpler to just do this in the source for each such file.  */
-
-#define GETOPT_INTERFACE_VERSION 2
-#if !defined _LIBC && defined __GLIBC__ && __GLIBC__ >= 2
-# include <gnu-versions.h>
-# if _GNU_GETOPT_INTERFACE_VERSION == GETOPT_INTERFACE_VERSION
-#  define ELIDE_CODE
-# endif
-#endif
-
-#ifndef ELIDE_CODE
+#ifdef SC_PROVIDE_GETOPT
+#include "sc_builtin/getopt.h"
+#include "sc_builtin/getopt_int.h"
 
 /* kill gettext */
 #define _(msgid) msgid
@@ -110,7 +92,7 @@ int optopt = '?';
 
 static struct _getopt_data getopt_data;
 
-
+
 #ifndef __GNU_LIBRARY__
 
 /* Avoid depending on library functions or files
@@ -121,7 +103,7 @@ extern char *getenv ();
 #endif
 
 #endif /* not __GNU_LIBRARY__ */
-
+
 #ifdef _LIBC
 /* Stored original parameters.
    XXX This is no good solution.  We should rather copy the args so
@@ -305,7 +287,7 @@ _getopt_initialize (int argc, char *const *argv, const char *optstring,
 
   return optstring;
 }
-
+
 /* Scan elements of ARGV (whose length is ARGC) for option characters
    given in OPTSTRING.
 
@@ -1125,8 +1107,6 @@ getopt (int argc, char *const *argv, const char *optstring)
 			   0);
 }
 
-#endif
-
-#endif	/* Not ELIDE_CODE.  */
+#endif /* SC_PROVIDE_GETOPT */
 
 /* *INDENT-ON* */

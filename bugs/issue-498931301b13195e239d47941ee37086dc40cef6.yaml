@@ -1,0 +1,31 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Add C++ C99 Compatibility Layer for Complex Arithmetic
+desc: |-
+  We should use the approach laid out in [1] to write complex arithmetic
+  code that can be compiled with C++ or C99.  To do this we would need to
+  only include a small header file [2] in libsc.  Carsten suggested that we
+  do not use abs for fabs and I do agree.  Note also that tgmath.h is a ISO
+  C standard header (aka C99) [3].
+  
+  [1] http://www.ddj.com/cpp/184401628?pgno=1
+  [2] http://www.ddj.com/cpp/184401628?pgno=2
+  [3] http://www.opengroup.org/onlinepubs/009695399/basedefs/tgmath.h.html
+type: :feature
+component: libsc
+release: 
+reporter: Lucas C Wilcox <lucasw@ices.utexas.edu>
+status: :closed
+disposition: :fixed
+creation_time: 2009-10-08 18:09:58.258892 Z
+references: []
+
+id: 498931301b13195e239d47941ee37086dc40cef6
+log_events: 
+- - 2009-10-08 18:10:03.410919 Z
+  - Lucas C Wilcox <lucasw@ices.utexas.edu>
+  - created
+  - Initial report
+- - 2009-10-08 18:42:50.628613 Z
+  - Lucas C Wilcox <lucasw@ices.utexas.edu>
+  - closed with disposition fixed
+  - Fixed

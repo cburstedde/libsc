@@ -1,0 +1,35 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Add ENABLE or WITH to SC_ARG defines
+desc: |-
+  The SC_ARG_ENABLE and SC_ARG_WITH macres use AC_DEFINE
+  to define preprocessor macros.  Currently these macros
+  do not include the ENABLE or WITH tokens which makes them
+  different from the AC_CONDITIONALS which include them.
+  Beware that this will require changes in dependent projects.
+type: :bugfix
+component: libsc
+release: 
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :unstarted
+disposition: 
+creation_time: 2010-07-17 19:55:37.908549 Z
+references: []
+
+id: 7f4c9393e1e2f9d173c9633dd3e1a96b947f702a
+log_events: 
+- - 2010-07-17 19:55:39.360433 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
+- - 2014-02-11 11:17:49.662565 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - commented
+  - |-
+    The ENABLE_ and DISABLE_ defines are in place.
+    The old ones are deprecated and need to be phased out in the code.
+- - 2014-02-11 11:26:20.998555 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - commented
+  - |-
+    The AM_CONDITIONAL has been changed over.
+    Use of old conditionals will throw errors and force the fix.

@@ -14,6 +14,15 @@ For details, see http://sourceforge.net/projects/libb64
 
 const int           CHARS_PER_LINE = 72;
 
+static inline char
+base64_encode_value (char value_in)
+{
+  static const char  *encoding =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+  return value_in > 63 ? '=' : encoding[(int) value_in];
+}
+
 void
 base64_init_encodestate (base64_encodestate * state_in)
 {
@@ -22,27 +31,17 @@ base64_init_encodestate (base64_encodestate * state_in)
   state_in->stepcount = 0;
 }
 
-char
-base64_encode_value (char value_in)
-{
-  static const char  *encoding =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  if (value_in > 63)
-    return '=';
-  return encoding[(int) value_in];
-}
-
 size_t
-base64_encode_block (const char *plaintext_in, size_t length_in, char *code_out,
-                     base64_encodestate * state_in)
+base64_encode_block (const char *plaintext_in, size_t length_in,
+                     char *code_out, base64_encodestate * state_in)
 {
-  /*@unused@*/
+  /*@unused@ */
   const char         *plainchar = plaintext_in;
-  /*@unused@*/
+  /*@unused@ */
   const char         *const plaintextend = plaintext_in + length_in;
   char               *codechar = code_out;
   char                result;
-  /*@unused@*/
+  /*@unused@ */
   char                fragment;
 
   result = state_in->result;
@@ -120,5 +119,3 @@ base64_encode_blockend (char *code_out, base64_encodestate * state_in)
 
   return (size_t) (codechar - code_out);
 }
-
-/* EOF cencode.c */

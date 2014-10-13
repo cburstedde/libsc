@@ -1,0 +1,22 @@
+
+# This file is part of the SC Library
+# Use `include /path/to/Makefile.sc.mk' in your Makefile
+# to use libsc in your project without autotools
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+sc_sysconfdir = @sysconfdir@
+
+# SC_CC and SC_CFLAGS may not be necessary for your project
+SC_CC = @CC@
+SC_CFLAGS = @CFLAGS@
+
+# These pull in sc but none of its dependencies
+SC_PKG_CPPFLAGS = -I@includedir@
+SC_PKG_LDFLAGS = -L@libdir@
+SC_PKG_LIBS = -lsc
+
+# These pull in everything needed by libsc
+SC_CPPFLAGS = @CPPFLAGS@ $(SC_PKG_CPPFLAGS)
+SC_LDFLAGS = @LDFLAGS@ $(SC_PKG_LDFLAGS)
+SC_LIBS = $(SC_PKG_LIBS) @LIBS@

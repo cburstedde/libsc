@@ -2,32 +2,35 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2010 The University of Texas System
 
-  The SC Library is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  The SC Library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
 
   The SC Library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public
+  License along with the SC Library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  02110-1301, USA.
 */
 
 #ifndef SC_FUNCTIONS_H
 #define SC_FUNCTIONS_H
 
-#ifndef SC_H
-#error "sc.h should be included before this header file"
-#endif
+#include <sc.h>
 
 SC_EXTERN_C_BEGIN;
 
-typedef double      (*sc_function3_t) (double, double, double, void *);
+typedef double      (*sc_function1_t) (double x, void *data);
+
+typedef double      (*sc_function3_t) (double x, double y, double z,
+                                       void *data);
 
 /*
  * this structure is used as data element for the meta functions.
@@ -47,23 +50,56 @@ typedef struct sc_function3_meta
 }
 sc_function3_meta_t;
 
-double              sc_zero (double x, double y, double z, void *data);
-double              sc_one (double x, double y, double z, void *data);
-double              sc_two (double x, double y, double z, void *data);
-double              sc_ten (double x, double y, double z, void *data);
+/* Evaluate the inverse function with regula falsi: x = func^{-1}(y) */
+double              sc_function1_invert (sc_function1_t func, void *data,
+                                         double x_low, double x_high,
+                                         double y, double rtol);
+
+/** Seed the random number generator differently on each process.
+ * Seeds each process with seed and mpirank from sc_MPI_COMM_WORLD.
+ *    ( mpirank + seed * large_prime )
+ *
+ * \param [in] seed Seed for random number generator, calls srand ().
+ */
+void                sc_srand (unsigned int seed);
+
+/** Seed the random number generator differently on each process.
+ * Seeds each process with time and mpirank from sc_MPI_COMM_WORLD.
+ *    ( time + mpirank * small_prime )
+ */
+void                sc_srand_time ();
+
+/** Sample a uniform value from [0,1) via rand ().
+ *
+ * \return    randum number from uniform distribution on [0,1)
+ */
+double              sc_rand_uniform (void);
+
+/** Sample a (gaussian) standard normal distribution.
+ * Implements polar form of the Box Muller transform based on rand ().
+ *
+ * \return    random number from a univariate standard normal distribution
+ */
+double              sc_rand_normal (void);
+
+/* Some basic 3D functions */
+double              sc_zero3 (double x, double y, double z, void *data);
+double              sc_one3 (double x, double y, double z, void *data);
+double              sc_two3 (double x, double y, double z, void *data);
+double              sc_ten3 (double x, double y, double z, void *data);
 
 /**
  * \param data   needs to be *double with the value of the constant.
  */
-double              sc_constant (double x, double y, double z, void *data);
+double              sc_constant3 (double x, double y, double z, void *data);
 
-double              sc_x (double x, double y, double z, void *data);
-double              sc_y (double x, double y, double z, void *data);
-double              sc_z (double x, double y, double z, void *data);
+double              sc_x3 (double x, double y, double z, void *data);
+double              sc_y3 (double x, double y, double z, void *data);
+double              sc_z3 (double x, double y, double z, void *data);
 
-double              sc_sum (double x, double y, double z, void *data);
-double              sc_product (double x, double y, double z, void *data);
-double              sc_tensor (double x, double y, double z, void *data);
+double              sc_sum3 (double x, double y, double z, void *data);
+double              sc_product3 (double x, double y, double z, void *data);
+double              sc_tensor3 (double x, double y, double z, void *data);
 
 SC_EXTERN_C_END;
 

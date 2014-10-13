@@ -1,0 +1,31 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Make option callback more flexible
+desc: |-
+  Right now the callback function does not know the option name.
+  Also the option argument is neither stored, loaded or saved.
+  Change this so that it can e.g. easily emulate a string option.
+type: :bugfix
+component: libsc
+release: 
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :closed
+disposition: :fixed
+creation_time: 2009-12-04 04:36:38.086378 Z
+references: []
+
+id: 04ae88702a9f6d21e8be9af5f12b70dc25d05b17
+log_events: 
+- - 2009-12-04 04:36:39.870061 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
+- - 2010-01-22 17:33:58.809291 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - unassigned from release 1.6
+  - ""
+- - 2011-04-20 00:18:03.423353 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - closed with disposition fixed
+  - |-
+    Callback load/save now uses the string value.
+    The user_data can be used to inform the callback of its context.

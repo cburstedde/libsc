@@ -2,64 +2,87 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2007,2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2010 The University of Texas System
 
-  The SC Library is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  The SC Library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
 
   The SC Library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public
+  License along with the SC Library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  02110-1301, USA.
 */
 
 /*
-  The files sc_obstack* and sc_getopt* have been copied from GNU C library
-  2.7, Copyright (C) Free Software Foundation, Inc., and modified.
+  Authors:
 
-  The files sc_avl.{c,h} have been copied from libavl (Debian 0.3.5-2),
+  Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  Lucas C. Wilcox <lucasw@ices.utexas.edu>
+  Tobin Isaac <tisaac@ices.utexas.edu>
+*/
+
+/*
+  Contributors:
+
+  James Martin <jmartin@ices.utexas.edu>
+  Tan Bui-Thanh <tanbui@ices.utexas.edu>
+  Adrian Seyboldt <adrian.seyboldt@gmail.com>
+  Sarah Weischer <s.weischer@gmx.de>
+  Johannes Holke <holke@ins.uni-bonn.de>
+*/
+
+/*
+  Thanks to:
+
+  Matthias Maier <matthias.maier@iwr.uni-heidelberg.de>
+*/
+
+/*
+  Acknowledgement and Disclaimer:
+
+  The development of libsc was partially supported by the US National Science
+  Foundation (NSF Grants No. OCI-0749334, CCF-0427985, CNS-0540372,
+  CNS-0619838, DMS-0724746, OPP-0941678) and the US Department of Energy (DOE
+  Grants No.  06ER25782, 08ER25860, SC0002710).  The authors thank the Texas
+  Advanced Computing Center (TACC) for providing them with access to the Ranger
+  supercomputer under NSF TeraGrid award MCA04N026, and the National Center for
+  Computational Science (NCCS) for early-user access to the Jaguar Cray XT5
+  supercomputer.  Any opinions, findings and conclusions or recomendations
+  expressed in the source code and documentation are those of the authors and
+  do not necessarily reflect the views of the National Science Foundation
+  (NSF).
+*/
+
+/*
+  The files under src/sc_builtin are copied from the GNU C library.
+  See copyright information below.
+
+  The files sc_avl.{c,h} are derived from libavl (Debian 0.3.5-2),
   Copyright (C) 1998  Michael H. Buselli <cosine@cosine.org>
-  Copyright (C) 2000-2002  Wessel Dankers <wsl@nl.linux.org>
-  and modified for the SC Library.
+  Copyright (C) 2000-2002  Wessel Dankers <wsl@nl.linux.org>.
 
-  The files sc_zlib.h and sc_zconf.h have been copied from  zlib 1.2.3,
-  Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler, and modified.
-*/
+  The files sc_obstack.c and sc_getopt*.c are derived from the GNU C
+  library 2.7, Copyright (C) Free Software Foundation, Inc.
 
-/*
-  The files under zlib except zlib/Makefile.am are copied from zlib 1.2.3,
-  Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler.  They have been
-  modified as described in zlib/sc_modifications.txt.
-*/
+  The source files under libb64 are derived from libb64.  libb64 is public
+  domain software, see the LICENSE and AUTHORS files in that directory.
 
-/*
-  The source files under libb64 have been copied from libb64 and modified.
-  libb64 is public domain software, see the LICENSE and AUTHORS files in
+  The files under iniparser are derived from iniparser3.0b.  iniparser is
+  licensed unter the MIT license, see the LICENSE and AUTHORS files in
   that directory.
+
+  Several scripts under config are released under GNU GPL versions.
+  These are not compiled or linked with libsc, so we consider them
+  independent programs that are not part of libsc.
+
+  Thanks to Rahul Sampath for mentioning the bitonic sort algorithm and to
+  www.inf.fh-flensburg.de/lang/algorithmen/sortieren/bitonic/bitonicen.htm
+  for a nice description of the serial special case for arbitrary n.
 */
-
-/*
-  The files under iniparser have been copied from iniparser3.0b
-  and modified.  iniparser is licensed unter the MIT license,
-  see the LICENSE and AUTHORS files in that directory.
-*/
-
-/*
-  The files src/sc_c99_protos.h and src/sc_c99_functions.c are based on
-  files from libgfortran, Copyright (C) 2004 Free Software Foundation, Inc.
-*/
-
-Contact:
-
-Carsten Burstedde <carsten@ices.utexas.edu>
-Lucas Wilcox <lucasw@ices.utexas.edu>
-
-ICES, The University of Texas at Austin
-1 University Station C0200
-Austin, TX 78712
-USA

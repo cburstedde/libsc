@@ -2,61 +2,60 @@
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
-  Copyright (C) 2008 Carsten Burstedde, Lucas Wilcox.
+  Copyright (C) 2010 The University of Texas System
 
-  The SC Library is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  The SC Library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
 
   The SC Library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the SC Library.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public
+  License along with the SC Library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  02110-1301, USA.
 */
 
-#include <sc.h>
 #include <sc_statistics.h>
 
-#ifdef SC_PAPI
-#include <papi.h>
-#endif
-
-#ifdef SC_MPI
+#ifdef SC_ENABLE_MPI
 
 static void
-sc_statinfo_mpifunc (void *invec, void *inoutvec, int *len,
-                     MPI_Datatype * datatype)
+sc_stats_mpifunc (void *invec, void *inoutvec, int *len,
+                  sc_MPI_Datatype * datatype)
 {
   int                 i;
-  double             *in = invec;
-  double             *inout = inoutvec;
+  double             *in = (double *) invec;
+  double             *inout = (double *) inoutvec;
 
   for (i = 0; i < *len; ++i) {
     /* sum count, values and their squares */
     inout[0] += in[0];
-    inout[1] += in[1];
-    inout[2] += in[2];
+    if (in[0]) {                /* ignore statistics when no count */
+      inout[1] += in[1];
+      inout[2] += in[2];
 
-    /* compute minimum and its rank */
-    if (in[3] < inout[3]) {
-      inout[3] = in[3];
-      inout[5] = in[5];
-    }
-    else if (in[3] == inout[3]) {       /* ignore the comparison warning */
-      inout[5] = SC_MIN (in[5], inout[5]);
-    }
+      /* compute minimum and its rank */
+      if (in[3] < inout[3]) {
+        inout[3] = in[3];
+        inout[5] = in[5];
+      }
+      else if (in[3] == inout[3]) {     /* ignore the comparison warning */
+        inout[5] = SC_MIN (in[5], inout[5]);
+      }
 
-    /* compute maximum and its rank */
-    if (in[4] > inout[4]) {
-      inout[4] = in[4];
-      inout[6] = in[6];
-    }
-    else if (in[4] == inout[4]) {       /* ignore the comparison warning */
-      inout[6] = SC_MIN (in[6], inout[6]);
+      /* compute maximum and its rank */
+      if (in[4] > inout[4]) {
+        inout[4] = in[4];
+        inout[6] = in[6];
+      }
+      else if (in[4] == inout[4]) {     /* ignore the comparison warning */
+        inout[6] = SC_MIN (in[6], inout[6]);
+      }
     }
 
     /* advance to next data set */
@@ -65,11 +64,12 @@ sc_statinfo_mpifunc (void *invec, void *inoutvec, int *len,
   }
 }
 
-#endif /* SC_MPI */
+#endif /* SC_ENABLE_MPI */
 
 void
-sc_statinfo_set1 (sc_statinfo_t * stats, double value, const char *variable)
+sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
 {
+  stats->dirty = 1;
   stats->count = 1;
   stats->sum_values = value;
   stats->sum_squares = value * value;
@@ -79,7 +79,37 @@ sc_statinfo_set1 (sc_statinfo_t * stats, double value, const char *variable)
 }
 
 void
-sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
+sc_stats_init (sc_statinfo_t * stats, const char *variable)
+{
+  stats->dirty = 1;
+  stats->count = 0;
+  stats->sum_values = stats->sum_squares = 0.;
+  stats->min = stats->max = 0.;
+  stats->variable = variable;
+}
+
+void
+sc_stats_accumulate (sc_statinfo_t * stats, double value)
+{
+  SC_ASSERT (stats->dirty);
+  if (stats->count) {
+    stats->count++;
+    stats->sum_values += value;
+    stats->sum_squares += value * value;
+    stats->min = SC_MIN (stats->min, value);
+    stats->max = SC_MAX (stats->max, value);
+  }
+  else {
+    stats->count = 1;
+    stats->sum_values = value;
+    stats->sum_squares = value * value;
+    stats->min = value;
+    stats->max = value;
+  }
+}
+
+void
+sc_stats_compute (sc_MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 {
   int                 i;
   int                 mpiret;
@@ -88,12 +118,12 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   double             *flat;
   double             *flatin;
   double             *flatout;
-#ifdef SC_MPI
-  MPI_Op              op;
-  MPI_Datatype        ctype;
+#ifdef SC_ENABLE_MPI
+  sc_MPI_Op           op;
+  sc_MPI_Datatype     ctype;
 #endif
 
-  mpiret = MPI_Comm_rank (mpicomm, &rank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
 
   flat = SC_ALLOC (double, 2 * 7 * nvars);
@@ -101,6 +131,10 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   flatout = flat + 7 * nvars;
 
   for (i = 0; i < nvars; ++i) {
+    if (!stats[i].dirty) {
+      memset (flatin + 7 * i, 0, 7 * sizeof (*flatin));
+      continue;
+    }
     flatin[7 * i + 0] = (double) stats[i].count;
     flatin[7 * i + 1] = stats[i].sum_values;
     flatin[7 * i + 2] = stats[i].sum_squares;
@@ -110,25 +144,37 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     flatin[7 * i + 6] = (double) rank;  /* rank that attains maximum */
   }
 
-#ifdef SC_MPI
+#ifndef SC_ENABLE_MPI
+  memcpy (flatout, flatin, 7 * nvars * sizeof (*flatout));
+#else
   mpiret = MPI_Type_contiguous (7, MPI_DOUBLE, &ctype);
   SC_CHECK_MPI (mpiret);
 
   mpiret = MPI_Type_commit (&ctype);
   SC_CHECK_MPI (mpiret);
 
-  mpiret = MPI_Op_create (sc_statinfo_mpifunc, 1, &op);
+  mpiret = MPI_Op_create ((MPI_User_function *) sc_stats_mpifunc, 1, &op);
   SC_CHECK_MPI (mpiret);
 
   mpiret = MPI_Allreduce (flatin, flatout, nvars, ctype, op, mpicomm);
   SC_CHECK_MPI (mpiret);
-#else
-  memcpy (flatout, flatin, 7 * nvars * sizeof (*flatout));
-#endif /* SC_MPI */
+
+  mpiret = MPI_Op_free (&op);
+  SC_CHECK_MPI (mpiret);
+
+  mpiret = MPI_Type_free (&ctype);
+  SC_CHECK_MPI (mpiret);
+#endif /* SC_ENABLE_MPI */
 
   for (i = 0; i < nvars; ++i) {
+    if (!stats[i].dirty) {
+      continue;
+    }
     cnt = flatout[7 * i + 0];
-    stats[i].count = (int) cnt;
+    stats[i].count = (long) cnt;
+    if (!cnt) {
+      continue;
+    }
     stats[i].sum_values = flatout[7 * i + 1];
     stats[i].sum_squares = flatout[7 * i + 2];
     stats[i].min = flatout[7 * i + 3];
@@ -141,21 +187,14 @@ sc_statinfo_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     stats[i].variance_mean = stats[i].variance / cnt;
     stats[i].standev = sqrt (stats[i].variance);
     stats[i].standev_mean = sqrt (stats[i].variance_mean);
+    stats[i].dirty = 0;
   }
-
-#ifdef SC_MPI
-  mpiret = MPI_Op_free (&op);
-  SC_CHECK_MPI (mpiret);
-
-  mpiret = MPI_Type_free (&ctype);
-  SC_CHECK_MPI (mpiret);
-#endif /* SC_MPI */
 
   SC_FREE (flat);
 }
 
 void
-sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
+sc_stats_compute1 (sc_MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 {
   int                 i;
   double              value;
@@ -169,137 +208,208 @@ sc_statinfo_compute1 (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     stats[i].max = value;
   }
 
-  sc_statinfo_compute (mpicomm, nvars, stats);
+  sc_stats_compute (mpicomm, nvars, stats);
 }
 
 void
-sc_statinfo_print (int nvars, sc_statinfo_t * stats,
-                   bool full, bool summary, FILE * nout)
+sc_stats_print (int package_id, int log_priority,
+                int nvars, sc_statinfo_t * stats, int full, int summary)
 {
-  int                 i;
+  int                 i, count;
   sc_statinfo_t      *si;
   char                buffer[BUFSIZ];
-
-  if (nout == NULL) {
-    return;
-  }
 
   if (full) {
     for (i = 0; i < nvars; ++i) {
       si = &stats[i];
       if (si->variable != NULL) {
-        fprintf (nout, "Statistics for variable: %s\n", si->variable);
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "Statistics for %s\n", si->variable);
       }
       else {
-        fprintf (nout, "Statistics for variable no. %d\n", i);
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "Statistics for %d\n", i);
       }
-      fprintf (nout, "   Global number of values: %5d\n", si->count);
+      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                   "   Global number of values: %5ld\n", si->count);
+      if (!si->count) {
+        continue;
+      }
       if (si->average != 0.) {  /* ignore the comparison warning */
-        fprintf (nout,
-                 "   Mean value (std. dev.):         %g (%.3g = %.3g%%)\n",
-                 si->average, si->standev,
-                 100. * si->standev / fabs (si->average));
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "   Mean value (std. dev.):         %g (%.3g = %.3g%%)\n",
+                     si->average, si->standev,
+                     100. * si->standev / fabs (si->average));
       }
       else {
-        fprintf (nout, "   Mean value (std. dev.):         %g (%.3g)\n",
-                 si->average, si->standev);
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "   Mean value (std. dev.):         %g (%.3g)\n",
+                     si->average, si->standev);
       }
-      fprintf (nout, "   Minimum attained at rank %5d: %g\n",
-               si->min_at_rank, si->min);
-      fprintf (nout, "   Maximum attained at rank %5d: %g\n",
-               si->max_at_rank, si->max);
+      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                   "   Minimum attained at rank %5d: %g\n",
+                   si->min_at_rank, si->min);
+      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                   "   Maximum attained at rank %5d: %g\n",
+                   si->max_at_rank, si->max);
     }
   }
   else {
     for (i = 0; i < nvars; ++i) {
       si = &stats[i];
       if (si->variable != NULL) {
-        snprintf (buffer, BUFSIZ, "for variable %s:", si->variable);
+        snprintf (buffer, BUFSIZ, "for %s:", si->variable);
       }
       else {
-        snprintf (buffer, BUFSIZ, "for variable no. %d:", i);
+        snprintf (buffer, BUFSIZ, "for %d:", i);
       }
       if (si->average != 0.) {  /* ignore the comparison warning */
-        fprintf (nout,
-                 "Mean value (std. dev.) %-28s %g (%.3g = %.3g%%)\n",
-                 buffer, si->average, si->standev,
-                 100. * si->standev / fabs (si->average));
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "Mean (sigma) %-28s %g (%.3g = %.3g%%)\n",
+                     buffer, si->average, si->standev,
+                     100. * si->standev / fabs (si->average));
       }
       else {
-        fprintf (nout, "Mean value (std. dev.) %-28s %g (%.3g)\n",
-                 buffer, si->average, si->standev);
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+                     "Mean (sigma) %-28s %g (%.3g)\n", buffer,
+                     si->average, si->standev);
       }
     }
   }
 
   if (summary) {
-    fputs ("Summary = ", nout);
-    for (i = 0; i < nvars; ++i) {
+    count = snprintf (buffer, BUFSIZ, "Summary = ");
+    for (i = 0; i < nvars && count >= 0 && (size_t) count < BUFSIZ; ++i) {
       si = &stats[i];
-      fprintf (nout, "%s%g", i == 0 ? "[ " : " ", si->average);
+      count += snprintf (buffer + count, BUFSIZ - count,
+                         "%s%g", i == 0 ? "[ " : " ", si->average);
     }
-    fputs (" ];\n", nout);
+    if (count >= 0 && (size_t) count < BUFSIZ) {
+      snprintf (buffer + count, BUFSIZ - count, "%s", " ];\n");
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, buffer);
+    }
+    else {
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
+                  "Summary overflow\n");
+    }
+    count = snprintf (buffer, BUFSIZ, "Maximum = ");
+    for (i = 0; i < nvars && count >= 0 && (size_t) count < BUFSIZ; ++i) {
+      si = &stats[i];
+      count += snprintf (buffer + count, BUFSIZ - count,
+                         "%s%g", i == 0 ? "[ " : " ", si->max);
+    }
+    if (count >= 0 && (size_t) count < BUFSIZ) {
+      snprintf (buffer + count, BUFSIZ - count, "%s", " ];\n");
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, buffer);
+    }
+    else {
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
+                  "Maximum overflow\n");
+    }
   }
+}
 
-  fflush (nout);
+sc_statistics_t    *
+sc_statistics_new (sc_MPI_Comm mpicomm)
+{
+  sc_statistics_t    *stats;
+
+  stats = SC_ALLOC (sc_statistics_t, 1);
+  stats->mpicomm = mpicomm;
+  stats->kv = sc_keyvalue_new ();
+  stats->sarray = sc_array_new (sizeof (sc_statinfo_t));
+
+  return stats;
 }
 
 void
-sc_papi_start (float *rtime, float *ptime, long long *flpops)
+sc_statistics_destroy (sc_statistics_t * stats)
 {
-#ifdef SC_PAPI
-  float               p_rtime, p_ptime, p_mflops;
-  long long           p_flpops;
-  int                 retval;
+  sc_keyvalue_destroy (stats->kv);
+  sc_array_destroy (stats->sarray);
 
-  retval = PAPI_flops (&p_rtime, &p_ptime, &p_flpops, &p_mflops);
-  if (retval == PAPI_OK) {
-    *rtime = -p_rtime;
-    *ptime = -p_ptime;
-    *flpops = -p_flpops;
-  }
-#endif
+  SC_FREE (stats);
 }
 
 void
-sc_flopinfo_start (sc_flopinfo_t * fi)
+sc_statistics_add (sc_statistics_t * stats, const char *name)
 {
-  fi->seconds = -MPI_Wtime ();
-  sc_papi_start (&fi->rtime, &fi->ptime, &fi->flpops);
-  fi->mflops = 0.;
+  int                 i;
+  sc_statinfo_t      *si;
+
+  /* always check for wrong usage and output adequate error message */
+  SC_CHECK_ABORTF (!sc_keyvalue_exists (stats->kv, name),
+                   "Statistics variable \"%s\" exists already", name);
+
+  i = (int) stats->sarray->elem_count;
+  si = (sc_statinfo_t *) sc_array_push (stats->sarray);
+  sc_stats_set1 (si, 0, name);
+
+  sc_keyvalue_set_int (stats->kv, name, i);
 }
 
 void
-sc_papi_stop (float *rtime, float *ptime, long long *flpops,
-              float *mflops)
+sc_statistics_set (sc_statistics_t * stats, const char *name, double value)
 {
-#ifdef SC_PAPI
-  float               p_rtime, p_ptime, p_mflops;
-  long long           p_flpops;
-  int                 retval;
+  int                 i;
+  sc_statinfo_t      *si;
 
-  retval = PAPI_flops (&p_rtime, &p_ptime, &p_flpops, &p_mflops);
-  if (retval == PAPI_OK) {
-    *rtime += p_rtime;
-    *ptime += p_ptime;
-    *flpops += p_flpops;
-    *mflops = p_mflops;
-  }
-  else {
-    *rtime = *ptime = *mflops = 0.;
-    *flpops = 0;
-  }
-#else
-  *rtime = *ptime = *mflops = 0.;
-  *flpops = 0;
-#endif
+  i = sc_keyvalue_get_int (stats->kv, name, -1);
+
+  /* always check for wrong usage and output adequate error message */
+  SC_CHECK_ABORTF (i >= 0, "Statistics variable \"%s\" does not exist", name);
+
+  si = (sc_statinfo_t *) sc_array_index_int (stats->sarray, i);
+
+  sc_stats_set1 (si, value, name);
 }
 
 void
-sc_flopinfo_stop (sc_flopinfo_t * fi)
+sc_statistics_add_empty (sc_statistics_t * stats, const char *name)
 {
-  sc_papi_stop (&fi->rtime, &fi->ptime, &fi->flpops, &fi->mflops);
-  fi->seconds += MPI_Wtime ();
+  int                 i;
+  sc_statinfo_t      *si;
+
+  /* always check for wrong usage and output adequate error message */
+  SC_CHECK_ABORTF (!sc_keyvalue_exists (stats->kv, name),
+                   "Statistics variable \"%s\" exists already", name);
+
+  i = (int) stats->sarray->elem_count;
+  si = (sc_statinfo_t *) sc_array_push (stats->sarray);
+  sc_stats_init (si, name);
+
+  sc_keyvalue_set_int (stats->kv, name, i);
 }
 
-/* EOF sc_statistics.c */
+void
+sc_statistics_accumulate (sc_statistics_t * stats, const char *name,
+                          double value)
+{
+  int                 i;
+  sc_statinfo_t      *si;
+
+  i = sc_keyvalue_get_int (stats->kv, name, -1);
+
+  /* always check for wrong usage and output adequate error message */
+  SC_CHECK_ABORTF (i >= 0, "Statistics variable \"%s\" does not exist", name);
+
+  si = (sc_statinfo_t *) sc_array_index_int (stats->sarray, i);
+
+  sc_stats_accumulate (si, value);
+}
+
+void
+sc_statistics_compute (sc_statistics_t * stats)
+{
+  sc_stats_compute (stats->mpicomm, (int) stats->sarray->elem_count,
+                    (sc_statinfo_t *) stats->sarray->array);
+}
+
+void
+sc_statistics_print (sc_statistics_t * stats,
+                     int package_id, int log_priority, int full, int summary)
+{
+  sc_stats_print (package_id, log_priority,
+                  (int) stats->sarray->elem_count,
+                  (sc_statinfo_t *) stats->sarray->array, full, summary);
+}

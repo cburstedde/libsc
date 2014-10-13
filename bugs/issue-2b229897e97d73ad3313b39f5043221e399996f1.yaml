@@ -1,0 +1,37 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Fix parallel sort.
+desc: |-
+  The bitonic sort algorithm has a problem.  It fails randomly
+  which can be reproduced with mpirun -np 3 test/sc_test_sortb.
+type: :bugfix
+component: libsc
+release: 
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :closed
+disposition: :fixed
+creation_time: 2008-11-29 21:35:03.611981 Z
+references: []
+
+id: 2b229897e97d73ad3313b39f5043221e399996f1
+log_events: 
+- - 2008-11-29 21:35:04.235840 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
+- - 2009-02-03 22:31:42.534180 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - unassigned from release 1.6
+  - |-
+    Parallel sort is still buggy. Fix it for 0.7 hopefully.
+    Remember to remove the SC_DEBUG checks from test_sort.c and sc_sort.c
+    and to update documentation in sc_sort.h once the bug is fixed.
+- - 2013-07-03 13:42:44.561485 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - commented
+  - |-
+    The sc_sort function has been fixed somewhat, but test_sc_sort is still
+    not happy for np >= 18.
+- - 2014-07-01 12:39:57.935188 Z
+  - Carsten Burstedde <burstedde@ins.uni-bonn.de>
+  - closed with disposition fixed
+  - The test passes now for np = 18.  This does not mean the function is fast.

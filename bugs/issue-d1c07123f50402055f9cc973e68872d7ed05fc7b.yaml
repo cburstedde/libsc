@@ -1,0 +1,56 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Fix warnings from llvm static analyzer
+desc: |-
+  The static analyzer[0] from llvm finds a couple of possible problems
+  with the code.
+  
+  I build libsc in the following way
+  
+    scan-build ./configure CFLAGS="-std=c99 -O0 -g -Wall -Wextra -Wshadow -Wno-unused-parameter" --enable-debug --with-p4est --with-lint
+    make
+  
+  and got the following warnings
+  
+    src/sc_options.c:499:13: warning: Dereference of null pointer.
+        switch (item->opt_type) {
+                ^~~~~~~~~~~~~~
+    src/sc_options.c:481:7: warning: Branch condition evaluates to an uninitialized value.
+          SC_ASSERT (item_index >= 0);
+          ^~~~~~~~~  
+    rc/sc_getopt.c:882:39: warning: Dereference of null pointer.
+            for (p = longopts, option_index = 0; p->name; p++, option_index++)
+                                                 ^~~~~~~
+    src/sc_obstack.c:164:35: warning: Dereference of null pointer.
+      h->next_free = h->object_base = __PTR_ALIGN ((char *) chunk, chunk->contents,
+                                      ^~~~~~~~~~~
+    ANALYZE: src/sc_obstack.c _obstack_begin_1
+    src/sc_obstack.c:212:35: warning: Dereference of null pointer.
+      h->next_free = h->object_base = __PTR_ALIGN ((char *) chunk, chunk->contents,
+                                      ^~~~~~~~~~~
+    ANALYZE: src/sc_obstack.c _obstack_newchunk
+    src/sc_obstack.c:250:3: warning: Dereference of null pointer.
+      new_chunk->prev = old_chunk;
+      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+  [0] http://clang.llvm.org/StaticAnalysis.html
+type: :bugfix
+component: libsc
+release: 
+reporter: Lucas C Wilcox <lucasw@ices.utexas.edu>
+status: :closed
+disposition: :wontfix
+creation_time: 2008-10-17 17:06:11.024651 Z
+references: []
+
+id: d1c07123f50402055f9cc973e68872d7ed05fc7b
+log_events: 
+- - 2008-10-17 17:06:15.640323 Z
+  - Lucas C Wilcox <lucasw@ices.utexas.edu>
+  - created
+  - Initial report
+- - 2008-10-29 17:53:50.709546 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - closed with disposition wontfix
+  - |-
+    The warnings for sc_options.c have been addressed.
+    The remaining ones are for sc_getopt and sc_obstack which is glibc code.

@@ -7,7 +7,7 @@ libb64 is a library of ANSI C routines for fast encoding/decoding data into and
 from a base64-encoded format. C++ wrappers are included, as well as the source
 code for standalone encoding and decoding executables.
 
-base64 consists of ASCII text, and is therefore a useful encoding for storing 
+base64 consists of ASCII text, and is therefore a useful encoding for storing
 binary data in a text file, such as xml, or sending binary data over text-only
 email.
 
@@ -27,7 +27,7 @@ either the GNU/GPL, or a BSD-variant, which is not what I require.
 Also, the chance to actually use the co-routine implementation in code is rare,
 and its use here is fitting. I couldn't pass up the chance.
 For more information on this technique, see "Coroutines in C", by Simon Tatham,
-which can be found online here: 
+which can be found online here:
 http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html
 
 So then, under which license do I release this code? On to the next section...

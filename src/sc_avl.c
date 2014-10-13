@@ -31,8 +31,6 @@
 
 /* renamed from avl.h to sc_avl.h for the SC Library and modified */
 
-/* sc.h comes first in every compilation unit */
-#include <sc.h>
 #include <sc_avl.h>
 
 static void avl_rebalance(avl_tree_t *, avl_node_t *);
@@ -334,7 +332,7 @@ avl_node_t *avl_insert(avl_tree_t *avltree, void *item) {
 		/* errno = EEXIST; */
                 return NULL;
 	}
-	SC_CHECK_NOT_REACHED ();
+	SC_ABORT_NOT_REACHED ();
         return NULL;
 }
 
@@ -609,27 +607,27 @@ typedef struct avl_to_array_data
 }
 avl_to_array_data_t;
 
-typedef struct avl_foreach_recursion
+typedef struct avl_foreach_recursion_data
 {
   avl_foreach_t       callback;
   void               *data;
 }
-avl_foreach_recursion_t;
+avl_foreach_recursion_data_t;
 
 static void
 avl_to_array_foreach (void *item, void *data)
 {
   void              **pp;
-  avl_to_array_data_t *adata = data;
+  avl_to_array_data_t *adata = (avl_to_array_data_t *) data;
 
-  pp = sc_array_index (adata->array, adata->iz);
+  pp = (void **) sc_array_index (adata->array, adata->iz);
   *pp = item;
 
   ++adata->iz;
 }
 
 static void
-avl_foreach_recursion (avl_node_t * node, avl_foreach_recursion_t * rec)
+avl_foreach_recursion (avl_node_t * node, avl_foreach_recursion_data_t * rec)
 {
   if (node->left != NULL)
     avl_foreach_recursion (node->left, rec);
@@ -643,7 +641,7 @@ avl_foreach_recursion (avl_node_t * node, avl_foreach_recursion_t * rec)
 void
 avl_foreach (avl_tree_t * avltree, avl_foreach_t callback, void *data)
 {
-  avl_foreach_recursion_t rec;
+  avl_foreach_recursion_data_t rec;
 
   rec.callback = callback;
   rec.data = data;
@@ -670,5 +668,3 @@ avl_to_array (avl_tree_t * avltree, sc_array_t * array)
 }
 
 #endif /* AVL_COUNT */
-
-/* EOF sc_avl.c */

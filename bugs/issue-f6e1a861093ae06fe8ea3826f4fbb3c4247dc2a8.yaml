@@ -1,0 +1,29 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: Check C99 conformance
+desc: |-
+  Can the files sc_c99_functions be removed? Or changed?
+  What is the right way to handle C99 functions and prototypes?
+  How to deal with feature test macros for glibc?
+type: :bugfix
+component: libsc
+release: 
+reporter: Carsten Burstedde <carsten@ices.utexas.edu>
+status: :unstarted
+disposition: 
+creation_time: 2009-07-21 21:12:21.823496 Z
+references: []
+
+id: f6e1a861093ae06fe8ea3826f4fbb3c4247dc2a8
+log_events: 
+- - 2009-07-21 21:12:23.783247 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - created
+  - ""
+- - 2009-07-21 21:14:24.387055 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - assigned to release 1.6 from unassigned
+  - ""
+- - 2010-01-22 17:33:37.936420 Z
+  - Carsten Burstedde <carsten@ices.utexas.edu>
+  - unassigned from release 1.6
+  - Also remove tgmath.h from sc_complex.h for portability.
