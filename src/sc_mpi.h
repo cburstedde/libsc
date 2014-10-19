@@ -133,6 +133,7 @@ sc_tag_t;
 #define sc_MPI_Gatherv             MPI_Gatherv
 #define sc_MPI_Allgather           MPI_Allgather
 #define sc_MPI_Allgatherv          MPI_Allgatherv
+#define sc_MPI_Alltoall            MPI_Alltoall
 #define sc_MPI_Reduce              MPI_Reduce
 #define sc_MPI_Allreduce           MPI_Allreduce
 #define sc_MPI_Recv                MPI_Recv
@@ -237,6 +238,8 @@ int                 sc_MPI_Allgather (void *, int, sc_MPI_Datatype, void *,
 int                 sc_MPI_Allgatherv (void *, int, sc_MPI_Datatype, void *,
                                        int *, int *, sc_MPI_Datatype,
                                        sc_MPI_Comm);
+int                 sc_MPI_Alltoall (void *, int, sc_MPI_Datatype, void *,
+                                     int, sc_MPI_Datatype, sc_MPI_Comm);
 int                 sc_MPI_Reduce (void *, void *, int, sc_MPI_Datatype,
                                    sc_MPI_Op, int, sc_MPI_Comm);
 int                 sc_MPI_Allreduce (void *, void *, int, sc_MPI_Datatype,

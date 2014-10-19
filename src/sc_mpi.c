@@ -187,6 +187,13 @@ sc_MPI_Allgatherv (void *p, int np, sc_MPI_Datatype tp,
 }
 
 int
+sc_MPI_Alltoall (void *p, int np, sc_MPI_Datatype tp,
+                 void *q, int nq, sc_MPI_Datatype tq, sc_MPI_Comm comm)
+{
+  return sc_MPI_Gather (p, np, tp, q, nq, tq, 0, comm);
+}
+
+int
 sc_MPI_Reduce (void *p, void *q, int n, sc_MPI_Datatype t,
                sc_MPI_Op op, int rank, sc_MPI_Comm comm)
 {
