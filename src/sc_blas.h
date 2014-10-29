@@ -125,7 +125,7 @@ void                SC_BLAS_DGEMM (const char *transa, const char *transb,
 #define SC_BLAS_DGEMM  (void)   sc_blas_nonimplemented
 #define SC_BLAS_DGEMV  (void)   sc_blas_nonimplemented
 
-int                 sc_blas_nonimplemented ();
+int                 sc_blas_nonimplemented (SC_NOARGS);
 
 #endif
 

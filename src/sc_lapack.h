@@ -117,7 +117,7 @@ int                 SC_LAPACK_ILAENV (const sc_bint_t * ispec,
 #define SC_LAPACK_DLAIC1   (void) sc_lapack_nonimplemented
 #define SC_LAPACK_ILAENV   (int)  sc_lapack_nonimplemented
 
-int                 sc_lapack_nonimplemented ();
+int                 sc_lapack_nonimplemented (SC_NOARGS);
 
 #endif
 
