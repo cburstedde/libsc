@@ -65,6 +65,39 @@ void                sc_options_destroy_deep (sc_options_t * opt);
  */
 void                sc_options_destroy (sc_options_t * opt);
 
+/** Helper function to search configuration directories for a file.
+ * The checking is done by calling stat and checking the S_ISREG macro.
+ * This will follow symbolic links and check the file they are pointing to.
+ * \param [in] opt          The program_path member is used in this function.
+ * \param [in] filename     Absolute or relative file name.
+ * \param [in] env_variable Environment variable name; may be NULL (see below).
+ * \param [in] config_dir   Check under $HOME/config_dir/; may be NULL.
+ * \param [in] inidata_dir  Where config files are make installed, or NULL.
+ * \return                  If \a filename is an absolute path, i.e., it
+ *                          begins with a '/', \a filename is checked verbatim.
+ *                          Else, we search in order of precendence:
+ *                          1. \a filename is checked verbatim, relying on the
+ *                             current working directory that we do not verify.
+ *                          2. We search for a file relative to the directory
+ *                             of the application, i.e., \a opt->program_path,
+ *                             in case it was called with a relative path.
+ *                          3. We search for filename relative to the
+ *                             environment variable \a env_variable, if that
+ *                             is not NULL and if its value is not NULL.
+ *                          4. We search relative to the directory \a
+ *                             $HOME/config_dir, if \a config_dir is not NULL.
+ *                          5. We search relative to the configured datadir.
+ *                             This works after make install has been called.
+ *                          If the file is located in this manner, a file name
+ *                          or path is returned that is guaranteed to exist.
+ *                          The return value must be SC_FREE'd eventually.
+ */
+char               *sc_options_find_file (sc_options_t * opt,
+                                          const char *filename,
+                                          const char *env_variable,
+                                          const char *config_dir,
+                                          const char *inidata_dir);
+
 /** Add a switch option. This option is used without option arguments.
  * Every use increments the variable by one.  Its initial value is 0.
  * Either opt_char or opt_name must be valid, that is, not '\0'/NULL.

@@ -24,6 +24,16 @@
 #include <sc_options.h>
 #include <iniparser.h>
 
+#ifdef SC_HAVE_LIBGEN_H
+#include <libgen.h>
+#endif
+#ifdef SC_HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef SC_HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+
 #include <errno.h>
 
 typedef enum
@@ -169,6 +179,8 @@ sc_options_new (const char *program_path)
 {
   sc_options_t       *opt;
 
+  SC_ASSERT (program_path != NULL);
+
   opt = SC_ALLOC_ZERO (sc_options_t, 1);
 
   snprintf (opt->program_path, BUFSIZ, "%s", program_path);
@@ -224,6 +236,76 @@ void
 sc_options_destroy (sc_options_t * opt)
 {
   sc_options_destroy_internal (opt, 0);
+}
+
+static int
+sc_options_stat_file (const char *filename)
+{
+  int                 retval;
+  struct stat         st;
+
+  retval = stat (filename, &st);
+  if (retval == 0 && S_ISREG (st.st_mode)) {
+    return 0;
+  }
+  else {
+    return -1;
+  }
+}
+
+char               *
+sc_options_find_file (sc_options_t * opt, const char *filename,
+                      const char *env_variable, const char *config_dir,
+                      const char *inidata_dir)
+{
+  int                 absolute;
+  char                inp[BUFSIZ], buf[BUFSIZ];
+  char               *str;
+
+  SC_ASSERT (opt != NULL);
+  SC_ASSERT (opt->program_path != NULL);
+  SC_ASSERT (filename != NULL);
+
+  absolute = (filename[0] == '/');
+  if (!sc_options_stat_file (filename)) {
+    return SC_STRDUP (filename);
+  }
+  if (!absolute) {
+    /* File relative to opt->program_path */
+    snprintf (inp, BUFSIZ, "%s", opt->program_path);
+    snprintf (buf, BUFSIZ, "%s/%s", dirname (inp), filename);
+    if (!sc_options_stat_file (buf)) {
+      return SC_STRDUP (buf);
+    }
+
+    /* File relative to $env_variable */
+    if (env_variable != NULL && (str = getenv (env_variable)) != NULL) {
+      snprintf (buf, BUFSIZ, "%s/%s", str, filename);
+      if (!sc_options_stat_file (buf)) {
+        return SC_STRDUP (buf);
+      }
+    }
+
+    /* File relative to $HOME/config_dir/ */
+    if (config_dir != NULL && (str = getenv ("HOME")) != NULL) {
+      snprintf (buf, BUFSIZ, "%s/%s/%s", str, config_dir, filename);
+      if (!sc_options_stat_file (buf)) {
+        return SC_STRDUP (buf);
+      }
+    }
+
+    /* File relative to configured datadir, or a subdirectory.
+     * Can be set in Makefile.am with -DINIDATA_DIR=\"$(datadir)/subdir\" */
+    if (inidata_dir != NULL) {
+      snprintf (buf, BUFSIZ, "%s/%s", inidata_dir, filename);
+      if (!sc_options_stat_file (buf)) {
+        return SC_STRDUP (buf);
+      }
+    }
+  }
+
+  /* We have not found a match */
+  return NULL;
 }
 
 void
