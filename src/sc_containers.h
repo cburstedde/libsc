@@ -492,12 +492,16 @@ sc_array_push (sc_array_t * array)
  * Elements are referenced by their address which never changes.
  * Elements can be freed (that is, returned to the pool)
  *    and are transparently reused.
+ * If the zero_and_persist option is selected, new elements are initialized to
+ * all zeros on creation, and the contents of an element are not touched
+ * between freeing and re-returning it.
  */
 typedef struct sc_mempool
 {
   /* interface variables */
   size_t              elem_size;        /**< size of a single element */
   size_t              elem_count;       /**< number of valid elements */
+  int                 zero_and_persist; /**< Boolean; is set in constructor. */
 
   /* implementation variables */
   struct obstack      obstack;  /**< holds the allocated elements */
@@ -511,11 +515,20 @@ sc_mempool_t;
  */
 size_t              sc_mempool_memory_used (sc_mempool_t * mempool);
 
-/** Creates a new mempool structure.
+/** Creates a new mempool structure with the zero_and_persist option off.
+ * The contents of any elements returned by sc_mempool_alloc are undefined.
  * \param [in] elem_size  Size of one element in bytes.
  * \return Returns an allocated and initialized memory pool.
  */
 sc_mempool_t       *sc_mempool_new (size_t elem_size);
+
+/** Creates a new mempool structure with the zero_and_persist option on.
+ * The memory of newly created elements is zero'd out, and the contents of an
+ * element are not touched between freeing and re-returning it.
+ * \param [in] elem_size  Size of one element in bytes.
+ * \return Returns an allocated and initialized memory pool.
+ */
+sc_mempool_t       *sc_mempool_new_zero_and_persist (size_t elem_size);
 
 /** Destroys a mempool structure.
  * All elements that are still in use are invalidated.
@@ -544,10 +557,15 @@ sc_mempool_alloc (sc_mempool_t * mempool)
   }
   else {
     ret = obstack_alloc (&mempool->obstack, (int) mempool->elem_size);
+    if (mempool->zero_and_persist) {
+      memset (ret, 0, mempool->elem_size);
+    }
   }
 
 #ifdef SC_DEBUG
-  memset (ret, -1, mempool->elem_size);
+  if (!mempool->zero_and_persist) {
+    memset (ret, -1, mempool->elem_size);
+  }
 #endif
 
   return ret;
@@ -565,7 +583,9 @@ sc_mempool_free (sc_mempool_t * mempool, void *elem)
   SC_ASSERT (mempool->elem_count > 0);
 
 #ifdef SC_DEBUG
-  memset (elem, -1, mempool->elem_size);
+  if (!mempool->zero_and_persist) {
+    memset (elem, -1, mempool->elem_size);
+  }
 #endif
 
   --mempool->elem_count;
