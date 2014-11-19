@@ -51,7 +51,8 @@ SC_EXTERN_C_BEGIN;
 
 typedef enum
 {
-  SC_TAG_AG_ALLTOALL = 's' + 'c',       /* anything really */
+  SC_TAG_FIRST = 's' + 'c',     /* anything really */
+  SC_TAG_AG_ALLTOALL = SC_TAG_FIRST,
   SC_TAG_AG_RECURSIVE_A,
   SC_TAG_AG_RECURSIVE_B,
   SC_TAG_AG_RECURSIVE_C,
