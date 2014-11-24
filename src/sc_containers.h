@@ -173,22 +173,26 @@ void                sc_array_init_size (sc_array_t * array,
                                         size_t elem_size, size_t elem_count);
 
 /** Initializes an already allocated (or static) view from existing sc_array_t.
+ * The array view returned does not require sc_array_reset (doesn't hurt though).
  * \param [in,out] view  Array structure to be initialized.
  * \param [in] array     The array must not be resized while view is alive.
  * \param [in] offset    The offset of the viewed section in element units.
  *                       This offset cannot be changed until the view is reset.
  * \param [in] length    The length of the view in element units.
  *                       The view cannot be resized to exceed this length.
+ *                       It is not necessary to call sc_array_reset later.
  */
 void                sc_array_init_view (sc_array_t * view, sc_array_t * array,
                                         size_t offset, size_t length);
 
 /** Initializes an already allocated (or static) view from given plain C data.
+ * The array view returned does not require sc_array_reset (doesn't hurt though).
  * \param [in,out] view     Array structure to be initialized.
  * \param [in] base         The data must not be moved while view is alive.
  * \param [in] elem_size    Size of one array element in bytes.
  * \param [in] elem_count   The length of the view in element units.
  *                          The view cannot be resized to exceed this length.
+ *                          It is not necessary to call sc_array_reset later.
  */
 void                sc_array_init_data (sc_array_t * view, void *base,
                                         size_t elem_size, size_t elem_count);
@@ -198,6 +202,9 @@ void                sc_array_init_data (sc_array_t * view, void *base,
  * \param [in,out]  array       Array structure to be reset.
  * \note Calling sc_array_init, then any array operations,
  *       then sc_array_reset is memory neutral.
+ *       As an exception, the two functions sc_array_init_view and
+ *       sc_array_init_data do not require a subsequent call to sc_array_reset.
+ *       Regardless, it is legal to call sc_array_reset anyway.
  */
 void                sc_array_reset (sc_array_t * array);
 
