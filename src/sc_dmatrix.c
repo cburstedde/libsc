@@ -649,14 +649,14 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
     /* Perform an LU factorization of B. */
     SC_LAPACK_DGETRF (&N, &N, lu->e[0], &N, ipiv, &info);
 
-    SC_ASSERT (info == 0);
+    SC_CHECK_ABORT (info == 0, "Lapack routine DGETRF failed");
 
     /* Solve the linear system. */
     sc_dmatrix_copy (A, C);
     SC_LAPACK_DGETRS (&sc_transchar[transb], &N, &Nrhs, lu->e[0], &N,
                       ipiv, C->e[0], &N, &info);
 
-    SC_ASSERT (info == 0);
+    SC_CHECK_ABORT (info == 0, "Lapack routine DGETRS failed");
 
     SC_FREE (ipiv);
     sc_dmatrix_destroy (lu);
@@ -664,6 +664,22 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
   else {
     SC_CHECK_ABORT (0, "Only square A's work right now\n");
   }
+}
+
+void
+sc_dmatrix_solve_transpose_inplace (sc_dmatrix_t * A, sc_dmatrix_t * B)
+{
+  const sc_bint_t     N = A->m;
+  const sc_bint_t     nrhs = B->m;
+  sc_bint_t          *ipiv, info;
+
+  SC_ASSERT (A->n == N && B->n == N);
+
+  ipiv = SC_ALLOC (sc_bint_t, N);
+  SC_LAPACK_DGESV (&N, &nrhs, A->e[0], &N, ipiv, B->e[0], &N, &info);
+  SC_FREE (ipiv);
+
+  SC_CHECK_ABORT (info == 0, "Lapack routine DGESV failed");
 }
 
 void

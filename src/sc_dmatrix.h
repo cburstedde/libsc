@@ -261,6 +261,19 @@ void                sc_dmatrix_rdivide (sc_trans_t transb,
                                         const sc_dmatrix_t * B,
                                         sc_dmatrix_t * C);
 
+/** \brief Solve B^T <- A^{-T} B^T.
+ * This call is destructive on the entries of the matrix A.
+ * Solving multiple right hand sides is supported.
+ *
+ *   \param[in,out] A   Square invertible matrix.  Values are changed.
+ *                      Its transpose is inverted and applied to B^T.
+ *   \param[in,out] B   Rectangular matrix with as many columns as A.
+ *                      On input, each row is an independent right hand side.
+ *                      On output, each row holds the corresponding solution.
+ */
+void                sc_dmatrix_solve_transpose_inplace
+  (sc_dmatrix_t * A, sc_dmatrix_t * B);
+
 /** \brief Writes a matrix to an opened stream.
  *
  *   \param dmatrix Pointer to matrix to write
