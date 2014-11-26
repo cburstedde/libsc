@@ -44,6 +44,7 @@ extern const char   sc_jobzchar[];
 #endif
 
 #define SC_LAPACK_DGELS   SC_F77_FUNC(dgels,DGELS)
+#define SC_LAPACK_DGESV   SC_F77_FUNC(dgesv,DGESV)
 #define SC_LAPACK_DGETRF  SC_F77_FUNC(dgetrf,DGETRF)
 #define SC_LAPACK_DGETRS  SC_F77_FUNC(dgetrs,DGETRS)
 #define SC_LAPACK_DSTEV   SC_F77_FUNC(dstev,DSTEV)
@@ -58,6 +59,14 @@ void                SC_LAPACK_DGELS (const char *trans,
                                      const sc_bint_t * ldb, double *work,
                                      const sc_bint_t * lwork,
                                      sc_bint_t * info);
+
+void                SC_LAPACK_DGESV (const sc_bint_t * n,
+                                     const sc_bint_t * nrhs,
+                                     double *a, const sc_bint_t * lda,
+                                     sc_bint_t * ipiv,
+                                     double *b, const sc_bint_t * ldb,
+                                     sc_bint_t * info);
+
 void                SC_LAPACK_DGETRF (const sc_bint_t * m,
                                       const sc_bint_t * n, double *a,
                                       const sc_bint_t * lda, sc_bint_t * ipiv,
@@ -110,6 +119,7 @@ int                 SC_LAPACK_ILAENV (const sc_bint_t * ispec,
 #else /* !SC_WITH_LAPACK */
 
 #define SC_LAPACK_DGELS    (void) sc_lapack_nonimplemented
+#define SC_LAPACK_DGESV    (void) sc_lapack_nonimplemented
 #define SC_LAPACK_DGETRF   (void) sc_lapack_nonimplemented
 #define SC_LAPACK_DGETRS   (void) sc_lapack_nonimplemented
 #define SC_LAPACK_DSTEV    (void) sc_lapack_nonimplemented
