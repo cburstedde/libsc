@@ -624,7 +624,7 @@ typedef struct sc_list
 }
 sc_list_t;
 
-/** Calculate the memory used by a list.
+/** Calculate the total memory used by a list.
  * \param [in] list        The list.
  * \param [in] is_dynamic  True if created with sc_list_new,
  *                         false if initialized with sc_list_init
@@ -632,52 +632,73 @@ sc_list_t;
  */
 size_t              sc_list_memory_used (sc_list_t * list, int is_dynamic);
 
-/** Allocate a linked list structure.
- * \param [in] allocator Memory allocator for sc_link_t, can be NULL.
+/** Allocate a new, empty linked list.
+ * \param [in] allocator    Memory allocator for sc_link_t, can be NULL
+ *                          in which case an internal allocator is created.
+ * \return                  Pointer to a newly allocated, empty list object.
  */
 sc_list_t          *sc_list_new (sc_mempool_t * allocator);
 
 /** Destroy a linked list structure in O(N).
+ * \param [in,out] list     All memory allocated for this list is freed.
  * \note If allocator was provided in sc_list_new, it will not be destroyed.
  */
 void                sc_list_destroy (sc_list_t * list);
 
-/** Initializes an already allocated list structure.
+/** Initialize a list object with an external link allocator.
  * \param [in,out]  list       List structure to be initialized.
- * \param [in]      allocator  External memory allocator for sc_link_t.
+ * \param [in]      allocator  External memory allocator for sc_link_t,
+ *                             which must exist already.
  */
 void                sc_list_init (sc_list_t * list, sc_mempool_t * allocator);
 
-/** Removes all elements from a list in O(N).
- * \param [in,out]  list       List structure to be resetted.
+/** Remove all elements from a list in O(N).
+ * \param [in,out]  list       List structure to be emptied.
  * \note Calling sc_list_init, then any list operations,
  *       then sc_list_reset is memory neutral.
  */
 void                sc_list_reset (sc_list_t * list);
 
-/** Unliks all list elements without returning them to the mempool.
- * This runs in O(1) but is dangerous because of potential memory leaks.
+/** Unlink all list elements without returning them to the mempool.
+ * This runs in O(1) but is dangerous because the link memory stays alive.
  * \param [in,out]  list       List structure to be unlinked.
  */
 void                sc_list_unlink (sc_list_t * list);
 
-void                sc_list_prepend (sc_list_t * list, void *data);
-void                sc_list_append (sc_list_t * list, void *data);
-
-/** Insert an element after a given position.
- * \param [in] pred The predecessor of the element to be inserted.
+/** Insert a list element at the beginning of the list.
+ * \param [in,out] list     Valid list object.
+ * \param [in] data         A new link is created holding this data.
+ * \return                  The link that has been created for data.
  */
-void                sc_list_insert (sc_list_t * list,
+sc_link_t          *sc_list_prepend (sc_list_t * list, void *data);
+
+/** Insert a list element at the end of the list.
+ * \param [in,out] list     Valid list object.
+ * \param [in] data         A new link is created holding this data.
+ * \return                  The link that has been created for data.
+ */
+sc_link_t          *sc_list_append (sc_list_t * list, void *data);
+
+/** Insert an element after a given list position.
+ * \param [in,out] list     Valid list object.
+ * \param [in,out] pred     The predecessor of the element to be inserted.
+ * \param [in] data         A new link is created holding this data.
+ * \return                  The link that has been created for data.
+ */
+sc_link_t          *sc_list_insert (sc_list_t * list,
                                     sc_link_t * pred, void *data);
 
-/** Remove an element after a given position.
+/** Remove an element after a given list position.
+ * \param [in,out] list     Valid, non-empty list object.
  * \param [in] pred  The predecessor of the element to be removed.
-                     If \a pred == NULL, the first element is removed.
- * \return Returns the data of the removed element.
+ *                   If \a pred == NULL, the first element is removed,
+ *                   which is equivalent to calling sc_list_pop (list).
+ * \return           The data of the removed and freed link.
  */
 void               *sc_list_remove (sc_list_t * list, sc_link_t * pred);
 
 /** Remove an element from the front of the list.
+ * \param [in,out] list     Valid, non-empty list object.
  * \return Returns the data of the removed first list element.
  */
 void               *sc_list_pop (sc_list_t * list);
