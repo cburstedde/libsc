@@ -219,6 +219,21 @@ sc_MPI_Allreduce (void *p, void *q, int n, sc_MPI_Datatype t,
 }
 
 int
+sc_MPI_Scan (void *sendbuf, void *recvbf, int count,
+             sc_MPI_Datatype datatype, sc_MPI_Op op, sc_MPI_Comm comm)
+{
+  return sc_MPI_Reduce (sendbuf, recvbuf, count, datatype, op, 0, comm);
+}
+
+/* Exscan recvbuf undefined on proc 0 */
+int
+sc_MPI_Exscan (void *sendbuf, void *recvbf, int count,
+               sc_MPI_Datatype datatype, sc_MPI_Op op, sc_MPI_Comm comm)
+{
+  return sc_MPI_SUCCESS;
+}
+
+int
 sc_MPI_Recv (void *buf, int count, sc_MPI_Datatype datatype, int source,
              int tag, sc_MPI_Comm comm, sc_MPI_Status * status)
 {
