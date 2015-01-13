@@ -135,6 +135,8 @@ sc_tag_t;
 #define sc_MPI_Allgatherv          MPI_Allgatherv
 #define sc_MPI_Reduce              MPI_Reduce
 #define sc_MPI_Allreduce           MPI_Allreduce
+#define sc_MPI_Scan                MPI_Scan
+#define sc_MPI_Exscan              MPI_Exscan
 #define sc_MPI_Recv                MPI_Recv
 #define sc_MPI_Irecv               MPI_Irecv
 #define sc_MPI_Send                MPI_Send
@@ -241,6 +243,10 @@ int                 sc_MPI_Reduce (void *, void *, int, sc_MPI_Datatype,
                                    sc_MPI_Op, int, sc_MPI_Comm);
 int                 sc_MPI_Allreduce (void *, void *, int, sc_MPI_Datatype,
                                       sc_MPI_Op, sc_MPI_Comm);
+int                 sc_MPI_Scan (void *, void *, int, sc_MPI_Datatype,
+                                 sc_MPI_Op, sc_MPI_Comm);
+int                 sc_MPI_Exscan (void *, void *, int, sc_MPI_Datatype,
+                                   sc_MPI_Op, sc_MPI_Comm);
 
 double              sc_MPI_Wtime (void);
 
