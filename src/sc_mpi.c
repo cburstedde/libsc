@@ -212,7 +212,7 @@ sc_MPI_Allreduce (void *p, void *q, int n, sc_MPI_Datatype t,
 }
 
 int
-sc_MPI_Scan (void *sendbuf, void *recvbf, int count,
+sc_MPI_Scan (void *sendbuf, void *recvbuf, int count,
              sc_MPI_Datatype datatype, sc_MPI_Op op, sc_MPI_Comm comm)
 {
   return sc_MPI_Reduce (sendbuf, recvbuf, count, datatype, op, 0, comm);
