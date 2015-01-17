@@ -43,10 +43,12 @@ main (int argc, char **argv)
   int                 first_arg;
   int                 w;
   int                 i1, i2, si1;
+  int                 kvint;
   size_t              z;
   double              d, sd;
   const char         *s1, *s2, *ss1, *ss2;
   const char         *cd = "Callback example";
+  sc_keyvalue_t      *keyvalue;
   sc_options_t       *opt, *subopt;
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -56,6 +58,10 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+
+  keyvalue = sc_keyvalue_new ();
+  sc_keyvalue_set_int (keyvalue, "one", 1);
+  sc_keyvalue_set_int (keyvalue, "two", 2);
 
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'w', "switch", &w, "Switch");
@@ -77,6 +83,8 @@ main (int argc, char **argv)
   sc_options_add_string (subopt, 's', NULL, &ss1, NULL, "Subset string 1");
   sc_options_add_string (subopt, '\0', "string2", &ss2, NULL,
                          "Subset string 1");
+  sc_options_add_keyvalue (subopt, 'n', "number", &kvint, "one",
+                           keyvalue, "Subset keyvalue number");
 
   sc_options_add_suboptions (opt, subopt, "Subset");
 
@@ -97,6 +105,7 @@ main (int argc, char **argv)
   else {
     SC_GLOBAL_INFO ("Option parsing successful\n");
     sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
+    SC_GLOBAL_INFOF ("Keyvalue number is now %d\n", kvint);
 
     if (rank == 0) {
       retval = sc_options_save (sc_package_id, SC_LP_INFO, opt, "output.ini");
@@ -119,6 +128,7 @@ main (int argc, char **argv)
 
   sc_options_destroy (opt);
   sc_options_destroy (subopt);
+  sc_keyvalue_destroy (keyvalue);
 
   sc_finalize ();
 
