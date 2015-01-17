@@ -478,8 +478,8 @@ sc_set_log_defaults (FILE * log_stream,
     sc_default_log_threshold = SC_LP_THRESHOLD;
   }
   else {
-    SC_ASSERT (log_threshold >= SC_LP_ALWAYS
-               && log_threshold <= SC_LP_SILENT);
+    SC_ASSERT (log_threshold >= SC_LP_ALWAYS &&
+               log_threshold <= SC_LP_SILENT);
     sc_default_log_threshold = log_threshold;
   }
 
@@ -705,8 +705,8 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   int                 new_package_id = -1;
 
   SC_CHECK_ABORT (log_threshold == SC_LP_DEFAULT ||
-                  (log_threshold >= SC_LP_ALWAYS
-                   && log_threshold <= SC_LP_SILENT),
+                  (log_threshold >= SC_LP_ALWAYS &&
+                   log_threshold <= SC_LP_SILENT),
                   "Invalid package log threshold");
   SC_CHECK_ABORT (strcmp (name, "default"), "Package default forbidden");
   SC_CHECK_ABORT (strchr (name, ' ') == NULL,
@@ -780,6 +780,22 @@ sc_package_is_registered (int package_id)
 
   return (package_id < sc_num_packages_alloc &&
           sc_packages[package_id].is_registered);
+}
+
+void
+sc_package_set_verbosity (int package_id, int log_priority)
+{
+  sc_package_t       *p;
+
+  SC_CHECK_ABORT (sc_package_is_registered (package_id),
+                  "Package id is not registered");
+  SC_CHECK_ABORT (log_priority == SC_LP_DEFAULT ||
+                  (log_priority >= SC_LP_ALWAYS &&
+                   log_priority <= SC_LP_SILENT),
+                  "Invalid package log threshold");
+
+  p = sc_packages + package_id;
+  p->log_threshold = log_priority;
 }
 
 void
