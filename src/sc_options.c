@@ -504,8 +504,8 @@ sc_options_print_usage (int package_id, int log_priority,
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
-  const char         *provide_short;
-  const char         *provide_long;
+  const char         *provide;
+  const char         *separator;
   char                outbuf[BUFSIZ];
   char               *copy, *tok;
 
@@ -519,69 +519,65 @@ sc_options_print_usage (int package_id, int log_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
-    provide_short = "";
-    provide_long = "";
+    provide = "";
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
       break;
     case SC_OPTION_BOOL:
-      provide_short = " [0fFnN1tTyY]";
-      provide_long = "[=0fFnN1tTyY]";
+      provide = "[0fFnN1tTyY]";
       break;
     case SC_OPTION_INT:
-      provide_short = " <INT>";
-      provide_long = "=<INT>";
+      provide = "<INT>";
       break;
     case SC_OPTION_SIZE_T:
-      provide_short = " <SIZE_T>";
-      provide_long = "=<SIZE_T>";
+      provide = "<SIZE_T>";
       break;
     case SC_OPTION_DOUBLE:
-      provide_short = " <REAL>";
-      provide_long = "=<REAL>";
+      provide = "<REAL>";
       break;
     case SC_OPTION_STRING:
-      provide_short = " <STRING>";
-      provide_long = "=<STRING>";
+      provide = "<STRING>";
       break;
     case SC_OPTION_INIFILE:
-      provide_short = " <INIFILE>";
-      provide_long = "=<INIFILE>";
+      provide = "<FILE>";
       break;
     case SC_OPTION_CALLBACK:
       if (item->has_arg) {
-        provide_short = " <ARG>";
-        provide_long = "=<ARG>";
+        provide = "<ARG>";
       }
       break;
     case SC_OPTION_KEYVALUE:
-      provide_short = " <CHOICE>";
-      provide_long = "=<CHOICE>";
+      provide = "<CHOICE>";
       break;
     default:
       SC_ABORT_NOT_REACHED ();
     }
+#if 0
+    separator = item->has_arg ? "=" : "";
+#else
+    separator = "";
+#endif
     outbuf[0] = '\0';
     printed = 0;
     if (item->opt_char != '\0' && item->opt_name != NULL) {
-      printed = snprintf (outbuf, BUFSIZ, "   -%c%s | --%s%s",
-                          item->opt_char, provide_short,
-                          item->opt_name, provide_long);
+      printed += snprintf (outbuf, BUFSIZ, "   -%c | --%s%s",
+                           item->opt_char, item->opt_name, separator);
     }
     else if (item->opt_char != '\0') {
-      printed = snprintf (outbuf, BUFSIZ, "   -%c%s",
-                          item->opt_char, provide_short);
+      printed += snprintf (outbuf, BUFSIZ, "   -%c", item->opt_char);
     }
     else if (item->opt_name != NULL) {
-      printed = snprintf (outbuf, BUFSIZ, "   --%s%s",
-                          item->opt_name, provide_long);
+      printed += snprintf (outbuf, BUFSIZ, "   --%s%s",
+                           item->opt_name, separator);
     }
     else {
       SC_ABORT_NOT_REACHED ();
     }
+    printed += snprintf (outbuf + printed, BUFSIZ - printed, "%*s%s",
+                         SC_MAX (1, 22 - printed), "", provide);
     if (item->help_string != NULL) {
-      snprintf (outbuf + printed, BUFSIZ - printed, "%*s%s",
-                SC_MAX (1, 40 - printed), "", item->help_string);
+      printed += snprintf (outbuf + printed, BUFSIZ - printed, "%*s%s",
+                           SC_MAX (1, 32 - printed), "", item->help_string);
     }
     SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
