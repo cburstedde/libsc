@@ -375,6 +375,39 @@ sc_options_add_callback (sc_options_t * opt, int opt_char,
 }
 
 void
+sc_options_add_keyvalue (sc_options_t * opt,
+                         int opt_char, const char *opt_name,
+                         int *variable, const char *init_value,
+                         sc_keyvalue_t * keyvalue, const char *help_string)
+{
+  sc_option_item_t   *item;
+
+  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
+  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
+
+  /* we do not accept an invalid default value */
+  SC_ASSERT (variable != NULL);
+  SC_ASSERT (init_value != NULL);
+  SC_ASSERT (keyvalue != NULL);
+
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
+
+  item->opt_type = SC_OPTION_KEYVALUE;
+  item->opt_char = opt_char;
+  item->opt_name = opt_name;
+  item->opt_var = variable;
+  item->opt_fn = NULL;
+  item->has_arg = 1;
+  item->called = 0;
+  item->help_string = help_string;
+  item->user_data = keyvalue;
+
+  /* we will abort if the key does not point to a valid integer entry */
+  *variable = sc_keyvalue_get_int_check (keyvalue, init_value, NULL);
+  item->string_value = SC_STRDUP (init_value);
+}
+
+void
 sc_options_add_suboptions (sc_options_t * opt,
                            sc_options_t * subopt, const char *prefix)
 {
@@ -433,6 +466,13 @@ sc_options_add_suboptions (sc_options_t * opt,
       sc_options_add_callback (opt, '\0', *name, item->has_arg,
                                (sc_options_callback_t) item->opt_fn,
                                item->user_data, item->help_string);
+      break;
+    case SC_OPTION_KEYVALUE:
+      SC_ASSERT (item->string_value != NULL);
+      sc_options_add_keyvalue (opt, '\0', *name,
+                               (int *) item->opt_var, item->string_value,
+                               (sc_keyvalue_t *) item->user_data,
+                               item->help_string);
       break;
     default:
       SC_ABORT_NOT_REACHED ();
@@ -498,6 +538,10 @@ sc_options_print_usage (int package_id, int log_priority,
         provide_short = " <ARG>";
         provide_long = "=<ARG>";
       }
+      break;
+    case SC_OPTION_KEYVALUE:
+      provide_short = " <CHOICE>";
+      provide_long = "=<CHOICE>";
       break;
     default:
       SC_ABORT_NOT_REACHED ();
@@ -607,6 +651,11 @@ sc_options_print_summary (int package_id, int log_priority,
       }
       printed += snprintf (outbuf + printed, BUFSIZ - printed,
                            "%s", string_val);
+      break;
+    case SC_OPTION_KEYVALUE:
+      SC_ASSERT (item->string_value != NULL);
+      printed += snprintf (outbuf + printed, BUFSIZ - printed,
+                           "%s", item->string_value);
       break;
     default:
       SC_ABORT_NOT_REACHED ();
@@ -782,6 +831,26 @@ sc_options_load (int package_id, int err_priority,
         return -1;
       }
       break;
+    case SC_OPTION_KEYVALUE:
+      SC_ASSERT (item->string_value != NULL);
+      s = iniparser_getstring (dict, key, NULL);
+      if (s != NULL) {
+        /* lookup the key and see if the result is valid */
+        iserror = *(ivalue = (int *) item->opt_var);
+        *ivalue = sc_keyvalue_get_int_check ((sc_keyvalue_t *)
+                                             item->user_data, s, &iserror);
+        if (iserror) {
+          /* key not found or of the wrong type; this cannot be ignored */
+          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                       "Invalid key %s for option %s in file: %s\n",
+                       s, key, inifile);
+          iniparser_freedict (dict);
+          return -1;
+        }
+        SC_FREE (item->string_value);
+        item->string_value = SC_STRDUP (s);
+      }
+      break;
     default:
       SC_ABORT_NOT_REACHED ();
     }
@@ -926,6 +995,10 @@ sc_options_save (int package_id, int err_priority,
         retval = fprintf (file, "%s\n", "true");
       }
       break;
+    case SC_OPTION_KEYVALUE:
+      SC_ASSERT (item->string_value != NULL);
+      retval = fprintf (file, "%s\n", item->string_value);
+      break;
     default:
       SC_ABORT_NOT_REACHED ();
     }
@@ -970,10 +1043,11 @@ int
 sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
                   int argc, char **argv)
 {
-  int                 retval;
+  int                 retval, iserror;
   int                 position, printed;
   int                 c, option_index;
   int                 item_index = -1;
+  int                *ivalue;
   size_t              iz;
   long                ilong;
   long long           ilonglong;
@@ -1134,6 +1208,21 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
                     "Error in callback option\n");
 #endif
         retval = -1;            /* this ends option processing */
+      }
+      break;
+    case SC_OPTION_KEYVALUE:
+      SC_ASSERT (item->string_value != NULL);
+      iserror = *(ivalue = (int *) item->opt_var);
+      *ivalue = sc_keyvalue_get_int_check ((sc_keyvalue_t *) item->user_data,
+                                           optarg, &iserror);
+      if (iserror) {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Error looking up: %s\n", optarg);
+        retval = -1;            /* this ends option processing */
+      }
+      else {
+        SC_FREE (item->string_value);
+        item->string_value = SC_STRDUP (optarg);
       }
       break;
     default:

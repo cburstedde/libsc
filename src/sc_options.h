@@ -24,6 +24,7 @@
 #define SC_OPTIONS_H
 
 #include <sc_containers.h>
+#include <sc_keyvalue.h>
 
 SC_EXTERN_C_BEGIN;
 
@@ -36,7 +37,8 @@ typedef enum
   SC_OPTION_DOUBLE,
   SC_OPTION_STRING,
   SC_OPTION_INIFILE,
-  SC_OPTION_CALLBACK
+  SC_OPTION_CALLBACK,
+  SC_OPTION_KEYVALUE
 }
 sc_option_type_t;
 
@@ -181,6 +183,27 @@ void                sc_options_add_callback (sc_options_t * opt,
                                              int has_arg,
                                              sc_options_callback_t fn,
                                              void *data,
+                                             const char *help_string);
+
+/** Add an option that takes string keys into a lookup table of integers.
+ * \param [in] opt          Initialized options structure.
+ * \param [in] opt_char     Option character for command line, or 0.
+ * \param [in] opt_name     Name of the long option, or NULL.
+ * \param [in] variable     Address of an existing integer that holds
+ *                          the value of this option parameter.
+ * \param [in] init_value   The key that is looked up for the initial value.
+ * \param [in] keyvalue     A valid key-value structure where the values
+ *                          must be integers.  If a key is asked for that
+ *                          does not exist, we will produce an option error.
+ *                          This structure must stay alive as long as opt.
+ * \param [in] help_string  Instructive one-line string to explain the option.
+ */
+void                sc_options_add_keyvalue (sc_options_t * opt,
+                                             int opt_char,
+                                             const char *opt_name,
+                                             int *variable,
+                                             const char *init_value,
+                                             sc_keyvalue_t * keyvalue,
                                              const char *help_string);
 
 /**
