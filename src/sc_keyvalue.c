@@ -285,6 +285,44 @@ sc_keyvalue_get_pointer (sc_keyvalue_t * kv, const char *key, void *dvalue)
     return dvalue;
 }
 
+int
+sc_keyvalue_get_int_check (sc_keyvalue_t * kv, const char *key, int *status)
+{
+  int                 result;
+  int                 etype;
+  void              **found;
+  sc_keyvalue_entry_t svalue, *pvalue = &svalue;
+  sc_keyvalue_entry_t *value;
+
+  SC_ASSERT (kv != NULL);
+  SC_ASSERT (key != NULL);
+
+  result = (status != NULL) ? *status : 0;
+  etype = 1;
+  pvalue->key = key;
+  pvalue->type = SC_KEYVALUE_ENTRY_NONE;
+  if (sc_hash_lookup (kv->hash, pvalue, &found)) {
+    value = (sc_keyvalue_entry_t *) (*found);
+    if (value->type == SC_KEYVALUE_ENTRY_INT) {
+      etype = 0;
+      result = value->value.i;
+    }
+    else {
+      etype = 2;
+    }
+  }
+  if (status == NULL) {
+    if (etype != 0) {
+      SC_ABORTF ("Key-value lookup failed for %s\n", key);
+    }
+    /* Else we have found a value to return */
+  }
+  else {
+    *status = etype;
+  }
+  return result;
+}
+
 void
 sc_keyvalue_set_int (sc_keyvalue_t * kv, const char *key, int newvalue)
 {

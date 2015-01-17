@@ -66,7 +66,8 @@ sc_keyvalue_entry_type_t sc_keyvalue_unset (sc_keyvalue_t * kv,
                                             const char *key);
 
 /* Routines to extract values from keys
-   if the key is not present then dvalue is returned */
+   if the key is not present then a default value is returned
+   these functions assert that the key points to the correct type */
 int                 sc_keyvalue_get_int (sc_keyvalue_t * kv,
                                          const char *key, int dvalue);
 double              sc_keyvalue_get_double (sc_keyvalue_t * kv,
@@ -76,6 +77,22 @@ const char         *sc_keyvalue_get_string (sc_keyvalue_t * kv,
                                             const char *dvalue);
 void               *sc_keyvalue_get_pointer (sc_keyvalue_t * kv,
                                              const char *key, void *dvalue);
+
+/** Query a key with error checking.
+ * An error occurs when the key is not found or when it is of the wrong type.
+ * A default value to be returned on error can be provided as *status.
+ * \param [in] kv           Valid key-value table.
+ * \param [in] key          Non-NULL key string.
+ * \param [in,out] status   If NULL, abort the program on error.  Else, set to
+ *                          0 if there is no error,
+ *                          1 if the key is not found,
+ *                          2 if a value us found but its type is not integer,
+ *                          and return the input value *status on error.
+ * \return                  On error, the program either exits or we
+ *                          return *status.  Else return result of the lookup.
+ */
+int                 sc_keyvalue_get_int_check (sc_keyvalue_t * kv,
+                                               const char *key, int *status);
 
 /* Routines to set values for a given key */
 void                sc_keyvalue_set_int (sc_keyvalue_t * kv,
