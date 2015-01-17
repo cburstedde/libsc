@@ -77,8 +77,7 @@ main (int argc, char **argv)
   }
 
   /* cleanup */
-  sc_options_destroy (opt);
-  sc_keyvalue_destroy (priorities);
+  sc_options_destroy_deep (opt);
 
   sc_finalize ();
 

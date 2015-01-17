@@ -78,14 +78,21 @@ sc_options_t;
 typedef int         (*sc_options_callback_t) (sc_options_t * opt,
                                               const char *optarg, void *data);
 
-/**
- * Create an empty options structure.
+/** Create an empty options structure.
  * \param [in] program_path   Name or path name of the program.
  */
 sc_options_t       *sc_options_new (const char *program_path);
 
-/**
- * Destroy the options structure.
+/** Destroy the options structure and all allocated structures contained.
+ * The keyvalue structure passed into sc_keyvalue_add is destroyed.
+ * \param [in,out] opt          This options structure is deallocated,
+ *                              including all objects referenced.
+ */
+void                sc_options_destroy_deep (sc_options_t * opt);
+
+/** Destroy the options structure.
+ * Whatever has been passed into sc_keyvalue_add is left alone.
+ * \param [in,out] opt          This options structure is deallocated.
  */
 void                sc_options_destroy (sc_options_t * opt);
 
