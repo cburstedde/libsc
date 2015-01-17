@@ -186,12 +186,15 @@ void                sc_options_add_callback (sc_options_t * opt,
                                              const char *help_string);
 
 /** Add an option that takes string keys into a lookup table of integers.
+ * On calling this function, it must be certain that the initial value exists.
  * \param [in] opt          Initialized options structure.
  * \param [in] opt_char     Option character for command line, or 0.
  * \param [in] opt_name     Name of the long option, or NULL.
  * \param [in] variable     Address of an existing integer that holds
  *                          the value of this option parameter.
  * \param [in] init_value   The key that is looked up for the initial value.
+ *                          It must be certain that the key exists
+ *                          and its value is of type integer.
  * \param [in] keyvalue     A valid key-value structure where the values
  *                          must be integers.  If a key is asked for that
  *                          does not exist, we will produce an option error.

@@ -79,17 +79,19 @@ void               *sc_keyvalue_get_pointer (sc_keyvalue_t * kv,
                                              const char *key, void *dvalue);
 
 /** Query a key with error checking.
- * An error occurs when the key is not found or when it is of the wrong type.
- * A default value to be returned on error can be provided as *status.
+ * We check whether the key is not found or it is of the wrong type.
+ * A default value to be returned on error can be passed in as *status.
+ * If status is NULL, then the result on error is undefined.
  * \param [in] kv           Valid key-value table.
  * \param [in] key          Non-NULL key string.
- * \param [in,out] status   If NULL, abort the program on error.  Else, set to
+ * \param [in,out] status   If not NULL, set to
  *                          0 if there is no error,
  *                          1 if the key is not found,
- *                          2 if a value us found but its type is not integer,
+ *                          2 if a value is found but its type is not integer,
  *                          and return the input value *status on error.
- * \return                  On error, the program either exits or we
- *                          return *status.  Else return result of the lookup.
+ * \return                  On error we return *status if status is not NULL,
+ *                          and else an undefined value backed by an assertion.
+ *                          Without error, return the result of the lookup.
  */
 int                 sc_keyvalue_get_int_check (sc_keyvalue_t * kv,
                                                const char *key, int *status);

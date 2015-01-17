@@ -402,7 +402,7 @@ sc_options_add_keyvalue (sc_options_t * opt,
   item->help_string = help_string;
   item->user_data = keyvalue;
 
-  /* we will abort if the key does not point to a valid integer entry */
+  /* we expect that the key points to a valid integer entry by design */
   *variable = sc_keyvalue_get_int_check (keyvalue, init_value, NULL);
   item->string_value = SC_STRDUP (init_value);
 }

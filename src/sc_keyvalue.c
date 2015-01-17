@@ -297,7 +297,7 @@ sc_keyvalue_get_int_check (sc_keyvalue_t * kv, const char *key, int *status)
   SC_ASSERT (kv != NULL);
   SC_ASSERT (key != NULL);
 
-  result = (status != NULL) ? *status : 0;
+  result = (status != NULL) ? *status : INT_MIN;
   etype = 1;
   pvalue->key = key;
   pvalue->type = SC_KEYVALUE_ENTRY_NONE;
@@ -311,13 +311,8 @@ sc_keyvalue_get_int_check (sc_keyvalue_t * kv, const char *key, int *status)
       etype = 2;
     }
   }
-  if (status == NULL) {
-    if (etype != 0) {
-      SC_ABORTF ("Key-value lookup failed for %s\n", key);
-    }
-    /* Else we have found a value to return */
-  }
-  else {
+  SC_ASSERT (status != NULL || etype == 0);
+  if (status != NULL) {
     *status = etype;
   }
   return result;
