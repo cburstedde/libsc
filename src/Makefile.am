@@ -7,7 +7,7 @@
 libsc_generated_headers = src/sc_config.h
 libsc_installed_headers = \
         src/sc.h src/sc_mpi.h src/sc_containers.h src/sc_avl.h \
-        src/sc_unique_counter.h \
+        src/sc_string.h src/sc_unique_counter.h \
         src/sc_options.h src/sc_functions.h src/sc_statistics.h \
         src/sc_ranges.h src/sc_io.h \
         src/sc_amr.h src/sc_search.h src/sc_sort.h \
@@ -20,7 +20,7 @@ libsc_installed_headers = \
 libsc_internal_headers =
 libsc_compiled_sources = \
         src/sc.c src/sc_mpi.c src/sc_containers.c src/sc_avl.c \
-        src/sc_unique_counter.c \
+        src/sc_string.c src/sc_unique_counter.c \
         src/sc_options.c src/sc_functions.c src/sc_statistics.c \
         src/sc_ranges.c src/sc_io.c \
         src/sc_amr.c src/sc_search.c src/sc_sort.c \
