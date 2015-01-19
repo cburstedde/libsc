@@ -560,14 +560,16 @@ sc_options_print_usage (int package_id, int log_priority,
     outbuf[0] = '\0';
     printed = 0;
     if (item->opt_char != '\0' && item->opt_name != NULL) {
-      printed += snprintf (outbuf, BUFSIZ, "   -%c | --%s%s",
-                           item->opt_char, item->opt_name, separator);
+      printed +=
+        snprintf (outbuf + printed, BUFSIZ - printed, "   -%c | --%s%s",
+                  item->opt_char, item->opt_name, separator);
     }
     else if (item->opt_char != '\0') {
-      printed += snprintf (outbuf, BUFSIZ, "   -%c", item->opt_char);
+      printed += snprintf (outbuf + printed, BUFSIZ - printed, "   -%c",
+                           item->opt_char);
     }
     else if (item->opt_name != NULL) {
-      printed += snprintf (outbuf, BUFSIZ, "   --%s%s",
+      printed += snprintf (outbuf + printed, BUFSIZ - printed, "   --%s%s",
                            item->opt_name, separator);
     }
     else {
@@ -613,11 +615,14 @@ sc_options_print_summary (int package_id, int log_priority,
     if (item->opt_type == SC_OPTION_INIFILE) {
       continue;
     }
+    printed = 0;
     if (item->opt_name == NULL) {
-      printed = snprintf (outbuf, BUFSIZ, "   -%c: ", item->opt_char);
+      printed += snprintf (outbuf + printed, BUFSIZ - printed, "   -%c: ",
+                           item->opt_char);
     }
     else {
-      printed = snprintf (outbuf, BUFSIZ, "   %s: ", item->opt_name);
+      printed += snprintf (outbuf + printed, BUFSIZ - printed, "   %s: ",
+                           item->opt_name);
     }
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
