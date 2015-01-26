@@ -576,10 +576,10 @@ sc_options_print_usage (int package_id, int log_priority,
       SC_ABORT_NOT_REACHED ();
     }
     printed += snprintf (outbuf + printed, BUFSIZ - printed, "%*s%s",
-                         SC_MAX (1, 22 - printed), "", provide);
+                         SC_MAX (1, 19 - printed), "", provide);
     if (item->help_string != NULL) {
       printed += snprintf (outbuf + printed, BUFSIZ - printed, "%*s%s",
-                           SC_MAX (1, 32 - printed), "", item->help_string);
+                           SC_MAX (1, 33 - printed), "", item->help_string);
     }
     SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
