@@ -171,6 +171,59 @@ sc_dmatrix_new_view_offset (sc_bint_t o, sc_bint_t m, sc_bint_t n,
 }
 
 sc_dmatrix_t       *
+sc_dmatrix_new_view_column (sc_dmatrix_t * orig, sc_bint_t j)
+{
+  sc_dmatrix_t       *rdm;
+
+  SC_ASSERT (orig->m >= 0);
+  SC_ASSERT (0 <= j && j < orig->n);
+
+  rdm = SC_ALLOC (sc_dmatrix_t, 1);
+  sc_dmatrix_new_e (rdm, orig->m, orig->n, orig->e[0] + j);
+  rdm->n = 1;
+  rdm->view = 1;
+
+  return rdm;
+}
+
+void
+sc_dmatrix_view_set_column (sc_dmatrix_t * view,
+                            sc_dmatrix_t * orig, sc_bint_t j)
+{
+  const sc_bint_t     m = view->m;
+  sc_bint_t           i;
+
+  SC_ASSERT (view->view);
+  SC_ASSERT (view->m == orig->m);
+  SC_ASSERT (orig->m >= 0);
+  SC_ASSERT (0 <= j && j < orig->n);
+
+  view->e[0] = orig->e[0] + j;
+
+  if (m > 0) {
+    for (i = 1; i < m; ++i)
+      view->e[i] = view->e[i - 1] + orig->n;
+
+    view->e[m] = NULL;          /* safeguard */
+  }
+
+  view->n = 1;
+}
+
+void
+sc_dmatrix_view_set_row (sc_dmatrix_t * view,
+                         sc_dmatrix_t * orig, sc_bint_t i)
+{
+  SC_ASSERT (view->view);
+  SC_ASSERT (view->m == 1);
+  SC_ASSERT (orig->n >= 0);
+  SC_ASSERT (0 <= i && i < orig->m);
+
+  view->e[0] = orig->e[i];
+  view->n = orig->n;
+}
+
+sc_dmatrix_t       *
 sc_dmatrix_clone (const sc_dmatrix_t * X)
 {
   const sc_bint_t     totalsize = X->m * X->n;

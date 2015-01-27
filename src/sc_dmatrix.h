@@ -92,6 +92,38 @@ sc_dmatrix_t       *sc_dmatrix_new_view_offset (sc_bint_t o,
                                                 sc_bint_t m, sc_bint_t n,
                                                 sc_dmatrix_t * orig);
 
+/** Create a matrix view onto one column of an existing sc_dmatrix_t.
+ * \param [in] orig     This matrix (or view) must have at least one column.
+ *                      Its \b jth column is returned as a view.
+ * \param [in] j        Valid column index into \b orig.
+ * \return              A matrix of as many rows as \orig and one column
+ *                      whose entries point at the jth column of \b orig.
+ */
+sc_dmatrix_t       *sc_dmatrix_new_view_column (sc_dmatrix_t * orig,
+                                                sc_bint_t j);
+
+/** Change a matrix view to point at a single column of another matrix.
+ * \param [in,out] view     This must be a view and is modified in place.
+ *                          It must have the same number of rows as \b orig.
+ *                          On return, its number of columns will be one.
+ * \param [in] orig         The \b jth column of this matrix is viewed.
+ * \param [in] j            Valid column index into \b orig.
+ */
+void                sc_dmatrix_view_set_column (sc_dmatrix_t * view,
+                                                sc_dmatrix_t * orig,
+                                                sc_bint_t j);
+
+/** Change a matrix view to point at a single row of another matrix.
+ * \param [in,out] view     This must be a view and is modified in place.
+ *                          It must have precisely one row.  On return,
+ *                          its number of columns will match \b orig.
+ * \param [in] orig         The \b jth row of this matrix is viewed.
+ * \param [in] j            Valid row index into \b orig.
+ */
+void                sc_dmatrix_view_set_row (sc_dmatrix_t * view,
+                                             sc_dmatrix_t * orig,
+                                             sc_bint_t i);
+
 /** Reshape a matrix to different m and n without changing m * n.
  */
 void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m,
