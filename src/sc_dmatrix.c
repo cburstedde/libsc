@@ -752,7 +752,7 @@ sc_dmatrix_write (const sc_dmatrix_t * dmatrix, FILE * fp)
 }
 
 sc_dmatrix_pool_t  *
-sc_dmatrix_pool_new (int m, int n)
+sc_dmatrix_pool_new (sc_bint_t m, sc_bint_t n)
 {
   sc_dmatrix_pool_t  *dmpool;
 
