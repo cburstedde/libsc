@@ -37,6 +37,12 @@ typedef struct sc_keyvalue_entry
 }
 sc_keyvalue_entry_t;
 
+struct sc_keyvalue
+{
+  sc_hash_t          *hash;
+  sc_mempool_t       *value_allocator;
+};
+
 static unsigned
 sc_keyvalue_entry_hash (const void *v, const void *u)
 {
