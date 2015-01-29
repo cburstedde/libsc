@@ -50,17 +50,34 @@ typedef struct sc_string
 sc_string_t;
 
 /** Initialize to an empty string.
+ * This function can be used to reset a non-empty string to be empty again.
  * \param [out] scs             After returning, a valid object
  *                              containing the empty string.
  */
 void                sc_string_init (sc_string_t * scs);
 
-/** Append to the string object.
+/** Append a single character to the string buffer object.
+ * \param [in,out] scs          A valid string buffer object.
+ * \param [in] c                Converted to an unsigned char and appended.
+ * \return                      Zero if the character has been appended and
+ *                              a negative value when the input was truncated.
+ */
+int                 sc_string_putc (sc_string_t * scs, int c);
+
+/** Append a string to the string buffer object.
+ * \param [in,out] scs          A valid string buffer object.
+ * \param [in] s                This string is appended to the string buffer.
+ * \return                      Zero if the string has been appended and
+ *                              a negative value when the input was truncated.
+ */
+int                 sc_string_append (sc_string_t * scs, const char * s);
+
+/** Append to the string object using a format string and arguments.
  * The maximum length will not be exceeded.
  * The string object will remain valid even on truncated input.
  * \param [in,out] scs          Valid string object that is appended to.
  * \param [in] fmt              Format string as used with printf and friends.
- * \return                      Zero of everything has been appended and a
+ * \return                      Zero if everything has been appended and a
  *                              negative value when the input was truncated.
  */
 int                 sc_string_appendf (sc_string_t * scs,
@@ -70,13 +87,13 @@ int                 sc_string_appendf (sc_string_t * scs,
 #endif
   ;
 
-/** Append to the string object.
+/** Append to the string object using a format string and a vararg pointer.
  * The maximum length will not be exceeded.
  * The string object will remain valid even on truncated input.
  * \param [in,out] scs          Valid string object that is appended to.
  * \param [in] fmt              Format string as used with printf and friends.
  * \param [in,out] ap           Argument list pointer as defined in stdarg.h.
- * \return                      Zero of everything has been appended and a
+ * \return                      Zero if everything has been appended and a
  *                              negative value when the input was truncated.
  */
 int                 sc_string_vappendf (sc_string_t * scs,

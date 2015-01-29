@@ -32,6 +32,18 @@ sc_string_init (sc_string_t * scs)
 }
 
 int
+sc_string_putc (sc_string_t * scs, int c)
+{
+  return sc_string_appendf (scs, "%c", c);
+}
+
+int
+sc_string_append (sc_string_t * scs, const char * s)
+{
+  return sc_string_appendf (scs, "%s", s);
+}
+
+int
 sc_string_appendf (sc_string_t * scs, const char *fmt, ...)
 {
   int                 result;
