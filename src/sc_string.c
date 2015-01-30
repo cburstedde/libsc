@@ -34,17 +34,17 @@ sc_string_init (sc_string_t * scs)
 int
 sc_string_putc (sc_string_t * scs, int c)
 {
-  return sc_string_appendf (scs, "%c", c);
+  return sc_string_putf (scs, "%c", c);
 }
 
 int
-sc_string_append (sc_string_t * scs, const char * s)
+sc_string_puts (sc_string_t * scs, const char *s)
 {
-  return sc_string_appendf (scs, "%s", s);
+  return sc_string_putf (scs, "%s", s);
 }
 
 int
-sc_string_appendf (sc_string_t * scs, const char *fmt, ...)
+sc_string_putf (sc_string_t * scs, const char *fmt, ...)
 {
   int                 result;
   va_list             val;
@@ -53,14 +53,14 @@ sc_string_appendf (sc_string_t * scs, const char *fmt, ...)
   SC_ASSERT (0 <= scs->printed && scs->printed < SC_STRING_SIZE);
 
   va_start (val, fmt);
-  result = sc_string_vappendf (scs, fmt, val);
+  result = sc_string_putv (scs, fmt, val);
   va_end (val);
 
   return result;
 }
 
 int
-sc_string_vappendf (sc_string_t * scs, const char *fmt, va_list ap)
+sc_string_putv (sc_string_t * scs, const char *fmt, va_list ap)
 {
   int                 remain, result;
 

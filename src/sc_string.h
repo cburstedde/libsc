@@ -70,7 +70,7 @@ int                 sc_string_putc (sc_string_t * scs, int c);
  * \return                      Zero if the string has been appended and
  *                              a negative value when the input was truncated.
  */
-int                 sc_string_append (sc_string_t * scs, const char * s);
+int                 sc_string_puts (sc_string_t * scs, const char *s);
 
 /** Append to the string object using a format string and arguments.
  * The maximum length will not be exceeded.
@@ -80,12 +80,8 @@ int                 sc_string_append (sc_string_t * scs, const char * s);
  * \return                      Zero if everything has been appended and a
  *                              negative value when the input was truncated.
  */
-int                 sc_string_appendf (sc_string_t * scs,
-                                       const char *fmt, ...)
-#ifndef SC_DOXYGEN
-  __attribute__ ((format (printf, 2, 3)))
-#endif
-  ;
+int                 sc_string_putf (sc_string_t * scs, const char *fmt, ...)
+  __attribute__ ((format (printf, 2, 3)));
 
 /** Append to the string object using a format string and a vararg pointer.
  * The maximum length will not be exceeded.
@@ -96,8 +92,8 @@ int                 sc_string_appendf (sc_string_t * scs,
  * \return                      Zero if everything has been appended and a
  *                              negative value when the input was truncated.
  */
-int                 sc_string_vappendf (sc_string_t * scs,
-                                        const char *fmt, va_list ap);
+int                 sc_string_putv (sc_string_t * scs, const char *fmt,
+                                    va_list ap);
 
 /** Access content of the string buffer.
  * \param [in] scs              Valid sc_string object.
