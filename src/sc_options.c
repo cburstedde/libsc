@@ -60,6 +60,8 @@ struct sc_options
   char                program_path[BUFSIZ];
   const char         *program_name;
   sc_array_t         *option_items;
+  int                 space_type;
+  int                 space_help;
   int                 args_alloced;
   int                 first_arg;
   int                 argc;
@@ -68,6 +70,9 @@ struct sc_options
 };
 
 static char        *sc_iniparser_invalid_key = (char *) -1;
+
+static const int    sc_options_space_type = 19;
+static const int    sc_options_space_help = 33;
 
 static int
 sc_iniparser_getint (dictionary * d, const char *key, int notfound,
@@ -180,6 +185,9 @@ sc_options_new (const char *program_path)
   opt->argc = 0;
   opt->argv = NULL;
 
+  /* set default spacing for printing option summary */
+  sc_options_set_spacing (opt, -1, -1);
+
   return opt;
 }
 
@@ -224,6 +232,15 @@ void
 sc_options_destroy (sc_options_t * opt)
 {
   sc_options_destroy_internal (opt, 0);
+}
+
+void
+sc_options_set_spacing (sc_options_t * opt, int space_type, int space_help)
+{
+  SC_ASSERT (opt != NULL);
+
+  opt->space_type = space_type < 0 ? sc_options_space_type : space_type;
+  opt->space_help = space_help < 0 ? sc_options_space_help : space_help;
 }
 
 void
@@ -617,10 +634,11 @@ sc_options_print_usage (int package_id, int log_priority,
       SC_ABORT_NOT_REACHED ();
     }
     printed += snprintf (outbuf + printed, BUFSIZ - printed, "%*s%s",
-                         SC_MAX (1, 19 - printed), "", provide);
+                         SC_MAX (1, opt->space_type - printed), "", provide);
     if (item->help_string != NULL) {
       printed += snprintf (outbuf + printed, BUFSIZ - printed, "%*s%s",
-                           SC_MAX (1, 33 - printed), "", item->help_string);
+                           SC_MAX (1, opt->space_help - printed), "",
+                           item->help_string);
     }
     SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
   }
@@ -658,13 +676,15 @@ sc_options_print_summary (int package_id, int log_priority,
     }
     printed = 0;
     if (item->opt_name == NULL) {
-      printed += snprintf (outbuf + printed, BUFSIZ - printed, "   -%c: ",
+      printed += snprintf (outbuf + printed, BUFSIZ - printed, "   -%c",
                            item->opt_char);
     }
     else {
-      printed += snprintf (outbuf + printed, BUFSIZ - printed, "   %s: ",
+      printed += snprintf (outbuf + printed, BUFSIZ - printed, "   %s",
                            item->opt_name);
     }
+    printed += snprintf (outbuf + printed, BUFSIZ - printed, "%*s",
+                         SC_MAX (1, opt->space_type - printed), "");
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
       bvalue = *(int *) item->opt_var;

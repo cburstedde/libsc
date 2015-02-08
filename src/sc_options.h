@@ -65,6 +65,20 @@ void                sc_options_destroy_deep (sc_options_t * opt);
  */
 void                sc_options_destroy (sc_options_t * opt);
 
+/** Set the spacing for \ref sc_options_print_summary.
+ * There are two values to be set: the spacing from the beginning of the
+ * printed line to the type of the option variable, and from the beginning
+ * of the printed line to the help string.
+ * \param [in,out] opt          Valid options structure.
+ * \param [in] space_type       Number of spaces to the type display, for
+ *                              example \<INT\>, \<STRING\>, etc.
+ *                              Setting this negative sets the default 19.
+ * \param [in] space_help       Number of space to the help string.
+ *                              Setting this negative sets the default 33.
+ */
+void                sc_options_set_spacing (sc_options_t * opt,
+                                            int space_type, int space_help);
+
 /** Add a switch option. This option is used without option arguments.
  * Every use increments the variable by one.  Its initial value is 0.
  * Either opt_char or opt_name must be valid, that is, not '\0'/NULL.
