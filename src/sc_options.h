@@ -72,9 +72,9 @@ void                sc_options_destroy (sc_options_t * opt);
  * \param [in,out] opt          Valid options structure.
  * \param [in] space_type       Number of spaces to the type display, for
  *                              example \<INT\>, \<STRING\>, etc.
- *                              Setting this negative sets the default 19.
+ *                              Setting this negative sets the default 20.
  * \param [in] space_help       Number of space to the help string.
- *                              Setting this negative sets the default 33.
+ *                              Setting this negative sets the default 32.
  */
 void                sc_options_set_spacing (sc_options_t * opt,
                                             int space_type, int space_help);

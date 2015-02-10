@@ -71,8 +71,8 @@ struct sc_options
 
 static char        *sc_iniparser_invalid_key = (char *) -1;
 
-static const int    sc_options_space_type = 19;
-static const int    sc_options_space_help = 33;
+static const int    sc_options_space_type = 20;
+static const int    sc_options_space_help = 32;
 
 static int
 sc_iniparser_getint (dictionary * d, const char *key, int notfound,
