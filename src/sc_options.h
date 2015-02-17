@@ -37,6 +37,7 @@ typedef struct sc_options sc_options_t;
 
 /** This callback can be invoked during sc_options_parse.
  * \param [in] opt      Valid options data structure.
+ *                      This is passed in case a file should be loaded.
  * \param [in] optarg   The option argument or NULL if there is none.
  * \param [in] data     User-defined data passed to sc_options_add_callback.
  * \return              Return 0 if successful, -1 on error.
@@ -176,6 +177,8 @@ void                sc_options_add_string (sc_options_t * opt,
 
 /** Add an option to read in a file in .ini format.
  * The argument to this option must be a filename.
+ * On parsing the specified file is read to set known option variables.
+ * It does not have an associated option variable itself.
  * \param [in,out] opt       A valid options structure.
  * \param [in] opt_char      Short option character, may be '\0'.
  * \param [in] opt_name      Long option name without initial dashes, may be NULL.
@@ -187,8 +190,14 @@ void                sc_options_add_inifile (sc_options_t * opt,
                                             const char *help_string);
 
 /** Add an option that calls a user-defined function when parsed.
- * The callback function should be implemented to allow multiple calls
- * where the last call determines the option's effect independent of previous ones.
+ * The callback function should be implemented to allow multiple calls.
+ * The option does not have an associated variable.
+ * The callback can be used to set multiple option variables in bulk that would
+ * otherwise require an inconvenient number of individual options.
+ * This is, however, currently not possible for options with
+ * string values or key-value pairs due to the way the API is set up.
+ * This function should not have non-option related side effects.
+ * This option is not loaded from or saved to files.
  * \param [in,out] opt      A valid options structure.
  * \param [in] opt_char     Short option character, may be '\0'.
  * \param [in] opt_name     Long option name without initial dashes, may be NULL.

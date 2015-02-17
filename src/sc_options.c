@@ -48,9 +48,9 @@ typedef struct
   void               *opt_var;
   void                (*opt_fn) (void);
   int                 has_arg;
-  int                 called;
+  int                 called;           /**< set to 0 and ignored */
   const char         *help_string;
-  char               *string_value;
+  char               *string_value;     /**< set on call but ignored */
   void               *user_data;
 }
 sc_option_item_t;
@@ -671,7 +671,8 @@ sc_options_print_summary (int package_id, int log_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
-    if (item->opt_type == SC_OPTION_INIFILE) {
+    if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
     printed = 0;
@@ -719,6 +720,7 @@ sc_options_print_summary (int package_id, int log_priority,
       printed += snprintf (outbuf + printed, BUFSIZ - printed,
                            "%s", string_val);
       break;
+#if 0
     case SC_OPTION_CALLBACK:
       if (item->called) {
         string_val = item->has_arg ? item->string_value : "true";
@@ -729,6 +731,7 @@ sc_options_print_summary (int package_id, int log_priority,
       printed += snprintf (outbuf + printed, BUFSIZ - printed,
                            "%s", string_val);
       break;
+#endif
     case SC_OPTION_KEYVALUE:
       SC_ASSERT (item->string_value != NULL);
       printed += snprintf (outbuf + printed, BUFSIZ - printed,
@@ -776,7 +779,6 @@ sc_options_load (int package_id, int err_priority,
   size_t             *zvalue;
   const char         *s, *key;
   char                skey[BUFSIZ], lkey[BUFSIZ];
-  sc_options_callback_t fn;
 
   dict = iniparser_load (inifile);
   if (dict == NULL) {
@@ -787,7 +789,8 @@ sc_options_load (int package_id, int err_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
-    if (item->opt_type == SC_OPTION_INIFILE) {
+    if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
 
@@ -887,6 +890,7 @@ sc_options_load (int package_id, int err_priority,
         *(const char **) item->opt_var = item->string_value = SC_STRDUP (s);
       }
       break;
+#if 0
     case SC_OPTION_CALLBACK:
       if (item->has_arg) {
         s = iniparser_getstring (dict, key, NULL);
@@ -908,6 +912,7 @@ sc_options_load (int package_id, int err_priority,
         return -1;
       }
       break;
+#endif
     case SC_OPTION_KEYVALUE:
       SC_ASSERT (item->string_value != NULL);
       s = iniparser_getstring (dict, key, NULL);
@@ -983,10 +988,8 @@ sc_options_save (int package_id, int err_priority,
     if (item->opt_type == SC_OPTION_STRING && item->string_value == NULL) {
       continue;
     }
-    if (item->opt_type == SC_OPTION_INIFILE) {
-      continue;
-    }
-    if (item->opt_type == SC_OPTION_CALLBACK && !item->called) {
+    if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
 
@@ -1063,6 +1066,7 @@ sc_options_save (int package_id, int err_priority,
     case SC_OPTION_STRING:
       retval = fprintf (file, "%s\n", item->string_value);
       break;
+#if 0
     case SC_OPTION_CALLBACK:
       if (item->has_arg) {
         SC_ASSERT (item->string_value != NULL);
@@ -1072,6 +1076,7 @@ sc_options_save (int package_id, int err_priority,
         retval = fprintf (file, "%s\n", "true");
       }
       break;
+#endif
     case SC_OPTION_KEYVALUE:
       SC_ASSERT (item->string_value != NULL);
       retval = fprintf (file, "%s\n", item->string_value);
@@ -1170,13 +1175,14 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       break;
     }
     if (c == '?') {             /* invalid option */
-      if (optopt == 0) {
+      if (optopt == '-' || !isprint (optopt)) {
         SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
-                    "Encountered invalid long option\n");
+                    "Invalid long option or missing argument\n");
       }
       else {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                     "Encountered invalid short option: -%c\n", optopt);
+                     "Invalid short option: -%c or missing argument\n",
+                     optopt);
       }
       retval = -1;
       break;
