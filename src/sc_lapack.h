@@ -40,17 +40,22 @@ extern const char   sc_jobzchar[];
 #ifdef SC_LAPACK
 
 #ifndef SC_F77_FUNC
-#ifdef __bgq__
-#define SC_F77_FUNC(small,CAPS) small
-#else
-#define SC_F77_FUNC(small,CAPS) small ## _
-#endif
+# if defined(__bgq__) //&& defined(__HAVE_ESSL)
+#   define SC_F77_FUNC(small,CAPS) small ## _
+#   define SC_F77_FUNC_NOESSL(small,CAPS) small
+# else
+#   define SC_F77_FUNC(small,CAPS) small ## _
+# endif
 #endif /* SC_F77_FUNC */
 
 #define LAPACK_DGELS   SC_F77_FUNC(dgels,DGELS)
 #define LAPACK_DGETRF  SC_F77_FUNC(dgetrf,DGETRF)
 #define LAPACK_DGETRS  SC_F77_FUNC(dgetrs,DGETRS)
-#define LAPACK_DSTEV   SC_F77_FUNC(dstev,DSTEV)
+#if defined(__bgq__) // && define(__HAVE_ESSL)
+# define LAPACK_DSTEV   SC_F77_FUNC_NOESSL(dstev,DSTEV)
+#else
+# define LAPACK_DSTEV   SC_F77_FUNC(dstev,DSTEV)
+#endif
 #define LAPACK_DTRSM   SC_F77_FUNC(dtrsm,DTRSM)
 #define LAPACK_DLAIC1  SC_F77_FUNC(dlaic1,DLAIC1)
 #define LAPACK_ILAENV  SC_F77_FUNC(ilaenv,ILAENV)
