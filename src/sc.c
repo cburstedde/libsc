@@ -285,6 +285,11 @@ sc_malloc (int package, size_t size)
   if (size > 0) {
     SC_CHECK_ABORTF (ret != NULL, "Allocation (malloc size %lli)",
                      (long long int) size);
+  }
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_lock (package);
+#endif
+  if (size > 0) {
     ++*malloc_count;
   }
   else {
@@ -307,6 +312,11 @@ sc_calloc (int package, size_t nmemb, size_t size)
   if (nmemb * size > 0) {
     SC_CHECK_ABORTF (ret != NULL, "Allocation (calloc size %lli)",
                      (long long int) size);
+  }
+#ifdef SC_ENABLE_PTHREAD
+  sc_package_lock (package);
+#endif
+  if (nmemb * size > 0) {
     ++*malloc_count;
   }
   else {
