@@ -529,6 +529,10 @@ size_t              sc_mempool_memory_used (sc_mempool_t * mempool);
  */
 sc_mempool_t       *sc_mempool_new (size_t elem_size);
 
+/** Same as sc_mempool_new(), but the mempool has already been allocated.
+ */
+void                sc_mempool_init (sc_mempool_t * mempool, size_t elem_size);
+
 /** Creates a new mempool structure with the zero_and_persist option on.
  * The memory of newly created elements is zero'd out, and the contents of an
  * element are not touched between freeing and re-returning it.
@@ -541,6 +545,9 @@ sc_mempool_t       *sc_mempool_new_zero_and_persist (size_t elem_size);
  * All elements that are still in use are invalidated.
  */
 void                sc_mempool_destroy (sc_mempool_t * mempool);
+
+/** Reset a mempool structure (destroy without deallocating) */
+void                sc_mempool_reset (sc_mempool_t * mempool);
 
 /** Invalidates all previously returned pointers, resets count to 0.
  */
