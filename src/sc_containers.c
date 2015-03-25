@@ -743,6 +743,16 @@ sc_containers_free (void *p)
 
 static void         (*obstack_chunk_free) (void *) = sc_containers_free;
 
+void
+sc_mempool_init (sc_mempool_t * mempool, size_t elem_size)
+{
+  mempool->elem_size = elem_size;
+  mempool->elem_count = 0;
+
+  obstack_init (&mempool->obstack);
+  sc_array_init (&mempool->freed, sizeof (void *));
+}
+
 sc_mempool_t       *
 sc_mempool_new (size_t elem_size)
 {
@@ -753,21 +763,22 @@ sc_mempool_new (size_t elem_size)
 
   mempool = SC_ALLOC (sc_mempool_t, 1);
 
-  mempool->elem_size = elem_size;
-  mempool->elem_count = 0;
-
-  obstack_init (&mempool->obstack);
-  sc_array_init (&mempool->freed, sizeof (void *));
+  sc_mempool_init (mempool, elem_size);
 
   return mempool;
 }
 
 void
-sc_mempool_destroy (sc_mempool_t * mempool)
+sc_mempool_reset (sc_mempool_t *mempool)
 {
   sc_array_reset (&mempool->freed);
   obstack_free (&mempool->obstack, NULL);
+}
 
+void
+sc_mempool_destroy (sc_mempool_t * mempool)
+{
+  sc_mempool_reset (mempool);
   SC_FREE (mempool);
 }
 

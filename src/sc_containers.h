@@ -501,10 +501,14 @@ size_t              sc_mempool_memory_used (sc_mempool_t * mempool);
  */
 sc_mempool_t       *sc_mempool_new (size_t elem_size);
 
+void                sc_mempool_init (sc_mempool_t * mempool, size_t elem_size);
+
 /** Destroys a mempool structure.
  * All elements that are still in use are invalidated.
  */
 void                sc_mempool_destroy (sc_mempool_t * mempool);
+
+void                sc_mempool_reset (sc_mempool_t * mempool);
 
 /** Invalidates all previously returned pointers, resets count to 0.
  */
