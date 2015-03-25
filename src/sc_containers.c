@@ -149,8 +149,6 @@ sc_array_reset (sc_array_t * array)
   array->byte_alloc = 0;
 }
 
-#ifdef SC_USE_REALLOC
-
 void
 sc_array_truncate (sc_array_t * array)
 {
@@ -163,6 +161,8 @@ sc_array_truncate (sc_array_t * array)
   memset (array->array, -1, array->byte_alloc);
 #endif
 }
+
+#ifdef SC_USE_REALLOC
 
 void
 sc_array_resize (sc_array_t * array, size_t new_count)
@@ -232,7 +232,7 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   size_t              oldoffs, newoffs;
   size_t              roundup, newsize;
 #ifdef SC_DEBUG
-  size_t              i;
+  size_t              i, minoffs;
 #endif
 
   if (!SC_ARRAY_IS_OWNER (array)) {
@@ -280,7 +280,9 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   array->array = ptr;
 
 #ifdef SC_DEBUG
-  memset (array->array + oldoffs, -1, newsize - oldoffs);
+  minoffs = SC_MIN (oldoffs, newoffs);
+  SC_ASSERT (minoffs <= newsize);
+  memset (array->array + minoffs, -1, newsize - minoffs);
 #endif
 }
 
