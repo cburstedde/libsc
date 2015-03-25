@@ -35,6 +35,8 @@ See sc.h for possible log priorities in --enable-logging=PRIO])
                esac])
 SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
+SC_ARG_ENABLE([realloc], [use realloc in array and dmatrix resize],
+              [USE_REALLOC])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 SC_ARG_WITH_BUILTIN_ALL
 

@@ -212,7 +212,14 @@ sc_dmatrix_resize (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
   newsize = m * n;
 
   if (!dmatrix->view && size != newsize) {
+#ifdef SC_USE_REALLOC
     data = SC_REALLOC (dmatrix->e[0], double, newsize);
+#else
+    data = SC_ALLOC (double, newsize);
+    memcpy (data, dmatrix->e[0],
+            (size_t) SC_MIN (newsize, size) * sizeof (double));
+    SC_FREE (dmatrix->e[0]);
+#endif
   }
   else {
     /* for views you must know that data is large enough */
@@ -244,7 +251,14 @@ sc_dmatrix_resize_in_place (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
     }
   }
   if (newsize != size) {
+#ifdef SC_USE_REALLOC
     data = SC_REALLOC (dmatrix->e[0], double, newsize);
+#else
+    data = SC_ALLOC (double, newsize);
+    memcpy (data, dmatrix->e[0],
+            (size_t) SC_MIN (newsize, size) * sizeof (double));
+    SC_FREE (dmatrix->e[0]);
+#endif
   }
   if (n > old_n) {
     for (i = min_m - 1; i > 0; i--) {
