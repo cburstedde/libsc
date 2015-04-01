@@ -281,7 +281,12 @@ sc_malloc (int package, size_t size)
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
 
+#if defined(__bgq__)
+  size_t alignment = 32;
+  posix_memalign( &ret , alignment , size );
+#else
   ret = malloc (size);
+#endif
   if (size > 0) {
     SC_CHECK_ABORT (ret != NULL, "Allocation");
   }
