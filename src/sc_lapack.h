@@ -41,7 +41,8 @@ extern const char   sc_jobzchar[];
 
 #ifndef SC_F77_FUNC
 # if defined(__bgq__) //&& defined(__HAVE_ESSL)
-#   define SC_F77_FUNC(small,CAPS) small ## _
+#   define SC_F77_FUNC(small,CAPS) small
+//#   define SC_F77_FUNC(small,CAPS) small ## _ // TODO - FIX THIS FOR NOW WE DO NOT USE ESSL
 #   define SC_F77_FUNC_NOESSL(small,CAPS) small
 # else
 #   define SC_F77_FUNC(small,CAPS) small ## _

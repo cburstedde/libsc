@@ -25,7 +25,7 @@
 
 #include <sc.h>
 #if defined(__bgq__)
-# include "essl.h"
+//# include "essl.h" // TODO - FOR NOW WE DO NOT USE ESSL
 #endif
 
 SC_EXTERN_C_BEGIN;
