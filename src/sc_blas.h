@@ -80,7 +80,8 @@ extern const char   sc_cmachchar[];
 
 #ifndef SC_F77_FUNC
 # if defined(__bgq__) //&& defined(__HAVE_ESSL)
-#   define SC_F77_FUNC(small,CAPS) small ## _
+#   define SC_F77_FUNC(small,CAPS) small
+//#   define SC_F77_FUNC(small,CAPS) small ## _ // TODO - For now we do not use ESSL
 #   define SC_F77_FUNC_NOESSL(small,CAPS) small
 # else
 #   define SC_F77_FUNC(small,CAPS) small ## _
