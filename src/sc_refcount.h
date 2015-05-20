@@ -1,4 +1,4 @@
-﻿/*
+/*
   This file is part of the SC Library.
   The SC Library provides support for parallel scientific applications.
 
@@ -22,12 +22,10 @@
 
 /** \file sc_refcount.h
  *
- *  Provide reference counting facilities.
- */
-
-/*
- * The idea is not so much to enable garbage collection but rather
- * to ensure that no objects are referenced after their deallocation.
+ * Provide reference counting facilities.
+ * The functions in this file can be used for multiple purposes.
+ * The current setup is not so much targeted at garbage collection but rather
+ * intended for debugging and verification.
  */
 
 #ifndef SC_REFCOUNT_H
@@ -37,51 +35,62 @@
 
 SC_EXTERN_C_BEGIN;
 
-/* Macros for refcount management */
-
-#define SC_REFCOUNT_GET_N_ACTIVE() sc_refcount_get_n_active ();
-#define SC_REFCOUNT_INIT(rc)       sc_refcount_init (sc_package_id,rc);
-#define SC_REFCOUNT_NEW ()         sc_refcount_new (sc_package_id);
-#define SC_REFCOUNT_DESTROY (rc)   sc_refcount_destroy (rc);
-#define SC_REFCOUNT_REF (rc)       sc_refcount_ref (sc_package_id,rc);
-#define SC_REFCOUNT_UNREF (rc)     sc_refcount_unref (sc_package_id,rc);
-
+/** The refcount structure is declared in public so its size is known. */
 typedef struct sc_refcount
 {
+  /** Package id that is used for locking; see \ref sc_package_register. */
+  int                 package_id;
+
+  /** The reference count is always positive for a valid counter. */
   int                 refcount;
 }
 sc_refcount_t;
 
-/* Functions for refcount management */
-
-/** Return the number of reference counters that are active.
+/** Return the number of reference counters that are active globally.
+ * This function is thread safe if configured with --enable-pthread.
+ * \return          The number of active (that is legal) reference counters.
  */
 int                 sc_refcount_get_n_active (void);
 
 /** Initialize a reference counter to 1.
  * It is legal if its status prior to this call is undefined.
+ * \param [out] rc          This reference counter is initialized to one.
+ *                          The object's contents may be undefined on input.
+ * \param [in] package_id   A package id from \ref sc_package_register.
  */
-void                sc_refcount_init (int package, sc_refcount_t * rc);
+void                sc_refcount_init (sc_refcount_t * rc, int package_id);
 
 /** Create a new reference counter with count initialized to 1.
- * Equivalent to calling sc_refcount_init on a newly allocated refcount_t.
+ * Equivalent to calling \ref sc_refcount_init on a newly allocated refcount_t
+ * object.
+ * \param [in] package_id   A package id from \ref sc_package_register.
+ * \return                  A reference counter with count one.
  */
-sc_refcount_t      *sc_refcount_new (int package);
+sc_refcount_t      *sc_refcount_new (int package_id);
 
-/** Destroy a reference counter.  It must have count 0.
+/** Destroy a reference counter.
+ * It must have been count down to zero before, thus reached an inactive state.
+ * \param [in,out] rc       This reference counter must have reached count zero.
  */
 void                sc_refcount_destroy (sc_refcount_t * rc);
 
-/** Increase the reference count by 1.  The count must already be greater zero.
+/** Increase a reference counter.
+ * The counter must be active, that is, have a value greater than zero.
+ * \param [in,out] rc       This reference counter must be valid (greater zero).
+ *                          Its count is increased by one.
  */
-void                sc_refcount_ref (int package, sc_refcount_t * rc);
+void                sc_refcount_ref (sc_refcount_t * rc);
 
-/** Decrease the reference count by 1.  The count must thus be greater zero.
- * If the reference count has reached zero, which is known by the return value,
- * the counter may be reactivated later by calling sc_refcount_init.
+/** Decrease the reference counter and notify when it reaches zero.
+ * The count must be greater zero on input.  If the reference count reaches
+ * zero, which is indicated by the return value, the counter may not be used
+ * furter with \ref sc_refcount_ref or \see sc_refcount_unref.  It is legal
+ * however to reactivate it later by calling \see sc_refcount_init.
+ * \param [in,out] rc       This reference counter must be valid (greater zero).
+ *                          Its count is decreased by one.
  * \return          True if the count has reached zero, false otherwise.
  */
-int                 sc_refcount_unref (int package, sc_refcount_t * rc);
+int                 sc_refcount_unref (sc_refcount_t * rc);
 
 SC_EXTERN_C_END;
 
