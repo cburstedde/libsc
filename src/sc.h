@@ -527,6 +527,28 @@ int                 sc_package_register (sc_log_handler_t log_handler,
  */
 int                 sc_package_is_registered (int package_id);
 
+/** Acquire a pthread mutex lock.
+ * If configured without --enable-pthread, this function does nothing.
+ * This function must be followed with a matching \ref sc_package_unlock.
+ * \param [in] package_id       Either -1 for an undefined package or
+ *                              an id returned from \ref sc_package_register.
+ *                              Depending on the value, the appropriate mutex
+ *                              is chosen.  Thus, we may overlap locking calls
+ *                              with distinct package_id.
+ */
+void                sc_package_lock (int package_id);
+
+/** Release a pthread mutex lock.
+ * If configured without --enable-pthread, this function does nothing.
+ * This function must be follow a matching \ref sc_package_lock.
+ * \param [in] package_id       Either -1 for an undefined package or
+ *                              an id returned from \ref sc_package_register.
+ *                              Depending on the value, the appropriate mutex
+ *                              is chosen.  Thus, we may overlap locking calls
+ *                              with distinct package_id.
+ */
+void                sc_package_unlock (int package_id);
+
 /** Set the logging verbosity of a registered package.
  * This can be called at any point in the program, any number of times.
  * It can only lower the verbosity at and below the value of SC_LP_THRESHOLD.
