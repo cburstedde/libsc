@@ -142,27 +142,31 @@ sc_package_mutex (int package)
   }
 }
 
-static inline void
+#endif /* SC_ENABLE_PTHREAD */
+
+void
 sc_package_lock (int package)
 {
+#ifdef SC_ENABLE_PTHREAD
   pthread_mutex_t    *mutex = sc_package_mutex (package);
   int                 pth;
 
   pth = pthread_mutex_lock (mutex);
   sc_check_abort_thread (pth == 0, package, "sc_package_lock");
+#endif
 }
 
-static inline void
+void
 sc_package_unlock (int package)
 {
+#ifdef SC_ENABLE_PTHREAD
   pthread_mutex_t    *mutex = sc_package_mutex (package);
   int                 pth;
 
   pth = pthread_mutex_unlock (mutex);
   sc_check_abort_thread (pth == 0, package, "sc_package_unlock");
+#endif
 }
-
-#endif /* SC_ENABLE_PTHREAD */
 
 static void
 sc_signal_handler (int sig)
