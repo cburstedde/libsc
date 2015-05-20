@@ -31,30 +31,31 @@ sc_refcount_get_n_active (void)
 }
 
 void
-sc_refcount_init (sc_refcount_t * rc, int package_id)
+sc_refcount_init (sc_refcount_t * rc)
 {
-  SC_ASSERT (rc != NULL);
-  SC_ASSERT (sc_package_is_registered (package_id));
+#ifdef SC_ENABLE_DEBUG
+  int                 valid;
+#endif
 
-  rc->package_id = package_id;
+  SC_ASSERT (rc != NULL);
+
   rc->refcount = 1;
 
-#ifdef SC_ENABLE_PTHREAD
-  sc_package_lock (package_id);
+#ifdef SC_ENABLE_DEBUG
+  sc_package_lock (sc_package_id);
+  valid = sc_refcount_n_active++ >= 0;
+  sc_package_unlock (sc_package_id);
 #endif
-  ++sc_refcount_n_active;
-#ifdef SC_ENABLE_PTHREAD
-  sc_package_unlock (package_id);
-#endif
+  SC_ASSERT (valid);
 }
 
 sc_refcount_t      *
-sc_refcount_new (int package_id)
+sc_refcount_new (void)
 {
   sc_refcount_t      *rc;
 
   rc = SC_ALLOC (sc_refcount_t, 1);
-  sc_refcount_init (rc, package_id);
+  sc_refcount_init (rc);
 
   return rc;
 }
@@ -63,7 +64,6 @@ void
 sc_refcount_destroy (sc_refcount_t * rc)
 {
   SC_ASSERT (rc != NULL);
-  SC_ASSERT (sc_package_is_registered (rc->package_id));
   SC_ASSERT (rc->refcount == 0);
 
   SC_FREE (rc);
@@ -73,7 +73,6 @@ void
 sc_refcount_ref (sc_refcount_t * rc)
 {
   SC_ASSERT (rc != NULL);
-  SC_ASSERT (sc_package_is_registered (rc->package_id));
   SC_ASSERT (rc->refcount > 0);
 
   ++rc->refcount;
@@ -82,18 +81,20 @@ sc_refcount_ref (sc_refcount_t * rc)
 int
 sc_refcount_unref (sc_refcount_t * rc)
 {
+#ifdef SC_ENABLE_DEBUG
+  int                 valid;
+#endif
+
   SC_ASSERT (rc != NULL);
-  SC_ASSERT (sc_package_is_registered (rc->package_id));
   SC_ASSERT (rc->refcount > 0);
 
   if (--rc->refcount == 0) {
-#ifdef SC_ENABLE_PTHREAD
-    sc_package_lock (package_id);
+#ifdef SC_ENABLE_DEBUG
+    sc_package_lock (sc_package_id);
+    valid = --sc_refcount_n_active >= 0;
+    sc_package_unlock (sc_package_id);
 #endif
-    --sc_refcount_n_active;
-#ifdef SC_ENABLE_PTHREAD
-    sc_package_unlock (package_id);
-#endif
+    SC_ASSERT (valid);
     return 1;
   }
   else {
