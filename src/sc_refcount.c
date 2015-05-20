@@ -22,12 +22,25 @@
 
 #include <sc_refcount.h>
 
+#ifdef SC_ENABLE_DEBUG
 static int          sc_refcount_n_active = 0;
+#endif
 
 int
 sc_refcount_get_n_active (void)
 {
-  return sc_refcount_n_active;
+#ifdef SC_ENABLE_DEBUG
+  int                 retval;
+
+  sc_package_lock (sc_package_id);
+  retval = sc_refcount_n_active;
+  sc_package_unlock (sc_package_id);
+  SC_ASSERT (retval >= 0);
+
+  return retval;
+#else
+  return 0;
+#endif
 }
 
 void
