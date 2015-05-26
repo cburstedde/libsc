@@ -35,39 +35,36 @@
 
 SC_EXTERN_C_BEGIN;
 
-/** The refcount structure is declared in public so its size is known. */
+/** The refcount structure is declared in public so its size is known.
+ * Its members should really never be accessed directly.
+ */
 typedef struct sc_refcount
 {
+  /** The sc package that uses this reference counter. */
+  int                 package_id;
+
   /** The reference count is always positive for a valid counter. */
   int                 refcount;
 }
 sc_refcount_t;
 
-/** With --enable-debug, return the number of active reference counters.
- * This function is thread safe if configured with --enable-pthread.
- * This function always returns zero when not in debugging mode.
- * \return          With --enable-debug, the number of active (that is
- *                  initialized and positive) reference counters.
- *                  When not in debug mode, always return zero.
- */
-int                 sc_refcount_get_n_active (void);
-
 /** Initialize a reference counter to 1.
  * It is legal if its status prior to this call is undefined.
  * \param [out] rc          This reference counter is initialized to one.
  *                          The object's contents may be undefined on input.
+ * \param [in] package_id   Either -1 or a package registered to libsc.
  */
-void                sc_refcount_init (sc_refcount_t * rc);
+void                sc_refcount_init (sc_refcount_t * rc, int package_id);
 
 /** Create a new reference counter with count initialized to 1.
- * Equivalent to calling \ref sc_refcount_init on a newly allocated refcount_t
- * object.
+ * Equivalent to calling \ref sc_refcount_init on a newly allocated rc object.
+ * \param [in] package_id   Either -1 or a package registered to libsc.
  * \return                  A reference counter with count one.
  */
-sc_refcount_t      *sc_refcount_new (void);
+sc_refcount_t      *sc_refcount_new (int package_id);
 
 /** Destroy a reference counter.
- * It must have been count down to zero before, thus reached an inactive state.
+ * It must have been counted down to zero before, thus reached an inactive state.
  * \param [in,out] rc       This reference counter must have reached count zero.
  */
 void                sc_refcount_destroy (sc_refcount_t * rc);
@@ -89,6 +86,12 @@ void                sc_refcount_ref (sc_refcount_t * rc);
  * \return          True if the count has reached zero, false otherwise.
  */
 int                 sc_refcount_unref (sc_refcount_t * rc);
+
+/** Check whether a reference counter has a positive value.
+ * \param [in] rc   A reference counter.
+ * \return          True if the count is greater zero, false otherwise.
+ */
+int                 sc_refcount_is_active (sc_refcount_t * rc);
 
 SC_EXTERN_C_END;
 

@@ -20,55 +20,30 @@
   02110-1301, USA.
 */
 
+#include <sc_private.h>
 #include <sc_refcount.h>
 
-#ifdef SC_ENABLE_DEBUG
-static int          sc_refcount_n_active = 0;
-#endif
-
-int
-sc_refcount_get_n_active (void)
-{
-#ifdef SC_ENABLE_DEBUG
-  int                 retval;
-
-  sc_package_lock (sc_package_id);
-  retval = sc_refcount_n_active;
-  sc_package_unlock (sc_package_id);
-  SC_ASSERT (retval >= 0);
-
-  return retval;
-#else
-  return 0;
-#endif
-}
-
 void
-sc_refcount_init (sc_refcount_t * rc)
+sc_refcount_init (sc_refcount_t * rc, int package_id)
 {
-#ifdef SC_ENABLE_DEBUG
-  int                 valid;
-#endif
-
   SC_ASSERT (rc != NULL);
+  SC_ASSERT (package_id == -1 || sc_package_is_registered (package_id));
 
+  rc->package_id = package_id;
   rc->refcount = 1;
 
 #ifdef SC_ENABLE_DEBUG
-  sc_package_lock (sc_package_id);
-  valid = sc_refcount_n_active++ >= 0;
-  sc_package_unlock (sc_package_id);
+  sc_package_rc_count_add (rc->package_id, 1);
 #endif
-  SC_ASSERT (valid);
 }
 
 sc_refcount_t      *
-sc_refcount_new (void)
+sc_refcount_new (int package_id)
 {
   sc_refcount_t      *rc;
 
   rc = SC_ALLOC (sc_refcount_t, 1);
-  sc_refcount_init (rc);
+  sc_refcount_init (rc, package_id);
 
   return rc;
 }
@@ -94,23 +69,24 @@ sc_refcount_ref (sc_refcount_t * rc)
 int
 sc_refcount_unref (sc_refcount_t * rc)
 {
-#ifdef SC_ENABLE_DEBUG
-  int                 valid;
-#endif
-
   SC_ASSERT (rc != NULL);
   SC_ASSERT (rc->refcount > 0);
 
   if (--rc->refcount == 0) {
 #ifdef SC_ENABLE_DEBUG
-    sc_package_lock (sc_package_id);
-    valid = --sc_refcount_n_active >= 0;
-    sc_package_unlock (sc_package_id);
+    sc_package_rc_count_add (rc->package_id, -1);
 #endif
-    SC_ASSERT (valid);
     return 1;
   }
   else {
     return 0;
   }
+}
+
+int
+sc_refcount_is_active (sc_refcount_t * rc)
+{
+  SC_ASSERT (rc != NULL);
+
+  return rc->refcount > 0;
 }
