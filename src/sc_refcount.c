@@ -90,3 +90,11 @@ sc_refcount_is_active (sc_refcount_t * rc)
 
   return rc->refcount > 0;
 }
+
+int
+sc_refcount_is_last (sc_refcount_t * rc)
+{
+  SC_ASSERT (rc != NULL);
+
+  return rc->refcount == 1;
+}
