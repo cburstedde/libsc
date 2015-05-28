@@ -24,6 +24,15 @@
 #include <sc_refcount.h>
 
 void
+sc_refcount_init_invalid (sc_refcount_t * rc)
+{
+  SC_ASSERT (rc != NULL);
+
+  rc->package_id = -1;
+  rc->refcount = -1;
+}
+
+void
 sc_refcount_init (sc_refcount_t * rc, int package_id)
 {
   SC_ASSERT (rc != NULL);

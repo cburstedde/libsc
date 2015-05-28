@@ -48,6 +48,19 @@ typedef struct sc_refcount
 }
 sc_refcount_t;
 
+/** Initialize a well-defined but unusable reference counter.
+ * Specifically, we set its package identifier and reference count to -1.
+ * To make this reference counter usable, call \ref sc_refcount_init.
+ * \param [out] rc          This reference counter is defined as invalid.
+ *                          It will return false on both
+ *                          \ref sc_refcount_is_active and
+ *                          \ref sc_refcount_is_last.
+ *                          It can be made valid by calling
+ *                          \ref sc_refcount_init.
+ *                          No other functions must be called on it.
+ */
+void                sc_refcount_init_invalid (sc_refcount_t * rc);
+
 /** Initialize a reference counter to 1.
  * It is legal if its status prior to this call is undefined.
  * \param [out] rc          This reference counter is initialized to one.
