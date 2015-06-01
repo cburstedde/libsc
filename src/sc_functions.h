@@ -33,12 +33,23 @@ SC_EXTERN_C_BEGIN;
  * the-most-efficient-way-to-implement-an-integer-based-power-function-powint-int
  *
  * \param [in] base         This integer is taken to the power of \exp.
+ *                          It may be negative as well.
  * \param [in] exp          This non-negative integer is the exponent.
  * \return                  We compute \b base ** \b exp.
  */
 int                 sc_intpow (int base, int exp);
 
+/* Power routine for 64-bit integers.
+ * \see sc_intpow.
+ * \param [in] base         This integer is taken to the power of \exp.
+ *                          It may be negative as well.
+ * \param [in] exp          This non-negative integer is the exponent.
+ * \return                  We compute \b base ** \b exp.
+ */
+int64_t             sc_intpow64 (int64_t base, int exp);
+
 /* Power routine for unsigned 64-bit integers.
+ * \see sc_intpow.
  * \param [in] base         This integer is taken to the power of \exp.
  * \param [in] exp          This non-negative integer is the exponent.
  * \return                  We compute \b base ** \b exp.

@@ -41,6 +41,24 @@ sc_intpow (int base, int exp)
   return result;
 }
 
+int64_t
+sc_intpow64 (int64_t base, int exp)
+{
+  int64_t             result = 1;
+
+  SC_ASSERT (exp >= 0);
+
+  while (exp) {
+    if (exp & 1) {
+      result *= base;
+    }
+    exp >>= 1;
+    base *= base;
+  }
+
+  return result;
+}
+
 uint64_t
 sc_intpow64u (uint64_t base, int exp)
 {
