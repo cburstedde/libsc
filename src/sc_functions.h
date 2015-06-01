@@ -27,6 +27,24 @@
 
 SC_EXTERN_C_BEGIN;
 
+/** Integer power routine.
+ * Found in github.com:bfam/bfam.git, and originally in
+ * http://stackoverflow.com/questions/101439/\
+ * the-most-efficient-way-to-implement-an-integer-based-power-function-powint-int
+ *
+ * \param [in] base         This integer is taken to the power of \exp.
+ * \param [in] exp          This non-negative integer is the exponent.
+ * \return                  We compute \b base ** \b exp.
+ */
+int                 sc_intpow (int base, int exp);
+
+/* Power routine for unsigned 64-bit integers.
+ * \param [in] base         This integer is taken to the power of \exp.
+ * \param [in] exp          This non-negative integer is the exponent.
+ * \return                  We compute \b base ** \b exp.
+ */
+uint64_t            sc_intpow64u (uint64_t base, int exp);
+
 typedef double      (*sc_function1_t) (double x, void *data);
 
 typedef double      (*sc_function3_t) (double x, double y, double z,
