@@ -214,6 +214,11 @@ void                sc_dmatrix_scale (double alpha, sc_dmatrix_t * X);
  */
 void                sc_dmatrix_shift (double alpha, sc_dmatrix_t * X);
 
+/** Perform element-wise multipl. & addition w/ scalar, X := alpha .* X + beta.
+ */
+void                sc_dmatrix_scale_shift (double alpha, double beta,
+                                            sc_dmatrix_t * X);
+
 /** Perform element-wise divison with a scalar, X := alpha ./ X.
  */
 void                sc_dmatrix_alphadivide (double alpha, sc_dmatrix_t * X);
@@ -266,6 +271,12 @@ void                sc_dmatrix_dotmultiply (const sc_dmatrix_t * X,
  */
 void                sc_dmatrix_dotdivide (const sc_dmatrix_t * X,
                                           sc_dmatrix_t * Y);
+
+/** Perform element-wise multiplication & addition, Y := A .* X + Y.
+ */
+void                sc_dmatrix_dotmultiply_add (const sc_dmatrix_t * A,
+                                                const sc_dmatrix_t * X,
+                                                sc_dmatrix_t * Y);
 
 /** Copy one matrix into another.
  * \param [in] X        Matrix taken as a source.

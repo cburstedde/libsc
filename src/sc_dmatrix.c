@@ -401,6 +401,17 @@ sc_dmatrix_shift (double alpha, sc_dmatrix_t * X)
 }
 
 void
+sc_dmatrix_scale_shift (double alpha, double beta, sc_dmatrix_t * X)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  double             *Xdata = X->e[0];
+
+  for (i = 0; i < totalsize; ++i)
+    Xdata[i] = alpha * Xdata[i] + beta;
+}
+
+void
 sc_dmatrix_alphadivide (double alpha, sc_dmatrix_t * X)
 {
   sc_bint_t           i;
@@ -547,6 +558,24 @@ sc_dmatrix_dotdivide (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 
   for (i = 0; i < totalsize; ++i)
     Ydata[i] /= Xdata[i];
+}
+
+void
+sc_dmatrix_dotmultiply_add (const sc_dmatrix_t * A, const sc_dmatrix_t * X,
+                            sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *Adata = A->e[0];
+  const double       *Xdata = X->e[0];
+  double             *Ydata = Y->e[0];
+
+  SC_ASSERT (X->m == A->m && X->n == A->n);
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i) {
+    Ydata[i] += Adata[i] * Xdata[i];
+  }
 }
 
 void
