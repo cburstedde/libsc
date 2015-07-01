@@ -204,7 +204,7 @@ sc_allgather_final_create_shared(void *sendbuf, int sendcount, sc_MPI_Datatype s
 {
   MPI_Comm intranode = sc_MPI_COMM_NULL, internode = sc_MPI_COMM_NULL;
   size_t typesize;
-  int  mpiret, size, intersize, interrank, intrarank, intrasize;
+  int  mpiret, size, interrank, intrarank, intrasize;
   char *noderecvchar = NULL;
 
   typesize = sc_mpi_sizeof (recvtype);
@@ -258,4 +258,110 @@ sc_allgather_final_destroy_shared(void *recvbuf, sc_MPI_Comm mpicomm)
   if (!intrarank) {
     SC_FREE(recvbuf);
   }
+}
+
+void
+sc_allgather_final_create_window(void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
+                                 void **recvbuf, int recvcount, sc_MPI_Datatype recvtype,
+                                 sc_MPI_Comm mpicomm)
+{
+#if defined(SC_ENABLE_MPIWINSHARED)
+  MPI_Comm intranode = sc_MPI_COMM_NULL, internode = sc_MPI_COMM_NULL;
+  MPI_Win win;
+  int typesize;
+  int disp_unit;
+  int  mpiret, size, intersize, interrank, intrarank, intrasize;
+  char *noderecvchar = NULL;
+  MPI_Aint winsize = 0;
+
+  typesize = (int) sc_mpi_sizeof (recvtype);
+
+  sc_mpi_comm_get_node_comms(mpicomm,&intranode,&internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    sc_allgather_final_create_default(sendbuf,sendcount,sendtype,recvbuf,recvcount,recvtype,mpicomm);
+    return;
+  }
+
+  mpiret = sc_MPI_Comm_rank(intranode,&intrarank);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(intranode,&intrasize);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(internode,&intersize);
+  SC_CHECK_MPI(mpiret);
+  /* node root gathers from node */
+  if (!intrarank) {
+    noderecvchar = SC_ALLOC (char,intrasize * recvcount * typesize);
+  }
+  mpiret = sc_MPI_Gather (sendbuf,sendcount,sendtype,noderecvchar,recvcount,recvtype,0,intranode);
+  SC_CHECK_MPI(mpiret);
+
+  /* create the shared array */
+  disp_unit = SC_MAX(typesize,sizeof (MPI_Win));
+  if (!intrarank) {
+    winsize = intrasize * intersize * recvcount * typesize + intrasize * sizeof (MPI_Win);
+    if (winsize % disp_unit) {
+      winsize = ((winsize / disp_unit) + 1) * disp_unit;
+    }
+  }
+  mpiret = MPI_Win_allocate_shared(winsize,disp_unit,MPI_INFO_NULL,intranode,recvbuf,&win);
+  SC_CHECK_MPI(mpiret);
+  mpiret = MPI_Win_shared_query(win,0,&winsize,&disp_unit,&recvbuf);
+  SC_CHECK_MPI(mpiret);
+  /* store the windows at the front of the array */
+  mpiret = sc_MPI_Gather (&win,sizeof(MPI_Win),sc_MPI_BYTE,
+                          recvbuf,sizeof(MPI_Win),sc_MPI_BYTE,
+                          0,intranode);
+  SC_CHECK_MPI(mpiret);
+  recvbuf += intrasize * sizeof (MPI_Win);
+  /* node root allgathers between nodes */
+  if (!intrarank) {
+    mpiret = MPI_Win_lock(MPI_LOCK_EXCLUSIVE,0,MPI_MODE_NOCHECK,win);
+    SC_CHECK_MPI(mpiret);
+    mpiret = sc_MPI_Allgather(noderecvchar,intrasize*recvcount,recvtype,
+                              recvbuf,intrasize*recvcount,recvtype,internode);
+    SC_CHECK_MPI(mpiret);
+    mpiret = MPI_Win_unlock(0,win);
+    SC_CHECK_MPI(mpiret);
+    SC_FREE(noderecvchar);
+  }
+  mpiret = sc_MPI_Barrier(intranode);
+  SC_CHECK_MPI(mpiret);
+
+  /* open access */
+  mpiret = MPI_Win_lock(MPI_LOCK_SHARED,0,MPI_MODE_NOCHECK,win);
+  SC_CHECK_MPI(mpiret);
+#else
+  sc_allgather_final_create_default(sendbuf,sendcount,sendtype,recvbuf,recvcount,recvtype,mpicomm);
+#endif
+}
+
+void
+sc_allgather_final_destroy_window(void *recvbuf, sc_MPI_Comm mpicomm)
+{
+#if defined(SC_ENABLE_MPIWINSHARED)
+  MPI_Comm intranode = sc_MPI_COMM_NULL, internode = sc_MPI_COMM_NULL;
+  int  mpiret, size, intersize, interrank, intrarank, intrasize;
+  char *noderecvchar = NULL;
+  MPI_Win win;
+
+  sc_mpi_comm_get_node_comms(mpicomm,&intranode,&internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    sc_allgather_final_destroy_default(recvbuf,mpicomm);
+    return;
+  }
+  mpiret = sc_MPI_Comm_rank(intranode,&intrarank);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(intranode,&intrasize);
+  SC_CHECK_MPI(mpiret);
+
+  /* get the stashed window */
+  win = ((MPI_Win *) recvbuf)[-intrasize + intrarank];
+
+  mpiret = MPI_Win_unlock(0,win);
+  SC_CHECK_MPI(mpiret);
+
+  mpiret = MPI_Win_free(&win);
+#else
+  sc_allgather_final_destroy_default(recvbuf,mpicomm);
+#endif
 }
