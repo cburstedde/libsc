@@ -305,20 +305,23 @@ sc_allgather_final_create_window(void *sendbuf, int sendcount, sc_MPI_Datatype s
   }
   mpiret = MPI_Win_allocate_shared(winsize,disp_unit,MPI_INFO_NULL,intranode,recvbuf,&win);
   SC_CHECK_MPI(mpiret);
-  mpiret = MPI_Win_shared_query(win,0,&winsize,&disp_unit,&recvbuf);
+  mpiret = MPI_Win_shared_query(win,0,&winsize,&disp_unit,recvbuf);
   SC_CHECK_MPI(mpiret);
   /* store the windows at the front of the array */
   mpiret = sc_MPI_Gather (&win,sizeof(MPI_Win),sc_MPI_BYTE,
-                          recvbuf,sizeof(MPI_Win),sc_MPI_BYTE,
+                          *recvbuf,sizeof(MPI_Win),sc_MPI_BYTE,
                           0,intranode);
   SC_CHECK_MPI(mpiret);
-  recvbuf += intrasize * sizeof (MPI_Win);
+  {
+    MPI_Win *shiftedbuf = ((MPI_Win *) *recvbuf) + intrasize;
+    *recvbuf = (void *) shiftedbuf;
+  }
   /* node root allgathers between nodes */
   if (!intrarank) {
     mpiret = MPI_Win_lock(MPI_LOCK_EXCLUSIVE,0,MPI_MODE_NOCHECK,win);
     SC_CHECK_MPI(mpiret);
     mpiret = sc_MPI_Allgather(noderecvchar,intrasize*recvcount,recvtype,
-                              recvbuf,intrasize*recvcount,recvtype,internode);
+                              *recvbuf,intrasize*recvcount,recvtype,internode);
     SC_CHECK_MPI(mpiret);
     mpiret = MPI_Win_unlock(0,win);
     SC_CHECK_MPI(mpiret);

@@ -94,6 +94,12 @@ main (int argc, char **argv)
     sc_allgather_final_destroy_shared (recv_final,MPI_COMM_WORLD);
 #endif
 
+    sc_allgather_final_create_window (&myval,longintsize,sc_MPI_CHAR,
+                               (void *) &recv_final,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
+    check = memcmp(recv_self,recv_final,longintsize*size);
+    SC_CHECK_ABORT(!check,"sc_allgather_final_create does not reproduce sc_MPI_Allgather");
+    sc_allgather_final_destroy_window (recv_final,MPI_COMM_WORLD);
+
     sc_allgather_final_create (&myval,longintsize,sc_MPI_CHAR,
                                (void *) &recv_final,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
     check = memcmp(recv_self,recv_final,longintsize*size);
