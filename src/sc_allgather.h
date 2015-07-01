@@ -52,6 +52,31 @@ int                 sc_allgather (void *sendbuf, int sendcount,
                                   int recvcount, sc_MPI_Datatype recvtype,
                                   sc_MPI_Comm mpicomm);
 
+
+/** Prototype for a function that allgathers into a newly created array
+ * __DATA THAT IS NOT TO BE CHANGED__.  This is to allow for implementations
+ * where the data is shared between mpi processes.
+ */
+typedef void (*sc_allgather_final_create_t) (void *sendbuf, int sendcount,
+                                             sc_MPI_Datatype sendtype,
+                                             void **recvbuf,
+                                             int recvcount, sc_MPI_Datatype recvtype,
+                                             sc_MPI_Comm mpicomm);
+
+/** Prototype for a function that destroys the receive buffer created
+ * by a sc_allgather_final_create_t implementation.
+ */
+typedef void (*sc_allgather_final_destroy_t) (void *recvbuf, sc_MPI_Comm mpicomm);
+
+extern sc_allgather_final_create_t sc_allgather_final_create;
+extern sc_allgather_final_destroy_t sc_allgather_final_destroy;
+
+/** default implementation using SC_ALLOC and sc_MPI_Allgather() */
+void sc_allgather_final_create_default(void *sendbuf, int sendcount,
+                                       sc_MPI_Datatype sendtype, void **recvbuf, int recvcount,
+                                       sc_MPI_Datatype recvtype, sc_MPI_Comm mpicomm);
+void sc_allgather_final_destroy_default(void *recvbuf, sc_MPI_Comm mpicomm);
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_ALLGATHER_H */

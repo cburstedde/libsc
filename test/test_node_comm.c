@@ -23,6 +23,7 @@
 #include <sc.h>
 #include <sc_mpi.h>
 #include <sc_options.h>
+#include <sc_allgather.h>
 
 int
 main (int argc, char **argv)
@@ -30,12 +31,14 @@ main (int argc, char **argv)
   sc_options_t *opt;
   sc_MPI_Comm   intranode = sc_MPI_COMM_NULL;
   sc_MPI_Comm   internode = sc_MPI_COMM_NULL;
-  int           mpiret, node_size = 1, rank;
+  int           mpiret, node_size = 1, rank, size;
   int           first, intrarank, interrank;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (MPI_COMM_WORLD, &size);
   SC_CHECK_MPI (mpiret);
 
   sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
@@ -63,6 +66,28 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   SC_CHECK_ABORT (interrank * node_size + intrarank == rank, "rank calculation mismatch");
+
+  srandom(rank);
+  {
+    long int myval = random();
+    int longintsize = sizeof (long int);
+    long int *recv_self;
+    long int *recv_final;
+    int check;
+
+    recv_self = SC_ALLOC(long int,size);
+    mpiret = sc_MPI_Allgather(&myval,longintsize,sc_MPI_CHAR,
+                              recv_self,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
+    SC_CHECK_MPI(mpiret);
+
+    sc_allgather_final_create (&myval,longintsize,sc_MPI_CHAR,
+                               (void *) &recv_final,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
+    check = memcmp(recv_self,recv_final,longintsize*size);
+    SC_CHECK_ABORT(!check,"sc_allgather_final_create does not reproduce sc_MPI_Allgather");
+    sc_allgather_final_destroy(recv_final,MPI_COMM_WORLD);
+
+    SC_FREE (recv_self);
+  }
 
   sc_finalize ();
 

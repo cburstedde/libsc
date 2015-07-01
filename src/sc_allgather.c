@@ -164,3 +164,34 @@ sc_allgather (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
 
   return sc_MPI_SUCCESS;
 }
+
+void
+sc_allgather_final_create_default(void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
+                                  void **recvbuf, int recvcount, sc_MPI_Datatype recvtype,
+                                  sc_MPI_Comm mpicomm)
+{
+  size_t typesize;
+  int  mpiret, size;
+  char *recvchar;
+
+  mpiret = sc_MPI_Comm_size (mpicomm, &size);
+  SC_CHECK_MPI(mpiret);
+
+  typesize = sc_mpi_sizeof (recvtype);
+  recvchar = SC_ALLOC(char,size * recvcount * typesize);
+
+  mpiret = sc_MPI_Allgather(sendbuf,sendcount,sendtype,recvchar,recvcount,recvtype,mpicomm);
+  SC_CHECK_MPI(mpiret);
+
+  *recvbuf = (void *) recvchar;
+}
+
+void
+sc_allgather_final_destroy_default(void *recvbuf, sc_MPI_Comm mpicomm)
+{
+  SC_FREE(recvbuf);
+}
+
+sc_allgather_final_create_t sc_allgather_final_create = sc_allgather_final_create_default;
+sc_allgather_final_destroy_t sc_allgather_final_destroy = sc_allgather_final_destroy_default;
+
