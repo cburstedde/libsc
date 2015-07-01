@@ -77,6 +77,12 @@ void sc_allgather_final_create_default(void *sendbuf, int sendcount,
                                        sc_MPI_Datatype recvtype, sc_MPI_Comm mpicomm);
 void sc_allgather_final_destroy_default(void *recvbuf, sc_MPI_Comm mpicomm);
 
+/** implementation for shared memory spaces that WON'T work in most settings */
+void sc_allgather_final_create_shared(void *sendbuf, int sendcount,
+                                       sc_MPI_Datatype sendtype, void **recvbuf, int recvcount,
+                                       sc_MPI_Datatype recvtype, sc_MPI_Comm mpicomm);
+void sc_allgather_final_destroy_shared(void *recvbuf, sc_MPI_Comm mpicomm);
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_ALLGATHER_H */

@@ -195,3 +195,67 @@ sc_allgather_final_destroy_default(void *recvbuf, sc_MPI_Comm mpicomm)
 sc_allgather_final_create_t sc_allgather_final_create = sc_allgather_final_create_default;
 sc_allgather_final_destroy_t sc_allgather_final_destroy = sc_allgather_final_destroy_default;
 
+/** implement sc_allgather_final when nodes have a shared address space, so
+ * that raw pointers can be passed and dereferenced in nodes */
+void
+sc_allgather_final_create_shared(void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
+                                 void **recvbuf, int recvcount, sc_MPI_Datatype recvtype,
+                                 sc_MPI_Comm mpicomm)
+{
+  MPI_Comm intranode = sc_MPI_COMM_NULL, internode = sc_MPI_COMM_NULL;
+  size_t typesize;
+  int  mpiret, size, intersize, interrank, intrarank, intrasize;
+  char *noderecvchar = NULL;
+
+  typesize = sc_mpi_sizeof (recvtype);
+
+  sc_mpi_comm_get_node_comms(mpicomm,&intranode,&internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    sc_allgather_final_create_default(sendbuf,sendcount,sendtype,recvbuf,recvcount,recvtype,mpicomm);
+    return;
+  }
+
+  mpiret = sc_MPI_Comm_rank(intranode,&intrarank);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(intranode,&intrasize);
+  SC_CHECK_MPI(mpiret);
+  /* node root gathers from node */
+  if (!intrarank) {
+    noderecvchar = SC_ALLOC (char,intrasize * recvcount * typesize);
+  }
+  mpiret = sc_MPI_Gather (sendbuf,sendcount,sendtype,noderecvchar,recvcount,recvtype,0,intranode);
+  SC_CHECK_MPI(mpiret);
+
+  /* node root allgathers between nodes */
+  if (!intrarank) {
+    sc_allgather_final_create_default(noderecvchar,sendcount*intrasize,sendtype,recvbuf,recvcount*intrasize,
+                                      recvtype, internode);
+    SC_FREE(noderecvchar);
+  }
+  else {
+    *recvbuf = NULL;
+  }
+
+  /* node root broadcast array start in node */
+  mpiret = sc_MPI_Bcast(recvbuf,sizeof(char *),sc_MPI_BYTE,0,intranode);
+  SC_CHECK_MPI(mpiret);
+}
+
+void
+sc_allgather_final_destroy_shared(void *recvbuf, sc_MPI_Comm mpicomm)
+{
+  MPI_Comm intranode = sc_MPI_COMM_NULL, internode = sc_MPI_COMM_NULL;
+  int  mpiret, size, intersize, interrank, intrarank, intrasize;
+  char *noderecvchar = NULL;
+
+  sc_mpi_comm_get_node_comms(mpicomm,&intranode,&internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    sc_allgather_final_destroy_default(recvbuf,mpicomm);
+    return;
+  }
+  mpiret = sc_MPI_Comm_rank(intranode,&intrarank);
+  SC_CHECK_MPI(mpiret);
+  if (!intrarank) {
+    SC_FREE(recvbuf);
+  }
+}

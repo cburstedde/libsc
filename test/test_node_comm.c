@@ -80,6 +80,20 @@ main (int argc, char **argv)
                               recv_self,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
     SC_CHECK_MPI(mpiret);
 
+    sc_allgather_final_create_default (&myval,longintsize,sc_MPI_CHAR,
+                               (void *) &recv_final,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
+    check = memcmp(recv_self,recv_final,longintsize*size);
+    SC_CHECK_ABORT(!check,"sc_allgather_final_create does not reproduce sc_MPI_Allgather");
+    sc_allgather_final_destroy_default (recv_final,MPI_COMM_WORLD);
+
+#if 0
+    sc_allgather_final_create_shared (&myval,longintsize,sc_MPI_CHAR,
+                               (void *) &recv_final,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
+    check = memcmp(recv_self,recv_final,longintsize*size);
+    SC_CHECK_ABORT(!check,"sc_allgather_final_create does not reproduce sc_MPI_Allgather");
+    sc_allgather_final_destroy_shared (recv_final,MPI_COMM_WORLD);
+#endif
+
     sc_allgather_final_create (&myval,longintsize,sc_MPI_CHAR,
                                (void *) &recv_final,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
     check = memcmp(recv_self,recv_final,longintsize*size);
