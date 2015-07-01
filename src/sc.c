@@ -828,6 +828,28 @@ sc_package_print_summary (int log_priority)
   }
 }
 
+#if defined(SC_ENABLE_MPI)
+static int
+sc_mpi_intranode_comm_destroy(MPI_Comm comm,int comm_keyval,void *attribute_val,void *extra_state)
+{
+  int mpiret;
+  MPI_Comm *intra_comm = (MPI_Comm *) attribute_val;
+
+  mpiret = MPI_Comm_free(intra_comm);
+  return mpiret;
+}
+
+static int
+sc_mpi_internode_comm_destroy(MPI_Comm comm,int comm_keyval,void *attribute_val,void *extra_state)
+{
+  int mpiret;
+  MPI_Comm *inter_comm = (MPI_Comm *) attribute_val;
+
+  mpiret = MPI_Comm_free(inter_comm);
+  return mpiret;
+}
+#endif
+
 void
 sc_init (sc_MPI_Comm mpicomm,
          int catch_signals, int print_backtrace,
@@ -918,6 +940,18 @@ sc_init (sc_MPI_Comm mpicomm,
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "BLAS_LIBS", SC_BLAS_LIBS);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LAPACK_LIBS", SC_LAPACK_LIBS);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FLIBS", SC_FLIBS);
+#endif
+
+#if defined(SC_ENABLE_MPI)
+  /** register the node comm attachments with MPI */
+  if (mpicomm != MPI_COMM_NULL) {
+    int mpiret;
+
+    mpiret = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN,sc_mpi_intranode_comm_destroy,&sc_mpi_intranode_comm_keyval,NULL);
+    SC_CHECK_MPI(mpiret);
+    mpiret = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN,sc_mpi_internode_comm_destroy,&sc_mpi_internode_comm_keyval,NULL);
+    SC_CHECK_MPI(mpiret);
+  }
 #endif
 }
 

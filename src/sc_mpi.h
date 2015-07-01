@@ -296,6 +296,25 @@ int                 sc_MPI_Init_thread (int *argc, char ***argv,
  */
 size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
 
+/** Compute ``sc_intranode_comm'' and ``sc_internode_comm''
+ * communicators and attach them to the current communicator.  This split
+ * takes \a processes_per_node passed by the user at face value: there is no
+ * hardware checking to see if this is the true affinity.
+ *
+ * \param [in/out] comm                 MPI communicator
+ * \param [in]     processes_per_node   the size of the intranode
+ *                                      communicators.
+ */
+
+void                sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
+                                                   int processes_per_node);
+
+/** An MPI_Comm_keyval to handle attached intranode and internode
+ * communicators: should not be touched by users.
+ */
+extern int sc_mpi_intranode_comm_keyval;
+extern int sc_mpi_internode_comm_keyval;
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_MPI_H */

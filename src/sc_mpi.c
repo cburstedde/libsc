@@ -356,3 +356,43 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
 
   SC_ABORT_NOT_REACHED ();
 }
+
+/* these should be initialized in sc_init() */
+int sc_mpi_intranode_comm_keyval = MPI_KEYVAL_INVALID;
+int sc_mpi_internode_comm_keyval = MPI_KEYVAL_INVALID;
+
+void
+sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
+                               int processes_per_node)
+{
+#if defined(SC_ENABLE_MPI)
+  int size, rank, node, offset, keyval, mpiret;
+  MPI_Comm *internode, *intranode;
+
+  SC_ASSERT(sc_mpi_intranode_comm_keyval != MPI_KEYVAL_INVALID);
+  SC_ASSERT(sc_mpi_internode_comm_keyval != MPI_KEYVAL_INVALID);
+
+  mpiret = MPI_Comm_size(comm,&size);
+  SC_CHECK_MPI(mpiret);
+
+  mpiret = MPI_Comm_rank(comm,&rank);
+  SC_CHECK_MPI(mpiret);
+
+  SC_ASSERT (!(size % processes_per_node));
+
+  node = rank / processes_per_node;
+  offset = rank % processes_per_node;
+
+  mpiret = MPI_Comm_split(comm,node,offset,intranode);
+  SC_CHECK_MPI(mpiret);
+
+  mpiret = MPI_Comm_split(comm,offset,node,internode);
+  SC_CHECK_MPI(mpiret);
+
+  mpiret = MPI_Comm_set_attr(comm,sc_mpi_intranode_comm_keyval, (void *) intranode);
+  SC_CHECK_MPI(mpiret);
+
+  mpiret = MPI_Comm_set_attr(comm,sc_mpi_internode_comm_keyval, (void *) internode);
+  SC_CHECK_MPI(mpiret);
+#endif
+}
