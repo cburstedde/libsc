@@ -383,10 +383,10 @@ sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
   node = rank / processes_per_node;
   offset = rank % processes_per_node;
 
-  mpiret = MPI_Comm_split(comm,node,rank,&intranode);
+  mpiret = MPI_Comm_split(comm,node,offset,&intranode);
   SC_CHECK_MPI(mpiret);
 
-  mpiret = MPI_Comm_split(comm,offset,rank,&internode);
+  mpiret = MPI_Comm_split(comm,offset,node,&internode);
   SC_CHECK_MPI(mpiret);
 
   mpiret = MPI_Comm_set_attr(comm,sc_mpi_intranode_comm_keyval, (void *) intranode);
@@ -394,5 +394,29 @@ sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
 
   mpiret = MPI_Comm_set_attr(comm,sc_mpi_internode_comm_keyval, (void *) internode);
   SC_CHECK_MPI(mpiret);
+#endif
+}
+
+void
+sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
+                            sc_MPI_Comm *intranode,
+                            sc_MPI_Comm *internode)
+{
+  int mpiret, intraflag, interflag;
+  void *intraval, *interval;
+
+  *intranode = sc_MPI_COMM_NULL;
+  *internode = sc_MPI_COMM_NULL;
+#if defined(SC_ENABLE_MPI)
+  mpiret = MPI_Comm_get_attr(comm,sc_mpi_intranode_comm_keyval,&intraval,&intraflag);
+  SC_CHECK_MPI(mpiret);
+  mpiret = MPI_Comm_get_attr(comm,sc_mpi_internode_comm_keyval,&interval,&interflag);
+  SC_CHECK_MPI(mpiret);
+  if (intraflag) {
+    *intranode = (MPI_Comm) intraval;
+  }
+  if (interflag) {
+    *internode = (MPI_Comm) interval;
+  }
 #endif
 }

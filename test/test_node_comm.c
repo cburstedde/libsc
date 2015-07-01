@@ -28,11 +28,16 @@ int
 main (int argc, char **argv)
 {
   sc_options_t *opt;
-  int           mpiret, node_size = 1;
-  int           first;
+  sc_MPI_Comm   intranode = sc_MPI_COMM_NULL;
+  sc_MPI_Comm   internode = sc_MPI_COMM_NULL;
+  int           mpiret, node_size = 1, rank;
+  int           first, intrarank, interrank;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+  SC_CHECK_MPI (mpiret);
+
   sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   opt = sc_options_new (argv[0]);
@@ -47,6 +52,17 @@ main (int argc, char **argv)
   sc_options_destroy (opt);
 
   sc_mpi_comm_attach_node_comms (MPI_COMM_WORLD,node_size);
+  sc_mpi_comm_get_node_comms(MPI_COMM_WORLD,&intranode,&internode);
+
+  SC_CHECK_ABORT(intranode != sc_MPI_COMM_NULL,"Could not extract communicator");
+  SC_CHECK_ABORT(internode != sc_MPI_COMM_NULL,"Could not extract communicator");
+
+  mpiret = sc_MPI_Comm_rank(intranode,&intrarank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank(internode,&interrank);
+  SC_CHECK_MPI (mpiret);
+
+  SC_CHECK_ABORT (interrank * node_size + intrarank == rank, "rank calculation mismatch");
 
   sc_finalize ();
 

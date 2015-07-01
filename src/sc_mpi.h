@@ -309,6 +309,15 @@ size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
 void                sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
                                                    int processes_per_node);
 
+/** Get the communicators computed in sc_mpi_comm_attach_node_comms() if they
+ * exist; return sc_MPI_COMM_NULL otherwise.
+ *
+ * \param[in] comm            Super communicator
+ * \param[out] intranode      intranode communicator
+ * \param[out] internode      internode communicator
+ */
+void sc_mpi_comm_get_node_comms (sc_MPI_Comm comm, sc_MPI_Comm *intranode, sc_MPI_Comm *internode);
+
 /** An MPI_Comm_keyval to handle attached intranode and internode
  * communicators: should not be touched by users.
  */
