@@ -833,9 +833,9 @@ static int
 sc_mpi_intranode_comm_destroy(MPI_Comm comm,int comm_keyval,void *attribute_val,void *extra_state)
 {
   int mpiret;
-  MPI_Comm *intra_comm = (MPI_Comm *) attribute_val;
+  MPI_Comm intra_comm = (MPI_Comm) attribute_val;
 
-  mpiret = MPI_Comm_free(intra_comm);
+  mpiret = MPI_Comm_free(&intra_comm);
   return mpiret;
 }
 
@@ -843,9 +843,9 @@ static int
 sc_mpi_internode_comm_destroy(MPI_Comm comm,int comm_keyval,void *attribute_val,void *extra_state)
 {
   int mpiret;
-  MPI_Comm *inter_comm = (MPI_Comm *) attribute_val;
+  MPI_Comm inter_comm = (MPI_Comm) attribute_val;
 
-  mpiret = MPI_Comm_free(inter_comm);
+  mpiret = MPI_Comm_free(&inter_comm);
   return mpiret;
 }
 #endif
