@@ -11,6 +11,7 @@ sc_test_programs = \
         test/sc_test_dmatrix_pool \
         test/sc_test_io_sink \
         test/sc_test_keyvalue \
+        test/sc_test_node_comm \
         test/sc_test_notify \
         test/sc_test_reduce \
         test/sc_test_search \
@@ -29,6 +30,7 @@ test_sc_test_dmatrix_pool_SOURCES = test/test_dmatrix_pool.c
 test_sc_test_io_sink_SOURCES = test/test_io_sink.c
 test_sc_test_keyvalue_SOURCES = test/test_keyvalue.c
 test_sc_test_notify_SOURCES = test/test_notify.c
+test_sc_test_node_comm_SOURCES = test/test_node_comm.c
 ## Reenable and properly verify pqueue when it is actually used
 ## test_sc_test_pqueue_SOURCES = test/test_pqueue.c
 test_sc_test_reduce_SOURCES = test/test_reduce.c
