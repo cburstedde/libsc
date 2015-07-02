@@ -24,6 +24,9 @@
 #define SC_BLAS_H
 
 #include <sc.h>
+#if defined(__bgq__)
+//# include "essl.h" // TODO - FOR NOW WE DO NOT USE ESSL
+#endif
 
 SC_EXTERN_C_BEGIN;
 
@@ -76,8 +79,14 @@ extern const char   sc_cmachchar[];
 #ifdef SC_WITH_BLAS
 
 #ifndef SC_F77_FUNC
-#define SC_F77_FUNC(small,CAPS) small ## _
-#endif
+# if defined(__bgq__) //&& defined(__HAVE_ESSL)
+#   define SC_F77_FUNC(small,CAPS) small
+//#   define SC_F77_FUNC(small,CAPS) small ## _ // TODO - For now we do not use ESSL
+#   define SC_F77_FUNC_NOESSL(small,CAPS) small
+# else
+#   define SC_F77_FUNC(small,CAPS) small ## _
+# endif
+#endif /* SC_F77_FUNC */
 
 #define SC_BLAS_DLAMCH  SC_F77_FUNC(dlamch,DLAMCH)
 #define SC_BLAS_DSCAL   SC_F77_FUNC(dscal,DSCAL)
