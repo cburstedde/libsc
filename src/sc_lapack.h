@@ -53,9 +53,9 @@ extern const char   sc_jobzchar[];
 #define SC_LAPACK_DGETRF  SC_F77_FUNC(dgetrf,DGETRF)
 #define SC_LAPACK_DGETRS  SC_F77_FUNC(dgetrs,DGETRS)
 #if defined(__bgq__) // && define(__HAVE_ESSL)
-# define LAPACK_DSTEV   SC_F77_FUNC_NOESSL(dstev,DSTEV)
+# define SC_LAPACK_DSTEV   SC_F77_FUNC_NOESSL(dstev,DSTEV)
 #else
-# define LAPACK_DSTEV   SC_F77_FUNC(dstev,DSTEV)
+# define SC_LAPACK_DSTEV   SC_F77_FUNC(dstev,DSTEV)
 #endif
 #define SC_LAPACK_DTRSM   SC_F77_FUNC(dtrsm,DTRSM)
 #define SC_LAPACK_DLAIC1  SC_F77_FUNC(dlaic1,DLAIC1)
