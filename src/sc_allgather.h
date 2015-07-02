@@ -63,25 +63,53 @@ typedef void (*sc_allgather_final_create_t) (void *sendbuf, int sendcount,
                                              int recvcount, sc_MPI_Datatype recvtype,
                                              sc_MPI_Comm mpicomm);
 
+typedef void (*sc_allgather_final_scan_create_t) (void *sendbuf, void **recvbuf,
+                                                  int count, sc_MPI_Datatype type,
+                                                  sc_MPI_Op op, MPI_Comm comm);
+
 /** Prototype for a function that destroys the receive buffer created
  * by a sc_allgather_final_create_t implementation.
  */
 typedef void (*sc_allgather_final_destroy_t) (void *recvbuf, sc_MPI_Comm mpicomm);
 
+/** function pointers, so that the user can at runtime change which method is
+ * used from the default */
 extern sc_allgather_final_create_t sc_allgather_final_create;
+extern sc_allgather_final_scan_create_t sc_allgather_final_scan_create;
 extern sc_allgather_final_destroy_t sc_allgather_final_destroy;
 
 /** default implementation using SC_ALLOC and sc_MPI_Allgather() */
 void sc_allgather_final_create_default(void *sendbuf, int sendcount,
                                        sc_MPI_Datatype sendtype, void **recvbuf, int recvcount,
                                        sc_MPI_Datatype recvtype, sc_MPI_Comm mpicomm);
+/** default implementation: alloc, allgather, sum on array: only works for
+ * MPI_SUM and pre-defined integer and floating point types*/
+void sc_allgather_final_scan_create_default(void *sendbuf, void **recvbuf, int count,
+                                            sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm);
+/** prescan implementation: mpi_scan, then alloc, then allgather: works for any type or op */
+void sc_allgather_final_scan_create_scan(void *sendbuf, void **recvbuf, int count,
+                                            sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm);
 void sc_allgather_final_destroy_default(void *recvbuf, sc_MPI_Comm mpicomm);
 
 /** implementation for shared memory spaces that WON'T work in most settings */
 void sc_allgather_final_create_shared(void *sendbuf, int sendcount,
                                        sc_MPI_Datatype sendtype, void **recvbuf, int recvcount,
                                        sc_MPI_Datatype recvtype, sc_MPI_Comm mpicomm);
+void sc_allgather_final_scan_create_shared(void *sendbuf, void **recvbuf, int count,
+                                           sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm);
+void sc_allgather_final_scan_create_shared_prescan(void *sendbuf, void **recvbuf, int count,
+                                                   sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm);
 void sc_allgather_final_destroy_shared(void *recvbuf, sc_MPI_Comm mpicomm);
+
+/** implementation using MPI_Win_allocate_shared() */
+void sc_allgather_final_create_window(void *sendbuf, int sendcount,
+                                       sc_MPI_Datatype sendtype, void **recvbuf, int recvcount,
+                                       sc_MPI_Datatype recvtype, sc_MPI_Comm mpicomm);
+void sc_allgather_final_scan_create_window(void *sendbuf, void **recvbuf, int count,
+                                           sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm);
+void sc_allgather_final_scan_create_window_prescan(void *sendbuf, void **recvbuf, int count,
+                                                   sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm);
+void sc_allgather_final_destroy_window(void *recvbuf, sc_MPI_Comm mpicomm);
 
 SC_EXTERN_C_END;
 

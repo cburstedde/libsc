@@ -165,6 +165,132 @@ sc_allgather (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
   return sc_MPI_SUCCESS;
 }
 
+static void
+sc_scan_on_array(char *recvchar, int size, int count, int typesize, sc_MPI_Datatype type,
+                 sc_MPI_Op op)
+{
+  int p, c;
+
+  if (op == sc_MPI_SUM) {
+    if (type == sc_MPI_CHAR) {
+      char *array = recvchar;
+
+      SC_ASSERT (sizeof (*array) == typesize);
+      for (p = 1; p <= size; p++) {
+        for (c = 0; c < count; c++) {
+          array[count * p + c] += array[count * (p - 1) + c];
+        }
+      }
+    }
+    else if (type == sc_MPI_SHORT) {
+      short *array = (short *) recvchar;
+
+      SC_ASSERT (sizeof (*array) == typesize);
+      for (p = 1; p <= size; p++) {
+        for (c = 0; c < count; c++) {
+          array[count * p + c] += array[count * (p - 1) + c];
+        }
+      }
+    }
+    else if (type == sc_MPI_UNSIGNED_SHORT) {
+      unsigned short *array = (unsigned short *) recvchar;
+
+      SC_ASSERT (sizeof (*array) == typesize);
+      for (p = 1; p <= size; p++) {
+        for (c = 0; c < count; c++) {
+          array[count * p + c] += array[count * (p - 1) + c];
+        }
+      }
+    }
+    else if (type == sc_MPI_INT) {
+      int *array = (int *) recvchar;
+
+      SC_ASSERT (sizeof (*array) == typesize);
+      for (p = 1; p <= size; p++) {
+        for (c = 0; c < count; c++) {
+          array[count * p + c] += array[count * (p - 1) + c];
+        }
+      }
+    }
+    else if (type == sc_MPI_UNSIGNED) {
+      unsigned *array = (unsigned *) recvchar;
+
+      SC_ASSERT (sizeof (*array) == typesize);
+      for (p = 1; p <= size; p++) {
+        for (c = 0; c < count; c++) {
+          array[count * p + c] += array[count * (p - 1) + c];
+        }
+      }
+    }
+    else if (type == sc_MPI_LONG) {
+      long *array = (long *) recvchar;
+
+      SC_ASSERT (sizeof (*array) == typesize);
+      for (p = 1; p <= size; p++) {
+        for (c = 0; c < count; c++) {
+          array[count * p + c] += array[count * (p - 1) + c];
+        }
+      }
+    }
+    else if (type == sc_MPI_UNSIGNED_LONG) {
+      unsigned long *array = (unsigned long *) recvchar;
+
+      SC_ASSERT (sizeof (*array) == typesize);
+      for (p = 1; p <= size; p++) {
+        for (c = 0; c < count; c++) {
+          array[count * p + c] += array[count * (p - 1) + c];
+        }
+      }
+    }
+    else if (type == sc_MPI_LONG_LONG_INT) {
+      long long *array = (long long *) recvchar;
+
+      SC_ASSERT (sizeof (*array) == typesize);
+      for (p = 1; p <= size; p++) {
+        for (c = 0; c < count; c++) {
+          array[count * p + c] += array[count * (p - 1) + c];
+        }
+      }
+    }
+    else if (type == sc_MPI_FLOAT) {
+      float *array = (float *) recvchar;
+
+      SC_ASSERT (sizeof (*array) == typesize);
+      for (p = 1; p <= size; p++) {
+        for (c = 0; c < count; c++) {
+          array[count * p + c] += array[count * (p - 1) + c];
+        }
+      }
+    }
+    else if (type == sc_MPI_DOUBLE) {
+      double *array = (double *) recvchar;
+
+      SC_ASSERT (sizeof (*array) == typesize);
+      for (p = 1; p <= size; p++) {
+        for (c = 0; c < count; c++) {
+          array[count * p + c] += array[count * (p - 1) + c];
+        }
+      }
+    }
+    else if (type == sc_MPI_LONG_DOUBLE) {
+      long double *array = (long double *) recvchar;
+
+      SC_ASSERT (sizeof (*array) == typesize);
+      for (p = 1; p <= size; p++) {
+        for (c = 0; c < count; c++) {
+          array[count * p + c] += array[count * (p - 1) + c];
+        }
+      }
+    }
+    else {
+      SC_ABORT("MPI_Datatype not supported\n");
+    }
+  }
+  else {
+    SC_ABORT("MPI_Op not supported\n");
+  }
+}
+
 void
 sc_allgather_final_create_default(void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
                                   void **recvbuf, int recvcount, sc_MPI_Datatype recvtype,
@@ -182,6 +308,59 @@ sc_allgather_final_create_default(void *sendbuf, int sendcount, sc_MPI_Datatype 
 
   mpiret = sc_MPI_Allgather(sendbuf,sendcount,sendtype,recvchar,recvcount,recvtype,mpicomm);
   SC_CHECK_MPI(mpiret);
+
+  *recvbuf = (void *) recvchar;
+}
+
+void
+sc_allgather_final_scan_create_default(void *sendbuf, void **recvbuf, int count,
+                                       sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm)
+
+{
+  size_t typesize;
+  int  mpiret, p, c, size;
+  char *recvchar;
+
+  mpiret = sc_MPI_Comm_size (mpicomm, &size);
+  SC_CHECK_MPI(mpiret);
+
+  typesize = sc_mpi_sizeof (type);
+  recvchar = SC_ALLOC_ZERO(char,(size + 1) * count * typesize);
+
+  mpiret = sc_MPI_Allgather(sendbuf,count,type,recvchar+count*typesize,count,type,mpicomm);
+  SC_CHECK_MPI(mpiret);
+
+  sc_scan_on_array(recvchar,size,count,typesize,type,op);
+
+  *recvbuf = (void *) recvchar;
+}
+
+void
+sc_allgather_final_scan_create_prescan(void *sendbuf, void **recvbuf, int count,
+                                       sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm)
+
+{
+  size_t typesize;
+  int  mpiret, p, c, size;
+  char *prescan, *recvchar;
+
+  mpiret = sc_MPI_Comm_size (mpicomm, &size);
+  SC_CHECK_MPI(mpiret);
+
+  typesize = sc_mpi_sizeof (type);
+  prescan = SC_ALLOC(char,count * typesize);
+  memcpy (prescan, sendbuf, count * typesize);
+
+  mpiret = sc_MPI_Scan(sendbuf, prescan, count, type, op, mpicomm);
+  SC_CHECK_MPI(mpiret);
+
+  recvchar = SC_ALLOC_ZERO(char,(size + 1) * count * typesize);
+
+  memset (recvchar,0,count*typesize);
+
+  mpiret = sc_MPI_Allgather(prescan,count,type,recvchar+count*typesize,count,type,mpicomm);
+  SC_CHECK_MPI(mpiret);
+  SC_FREE(prescan);
 
   *recvbuf = (void *) recvchar;
 }
@@ -230,6 +409,116 @@ sc_allgather_final_create_shared(void *sendbuf, int sendcount, sc_MPI_Datatype s
   if (!intrarank) {
     sc_allgather_final_create_default(noderecvchar,sendcount*intrasize,sendtype,recvbuf,recvcount*intrasize,
                                       recvtype, internode);
+    SC_FREE(noderecvchar);
+  }
+  else {
+    *recvbuf = NULL;
+  }
+
+  /* node root broadcast array start in node */
+  mpiret = sc_MPI_Bcast(recvbuf,sizeof(char *),sc_MPI_BYTE,0,intranode);
+  SC_CHECK_MPI(mpiret);
+}
+
+void
+sc_allgather_final_scan_create_shared(void *sendbuf, void **recvbuf, int count,
+                                       sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm)
+
+{
+  MPI_Comm intranode = sc_MPI_COMM_NULL, internode = sc_MPI_COMM_NULL;
+  size_t typesize;
+  int  mpiret, size, interrank, intrarank, intrasize, intersize;
+  char *noderecvchar = NULL;
+
+  typesize = sc_mpi_sizeof (type);
+
+  sc_mpi_comm_get_node_comms(mpicomm,&intranode,&internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    sc_allgather_final_scan_create_default(sendbuf,recvbuf,count,type,op,mpicomm);
+    return;
+  }
+
+  mpiret = sc_MPI_Comm_rank(intranode,&intrarank);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(intranode,&intrasize);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(internode,&intersize);
+  SC_CHECK_MPI(mpiret);
+  /* node root gathers from node */
+  if (!intrarank) {
+    noderecvchar = SC_ALLOC (char,intrasize * count * typesize);
+  }
+  mpiret = sc_MPI_Gather (sendbuf,count,type,noderecvchar,count,type,0,intranode);
+  SC_CHECK_MPI(mpiret);
+
+  /* node root allgathers between nodes and scans */
+  if (!intrarank) {
+    *recvbuf = SC_ALLOC(char,(intrasize * intersize + 1) * count * typesize);
+
+    memset (*recvbuf,0,count*typesize);
+
+    mpiret = sc_MPI_Allgather(noderecvchar, count*intrasize, type, *recvbuf+count*typesize,
+                              count*intrasize, type, internode);
+
+    sc_scan_on_array(*recvbuf,intrasize * intersize, count, typesize, type, op);
+    SC_FREE(noderecvchar);
+  }
+  else {
+    *recvbuf = NULL;
+  }
+
+  /* node root broadcast array start in node */
+  mpiret = sc_MPI_Bcast(recvbuf,sizeof(char *),sc_MPI_BYTE,0,intranode);
+  SC_CHECK_MPI(mpiret);
+}
+
+void
+sc_allgather_final_scan_create_shared_prescan(void *sendbuf, void **recvbuf, int count,
+                                              sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm)
+
+{
+  MPI_Comm intranode = sc_MPI_COMM_NULL, internode = sc_MPI_COMM_NULL;
+  size_t typesize;
+  int  mpiret, size, interrank, intrarank, intrasize, intersize;
+  char *noderecvchar = NULL;
+  char *prescan = NULL;
+
+  typesize = sc_mpi_sizeof (type);
+
+  sc_mpi_comm_get_node_comms(mpicomm,&intranode,&internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    sc_allgather_final_scan_create_prescan(sendbuf,recvbuf,count,type,op,mpicomm);
+    return;
+  }
+
+  prescan = SC_ALLOC(char,count * typesize);
+  memcpy (prescan, sendbuf, count * typesize);
+
+  mpiret = sc_MPI_Scan(sendbuf, prescan, count, type, op, mpicomm);
+  SC_CHECK_MPI(mpiret);
+
+  mpiret = sc_MPI_Comm_rank(intranode,&intrarank);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(intranode,&intrasize);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(internode,&intersize);
+  SC_CHECK_MPI(mpiret);
+  /* node root gathers from node */
+  if (!intrarank) {
+    noderecvchar = SC_ALLOC (char,intrasize * count * typesize);
+  }
+  mpiret = sc_MPI_Gather (prescan,count,type,noderecvchar,count,type,0,intranode);
+  SC_CHECK_MPI(mpiret);
+  SC_FREE(prescan);
+
+  /* node root allgathers between nodes and scans */
+  if (!intrarank) {
+    *recvbuf = SC_ALLOC(char,(intrasize * intersize + 1) * count * typesize);
+
+    memset (*recvbuf,0,count*typesize);
+
+    mpiret = sc_MPI_Allgather(noderecvchar, count*intrasize, type, *recvbuf+count*typesize,
+                              count*intrasize, type, internode);
     SC_FREE(noderecvchar);
   }
   else {
@@ -335,6 +624,174 @@ sc_allgather_final_create_window(void *sendbuf, int sendcount, sc_MPI_Datatype s
   SC_CHECK_MPI(mpiret);
 #else
   sc_allgather_final_create_default(sendbuf,sendcount,sendtype,recvbuf,recvcount,recvtype,mpicomm);
+#endif
+}
+
+void
+sc_allgather_final_scan_create_window(void *sendbuf, void **recvbuf, int count,
+                                      sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm)
+
+{
+#if defined(SC_ENABLE_MPIWINSHARED)
+  MPI_Comm intranode = sc_MPI_COMM_NULL, internode = sc_MPI_COMM_NULL;
+  size_t typesize;
+  int  mpiret, size, interrank, intrarank, intrasize, intersize;
+  char *noderecvchar = NULL;
+  MPI_Aint winsize = 0;
+  int disp_unit;
+  MPI_Win win;
+
+  typesize = sc_mpi_sizeof (type);
+
+  sc_mpi_comm_get_node_comms(mpicomm,&intranode,&internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    sc_allgather_final_scan_create_default(sendbuf,recvbuf,count,type,op,mpicomm);
+    return;
+  }
+
+  mpiret = sc_MPI_Comm_rank(intranode,&intrarank);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(intranode,&intrasize);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(internode,&intersize);
+  SC_CHECK_MPI(mpiret);
+  /* node root gathers from node */
+  if (!intrarank) {
+    noderecvchar = SC_ALLOC (char,intrasize * count * typesize);
+  }
+  mpiret = sc_MPI_Gather (sendbuf,count,type,noderecvchar,count,type,0,intranode);
+  SC_CHECK_MPI(mpiret);
+
+  /* create the shared array */
+  disp_unit = SC_MAX(typesize,sizeof (MPI_Win));
+  if (!intrarank) {
+    winsize = (intrasize * intersize + 1) * count * typesize + intrasize * sizeof (MPI_Win);
+    if (winsize % disp_unit) {
+      winsize = ((winsize / disp_unit) + 1) * disp_unit;
+    }
+  }
+  mpiret = MPI_Win_allocate_shared(winsize,disp_unit,MPI_INFO_NULL,intranode,recvbuf,&win);
+  SC_CHECK_MPI(mpiret);
+  mpiret = MPI_Win_shared_query(win,0,&winsize,&disp_unit,recvbuf);
+  SC_CHECK_MPI(mpiret);
+  /* store the windows at the front of the array */
+  mpiret = sc_MPI_Gather (&win,sizeof(MPI_Win),sc_MPI_BYTE,
+                          *recvbuf,sizeof(MPI_Win),sc_MPI_BYTE,
+                          0,intranode);
+  SC_CHECK_MPI(mpiret);
+  {
+    MPI_Win *shiftedbuf = ((MPI_Win *) *recvbuf) + intrasize;
+    *recvbuf = (void *) shiftedbuf;
+  }
+  /* node root allgathers between nodes */
+  if (!intrarank) {
+    mpiret = MPI_Win_lock(MPI_LOCK_EXCLUSIVE,0,MPI_MODE_NOCHECK,win);
+    SC_CHECK_MPI(mpiret);
+    memset (*recvbuf,0,count*typesize);
+    mpiret = sc_MPI_Allgather(noderecvchar,intrasize*count,type,
+                              *recvbuf+count*typesize,intrasize*count,type,internode);
+    SC_CHECK_MPI(mpiret);
+    sc_scan_on_array(*recvbuf,intrasize * intersize, count, typesize, type, op);
+    mpiret = MPI_Win_unlock(0,win);
+    SC_CHECK_MPI(mpiret);
+    SC_FREE(noderecvchar);
+  }
+  mpiret = sc_MPI_Barrier(intranode);
+  SC_CHECK_MPI(mpiret);
+
+  /* open access */
+  mpiret = MPI_Win_lock(MPI_LOCK_SHARED,0,MPI_MODE_NOCHECK,win);
+  SC_CHECK_MPI(mpiret);
+#else
+  sc_allgather_final_scan_create_default(sendbuf,recvbuf,count,type,op,mpicomm);
+#endif
+}
+
+void
+sc_allgather_final_scan_create_window_prescan(void *sendbuf, void **recvbuf, int count,
+                                              sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm)
+
+{
+#if defined(SC_ENABLE_MPIWINSHARED)
+  MPI_Comm intranode = sc_MPI_COMM_NULL, internode = sc_MPI_COMM_NULL;
+  size_t typesize;
+  int  mpiret, size, interrank, intrarank, intrasize, intersize;
+  char *noderecvchar = NULL;
+  int disp_unit;
+  MPI_Aint winsize = 0;
+  MPI_Win win;
+  char *prescan = NULL;
+
+  typesize = sc_mpi_sizeof (type);
+
+  sc_mpi_comm_get_node_comms(mpicomm,&intranode,&internode);
+  if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
+    sc_allgather_final_scan_create_default(sendbuf,recvbuf,count,type,op,mpicomm);
+    return;
+  }
+
+  prescan = SC_ALLOC(char,count * typesize);
+  memcpy (prescan, sendbuf, count * typesize);
+
+  mpiret = sc_MPI_Scan(sendbuf, prescan, count, type, op, mpicomm);
+  SC_CHECK_MPI(mpiret);
+
+  mpiret = sc_MPI_Comm_rank(intranode,&intrarank);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(intranode,&intrasize);
+  SC_CHECK_MPI(mpiret);
+  mpiret = sc_MPI_Comm_size(internode,&intersize);
+  SC_CHECK_MPI(mpiret);
+  /* node root gathers from node */
+  if (!intrarank) {
+    noderecvchar = SC_ALLOC (char,intrasize * count * typesize);
+  }
+  mpiret = sc_MPI_Gather (prescan,count,type,noderecvchar,count,type,0,intranode);
+  SC_CHECK_MPI(mpiret);
+  SC_FREE(prescan);
+
+  /* create the shared array */
+  disp_unit = SC_MAX(typesize,sizeof (MPI_Win));
+  if (!intrarank) {
+    winsize = (intrasize * intersize + 1) * count * typesize + intrasize * sizeof (MPI_Win);
+    if (winsize % disp_unit) {
+      winsize = ((winsize / disp_unit) + 1) * disp_unit;
+    }
+  }
+  mpiret = MPI_Win_allocate_shared(winsize,disp_unit,MPI_INFO_NULL,intranode,recvbuf,&win);
+  SC_CHECK_MPI(mpiret);
+  mpiret = MPI_Win_shared_query(win,0,&winsize,&disp_unit,recvbuf);
+  SC_CHECK_MPI(mpiret);
+  /* store the windows at the front of the array */
+  mpiret = sc_MPI_Gather (&win,sizeof(MPI_Win),sc_MPI_BYTE,
+                          *recvbuf,sizeof(MPI_Win),sc_MPI_BYTE,
+                          0,intranode);
+  SC_CHECK_MPI(mpiret);
+  {
+    MPI_Win *shiftedbuf = ((MPI_Win *) *recvbuf) + intrasize;
+    *recvbuf = (void *) shiftedbuf;
+  }
+  /* node root allgathers between nodes */
+  if (!intrarank) {
+    mpiret = MPI_Win_lock(MPI_LOCK_EXCLUSIVE,0,MPI_MODE_NOCHECK,win);
+    SC_CHECK_MPI(mpiret);
+    memset (*recvbuf,0,count*typesize);
+    mpiret = sc_MPI_Allgather(noderecvchar,intrasize*count,type,
+                              *recvbuf+count*typesize,intrasize*count,type,internode);
+    SC_CHECK_MPI(mpiret);
+    mpiret = MPI_Win_unlock(0,win);
+    SC_CHECK_MPI(mpiret);
+    SC_FREE(noderecvchar);
+  }
+  mpiret = sc_MPI_Barrier(intranode);
+  SC_CHECK_MPI(mpiret);
+
+  /* open access */
+  mpiret = MPI_Win_lock(MPI_LOCK_SHARED,0,MPI_MODE_NOCHECK,win);
+  SC_CHECK_MPI(mpiret);
+
+#else
+  sc_allgather_final_scan_create_default(sendbuf,recvbuf,count,type,op,mpicomm);
 #endif
 }
 
