@@ -377,6 +377,7 @@ sc_allgather_final_destroy_default(void *recvbuf, sc_MPI_Comm mpicomm)
 }
 
 sc_allgather_final_create_t sc_allgather_final_create = sc_allgather_final_create_default;
+sc_allgather_final_scan_create_t sc_allgather_final_scan_create = sc_allgather_final_scan_create_default;
 sc_allgather_final_destroy_t sc_allgather_final_destroy = sc_allgather_final_destroy_default;
 
 /** implement sc_allgather_final when nodes have a shared address space, so
