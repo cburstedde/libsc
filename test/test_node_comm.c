@@ -72,33 +72,77 @@ main (int argc, char **argv)
     long int myval = random();
     int longintsize = sizeof (long int);
     long int *recv_self;
+    long int *scan_self;
     long int *recv_final;
-    int check;
+    long int *scan_final;
+    int check, p;
 
     recv_self = SC_ALLOC(long int,size);
+    scan_self = SC_ALLOC(long int,size + 1);
     mpiret = sc_MPI_Allgather(&myval,longintsize,sc_MPI_CHAR,
                               recv_self,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
     SC_CHECK_MPI(mpiret);
 
+    scan_self[0] = 0;
+    for (p = 0; p < size; p++) {
+      scan_self[p + 1] = scan_self[p] + recv_self[p];
+    }
+
     sc_allgather_final_create_default (&myval,longintsize,sc_MPI_CHAR,
                                (void *) &recv_final,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
     check = memcmp(recv_self,recv_final,longintsize*size);
-    SC_CHECK_ABORT(!check,"sc_allgather_final_create does not reproduce sc_MPI_Allgather");
+    SC_CHECK_ABORT(!check,"sc_allgather_final_create_default does not reproduce sc_MPI_Allgather");
     sc_allgather_final_destroy_default (recv_final,MPI_COMM_WORLD);
 
-#if 0
+    sc_allgather_final_scan_create_default (&myval,(void *) &scan_final, 1, sc_MPI_LONG, sc_MPI_SUM,
+                                            MPI_COMM_WORLD);
+    check = memcmp(scan_self,scan_final,longintsize*size);
+    SC_CHECK_ABORT(!check,"sc_allgather_final_scan_create_default does not reproduce sc_MPI_Allgather + scan");
+    sc_allgather_final_destroy_default (scan_self,MPI_COMM_WORLD);
+
+    sc_allgather_final_scan_create_prescan (&myval,(void *) &scan_final, 1, sc_MPI_LONG, sc_MPI_SUM,
+                                            MPI_COMM_WORLD);
+    check = memcmp(scan_self,scan_final,longintsize*size);
+    SC_CHECK_ABORT(!check,"sc_allgather_final_scan_create_prescan does not reproduce sc_MPI_Allgather + scan");
+    sc_allgather_final_destroy_default (scan_self,MPI_COMM_WORLD);
+
+#if defined(__bgq__)
     sc_allgather_final_create_shared (&myval,longintsize,sc_MPI_CHAR,
                                (void *) &recv_final,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
     check = memcmp(recv_self,recv_final,longintsize*size);
-    SC_CHECK_ABORT(!check,"sc_allgather_final_create does not reproduce sc_MPI_Allgather");
+    SC_CHECK_ABORT(!check,"sc_allgather_final_create_shared does not reproduce sc_MPI_Allgather");
     sc_allgather_final_destroy_shared (recv_final,MPI_COMM_WORLD);
+
+    sc_allgather_final_scan_create_shared (&myval,(void *) &scan_final, 1, sc_MPI_LONG, sc_MPI_SUM,
+                                            MPI_COMM_WORLD);
+    check = memcmp(scan_self,scan_final,longintsize*size);
+    SC_CHECK_ABORT(!check,"sc_allgather_final_scan_create_shared does not reproduce sc_MPI_Allgather + scan");
+    sc_allgather_final_destroy_default (scan_self,MPI_COMM_WORLD);
+
+    sc_allgather_final_scan_create_shared_prescan (&myval,(void *) &scan_final, 1, sc_MPI_LONG, sc_MPI_SUM,
+                                            MPI_COMM_WORLD);
+    check = memcmp(scan_self,scan_final,longintsize*size);
+    SC_CHECK_ABORT(!check,"sc_allgather_final_scan_create_shared_prescan does not reproduce sc_MPI_Allgather + scan");
+    sc_allgather_final_destroy_default (scan_self,MPI_COMM_WORLD);
 #endif
 
     sc_allgather_final_create_window (&myval,longintsize,sc_MPI_CHAR,
                                (void *) &recv_final,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
     check = memcmp(recv_self,recv_final,longintsize*size);
-    SC_CHECK_ABORT(!check,"sc_allgather_final_create does not reproduce sc_MPI_Allgather");
+    SC_CHECK_ABORT(!check,"sc_allgather_final_create_window does not reproduce sc_MPI_Allgather");
     sc_allgather_final_destroy_window (recv_final,MPI_COMM_WORLD);
+
+    sc_allgather_final_scan_create_window (&myval,(void *) &scan_final, 1, sc_MPI_LONG, sc_MPI_SUM,
+                                            MPI_COMM_WORLD);
+    check = memcmp(scan_self,scan_final,longintsize*size);
+    SC_CHECK_ABORT(!check,"sc_allgather_final_scan_create_window does not reproduce sc_MPI_Allgather + scan");
+    sc_allgather_final_destroy_default (scan_self,MPI_COMM_WORLD);
+
+    sc_allgather_final_scan_create_window_prescan (&myval,(void *) &scan_final, 1, sc_MPI_LONG, sc_MPI_SUM,
+                                            MPI_COMM_WORLD);
+    check = memcmp(scan_self,scan_final,longintsize*size);
+    SC_CHECK_ABORT(!check,"sc_allgather_final_scan_create_window_prescan does not reproduce sc_MPI_Allgather + scan");
+    sc_allgather_final_destroy_default (scan_self,MPI_COMM_WORLD);
 
     sc_allgather_final_create (&myval,longintsize,sc_MPI_CHAR,
                                (void *) &recv_final,longintsize,sc_MPI_CHAR, MPI_COMM_WORLD);
@@ -106,7 +150,14 @@ main (int argc, char **argv)
     SC_CHECK_ABORT(!check,"sc_allgather_final_create does not reproduce sc_MPI_Allgather");
     sc_allgather_final_destroy(recv_final,MPI_COMM_WORLD);
 
+    sc_allgather_final_scan_create (&myval,(void *) &scan_final, 1, sc_MPI_LONG, sc_MPI_SUM,
+                                            MPI_COMM_WORLD);
+    check = memcmp(scan_self,scan_final,longintsize*size);
+    SC_CHECK_ABORT(!check,"sc_allgather_final_scan_create does not reproduce sc_MPI_Allgather + scan");
+    sc_allgather_final_destroy_default (scan_self,MPI_COMM_WORLD);
+
     SC_FREE (recv_self);
+    SC_FREE (scan_self);
   }
 
   sc_finalize ();
