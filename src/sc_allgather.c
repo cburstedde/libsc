@@ -21,6 +21,11 @@
 */
 
 #include <sc_allgather.h>
+#if defined(__bgq__)
+/** for sc_allgather_final_*_shared routines to work on BG/Q, you must
+ * run with --env BG_MAPCOMMONHEAP=1 */
+#include <hwi/include/bqc/A2_inlines.h>
+#endif
 
 void
 sc_allgather_alltoall (sc_MPI_Comm mpicomm, char *data, int datasize,
@@ -415,9 +420,23 @@ sc_allgather_final_create_shared(void *sendbuf, int sendcount, sc_MPI_Datatype s
     *recvbuf = NULL;
   }
 
+#if defined(__bgq__)
+  /* these memory sync's are included in Jeff's example */
+  /* https://wiki.alcf.anl.gov/parts/index.php/Blue_Gene/Q#Abusing_the_common_heap */
+  ppc_msync();
+#endif
+  mpiret = MPI_Barrier(intranode);
+  SC_CHECK_MPI(mpiret);
+
   /* node root broadcast array start in node */
   mpiret = sc_MPI_Bcast(recvbuf,sizeof(char *),sc_MPI_BYTE,0,intranode);
   SC_CHECK_MPI(mpiret);
+
+#if defined(__bgq__)
+  /* these memory sync's are included in Jeff's example */
+  /* https://wiki.alcf.anl.gov/parts/index.php/Blue_Gene/Q#Abusing_the_common_heap */
+  ppc_msync();
+#endif
 }
 
 void
@@ -467,9 +486,23 @@ sc_allgather_final_scan_create_shared(void *sendbuf, void **recvbuf, int count,
     *recvbuf = NULL;
   }
 
+#if defined(__bgq__)
+  /* these memory sync's are included in Jeff's example */
+  /* https://wiki.alcf.anl.gov/parts/index.php/Blue_Gene/Q#Abusing_the_common_heap */
+  ppc_msync();
+#endif
+  mpiret = MPI_Barrier(intranode);
+  SC_CHECK_MPI(mpiret);
+
   /* node root broadcast array start in node */
   mpiret = sc_MPI_Bcast(recvbuf,sizeof(char *),sc_MPI_BYTE,0,intranode);
   SC_CHECK_MPI(mpiret);
+
+#if defined(__bgq__)
+  /* these memory sync's are included in Jeff's example */
+  /* https://wiki.alcf.anl.gov/parts/index.php/Blue_Gene/Q#Abusing_the_common_heap */
+  ppc_msync();
+#endif
 }
 
 void
@@ -525,9 +558,23 @@ sc_allgather_final_scan_create_shared_prescan(void *sendbuf, void **recvbuf, int
     *recvbuf = NULL;
   }
 
+#if defined(__bgq__)
+  /* these memory sync's are included in Jeff's example */
+  /* https://wiki.alcf.anl.gov/parts/index.php/Blue_Gene/Q#Abusing_the_common_heap */
+  ppc_msync();
+#endif
+  mpiret = MPI_Barrier(intranode);
+  SC_CHECK_MPI(mpiret);
+
   /* node root broadcast array start in node */
   mpiret = sc_MPI_Bcast(recvbuf,sizeof(char *),sc_MPI_BYTE,0,intranode);
   SC_CHECK_MPI(mpiret);
+
+#if defined(__bgq__)
+  /* these memory sync's are included in Jeff's example */
+  /* https://wiki.alcf.anl.gov/parts/index.php/Blue_Gene/Q#Abusing_the_common_heap */
+  ppc_msync();
+#endif
 }
 
 void
