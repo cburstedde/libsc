@@ -376,9 +376,21 @@ sc_allgather_final_destroy_default(void *recvbuf, sc_MPI_Comm mpicomm)
   SC_FREE(recvbuf);
 }
 
-sc_allgather_final_create_t sc_allgather_final_create = sc_allgather_final_create_default;
-sc_allgather_final_scan_create_t sc_allgather_final_scan_create = sc_allgather_final_scan_create_default;
-sc_allgather_final_destroy_t sc_allgather_final_destroy = sc_allgather_final_destroy_default;
+#if !defined(SC_AG_FINAL_CREATE_DEFAULT)
+#define SC_AG_FINAL_CREATE_DEFAULT sc_allgather_final_create_default
+#endif
+sc_allgather_final_create_t sc_allgather_final_create = SC_AG_FINAL_CREATE_DEFAULT;
+
+#if !defined(SC_AG_FINAL_SCAN_CREATE_DEFAULT)
+#define SC_AG_FINAL_SCAN_CREATE_DEFAULT sc_allgather_final_scan_create_default
+#endif
+sc_allgather_final_scan_create_t sc_allgather_final_scan_create = SC_AG_FINAL_SCAN_CREATE_DEFAULT;
+
+
+#if !defined(SC_AG_FINAL_DESTROY_DEFAULT)
+#define SC_AG_FINAL_DESTROY_DEFAULT sc_allgather_final_destroy_default
+#endif
+sc_allgather_final_destroy_t sc_allgather_final_destroy = SC_AG_FINAL_DESTROY_DEFAULT;
 
 /** implement sc_allgather_final when nodes have a shared address space, so
  * that raw pointers can be passed and dereferenced in nodes */
