@@ -87,7 +87,7 @@ void sc_allgather_final_create_default(void *sendbuf, int sendcount,
 void sc_allgather_final_scan_create_default(void *sendbuf, void **recvbuf, int count,
                                             sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm);
 /** prescan implementation: mpi_scan, then alloc, then allgather: works for any type or op */
-void sc_allgather_final_scan_create_scan(void *sendbuf, void **recvbuf, int count,
+void sc_allgather_final_scan_create_prescan(void *sendbuf, void **recvbuf, int count,
                                             sc_MPI_Datatype type, sc_MPI_Op op, sc_MPI_Comm mpicomm);
 void sc_allgather_final_destroy_default(void *recvbuf, sc_MPI_Comm mpicomm);
 
