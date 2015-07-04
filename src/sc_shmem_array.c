@@ -29,8 +29,8 @@
 #endif
 
 static void
-sc_scan_on_array(void *recvchar, int size, int count, int typesize, sc_MPI_Datatype type,
-                 sc_MPI_Op op)
+sc_scan_on_array(void *recvchar, int size, int count, int typesize,
+                 sc_MPI_Datatype type, sc_MPI_Op op)
 {
   int p, c;
 
@@ -262,16 +262,17 @@ sc_shmem_array_allgather_basic(void *sendbuf, int sendcount, sc_MPI_Datatype sen
 }
 
 static void
-sc_shmem_array_prefix_basic (void *sendbuf, int *recvbuf, int count,
+sc_shmem_array_prefix_basic (void *sendbuf, void *recvbuf, int count,
                              sc_MPI_Datatype type, sc_MPI_Op op,
                              sc_MPI_Comm comm,
-                           sc_MPI_Comm intranode, sc_MPI_Comm internode)
+                             sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   int mpiret, size;
   size_t typesize = sc_mpi_sizeof (type);
 
   memset(recvbuf,0,typesize * count);
-  mpiret = sc_MPI_Allgather (sendbuf, count, type, ((char *) recvbuf) + typesize * count, count, type, comm);
+  mpiret = sc_MPI_Allgather (sendbuf, count, type, ((char *) recvbuf) +
+                             typesize * count, count, type, comm);
   SC_CHECK_MPI(mpiret);
   mpiret = sc_MPI_Comm_size (comm, &size);
   SC_CHECK_MPI(mpiret);
@@ -283,8 +284,8 @@ sc_shmem_array_prefix_basic (void *sendbuf, int *recvbuf, int count,
 static void
 sc_shmem_array_prefix_prescan (void *sendbuf, int *recvbuf, int count,
                                sc_MPI_Datatype type, sc_MPI_Op op,
-                               sc_MPI_Comm comm,
-                           sc_MPI_Comm intranode, sc_MPI_Comm internode)
+                               sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                               sc_MPI_Comm internode)
 {
   int mpiret, size;
   size_t typesize = sc_mpi_sizeof (type);
@@ -292,10 +293,14 @@ sc_shmem_array_prefix_prescan (void *sendbuf, int *recvbuf, int count,
 
   sendscan = SC_ALLOC (char, typesize * count);
   mpiret = sc_MPI_Scan (sendbuf, sendscan, count, type, op, comm);
+  SC_CHECK_MPI(mpiret);
 
   memset(recvbuf,0,typesize * count);
-  mpiret = sc_MPI_Allgather (sendscan, count, type, ((char *) recvbuf) + typesize * count, count, type, comm);
+  mpiret = sc_MPI_Allgather (sendscan, count, type,
+                             ((char *) recvbuf) + typesize * count,
+                             count, type, comm);
   SC_CHECK_MPI(mpiret);
+  SC_FREE(sendscan);
 }
 
 /* common to SHARED and WINDOW */
@@ -805,6 +810,7 @@ sc_shmem_array_prefix (void *sendbuf, void *recvbuf, int count, sc_MPI_Datatype 
   switch (type) {
   case SC_SHMEM_ARRAY_BASIC:
     sc_shmem_array_prefix_basic(sendbuf, recvbuf, count, dtype, op, comm, intranode, internode);
+    break;
   case SC_SHMEM_ARRAY_PRESCAN:
     sc_shmem_array_prefix_prescan(sendbuf, recvbuf, count, dtype, op, comm, intranode, internode);
     break;

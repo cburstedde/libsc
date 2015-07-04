@@ -31,6 +31,8 @@ test_shmem_array (int count, sc_MPI_Comm comm, sc_shmem_array_type_t type)
   int i, p, size, mpiret, check;
   long int *myval, *recv_self, *recv_shmem, *scan_self, *scan_shmem;
 
+  SC_GLOBAL_PRODUCTIONF ("type %d\n", type);
+
   sc_shmem_array_set_type(comm, type);
 
   mpiret = sc_MPI_Comm_size(comm, &size);
@@ -41,18 +43,22 @@ test_shmem_array (int count, sc_MPI_Comm comm, sc_shmem_array_type_t type)
     myval[i] = random();
   }
 
-  recv_self = SC_ALLOC(long int,size);
-  scan_self = SC_ALLOC(long int,size + 1);
+  recv_self = SC_ALLOC(long int,count * size);
+  scan_self = SC_ALLOC(long int,count * (size + 1));
   mpiret = sc_MPI_Allgather(myval,count,sc_MPI_LONG,
                             recv_self,count,sc_MPI_LONG, comm);
   SC_CHECK_MPI(mpiret);
 
-  scan_self[0] = 0;
+  for (i = 0; i < count; i++) {
+    scan_self[i] = 0;
+  }
   for (p = 0; p < size; p++) {
-    scan_self[p + 1] = scan_self[p] + recv_self[p];
+    for (i = 0; i < count; i++) {
+      scan_self[count * (p + 1) + i] = scan_self[count * p + i] + recv_self[count * p + i];
+    }
   }
 
-  recv_shmem = sc_shmem_array_alloc(sizeof (long int),size,comm);
+  recv_shmem = sc_shmem_array_alloc(sizeof (long int),count * size,comm);
   sc_shmem_array_allgather(myval,count,sc_MPI_LONG,
                            recv_shmem,count,sc_MPI_LONG,
                            comm);
@@ -60,7 +66,7 @@ test_shmem_array (int count, sc_MPI_Comm comm, sc_shmem_array_type_t type)
   SC_CHECK_ABORTF(!check,"sc_shmem_array_allgather does not reproduce for type %d, count %d\n",type,count);
   sc_shmem_array_free(recv_shmem,comm);
 
-  recv_shmem = sc_shmem_array_alloc(sizeof (long int),size,comm);
+  scan_shmem = sc_shmem_array_alloc(sizeof (long int),count * (size + 1),comm);
   sc_shmem_array_prefix(myval,scan_shmem,count,sc_MPI_LONG,sc_MPI_SUM,comm);
   check = memcmp(scan_self,scan_shmem,count * sizeof(long int)*(size + 1));
   SC_CHECK_ABORTF(!check,"sc_shmem_array_prefix does not reproduce for type %d, count %d\n",type,count);
