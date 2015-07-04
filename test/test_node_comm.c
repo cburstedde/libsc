@@ -22,7 +22,6 @@
 
 #include <sc.h>
 #include <sc_mpi.h>
-#include <sc_options.h>
 #include <sc_shmem_array.h>
 
 void
@@ -80,7 +79,6 @@ test_shmem_array (int count, sc_MPI_Comm comm, sc_shmem_array_type_t type)
 int
 main (int argc, char **argv)
 {
-  sc_options_t *opt;
   sc_MPI_Comm   intranode = sc_MPI_COMM_NULL;
   sc_MPI_Comm   internode = sc_MPI_COMM_NULL;
   int           mpiret, node_size = 1, rank, size;
@@ -95,30 +93,6 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
-
-  opt = sc_options_new (argv[0]);
-  sc_options_add_int (opt, 'n', "node-size", &node_size,
-                      node_size, "simulated node size for intranode communicators");
-
-  first = sc_options_parse (sc_package_id, SC_LP_INFO, opt, argc, argv);
-  if (first < 0) {
-    sc_options_print_usage (sc_package_id, SC_LP_INFO, opt, NULL);
-    sc_abort_collective ("Usage error");
-  }
-  sc_options_destroy (opt);
-
-  sc_mpi_comm_attach_node_comms (MPI_COMM_WORLD,node_size);
-  sc_mpi_comm_get_node_comms(MPI_COMM_WORLD,&intranode,&internode);
-
-  SC_CHECK_ABORT(intranode != sc_MPI_COMM_NULL,"Could not extract communicator");
-  SC_CHECK_ABORT(internode != sc_MPI_COMM_NULL,"Could not extract communicator");
-
-  mpiret = sc_MPI_Comm_rank(intranode,&intrarank);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank(internode,&interrank);
-  SC_CHECK_MPI (mpiret);
-
-  SC_CHECK_ABORT (interrank * node_size + intrarank == rank, "rank calculation mismatch");
 
   srandom(rank);
   for (type = 0; type < SC_SHMEM_ARRAY_NUM_TYPES; type++) {

@@ -981,14 +981,21 @@ sc_init (sc_MPI_Comm mpicomm,
 #endif
 
 #if defined(SC_ENABLE_MPI)
-  /** register the node comm attachments with MPI */
   if (mpicomm != MPI_COMM_NULL) {
     int mpiret;
 
+    /* register the node comm attachment with MPI */
     mpiret = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN,sc_mpi_node_comms_destroy,&sc_mpi_node_comm_keyval,NULL);
     SC_CHECK_MPI(mpiret);
+
+    /* register the shared memory behavior with MPI */
     mpiret = MPI_Comm_create_keyval(MPI_COMM_DUP_FN,MPI_COMM_NULL_DELETE_FN,&sc_shmem_array_keyval,NULL);
     SC_CHECK_MPI(mpiret);
+
+#if (MPI_VERSION >= 3)
+    /* compute the node comms by default */
+    sc_mpi_comm_attach_node_comms(mpicomm,0);
+#endif
   }
 #endif
 }
