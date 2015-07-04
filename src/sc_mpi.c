@@ -380,27 +380,63 @@ sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
                                int processes_per_node)
 {
 #if defined(SC_ENABLE_MPI)
-  int size, rank, node, offset, keyval, mpiret;
+  int keyval, mpiret, rank, size;
   MPI_Comm *node_comms, internode, intranode;
 
   SC_ASSERT(sc_mpi_node_comm_keyval != MPI_KEYVAL_INVALID);
 
   mpiret = MPI_Comm_size(comm,&size);
   SC_CHECK_MPI(mpiret);
-
   mpiret = MPI_Comm_rank(comm,&rank);
   SC_CHECK_MPI(mpiret);
 
-  SC_ASSERT (!(size % processes_per_node));
+  if (processes_per_node < 1) {
+#if (MPI_VERSION < 3)
+    SC_ABORT ("Require MPI-3 or greater to automatically determin node communicators");
+#else
+    int intrasize, intrarank, maxintrasize, minintrasize;
 
-  node = rank / processes_per_node;
-  offset = rank % processes_per_node;
+    mpiret = MPI_Comm_split_type(comm,MPI_COMM_TYPE_SHARED,rank,MPI_INFO_NULL,&intranode);
+    SC_CHECK_MPI(mpiret);
 
-  mpiret = MPI_Comm_split(comm,node,offset,&intranode);
-  SC_CHECK_MPI(mpiret);
+    /* We only accept node comms if they are all the same size */
+    mpiret = MPI_Comm_size(intranode,&intrasize);
+    SC_CHECK_MPI(mpiret);
+    mpiret = MPI_Comm_rank(intranode,&intrarank);
+    SC_CHECK_MPI(mpiret);
 
-  mpiret = MPI_Comm_split(comm,offset,node,&internode);
-  SC_CHECK_MPI(mpiret);
+    mpiret = MPI_Allreduce(&intrasize,&maxintrasize,1,MPI_INT,MPI_MAX,comm);
+    SC_CHECK_MPI(mpiret);
+    mpiret = MPI_Allreduce(&intrasize,&minintrasize,1,MPI_INT,MPI_MIN,comm);
+    SC_CHECK_MPI(mpiret);
+
+    if (maxintrasize != minintrasize) {
+      SC_GLOBAL_LDEBUG ("node communicators are not the same size: not attaching\n");
+
+      mpiret = MPI_Comm_free(&intrasize);
+      SC_CHECK_MPI(mpiret);
+
+      return;
+    }
+
+    mpiret = MPI_Comm_split(comm,intrarank,rank,&internode);
+    SC_CHECK_MPI(mpiret);
+#endif
+  }
+  else {
+    int node, offset;
+
+    SC_ASSERT (!(size % processes_per_node));
+
+    node = rank / processes_per_node;
+    offset = rank % processes_per_node;
+
+    mpiret = MPI_Comm_split(comm,node,offset,&intranode);
+    SC_CHECK_MPI(mpiret);
+
+    mpiret = MPI_Comm_split(comm,offset,node,&internode);
+    SC_CHECK_MPI(mpiret);
+  }
 
   /* We can't used SC_ALLOC because these might be destroyed after
    * sc finalizes */

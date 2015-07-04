@@ -315,7 +315,9 @@ size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
  *
  * \param [in/out] comm                 MPI communicator
  * \param [in]     processes_per_node   the size of the intranode
- *                                      communicators.
+ *                                      communicators. if < 1,
+ *                                      sc will try to determine the correct
+ *                                      shared memory communicators.
  */
 
 void                sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
