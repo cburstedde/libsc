@@ -992,7 +992,7 @@ sc_init (sc_MPI_Comm mpicomm,
     mpiret = MPI_Comm_create_keyval(MPI_COMM_DUP_FN,MPI_COMM_NULL_DELETE_FN,&sc_shmem_array_keyval,NULL);
     SC_CHECK_MPI(mpiret);
 
-#if (MPI_VERSION >= 3)
+#if defined(SC_ENABLE_MPICOMMSHARED)
     /* compute the node comms by default */
     sc_mpi_comm_attach_node_comms(mpicomm,0);
 #endif

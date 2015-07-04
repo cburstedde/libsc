@@ -391,8 +391,8 @@ sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
   SC_CHECK_MPI(mpiret);
 
   if (processes_per_node < 1) {
-#if (MPI_VERSION < 3)
-    SC_ABORT ("Require MPI-3 or greater to automatically determin node communicators");
+#if !defined(SC_ENABLE_MPICOMMSHARED)
+    SC_ABORT ("Require MPI-3 or greater to automatically determine node communicators");
 #else
     int intrasize, intrarank, maxintrasize, minintrasize;
 

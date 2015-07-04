@@ -337,6 +337,29 @@ mpiret = MPI_Finalize ();
  $2])
 ])
 
+dnl SC_MPICOMMSHARED_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI_COMM_TYPE_SHARED test program
+dnl
+AC_DEFUN([SC_MPICOMMSHARED_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for MPI_COMM_TYPE_SHARED C program])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+int mpiret;
+MPI_Comm subcomm;
+MPI_Init ((int *) 0, (char ***) 0);
+mpiret = MPI_Comm_split_type(MPI_COMM_WORLD,MPI_COMM_TYPE_SHARED,0,MPI_INFO_NULL,&subcomm);
+mpiret = MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $1],
+[AC_MSG_RESULT([failed])
+ $2])
+])
+
 dnl SC_MPI_INCLUDES
 dnl Call the compiler with various --show* options
 dnl to figure out the MPI_INCLUDES and MPI_INCLUDE_PATH varables
@@ -425,10 +448,16 @@ dnl  ])
   fi
   $1_ENABLE_MPIWINSHARED=yes
   SC_MPIWINSHARED_C_COMPILE_AND_LINK(,[$1_ENABLE_MPIWINSHARED=no])
-  if test "x$HAVE_PKG_MPIWINSHARED" = xyes ; then
+  if test "x$$1_ENABLE_MPIWINSHARED" = xyes ; then
     AC_DEFINE([ENABLE_MPIWINSHARED], 1, [Define to 1 if we can use MPI_Win_allocate_shared])
   fi
-  AM_CONDITIONAL([$1_ENABLE_MPIWINSHARED], [test "x$1_PKG_MPIWINSHARED" = xyes])
+  AM_CONDITIONAL([$1_ENABLE_MPIWINSHARED], [test "x$$1_ENABLE_MPIWINSHARED" = xyes])
+  $1_ENABLE_MPICOMMSHARED=yes
+  SC_MPICOMMSHARED_C_COMPILE_AND_LINK(,[$1_ENABLE_MPICOMMSHARED=no])
+  if test "x$$1_ENABLE_MPICOMMSHARED" = xyes ; then
+    AC_DEFINE([ENABLE_MPICOMMSHARED], 1, [Define to 1 if we can use MPI_COMM_TYPE_SHARED])
+  fi
+  AM_CONDITIONAL([$1_ENABLE_MPICOMMSHARED], [test "x$$1_ENABLE_MPICOMMSHARED" = xyes])
 fi
 
 dnl figure out the MPI include directories
