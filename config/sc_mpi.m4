@@ -14,13 +14,10 @@ dnl --disable-mpiio   Only effective if --enable-mpi is given.  In this case,
 dnl                   do not use MPI I/O in sc and skip the compile-and-link test.
 dnl --disable-mpithread Only effective if --enable-mpi is given.  In this case,
 dnl                   do not use MPI_Init_thread () and skip compile-and-link test.
-dnl --enable-mpiwinshared Only effective if --enable-mpi is given.  In this case,
-dnl                   use MPI_Win_allocate_shared () and compile-and-link test.
 dnl
 dnl If MPI is enabled, set AC_DEFINE and AC_CONDITIONAL for PREFIX_ENABLE_MPI.
 dnl If MPI I/O is not disabled, set these for PREFIX_ENABLE_MPIIO.
 dnl If MPI_Init_thread is not disabled, set these for PREFIX_ENABLE_MPITHREAD.
-dnl If MPI_Win_allocate_shared is enabled, set these for PREFIX_ENABLE_MPIWINSHARED.
 dnl
 dnl SC_MPI_ENGAGE(PREFIX)
 dnl
@@ -36,8 +33,6 @@ dnl If MPI is enabled and I/O is not disabled, a compile-and-link test
 dnl for MPI I/O is performed.  It aborts configuration on failure.
 dnl If MPI is enabled and MPITHREAD is not disabled, a compile-and-link test
 dnl for MPI_Init_thread is performed.  It aborts configuration on failure.
-dnl If MPI is enabled and MPIWINSHARED is enabled, a compile-and-link test
-dnl for MPI_Win_allocate_shared is performed.  It aborts configuration on failure.
 dnl
 dnl These macros are separate because of the AC_REQUIRE logic inside autoconf.
 
@@ -46,7 +41,6 @@ AC_DEFUN([SC_MPI_CONFIG],
 HAVE_PKG_MPI=no
 HAVE_PKG_MPIIO=no
 HAVE_PKG_MPITHREAD=no
-HAVE_PKG_MPIWINSHARED=no
 m4_ifval([$2], [m4_define([SC_CHECK_MPI_F77], [yes])])
 m4_ifval([$2], [m4_define([SC_CHECK_MPI_FC], [yes])])
 m4_ifval([$3], [m4_define([SC_CHECK_MPI_CXX], [yes])])
@@ -97,20 +91,6 @@ elif test "x$enableval" != xno ; then
 fi
 AC_MSG_CHECKING([whether we are using MPI_Init_thread])
 AC_MSG_RESULT([$HAVE_PKG_MPITHREAD])
-
-dnl The variable SC_ENABLE_MPIWINSHARED is set if --disable-mpiwinshared not given.
-dnl If enabled, MPI_Win_allocated_shared will be verified by a compile/link test.
-AC_ARG_ENABLE([mpiwinshared],
-              [AS_HELP_STRING([--enable-mpiwinshared],
-               [use MPI_Win_allocate_shared])],,
-              [enableval=no])
-if test "x$enableval" = xyes ; then
-  if test "x$HAVE_PKG_MPI" = xyes ; then
-    HAVE_PKG_MPIWINSHARED=yes
-  fi
-fi
-AC_MSG_CHECKING([whether we are using MPI_Win_allocate_shared])
-AC_MSG_RESULT([$HAVE_PKG_MPIWINSHARED])
 
 dnl Establish the MPI test environment
 $1_MPIRUN=
@@ -164,9 +144,6 @@ m4_ifset([SC_CHECK_MPI_CXX], [
   if test "x$HAVE_PKG_MPITHREAD" = xyes ; then
     AC_DEFINE([ENABLE_MPITHREAD], 1, [Define to 1 if we are using MPI_Init_thread])
   fi
-  if test "x$HAVE_PKG_MPIWINSHARED" = xyes ; then
-    AC_DEFINE([ENABLE_MPIWINSHARED], 1, [Define to 1 if we are using MPI_Win_allocate_shared])
-  fi
 else
 m4_ifset([SC_CHECK_MPI_F77], [
   if test "x$F77" = x ; then
@@ -188,7 +165,6 @@ fi
 AM_CONDITIONAL([$1_ENABLE_MPI], [test "x$HAVE_PKG_MPI" = xyes])
 AM_CONDITIONAL([$1_ENABLE_MPIIO], [test "x$HAVE_PKG_MPIIO" = xyes])
 AM_CONDITIONAL([$1_ENABLE_MPITHREAD], [test "x$HAVE_PKG_MPITHREAD" = xyes])
-AM_CONDITIONAL([$1_ENABLE_MPIWINSHARED], [test "x$HAVE_PKG_MPIWINSHARED" = xyes])
 ])
 
 dnl SC_MPI_F77_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
@@ -447,11 +423,13 @@ dnl  ])
     SC_MPITHREAD_C_COMPILE_AND_LINK(,
       [AC_MSG_ERROR([MPI_Init_thread not found; you may try --disable-mpithread])])
   fi
-fi
+  $1_ENABLE_MPIWINSHARED=yes
+  SC_MPIWINSHARED_C_COMPILE_AND_LINK(,[$1_ENABLE_MPIWINSHARED=no])
   if test "x$HAVE_PKG_MPIWINSHARED" = xyes ; then
-    SC_MPIWINSHARED_C_COMPILE_AND_LINK(,
-      [AC_MSG_ERROR([MPI_Win_allocate_shared not found; you may try --disable-mpiwinshared])])
+    AC_DEFINE([ENABLE_MPIWINSHARED], 1, [Define to 1 if we can use MPI_Win_allocate_shared])
   fi
+  AM_CONDITIONAL([$1_ENABLE_MPIWINSHARED], [test "x$1_PKG_MPIWINSHARED" = xyes])
+fi
 
 dnl figure out the MPI include directories
 SC_MPI_INCLUDES
