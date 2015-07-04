@@ -373,8 +373,7 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
 }
 
 /* these should be initialized in sc_init() */
-int sc_mpi_intranode_comm_keyval = MPI_KEYVAL_INVALID;
-int sc_mpi_internode_comm_keyval = MPI_KEYVAL_INVALID;
+int sc_mpi_node_comm_keyval = MPI_KEYVAL_INVALID;
 
 void
 sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
@@ -382,10 +381,9 @@ sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
 {
 #if defined(SC_ENABLE_MPI)
   int size, rank, node, offset, keyval, mpiret;
-  MPI_Comm internode, intranode;
+  MPI_Comm *node_comms, internode, intranode;
 
-  SC_ASSERT(sc_mpi_intranode_comm_keyval != MPI_KEYVAL_INVALID);
-  SC_ASSERT(sc_mpi_internode_comm_keyval != MPI_KEYVAL_INVALID);
+  SC_ASSERT(sc_mpi_node_comm_keyval != MPI_KEYVAL_INVALID);
 
   mpiret = MPI_Comm_size(comm,&size);
   SC_CHECK_MPI(mpiret);
@@ -404,10 +402,14 @@ sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
   mpiret = MPI_Comm_split(comm,offset,node,&internode);
   SC_CHECK_MPI(mpiret);
 
-  mpiret = MPI_Comm_set_attr(comm,sc_mpi_intranode_comm_keyval, (void *) intranode);
+  /* We can't used SC_ALLOC because these might be destroyed after
+   * sc finalizes */
+  mpiret = MPI_Alloc_mem(2 * sizeof(MPI_Comm),MPI_INFO_NULL,&node_comms);
   SC_CHECK_MPI(mpiret);
+  node_comms[0] = intranode;
+  node_comms[1] = internode;
 
-  mpiret = MPI_Comm_set_attr(comm,sc_mpi_internode_comm_keyval, (void *) internode);
+  mpiret = MPI_Comm_set_attr(comm,sc_mpi_node_comm_keyval, node_comms);
   SC_CHECK_MPI(mpiret);
 #endif
 }
@@ -417,21 +419,18 @@ sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
                             sc_MPI_Comm *intranode,
                             sc_MPI_Comm *internode)
 {
-  int mpiret, intraflag, interflag;
+  int mpiret, flag;
+  MPI_Comm *node_comms;
   void *intraval, *interval;
 
   *intranode = sc_MPI_COMM_NULL;
   *internode = sc_MPI_COMM_NULL;
 #if defined(SC_ENABLE_MPI)
-  mpiret = MPI_Comm_get_attr(comm,sc_mpi_intranode_comm_keyval,&intraval,&intraflag);
+  mpiret = MPI_Comm_get_attr(comm,sc_mpi_node_comm_keyval,&node_comms,&flag);
   SC_CHECK_MPI(mpiret);
-  mpiret = MPI_Comm_get_attr(comm,sc_mpi_internode_comm_keyval,&interval,&interflag);
-  SC_CHECK_MPI(mpiret);
-  if (intraflag) {
-    *intranode = (MPI_Comm) intraval;
-  }
-  if (interflag) {
-    *internode = (MPI_Comm) interval;
+  if (flag && node_comms) {
+    *intranode = (MPI_Comm) node_comms[0];
+    *internode = (MPI_Comm) node_comms[1];
   }
 #endif
 }

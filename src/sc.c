@@ -835,24 +835,57 @@ sc_package_print_summary (int log_priority)
 
 #if defined(SC_ENABLE_MPI)
 static int
-sc_mpi_intranode_comm_destroy(MPI_Comm comm,int comm_keyval,void *attribute_val,void *extra_state)
+sc_mpi_node_comms_destroy(MPI_Comm comm,int comm_keyval,void *attribute_val,void *extra_state)
 {
   int mpiret;
-  MPI_Comm intra_comm = (MPI_Comm) attribute_val;
+  MPI_Comm *node_comms = (MPI_Comm *) attribute_val;
 
-  mpiret = MPI_Comm_free(&intra_comm);
-  return mpiret;
+  mpiret = MPI_Comm_free(&node_comms[0]);
+  if (mpiret != MPI_SUCCESS) {
+    return mpiret;
+  }
+  mpiret = MPI_Comm_free(&node_comms[1]);
+  if (mpiret != MPI_SUCCESS) {
+    return mpiret;
+  }
+  mpiret = MPI_Free_mem(node_comms);
+
+  return MPI_SUCCESS;
 }
 
 static int
-sc_mpi_internode_comm_destroy(MPI_Comm comm,int comm_keyval,void *attribute_val,void *extra_state)
+sc_mpi_node_comms_copy (MPI_Comm oldcomm, int comm_keyval,
+                        void *extra_state,
+                        void *attribute_val_in,
+                        void *attribute_val_out,
+                        int *flag)
 {
+  MPI_Comm *node_comms_in = (MPI_Comm *) attribute_val_in;
+  MPI_Comm *node_comms_out;
   int mpiret;
-  MPI_Comm inter_comm = (MPI_Comm) attribute_val;
 
-  mpiret = MPI_Comm_free(&inter_comm);
-  return mpiret;
+  /* We can't used SC_ALLOC because these might be destroyed after
+   * sc finalizes */
+  mpiret = MPI_Alloc_mem (2 * sizeof(MPI_Comm),MPI_INFO_NULL,&node_comms_out);
+  if (mpiret != MPI_SUCCESS) {
+    return mpiret;
+  }
+
+  mpiret = MPI_Comm_dup (node_comms_in[0],&node_comms_out[0]);
+  if (mpiret != MPI_SUCCESS) {
+    return mpiret;
+  }
+  mpiret = MPI_Comm_dup (node_comms_in[1],&node_comms_out[1]);
+  if (mpiret != MPI_SUCCESS) {
+    return mpiret;
+  }
+
+  *((MPI_Comm **) attribute_val_out) = node_comms_out;
+  *flag = 1;
+
+  return MPI_SUCCESS;
 }
+
 #endif
 
 void
@@ -952,9 +985,7 @@ sc_init (sc_MPI_Comm mpicomm,
   if (mpicomm != MPI_COMM_NULL) {
     int mpiret;
 
-    mpiret = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN,sc_mpi_intranode_comm_destroy,&sc_mpi_intranode_comm_keyval,NULL);
-    SC_CHECK_MPI(mpiret);
-    mpiret = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN,sc_mpi_internode_comm_destroy,&sc_mpi_internode_comm_keyval,NULL);
+    mpiret = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN,sc_mpi_node_comms_destroy,&sc_mpi_node_comm_keyval,NULL);
     SC_CHECK_MPI(mpiret);
     mpiret = MPI_Comm_create_keyval(MPI_COMM_DUP_FN,MPI_COMM_NULL_DELETE_FN,&sc_shmem_array_keyval,NULL);
     SC_CHECK_MPI(mpiret);

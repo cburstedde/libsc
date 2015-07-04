@@ -152,8 +152,7 @@ sc_tag_t;
 /** An MPI_Comm_keyval to handle attached intranode and internode
  * communicators: should not be touched by users.
  */
-extern int sc_mpi_intranode_comm_keyval;
-extern int sc_mpi_internode_comm_keyval;
+extern int sc_mpi_node_comm_keyval;
 extern int sc_shmem_array_keyval;
 
 #else /* !SC_ENABLE_MPI */
