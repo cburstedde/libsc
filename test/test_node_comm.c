@@ -64,7 +64,7 @@ test_shmem (int count, sc_MPI_Comm comm, sc_shmem_type_t type)
     SC_GLOBAL_LERROR ("sc_shmem_allgather mismatch\n");
     return 1;
   }
-  sc_shmem_free (recv_shmem, comm);
+  SC_SHMEM_FREE (recv_shmem, comm);
 
   scan_shmem = SC_SHMEM_ALLOC (long int, (size_t) count * (size + 1), comm);
   sc_shmem_prefix (myval, scan_shmem, count, sc_MPI_LONG, sc_MPI_SUM, comm);
@@ -74,7 +74,7 @@ test_shmem (int count, sc_MPI_Comm comm, sc_shmem_type_t type)
     SC_GLOBAL_LERROR ("sc_shmem_prefix mismatch\n");
     return 2;
   }
-  sc_shmem_free (scan_shmem, comm);
+  SC_SHMEM_FREE (scan_shmem, comm);
 
   SC_FREE (scan_self);
   SC_FREE (recv_self);

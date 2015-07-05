@@ -73,7 +73,7 @@ sc_shmem_type_t     sc_shmem_get_type (sc_MPI_Comm comm);
 
 /** Allocate a shmem array: an array that is redundant on every process.
  *
- * \param[in] package         package asking for memory
+ * \param[in] package         package requesting memory
  * \param[in] elem_size       the size of each element in the array
  * \param[in] elem_count      the number of elements in the array
  * \param[in] comm            the mpi communicator
@@ -87,11 +87,15 @@ void               *sc_shmem_malloc (int package, size_t elem_size,
 
 /** Destroy a shmem array created with sc_shmem_alloc()
  *
+ * \param[in] package         package freeing memory
  * \param[in] array           array to be freed
  * \param[in] comm            the mpi communicator
  *
  * */
-void                sc_shmem_free (void *array, sc_MPI_Comm comm);
+void                sc_shmem_free (int package, void *array,
+                                   sc_MPI_Comm comm);
+
+#define SC_SHMEM_FREE(a,c) sc_shmem_free (sc_package_id,a,c)
 
 /** Start a write window for a shared array.
  *

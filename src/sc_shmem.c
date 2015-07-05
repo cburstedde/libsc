@@ -233,10 +233,10 @@ sc_shmem_malloc_basic (int package, size_t elem_count, size_t elem_size,
 }
 
 static void
-sc_shmem_free_basic (void *array, sc_MPI_Comm comm,
+sc_shmem_free_basic (int package, void *array, sc_MPI_Comm comm,
                      sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
-  sc_free (sc_package_id, array);
+  sc_free (package, array);
 }
 
 static int
@@ -508,11 +508,11 @@ sc_shmem_malloc_shared (int package, size_t elem_size, size_t elem_count,
 }
 
 static void
-sc_shmem_free_shared (void *array, sc_MPI_Comm comm,
+sc_shmem_free_shared (int package, void *array, sc_MPI_Comm comm,
                       sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   if (sc_shmem_write_start_shared (NULL, comm, intranode, internode)) {
-    sc_free (sc_package_id, array);
+    sc_free (package, array);
   }
   sc_shmem_write_end_shared (NULL, comm, intranode, internode);
 }
@@ -573,7 +573,7 @@ sc_shmem_malloc_window (int package, size_t elem_size, size_t elem_count,
 }
 
 static void
-sc_shmem_free_window (void *array, sc_MPI_Comm comm,
+sc_shmem_free_window (int package, void *array, sc_MPI_Comm comm,
                       sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   int                 mpiret;
@@ -669,7 +669,7 @@ sc_shmem_malloc (int package, size_t elem_size, size_t elem_count,
 }
 
 void
-sc_shmem_free (void *array, sc_MPI_Comm comm)
+sc_shmem_free (int package, void *array, sc_MPI_Comm comm)
 {
   sc_shmem_type_t     type;
   sc_MPI_Comm         intranode = sc_MPI_COMM_NULL, internode =
@@ -683,18 +683,18 @@ sc_shmem_free (void *array, sc_MPI_Comm comm)
   switch (type) {
   case SC_SHMEM_BASIC:
   case SC_SHMEM_PRESCAN:
-    sc_shmem_free_basic (array, comm, intranode, internode);
+    sc_shmem_free_basic (package, array, comm, intranode, internode);
     break;
 #if defined(__bgq__)
   case SC_SHMEM_SHARED:
   case SC_SHMEM_SHARED_PRESCAN:
-    sc_shmem_free_shared (array, comm, intranode, internode);
+    sc_shmem_free_shared (package, array, comm, intranode, internode);
     break;
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
   case SC_SHMEM_WINDOW:
   case SC_SHMEM_WINDOW_PRESCAN:
-    sc_shmem_free_window (array, comm, intranode, internode);
+    sc_shmem_free_window (package, array, comm, intranode, internode);
     break;
 #endif
   default:
