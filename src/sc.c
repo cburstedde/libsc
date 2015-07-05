@@ -833,62 +833,6 @@ sc_package_print_summary (int log_priority)
   }
 }
 
-#if defined(SC_ENABLE_MPI)
-static int
-sc_mpi_node_comms_destroy (MPI_Comm comm, int comm_keyval,
-                           void *attribute_val, void *extra_state)
-{
-  int                 mpiret;
-  MPI_Comm           *node_comms = (MPI_Comm *) attribute_val;
-
-  mpiret = MPI_Comm_free (&node_comms[0]);
-  if (mpiret != MPI_SUCCESS) {
-    return mpiret;
-  }
-  mpiret = MPI_Comm_free (&node_comms[1]);
-  if (mpiret != MPI_SUCCESS) {
-    return mpiret;
-  }
-  mpiret = MPI_Free_mem (node_comms);
-
-  return MPI_SUCCESS;
-}
-
-static int
-sc_mpi_node_comms_copy (MPI_Comm oldcomm, int comm_keyval,
-                        void *extra_state,
-                        void *attribute_val_in,
-                        void *attribute_val_out, int *flag)
-{
-  MPI_Comm           *node_comms_in = (MPI_Comm *) attribute_val_in;
-  MPI_Comm           *node_comms_out;
-  int                 mpiret;
-
-  /* We can't used SC_ALLOC because these might be destroyed after
-   * sc finalizes */
-  mpiret =
-    MPI_Alloc_mem (2 * sizeof (MPI_Comm), MPI_INFO_NULL, &node_comms_out);
-  if (mpiret != MPI_SUCCESS) {
-    return mpiret;
-  }
-
-  mpiret = MPI_Comm_dup (node_comms_in[0], &node_comms_out[0]);
-  if (mpiret != MPI_SUCCESS) {
-    return mpiret;
-  }
-  mpiret = MPI_Comm_dup (node_comms_in[1], &node_comms_out[1]);
-  if (mpiret != MPI_SUCCESS) {
-    return mpiret;
-  }
-
-  *((MPI_Comm **) attribute_val_out) = node_comms_out;
-  *flag = 1;
-
-  return MPI_SUCCESS;
-}
-
-#endif
-
 void
 sc_init (sc_MPI_Comm mpicomm,
          int catch_signals, int print_backtrace,
@@ -981,25 +925,11 @@ sc_init (sc_MPI_Comm mpicomm,
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FLIBS", SC_FLIBS);
 #endif
 
-#if defined(SC_ENABLE_MPI)
+#if defined(SC_ENABLE_MPI) && defined(SC_ENABLE_MPICOMMSHARED)
   if (mpicomm != MPI_COMM_NULL) {
     int                 mpiret;
     MPI_Comm            intranode, internode;
 
-    /* register the node comm attachment with MPI */
-    mpiret =
-      MPI_Comm_create_keyval (MPI_COMM_NULL_COPY_FN,
-                              sc_mpi_node_comms_destroy,
-                              &sc_mpi_node_comm_keyval, NULL);
-    SC_CHECK_MPI (mpiret);
-
-    /* register the shared memory behavior with MPI */
-    mpiret =
-      MPI_Comm_create_keyval (MPI_COMM_DUP_FN, MPI_COMM_NULL_DELETE_FN,
-                              &sc_shmem_keyval, NULL);
-    SC_CHECK_MPI (mpiret);
-
-#if defined(SC_ENABLE_MPICOMMSHARED)
     /* compute the node comms by default */
     sc_mpi_comm_attach_node_comms (mpicomm, 0);
     sc_mpi_comm_get_node_comms (mpicomm, &intranode, &internode);
@@ -1015,7 +945,6 @@ sc_init (sc_MPI_Comm mpicomm,
       SC_GLOBAL_STATISTICSF ("Shared memory node communicator size: %d\n",
                              intrasize);
     }
-#endif
   }
 #endif
 }

@@ -149,12 +149,6 @@ sc_tag_t;
 #define sc_MPI_Waitsome            MPI_Waitsome
 #define sc_MPI_Waitall             MPI_Waitall
 
-/** An MPI_Comm_keyval to handle attached intranode and internode
- * communicators: should not be touched by users.
- */
-extern int          sc_mpi_node_comm_keyval;
-extern int          sc_shmem_keyval;
-
 #else /* !SC_ENABLE_MPI */
 
 /* constants */

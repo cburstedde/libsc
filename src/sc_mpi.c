@@ -372,8 +372,63 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
   SC_ABORT_NOT_REACHED ();
 }
 
+#if defined(SC_ENABLE_MPI)
 /* these should be initialized in sc_init() */
-int                 sc_mpi_node_comm_keyval = MPI_KEYVAL_INVALID;
+static int          sc_mpi_node_comm_keyval = MPI_KEYVAL_INVALID;
+
+static int
+sc_mpi_node_comms_destroy (MPI_Comm comm, int comm_keyval,
+                           void *attribute_val, void *extra_state)
+{
+  int                 mpiret;
+  MPI_Comm           *node_comms = (MPI_Comm *) attribute_val;
+
+  mpiret = MPI_Comm_free (&node_comms[0]);
+  if (mpiret != MPI_SUCCESS) {
+    return mpiret;
+  }
+  mpiret = MPI_Comm_free (&node_comms[1]);
+  if (mpiret != MPI_SUCCESS) {
+    return mpiret;
+  }
+  mpiret = MPI_Free_mem (node_comms);
+
+  return MPI_SUCCESS;
+}
+
+static int
+sc_mpi_node_comms_copy (MPI_Comm oldcomm, int comm_keyval,
+                        void *extra_state,
+                        void *attribute_val_in,
+                        void *attribute_val_out, int *flag)
+{
+  MPI_Comm           *node_comms_in = (MPI_Comm *) attribute_val_in;
+  MPI_Comm           *node_comms_out;
+  int                 mpiret;
+
+  /* We can't used SC_ALLOC because these might be destroyed after
+   * sc finalizes */
+  mpiret =
+    MPI_Alloc_mem (2 * sizeof (MPI_Comm), MPI_INFO_NULL, &node_comms_out);
+  if (mpiret != MPI_SUCCESS) {
+    return mpiret;
+  }
+
+  mpiret = MPI_Comm_dup (node_comms_in[0], &node_comms_out[0]);
+  if (mpiret != MPI_SUCCESS) {
+    return mpiret;
+  }
+  mpiret = MPI_Comm_dup (node_comms_in[1], &node_comms_out[1]);
+  if (mpiret != MPI_SUCCESS) {
+    return mpiret;
+  }
+
+  *((MPI_Comm **) attribute_val_out) = node_comms_out;
+  *flag = 1;
+
+  return MPI_SUCCESS;
+}
+#endif
 
 void
 sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm, int processes_per_node)
@@ -382,6 +437,14 @@ sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm, int processes_per_node)
   int                 keyval, mpiret, rank, size;
   MPI_Comm           *node_comms, internode, intranode;
 
+  if (sc_mpi_node_comm_keyval == MPI_KEYVAL_INVALID) {
+    /* register the node comm attachment with MPI */
+    mpiret =
+      MPI_Comm_create_keyval (MPI_COMM_NULL_COPY_FN,
+                              sc_mpi_node_comms_destroy,
+                              &sc_mpi_node_comm_keyval, NULL);
+    SC_CHECK_MPI (mpiret);
+  }
   SC_ASSERT (sc_mpi_node_comm_keyval != MPI_KEYVAL_INVALID);
 
   mpiret = MPI_Comm_size (comm, &size);
@@ -466,6 +529,11 @@ sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
   *intranode = sc_MPI_COMM_NULL;
   *internode = sc_MPI_COMM_NULL;
 #if defined(SC_ENABLE_MPI)
+  if (sc_mpi_node_comm_keyval == MPI_KEYVAL_INVALID) {
+    SC_GLOBAL_LDEBUG
+      ("Asking for node comms before sc_mpi_comm_attach_node_comms is called\n");
+    return;
+  }
   mpiret =
     MPI_Comm_get_attr (comm, sc_mpi_node_comm_keyval, &node_comms, &flag);
   SC_CHECK_MPI (mpiret);
