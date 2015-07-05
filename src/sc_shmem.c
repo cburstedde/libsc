@@ -20,7 +20,7 @@
   02110-1301, USA.
 */
 
-#include <sc_shmem_array.h>
+#include <sc_shmem.h>
 
 #if defined(__bgq__)
 /** for sc_allgather_final_*_shared routines to work on BG/Q, you must
@@ -28,7 +28,7 @@
 #include <hwi/include/bqc/A2_inlines.h>
 #endif
 
-const char         *sc_shmem_array_type_to_string[SC_SHMEM_ARRAY_NUM_TYPES] = {
+const char         *sc_shmem_type_to_string[SC_SHMEM_NUM_TYPES] = {
   "basic", "basic_prescan",
 #if defined(SC_ENABLE_MPIWINSHARED)
   "window", "window_prescan",
@@ -164,111 +164,108 @@ sc_scan_on_array (void *recvchar, int size, int count, int typesize,
   }
 }
 
-#if !defined(SC_SHMEM_ARRAY_DEFAULT)
-#define SC_SHMEM_ARRAY_DEFAULT SC_SHMEM_ARRAY_BASIC
+#if !defined(SC_SHMEM_DEFAULT)
+#define SC_SHMEM_DEFAULT SC_SHMEM_BASIC
 #endif
-sc_shmem_array_type_t sc_shmem_array_default_type = SC_SHMEM_ARRAY_DEFAULT;
+sc_shmem_type_t     sc_shmem_default_type = SC_SHMEM_DEFAULT;
 
 #if defined(SC_ENABLE_MPI)
-int                 sc_shmem_array_keyval = MPI_KEYVAL_INVALID;
+int                 sc_shmem_keyval = MPI_KEYVAL_INVALID;
 #endif
 
-static sc_shmem_array_type_t sc_shmem_array_types[SC_SHMEM_ARRAY_NUM_TYPES] = {
-  SC_SHMEM_ARRAY_BASIC,
-  SC_SHMEM_ARRAY_PRESCAN,
+static sc_shmem_type_t sc_shmem_types[SC_SHMEM_NUM_TYPES] = {
+  SC_SHMEM_BASIC,
+  SC_SHMEM_PRESCAN,
 #if defined(__bgq__)
-  SC_SHMEM_ARRAY_SHARED,
-  SC_SHMEM_ARRAY_SHARED_PRESCAN,
+  SC_SHMEM_SHARED,
+  SC_SHMEM_SHARED_PRESCAN,
 #endif
 #if defined(SC_ENABLE_WINSHARED)
-  SC_SHMEM_ARRAY_WINDOW,
-  SC_SHMEM_ARRAY_WINDOW_PRESCAN
+  SC_SHMEM_WINDOW,
+  SC_SHMEM_WINDOW_PRESCAN
 #endif
 };
 
-sc_shmem_array_type_t
-sc_shmem_array_get_type (sc_MPI_Comm comm)
+sc_shmem_type_t
+sc_shmem_get_type (sc_MPI_Comm comm)
 {
   int                 mpiret, flg;
-  sc_shmem_array_type_t *type;
+  sc_shmem_type_t    *type;
 
-  mpiret = MPI_Comm_get_attr (comm, sc_shmem_array_keyval, &type, &flg);
+  mpiret = MPI_Comm_get_attr (comm, sc_shmem_keyval, &type, &flg);
   SC_CHECK_MPI (mpiret);
 
   if (flg) {
     return *type;
   }
   else {
-    return SC_SHMEM_ARRAY_NOT_SET;
+    return SC_SHMEM_NOT_SET;
   }
 }
 
 void
-sc_shmem_array_set_type (sc_MPI_Comm comm, sc_shmem_array_type_t type)
+sc_shmem_set_type (sc_MPI_Comm comm, sc_shmem_type_t type)
 {
   int                 mpiret;
 
-  mpiret =
-    MPI_Comm_set_attr (comm, sc_shmem_array_keyval,
-                       &sc_shmem_array_types[type]);
+  mpiret = MPI_Comm_set_attr (comm, sc_shmem_keyval, &sc_shmem_types[type]);
   SC_CHECK_MPI (mpiret);
 }
 
-static              sc_shmem_array_type_t
-sc_shmem_array_get_type_default (sc_MPI_Comm comm)
+static              sc_shmem_type_t
+sc_shmem_get_type_default (sc_MPI_Comm comm)
 {
-  sc_shmem_array_type_t type = sc_shmem_array_get_type (comm);
-  if (type == SC_SHMEM_ARRAY_NOT_SET) {
-    type = sc_shmem_array_default_type;
-    sc_shmem_array_set_type (comm, type);
+  sc_shmem_type_t     type = sc_shmem_get_type (comm);
+  if (type == SC_SHMEM_NOT_SET) {
+    type = sc_shmem_default_type;
+    sc_shmem_set_type (comm, type);
   }
   return type;
 }
 
 /* BASIC implementation */
 static void        *
-sc_shmem_array_alloc_basic (size_t elem_count, size_t elem_size,
-                            sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                            sc_MPI_Comm internode)
+sc_shmem_malloc_basic (int package, size_t elem_count, size_t elem_size,
+                       sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                       sc_MPI_Comm internode)
 {
-  return sc_malloc (sc_package_id, elem_count * elem_size);
+  return sc_malloc (package, elem_count * elem_size);
 }
 
 static void
-sc_shmem_array_free_basic (void *array, sc_MPI_Comm comm,
-                           sc_MPI_Comm intranode, sc_MPI_Comm internode)
+sc_shmem_free_basic (void *array, sc_MPI_Comm comm,
+                     sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   sc_free (sc_package_id, array);
 }
 
 static int
-sc_shmem_array_write_start_basic (void *array, sc_MPI_Comm comm,
-                                  sc_MPI_Comm intranode,
-                                  sc_MPI_Comm internode)
+sc_shmem_write_start_basic (void *array, sc_MPI_Comm comm,
+                            sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   return 1;
 }
 
 static void
-sc_shmem_array_write_end_basic (void *array, sc_MPI_Comm comm,
-                                sc_MPI_Comm intranode, sc_MPI_Comm internode)
+sc_shmem_write_end_basic (void *array, sc_MPI_Comm comm,
+                          sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
 }
 
 static void
-sc_shmem_array_memcpy_basic (void *destarray, void *srcarray, size_t bytes,
-                             sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                             sc_MPI_Comm internode)
+sc_shmem_memcpy_basic (void *destarray, void *srcarray, size_t bytes,
+                       sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                       sc_MPI_Comm internode)
 {
   memcpy (destarray, srcarray, bytes);
 }
 
 static void
-sc_shmem_array_allgather_basic (void *sendbuf, int sendcount,
-                                sc_MPI_Datatype sendtype, void *recvbuf,
-                                int recvcount, sc_MPI_Datatype recvtype,
-                                sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                                sc_MPI_Comm internode)
+sc_shmem_allgather_basic (void *sendbuf, int sendcount,
+                          sc_MPI_Datatype sendtype, void *recvbuf,
+                          int recvcount, sc_MPI_Datatype recvtype,
+                          sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                          sc_MPI_Comm internode)
 {
   int                 mpiret = sc_MPI_Allgather (sendbuf, sendcount, sendtype,
                                                  recvbuf, recvcount, recvtype,
@@ -277,10 +274,10 @@ sc_shmem_array_allgather_basic (void *sendbuf, int sendcount,
 }
 
 static void
-sc_shmem_array_prefix_basic (void *sendbuf, void *recvbuf, int count,
-                             sc_MPI_Datatype type, sc_MPI_Op op,
-                             sc_MPI_Comm comm,
-                             sc_MPI_Comm intranode, sc_MPI_Comm internode)
+sc_shmem_prefix_basic (void *sendbuf, void *recvbuf, int count,
+                       sc_MPI_Datatype type, sc_MPI_Op op,
+                       sc_MPI_Comm comm,
+                       sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   int                 mpiret, size;
   size_t              typesize = sc_mpi_sizeof (type);
@@ -297,10 +294,10 @@ sc_shmem_array_prefix_basic (void *sendbuf, void *recvbuf, int count,
 /* PRESCAN implementation */
 
 static void
-sc_shmem_array_prefix_prescan (void *sendbuf, int *recvbuf, int count,
-                               sc_MPI_Datatype type, sc_MPI_Op op,
-                               sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                               sc_MPI_Comm internode)
+sc_shmem_prefix_prescan (void *sendbuf, int *recvbuf, int count,
+                         sc_MPI_Datatype type, sc_MPI_Op op,
+                         sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                         sc_MPI_Comm internode)
 {
   int                 mpiret, size;
   size_t              typesize = sc_mpi_sizeof (type);
@@ -321,22 +318,22 @@ sc_shmem_array_prefix_prescan (void *sendbuf, int *recvbuf, int count,
 /* common to SHARED and WINDOW */
 
 static void
-sc_shmem_array_memcpy_common (void *destarray, void *srcarray, size_t bytes,
-                              sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                              sc_MPI_Comm internode)
+sc_shmem_memcpy_common (void *destarray, void *srcarray, size_t bytes,
+                        sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                        sc_MPI_Comm internode)
 {
-  if (sc_shmem_array_write_start (destarray, comm)) {
+  if (sc_shmem_write_start (destarray, comm)) {
     memcpy (destarray, srcarray, bytes);
   }
-  sc_shmem_array_write_end (destarray, comm);
+  sc_shmem_write_end (destarray, comm);
 }
 
 static void
-sc_shmem_array_allgather_common (void *sendbuf, int sendcount,
-                                 sc_MPI_Datatype sendtype, void *recvbuf,
-                                 int recvcount, sc_MPI_Datatype recvtype,
-                                 sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                                 sc_MPI_Comm internode)
+sc_shmem_allgather_common (void *sendbuf, int sendcount,
+                           sc_MPI_Datatype sendtype, void *recvbuf,
+                           int recvcount, sc_MPI_Datatype recvtype,
+                           sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                           sc_MPI_Comm internode)
 {
   size_t              typesize;
   int                 mpiret, intrarank, intrasize;
@@ -359,21 +356,21 @@ sc_shmem_array_allgather_common (void *sendbuf, int sendcount,
   SC_CHECK_MPI (mpiret);
 
   /* node root allgathers between nodes */
-  if (sc_shmem_array_write_start (recvbuf, comm)) {
+  if (sc_shmem_write_start (recvbuf, comm)) {
     mpiret =
       sc_MPI_Allgather (noderecvchar, sendcount * intrasize, sendtype,
                         recvbuf, recvcount * intrasize, recvtype, internode);
     SC_CHECK_MPI (mpiret);
     SC_FREE (noderecvchar);
   }
-  sc_shmem_array_write_end (recvbuf, comm);
+  sc_shmem_write_end (recvbuf, comm);
 }
 
 static void
-sc_shmem_array_prefix_common (void *sendbuf, void *recvbuf, int count,
-                              sc_MPI_Datatype type, sc_MPI_Op op,
-                              sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                              sc_MPI_Comm internode)
+sc_shmem_prefix_common (void *sendbuf, void *recvbuf, int count,
+                        sc_MPI_Datatype type, sc_MPI_Op op,
+                        sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                        sc_MPI_Comm internode)
 {
   size_t              typesize;
   int                 mpiret, intrarank, intrasize, size;
@@ -398,7 +395,7 @@ sc_shmem_array_prefix_common (void *sendbuf, void *recvbuf, int count,
   SC_CHECK_MPI (mpiret);
 
   /* node root allgathers between nodes */
-  if (sc_shmem_array_write_start (recvbuf, comm)) {
+  if (sc_shmem_write_start (recvbuf, comm)) {
     memset (recvbuf, 0, count * typesize);
     mpiret =
       sc_MPI_Allgather (noderecvchar, count * intrasize, type,
@@ -408,14 +405,14 @@ sc_shmem_array_prefix_common (void *sendbuf, void *recvbuf, int count,
     SC_FREE (noderecvchar);
     sc_scan_on_array (recvbuf, size, count, typesize, type, op);
   }
-  sc_shmem_array_write_end (recvbuf, comm);
+  sc_shmem_write_end (recvbuf, comm);
 }
 
 static void
-sc_shmem_array_prefix_common_prescan (void *sendbuf, void *recvbuf, int count,
-                                      sc_MPI_Datatype type, sc_MPI_Op op,
-                                      sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                                      sc_MPI_Comm internode)
+sc_shmem_prefix_common_prescan (void *sendbuf, void *recvbuf, int count,
+                                sc_MPI_Datatype type, sc_MPI_Op op,
+                                sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                                sc_MPI_Comm internode)
 {
   size_t              typesize;
   int                 mpiret, intrarank, intrasize, size;
@@ -445,7 +442,7 @@ sc_shmem_array_prefix_common_prescan (void *sendbuf, void *recvbuf, int count,
   SC_FREE (sendscan);
 
   /* node root allgathers between nodes */
-  if (sc_shmem_array_write_start (recvbuf, comm)) {
+  if (sc_shmem_write_start (recvbuf, comm)) {
     memset (recvbuf, 0, count * typesize);
     mpiret =
       sc_MPI_Allgather (noderecvchar, count * intrasize, type,
@@ -454,16 +451,15 @@ sc_shmem_array_prefix_common_prescan (void *sendbuf, void *recvbuf, int count,
     SC_CHECK_MPI (mpiret);
     SC_FREE (noderecvchar);
   }
-  sc_shmem_array_write_end (recvbuf, comm);
+  sc_shmem_write_end (recvbuf, comm);
 }
 
 #if defined(__bgq__)
 /* SHARED implementation */
 
 static int
-sc_shmem_array_write_start_shared (void *array, sc_MPI_Comm comm,
-                                   sc_MPI_Comm intranode,
-                                   sc_MPI_Comm internode)
+sc_shmem_write_start_shared (void *array, sc_MPI_Comm comm,
+                             sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   int                 intrarank, mpiret;
 
@@ -474,8 +470,8 @@ sc_shmem_array_write_start_shared (void *array, sc_MPI_Comm comm,
 }
 
 static void
-sc_shmem_array_write_end_shared (void *array, sc_MPI_Comm comm,
-                                 sc_MPI_Comm intranode, sc_MPI_Comm internode)
+sc_shmem_write_end_shared (void *array, sc_MPI_Comm comm,
+                           sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   int                 mpiret;
 
@@ -487,18 +483,18 @@ sc_shmem_array_write_end_shared (void *array, sc_MPI_Comm comm,
 }
 
 static void        *
-sc_shmem_array_alloc_shared (size_t elem_size, size_t elem_count,
-                             sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                             sc_MPI_Comm internode)
+sc_shmem_malloc_shared (int package, size_t elem_size, size_t elem_count,
+                        sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                        sc_MPI_Comm internode)
 {
   char               *array = NULL;
   int                 mpiret;
 
-  if (sc_shmem_array_write_start_shared (NULL, comm, intranode, internode)) {
-    array = sc_malloc (sc_package_id, elem_size * elem_count);
+  if (sc_shmem_write_start_shared (NULL, comm, intranode, internode)) {
+    array = sc_malloc (package, elem_size * elem_count);
 
   }
-  sc_shmem_array_write_end_shared (NULL, comm, intranode, internode);
+  sc_shmem_write_end_shared (NULL, comm, intranode, internode);
 
   /* node root broadcast array start in node */
   mpiret = sc_MPI_Bcast (&array, sizeof (char *), sc_MPI_BYTE, 0, intranode);
@@ -512,13 +508,13 @@ sc_shmem_array_alloc_shared (size_t elem_size, size_t elem_count,
 }
 
 static void
-sc_shmem_array_free_shared (void *array, sc_MPI_Comm comm,
-                            sc_MPI_Comm intranode, sc_MPI_Comm internode)
+sc_shmem_free_shared (void *array, sc_MPI_Comm comm,
+                      sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
-  if (sc_shmem_array_write_start_shared (NULL, comm, intranode, internode)) {
+  if (sc_shmem_write_start_shared (NULL, comm, intranode, internode)) {
     sc_free (sc_package_id, array);
   }
-  sc_shmem_array_write_end_shared (NULL, comm, intranode, internode);
+  sc_shmem_write_end_shared (NULL, comm, intranode, internode);
 }
 #endif /* __bgq__ */
 
@@ -526,8 +522,8 @@ sc_shmem_array_free_shared (void *array, sc_MPI_Comm comm,
 /* MPI_Win implementation */
 
 static              MPI_Win
-sc_shmem_array_get_win (void *array, sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                        sc_MPI_Comm internode)
+sc_shmem_get_win (void *array, sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                  sc_MPI_Comm internode)
 {
   int                 mpiret, intrarank, intrasize;
 
@@ -539,9 +535,9 @@ sc_shmem_array_get_win (void *array, sc_MPI_Comm comm, sc_MPI_Comm intranode,
 }
 
 static void        *
-sc_shmem_array_alloc_window (size_t elem_size, size_t elem_count,
-                             sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                             sc_MPI_Comm internode)
+sc_shmem_malloc_window (int package, size_t elem_size, size_t elem_count,
+                        sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                        sc_MPI_Comm internode)
 {
   char               *array = NULL;
   int                 mpiret, disp_unit, intrarank, intrasize;
@@ -577,13 +573,13 @@ sc_shmem_array_alloc_window (size_t elem_size, size_t elem_count,
 }
 
 static void
-sc_shmem_array_free_window (void *array, sc_MPI_Comm comm,
-                            sc_MPI_Comm intranode, sc_MPI_Comm internode)
+sc_shmem_free_window (void *array, sc_MPI_Comm comm,
+                      sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   int                 mpiret;
   MPI_Win             win;
 
-  win = sc_shmem_array_get_win (array, comm, intranode, internode);
+  win = sc_shmem_get_win (array, comm, intranode, internode);
 
   mpiret = MPI_Win_unlock (0, win);
   SC_CHECK_MPI (mpiret);
@@ -592,14 +588,13 @@ sc_shmem_array_free_window (void *array, sc_MPI_Comm comm,
 }
 
 static int
-sc_shmem_array_write_start_window (void *array, sc_MPI_Comm comm,
-                                   sc_MPI_Comm intranode,
-                                   sc_MPI_Comm internode)
+sc_shmem_write_start_window (void *array, sc_MPI_Comm comm,
+                             sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   int                 mpiret, intrarank;
   MPI_Win             win;
 
-  win = sc_shmem_array_get_win (array, comm, intranode, internode);
+  win = sc_shmem_get_win (array, comm, intranode, internode);
 
   mpiret = MPI_Win_unlock (0, win);
   SC_CHECK_MPI (mpiret);
@@ -615,13 +610,13 @@ sc_shmem_array_write_start_window (void *array, sc_MPI_Comm comm,
 }
 
 static void
-sc_shmem_array_write_end_window (void *array, sc_MPI_Comm comm,
-                                 sc_MPI_Comm intranode, sc_MPI_Comm internode)
+sc_shmem_write_end_window (void *array, sc_MPI_Comm comm,
+                           sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   int                 mpiret, intrarank;
   MPI_Win             win;
 
-  win = sc_shmem_array_get_win (array, comm, intranode, internode);
+  win = sc_shmem_get_win (array, comm, intranode, internode);
 
   mpiret = sc_MPI_Comm_rank (intranode, &intrarank);
   SC_CHECK_MPI (mpiret);
@@ -638,33 +633,34 @@ sc_shmem_array_write_end_window (void *array, sc_MPI_Comm comm,
 #endif /* SC_ENABLE_MPIWINSHARED */
 
 void               *
-sc_shmem_array_alloc (size_t elem_size, size_t elem_count, sc_MPI_Comm comm)
+sc_shmem_malloc (int package, size_t elem_size, size_t elem_count,
+                 sc_MPI_Comm comm)
 {
-  sc_shmem_array_type_t type;
+  sc_shmem_type_t     type;
   sc_MPI_Comm         intranode = sc_MPI_COMM_NULL, internode =
     sc_MPI_COMM_NULL;
 
-  type = sc_shmem_array_get_type (comm);
+  type = sc_shmem_get_type (comm);
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
-    type = SC_SHMEM_ARRAY_BASIC;
+    type = SC_SHMEM_BASIC;
   }
   switch (type) {
-  case SC_SHMEM_ARRAY_BASIC:
-  case SC_SHMEM_ARRAY_PRESCAN:
-    return sc_shmem_array_alloc_basic (elem_size, elem_count, comm, intranode,
-                                       internode);
+  case SC_SHMEM_BASIC:
+  case SC_SHMEM_PRESCAN:
+    return sc_shmem_malloc_basic (package, elem_size, elem_count, comm,
+                                  intranode, internode);
 #if defined(__bgq__)
-  case SC_SHMEM_ARRAY_SHARED:
-  case SC_SHMEM_ARRAY_SHARED_PRESCAN:
-    return sc_shmem_array_alloc_shared (elem_size, elem_count, comm,
-                                        intranode, internode);
+  case SC_SHMEM_SHARED:
+  case SC_SHMEM_SHARED_PRESCAN:
+    return sc_shmem_malloc_shared (package, elem_size, elem_count, comm,
+                                   intranode, internode);
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
-  case SC_SHMEM_ARRAY_WINDOW:
-  case SC_SHMEM_ARRAY_WINDOW_PRESCAN:
-    return sc_shmem_array_alloc_window (elem_size, elem_count, comm,
-                                        intranode, internode);
+  case SC_SHMEM_WINDOW:
+  case SC_SHMEM_WINDOW_PRESCAN:
+    return sc_shmem_malloc_window (package, elem_size, elem_count, comm,
+                                   intranode, internode);
 #endif
   default:
     SC_ABORT_NOT_REACHED ();
@@ -673,32 +669,32 @@ sc_shmem_array_alloc (size_t elem_size, size_t elem_count, sc_MPI_Comm comm)
 }
 
 void
-sc_shmem_array_free (void *array, sc_MPI_Comm comm)
+sc_shmem_free (void *array, sc_MPI_Comm comm)
 {
-  sc_shmem_array_type_t type;
+  sc_shmem_type_t     type;
   sc_MPI_Comm         intranode = sc_MPI_COMM_NULL, internode =
     sc_MPI_COMM_NULL;
 
-  type = sc_shmem_array_get_type (comm);
+  type = sc_shmem_get_type (comm);
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
-    type = SC_SHMEM_ARRAY_BASIC;
+    type = SC_SHMEM_BASIC;
   }
   switch (type) {
-  case SC_SHMEM_ARRAY_BASIC:
-  case SC_SHMEM_ARRAY_PRESCAN:
-    sc_shmem_array_free_basic (array, comm, intranode, internode);
+  case SC_SHMEM_BASIC:
+  case SC_SHMEM_PRESCAN:
+    sc_shmem_free_basic (array, comm, intranode, internode);
     break;
 #if defined(__bgq__)
-  case SC_SHMEM_ARRAY_SHARED:
-  case SC_SHMEM_ARRAY_SHARED_PRESCAN:
-    sc_shmem_array_free_shared (array, comm, intranode, internode);
+  case SC_SHMEM_SHARED:
+  case SC_SHMEM_SHARED_PRESCAN:
+    sc_shmem_free_shared (array, comm, intranode, internode);
     break;
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
-  case SC_SHMEM_ARRAY_WINDOW:
-  case SC_SHMEM_ARRAY_WINDOW_PRESCAN:
-    sc_shmem_array_free_window (array, comm, intranode, internode);
+  case SC_SHMEM_WINDOW:
+  case SC_SHMEM_WINDOW_PRESCAN:
+    sc_shmem_free_window (array, comm, intranode, internode);
     break;
 #endif
   default:
@@ -707,33 +703,30 @@ sc_shmem_array_free (void *array, sc_MPI_Comm comm)
 }
 
 int
-sc_shmem_array_write_start (void *array, sc_MPI_Comm comm)
+sc_shmem_write_start (void *array, sc_MPI_Comm comm)
 {
-  sc_shmem_array_type_t type;
+  sc_shmem_type_t     type;
   sc_MPI_Comm         intranode = sc_MPI_COMM_NULL, internode =
     sc_MPI_COMM_NULL;
 
-  type = sc_shmem_array_get_type (comm);
+  type = sc_shmem_get_type (comm);
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
-    type = SC_SHMEM_ARRAY_BASIC;
+    type = SC_SHMEM_BASIC;
   }
   switch (type) {
-  case SC_SHMEM_ARRAY_BASIC:
-  case SC_SHMEM_ARRAY_PRESCAN:
-    return sc_shmem_array_write_start_basic (array, comm, intranode,
-                                             internode);
+  case SC_SHMEM_BASIC:
+  case SC_SHMEM_PRESCAN:
+    return sc_shmem_write_start_basic (array, comm, intranode, internode);
 #if defined(__bgq__)
-  case SC_SHMEM_ARRAY_SHARED:
-  case SC_SHMEM_ARRAY_SHARED_PRESCAN:
-    return sc_shmem_array_write_start_shared (array, comm, intranode,
-                                              internode);
+  case SC_SHMEM_SHARED:
+  case SC_SHMEM_SHARED_PRESCAN:
+    return sc_shmem_write_start_shared (array, comm, intranode, internode);
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
-  case SC_SHMEM_ARRAY_WINDOW:
-  case SC_SHMEM_ARRAY_WINDOW_PRESCAN:
-    return sc_shmem_array_write_start_window (array, comm, intranode,
-                                              internode);
+  case SC_SHMEM_WINDOW:
+  case SC_SHMEM_WINDOW_PRESCAN:
+    return sc_shmem_write_start_window (array, comm, intranode, internode);
 #endif
   default:
     SC_ABORT_NOT_REACHED ();
@@ -742,32 +735,32 @@ sc_shmem_array_write_start (void *array, sc_MPI_Comm comm)
 }
 
 void
-sc_shmem_array_write_end (void *array, sc_MPI_Comm comm)
+sc_shmem_write_end (void *array, sc_MPI_Comm comm)
 {
-  sc_shmem_array_type_t type;
+  sc_shmem_type_t     type;
   sc_MPI_Comm         intranode = sc_MPI_COMM_NULL, internode =
     sc_MPI_COMM_NULL;
 
-  type = sc_shmem_array_get_type (comm);
+  type = sc_shmem_get_type (comm);
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
-    type = SC_SHMEM_ARRAY_BASIC;
+    type = SC_SHMEM_BASIC;
   }
   switch (type) {
-  case SC_SHMEM_ARRAY_BASIC:
-  case SC_SHMEM_ARRAY_PRESCAN:
-    sc_shmem_array_write_end_basic (array, comm, intranode, internode);
+  case SC_SHMEM_BASIC:
+  case SC_SHMEM_PRESCAN:
+    sc_shmem_write_end_basic (array, comm, intranode, internode);
     break;
 #if defined(__bgq__)
-  case SC_SHMEM_ARRAY_SHARED:
-  case SC_SHMEM_ARRAY_SHARED_PRESCAN:
-    sc_shmem_array_write_end_shared (array, comm, intranode, internode);
+  case SC_SHMEM_SHARED:
+  case SC_SHMEM_SHARED_PRESCAN:
+    sc_shmem_write_end_shared (array, comm, intranode, internode);
     break;
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
-  case SC_SHMEM_ARRAY_WINDOW:
-  case SC_SHMEM_ARRAY_WINDOW_PRESCAN:
-    sc_shmem_array_write_end_window (array, comm, intranode, internode);
+  case SC_SHMEM_WINDOW:
+  case SC_SHMEM_WINDOW_PRESCAN:
+    sc_shmem_write_end_window (array, comm, intranode, internode);
     break;
 #endif
   default:
@@ -776,35 +769,35 @@ sc_shmem_array_write_end (void *array, sc_MPI_Comm comm)
 }
 
 void
-sc_shmem_array_memcpy (void *destarray, void *srcarray, size_t bytes,
-                       sc_MPI_Comm comm)
+sc_shmem_memcpy (void *destarray, void *srcarray, size_t bytes,
+                 sc_MPI_Comm comm)
 {
-  sc_shmem_array_type_t type;
+  sc_shmem_type_t     type;
   sc_MPI_Comm         intranode = sc_MPI_COMM_NULL, internode =
     sc_MPI_COMM_NULL;
 
-  type = sc_shmem_array_get_type (comm);
+  type = sc_shmem_get_type (comm);
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
-    type = SC_SHMEM_ARRAY_BASIC;
+    type = SC_SHMEM_BASIC;
   }
   switch (type) {
-  case SC_SHMEM_ARRAY_BASIC:
-  case SC_SHMEM_ARRAY_PRESCAN:
-    sc_shmem_array_memcpy_basic (destarray, srcarray, bytes, comm, intranode,
-                                 internode);
+  case SC_SHMEM_BASIC:
+  case SC_SHMEM_PRESCAN:
+    sc_shmem_memcpy_basic (destarray, srcarray, bytes, comm, intranode,
+                           internode);
     break;
 #if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 #if defined(__bgq__)
-  case SC_SHMEM_ARRAY_SHARED:
-  case SC_SHMEM_ARRAY_SHARED_PRESCAN:
+  case SC_SHMEM_SHARED:
+  case SC_SHMEM_SHARED_PRESCAN:
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
-  case SC_SHMEM_ARRAY_WINDOW:
-  case SC_SHMEM_ARRAY_WINDOW_PRESCAN:
+  case SC_SHMEM_WINDOW:
+  case SC_SHMEM_WINDOW_PRESCAN:
 #endif
-    sc_shmem_array_memcpy_common (destarray, srcarray, bytes, comm, intranode,
-                                  internode);
+    sc_shmem_memcpy_common (destarray, srcarray, bytes, comm, intranode,
+                            internode);
     break;
 #endif
   default:
@@ -813,39 +806,38 @@ sc_shmem_array_memcpy (void *destarray, void *srcarray, size_t bytes,
 }
 
 void
-sc_shmem_array_allgather (void *sendbuf, int sendcount,
-                          sc_MPI_Datatype sendtype, void *recvbuf,
-                          int recvcount, sc_MPI_Datatype recvtype,
-                          sc_MPI_Comm comm)
+sc_shmem_allgather (void *sendbuf, int sendcount,
+                    sc_MPI_Datatype sendtype, void *recvbuf,
+                    int recvcount, sc_MPI_Datatype recvtype, sc_MPI_Comm comm)
 {
-  sc_shmem_array_type_t type;
+  sc_shmem_type_t     type;
   sc_MPI_Comm         intranode = sc_MPI_COMM_NULL, internode =
     sc_MPI_COMM_NULL;
 
-  type = sc_shmem_array_get_type (comm);
+  type = sc_shmem_get_type (comm);
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
-    type = SC_SHMEM_ARRAY_BASIC;
+    type = SC_SHMEM_BASIC;
   }
   switch (type) {
-  case SC_SHMEM_ARRAY_BASIC:
-  case SC_SHMEM_ARRAY_PRESCAN:
-    sc_shmem_array_allgather_basic (sendbuf, sendcount, sendtype, recvbuf,
-                                    recvcount, recvtype, comm, intranode,
-                                    internode);
+  case SC_SHMEM_BASIC:
+  case SC_SHMEM_PRESCAN:
+    sc_shmem_allgather_basic (sendbuf, sendcount, sendtype, recvbuf,
+                              recvcount, recvtype, comm, intranode,
+                              internode);
     break;
 #if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 #if defined(__bgq__)
-  case SC_SHMEM_ARRAY_SHARED:
-  case SC_SHMEM_ARRAY_SHARED_PRESCAN:
+  case SC_SHMEM_SHARED:
+  case SC_SHMEM_SHARED_PRESCAN:
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
-  case SC_SHMEM_ARRAY_WINDOW:
-  case SC_SHMEM_ARRAY_WINDOW_PRESCAN:
+  case SC_SHMEM_WINDOW:
+  case SC_SHMEM_WINDOW_PRESCAN:
 #endif
-    sc_shmem_array_allgather_common (sendbuf, sendcount, sendtype, recvbuf,
-                                     recvcount, recvtype, comm, intranode,
-                                     internode);
+    sc_shmem_allgather_common (sendbuf, sendcount, sendtype, recvbuf,
+                               recvcount, recvtype, comm, intranode,
+                               internode);
     break;
 #endif
   default:
@@ -854,47 +846,47 @@ sc_shmem_array_allgather (void *sendbuf, int sendcount,
 }
 
 void
-sc_shmem_array_prefix (void *sendbuf, void *recvbuf, int count,
-                       sc_MPI_Datatype dtype, sc_MPI_Op op, sc_MPI_Comm comm)
+sc_shmem_prefix (void *sendbuf, void *recvbuf, int count,
+                 sc_MPI_Datatype dtype, sc_MPI_Op op, sc_MPI_Comm comm)
 {
-  sc_shmem_array_type_t type;
+  sc_shmem_type_t     type;
   sc_MPI_Comm         intranode = sc_MPI_COMM_NULL, internode =
     sc_MPI_COMM_NULL;
 
-  type = sc_shmem_array_get_type (comm);
+  type = sc_shmem_get_type (comm);
   sc_mpi_comm_get_node_comms (comm, &intranode, &internode);
   if (intranode == sc_MPI_COMM_NULL || internode == sc_MPI_COMM_NULL) {
-    type = SC_SHMEM_ARRAY_BASIC;
+    type = SC_SHMEM_BASIC;
   }
   switch (type) {
-  case SC_SHMEM_ARRAY_BASIC:
-    sc_shmem_array_prefix_basic (sendbuf, recvbuf, count, dtype, op, comm,
-                                 intranode, internode);
+  case SC_SHMEM_BASIC:
+    sc_shmem_prefix_basic (sendbuf, recvbuf, count, dtype, op, comm,
+                           intranode, internode);
     break;
-  case SC_SHMEM_ARRAY_PRESCAN:
-    sc_shmem_array_prefix_prescan (sendbuf, recvbuf, count, dtype, op, comm,
-                                   intranode, internode);
+  case SC_SHMEM_PRESCAN:
+    sc_shmem_prefix_prescan (sendbuf, recvbuf, count, dtype, op, comm,
+                             intranode, internode);
     break;
 #if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 #if defined(__bgq__)
-  case SC_SHMEM_ARRAY_SHARED:
+  case SC_SHMEM_SHARED:
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
-  case SC_SHMEM_ARRAY_WINDOW:
+  case SC_SHMEM_WINDOW:
 #endif
-    sc_shmem_array_prefix_common (sendbuf, recvbuf, count, dtype, op, comm,
-                                  intranode, internode);
+    sc_shmem_prefix_common (sendbuf, recvbuf, count, dtype, op, comm,
+                            intranode, internode);
     break;
 #endif
 #if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 #if defined(__bgq__)
-  case SC_SHMEM_ARRAY_SHARED_PRESCAN:
+  case SC_SHMEM_SHARED_PRESCAN:
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
-  case SC_SHMEM_ARRAY_WINDOW_PRESCAN:
+  case SC_SHMEM_WINDOW_PRESCAN:
 #endif
-    sc_shmem_array_prefix_common_prescan (sendbuf, recvbuf, count, dtype, op,
-                                          comm, intranode, internode);
+    sc_shmem_prefix_common_prescan (sendbuf, recvbuf, count, dtype, op,
+                                    comm, intranode, internode);
     break;
 #endif
   default:

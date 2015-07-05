@@ -996,7 +996,7 @@ sc_init (sc_MPI_Comm mpicomm,
     /* register the shared memory behavior with MPI */
     mpiret =
       MPI_Comm_create_keyval (MPI_COMM_DUP_FN, MPI_COMM_NULL_DELETE_FN,
-                              &sc_shmem_array_keyval, NULL);
+                              &sc_shmem_keyval, NULL);
     SC_CHECK_MPI (mpiret);
 
 #if defined(SC_ENABLE_MPICOMMSHARED)
