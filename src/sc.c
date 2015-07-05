@@ -983,6 +983,7 @@ sc_init (sc_MPI_Comm mpicomm,
 #if defined(SC_ENABLE_MPI)
   if (mpicomm != MPI_COMM_NULL) {
     int mpiret;
+    MPI_Comm intranode, internode;
 
     /* register the node comm attachment with MPI */
     mpiret = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN,sc_mpi_node_comms_destroy,&sc_mpi_node_comm_keyval,NULL);
@@ -995,6 +996,18 @@ sc_init (sc_MPI_Comm mpicomm,
 #if defined(SC_ENABLE_MPICOMMSHARED)
     /* compute the node comms by default */
     sc_mpi_comm_attach_node_comms(mpicomm,0);
+    sc_mpi_comm_get_node_comms(mpicomm,&intranode,&internode);
+    if (intranode == MPI_COMM_NULL) {
+      SC_GLOBAL_STATISTICS("No shared memory node communicators\n");
+    }
+    else {
+      int intrasize;
+
+      mpiret = MPI_Comm_size(intranode,&intrasize);
+      SC_CHECK_MPI(mpiret);
+
+      SC_GLOBAL_STATISTICSF ("Shared memory node communicator size: %d\n", intrasize);
+    }
 #endif
   }
 #endif
