@@ -152,8 +152,8 @@ sc_tag_t;
 /** An MPI_Comm_keyval to handle attached intranode and internode
  * communicators: should not be touched by users.
  */
-extern int sc_mpi_node_comm_keyval;
-extern int sc_shmem_array_keyval;
+extern int          sc_mpi_node_comm_keyval;
+extern int          sc_shmem_array_keyval;
 
 #else /* !SC_ENABLE_MPI */
 
@@ -330,8 +330,9 @@ void                sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
  * \param[out] intranode      intranode communicator
  * \param[out] internode      internode communicator
  */
-void sc_mpi_comm_get_node_comms (sc_MPI_Comm comm, sc_MPI_Comm *intranode, sc_MPI_Comm *internode);
-
+void                sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
+                                                sc_MPI_Comm * intranode,
+                                                sc_MPI_Comm * internode);
 
 SC_EXTERN_C_END;
 

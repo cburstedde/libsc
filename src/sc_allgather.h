@@ -52,7 +52,6 @@ int                 sc_allgather (void *sendbuf, int sendcount,
                                   int recvcount, sc_MPI_Datatype recvtype,
                                   sc_MPI_Comm mpicomm);
 
-
 SC_EXTERN_C_END;
 
 #endif /* !SC_ALLGATHER_H */

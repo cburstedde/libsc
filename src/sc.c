@@ -282,8 +282,8 @@ sc_malloc (int package, size_t size)
   int                *malloc_count = sc_malloc_count (package);
 
 #if defined(__bgq__)
-  size_t alignment = 32;
-  posix_memalign( &ret , alignment , size );
+  size_t              alignment = 32;
+  posix_memalign (&ret, alignment, size);
 #else
   ret = malloc (size);
 #endif
@@ -835,20 +835,21 @@ sc_package_print_summary (int log_priority)
 
 #if defined(SC_ENABLE_MPI)
 static int
-sc_mpi_node_comms_destroy(MPI_Comm comm,int comm_keyval,void *attribute_val,void *extra_state)
+sc_mpi_node_comms_destroy (MPI_Comm comm, int comm_keyval,
+                           void *attribute_val, void *extra_state)
 {
-  int mpiret;
-  MPI_Comm *node_comms = (MPI_Comm *) attribute_val;
+  int                 mpiret;
+  MPI_Comm           *node_comms = (MPI_Comm *) attribute_val;
 
-  mpiret = MPI_Comm_free(&node_comms[0]);
+  mpiret = MPI_Comm_free (&node_comms[0]);
   if (mpiret != MPI_SUCCESS) {
     return mpiret;
   }
-  mpiret = MPI_Comm_free(&node_comms[1]);
+  mpiret = MPI_Comm_free (&node_comms[1]);
   if (mpiret != MPI_SUCCESS) {
     return mpiret;
   }
-  mpiret = MPI_Free_mem(node_comms);
+  mpiret = MPI_Free_mem (node_comms);
 
   return MPI_SUCCESS;
 }
@@ -857,25 +858,25 @@ static int
 sc_mpi_node_comms_copy (MPI_Comm oldcomm, int comm_keyval,
                         void *extra_state,
                         void *attribute_val_in,
-                        void *attribute_val_out,
-                        int *flag)
+                        void *attribute_val_out, int *flag)
 {
-  MPI_Comm *node_comms_in = (MPI_Comm *) attribute_val_in;
-  MPI_Comm *node_comms_out;
-  int mpiret;
+  MPI_Comm           *node_comms_in = (MPI_Comm *) attribute_val_in;
+  MPI_Comm           *node_comms_out;
+  int                 mpiret;
 
   /* We can't used SC_ALLOC because these might be destroyed after
    * sc finalizes */
-  mpiret = MPI_Alloc_mem (2 * sizeof(MPI_Comm),MPI_INFO_NULL,&node_comms_out);
+  mpiret =
+    MPI_Alloc_mem (2 * sizeof (MPI_Comm), MPI_INFO_NULL, &node_comms_out);
   if (mpiret != MPI_SUCCESS) {
     return mpiret;
   }
 
-  mpiret = MPI_Comm_dup (node_comms_in[0],&node_comms_out[0]);
+  mpiret = MPI_Comm_dup (node_comms_in[0], &node_comms_out[0]);
   if (mpiret != MPI_SUCCESS) {
     return mpiret;
   }
-  mpiret = MPI_Comm_dup (node_comms_in[1],&node_comms_out[1]);
+  mpiret = MPI_Comm_dup (node_comms_in[1], &node_comms_out[1]);
   if (mpiret != MPI_SUCCESS) {
     return mpiret;
   }
@@ -982,31 +983,37 @@ sc_init (sc_MPI_Comm mpicomm,
 
 #if defined(SC_ENABLE_MPI)
   if (mpicomm != MPI_COMM_NULL) {
-    int mpiret;
-    MPI_Comm intranode, internode;
+    int                 mpiret;
+    MPI_Comm            intranode, internode;
 
     /* register the node comm attachment with MPI */
-    mpiret = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN,sc_mpi_node_comms_destroy,&sc_mpi_node_comm_keyval,NULL);
-    SC_CHECK_MPI(mpiret);
+    mpiret =
+      MPI_Comm_create_keyval (MPI_COMM_NULL_COPY_FN,
+                              sc_mpi_node_comms_destroy,
+                              &sc_mpi_node_comm_keyval, NULL);
+    SC_CHECK_MPI (mpiret);
 
     /* register the shared memory behavior with MPI */
-    mpiret = MPI_Comm_create_keyval(MPI_COMM_DUP_FN,MPI_COMM_NULL_DELETE_FN,&sc_shmem_array_keyval,NULL);
-    SC_CHECK_MPI(mpiret);
+    mpiret =
+      MPI_Comm_create_keyval (MPI_COMM_DUP_FN, MPI_COMM_NULL_DELETE_FN,
+                              &sc_shmem_array_keyval, NULL);
+    SC_CHECK_MPI (mpiret);
 
 #if defined(SC_ENABLE_MPICOMMSHARED)
     /* compute the node comms by default */
-    sc_mpi_comm_attach_node_comms(mpicomm,0);
-    sc_mpi_comm_get_node_comms(mpicomm,&intranode,&internode);
+    sc_mpi_comm_attach_node_comms (mpicomm, 0);
+    sc_mpi_comm_get_node_comms (mpicomm, &intranode, &internode);
     if (intranode == MPI_COMM_NULL) {
-      SC_GLOBAL_STATISTICS("No shared memory node communicators\n");
+      SC_GLOBAL_STATISTICS ("No shared memory node communicators\n");
     }
     else {
-      int intrasize;
+      int                 intrasize;
 
-      mpiret = MPI_Comm_size(intranode,&intrasize);
-      SC_CHECK_MPI(mpiret);
+      mpiret = MPI_Comm_size (intranode, &intrasize);
+      SC_CHECK_MPI (mpiret);
 
-      SC_GLOBAL_STATISTICSF ("Shared memory node communicator size: %d\n", intrasize);
+      SC_GLOBAL_STATISTICSF ("Shared memory node communicator size: %d\n",
+                             intrasize);
     }
 #endif
   }

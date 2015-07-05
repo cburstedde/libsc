@@ -48,7 +48,7 @@ typedef enum
 }
 sc_shmem_array_type_t;
 
-extern const char *sc_shmem_array_type_to_string[SC_SHMEM_ARRAY_NUM_TYPES];
+extern const char  *sc_shmem_array_type_to_string[SC_SHMEM_ARRAY_NUM_TYPES];
 
 extern sc_shmem_array_type_t sc_shmem_array_default_type;
 
@@ -60,7 +60,8 @@ extern sc_shmem_array_type_t sc_shmem_array_default_type;
  * \param[in,out] comm        the mpi communicator
  * \param[in]     type        the type of shmem array behavior.
  */
-void sc_shmem_array_set_type(sc_MPI_Comm comm, sc_shmem_array_type_t type);
+void                sc_shmem_array_set_type (sc_MPI_Comm comm,
+                                             sc_shmem_array_type_t type);
 
 /** Get the type of shared memory arrays to use on this mpi communicator.
  *
@@ -68,7 +69,7 @@ void sc_shmem_array_set_type(sc_MPI_Comm comm, sc_shmem_array_type_t type);
  *
  * \return the type of shmem array used on this communicator.
  */
-sc_shmem_array_type_t sc_shmem_array_get_type(sc_MPI_Comm comm);
+sc_shmem_array_type_t sc_shmem_array_get_type (sc_MPI_Comm comm);
 
 /** Allocate a shmem array: an array that is redundant on every process.
  *
@@ -78,7 +79,8 @@ sc_shmem_array_type_t sc_shmem_array_get_type(sc_MPI_Comm comm);
  *
  * \return a shared memory array
  * */
-void *sc_shmem_array_alloc(size_t elem_size, size_t elem_count, sc_MPI_Comm comm);
+void               *sc_shmem_array_alloc (size_t elem_size, size_t elem_count,
+                                          sc_MPI_Comm comm);
 
 /** Destroy a shmem array created with sc_shmem_array_alloc()
  *
@@ -86,7 +88,7 @@ void *sc_shmem_array_alloc(size_t elem_size, size_t elem_count, sc_MPI_Comm comm
  * \param[in] comm            the mpi communicator
  *
  * */
-void  sc_shmem_array_free(void *array, sc_MPI_Comm comm);
+void                sc_shmem_array_free (void *array, sc_MPI_Comm comm);
 
 /** Start a write window for a shared array.
  *
@@ -96,14 +98,15 @@ void  sc_shmem_array_free(void *array, sc_MPI_Comm comm);
  * \return 1 if I have write access, 0 if my proc should not change the
  * array.
  */
-int   sc_shmem_array_write_start(void *array, sc_MPI_Comm comm);
+int                 sc_shmem_array_write_start (void *array,
+                                                sc_MPI_Comm comm);
 
 /** End a write window for a shared array.
  *
  * \param[in] array           array that has changed
  * \param[in] comm            the mpi communicator
  */
-void  sc_shmem_array_write_end(void *array, sc_MPI_Comm comm);
+void                sc_shmem_array_write_end (void *array, sc_MPI_Comm comm);
 
 /** Copy a shmem array.
  *
@@ -112,9 +115,8 @@ void  sc_shmem_array_write_end(void *array, sc_MPI_Comm comm);
  * \param[in    bytes         number of bytes to write
  * \param[in]   comm          the mpi communicator
  */
-void  sc_shmem_array_memcpy(void *destarray, void *srcarray,
-                            size_t bytes,
-                            sc_MPI_Comm comm);
+void                sc_shmem_array_memcpy (void *destarray, void *srcarray,
+                                           size_t bytes, sc_MPI_Comm comm);
 
 /** Fill a shmem array with an allgather.
  *
@@ -126,10 +128,11 @@ void  sc_shmem_array_memcpy(void *destarray, void *srcarray,
  * \param[in] recvtype        the type of items to allgather
  * \param[in] comm            the mpi communicator
  */
-void sc_shmem_array_allgather(void *sendbuf, int sendcount,
-                              sc_MPI_Datatype sendtype, void *recvbuf,
-                              int recvcount, sc_MPI_Datatype recvtype,
-                              sc_MPI_Comm comm);
+void                sc_shmem_array_allgather (void *sendbuf, int sendcount,
+                                              sc_MPI_Datatype sendtype,
+                                              void *recvbuf, int recvcount,
+                                              sc_MPI_Datatype recvtype,
+                                              sc_MPI_Comm comm);
 
 /** Fill a shmem array with an allgather of the prefix op over all processes.
  *
@@ -140,9 +143,9 @@ void sc_shmem_array_allgather(void *sendbuf, int sendcount,
  * \param[in] op              the operation to prefix (e.g., sc_MPI_SUM)
  * \param[in] comm            the mpi communicator
  */
-void sc_shmem_array_prefix (void *sendbuf, void *recvbuf, int count,
-                            sc_MPI_Datatype type, sc_MPI_Op op,
-                            sc_MPI_Comm comm);
+void                sc_shmem_array_prefix (void *sendbuf, void *recvbuf,
+                                           int count, sc_MPI_Datatype type,
+                                           sc_MPI_Op op, sc_MPI_Comm comm);
 SC_EXTERN_C_END;
 
 #endif /* SC_SHMEM_ARRAY_H */

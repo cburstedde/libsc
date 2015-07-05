@@ -164,4 +164,3 @@ sc_allgather (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
 
   return sc_MPI_SUCCESS;
 }
-
