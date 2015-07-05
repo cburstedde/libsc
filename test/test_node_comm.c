@@ -24,13 +24,11 @@
 #include <sc_mpi.h>
 #include <sc_shmem_array.h>
 
-void
+int
 test_shmem_array (int count, sc_MPI_Comm comm, sc_shmem_array_type_t type)
 {
   int i, p, size, mpiret, check;
   long int *myval, *recv_self, *recv_shmem, *scan_self, *scan_shmem;
-
-  SC_GLOBAL_PRODUCTIONF ("type %d\n", type);
 
   sc_shmem_array_set_type(comm, type);
 
@@ -62,18 +60,25 @@ test_shmem_array (int count, sc_MPI_Comm comm, sc_shmem_array_type_t type)
                            recv_shmem,count,sc_MPI_LONG,
                            comm);
   check = memcmp(recv_self,recv_shmem,count * sizeof(long int)*size);
-  SC_CHECK_ABORTF(!check,"sc_shmem_array_allgather does not reproduce for type %d, count %d\n",type,count);
+  if (check) {
+    SC_GLOBAL_LERROR("sc_shmem_array_allgather mismatch\n");
+    return 1;
+  }
   sc_shmem_array_free(recv_shmem,comm);
 
   scan_shmem = sc_shmem_array_alloc(sizeof (long int),count * (size + 1),comm);
   sc_shmem_array_prefix(myval,scan_shmem,count,sc_MPI_LONG,sc_MPI_SUM,comm);
   check = memcmp(scan_self,scan_shmem,count * sizeof(long int)*(size + 1));
-  SC_CHECK_ABORTF(!check,"sc_shmem_array_prefix does not reproduce for type %d, count %d\n",type,count);
+  if (check) {
+    SC_GLOBAL_LERROR("sc_shmem_array_prefix mismatch\n");
+    return 2;
+  }
   sc_shmem_array_free(scan_shmem,comm);
 
   SC_FREE (scan_self);
   SC_FREE (recv_self);
   SC_FREE (myval);
+  return 0;
 }
 
 int
@@ -83,6 +88,7 @@ main (int argc, char **argv)
   sc_MPI_Comm   internode = sc_MPI_COMM_NULL;
   int           mpiret, node_size = 1, rank, size;
   int           first, intrarank, interrank, count;
+  int           retval = 0;
   sc_shmem_array_type_t type;
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -96,8 +102,19 @@ main (int argc, char **argv)
 
   srandom(rank);
   for (type = 0; type < SC_SHMEM_ARRAY_NUM_TYPES; type++) {
+
+    SC_GLOBAL_PRODUCTIONF("sc_shmem_array type: %s\n", sc_shmem_array_type_to_string[type]);
     for (count = 1; count <= 3; count++) {
-      test_shmem_array (count, MPI_COMM_WORLD, type);
+      int retvalin = retval;
+
+      SC_GLOBAL_PRODUCTIONF ("  count = %d\n", count);
+      retval += test_shmem_array (count, MPI_COMM_WORLD, type);
+      if (retval != retvalin) {
+        SC_GLOBAL_PRODUCTION ("    unsuccessful\n");
+      }
+      else {
+        SC_GLOBAL_PRODUCTION ("    successful\n");
+      }
     }
   }
 
@@ -105,5 +122,5 @@ main (int argc, char **argv)
 
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
-  return 0;
+  return retval;
 }

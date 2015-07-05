@@ -28,6 +28,17 @@
 #include <hwi/include/bqc/A2_inlines.h>
 #endif
 
+const char *sc_shmem_array_type_to_string[SC_SHMEM_ARRAY_NUM_TYPES] =
+{
+  "basic", "basic_prescan",
+#if defined(SC_ENABLE_MPIWINSHARED)
+  "window", "window_prescan",
+#endif
+#if defined(__bgq__)
+  "shared", "shared_prescan",
+#endif
+};
+
 static void
 sc_scan_on_array(void *recvchar, int size, int count, int typesize,
                  sc_MPI_Datatype type, sc_MPI_Op op)

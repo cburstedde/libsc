@@ -35,18 +35,20 @@ typedef enum
 {
   SC_SHMEM_ARRAY_BASIC = 0, /**< use allgathers, then sum to simulate scan */
   SC_SHMEM_ARRAY_PRESCAN, /**< mpi_scan, then allgather */
-#if defined(__bgq__)
-  SC_SHMEM_ARRAY_SHARED,  /**< raw pointer passing: only works for shared-heap environments */
-  SC_SHMEM_ARRAY_SHARED_PRESCAN, /**< mpi_scan, thenraw pointer passing: only works for shared-heap environments */
-#endif
 #if defined(SC_ENABLE_MPIWINSHARED)
   SC_SHMEM_ARRAY_WINDOW,     /**< MPI_Win (requires MPI 3) */
   SC_SHMEM_ARRAY_WINDOW_PRESCAN, /**< mpi_scan, then MPI_Win (requires MPI 3) */
+#endif
+#if defined(__bgq__)
+  SC_SHMEM_ARRAY_SHARED,  /**< raw pointer passing: only works for shared-heap environments */
+  SC_SHMEM_ARRAY_SHARED_PRESCAN, /**< mpi_scan, thenraw pointer passing: only works for shared-heap environments */
 #endif
   SC_SHMEM_ARRAY_NUM_TYPES,
   SC_SHMEM_ARRAY_NOT_SET
 }
 sc_shmem_array_type_t;
+
+extern const char *sc_shmem_array_type_to_string[SC_SHMEM_ARRAY_NUM_TYPES];
 
 extern sc_shmem_array_type_t sc_shmem_array_default_type;
 
