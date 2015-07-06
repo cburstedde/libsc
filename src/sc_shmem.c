@@ -176,13 +176,13 @@ sc_shmem_type_t     sc_shmem_default_type = SC_SHMEM_DEFAULT;
 static sc_shmem_type_t sc_shmem_types[SC_SHMEM_NUM_TYPES] = {
   SC_SHMEM_BASIC,
   SC_SHMEM_PRESCAN,
-#if defined(__bgq__)
-  SC_SHMEM_SHARED,
-  SC_SHMEM_SHARED_PRESCAN,
-#endif
 #if defined(SC_ENABLE_MPIWINSHARED)
   SC_SHMEM_WINDOW,
   SC_SHMEM_WINDOW_PRESCAN
+#endif
+#if defined(__bgq__)
+  SC_SHMEM_SHARED,
+  SC_SHMEM_SHARED_PRESCAN,
 #endif
 };
 
