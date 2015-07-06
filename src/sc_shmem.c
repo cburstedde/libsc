@@ -180,7 +180,7 @@ static sc_shmem_type_t sc_shmem_types[SC_SHMEM_NUM_TYPES] = {
   SC_SHMEM_SHARED,
   SC_SHMEM_SHARED_PRESCAN,
 #endif
-#if defined(SC_ENABLE_WINSHARED)
+#if defined(SC_ENABLE_MPIWINSHARED)
   SC_SHMEM_WINDOW,
   SC_SHMEM_WINDOW_PRESCAN
 #endif
