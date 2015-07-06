@@ -451,13 +451,11 @@ dnl  ])
   if test "x$$1_ENABLE_MPIWINSHARED" = xyes ; then
     AC_DEFINE([ENABLE_MPIWINSHARED], 1, [Define to 1 if we can use MPI_Win_allocate_shared])
   fi
-  AM_CONDITIONAL([$1_ENABLE_MPIWINSHARED], [test "x$$1_ENABLE_MPIWINSHARED" = xyes])
   $1_ENABLE_MPICOMMSHARED=yes
   SC_MPICOMMSHARED_C_COMPILE_AND_LINK(,[$1_ENABLE_MPICOMMSHARED=no])
   if test "x$$1_ENABLE_MPICOMMSHARED" = xyes ; then
     AC_DEFINE([ENABLE_MPICOMMSHARED], 1, [Define to 1 if we can use MPI_COMM_TYPE_SHARED])
   fi
-  AM_CONDITIONAL([$1_ENABLE_MPICOMMSHARED], [test "x$$1_ENABLE_MPICOMMSHARED" = xyes])
 fi
 
 dnl figure out the MPI include directories
