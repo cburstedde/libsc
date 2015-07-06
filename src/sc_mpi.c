@@ -523,7 +523,7 @@ sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
                             sc_MPI_Comm * intranode, sc_MPI_Comm * internode)
 {
   int                 mpiret, flag;
-  MPI_Comm           *node_comms;
+  sc_MPI_Comm        *node_comms;
   void               *intraval, *interval;
 
   *intranode = sc_MPI_COMM_NULL;
