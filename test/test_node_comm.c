@@ -94,12 +94,12 @@ main (int argc, char **argv)
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &rank);
   SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_size (MPI_COMM_WORLD, &size);
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &size);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   srandom (rank);
   for (type = 0; type < SC_SHMEM_NUM_TYPES; type++) {
@@ -110,7 +110,7 @@ main (int argc, char **argv)
       int                 retvalin = retval;
 
       SC_GLOBAL_PRODUCTIONF ("  count = %d\n", count);
-      retval += test_shmem (count, MPI_COMM_WORLD, type);
+      retval += test_shmem (count, sc_MPI_COMM_WORLD, type);
       if (retval != retvalin) {
         SC_GLOBAL_PRODUCTION ("    unsuccessful\n");
       }
