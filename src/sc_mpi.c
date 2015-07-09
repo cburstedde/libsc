@@ -373,6 +373,7 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
 }
 
 #if defined(SC_ENABLE_MPI)
+
 /* these should be initialized in sc_init() */
 static int          sc_mpi_node_comm_keyval = MPI_KEYVAL_INVALID;
 
@@ -395,6 +396,8 @@ sc_mpi_node_comms_destroy (MPI_Comm comm, int comm_keyval,
 
   return MPI_SUCCESS;
 }
+
+#if 0                           /* not used right now */
 
 static int
 sc_mpi_node_comms_copy (MPI_Comm oldcomm, int comm_keyval,
@@ -428,13 +431,16 @@ sc_mpi_node_comms_copy (MPI_Comm oldcomm, int comm_keyval,
 
   return MPI_SUCCESS;
 }
-#endif
+
+#endif /* 0 -- not used by now */
+
+#endif /* SC_ENABLE_MPI */
 
 void
 sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm, int processes_per_node)
 {
 #if defined(SC_ENABLE_MPI)
-  int                 keyval, mpiret, rank, size;
+  int                 mpiret, rank, size;
   MPI_Comm           *node_comms, internode, intranode;
 
   if (sc_mpi_node_comm_keyval == MPI_KEYVAL_INVALID) {
@@ -522,9 +528,10 @@ void
 sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
                             sc_MPI_Comm * intranode, sc_MPI_Comm * internode)
 {
+#ifdef SC_ENABLE_MPI
   int                 mpiret, flag;
   sc_MPI_Comm        *node_comms;
-  void               *intraval, *interval;
+#endif
 
   *intranode = sc_MPI_COMM_NULL;
   *internode = sc_MPI_COMM_NULL;

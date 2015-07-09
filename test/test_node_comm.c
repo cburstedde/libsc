@@ -85,12 +85,10 @@ test_shmem (int count, sc_MPI_Comm comm, sc_shmem_type_t type)
 int
 main (int argc, char **argv)
 {
-  sc_MPI_Comm         intranode = sc_MPI_COMM_NULL;
-  sc_MPI_Comm         internode = sc_MPI_COMM_NULL;
-  int                 mpiret, node_size = 1, rank, size;
-  int                 first, intrarank, interrank, count;
+  int                 mpiret, rank, size;
+  int                 count;
+  int                 itype;
   int                 retval = 0;
-  sc_shmem_type_t     type;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -102,15 +100,15 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   srandom (rank);
-  for (type = 0; type < SC_SHMEM_NUM_TYPES; type++) {
+  for (itype = 0; itype < (int) SC_SHMEM_NUM_TYPES; itype++) {
 
     SC_GLOBAL_PRODUCTIONF ("sc_shmem type: %s\n",
-                           sc_shmem_type_to_string[type]);
+                           sc_shmem_type_to_string[itype]);
     for (count = 1; count <= 3; count++) {
       int                 retvalin = retval;
 
       SC_GLOBAL_PRODUCTIONF ("  count = %d\n", count);
-      retval += test_shmem (count, sc_MPI_COMM_WORLD, type);
+      retval += test_shmem (count, sc_MPI_COMM_WORLD, (sc_shmem_type_t) itype);
       if (retval != retvalin) {
         SC_GLOBAL_PRODUCTION ("    unsuccessful\n");
       }
