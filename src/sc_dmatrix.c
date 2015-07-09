@@ -171,6 +171,59 @@ sc_dmatrix_new_view_offset (sc_bint_t o, sc_bint_t m, sc_bint_t n,
 }
 
 sc_dmatrix_t       *
+sc_dmatrix_new_view_column (sc_dmatrix_t * orig, sc_bint_t j)
+{
+  sc_dmatrix_t       *rdm;
+
+  SC_ASSERT (orig->m >= 0);
+  SC_ASSERT (0 <= j && j < orig->n);
+
+  rdm = SC_ALLOC (sc_dmatrix_t, 1);
+  sc_dmatrix_new_e (rdm, orig->m, orig->n, orig->e[0] + j);
+  rdm->n = 1;
+  rdm->view = 1;
+
+  return rdm;
+}
+
+void
+sc_dmatrix_view_set_column (sc_dmatrix_t * view,
+                            sc_dmatrix_t * orig, sc_bint_t j)
+{
+  const sc_bint_t     m = view->m;
+  sc_bint_t           i;
+
+  SC_ASSERT (view->view);
+  SC_ASSERT (view->m == orig->m);
+  SC_ASSERT (orig->m >= 0);
+  SC_ASSERT (0 <= j && j < orig->n);
+
+  view->e[0] = orig->e[0] + j;
+
+  if (m > 0) {
+    for (i = 1; i < m; ++i)
+      view->e[i] = view->e[i - 1] + orig->n;
+
+    view->e[m] = NULL;          /* safeguard */
+  }
+
+  view->n = 1;
+}
+
+void
+sc_dmatrix_view_set_row (sc_dmatrix_t * view,
+                         sc_dmatrix_t * orig, sc_bint_t i)
+{
+  SC_ASSERT (view->view);
+  SC_ASSERT (view->m == 1);
+  SC_ASSERT (orig->n >= 0);
+  SC_ASSERT (0 <= i && i < orig->m);
+
+  view->e[0] = orig->e[i];
+  view->n = orig->n;
+}
+
+sc_dmatrix_t       *
 sc_dmatrix_clone (const sc_dmatrix_t * X)
 {
   const sc_bint_t     totalsize = X->m * X->n;
@@ -649,14 +702,14 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
     /* Perform an LU factorization of B. */
     SC_LAPACK_DGETRF (&N, &N, lu->e[0], &N, ipiv, &info);
 
-    SC_ASSERT (info == 0);
+    SC_CHECK_ABORT (info == 0, "Lapack routine DGETRF failed");
 
     /* Solve the linear system. */
     sc_dmatrix_copy (A, C);
     SC_LAPACK_DGETRS (&sc_transchar[transb], &N, &Nrhs, lu->e[0], &N,
                       ipiv, C->e[0], &N, &info);
 
-    SC_ASSERT (info == 0);
+    SC_CHECK_ABORT (info == 0, "Lapack routine DGETRS failed");
 
     SC_FREE (ipiv);
     sc_dmatrix_destroy (lu);
@@ -664,6 +717,22 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
   else {
     SC_CHECK_ABORT (0, "Only square A's work right now\n");
   }
+}
+
+void
+sc_dmatrix_solve_transpose_inplace (sc_dmatrix_t * A, sc_dmatrix_t * B)
+{
+  const sc_bint_t     N = A->m;
+  const sc_bint_t     nrhs = B->m;
+  sc_bint_t          *ipiv, info;
+
+  SC_ASSERT (A->n == N && B->n == N);
+
+  ipiv = SC_ALLOC (sc_bint_t, N);
+  SC_LAPACK_DGESV (&N, &nrhs, A->e[0], &N, ipiv, B->e[0], &N, &info);
+  SC_FREE (ipiv);
+
+  SC_CHECK_ABORT (info == 0, "Lapack routine DGESV failed");
 }
 
 void
@@ -683,7 +752,7 @@ sc_dmatrix_write (const sc_dmatrix_t * dmatrix, FILE * fp)
 }
 
 sc_dmatrix_pool_t  *
-sc_dmatrix_pool_new (int m, int n)
+sc_dmatrix_pool_new (sc_bint_t m, sc_bint_t n)
 {
   sc_dmatrix_pool_t  *dmpool;
 

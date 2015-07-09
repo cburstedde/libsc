@@ -55,7 +55,7 @@ main (int argc, char **argv)
 #if defined(SC_WITH_BLAS) && defined(SC_WITH_LAPACK)
   int                 j;
   int                 mpiret;
-  sc_dmatrix_t       *A, *x, *xexact, *b, *bT, *xT, *xTexact;
+  sc_dmatrix_t       *A, *x, *xexact, *b, *bT, *xT, *xTexact, *A2, *b2;
   double              xmaxerror = 0.0;
   double              A_data[] = { 8.0, 1.0, 6.0,
     3.0, 5.0, 7.0,
@@ -70,9 +70,13 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   A = sc_dmatrix_new_data (3, 3, A_data);
+  A2 = sc_dmatrix_clone (A);
   b = sc_dmatrix_new_data (1, 3, b_data);
+  b2 = sc_dmatrix_clone (b);
   xexact = sc_dmatrix_new_data (1, 3, xexact_data);
   x = sc_dmatrix_new (1, 3);
+
+  /* Test 1: solve with A from the right */
 
   sc_dmatrix_rdivide (SC_NO_TRANS, b, A, x);
 
@@ -88,6 +92,25 @@ main (int argc, char **argv)
   if (xmaxerror > 100.0 * eps) {
     ++num_failed_tests;
   }
+
+  /* Test 2: solve with A^T from the left */
+
+  sc_dmatrix_solve_transpose_inplace (A2, b2);
+
+  sc_dmatrix_add (-1.0, xexact, b2);
+
+  xmaxerror = 0.0;
+  for (j = 0; j < 3; ++j) {
+    xmaxerror = SC_MAX (xmaxerror, fabs (x->e[0][j]));
+  }
+
+  SC_LDEBUGF ("xmaxerror = %g\n", xmaxerror);
+
+  if (xmaxerror > 100.0 * eps) {
+    ++num_failed_tests;
+  }
+
+  /* Test 3: solve with A^T from the right */
 
   xexact->e[0][0] = 0.05;
   xexact->e[0][1] = 0.3;
@@ -107,6 +130,8 @@ main (int argc, char **argv)
   if (xmaxerror > 100.0 * eps) {
     ++num_failed_tests;
   }
+
+  /* Test 4: solve with A from the left */
 
   bT = sc_dmatrix_new_data (3, 1, b_data);
   xT = sc_dmatrix_new (3, 1);
@@ -138,6 +163,8 @@ main (int argc, char **argv)
   sc_dmatrix_destroy (b);
   sc_dmatrix_destroy (x);
   sc_dmatrix_destroy (xexact);
+  sc_dmatrix_destroy (A2);
+  sc_dmatrix_destroy (b2);
 
   test_zero_sizes ();
 

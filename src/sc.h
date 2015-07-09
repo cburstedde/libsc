@@ -76,13 +76,16 @@
 
 /* provide extern C defines */
 
-/* the hacks below enable semicolons after the SC_EXTERN_C_ macros */
+/* The hacks below enable semicolons after the SC_EXTERN_C_ macros
+ * and also take care of the different semantics of () / (...) */
 #ifdef __cplusplus
 #define SC_EXTERN_C_BEGIN       extern "C" { void sc_extern_c_hack_1 (void)
 #define SC_EXTERN_C_END                    } void sc_extern_c_hack_2 (void)
+#define SC_NOARGS               ...
 #else
 #define SC_EXTERN_C_BEGIN                    void sc_extern_c_hack_3 (void)
 #define SC_EXTERN_C_END                      void sc_extern_c_hack_4 (void)
+#define SC_NOARGS
 #endif
 
 /* this libsc header is always included */
@@ -516,7 +519,43 @@ void                sc_abort_collective (const char *msg)
 int                 sc_package_register (sc_log_handler_t log_handler,
                                          int log_threshold,
                                          const char *name, const char *full);
+
+/** Query whether an identifier matches a registered package.
+ * \param [in] package_id       Only a non-negative id can be registered.
+ * \return                      True if and only if the package id is
+ *                              non-negative and package is registered.
+ */
 int                 sc_package_is_registered (int package_id);
+
+/** Acquire a pthread mutex lock.
+ * If configured without --enable-pthread, this function does nothing.
+ * This function must be followed with a matching \ref sc_package_unlock.
+ * \param [in] package_id       Either -1 for an undefined package or
+ *                              an id returned from \ref sc_package_register.
+ *                              Depending on the value, the appropriate mutex
+ *                              is chosen.  Thus, we may overlap locking calls
+ *                              with distinct package_id.
+ */
+void                sc_package_lock (int package_id);
+
+/** Release a pthread mutex lock.
+ * If configured without --enable-pthread, this function does nothing.
+ * This function must be follow a matching \ref sc_package_lock.
+ * \param [in] package_id       Either -1 for an undefined package or
+ *                              an id returned from \ref sc_package_register.
+ *                              Depending on the value, the appropriate mutex
+ *                              is chosen.  Thus, we may overlap locking calls
+ *                              with distinct package_id.
+ */
+void                sc_package_unlock (int package_id);
+
+/** Set the logging verbosity of a registered package.
+ * This can be called at any point in the program, any number of times.
+ * It can only lower the verbosity at and below the value of SC_LP_THRESHOLD.
+ * \param [in] package_id       Must be a registered package identifier.
+ */
+void                sc_package_set_verbosity (int package_id,
+                                              int log_priority);
 
 /** Unregister a software package with SC.
  * This function must only be called after additional threads are finished.
@@ -524,7 +563,7 @@ int                 sc_package_is_registered (int package_id);
 void                sc_package_unregister (int package_id);
 
 /** Print a summary of all packages registered with SC.
- * Uses the SC_LP_GLOBAL log category which by default only prints on rank 0.
+ * Uses the SC_LC_GLOBAL log category which by default only prints on rank 0.
  * \param [in] log_priority     Priority passed to sc log functions.
  */
 void                sc_package_print_summary (int log_priority);

@@ -20,17 +20,29 @@
   02110-1301, USA.
 */
 
-#include <sc_lapack.h>
+/** \file sc_private.h
+ *
+ * Support for calls between different parts of the sc library.
+ * This is not meant for use from other packages or applications.
+ */
 
-const char          sc_jobzchar[] = { 'N', 'V', '?' };
+#ifndef SC_PRIVATE_H
+#define SC_PRIVATE_H
 
-#ifndef SC_WITH_LAPACK
+#include <sc.h>
 
-int
-sc_lapack_nonimplemented (SC_NOARGS)
-{
-  SC_ABORT ("LAPACK not compiled in this configuration");
-  return 0;
-}
+SC_EXTERN_C_BEGIN;
 
-#endif /* !SC_WITH_LAPACK */
+/** Add to the per-package variable about active reference counters.
+ * This function is thread safe; it uses per-package locking internally
+ * \param [in] package_id       The id of a registered package or -1.
+ * \param [in] toadd            This is added to the package's internal
+ *                              variable that counts active rcs.
+ *                              We assert that the new count does not
+ *                              drop below zero.
+ */
+void                sc_package_rc_count_add (int package_id, int toadd);
+
+SC_EXTERN_C_END;
+
+#endif /* SC_PRIVATE_H */

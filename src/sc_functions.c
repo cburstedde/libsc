@@ -23,6 +23,60 @@
 #include <sc_functions.h>
 #include <time.h>
 
+int
+sc_intpow (int base, int exp)
+{
+  int                 result = 1;
+
+  SC_ASSERT (exp >= 0);
+
+  while (exp) {
+    if (exp & 1) {
+      result *= base;
+    }
+    exp >>= 1;
+    base *= base;
+  }
+
+  return result;
+}
+
+int64_t
+sc_intpow64 (int64_t base, int exp)
+{
+  int64_t             result = 1;
+
+  SC_ASSERT (exp >= 0);
+
+  while (exp) {
+    if (exp & 1) {
+      result *= base;
+    }
+    exp >>= 1;
+    base *= base;
+  }
+
+  return result;
+}
+
+uint64_t
+sc_intpow64u (uint64_t base, int exp)
+{
+  uint64_t            result = 1;
+
+  SC_ASSERT (exp >= 0);
+
+  while (exp) {
+    if (exp & 1) {
+      result *= base;
+    }
+    exp >>= 1;
+    base *= base;
+  }
+
+  return result;
+}
+
 double
 sc_function1_invert (sc_function1_t func, void *data,
                      double x_low, double x_high, double y, double rtol)

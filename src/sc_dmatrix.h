@@ -23,16 +23,23 @@
 #ifndef SC_DMATRIX_H
 #define SC_DMATRIX_H
 
+/** \file sc_dmatrix.h
+ * Routines to create and manipulate small dense matrices of double.
+ * We use BLAS and LAPACK for more advanced linear algebra computations.
+ */
+
 #include <sc_blas.h>
 #include <sc_containers.h>
 
 SC_EXTERN_C_BEGIN;
 
+/** This is the matrix object.  It can have its own storage or be a view. */
 typedef struct sc_dmatrix
 {
-  double            **e;
-  sc_bint_t           m, n;
-  int                 view;
+  double            **e;        /**< Array into the rows of the matrix. */
+  sc_bint_t           m;        /**< Number of rows in this matrix. */
+  sc_bint_t           n;        /**< Number of columns in this matrix. */
+  int                 view;     /**< Boolean to indicate this is a view. */
 }
 sc_dmatrix_t;
 
@@ -54,17 +61,32 @@ int                 sc_darray_is_range (const double *darray, size_t nelem,
                                         double low, double high);
 
 /** Calculate the memory used by a dmatrix.
- * \param [in] array       The dmatrix.
+ * \param [in] dmatrix     The dmatrix.
  * \return                 Memory used in bytes.
  */
 size_t              sc_dmatrix_memory_used (sc_dmatrix_t * dmatrix);
 
-/*
- * The sc_dmatrix_new/clone functions abort on allocation errors.
- * There is no need to check the return value.
+/** Create a new uninitalized matrix object.
+ * This function aborts on memory allocation errors.
+ * \param [in] m            Number of rows.
+ * \param [in] n            Number of columns.
+ * \return                  A valid dmatrix object with uninitialized entries.
  */
 sc_dmatrix_t       *sc_dmatrix_new (sc_bint_t m, sc_bint_t n);
+
+/** Create a new matrix object with all entries set to zero.
+ * This function aborts on memory allocation errors.
+ * \param [in] m            Number of rows.
+ * \param [in] n            Number of columns.
+ * \return                  A valid dmatrix object storing all zeros.
+ */
 sc_dmatrix_t       *sc_dmatrix_new_zero (sc_bint_t m, sc_bint_t n);
+
+/** Create a new matrix object with the same size and entries as another.
+ * This function aborts on memory allocation errors.
+ * \param [in] dmatrix      A valid dmatrix or view.
+ * \return                  A valid dmatrix with size and entries of \b view.
+ */
 sc_dmatrix_t       *sc_dmatrix_clone (const sc_dmatrix_t * dmatrix);
 
 /** Create a matrix view on an existing data array.
@@ -77,6 +99,7 @@ sc_dmatrix_t       *sc_dmatrix_new_data (sc_bint_t m, sc_bint_t n,
 /** Create a matrix view on an existing sc_dmatrix_t.
  * The original matrix must have greater equal as many elements as the view.
  * The original matrix must not be destroyed or resized while view is in use.
+ * \note            Currently, creating views of views is not safe.
  */
 sc_dmatrix_t       *sc_dmatrix_new_view (sc_bint_t m, sc_bint_t n,
                                          sc_dmatrix_t * orig);
@@ -85,17 +108,57 @@ sc_dmatrix_t       *sc_dmatrix_new_view (sc_bint_t m, sc_bint_t n,
  * The start of the view is offset by a number of rows.
  * The original matrix must have greater equal as many elements as view end.
  * The original matrix must not be destroyed or resized while view is in use.
- * \param[in] o     Number of rows that the view is offset.
+ * \param [in] o    Number of rows that the view is offset.
  *                  Requires (o + m) * n <= orig->m * orig->n.
+ * \param [in] m    Number of rows that the view shall have.
+ * \param [in] n    Number of columns that the view shall have.
+ * \param [in] orig     This valid matrix is viewed.
+ * \return              A newly created mxn view onto \b orig.
+ * \note            Currently, creating views of views is not safe.
  */
 sc_dmatrix_t       *sc_dmatrix_new_view_offset (sc_bint_t o,
                                                 sc_bint_t m, sc_bint_t n,
                                                 sc_dmatrix_t * orig);
 
+/** Create a matrix view onto one column of an existing sc_dmatrix_t.
+ * \param [in] orig     This matrix must have at least one column.
+ *                      Its \b jth column is returned as a view.
+ * \param [in] j        Valid column index into \b orig.
+ * \return              A matrix of as many rows as \b orig and one column
+ *                      whose entries point at the jth column of \b orig.
+ * \note            Currently, creating views of views is not safe.
+ */
+sc_dmatrix_t       *sc_dmatrix_new_view_column (sc_dmatrix_t * orig,
+                                                sc_bint_t j);
+
+/** Change a matrix view to point at a single column of another matrix.
+ * \param [in,out] view     This must be a view and is modified in place.
+ *                          It must have the same number of rows as \b orig.
+ *                          On return, its number of columns will be one.
+ * \param [in] orig         The \b jth column of this matrix is viewed.
+ * \param [in] j            Valid column index into \b orig.
+ * \note            Currently, creating views of views is not safe.
+ */
+void                sc_dmatrix_view_set_column (sc_dmatrix_t * view,
+                                                sc_dmatrix_t * orig,
+                                                sc_bint_t j);
+
+/** Change a matrix view to point at a single row of another matrix.
+ * \param [in,out] view     This must be a view and is modified in place.
+ *                          It must have precisely one row.  On return,
+ *                          its number of columns will match \b orig.
+ * \param [in] orig         The \b jth row of this matrix is viewed.
+ * \param [in] i            Valid row index into \b orig.
+ * \note            Currently, creating views of views is not safe.
+ */
+void                sc_dmatrix_view_set_row (sc_dmatrix_t * view,
+                                             sc_dmatrix_t * orig,
+                                             sc_bint_t i);
+
 /** Reshape a matrix to different m and n without changing m * n.
  */
-void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix, sc_bint_t m,
-                                        sc_bint_t n);
+void                sc_dmatrix_reshape (sc_dmatrix_t * dmatrix,
+                                        sc_bint_t m, sc_bint_t n);
 
 /** Change the matrix dimensions.
  * For views it must be known that the new size is permitted.
@@ -124,13 +187,22 @@ void                sc_dmatrix_destroy (sc_dmatrix_t * dmatrix);
 int                 sc_dmatrix_is_valid (const sc_dmatrix_t * A);
 
 /** Check a square dmatrix for symmetry.
- * \param [in] tolerance    measures the absolute value of the max difference.
- * \return                  true if matrix is numerically symmetric.
+ * \param [in] A            This square dmatrix is checked for symmetry.
+ * \param [in] tolerance    Measures the absolute value of the max difference.
+ * \return                  true if and only if matrix is numerically symmetric.
  */
 int                 sc_dmatrix_is_symmetric (const sc_dmatrix_t * A,
                                              double tolerance);
 
+/** Set a matrix to all zero entries.
+ * \param [in,out] dmatrix  Valid dmatrix whose entries are zero'd.
+ */
 void                sc_dmatrix_set_zero (sc_dmatrix_t * dmatrix);
+
+/** Set all entries of a matrix to a constant.
+ * \param [in,out] dmatrix  Valid dmatrix whose entries are set to \b value.
+ * \param [in] value        This value is written into every entry of \b dmatrix.
+ */
 void                sc_dmatrix_set_value (sc_dmatrix_t * dmatrix,
                                           double value);
 
@@ -195,9 +267,19 @@ void                sc_dmatrix_dotmultiply (const sc_dmatrix_t * X,
 void                sc_dmatrix_dotdivide (const sc_dmatrix_t * X,
                                           sc_dmatrix_t * Y);
 
+/** Copy one matrix into another.
+ * \param [in] X        Matrix taken as a source.
+ * \param [in,out] Y    Matrix of dimensions of \b X.
+ *                      On output, its entries are set to X.
+ */
 void                sc_dmatrix_copy (const sc_dmatrix_t * X,
                                      sc_dmatrix_t * Y);
 
+/** Copy one matrix transposed into another.
+ * \param [in] X        Matrix taken as a source.
+ * \param [in,out] Y    Matrix of dimensions of \b X transposed.
+ *                      On output, its entries are set to X transposed.
+ */
 void                sc_dmatrix_transpose (const sc_dmatrix_t * X,
                                           sc_dmatrix_t * Y);
 
@@ -206,13 +288,16 @@ void                sc_dmatrix_transpose (const sc_dmatrix_t * X,
 void                sc_dmatrix_add (double alpha, const sc_dmatrix_t * X,
                                     sc_dmatrix_t * Y);
 
-/**
- * Perform matrix-vector multiplication Y = alpha * A * X + beta * Y.
- * \param [in] transa    Transpose operation for matrix A.
- * \param [in] transx    Transpose operation for matrix X.
- * \param [in] transy    Transpose operation for matrix Y.
- * \param [in] A         Matrix.
- * \param [in] X, Y      Column or row vectors (or one each).
+/** Perform matrix-vector multiplication Y = alpha * A * X + beta * Y.
+ * The dimensions of A, X, and Y must be compatible.
+ * \param [in] transa   Transpose operation for matrix A.
+ * \param [in] transx   Transpose operation for matrix X.
+ * \param [in] transy   Transpose operation for matrix Y.
+ * \param [in] alpha    Factor for the matrix to multiply.
+ * \param [in] A        Valid matrix or view.
+ * \param [in] X        Column or row vector.
+ * \param [in] beta     Factor for the original matrix.
+ * \param [in] Y        Column or row vector.
  */
 void                sc_dmatrix_vector (sc_trans_t transa,
                                        sc_trans_t transx,
@@ -221,11 +306,15 @@ void                sc_dmatrix_vector (sc_trans_t transa,
                                        const sc_dmatrix_t * X, double beta,
                                        sc_dmatrix_t * Y);
 
-/*! \brief Matrix Matrix Multiply  \c C := alpha * A * B + beta * C
- *
- *   \param A matrix
- *   \param B matrix
- *   \param C matrix
+/** Matrix-matrix multiplication \c C := alpha * A * B + beta * C
+ * The dimensions of A, B, and C must be compatible.
+ * \param [in] transa   Transpose operation for matrix A.
+ * \param [in] transb   Transpose operation for matrix B.
+ * \param [in] alpha    Factor for the matrix to multiply.
+ * \param [in] A        First matrix to multiply.
+ * \param [in] B        Secend Matrix to multiply.
+ * \param [in] beta     Factor for the original matrix.
+ * \param [in,out] C    Matrix is modified in place.
  */
 void                sc_dmatrix_multiply (sc_trans_t transa,
                                          sc_trans_t transb, double alpha,
@@ -261,6 +350,19 @@ void                sc_dmatrix_rdivide (sc_trans_t transb,
                                         const sc_dmatrix_t * B,
                                         sc_dmatrix_t * C);
 
+/** \brief Solve B^T <- A^{-T} B^T.
+ * This call is destructive on the entries of the matrix A.
+ * Solving multiple right hand sides is supported.
+ *
+ *   \param[in,out] A   Square invertible matrix.  Values are changed.
+ *                      Its transpose is inverted and applied to B^T.
+ *   \param[in,out] B   Rectangular matrix with as many columns as A.
+ *                      On input, each row is an independent right hand side.
+ *                      On output, each row holds the corresponding solution.
+ */
+void                sc_dmatrix_solve_transpose_inplace
+  (sc_dmatrix_t * A, sc_dmatrix_t * B);
+
 /** \brief Writes a matrix to an opened stream.
  *
  *   \param dmatrix Pointer to matrix to write
@@ -269,14 +371,13 @@ void                sc_dmatrix_rdivide (sc_trans_t transb,
 void                sc_dmatrix_write (const sc_dmatrix_t * dmatrix,
                                       FILE * fp);
 
-/*
- * The sc_dmatrix_pool recycles matrices of the same size.
- */
+/** The sc_dmatrix_pool recycles matrices of the same size. */
 typedef struct sc_dmatrix_pool
 {
-  int                 m, n;
-  size_t              elem_count;
-  sc_array_t          freed;    /* buffers the freed elements */
+  sc_bint_t           m;        /**< Number of rows of the matrices stored. */
+  sc_bint_t           n;        /**< NUmber of columns of matrices stored. */
+  size_t              elem_count;       /**< Number of matrices alive. */
+  sc_array_t          freed;    /**< Buffer for the matrices returned. */
 }
 sc_dmatrix_pool_t;
 
@@ -285,25 +386,25 @@ sc_dmatrix_pool_t;
  * \param [in] n    Column count of the stored matrices.
  * \return          Returns a dmatrix pool that is ready to use.
  */
-sc_dmatrix_pool_t  *sc_dmatrix_pool_new (int m, int n);
+sc_dmatrix_pool_t  *sc_dmatrix_pool_new (sc_bint_t m, sc_bint_t n);
 
 /** Destroy a dmatrix pool.
  * This will also destroy all matrices stored for reuse.
  * Requires all allocated matrices to be returned to the pool previously.
- * \param [in]      The dmatrix pool to destroy.
+ * \param [in,out] dmpool       The dmatrix pool to destroy.
  */
 void                sc_dmatrix_pool_destroy (sc_dmatrix_pool_t * dmpool);
 
 /** Allocate a dmatrix from the pool.
  * Reuses a matrix previously returned to the pool, or allocated a fresh one.
- * \param [in] pool   The dmatrix pool to use.
- * \return            Returns a dmatrix of size pool->m by pool->n.
+ * \param [in,out] dmpool   The dmatrix pool to use.
+ * \return                  Returns a matrix of size dmpool->m by dmpool->n.
  */
 sc_dmatrix_t       *sc_dmatrix_pool_alloc (sc_dmatrix_pool_t * dmpool);
 
 /** Return a dmatrix to the pool.
  * The matrix is stored internally for reuse and not freed in this function.
- * \param [in] pool   The dmatrix pool to use.
+ * \param [in] dmpool The dmatrix pool to use.
  * \param [in] dm     The dmatrix pool to return to the pool.
  */
 void                sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool,

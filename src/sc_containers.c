@@ -684,8 +684,9 @@ sc_containers_free (void *p)
 
 static void         (*obstack_chunk_free) (void *) = sc_containers_free;
 
-sc_mempool_t       *
-sc_mempool_new (size_t elem_size)
+/** This function is static; we do not like to expose _ext functions in libsc. */
+static sc_mempool_t *
+sc_mempool_new_ext (size_t elem_size, int zero_and_persist)
 {
   sc_mempool_t       *mempool;
 
@@ -696,11 +697,24 @@ sc_mempool_new (size_t elem_size)
 
   mempool->elem_size = elem_size;
   mempool->elem_count = 0;
+  mempool->zero_and_persist = zero_and_persist;
 
   obstack_init (&mempool->obstack);
   sc_array_init (&mempool->freed, sizeof (void *));
 
   return mempool;
+}
+
+sc_mempool_t       *
+sc_mempool_new (size_t elem_size)
+{
+  return sc_mempool_new_ext (elem_size, 0);
+}
+
+sc_mempool_t       *
+sc_mempool_new_zero_and_persist (size_t elem_size)
+{
+  return sc_mempool_new_ext (elem_size, 1);
 }
 
 void
@@ -807,7 +821,7 @@ sc_list_unlink (sc_list_t * list)
   list->elem_count = 0;
 }
 
-void
+sc_link_t          *
 sc_list_prepend (sc_list_t * list, void *data)
 {
   sc_link_t          *lynk;
@@ -821,9 +835,10 @@ sc_list_prepend (sc_list_t * list, void *data)
   }
 
   ++list->elem_count;
+  return lynk;
 }
 
-void
+sc_link_t          *
 sc_list_append (sc_list_t * list, void *data)
 {
   sc_link_t          *lynk;
@@ -840,9 +855,10 @@ sc_list_append (sc_list_t * list, void *data)
   list->last = lynk;
 
   ++list->elem_count;
+  return lynk;
 }
 
-void
+sc_link_t          *
 sc_list_insert (sc_list_t * list, sc_link_t * pred, void *data)
 {
   sc_link_t          *lynk;
@@ -858,6 +874,7 @@ sc_list_insert (sc_list_t * list, sc_link_t * pred, void *data)
   }
 
   ++list->elem_count;
+  return lynk;
 }
 
 void               *
@@ -870,6 +887,7 @@ sc_list_remove (sc_list_t * list, sc_link_t * pred)
     return sc_list_pop (list);
   }
 
+  SC_ASSERT (list->first != NULL && list->last != NULL);
   SC_ASSERT (pred->next != NULL);
 
   lynk = pred->next;
@@ -890,7 +908,7 @@ sc_list_pop (sc_list_t * list)
   sc_link_t          *lynk;
   void               *data;
 
-  SC_ASSERT (list->first != NULL);
+  SC_ASSERT (list->first != NULL && list->last != NULL);
 
   lynk = list->first;
   list->first = lynk->next;
@@ -1001,7 +1019,7 @@ sc_hash_maybe_resize (sc_hash_t * hash)
       /* insert data into new slot list */
       j = hash->hash_fn (lynk->data, hash->user_data) % new_size;
       new_list = (sc_list_t *) sc_array_index (new_slots, j);
-      sc_list_prepend (new_list, lynk->data);
+      (void) sc_list_prepend (new_list, lynk->data);
       ++new_count;
 
       /* remove old list element */
@@ -1174,7 +1192,7 @@ sc_hash_insert_unique (sc_hash_t * hash, void *v, void ***found)
   }
 
   /* append new object to the list */
-  sc_list_append (list, v);
+  (void) sc_list_append (list, v);
   if (found != NULL) {
     *found = &list->last->data;
   }

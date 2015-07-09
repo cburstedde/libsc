@@ -173,22 +173,26 @@ void                sc_array_init_size (sc_array_t * array,
                                         size_t elem_size, size_t elem_count);
 
 /** Initializes an already allocated (or static) view from existing sc_array_t.
+ * The array view returned does not require sc_array_reset (doesn't hurt though).
  * \param [in,out] view  Array structure to be initialized.
  * \param [in] array     The array must not be resized while view is alive.
  * \param [in] offset    The offset of the viewed section in element units.
  *                       This offset cannot be changed until the view is reset.
  * \param [in] length    The length of the view in element units.
  *                       The view cannot be resized to exceed this length.
+ *                       It is not necessary to call sc_array_reset later.
  */
 void                sc_array_init_view (sc_array_t * view, sc_array_t * array,
                                         size_t offset, size_t length);
 
 /** Initializes an already allocated (or static) view from given plain C data.
+ * The array view returned does not require sc_array_reset (doesn't hurt though).
  * \param [in,out] view     Array structure to be initialized.
  * \param [in] base         The data must not be moved while view is alive.
  * \param [in] elem_size    Size of one array element in bytes.
  * \param [in] elem_count   The length of the view in element units.
  *                          The view cannot be resized to exceed this length.
+ *                          It is not necessary to call sc_array_reset later.
  */
 void                sc_array_init_data (sc_array_t * view, void *base,
                                         size_t elem_size, size_t elem_count);
@@ -198,6 +202,9 @@ void                sc_array_init_data (sc_array_t * view, void *base,
  * \param [in,out]  array       Array structure to be reset.
  * \note Calling sc_array_init, then any array operations,
  *       then sc_array_reset is memory neutral.
+ *       As an exception, the two functions sc_array_init_view and
+ *       sc_array_init_data do not require a subsequent call to sc_array_reset.
+ *       Regardless, it is legal to call sc_array_reset anyway.
  */
 void                sc_array_reset (sc_array_t * array);
 
@@ -492,12 +499,16 @@ sc_array_push (sc_array_t * array)
  * Elements are referenced by their address which never changes.
  * Elements can be freed (that is, returned to the pool)
  *    and are transparently reused.
+ * If the zero_and_persist option is selected, new elements are initialized to
+ * all zeros on creation, and the contents of an element are not touched
+ * between freeing and re-returning it.
  */
 typedef struct sc_mempool
 {
   /* interface variables */
   size_t              elem_size;        /**< size of a single element */
   size_t              elem_count;       /**< number of valid elements */
+  int                 zero_and_persist; /**< Boolean; is set in constructor. */
 
   /* implementation variables */
   struct obstack      obstack;  /**< holds the allocated elements */
@@ -511,11 +522,20 @@ sc_mempool_t;
  */
 size_t              sc_mempool_memory_used (sc_mempool_t * mempool);
 
-/** Creates a new mempool structure.
+/** Creates a new mempool structure with the zero_and_persist option off.
+ * The contents of any elements returned by sc_mempool_alloc are undefined.
  * \param [in] elem_size  Size of one element in bytes.
  * \return Returns an allocated and initialized memory pool.
  */
 sc_mempool_t       *sc_mempool_new (size_t elem_size);
+
+/** Creates a new mempool structure with the zero_and_persist option on.
+ * The memory of newly created elements is zero'd out, and the contents of an
+ * element are not touched between freeing and re-returning it.
+ * \param [in] elem_size  Size of one element in bytes.
+ * \return Returns an allocated and initialized memory pool.
+ */
+sc_mempool_t       *sc_mempool_new_zero_and_persist (size_t elem_size);
 
 /** Destroys a mempool structure.
  * All elements that are still in use are invalidated.
@@ -544,10 +564,15 @@ sc_mempool_alloc (sc_mempool_t * mempool)
   }
   else {
     ret = obstack_alloc (&mempool->obstack, (int) mempool->elem_size);
+    if (mempool->zero_and_persist) {
+      memset (ret, 0, mempool->elem_size);
+    }
   }
 
 #ifdef SC_DEBUG
-  memset (ret, -1, mempool->elem_size);
+  if (!mempool->zero_and_persist) {
+    memset (ret, -1, mempool->elem_size);
+  }
 #endif
 
   return ret;
@@ -565,7 +590,9 @@ sc_mempool_free (sc_mempool_t * mempool, void *elem)
   SC_ASSERT (mempool->elem_count > 0);
 
 #ifdef SC_DEBUG
-  memset (elem, -1, mempool->elem_size);
+  if (!mempool->zero_and_persist) {
+    memset (elem, -1, mempool->elem_size);
+  }
 #endif
 
   --mempool->elem_count;
@@ -597,7 +624,7 @@ typedef struct sc_list
 }
 sc_list_t;
 
-/** Calculate the memory used by a list.
+/** Calculate the total memory used by a list.
  * \param [in] list        The list.
  * \param [in] is_dynamic  True if created with sc_list_new,
  *                         false if initialized with sc_list_init
@@ -605,52 +632,73 @@ sc_list_t;
  */
 size_t              sc_list_memory_used (sc_list_t * list, int is_dynamic);
 
-/** Allocate a linked list structure.
- * \param [in] allocator Memory allocator for sc_link_t, can be NULL.
+/** Allocate a new, empty linked list.
+ * \param [in] allocator    Memory allocator for sc_link_t, can be NULL
+ *                          in which case an internal allocator is created.
+ * \return                  Pointer to a newly allocated, empty list object.
  */
 sc_list_t          *sc_list_new (sc_mempool_t * allocator);
 
 /** Destroy a linked list structure in O(N).
+ * \param [in,out] list     All memory allocated for this list is freed.
  * \note If allocator was provided in sc_list_new, it will not be destroyed.
  */
 void                sc_list_destroy (sc_list_t * list);
 
-/** Initializes an already allocated list structure.
+/** Initialize a list object with an external link allocator.
  * \param [in,out]  list       List structure to be initialized.
- * \param [in]      allocator  External memory allocator for sc_link_t.
+ * \param [in]      allocator  External memory allocator for sc_link_t,
+ *                             which must exist already.
  */
 void                sc_list_init (sc_list_t * list, sc_mempool_t * allocator);
 
-/** Removes all elements from a list in O(N).
- * \param [in,out]  list       List structure to be resetted.
+/** Remove all elements from a list in O(N).
+ * \param [in,out]  list       List structure to be emptied.
  * \note Calling sc_list_init, then any list operations,
  *       then sc_list_reset is memory neutral.
  */
 void                sc_list_reset (sc_list_t * list);
 
-/** Unliks all list elements without returning them to the mempool.
- * This runs in O(1) but is dangerous because of potential memory leaks.
+/** Unlink all list elements without returning them to the mempool.
+ * This runs in O(1) but is dangerous because the link memory stays alive.
  * \param [in,out]  list       List structure to be unlinked.
  */
 void                sc_list_unlink (sc_list_t * list);
 
-void                sc_list_prepend (sc_list_t * list, void *data);
-void                sc_list_append (sc_list_t * list, void *data);
-
-/** Insert an element after a given position.
- * \param [in] pred The predecessor of the element to be inserted.
+/** Insert a list element at the beginning of the list.
+ * \param [in,out] list     Valid list object.
+ * \param [in] data         A new link is created holding this data.
+ * \return                  The link that has been created for data.
  */
-void                sc_list_insert (sc_list_t * list,
+sc_link_t          *sc_list_prepend (sc_list_t * list, void *data);
+
+/** Insert a list element at the end of the list.
+ * \param [in,out] list     Valid list object.
+ * \param [in] data         A new link is created holding this data.
+ * \return                  The link that has been created for data.
+ */
+sc_link_t          *sc_list_append (sc_list_t * list, void *data);
+
+/** Insert an element after a given list position.
+ * \param [in,out] list     Valid list object.
+ * \param [in,out] pred     The predecessor of the element to be inserted.
+ * \param [in] data         A new link is created holding this data.
+ * \return                  The link that has been created for data.
+ */
+sc_link_t          *sc_list_insert (sc_list_t * list,
                                     sc_link_t * pred, void *data);
 
-/** Remove an element after a given position.
+/** Remove an element after a given list position.
+ * \param [in,out] list     Valid, non-empty list object.
  * \param [in] pred  The predecessor of the element to be removed.
-                     If \a pred == NULL, the first element is removed.
- * \return Returns the data of the removed element.
+ *                   If \a pred == NULL, the first element is removed,
+ *                   which is equivalent to calling sc_list_pop (list).
+ * \return           The data of the removed and freed link.
  */
 void               *sc_list_remove (sc_list_t * list, sc_link_t * pred);
 
 /** Remove an element from the front of the list.
+ * \param [in,out] list     Valid, non-empty list object.
  * \return Returns the data of the removed first list element.
  */
 void               *sc_list_pop (sc_list_t * list);

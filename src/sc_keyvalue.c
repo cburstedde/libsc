@@ -37,6 +37,12 @@ typedef struct sc_keyvalue_entry
 }
 sc_keyvalue_entry_t;
 
+struct sc_keyvalue
+{
+  sc_hash_t          *hash;
+  sc_mempool_t       *value_allocator;
+};
+
 static unsigned
 sc_keyvalue_entry_hash (const void *v, const void *u)
 {
@@ -283,6 +289,39 @@ sc_keyvalue_get_pointer (sc_keyvalue_t * kv, const char *key, void *dvalue)
   }
   else
     return dvalue;
+}
+
+int
+sc_keyvalue_get_int_check (sc_keyvalue_t * kv, const char *key, int *status)
+{
+  int                 result;
+  int                 etype;
+  void              **found;
+  sc_keyvalue_entry_t svalue, *pvalue = &svalue;
+  sc_keyvalue_entry_t *value;
+
+  SC_ASSERT (kv != NULL);
+  SC_ASSERT (key != NULL);
+
+  result = (status != NULL) ? *status : INT_MIN;
+  etype = 1;
+  pvalue->key = key;
+  pvalue->type = SC_KEYVALUE_ENTRY_NONE;
+  if (sc_hash_lookup (kv->hash, pvalue, &found)) {
+    value = (sc_keyvalue_entry_t *) (*found);
+    if (value->type == SC_KEYVALUE_ENTRY_INT) {
+      etype = 0;
+      result = value->value.i;
+    }
+    else {
+      etype = 2;
+    }
+  }
+  SC_ASSERT (status != NULL || etype == 0);
+  if (status != NULL) {
+    *status = etype;
+  }
+  return result;
 }
 
 void

@@ -31,7 +31,7 @@ const char          sc_cmachchar[] =
 #ifndef SC_WITH_BLAS
 
 int
-sc_blas_nonimplemented ()
+sc_blas_nonimplemented (SC_NOARGS)
 {
   SC_ABORT ("BLAS not compiled in this configuration");
   return 0;

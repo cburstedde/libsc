@@ -22,6 +22,9 @@
 
 #include <sc_options.h>
 
+/* quick and dirty -- please use callback's data argument instead */
+static int          w;
+
 static int
 callback (sc_options_t * opt, const char *theoptarg, void *data)
 {
@@ -31,6 +34,7 @@ callback (sc_options_t * opt, const char *theoptarg, void *data)
   else {
     SC_GLOBAL_INFOF ("%s with %s\n", (const char *) data, theoptarg);
   }
+  ++w;
 
   return 0;
 }
@@ -41,12 +45,13 @@ main (int argc, char **argv)
   int                 mpiret, retval;
   int                 rank;
   int                 first_arg;
-  int                 w;
   int                 i1, i2, si1;
+  int                 kvint;
   size_t              z;
   double              d, sd;
   const char         *s1, *s2, *ss1, *ss2;
   const char         *cd = "Callback example";
+  sc_keyvalue_t      *keyvalue;
   sc_options_t       *opt, *subopt;
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -56,6 +61,10 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+
+  keyvalue = sc_keyvalue_new ();
+  sc_keyvalue_set_int (keyvalue, "one", 1);
+  sc_keyvalue_set_int (keyvalue, "two", 2);
 
   opt = sc_options_new (argv[0]);
   sc_options_add_switch (opt, 'w', "switch", &w, "Switch");
@@ -69,7 +78,8 @@ main (int argc, char **argv)
   sc_options_add_string (opt, 't', NULL, &s2, NULL, "String 2");
   sc_options_add_inifile (opt, 'f', "inifile", ".ini file");
   sc_options_add_int (opt, '\0', "integer2", &i2, 7, "Integer 2");
-  sc_options_add_size_t (opt, 'z', "sizet", &z, (size_t) 7000000000ULL, "Size_t");
+  sc_options_add_size_t (opt, 'z', "sizet", &z, (size_t) 7000000000ULL,
+                         "Size_t");
 
   subopt = sc_options_new (argv[0]);
   sc_options_add_int (subopt, 'i', "integer", &si1, 0, "Subset integer");
@@ -77,6 +87,8 @@ main (int argc, char **argv)
   sc_options_add_string (subopt, 's', NULL, &ss1, NULL, "Subset string 1");
   sc_options_add_string (subopt, '\0', "string2", &ss2, NULL,
                          "Subset string 1");
+  sc_options_add_keyvalue (subopt, 'n', "number", &kvint, "one",
+                           keyvalue, "Subset keyvalue number");
 
   sc_options_add_suboptions (opt, subopt, "Subset");
 
@@ -91,12 +103,13 @@ main (int argc, char **argv)
   first_arg = sc_options_parse (sc_package_id, SC_LP_INFO, opt, argc, argv);
   if (first_arg < 0) {
     sc_options_print_usage (sc_package_id, SC_LP_INFO, opt,
-                            "This is arg 1\nand this is arg 2");
+                            "Usage for arg 1\nand for arg 2");
     SC_GLOBAL_INFO ("Option parsing failed\n");
   }
   else {
     SC_GLOBAL_INFO ("Option parsing successful\n");
     sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
+    SC_GLOBAL_INFOF ("Keyvalue number is now %d\n", kvint);
 
     if (rank == 0) {
       retval = sc_options_save (sc_package_id, SC_LP_INFO, opt, "output.ini");
@@ -119,6 +132,7 @@ main (int argc, char **argv)
 
   sc_options_destroy (opt);
   sc_options_destroy (subopt);
+  sc_keyvalue_destroy (keyvalue);
 
   sc_finalize ();
 

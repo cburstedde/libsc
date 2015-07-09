@@ -20,7 +20,7 @@
   02110-1301, USA.
 */
 
-#include <sc.h>
+#include <sc_private.h>
 
 #ifdef SC_HAVE_SIGNAL_H
 #include <signal.h>
@@ -50,6 +50,7 @@ typedef struct sc_package
   int                 log_indent;
   int                 malloc_count;
   int                 free_count;
+  int                 rc_active;
   const char         *name;
   const char         *full;
 #ifdef SC_ENABLE_PTHREAD
@@ -91,6 +92,7 @@ int                 sc_trace_prio = SC_LP_STATISTICS;
 
 static int          default_malloc_count = 0;
 static int          default_free_count = 0;
+static int          default_rc_active = 0;
 
 static int          sc_identifier = -1;
 static sc_MPI_Comm  sc_mpicomm = sc_MPI_COMM_NULL;
@@ -142,27 +144,57 @@ sc_package_mutex (int package)
   }
 }
 
-static inline void
+#endif /* SC_ENABLE_PTHREAD */
+
+void
 sc_package_lock (int package)
 {
+#ifdef SC_ENABLE_PTHREAD
   pthread_mutex_t    *mutex = sc_package_mutex (package);
   int                 pth;
 
   pth = pthread_mutex_lock (mutex);
   sc_check_abort_thread (pth == 0, package, "sc_package_lock");
+#endif
 }
 
-static inline void
+void
 sc_package_unlock (int package)
 {
+#ifdef SC_ENABLE_PTHREAD
   pthread_mutex_t    *mutex = sc_package_mutex (package);
   int                 pth;
 
   pth = pthread_mutex_unlock (mutex);
   sc_check_abort_thread (pth == 0, package, "sc_package_unlock");
+#endif
 }
 
-#endif /* SC_ENABLE_PTHREAD */
+void
+sc_package_rc_count_add (int package_id, int toadd)
+{
+  int                *pcount;
+#ifdef SC_ENABLE_DEBUG
+  int                 newvalue;
+#endif
+
+  if (package_id == -1) {
+    pcount = &default_rc_active;
+  }
+  else {
+    SC_ASSERT (sc_package_is_registered (package_id));
+    pcount = &sc_packages[package_id].rc_active;
+  }
+
+  sc_package_lock (package_id);
+#ifdef SC_ENABLE_DEBUG
+  newvalue =
+#endif
+    *pcount += toadd;
+  sc_package_unlock (package_id);
+
+  SC_ASSERT (newvalue >= 0);
+}
 
 static void
 sc_signal_handler (int sig)
@@ -408,14 +440,17 @@ sc_memory_check (int package)
 {
   sc_package_t       *p;
 
-  if (package == -1)
+  if (package == -1) {
     SC_CHECK_ABORT (default_malloc_count == default_free_count,
                     "Memory balance (default)");
+    SC_CHECK_ABORT (default_rc_active == 0, "Leftover references (default)");
+  }
   else {
     SC_ASSERT (sc_package_is_registered (package));
     p = sc_packages + package;
     SC_CHECK_ABORTF (p->malloc_count == p->free_count,
                      "Memory balance (%s)", p->name);
+    SC_CHECK_ABORTF (p->rc_active == 0, "Leftover references (%s)", p->name);
   }
 }
 
@@ -483,8 +518,8 @@ sc_set_log_defaults (FILE * log_stream,
     sc_default_log_threshold = SC_LP_THRESHOLD;
   }
   else {
-    SC_ASSERT (log_threshold >= SC_LP_ALWAYS
-               && log_threshold <= SC_LP_SILENT);
+    SC_ASSERT (log_threshold >= SC_LP_ALWAYS &&
+               log_threshold <= SC_LP_SILENT);
     sc_default_log_threshold = log_threshold;
   }
 
@@ -710,8 +745,8 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   int                 new_package_id = -1;
 
   SC_CHECK_ABORT (log_threshold == SC_LP_DEFAULT ||
-                  (log_threshold >= SC_LP_ALWAYS
-                   && log_threshold <= SC_LP_SILENT),
+                  (log_threshold >= SC_LP_ALWAYS &&
+                   log_threshold <= SC_LP_SILENT),
                   "Invalid package log threshold");
   SC_CHECK_ABORT (strcmp (name, "default"), "Package default forbidden");
   SC_CHECK_ABORT (strchr (name, ' ') == NULL,
@@ -753,6 +788,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
       p->log_indent = 0;
       p->malloc_count = 0;
       p->free_count = 0;
+      p->rc_active = 0;
       p->name = NULL;
       p->full = NULL;
     }
@@ -764,6 +800,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   new_package->log_indent = 0;
   new_package->malloc_count = 0;
   new_package->free_count = 0;
+  new_package->rc_active = 0;
   new_package->name = name;
   new_package->full = full;
 #ifdef SC_ENABLE_PTHREAD
@@ -788,6 +825,22 @@ sc_package_is_registered (int package_id)
 }
 
 void
+sc_package_set_verbosity (int package_id, int log_priority)
+{
+  sc_package_t       *p;
+
+  SC_CHECK_ABORT (sc_package_is_registered (package_id),
+                  "Package id is not registered");
+  SC_CHECK_ABORT (log_priority == SC_LP_DEFAULT ||
+                  (log_priority >= SC_LP_ALWAYS &&
+                   log_priority <= SC_LP_SILENT),
+                  "Invalid package log threshold");
+
+  p = sc_packages + package_id;
+  p->log_threshold = log_priority;
+}
+
+void
 sc_package_unregister (int package_id)
 {
 #ifdef SC_ENABLE_PTHREAD
@@ -804,6 +857,7 @@ sc_package_unregister (int package_id)
   p->log_handler = NULL;
   p->log_threshold = SC_LP_DEFAULT;
   p->malloc_count = p->free_count = 0;
+  p->rc_active = 0;
 #ifdef SC_ENABLE_PTHREAD
   i = pthread_mutex_destroy (&p->mutex);
   SC_CHECK_ABORTF (i == 0, "Mutex destroy failed for package %s", p->name);
