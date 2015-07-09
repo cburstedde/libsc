@@ -316,7 +316,7 @@ sc_shmem_prefix_basic (void *sendbuf, void *recvbuf, int count,
 /* PRESCAN implementation */
 
 static void
-sc_shmem_prefix_prescan (void *sendbuf, int *recvbuf, int count,
+sc_shmem_prefix_prescan (void *sendbuf, void *recvbuf, int count,
                          sc_MPI_Datatype type, sc_MPI_Op op,
                          sc_MPI_Comm comm, sc_MPI_Comm intranode,
                          sc_MPI_Comm internode)
