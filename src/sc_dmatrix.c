@@ -859,3 +859,66 @@ sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool, sc_dmatrix_t * dm)
 
   *(sc_dmatrix_t **) sc_array_push (&dmpool->freed) = dm;
 }
+
+sc_darray_work_t *
+sc_darray_work_new (const int n_threads, const int n_blocks,
+                    const int n_entries)
+{
+  sc_darray_work_t   *work;
+  int                 t, b;
+
+  SC_ASSERT (0 < n_threads);
+  SC_ASSERT (0 < n_blocks);
+
+  work = SC_ALLOC (sc_darray_work_t, 1);
+
+  work->thread_block = SC_ALLOC (sc_darray_work_block_t *, n_threads);
+  work->n_threads = n_threads;
+  work->n_blocks = n_blocks;
+
+  for (t = 0; t < n_threads; t++) {
+    work->thread_block[t] = SC_ALLOC (sc_darray_work_block_t, n_blocks);
+
+    for (b = 0; b < n_blocks; b++) {
+      work->thread_block[t][b].data = SC_ALLOC (double, n_entries);
+      work->thread_block[t][b].n_entries = n_entries;
+    }
+  }
+
+  return work;
+}
+
+void
+sc_darray_work_destroy (sc_darray_work_t * work)
+{
+  int                 t, b;
+
+  for (t = 0; t < work->n_threads; t++) {
+    for (b = 0; b < work->n_blocks; b++) {
+      SC_FREE (work->thread_block[t][b].data);
+    }
+
+    SC_FREE (work->thread_block[t]);
+  }
+
+  SC_FREE (work->thread_block);
+  SC_FREE (work);
+}
+
+double *
+sc_darray_work_get (sc_darray_work_t * work, const int thread, const int block)
+{
+  return work->thread_block[thread][block].data;
+}
+
+int
+sc_darray_work_get_blockcount (sc_darray_work_t * work)
+{
+  return work->n_blocks;
+}
+
+int
+sc_darray_work_get_blocksize (sc_darray_work_t * work)
+{
+  return work->thread_block[0][0].n_entries;
+}

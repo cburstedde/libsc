@@ -421,6 +421,37 @@ sc_dmatrix_t       *sc_dmatrix_pool_alloc (sc_dmatrix_pool_t * dmpool);
 void                sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool,
                                           sc_dmatrix_t * dm);
 
+/**
+ * Work allocations for multithreading
+ */
+typedef struct sc_darray_work_block
+{
+  double             *data;
+  int                 n_entries;
+}
+sc_darray_work_block_t;
+
+typedef struct sc_darray_work
+{
+  sc_darray_work_block_t **thread_block;
+  int                 n_threads;
+  int                 n_blocks;
+}
+sc_darray_work_t;
+
+sc_darray_work_t   *sc_darray_work_new (const int n_threads,
+                                        const int n_blocks,
+                                        const int n_entries);
+
+void                sc_darray_work_destroy (sc_darray_work_t * work);
+
+double             *sc_darray_work_get (sc_darray_work_t * work,
+                                        const int thread, const int block);
+
+int                 sc_darray_work_get_blockcount (sc_darray_work_t * work);
+
+int                 sc_darray_work_get_blocksize (sc_darray_work_t * work);
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_DMATRIX_H */
