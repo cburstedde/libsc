@@ -908,6 +908,9 @@ sc_darray_work_destroy (sc_darray_work_t * work)
 double *
 sc_darray_work_get (sc_darray_work_t * work, const int thread, const int block)
 {
+  SC_ASSERT (0 <= thread && thread < work->n_threads);
+  SC_ASSERT (0 <= block && block < work->n_blocks);
+
   return work->thread_block[thread][block].data;
 }
 
