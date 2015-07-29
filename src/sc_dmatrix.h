@@ -433,8 +433,10 @@ sc_darray_work_block_t;
 typedef struct sc_darray_work
 {
   sc_darray_work_block_t **thread_block;  /**< Array into allocation blocks */
+  double             *data;               /**< Entries of all blocks */
   int                 n_threads;          /**< Number of threads */
   int                 n_blocks;           /**< Number of blocks per thread */
+  int                 n_entries;          /**< Number of entries */
 }
 sc_darray_work_t;
 
@@ -447,7 +449,8 @@ sc_darray_work_t;
  */
 sc_darray_work_t   *sc_darray_work_new (const int n_threads,
                                         const int n_blocks,
-                                        const int n_entries);
+                                        const int n_entries,
+                                        const int alignment_bytes);
 
 /** Destroy a darray_work object and all allocated memory. */
 void                sc_darray_work_destroy (sc_darray_work_t * work);

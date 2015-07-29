@@ -862,16 +862,20 @@ sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool, sc_dmatrix_t * dm)
 
 sc_darray_work_t *
 sc_darray_work_new (const int n_threads, const int n_blocks,
-                    const int n_entries)
+                    const int n_entries, const int alignment_bytes)
 {
+  const int           align_dbl = alignment_bytes / 8;
+  const int           n_entries_aligned = SC_ALIGN_UP (n_entries, align_dbl);
   sc_darray_work_t   *work;
   int                 t, b;
 
   SC_ASSERT (0 < n_threads);
   SC_ASSERT (0 < n_blocks);
+  SC_ASSERT (alignment_bytes <= 0 || (alignment_bytes % 8) == 0);
 
   work = SC_ALLOC (sc_darray_work_t, 1);
 
+#if 0
   work->thread_block = SC_ALLOC (sc_darray_work_block_t *, n_threads);
   work->n_threads = n_threads;
   work->n_blocks = n_blocks;
@@ -884,6 +888,12 @@ sc_darray_work_new (const int n_threads, const int n_blocks,
       work->thread_block[t][b].n_entries = n_entries;
     }
   }
+#else
+  work->data = SC_ALLOC (double, n_threads * n_blocks * n_entries_aligned);
+  work->n_threads = n_threads;
+  work->n_blocks = n_blocks;
+  work->n_entries = n_entries_aligned;
+#endif
 
   return work;
 }
@@ -891,6 +901,7 @@ sc_darray_work_new (const int n_threads, const int n_blocks,
 void
 sc_darray_work_destroy (sc_darray_work_t * work)
 {
+#if 0
   int                 t, b;
 
   for (t = 0; t < work->n_threads; t++) {
@@ -902,6 +913,9 @@ sc_darray_work_destroy (sc_darray_work_t * work)
   }
 
   SC_FREE (work->thread_block);
+#else
+  SC_FREE (work->data);
+#endif
   SC_FREE (work);
 }
 
@@ -911,7 +925,11 @@ sc_darray_work_get (sc_darray_work_t * work, const int thread, const int block)
   SC_ASSERT (0 <= thread && thread < work->n_threads);
   SC_ASSERT (0 <= block && block < work->n_blocks);
 
+#if 0
   return work->thread_block[thread][block].data;
+#else
+  return work->data + work->n_entries * (work->n_blocks * thread + block);
+#endif
 }
 
 int
@@ -923,5 +941,9 @@ sc_darray_work_get_blockcount (sc_darray_work_t * work)
 int
 sc_darray_work_get_blocksize (sc_darray_work_t * work)
 {
+#if 0
   return work->thread_block[0][0].n_entries;
+#else
+  return work->n_entries;
+#endif
 }
