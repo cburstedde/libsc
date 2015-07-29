@@ -153,6 +153,14 @@ extern int          sc_trace_prio;
 #define SC_EPS               2.220446049250313e-16
 #define SC_1000_EPS (1000. * 2.220446049250313e-16)
 
+#ifndef SC_MEMALIGN_BYTES
+# if defined(__bgq__)
+#   define SC_MEMALIGN_BYTES 32
+# else
+#   define SC_MEMALIGN_BYTES 64
+# endif
+#endif
+
 #if 0
 /*@ignore@*/
 #define index   DONT_USE_NAME_CONFLICT_1 ---
@@ -270,6 +278,7 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
   (((x) <= 0) ? 0 : (1 << (SC_LOG2_32 ((x) - 1) + 1)))
 #define SC_ROUNDUP2_64(x)                               \
   (((x) <= 0) ? 0 : (1LL << (SC_LOG2_64 ((x) - 1LL) + 1)))
+#define SC_ALIGN_UP(x,n) ( ((n) <= 0) ? (x) : ((x) + (n) - 1) / (n) * (n) )
 
 /* log categories */
 
