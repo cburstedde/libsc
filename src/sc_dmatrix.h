@@ -421,18 +421,9 @@ sc_dmatrix_t       *sc_dmatrix_pool_alloc (sc_dmatrix_pool_t * dmpool);
 void                sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool,
                                           sc_dmatrix_t * dm);
 
-/** Workspace allocation block */
-typedef struct sc_darray_work_block
-{
-  double             *data;       /**< Entries of block */
-  int                 n_entries;  /**< Number of entries */
-}
-sc_darray_work_block_t;
-
-/** Workspace allocation for multiple threads of multiple blocks */
+/** Multithreaded workspace allocations of multiple blocks */
 typedef struct sc_darray_work
 {
-  sc_darray_work_block_t **thread_block;  /**< Array into allocation blocks */
   double             *data;               /**< Entries of all blocks */
   int                 n_threads;          /**< Number of threads */
   int                 n_blocks;           /**< Number of blocks per thread */
@@ -475,6 +466,29 @@ int                 sc_darray_work_get_blockcount (sc_darray_work_t * work);
  * \return                  Number of allocated entries per blocks per thread.
  */
 int                 sc_darray_work_get_blocksize (sc_darray_work_t * work);
+
+typedef struct sc_iarray_work
+{
+  int                *data;
+  int                 n_threads;
+  int                 n_blocks;
+  int                 n_entries;
+}
+sc_iarray_work_t;
+
+sc_iarray_work_t   *sc_iarray_work_new (const int n_threads,
+                                        const int n_blocks,
+                                        const int n_entries,
+                                        const int alignment_bytes);
+
+void                sc_iarray_work_destroy (sc_iarray_work_t * work);
+
+int                *sc_iarray_work_get (sc_iarray_work_t * work,
+                                        const int thread, const int block);
+
+int                 sc_iarray_work_get_blockcount (sc_iarray_work_t * work);
+
+int                 sc_iarray_work_get_blocksize (sc_iarray_work_t * work);
 
 SC_EXTERN_C_END;
 
