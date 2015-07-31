@@ -161,13 +161,13 @@ extern int          sc_trace_prio;
 # endif
 #endif
 
-#if defined(__GNUC__)
-//# define SC_ARG_ALIGN(x,n) __builtin_assume_aligned((x), (n))
-# define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#if defined(__bgq__)
+# define SC_ARG_ALIGN(x,n) __alignx((n), (x))
 #elif defined(__ICC)
 # define SC_ARG_ALIGN(x,n) __assume_aligned((x), (n))
-#elif defined(__bgq__)
-# define SC_ARG_ALIGN(x,n) __alignx((n), (x))
+#elif defined(__GNUC__)
+//# define SC_ARG_ALIGN(x,n) __builtin_assume_aligned((x), (n))
+# define SC_ARG_ALIGN(x,n) SC_NOOP ()
 #else
 # define SC_ARG_ALIGN(x,n) SC_NOOP ()
 #endif
