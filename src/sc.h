@@ -157,8 +157,19 @@ extern int          sc_trace_prio;
 # if defined(__bgq__)
 #   define SC_MEMALIGN_BYTES 32
 # else
-#   define SC_MEMALIGN_BYTES 64
+#   define SC_MEMALIGN_BYTES __BIGGEST_ALIGNMENT__
 # endif
+#endif
+
+#if defined(__GNUC__)
+//# define SC_ARG_ALIGN(x,n) __builtin_assume_aligned((x), (n))
+# define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#elif defined(__ICC)
+# define SC_ARG_ALIGN(x,n) __assume_aligned((x), (n))
+#elif defined(__bgq__)
+# define SC_ARG_ALIGN(x,n) __alignx((n), (x))
+#else
+# define SC_ARG_ALIGN(x,n) SC_NOOP ()
 #endif
 
 #if 0

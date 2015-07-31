@@ -317,7 +317,8 @@ sc_malloc (int package, size_t size)
   size_t              alignment = 32;
   posix_memalign (&ret, alignment, size);
 #else
-  ret = malloc (size);
+  posix_memalign (&ret, SC_MEMALIGN_BYTES, size);
+  //ret = malloc (size);
 #endif
   if (size > 0) {
     SC_CHECK_ABORTF (ret != NULL, "Allocation (malloc size %lli)",
