@@ -162,6 +162,8 @@ sc_array_truncate (sc_array_t * array)
 #endif
 }
 
+#ifdef SC_USE_REALLOC
+
 void
 sc_array_resize (sc_array_t * array, size_t new_count)
 {
@@ -220,6 +222,71 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   memset (array->array + minoffs, -1, newsize - minoffs);
 #endif
 }
+
+#else /* !SC_USE_REALLOC */
+
+void
+sc_array_resize (sc_array_t * array, size_t new_count)
+{
+  char               *ptr;
+  size_t              oldoffs, newoffs;
+  size_t              roundup, newsize;
+#ifdef SC_DEBUG
+  size_t              i, minoffs;
+#endif
+
+  if (!SC_ARRAY_IS_OWNER (array)) {
+    /* *INDENT-OFF* HORRIBLE indent bug */
+    SC_ASSERT (new_count * array->elem_size <=
+               (size_t) -(array->byte_alloc + 1));
+    /* *INDENT-ON* */
+    array->elem_count = new_count;
+    return;
+  }
+
+  /* We know that this array is not a view now so we can call reset. */
+  if (new_count == 0) {
+    sc_array_reset (array);
+    return;
+  }
+
+  oldoffs = array->elem_count * array->elem_size;
+  array->elem_count = new_count;
+  newoffs = array->elem_count * array->elem_size;
+  roundup = (size_t) SC_ROUNDUP2_64 (newoffs);
+  SC_ASSERT (roundup >= newoffs && roundup <= 2 * newoffs);
+
+  if (newoffs > (size_t) array->byte_alloc) {
+    array->byte_alloc = (ssize_t) roundup;
+  }
+  else {
+#ifdef SC_DEBUG
+    if (newoffs < oldoffs) {
+      memset (array->array + newoffs, -1, oldoffs - newoffs);
+    }
+    for (i = oldoffs; i < newoffs; ++i) {
+      SC_ASSERT (array->array[i] == (char) -1);
+    }
+#endif
+    return;
+  }
+  SC_ASSERT ((size_t) array->byte_alloc >= newoffs);
+  SC_ASSERT (newoffs > oldoffs);
+
+  newsize = (size_t) array->byte_alloc;
+  ptr = SC_ALLOC (char, newsize);
+  memcpy (ptr, array->array, oldoffs);
+  SC_FREE (array->array);
+  array->array = ptr;
+
+#ifdef SC_DEBUG
+  minoffs = SC_MIN (oldoffs, newoffs);
+  SC_ASSERT (minoffs <= newsize);
+  memset (array->array + minoffs, -1, newsize - minoffs);
+#endif
+}
+
+#endif /* !SC_USE_REALLOC */
 
 void
 sc_array_copy (sc_array_t * dest, sc_array_t * src)
@@ -685,6 +752,24 @@ sc_containers_free (void *p)
 static void         (*obstack_chunk_free) (void *) = sc_containers_free;
 
 /** This function is static; we do not like to expose _ext functions in libsc. */
+static void
+sc_mempool_init_ext (sc_mempool_t * mempool, size_t elem_size, int zero_and_persist)
+{
+  mempool->elem_size = elem_size;
+  mempool->elem_count = 0;
+  mempool->zero_and_persist = zero_and_persist;
+
+  obstack_init (&mempool->obstack);
+  sc_array_init (&mempool->freed, sizeof (void *));
+}
+
+void
+sc_mempool_init (sc_mempool_t * mempool, size_t elem_size)
+{
+  sc_mempool_init_ext (mempool, elem_size, 0);
+}
+
+/** This function is static; we do not like to expose _ext functions in libsc. */
 static sc_mempool_t *
 sc_mempool_new_ext (size_t elem_size, int zero_and_persist)
 {
@@ -695,12 +780,7 @@ sc_mempool_new_ext (size_t elem_size, int zero_and_persist)
 
   mempool = SC_ALLOC (sc_mempool_t, 1);
 
-  mempool->elem_size = elem_size;
-  mempool->elem_count = 0;
-  mempool->zero_and_persist = zero_and_persist;
-
-  obstack_init (&mempool->obstack);
-  sc_array_init (&mempool->freed, sizeof (void *));
+  sc_mempool_init_ext (mempool, elem_size, zero_and_persist);
 
   return mempool;
 }
@@ -718,11 +798,16 @@ sc_mempool_new_zero_and_persist (size_t elem_size)
 }
 
 void
-sc_mempool_destroy (sc_mempool_t * mempool)
+sc_mempool_reset (sc_mempool_t *mempool)
 {
   sc_array_reset (&mempool->freed);
   obstack_free (&mempool->obstack, NULL);
+}
 
+void
+sc_mempool_destroy (sc_mempool_t * mempool)
+{
+  sc_mempool_reset (mempool);
   SC_FREE (mempool);
 }
 

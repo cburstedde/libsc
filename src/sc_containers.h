@@ -537,10 +537,17 @@ sc_mempool_t       *sc_mempool_new (size_t elem_size);
  */
 sc_mempool_t       *sc_mempool_new_zero_and_persist (size_t elem_size);
 
+/** Same as sc_mempool_new, but for an already allocated sc_mempool_t pointer. */
+void                sc_mempool_init (sc_mempool_t * mempool,
+                                     size_t elem_size);
+
 /** Destroys a mempool structure.
  * All elements that are still in use are invalidated.
  */
 void                sc_mempool_destroy (sc_mempool_t * mempool);
+
+/** Same as sc_mempool_destroy, but does not free the pointer */
+void                sc_mempool_reset (sc_mempool_t * mempool);
 
 /** Invalidates all previously returned pointers, resets count to 0.
  */
