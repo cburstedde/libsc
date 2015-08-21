@@ -381,6 +381,12 @@ sc_statistics_add_empty (sc_statistics_t * stats, const char *name)
   sc_keyvalue_set_int (stats->kv, name, i);
 }
 
+int
+sc_statistics_has (sc_statistics_t *stats, const char *name)
+{
+  return sc_keyvalue_exists (stats->kv, name);
+}
+
 void
 sc_statistics_accumulate (sc_statistics_t * stats, const char *name,
                           double value)
