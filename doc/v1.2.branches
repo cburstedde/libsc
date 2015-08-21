@@ -14,7 +14,7 @@
   remotes/carsten/ng                        # ask carsten
   remotes/carsten/poly                      # ask carsten
   remotes/github/feature/shmem-array        # subset of tisaac/mpi
-  remotes/github/fix-make-dist-hook         # yes
+  remotes/github/fix-make-dist-hook         # subset of tisaac/mpi
   remotes/github/sc-allgather               # subset of tisaac/mpi
   remotes/github/tisaac/feature-stats-has   # yes
   remotes/github/tisaac/mpi                 # same as local
