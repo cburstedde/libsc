@@ -40,14 +40,26 @@ extern const char   sc_jobzchar[];
 #ifdef SC_WITH_LAPACK
 
 #ifndef SC_F77_FUNC
+#if defined(__bgq__)            /* && defined(__HAVE_ESSL) */
+#define SC_F77_FUNC(small,CAPS) small
+/* TODO - FIX THIS FOR NOW WE DO NOT USE ESSL
+  #   define SC_F77_FUNC(small,CAPS) small ## _
+*/
+#define SC_F77_FUNC_NOESSL(small,CAPS) small
+#else
 #define SC_F77_FUNC(small,CAPS) small ## _
 #endif
+#endif /* SC_F77_FUNC */
 
 #define SC_LAPACK_DGELS   SC_F77_FUNC(dgels,DGELS)
 #define SC_LAPACK_DGESV   SC_F77_FUNC(dgesv,DGESV)
 #define SC_LAPACK_DGETRF  SC_F77_FUNC(dgetrf,DGETRF)
 #define SC_LAPACK_DGETRS  SC_F77_FUNC(dgetrs,DGETRS)
+#if defined(__bgq__)            /* && define(__HAVE_ESSL) */
+#define SC_LAPACK_DSTEV   SC_F77_FUNC_NOESSL(dstev,DSTEV)
+#else
 #define SC_LAPACK_DSTEV   SC_F77_FUNC(dstev,DSTEV)
+#endif
 #define SC_LAPACK_DTRSM   SC_F77_FUNC(dtrsm,DTRSM)
 #define SC_LAPACK_DLAIC1  SC_F77_FUNC(dlaic1,DLAIC1)
 #define SC_LAPACK_ILAENV  SC_F77_FUNC(ilaenv,ILAENV)

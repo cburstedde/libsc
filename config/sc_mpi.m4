@@ -307,6 +307,59 @@ mpiret = MPI_Finalize ();
  $2])
 ])
 
+dnl SC_MPIWINSHARED_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI_Win_allocate_shared test program
+dnl
+AC_DEFUN([SC_MPIWINSHARED_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for MPI_Win_allocate_shared C program])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+int mpiret;
+int mpithr;
+int disp_unit=0;
+char *baseptr;
+MPI_Win win;
+MPI_Init ((int *) 0, (char ***) 0);
+mpiret = MPI_Win_allocate_shared(0,disp_unit,MPI_INFO_NULL,MPI_COMM_WORLD,(void *) &baseptr,&win);
+mpiret = MPI_Win_shared_query(win,0,0,&disp_unit,(void *) &baseptr);
+mpiret = MPI_Win_lock(MPI_LOCK_EXCLUSIVE,0,MPI_MODE_NOCHECK,win);
+mpiret = MPI_Win_unlock(0,win);
+mpiret = MPI_Win_free(&win);
+mpiret = MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $1],
+[AC_MSG_RESULT([failed])
+ $2])
+])
+
+dnl SC_MPICOMMSHARED_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI_COMM_TYPE_SHARED test program
+dnl
+AC_DEFUN([SC_MPICOMMSHARED_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for MPI_COMM_TYPE_SHARED C program])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+int mpiret;
+MPI_Comm subcomm;
+MPI_Init ((int *) 0, (char ***) 0);
+mpiret = MPI_Comm_split_type(MPI_COMM_WORLD,MPI_COMM_TYPE_SHARED,0,MPI_INFO_NULL,&subcomm);
+mpiret = MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $1],
+[AC_MSG_RESULT([failed])
+ $2])
+])
+
 dnl SC_MPI_INCLUDES
 dnl Call the compiler with various --show* options
 dnl to figure out the MPI_INCLUDES and MPI_INCLUDE_PATH varables
@@ -392,6 +445,16 @@ dnl  ])
   if test "x$HAVE_PKG_MPITHREAD" = xyes ; then
     SC_MPITHREAD_C_COMPILE_AND_LINK(,
       [AC_MSG_ERROR([MPI_Init_thread not found; you may try --disable-mpithread])])
+  fi
+  $1_ENABLE_MPIWINSHARED=yes
+  SC_MPIWINSHARED_C_COMPILE_AND_LINK(,[$1_ENABLE_MPIWINSHARED=no])
+  if test "x$$1_ENABLE_MPIWINSHARED" = xyes ; then
+    AC_DEFINE([ENABLE_MPIWINSHARED], 1, [Define to 1 if we can use MPI_Win_allocate_shared])
+  fi
+  $1_ENABLE_MPICOMMSHARED=yes
+  SC_MPICOMMSHARED_C_COMPILE_AND_LINK(,[$1_ENABLE_MPICOMMSHARED=no])
+  if test "x$$1_ENABLE_MPICOMMSHARED" = xyes ; then
+    AC_DEFINE([ENABLE_MPICOMMSHARED], 1, [Define to 1 if we can use MPI_COMM_TYPE_SHARED])
   fi
 fi
 
