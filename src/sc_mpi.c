@@ -404,8 +404,6 @@ sc_mpi_node_comms_destroy (MPI_Comm comm, int comm_keyval,
   return MPI_SUCCESS;
 }
 
-#if 0                           /* not used right now */
-
 static int
 sc_mpi_node_comms_copy (MPI_Comm oldcomm, int comm_keyval,
                         void *extra_state,
@@ -439,8 +437,6 @@ sc_mpi_node_comms_copy (MPI_Comm oldcomm, int comm_keyval,
   return MPI_SUCCESS;
 }
 
-#endif /* 0 -- not used by now */
-
 #endif /* SC_ENABLE_MPI */
 
 void
@@ -453,7 +449,7 @@ sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm, int processes_per_node)
   if (sc_mpi_node_comm_keyval == MPI_KEYVAL_INVALID) {
     /* register the node comm attachment with MPI */
     mpiret =
-      MPI_Comm_create_keyval (MPI_COMM_NULL_COPY_FN,
+      MPI_Comm_create_keyval (sc_mpi_node_comms_copy,
                               sc_mpi_node_comms_destroy,
                               &sc_mpi_node_comm_keyval, NULL);
     SC_CHECK_MPI (mpiret);

@@ -40,8 +40,8 @@ typedef enum
   SC_SHMEM_WINDOW_PRESCAN, /**< mpi_scan, then MPI_Win (requires MPI 3) */
 #endif
 #if defined(__bgq__)
-  SC_SHMEM_SHARED,  /**< raw pointer passing: only works for shared-heap environments */
-  SC_SHMEM_SHARED_PRESCAN, /**< mpi_scan, thenraw pointer passing: only works for shared-heap environments */
+  SC_SHMEM_BGQ,  /**< raw pointer passing: only works for shared-heap environments */
+  SC_SHMEM_BGQ_PRESCAN, /**< mpi_scan, thenraw pointer passing: only works for shared-heap environments */
 #endif
   SC_SHMEM_NUM_TYPES,
   SC_SHMEM_NOT_SET

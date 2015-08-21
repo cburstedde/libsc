@@ -23,7 +23,7 @@
 #include <sc_shmem.h>
 
 #if defined(__bgq__)
-/** for sc_allgather_final_*_shared routines to work on BG/Q, you must
+/** for sc_allgather_final_*_bgq routines to work on BG/Q, you must
  * run with --env BG_MAPCOMMONHEAP=1 */
 #include <hwi/include/bqc/A2_inlines.h>
 #endif
@@ -38,7 +38,7 @@ const char         *sc_shmem_type_to_string[SC_SHMEM_NUM_TYPES] = {
   "window", "window_prescan",
 #endif
 #if defined(__bgq__)
-  "shared", "shared_prescan",
+  "bgq", "bgq_prescan",
 #endif
 };
 
@@ -183,8 +183,8 @@ static sc_shmem_type_t sc_shmem_types[SC_SHMEM_NUM_TYPES] = {
   SC_SHMEM_WINDOW_PRESCAN
 #endif
 #if defined(__bgq__)
-    SC_SHMEM_SHARED,
-  SC_SHMEM_SHARED_PRESCAN,
+    SC_SHMEM_BGQ,
+  SC_SHMEM_BGQ_PRESCAN,
 #endif
 };
 
@@ -488,8 +488,8 @@ sc_shmem_prefix_common_prescan (void *sendbuf, void *recvbuf, int count,
 /* SHARED implementation */
 
 static int
-sc_shmem_write_start_shared (void *array, sc_MPI_Comm comm,
-                             sc_MPI_Comm intranode, sc_MPI_Comm internode)
+sc_shmem_write_start_bgq (void *array, sc_MPI_Comm comm,
+                          sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   int                 intrarank, mpiret;
 
@@ -500,8 +500,8 @@ sc_shmem_write_start_shared (void *array, sc_MPI_Comm comm,
 }
 
 static void
-sc_shmem_write_end_shared (void *array, sc_MPI_Comm comm,
-                           sc_MPI_Comm intranode, sc_MPI_Comm internode)
+sc_shmem_write_end_bgq (void *array, sc_MPI_Comm comm,
+                        sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
   int                 mpiret;
 
@@ -513,18 +513,18 @@ sc_shmem_write_end_shared (void *array, sc_MPI_Comm comm,
 }
 
 static void        *
-sc_shmem_malloc_shared (int package, size_t elem_size, size_t elem_count,
-                        sc_MPI_Comm comm, sc_MPI_Comm intranode,
-                        sc_MPI_Comm internode)
+sc_shmem_malloc_bgq (int package, size_t elem_size, size_t elem_count,
+                     sc_MPI_Comm comm, sc_MPI_Comm intranode,
+                     sc_MPI_Comm internode)
 {
   char               *array = NULL;
   int                 mpiret;
 
-  if (sc_shmem_write_start_shared (NULL, comm, intranode, internode)) {
+  if (sc_shmem_write_start_bgq (NULL, comm, intranode, internode)) {
     array = sc_malloc (package, elem_size * elem_count);
 
   }
-  sc_shmem_write_end_shared (NULL, comm, intranode, internode);
+  sc_shmem_write_end_bgq (NULL, comm, intranode, internode);
 
   /* node root broadcast array start in node */
   mpiret = sc_MPI_Bcast (&array, sizeof (char *), sc_MPI_BYTE, 0, intranode);
@@ -538,13 +538,13 @@ sc_shmem_malloc_shared (int package, size_t elem_size, size_t elem_count,
 }
 
 static void
-sc_shmem_free_shared (int package, void *array, sc_MPI_Comm comm,
-                      sc_MPI_Comm intranode, sc_MPI_Comm internode)
+sc_shmem_free_bgq (int package, void *array, sc_MPI_Comm comm,
+                   sc_MPI_Comm intranode, sc_MPI_Comm internode)
 {
-  if (sc_shmem_write_start_shared (NULL, comm, intranode, internode)) {
+  if (sc_shmem_write_start_bgq (NULL, comm, intranode, internode)) {
     sc_free (package, array);
   }
-  sc_shmem_write_end_shared (NULL, comm, intranode, internode);
+  sc_shmem_write_end_bgq (NULL, comm, intranode, internode);
 }
 #endif /* __bgq__ */
 
@@ -586,10 +586,10 @@ sc_shmem_malloc_window (int package, size_t elem_size, size_t elem_count,
     }
   }
   mpiret =
-    MPI_Win_allocate_shared (winsize, disp_unit, MPI_INFO_NULL, intranode,
-                             &array, &win);
+    MPI_Win_allocate_bgq (winsize, disp_unit, MPI_INFO_NULL, intranode,
+                          &array, &win);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Win_shared_query (win, 0, &winsize, &disp_unit, &array);
+  mpiret = MPI_Win_bgq_query (win, 0, &winsize, &disp_unit, &array);
   SC_CHECK_MPI (mpiret);
   /* store the windows at the front of the array */
   mpiret = sc_MPI_Gather (&win, sizeof (MPI_Win), sc_MPI_BYTE,
@@ -680,10 +680,10 @@ sc_shmem_malloc (int package, size_t elem_size, size_t elem_count,
     return sc_shmem_malloc_basic (package, elem_size, elem_count, comm,
                                   intranode, internode);
 #if defined(__bgq__)
-  case SC_SHMEM_SHARED:
-  case SC_SHMEM_SHARED_PRESCAN:
-    return sc_shmem_malloc_shared (package, elem_size, elem_count, comm,
-                                   intranode, internode);
+  case SC_SHMEM_BGQ:
+  case SC_SHMEM_BGQ_PRESCAN:
+    return sc_shmem_malloc_bgq (package, elem_size, elem_count, comm,
+                                intranode, internode);
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
   case SC_SHMEM_WINDOW:
@@ -715,9 +715,9 @@ sc_shmem_free (int package, void *array, sc_MPI_Comm comm)
     sc_shmem_free_basic (package, array, comm, intranode, internode);
     break;
 #if defined(__bgq__)
-  case SC_SHMEM_SHARED:
-  case SC_SHMEM_SHARED_PRESCAN:
-    sc_shmem_free_shared (package, array, comm, intranode, internode);
+  case SC_SHMEM_BGQ:
+  case SC_SHMEM_BGQ_PRESCAN:
+    sc_shmem_free_bgq (package, array, comm, intranode, internode);
     break;
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
@@ -748,9 +748,9 @@ sc_shmem_write_start (void *array, sc_MPI_Comm comm)
   case SC_SHMEM_PRESCAN:
     return sc_shmem_write_start_basic (array, comm, intranode, internode);
 #if defined(__bgq__)
-  case SC_SHMEM_SHARED:
-  case SC_SHMEM_SHARED_PRESCAN:
-    return sc_shmem_write_start_shared (array, comm, intranode, internode);
+  case SC_SHMEM_BGQ:
+  case SC_SHMEM_BGQ_PRESCAN:
+    return sc_shmem_write_start_bgq (array, comm, intranode, internode);
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
   case SC_SHMEM_WINDOW:
@@ -781,9 +781,9 @@ sc_shmem_write_end (void *array, sc_MPI_Comm comm)
     sc_shmem_write_end_basic (array, comm, intranode, internode);
     break;
 #if defined(__bgq__)
-  case SC_SHMEM_SHARED:
-  case SC_SHMEM_SHARED_PRESCAN:
-    sc_shmem_write_end_shared (array, comm, intranode, internode);
+  case SC_SHMEM_BGQ:
+  case SC_SHMEM_BGQ_PRESCAN:
+    sc_shmem_write_end_bgq (array, comm, intranode, internode);
     break;
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
@@ -818,8 +818,8 @@ sc_shmem_memcpy (void *destarray, void *srcarray, size_t bytes,
     break;
 #if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 #if defined(__bgq__)
-  case SC_SHMEM_SHARED:
-  case SC_SHMEM_SHARED_PRESCAN:
+  case SC_SHMEM_BGQ:
+  case SC_SHMEM_BGQ_PRESCAN:
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
   case SC_SHMEM_WINDOW:
@@ -857,8 +857,8 @@ sc_shmem_allgather (void *sendbuf, int sendcount,
     break;
 #if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 #if defined(__bgq__)
-  case SC_SHMEM_SHARED:
-  case SC_SHMEM_SHARED_PRESCAN:
+  case SC_SHMEM_BGQ:
+  case SC_SHMEM_BGQ_PRESCAN:
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
   case SC_SHMEM_WINDOW:
@@ -898,7 +898,7 @@ sc_shmem_prefix (void *sendbuf, void *recvbuf, int count,
     break;
 #if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 #if defined(__bgq__)
-  case SC_SHMEM_SHARED:
+  case SC_SHMEM_BGQ:
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
   case SC_SHMEM_WINDOW:
@@ -909,7 +909,7 @@ sc_shmem_prefix (void *sendbuf, void *recvbuf, int count,
 #endif
 #if defined(__bgq__) || defined(SC_ENABLE_MPIWINSHARED)
 #if defined(__bgq__)
-  case SC_SHMEM_SHARED_PRESCAN:
+  case SC_SHMEM_BGQ_PRESCAN:
 #endif
 #if defined(SC_ENABLE_MPIWINSHARED)
   case SC_SHMEM_WINDOW_PRESCAN:
