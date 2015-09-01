@@ -585,15 +585,16 @@ sc_shmem_malloc_window (int package, size_t elem_size, size_t elem_count,
       winsize = ((winsize / disp_unit) + 1) * disp_unit;
     }
   }
-  mpiret =
-    MPI_Win_allocate_bgq (winsize, disp_unit, MPI_INFO_NULL, intranode,
-                          &array, &win);
+  mpiret = MPI_Win_allocate_shared (winsize, disp_unit, MPI_INFO_NULL,
+                                    intranode, &array, &win);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Win_bgq_query (win, 0, &winsize, &disp_unit, &array);
+  mpiret = MPI_Win_shared_query (win, 0, &winsize, &disp_unit, &array);
   SC_CHECK_MPI (mpiret);
   /* store the windows at the front of the array */
   mpiret = sc_MPI_Gather (&win, sizeof (MPI_Win), sc_MPI_BYTE,
                           array, sizeof (MPI_Win), sc_MPI_BYTE, 0, intranode);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Barrier (intranode);
   SC_CHECK_MPI (mpiret);
 
   mpiret = MPI_Win_lock (MPI_LOCK_SHARED, 0, MPI_MODE_NOCHECK, win);
