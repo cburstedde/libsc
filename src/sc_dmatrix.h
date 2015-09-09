@@ -421,22 +421,27 @@ sc_dmatrix_t       *sc_dmatrix_pool_alloc (sc_dmatrix_pool_t * dmpool);
 void                sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool,
                                           sc_dmatrix_t * dm);
 
-/** Multithreaded workspace allocations of multiple blocks */
+/** Multithreaded workspace allocations of multiple blocks. */
 typedef struct sc_darray_work
 {
-  double             *data;               /**< Entries of all blocks */
-  int                 n_threads;          /**< Number of threads */
-  int                 n_blocks;           /**< Number of blocks per thread */
-  int                 n_entries;          /**< Number of entries */
+  double             *data;       /**< Entries of all blocks of all threads */
+  int                 n_threads;  /**< Number of threads */
+  int                 n_blocks;   /**< Number of blocks per thread */
+  int                 n_entries;  /**< Number of entries per block */
 }
 sc_darray_work_t;
 
 /** Create a new multithreaded workspace allocation object.
- * This function aborts on memory allocation errors.
- * \param [in] n_threads    Number of thread.
- * \param [in] n_blocks     Number of blocks per thread.
- * \param [in] n_entries    Number of entries per block.
- * \return                  A valid darray_work object.
+ * For each thread \c n_blocks of memory blocks with at least \c n_entries
+ * double values are allocated.  The actual number of entries per block is
+ * adjusted such that the base-pointer for each block is aligned to
+ * \c alignment_bytes.  It is assumed that SC_ALLOC returns an aligned
+ * base-pointer.  This function aborts on memory allocation errors.
+ * \param [in] n_threads        Number of thread.
+ * \param [in] n_blocks         Number of blocks per thread.
+ * \param [in] n_entries        Minimum number of entries per block.
+ * \param [in] alignment_bytes  Align blocks to this byte boundary.
+ * \return                      A valid darray_work object.
  */
 sc_darray_work_t   *sc_darray_work_new (const int n_threads,
                                         const int n_blocks,
@@ -450,7 +455,7 @@ void                sc_darray_work_destroy (sc_darray_work_t * work);
  * \param [in] work         Workspace taken as a source.
  * \param [in] thread       Valid thread index into \b work.
  * \param [in] block        Valid block index into \b work.
- * \return                  Pointer to entries in workspace allocation.
+ * \return                  Pointer to entries (memory aligned).
  */
 double             *sc_darray_work_get (sc_darray_work_t * work,
                                         const int thread, const int block);
