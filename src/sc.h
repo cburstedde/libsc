@@ -153,25 +153,6 @@ extern int          sc_trace_prio;
 #define SC_EPS               2.220446049250313e-16
 #define SC_1000_EPS (1000. * 2.220446049250313e-16)
 
-#ifndef SC_MEMALIGN_BYTES
-# if defined(__bgq__)
-#   define SC_MEMALIGN_BYTES 32
-# else
-#   define SC_MEMALIGN_BYTES __BIGGEST_ALIGNMENT__
-# endif
-#endif
-
-#if defined(__bgq__)
-# define SC_ARG_ALIGN(x,n) __alignx((n), (x))
-#elif defined(__ICC)
-# define SC_ARG_ALIGN(x,n) __assume_aligned((x), (n))
-#elif defined(__GNUC__)
-//# define SC_ARG_ALIGN(x,n) __builtin_assume_aligned((x), (n))
-# define SC_ARG_ALIGN(x,n) SC_NOOP ()
-#else
-# define SC_ARG_ALIGN(x,n) SC_NOOP ()
-#endif
-
 #if 0
 /*@ignore@*/
 #define index   DONT_USE_NAME_CONFLICT_1 ---
@@ -264,6 +245,30 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_STRDUP(s)                sc_strdup (sc_package_id, (s))
 #define SC_FREE(p)                  sc_free (sc_package_id, (p))
 
+/* macros for memory alignment */
+
+#ifndef SC_MEMALIGN_BYTES
+# if defined(__bgq__)
+#   define SC_MEMALIGN_BYTES 32
+# elif defined(__BIGGEST_ALIGNMENT__)
+#   define SC_MEMALIGN_BYTES __BIGGEST_ALIGNMENT__
+# endif
+#endif
+
+#define SC_ALIGN_UP(x,n) ( ((n) <= 0) ? (x) : ((x) + (n) - 1) / (n) * (n) )
+
+#if defined(__bgq__)
+# define SC_ARG_ALIGN(x,n) __alignx((n), (x))
+#elif defined(__ICC)
+# define SC_ARG_ALIGN(x,n) __assume_aligned((x), (n))
+#elif defined(__GNUC__)
+//# define SC_ARG_ALIGN(x,n) __builtin_assume_aligned((x), (n))
+// Note: gcc implementation of memory alignment directives is buggy.
+# define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#else
+# define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#endif
+
 /**
  * Sets n elements of a memory range to zero.
  * Assumes the pointer p is of the correct type.
@@ -289,7 +294,6 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
   (((x) <= 0) ? 0 : (1 << (SC_LOG2_32 ((x) - 1) + 1)))
 #define SC_ROUNDUP2_64(x)                               \
   (((x) <= 0) ? 0 : (1LL << (SC_LOG2_64 ((x) - 1LL) + 1)))
-#define SC_ALIGN_UP(x,n) ( ((n) <= 0) ? (x) : ((x) + (n) - 1) / (n) * (n) )
 
 /* log categories */
 
