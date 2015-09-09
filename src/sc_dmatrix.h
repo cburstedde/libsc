@@ -467,29 +467,6 @@ int                 sc_darray_work_get_blockcount (sc_darray_work_t * work);
  */
 int                 sc_darray_work_get_blocksize (sc_darray_work_t * work);
 
-typedef struct sc_iarray_work
-{
-  int                *data;
-  int                 n_threads;
-  int                 n_blocks;
-  int                 n_entries;
-}
-sc_iarray_work_t;
-
-sc_iarray_work_t   *sc_iarray_work_new (const int n_threads,
-                                        const int n_blocks,
-                                        const int n_entries,
-                                        const int alignment_bytes);
-
-void                sc_iarray_work_destroy (sc_iarray_work_t * work);
-
-int                *sc_iarray_work_get (sc_iarray_work_t * work,
-                                        const int thread, const int block);
-
-int                 sc_iarray_work_get_blockcount (sc_iarray_work_t * work);
-
-int                 sc_iarray_work_get_blocksize (sc_iarray_work_t * work);
-
 SC_EXTERN_C_END;
 
 #endif /* !SC_DMATRIX_H */
