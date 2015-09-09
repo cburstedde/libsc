@@ -178,7 +178,7 @@ void                sc_dmatrix_resize (sc_dmatrix_t * dmatrix,
 void                sc_dmatrix_resize_in_place (sc_dmatrix_t * dmatrix,
                                                 sc_bint_t m, sc_bint_t n);
 
-/** Destroy a dmatrix and all allocated memory */
+/** Destroy a dmatrix and all allocated memory. */
 void                sc_dmatrix_destroy (sc_dmatrix_t * dmatrix);
 
 /** Check whether a dmatrix is free of NaN entries.
@@ -421,35 +421,56 @@ sc_dmatrix_t       *sc_dmatrix_pool_alloc (sc_dmatrix_pool_t * dmpool);
 void                sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool,
                                           sc_dmatrix_t * dm);
 
-/**
- * Work allocations for multithreading
- */
+/** Workspace allocation block */
 typedef struct sc_darray_work_block
 {
-  double             *data;
-  int                 n_entries;
+  double             *data;       /**< Entries of block */
+  int                 n_entries;  /**< Number of entries */
 }
 sc_darray_work_block_t;
 
+/** Workspace allocation for multiple threads of multiple blocks */
 typedef struct sc_darray_work
 {
-  sc_darray_work_block_t **thread_block;
-  int                 n_threads;
-  int                 n_blocks;
+  sc_darray_work_block_t **thread_block;  /**< Array into allocation blocks */
+  int                 n_threads;          /**< Number of threads */
+  int                 n_blocks;           /**< Number of blocks per thread */
 }
 sc_darray_work_t;
 
+/** Create a new multithreaded workspace allocation object.
+ * This function aborts on memory allocation errors.
+ * \param [in] n_threads    Number of thread.
+ * \param [in] n_blocks     Number of blocks per thread.
+ * \param [in] n_entries    Number of entries per block.
+ * \return                  A valid darray_work object.
+ */
 sc_darray_work_t   *sc_darray_work_new (const int n_threads,
                                         const int n_blocks,
                                         const int n_entries);
 
+/** Destroy a darray_work object and all allocated memory. */
 void                sc_darray_work_destroy (sc_darray_work_t * work);
 
+/** Get workspace allocation of a certain thread and a specified block.
+ * \param [in] work         Workspace taken as a source.
+ * \param [in] thread       Valid thread index into \b work.
+ * \param [in] block        Valid block index into \b work.
+ * \return                  Pointer to entries in workspace allocation.
+ */
 double             *sc_darray_work_get (sc_darray_work_t * work,
                                         const int thread, const int block);
 
+/** Get the number of blocks per thread of a workspace allocation.
+ * \param [in] work         Workspace taken as a source.
+ * \return                  Number of allocated blocks per thread.
+ */
 int                 sc_darray_work_get_blockcount (sc_darray_work_t * work);
 
+/** Get the number of entries per block of a workspace allocation.
+ * \param [in] work         Workspace taken as a source.
+ * \return                  Number of allocated entries per blocks per thread.
+ */
 int                 sc_darray_work_get_blocksize (sc_darray_work_t * work);
 
 SC_EXTERN_C_END;
