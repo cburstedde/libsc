@@ -313,12 +313,10 @@ sc_malloc (int package, size_t size)
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
 
-#if defined(__bgq__)
-  size_t              alignment = 32;
-  posix_memalign (&ret, alignment, size);
-#else
+#if defined(SC_MEMALIGN_BYTES)
   posix_memalign (&ret, SC_MEMALIGN_BYTES, size);
-  //ret = malloc (size);
+#else
+  ret = malloc (size);
 #endif
   if (size > 0) {
     SC_CHECK_ABORTF (ret != NULL, "Allocation (malloc size %lli)",
