@@ -84,7 +84,7 @@ sc_search_lower_bound64 (int64_t target, const int64_t * array,
     break;
   }
 
-  SC_ASSERT (0 <= guess && guess < nmemb);
+  SC_ASSERT (guess < nmemb);
   SC_ASSERT (array[guess] >= target);
   SC_ASSERT (guess == 0 || array[guess - 1] < target);
   return (ssize_t) guess;
