@@ -20,6 +20,14 @@
   02110-1301, USA.
 */
 
+/* activate random & srandom functions */
+#if !defined(_XOPEN_SOURCE)
+# define _XOPEN_SOURCE 500
+#elif defined(_XOPEN_SOURCE) && _XOPEN_SOURCE < 500
+# undef _XOPEN_SOURCE
+# define _XOPEN_SOURCE 500
+#endif
+
 #include <sc.h>
 #include <sc_mpi.h>
 #include <sc_shmem.h>
