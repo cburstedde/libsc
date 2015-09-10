@@ -38,7 +38,7 @@ typedef void        (*sc_sig_t) (int);
 #endif
 #endif
 
-#if defined(SC_ENABLE_POSIX_MEMALIGN)
+#ifdef SC_ENABLE_POSIX_MEMALIGN
 #include <errno.h>
 #endif
 
@@ -316,7 +316,7 @@ sc_malloc (int package, size_t size)
 {
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
-#if defined(SC_ENABLE_POSIX_MEMALIGN) && defined(SC_MEMALIGN_BYTES)
+#ifdef SC_ENABLE_POSIX_MEMALIGN
   int                 err;
 
   err = posix_memalign (&ret, SC_MEMALIGN_BYTES, size);

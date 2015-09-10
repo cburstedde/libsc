@@ -257,6 +257,8 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #   define SC_MEMALIGN_BYTES 32
 # elif defined(__BIGGEST_ALIGNMENT__)
 #   define SC_MEMALIGN_BYTES __BIGGEST_ALIGNMENT__
+# elif defined(SC_ENABLE_POSIX_MEMALIGN)
+#   error "--enable-posix-memalign is active, but a byte boundary was not set"
 # endif
 #endif
 
