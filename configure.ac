@@ -37,6 +37,8 @@ SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
 SC_ARG_ENABLE([realloc], [use realloc in array and dmatrix resize],
               [USE_REALLOC])
+SC_ARG_ENABLE([posix-memalign], [use posix_memalign (is SC_MEMALIGN_BYTES is given or known)],
+              [POSIX_MEMALIGN])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 
 echo "o---------------------------------------"

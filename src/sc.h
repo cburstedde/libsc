@@ -49,6 +49,13 @@
 #define __STDC_LIMIT_MACROS
 #endif
 
+/* put in the feature test macro that will cause the compiler to raise a
+ * warning/error if posix_memalign is not available */
+
+#ifdef SC_ENABLE_POSIX_MEMALIGN
+#define _POSIX_C_SOURCE 200112L
+#endif
+
 /* include MPI before stdio.h */
 
 #ifdef SC_ENABLE_MPI
