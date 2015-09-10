@@ -53,7 +53,12 @@
  * warning/error if posix_memalign is not available */
 
 #ifdef SC_ENABLE_POSIX_MEMALIGN
-#define _POSIX_C_SOURCE 200112L
+# if !defined(_POSIX_C_SOURCE)
+#   define _POSIX_C_SOURCE 200112L
+# elif defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE < 200112L
+#   undef _POSIX_C_SOURCE
+#   define _POSIX_C_SOURCE 200112L
+# endif
 #endif
 
 /* include MPI before stdio.h */
