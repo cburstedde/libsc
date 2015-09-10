@@ -38,6 +38,10 @@ typedef void        (*sc_sig_t) (int);
 #endif
 #endif
 
+#if defined(SC_ENABLE_POSIX_MEMALIGN)
+#include <errno.h>
+#endif
+
 #ifdef SC_ENABLE_PTHREAD
 #include <pthread.h>
 #endif
@@ -312,9 +316,16 @@ sc_malloc (int package, size_t size)
 {
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
+#if defined(SC_ENABLE_POSIX_MEMALIGN) && defined(SC_MEMALIGN_BYTES)
+  int                 err;
 
-#if defined(SC_MEMALIGN_BYTES)
-  posix_memalign (&ret, SC_MEMALIGN_BYTES, size);
+  err = posix_memalign (&ret, SC_MEMALIGN_BYTES, size);
+  if (size > 0) {
+    SC_CHECK_ABORTF (err != ENOMEM, "Insufficient memory (malloc size %lli)",
+                     (long long int) size);
+    SC_CHECK_ABORTF (err != EINVAL, "Alignment %i is not a power of two",
+                     SC_MEMALIGN_BYTES);
+  }
 #else
   ret = malloc (size);
 #endif
