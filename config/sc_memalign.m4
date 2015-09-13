@@ -1,44 +1,79 @@
 
-dnl SC_CHECK_MEMALIGN(PREFIX)
-dnl Let the user either specify --with-memalign (configure tries to determine
-dnl the alignment size) or --with-memalign=X (number of bytes).  Searches for
-dnl memalign functions (allignedposix_memalign, memalign).
+dnl SC_CHECK_MEMALIGN(PREFIX) Let the user specify --with-memalign=X (number of
+dnl bytes).  Searches for memalign functions (aligned_alloc (C11),
+dnl posix_memalign (POSIX), memalign (POSIX (deprecated))).
 dnl
 AC_DEFUN([SC_CHECK_MEMALIGN], [
 
 AC_MSG_CHECKING([memory alignment])
 
-SC_ARG_WITH_PREFIX([memalign],
-  [used aligned malloc (optionally use --with-memalign=<NUM_BYTES>)],
-  [MEMALIGN], [$1])
+SC_ARG_ENABLE_PREFIX([memalign],[use aligned malloc],[MEMALIGN],[$1],[=<NUM_BYTES>])
 if test "x$$1_ENABLE_MEMALIGN" != xno ; then
-  $1_MEMALIGN_BYTES=
-  if test "x$$1_ENABLE_MEMALIGN" != xyes ; then
-    $1_MEMALIGN_BYTES="$$1_ENABLE_MEMALIGN"
+  if test "x$$1_ENABLE_MEMALIGN" = xyes ; then
+    AC_MSG_ERROR([Please specify the number of bytes to align allocations])
   fi
-  if test "x$$1_MEMALIGN_BYTES" = x ; then
-    AC_MSG_NOTICE([Attempting to determine the best memory alignment])
+  $1_MEMALIGN_BYTES=$$1_ENABLE_MEMALIGN
+  AC_DEFINE_UNQUOTED([MEMALIGN_BYTES],[$$1_MEMALIGN_BYTES],[desired alignment (in bytes) of allocations])
+  AC_MSG_RESULT([$$1_MEMALIGN_BYTES])
+dnl aligned_alloc
+  $1_WITH_ALIGNED_ALLOC="yes"
+  AC_SEARCH_LIBS([aligned_alloc])
+  if test "x$ac_cv_search_aligned_alloc" != "xnone required" ; then
+    $1_WITH_ALIGNED_ALLOC=no
   fi
-  PRE_PTHREAD_CFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS $$1_PTHREAD_CFLAGS"
-  AC_LINK_IFELSE([AC_LANG_PROGRAM(
+  if test "x$$1_WITH_ALIGNED_ALLOC" = xyes ; then
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include<stdlib.h>]],
 [[
-#include <pthread.h>
-void *start_routine (void *v)
-{
-  return NULL;
-}
-]],[[
-  pthread_t thread;
-  pthread_create (&thread, NULL, &start_routine, NULL);
-  pthread_join (thread, NULL);
-  pthread_exit (NULL);
-]])],,
-                 [AC_MSG_ERROR([Unable to link with POSIX threads])])
-dnl Keep the variables changed as done above
-dnl CFLAGS="$PRE_PTHREAD_CFLAGS"
-
-  AC_MSG_RESULT([successful])
+int *a = (int *) aligned_alloc($$1_MEMALIGN_BYTES,3*sizeof(*a));
+free(a);
+]])],
+                   [],[$1_WITH_ALIGNED_ALLOC=no])
+  fi
+  if test "x$$1_WITH_ALIGNED_ALLOC" = xyes ; then
+    AC_DEFINE([WITH_ALIGNED_ALLOC],[1],[define to 1 if aligned_alloc() found])
+  fi
+dnl posix_memalign
+  $1_WITH_POSIX_MEMALIGN="yes"
+  AC_SEARCH_LIBS([posix_memalign])
+  if test "x$ac_cv_search_posix_memalign" != "xnone required" ; then
+    $1_WITH_POSIX_MEMALIGN=no
+  fi
+  if test "x$$1_WITH_POSIX_MEMALIGN" = xyes ; then
+    AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#include<stdlib.h>
+#include<errno.h>
+]],
+[[
+int *a;
+int err = posix_memalign((void **) &a, $$1_MEMALIGN_BYTES,3*sizeof(*a));
+free(a);
+]])],
+                   [],[$1_WITH_POSIX_MEMALIGN=no])
+  fi
+  if test "x$$1_WITH_POSIX_MEMALIGN" = xyes ; then
+    AC_DEFINE([WITH_POSIX_MEMALIGN],[1],[define to 1 if posix_memalign() found])
+  fi
+dnl memalign
+  $1_WITH_MEMALIGN="yes"
+  AC_SEARCH_LIBS([memalign])
+  if test "x$ac_cv_search_memalign" != "xnone required" ; then
+    $1_WITH_MEMALIGN=no
+  fi
+  if test "x$$1_WITH_MEMALIGN" = xyes ; then
+    AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#include<stdlib.h>
+]],
+[[
+int *a = (int *) memalign($$1_MEMALIGN_BYTES,3*sizeof(*a));
+free(a);
+]])],
+                   [],[$1_WITH_MEMALIGN=no])
+  fi
+  if test "x$$1_WITH_MEMALIGN" = xyes ; then
+    AC_DEFINE([WITH_MEMALIGN],[1],[define to 1 if memalign() found])
+  fi
 else
   AC_MSG_RESULT([not used])
 fi

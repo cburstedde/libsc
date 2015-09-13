@@ -49,18 +49,6 @@
 #define __STDC_LIMIT_MACROS
 #endif
 
-/* put in the feature test macro that will cause the compiler to raise a
- * warning/error if posix_memalign is not available */
-
-#ifdef SC_ENABLE_POSIX_MEMALIGN
-# if !defined(_POSIX_C_SOURCE)
-#   define _POSIX_C_SOURCE 200112L
-# elif defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE < 200112L
-#   undef _POSIX_C_SOURCE
-#   define _POSIX_C_SOURCE 200112L
-# endif
-#endif
-
 /* include MPI before stdio.h */
 
 #ifdef SC_ENABLE_MPI
@@ -250,30 +238,18 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_STRDUP(s)                sc_strdup (sc_package_id, (s))
 #define SC_FREE(p)                  sc_free (sc_package_id, (p))
 
-/* macros for memory alignment */
-
-#ifndef SC_MEMALIGN_BYTES
-# if defined(__bgq__)
-#   define SC_MEMALIGN_BYTES 32
-# elif defined(__BIGGEST_ALIGNMENT__)
-#   define SC_MEMALIGN_BYTES __BIGGEST_ALIGNMENT__
-# elif defined(SC_ENABLE_POSIX_MEMALIGN)
-#   error "--enable-posix-memalign is active, but a byte boundary was not set"
-# endif
-#endif
-
 #define SC_ALIGN_UP(x,n) ( ((n) <= 0) ? (x) : ((x) + (n) - 1) / (n) * (n) )
 
 #if defined(__bgq__)
-# define SC_ARG_ALIGN(x,n) __alignx((n), (x))
+#define SC_ARG_ALIGN(x,n) __alignx((n), (x))
 #elif defined(__ICC)
-# define SC_ARG_ALIGN(x,n) __assume_aligned((x), (n))
+#define SC_ARG_ALIGN(x,n) __assume_aligned((x), (n))
 #elif defined(__GNUC__)
 //# define SC_ARG_ALIGN(x,n) __builtin_assume_aligned((x), (n))
 // Note: gcc implementation of memory alignment directives is buggy.
-# define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#define SC_ARG_ALIGN(x,n) SC_NOOP ()
 #else
-# define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#define SC_ARG_ALIGN(x,n) SC_NOOP ()
 #endif
 
 /**

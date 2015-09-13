@@ -38,9 +38,7 @@ typedef void        (*sc_sig_t) (int);
 #endif
 #endif
 
-#ifdef SC_ENABLE_POSIX_MEMALIGN
 #include <errno.h>
-#endif
 
 #ifdef SC_ENABLE_PTHREAD
 #include <pthread.h>
@@ -311,21 +309,64 @@ sc_free_count (int package)
   return &sc_packages[package].free_count;
 }
 
+#ifdef SC_ENABLE_MEMALIGN
+static void        *
+sc_malloc_aligned (size_t alignment, size_t size)
+{
+#if defined(SC_HAVE_ALIGNED_ALLOC)
+  return aligned_alloc (alignment, size);
+#elif defined(SC_HAVE_POSIX_MEMALIGN)
+  {
+    void               *data = NULL;
+    int                 err = posix_memalign (&data, alignment, size);
+    SC_CHECK_ABORTF (err != ENOMEM, "Insufficient memory (malloc size %lli)",
+                     (long long int) size);
+    SC_CHECK_ABORTF (err != EINVAL, "Alignment %i is not a power of two",
+                     alignment);
+    return data;
+  }
+#elif defined(SC_HAVE_MEMALIGN)
+  return memalign (alignment, size);
+#else
+  {
+    /* adapted from PetscMallocAlign */
+    int                *datastart = malloc (size + 2 * alignment);
+    int                 shift = ((uintptr_t) datastart) % alignment;
+
+    shift = (2 * alignment - shift) / sizeof (int);
+    datastart[shift - 1] = shift;
+    datastart += shift;
+    return (void *) datastart;
+  }
+#endif
+}
+
+static void
+sc_free_aligned (void *ptr)
+{
+  if (ptr == NULL) {
+    return;
+  }
+#if defined(SC_HAVE_ALIGNED_ALLOC) || defined(SC_HAVE_POSIX_MEMALIGN) || defined (SC_HAVE_MEMALIGN)
+  free (ptr);
+#else
+  {
+    int                *datastart = ptr;
+    int                 shift = datastart[-1];
+    datastart -= shift;
+    free ((void *) datastart);
+  }
+#endif
+}
+#endif
+
 void               *
 sc_malloc (int package, size_t size)
 {
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
-#ifdef SC_ENABLE_POSIX_MEMALIGN
-  int                 err;
-
-  err = posix_memalign (&ret, SC_MEMALIGN_BYTES, size);
-  if (size > 0) {
-    SC_CHECK_ABORTF (err != ENOMEM, "Insufficient memory (malloc size %lli)",
-                     (long long int) size);
-    SC_CHECK_ABORTF (err != EINVAL, "Alignment %i is not a power of two",
-                     SC_MEMALIGN_BYTES);
-  }
+#if defined(SC_ENABLE_MEMALIGN) && defined(SC_MEMALIGN_BYTES)
+  ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, size);
 #else
   ret = malloc (size);
 #endif
@@ -430,7 +471,11 @@ sc_free (int package, void *ptr)
     sc_package_unlock (package);
 #endif
   }
+#if defined(SC_ENABLE_MEMALIGN) && defined (SC_MEMALIGN_BYTES)
+  sc_free_aligned (ptr);
+#else
   free (ptr);
+#endif
 }
 
 int
