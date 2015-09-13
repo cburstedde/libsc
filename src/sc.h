@@ -245,8 +245,10 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #elif defined(__ICC)
 #define SC_ARG_ALIGN(x,n) __assume_aligned((x), (n))
 #elif defined(__GNUC__)
-//# define SC_ARG_ALIGN(x,n) __builtin_assume_aligned((x), (n))
-// Note: gcc implementation of memory alignment directives is buggy.
+#if 0
+/* Note: gcc implementation of memory alignment directives is buggy. */
+#define SC_ARG_ALIGN(x,n) __builtin_assume_aligned((x), (n))
+#endif
 #define SC_ARG_ALIGN(x,n) SC_NOOP ()
 #else
 #define SC_ARG_ALIGN(x,n) SC_NOOP ()
