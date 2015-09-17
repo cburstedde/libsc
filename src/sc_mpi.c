@@ -92,6 +92,23 @@ sc_MPI_Comm_dup (sc_MPI_Comm comm, sc_MPI_Comm * newcomm)
 }
 
 int
+sc_MPI_Comm_create (sc_MPI_Comm comm, sc_MPI_Group group,
+                    sc_MPI_Comm * newcomm)
+{
+  *newcomm = sc_MPI_COMM_NULL;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Comm_split (sc_MPI_Comm comm, int color, int key, sc_MPI_Comm * newcomm)
+{
+  *newcomm = sc_MPI_COMM_NULL;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
 sc_MPI_Comm_free (sc_MPI_Comm * comm)
 {
   *comm = sc_MPI_COMM_NULL;
@@ -111,6 +128,144 @@ int
 sc_MPI_Comm_rank (sc_MPI_Comm comm, int *rank)
 {
   *rank = 0;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Comm_compare (sc_MPI_Comm comm1, sc_MPI_Comm comm2, int * result)
+{
+  if (comm1 == comm2) {
+    *result = sc_MPI_IDENT;
+  }
+  else {
+    *result = sc_MPI_UNEQUAL;
+  }
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Comm_group (sc_MPI_Comm comm, sc_MPI_Group * group)
+{
+  *group = sc_MPI_GROUP_NULL;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Group_free (sc_MPI_Group * group)
+{
+  *group = sc_MPI_GROUP_NULL;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Group_size (sc_MPI_Group group, int * size)
+{
+  if (group == sc_MPI_GROUP_NULL) {
+    return sc_MPI_ERR_GROUP;
+  }
+  else {
+    *size = 0;
+    return sc_MPI_SUCCESS;
+  }
+}
+
+int
+sc_MPI_Group_rank (sc_MPI_Group group, int * rank)
+{
+  *rank = sc_MPI_UNDEFINED;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Group_translate_ranks (sc_MPI_Group group1, int n, int * ranks1,
+                              sc_MPI_Group group2, int * ranks2)
+{
+  int                 i;
+
+  for (i = 0; i < n; i++) {
+    ranks2[i] = sc_MPI_UNDEFINED;
+  }
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Group_compare (sc_MPI_Group group1, sc_MPI_Group group2, int * result)
+{
+  if (group1 == group2) {
+    *result = sc_MPI_IDENT;
+  }
+  else {
+    *result = sc_MPI_UNEQUAL;
+  }
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Group_union (sc_MPI_Group group1, sc_MPI_Group group2,
+                    sc_MPI_Group * newgroup)
+{
+  *newgroup = sc_MPI_GROUP_NULL;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Group_intersection (sc_MPI_Group group1, sc_MPI_Group group2,
+                           sc_MPI_Group * newgroup)
+{
+  *newgroup = sc_MPI_GROUP_NULL;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Group_difference (sc_MPI_Group group1, sc_MPI_Group group2,
+                         sc_MPI_Group * newgroup)
+{
+  *newgroup = sc_MPI_GROUP_NULL;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Group_incl (sc_MPI_Group group, int n, int * ranks,
+                   sc_MPI_Group * newgroup)
+{
+  *newgroup = sc_MPI_GROUP_NULL;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Group_excl (sc_MPI_Group group, int n, int * ranks,
+                   sc_MPI_Group * newgroup)
+{
+  *newgroup = sc_MPI_GROUP_NULL;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Group_range_incl (sc_MPI_Group group, int n, int ranges[][3],
+                         sc_MPI_Group * newgroup)
+{
+  *newgroup = sc_MPI_GROUP_NULL;
+
+  return sc_MPI_SUCCESS;
+}
+
+int
+sc_MPI_Group_range_excl (sc_MPI_Group group, int n, int ranges[][3],
+                         sc_MPI_Group * newgroup)
+{
+  *newgroup = sc_MPI_GROUP_NULL;
 
   return sc_MPI_SUCCESS;
 }
