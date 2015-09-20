@@ -164,6 +164,21 @@ sc_io_sink_complete (sc_io_sink_t * sink,
   return SC_IO_ERROR_NONE;
 }
 
+int
+sc_io_sink_align (sc_io_sink_t * sink, size_t bytes_align)
+{
+  size_t              fill_bytes;
+  char               *fill;
+  int                 retval;
+
+  fill_bytes = (bytes_align - sink->bytes_out % bytes_align) % bytes_align;
+  fill = SC_ALLOC_ZERO (char, fill_bytes);
+  retval = sc_io_sink_write (sink, fill, fill_bytes);
+  SC_FREE (fill);
+
+  return retval;
+}
+
 sc_io_source_t     *
 sc_io_source_new (sc_io_type_t iotype, sc_io_encode_t encode, ...)
 {
@@ -210,8 +225,16 @@ sc_io_source_destroy (sc_io_source_t * source)
 {
   int                 retval;
 
-  /* The error value SC_IO_ERROR_AGAIN is turned into FATAL */
+  /* complete reading */
   retval = sc_io_source_complete (source, NULL, NULL);
+
+  /* destroy mirror */
+  if (source->mirror != NULL) {
+    retval = sc_io_sink_destroy (source->mirror) || retval;
+    sc_array_destroy (source->mirror_buffer);
+  }
+
+  /* The error value SC_IO_ERROR_AGAIN is turned into FATAL */
   if (source->iotype == SC_IO_TYPE_FILENAME) {
     SC_ASSERT (source->file != NULL);
 
@@ -221,6 +244,23 @@ sc_io_source_destroy (sc_io_source_t * source)
   SC_FREE (source);
 
   return retval ? SC_IO_ERROR_FATAL : SC_IO_ERROR_NONE;
+}
+
+int
+sc_io_source_activate_mirror (sc_io_source_t * source)
+{
+  if (source->iotype == SC_IO_TYPE_BUFFER) {
+    return SC_IO_ERROR_FATAL;
+  }
+  if (source->mirror != NULL) {
+    return SC_IO_ERROR_FATAL;
+  }
+
+  source->mirror_buffer = sc_array_new (sizeof (char));
+  source->mirror = sc_io_sink_new (SC_IO_TYPE_BUFFER, SC_IO_MODE_WRITE,
+                                   SC_IO_ENCODE_NONE, source->mirror_buffer);
+
+  return (source->mirror != NULL ? SC_IO_ERROR_NONE : SC_IO_ERROR_FATAL);
 }
 
 int
@@ -253,6 +293,9 @@ sc_io_source_read (sc_io_source_t * source, void *data,
       if (bbytes_out < bytes_avail) {
         retval = !feof (source->file) || ferror (source->file);
       }
+      if (retval == SC_IO_ERROR_NONE && source->mirror != NULL) {
+        retval = sc_io_sink_write (source->mirror, data, bbytes_out);
+      }
     }
     else {
       retval = fseek (source->file, (long) bytes_avail, SEEK_CUR);
@@ -279,10 +322,18 @@ int
 sc_io_source_complete (sc_io_source_t * source,
                        size_t * bytes_in, size_t * bytes_out)
 {
+  int                 retval = SC_IO_ERROR_NONE;
+
   if (source->iotype == SC_IO_TYPE_BUFFER) {
     SC_ASSERT (source->buffer != NULL);
     if (source->buffer_bytes % source->buffer->elem_size != 0) {
       return SC_IO_ERROR_AGAIN;
+    }
+  }
+  else if (source->iotype == SC_IO_TYPE_FILENAME ||
+           source->iotype == SC_IO_TYPE_FILEFILE) {
+    if (source->mirror != NULL) {
+      retval = sc_io_sink_complete (source->mirror, NULL, NULL);
     }
   }
 
@@ -294,7 +345,17 @@ sc_io_source_complete (sc_io_source_t * source,
   }
   source->bytes_in = source->bytes_out = 0;
 
-  return SC_IO_ERROR_NONE;
+  return retval;
+}
+
+int
+sc_io_source_align (sc_io_source_t * source, size_t bytes_align)
+{
+  size_t              fill_bytes;
+
+  fill_bytes = (bytes_align - source->bytes_out % bytes_align) % bytes_align;
+
+  return sc_io_source_read (source, NULL, fill_bytes, NULL);
 }
 
 int
