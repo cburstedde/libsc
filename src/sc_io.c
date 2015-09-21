@@ -247,23 +247,6 @@ sc_io_source_destroy (sc_io_source_t * source)
 }
 
 int
-sc_io_source_activate_mirror (sc_io_source_t * source)
-{
-  if (source->iotype == SC_IO_TYPE_BUFFER) {
-    return SC_IO_ERROR_FATAL;
-  }
-  if (source->mirror != NULL) {
-    return SC_IO_ERROR_FATAL;
-  }
-
-  source->mirror_buffer = sc_array_new (sizeof (char));
-  source->mirror = sc_io_sink_new (SC_IO_TYPE_BUFFER, SC_IO_MODE_WRITE,
-                                   SC_IO_ENCODE_NONE, source->mirror_buffer);
-
-  return (source->mirror != NULL ? SC_IO_ERROR_NONE : SC_IO_ERROR_FATAL);
-}
-
-int
 sc_io_source_read (sc_io_source_t * source, void *data,
                    size_t bytes_avail, size_t * bytes_out)
 {
@@ -356,6 +339,46 @@ sc_io_source_align (sc_io_source_t * source, size_t bytes_align)
   fill_bytes = (bytes_align - source->bytes_out % bytes_align) % bytes_align;
 
   return sc_io_source_read (source, NULL, fill_bytes, NULL);
+}
+
+int
+sc_io_source_activate_mirror (sc_io_source_t * source)
+{
+  if (source->iotype == SC_IO_TYPE_BUFFER) {
+    return SC_IO_ERROR_FATAL;
+  }
+  if (source->mirror != NULL) {
+    return SC_IO_ERROR_FATAL;
+  }
+
+  source->mirror_buffer = sc_array_new (sizeof (char));
+  source->mirror = sc_io_sink_new (SC_IO_TYPE_BUFFER, SC_IO_MODE_WRITE,
+                                   SC_IO_ENCODE_NONE, source->mirror_buffer);
+
+  return (source->mirror != NULL ? SC_IO_ERROR_NONE : SC_IO_ERROR_FATAL);
+}
+
+int
+sc_io_source_read_mirror (sc_io_source_t * source, void * data,
+                          size_t bytes_avail, size_t * bytes_out)
+{
+  sc_io_source_t     *mirror_src;
+  int                 retval;
+
+  if (source->mirror_buffer == NULL) {
+    return SC_IO_ERROR_FATAL;
+  }
+
+  mirror_src = sc_io_source_new (SC_IO_TYPE_BUFFER, SC_IO_ENCODE_NONE,
+                                 source->mirror_buffer);
+  retval = (mirror_src != NULL ? SC_IO_ERROR_NONE : SC_IO_ERROR_FATAL);
+  retval = retval || sc_io_source_read (mirror_src, data, bytes_avail,
+                                        bytes_out);
+  if (mirror_src != NULL) {
+    retval = sc_io_source_destroy (mirror_src) || retval;
+  }
+
+  return retval;
 }
 
 int

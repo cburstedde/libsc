@@ -175,12 +175,6 @@ sc_io_source_t     *sc_io_source_new (sc_io_type_t iotype,
  */
 int                 sc_io_source_destroy (sc_io_source_t * source);
 
-/** Activate a buffer that mirrors, i.e., stores the data that was read.
- * \param [in,out] source       The source object to activate mirror in.
- * \return                      0 on success, nonzero on error.
- */
-int                 sc_io_source_activate_mirror (sc_io_source_t * source);
-
 /** Read data from a source.
  * The internal counters source->bytes_in and source->bytes_out are updated.
  * Data is read until the data buffer has not enough room anymore, or source
@@ -226,6 +220,22 @@ int                 sc_io_source_complete (sc_io_source_t * source,
  */
 int                 sc_io_source_align (sc_io_source_t * source,
                                         size_t bytes_align);
+
+/** Activate a buffer that mirrors (i.e., stores) the data that was read.
+ * \param [in,out] source       The source object to activate mirror in.
+ * \return                      0 on success, nonzero on error.
+ */
+int                 sc_io_source_activate_mirror (sc_io_source_t * source);
+
+/** Read data from the source's mirror.
+ * Same behaviour as sc_io_source_read.
+ * \param [in,out] source       The source object to read mirror data from.
+ * \return                      0 on success, nonzero on error.
+ */
+int                 sc_io_source_read_mirror (sc_io_source_t * source,
+                                              void * data,
+                                              size_t bytes_avail,
+                                              size_t * bytes_out);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream openened for writing.
