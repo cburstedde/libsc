@@ -25,8 +25,15 @@
 #include <sc_refcount.h>
 #include <sc_shmem.h>
 
+#define DATA_SIZE 1000
+
+typedef struct {
+	int    rank;
+	double data[DATA_SIZE];
+} data_t;
+
 void
-test_shmem_print_int (int *array, sc_MPI_Comm comm)
+test_shmem_print_int (data_t *array, sc_MPI_Comm comm)
 {
   int                 i, p;
   MPI_Aint            address;
@@ -47,7 +54,7 @@ test_shmem_print_int (int *array, sc_MPI_Comm comm)
     /* loop over array entries */
   {
     snprintf (outstring + strlen (outstring), BUFSIZ - strlen (outstring),
-              "%i ", array[i]);
+              "%i ", array[i].rank);
   }
 
   for (p = 0; p < mpisize; p++)
@@ -68,7 +75,7 @@ test_shmem_test1 ()
 {
   sc_shmem_type_t     type = SC_SHMEM_NOT_SET;
   int                 mpirank, mpisize, mpiret;
-  int                *rankarray;
+  data_t             *rankarray;
 
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -88,9 +95,9 @@ test_shmem_test1 ()
   sc_shmem_set_type (sc_MPI_COMM_WORLD, type);
   SC_GLOBAL_ESSENTIALF ("My type is %s.\n", sc_shmem_type_to_string[type]);
 
-  rankarray = SC_SHMEM_ALLOC (int, mpisize, sc_MPI_COMM_WORLD);
+  rankarray = SC_SHMEM_ALLOC (data_t, mpisize, sc_MPI_COMM_WORLD);
 
-  sc_shmem_allgather (&mpirank, 1, sc_MPI_INT, rankarray, 1, sc_MPI_INT,
+  sc_shmem_allgather (&mpirank, sizeof(data_t), sc_MPI_BYTE, rankarray, sizeof(data_t), sc_MPI_BYTE,
                       sc_MPI_COMM_WORLD);
 
   test_shmem_print_int (rankarray, sc_MPI_COMM_WORLD);
