@@ -138,8 +138,9 @@ test_shmem_allgather (sc_shmem_type_t type)
   sc_shmem_allgather (&data, sizeof (data_t), sc_MPI_BYTE, data_array,
                       sizeof (data_t), sc_MPI_BYTE, sc_MPI_COMM_WORLD);
   for (i = 0; i < mpisize; i++) {
-    SC_CHECK_ABORT (test_shmem_correct_data (&data, i),
-                    "Error in shmem_allgather.");
+    SC_CHECK_ABORTF (test_shmem_correct_data (&data_array[i], i),
+                     "Error in shmem_allgather. Array entry %i is not correct.",
+                     i);
   }
   SC_SHMEM_FREE (data_array, sc_MPI_COMM_WORLD);
 
