@@ -27,12 +27,18 @@
 
 #define DATA_SIZE 10
 
+/* This struct stores data which we use to test shared
+ * memory arrays.
+ */
 typedef struct
 {
-  int                 rank;
-  double              data[DATA_SIZE];
+  int                 rank;     /*< This entry stores the rank of the creating process */
+  double              data[DATA_SIZE];  /*< This field can store arbitrary data */
 } data_t;
 
+/* For each process print the integer entry of
+ * each element in an array of type data_t.
+ */
 void
 test_shmem_print_int (data_t * array, sc_MPI_Comm comm)
 {
@@ -70,6 +76,10 @@ test_shmem_print_int (data_t * array, sc_MPI_Comm comm)
   }
 }
 
+/* Check whether a given data item has entries
+ * data.rank = i
+ * data.data = {0,...,DATA_SIZE-1}
+ */
 int
 test_shmem_correct_data (data_t * data, int i)
 {
@@ -85,6 +95,9 @@ test_shmem_correct_data (data_t * data, int i)
   return 1;
 }
 
+/* Fill the array of one data item with
+ * the numbers 0,...,DATA_SIZE -1.
+ */
 void
 test_shmem_fill_data (data_t * data)
 {
@@ -95,6 +108,11 @@ test_shmem_fill_data (data_t * data)
   }
 }
 
+/* For a given shmem type, allocate a shared array
+ * and fill it with data via a call to shmem_allgather.
+ * We check wether all data was gathered correctly and
+ * free the array.
+ */
 void
 test_shmem_allgather (sc_shmem_type_t type)
 {
