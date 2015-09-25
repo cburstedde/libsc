@@ -67,42 +67,75 @@ test_shmem_print_int (data_t *array, sc_MPI_Comm comm)
     }
     sc_MPI_Barrier (comm);
   }
+}
 
+int
+test_shmem_correct_data (data_t * data, int i)
+{
+  int                 j;
+  if (data->rank != i) {
+    return 0;
+  }
+  for (j = 0; j < DATA_SIZE; j++) {
+    if (data->data[j] != (double) j) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+void
+test_shmem_fill_data (data_t * data)
+{
+  int                 i;
+
+  for (i = 0; i < DATA_SIZE; i++) {
+    data->data[i] = (double) i;
+  }
+}
+
+void
+test_shmem_allgather (sc_shmem_type_t type)
+{
+  data_t             *data_array;
+  data_t              data;
+  int                 mpirank, mpisize, mpiret;
+  int                 i;
+
+  SC_GLOBAL_ESSENTIALF ("Testing allgather with type %s.\n",
+                        sc_shmem_type_to_string[type]);
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  data.rank = mpirank;
+  test_shmem_fill_data (&data);
+
+  sc_shmem_set_type (sc_MPI_COMM_WORLD, type);
+
+  data_array = SC_SHMEM_ALLOC (data_t, mpisize, sc_MPI_COMM_WORLD);
+  SC_CHECK_ABORT (data_array != NULL, "Allocation failed");
+
+  sc_shmem_allgather (&data, sizeof (data_t), sc_MPI_BYTE, data_array,
+                      sizeof (data_t), sc_MPI_BYTE, sc_MPI_COMM_WORLD);
+  for (i = 0; i < mpisize; i++) {
+    SC_CHECK_ABORT (test_shmem_correct_data (&data, i),
+                    "Error in shmem_allgather.");
+  }
+  SC_SHMEM_FREE (data_array, sc_MPI_COMM_WORLD);
+
+  SC_GLOBAL_ESSENTIALF ("Testing type %s succesful.\n",
+                        sc_shmem_type_to_string[type]);
 }
 
 void
 test_shmem_test1 ()
 {
-  sc_shmem_type_t     type = SC_SHMEM_NOT_SET;
-  int                 mpirank, mpisize, mpiret;
-  data_t             *rankarray;
+  sc_shmem_type_t     type;
 
-  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-  SC_CHECK_MPI (mpiret);
-
-#if defined SC_ENABLE_MPIWINSHARED
-  type = SC_SHMEM_WINDOW;
-#endif
-#if defined __bgq__
-  type = SC_SHMEM_BGQ;
-#endif
-
-  if (type == SC_SHMEM_NOT_SET) {
-    type = SC_SHMEM_BASIC;
+  for (type = SC_SHMEM_BASIC; type < SC_SHMEM_NUM_TYPES; type++) {
+    test_shmem_allgather (type);
   }
-  sc_shmem_set_type (sc_MPI_COMM_WORLD, type);
-  SC_GLOBAL_ESSENTIALF ("My type is %s.\n", sc_shmem_type_to_string[type]);
-
-  rankarray = SC_SHMEM_ALLOC (data_t, mpisize, sc_MPI_COMM_WORLD);
-
-  sc_shmem_allgather (&mpirank, sizeof(data_t), sc_MPI_BYTE, rankarray, sizeof(data_t), sc_MPI_BYTE,
-                      sc_MPI_COMM_WORLD);
-
-  test_shmem_print_int (rankarray, sc_MPI_COMM_WORLD);
-
-  SC_SHMEM_FREE (rankarray, sc_MPI_COMM_WORLD);
 }
 
 int
