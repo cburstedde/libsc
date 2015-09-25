@@ -25,11 +25,11 @@
 #include <sc_refcount.h>
 #include <sc_shmem.h>
 
-#define DATA_SIZE 1000
+#define DATA_SIZE 10
 
 typedef struct {
-	int    rank;
-	double data[DATA_SIZE];
+	int     rank;
+	double  data[DATA_SIZE];
 } data_t;
 
 void
