@@ -148,6 +148,61 @@ test_shmem_allgather (sc_shmem_type_t type)
                         sc_shmem_type_to_string[type]);
 }
 
+/* create a shmem array, copy it and check whether the
+ * copy is the same as the original
+ */
+void
+test_shmem_copy (sc_shmem_type_t type)
+{
+  data_t             *data_array, *copy_array;
+  data_t              data;
+  int                 mpirank, mpisize, mpiret;
+  int                 i;
+
+  SC_GLOBAL_ESSENTIALF ("Testing copy with type %s.\n",
+                        sc_shmem_type_to_string[type]);
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  data.rank = mpirank;
+  test_shmem_fill_data (&data);
+
+  sc_shmem_set_type (sc_MPI_COMM_WORLD, type);
+
+  data_array = SC_SHMEM_ALLOC (data_t, mpisize, sc_MPI_COMM_WORLD);
+  SC_CHECK_ABORT (data_array != NULL, "Allocation failed");
+  copy_array = SC_SHMEM_ALLOC (data_t, mpisize, sc_MPI_COMM_WORLD);
+  SC_CHECK_ABORT (copy_array != NULL, "Allocation failed");
+
+  data.rank = mpirank;
+  test_shmem_fill_data (&data);
+  /* We fill the array via a shmem_allgather */
+  sc_shmem_allgather (&data, sizeof (data_t), sc_MPI_BYTE, data_array,
+                      sizeof (data_t), sc_MPI_BYTE, sc_MPI_COMM_WORLD);
+  /* Check whether the allgather worked */
+  for (i = 0; i < mpisize; i++) {
+    SC_CHECK_ABORTF (test_shmem_correct_data (&data_array[i], i),
+                     "Error in shmem_allgather in test_shmem_copy."
+                     "Array entry %i is not correct.", i);
+  }
+  sc_shmem_memcpy ((void *) copy_array, (void *) data_array,
+                   mpisize * sizeof (data_t), sc_MPI_COMM_WORLD);
+  /* Check whether the copy worked */
+  for (i = 0; i < mpisize; i++) {
+    SC_CHECK_ABORTF (!memcmp
+                     (&data_array[i], &copy_array[i], sizeof (data_t)),
+                     "Error in shmem_copy. Array entries at %i do not match",
+                     i);
+  }
+
+  SC_SHMEM_FREE (data_array, sc_MPI_COMM_WORLD);
+  SC_SHMEM_FREE (copy_array, sc_MPI_COMM_WORLD);
+
+  SC_GLOBAL_ESSENTIALF ("Testing type %s succesful.\n",
+                        sc_shmem_type_to_string[type]);
+}
+
 void
 test_shmem_test1 ()
 {
