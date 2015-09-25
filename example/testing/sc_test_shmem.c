@@ -151,10 +151,10 @@ test_shmem_allgather (sc_shmem_type_t type)
 void
 test_shmem_test1 ()
 {
-  sc_shmem_type_t     type;
+  int                 type;
 
-  for (type = SC_SHMEM_BASIC; type < SC_SHMEM_NUM_TYPES; type++) {
-    test_shmem_allgather (type);
+  for (type = (int) SC_SHMEM_BASIC; type < (int) SC_SHMEM_NUM_TYPES; type++) {
+    test_shmem_allgather ((sc_shmem_type_t) type);
   }
 }
 
