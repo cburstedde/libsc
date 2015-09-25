@@ -120,7 +120,7 @@ void                sc_shmem_write_end (void *array, sc_MPI_Comm comm);
  *
  * \param[out]  destarray     array to write to
  * \param[in]   srcarray      array to write from
- * \param[in    bytes         number of bytes to write
+ * \param[in]   bytes         number of bytes to write
  * \param[in]   comm          the mpi communicator
  */
 void                sc_shmem_memcpy (void *destarray, void *srcarray,
