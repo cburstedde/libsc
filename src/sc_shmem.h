@@ -28,6 +28,8 @@
 
 SC_EXTERN_C_BEGIN;
 
+/** \file sc_shmem.h */
+
 /* sc_shmem: an interface for arrays that are redundant on each mpi
  * process */
 
