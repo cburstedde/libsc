@@ -108,25 +108,14 @@ test_shmem_fill_data (data_t * data)
   }
 }
 
-/* For a given shmem type, allocate a shared array
- * and fill it with data via a call to shmem_allgather.
- * We check wether all data was gathered correctly and
- * free the array.
- */
-void
-test_shmem_allgather (sc_shmem_type_t type)
+/* allocate a shared memory array and fill the date fields */
+data_t *
+test_shmem_create_data_array (sc_shmem_type_t type, int mpirank, int mpisize)
 {
-  data_t             *data_array;
   data_t              data;
-  int                 mpirank, mpisize, mpiret;
+  data_t             *data_array;
   int                 i;
 
-  SC_GLOBAL_ESSENTIALF ("Testing allgather with type %s.\n",
-                        sc_shmem_type_to_string[type]);
-  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-  SC_CHECK_MPI (mpiret);
   data.rank = mpirank;
   test_shmem_fill_data (&data);
 
@@ -137,6 +126,36 @@ test_shmem_allgather (sc_shmem_type_t type)
 
   sc_shmem_allgather (&data, sizeof (data_t), sc_MPI_BYTE, data_array,
                       sizeof (data_t), sc_MPI_BYTE, sc_MPI_COMM_WORLD);
+  /* check whether creation worked */
+  for (i = 0; i < mpisize; i++) {
+    SC_CHECK_ABORTF (test_shmem_correct_data (&data_array[i], i),
+                     "Error in shmem_allgather. Array entry %i is not correct.",
+                     i);
+  }
+  return data_array;
+}
+
+/* For a given shmem type, allocate a shared array
+ * and fill it with data via a call to shmem_allgather.
+ * We check wether all data was gathered correctly and
+ * free the array.
+ */
+void
+test_shmem_allgather (sc_shmem_type_t type)
+{
+  data_t             *data_array;
+  int                 mpirank, mpisize, mpiret;
+  int                 i;
+
+  SC_GLOBAL_ESSENTIALF ("Testing allgather with type %s.\n",
+                        sc_shmem_type_to_string[type]);
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  data_array = test_shmem_create_data_array (type, mpirank, mpisize);
+
   for (i = 0; i < mpisize; i++) {
     SC_CHECK_ABORTF (test_shmem_correct_data (&data_array[i], i),
                      "Error in shmem_allgather. Array entry %i is not correct.",
@@ -155,7 +174,6 @@ void
 test_shmem_copy (sc_shmem_type_t type)
 {
   data_t             *data_array, *copy_array;
-  data_t              data;
   int                 mpirank, mpisize, mpiret;
   int                 i;
 
@@ -165,27 +183,10 @@ test_shmem_copy (sc_shmem_type_t type)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
   SC_CHECK_MPI (mpiret);
-  data.rank = mpirank;
-  test_shmem_fill_data (&data);
 
-  sc_shmem_set_type (sc_MPI_COMM_WORLD, type);
-
-  data_array = SC_SHMEM_ALLOC (data_t, mpisize, sc_MPI_COMM_WORLD);
-  SC_CHECK_ABORT (data_array != NULL, "Allocation failed");
+  data_array = test_shmem_create_data_array (type, mpirank, mpisize);
   copy_array = SC_SHMEM_ALLOC (data_t, mpisize, sc_MPI_COMM_WORLD);
-  SC_CHECK_ABORT (copy_array != NULL, "Allocation failed");
 
-  data.rank = mpirank;
-  test_shmem_fill_data (&data);
-  /* We fill the array via a shmem_allgather */
-  sc_shmem_allgather (&data, sizeof (data_t), sc_MPI_BYTE, data_array,
-                      sizeof (data_t), sc_MPI_BYTE, sc_MPI_COMM_WORLD);
-  /* Check whether the allgather worked */
-  for (i = 0; i < mpisize; i++) {
-    SC_CHECK_ABORTF (test_shmem_correct_data (&data_array[i], i),
-                     "Error in shmem_allgather in test_shmem_copy."
-                     "Array entry %i is not correct.", i);
-  }
   sc_shmem_memcpy ((void *) copy_array, (void *) data_array,
                    mpisize * sizeof (data_t), sc_MPI_COMM_WORLD);
   /* Check whether the copy worked */
