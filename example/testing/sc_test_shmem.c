@@ -208,9 +208,18 @@ test_shmem_test1 ()
 {
   int                 type;
 
+  SC_GLOBAL_ESSENTIAL ("Testing sc_shmem_allgather.\n");
+  sc_log_indent_push ();
   for (type = (int) SC_SHMEM_BASIC; type < (int) SC_SHMEM_NUM_TYPES; type++) {
     test_shmem_allgather ((sc_shmem_type_t) type);
   }
+  sc_log_indent_pop ();
+  SC_GLOBAL_ESSENTIAL ("Testing sc_shmem_copy.\n");
+  sc_log_indent_push ();
+  for (type = (int) SC_SHMEM_BASIC; type < (int) SC_SHMEM_NUM_TYPES; type++) {
+    test_shmem_copy ((sc_shmem_type_t) type);
+  }
+  sc_log_indent_pop ();
 }
 
 int
