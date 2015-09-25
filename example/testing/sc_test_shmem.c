@@ -27,13 +27,14 @@
 
 #define DATA_SIZE 10
 
-typedef struct {
-	int     rank;
-	double  data[DATA_SIZE];
+typedef struct
+{
+  int                 rank;
+  double              data[DATA_SIZE];
 } data_t;
 
 void
-test_shmem_print_int (data_t *array, sc_MPI_Comm comm)
+test_shmem_print_int (data_t * array, sc_MPI_Comm comm)
 {
   int                 i, p;
   MPI_Aint            address;
