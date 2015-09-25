@@ -21,7 +21,6 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include <mpi.h>
 #include <sc_refcount.h>
 #include <sc_shmem.h>
 
@@ -36,6 +35,7 @@ typedef struct
   double              data[DATA_SIZE];  /*< This field can store arbitrary data */
 } data_t;
 
+#if 0
 /* For each process print the integer entry of
  * each element in an array of type data_t.
  */
@@ -75,6 +75,7 @@ test_shmem_print_int (data_t * array, sc_MPI_Comm comm)
     sc_MPI_Barrier (comm);
   }
 }
+#endif
 
 /* Check whether a given data item has entries
  * data.rank = i
