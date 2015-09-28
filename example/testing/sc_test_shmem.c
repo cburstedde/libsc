@@ -208,11 +208,11 @@ test_shmem_copy (sc_shmem_type_t type)
 void
 test_shmem_write (sc_shmem_type_t type)
 {
-  data_t          *data_array;
+  data_t             *data_array;
   int                 mpirank, mpisize, mpiret;
   int                 i;
 
-  SC_GLOBAL_ESSENTIALF ("Testing copy with type %s.\n",
+  SC_GLOBAL_ESSENTIALF ("Testing shmem_write with type %s.\n",
                         sc_shmem_type_to_string[type]);
   mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -220,9 +220,28 @@ test_shmem_write (sc_shmem_type_t type)
   SC_CHECK_MPI (mpiret);
 
   data_array = SC_SHMEM_ALLOC (data_t, mpisize, sc_MPI_COMM_WORLD);
-  /* wait until we get write access */
-  while (!sc_shmem_write_start (data_array, sc_MPI_COMM_WORLD));
+  /* The process that first gets write access to the array writes te data */
+  if (sc_shmem_write_start (data_array, sc_MPI_COMM_WORLD)) {
+    for (i = 0; i < mpisize; i++) {
+      data_array[i].rank = i;
+      test_shmem_fill_data (&data_array[i]);
+    }
+  }
 
+  sc_shmem_write_end (data_array, sc_MPI_COMM_WORLD);
+  mpiret = sc_MPI_Barrier (sc_MPI_COMM_WORLD);
+  SC_CHECK_MPI (mpiret);
+
+  /* All processes check whether writing worked */
+  for (i = 0; i < mpisize; i++) {
+    SC_CHECK_ABORTF (test_shmem_correct_data (&data_array[i], i),
+                     "Error in shmem_copy. Array entries at %i do not match",
+                     i);
+  }
+
+  SC_SHMEM_FREE (data_array, sc_MPI_COMM_WORLD);
+  SC_GLOBAL_ESSENTIALF ("Testing type %s succesful.\n",
+                        sc_shmem_type_to_string[type]);
 }
 
 void
@@ -240,6 +259,12 @@ test_shmem_test1 ()
   sc_log_indent_push ();
   for (type = (int) SC_SHMEM_BASIC; type < (int) SC_SHMEM_NUM_TYPES; type++) {
     test_shmem_copy ((sc_shmem_type_t) type);
+  }
+  sc_log_indent_pop ();
+  SC_GLOBAL_ESSENTIAL ("Testing sc_shmem_write.\n");
+  sc_log_indent_push ();
+  for (type = (int) SC_SHMEM_BASIC; type < (int) SC_SHMEM_NUM_TYPES; type++) {
+    test_shmem_write ((sc_shmem_type_t) type);
   }
   sc_log_indent_pop ();
 }
