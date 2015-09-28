@@ -245,6 +245,35 @@ test_shmem_write (sc_shmem_type_t type)
 }
 
 void
+test_shmem_prefix (sc_shmem_type_t type)
+{
+  int                *data_array;
+  int                 mpirank, mpisize, mpiret;
+  int                 i;
+
+  SC_GLOBAL_ESSENTIALF ("Testing prefix with type %s.\n",
+                        sc_shmem_type_to_string[type]);
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  data_array = SC_SHMEM_ALLOC (int, mpisize, sc_MPI_COMM_WORLD);
+
+  sc_shmem_prefix (&mpirank, data_array, 1, sc_MPI_INT, sc_MPI_SUM,
+                   sc_MPI_COMM_WORLD);
+  for (i = 0; i < mpisize; i++) {
+    SC_CHECK_ABORTF (data_array[i] == i * (i + 1) / 2,
+                     "Error in shmem prefix."
+                     "Array entry at %i is not correct.\n", i);
+  }
+
+  SC_SHMEM_FREE (data_array, sc_MPI_COMM_WORLD);
+  SC_GLOBAL_ESSENTIALF ("Testing type %s succesful.\n",
+                        sc_shmem_type_to_string[type]);
+}
+
+void
 test_shmem_test1 ()
 {
   int                 type;
@@ -265,6 +294,12 @@ test_shmem_test1 ()
   sc_log_indent_push ();
   for (type = (int) SC_SHMEM_BASIC; type < (int) SC_SHMEM_NUM_TYPES; type++) {
     test_shmem_write ((sc_shmem_type_t) type);
+  }
+  sc_log_indent_pop ();
+  SC_GLOBAL_ESSENTIAL ("Testing sc_shmem_prefix.\n");
+  sc_log_indent_push ();
+  for (type = (int) SC_SHMEM_BASIC; type < (int) SC_SHMEM_NUM_TYPES; type++) {
+    test_shmem_prefix ((sc_shmem_type_t) type);
   }
   sc_log_indent_pop ();
 }
