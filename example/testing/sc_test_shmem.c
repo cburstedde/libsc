@@ -206,6 +206,26 @@ test_shmem_copy (sc_shmem_type_t type)
 }
 
 void
+test_shmem_write (sc_shmem_type_t type)
+{
+  data_t          *data_array;
+  int                 mpirank, mpisize, mpiret;
+  int                 i;
+
+  SC_GLOBAL_ESSENTIALF ("Testing copy with type %s.\n",
+                        sc_shmem_type_to_string[type]);
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  data_array = SC_SHMEM_ALLOC (data_t, mpisize, sc_MPI_COMM_WORLD);
+  /* wait until we get write access */
+  while (!sc_shmem_write_start (data_array, sc_MPI_COMM_WORLD));
+
+}
+
+void
 test_shmem_test1 ()
 {
   int                 type;
