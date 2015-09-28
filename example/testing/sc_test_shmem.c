@@ -250,6 +250,7 @@ test_shmem_prefix (sc_shmem_type_t type)
   int                *data_array;
   int                 mpirank, mpisize, mpiret;
   int                 i;
+  char                buffer[BUFSIZ];
 
   SC_GLOBAL_ESSENTIALF ("Testing prefix with type %s.\n",
                         sc_shmem_type_to_string[type]);
@@ -262,11 +263,16 @@ test_shmem_prefix (sc_shmem_type_t type)
 
   sc_shmem_prefix (&mpirank, data_array, 1, sc_MPI_INT, sc_MPI_SUM,
                    sc_MPI_COMM_WORLD);
+  snprintf (buffer, BUFSIZ, "[%i]\t", mpirank);
   for (i = 0; i < mpisize; i++) {
+    snprintf (buffer + strlen (buffer), BUFSIZ - strlen (buffer), "%i, ",
+              data_array[i]);
+    /*
     SC_CHECK_ABORTF (data_array[i] == i * (i + 1) / 2,
                      "Error in shmem prefix."
-                     "Array entry at %i is not correct.\n", i);
+                     "Array entry at %i is not correct.\n", i); */
   }
+  SC_GLOBAL_ESSENTIALF ("%s\n", buffer);
 
   SC_SHMEM_FREE (data_array, sc_MPI_COMM_WORLD);
   SC_GLOBAL_ESSENTIALF ("Testing type %s succesful.\n",
