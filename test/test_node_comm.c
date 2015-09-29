@@ -22,10 +22,10 @@
 
 /* activate random & srandom functions */
 #if !defined(_XOPEN_SOURCE)
-# define _XOPEN_SOURCE 500
+#define _XOPEN_SOURCE 500
 #elif defined(_XOPEN_SOURCE) && _XOPEN_SOURCE < 500
-# undef _XOPEN_SOURCE
-# define _XOPEN_SOURCE 500
+#undef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
 #endif
 
 #include <sc.h>
@@ -116,7 +116,8 @@ main (int argc, char **argv)
       int                 retvalin = retval;
 
       SC_GLOBAL_PRODUCTIONF ("  count = %d\n", count);
-      retval += test_shmem (count, sc_MPI_COMM_WORLD, (sc_shmem_type_t) itype);
+      retval +=
+        test_shmem (count, sc_MPI_COMM_WORLD, (sc_shmem_type_t) itype);
       if (retval != retvalin) {
         SC_GLOBAL_PRODUCTION ("    unsuccessful\n");
       }

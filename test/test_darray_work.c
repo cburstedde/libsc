@@ -49,14 +49,12 @@ main (int argc, char **argv)
   work = sc_darray_work_new (n_threads, n_blocks, n_entries, memalign_bytes);
 
   /* check size of allocation */
-  SC_CHECK_ABORTF (
-      n_blocks == sc_darray_work_get_blockcount (work),
-      "Wrong number of blocks %i, should be %i\n",
-      sc_darray_work_get_blockcount (work), n_blocks);
-  SC_CHECK_ABORTF (
-      n_entries <= sc_darray_work_get_blocksize (work),
-      "Insufficient number of entries per block %i, should be at least %i\n",
-      sc_darray_work_get_blocksize (work), n_entries);
+  SC_CHECK_ABORTF (n_blocks == sc_darray_work_get_blockcount (work),
+                   "Wrong number of blocks %i, should be %i\n",
+                   sc_darray_work_get_blockcount (work), n_blocks);
+  SC_CHECK_ABORTF (n_entries <= sc_darray_work_get_blocksize (work),
+                   "Insufficient number of entries per block %i, should be at least %i\n",
+                   sc_darray_work_get_blocksize (work), n_entries);
 
   /* write to all entries of workspace */
   for (t = 0; t < n_threads; t++) {

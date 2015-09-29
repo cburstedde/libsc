@@ -36,7 +36,7 @@ static const double eps = 2.220446049250313e-16;
 static double
 test_dmatrix_get_random_uniform (const double alpha, const double beta)
 {
-  return alpha + ( rand () / (RAND_MAX/(beta - alpha)) );
+  return alpha + (rand () / (RAND_MAX / (beta - alpha)));
 }
 
 /**
@@ -59,7 +59,7 @@ test_dmatrix_set_random (sc_dmatrix_t * mat, const double alpha,
  * Checks entries of a matrix comparing to a reference matrix.
  * \return  number of non-identical entries.
  */
-static sc_bint_t
+static              sc_bint_t
 test_dmatrix_check_error_identical (const sc_dmatrix_t * mat_chk,
                                     const sc_dmatrix_t * mat_ref)
 {
