@@ -188,13 +188,13 @@ sc_tag_t;
 #define sc_MPI_COMM_WORLD          ((sc_MPI_Comm) 0x44000000)
 #define sc_MPI_COMM_SELF           ((sc_MPI_Comm) 0x44000001)
 
-#define sc_MPI_GROUP_NULL          ((sc_MPI_Group) 0x54000000) //TODO change val
-#define sc_MPI_GROUP_EMPTY         ((sc_MPI_Group) 0x54000001) //TODO change val
+#define sc_MPI_GROUP_NULL          ((sc_MPI_Group) 0x54000000) /* TODO change val */
+#define sc_MPI_GROUP_EMPTY         ((sc_MPI_Group) 0x54000001) /* TODO change val */
 
-#define sc_MPI_IDENT               (1) //TODO change val
-#define sc_MPI_CONGRUENT           (2) //TODO change val
-#define sc_MPI_SIMILAR             (3) //TODO change val
-#define sc_MPI_UNEQUAL             (-1) //TODO change val
+#define sc_MPI_IDENT               (1) /* TODO change val */
+#define sc_MPI_CONGRUENT           (2) /* TODO change val */
+#define sc_MPI_SIMILAR             (3) /* TODO change val */
+#define sc_MPI_UNEQUAL             (-1) /* TODO change val */
 
 #define sc_MPI_ANY_SOURCE          (-2)
 #define sc_MPI_ANY_TAG             (-1)
@@ -234,7 +234,7 @@ sc_tag_t;
 
 #define sc_MPI_UNDEFINED           (-32766)
 
-#define sc_MPI_ERR_GROUP           (-123456) //TODO change val
+#define sc_MPI_ERR_GROUP           (-123456) /* TODO change val */
 
 /* types */
 
