@@ -860,7 +860,7 @@ sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool, sc_dmatrix_t * dm)
   *(sc_dmatrix_t **) sc_array_push (&dmpool->freed) = dm;
 }
 
-sc_darray_work_t *
+sc_darray_work_t   *
 sc_darray_work_new (const int n_threads, const int n_blocks,
                     const int n_entries, const int alignment_bytes)
 {
@@ -889,8 +889,9 @@ sc_darray_work_destroy (sc_darray_work_t * work)
   SC_FREE (work);
 }
 
-double *
-sc_darray_work_get (sc_darray_work_t * work, const int thread, const int block)
+double             *
+sc_darray_work_get (sc_darray_work_t * work, const int thread,
+                    const int block)
 {
   SC_ASSERT (0 <= thread && thread < work->n_threads);
   SC_ASSERT (0 <= block && block < work->n_blocks);

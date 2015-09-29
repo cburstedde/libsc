@@ -101,7 +101,8 @@ sc_MPI_Comm_create (sc_MPI_Comm comm, sc_MPI_Group group,
 }
 
 int
-sc_MPI_Comm_split (sc_MPI_Comm comm, int color, int key, sc_MPI_Comm * newcomm)
+sc_MPI_Comm_split (sc_MPI_Comm comm, int color, int key,
+                   sc_MPI_Comm * newcomm)
 {
   *newcomm = sc_MPI_COMM_NULL;
 
@@ -133,7 +134,7 @@ sc_MPI_Comm_rank (sc_MPI_Comm comm, int *rank)
 }
 
 int
-sc_MPI_Comm_compare (sc_MPI_Comm comm1, sc_MPI_Comm comm2, int * result)
+sc_MPI_Comm_compare (sc_MPI_Comm comm1, sc_MPI_Comm comm2, int *result)
 {
   if (comm1 == comm2) {
     *result = sc_MPI_IDENT;
@@ -162,7 +163,7 @@ sc_MPI_Group_free (sc_MPI_Group * group)
 }
 
 int
-sc_MPI_Group_size (sc_MPI_Group group, int * size)
+sc_MPI_Group_size (sc_MPI_Group group, int *size)
 {
   if (group == sc_MPI_GROUP_NULL) {
     return sc_MPI_ERR_GROUP;
@@ -174,7 +175,7 @@ sc_MPI_Group_size (sc_MPI_Group group, int * size)
 }
 
 int
-sc_MPI_Group_rank (sc_MPI_Group group, int * rank)
+sc_MPI_Group_rank (sc_MPI_Group group, int *rank)
 {
   *rank = sc_MPI_UNDEFINED;
 
@@ -182,8 +183,8 @@ sc_MPI_Group_rank (sc_MPI_Group group, int * rank)
 }
 
 int
-sc_MPI_Group_translate_ranks (sc_MPI_Group group1, int n, int * ranks1,
-                              sc_MPI_Group group2, int * ranks2)
+sc_MPI_Group_translate_ranks (sc_MPI_Group group1, int n, int *ranks1,
+                              sc_MPI_Group group2, int *ranks2)
 {
   int                 i;
 
@@ -195,7 +196,7 @@ sc_MPI_Group_translate_ranks (sc_MPI_Group group1, int n, int * ranks1,
 }
 
 int
-sc_MPI_Group_compare (sc_MPI_Group group1, sc_MPI_Group group2, int * result)
+sc_MPI_Group_compare (sc_MPI_Group group1, sc_MPI_Group group2, int *result)
 {
   if (group1 == group2) {
     *result = sc_MPI_IDENT;
@@ -235,7 +236,7 @@ sc_MPI_Group_difference (sc_MPI_Group group1, sc_MPI_Group group2,
 }
 
 int
-sc_MPI_Group_incl (sc_MPI_Group group, int n, int * ranks,
+sc_MPI_Group_incl (sc_MPI_Group group, int n, int *ranks,
                    sc_MPI_Group * newgroup)
 {
   *newgroup = sc_MPI_GROUP_NULL;
@@ -244,7 +245,7 @@ sc_MPI_Group_incl (sc_MPI_Group group, int n, int * ranks,
 }
 
 int
-sc_MPI_Group_excl (sc_MPI_Group group, int n, int * ranks,
+sc_MPI_Group_excl (sc_MPI_Group group, int n, int *ranks,
                    sc_MPI_Group * newgroup)
 {
   *newgroup = sc_MPI_GROUP_NULL;

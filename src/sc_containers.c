@@ -753,7 +753,8 @@ static void         (*obstack_chunk_free) (void *) = sc_containers_free;
 
 /** This function is static; we do not like to expose _ext functions in libsc. */
 static void
-sc_mempool_init_ext (sc_mempool_t * mempool, size_t elem_size, int zero_and_persist)
+sc_mempool_init_ext (sc_mempool_t * mempool, size_t elem_size,
+                     int zero_and_persist)
 {
   mempool->elem_size = elem_size;
   mempool->elem_count = 0;
@@ -798,7 +799,7 @@ sc_mempool_new_zero_and_persist (size_t elem_size)
 }
 
 void
-sc_mempool_reset (sc_mempool_t *mempool)
+sc_mempool_reset (sc_mempool_t * mempool)
 {
   sc_array_reset (&mempool->freed);
   obstack_free (&mempool->obstack, NULL);

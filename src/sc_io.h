@@ -152,7 +152,8 @@ int                 sc_io_sink_complete (sc_io_sink_t * sink,
  * \param [in] bytes_align      Byte boundary.
  * \return                      0 on success, nonzero on error.
  */
-int                 sc_io_sink_align (sc_io_sink_t * sink, size_t bytes_align);
+int                 sc_io_sink_align (sc_io_sink_t * sink,
+                                      size_t bytes_align);
 
 /** Create a generic data source.
  * \param [in] iotype           Type of the source.
@@ -233,7 +234,7 @@ int                 sc_io_source_activate_mirror (sc_io_source_t * source);
  * \return                      0 on success, nonzero on error.
  */
 int                 sc_io_source_read_mirror (sc_io_source_t * source,
-                                              void * data,
+                                              void *data,
                                               size_t bytes_avail,
                                               size_t * bytes_out);
 

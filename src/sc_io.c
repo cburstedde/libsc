@@ -359,7 +359,7 @@ sc_io_source_activate_mirror (sc_io_source_t * source)
 }
 
 int
-sc_io_source_read_mirror (sc_io_source_t * source, void * data,
+sc_io_source_read_mirror (sc_io_source_t * source, void *data,
                           size_t bytes_avail, size_t * bytes_out)
 {
   sc_io_source_t     *mirror_src;
