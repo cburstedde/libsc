@@ -99,6 +99,9 @@ static FILE        *sc_log_stream = NULL;
 static sc_log_handler_t sc_default_log_handler = sc_log_handler;
 static int          sc_default_log_threshold = SC_LP_THRESHOLD;
 
+static void sc_abort_handler (void);
+static sc_abort_handler_t sc_default_abort_handler = sc_abort_handler;
+
 static int          sc_signals_caught = 0;
 static sc_sig_t     system_int_handler = NULL;
 static sc_sig_t     system_segv_handler = NULL;
@@ -601,7 +604,21 @@ sc_log_indent_pop_count (int package, int count)
 }
 
 void
+sc_set_abort_handler (sc_abort_handler_t abort_handler)
+{
+  sc_default_abort_handler = abort_handler != NULL ? abort_handler :
+    sc_abort_handler;
+}
+
+void
 sc_abort (void)
+{
+  sc_default_abort_handler ();
+  abort (); /* if the user supplied callback incorrecty returns, abort */
+}
+
+static void
+sc_abort_handler (void)
 {
   if (0) {
   }
