@@ -265,14 +265,7 @@ sc_dmatrix_resize (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
   newsize = m * n;
 
   if (!dmatrix->view && size != newsize) {
-#ifdef SC_USE_REALLOC
     data = SC_REALLOC (dmatrix->e[0], double, newsize);
-#else
-    data = SC_ALLOC (double, newsize);
-    memcpy (data, dmatrix->e[0],
-            (size_t) SC_MIN (newsize, size) * sizeof (double));
-    SC_FREE (dmatrix->e[0]);
-#endif
   }
   else {
     /* for views you must know that data is large enough */
@@ -860,7 +853,7 @@ sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool, sc_dmatrix_t * dm)
   *(sc_dmatrix_t **) sc_array_push (&dmpool->freed) = dm;
 }
 
-sc_darray_work_t *
+sc_darray_work_t   *
 sc_darray_work_new (const int n_threads, const int n_blocks,
                     const int n_entries, const int alignment_bytes)
 {
@@ -889,8 +882,9 @@ sc_darray_work_destroy (sc_darray_work_t * work)
   SC_FREE (work);
 }
 
-double *
-sc_darray_work_get (sc_darray_work_t * work, const int thread, const int block)
+double             *
+sc_darray_work_get (sc_darray_work_t * work, const int thread,
+                    const int block)
 {
   SC_ASSERT (0 <= thread && thread < work->n_threads);
   SC_ASSERT (0 <= block && block < work->n_blocks);

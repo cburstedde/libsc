@@ -134,7 +134,8 @@ void                sc_statistics_add_empty (sc_statistics_t * stats,
                                              const char *name);
 
 /** Returns true if the stats include a variable with the given name */
-int                 sc_statistics_has (sc_statistics_t *stats, const char *name);
+int                 sc_statistics_has (sc_statistics_t * stats,
+                                       const char *name);
 /** Set the value of a statistics variable, see sc_stats_set1.
  * The variable must previously be added with sc_statistics_add.
  * This assumes count=1 as in the sc_stats_set1 function above.

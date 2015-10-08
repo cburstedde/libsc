@@ -382,7 +382,7 @@ sc_statistics_add_empty (sc_statistics_t * stats, const char *name)
 }
 
 int
-sc_statistics_has (sc_statistics_t *stats, const char *name)
+sc_statistics_has (sc_statistics_t * stats, const char *name)
 {
   return sc_keyvalue_exists (stats->kv, name);
 }

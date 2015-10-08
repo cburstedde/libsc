@@ -73,6 +73,14 @@ sc_tag_t;
 #define sc_MPI_COMM_WORLD          MPI_COMM_WORLD
 #define sc_MPI_COMM_SELF           MPI_COMM_SELF
 
+#define sc_MPI_GROUP_NULL          MPI_GROUP_NULL
+#define sc_MPI_GROUP_EMPTY         MPI_GROUP_EMPTY
+
+#define sc_MPI_IDENT               MPI_IDENT
+#define sc_MPI_CONGRUENT           MPI_CONGRUENT
+#define sc_MPI_SIMILAR             MPI_SIMILAR
+#define sc_MPI_UNEQUAL             MPI_UNEQUAL
+
 #define sc_MPI_ANY_SOURCE          MPI_ANY_SOURCE
 #define sc_MPI_ANY_TAG             MPI_ANY_TAG
 #define sc_MPI_STATUS_IGNORE       MPI_STATUS_IGNORE
@@ -111,9 +119,12 @@ sc_tag_t;
 
 #define sc_MPI_UNDEFINED           MPI_UNDEFINED
 
+#define sc_MPI_ERR_GROUP           MPI_ERR_GROUP
+
 /* types */
 
 #define sc_MPI_Comm                MPI_Comm
+#define sc_MPI_Group               MPI_Group
 #define sc_MPI_Datatype            MPI_Datatype
 #define sc_MPI_Op                  MPI_Op
 #define sc_MPI_Request             MPI_Request
@@ -126,9 +137,25 @@ sc_tag_t;
 #define sc_MPI_Finalize            MPI_Finalize
 #define sc_MPI_Abort               MPI_Abort
 #define sc_MPI_Comm_dup            MPI_Comm_dup
+#define sc_MPI_Comm_create         MPI_Comm_create
+#define sc_MPI_Comm_split          MPI_Comm_split
 #define sc_MPI_Comm_free           MPI_Comm_free
 #define sc_MPI_Comm_size           MPI_Comm_size
 #define sc_MPI_Comm_rank           MPI_Comm_rank
+#define sc_MPI_Comm_compare        MPI_Comm_compare
+#define sc_MPI_Comm_group          MPI_Comm_group
+#define sc_MPI_Group_free          MPI_Group_free
+#define sc_MPI_Group_size          MPI_Group_size
+#define sc_MPI_Group_rank          MPI_Group_rank
+#define sc_MPI_Group_translate_ranks MPI_Group_translate_ranks
+#define sc_MPI_Group_compare       MPI_Group_compare
+#define sc_MPI_Group_union         MPI_Group_union
+#define sc_MPI_Group_intersection  MPI_Group_intersection
+#define sc_MPI_Group_difference    MPI_Group_difference
+#define sc_MPI_Group_incl          MPI_Group_incl
+#define sc_MPI_Group_excl          MPI_Group_excl
+#define sc_MPI_Group_range_incl    MPI_Group_range_incl
+#define sc_MPI_Group_range_excl    MPI_Group_range_excl
 #define sc_MPI_Barrier             MPI_Barrier
 #define sc_MPI_Bcast               MPI_Bcast
 #define sc_MPI_Gather              MPI_Gather
@@ -160,6 +187,14 @@ sc_tag_t;
 #define sc_MPI_COMM_NULL           ((sc_MPI_Comm) 0x04000000)
 #define sc_MPI_COMM_WORLD          ((sc_MPI_Comm) 0x44000000)
 #define sc_MPI_COMM_SELF           ((sc_MPI_Comm) 0x44000001)
+
+#define sc_MPI_GROUP_NULL          ((sc_MPI_Group) 0x54000000)  /* TODO change val */
+#define sc_MPI_GROUP_EMPTY         ((sc_MPI_Group) 0x54000001)  /* TODO change val */
+
+#define sc_MPI_IDENT               (1)  /* TODO change val */
+#define sc_MPI_CONGRUENT           (2)  /* TODO change val */
+#define sc_MPI_SIMILAR             (3)  /* TODO change val */
+#define sc_MPI_UNEQUAL             (-1) /* TODO change val */
 
 #define sc_MPI_ANY_SOURCE          (-2)
 #define sc_MPI_ANY_TAG             (-1)
@@ -199,9 +234,12 @@ sc_tag_t;
 
 #define sc_MPI_UNDEFINED           (-32766)
 
+#define sc_MPI_ERR_GROUP           (-123456)    /* TODO change val */
+
 /* types */
 
 typedef int         sc_MPI_Comm;
+typedef int         sc_MPI_Group;
 typedef int         sc_MPI_Datatype;
 typedef int         sc_MPI_Op;
 typedef int         sc_MPI_Request;
@@ -225,9 +263,35 @@ int                 sc_MPI_Abort (sc_MPI_Comm, int)
   __attribute__ ((noreturn));
 
 int                 sc_MPI_Comm_dup (sc_MPI_Comm, sc_MPI_Comm *);
+int                 sc_MPI_Comm_create (sc_MPI_Comm, sc_MPI_Group,
+                                        sc_MPI_Comm *);
+int                 sc_MPI_Comm_split (sc_MPI_Comm, int, int, sc_MPI_Comm *);
 int                 sc_MPI_Comm_free (sc_MPI_Comm *);
 int                 sc_MPI_Comm_size (sc_MPI_Comm, int *);
 int                 sc_MPI_Comm_rank (sc_MPI_Comm, int *);
+int                 sc_MPI_Comm_compare (sc_MPI_Comm, sc_MPI_Comm, int *);
+int                 sc_MPI_Comm_group (sc_MPI_Comm, sc_MPI_Group *);
+
+int                 sc_MPI_Group_free (sc_MPI_Group *);
+int                 sc_MPI_Group_size (sc_MPI_Group, int *);
+int                 sc_MPI_Group_rank (sc_MPI_Group, int *);
+int                 sc_MPI_Group_translate_ranks (sc_MPI_Group, int, int *,
+                                                  sc_MPI_Group, int *);
+int                 sc_MPI_Group_compare (sc_MPI_Group, sc_MPI_Group, int *);
+int                 sc_MPI_Group_union (sc_MPI_Group, sc_MPI_Group,
+                                        sc_MPI_Group *);
+int                 sc_MPI_Group_intersection (sc_MPI_Group, sc_MPI_Group,
+                                               sc_MPI_Group *);
+int                 sc_MPI_Group_difference (sc_MPI_Group, sc_MPI_Group,
+                                             sc_MPI_Group *);
+int                 sc_MPI_Group_incl (sc_MPI_Group, int, int *,
+                                       sc_MPI_Group *);
+int                 sc_MPI_Group_excl (sc_MPI_Group, int, int *,
+                                       sc_MPI_Group *);
+int                 sc_MPI_Group_range_incl (sc_MPI_Group, int,
+                                             int ranges[][3], sc_MPI_Group *);
+int                 sc_MPI_Group_range_excl (sc_MPI_Group, int,
+                                             int ranges[][3], sc_MPI_Group *);
 
 int                 sc_MPI_Barrier (sc_MPI_Comm);
 int                 sc_MPI_Bcast (void *, int, sc_MPI_Datatype, int,

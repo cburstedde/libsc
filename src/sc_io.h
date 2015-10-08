@@ -85,6 +85,8 @@ typedef struct sc_io_source
   FILE               *file;
   size_t              bytes_in;
   size_t              bytes_out;
+  sc_io_sink_t       *mirror;
+  sc_array_t         *mirror_buffer;
 }
 sc_io_source_t;
 
@@ -117,7 +119,7 @@ int                 sc_io_sink_destroy (sc_io_sink_t * sink);
  * The internal counters sink->bytes_in and sink->bytes_out are updated.
  * \param [in,out] sink         The sink object to write to.
  * \param [in] data             Data passed into sink.
- * \param [in] bytes_avail      Number of data bytes passed in.;
+ * \param [in] bytes_avail      Number of data bytes passed in.
  * \return                      0 on success, nonzero on error.
  */
 int                 sc_io_sink_write (sc_io_sink_t * sink,
@@ -144,6 +146,14 @@ int                 sc_io_sink_write (sc_io_sink_t * sink,
 int                 sc_io_sink_complete (sc_io_sink_t * sink,
                                          size_t * bytes_in,
                                          size_t * bytes_out);
+
+/** Align sink to a byte boundary by writing zeros.
+ * \param [in,out] sink         The sink object to align.
+ * \param [in] bytes_align      Byte boundary.
+ * \return                      0 on success, nonzero on error.
+ */
+int                 sc_io_sink_align (sc_io_sink_t * sink,
+                                      size_t bytes_align);
 
 /** Create a generic data source.
  * \param [in] iotype           Type of the source.
@@ -203,6 +213,30 @@ int                 sc_io_source_read (sc_io_source_t * source,
 int                 sc_io_source_complete (sc_io_source_t * source,
                                            size_t * bytes_in,
                                            size_t * bytes_out);
+
+/** Align source to a byte boundary by skipping.
+ * \param [in,out] source       The source object to align.
+ * \param [in] bytes_align      Byte boundary.
+ * \return                      0 on success, nonzero on error.
+ */
+int                 sc_io_source_align (sc_io_source_t * source,
+                                        size_t bytes_align);
+
+/** Activate a buffer that mirrors (i.e., stores) the data that was read.
+ * \param [in,out] source       The source object to activate mirror in.
+ * \return                      0 on success, nonzero on error.
+ */
+int                 sc_io_source_activate_mirror (sc_io_source_t * source);
+
+/** Read data from the source's mirror.
+ * Same behaviour as sc_io_source_read.
+ * \param [in,out] source       The source object to read mirror data from.
+ * \return                      0 on success, nonzero on error.
+ */
+int                 sc_io_source_read_mirror (sc_io_source_t * source,
+                                              void *data,
+                                              size_t bytes_avail,
+                                              size_t * bytes_out);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream openened for writing.

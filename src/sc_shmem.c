@@ -524,7 +524,9 @@ sc_shmem_malloc_bgq (int package, size_t elem_size, size_t elem_count,
     array = sc_malloc (package, elem_size * elem_count);
 
   }
-  sc_shmem_write_end_bgq (NULL, comm, intranode, internode);
+  /* these memory sync's are included in Jeff's example */
+  /* https://wiki.alcf.anl.gov/parts/index.php/Blue_Gene/Q#Abusing_the_common_heap */
+  ppc_msync ();
 
   /* node root broadcast array start in node */
   mpiret = sc_MPI_Bcast (&array, sizeof (char *), sc_MPI_BYTE, 0, intranode);

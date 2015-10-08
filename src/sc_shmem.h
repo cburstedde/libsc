@@ -35,15 +35,17 @@ SC_EXTERN_C_BEGIN;
 
 typedef enum
 {
-  SC_SHMEM_BASIC = 0, /**< use allgathers, then sum to simulate scan */
-  SC_SHMEM_PRESCAN, /**< mpi_scan, then allgather */
+  SC_SHMEM_BASIC = 0,      /**< use allgathers, then sum to simulate scan */
+  SC_SHMEM_PRESCAN,        /**< mpi_scan, then allgather */
 #if defined(SC_ENABLE_MPIWINSHARED)
-  SC_SHMEM_WINDOW,     /**< MPI_Win (requires MPI 3) */
+  SC_SHMEM_WINDOW,         /**< MPI_Win (requires MPI 3) */
   SC_SHMEM_WINDOW_PRESCAN, /**< mpi_scan, then MPI_Win (requires MPI 3) */
 #endif
 #if defined(__bgq__)
-  SC_SHMEM_BGQ,  /**< raw pointer passing: only works for shared-heap environments */
-  SC_SHMEM_BGQ_PRESCAN, /**< mpi_scan, thenraw pointer passing: only works for shared-heap environments */
+  SC_SHMEM_BGQ,            /**< raw pointer passing: only works for
+                                shared-heap environments */
+  SC_SHMEM_BGQ_PRESCAN,    /**< mpi_scan, then raw pointer passing: only works
+                                for shared-heap environments */
 #endif
   SC_SHMEM_NUM_TYPES,
   SC_SHMEM_NOT_SET
@@ -143,6 +145,13 @@ void                sc_shmem_allgather (void *sendbuf, int sendcount,
                                         sc_MPI_Comm comm);
 
 /** Fill a shmem array with an allgather of the prefix op over all processes.
+ *
+ * The return array will be
+ * (0, send0, send0 op send1, send0 op send1 op send2, ...)
+ *
+ * Note that the first entry of \a recvbuf will be set to 0 using memset: if
+ * this is not the desired value for the first entry of the array, the user
+ * can change it *after* calling sc_shmem_prefix.
  *
  * \param[in] sendbuf         the source from this process
  * \param[in,out] recvbuf     the destination shmem array
