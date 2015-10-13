@@ -219,7 +219,7 @@ test_shmem_write (sc_shmem_type_t type)
   SC_CHECK_MPI (mpiret);
 
   data_array = SC_SHMEM_ALLOC (data_t, mpisize, sc_MPI_COMM_WORLD);
-  /* The process that first gets write access to the array writes te data */
+  /* The process that first gets write access to the array writes the data */
   if (sc_shmem_write_start (data_array, sc_MPI_COMM_WORLD)) {
     for (i = 0; i < mpisize; i++) {
       data_array[i].rank = i;
