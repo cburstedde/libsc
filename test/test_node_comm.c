@@ -36,7 +36,8 @@ int
 test_shmem (int count, sc_MPI_Comm comm, sc_shmem_type_t type)
 {
   int                 i, p, size, mpiret, check;
-  long int           *myval, *recv_self, *recv_shmem, *scan_self, *scan_shmem;
+  long int           *myval, *recv_self, *recv_shmem, *scan_self, *scan_shmem,
+                     *copy_shmem;
 
   sc_shmem_set_type (comm, type);
 
@@ -72,6 +73,16 @@ test_shmem (int count, sc_MPI_Comm comm, sc_shmem_type_t type)
     SC_GLOBAL_LERROR ("sc_shmem_allgather mismatch\n");
     return 1;
   }
+
+  copy_shmem = SC_SHMEM_ALLOC (long int, (size_t) count * size, comm);
+  sc_shmem_memcpy (copy_shmem, recv_shmem,
+                   (size_t) count * sizeof (long int) * size, comm);
+  check = memcmp (recv_shmem, copy_shmem, count * sizeof (long int) * size);
+  if (check) {
+    SC_GLOBAL_LERROR ("sc_shmem_copy mismatch\n");
+    return 1;
+  }
+  SC_SHMEM_FREE (copy_shmem, comm);
   SC_SHMEM_FREE (recv_shmem, comm);
 
   scan_shmem = SC_SHMEM_ALLOC (long int, (size_t) count * (size + 1), comm);
