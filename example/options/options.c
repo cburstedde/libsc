@@ -93,7 +93,8 @@ main (int argc, char **argv)
   sc_options_add_suboptions (opt, subopt, "Subset");
 
   /* this is just to show off the load function */
-  if (!sc_options_load (sc_package_id, SC_LP_INFO, opt, "preload.ini")) {
+  if (!sc_options_load (sc_package_id, SC_LP_INFO, opt,
+                        "sc_options_preload.ini")) {
     SC_GLOBAL_INFO ("Preload successful\n");
   }
   else {
