@@ -270,6 +270,7 @@ SC_CHECK_LIB([lua52 lua5.2 lua51 lua5.1 lua lua5], [lua_createtable],
 SC_CHECK_BLAS_LAPACK([$1])
 SC_BUILTIN_ALL_PREFIX([$1])
 SC_CHECK_PTHREAD([$1])
+SC_CHECK_OPENMP([$1])
 dnl SC_CUDA([$1])
 ])
 
