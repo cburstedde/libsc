@@ -525,6 +525,16 @@ int                 sc_package_register (sc_log_handler_t log_handler,
                                          const char *name, const char *full);
 int                 sc_package_is_registered (int package_id);
 
+/** Set the unregister behavior of sc_package_unregister().
+ *
+ * \param[in] package_id
+ * \param[in] set_abort  1 if sc_package_unregister() should abort if the
+ *                       number of alloc's does not match the number of
+ *                       free's; 0 otherwise.
+ */
+void                sc_package_set_abort_alloc_mismatch (int package_id,
+                                                         int set_abort);
+
 /** Unregister a software package with SC.
  * This function must only be called after additional threads are finished.
  */
