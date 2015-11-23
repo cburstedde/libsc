@@ -166,8 +166,13 @@ void
 sc_array_resize (sc_array_t * array, size_t new_count)
 {
   size_t              newoffs, roundup, newsize;
-#ifdef SC_DEBUG
+#if !defined SC_ENABLE_USE_REALLOC || defined SC_DEBUG
   size_t              oldoffs;
+#endif
+#ifndef SC_ENABLE_USE_REALLOC
+  char               *ptr;
+#endif
+#ifdef SC_DEBUG
   size_t              i, minoffs;
 #endif
 
@@ -186,7 +191,7 @@ sc_array_resize (sc_array_t * array, size_t new_count)
     return;
   }
 
-#ifdef SC_DEBUG
+#if defined SC_DEBUG || !defined SC_ENABLE_USE_REALLOC
   oldoffs = array->elem_count * array->elem_size;
 #endif
   array->elem_count = new_count;
@@ -212,7 +217,14 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   SC_ASSERT ((size_t) array->byte_alloc >= newoffs);
 
   newsize = (size_t) array->byte_alloc;
+#ifdef SC_ENABLE_USE_REALLOC
   array->array = SC_REALLOC (array->array, char, newsize);
+#else
+  ptr = SC_ALLOC (char, newsize);
+  memcpy (ptr, array->array, oldoffs);
+  SC_FREE (array->array);
+  array->array = ptr;
+#endif
 
 #ifdef SC_DEBUG
   minoffs = SC_MIN (oldoffs, newoffs);
