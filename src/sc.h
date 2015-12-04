@@ -444,6 +444,7 @@ typedef void        (*sc_log_handler_t) (FILE * log_stream,
                                          const char *filename, int lineno,
                                          int package, int category,
                                          int priority, const char *msg);
+typedef void        (*sc_abort_handler_t) (void);
 
 /* memory allocation functions, will abort if out of memory */
 
@@ -473,6 +474,12 @@ int                 sc_double_compare (const void *v1, const void *v2);
 void                sc_set_log_defaults (FILE * log_stream,
                                          sc_log_handler_t log_handler,
                                          int log_thresold);
+
+/** Controls the default SC abort behavior.
+ * \param [in] abort_handler Set default SC above handler (NULL selects
+ *                           builtin).  ***This function should not return!***
+ */
+void                sc_set_abort_handler (sc_abort_handler_t abort_handler);
 
 /** The central log function to be called by all packages.
  * Dispatches the log calls by package and filters by category and priority.
@@ -572,6 +579,16 @@ void                sc_package_unlock (int package_id);
  */
 void                sc_package_set_verbosity (int package_id,
                                               int log_priority);
+
+/** Set the unregister behavior of sc_package_unregister().
+ *
+ * \param[in] package_id
+ * \param[in] set_abort  1 if sc_package_unregister() should abort if the
+ *                       number of alloc's does not match the number of
+ *                       free's; 0 otherwise.
+ */
+void                sc_package_set_abort_alloc_mismatch (int package_id,
+                                                         int set_abort);
 
 /** Unregister a software package with SC.
  * This function must only be called after additional threads are finished.

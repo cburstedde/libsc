@@ -53,6 +53,7 @@ typedef struct sc_package
   int                 malloc_count;
   int                 free_count;
   int                 rc_active;
+  int                 abort_mismatch;
   const char         *name;
   const char         *full;
 #ifdef SC_ENABLE_PTHREAD
@@ -95,6 +96,7 @@ int                 sc_trace_prio = SC_LP_STATISTICS;
 static int          default_malloc_count = 0;
 static int          default_free_count = 0;
 static int          default_rc_active = 0;
+static int          default_abort_mismatch = 1;
 
 static int          sc_identifier = -1;
 static sc_MPI_Comm  sc_mpicomm = sc_MPI_COMM_NULL;
@@ -102,6 +104,9 @@ static sc_MPI_Comm  sc_mpicomm = sc_MPI_COMM_NULL;
 static FILE        *sc_log_stream = NULL;
 static sc_log_handler_t sc_default_log_handler = sc_log_handler;
 static int          sc_default_log_threshold = SC_LP_THRESHOLD;
+
+static void         sc_abort_handler (void);
+static sc_abort_handler_t sc_default_abort_handler = sc_abort_handler;
 
 static int          sc_signals_caught = 0;
 static sc_sig_t     system_int_handler = NULL;
@@ -494,21 +499,46 @@ sc_memory_status (int package)
 }
 
 void
+sc_package_set_abort_alloc_mismatch (int package_id, int set_abort)
+{
+  if (package_id == -1) {
+    default_abort_mismatch = set_abort;
+  }
+  else {
+    sc_package_t       *p;
+
+    SC_ASSERT (sc_package_is_registered (package_id));
+    p = sc_packages + package_id;
+    p->abort_mismatch = set_abort;
+  }
+}
+
+void
 sc_memory_check (int package)
 {
   sc_package_t       *p;
 
   if (package == -1) {
-    SC_CHECK_ABORT (default_malloc_count == default_free_count,
-                    "Memory balance (default)");
     SC_CHECK_ABORT (default_rc_active == 0, "Leftover references (default)");
+    if (default_abort_mismatch) {
+      SC_CHECK_ABORT (default_malloc_count == default_free_count,
+                      "Memory balance (default)");
+    }
+    else if (default_malloc_count != default_free_count) {
+      SC_GLOBAL_LERROR ("Memory balance (default)\n");
+    }
   }
   else {
     SC_ASSERT (sc_package_is_registered (package));
     p = sc_packages + package;
-    SC_CHECK_ABORTF (p->malloc_count == p->free_count,
-                     "Memory balance (%s)", p->name);
     SC_CHECK_ABORTF (p->rc_active == 0, "Leftover references (%s)", p->name);
+    if (p->abort_mismatch) {
+      SC_CHECK_ABORTF (p->malloc_count == p->free_count,
+                       "Memory balance (%s)", p->name);
+    }
+    else if (p->malloc_count != p->free_count) {
+      SC_GLOBAL_LERRORF ("Memory balance (%s)\n", p->name);
+    }
   }
 }
 
@@ -699,7 +729,21 @@ sc_log_indent_pop_count (int package, int count)
 }
 
 void
+sc_set_abort_handler (sc_abort_handler_t abort_handler)
+{
+  sc_default_abort_handler = abort_handler != NULL ? abort_handler :
+    sc_abort_handler;
+}
+
+void
 sc_abort (void)
+{
+  sc_default_abort_handler ();
+  abort ();                     /* if the user supplied callback incorrecty returns, abort */
+}
+
+static void
+sc_abort_handler (void)
 {
   if (0) {
   }
@@ -859,6 +903,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   new_package->malloc_count = 0;
   new_package->free_count = 0;
   new_package->rc_active = 0;
+  new_package->abort_mismatch = 1;
   new_package->name = name;
   new_package->full = full;
 #ifdef SC_ENABLE_PTHREAD
