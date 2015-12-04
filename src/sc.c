@@ -430,7 +430,6 @@ sc_realloc (int package, void *ptr, size_t size)
     return NULL;
   }
   else {
-#ifdef SC_USE_REALLOC
     void               *ret;
 
     ret = realloc (ptr, size);
@@ -438,15 +437,6 @@ sc_realloc (int package, void *ptr, size_t size)
                      (long long int) size);
 
     return ret;
-#else
-    void               *ret;
-
-    ret = sc_malloc (package, size);
-    memcpy (ret, ptr, size);
-    sc_free (package, ptr);
-
-    return ret;
-#endif
   }
 }
 
