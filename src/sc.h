@@ -582,10 +582,11 @@ void                sc_package_set_verbosity (int package_id,
 
 /** Set the unregister behavior of sc_package_unregister().
  *
- * \param[in] package_id
- * \param[in] set_abort  1 if sc_package_unregister() should abort if the
- *                       number of alloc's does not match the number of
- *                       free's; 0 otherwise.
+ * \param[in] package_id    Must be -1 for the default package or
+ *                          the identifier of a registered package.
+ * \param[in] set_abort     True if sc_package_unregister() should abort if the
+ *                          number of allocs does not match the number of
+ *                          frees; false otherwise.
  */
 void                sc_package_set_abort_alloc_mismatch (int package_id,
                                                          int set_abort);
