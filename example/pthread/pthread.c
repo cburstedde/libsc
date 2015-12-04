@@ -27,7 +27,7 @@ typedef struct thread_data
 {
   pthread_t           thread;
   int                 id;
-  MPI_Comm            mpicomm;
+  sc_MPI_Comm         mpicomm;
 }
 thread_data_t;
 

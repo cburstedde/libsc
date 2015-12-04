@@ -1,9 +1,10 @@
 #include <sc.h>
 #include <omp.h>
 
-omp_lock_t  writelock;
+omp_lock_t          writelock;
 
-openmp_print_tid ()
+void
+openmp_print_tid (void)
 {
   omp_set_lock (&writelock);
   SC_PRODUCTIONF ("Hello from thread %i.\n", omp_get_thread_num ());

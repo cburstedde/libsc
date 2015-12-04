@@ -4,9 +4,9 @@ dnl Check for OpenMP support and link a test program
 dnl
 AC_DEFUN([SC_CHECK_OPENMP], [
 
-SAVE_LIBS=$LIBS
+SAVE_LIBS="$LIBS"
 SC_CHECK_LIB([gomp], [omp_get_thread_num], [OPENMP], [$1])
-LIBS=$SAVE_LIBS
+LIBS="$SAVE_LIBS"
 AC_MSG_CHECKING([for OpenMP])
 
 SC_ARG_ENABLE_PREFIX([openmp],
