@@ -156,9 +156,11 @@ test_scale_shift ()
 static int
 test_dotmultiply_add ()
 {
+  sc_bint_t           n_err_entries = 0;
+
+#if defined(SC_WITH_BLAS)
   sc_dmatrix_t       *mat_in, *mat_mult;
   sc_dmatrix_t       *mat_chk, *mat_ref;
-  sc_bint_t           n_err_entries;
 
   /* create & fill matrices with random values */
   mat_in = sc_dmatrix_new (TEST_DMATRIX_M, TEST_DMATRIX_N);
@@ -185,6 +187,7 @@ test_dotmultiply_add ()
   sc_dmatrix_destroy (mat_mult);
   sc_dmatrix_destroy (mat_chk);
   sc_dmatrix_destroy (mat_ref);
+#endif
 
   /* return number of entries with errors */
   return (int) n_err_entries;
