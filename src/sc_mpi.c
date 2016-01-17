@@ -290,13 +290,18 @@ sc_MPI_Gather (void *p, int np, sc_MPI_Datatype tp,
                void *q, int nq, sc_MPI_Datatype tq, int rank,
                sc_MPI_Comm comm)
 {
-  size_t              lp, lq;
+  size_t              lp;
+#ifdef SC_ENABLE_DEBUG
+  size_t              lq;
+#endif
 
   SC_ASSERT (rank == 0 && np >= 0 && nq >= 0);
 
 /* *INDENT-OFF* horrible indent bug */
   lp = (size_t) np * sc_mpi_sizeof (tp);
+#ifdef SC_ENABLE_DEBUG
   lq = (size_t) nq * sc_mpi_sizeof (tq);
+#endif
 /* *INDENT-ON* */
 
   SC_ASSERT (lp == lq);
@@ -310,15 +315,20 @@ sc_MPI_Gatherv (void *p, int np, sc_MPI_Datatype tp,
                 void *q, int *recvc, int *displ,
                 sc_MPI_Datatype tq, int rank, sc_MPI_Comm comm)
 {
+  size_t              lp;
+#ifdef SC_ENABLE_DEBUG
+  size_t              lq;
   int                 nq;
-  size_t              lp, lq;
 
   nq = recvc[0];
+#endif
   SC_ASSERT (rank == 0 && np >= 0 && nq >= 0);
 
 /* *INDENT-OFF* horrible indent bug */
   lp = (size_t) np * sc_mpi_sizeof (tp);
+#ifdef SC_ENABLE_DEBUG
   lq = (size_t) nq * sc_mpi_sizeof (tq);
+#endif
 /* *INDENT-ON* */
 
   SC_ASSERT (lp == lq);
