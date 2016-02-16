@@ -434,15 +434,16 @@ sc_array_index_int16 (sc_array_t * array, int16_t i16)
 static inline       size_t
 sc_array_position (sc_array_t * array, void *element)
 {
-  size_t              position;
+  ptrdiff_t           position;
 
   SC_ASSERT (array->array <= (char *) element);
-  SC_ASSERT (((char *) element - array->array) % array->elem_size == 0);
+  SC_ASSERT (((char *) element - array->array) %
+             (ptrdiff_t) array->elem_size == 0);
 
-  position = ((char *) element - array->array) / array->elem_size;
-  SC_ASSERT (position < array->elem_count);
+  position = ((char *) element - array->array) / (ptrdiff_t) array->elem_size;
+  SC_ASSERT (0 <= position && position < (ptrdiff_t) array->elem_count);
 
-  return position;
+  return (size_t) position;
 }
 
 /** Remove the last element from an array and return a pointer to it.
