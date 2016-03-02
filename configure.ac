@@ -53,26 +53,6 @@ dnl SC_C_VERSION
 LT_INIT
 
 echo "o---------------------------------------"
-echo "| Checking libraries"
-echo "o---------------------------------------"
-
-SC_CHECK_LIBRARIES([SC])
-
-echo "o---------------------------------------"
-echo "| Checking headers"
-echo "o---------------------------------------"
-
-AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h sys/types.h time.h])
-AC_CHECK_HEADERS([lua.h lua5.1/lua.h lua5.2/lua.h])
-
-echo "o---------------------------------------"
-echo "| Checking functions"
-echo "o---------------------------------------"
-
-AC_CHECK_FUNCS([backtrace backtrace_symbols strtol strtoll])
-SC_CHECK_MEMALIGN([SC])
-
-echo "o---------------------------------------"
 echo "| Checking keywords and types"
 echo "o---------------------------------------"
 
@@ -80,12 +60,33 @@ AC_C_BIGENDIAN([AC_DEFINE([IS_BIGENDIAN], 1, [Define to 1 on a bigendian machine
 AC_C_CONST
 AC_C_INLINE
 AC_C_RESTRICT
+AC_CHECK_SIZEOF([int])
 AC_CHECK_SIZEOF([long])
 AC_CHECK_SIZEOF([long long])
 AC_CHECK_SIZEOF([unsigned long])
 AC_CHECK_SIZEOF([unsigned long long])
+AC_CHECK_SIZEOF([void *])
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
+
+echo "o---------------------------------------"
+echo "| Checking headers"
+echo "o---------------------------------------"
+
+AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h sys/types.h time.h])
+AC_CHECK_HEADERS([lua.h lua5.1/lua.h lua5.2/lua.h lua5.3/lua.h])
+
+echo "o---------------------------------------"
+echo "| Checking functions"
+echo "o---------------------------------------"
+
+AC_CHECK_FUNCS([backtrace backtrace_symbols strtol strtoll])
+
+echo "o---------------------------------------"
+echo "| Checking libraries"
+echo "o---------------------------------------"
+
+SC_CHECK_LIBRARIES([SC])
 
 # Print summary.
 
