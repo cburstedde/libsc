@@ -42,12 +42,16 @@ test_new_size (sc_array_t * a)
 {
   const size_t        S = a->elem_size;
   const size_t        N = a->elem_count;
+  size_t              zz;
   sc_array_t         *v, *w;
 
   v = sc_array_new_size (S, N);
   SC_CHECK_ABORT (v->elem_size == S && S == sizeof (int), "Size mismatch");
   SC_CHECK_ABORT (v->elem_count == N && N > 0, "Count mismatch");
   SC_CHECK_ABORT (v->byte_alloc <= a->byte_alloc, "Alloc mismatch");
+  for (zz = 0; zz < N; ++zz) {
+    *(int *) sc_array_index (v, zz) = (int) zz;
+  }
 
   w = sc_array_new (S);
   sc_array_copy (w, v);
