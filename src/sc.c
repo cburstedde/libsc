@@ -354,7 +354,7 @@ sc_malloc_aligned (size_t alignment, size_t size)
 static void
 sc_free_aligned (void *ptr)
 {
-#if defined SC_HAVE_POSIX_MEMALIGN || defined SC_HAVE_ALIGNED_ALLOC 
+#if defined SC_HAVE_POSIX_MEMALIGN || defined SC_HAVE_ALIGNED_ALLOC
   free (ptr);
 #else
   {
@@ -377,6 +377,7 @@ sc_malloc (int package, size_t size)
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
 
+  /* allocate memory */
 #if defined SC_ENABLE_MEMALIGN
   ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, size);
 #else
@@ -387,6 +388,7 @@ sc_malloc (int package, size_t size)
                      (long long int) size);
   }
 
+  /* count the allocations */
 #ifdef SC_ENABLE_PTHREAD
   sc_package_lock (package);
 #endif
@@ -409,12 +411,23 @@ sc_calloc (int package, size_t nmemb, size_t size)
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
 
+  /* allocate memory */
+#if defined SC_ENABLE_MEMALIGN
+  ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, nmemb * size);
+#else
   ret = calloc (nmemb, size);
+#endif
   if (nmemb * size > 0) {
     SC_CHECK_ABORTF (ret != NULL, "Allocation (calloc size %lli)",
                      (long long int) size);
+
+    /* set memory to zero if not already done so */
+#if defined SC_ENABLE_MEMALIGN
+    memset (ret, 0, nmemb * size);
+#endif
   }
 
+  /* count the allocations */
 #ifdef SC_ENABLE_PTHREAD
   sc_package_lock (package);
 #endif
@@ -472,6 +485,7 @@ sc_strdup (int package, const char *s)
 void
 sc_free (int package, void *ptr)
 {
+  /* uncount the allocations */
   if (ptr != NULL) {
     int                *free_count = sc_free_count (package);
 
@@ -483,6 +497,8 @@ sc_free (int package, void *ptr)
     sc_package_unlock (package);
 #endif
   }
+
+  /* free memory */
 #if defined SC_ENABLE_MEMALIGN
   sc_free_aligned (ptr);
 #else
