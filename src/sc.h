@@ -43,6 +43,16 @@
 #define _sc_restrict restrict
 #endif
 
+/* use this feature macro minimal invasively */
+
+#ifdef SC_ENABLE_MEMALIGN
+#ifndef SC_HAVE_POSIX_MEMALIGN
+#ifdef SC_HAVE_ALIGNED_ALLOC
+#define _ISOC11_SOURCE
+#endif
+#endif
+#endif
+
 /* use this in case mpi.h includes stdint.h */
 
 #ifndef __STDC_LIMIT_MACROS

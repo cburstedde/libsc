@@ -318,20 +318,25 @@ sc_free_count (int package)
 static void        *
 sc_malloc_aligned (size_t alignment, size_t size)
 {
-#if defined(SC_HAVE_ALIGNED_ALLOC)
-  return aligned_alloc (alignment, size);
-#elif defined(SC_HAVE_POSIX_MEMALIGN)
+#if defined SC_HAVE_POSIX_MEMALIGN
   {
     void               *data = NULL;
     int                 err = posix_memalign (&data, alignment, size);
-    SC_CHECK_ABORTF (err != ENOMEM, "Insufficient memory (malloc size %lli)",
-                     (long long int) size);
-    SC_CHECK_ABORTF (err != EINVAL, "Alignment %i is not a power of two",
-                     alignment);
+    SC_CHECK_ABORTF (err != ENOMEM, "Insufficient memory (malloc size %llu)",
+                     (long long unsigned) size);
+    SC_CHECK_ABORTF (err != EINVAL, "Alignment %llu is not a power of two"
+                     "or not a multiple of sizeof (void *)",
+                     (long long unsigned) alignment);
+    SC_CHECK_ABORTF (err == 0, "Return of %d from posix_memalign", err);
     return data;
   }
-#elif defined(SC_HAVE_MEMALIGN)
-  return memalign (alignment, size);
+#elif defined SC_HAVE_ALIGNED_ALLOC
+  {
+    void               *data = aligned_alloc (alignment, size);
+    SC_CHECK_ABORT (data != NULL || size == 0,
+                    "Returned NULL from aligned_alloc");
+    return data;
+  }
 #else
   {
     /* adapted from PetscMallocAlign */
@@ -349,28 +354,30 @@ sc_malloc_aligned (size_t alignment, size_t size)
 static void
 sc_free_aligned (void *ptr)
 {
-  if (ptr == NULL) {
-    return;
-  }
-#if defined(SC_HAVE_ALIGNED_ALLOC) || defined(SC_HAVE_POSIX_MEMALIGN) || defined (SC_HAVE_MEMALIGN)
+#if defined SC_HAVE_POSIX_MEMALIGN || defined SC_HAVE_ALIGNED_ALLOC 
   free (ptr);
 #else
   {
     int                *datastart = ptr;
     int                 shift = datastart[-1];
+
+    SC_ASSERT (ptr != NULL);
+
     datastart -= shift;
     free ((void *) datastart);
   }
 #endif
 }
-#endif
+
+#endif /* SC_ENABLE_MEMALIGN */
 
 void               *
 sc_malloc (int package, size_t size)
 {
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
-#if defined(SC_ENABLE_MEMALIGN) && defined(SC_MEMALIGN_BYTES)
+
+#if defined SC_ENABLE_MEMALIGN
   ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, size);
 #else
   ret = malloc (size);
@@ -476,7 +483,7 @@ sc_free (int package, void *ptr)
     sc_package_unlock (package);
 #endif
   }
-#if defined(SC_ENABLE_MEMALIGN) && defined (SC_MEMALIGN_BYTES)
+#if defined SC_ENABLE_MEMALIGN
   sc_free_aligned (ptr);
 #else
   free (ptr);
