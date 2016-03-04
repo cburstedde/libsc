@@ -406,10 +406,7 @@ sc_free_aligned (void *ptr, size_t alignment)
    (defined SC_HAVE_POSIX_MEMALIGN || defined SC_HAVE_ALIGNED_ALLOC)
   free (ptr);
 #else
-  if (ptr == NULL) {
-    return;
-  }
-  else {
+  {
 #if 0
     int                *datastart = ptr;
     int                 shift = datastart[-1];
@@ -425,6 +422,7 @@ sc_free_aligned (void *ptr, size_t alignment)
     ptrdiff_t           shift, ssize, i;
 #endif
 
+    /* we excluded these cases earlier */
     SC_ASSERT (ptr != NULL);
     SC_ASSERT ((ptrdiff_t) ptr % signalign == 0);
 
@@ -614,8 +612,11 @@ sc_strdup (int package, const char *s)
 void
 sc_free (int package, void *ptr)
 {
-  /* uncount the allocations */
-  if (ptr != NULL) {
+  if (ptr == NULL) {
+    return;
+  }
+  else {
+    /* uncount the allocations */
     int                *free_count = sc_free_count (package);
 
 #ifdef SC_ENABLE_PTHREAD
