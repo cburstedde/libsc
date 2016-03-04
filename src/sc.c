@@ -315,6 +315,13 @@ sc_free_count (int package)
 }
 
 #ifdef SC_ENABLE_MEMALIGN
+
+/* *INDENT-OFF* */
+static void        *
+sc_malloc_aligned (size_t alignment, size_t size)
+SC_ATTR_ALIGN (SC_MEMALIGN_BYTES);
+/* *INDENT-ON* */
+
 static void        *
 sc_malloc_aligned (size_t alignment, size_t size)
 {
@@ -322,6 +329,7 @@ sc_malloc_aligned (size_t alignment, size_t size)
   SC_ASSERT (sizeof (char **) == sizeof (void *));
   SC_ASSERT (sizeof (char **) >= sizeof (size_t));
   SC_ASSERT (alignment > 0 && alignment % sizeof (void *) == 0);
+  SC_ASSERT (alignment == SC_MEMALIGN_BYTES);
 
 #if defined SC_HAVE_ANY_MEMALIGN && defined SC_HAVE_POSIX_MEMALIGN
   {
@@ -379,6 +387,7 @@ sc_malloc_aligned (size_t alignment, size_t size)
     SC_ASSERT ((ptrdiff_t) ptr % signalign == 0);
 
     /* memorize the original pointer that we got from malloc and fill up */
+    SC_ARG_ALIGN (ptr, SC_MEMALIGN_BYTES);
     ((char **) ptr)[-1] = alloc_ptr;
     ((char **) ptr)[-2] = (char *) size;
 #ifdef SC_ENABLE_DEBUG
@@ -452,6 +461,12 @@ sc_free_aligned (void *ptr, size_t alignment)
 #endif
 }
 
+/* *INDENT-OFF* */
+static void        *
+sc_realloc_aligned (void *ptr, size_t alignment, size_t size)
+SC_ATTR_ALIGN (SC_MEMALIGN_BYTES);
+/* *INDENT-ON* */
+
 static void        *
 sc_realloc_aligned (void *ptr, size_t alignment, size_t size)
 {
@@ -459,6 +474,7 @@ sc_realloc_aligned (void *ptr, size_t alignment, size_t size)
   SC_ASSERT (sizeof (char **) == sizeof (void *));
   SC_ASSERT (sizeof (char **) >= sizeof (size_t));
   SC_ASSERT (alignment > 0 && alignment % sizeof (void *) == 0);
+  SC_ASSERT (alignment == SC_MEMALIGN_BYTES);
 
 #if defined SC_HAVE_ANY_MEMALIGN && \
    (defined SC_HAVE_POSIX_MEMALIGN || defined SC_HAVE_ALIGNED_ALLOC)

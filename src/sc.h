@@ -255,20 +255,35 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_STRDUP(s)                sc_strdup (sc_package_id, (s))
 #define SC_FREE(p)                  sc_free (sc_package_id, (p))
 
+/* macros for memory alignment */
+/* some copied from bfam: https://github.com/bfam/bfam */
+
 #define SC_ALIGN_UP(x,n) ( ((n) <= 0) ? (x) : ((x) + (n) - 1) / (n) * (n) )
 
-#if defined(__bgq__)
+#if defined (__bgq__)
 #define SC_ARG_ALIGN(x,n) __alignx((n), (x))
-#elif defined(__ICC)
+#elif defined (__ICC)
 #define SC_ARG_ALIGN(x,n) __assume_aligned((x), (n))
-#elif defined(__GNUC__)
-#if 0
-/* Note: gcc implementation of memory alignment directives is buggy. */
-#define SC_ARG_ALIGN(x,n) __builtin_assume_aligned((x), (n))
-#endif
+#elif defined (__clang__)
 #define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#elif defined (__GNUC__) || defined (__GNUG__)
+
+#if __GNUC_PREREQ(4, 7)
+#define SC_ARG_ALIGN(x,n) do {                  \
+  (x) = __builtin_assume_aligned((x), (n));     \
+} while (0)
 #else
 #define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#endif
+
+#else
+#define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#endif
+
+#if (defined __GNUC__) || (defined __PGI) || (defined __IBMC__)
+#define SC_ATTR_ALIGN(n) __attribute__((aligned(n)))
+#else
+#define SC_ATTR_ALIGN(n)
 #endif
 
 /**
