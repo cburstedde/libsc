@@ -369,7 +369,7 @@ sc_malloc_aligned (size_t alignment, size_t size)
     const ptrdiff_t     extrasize = (const ptrdiff_t) (2 * sizeof (char **));
     const ptrdiff_t     signalign = (const ptrdiff_t) alignment;
     const size_t        alloc_size = extrasize + size + alignment;
-    char               *alloc_ptr = malloc (alloc_size);
+    char               *alloc_ptr = (char *) malloc (alloc_size);
     char               *ptr;
     ptrdiff_t           shift;
 
@@ -388,6 +388,8 @@ sc_malloc_aligned (size_t alignment, size_t size)
 
     /* memorize the original pointer that we got from malloc and fill up */
     SC_ARG_ALIGN (ptr, char *, SC_MEMALIGN_BYTES);
+
+    /* remember parameters of allocation for later use */
     ((char **) ptr)[-1] = alloc_ptr;
     ((char **) ptr)[-2] = (char *) size;
 #ifdef SC_ENABLE_DEBUG
@@ -502,7 +504,7 @@ sc_realloc_aligned (void *ptr, size_t alignment, size_t size)
     min_size = SC_MIN (old_size, size);
     memcpy (new_ptr, ptr, min_size);
 #ifdef SC_ENABLE_DEBUG
-    memset (new_ptr + min_size, -3, size - min_size);
+    memset ((char *) new_ptr + min_size, -3, size - min_size);
 #endif
 
     /* free old memory and return new pointer */
