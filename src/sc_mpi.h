@@ -386,6 +386,8 @@ size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
 void                sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
                                                    int processes_per_node);
 
+void                sc_mpi_comm_detach_node_comms (sc_MPI_Comm comm);
+
 /** Get the communicators computed in sc_mpi_comm_attach_node_comms() if they
  * exist; return sc_MPI_COMM_NULL otherwise.
  *

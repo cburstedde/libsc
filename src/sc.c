@@ -1112,6 +1112,10 @@ sc_finalize (void)
   int                 i;
   int                 retval;
 
+#if defined(SC_ENABLE_MPI) && defined(SC_ENABLE_MPICOMMSHARED)
+  sc_mpi_comm_detach_node_comms (sc_mpicomm);
+#endif
+  
   /* sc_packages is static and thus initialized to all zeros */
   for (i = sc_num_packages_alloc - 1; i >= 0; --i)
     if (sc_packages[i].is_registered)
