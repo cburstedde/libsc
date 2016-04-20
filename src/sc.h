@@ -261,23 +261,23 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_ALIGN_UP(x,n) ( ((n) <= 0) ? (x) : ((x) + (n) - 1) / (n) * (n) )
 
 #if defined (__bgq__)
-#define SC_ARG_ALIGN(x,n) __alignx((n), (x))
+#define SC_ARG_ALIGN(p,t,n) __alignx((n), (p))
 #elif defined (__ICC)
-#define SC_ARG_ALIGN(x,n) __assume_aligned((x), (n))
+#define SC_ARG_ALIGN(p,t,n) __assume_aligned((p), (n))
 #elif defined (__clang__)
-#define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#define SC_ARG_ALIGN(p,t,n) SC_NOOP ()
 #elif defined (__GNUC__) || defined (__GNUG__)
 
 #if __GNUC_PREREQ(4, 7)
-#define SC_ARG_ALIGN(x,n) do {                  \
-  (x) = __builtin_assume_aligned((x), (n));     \
+#define SC_ARG_ALIGN(p,t,n) do {                              \
+  (p) = (t) __builtin_assume_aligned((void *) (p), (n));      \
 } while (0)
 #else
-#define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#define SC_ARG_ALIGN(p,t,n) SC_NOOP ()
 #endif
 
 #else
-#define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#define SC_ARG_ALIGN(p,t,n) SC_NOOP ()
 #endif
 
 #if (defined __GNUC__) || (defined __PGI) || (defined __IBMC__)

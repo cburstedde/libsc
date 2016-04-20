@@ -387,7 +387,7 @@ sc_malloc_aligned (size_t alignment, size_t size)
     SC_ASSERT ((ptrdiff_t) ptr % signalign == 0);
 
     /* memorize the original pointer that we got from malloc and fill up */
-    SC_ARG_ALIGN (ptr, SC_MEMALIGN_BYTES);
+    SC_ARG_ALIGN (ptr, char *, SC_MEMALIGN_BYTES);
     ((char **) ptr)[-1] = alloc_ptr;
     ((char **) ptr)[-2] = (char *) size;
 #ifdef SC_ENABLE_DEBUG
