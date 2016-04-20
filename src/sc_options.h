@@ -52,14 +52,6 @@ typedef int         (*sc_options_callback_t) (sc_options_t * opt,
  */
 sc_options_t       *sc_options_new (const char *program_path);
 
-/** Destroy the options structure and all allocated structures contained.
- * The keyvalue structure passed into sc_keyvalue_add is destroyed.
- * \param [in,out] opt          This options structure is deallocated,
- *                              including all key-value containers referenced.
- * \deprecated                  This function may go away soon.
- */
-void                sc_options_destroy_deep (sc_options_t * opt);
-
 /** Destroy the options structure.
  * Whatever has been passed into sc_keyvalue_add is left alone.
  * \param [in,out] opt          This options structure is deallocated.
@@ -228,6 +220,7 @@ void                sc_options_add_callback (sc_options_t * opt,
  *                          must be integers.  If a key is asked for that
  *                          does not exist, we will produce an option error.
  *                          This structure must stay alive as long as opt.
+ *                          We do not assume ownership in any way.
  * \param [in] help_string  Instructive one-line string to explain the option.
  */
 void                sc_options_add_keyvalue (sc_options_t * opt,

@@ -192,7 +192,7 @@ sc_options_new (const char *program_path)
 }
 
 static void
-sc_options_destroy_internal (sc_options_t * opt, int deep)
+sc_options_destroy_internal (sc_options_t * opt)
 {
   size_t              iz;
   sc_array_t         *items = opt->option_items;
@@ -203,9 +203,6 @@ sc_options_destroy_internal (sc_options_t * opt, int deep)
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
-    if (deep && item->opt_type == SC_OPTION_KEYVALUE) {
-      sc_keyvalue_destroy ((sc_keyvalue_t *) item->user_data);
-    }
     SC_FREE (item->string_value);
   }
 
@@ -223,15 +220,9 @@ sc_options_destroy_internal (sc_options_t * opt, int deep)
 }
 
 void
-sc_options_destroy_deep (sc_options_t * opt)
-{
-  sc_options_destroy_internal (opt, 1);
-}
-
-void
 sc_options_destroy (sc_options_t * opt)
 {
-  sc_options_destroy_internal (opt, 0);
+  sc_options_destroy_internal (opt);
 }
 
 void
