@@ -1,12 +1,14 @@
 
 dnl SC_CHECK_MEMALIGN(PREFIX)
-dnl Let the user specify --enable-memalign[=X].
+dnl Let the user specify --enable-memalign[=X] or --disable-memalign.
 dnl The alignment argument X must be a multiple of sizeof (void *).
-dnl If no argument is specified, we default X to sizeof (void *).
+dnl
+dnl The default is --enable-memalign, which sets X to (sizeof (void *)).
 dnl
 dnl This macro also searches for the aligned allocation functions aligned_alloc
 dnl (C11 / glibc >= 2.16) and posix_memalign (POSIX / glibc >= 2.1.91) and
 dnl defines SC_HAVE_ALIGNED_ALLOC and SC_HAVE_POSIX_MEMALIGN, respectively.
+dnl If found and alignment is enabled, this macro runs the link tests.
 dnl
 dnl If memory alignment is selected, the sc_malloc calls and friends will
 dnl use the aligned version, relying on posix_memalign if it exists.
@@ -16,8 +18,9 @@ AC_DEFUN([SC_CHECK_MEMALIGN], [
 dnl check for presence of functions
 AC_CHECK_FUNCS([aligned_alloc posix_memalign])
 
+dnl custom memory alignment option
 AC_MSG_CHECKING([for memory alignment option])
-SC_ARG_ENABLE_PREFIX([memalign],
+SC_ARG_DISABLE_PREFIX([memalign],
   [use aligned malloc (optionally use --enable-memalign=<bytes>)],
   [MEMALIGN], [$1])
 
