@@ -28,7 +28,7 @@ sc_refcount_init_invalid (sc_refcount_t * rc)
 {
   SC_ASSERT (rc != NULL);
 
-  rc->package_id = -1;
+  rc->package_id = -2;
   rc->refcount = -1;
 }
 

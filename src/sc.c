@@ -525,7 +525,7 @@ sc_memory_check (int package)
                       "Memory balance (default)");
     }
     else if (default_malloc_count != default_free_count) {
-      SC_GLOBAL_LERROR ("Memory balance (default)\n");
+      SC_LERROR ("Memory balance (default)\n");
     }
   }
   else {
@@ -537,7 +537,7 @@ sc_memory_check (int package)
                        "Memory balance (%s)", p->name);
     }
     else if (p->malloc_count != p->free_count) {
-      SC_GLOBAL_LERRORF ("Memory balance (%s)\n", p->name);
+      SC_LERRORF ("Memory balance (%s)\n", p->name);
     }
   }
 }
@@ -702,12 +702,15 @@ sc_log_indent_pop (void)
 void
 sc_log_indent_push_count (int package, int count)
 {
+  SC_ASSERT (count >= 0);
+
   /* TODO: figure out a version that makes sense with threads */
 #ifndef SC_ENABLE_PTHREAD
-  SC_ASSERT (package < sc_num_packages);
-
   if (package >= 0) {
-    sc_packages[package].log_indent += SC_MAX (0, count);
+    SC_ASSERT (sc_package_is_registered (package));
+
+    SC_ASSERT (sc_packages[package].log_indent >= 0);
+    sc_packages[package].log_indent += count;
   }
 #endif
 }
@@ -715,15 +718,15 @@ sc_log_indent_push_count (int package, int count)
 void
 sc_log_indent_pop_count (int package, int count)
 {
+  SC_ASSERT (count >= 0);
+
   /* TODO: figure out a version that makes sense with threads */
 #ifndef SC_ENABLE_PTHREAD
-  int                 new_indent;
-
-  SC_ASSERT (package < sc_num_packages);
-
   if (package >= 0) {
-    new_indent = sc_packages[package].log_indent - SC_MAX (0, count);
-    sc_packages[package].log_indent = SC_MAX (0, new_indent);
+    SC_ASSERT (sc_package_is_registered (package));
+
+    sc_packages[package].log_indent -= count;
+    SC_ASSERT (sc_packages[package].log_indent >= 0);
   }
 #endif
 }

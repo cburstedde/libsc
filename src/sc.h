@@ -498,10 +498,16 @@ void                sc_logv (const char *filename, int lineno,
                              int package, int category, int priority,
                              const char *fmt, va_list ap);
 
-/** Add spaces to the start of a package's default log format. */
+/** Add spaces to the start of a package's default log format.
+ * \param [in] package       If non-negative, must be registered.
+ * \param [in] count         Must be non-negative.
+ */
 void                sc_log_indent_push_count (int package, int count);
 
-/** Remove spaces from the start of a package's default log format. */
+/** Remove spaces from the start of a package's default log format.
+ * \param [in] package       If non-negative, must be registered.
+ * \param [in] count         Must be non-negative.
+ */
 void                sc_log_indent_pop_count (int package, int count);
 
 /** Add one space to the start of sc's default log format. */
