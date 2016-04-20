@@ -1148,6 +1148,18 @@ sc_is_root (void)
   return sc_identifier <= 0;
 }
 
+int
+sc_is_root_comm (sc_MPI_Comm mpicomm)
+{
+  int                 mpiret;
+  int                 rank;
+
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
+  SC_CHECK_MPI (mpiret);
+
+  return (rank == 0);
+}
+
 /* enable logging for files compiled with C++ */
 
 #ifndef __cplusplus

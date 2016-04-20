@@ -641,6 +641,12 @@ void                sc_finalize (void);
  */
 int                 sc_is_root (void);
 
+/** Query whether a given communicator has rank 0.
+ * \param [in] mpicomm          The communicator to be queried.
+ * \return          True if the communicator has rank 0, false otherwise.
+ */
+int                 sc_is_root_comm (sc_MPI_Comm mpicomm);
+
 SC_EXTERN_C_END;
 
 #endif /* SC_H */
