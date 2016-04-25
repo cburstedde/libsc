@@ -382,7 +382,6 @@ size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
  *                                      sc will try to determine the correct
  *                                      shared memory communicators.
  */
-
 void                sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
                                                    int processes_per_node);
 
