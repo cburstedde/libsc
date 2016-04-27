@@ -2,6 +2,13 @@
 dnl SC_CHECK_OPENMP(PREFIX)
 dnl Check for OpenMP support and link a test program
 dnl
+dnl This macro tries to link to omp_get_thread_num both as is and with -lgomp.
+dnl If neither of this works, we throw an error.
+dnl Use the LIBS variable on the configure line to specify a different library.
+dnl
+dnl Using --enable-openmp without any argument defaults to -fopenmp.
+dnl For different CFLAGS use --enable-openmp="-my-openmp-cflags" or similar.
+dnl
 AC_DEFUN([SC_CHECK_OPENMP], [
 
 dnl This link test changes the LIBS variable in place for posterity
