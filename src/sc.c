@@ -125,6 +125,12 @@ sc_get_package_id (void)
   return sc_package_id;
 }
 
+sc_MPI_Comm
+sc_get_mpicomm (void)
+{
+  return sc_mpicomm;
+}
+
 #ifdef SC_ENABLE_PTHREAD
 
 static pthread_mutex_t sc_default_mutex = PTHREAD_MUTEX_INITIALIZER;

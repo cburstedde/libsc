@@ -100,6 +100,12 @@ SC_EXTERN_C_BEGIN;
  */
 int                 sc_get_package_id (void);
 
+/**< Return the MPI communicator originally provided to \ref sc_init.
+ * \return          At program start, return sc_MPI_COMM_NULL.
+ *                  After \ref sc_init, return the communicator passed to it.
+ */
+sc_MPI_Comm         sc_get_mpicomm (void);
+
 /* extern variables */
 
 extern const int    sc_log2_lookup_table[256];
