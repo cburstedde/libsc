@@ -93,9 +93,21 @@
 
 SC_EXTERN_C_BEGIN;
 
+/**< Query the package identifier for libsc.
+ * \return          The identifier of libsc as a package managed by libsc.
+ *                  At program start this is -1.  After \ref sc_init has been
+ *                  called, this is a non-negative number.
+ */
+int                 sc_get_package_id (void);
+
 /* extern variables */
 
 extern const int    sc_log2_lookup_table[256];
+
+/** This access to the package identifier is DEPRECATED.
+ * Please use \ref sc_package_get_id instead.
+ * \deprecated
+ */
 extern int          sc_package_id;
 
 /* control a trace file by environment variables (see sc_init) */

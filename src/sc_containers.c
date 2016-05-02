@@ -683,7 +683,7 @@ sc_mempool_memory_used (sc_mempool_t * mempool)
 static void        *
 sc_containers_malloc (size_t n)
 {
-  return sc_malloc (sc_package_id, n);
+  return sc_malloc (sc_get_package_id (), n);
 }
 
 static void        *(*obstack_chunk_alloc) (size_t) = sc_containers_malloc;
@@ -691,7 +691,7 @@ static void        *(*obstack_chunk_alloc) (size_t) = sc_containers_malloc;
 static void
 sc_containers_free (void *p)
 {
-  sc_free (sc_package_id, p);
+  sc_free (sc_get_package_id (), p);
 }
 
 static void         (*obstack_chunk_free) (void *) = sc_containers_free;

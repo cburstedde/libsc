@@ -119,6 +119,12 @@ static int          sc_num_packages = 0;
 static int          sc_num_packages_alloc = 0;
 static sc_package_t *sc_packages = NULL;
 
+int
+sc_get_package_id (void)
+{
+  return sc_package_id;
+}
+
 #ifdef SC_ENABLE_PTHREAD
 
 static pthread_mutex_t sc_default_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -690,13 +696,13 @@ sc_logv (const char *filename, int lineno,
 void
 sc_log_indent_push (void)
 {
-  sc_log_indent_push_count (sc_package_id, 1);
+  sc_log_indent_push_count (sc_get_package_id (), 1);
 }
 
 void
 sc_log_indent_pop (void)
 {
-  sc_log_indent_pop_count (sc_package_id, 1);
+  sc_log_indent_pop_count (sc_get_package_id (), 1);
 }
 
 void
@@ -979,14 +985,14 @@ sc_package_print_summary (int log_priority)
   int                 i;
   sc_package_t       *p;
 
-  SC_GEN_LOGF (sc_package_id, SC_LC_GLOBAL, log_priority,
+  SC_GEN_LOGF (sc_get_package_id (), SC_LC_GLOBAL, log_priority,
                "Package summary (%d total):\n", sc_num_packages);
 
   /* sc_packages is static and thus initialized to all zeros */
   for (i = 0; i < sc_num_packages_alloc; ++i) {
     p = sc_packages + i;
     if (p->is_registered) {
-      SC_GEN_LOGF (sc_package_id, SC_LC_GLOBAL, log_priority,
+      SC_GEN_LOGF (sc_get_package_id (), SC_LC_GLOBAL, log_priority,
                    "   %3d: %-15s +%d-%d   %s\n",
                    i, p->name, p->malloc_count, p->free_count, p->full);
     }
@@ -1226,7 +1232,8 @@ SC_GLOBAL_LOGF (int priority, const char *fmt, ...)
   va_list             ap;
 
   va_start (ap, fmt);
-  sc_logv ("<unknown>", 0, sc_package_id, SC_LC_GLOBAL, priority, fmt, ap);
+  sc_logv ("<unknown>", 0, sc_get_package_id (), SC_LC_GLOBAL,
+           priority, fmt, ap);
   va_end (ap);
 }
 
@@ -1236,7 +1243,8 @@ SC_LOGF (int priority, const char *fmt, ...)
   va_list             ap;
 
   va_start (ap, fmt);
-  sc_logv ("<unknown>", 0, sc_package_id, SC_LC_NORMAL, priority, fmt, ap);
+  sc_logv ("<unknown>", 0, sc_get_package_id (), SC_LC_NORMAL,
+           priority, fmt, ap);
   va_end (ap);
 }
 
@@ -1246,7 +1254,7 @@ SC_LOGF (int priority, const char *fmt, ...)
   {                                                     \
     va_list             ap;                             \
     va_start (ap, fmt);                                 \
-    sc_logv ("<unknown>", 0, sc_package_id,             \
+    sc_logv ("<unknown>", 0, sc_get_package_id (),      \
              SC_LC_GLOBAL, SC_LP_ ## p, fmt, ap);       \
     va_end (ap);                                        \
   }                                                     \
@@ -1255,7 +1263,7 @@ SC_LOGF (int priority, const char *fmt, ...)
   {                                                     \
     va_list             ap;                             \
     va_start (ap, fmt);                                 \
-    sc_logv ("<unknown>", 0, sc_package_id,             \
+    sc_logv ("<unknown>", 0, sc_get_package_id (),      \
              SC_LC_NORMAL, SC_LP_ ## p, fmt, ap);       \
     va_end (ap);                                        \
   }
