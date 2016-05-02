@@ -1161,7 +1161,7 @@ sc_is_root (void)
 }
 
 int
-sc_is_root_comm (sc_MPI_Comm mpicomm)
+sc_is_root_comm (sc_MPI_Comm mpicomm, int root)
 {
   int                 mpiret;
   int                 rank;
@@ -1169,7 +1169,7 @@ sc_is_root_comm (sc_MPI_Comm mpicomm)
   mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
 
-  return (rank == 0);
+  return (rank == root);
 }
 
 /* enable logging for files compiled with C++ */
