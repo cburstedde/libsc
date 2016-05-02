@@ -1363,3 +1363,148 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
   iniparser_freedict (dict);
   return 0;
 }
+
+void
+sc_options_broadcast (sc_options_t * opt, int root, sc_MPI_Comm mpicomm)
+{
+  int                 mpiret;
+  int                 rank;
+  int                 n_int, n_size_t, n_double, n_string;
+  int                 length, length_sum;
+  int                *int_data;
+  size_t              countz, iz;
+  long long          *size_t_data;
+  double             *double_data;
+  char               *char_data;
+  sc_option_item_t   *item;
+
+  /* setup some variables */
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
+  SC_CHECK_MPI (mpiret);
+  countz = opt->option_items->elem_count;
+
+  /* gather information about the data to be broadcast */
+  n_int = n_size_t = n_double = n_string = 0;
+  length_sum = 0;
+  for (iz = 0; iz < countz; ++iz) {
+    item = (sc_option_item_t *) sc_array_index (opt->option_items, iz);
+    switch (item->opt_type) {
+    case SC_OPTION_SWITCH:
+    case SC_OPTION_BOOL:
+    case SC_OPTION_INT:
+    case SC_OPTION_KEYVALUE:
+      ++n_int;
+      break;
+    case SC_OPTION_SIZE_T:
+      ++n_size_t;
+      break;
+    case SC_OPTION_DOUBLE:
+      ++n_double;
+      break;
+    case SC_OPTION_STRING:
+      if (rank == root) {
+        if (item->string_value != NULL) {
+          length_sum += strlen (item->string_value);
+        }
+      }
+      ++n_string;
+      break;
+    case SC_OPTION_INIFILE:
+    case SC_OPTION_CALLBACK:
+      /* do nothing is sufficient for meta-options */
+      break;
+    }
+  }
+
+  /* allocate data buffers of known size for broadcast */
+  int_data = SC_ALLOC_ZERO (int, 5 + n_int + n_string);
+  size_t_data = SC_ALLOC_ZERO (long long, n_size_t);
+  double_data = SC_ALLOC_ZERO (double, n_double);
+  char_data = NULL;
+
+  /* fill data into buffers by the sender */
+  if (rank == root) {
+    char_data = SC_ALLOC (char, length_sum);
+    int_data[0] = n_int;
+    int_data[1] = n_size_t;
+    int_data[2] = n_double;
+    int_data[3] = n_string;
+    int_data[4] = length_sum;
+    n_int = n_size_t = n_double = n_string = 0;
+    length_sum = 0;
+    for (iz = 0; iz < countz; ++iz) {
+      item = (sc_option_item_t *) sc_array_index (opt->option_items, iz);
+      switch (item->opt_type) {
+      case SC_OPTION_SWITCH:
+      case SC_OPTION_BOOL:
+      case SC_OPTION_INT:
+      case SC_OPTION_KEYVALUE:
+        int_data[5 + n_int + n_string] = *(int *) item->opt_var;
+        ++n_int;
+        break;
+      case SC_OPTION_SIZE_T:
+        size_t_data[n_size_t] = (long long) *(size_t *) item->opt_var;
+        ++n_size_t;
+        break;
+      case SC_OPTION_DOUBLE:
+        double_data[n_double] = *(double *) item->opt_var;
+        ++n_double;
+        break;
+      case SC_OPTION_STRING:
+        if (item->string_value != NULL) {
+          length = strlen (item->string_value);
+          memcpy (char_data + length_sum, item->string_value, length);
+          int_data[5 + n_int + n_string] = length;
+          length_sum += length;
+        }
+        else {
+          int_data[5 + n_int + n_string] = -1;
+        }
+        ++n_string;
+        break;
+      case SC_OPTION_INIFILE:
+      case SC_OPTION_CALLBACK:
+        /* do nothing is sufficient for meta-options */
+        break;
+      }
+    }
+  }
+
+  /* broadcast the known-size buffers */
+  mpiret = sc_MPI_Bcast (int_data, 5 + n_int + n_string, sc_MPI_INT,
+                         root, opt->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  SC_ASSERT (int_data[0] == n_int);
+  SC_ASSERT (int_data[1] == n_size_t);
+  SC_ASSERT (int_data[2] == n_double);
+  SC_ASSERT (int_data[3] == n_string);
+  mpiret = sc_MPI_Bcast (size_t_data, n_size_t, sc_MPI_LONG_LONG_INT,
+                         root, opt->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Bcast (double_data, n_double, sc_MPI_DOUBLE,
+                         root, opt->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  /* allocate receiver data and broadcast now-known-size buffers */
+  if (rank != root) {
+    SC_ASSERT (char_data == NULL);
+    SC_ASSERT (length_sum == 0);
+    length_sum = int_data[4];
+    char_data = SC_ALLOC (char, length_sum);
+  }
+  else {
+    SC_ASSERT (char_data != NULL);
+    SC_ASSERT (int_data[4] == length_sum);
+  }
+  mpiret = sc_MPI_Bcast (char_data, length_sum, sc_MPI_CHAR,
+                         root, opt->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  /* write received values into option values */
+
+  /* free memory */
+  SC_FREE (int_data);
+  SC_FREE (size_t_data);
+  SC_FREE (double_data);
+  SC_FREE (char_data);
+}

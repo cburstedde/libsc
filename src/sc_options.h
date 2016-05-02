@@ -328,6 +328,20 @@ int                 sc_options_load_args (int package_id, int err_priority,
                                           sc_options_t * opt,
                                           const char *inifile);
 
+/** Perform an MPI broadcast of the option values.
+ * The option values are broadcast, not the option object's metadata.
+ * Thus, this function assumes that sc_options_add_* have been called
+ * identically and in the same order on all participating ranks.
+ * \param [in,out] opt          This object must have the same members
+ *                              on all participating ranks.
+ *                              The option variables' values on the root rank
+ *                              are broadcast to all other ranks.
+ * \param [in] root             This rank is considered the root rank.
+ * \param [in,out] mpicomm      Communicator passed to sc_MPI_Bcast.
+ */
+void                sc_options_broadcast (sc_options_t * opt, int root,
+                                          sc_MPI_Comm mpicomm);
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_OPTIONS_H */
