@@ -767,9 +767,9 @@ sc_options_print_summary (int package_id, int log_priority,
   }
 }
 
-int
-sc_options_load (int package_id, int err_priority,
-                 sc_options_t * opt, const char *inifile)
+static int
+sc_options_load_serial (int package_id, int err_priority,
+                        sc_options_t * opt, const char *inifile)
 {
   int                 found_short, found_long;
   size_t              iz;
@@ -948,8 +948,38 @@ sc_options_load (int package_id, int err_priority,
 }
 
 int
-sc_options_save (int package_id, int err_priority,
+sc_options_load (int package_id, int err_priority,
                  sc_options_t * opt, const char *inifile)
+{
+  const int           is_collective = opt->mpicomm != sc_MPI_COMM_NULL;
+
+  if (is_collective) {
+    const int           root = 0;
+    int                 retval = -1;
+    int                 mpiret;
+
+    if (sc_is_root_comm (opt->mpicomm, root)) {
+      /* only read file on the root rank */
+      retval =
+        sc_options_load_serial (package_id, err_priority, opt, inifile);
+    }
+
+    /* make sure that all MPI ranks obtain the same return value */
+    mpiret = sc_MPI_Bcast (&retval, 1, sc_MPI_INT, root, opt->mpicomm);
+    SC_CHECK_MPI (mpiret);
+
+    /* this return value is now identical on all ranks */
+    return retval;
+  }
+  else {
+    /* we call the load function no matter what */
+    return sc_options_load_serial (package_id, err_priority, opt, inifile);
+  }
+}
+
+static int
+sc_options_save_serial (int package_id, int err_priority,
+                        sc_options_t * opt, const char *inifile)
 {
   int                 retval;
   int                 i;
@@ -1124,6 +1154,36 @@ sc_options_save (int package_id, int err_priority,
   }
 
   return 0;
+}
+
+int
+sc_options_save (int package_id, int err_priority,
+                 sc_options_t * opt, const char *inifile)
+{
+  const int           is_collective = opt->mpicomm != sc_MPI_COMM_NULL;
+
+  if (is_collective) {
+    const int           root = 0;
+    int                 retval = -1;
+    int                 mpiret;
+
+    if (sc_is_root_comm (opt->mpicomm, root)) {
+      /* only write file on the root rank */
+      retval =
+        sc_options_save_serial (package_id, err_priority, opt, inifile);
+    }
+
+    /* make sure that all MPI ranks obtain the same return value */
+    mpiret = sc_MPI_Bcast (&retval, 1, sc_MPI_INT, root, opt->mpicomm);
+    SC_CHECK_MPI (mpiret);
+
+    /* this return value is now identical on all ranks */
+    return retval;
+  }
+  else {
+    /* we call the save function no matter what */
+    return sc_options_save_serial (package_id, err_priority, opt, inifile);
+  }
 }
 
 int
