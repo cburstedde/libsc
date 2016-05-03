@@ -1672,3 +1672,79 @@ sc_options_broadcast (sc_options_t * opt, int root, sc_MPI_Comm mpicomm)
   SC_FREE (double_data);
   SC_FREE (char_data);
 }
+
+void
+sc_options_broadcast_args (sc_options_t * opt, int root, sc_MPI_Comm mpicomm)
+{
+  int                 mpiret;
+  int                 rank;
+  int                 na, arg_info[2];
+  int                 i;
+  int                 len;
+  int                 sint, topush;
+  char               *p, *q;
+  sc_array_t         *chars;
+
+  SC_ASSERT (sc_comm_root_is_valid (mpicomm, root));
+
+  /* setup some variables */
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
+  SC_CHECK_MPI (mpiret);
+  sint = (int) sizeof (int);
+
+  /* go through arguments and collect data to send */
+  chars = NULL;
+  if (rank == root) {
+    chars = sc_array_new (sizeof (char));
+    na = arg_info[0] = opt->first_arg < 0 ? -1 : opt->argc - opt->first_arg;
+    for (i = 0; i < na; ++i) {
+      p = opt->argv[opt->first_arg + i];
+      /* we include the trailing zero in the payload data */
+      len = strlen (p) + 1;
+      topush = sint + ((len + sint - 1) / sint) * sint;
+      q = (char *) sc_array_push_count (chars, topush);
+      *(int *) q = len;
+      memcpy (q + sint, p, len);
+      /* we leave the padding uninitialized which may trigger warnings */
+    }
+    arg_info[1] = (int) chars->elem_count;
+  }
+
+  /* broadcast metadata */
+  mpiret = sc_MPI_Bcast (arg_info, 2, sc_MPI_INT, root, opt->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  /* broadcast argument data */
+  if (rank != root) {
+    SC_ASSERT (chars == NULL);
+    na = arg_info[0];
+    len = arg_info[1];
+    chars = sc_array_new_size (sizeof (char), len);
+  }
+  else {
+    SC_ASSERT (arg_info[0] == na);
+    SC_ASSERT (arg_info[1] == (int) chars->elem_count);
+    len = arg_info[1];
+  }
+  mpiret = sc_MPI_Bcast (chars->array, len, sc_MPI_CHAR, root, opt->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  /* unpack on all ranks including the sender to match first_arg */
+  sc_options_free_args (opt);
+  if (na >= 0) {
+    opt->args_alloced = 1;
+    opt->first_arg = 0;
+    opt->argc = na;
+    opt->argv = SC_ALLOC (char *, na);
+    q = chars->array;
+    for (i = 0; i < na; ++i) {
+      /* we include the trailing zero in the payload data */
+      len = *(int *) q;
+      topush = sint + ((len + sint - 1) / sint) * sint;
+      opt->argv[i] = SC_STRDUP (q + sint);
+      q += topush;
+    }
+    SC_ASSERT (q - chars->array == (ptrdiff_t) arg_info[1]);
+  }
+  sc_array_destroy (chars);
+}

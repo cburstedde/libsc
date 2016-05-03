@@ -352,6 +352,16 @@ int                 sc_options_load_args (int package_id, int err_priority,
 void                sc_options_broadcast (sc_options_t * opt, int root,
                                           sc_MPI_Comm mpicomm);
 
+/** Perform an MPI broadcast of the argument values.
+ * TODO: Call this from within load_args.
+ * \param [in,out] opt          The argument strings on the root rank
+ *                              are broadcast to all other ranks.
+ * \param [in] root             This rank is considered the root rank.
+ * \param [in,out] mpicomm      Communicator passed to sc_MPI_Bcast.
+ */
+void                sc_options_broadcast_args (sc_options_t * opt, int root,
+                                               sc_MPI_Comm mpicomm);
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_OPTIONS_H */
