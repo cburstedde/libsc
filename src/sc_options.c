@@ -1401,9 +1401,9 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   return opt->first_arg;
 }
 
-int
-sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
-                      const char *inifile)
+static int
+sc_options_load_args_serial (int package_id, int err_priority,
+                             sc_options_t * opt, const char *inifile)
 {
   int                 lc;
   int                 i, count;
@@ -1450,6 +1450,37 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
 
   iniparser_freedict (dict);
   return 0;
+}
+
+int
+sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
+                      const char *inifile)
+{
+  const int           is_collective = opt->mpicomm != sc_MPI_COMM_NULL;
+
+  if (is_collective) {
+    const int           root = 0;
+    int                 retval = -1;
+    int                 mpiret;
+
+    if (sc_comm_is_root (opt->mpicomm, root)) {
+      /* only read file on the root rank */
+      retval =
+        sc_options_load_args_serial (package_id, err_priority, opt, inifile);
+    }
+
+    /* make sure that all MPI ranks obtain the same return value */
+    mpiret = sc_MPI_Bcast (&retval, 1, sc_MPI_INT, root, opt->mpicomm);
+    SC_CHECK_MPI (mpiret);
+
+    /* this return value is now identical on all ranks */
+    return retval;
+  }
+  else {
+    /* we call the load function no matter what */
+    return sc_options_load_args_serial (package_id, err_priority,
+                                        opt, inifile);
+  }
 }
 
 void
