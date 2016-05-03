@@ -1003,9 +1003,7 @@ sc_options_save_serial (int package_id, int err_priority,
 
   lc = opt->lc;
 
-  /* this routine must only be called after successful option parsing */
-  SC_ASSERT (opt->argc >= 0 && opt->first_arg >= 0);
-  SC_ASSERT (opt->first_arg <= opt->argc);
+  /* open file and write comment */
 
   file = fopen (inifile, "wb");
   if (file == NULL) {
@@ -1019,6 +1017,8 @@ sc_options_save_serial (int package_id, int err_priority,
     fclose (file);
     return -1;
   }
+
+  /* write option values to file */
 
   this_prefix = NULL;
   last_prefix = NULL;
@@ -1131,22 +1131,30 @@ sc_options_save_serial (int package_id, int err_priority,
     }
   }
 
-  retval = fprintf (file, "[Arguments]\n        count = %d\n",
-                    opt->argc - opt->first_arg);
-  if (retval < 0) {
-    SC_GEN_LOG (package_id, lc, err_priority, "Write title 2 failed\n");
-    fclose (file);
-    return -1;
-  }
-  for (i = opt->first_arg; i < opt->argc; ++i) {
-    retval = fprintf (file, "        %d = %s\n",
-                      i - opt->first_arg, opt->argv[i]);
+  /* write command line arguments to file */
+
+  if (opt->first_arg >= 0) {
+    SC_ASSERT (opt->first_arg <= opt->argc);
+
+    retval = fprintf (file, "[Arguments]\n        count = %d\n",
+                      opt->argc - opt->first_arg);
     if (retval < 0) {
-      SC_GEN_LOG (package_id, lc, err_priority, "Write argument failed\n");
+      SC_GEN_LOG (package_id, lc, err_priority, "Write title 2 failed\n");
       fclose (file);
       return -1;
     }
+    for (i = opt->first_arg; i < opt->argc; ++i) {
+      retval = fprintf (file, "        %d = %s\n",
+                        i - opt->first_arg, opt->argv[i]);
+      if (retval < 0) {
+        SC_GEN_LOG (package_id, lc, err_priority, "Write argument failed\n");
+        fclose (file);
+        return -1;
+      }
+    }
   }
+
+  /* close file after successful writing */
 
   retval = fclose (file);
   if (retval) {
