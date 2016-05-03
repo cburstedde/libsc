@@ -42,8 +42,8 @@ callback (sc_options_t * opt, const char *theoptarg, void *data)
 int
 main (int argc, char **argv)
 {
+  sc_MPI_Comm         mpicomm;
   int                 mpiret, retval;
-  int                 rank;
   int                 first_arg;
   int                 i1, i2, si1;
   int                 kvint;
@@ -57,16 +57,16 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &rank);
-  SC_CHECK_MPI (mpiret);
-
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+  mpicomm = sc_MPI_COMM_WORLD;
+  sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
   keyvalue = sc_keyvalue_new ();
   sc_keyvalue_set_int (keyvalue, "one", 1);
   sc_keyvalue_set_int (keyvalue, "two", 2);
 
   opt = sc_options_new (argv[0]);
+  sc_options_set_collective (opt, mpicomm);
+
   sc_options_add_switch (opt, 'w', "switch", &w, "Switch");
   sc_options_add_int (opt, 'i', "integer1", &i1, 0, "Integer 1");
   sc_options_add_double (opt, 'd', "double", &d, 0., "Double");
@@ -112,21 +112,19 @@ main (int argc, char **argv)
     sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
     SC_GLOBAL_INFOF ("Keyvalue number is now %d\n", kvint);
 
-    if (rank == 0) {
-      retval = sc_options_save (sc_package_id, SC_LP_INFO, opt, "output.ini");
+    retval = sc_options_save (sc_package_id, SC_LP_INFO, opt, "output.ini");
+    if (retval) {
+      SC_GLOBAL_INFO ("Option file output failed\n");
+    }
+    else {
+      retval = sc_options_load_args (sc_package_id, SC_LP_INFO, opt,
+                                     "output.ini");
       if (retval) {
-        SC_GLOBAL_INFO ("Option file output failed\n");
+        SC_GLOBAL_INFO ("Argument file input failed\n");
       }
       else {
-        retval = sc_options_load_args (sc_package_id, SC_LP_INFO, opt,
-                                       "output.ini");
-        if (retval) {
-          SC_GLOBAL_INFO ("Argument file input failed\n");
-        }
-        else {
-          sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
-          SC_GLOBAL_INFO ("Argument save load successful\n");
-        }
+        sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
+        SC_GLOBAL_INFO ("Argument save load successful\n");
       }
     }
   }
