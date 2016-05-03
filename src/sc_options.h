@@ -25,6 +25,27 @@
 
 /** \file sc_options.h
  * Register and parse command line options and read/write configuration files.
+ *
+ * With few exceptions, the functions in this file do not know about MPI.
+ * It is possible to use them say just on the root process and, after parsing
+ * and/or loading them on that process, to distribute the parameters by hand.
+ *
+ * It is also possible to call the functions on every process to guarantee
+ * identical results across all MPI ranks.  This has the drawback that \ref
+ * sc_options_load on its own or via \ref sc_options_add_inifile may overload a
+ * parallel file system.  To solve this problem, we have written \ref
+ * sc_options_set_collective and \ref sc_options_broadcast.
+ *
+ * If \ref sc_options_set_collective is called, we expect that the functions in
+ * this file are called on all MPI ranks.  Internally, we only load and save
+ * files on the root rank.  Before returning from \ref sc_options_load and \ref
+ * sc_options_parse, we call the function \ref sc_options_broadcast to
+ * synchronize the values of the parameter variables across al MPI ranks.
+ *
+ * If collective operation is set, we use the global log category,
+ * otherwise we use the local log category.
+ *
+ * TODO: There is no interface function to access arguments after parsing.
  */
 
 #include <sc_containers.h>
@@ -46,6 +67,8 @@ typedef int         (*sc_options_callback_t) (sc_options_t * opt,
                                               const char *optarg, void *data);
 
 /** Create an empty options structure.
+ * It defaults to non-collective behavior.
+ * Change this by \ref sc_options_set_collective.
  * \param [in] program_path   Name or path name of the program to display.
  *                            Usually argv[0] is fine.
  * \return                    A valid and empty options structure.
@@ -242,6 +265,7 @@ void                sc_options_add_keyvalue (sc_options_t * opt,
                                              const char *help_string);
 
 /** Copy one set of options to another as a subset, with a prefix.
+ * The collective status of either option object is not considered.
  * \param [in,out] opt  A set of options.
  * \param [in]  subopt  Another set of options to be copied.
  * \param [in]  prefix  The prefix to add to option names as they are copied.
@@ -255,8 +279,9 @@ void                sc_options_add_suboptions (sc_options_t * opt,
                                                const char *prefix);
 
 /** Print a usage message.
- * This function uses the SC_LC_GLOBAL log category.
- * That means the default action is to print only on rank 0.
+ * This function uses the SC_LC_LOCAL log category by default and the
+ * SC_LC_GLOBAL log category after \ref sc_options_set_collective.
+ * This means that the default action is to print on all ranks.
  * Applications can change that by providing a user-defined log handler.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] log_priority     Log priority for output according to sc.h.
@@ -274,8 +299,9 @@ void                sc_options_print_usage (int package_id, int log_priority,
 /** Print a summary of all option values.
  * Prints the title "Options:" and a line for every option,
  * then the title "Arguments:" and a line for every argument.
- * This function uses the SC_LC_GLOBAL log category.
- * That means the default action is to print only on rank 0.
+ * This function uses the SC_LC_LOCAL log category by default and the
+ * SC_LC_GLOBAL log category after \ref sc_options_set_collective.
+ * This means that the default action is to print on all ranks.
  * Applications can change that by providing a user-defined log handler.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] log_priority     Log priority for output according to sc.h.
@@ -286,6 +312,11 @@ void                sc_options_print_summary (int package_id,
                                               sc_options_t * opt);
 
 /** Load a file in .ini format and updates entries found under [Options].
+ * This function is executed on all ranks it is called from unless \ref
+ * sc_options_set_collective has been called with a communicator.
+ * In the latter case, this function must be called on all ranks of the
+ * communicator but will only read the file on the root rank,
+ * and the return value is obtained by an MPI broadcast.
  * An option whose name contains a colon such as "prefix:basename" will be
  * updated by a "basename =" entry in a [prefix] section.
  * \param [in] package_id       Registered package id or -1.
@@ -298,10 +329,12 @@ int                 sc_options_load (int package_id, int err_priority,
                                      sc_options_t * opt, const char *inifile);
 
 /** Save all options and arguments to a file in .ini format.
- * This function must only be called after successful option parsing.
- * This function should only be called on rank 0.
- * This function will log errors with category SC_LC_GLOBAL.
- * An options whose name contains a colon such as "prefix:basename" will be
+ * This function is executed on all ranks it is called from unless \ref
+ * sc_options_set_collective has been called with a communicator.
+ * In the latter case, this function must be called on all ranks of the
+ * communicator but will only write the file on the root rank,
+ * and the return value is obtained by an MPI broadcast.
+ * An option whose name contains a colon such as "prefix:basename" will be
  * written in a section titled [prefix] as "basename =".
  * \param [in] package_id       Registered package id or -1.
  * \param [in] err_priority     Error log priority according to sc.h.
@@ -313,6 +346,8 @@ int                 sc_options_save (int package_id, int err_priority,
                                      sc_options_t * opt, const char *inifile);
 
 /** Parse command line options.
+ * TODO: What is the collective behavior?
+ *       What about the value of first_arg?
  * \param [in] package_id       Registered package id or -1.
  * \param [in] err_priority     Error log priority according to sc.h.
  * \param [in] opt              The option structure.
@@ -328,6 +363,7 @@ int                 sc_options_parse (int package_id, int err_priority,
 /** Load a file in .ini format and updates entries found under [Arguments].
  * There needs to be a key Arguments.count specifing the number.
  * Then as many integer keys starting with 0 need to be present.
+ * If the options are collective, only the root rank reads the file.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] err_priority     Error log priority according to sc.h.
  * \param [in] opt              The args are stored in this option structure.
@@ -339,8 +375,9 @@ int                 sc_options_load_args (int package_id, int err_priority,
                                           const char *inifile);
 
 /** Perform an MPI broadcast of the option values.
+ * TODO: Call this from within load and parse.
  * The option values are broadcast, not the option object's metadata.
- * Thus, this function assumes that sc_options_add_* have been called
+ * Thus, this function assumes that sc_options_add_* has been called
  * identically and in the same order on all participating ranks.
  * \param [in,out] opt          This object must have the same members
  *                              on all participating ranks.
