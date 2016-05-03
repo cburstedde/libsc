@@ -59,13 +59,15 @@ struct sc_options
 {
   char                program_path[BUFSIZ];
   const char         *program_name;
-  sc_array_t         *option_items;
+  sc_MPI_Comm         mpicomm;
+  int                 lc;
   int                 space_type;
   int                 space_help;
   int                 args_alloced;
   int                 first_arg;
   int                 argc;
   char              **argv;
+  sc_array_t         *option_items;
   sc_array_t         *subopt_names;
 };
 
@@ -178,6 +180,8 @@ sc_options_new (const char *program_path)
 
   snprintf (opt->program_path, BUFSIZ, "%s", program_path);
   opt->program_name = basename (opt->program_path);
+  opt->mpicomm = sc_MPI_COMM_NULL;
+  opt->lc = SC_LC_NORMAL;
   opt->option_items = sc_array_new (sizeof (sc_option_item_t));
   opt->subopt_names = sc_array_new (sizeof (char *));
   opt->args_alloced = 0;
@@ -232,6 +236,16 @@ sc_options_set_spacing (sc_options_t * opt, int space_type, int space_help)
 
   opt->space_type = space_type < 0 ? sc_options_space_type : space_type;
   opt->space_help = space_help < 0 ? sc_options_space_help : space_help;
+}
+
+void
+sc_options_set_collective (sc_options_t * opt, sc_MPI_Comm mpicomm)
+{
+  SC_ASSERT (opt != NULL);
+  SC_ASSERT (mpicomm != sc_MPI_COMM_NULL);
+
+  opt->mpicomm = mpicomm;
+  opt->lc = SC_LC_GLOBAL;
 }
 
 void

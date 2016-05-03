@@ -72,6 +72,16 @@ void                sc_options_destroy (sc_options_t * opt);
 void                sc_options_set_spacing (sc_options_t * opt,
                                             int space_type, int space_help);
 
+/** Designate collective operation of option functions.
+ * The communicator provided is stored for later use from \ref
+ * sc_options_broadcast, and the log category changes from local to global.
+ * \param [in,out]              Valid options structure.
+ * \param [in] mpicomm          This communicator must be valid.
+ *                              It is stored for later use.
+ */
+void                sc_options_set_collective (sc_options_t * opt,
+                                               sc_MPI_Comm mpicomm);
+
 /** Add a switch option. This option is used without option arguments.
  * Every use increments the variable by one.  Its initial value is 0.
  * Either opt_char or opt_name must be valid, that is, not '\0'/NULL.
