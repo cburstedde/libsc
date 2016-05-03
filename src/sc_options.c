@@ -1485,7 +1485,7 @@ sc_options_broadcast (sc_options_t * opt, int root, sc_MPI_Comm mpicomm)
                          root, opt->mpicomm);
   SC_CHECK_MPI (mpiret);
 
-  /* allocate receiver data and broadcast now-known-size buffers */
+  /* allocate receiver data and broadcast only-now-known-size buffers */
   if (rank != root) {
     SC_ASSERT (char_data == NULL);
     SC_ASSERT (length_sum == 0);
@@ -1501,6 +1501,49 @@ sc_options_broadcast (sc_options_t * opt, int root, sc_MPI_Comm mpicomm)
   SC_CHECK_MPI (mpiret);
 
   /* write received values into option values */
+  if (rank != root) {
+    n_int = n_size_t = n_double = n_string = 0;
+    length_sum = 0;
+    for (iz = 0; iz < countz; ++iz) {
+      item = (sc_option_item_t *) sc_array_index (opt->option_items, iz);
+      switch (item->opt_type) {
+      case SC_OPTION_SWITCH:
+      case SC_OPTION_BOOL:
+      case SC_OPTION_INT:
+      case SC_OPTION_KEYVALUE:
+        *(int *) item->opt_var = int_data[5 + n_int + n_string];
+        ++n_int;
+        break;
+      case SC_OPTION_SIZE_T:
+        *(size_t *) item->opt_var = (size_t) size_t_data[n_size_t];
+        ++n_size_t;
+        break;
+      case SC_OPTION_DOUBLE:
+        *(double *) item->opt_var = double_data[n_double];
+        ++n_double;
+        break;
+      case SC_OPTION_STRING:
+        SC_FREE (item->string_value);
+        length = int_data[5 + n_int + n_string];
+        if (length >= 0) {
+          item->string_value = SC_ALLOC (char, length + 1);
+          memcpy (item->string_value, char_data + length_sum, length);
+          item->string_value[length] = '\0';
+          length_sum += length;
+        }
+        else {
+          SC_ASSERT (length == -1);
+          item->string_value = NULL;
+        }
+        ++n_string;
+        break;
+      case SC_OPTION_INIFILE:
+      case SC_OPTION_CALLBACK:
+        /* do nothing is sufficient for meta-options */
+        break;
+      }
+    }
+  }
 
   /* free memory */
   SC_FREE (int_data);
