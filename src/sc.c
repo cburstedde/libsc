@@ -1161,15 +1161,39 @@ sc_is_root (void)
 }
 
 int
-sc_is_root_comm (sc_MPI_Comm mpicomm, int root)
+sc_comm_root_is_valid (sc_MPI_Comm mpicomm, int root)
+{
+  int                 mpiret;
+  int                 size;
+
+  SC_ASSERT (mpicomm != sc_MPI_COMM_NULL);
+
+  if (root < 0) {
+    return 0;
+  }
+
+  mpiret = sc_MPI_Comm_size (mpicomm, &size);
+  SC_CHECK_MPI (mpiret);
+
+  if (root >= size) {
+    return 0;
+  }
+
+  return 1;
+}
+
+int
+sc_comm_is_root (sc_MPI_Comm mpicomm, int root)
 {
   int                 mpiret;
   int                 rank;
 
+  SC_ASSERT (sc_comm_root_is_valid (mpicomm, root));
+
   mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
 
-  return (rank == root);
+  return rank == root;
 }
 
 /* enable logging for files compiled with C++ */

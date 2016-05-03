@@ -962,7 +962,7 @@ sc_options_load (int package_id, int err_priority,
     int                 retval = -1;
     int                 mpiret;
 
-    if (sc_is_root_comm (opt->mpicomm, root)) {
+    if (sc_comm_is_root (opt->mpicomm, root)) {
       /* only read file on the root rank */
       retval =
         sc_options_load_serial (package_id, err_priority, opt, inifile);
@@ -1176,7 +1176,7 @@ sc_options_save (int package_id, int err_priority,
     int                 retval = -1;
     int                 mpiret;
 
-    if (sc_is_root_comm (opt->mpicomm, root)) {
+    if (sc_comm_is_root (opt->mpicomm, root)) {
       /* only write file on the root rank */
       retval =
         sc_options_save_serial (package_id, err_priority, opt, inifile);
@@ -1465,6 +1465,8 @@ sc_options_broadcast (sc_options_t * opt, int root, sc_MPI_Comm mpicomm)
   double             *double_data;
   char               *char_data;
   sc_option_item_t   *item;
+
+  SC_ASSERT (sc_comm_root_is_valid (mpicomm, root));
 
   /* setup some variables */
   mpiret = sc_MPI_Comm_rank (mpicomm, &rank);

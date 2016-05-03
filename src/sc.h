@@ -659,12 +659,23 @@ void                sc_finalize (void);
  */
 int                 sc_is_root (void);
 
-/** Query whether a given communicator has the root rank.
- * \param [in] mpicomm          The communicator to be queried.
- * \param [in] root             The rank to be considered the root rank.
- * \return          True if the communicator has rank root, false otherwise.
+/** Query whether a hypothetic rank would fit a communicator.
+ * \param [in] mpicomm          This communicator is used as reference.
+ *                              It must be a valid communicator.
+ * \param [in] root             This number is checked for validitiy.
+ * \return                      True if and only if 0 <= root < size,
+ *                              where size is the size of \a mpicomm.
  */
-int                 sc_is_root_comm (sc_MPI_Comm mpicomm, int root);
+int                 sc_comm_root_is_valid (sc_MPI_Comm mpicomm, int root);
+
+/** Query whether a communicator has a given rank on a process.
+ * \param [in] mpicomm          The communicator to be queried.
+ *                              It must be a valid communicator.
+ * \param [in] root             The rank to be considered the queried rank.
+ *                              It must be a valid rank of \a mpicomm.
+ * \return          True if the communicator has rank \a root, false otherwise.
+ */
+int                 sc_comm_is_root (sc_MPI_Comm mpicomm, int root);
 
 SC_EXTERN_C_END;
 
