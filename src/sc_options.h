@@ -354,8 +354,9 @@ int                 sc_options_save (int package_id, int err_priority,
 
 /** Parse command line options.
  * Command line arguments stored previously will be removed and replaced.
- * TODO: What is the collective behavior?
- *       What about the value of first_arg?
+ * If collective mode is set, only the root rank parses the options.
+ * In the latter case, this function must be called on all ranks of the
+ * communicator and the return value is obtained by an MPI broadcast.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] err_priority     Error log priority according to sc.h.
  * \param [in] opt              The option structure.
