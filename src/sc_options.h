@@ -356,7 +356,7 @@ int                 sc_options_save (int package_id, int err_priority,
  * Command line arguments stored previously will be removed and replaced.
  * If collective mode is set, only the root rank parses the options.
  * In the latter case, this function must be called on all ranks of the
- * communicator and the return value is obtained by an MPI broadcast.
+ * communicator and option and return values are obtained by MPI broadcasts.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] err_priority     Error log priority according to sc.h.
  * \param [in] opt              The option structure.
@@ -374,7 +374,6 @@ int                 sc_options_parse (int package_id, int err_priority,
  * There needs to be a key Arguments.count specifing the number.
  * Then as many integer keys starting with 0 need to be present.
  * If the options are collective, only the root rank reads the file.
- * TODO: broadcast internally in collective mode.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] err_priority     Error log priority according to sc.h.
  * \param [in] opt              The args are stored in this option structure.
@@ -386,7 +385,6 @@ int                 sc_options_load_args (int package_id, int err_priority,
                                           const char *inifile);
 
 /** Perform an MPI broadcast of the option values.
- * TODO: Call this from within load and parse.
  * The option values are broadcast, not the option object's metadata.
  * Thus, this function assumes that sc_options_add_* has been called
  * identically and in the same order on all participating ranks.
@@ -401,7 +399,6 @@ void                sc_options_broadcast (sc_options_t * opt, int root,
                                           sc_MPI_Comm mpicomm);
 
 /** Perform an MPI broadcast of the argument values.
- * TODO: Call this from within load_args.
  * \param [in,out] opt          The argument strings on the root rank
  *                              are broadcast to all other ranks.
  * \param [in] root             This rank is considered the root rank.

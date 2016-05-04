@@ -66,6 +66,7 @@ struct sc_options
   int                 args_alloced;
   int                 first_arg;
   int                 argc;
+  int                 in_bcast_context;
   char              **argv;
   sc_array_t         *option_items;
   sc_array_t         *subopt_names;
@@ -188,6 +189,7 @@ sc_options_new (const char *program_path)
   opt->first_arg = -1;
   opt->argc = 0;
   opt->argv = NULL;
+  opt->in_bcast_context = 0;
 
   /* set default spacing for printing option summary */
   sc_options_set_spacing (opt, -1, -1);
@@ -981,7 +983,13 @@ sc_options_load (int package_id, int err_priority,
     mpiret = sc_MPI_Bcast (&retval, 1, sc_MPI_INT, root, opt->mpicomm);
     SC_CHECK_MPI (mpiret);
 
-    /* this return value is now identical on all ranks */
+    /* if we are not already in a context that will call broadcast */
+    if (!opt->in_bcast_context) {
+      /* share loaded (partially on error) values with all other ranks */
+      sc_options_broadcast (opt, root, opt->mpicomm);
+    }
+
+    /* the return and option values are now identical on all ranks */
     return retval;
   }
   else {
@@ -1419,17 +1427,23 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   if (is_collective) {
     const int           root = 0;
     int                 retval = -1;
-    int                 mpiret;
 
+    /* we set a context at the end of which we broadcast the options */
+    SC_ASSERT (!opt->in_bcast_context);
+    opt->in_bcast_context = 1;
+
+    /* only parse options on the root rank */
     if (sc_comm_is_root (opt->mpicomm, root)) {
-      /* only write file on the root rank */
+      /* this return value will be discarded */
       retval =
         sc_options_parse_serial (package_id, err_priority, opt, argc, argv);
     }
 
-    /* make sure that all MPI ranks obtain the same return value */
-    mpiret = sc_MPI_Bcast (&retval, 1, sc_MPI_INT, root, opt->mpicomm);
-    SC_CHECK_MPI (mpiret);
+    /* make sure that all MPI ranks obtain the same values */
+    sc_options_broadcast (opt, root, opt->mpicomm);
+    sc_options_broadcast_args (opt, root, opt->mpicomm);
+    retval = opt->first_arg;
+    opt->in_bcast_context = 0;
 
     /* this return value is now identical on all ranks */
     return retval;
@@ -1503,8 +1517,8 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
     int                 retval = -1;
     int                 mpiret;
 
+    /* only read file on the root rank */
     if (sc_comm_is_root (opt->mpicomm, root)) {
-      /* only read file on the root rank */
       retval =
         sc_options_load_args_serial (package_id, err_priority, opt, inifile);
     }
@@ -1512,6 +1526,10 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
     /* make sure that all MPI ranks obtain the same return value */
     mpiret = sc_MPI_Bcast (&retval, 1, sc_MPI_INT, root, opt->mpicomm);
     SC_CHECK_MPI (mpiret);
+
+    /* share loaded (partially on error) values with all other ranks */
+    SC_ASSERT (!opt->in_bcast_context);
+    sc_options_broadcast_args (opt, root, opt->mpicomm);
 
     /* this return value is now identical on all ranks */
     return retval;
