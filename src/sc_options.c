@@ -181,7 +181,7 @@ sc_options_new (const char *program_path)
   snprintf (opt->program_path, BUFSIZ, "%s", program_path);
   opt->program_name = basename (opt->program_path);
   opt->mpicomm = sc_MPI_COMM_NULL;
-  opt->lc = SC_LC_NORMAL;
+  opt->lc = SC_LC_GLOBAL;
   opt->option_items = sc_array_new (sizeof (sc_option_item_t));
   opt->subopt_names = sc_array_new (sizeof (char *));
   opt->args_alloced = 0;
@@ -236,6 +236,15 @@ sc_options_set_spacing (sc_options_t * opt, int space_type, int space_help)
 
   opt->space_type = space_type < 0 ? sc_options_space_type : space_type;
   opt->space_help = space_help < 0 ? sc_options_space_help : space_help;
+}
+
+void
+sc_options_set_serial (sc_options_t * opt)
+{
+  SC_ASSERT (opt != NULL);
+
+  opt->mpicomm = sc_MPI_COMM_NULL;
+  opt->lc = SC_LC_NORMAL;
 }
 
 void
