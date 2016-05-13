@@ -70,10 +70,22 @@ sc_polynom_t       *sc_polynom_new_from_product (const sc_polynom_t * q,
 /** Set degree of a polynomial.
  * If the new degree is larger than the old degree, the new coefficients
  * are set to zero.  If the new degree is smaller, the smaller set of
- * coefficients is unchanged.
+ * coefficients is unchanged and the others are set to zero.
  */
 void                sc_polynom_set_degree (sc_polynom_t * p, int degree);
+
+/** Set the polynomial to a constant.
+ * \param [in.out] p    This polynomial will be overwritten.
+ * \param [in] value    This is the constant.
+ */
 void                sc_polynom_set_value (sc_polynom_t * p, double value);
+
+/** Set a polynom to another.
+ * \param[in,out] p A polynom that is set to q.
+ * \param[in] q     The polynom that is used as the new value for p.
+ */
+void                sc_polynom_set_polynom (sc_polynom_t * p,
+                                            const sc_polynom_t * q);
 
 /** Shift a polynom by (i.e., add) a monomial.
  * \param[in] exponent  Exponent of the monomial, >= 0.
@@ -88,13 +100,6 @@ void                sc_polynom_shift (sc_polynom_t * p,
  */
 void                sc_polynom_scale (sc_polynom_t * p,
                                       int exponent, double factor);
-
-/** Set a polynom to another.
- * \param[in,out] p A polynom that is set to q.
- * \param[in] q     The polynom that is used as the new value for p.
- */
-void                sc_polynom_assign (sc_polynom_t * p,
-                                       const sc_polynom_t * q);
 
 /** Modify a polynom by adding another.
  * \param[in,out] p     The polynom p will be set to p + q.

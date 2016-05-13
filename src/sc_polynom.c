@@ -216,6 +216,17 @@ sc_polynom_set_value (sc_polynom_t * p, double value)
 }
 
 void
+sc_polynom_set_polynom (sc_polynom_t * p, const sc_polynom_t * q)
+{
+  SC_ASSERT (sc_polynom_is_valid (q));
+
+  sc_polynom_set_degree (p, q->degree);
+  sc_array_copy (p->c, q->c);
+
+  SC_ASSERT (sc_polynom_is_valid (p));
+}
+
+void
 sc_polynom_shift (sc_polynom_t * p, int exponent, double factor)
 {
   SC_ASSERT (sc_polynom_is_valid (p));
@@ -259,17 +270,6 @@ sc_polynom_scale (sc_polynom_t * p, int exponent, double factor)
 }
 
 void
-sc_polynom_assign (sc_polynom_t * p, const sc_polynom_t * q)
-{
-  SC_ASSERT (sc_polynom_is_valid (q));
-
-  sc_polynom_set_degree (p, q->degree);
-  sc_array_copy (p->c, q->c);
-
-  SC_ASSERT (sc_polynom_is_valid (p));
-}
-
-void
 sc_polynom_add (sc_polynom_t * p, const sc_polynom_t * q)
 {
   sc_polynom_AXPY (1., q, p);
@@ -303,6 +303,6 @@ sc_polynom_multiply (sc_polynom_t * p, const sc_polynom_t * q)
   sc_polynom_t       *prod;
 
   prod = sc_polynom_new_from_product (p, q);
-  sc_polynom_assign (p, prod);
+  sc_polynom_set_polynom (p, prod);
   sc_polynom_destroy (prod);
 }
