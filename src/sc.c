@@ -316,25 +316,44 @@ sc_free_count (int package)
 }
 
 #ifdef SC_ENABLE_MEMALIGN
+
+/* *INDENT-OFF* */
+static void        *
+sc_malloc_aligned (size_t alignment, size_t size)
+SC_ATTR_ALIGN (SC_MEMALIGN_BYTES);
+/* *INDENT-ON* */
+
 static void        *
 sc_malloc_aligned (size_t alignment, size_t size)
 {
-#if defined(SC_HAVE_ALIGNED_ALLOC)
-  return aligned_alloc (alignment, size);
-#elif defined(SC_HAVE_POSIX_MEMALIGN)
+  /* minimum requirements on alignment */
+  SC_ASSERT (sizeof (char **) == sizeof (void *));
+  SC_ASSERT (sizeof (char **) >= sizeof (size_t));
+  SC_ASSERT (alignment > 0 && alignment % sizeof (void *) == 0);
+  SC_ASSERT (alignment == SC_MEMALIGN_BYTES);
+
+#if defined SC_HAVE_ANY_MEMALIGN && defined SC_HAVE_POSIX_MEMALIGN
   {
     void               *data = NULL;
     int                 err = posix_memalign (&data, alignment, size);
-    SC_CHECK_ABORTF (err != ENOMEM, "Insufficient memory (malloc size %lli)",
-                     (long long int) size);
-    SC_CHECK_ABORTF (err != EINVAL, "Alignment %i is not a power of two",
-                     alignment);
+    SC_CHECK_ABORTF (err != ENOMEM, "Insufficient memory (malloc size %llu)",
+                     (long long unsigned) size);
+    SC_CHECK_ABORTF (err != EINVAL, "Alignment %llu is not a power of two"
+                     "or not a multiple of sizeof (void *)",
+                     (long long unsigned) alignment);
+    SC_CHECK_ABORTF (err == 0, "Return of %d from posix_memalign", err);
     return data;
   }
-#elif defined(SC_HAVE_MEMALIGN)
-  return memalign (alignment, size);
+#elif defined SC_HAVE_ANY_MEMALIGN && defined SC_HAVE_ALIGNED_ALLOC
+  {
+    void               *data = aligned_alloc (alignment, size);
+    SC_CHECK_ABORT (data != NULL || size == 0,
+                    "Returned NULL from aligned_alloc");
+    return data;
+  }
 #else
   {
+#if 0
     /* adapted from PetscMallocAlign */
     int                *datastart = malloc (size + 2 * alignment);
     int                 shift = ((uintptr_t) datastart) % alignment;
@@ -343,44 +362,179 @@ sc_malloc_aligned (size_t alignment, size_t size)
     datastart[shift - 1] = shift;
     datastart += shift;
     return (void *) datastart;
+#endif
+    /* We pad to achieve alignment, then write the original pointer and data
+     * size up front, then the real data shifted by at most alignment - 1
+     * bytes.  This way there is always at least one stop byte at the end that
+     * we can use for debugging. */
+    const ptrdiff_t     extrasize = (const ptrdiff_t) (2 * sizeof (char **));
+    const ptrdiff_t     signalign = (const ptrdiff_t) alignment;
+    const size_t        alloc_size = extrasize + size + alignment;
+    char               *alloc_ptr = (char *) malloc (alloc_size);
+    char               *ptr;
+    ptrdiff_t           shift;
+
+    SC_CHECK_ABORT (alloc_ptr != NULL, "Returned NULL from malloc");
+
+    /* compute shift to the right where we put the actual data */
+    shift = (signalign - (ptrdiff_t) (alloc_ptr + extrasize)) % signalign;
+    if (shift < 0) {
+      shift += signalign;
+    }
+    SC_ASSERT (0 <= shift && shift < signalign);
+
+    /* make sure the resulting pointer is fine */
+    ptr = alloc_ptr + (extrasize + shift);
+    SC_ASSERT ((ptrdiff_t) ptr % signalign == 0);
+
+    /* memorize the original pointer that we got from malloc and fill up */
+    SC_ARG_ALIGN (ptr, char *, SC_MEMALIGN_BYTES);
+
+    /* remember parameters of allocation for later use */
+    ((char **) ptr)[-1] = alloc_ptr;
+    ((char **) ptr)[-2] = (char *) size;
+#ifdef SC_ENABLE_DEBUG
+    memset (alloc_ptr, -2, shift);
+    SC_ASSERT (ptr + ((ptrdiff_t) size + signalign - shift) ==
+               alloc_ptr + alloc_size);
+    memset (ptr + size, -2, signalign - shift);
+#endif
+
+    /* and we are done */
+    return (void *) ptr;
   }
 #endif
 }
 
 static void
-sc_free_aligned (void *ptr)
+sc_free_aligned (void *ptr, size_t alignment)
 {
-  if (ptr == NULL) {
-    return;
-  }
-#if defined(SC_HAVE_ALIGNED_ALLOC) || defined(SC_HAVE_POSIX_MEMALIGN) || defined (SC_HAVE_MEMALIGN)
+  /* minimum requirements on alignment */
+  SC_ASSERT (sizeof (char **) == sizeof (void *));
+  SC_ASSERT (sizeof (char **) >= sizeof (size_t));
+  SC_ASSERT (alignment > 0 && alignment % sizeof (void *) == 0);
+
+#if defined SC_HAVE_ANY_MEMALIGN && \
+   (defined SC_HAVE_POSIX_MEMALIGN || defined SC_HAVE_ALIGNED_ALLOC)
   free (ptr);
 #else
   {
+#if 0
     int                *datastart = ptr;
     int                 shift = datastart[-1];
+
     datastart -= shift;
     free ((void *) datastart);
+#endif
+    /* this mirrors the function sc_malloc_aligned above */
+    char               *alloc_ptr;
+#ifdef SC_ENABLE_DEBUG
+    const ptrdiff_t     extrasize = (const ptrdiff_t) (2 * sizeof (char **));
+    const ptrdiff_t     signalign = (const ptrdiff_t) alignment;
+    ptrdiff_t           shift, ssize, i;
+#endif
+
+    /* we excluded these cases earlier */
+    SC_ASSERT (ptr != NULL);
+    SC_ASSERT ((ptrdiff_t) ptr % signalign == 0);
+
+    alloc_ptr = ((char **) ptr)[-1];
+    SC_ASSERT (alloc_ptr != NULL);
+
+#ifdef SC_ENABLE_DEBUG
+    /* compute shift to the right where we put the actual data */
+    ssize = (ptrdiff_t) ((char **) ptr)[-2];
+    shift = (signalign - (ptrdiff_t) (alloc_ptr + extrasize)) % signalign;
+    if (shift < 0) {
+      shift += signalign;
+    }
+    SC_ASSERT (0 <= shift && shift < signalign);
+    SC_ASSERT ((char *) ptr == alloc_ptr + (extrasize + shift));
+    for (i = 0; i < shift; ++i) {
+      SC_ASSERT (alloc_ptr[i] == -2);
+    }
+    for (i = 0; i < signalign - shift; ++i) {
+      SC_ASSERT (((char *) ptr)[ssize + i] == -2);
+    }
+#endif
+
+    /* free the original pointer */
+    free (alloc_ptr);
   }
 #endif
 }
+
+/* *INDENT-OFF* */
+static void        *
+sc_realloc_aligned (void *ptr, size_t alignment, size_t size)
+SC_ATTR_ALIGN (SC_MEMALIGN_BYTES);
+/* *INDENT-ON* */
+
+static void        *
+sc_realloc_aligned (void *ptr, size_t alignment, size_t size)
+{
+  /* minimum requirements on alignment */
+  SC_ASSERT (sizeof (char **) == sizeof (void *));
+  SC_ASSERT (sizeof (char **) >= sizeof (size_t));
+  SC_ASSERT (alignment > 0 && alignment % sizeof (void *) == 0);
+  SC_ASSERT (alignment == SC_MEMALIGN_BYTES);
+
+#if defined SC_HAVE_ANY_MEMALIGN && \
+   (defined SC_HAVE_POSIX_MEMALIGN || defined SC_HAVE_ALIGNED_ALLOC)
+  /* the result is no longer aligned */
+  return realloc (ptr, size);
+#else
+  {
+#ifdef SC_ENABLE_DEBUG
+    const ptrdiff_t     signalign = (const ptrdiff_t) alignment;
 #endif
+    size_t              old_size, min_size;
+    void               *new_ptr;
+
+    /* we excluded these cases earlier */
+    SC_ASSERT (ptr != NULL && size > 0);
+    SC_ASSERT ((ptrdiff_t) ptr % signalign == 0);
+
+    /* back out the previously allocated size */
+    old_size = (size_t) ((char **) ptr)[-2];
+
+    /* create new memory while the old memory is still around */
+    new_ptr = sc_malloc_aligned (alignment, size);
+
+    /* copy data */
+    min_size = SC_MIN (old_size, size);
+    memcpy (new_ptr, ptr, min_size);
+#ifdef SC_ENABLE_DEBUG
+    memset ((char *) new_ptr + min_size, -3, size - min_size);
+#endif
+
+    /* free old memory and return new pointer */
+    sc_free_aligned (ptr, alignment);
+    return new_ptr;
+  }
+#endif
+}
+
+#endif /* SC_ENABLE_MEMALIGN */
 
 void               *
 sc_malloc (int package, size_t size)
 {
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
-#if defined(SC_ENABLE_MEMALIGN) && defined(SC_MEMALIGN_BYTES)
+
+  /* allocate memory */
+#if defined SC_ENABLE_MEMALIGN
   ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, size);
 #else
   ret = malloc (size);
-#endif
   if (size > 0) {
     SC_CHECK_ABORTF (ret != NULL, "Allocation (malloc size %lli)",
                      (long long int) size);
   }
+#endif
 
+  /* count the allocations */
 #ifdef SC_ENABLE_PTHREAD
   sc_package_lock (package);
 #endif
@@ -403,12 +557,19 @@ sc_calloc (int package, size_t nmemb, size_t size)
   void               *ret;
   int                *malloc_count = sc_malloc_count (package);
 
+  /* allocate memory */
+#if defined SC_ENABLE_MEMALIGN
+  ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, nmemb * size);
+  memset (ret, 0, nmemb * size);
+#else
   ret = calloc (nmemb, size);
   if (nmemb * size > 0) {
     SC_CHECK_ABORTF (ret != NULL, "Allocation (calloc size %lli)",
                      (long long int) size);
   }
+#endif
 
+  /* count the allocations */
 #ifdef SC_ENABLE_PTHREAD
   sc_package_lock (package);
 #endif
@@ -438,9 +599,13 @@ sc_realloc (int package, void *ptr, size_t size)
   else {
     void               *ret;
 
+#if defined SC_ENABLE_MEMALIGN
+    ret = sc_realloc_aligned (ptr, SC_MEMALIGN_BYTES, size);
+#else
     ret = realloc (ptr, size);
     SC_CHECK_ABORTF (ret != NULL, "Reallocation (realloc size %lli)",
                      (long long int) size);
+#endif
 
     return ret;
   }
@@ -466,7 +631,11 @@ sc_strdup (int package, const char *s)
 void
 sc_free (int package, void *ptr)
 {
-  if (ptr != NULL) {
+  if (ptr == NULL) {
+    return;
+  }
+  else {
+    /* uncount the allocations */
     int                *free_count = sc_free_count (package);
 
 #ifdef SC_ENABLE_PTHREAD
@@ -477,8 +646,10 @@ sc_free (int package, void *ptr)
     sc_package_unlock (package);
 #endif
   }
-#if defined(SC_ENABLE_MEMALIGN) && defined (SC_MEMALIGN_BYTES)
-  sc_free_aligned (ptr);
+
+  /* free memory */
+#if defined SC_ENABLE_MEMALIGN
+  sc_free_aligned (ptr, SC_MEMALIGN_BYTES);
 #else
   free (ptr);
 #endif

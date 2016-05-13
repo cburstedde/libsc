@@ -44,6 +44,23 @@
 #define _sc_restrict restrict
 #endif
 
+/* use this feature macro, be minimally invasive */
+#ifdef SC_ENABLE_MEMALIGN
+/* we disable the system-provided functions for the time being */
+#ifdef SC_HAVE_ANY_MEMALIGN
+#undef SC_HAVE_ANY_MEMALIGN
+#endif
+/* if system-provided functions are needed, give them the prototype */
+#ifdef SC_HAVE_ANY_MEMALIGN
+#ifndef SC_HAVE_POSIX_MEMALIGN
+#ifdef SC_HAVE_ALIGNED_ALLOC
+#define _ISOC11_SOURCE
+#endif
+#endif
+#endif
+/* done with memalign macros */
+#endif
+
 /* use this in case mpi.h includes stdint.h */
 
 #ifndef __STDC_LIMIT_MACROS
@@ -239,20 +256,35 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_STRDUP(s)                sc_strdup (sc_package_id, (s))
 #define SC_FREE(p)                  sc_free (sc_package_id, (p))
 
+/* macros for memory alignment */
+/* some copied from bfam: https://github.com/bfam/bfam */
+
 #define SC_ALIGN_UP(x,n) ( ((n) <= 0) ? (x) : ((x) + (n) - 1) / (n) * (n) )
 
-#if defined(__bgq__)
-#define SC_ARG_ALIGN(x,n) __alignx((n), (x))
-#elif defined(__ICC)
-#define SC_ARG_ALIGN(x,n) __assume_aligned((x), (n))
-#elif defined(__GNUC__)
-#if 0
-/* Note: gcc implementation of memory alignment directives is buggy. */
-#define SC_ARG_ALIGN(x,n) __builtin_assume_aligned((x), (n))
-#endif
-#define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#if defined (__bgq__)
+#define SC_ARG_ALIGN(p,t,n) __alignx((n), (p))
+#elif defined (__ICC)
+#define SC_ARG_ALIGN(p,t,n) __assume_aligned((p), (n))
+#elif defined (__clang__)
+#define SC_ARG_ALIGN(p,t,n) SC_NOOP ()
+#elif defined (__GNUC__) || defined (__GNUG__)
+
+#if __GNUC_PREREQ(4, 7)
+#define SC_ARG_ALIGN(p,t,n) do {                              \
+  (p) = (t) __builtin_assume_aligned((void *) (p), (n));      \
+} while (0)
 #else
-#define SC_ARG_ALIGN(x,n) SC_NOOP ()
+#define SC_ARG_ALIGN(p,t,n) SC_NOOP ()
+#endif
+
+#else
+#define SC_ARG_ALIGN(p,t,n) SC_NOOP ()
+#endif
+
+#if (defined __GNUC__) || (defined __PGI) || (defined __IBMC__)
+#define SC_ATTR_ALIGN(n) __attribute__((aligned(n)))
+#else
+#define SC_ATTR_ALIGN(n)
 #endif
 
 /**

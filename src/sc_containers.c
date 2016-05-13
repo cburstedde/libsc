@@ -167,13 +167,13 @@ sc_array_resize (sc_array_t * array, size_t new_count)
 {
   size_t              newoffs, roundup, newsize;
 #if !defined SC_ENABLE_USE_REALLOC || defined SC_DEBUG
-  size_t              oldoffs;
+  size_t              oldoffs, minoffs;
 #endif
 #ifndef SC_ENABLE_USE_REALLOC
   char               *ptr;
 #endif
 #ifdef SC_DEBUG
-  size_t              i, minoffs;
+  size_t              i;
 #endif
 
   if (!SC_ARRAY_IS_OWNER (array)) {
@@ -191,16 +191,19 @@ sc_array_resize (sc_array_t * array, size_t new_count)
     return;
   }
 
+  /* Figure out how the array size will change */
+  newoffs = new_count * array->elem_size;
 #if defined SC_DEBUG || !defined SC_ENABLE_USE_REALLOC
   oldoffs = array->elem_count * array->elem_size;
+  minoffs = SC_MIN (oldoffs, newoffs);
 #endif
   array->elem_count = new_count;
-  newoffs = array->elem_count * array->elem_size;
   roundup = (size_t) SC_ROUNDUP2_64 (newoffs);
   SC_ASSERT (roundup >= newoffs && roundup <= 2 * newoffs);
 
   if (newoffs > (size_t) array->byte_alloc ||
       roundup < (size_t) array->byte_alloc) {
+    /* we will reallocate the array memory, either grow or shrink it */
     array->byte_alloc = (ssize_t) roundup;
   }
   else {
@@ -212,8 +215,11 @@ sc_array_resize (sc_array_t * array, size_t new_count)
       SC_ASSERT (array->array[i] == (char) -1);
     }
 #endif
+    /* we keep the current allocation */
     return;
   }
+
+  /* byte_alloc is the size to be realloced to, it may be smaller than oldoffs */
   SC_ASSERT ((size_t) array->byte_alloc >= newoffs);
 
   newsize = (size_t) array->byte_alloc;
@@ -221,13 +227,12 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   array->array = SC_REALLOC (array->array, char, newsize);
 #else
   ptr = SC_ALLOC (char, newsize);
-  memcpy (ptr, array->array, oldoffs);
+  memcpy (ptr, array->array, minoffs);
   SC_FREE (array->array);
   array->array = ptr;
 #endif
 
 #ifdef SC_DEBUG
-  minoffs = SC_MIN (oldoffs, newoffs);
   SC_ASSERT (minoffs <= newsize);
   memset (array->array + minoffs, -1, newsize - minoffs);
 #endif
