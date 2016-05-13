@@ -25,65 +25,61 @@
 int
 main (int argc, char **argv)
 {
-  MPI_Comm            mpicomm;
+  sc_MPI_Comm         mpicomm;
   int                 mpiret;
   int                 mpisize;
   int                 mpirank;
   int                 i;
-#ifdef SC_MPI
   int                *idata;
   double              elapsed_alltoall = 0.;
   double              elapsed_recursive;
-#endif
   double              dsend;
   double             *ddata1;
   double             *ddata2;
   double              elapsed_allgather;
   double              elapsed_replacement;
 
-  mpiret = MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
-  mpicomm = MPI_COMM_WORLD;
-  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  mpicomm = sc_MPI_COMM_WORLD;
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &mpirank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
-#ifdef SC_MPI
   idata = SC_ALLOC (int, mpisize);
 
   if (mpisize <= 64) {
-    SC_GLOBAL_INFO ("Testing sc_ag_alltoall\n");
+    SC_GLOBAL_INFO ("Testing sc_allgather_alltoall\n");
 
     for (i = 0; i < mpisize; ++i) {
       idata[i] = (i == mpirank) ? mpirank : -1;
     }
-    elapsed_alltoall = -MPI_Wtime ();
-    sc_ag_alltoall (mpicomm, (char *) idata, (int) sizeof (int),
-                    mpisize, mpirank, mpirank);
-    elapsed_alltoall += MPI_Wtime ();
+    elapsed_alltoall = -sc_MPI_Wtime ();
+    sc_allgather_alltoall (mpicomm, (char *) idata, (int) sizeof (int),
+                           mpisize, mpirank, mpirank);
+    elapsed_alltoall += sc_MPI_Wtime ();
     for (i = 0; i < mpisize; ++i) {
       SC_ASSERT (idata[i] == i);
     }
   }
 
-  SC_GLOBAL_INFO ("Testing sc_ag_recursive\n");
+  SC_GLOBAL_INFO ("Testing sc_allgather_recursive\n");
 
   for (i = 0; i < mpisize; ++i) {
     idata[i] = (i == mpirank) ? mpirank : -1;
   }
-  elapsed_recursive = -MPI_Wtime ();
-  sc_ag_recursive (mpicomm, (char *) idata, (int) sizeof (int),
-                   mpisize, mpirank, mpirank);
-  elapsed_recursive += MPI_Wtime ();
+  elapsed_recursive = -sc_MPI_Wtime ();
+  sc_allgather_recursive (mpicomm, (char *) idata, (int) sizeof (int),
+                          mpisize, mpirank, mpirank);
+  elapsed_recursive += sc_MPI_Wtime ();
   for (i = 0; i < mpisize; ++i) {
     SC_ASSERT (idata[i] == i);
   }
 
   SC_FREE (idata);
-#endif
 
   ddata1 = SC_ALLOC (double, mpisize);
   ddata2 = SC_ALLOC (double, mpisize);
@@ -92,25 +88,25 @@ main (int argc, char **argv)
 
   dsend = M_PI;
 
-  mpiret = MPI_Barrier (mpicomm);
+  mpiret = sc_MPI_Barrier (mpicomm);
   SC_CHECK_MPI (mpiret);
-  elapsed_allgather = -MPI_Wtime ();
-  mpiret = MPI_Allgather (&dsend, 1, MPI_DOUBLE, ddata1, 1, MPI_DOUBLE,
-                          mpicomm);
+  elapsed_allgather = -sc_MPI_Wtime ();
+  mpiret = sc_MPI_Allgather (&dsend, 1, sc_MPI_DOUBLE, ddata1, 1,
+                             sc_MPI_DOUBLE, mpicomm);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Barrier (mpicomm);
+  mpiret = sc_MPI_Barrier (mpicomm);
   SC_CHECK_MPI (mpiret);
-  elapsed_allgather += MPI_Wtime ();
+  elapsed_allgather += sc_MPI_Wtime ();
 
-  mpiret = MPI_Barrier (mpicomm);
+  mpiret = sc_MPI_Barrier (mpicomm);
   SC_CHECK_MPI (mpiret);
-  elapsed_replacement = -MPI_Wtime ();
-  mpiret = sc_allgather (&dsend, 1, MPI_DOUBLE, ddata2, 1, MPI_DOUBLE,
+  elapsed_replacement = -sc_MPI_Wtime ();
+  mpiret = sc_allgather (&dsend, 1, sc_MPI_DOUBLE, ddata2, 1, sc_MPI_DOUBLE,
                          mpicomm);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Barrier (mpicomm);
+  mpiret = sc_MPI_Barrier (mpicomm);
   SC_CHECK_MPI (mpiret);
-  elapsed_replacement += MPI_Wtime ();
+  elapsed_replacement += sc_MPI_Wtime ();
 
   for (i = 0; i < mpisize; ++i) {
     SC_ASSERT (ddata1[i] == ddata2[i]); /* exact match wanted */
@@ -122,16 +118,14 @@ main (int argc, char **argv)
 
   SC_GLOBAL_STATISTICSF ("Timings with threshold %d on %d cores\n",
                          SC_AG_ALLTOALL_MAX, mpisize);
-#ifdef SC_MPI
   SC_GLOBAL_STATISTICSF ("   alltoall %g\n", elapsed_alltoall);
   SC_GLOBAL_STATISTICSF ("   recursive %g\n", elapsed_recursive);
-#endif
   SC_GLOBAL_STATISTICSF ("   allgather %g\n", elapsed_allgather);
   SC_GLOBAL_STATISTICSF ("   replacement %g\n", elapsed_replacement);
 
   sc_finalize ();
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
   return 0;

@@ -13,7 +13,7 @@ desc: |-
   The workaround is to pass --without-getopt to configure.
 type: :bugfix
 component: libsc
-release: "0.6"
+release: "1.6"
 reporter: Lucas C Wilcox <lucasw@ices.utexas.edu>
 status: :closed
 disposition: :wontfix

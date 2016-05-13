@@ -23,21 +23,21 @@
 #include <sc_search.h>
 
 int
-main (int argc, char ** argv)
+main (int argc, char **argv)
 {
   int                 mpiret;
   int                 mpirank, mpisize;
   int                 maxlevel, level, target;
   int                 i, position;
-  MPI_Comm            mpicomm;
+  sc_MPI_Comm         mpicomm;
 
-  mpiret = MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  mpicomm = MPI_COMM_WORLD;
-  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  mpicomm = sc_MPI_COMM_WORLD;
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &mpirank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   if (mpirank == 0) {
@@ -48,14 +48,14 @@ main (int argc, char ** argv)
 
       for (i = 0; i < 1 << level; ++i) {
 
-	position = sc_search_bias (maxlevel, level, i, target);
-	SC_LDEBUGF ("Levels %d %d index %d target %d position %d\n",
-		    maxlevel, level, i, target, position);
+        position = sc_search_bias (maxlevel, level, i, target);
+        SC_LDEBUGF ("Levels %d %d index %d target %d position %d\n",
+                    maxlevel, level, i, target, position);
       }
     }
   }
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
   return 0;

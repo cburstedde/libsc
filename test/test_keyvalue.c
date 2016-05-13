@@ -42,10 +42,22 @@ main (int argc, char **argv)
   void               *pointerTest;
 
   /* Initialization stuff */
-  mpiret = MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+
+  /* Print some funny stuff */
+  SC_GLOBAL_LDEBUGF ("Hash of empty string: %x\n",
+                     sc_hash_function_string ("", NULL));
+  SC_GLOBAL_LDEBUGF ("Hash of ABCDEFGHIJKL: %x\n",
+                     sc_hash_function_string ("ABCDEFGHIJKL", NULL));
+  SC_GLOBAL_LDEBUGF ("Hash of dummy: %x\n",
+                     sc_hash_function_string (dummy, NULL));
+  SC_GLOBAL_LDEBUGF ("Hash of dummy: %x\n",
+                     sc_hash_function_string (wrong, NULL));
+  SC_GLOBAL_LDEBUGF ("Hash of dummy: %x\n",
+                     sc_hash_function_string (again, NULL));
 
   /* Create a new argument set */
   args = sc_keyvalue_newf (0,
@@ -202,7 +214,7 @@ main (int argc, char **argv)
   /* Shutdown procedures */
   sc_finalize ();
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
   return num_failed_tests ? 1 : 0;

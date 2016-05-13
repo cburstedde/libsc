@@ -21,9 +21,9 @@ log_events:
   - ""
 - - 2009-07-21 21:14:24.387055 Z
   - Carsten Burstedde <carsten@ices.utexas.edu>
-  - assigned to release 0.6 from unassigned
+  - assigned to release 1.6 from unassigned
   - ""
 - - 2010-01-22 17:33:37.936420 Z
   - Carsten Burstedde <carsten@ices.utexas.edu>
-  - unassigned from release 0.6
+  - unassigned from release 1.6
   - Also remove tgmath.h from sc_complex.h for portability.

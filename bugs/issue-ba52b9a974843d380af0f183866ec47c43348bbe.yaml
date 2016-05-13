@@ -7,7 +7,7 @@ desc: |-
   and remove the object_value logic from sc_object.
 type: :bugfix
 component: libsc
-release: "0.6"
+release: "1.6"
 reporter: Carsten Burstedde <carsten@ices.utexas.edu>
 status: :closed
 disposition: :fixed

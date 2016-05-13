@@ -38,14 +38,14 @@ main (int argc, char **argv)
   size_t              nmemb[3], lsize, total;
   size_t              zz;
   char               *ldata;
-  MPI_Comm            mpicomm;
+  sc_MPI_Comm         mpicomm;
 
-  mpiret = MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
-  mpicomm = MPI_COMM_WORLD;
-  mpiret = MPI_Comm_size (mpicomm, &num_procs);
+  mpicomm = sc_MPI_COMM_WORLD;
+  mpiret = sc_MPI_Comm_size (mpicomm, &num_procs);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &rank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
 
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
@@ -61,13 +61,13 @@ main (int argc, char **argv)
   lsize = nmemb[rank];
   total = nmemb[0] + nmemb[1] + nmemb[2];
 
-  srand (17);
+  srand (17 + (int) total);
   ldata = SC_ALLOC (char, lsize * size);
   for (zz = 0; zz < lsize * size; ++zz) {
     ldata[zz] = (char) (-50. + (300. * rand () / (RAND_MAX + 1.0)));
   }
   sc_psort (mpicomm, ldata, nmemb, size, the_compare);
-  // qsort (ldata, nmemb[rank], size, the_compare);
+  /* qsort (ldata, nmemb[rank], size, the_compare); */
 
   for (zz = 1; zz < lsize; ++zz) {
     SC_CHECK_ABORT (the_compare (ldata + size * (zz - 1),
@@ -80,7 +80,7 @@ main (int argc, char **argv)
 donothing:
   sc_finalize ();
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
   return 0;

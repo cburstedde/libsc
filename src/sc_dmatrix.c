@@ -52,6 +52,19 @@ sc_darray_is_range (const double *darray, size_t nelem,
   return 1;
 }
 
+size_t
+sc_dmatrix_memory_used (sc_dmatrix_t * dm)
+{
+  size_t              mem = sizeof (sc_dmatrix_t);
+
+  mem += (dm->m + 1) * sizeof (double *);
+  if (!dm->view) {
+    mem += dm->m * dm->n * sizeof (double);
+  }
+
+  return mem;
+}
+
 static void
 sc_dmatrix_new_e (sc_dmatrix_t * rdm, sc_bint_t m, sc_bint_t n, double *data)
 {
@@ -158,6 +171,59 @@ sc_dmatrix_new_view_offset (sc_bint_t o, sc_bint_t m, sc_bint_t n,
 }
 
 sc_dmatrix_t       *
+sc_dmatrix_new_view_column (sc_dmatrix_t * orig, sc_bint_t j)
+{
+  sc_dmatrix_t       *rdm;
+
+  SC_ASSERT (orig->m >= 0);
+  SC_ASSERT (0 <= j && j < orig->n);
+
+  rdm = SC_ALLOC (sc_dmatrix_t, 1);
+  sc_dmatrix_new_e (rdm, orig->m, orig->n, orig->e[0] + j);
+  rdm->n = 1;
+  rdm->view = 1;
+
+  return rdm;
+}
+
+void
+sc_dmatrix_view_set_column (sc_dmatrix_t * view,
+                            sc_dmatrix_t * orig, sc_bint_t j)
+{
+  const sc_bint_t     m = view->m;
+  sc_bint_t           i;
+
+  SC_ASSERT (view->view);
+  SC_ASSERT (view->m == orig->m);
+  SC_ASSERT (orig->m >= 0);
+  SC_ASSERT (0 <= j && j < orig->n);
+
+  view->e[0] = orig->e[0] + j;
+
+  if (m > 0) {
+    for (i = 1; i < m; ++i)
+      view->e[i] = view->e[i - 1] + orig->n;
+
+    view->e[m] = NULL;          /* safeguard */
+  }
+
+  view->n = 1;
+}
+
+void
+sc_dmatrix_view_set_row (sc_dmatrix_t * view,
+                         sc_dmatrix_t * orig, sc_bint_t i)
+{
+  SC_ASSERT (view->view);
+  SC_ASSERT (view->m == 1);
+  SC_ASSERT (orig->n >= 0);
+  SC_ASSERT (0 <= i && i < orig->m);
+
+  view->e[0] = orig->e[i];
+  view->n = orig->n;
+}
+
+sc_dmatrix_t       *
 sc_dmatrix_clone (const sc_dmatrix_t * X)
 {
   const sc_bint_t     totalsize = X->m * X->n;
@@ -199,7 +265,7 @@ sc_dmatrix_resize (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
   newsize = m * n;
 
   if (!dmatrix->view && size != newsize) {
-#ifdef SC_USE_REALLOC
+#ifdef SC_ENABLE_USE_REALLOC
     data = SC_REALLOC (dmatrix->e[0], double, newsize);
 #else
     data = SC_ALLOC (double, newsize);
@@ -211,6 +277,46 @@ sc_dmatrix_resize (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
   else {
     /* for views you must know that data is large enough */
     data = dmatrix->e[0];
+  }
+  SC_FREE (dmatrix->e);
+  sc_dmatrix_new_e (dmatrix, m, n, data);
+}
+
+void
+sc_dmatrix_resize_in_place (sc_dmatrix_t * dmatrix, sc_bint_t m, sc_bint_t n)
+{
+  double             *data;
+  sc_bint_t           size, newsize;
+  sc_bint_t           i;
+  sc_bint_t           old_n = dmatrix->n;
+  sc_bint_t           min_m = SC_MIN (m, dmatrix->m);
+
+  SC_ASSERT (dmatrix->e != NULL);
+  SC_ASSERT (m >= 0 && n >= 0);
+  SC_ASSERT (!dmatrix->view);
+
+  size = dmatrix->m * dmatrix->n;
+  newsize = m * n;
+  data = dmatrix->e[0];
+  if (n < old_n) {
+    for (i = 1; i < min_m; i++) {
+      memmove (data + i * n, data + i * old_n, n * sizeof (double));
+    }
+  }
+  if (newsize != size) {
+#ifdef SC_ENABLE_USE_REALLOC
+    data = SC_REALLOC (dmatrix->e[0], double, newsize);
+#else
+    data = SC_ALLOC (double, newsize);
+    memcpy (data, dmatrix->e[0],
+            (size_t) SC_MIN (newsize, size) * sizeof (double));
+    SC_FREE (dmatrix->e[0]);
+#endif
+  }
+  if (n > old_n) {
+    for (i = min_m - 1; i > 0; i--) {
+      memmove (data + i * n, data + i * old_n, old_n * sizeof (double));
+    }
   }
   SC_FREE (dmatrix->e);
   sc_dmatrix_new_e (dmatrix, m, n, data);
@@ -277,14 +383,157 @@ sc_dmatrix_scale (double alpha, sc_dmatrix_t * X)
 {
   sc_bint_t           i;
   const sc_bint_t     totalsize = X->m * X->n;
-  double             *data = X->e[0];
+  double             *Xdata = X->e[0];
 
   for (i = 0; i < totalsize; ++i)
-    data[i] *= alpha;
+    Xdata[i] *= alpha;
 }
 
 void
-sc_dmatrix_dotmult (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
+sc_dmatrix_shift (double alpha, sc_dmatrix_t * X)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  double             *Xdata = X->e[0];
+
+  for (i = 0; i < totalsize; ++i)
+    Xdata[i] += alpha;
+}
+
+void
+sc_dmatrix_scale_shift (double alpha, double beta, sc_dmatrix_t * X)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  double             *Xdata = X->e[0];
+
+  for (i = 0; i < totalsize; ++i)
+    Xdata[i] = alpha * Xdata[i] + beta;
+}
+
+void
+sc_dmatrix_alphadivide (double alpha, sc_dmatrix_t * X)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  double             *Xdata = X->e[0];
+
+  for (i = 0; i < totalsize; ++i)
+    Xdata[i] = alpha / Xdata[i];
+}
+
+void
+sc_dmatrix_pow (double alpha, sc_dmatrix_t * X)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  double             *Xdata = X->e[0];
+
+  for (i = 0; i < totalsize; ++i)
+    Xdata[i] = pow (Xdata[i], alpha);
+}
+
+void
+sc_dmatrix_fabs (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *Xdata = X->e[0];
+  double             *Ydata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i)
+    Ydata[i] = fabs (Xdata[i]);
+}
+
+void
+sc_dmatrix_sqrt (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *Xdata = X->e[0];
+  double             *Ydata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i)
+    Ydata[i] = sqrt (Xdata[i]);
+}
+
+void
+sc_dmatrix_getsign (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *indata = X->e[0];
+  double             *outdata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i)
+    outdata[i] = (indata[i] >= 0. ? 1 : -1);
+}
+
+void
+sc_dmatrix_greaterequal (const sc_dmatrix_t * X, double bound,
+                         sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *indata = X->e[0];
+  double             *outdata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i)
+    outdata[i] = (indata[i] >= bound ? 1 : 0);
+}
+
+void
+sc_dmatrix_lessequal (const sc_dmatrix_t * X, double bound, sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *indata = X->e[0];
+  double             *outdata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i)
+    outdata[i] = (indata[i] <= bound ? 1 : 0);
+}
+
+void
+sc_dmatrix_maximum (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *indata = X->e[0];
+  double             *outdata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i)
+    outdata[i] = SC_MAX (indata[i], outdata[i]);
+}
+
+void
+sc_dmatrix_minimum (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *indata = X->e[0];
+  double             *outdata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i)
+    outdata[i] = SC_MIN (indata[i], outdata[i]);
+}
+
+void
+sc_dmatrix_dotmultiply (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           i;
   const sc_bint_t     totalsize = X->m * X->n;
@@ -298,14 +547,35 @@ sc_dmatrix_dotmult (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 }
 
 void
-sc_dmatrix_alphadotdivide (double alpha, sc_dmatrix_t * X)
+sc_dmatrix_dotdivide (const sc_dmatrix_t * X, sc_dmatrix_t * Y)
 {
   sc_bint_t           i;
   const sc_bint_t     totalsize = X->m * X->n;
-  double             *Xdata = X->e[0];
+  const double       *Xdata = X->e[0];
+  double             *Ydata = Y->e[0];
+
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
 
   for (i = 0; i < totalsize; ++i)
-    Xdata[i] = alpha / Xdata[i];
+    Ydata[i] /= Xdata[i];
+}
+
+void
+sc_dmatrix_dotmultiply_add (const sc_dmatrix_t * A, const sc_dmatrix_t * X,
+                            sc_dmatrix_t * Y)
+{
+  sc_bint_t           i;
+  const sc_bint_t     totalsize = X->m * X->n;
+  const double       *Adata = A->e[0];
+  const double       *Xdata = X->e[0];
+  double             *Ydata = Y->e[0];
+
+  SC_ASSERT (X->m == A->m && X->n == A->n);
+  SC_ASSERT (X->m == Y->m && X->n == Y->n);
+
+  for (i = 0; i < totalsize; ++i) {
+    Ydata[i] += Adata[i] * Xdata[i];
+  }
 }
 
 void
@@ -352,7 +622,9 @@ sc_dmatrix_add (double alpha, const sc_dmatrix_t * X, sc_dmatrix_t * Y)
   totalsize = X->m * X->n;
 
   inc = 1;
-  BLAS_DAXPY (&totalsize, &alpha, X->e[0], &inc, Y->e[0], &inc);
+  if (totalsize > 0) {
+    SC_BLAS_DAXPY (&totalsize, &alpha, X->e[0], &inc, Y->e[0], &inc);
+  }
 }
 
 void
@@ -372,12 +644,16 @@ sc_dmatrix_vector (sc_trans_t transa, sc_trans_t transx, sc_trans_t transy,
   sc_bint_t           Acols = (transa == SC_NO_TRANS) ? A->n : A->m;
 #endif
 
-  SC_ASSERT (Acols != 0 && Arows != 0);
   SC_ASSERT (Acols == dimX && Arows == dimY);
   SC_ASSERT (dimX1 == 1 && dimY1 == 1);
 
-  BLAS_DGEMV (&sc_antitranschar[transa], &A->n, &A->m, &alpha,
-              A->e[0], &A->n, X->e[0], &inc, &beta, Y->e[0], &inc);
+  if (A->n > 0 && A->m > 0) {
+    SC_BLAS_DGEMV (&sc_antitranschar[transa], &A->n, &A->m, &alpha,
+                   A->e[0], &A->n, X->e[0], &inc, &beta, Y->e[0], &inc);
+  }
+  else if (beta != 1.) {
+    sc_dmatrix_scale (beta, Y);
+  }
 }
 
 void
@@ -402,11 +678,16 @@ sc_dmatrix_multiply (sc_trans_t transa, sc_trans_t transb, double alpha,
   SC_ASSERT (transa == SC_NO_TRANS || transa == SC_TRANS);
   SC_ASSERT (transb == SC_NO_TRANS || transb == SC_TRANS);
 
-  SC_ASSERT (Acols != 0 && Crows != 0 && Ccols != 0);
-
-  BLAS_DGEMM (&sc_transchar[transb], &sc_transchar[transa], &Ccols,
-              &Crows, &Acols, &alpha, B->e[0], &B->n, A->e[0], &A->n, &beta,
-              C->e[0], &C->n);
+  if (Crows > 0 && Ccols > 0) {
+    if (Acols > 0) {
+      SC_BLAS_DGEMM (&sc_transchar[transb], &sc_transchar[transa], &Ccols,
+                     &Crows, &Acols, &alpha, B->e[0], &B->n, A->e[0], &A->n,
+                     &beta, C->e[0], &C->n);
+    }
+    else if (beta != 1.0) {     /* ignore comparison warning */
+      sc_dmatrix_scale (beta, C);
+    }
+  }
 }
 
 void
@@ -455,22 +736,23 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
 
   SC_ASSERT ((C_nrows == A_nrows) && (B_nrows == C_ncols)
              && (B_ncols == A_ncols));
+  SC_ASSERT (N > 0 && Nrhs > 0);
 
   if (M == N) {
     sc_dmatrix_t       *lu = sc_dmatrix_clone (B);
     sc_bint_t          *ipiv = SC_ALLOC (sc_bint_t, N);
 
-    // Perform an LU factorization of B.
-    LAPACK_DGETRF (&N, &N, lu->e[0], &N, ipiv, &info);
+    /* Perform an LU factorization of B. */
+    SC_LAPACK_DGETRF (&N, &N, lu->e[0], &N, ipiv, &info);
 
-    SC_ASSERT (info == 0);
+    SC_CHECK_ABORT (info == 0, "Lapack routine DGETRF failed");
 
-    // Solve the linear system.
+    /* Solve the linear system. */
     sc_dmatrix_copy (A, C);
-    LAPACK_DGETRS (&sc_transchar[transb], &N, &Nrhs, lu->e[0], &N,
-                   ipiv, C->e[0], &N, &info);
+    SC_LAPACK_DGETRS (&sc_transchar[transb], &N, &Nrhs, lu->e[0], &N,
+                      ipiv, C->e[0], &N, &info);
 
-    SC_ASSERT (info == 0);
+    SC_CHECK_ABORT (info == 0, "Lapack routine DGETRS failed");
 
     SC_FREE (ipiv);
     sc_dmatrix_destroy (lu);
@@ -478,6 +760,22 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
   else {
     SC_CHECK_ABORT (0, "Only square A's work right now\n");
   }
+}
+
+void
+sc_dmatrix_solve_transpose_inplace (sc_dmatrix_t * A, sc_dmatrix_t * B)
+{
+  const sc_bint_t     N = A->m;
+  const sc_bint_t     nrhs = B->m;
+  sc_bint_t          *ipiv, info;
+
+  SC_ASSERT (A->n == N && B->n == N);
+
+  ipiv = SC_ALLOC (sc_bint_t, N);
+  SC_LAPACK_DGESV (&N, &nrhs, A->e[0], &N, ipiv, B->e[0], &N, &info);
+  SC_FREE (ipiv);
+
+  SC_CHECK_ABORT (info == 0, "Lapack routine DGESV failed");
 }
 
 void
@@ -497,7 +795,7 @@ sc_dmatrix_write (const sc_dmatrix_t * dmatrix, FILE * fp)
 }
 
 sc_dmatrix_pool_t  *
-sc_dmatrix_pool_new (int m, int n)
+sc_dmatrix_pool_new (sc_bint_t m, sc_bint_t n)
 {
   sc_dmatrix_pool_t  *dmpool;
 
@@ -560,4 +858,55 @@ sc_dmatrix_pool_free (sc_dmatrix_pool_t * dmpool, sc_dmatrix_t * dm)
   --dmpool->elem_count;
 
   *(sc_dmatrix_t **) sc_array_push (&dmpool->freed) = dm;
+}
+
+sc_darray_work_t   *
+sc_darray_work_new (const int n_threads, const int n_blocks,
+                    const int n_entries, const int alignment_bytes)
+{
+  const int           align_dbl = alignment_bytes / 8;
+  const int           n_entries_aligned = SC_ALIGN_UP (n_entries, align_dbl);
+  sc_darray_work_t   *work;
+
+  SC_ASSERT (0 < n_threads);
+  SC_ASSERT (0 < n_blocks);
+  SC_ASSERT (alignment_bytes <= 0 || (alignment_bytes % 8) == 0);
+
+  work = SC_ALLOC (sc_darray_work_t, 1);
+
+  work->data = SC_ALLOC (double, n_threads * n_blocks * n_entries_aligned);
+  work->n_threads = n_threads;
+  work->n_blocks = n_blocks;
+  work->n_entries = n_entries_aligned;
+
+  return work;
+}
+
+void
+sc_darray_work_destroy (sc_darray_work_t * work)
+{
+  SC_FREE (work->data);
+  SC_FREE (work);
+}
+
+double             *
+sc_darray_work_get (sc_darray_work_t * work, const int thread,
+                    const int block)
+{
+  SC_ASSERT (0 <= thread && thread < work->n_threads);
+  SC_ASSERT (0 <= block && block < work->n_blocks);
+
+  return work->data + work->n_entries * (work->n_blocks * thread + block);
+}
+
+int
+sc_darray_work_get_blockcount (sc_darray_work_t * work)
+{
+  return work->n_blocks;
+}
+
+int
+sc_darray_work_get_blocksize (sc_darray_work_t * work)
+{
+  return work->n_entries;
 }

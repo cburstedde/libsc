@@ -9,7 +9,7 @@ EXTRA_DIST += \
         example/bspline/example3.txt
 
 bin_PROGRAMS += example/bspline/sc_bspline \
-								example/bspline/sc_bspline_per
+	example/bspline/sc_bspline_per
 example_bspline_sc_bspline_SOURCES = example/bspline/bspline.c
 example_bspline_sc_bspline_per_SOURCES = example/bspline/bspline_per.c
 

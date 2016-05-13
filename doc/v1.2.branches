@@ -1,0 +1,32 @@
+  attribute-unused                          # unused, skip
+  bgq                                       # this is a subset of tisaac/mpi
+  develop                                   # only alloc logging is worthwile
+  feature/shmem-array                       # subset of tisaac/mpi
+  ti/pu                                     # want sc_memory_status,
+                                            # not .gitignore file
+  tisaac/johann/gmg                         # subset of develop
+  tisaac/mpi
+  use-realloc                               # on top of develop, don't use
+  use-realloc-old                           # use this one: just what we want
+  remotes/carsten/configfile                # ask carsten
+  remotes/carsten/dset                      # this idea is undeveloped, skip
+  remotes/carsten/mpi                       # subset of tisaac/mpi
+  remotes/carsten/ng                        # ask carsten
+  remotes/carsten/poly                      # ask carsten
+  remotes/github/feature/shmem-array        # subset of tisaac/mpi
+  remotes/github/fix-make-dist-hook         # subset of tisaac/mpi
+  remotes/github/sc-allgather               # subset of tisaac/mpi
+  remotes/github/tisaac/feature-stats-has   # yes
+  remotes/github/tisaac/mpi                 # same as local
+  remotes/johann/next                       # doesn't seem ready yet
+  remotes/origin/bgq                        # same as local
+  remotes/origin/carsten-develop            # merge branch, don't use
+  remotes/origin/develop                    # same as local
+  remotes/origin/dset                       # same as local
+  remotes/origin/feature/shmem-array        # same as local
+  remotes/origin/fix-permute                # cherry-picked in
+  remotes/origin/redistribute               # seems unfinished, no
+  remotes/origin/ti/pu                      # same as local
+  remotes/origin/tisaac/johann/next         # just sc_statistics_has, no
+  remotes/origin/use-realloc                # same as local
+  remotes/origin/use-realloc-old            # same as local

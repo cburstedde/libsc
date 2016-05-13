@@ -23,11 +23,6 @@
 #include <sc_ranges.h>
 #include <sc_statistics.h>
 
-#ifdef SC_ALLGATHER
-#include <sc_allgather.h>
-#define MPI_Allgather sc_allgather
-#endif
-
 static int
 sc_ranges_compare (const void *v1, const void *v2)
 {
@@ -35,7 +30,7 @@ sc_ranges_compare (const void *v1, const void *v2)
 }
 
 int
-sc_ranges_compute (int package_id, int num_procs, int *procs,
+sc_ranges_compute (int package_id, int num_procs, const int *procs,
                    int rank, int first_peer, int last_peer,
                    int num_ranges, int *ranges)
 {
@@ -182,8 +177,8 @@ sc_ranges_compute (int package_id, int num_procs, int *procs,
 }
 
 int
-sc_ranges_adaptive (int package_id,
-                    MPI_Comm mpicomm, int *procs, int *inout1, int *inout2,
+sc_ranges_adaptive (int package_id, sc_MPI_Comm mpicomm,
+                    const int *procs, int *inout1, int *inout2,
                     int num_ranges, int *ranges, int **global_ranges)
 {
   int                 mpiret;
@@ -193,9 +188,9 @@ sc_ranges_adaptive (int package_id,
   int                 nwin, maxwin, twomaxwin;
 
   /* get processor related information */
-  mpiret = MPI_Comm_size (mpicomm, &num_procs);
+  mpiret = sc_MPI_Comm_size (mpicomm, &num_procs);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &rank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
   first_peer = *inout1;
   last_peer = *inout2;
@@ -210,7 +205,8 @@ sc_ranges_adaptive (int package_id,
                        first_peer, last_peer, num_ranges, ranges);
 
   /* communicate the maximum number of peers and ranges */
-  mpiret = MPI_Allreduce (local, global, 2, MPI_INT, MPI_MAX, mpicomm);
+  mpiret =
+    sc_MPI_Allreduce (local, global, 2, sc_MPI_INT, sc_MPI_MAX, mpicomm);
   SC_CHECK_MPI (mpiret);
   *inout1 = global[0];
   *inout2 = maxwin = global[1];
@@ -220,8 +216,9 @@ sc_ranges_adaptive (int package_id,
   /* distribute everybody's range information */
   if (global_ranges != NULL) {
     *global_ranges = SC_ALLOC (int, twomaxwin * num_procs);
-    mpiret = MPI_Allgather (ranges, twomaxwin, MPI_INT,
-                            *global_ranges, twomaxwin, MPI_INT, mpicomm);
+    mpiret = sc_MPI_Allgather (ranges, twomaxwin, sc_MPI_INT,
+                               *global_ranges, twomaxwin, sc_MPI_INT,
+                               mpicomm);
     SC_CHECK_MPI (mpiret);
   }
 
@@ -229,8 +226,88 @@ sc_ranges_adaptive (int package_id,
 }
 
 void
+sc_ranges_decode (int num_procs, int rank,
+                  int max_ranges, const int *global_ranges,
+                  int *num_receivers, int *receiver_ranks,
+                  int *num_senders, int *sender_ranks)
+{
+  int                 i, j;
+  int                 nr, ns;
+  const int          *the_ranges;
+
+#ifdef SC_DEBUG
+  int                 done;
+
+  /* verify consistency of ranges */
+  for (j = 0; j < num_procs; ++j) {
+    the_ranges = global_ranges + 2 * max_ranges * j;
+    done = 0;
+    for (i = 0; i < max_ranges; ++i) {
+      if (the_ranges[2 * i] < 0) {
+        done = 1;
+      }
+      if (!done) {
+        SC_ASSERT (the_ranges[2 * i] <= the_ranges[2 * i + 1]);
+        SC_ASSERT (i == 0 ||
+                   the_ranges[2 * (i - 1) + 1] + 1 < the_ranges[2 * i]);
+      }
+      else {
+        SC_ASSERT (the_ranges[2 * i] == -1 && the_ranges[2 * i + 1] == -2);
+      }
+    }
+  }
+#endif
+
+  /* identify receivers */
+  nr = 0;
+  the_ranges = global_ranges + 2 * max_ranges * rank;
+  for (i = 0; i < max_ranges; ++i) {
+    if (the_ranges[2 * i] < 0) {
+      /* this processor uses less ranges than the maximum */
+      break;
+    }
+    for (j = the_ranges[2 * i]; j <= the_ranges[2 * i + 1]; ++j) {
+      SC_ASSERT (0 <= j && j < num_procs);
+
+      /* exclude self */
+      if (j == rank) {
+        continue;
+      }
+      receiver_ranks[nr++] = j;
+    }
+  }
+  *num_receivers = nr;
+
+  /* identify senders */
+  ns = 0;
+  for (j = 0; j < num_procs; ++j) {
+    /* exclude self */
+    if (j == rank) {
+      continue;
+    }
+
+    /* look through that processor's ranges */
+    the_ranges = global_ranges + 2 * max_ranges * j;
+    for (i = 0; i < max_ranges; ++i) {
+      if (the_ranges[2 * i] < 0) {
+        /* processor j uses less ranges than the maximum */
+        break;
+      }
+      if (rank <= the_ranges[2 * i + 1]) {
+        if (rank >= the_ranges[2 * i]) {
+          /* processor j is a potential sender to rank */
+          sender_ranks[ns++] = j;
+        }
+        break;
+      }
+    }
+  }
+  *num_senders = ns;
+}
+
+void
 sc_ranges_statistics (int package_id, int log_priority,
-                      MPI_Comm mpicomm, int num_procs, int *procs,
+                      sc_MPI_Comm mpicomm, int num_procs, const int *procs,
                       int rank, int num_ranges, int *ranges)
 {
   int                 i, j;

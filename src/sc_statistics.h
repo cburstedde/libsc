@@ -44,7 +44,7 @@ sc_statinfo_t;
 /* sc_statistics_t allows dynamically adding random variables */
 typedef struct sc_stats
 {
-  MPI_Comm            mpicomm;
+  sc_MPI_Comm         mpicomm;
   sc_keyvalue_t      *kv;
   sc_array_t         *sarray;
 }
@@ -90,7 +90,7 @@ void                sc_stats_accumulate (sc_statinfo_t * stats, double value);
  *    average, variance, standev   Global statistical measures.
  *    variance_mean, standev_mean  Statistical measures of the mean.
  */
-void                sc_stats_compute (MPI_Comm mpicomm, int nvars,
+void                sc_stats_compute (sc_MPI_Comm mpicomm, int nvars,
                                       sc_statinfo_t * stats);
 
 /**
@@ -99,7 +99,7 @@ void                sc_stats_compute (MPI_Comm mpicomm, int nvars,
  * and the field variable must contain a valid string or NULL.
  * Only updates dirty variables. Then removes the dirty flag.
  */
-void                sc_stats_compute1 (MPI_Comm mpicomm, int nvars,
+void                sc_stats_compute1 (sc_MPI_Comm mpicomm, int nvars,
                                        sc_statinfo_t * stats);
 
 /**
@@ -118,7 +118,7 @@ void                sc_stats_print (int package_id, int log_priority,
 
 /** Create a new statistics structure that can grow dynamically.
  */
-sc_statistics_t    *sc_statistics_new (MPI_Comm mpicomm);
+sc_statistics_t    *sc_statistics_new (sc_MPI_Comm mpicomm);
 void                sc_statistics_destroy (sc_statistics_t * stats);
 
 /** Register a statistics variable by name and set its value to 0.
@@ -133,6 +133,9 @@ void                sc_statistics_add (sc_statistics_t * stats,
 void                sc_statistics_add_empty (sc_statistics_t * stats,
                                              const char *name);
 
+/** Returns true if the stats include a variable with the given name */
+int                 sc_statistics_has (sc_statistics_t * stats,
+                                       const char *name);
 /** Set the value of a statistics variable, see sc_stats_set1.
  * The variable must previously be added with sc_statistics_add.
  * This assumes count=1 as in the sc_stats_set1 function above.

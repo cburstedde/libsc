@@ -23,6 +23,20 @@
 #ifndef SC_CONTAINERS_H
 #define SC_CONTAINERS_H
 
+/** \file sc_containers.h
+ *
+ * Defines lists, arrays, hash tables, etc.
+ *
+ * \ingroup containers
+ */
+
+/** \defgroup containers containers
+ *
+ * Defines lists, arrays, hash tables, etc.
+ *
+ * \ingroup sc
+ */
+
 #include <sc_obstack.h>
 
 SC_EXTERN_C_BEGIN;
@@ -78,20 +92,24 @@ typedef int         (*sc_hash_foreach_t) (void **v, const void *u);
 typedef struct sc_array
 {
   /* interface variables */
-  size_t              elem_size;        /* size of a single element */
-  size_t              elem_count;       /* number of valid elements */
+  size_t              elem_size;        /**< size of a single element */
+  size_t              elem_count;       /**< number of valid elements */
 
   /* implementation variables */
-  ssize_t             byte_alloc;       /* number of allocated bytes
+  ssize_t             byte_alloc;       /**< number of allocated bytes
                                            or -(number of viewed bytes + 1)
                                            if this is a view: the "+ 1"
                                            distinguishes an array of size 0
                                            from a view of size 0 */
-  char               *array;    /* linear array to store elements */
+  char               *array;    /**< linear array to store elements */
 }
 sc_array_t;
 
+/** test whether the sc_array_t owns its \a array */
 #define SC_ARRAY_IS_OWNER(a) ((a)->byte_alloc >= 0)
+/** the allocated size of the array */
+#define SC_ARRAY_BYTE_ALLOC(a) ((size_t) \
+         (SC_ARRAY_IS_OWNER (a) ? (a)->byte_alloc : -((a)->byte_alloc + 1)))
 
 /** Calculate the memory used by an array.
  * \param [in] array       The array.
@@ -155,33 +173,49 @@ void                sc_array_init_size (sc_array_t * array,
                                         size_t elem_size, size_t elem_count);
 
 /** Initializes an already allocated (or static) view from existing sc_array_t.
+ * The array view returned does not require sc_array_reset (doesn't hurt though).
  * \param [in,out] view  Array structure to be initialized.
  * \param [in] array     The array must not be resized while view is alive.
  * \param [in] offset    The offset of the viewed section in element units.
  *                       This offset cannot be changed until the view is reset.
  * \param [in] length    The length of the view in element units.
  *                       The view cannot be resized to exceed this length.
+ *                       It is not necessary to call sc_array_reset later.
  */
 void                sc_array_init_view (sc_array_t * view, sc_array_t * array,
                                         size_t offset, size_t length);
 
 /** Initializes an already allocated (or static) view from given plain C data.
+ * The array view returned does not require sc_array_reset (doesn't hurt though).
  * \param [in,out] view     Array structure to be initialized.
  * \param [in] base         The data must not be moved while view is alive.
  * \param [in] elem_size    Size of one array element in bytes.
  * \param [in] elem_count   The length of the view in element units.
  *                          The view cannot be resized to exceed this length.
+ *                          It is not necessary to call sc_array_reset later.
  */
 void                sc_array_init_data (sc_array_t * view, void *base,
                                         size_t elem_size, size_t elem_count);
 
 /** Sets the array count to zero and frees all elements.
  * This function turns a view into a newly initialized array.
- * \param [in,out]  array       Array structure to be resetted.
+ * \param [in,out]  array       Array structure to be reset.
  * \note Calling sc_array_init, then any array operations,
  *       then sc_array_reset is memory neutral.
+ *       As an exception, the two functions sc_array_init_view and
+ *       sc_array_init_data do not require a subsequent call to sc_array_reset.
+ *       Regardless, it is legal to call sc_array_reset anyway.
  */
 void                sc_array_reset (sc_array_t * array);
+
+/** Sets the array count to zero, but does not free elements.
+ * Not allowed for views.
+ * \param [in,out]  array       Array structure to be truncated.
+ * \note This is intended to allow an sc_array to be used as a reusable
+ * buffer, where the "high water mark" of the buffer is preserved, so that
+ * O(log (max n)) reallocs occur over the life of the buffer.
+ */
+void                sc_array_truncate (sc_array_t * array);
 
 /** Sets the element count to new_count.
  * If this a view, new_count cannot be greater than the elem_count of
@@ -191,6 +225,13 @@ void                sc_array_reset (sc_array_t * array);
  * this function is usually fast.
  */
 void                sc_array_resize (sc_array_t * array, size_t new_count);
+
+/** Copy the contents of an array into another.
+ * Both arrays must have equal element sizes.
+ * \param [in] dest Array (not a view) will be resized and get new data.
+ * \param [in] src  Array used as source of new data, will not be changed.
+ */
+void                sc_array_copy (sc_array_t * dest, sc_array_t * src);
 
 /** Sorts the array in ascending order wrt. the comparison function.
  * \param [in] array    The array to sort.
@@ -203,10 +244,20 @@ void                sc_array_sort (sc_array_t * array,
 /** Check whether the array is sorted wrt. the comparison function.
  * \param [in] array    The array to check.
  * \param [in] compar   The comparison function to be used.
+ * \return              True if array is sorted, false otherwise.
  */
 int                 sc_array_is_sorted (sc_array_t * array,
                                         int (*compar) (const void *,
                                                        const void *));
+
+/** Check whether two arrays have equal size, count, and content.
+ * Either array may be a view.  Both arrays will not be changed.
+ * \param [in] array   One array to be compared.
+ * \param [in] other   A second array to be compared.
+ * \return              True if array and other are equal, false otherwise.
+ */
+int                 sc_array_is_equal (sc_array_t * array,
+                                       sc_array_t * other);
 
 /** Removed duplicate entries from a sorted array.
  * This function is not allowed for views.
@@ -256,12 +307,36 @@ void                sc_array_split (sc_array_t * array, sc_array_t * offsets,
                                     size_t num_types, sc_array_type_t type_fn,
                                     void *data);
 
+/** Determine whether \a array is an array of size_t's whose entries include
+ * every integer 0 <= i < array->elem_count.
+ * \param [in] array         An array.
+ * \return                   Returns 1 if array contains size_t elements whose
+ *                           entries include every integer
+ *                           0 <= i < \a array->elem_count, 0 otherwise.
+ */
+int                 sc_array_is_permutation (sc_array_t * array);
+
+/** Given permutation \a newindices, permute \a array in place.  The data that
+ * on input is contained in \a array[i] will be contained in \a
+ * array[newindices[i]] on output.  The entries of newindices will be altered
+ * unless \a keepperm is true.
+ * \param [in,out] array      An array.
+ * \param [in,out] newindices Permutation array (see sc_array_is_permutation).
+ * \param [in]     keepperm   If true, \a newindices will be unchanged by the
+ *                            algorithm; if false, \a newindices will be the
+ *                            identity permutation on output, but the
+ *                            algorithm will only use O(1) space.
+ */
+void                sc_array_permute (sc_array_t * array,
+                                      sc_array_t * newindices, int keepperm);
+
 /** Computes the adler32 checksum of array data (see zlib documentation).
  * This is a faster checksum than crc32, and it works with zeros as data.
  */
 unsigned            sc_array_checksum (sc_array_t * array);
 
 /** Adds an element to a priority queue.
+ * PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
  * This function is not allowed for views.
  * The priority queue is implemented as a heap in ascending order.
  * A heap is a binary tree where the children are not less than their parent.
@@ -279,6 +354,7 @@ size_t              sc_array_pqueue_add (sc_array_t * array,
                                                         const void *));
 
 /** Pops the smallest element from a priority queue.
+ * PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
  * This function is not allowed for views.
  * This function assumes that the array forms a valid heap in ascending order.
  * \param [out] result  Pointer to unused allocated memory of elem_size.
@@ -351,6 +427,25 @@ sc_array_index_int16 (sc_array_t * array, int16_t i16)
   return (void *) (array->array + (array->elem_size * (size_t) i16));
 }
 
+/** Return the index of an object in an array identified by a pointer.
+ * \param [in] element needs to be the address of an element in array.
+ */
+/*@unused@*/
+static inline       size_t
+sc_array_position (sc_array_t * array, void *element)
+{
+  ptrdiff_t           position;
+
+  SC_ASSERT (array->array <= (char *) element);
+  SC_ASSERT (((char *) element - array->array) %
+             (ptrdiff_t) array->elem_size == 0);
+
+  position = ((char *) element - array->array) / (ptrdiff_t) array->elem_size;
+  SC_ASSERT (0 <= position && position < (ptrdiff_t) array->elem_count);
+
+  return (size_t) position;
+}
+
 /** Remove the last element from an array and return a pointer to it.
  * This function is not allowed for views.
  * \return                The pointer to the removed object.  Will be valid
@@ -366,7 +461,30 @@ sc_array_pop (sc_array_t * array)
   return (void *) (array->array + (array->elem_size * --array->elem_count));
 }
 
-/** Enlarge an array by one.  Grows the array if necessary.
+/** Enlarge an array by a number of elements.  Grows the array if necessary.
+ * This function is not allowed for views.
+ * \return Returns a pointer to the uninitialized newly added elements.
+ */
+/*@unused@*/
+static inline void *
+sc_array_push_count (sc_array_t * array, size_t add_count)
+{
+  const size_t        old_count = array->elem_count;
+  const size_t        new_count = old_count + add_count;
+
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+
+  if (array->elem_size * new_count > (size_t) array->byte_alloc) {
+    sc_array_resize (array, new_count);
+  }
+  else {
+    array->elem_count = new_count;
+  }
+
+  return (void *) (array->array + array->elem_size * old_count);
+}
+
+/** Enlarge an array by one element.  Grows the array if necessary.
  * This function is not allowed for views.
  * \return Returns a pointer to the uninitialized newly added element.
  */
@@ -374,39 +492,7 @@ sc_array_pop (sc_array_t * array)
 static inline void *
 sc_array_push (sc_array_t * array)
 {
-  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
-
-  if (array->elem_size * (array->elem_count + 1) > (size_t) array->byte_alloc) {
-    const size_t        old_count = array->elem_count;
-
-    sc_array_resize (array, old_count + 1);
-    return (void *) (array->array + (array->elem_size * old_count));
-  }
-
-  return (void *) (array->array + (array->elem_size * array->elem_count++));
-}
-
-/** Enlarge a char array by a given number.  Grows the array if necessary.
- * This function is not allowed for views.
- * \return Returns a pointer to the uninitialized newly added bytes.
- */
-/*@unused@*/
-static inline char *
-sc_array_push_bytes (sc_array_t * array, size_t bytes)
-{
-  const size_t        old_count = array->elem_count;
-
-  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
-  SC_ASSERT (array->elem_size == 1);
-
-  if (old_count + bytes > (size_t) array->byte_alloc) {
-    sc_array_resize (array, old_count + bytes);
-  }
-  else {
-    array->elem_count += bytes;
-  }
-
-  return array->array + old_count;
+  return sc_array_push_count (array, 1);
 }
 
 /** The sc_mempool object provides a large pool of equal-size elements.
@@ -414,16 +500,20 @@ sc_array_push_bytes (sc_array_t * array, size_t bytes)
  * Elements are referenced by their address which never changes.
  * Elements can be freed (that is, returned to the pool)
  *    and are transparently reused.
+ * If the zero_and_persist option is selected, new elements are initialized to
+ * all zeros on creation, and the contents of an element are not touched
+ * between freeing and re-returning it.
  */
 typedef struct sc_mempool
 {
   /* interface variables */
-  size_t              elem_size;        /* size of a single element */
-  size_t              elem_count;       /* number of valid elements */
+  size_t              elem_size;        /**< size of a single element */
+  size_t              elem_count;       /**< number of valid elements */
+  int                 zero_and_persist; /**< Boolean; is set in constructor. */
 
   /* implementation variables */
-  struct obstack      obstack;  /* holds the allocated elements */
-  sc_array_t          freed;    /* buffers the freed elements */
+  struct obstack      obstack;  /**< holds the allocated elements */
+  sc_array_t          freed;    /**< buffers the freed elements */
 }
 sc_mempool_t;
 
@@ -433,16 +523,32 @@ sc_mempool_t;
  */
 size_t              sc_mempool_memory_used (sc_mempool_t * mempool);
 
-/** Creates a new mempool structure.
+/** Creates a new mempool structure with the zero_and_persist option off.
+ * The contents of any elements returned by sc_mempool_alloc are undefined.
  * \param [in] elem_size  Size of one element in bytes.
  * \return Returns an allocated and initialized memory pool.
  */
 sc_mempool_t       *sc_mempool_new (size_t elem_size);
 
+/** Creates a new mempool structure with the zero_and_persist option on.
+ * The memory of newly created elements is zero'd out, and the contents of an
+ * element are not touched between freeing and re-returning it.
+ * \param [in] elem_size  Size of one element in bytes.
+ * \return Returns an allocated and initialized memory pool.
+ */
+sc_mempool_t       *sc_mempool_new_zero_and_persist (size_t elem_size);
+
+/** Same as sc_mempool_new, but for an already allocated sc_mempool_t pointer. */
+void                sc_mempool_init (sc_mempool_t * mempool,
+                                     size_t elem_size);
+
 /** Destroys a mempool structure.
  * All elements that are still in use are invalidated.
  */
 void                sc_mempool_destroy (sc_mempool_t * mempool);
+
+/** Same as sc_mempool_destroy, but does not free the pointer */
+void                sc_mempool_reset (sc_mempool_t * mempool);
 
 /** Invalidates all previously returned pointers, resets count to 0.
  */
@@ -466,10 +572,15 @@ sc_mempool_alloc (sc_mempool_t * mempool)
   }
   else {
     ret = obstack_alloc (&mempool->obstack, (int) mempool->elem_size);
+    if (mempool->zero_and_persist) {
+      memset (ret, 0, mempool->elem_size);
+    }
   }
 
 #ifdef SC_DEBUG
-  memset (ret, -1, mempool->elem_size);
+  if (!mempool->zero_and_persist) {
+    memset (ret, -1, mempool->elem_size);
+  }
 #endif
 
   return ret;
@@ -487,7 +598,9 @@ sc_mempool_free (sc_mempool_t * mempool, void *elem)
   SC_ASSERT (mempool->elem_count > 0);
 
 #ifdef SC_DEBUG
-  memset (elem, -1, mempool->elem_size);
+  if (!mempool->zero_and_persist) {
+    memset (elem, -1, mempool->elem_size);
+  }
 #endif
 
   --mempool->elem_count;
@@ -519,7 +632,7 @@ typedef struct sc_list
 }
 sc_list_t;
 
-/** Calculate the memory used by a list.
+/** Calculate the total memory used by a list.
  * \param [in] list        The list.
  * \param [in] is_dynamic  True if created with sc_list_new,
  *                         false if initialized with sc_list_init
@@ -527,52 +640,73 @@ sc_list_t;
  */
 size_t              sc_list_memory_used (sc_list_t * list, int is_dynamic);
 
-/** Allocate a linked list structure.
- * \param [in] allocator Memory allocator for sc_link_t, can be NULL.
+/** Allocate a new, empty linked list.
+ * \param [in] allocator    Memory allocator for sc_link_t, can be NULL
+ *                          in which case an internal allocator is created.
+ * \return                  Pointer to a newly allocated, empty list object.
  */
 sc_list_t          *sc_list_new (sc_mempool_t * allocator);
 
 /** Destroy a linked list structure in O(N).
+ * \param [in,out] list     All memory allocated for this list is freed.
  * \note If allocator was provided in sc_list_new, it will not be destroyed.
  */
 void                sc_list_destroy (sc_list_t * list);
 
-/** Initializes an already allocated list structure.
+/** Initialize a list object with an external link allocator.
  * \param [in,out]  list       List structure to be initialized.
- * \param [in]      allocator  External memory allocator for sc_link_t.
+ * \param [in]      allocator  External memory allocator for sc_link_t,
+ *                             which must exist already.
  */
 void                sc_list_init (sc_list_t * list, sc_mempool_t * allocator);
 
-/** Removes all elements from a list in O(N).
- * \param [in,out]  list       List structure to be resetted.
+/** Remove all elements from a list in O(N).
+ * \param [in,out]  list       List structure to be emptied.
  * \note Calling sc_list_init, then any list operations,
  *       then sc_list_reset is memory neutral.
  */
 void                sc_list_reset (sc_list_t * list);
 
-/** Unliks all list elements without returning them to the mempool.
- * This runs in O(1) but is dangerous because of potential memory leaks.
+/** Unlink all list elements without returning them to the mempool.
+ * This runs in O(1) but is dangerous because the link memory stays alive.
  * \param [in,out]  list       List structure to be unlinked.
  */
 void                sc_list_unlink (sc_list_t * list);
 
-void                sc_list_prepend (sc_list_t * list, void *data);
-void                sc_list_append (sc_list_t * list, void *data);
-
-/** Insert an element after a given position.
- * \param [in] pred The predecessor of the element to be inserted.
+/** Insert a list element at the beginning of the list.
+ * \param [in,out] list     Valid list object.
+ * \param [in] data         A new link is created holding this data.
+ * \return                  The link that has been created for data.
  */
-void                sc_list_insert (sc_list_t * list,
+sc_link_t          *sc_list_prepend (sc_list_t * list, void *data);
+
+/** Insert a list element at the end of the list.
+ * \param [in,out] list     Valid list object.
+ * \param [in] data         A new link is created holding this data.
+ * \return                  The link that has been created for data.
+ */
+sc_link_t          *sc_list_append (sc_list_t * list, void *data);
+
+/** Insert an element after a given list position.
+ * \param [in,out] list     Valid list object.
+ * \param [in,out] pred     The predecessor of the element to be inserted.
+ * \param [in] data         A new link is created holding this data.
+ * \return                  The link that has been created for data.
+ */
+sc_link_t          *sc_list_insert (sc_list_t * list,
                                     sc_link_t * pred, void *data);
 
-/** Remove an element after a given position.
+/** Remove an element after a given list position.
+ * \param [in,out] list     Valid, non-empty list object.
  * \param [in] pred  The predecessor of the element to be removed.
-                     If \a pred == NULL, the first element is removed.
- * \return Returns the data of the removed element.
+ *                   If \a pred == NULL, the first element is removed,
+ *                   which is equivalent to calling sc_list_pop (list).
+ * \return           The data of the removed and freed link.
  */
 void               *sc_list_remove (sc_list_t * list, sc_link_t * pred);
 
 /** Remove an element from the front of the list.
+ * \param [in,out] list     Valid, non-empty list object.
  * \return Returns the data of the removed first list element.
  */
 void               *sc_list_pop (sc_list_t * list);
@@ -583,18 +717,26 @@ void               *sc_list_pop (sc_list_t * list);
 typedef struct sc_hash
 {
   /* interface variables */
-  size_t              elem_count;       /* total number of objects contained */
+  size_t              elem_count;       /**< total number of objects contained */
 
   /* implementation variables */
-  sc_array_t         *slots;    /* the slot count is slots->elem_count */
-  void               *user_data;        /* user data passed to hash function */
+  sc_array_t         *slots;    /**< the slot count is slots->elem_count */
+  void               *user_data;        /**< user data passed to hash function */
   sc_hash_function_t  hash_fn;
   sc_equal_function_t equal_fn;
   size_t              resize_checks, resize_actions;
   int                 allocator_owned;
-  sc_mempool_t       *allocator;        /* must allocate sc_link_t */
+  sc_mempool_t       *allocator;        /**< must allocate sc_link_t */
 }
 sc_hash_t;
+
+/** Compute a hash value from a null-terminated string.
+ * This hash function is NOT cryptographically safe! Use libcrypt then.
+ * \param [in] s        Null-terminated string to be hashed.
+ * \param [in] u        Not used.
+ * \return              The computed hash value as an unsigned integer.
+ */
+unsigned            sc_hash_function_string (const void *s, const void *u);
 
 /** Calculate the memory used by a hash table.
  * \param [in] hash        The hash table.

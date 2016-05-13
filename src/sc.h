@@ -3,6 +3,7 @@
   The SC Library provides support for parallel scientific applications.
 
   Copyright (C) 2010 The University of Texas System
+  Additional copyright (C) 2011 individual authors
 
   The SC Library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -20,12 +21,45 @@
   02110-1301, USA.
 */
 
+/** \file sc.h
+ *
+ * Support for process management (memory allocation, logging, etc.)
+ */
+
+/** \defgroup sc libsc
+ *
+ * The SC Library provides support for parallel scientific applications.
+ */
+
 #ifndef SC_H
 #define SC_H
 
 /* include the sc_config header first */
 
 #include <sc_config.h>
+#ifndef _sc_const
+#define _sc_const const
+#endif
+#ifndef _sc_restrict
+#define _sc_restrict restrict
+#endif
+
+/* use this feature macro, be minimally invasive */
+#ifdef SC_ENABLE_MEMALIGN
+/* we disable the system-provided functions for the time being */
+#ifdef SC_HAVE_ANY_MEMALIGN
+#undef SC_HAVE_ANY_MEMALIGN
+#endif
+/* if system-provided functions are needed, give them the prototype */
+#ifdef SC_HAVE_ANY_MEMALIGN
+#ifndef SC_HAVE_POSIX_MEMALIGN
+#ifdef SC_HAVE_ALIGNED_ALLOC
+#define _ISOC11_SOURCE
+#endif
+#endif
+#endif
+/* done with memalign macros */
+#endif
 
 /* use this in case mpi.h includes stdint.h */
 
@@ -35,7 +69,7 @@
 
 /* include MPI before stdio.h */
 
-#ifdef SC_MPI
+#ifdef SC_ENABLE_MPI
 #include <mpi.h>
 #else
 #ifdef MPI_SUCCESS
@@ -60,18 +94,19 @@
 
 /* provide extern C defines */
 
-/* the hacks below enable semicolons after the SC_EXTERN_C_ macros */
+/* The hacks below enable semicolons after the SC_EXTERN_C_ macros
+ * and also take care of the different semantics of () / (...) */
 #ifdef __cplusplus
 #define SC_EXTERN_C_BEGIN       extern "C" { void sc_extern_c_hack_1 (void)
 #define SC_EXTERN_C_END                    } void sc_extern_c_hack_2 (void)
+#define SC_NOARGS               ...
 #else
 #define SC_EXTERN_C_BEGIN                    void sc_extern_c_hack_3 (void)
 #define SC_EXTERN_C_END                      void sc_extern_c_hack_4 (void)
+#define SC_NOARGS
 #endif
 
-/* these two libsc headers are always included */
-
-#include <sc_c99_functions.h>
+/* this libsc header is always included */
 #include <sc_mpi.h>
 
 SC_EXTERN_C_BEGIN;
@@ -146,7 +181,8 @@ extern int          sc_trace_prio;
 #define SC_ABORT_NOT_REACHED() SC_ABORT ("Unreachable code")
 #define SC_CHECK_ABORT(q,s)                     \
   ((q) ? (void) 0 : SC_ABORT (s))
-#define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == MPI_SUCCESS, "MPI error")
+#define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == sc_MPI_SUCCESS, "MPI error")
+#define SC_CHECK_ZLIB(r) SC_CHECK_ABORT ((r) == Z_OK, "zlib error")
 
 /*
  * C++98 does not allow variadic macros
@@ -194,12 +230,23 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 
 #ifdef SC_DEBUG
 #define SC_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
+#define SC_EXECUTE_ASSERT_FALSE(expression)                             \
+  do { int _sc_i = (int) (expression);                                  \
+       SC_CHECK_ABORT (!_sc_i, "Expected false: '" #expression "'");    \
+  } while (0)
+#define SC_EXECUTE_ASSERT_TRUE(expression)                              \
+  do { int _sc_i = (int) (expression);                                  \
+       SC_CHECK_ABORT (_sc_i, "Expected true: '" #expression "'");      \
+  } while (0)
 #else
 #define SC_ASSERT(c) SC_NOOP ()
+#define SC_EXECUTE_ASSERT_FALSE(expression) \
+  do { (void) (expression); } while (0)
+#define SC_EXECUTE_ASSERT_TRUE(expression) \
+  do { (void) (expression); } while (0)
 #endif
 
-/* macros for memory allocation, will abort if out of memory
-   with --enable-alloc-line sc_malloc and sc_calloc are NOT thread-safe */
+/* macros for memory allocation, will abort if out of memory */
 
 #define SC_ALLOC(t,n)         (t *) sc_malloc (sc_package_id, (n) * sizeof(t))
 #define SC_ALLOC_ZERO(t,n)    (t *) sc_calloc (sc_package_id, \
@@ -208,6 +255,37 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
                                              (p), (n) * sizeof(t))
 #define SC_STRDUP(s)                sc_strdup (sc_package_id, (s))
 #define SC_FREE(p)                  sc_free (sc_package_id, (p))
+
+/* macros for memory alignment */
+/* some copied from bfam: https://github.com/bfam/bfam */
+
+#define SC_ALIGN_UP(x,n) ( ((n) <= 0) ? (x) : ((x) + (n) - 1) / (n) * (n) )
+
+#if defined (__bgq__)
+#define SC_ARG_ALIGN(p,t,n) __alignx((n), (p))
+#elif defined (__ICC)
+#define SC_ARG_ALIGN(p,t,n) __assume_aligned((p), (n))
+#elif defined (__clang__)
+#define SC_ARG_ALIGN(p,t,n) SC_NOOP ()
+#elif defined (__GNUC__) || defined (__GNUG__)
+
+#if __GNUC_PREREQ(4, 7)
+#define SC_ARG_ALIGN(p,t,n) do {                              \
+  (p) = (t) __builtin_assume_aligned((void *) (p), (n));      \
+} while (0)
+#else
+#define SC_ARG_ALIGN(p,t,n) SC_NOOP ()
+#endif
+
+#else
+#define SC_ARG_ALIGN(p,t,n) SC_NOOP ()
+#endif
+
+#if (defined __GNUC__) || (defined __PGI) || (defined __IBMC__)
+#define SC_ATTR_ALIGN(n) __attribute__((aligned(n)))
+#else
+#define SC_ATTR_ALIGN(n)
+#endif
 
 /**
  * Sets n elements of a memory range to zero.
@@ -233,32 +311,43 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_ROUNDUP2_32(x)                               \
   (((x) <= 0) ? 0 : (1 << (SC_LOG2_32 ((x) - 1) + 1)))
 #define SC_ROUNDUP2_64(x)                               \
-  (((x) <= 0) ? 0 : (1 << (SC_LOG2_64 ((x) - 1LL) + 1)))
+  (((x) <= 0) ? 0 : (1LL << (SC_LOG2_64 ((x) - 1LL) + 1)))
 
 /* log categories */
 
-#define SC_LC_GLOBAL      1     /* log only for master process */
-#define SC_LC_NORMAL      2     /* log for every process */
+#define SC_LC_GLOBAL      1     /**< log only for master process */
+#define SC_LC_NORMAL      2     /**< log for every process */
 
-/* log priorities
+/** \defgroup logpriorities log priorities
+ *
+ * Numbers designating the level of logging output.
  *
  * Priorities TRACE to VERBOSE are appropriate when all parallel processes
  * contribute log messages.  INFO and above must not clutter the output of
  * large parallel runs.  STATISTICS can be used for important measurements.
  * PRODUCTION is meant for rudimentary information on the program flow.
  * ESSENTIAL can be used for one-time messages, say at program startup.
+ *
+ * \ingroup sc
  */
-#define SC_LP_DEFAULT   (-1)    /* this selects the SC default threshold */
-#define SC_LP_ALWAYS      0     /* this will log everything */
-#define SC_LP_TRACE       1     /* this will prefix file and line number */
-#define SC_LP_DEBUG       2     /* any information on the internal state */
-#define SC_LP_VERBOSE     3     /* information on conditions, decisions */
-#define SC_LP_INFO        4     /* the main things a function is doing */
-#define SC_LP_STATISTICS  5     /* important for consistency or performance */
-#define SC_LP_PRODUCTION  6     /* a few lines for a major api function */
-#define SC_LP_ESSENTIAL   7     /* this logs a few lines max per program */
-#define SC_LP_ERROR       8     /* this logs errors only */
-#define SC_LP_SILENT      9     /* this never logs anything */
+/*@{ \ingroup logpriorities */
+/* log priorities */
+#define SC_LP_DEFAULT   (-1)    /**< this selects the SC default threshold */
+#define SC_LP_ALWAYS      0     /**< this will log everything */
+#define SC_LP_TRACE       1     /**< this will prefix file and line number */
+#define SC_LP_DEBUG       2     /**< any information on the internal state */
+#define SC_LP_VERBOSE     3     /**< information on conditions, decisions */
+#define SC_LP_INFO        4     /**< the main things a function is doing */
+#define SC_LP_STATISTICS  5     /**< important for consistency/performance */
+#define SC_LP_PRODUCTION  6     /**< a few lines for a major api function */
+#define SC_LP_ESSENTIAL   7     /**< this logs a few lines max per program */
+#define SC_LP_ERROR       8     /**< this logs errors only */
+#define SC_LP_SILENT      9     /**< this never logs anything */
+/*@}*/
+
+/** The log priority for the sc package.
+ *
+ */
 #ifdef SC_LOG_PRIORITY
 #define SC_LP_THRESHOLD SC_LOG_PRIORITY
 #else
@@ -388,21 +477,22 @@ typedef void        (*sc_log_handler_t) (FILE * log_stream,
                                          const char *filename, int lineno,
                                          int package, int category,
                                          int priority, const char *msg);
+typedef void        (*sc_abort_handler_t) (void);
 
-/* memory allocation functions, will abort if out of memory
-   with --enable-alloc-line sc_malloc and sc_calloc are NOT thread-safe
-   the sc_realloc function does not preserve alignment boundaries */
+/* memory allocation functions, will abort if out of memory */
 
 void               *sc_malloc (int package, size_t size);
 void               *sc_calloc (int package, size_t nmemb, size_t size);
 void               *sc_realloc (int package, void *ptr, size_t size);
 char               *sc_strdup (int package, const char *s);
 void                sc_free (int package, void *ptr);
+int                 sc_memory_status (int package);
 void                sc_memory_check (int package);
 
 /* comparison functions for various integer sizes */
 
 int                 sc_int_compare (const void *v1, const void *v2);
+int                 sc_int8_compare (const void *v1, const void *v2);
 int                 sc_int16_compare (const void *v1, const void *v2);
 int                 sc_int32_compare (const void *v1, const void *v2);
 int                 sc_int64_compare (const void *v1, const void *v2);
@@ -417,6 +507,12 @@ int                 sc_double_compare (const void *v1, const void *v2);
 void                sc_set_log_defaults (FILE * log_stream,
                                          sc_log_handler_t log_handler,
                                          int log_thresold);
+
+/** Controls the default SC abort behavior.
+ * \param [in] abort_handler Set default SC above handler (NULL selects
+ *                           builtin).  ***This function should not return!***
+ */
+void                sc_set_abort_handler (sc_abort_handler_t abort_handler);
 
 /** The central log function to be called by all packages.
  * Dispatches the log calls by package and filters by category and priority.
@@ -435,11 +531,17 @@ void                sc_logv (const char *filename, int lineno,
                              int package, int category, int priority,
                              const char *fmt, va_list ap);
 
-/** Generic MPI abort handler. The data must point to a MPI_Comm object. */
-void                sc_generic_abort_handler (void *data);
+/** Add spaces to the start of a package's default log format. */
+void                sc_log_indent_push_count (int package, int count);
 
-/** Installs an abort handler and its callback data. */
-void                sc_set_abort_handler (sc_handler_t handler, void *data);
+/** Remove spaces from the start of a package's default log format. */
+void                sc_log_indent_pop_count (int package, int count);
+
+/** Add one space to the start of sc's default log format. */
+void                sc_log_indent_push (void);
+
+/** Remove one space from the start of a sc's default log format. */
+void                sc_log_indent_pop (void);
 
 /** Print a stack trace, call the abort handler and then call abort (). */
 void                sc_abort (void)
@@ -461,47 +563,98 @@ void                sc_abort_verbosev (const char *filename, int lineno,
                                        const char *fmt, va_list ap)
   __attribute__ ((noreturn));
 
-/** Collective abort where only root calls sc_abort and prints a message */
+/** Collective abort where only root prints a message */
 void                sc_abort_collective (const char *msg)
   __attribute__ ((noreturn));
 
 /** Register a software package with SC.
+ * This function must only be called before additional threads are created.
  * The logging parameters are as in sc_set_log_defaults.
  * \return                   Returns a unique package id.
  */
 int                 sc_package_register (sc_log_handler_t log_handler,
                                          int log_threshold,
                                          const char *name, const char *full);
+
+/** Query whether an identifier matches a registered package.
+ * \param [in] package_id       Only a non-negative id can be registered.
+ * \return                      True if and only if the package id is
+ *                              non-negative and package is registered.
+ */
 int                 sc_package_is_registered (int package_id);
+
+/** Acquire a pthread mutex lock.
+ * If configured without --enable-pthread, this function does nothing.
+ * This function must be followed with a matching \ref sc_package_unlock.
+ * \param [in] package_id       Either -1 for an undefined package or
+ *                              an id returned from \ref sc_package_register.
+ *                              Depending on the value, the appropriate mutex
+ *                              is chosen.  Thus, we may overlap locking calls
+ *                              with distinct package_id.
+ */
+void                sc_package_lock (int package_id);
+
+/** Release a pthread mutex lock.
+ * If configured without --enable-pthread, this function does nothing.
+ * This function must be follow a matching \ref sc_package_lock.
+ * \param [in] package_id       Either -1 for an undefined package or
+ *                              an id returned from \ref sc_package_register.
+ *                              Depending on the value, the appropriate mutex
+ *                              is chosen.  Thus, we may overlap locking calls
+ *                              with distinct package_id.
+ */
+void                sc_package_unlock (int package_id);
+
+/** Set the logging verbosity of a registered package.
+ * This can be called at any point in the program, any number of times.
+ * It can only lower the verbosity at and below the value of SC_LP_THRESHOLD.
+ * \param [in] package_id       Must be a registered package identifier.
+ */
+void                sc_package_set_verbosity (int package_id,
+                                              int log_priority);
+
+/** Set the unregister behavior of sc_package_unregister().
+ *
+ * \param[in] package_id    Must be -1 for the default package or
+ *                          the identifier of a registered package.
+ * \param[in] set_abort     True if sc_package_unregister() should abort if the
+ *                          number of allocs does not match the number of
+ *                          frees; false otherwise.
+ */
+void                sc_package_set_abort_alloc_mismatch (int package_id,
+                                                         int set_abort);
+
+/** Unregister a software package with SC.
+ * This function must only be called after additional threads are finished.
+ */
 void                sc_package_unregister (int package_id);
 
 /** Print a summary of all packages registered with SC.
- * Uses the SC_LP_GLOBAL log category which by default only prints on rank 0.
+ * Uses the SC_LC_GLOBAL log category which by default only prints on rank 0.
  * \param [in] log_priority     Priority passed to sc log functions.
  */
 void                sc_package_print_summary (int log_priority);
 
 /** Sets the global program identifier (e.g. the MPI rank) and some flags.
  * This function is optional.
+ * This function must only be called before additional threads are created.
  * If this function is not called or called with log_handler == NULL,
  * the default SC log handler will be used.
  * If this function is not called or called with log_threshold == SC_LP_DEFAULT,
  * the default SC log threshold will be used.
  * The default SC log settings can be changed with sc_set_log_defaults ().
- * \param [in] mpicomm          MPI communicator, can be MPI_COMM_NULL.
- *                              If MPI_COMM_NULL, the identifier is set to -1.
- *                              Otherwise, MPI_Init must have been called
- *                              and the communicator is stored for later
- *                              use from within sc_generic_abort_handler.
+ * \param [in] mpicomm          MPI communicator, can be sc_MPI_COMM_NULL.
+ *                              If sc_MPI_COMM_NULL, the identifier is set to -1.
+ *                              Otherwise, sc_MPI_Init must have been called.
  * \param [in] catch_signals    If true, signals INT SEGV USR2 are be caught.
  * \param [in] print_backtrace  If true, sc_abort prints a backtrace.
  */
-void                sc_init (MPI_Comm mpicomm,
+void                sc_init (sc_MPI_Comm mpicomm,
                              int catch_signals, int print_backtrace,
                              sc_log_handler_t log_handler, int log_threshold);
 
 /** Unregisters all packages, runs the memory check, removes the
- * abort and signal handlers and resets sc_identifier and sc_root_*.
+ * signal handlers and resets sc_identifier and sc_root_*.
  * This function is optional.
  * This function does not require sc_init to be called first.
  */
@@ -509,7 +662,7 @@ void                sc_finalize (void);
 
 /** Identify the root process.
  * Only meaningful between sc_init and sc_finalize and
- * with a communicator that is not MPI_COMM_NULL (otherwise always true).
+ * with a communicator that is not sc_MPI_COMM_NULL (otherwise always true).
  *
  * \return          Return true for the root process and false otherwise.
  */

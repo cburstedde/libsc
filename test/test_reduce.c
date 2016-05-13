@@ -23,7 +23,7 @@
 #include <sc_reduce.h>
 
 int
-main (int argc, char ** argv)
+main (int argc, char **argv)
 {
   int                 mpiret;
   int                 mpirank, mpisize;
@@ -34,22 +34,22 @@ main (int argc, char ** argv)
   long                lvalue, lresult;
   float               fvalue[3], fresult[3], fexpect[3];
   double              dvalue, dresult;
-  MPI_Comm            mpicomm;
+  sc_MPI_Comm         mpicomm;
 
-  mpiret = MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  mpicomm = MPI_COMM_WORLD;
-  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  mpicomm = sc_MPI_COMM_WORLD;
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &mpirank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
   /* test allreduce int max */
   ivalue = mpirank;
-  sc_allreduce (&ivalue, &iresult, 1, MPI_INT, MPI_MAX, mpicomm);
+  sc_allreduce (&ivalue, &iresult, 1, sc_MPI_INT, sc_MPI_MAX, mpicomm);
   SC_CHECK_ABORT (iresult == mpisize - 1, "Allreduce mismatch");
 
   /* test reduce float max */
@@ -60,24 +60,25 @@ main (int argc, char ** argv)
   fvalue[2] = (float) (mpirank % 6);
   fexpect[2] = (float) (mpisize >= 6 ? 5 : (mpisize - 1) % 6);
   for (i = 0; i < mpisize; ++i) {
-    sc_reduce (fvalue, fresult, 3, MPI_FLOAT, MPI_MAX, i, mpicomm);
+    sc_reduce (fvalue, fresult, 3, sc_MPI_FLOAT, sc_MPI_MAX, i, mpicomm);
     if (i == mpirank) {
       for (j = 0; j < 3; ++j) {
-	SC_CHECK_ABORTF (fresult[j] == fexpect[j],         /* ok */
-			 "Reduce mismatch in %d", j);
+        SC_CHECK_ABORTF (fresult[j] == fexpect[j],      /* ok */
+                         "Reduce mismatch in %d", j);
       }
     }
   }
 
   /* test allreduce char min */
   cvalue = (char) (mpirank % 127);
-  sc_allreduce (&cvalue, &cresult, 1, MPI_CHAR, MPI_MIN, mpicomm);
+  sc_allreduce (&cvalue, &cresult, 1, sc_MPI_CHAR, sc_MPI_MIN, mpicomm);
   SC_CHECK_ABORT (cresult == 0, "Allreduce mismatch");
 
   /* test reduce unsigned short min */
   usvalue = (unsigned short) (mpirank % 32767);
   for (i = 0; i < mpisize; ++i) {
-    sc_reduce (&usvalue, &usresult, 1, MPI_UNSIGNED_SHORT, MPI_MIN, i, mpicomm);
+    sc_reduce (&usvalue, &usresult, 1, sc_MPI_UNSIGNED_SHORT, sc_MPI_MIN, i,
+               mpicomm);
     if (i == mpirank) {
       SC_CHECK_ABORT (usresult == 0, "Reduce mismatch");
     }
@@ -85,24 +86,23 @@ main (int argc, char ** argv)
 
   /* test allreduce long sum */
   lvalue = (long) mpirank;
-  sc_allreduce (&lvalue, &lresult, 1, MPI_LONG, MPI_SUM, mpicomm);
+  sc_allreduce (&lvalue, &lresult, 1, sc_MPI_LONG, sc_MPI_SUM, mpicomm);
   SC_CHECK_ABORT (lresult == ((long) (mpisize - 1)) * mpisize / 2,
-		  "Allreduce mismatch");
+                  "Allreduce mismatch");
 
   /* test reduce double sum */
   dvalue = (double) mpirank;
   for (i = 0; i < mpisize; ++i) {
-    sc_reduce (&dvalue, &dresult, 1, MPI_DOUBLE, MPI_SUM, i, mpicomm);
+    sc_reduce (&dvalue, &dresult, 1, sc_MPI_DOUBLE, sc_MPI_SUM, i, mpicomm);
     if (i == mpirank) {
-      SC_CHECK_ABORT (dresult ==
-		      ((double) (mpisize - 1)) * mpisize / 2.,  /* ok */
-		      "Reduce mismatch");
+      SC_CHECK_ABORT (dresult == ((double) (mpisize - 1)) * mpisize / 2.,       /* ok */
+                      "Reduce mismatch");
     }
   }
 
   sc_finalize ();
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
   return 0;

@@ -76,6 +76,27 @@ dnl Replaced obsolete AC_TRY_LINK_FUNC macro.
 dnl Disabled the PhiPack test since it requires BLAS_LIBS anyway.
 dnl Fixed buggy generic Mac OS X library test.
 
+dnl Subroutine to link a program using blas
+dnl SC_BLAS_LINK (<added to CHECKING message>)
+AC_DEFUN([SC_BLAS_LINK], [
+        AC_MSG_CHECKING([for BLAS by linking a C program$1])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(dnl
+[[
+#ifdef __cplusplus
+extern "C"
+void $sc_blas_func (char *, char *, int *, int *, int *, double *, double *,
+                    int *, double *, int *, double *, double *, int *);
+#endif
+]], [[
+int     i = 1;
+double  alpha = 1., beta = 1.;
+double  A = 1., B = 1., C = 1.;
+$sc_blas_func ("N", "N", &i, &i, &i, &alpha, &A, &i, &B, &i, &beta, &C, &i);
+]])],
+[AC_MSG_RESULT([successful])],
+[AC_MSG_RESULT([failed]); sc_blas_ok=no])
+])
+
 dnl The first argument of this macro should be the package prefix.
 dnl The second argument of this macro should be a mangled DGEMM function.
 AC_DEFUN([SC_BLAS], [
@@ -89,8 +110,7 @@ user_spec_blas_failed=no
 AC_ARG_WITH([blas], [AS_HELP_STRING([--with-blas=<lib>],
             [change default BLAS library to <lib>
              or specify --without-blas to use no BLAS and LAPACK at all])],,
-	     [withval="yes"])
-SC_ARG_OVERRIDE_WITH([$1], [BLAS])
+	     [withval=yes])
 case $withval in
 	yes | "") ;;
 	no) sc_blas_ok=disable ;;
@@ -105,7 +125,7 @@ sc_blas_save_LIBS="$LIBS"
 LIBS="$LIBS $FLIBS"
 
 # First, check BLAS_LIBS environment variable
-if test "$sc_blas_ok" = no; then
+if test "x$sc_blas_ok" = xno; then
 if test "x$BLAS_LIBS" != x; then
 	save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS"
 	AC_MSG_CHECKING([for $sc_blas_func in $BLAS_LIBS])
@@ -123,12 +143,12 @@ fi
 if test "x$user_spec_blas_failed" != xyes; then
 
 # BLAS linked to by default?  (happens on some supercomputers)
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	AC_CHECK_FUNC($sc_blas_func, [sc_blas_ok=yes])
 fi
 
 # BLAS in ATLAS library? (http://math-atlas.sourceforge.net/)
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	AC_CHECK_LIB(atlas, ATL_xerbla,
 		[AC_CHECK_LIB(f77blas, $sc_blas_func,
 		[AC_CHECK_LIB(cblas, cblas_dgemm,
@@ -140,7 +160,7 @@ fi
 
 # BLAS in PhiPACK libraries? (requires generic BLAS lib, too)
 # Disabled since we might want more than sgemm and dgemm.
-if test $sc_blas_ok = no -a -z 1 ; then
+if test "x$sc_blas_ok" = xno && false ; then
 	AC_CHECK_LIB(blas, $dgemm,
 		[AC_CHECK_LIB(dgemm, $dgemm,
 		[AC_CHECK_LIB(sgemm, $sgemm,
@@ -150,29 +170,29 @@ if test $sc_blas_ok = no -a -z 1 ; then
 fi
 
 # BLAS in Intel MKL library?
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	AC_CHECK_LIB(mkl, $sc_blas_func, [sc_blas_ok=yes;BLAS_LIBS="-lmkl"])
 fi
 
 # BLAS in Apple vecLib library?
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	save_LIBS="$LIBS"; LIBS="-framework vecLib $LIBS"
 	AC_CHECK_FUNC($sc_blas_func, [sc_blas_ok=yes;BLAS_LIBS="-framework vecLib"])
 	LIBS="$save_LIBS"
 fi
 
 # BLAS in Alpha CXML library?
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	AC_CHECK_LIB(cxml, $sc_blas_func, [sc_blas_ok=yes;BLAS_LIBS="-lcxml"])
 fi
 
 # BLAS in Alpha DXML library? (now called CXML, see above)
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	AC_CHECK_LIB(dxml, $sc_blas_func, [sc_blas_ok=yes;BLAS_LIBS="-ldxml"])
 fi
 
 # BLAS in Sun Performance library?
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	if test "x$GCC" != xyes; then # only works with Sun CC
 		AC_CHECK_LIB(sunmath, acosp,
 			[AC_CHECK_LIB(sunperf, $sc_blas_func,
@@ -182,18 +202,18 @@ if test $sc_blas_ok = no; then
 fi
 
 # BLAS in SCSL library?  (SGI/Cray Scientific Library)
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	AC_CHECK_LIB(scs, $sc_blas_func, [sc_blas_ok=yes; BLAS_LIBS="-lscs"])
 fi
 
 # BLAS in SGIMATH library?
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	AC_CHECK_LIB(complib.sgimath, $sc_blas_func,
 		     [sc_blas_ok=yes; BLAS_LIBS="-lcomplib.sgimath"])
 fi
 
 # BLAS in IBM ESSL library? (requires generic BLAS lib, too)
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	AC_CHECK_LIB(blas, $sc_blas_func,
 		[AC_CHECK_LIB(essl, $sc_blas_func,
 			[sc_blas_ok=yes; BLAS_LIBS="-lessl -lblas"],
@@ -201,7 +221,7 @@ if test $sc_blas_ok = no; then
 fi
 
 # Generic Mac OS X library?
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	save_LIBS="$LIBS"; LIBS="-framework Accelerate $LIBS"
 	AC_CHECK_FUNC($sc_blas_func, [sc_blas_ok=yes
                                BLAS_LIBS="-framework Accelerate"])
@@ -209,45 +229,44 @@ if test $sc_blas_ok = no; then
 fi
 
 # Generic BLAS library?
-if test $sc_blas_ok = no; then
+if test "x$sc_blas_ok" = xno; then
 	AC_CHECK_LIB(blas, $sc_blas_func, [sc_blas_ok=yes; BLAS_LIBS="-lblas"])
 fi
 
-AC_SUBST(BLAS_LIBS)
+dnl AC_SUBST(BLAS_LIBS)
 
 fi # If the user specified library wasn't found, we skipped the remaining
    # checks.
 
 LIBS="$sc_blas_save_LIBS"
+BLAS_FLIBS=
 
-# Test link and run a BLAS program
-if test "$sc_blas_ok" = yes ; then
+# Test link a BLAS program
+if test "x$sc_blas_ok" = xyes ; then
+    dnl Link without FLIBS first
+    sc_blas_save_run_LIBS="$LIBS"
+    LIBS="$BLAS_LIBS $LIBS"
+    SC_BLAS_LINK([ without FLIBS])
+    LIBS="$sc_blas_save_run_LIBS"
+
+    if test "x$sc_blas_ok" = xno ; then
+        dnl Link with FLIBS it didn't work without
         sc_blas_save_run_LIBS="$LIBS"
         LIBS="$BLAS_LIBS $LIBS $FLIBS"
-        AC_MSG_CHECKING([for BLAS by linking a C program])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(dnl
-[[#ifdef __cplusplus
-extern "C"
-void $sc_blas_func (char *, char *, int *, int *, int *, double *, double *,
-                    int *, double *, int *, double *, double *, int *);
-#endif
-]],[[
-int     i = 1;
-double  alpha = 1., beta = 1.;
-double  A = 1., B = 1., C = 1.;
-$sc_blas_func ("N", "N", &i, &i, &i, &alpha, &A, &i, &B, &i, &beta, &C, &i);
-]])],
-[AC_MSG_RESULT([successful])],
-[AC_MSG_RESULT([failed]); sc_blas_ok=no])
+        sc_blas_ok=yes
+        SC_BLAS_LINK([ with FLIBS])
         LIBS="$sc_blas_save_run_LIBS"
+        BLAS_FLIBS="$FLIBS"
+    fi
 fi
+dnl Now BLAS_FLIBS may be set or not
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test "$sc_blas_ok" = yes ; then
+if test "x$sc_blas_ok" = xyes ; then
         ifelse([$3],,
                [AC_DEFINE(HAVE_BLAS,1,[Define if you have a BLAS library.])],[$3])
         :
-elif test "$sc_blas_ok" != disable ; then
+elif test "x$sc_blas_ok" != xdisable ; then
         sc_blas_ok=no
         $4
 fi

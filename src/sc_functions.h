@@ -27,6 +27,35 @@
 
 SC_EXTERN_C_BEGIN;
 
+/** Integer power routine.
+ * Found in github.com:bfam/bfam.git, and originally in
+ * http://stackoverflow.com/questions/101439/\
+ * the-most-efficient-way-to-implement-an-integer-based-power-function-powint-int
+ *
+ * \param [in] base         This integer is taken to the power of \exp.
+ *                          It may be negative as well.
+ * \param [in] exp          This non-negative integer is the exponent.
+ * \return                  We compute \b base ** \b exp.
+ */
+int                 sc_intpow (int base, int exp);
+
+/* Power routine for 64-bit integers.
+ * \see sc_intpow.
+ * \param [in] base         This integer is taken to the power of \exp.
+ *                          It may be negative as well.
+ * \param [in] exp          This non-negative integer is the exponent.
+ * \return                  We compute \b base ** \b exp.
+ */
+int64_t             sc_intpow64 (int64_t base, int exp);
+
+/* Power routine for unsigned 64-bit integers.
+ * \see sc_intpow.
+ * \param [in] base         This integer is taken to the power of \exp.
+ * \param [in] exp          This non-negative integer is the exponent.
+ * \return                  We compute \b base ** \b exp.
+ */
+uint64_t            sc_intpow64u (uint64_t base, int exp);
+
 typedef double      (*sc_function1_t) (double x, void *data);
 
 typedef double      (*sc_function3_t) (double x, double y, double z,
@@ -54,6 +83,33 @@ sc_function3_meta_t;
 double              sc_function1_invert (sc_function1_t func, void *data,
                                          double x_low, double x_high,
                                          double y, double rtol);
+
+/** Seed the random number generator differently on each process.
+ * Seeds each process with seed and mpirank from sc_MPI_COMM_WORLD.
+ *    ( mpirank + seed * large_prime )
+ *
+ * \param [in] seed Seed for random number generator, calls srand ().
+ */
+void                sc_srand (unsigned int seed);
+
+/** Seed the random number generator differently on each process.
+ * Seeds each process with time and mpirank from sc_MPI_COMM_WORLD.
+ *    ( time + mpirank * small_prime )
+ */
+void                sc_srand_time ();
+
+/** Sample a uniform value from [0,1) via rand ().
+ *
+ * \return    randum number from uniform distribution on [0,1)
+ */
+double              sc_rand_uniform (void);
+
+/** Sample a (gaussian) standard normal distribution.
+ * Implements polar form of the Box Muller transform based on rand ().
+ *
+ * \return    random number from a univariate standard normal distribution
+ */
+double              sc_rand_normal (void);
 
 /* Some basic 3D functions */
 double              sc_zero3 (double x, double y, double z, void *data);

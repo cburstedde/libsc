@@ -14,7 +14,8 @@ libsc_internal_headers += $(iniparser_internal_headers)
 libsc_compiled_sources += $(iniparser_compiled_sources)
 LIBSC_CPPFLAGS += -I@top_srcdir@/iniparser
 
-EXTRA_DIST += iniparser/AUTHORS iniparser/LICENSE iniparser/twisted.ini
+EXTRA_DIST += iniparser/AUTHORS iniparser/LICENSE
+dist_scini_DATA += iniparser/sc_iniparser_twisted.ini
 
 LINT_CSOURCES += \
 	$(iniparser_sc_iniexample_SOURCES)

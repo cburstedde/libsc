@@ -21,7 +21,9 @@
 */
 
 #include <sc_containers.h>
-#include <sc_zlib.h>
+#ifdef SC_HAVE_ZLIB
+#include <zlib.h>
+#endif
 
 /* array routines */
 
@@ -147,69 +149,29 @@ sc_array_reset (sc_array_t * array)
   array->byte_alloc = 0;
 }
 
-#ifdef SC_USE_REALLOC
+void
+sc_array_truncate (sc_array_t * array)
+{
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+
+  array->elem_count = 0;
+
+#if SC_DEBUG
+  SC_ASSERT (array->byte_alloc >= 0);
+  memset (array->array, -1, array->byte_alloc);
+#endif
+}
 
 void
 sc_array_resize (sc_array_t * array, size_t new_count)
 {
   size_t              newoffs, roundup, newsize;
-#ifdef SC_DEBUG
-  size_t              oldoffs;
-  size_t              i, minoffs;
+#if !defined SC_ENABLE_USE_REALLOC || defined SC_DEBUG
+  size_t              oldoffs, minoffs;
 #endif
-
-  if (!SC_ARRAY_IS_OWNER (array)) {
-    /* *INDENT-OFF* HORRIBLE indent bug */
-    SC_ASSERT (new_count * array->elem_size <=
-               (size_t) -(array->byte_alloc + 1));
-    /* *INDENT-ON* */
-    array->elem_count = new_count;
-    return;
-  }
-
-#ifdef SC_DEBUG
-  oldoffs = array->elem_count * array->elem_size;
-#endif
-  array->elem_count = new_count;
-  newoffs = array->elem_count * array->elem_size;
-  roundup = (size_t) SC_ROUNDUP2_64 (newoffs);
-  SC_ASSERT (roundup >= newoffs && roundup <= 2 * newoffs);
-
-  if (newoffs > (size_t) array->byte_alloc ||
-      roundup < (size_t) array->byte_alloc) {
-    array->byte_alloc = (ssize_t) roundup;
-  }
-  else {
-#ifdef SC_DEBUG
-    if (newoffs < oldoffs) {
-      memset (array->array + newoffs, -1, oldoffs - newoffs);
-    }
-    for (i = oldoffs; i < newoffs; ++i) {
-      SC_ASSERT (array->array[i] == (char) -1);
-    }
-#endif
-    return;
-  }
-  SC_ASSERT ((size_t) array->byte_alloc >= newoffs);
-
-  newsize = (size_t) array->byte_alloc;
-  array->array = SC_REALLOC (array->array, char, newsize);
-
-#ifdef SC_DEBUG
-  minoffs = SC_MIN (oldoffs, newoffs);
-  SC_ASSERT (minoffs <= newsize);
-  memset (array->array + minoffs, -1, newsize - minoffs);
-#endif
-}
-
-#else /* !SC_USE_REALLOC */
-
-void
-sc_array_resize (sc_array_t * array, size_t new_count)
-{
+#ifndef SC_ENABLE_USE_REALLOC
   char               *ptr;
-  size_t              oldoffs, newoffs;
-  size_t              roundup, newsize;
+#endif
 #ifdef SC_DEBUG
   size_t              i;
 #endif
@@ -223,18 +185,25 @@ sc_array_resize (sc_array_t * array, size_t new_count)
     return;
   }
 
+  /* We know that this array is not a view now so we can call reset. */
   if (new_count == 0) {
     sc_array_reset (array);
     return;
   }
 
+  /* Figure out how the array size will change */
+  newoffs = new_count * array->elem_size;
+#if defined SC_DEBUG || !defined SC_ENABLE_USE_REALLOC
   oldoffs = array->elem_count * array->elem_size;
+  minoffs = SC_MIN (oldoffs, newoffs);
+#endif
   array->elem_count = new_count;
-  newoffs = array->elem_count * array->elem_size;
   roundup = (size_t) SC_ROUNDUP2_64 (newoffs);
   SC_ASSERT (roundup >= newoffs && roundup <= 2 * newoffs);
 
-  if (newoffs > (size_t) array->byte_alloc) {
+  if (newoffs > (size_t) array->byte_alloc ||
+      roundup < (size_t) array->byte_alloc) {
+    /* we will reallocate the array memory, either grow or shrink it */
     array->byte_alloc = (ssize_t) roundup;
   }
   else {
@@ -246,23 +215,38 @@ sc_array_resize (sc_array_t * array, size_t new_count)
       SC_ASSERT (array->array[i] == (char) -1);
     }
 #endif
+    /* we keep the current allocation */
     return;
   }
+
+  /* byte_alloc is the size to be realloced to, it may be smaller than oldoffs */
   SC_ASSERT ((size_t) array->byte_alloc >= newoffs);
-  SC_ASSERT (newoffs > oldoffs);
 
   newsize = (size_t) array->byte_alloc;
+#ifdef SC_ENABLE_USE_REALLOC
+  array->array = SC_REALLOC (array->array, char, newsize);
+#else
   ptr = SC_ALLOC (char, newsize);
-  memcpy (ptr, array->array, oldoffs);
+  memcpy (ptr, array->array, minoffs);
   SC_FREE (array->array);
   array->array = ptr;
+#endif
 
 #ifdef SC_DEBUG
-  memset (array->array + oldoffs, -1, newsize - oldoffs);
+  SC_ASSERT (minoffs <= newsize);
+  memset (array->array + minoffs, -1, newsize - minoffs);
 #endif
 }
 
-#endif /* !SC_USE_REALLOC */
+void
+sc_array_copy (sc_array_t * dest, sc_array_t * src)
+{
+  SC_ASSERT (SC_ARRAY_IS_OWNER (dest));
+  SC_ASSERT (dest->elem_size == src->elem_size);
+
+  sc_array_resize (dest, src->elem_count);
+  memcpy (dest->array, src->array, src->elem_count * src->elem_size);
+}
 
 void
 sc_array_sort (sc_array_t * array, int (*compar) (const void *, const void *))
@@ -292,6 +276,17 @@ sc_array_is_sorted (sc_array_t * array,
   }
 
   return 1;
+}
+
+int
+sc_array_is_equal (sc_array_t * array, sc_array_t * other)
+{
+  if (array->elem_size != other->elem_size ||
+      array->elem_count != other->elem_count) {
+    return 0;
+  }
+  return !memcmp (array->array, other->array,
+                  array->elem_size * array->elem_count);
 }
 
 void
@@ -445,9 +440,110 @@ sc_array_split (sc_array_t * array, sc_array_t * offsets, size_t num_types,
   }
 }
 
+int
+sc_array_is_permutation (sc_array_t * newindices)
+{
+  size_t              count = newindices->elem_count;
+  int                *counted = SC_ALLOC_ZERO (int, count);
+  size_t              zi;
+  size_t              zj;
+  size_t             *newind;
+
+  SC_ASSERT (newindices->elem_size == sizeof (size_t));
+  if (!newindices->elem_count) {
+    SC_FREE (counted);
+    return 1;
+  }
+  newind = (size_t *) sc_array_index (newindices, 0);
+
+  for (zi = 0; zi < count; zi++) {
+    zj = newind[zi];
+    if (zj >= count) {
+      SC_FREE (counted);
+      return 0;
+    }
+    counted[zj]++;
+  }
+
+  for (zi = 0; zi < count; zi++) {
+    if (counted[zi] != 1) {
+      SC_FREE (counted);
+      return 0;
+    }
+  }
+
+  SC_FREE (counted);
+  return 1;
+}
+
+/** permute an array in place.  newind[i] is the new index for the data that
+ * is currently at index i. entries in newind will be altered by this
+ * procedure */
+void
+sc_array_permute (sc_array_t * array, sc_array_t * newindices, int keepperm)
+{
+  size_t              zi, zj, zk;
+  char               *temp = SC_ALLOC (char, array->elem_size);
+  char               *carray = array->array;
+  size_t              esize = array->elem_size * sizeof (char);
+  size_t              count = array->elem_count;
+  size_t             *newind;
+
+  SC_ASSERT (newindices->elem_size == sizeof (size_t));
+  SC_ASSERT (newindices->elem_count == count);
+  SC_ASSERT (sc_array_is_permutation (newindices));
+  if (!count) {
+    SC_FREE (temp);
+    return;
+  }
+
+  if (!keepperm) {
+    newind = (size_t *) sc_array_index (newindices, 0);
+  }
+  else {
+    newind = SC_ALLOC (size_t, count);
+    memcpy (newind, sc_array_index (newindices, 0), count * sizeof (size_t));
+  }
+
+  zi = 0;
+  zj = 0;
+
+  while (zi < count) {
+    /* zi is the index of the current pivot slot */
+    /* zj is the old index of the data in the pivot */
+    /* zk is the new index for what is in the pivot */
+    zk = newind[zj];
+    SC_ASSERT (zk < count);
+    while (zk != zi) {
+      /* vacate zk */
+      memcpy (temp, carray + esize * zk, esize);
+      /* copy pivot to zk */
+      memcpy (carray + esize * zk, carray + esize * zi, esize);
+      /* copy zk to pivot */
+      memcpy (carray + esize * zi, temp, esize);
+      /* what was in zk is now in the pivot zi */
+      zj = zk;
+      zk = newind[zk];
+      SC_ASSERT (zk < count);
+      /* change newind to reflect the fact that what is now in zj is what is
+       * supposed to be in zj */
+      newind[zj] = zj;
+    }
+    newind[zi] = zi;
+    zj = (++zi);
+  }
+
+  if (keepperm) {
+    SC_FREE (newind);
+  }
+
+  SC_FREE (temp);
+}
+
 unsigned
 sc_array_checksum (sc_array_t * array)
 {
+#ifdef SC_HAVE_ZLIB
   uInt                bytes;
   uLong               crc;
 
@@ -460,6 +556,11 @@ sc_array_checksum (sc_array_t * array)
   crc = adler32 (crc, (const Bytef *) array->array, bytes);
 
   return (unsigned) crc;
+#else
+  SC_ABORT ("Configure did not find a recent enough zlib.  Abort.\n");
+
+  return 0;
+#endif
 }
 
 size_t
@@ -474,6 +575,9 @@ sc_array_pqueue_add (sc_array_t * array, void *temp,
   /* this works on a pre-allocated array that is not a view */
   SC_ASSERT (SC_ARRAY_IS_OWNER (array));
   SC_ASSERT (array->elem_count > 0);
+
+  /* PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED. */
+  SC_ABORT_NOT_REACHED ();
 
   swaps = 0;
   child = array->elem_count - 1;
@@ -516,6 +620,9 @@ sc_array_pqueue_pop (sc_array_t * array, void *result,
   /* array must not be empty or a view */
   SC_ASSERT (SC_ARRAY_IS_OWNER (array));
   SC_ASSERT (array->elem_count > 0);
+
+  /* PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED. */
+  SC_ABORT_NOT_REACHED ();
 
   swaps = 0;
   new_count = array->elem_count - 1;
@@ -594,8 +701,28 @@ sc_containers_free (void *p)
 
 static void         (*obstack_chunk_free) (void *) = sc_containers_free;
 
-sc_mempool_t       *
-sc_mempool_new (size_t elem_size)
+/** This function is static; we do not like to expose _ext functions in libsc. */
+static void
+sc_mempool_init_ext (sc_mempool_t * mempool, size_t elem_size,
+                     int zero_and_persist)
+{
+  mempool->elem_size = elem_size;
+  mempool->elem_count = 0;
+  mempool->zero_and_persist = zero_and_persist;
+
+  obstack_init (&mempool->obstack);
+  sc_array_init (&mempool->freed, sizeof (void *));
+}
+
+void
+sc_mempool_init (sc_mempool_t * mempool, size_t elem_size)
+{
+  sc_mempool_init_ext (mempool, elem_size, 0);
+}
+
+/** This function is static; we do not like to expose _ext functions in libsc. */
+static sc_mempool_t *
+sc_mempool_new_ext (size_t elem_size, int zero_and_persist)
 {
   sc_mempool_t       *mempool;
 
@@ -604,21 +731,34 @@ sc_mempool_new (size_t elem_size)
 
   mempool = SC_ALLOC (sc_mempool_t, 1);
 
-  mempool->elem_size = elem_size;
-  mempool->elem_count = 0;
-
-  obstack_init (&mempool->obstack);
-  sc_array_init (&mempool->freed, sizeof (void *));
+  sc_mempool_init_ext (mempool, elem_size, zero_and_persist);
 
   return mempool;
+}
+
+sc_mempool_t       *
+sc_mempool_new (size_t elem_size)
+{
+  return sc_mempool_new_ext (elem_size, 0);
+}
+
+sc_mempool_t       *
+sc_mempool_new_zero_and_persist (size_t elem_size)
+{
+  return sc_mempool_new_ext (elem_size, 1);
+}
+
+void
+sc_mempool_reset (sc_mempool_t * mempool)
+{
+  sc_array_reset (&mempool->freed);
+  obstack_free (&mempool->obstack, NULL);
 }
 
 void
 sc_mempool_destroy (sc_mempool_t * mempool)
 {
-  sc_array_reset (&mempool->freed);
-  obstack_free (&mempool->obstack, NULL);
-
+  sc_mempool_reset (mempool);
   SC_FREE (mempool);
 }
 
@@ -717,7 +857,7 @@ sc_list_unlink (sc_list_t * list)
   list->elem_count = 0;
 }
 
-void
+sc_link_t          *
 sc_list_prepend (sc_list_t * list, void *data)
 {
   sc_link_t          *lynk;
@@ -731,9 +871,10 @@ sc_list_prepend (sc_list_t * list, void *data)
   }
 
   ++list->elem_count;
+  return lynk;
 }
 
-void
+sc_link_t          *
 sc_list_append (sc_list_t * list, void *data)
 {
   sc_link_t          *lynk;
@@ -750,9 +891,10 @@ sc_list_append (sc_list_t * list, void *data)
   list->last = lynk;
 
   ++list->elem_count;
+  return lynk;
 }
 
-void
+sc_link_t          *
 sc_list_insert (sc_list_t * list, sc_link_t * pred, void *data)
 {
   sc_link_t          *lynk;
@@ -768,6 +910,7 @@ sc_list_insert (sc_list_t * list, sc_link_t * pred, void *data)
   }
 
   ++list->elem_count;
+  return lynk;
 }
 
 void               *
@@ -780,6 +923,7 @@ sc_list_remove (sc_list_t * list, sc_link_t * pred)
     return sc_list_pop (list);
   }
 
+  SC_ASSERT (list->first != NULL && list->last != NULL);
   SC_ASSERT (pred->next != NULL);
 
   lynk = pred->next;
@@ -800,7 +944,7 @@ sc_list_pop (sc_list_t * list)
   sc_link_t          *lynk;
   void               *data;
 
-  SC_ASSERT (list->first != NULL);
+  SC_ASSERT (list->first != NULL && list->last != NULL);
 
   lynk = list->first;
   list->first = lynk->next;
@@ -815,6 +959,46 @@ sc_list_pop (sc_list_t * list)
 }
 
 /* hash table routines */
+
+unsigned
+sc_hash_function_string (const void *s, const void *u)
+{
+  int                 j;
+  unsigned            h;
+  unsigned            a, b, c;
+  const char         *sp = (const char *) s;
+
+  j = 0;
+  h = 0;
+  a = b = c = 0;
+  for (;;) {
+    if (*sp) {
+      h += *sp++;
+    }
+
+    if (++j == 4) {
+      a += h;
+      h = 0;
+    }
+    else if (j == 8) {
+      b += h;
+      h = 0;
+    }
+    else if (j == 12) {
+      c += h;
+      sc_hash_mix (a, b, c);
+      if (!*sp) {
+        sc_hash_final (a, b, c);
+        return c;
+      }
+      j = 0;
+      h = 0;
+    }
+    else {
+      h <<= 8;
+    }
+  }
+}
 
 size_t
 sc_hash_memory_used (sc_hash_t * hash)
@@ -871,7 +1055,7 @@ sc_hash_maybe_resize (sc_hash_t * hash)
       /* insert data into new slot list */
       j = hash->hash_fn (lynk->data, hash->user_data) % new_size;
       new_list = (sc_list_t *) sc_array_index (new_slots, j);
-      sc_list_prepend (new_list, lynk->data);
+      (void) sc_list_prepend (new_list, lynk->data);
       ++new_count;
 
       /* remove old list element */
@@ -1026,7 +1210,6 @@ sc_hash_lookup (sc_hash_t * hash, void *v, void ***found)
 int
 sc_hash_insert_unique (sc_hash_t * hash, void *v, void ***found)
 {
-  int                 found_again;
   size_t              hval;
   sc_list_t          *list;
   sc_link_t          *lynk;
@@ -1045,7 +1228,7 @@ sc_hash_insert_unique (sc_hash_t * hash, void *v, void ***found)
   }
 
   /* append new object to the list */
-  sc_list_append (list, v);
+  (void) sc_list_append (list, v);
   if (found != NULL) {
     *found = &list->last->data;
   }
@@ -1055,8 +1238,7 @@ sc_hash_insert_unique (sc_hash_t * hash, void *v, void ***found)
   if (hash->elem_count % hash->slots->elem_count == 0) {
     sc_hash_maybe_resize (hash);
     if (found != NULL) {
-      found_again = sc_hash_lookup (hash, v, found);
-      SC_ASSERT (found_again);
+      SC_EXECUTE_ASSERT_TRUE (sc_hash_lookup (hash, v, found));
     }
   }
 

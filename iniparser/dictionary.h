@@ -1,11 +1,8 @@
 
-/* *INDENT-OFF* */
 /*-------------------------------------------------------------------------*/
 /**
    @file    dictionary.h
    @author  N. Devillard
-   @date    Sep 2007
-   @version $Revision: 1.12 $
    @brief   Implements a dictionary for string variables.
 
    This module implements a simple dictionary object, i.e. a list
@@ -14,26 +11,24 @@
 */
 /*--------------------------------------------------------------------------*/
 
-/*
-	$Id: dictionary.h,v 1.12 2007-11-23 21:37:00 ndevilla Exp $
-	$Author: ndevilla $
-	$Date: 2007-11-23 21:37:00 $
-	$Revision: 1.12 $
-*/
-
 #ifndef _DICTIONARY_H_
 #define _DICTIONARY_H_
 
 /*---------------------------------------------------------------------------
-  Includes
+                                Includes
  ---------------------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <sc_config.h>
+#ifdef SC_HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 /*---------------------------------------------------------------------------
-  Save C++ compilation
+                                Protect C++ compilation
  ---------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
@@ -44,13 +39,13 @@ extern "C" {
 #endif
 
 /*---------------------------------------------------------------------------
-  New types
+                                New types
  ---------------------------------------------------------------------------*/
 
 
 /*-------------------------------------------------------------------------*/
 /**
-  @brief	Dictionary object
+  @brief    Dictionary object
 
   This object contains a list of string/string associations. Each
   association is identified by a unique string key. Looking up values
@@ -59,16 +54,16 @@ extern "C" {
  */
 /*-------------------------------------------------------------------------*/
 typedef struct _dictionary_ {
-	int				n ;		/** Number of entries in dictionary */
-	int				size ;	/** Storage size */
-	char 		**	val ;	/** List of string values */
-	char 		**  key ;	/** List of string keys */
-	unsigned	 *	hash ;	/** List of hash values for keys */
+    int             n ;     /** Number of entries in dictionary */
+    int             size ;  /** Storage size */
+    char        **  val ;   /** List of string values */
+    char        **  key ;   /** List of string keys */
+    unsigned     *  hash ;  /** List of hash values for keys */
 } dictionary ;
 
 
 /*---------------------------------------------------------------------------
-  Function prototypes
+                            Function prototypes
  ---------------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------------*/
@@ -83,7 +78,7 @@ typedef struct _dictionary_ {
   by comparing the key itself in last resort.
  */
 /*--------------------------------------------------------------------------*/
-unsigned dictionary_hash(char * key);
+unsigned dictionary_hash(const char * key);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -96,7 +91,7 @@ unsigned dictionary_hash(char * key);
   dictionary, give size=0.
  */
 /*--------------------------------------------------------------------------*/
-dictionary * dictionary_new(size_t size);
+dictionary * dictionary_new(int size);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -123,7 +118,7 @@ void dictionary_del(dictionary * vd);
   dictionary object, you should not try to free it or modify it.
  */
 /*--------------------------------------------------------------------------*/
-char * dictionary_get(dictionary * d, char * key, char * def);
+char * dictionary_get(dictionary * d, const char * key, char * def);
 
 
 /*-------------------------------------------------------------------------*/
@@ -152,7 +147,7 @@ char * dictionary_get(dictionary * d, char * key, char * def);
   This function returns non-zero in case of failure.
  */
 /*--------------------------------------------------------------------------*/
-int dictionary_set(dictionary * vd, char * key, char * val);
+int dictionary_set(dictionary * vd, const char * key, const char * val);
 
 /*-------------------------------------------------------------------------*/
 /**
@@ -165,7 +160,7 @@ int dictionary_set(dictionary * vd, char * key, char * val);
   key cannot be found.
  */
 /*--------------------------------------------------------------------------*/
-void dictionary_unset(dictionary * d, char * key);
+void dictionary_unset(dictionary * d, const char * key);
 
 
 /*-------------------------------------------------------------------------*/

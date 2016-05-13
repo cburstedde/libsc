@@ -44,19 +44,20 @@ sc_search_bias (int maxlevel, int level, int interval, int target)
 
 ssize_t
 sc_search_lower_bound64 (int64_t target, const int64_t * array,
-                         size_t size, size_t guess)
+                         size_t nmemb, size_t guess)
 {
   size_t              k_low, k_high;
   int64_t             cur;
 
-  if (size == 0)
+  if (nmemb == 0) {
     return -1;
+  }
 
   k_low = 0;
-  k_high = size - 1;
+  k_high = nmemb - 1;
   for (;;) {
     SC_ASSERT (k_low <= k_high);
-    SC_ASSERT (k_low < size && k_high < size);
+    SC_ASSERT (k_low < nmemb && k_high < nmemb);
     SC_ASSERT (k_low <= guess && guess <= k_high);
 
     /* compare two quadrants */
@@ -72,9 +73,9 @@ sc_search_lower_bound64 (int64_t target, const int64_t * array,
     /* check if guess is lower than target */
     if (target > cur) {
       k_low = guess + 1;
-      if (k_low > k_high)
+      if (k_low > k_high) {
         return -1;
-
+      }
       guess = (k_low + k_high) / 2;
       continue;
     }
@@ -83,5 +84,59 @@ sc_search_lower_bound64 (int64_t target, const int64_t * array,
     break;
   }
 
+  SC_ASSERT (guess < nmemb);
+  SC_ASSERT (array[guess] >= target);
+  SC_ASSERT (guess == 0 || array[guess - 1] < target);
   return (ssize_t) guess;
+}
+
+size_t
+sc_bsearch_range (const void *key, const void *base, size_t nmemb,
+                  size_t size, int (*compar) (const void *, const void *))
+{
+  const char         *ckey = (char *) key;
+  const char         *cbase = (char *) base;
+  size_t              k_low, k_high, guess;
+
+  if (nmemb == 0) {
+    /* we need at least two array elements, nmemb >= 1, to search */
+    return nmemb;
+  }
+
+  k_low = 0;
+  k_high = nmemb - 1;
+  guess = nmemb / 2;
+  for (;;) {
+    SC_ASSERT (k_low <= k_high);
+    SC_ASSERT (k_low <= guess && guess <= k_high);
+    SC_ASSERT (k_low < nmemb && k_high < nmemb);
+
+    /* check if we have to search lower */
+    if (compar (ckey, cbase + guess * size) < 0) {
+      if (guess == k_low) {
+        return nmemb;
+      }
+      k_high = guess - 1;
+      guess = (k_low + k_high + 1) / 2;
+      continue;
+    }
+
+    /* check if we have to search higher */
+    if (compar (cbase + (guess + 1) * size, ckey) <= 0) {
+      if (guess == k_high) {
+        return nmemb;
+      }
+      k_low = guess + 1;
+      guess = (k_low + k_high) / 2;
+      continue;
+    }
+
+    /* otherwise guess is the correct position */
+    break;
+  }
+
+  SC_ASSERT (guess < nmemb);
+  SC_ASSERT (compar (cbase + guess * size, ckey) <= 0);
+  SC_ASSERT (compar (ckey, cbase + (guess + 1) * size) < 0);
+  return guess;
 }

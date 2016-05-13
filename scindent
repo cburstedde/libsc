@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 # This is the GNU style for indent 2.2.9 (according to man page)
 #
@@ -20,6 +20,21 @@ INDENT_OPTIONS="-bap -bli0 -br -nut -psl -sob -di20"
 
 INDENT=`which gnuindent 2> /dev/null`
 if test -z "$INDENT" ; then
-  INDENT=`which indent`
+	INDENT=`which gindent`
 fi
-exec $INDENT $INDENT_OPTIONS "$@"
+if test -z "$INDENT" ; then
+	INDENT=`which indent`
+fi
+
+for arg in "$@" ; do
+  if [ "x$arg" == "x-o" ]; then
+    WANTSOUT=1
+  fi
+done
+if [ -z "$WANTSOUT" ]; then
+  for NAME in "$@" ; do
+    $INDENT $INDENT_OPTIONS "$NAME"
+  done
+else
+  $INDENT $INDENT_OPTIONS $@
+fi

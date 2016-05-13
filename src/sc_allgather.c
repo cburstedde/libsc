@@ -22,126 +22,121 @@
 
 #include <sc_allgather.h>
 
-#ifdef SC_MPI
-
 void
-sc_ag_alltoall (MPI_Comm mpicomm, char *data, int datasize,
-                int groupsize, int myoffset, int myrank)
+sc_allgather_alltoall (sc_MPI_Comm mpicomm, char *data, int datasize,
+                       int groupsize, int myoffset, int myrank)
 {
   int                 j, peer;
   int                 mpiret;
-  MPI_Request        *request;
+  sc_MPI_Request     *request;
 
   SC_ASSERT (myoffset >= 0 && myoffset < groupsize);
 
-  request = SC_ALLOC (MPI_Request, 2 * groupsize);
+  request = SC_ALLOC (sc_MPI_Request, 2 * groupsize);
 
   for (j = 0; j < groupsize; ++j) {
     if (j == myoffset) {
-      request[j] = request[groupsize + j] = MPI_REQUEST_NULL;
+      request[j] = request[groupsize + j] = sc_MPI_REQUEST_NULL;
       continue;
     }
     peer = myrank - (myoffset - j);
 
-    mpiret = MPI_Irecv (data + j * datasize, datasize, MPI_BYTE,
-                        peer, SC_TAG_AG_ALLTOALL, mpicomm, request + j);
+    mpiret = sc_MPI_Irecv (data + j * datasize, datasize, sc_MPI_BYTE,
+                           peer, SC_TAG_AG_ALLTOALL, mpicomm, request + j);
     SC_CHECK_MPI (mpiret);
 
-    mpiret = MPI_Isend (data + myoffset * datasize, datasize, MPI_BYTE,
-                        peer, SC_TAG_AG_ALLTOALL,
-                        mpicomm, request + groupsize + j);
+    mpiret = sc_MPI_Isend (data + myoffset * datasize, datasize, sc_MPI_BYTE,
+                           peer, SC_TAG_AG_ALLTOALL,
+                           mpicomm, request + groupsize + j);
     SC_CHECK_MPI (mpiret);
   }
 
-  mpiret = MPI_Waitall (2 * groupsize, request, MPI_STATUSES_IGNORE);
+  mpiret = sc_MPI_Waitall (2 * groupsize, request, sc_MPI_STATUSES_IGNORE);
   SC_CHECK_MPI (mpiret);
 
   SC_FREE (request);
 }
 
 void
-sc_ag_recursive (MPI_Comm mpicomm, char *data, int datasize,
-                 int groupsize, int myoffset, int myrank)
+sc_allgather_recursive (sc_MPI_Comm mpicomm, char *data, int datasize,
+                        int groupsize, int myoffset, int myrank)
 {
   const int           g2 = groupsize / 2;
   const int           g2B = groupsize - g2;
   int                 mpiret;
-  MPI_Request         request[3];
+  sc_MPI_Request      request[3];
 
   SC_ASSERT (myoffset >= 0 && myoffset < groupsize);
 
   if (groupsize > SC_AG_ALLTOALL_MAX) {
     if (myoffset < g2) {
-      sc_ag_recursive (mpicomm, data, datasize, g2, myoffset, myrank);
+      sc_allgather_recursive (mpicomm, data, datasize, g2, myoffset, myrank);
 
-      mpiret = MPI_Irecv (data + g2 * datasize, g2B * datasize, MPI_BYTE,
-                          myrank + g2, SC_TAG_AG_RECURSIVE_B,
-                          mpicomm, request + 0);
+      mpiret = sc_MPI_Irecv (data + g2 * datasize, g2B * datasize,
+                             sc_MPI_BYTE, myrank + g2, SC_TAG_AG_RECURSIVE_B,
+                             mpicomm, request + 0);
       SC_CHECK_MPI (mpiret);
 
-      mpiret = MPI_Isend (data, g2 * datasize, MPI_BYTE,
-                          myrank + g2, SC_TAG_AG_RECURSIVE_A,
-                          mpicomm, request + 1);
+      mpiret = sc_MPI_Isend (data, g2 * datasize, sc_MPI_BYTE,
+                             myrank + g2, SC_TAG_AG_RECURSIVE_A,
+                             mpicomm, request + 1);
       SC_CHECK_MPI (mpiret);
 
       if (myoffset == g2 - 1 && g2 != g2B) {
-        mpiret = MPI_Isend (data, g2 * datasize, MPI_BYTE,
-                            myrank + g2B, SC_TAG_AG_RECURSIVE_C,
-                            mpicomm, request + 2);
+        mpiret = sc_MPI_Isend (data, g2 * datasize, sc_MPI_BYTE,
+                               myrank + g2B, SC_TAG_AG_RECURSIVE_C,
+                               mpicomm, request + 2);
         SC_CHECK_MPI (mpiret);
       }
       else {
-        request[2] = MPI_REQUEST_NULL;
+        request[2] = sc_MPI_REQUEST_NULL;
       }
     }
     else {
-      sc_ag_recursive (mpicomm, data + g2 * datasize, datasize, g2B,
-                       myoffset - g2, myrank);
+      sc_allgather_recursive (mpicomm, data + g2 * datasize, datasize, g2B,
+                              myoffset - g2, myrank);
 
       if (myoffset == groupsize - 1 && g2 != g2B) {
-        request[0] = MPI_REQUEST_NULL;
-        request[1] = MPI_REQUEST_NULL;
+        request[0] = sc_MPI_REQUEST_NULL;
+        request[1] = sc_MPI_REQUEST_NULL;
 
-        mpiret = MPI_Irecv (data, g2 * datasize, MPI_BYTE,
-                            myrank - g2B, SC_TAG_AG_RECURSIVE_C,
-                            mpicomm, request + 2);
+        mpiret = sc_MPI_Irecv (data, g2 * datasize, sc_MPI_BYTE,
+                               myrank - g2B, SC_TAG_AG_RECURSIVE_C,
+                               mpicomm, request + 2);
         SC_CHECK_MPI (mpiret);
       }
       else {
-        mpiret = MPI_Irecv (data, g2 * datasize, MPI_BYTE,
-                            myrank - g2, SC_TAG_AG_RECURSIVE_A,
-                            mpicomm, request + 0);
+        mpiret = sc_MPI_Irecv (data, g2 * datasize, sc_MPI_BYTE,
+                               myrank - g2, SC_TAG_AG_RECURSIVE_A,
+                               mpicomm, request + 0);
         SC_CHECK_MPI (mpiret);
 
-        mpiret = MPI_Isend (data + g2 * datasize, g2B * datasize, MPI_BYTE,
-                            myrank - g2, SC_TAG_AG_RECURSIVE_B,
-                            mpicomm, request + 1);
+        mpiret = sc_MPI_Isend (data + g2 * datasize, g2B * datasize,
+                               sc_MPI_BYTE, myrank - g2,
+                               SC_TAG_AG_RECURSIVE_B, mpicomm, request + 1);
         SC_CHECK_MPI (mpiret);
 
-        request[2] = MPI_REQUEST_NULL;
+        request[2] = sc_MPI_REQUEST_NULL;
       }
     }
 
-    mpiret = MPI_Waitall (3, request, MPI_STATUSES_IGNORE);
+    mpiret = sc_MPI_Waitall (3, request, sc_MPI_STATUSES_IGNORE);
     SC_CHECK_MPI (mpiret);
   }
   else {
-    sc_ag_alltoall (mpicomm, data, datasize, groupsize, myoffset, myrank);
+    sc_allgather_alltoall (mpicomm, data, datasize, groupsize, myoffset,
+                           myrank);
   }
 }
 
-#endif /* SC_MPI */
-
 int
-sc_allgather (void *sendbuf, int sendcount, MPI_Datatype sendtype,
-              void *recvbuf, int recvcount, MPI_Datatype recvtype,
-              MPI_Comm mpicomm)
+sc_allgather (void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
+              void *recvbuf, int recvcount, sc_MPI_Datatype recvtype,
+              sc_MPI_Comm mpicomm)
 {
-#ifdef SC_MPI
   int                 mpiret;
   int                 mpisize;
   int                 mpirank;
-#endif
   size_t              datasize;
 #ifdef SC_DEBUG
   size_t              datasize2;
@@ -158,18 +153,14 @@ sc_allgather (void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
   SC_ASSERT (datasize == datasize2);
 
-#ifdef SC_MPI
-  mpiret = MPI_Comm_size (mpicomm, &mpisize);
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &mpirank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   memcpy (((char *) recvbuf) + mpirank * datasize, sendbuf, datasize);
-  sc_ag_recursive (mpicomm, (char *) recvbuf, (int) datasize,
-                   mpisize, mpirank, mpirank);
-#else
-  memcpy (recvbuf, sendbuf, datasize);
-#endif
+  sc_allgather_recursive (mpicomm, (char *) recvbuf, (int) datasize,
+                          mpisize, mpirank, mpirank);
 
-  return MPI_SUCCESS;
+  return sc_MPI_SUCCESS;
 }

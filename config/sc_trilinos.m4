@@ -26,6 +26,39 @@ fi
 AC_SUBST([$4_TRILINOS_MK_$3])
 ])
 
+dnl SC_TRILINOS_PACKAGE_DEFS([Package], [PACKAGE], [PREFIX])
+dnl define PREFIX_PACKAGE_{CPPFLAGS,LDFLAGS,LIBS} for use with Trilinos export
+dnl Makefiles
+AC_DEFUN([SC_TRILINOS_PACKAGE_DEFS],
+[
+dnl for Trilinos 9, use PACKAGE_{INCLUDES,LIBS}
+  if test "$$3_TRILINOS_VERSION" = "9" ; then
+    $3_$2_CPPFLAGS="\$($2_INCLUDES)"
+    $3_$2_LDFLAGS=""
+    $3_$2_LIBS="\$($2_LIBS)"
+  else
+    AC_MSG_NOTICE([TRILINOS_MINOR_VERSION $$3_TRILINOS_MINOR_VERSION])
+    case "$$3_TRILINOS_MINOR_VERSION" in
+dnl 0 and 2 are the only official releases with all-caps
+    0[[0-2]])
+      $3_$2_CPPFLAGS="\$($2_INCLUDE_DIRS) \$($2_TPL_INCLUDE_DIRS)"
+      $3_$2_LDFLAGS="\$($2_SHARED_LIB_RPATH_COMMAND) \$($2_EXTRA_LD_FLAGS) "\
+"\$($2_LIBRARY_DIRS) \$($2_TPL_LIBRARY_DIRS)"
+      $3_$2_LIBS="\$($2_LIBRARIES)"
+      ;;
+    *)
+      $3_$2_CPPFLAGS="\$($1_INCLUDE_DIRS) \$($1_TPL_INCLUDE_DIRS)"
+      $3_$2_LDFLAGS="\$($1_SHARED_LIB_RPATH_COMMAND) \$($1_EXTRA_LD_FLAGS) "\
+"\$($1_LIBRARY_DIRS) \$($1_TPL_LIBRARY_DIRS)"
+      $3_$2_LIBS="\$($1_LIBRARIES)"
+      ;;
+    esac
+  fi
+  AC_SUBST([$3_$2_CPPFLAGS])
+  AC_SUBST([$3_$2_LDFLAGS])
+  AC_SUBST([$3_$2_LIBS])
+])
+
 dnl SC_TRILINOS([PREFIX], [EXTRA_PACKAGES])
 dnl EXTRA_PACKAGES can be empty or contain a comma-separated list
 dnl of trilinos packages in uppercase.
@@ -62,6 +95,8 @@ if test "$$1_WITH_TRILINOS" != "no" ; then
       AC_SUBST([$1_TRILINOS_CPPFLAGS])
       $1_TRILINOS_LDFLAGS="-L$$1_TRILINOS_DIR/lib"
       AC_SUBST([$1_TRILINOS_LDFLAGS])
+      $1_TRILINOS_MINOR_VERSION=`grep -o 'TRILINOS_MAJOR_MINOR_VERSION 10[[0-9]]\{2\}' "$TRILINOS_HEADER" | sed "s/.* 10//"`
+      AC_MSG_NOTICE([TRILINOS_MINOR_VERSION $$1_TRILINOS_MINOR_VERSION])
     elif grep -qs 'TRILINOS_MAJOR_VERSION[[[:space:]+]]9' "$TRILINOS_HEADER"
     then
       $1_TRILINOS_VERSION=9
@@ -70,9 +105,12 @@ if test "$$1_WITH_TRILINOS" != "no" ; then
     fi
     SC_TRILINOS_CHECK_MK([epetra], [Epetra], [EPETRA], [$1])
     SC_TRILINOS_CHECK_MK([teuchos], [Teuchos], [TEUCHOS], [$1])
+    SC_TRILINOS_PACKAGE_DEFS([Epetra], [EPETRA], [$1])
+    SC_TRILINOS_PACKAGE_DEFS([Teuchos], [TEUCHOS], [$1])
     m4_foreach([PKG], [$2], [
       if test "PKG" = "ML" ; then
         SC_TRILINOS_CHECK_MK([ml], [ML], [ML], [$1])
+        SC_TRILINOS_PACKAGE_DEFS([ML], [ML], [$1])
       fi
     ])
     AC_MSG_RESULT([version $$1_TRILINOS_VERSION])

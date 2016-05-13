@@ -1,0 +1,11 @@
+/homec/hbnxx/hbnxxx/source/libsc/configure --host=powerpc64-bgq-linux \
+CC=mpicc CXX=mpig++ F77=mpigfortran FC=mpigfortran F90=mpigfortran \
+CPPFLAGS="\
+-I/bgsys/local/szip/include -I/bgsys/local/zlib/include \
+-I/bgsys/drivers/ppcfloor/comm/include \
+-I/bgsys/drivers/ppcfloor/arch/include \
+-I/bgsys/drivers/ppcfloor/gnu-linux/powerpc-bgp-linux/sys-include" \
+CFLAGS="-O0 -g -shared-libgcc" \
+--enable-mpi --disable-shared --without-blas --enable-openmp="-qsmp=omp" \
+LDFLAGS="-L/bgsys/local/szip/lib -L/bgsys/local/zlib/lib" \
+LIBS="-ldl -lsz"

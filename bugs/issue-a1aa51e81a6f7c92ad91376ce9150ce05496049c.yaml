@@ -5,7 +5,7 @@ desc: |-
   2. Provide a way of aborting a program with logging only on rank 0.
 type: :bugfix
 component: libsc
-release: "0.6"
+release: "1.6"
 reporter: Carsten Burstedde <carsten@ices.utexas.edu>
 status: :closed
 disposition: :fixed

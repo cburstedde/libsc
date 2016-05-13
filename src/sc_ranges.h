@@ -37,15 +37,15 @@ SC_EXTERN_C_BEGIN;
  *                          Will be excluded from the ranges.
  * \param [in] first_peer   First processor to be considered.
  * \param [in] last_peer    Last processor to be considered (inclusive).
- * \param [in] num_ranges   The number of ranges to compute.
+ * \param [in] num_ranges   The maximum number of ranges to fill.
  * \param [in,out] ranges   Array [2 * num_ranges] that will be filled
  *                          with beginning and ending procs (inclusive)
  *                          that represent each range.  Values of -1
  *                          indicate that the range is not needed.
  * \return                  Returns the number of filled ranges.
  */
-int                 sc_ranges_compute (int package_id,
-                                       int num_procs, int *procs, int rank,
+int                 sc_ranges_compute (int package_id, int num_procs,
+                                       const int *procs, int rank,
                                        int first_peer, int last_peer,
                                        int num_ranges, int *ranges);
 
@@ -59,18 +59,45 @@ int                 sc_ranges_compute (int package_id,
  *     On output, global maximum of peer counts.
  * \param [in,out] inout2
  *     On input, last_peer as in sc_ranges_compute ().
- *     On output, global maximum of ranges.
- * \param [in] num_ranges   Same as in sc_ranges_compute ().
- * \param [in] ranges       Same as in sc_ranges_compute ().
+ *     On output, global maximum number of ranges.
+ * \param [in] num_ranges   The maximum number of ranges to fill.
+ * \param [in,out] ranges   Array [2 * num_ranges] that will be filled
+ *                          with beginning and ending procs (inclusive)
+ *                          that represent each local range.  Values of -1
+ *                          indicate that the range is not needed.
  * \param [out] global_ranges
  *     If not NULL, will be allocated and filled with everybody's ranges.
  *     Size will be 2 * inout2 * num_procs.  Must be freed with SC_FREE ().
  * \return                  Returns the number of locally filled ranges.
  */
-int                 sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
-                                        int *procs, int *inout1, int *inout2,
+int                 sc_ranges_adaptive (int package_id, sc_MPI_Comm mpicomm,
+                                        const int *procs,
+                                        int *inout1, int *inout2,
                                         int num_ranges, int *ranges,
                                         int **global_ranges);
+
+/** Determine an array of receivers and an array of senders from ranges.
+ * This function is intended for compatibility and debugging only.
+ * In particular, sc_ranges_adaptive may include non-receiving processors.
+ * It is generally more efficient to use sc_notify instead of sc_ranges.
+ *
+ * \param [in] num_procs    The number of parallel processors (aka mpisize).
+ * \param [in] rank         Number of this processors (aka mpirank).
+ *                          Rank is excluded from receiver and sender output.
+ * \param [in] max_ranges   Global maximum of filled range windows as
+ *                          returned in inout2 by sc_ranges_adaptive.
+ * \param [in] global_ranges    All processor ranges from sc_ranges_adaptive.
+ * \param [out] num_receivers   Number of receiver ranks.  Greater/equal to
+ *                              number of nonzero procs in sc_ranges_compute.
+ * \param [in,out] receiver_ranks   Array of at least mpisize for output.
+ * \param [out] num_senders         Number of senders to this processor.
+ * \paarm [in,out] sender_ranks     Array of at least mpisize for output.
+ */
+void                sc_ranges_decode (int num_procs, int rank,
+                                      int max_ranges,
+                                      const int *global_ranges,
+                                      int *num_receivers, int *receiver_ranks,
+                                      int *num_senders, int *sender_ranks);
 
 /** Compute global statistical information on the ranges.
  *
@@ -78,8 +105,8 @@ int                 sc_ranges_adaptive (int package_id, MPI_Comm mpicomm,
  * \param [in] log_priority     Priority to use for logging.
  */
 void                sc_ranges_statistics (int package_id, int log_priority,
-                                          MPI_Comm mpicomm, int num_procs,
-                                          int *procs, int rank,
+                                          sc_MPI_Comm mpicomm, int num_procs,
+                                          const int *procs, int rank,
                                           int num_ranges, int *ranges);
 
 SC_EXTERN_C_END;

@@ -26,6 +26,7 @@
 typedef struct sc_psort_peer
 {
   int                 received;
+  int                 sent;
   int                 prank;
   size_t              length;
   char               *buffer;
@@ -35,7 +36,7 @@ sc_psort_peer_t;
 
 typedef struct sc_psort
 {
-  MPI_Comm            mpicomm;
+  sc_MPI_Comm         mpicomm;
   int                 num_procs, rank;
   size_t              size;
   size_t              my_lo, my_hi, my_count;
@@ -103,13 +104,13 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
     size_t              lo_length, hi_length;
     size_t              offset, max_length;
     int                 lo_owner, hi_owner;
-    int                 num_peers, remaining, outcount;
+    int                 num_peers, remaining, remaining2, outcount, outcount2;
     int                 mpiret;
     sc_array_t          a, *pa = &a;
     sc_array_t          r, *pr = &r;
     sc_array_t          s, *ps = &s;
-    int                *wait_indices;
-    MPI_Status         *recv_statuses;
+    int                *wait_indices, *wait_indices2;
+    sc_MPI_Status      *recv_statuses, *recv_statuses2;
     sc_psort_peer_t    *peer;
 
     for (k = 1; k < n;) {
@@ -123,8 +124,8 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
     SC_ASSERT (lo_end <= hi_beg && lo_end - lo == hi - hi_beg);
 
     sc_array_init (pa, sizeof (sc_psort_peer_t));
-    sc_array_init (pr, sizeof (MPI_Request));
-    sc_array_init (ps, sizeof (MPI_Request));
+    sc_array_init (pr, sizeof (sc_MPI_Request));
+    sc_array_init (ps, sizeof (sc_MPI_Request));
 
     /* loop 1: initiate communication */
     lo_owner = hi_owner = rank;
@@ -144,55 +145,61 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
 
       if (lo_owner == rank && hi_owner != rank) {
         char               *lo_data;
-        MPI_Request        *rreq, *sreq;
+        sc_MPI_Request     *rreq, *sreq;
         const int           bytes = (int) (max_length * size);
 
         /* receive high part, send low part */
         peer = (sc_psort_peer_t *) sc_array_push (pa);
-        rreq = (MPI_Request *) sc_array_push (pr);
-        sreq = (MPI_Request *) sc_array_push (ps);
+        rreq = (sc_MPI_Request *) sc_array_push (pr);
+        sreq = (sc_MPI_Request *) sc_array_push (ps);
         lo_data = pst->my_base + (lo + offset - pst->my_lo) * size;
 
         peer->received = 0;
+        peer->sent = 0;
         peer->prank = hi_owner;
         peer->length = max_length;
         peer->buffer = SC_ALLOC (char, bytes);
         peer->my_start = lo_data;
-        mpiret = MPI_Irecv (peer->buffer, bytes, MPI_BYTE,
-                            peer->prank, SC_TAG_PSORT_HI, pst->mpicomm, rreq);
+        mpiret = sc_MPI_Irecv (peer->buffer, bytes, sc_MPI_BYTE,
+                               peer->prank, SC_TAG_PSORT_HI, pst->mpicomm,
+                               rreq);
         SC_CHECK_MPI (mpiret);
 
         SC_ASSERT (lo_data >= pst->my_base);
         SC_ASSERT (lo_data + bytes <= pst->my_base + pst->my_count * size);
-        mpiret = MPI_Isend (lo_data, bytes, MPI_BYTE,
-                            peer->prank, SC_TAG_PSORT_LO, pst->mpicomm, sreq);
+        mpiret = sc_MPI_Isend (lo_data, bytes, sc_MPI_BYTE,
+                               peer->prank, SC_TAG_PSORT_LO, pst->mpicomm,
+                               sreq);
         SC_CHECK_MPI (mpiret);
       }
       else if (lo_owner != rank && hi_owner == rank) {
         char               *hi_data;
-        MPI_Request        *rreq, *sreq;
+        sc_MPI_Request     *rreq, *sreq;
         const int           bytes = (int) (max_length * size);
 
         /* receive low part, send high part */
         peer = (sc_psort_peer_t *) sc_array_push (pa);
-        rreq = (MPI_Request *) sc_array_push (pr);
-        sreq = (MPI_Request *) sc_array_push (ps);
+        rreq = (sc_MPI_Request *) sc_array_push (pr);
+        sreq = (sc_MPI_Request *) sc_array_push (ps);
         hi_data = pst->my_base + (hi_beg + offset - pst->my_lo) * size;
 
         peer->received = 0;
+        peer->sent = 0;
         peer->prank = lo_owner;
         peer->length = max_length;
         peer->buffer = SC_ALLOC (char, bytes);
         peer->my_start = hi_data;
 
-        mpiret = MPI_Irecv (peer->buffer, bytes, MPI_BYTE,
-                            peer->prank, SC_TAG_PSORT_LO, pst->mpicomm, rreq);
+        mpiret = sc_MPI_Irecv (peer->buffer, bytes, sc_MPI_BYTE,
+                               peer->prank, SC_TAG_PSORT_LO, pst->mpicomm,
+                               rreq);
         SC_CHECK_MPI (mpiret);
 
         SC_ASSERT (hi_data >= pst->my_base);
         SC_ASSERT (hi_data + bytes <= pst->my_base + pst->my_count * size);
-        mpiret = MPI_Isend (hi_data, bytes, MPI_BYTE,
-                            peer->prank, SC_TAG_PSORT_HI, pst->mpicomm, sreq);
+        mpiret = sc_MPI_Isend (hi_data, bytes, sc_MPI_BYTE,
+                               peer->prank, SC_TAG_PSORT_HI, pst->mpicomm,
+                               sreq);
         SC_CHECK_MPI (mpiret);
       }
     }
@@ -236,69 +243,133 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
 
     /* loop 3: receive and compute with received data */
     outcount = 0;
+    outcount2 = 0;
     num_peers = (int) pa->elem_count;
     wait_indices = SC_ALLOC (int, num_peers);
-    recv_statuses = SC_ALLOC (MPI_Status, num_peers);
-    for (remaining = num_peers; remaining > 0; remaining -= outcount) {
+    wait_indices2 = SC_ALLOC (int, num_peers);
+    recv_statuses = SC_ALLOC (sc_MPI_Status, num_peers);
+    recv_statuses2 = SC_ALLOC (sc_MPI_Status, num_peers);
+    for (remaining = num_peers, remaining2 = num_peers;
+         remaining > 0 || remaining2 > 0;
+         remaining -= outcount, remaining2 -= outcount2) {
       int                 i;
-
-      mpiret = MPI_Waitsome (num_peers, (MPI_Request *) pr->array,
-                             &outcount, wait_indices, recv_statuses);
-      SC_CHECK_MPI (mpiret);
-      SC_ASSERT (outcount != MPI_UNDEFINED);
-      SC_ASSERT (outcount > 0);
-      for (i = 0; i < outcount; ++i) {
-        size_t              zz;
-        char               *lo_data, *hi_data;
+      outcount = 0;
+      outcount2 = 0;
+      if (remaining > 0) {
+        mpiret = sc_MPI_Waitsome (num_peers, (sc_MPI_Request *) pr->array,
+                                  &outcount, wait_indices, recv_statuses);
+        SC_CHECK_MPI (mpiret);
+        SC_ASSERT (outcount != sc_MPI_UNDEFINED);
+        SC_ASSERT (outcount > 0);
+        for (i = 0; i < outcount; ++i) {
+          size_t              zz;
+          char               *lo_data, *hi_data;
 #ifdef SC_DEBUG
-        MPI_Status         *jstatus;
+          sc_MPI_Status      *jstatus;
 
-        jstatus = &recv_statuses[i];
+          jstatus = &recv_statuses[i];
 #endif
 
-        /* retrieve peer information */
-        peer = (sc_psort_peer_t *) sc_array_index_int (pa, wait_indices[i]);
-        SC_ASSERT (!peer->received);
-        SC_ASSERT (peer->prank != rank);
-        SC_ASSERT (peer->prank == jstatus->MPI_SOURCE);
+          /* retrieve peer information */
+          peer = (sc_psort_peer_t *) sc_array_index_int (pa, wait_indices[i]);
+          if (peer->sent) {
+            /* only overwrite data,
+             * if made sure it has already been sent to the other process */
+            SC_ASSERT (!peer->received);
+            SC_ASSERT (peer->prank != rank);
+            SC_ASSERT (peer->prank == jstatus->MPI_SOURCE);
 
-        /* comparisons with remote peer */
-        if (rank < peer->prank) {
-          lo_data = peer->my_start;
-          hi_data = peer->buffer;
-          for (zz = 0; zz < peer->length; ++zz) {
-            if (dir == (sc_compare (lo_data, hi_data) > 0)) {
-              memcpy (lo_data, hi_data, size);
+            /* comparisons with remote peer */
+            if (rank < peer->prank) {
+              lo_data = peer->my_start;
+              hi_data = peer->buffer;
+              for (zz = 0; zz < peer->length; ++zz) {
+                if (dir == (sc_compare (lo_data, hi_data) > 0)) {
+                  memcpy (lo_data, hi_data, size);
+                }
+                lo_data += size;
+                hi_data += size;
+              }
             }
-            lo_data += size;
-            hi_data += size;
-          }
-        }
-        else {
-          lo_data = peer->buffer;
-          hi_data = peer->my_start;
-          for (zz = 0; zz < peer->length; ++zz) {
-            if (dir == (sc_compare (lo_data, hi_data) > 0)) {
-              memcpy (hi_data, lo_data, size);
+            else {
+              lo_data = peer->buffer;
+              hi_data = peer->my_start;
+              for (zz = 0; zz < peer->length; ++zz) {
+                if (dir == (sc_compare (lo_data, hi_data) > 0)) {
+                  memcpy (hi_data, lo_data, size);
+                }
+                lo_data += size;
+                hi_data += size;
+              }
             }
-            lo_data += size;
-            hi_data += size;
-          }
-        }
 
-        /* close down this peer */
-        SC_FREE (peer->buffer);
-        peer->received = 1;
+            /* close down this peer */
+            SC_FREE (peer->buffer);
+          }
+          peer->received = 1;
+        }
+      }
+
+      if (remaining2 > 0) {
+        mpiret =
+          sc_MPI_Waitsome (num_peers, (sc_MPI_Request *) ps->array,
+                           &outcount2, wait_indices2, recv_statuses2);
+        SC_CHECK_MPI (mpiret);
+        SC_ASSERT (outcount2 != sc_MPI_UNDEFINED);
+        SC_ASSERT (outcount2 > 0);
+        for (i = 0; i < outcount2; ++i) {
+          size_t              zz;
+          char               *lo_data, *hi_data;
+
+          /* retrieve peer information */
+          peer =
+            (sc_psort_peer_t *) sc_array_index_int (pa, wait_indices2[i]);
+
+          if (peer->received) {
+            SC_ASSERT (!peer->sent);
+
+            /* comparisons with remote peer */
+            if (rank < peer->prank) {
+              lo_data = peer->my_start;
+              hi_data = peer->buffer;
+              for (zz = 0; zz < peer->length; ++zz) {
+                if (dir == (sc_compare (lo_data, hi_data) > 0)) {
+                  memcpy (lo_data, hi_data, size);
+                }
+                lo_data += size;
+                hi_data += size;
+              }
+            }
+            else {
+              lo_data = peer->buffer;
+              hi_data = peer->my_start;
+              for (zz = 0; zz < peer->length; ++zz) {
+                if (dir == (sc_compare (lo_data, hi_data) > 0)) {
+                  memcpy (hi_data, lo_data, size);
+                }
+                lo_data += size;
+                hi_data += size;
+              }
+            }
+
+            /* close down this peer */
+            SC_FREE (peer->buffer);
+          }
+          peer->sent = 1;
+        }
       }
     }
     SC_ASSERT (remaining == 0);
+    SC_ASSERT (remaining2 == 0);
     SC_FREE (recv_statuses);
     SC_FREE (wait_indices);
+    SC_FREE (recv_statuses2);
+    SC_FREE (wait_indices2);
 
     /* clean up */
     if (num_peers > 0) {
-      mpiret = MPI_Waitall (num_peers, (MPI_Request *) ps->array,
-                            MPI_STATUSES_IGNORE);
+      mpiret = sc_MPI_Waitall (num_peers, (sc_MPI_Request *) ps->array,
+                               sc_MPI_STATUSES_IGNORE);
       SC_CHECK_MPI (mpiret);
     }
     sc_array_reset (pa);
@@ -332,7 +403,7 @@ sc_psort_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
 }
 
 void
-sc_psort (MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
+sc_psort (sc_MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
           int (*compar) (const void *, const void *))
 {
   int                 mpiret;
@@ -344,14 +415,10 @@ sc_psort (MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
 
   SC_ASSERT (sc_compare == NULL);
 
-#ifndef SC_DEBUG
-  SC_ABORT ("sc_psort is still buggy, don't use it yet");
-#endif
-
   /* get basic MPI information */
-  mpiret = MPI_Comm_size (mpicomm, &num_procs);
+  mpiret = sc_MPI_Comm_size (mpicomm, &num_procs);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &rank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
 
   /* alloc global offset array */

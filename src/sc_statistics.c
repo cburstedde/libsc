@@ -22,11 +22,11 @@
 
 #include <sc_statistics.h>
 
-#ifdef SC_MPI
+#ifdef SC_ENABLE_MPI
 
 static void
 sc_stats_mpifunc (void *invec, void *inoutvec, int *len,
-                  MPI_Datatype * datatype)
+                  sc_MPI_Datatype * datatype)
 {
   int                 i;
   double             *in = (double *) invec;
@@ -35,25 +35,27 @@ sc_stats_mpifunc (void *invec, void *inoutvec, int *len,
   for (i = 0; i < *len; ++i) {
     /* sum count, values and their squares */
     inout[0] += in[0];
-    inout[1] += in[1];
-    inout[2] += in[2];
+    if (in[0]) {                /* ignore statistics when no count */
+      inout[1] += in[1];
+      inout[2] += in[2];
 
-    /* compute minimum and its rank */
-    if (in[3] < inout[3]) {
-      inout[3] = in[3];
-      inout[5] = in[5];
-    }
-    else if (in[3] == inout[3]) {       /* ignore the comparison warning */
-      inout[5] = SC_MIN (in[5], inout[5]);
-    }
+      /* compute minimum and its rank */
+      if (in[3] < inout[3]) {
+        inout[3] = in[3];
+        inout[5] = in[5];
+      }
+      else if (in[3] == inout[3]) {     /* ignore the comparison warning */
+        inout[5] = SC_MIN (in[5], inout[5]);
+      }
 
-    /* compute maximum and its rank */
-    if (in[4] > inout[4]) {
-      inout[4] = in[4];
-      inout[6] = in[6];
-    }
-    else if (in[4] == inout[4]) {       /* ignore the comparison warning */
-      inout[6] = SC_MIN (in[6], inout[6]);
+      /* compute maximum and its rank */
+      if (in[4] > inout[4]) {
+        inout[4] = in[4];
+        inout[6] = in[6];
+      }
+      else if (in[4] == inout[4]) {     /* ignore the comparison warning */
+        inout[6] = SC_MIN (in[6], inout[6]);
+      }
     }
 
     /* advance to next data set */
@@ -62,7 +64,7 @@ sc_stats_mpifunc (void *invec, void *inoutvec, int *len,
   }
 }
 
-#endif /* SC_MPI */
+#endif /* SC_ENABLE_MPI */
 
 void
 sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
@@ -81,6 +83,8 @@ sc_stats_init (sc_statinfo_t * stats, const char *variable)
 {
   stats->dirty = 1;
   stats->count = 0;
+  stats->sum_values = stats->sum_squares = 0.;
+  stats->min = stats->max = 0.;
   stats->variable = variable;
 }
 
@@ -105,7 +109,7 @@ sc_stats_accumulate (sc_statinfo_t * stats, double value)
 }
 
 void
-sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
+sc_stats_compute (sc_MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 {
   int                 i;
   int                 mpiret;
@@ -114,12 +118,12 @@ sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   double             *flat;
   double             *flatin;
   double             *flatout;
-#ifdef SC_MPI
-  MPI_Op              op;
-  MPI_Datatype        ctype;
+#ifdef SC_ENABLE_MPI
+  sc_MPI_Op           op;
+  sc_MPI_Datatype     ctype;
 #endif
 
-  mpiret = MPI_Comm_rank (mpicomm, &rank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
 
   flat = SC_ALLOC (double, 2 * 7 * nvars);
@@ -140,7 +144,7 @@ sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     flatin[7 * i + 6] = (double) rank;  /* rank that attains maximum */
   }
 
-#ifndef SC_MPI
+#ifndef SC_ENABLE_MPI
   memcpy (flatout, flatin, 7 * nvars * sizeof (*flatout));
 #else
   mpiret = MPI_Type_contiguous (7, MPI_DOUBLE, &ctype);
@@ -160,7 +164,7 @@ sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 
   mpiret = MPI_Type_free (&ctype);
   SC_CHECK_MPI (mpiret);
-#endif /* SC_MPI */
+#endif /* SC_ENABLE_MPI */
 
   for (i = 0; i < nvars; ++i) {
     if (!stats[i].dirty) {
@@ -190,7 +194,7 @@ sc_stats_compute (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 }
 
 void
-sc_stats_compute1 (MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
+sc_stats_compute1 (sc_MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 {
   int                 i;
   double              value;
@@ -288,11 +292,25 @@ sc_stats_print (int package_id, int log_priority,
       SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
                   "Summary overflow\n");
     }
+    count = snprintf (buffer, BUFSIZ, "Maximum = ");
+    for (i = 0; i < nvars && count >= 0 && (size_t) count < BUFSIZ; ++i) {
+      si = &stats[i];
+      count += snprintf (buffer + count, BUFSIZ - count,
+                         "%s%g", i == 0 ? "[ " : " ", si->max);
+    }
+    if (count >= 0 && (size_t) count < BUFSIZ) {
+      snprintf (buffer + count, BUFSIZ - count, "%s", " ];\n");
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, buffer);
+    }
+    else {
+      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
+                  "Maximum overflow\n");
+    }
   }
 }
 
 sc_statistics_t    *
-sc_statistics_new (MPI_Comm mpicomm)
+sc_statistics_new (sc_MPI_Comm mpicomm)
 {
   sc_statistics_t    *stats;
 
@@ -361,6 +379,12 @@ sc_statistics_add_empty (sc_statistics_t * stats, const char *name)
   sc_stats_init (si, name);
 
   sc_keyvalue_set_int (stats->kv, name, i);
+}
+
+int
+sc_statistics_has (sc_statistics_t * stats, const char *name)
+{
+  return sc_keyvalue_exists (stats->kv, name);
 }
 
 void

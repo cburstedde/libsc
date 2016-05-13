@@ -25,15 +25,15 @@
 int
 main (int argc, char **argv)
 {
-#ifdef SC_BLAS
+#ifdef SC_WITH_BLAS
   int                 mpiret;
   sc_dmatrix_pool_t  *p13, *p92;
   sc_dmatrix_t       *m1, *m2, *m3, *m4;
 
-  mpiret = MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   p13 = sc_dmatrix_pool_new (1, 3);
   p92 = sc_dmatrix_pool_new (9, 2);
@@ -62,9 +62,9 @@ main (int argc, char **argv)
 
   sc_finalize ();
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
-#endif
+#endif /* !SC_WITH_BLAS */
 
   return 0;
 }

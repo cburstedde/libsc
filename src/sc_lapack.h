@@ -37,61 +37,109 @@ sc_jobz_t;
 
 extern const char   sc_jobzchar[];
 
-#ifdef SC_LAPACK
+#ifdef SC_WITH_LAPACK
 
 #ifndef SC_F77_FUNC
+#if defined(__bgq__)            /* && defined(__HAVE_ESSL) */
+#define SC_F77_FUNC(small,CAPS) small
+/* TODO - FIX THIS FOR NOW WE DO NOT USE ESSL
+  #   define SC_F77_FUNC(small,CAPS) small ## _
+*/
+#define SC_F77_FUNC_NOESSL(small,CAPS) small
+#else
 #define SC_F77_FUNC(small,CAPS) small ## _
 #endif
+#endif /* SC_F77_FUNC */
 
-#define LAPACK_DGELS   SC_F77_FUNC(dgels,DGELS)
-#define LAPACK_DGETRF  SC_F77_FUNC(dgetrf,DGETRF)
-#define LAPACK_DGETRS  SC_F77_FUNC(dgetrs,DGETRS)
-#define LAPACK_DSTEV   SC_F77_FUNC(dstev,DSTEV)
-#define LAPACK_ILAENV  SC_F77_FUNC(ilaenv,ILAENV)
+#define SC_LAPACK_DGELS   SC_F77_FUNC(dgels,DGELS)
+#define SC_LAPACK_DGESV   SC_F77_FUNC(dgesv,DGESV)
+#define SC_LAPACK_DGETRF  SC_F77_FUNC(dgetrf,DGETRF)
+#define SC_LAPACK_DGETRS  SC_F77_FUNC(dgetrs,DGETRS)
+#if defined(__bgq__)            /* && define(__HAVE_ESSL) */
+#define SC_LAPACK_DSTEV   SC_F77_FUNC_NOESSL(dstev,DSTEV)
+#else
+#define SC_LAPACK_DSTEV   SC_F77_FUNC(dstev,DSTEV)
+#endif
+#define SC_LAPACK_DTRSM   SC_F77_FUNC(dtrsm,DTRSM)
+#define SC_LAPACK_DLAIC1  SC_F77_FUNC(dlaic1,DLAIC1)
+#define SC_LAPACK_ILAENV  SC_F77_FUNC(ilaenv,ILAENV)
 
-void                LAPACK_DGELS (const char *trans,
-                                  const sc_bint_t * m, const sc_bint_t * n,
-                                  const sc_bint_t * nrhs, double *a,
-                                  const sc_bint_t * lda, double *b,
-                                  const sc_bint_t * ldb, double *work,
-                                  const sc_bint_t * lwork, sc_bint_t * info);
-void                LAPACK_DGETRF (const sc_bint_t * m, const sc_bint_t * n,
-                                   double *a, const sc_bint_t * lda,
-                                   sc_bint_t * ipiv, sc_bint_t * info);
+void                SC_LAPACK_DGELS (const char *trans,
+                                     const sc_bint_t * m, const sc_bint_t * n,
+                                     const sc_bint_t * nrhs, double *a,
+                                     const sc_bint_t * lda, double *b,
+                                     const sc_bint_t * ldb, double *work,
+                                     const sc_bint_t * lwork,
+                                     sc_bint_t * info);
 
-void                LAPACK_DGETRS (const char *trans, const sc_bint_t * n,
-                                   const sc_bint_t * nrhs, const double *a,
-                                   const sc_bint_t * lda,
-                                   const sc_bint_t * ipiv, double *b,
-                                   const sc_bint_t * ldx, sc_bint_t * info);
+void                SC_LAPACK_DGESV (const sc_bint_t * n,
+                                     const sc_bint_t * nrhs,
+                                     double *a, const sc_bint_t * lda,
+                                     sc_bint_t * ipiv,
+                                     double *b, const sc_bint_t * ldb,
+                                     sc_bint_t * info);
 
-void                LAPACK_DSTEV (const char *jobz,
-                                  const sc_bint_t * n,
-                                  double *d,
-                                  double *e,
-                                  double *z,
-                                  const sc_bint_t * ldz,
-                                  double *work, sc_bint_t * info);
+void                SC_LAPACK_DGETRF (const sc_bint_t * m,
+                                      const sc_bint_t * n, double *a,
+                                      const sc_bint_t * lda, sc_bint_t * ipiv,
+                                      sc_bint_t * info);
 
-int                 LAPACK_ILAENV (const sc_bint_t * ispec,
-                                   const char *name,
-                                   const char *opts,
-                                   const sc_bint_t * N1,
-                                   const sc_bint_t * N2,
-                                   const sc_bint_t * N3,
-                                   const sc_bint_t * N4,
-                                   sc_buint_t name_length,
-                                   sc_buint_t opts_length);
+void                SC_LAPACK_DGETRS (const char *trans, const sc_bint_t * n,
+                                      const sc_bint_t * nrhs, const double *a,
+                                      const sc_bint_t * lda,
+                                      const sc_bint_t * ipiv, double *b,
+                                      const sc_bint_t * ldx,
+                                      sc_bint_t * info);
 
-#else /* !SC_LAPACK */
+void                SC_LAPACK_DSTEV (const char *jobz,
+                                     const sc_bint_t * n,
+                                     double *d,
+                                     double *e,
+                                     double *z,
+                                     const sc_bint_t * ldz,
+                                     double *work, sc_bint_t * info);
 
-#define LAPACK_DGELS    (void) sc_lapack_nonimplemented
-#define LAPACK_DGETRF   (void) sc_lapack_nonimplemented
-#define LAPACK_DGETRS   (void) sc_lapack_nonimplemented
-#define LAPACK_DSTEV    (void) sc_lapack_nonimplemented
-#define LAPACK_ILAENV   (int)  sc_lapack_nonimplemented
+void                SC_LAPACK_DTRSM (const char *side,
+                                     const char *uplo,
+                                     const char *transa,
+                                     const char *diag,
+                                     const sc_bint_t * m,
+                                     const sc_bint_t * n,
+                                     const double *alpha,
+                                     const double *a,
+                                     const sc_bint_t * lda,
+                                     const double *b, const sc_bint_t * ldb);
 
-int                 sc_lapack_nonimplemented ();
+void                SC_LAPACK_DLAIC1 (const int *job,
+                                      const int *j,
+                                      const double *x,
+                                      const double *sest,
+                                      const double *w,
+                                      const double *gamma,
+                                      double *sestpr, double *s, double *c);
+
+int                 SC_LAPACK_ILAENV (const sc_bint_t * ispec,
+                                      const char *name,
+                                      const char *opts,
+                                      const sc_bint_t * N1,
+                                      const sc_bint_t * N2,
+                                      const sc_bint_t * N3,
+                                      const sc_bint_t * N4,
+                                      sc_buint_t name_length,
+                                      sc_buint_t opts_length);
+
+#else /* !SC_WITH_LAPACK */
+
+#define SC_LAPACK_DGELS    (void) sc_lapack_nonimplemented
+#define SC_LAPACK_DGESV    (void) sc_lapack_nonimplemented
+#define SC_LAPACK_DGETRF   (void) sc_lapack_nonimplemented
+#define SC_LAPACK_DGETRS   (void) sc_lapack_nonimplemented
+#define SC_LAPACK_DSTEV    (void) sc_lapack_nonimplemented
+#define SC_LAPACK_DTRSM    (void) sc_lapack_nonimplemented
+#define SC_LAPACK_DLAIC1   (void) sc_lapack_nonimplemented
+#define SC_LAPACK_ILAENV   (int)  sc_lapack_nonimplemented
+
+int                 sc_lapack_nonimplemented (SC_NOARGS);
 
 #endif
 

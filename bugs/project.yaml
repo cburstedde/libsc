@@ -1,12 +1,12 @@
 --- !ditz.rubyforge.org,2008-03-06/project 
 name: libsc
-version: "0.4"
+version: "1.1"
 components: 
 - !ditz.rubyforge.org,2008-03-06/component 
   name: libsc
 releases: 
 - !ditz.rubyforge.org,2008-03-06/release 
-  name: "0.5"
+  name: "1.5"
   status: :released
   release_time: 2008-10-17 16:34:16.044402 Z
   log_events: 
@@ -19,7 +19,7 @@ releases:
     - released
     - Current maintenance revision of this release is 0.5.4.
 - !ditz.rubyforge.org,2008-03-06/release 
-  name: "0.6"
+  name: "1.6"
   status: :unreleased
   release_time: 
   log_events: 

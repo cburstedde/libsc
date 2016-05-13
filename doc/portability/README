@@ -1,0 +1,22 @@
+
+Portability of shell code (relevant especially for autotools scripting)
+-----------------------------------------------------------------------
+
+According to autoconf.html#Limitations-of-Builtins, this is worth noting:
+
+test may get confused by strings to compare that start with ! or - .
+This is the reason for using test "x$ABC" = xyes .
+
+test may not recognize -a or -o.  Use separate test calls instead,
+if test 1 || { test 2 && test 3 ; } ; then
+  :
+fi
+
+test may not recognize -z or -n.  Use a string check instead,
+test "x$ABC" = x
+test "x$ABC" != x
+
+! test -d ABC is not portable; test ! d ABC is.
+
+There is no need to use double quotes "" around backticks `` or the
+variable expansion case $ABC .

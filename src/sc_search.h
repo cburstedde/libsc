@@ -35,19 +35,36 @@ SC_EXTERN_C_BEGIN;
  * \return          Branch position with 0 <= position <= 2**maxlevel.
  */
 int                 sc_search_bias (int maxlevel, int level,
-				    int interval, int target);
+                                    int interval, int target);
 
 /** Find lowest position k in a sorted array such that array[k] >= target.
  * \param [in]  target  The target lower bound to binary search for.
  * \param [in]  array   The 64bit integer array to binary search in.
- * \param [in]  size    The number of int64_t's in the array.
+ * \param [in]  nmemb   The number of int64_t's in the array.
  * \param [in]  guess   Initial array position to look at.
  * \return  Returns the matching position
  *          or -1 if array[size-1] < target or if size == 0.
  */
 ssize_t             sc_search_lower_bound64 (int64_t target,
                                              const int64_t * array,
-                                             size_t size, size_t guess);
+                                             size_t nmemb, size_t guess);
+
+/** Search position k in sorted array with array[k] <= target < array[k + 1].
+ * This function is modeled after the libc bsearch function.
+ * \param [in]  key     The target to find in the array range.
+ * \param [in]  base    The array to binary search in.
+ * \param [in]  nmemb   Number of entries in the array MINUS ONE.
+ *                      Thus the array always contains at least one element.
+ * \param [in]  size    Size of one entry in the array in bytes.
+ * \param [in]  compar  Comparison function to return < 0 for less than,
+ *                      0 for equal, and > 0 for greater between the arguments.
+ * \return              The matching array position if found, or nmemb if not,
+ *                      i.e., if target < array[0] or target >= array[nmemb].
+ */
+size_t              sc_bsearch_range (const void *key, const void *base,
+                                      size_t nmemb, size_t size,
+                                      int (*compar) (const void *,
+                                                     const void *));
 
 SC_EXTERN_C_END;
 

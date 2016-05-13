@@ -23,11 +23,6 @@
 #include <sc_allgather.h>
 #include <sc_sort.h>
 
-#ifdef SC_ALLGATHER
-#include <sc_allgather.h>
-#define MPI_Allgather sc_allgather
-#endif
-
 int
 main (int argc, char **argv)
 {
@@ -42,15 +37,15 @@ main (int argc, char **argv)
   size_t              lcount, gtotal;
   size_t             *nmemb;
   double             *ldata, *gdata;
-  MPI_Comm            mpicomm;
+  sc_MPI_Comm         mpicomm;
   char                buffer[BUFSIZ];
 
-  mpiret = MPI_Init (&argc, &argv);
+  mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
-  mpicomm = MPI_COMM_WORLD;
-  mpiret = MPI_Comm_size (mpicomm, &num_procs);
+  mpicomm = sc_MPI_COMM_WORLD;
+  mpiret = sc_MPI_Comm_size (mpicomm, &num_procs);
   SC_CHECK_MPI (mpiret);
-  mpiret = MPI_Comm_rank (mpicomm, &rank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
 
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
@@ -69,8 +64,8 @@ main (int argc, char **argv)
   SC_INFOF ("Local values %d\n", (int) lcount);
   nmemb = SC_ALLOC (size_t, num_procs);
   isizet = (int) sizeof (size_t);
-  mpiret = MPI_Allgather (&lcount, isizet, MPI_BYTE,
-                          nmemb, isizet, MPI_BYTE, mpicomm);
+  mpiret = sc_MPI_Allgather (&lcount, isizet, sc_MPI_BYTE,
+                             nmemb, isizet, sc_MPI_BYTE, mpicomm);
   SC_CHECK_MPI (mpiret);
 
   /* create data and sort it */
@@ -111,8 +106,8 @@ main (int argc, char **argv)
       gtotal = (size_t) displ[num_procs];
       gdata = SC_ALLOC (double, gtotal);
     }
-    mpiret = MPI_Gatherv (ldata, (int) lcount, MPI_DOUBLE,
-                          gdata, recvc, displ, MPI_DOUBLE, 0, mpicomm);
+    mpiret = sc_MPI_Gatherv (ldata, (int) lcount, sc_MPI_DOUBLE,
+                             gdata, recvc, displ, sc_MPI_DOUBLE, 0, mpicomm);
     SC_CHECK_MPI (mpiret);
     if (rank == 0) {
       for (zz = 0; zz < gtotal - 1; ++zz) {
@@ -130,7 +125,7 @@ main (int argc, char **argv)
 
   sc_finalize ();
 
-  mpiret = MPI_Finalize ();
+  mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 #endif
 

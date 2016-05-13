@@ -3,6 +3,7 @@
   The SC Library provides support for parallel scientific applications.
 
   Copyright (C) 2010 The University of Texas System
+  Additional copyright (C) 2011 individual authors
 
   The SC Library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -22,15 +23,54 @@
 
 /*
   Authors:
-  Carsten Burstedde <carsten@ices.utexas.edu>
+
+  Carsten Burstedde <burstedde@ins.uni-bonn.de>
   Lucas C. Wilcox <lucasw@ices.utexas.edu>
-  Toby Isaac <tisaac@ices.utexas.edu>
-  James Martin <jmartin@ices.utexas.edu>
+  Tobin Isaac <tisaac@ices.utexas.edu>
 */
 
 /*
-  The files under src/sc_builtin are copied from the GNU C library,
-  zlib and lua, respectively.  See Copyright information below.
+  Contributors:
+
+  James Martin <jmartin@ices.utexas.edu>
+  Tan Bui-Thanh <tanbui@ices.utexas.edu>
+  Adrian Seyboldt <adrian.seyboldt@gmail.com>
+  Sarah Weischer <s.weischer@gmx.de>
+  Johannes Holke <holke@ins.uni-bonn.de>
+  Johann Rudi <johann@ices.utexas.edu>
+  Cristiano Malossi <acm@zurich.ibm.com>
+  Pierre Kestener <pierre.kestener@cea.fr>
+*/
+
+/*
+  Thanks to:
+
+  Matthias Maier <matthias.maier@iwr.uni-heidelberg.de>
+*/
+
+/*
+  Acknowledgement and Disclaimer:
+
+  The development of libsc was partially supported by the US National Science
+  Foundation (NSF Grants No. OCI-0749334, CCF-0427985, CNS-0540372,
+  CNS-0619838, DMS-0724746, OPP-0941678) and the US Department of Energy (DOE
+  Grants No.  06ER25782, 08ER25860, SC0002710).  The authors thank the Texas
+  Advanced Computing Center (TACC) for providing them with access to the Ranger
+  supercomputer under NSF TeraGrid award MCA04N026, and the National Center for
+  Computational Science (NCCS) for early-user access to the Jaguar Cray XT5
+  supercomputer.  Any opinions, findings and conclusions or recomendations
+  expressed in the source code and documentation are those of the authors and
+  do not necessarily reflect the views of the National Science Foundation
+  (NSF).
+*/
+
+/*
+  The SC library is free software under the GNU LGPL v2.1 or later.
+  This is in agreement with the fact that some contributions have been
+  placed under the FreeBSD license and/or in the public domain.
+
+  The files under src/sc_builtin are copied from the GNU C library.
+  See copyright information below.
 
   The files sc_avl.{c,h} are derived from libavl (Debian 0.3.5-2),
   Copyright (C) 1998  Michael H. Buselli <cosine@cosine.org>
@@ -38,12 +78,6 @@
 
   The files sc_obstack.c and sc_getopt*.c are derived from the GNU C
   library 2.7, Copyright (C) Free Software Foundation, Inc.
-
-  The files under zlib except zlib/Makefile.am are copied from zlib 1.2.4,
-  Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler.
-
-  The files under lua except lua/Makefile.am are copied from lua 5.1.4,
-  Copyright (C) 1994-2008 Lua.org, PUC-Rio.
 
   The source files under libb64 are derived from libb64.  libb64 is public
   domain software, see the LICENSE and AUTHORS files in that directory.
@@ -60,13 +94,3 @@
   www.inf.fh-flensburg.de/lang/algorithmen/sortieren/bitonic/bitonicen.htm
   for a nice description of the serial special case for arbitrary n.
 */
-
-Contact:
-
-Carsten Burstedde <carsten@ices.utexas.edu>
-Lucas C. Wilcox <lucasw@ices.utexas.edu>
-
-ICES, The University of Texas at Austin
-1 University Station C0200
-Austin, TX 78712
-USA

@@ -73,6 +73,27 @@ dnl This way the SC_LAPACK macro can be called multiple times
 dnl with different Fortran environments to minimize F77 dependencies.
 dnl Replaced obsolete AC_TRY_LINK_FUNC macro.
 
+dnl Subroutine to link a program using lapack
+dnl SC_LAPACK_LINK (<added to CHECKING message>)
+AC_DEFUN([SC_LAPACK_LINK], [
+        AC_MSG_CHECKING([for LAPACK by linking$1])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM(dnl
+[[
+#ifdef __cplusplus
+extern "C"
+void $sc_lapack_func (char *, int *, double *, int *, double *,
+                      double *, double *, int *, int *);
+#endif
+]], [[
+int     i = 1, info = 0, iwork[1];
+double  anorm = 1., rcond;
+double  A = 1., work[4];
+$sc_lapack_func ("1", &i, &A, &i, &anorm, &rcond, work, iwork, &info);
+]])],
+[AC_MSG_RESULT([successful])],
+[AC_MSG_RESULT([failed]); sc_lapack_ok=no])
+])
+
 dnl The first argument of this macro should be the package prefix.
 dnl The second argument of this macro should be a mangled DGECON function.
 AC_DEFUN([SC_LAPACK], [
@@ -83,8 +104,7 @@ user_spec_lapack_failed=no
 AC_ARG_WITH([lapack], [AS_HELP_STRING([--with-lapack=<lib>],
             [change default LAPACK library to <lib>
              or specify --without-lapack to use no LAPACK at all])],,
-	     [withval="yes"])
-SC_ARG_OVERRIDE_WITH([$1], [LAPACK])
+	     [withval=yes])
 case $withval in
         yes | "") ;;
         no) sc_lapack_ok=disable ;;
@@ -96,14 +116,14 @@ dnl Expect the mangled DGECON function name to be in $2.
 sc_lapack_func="$2"
 
 # We cannot use LAPACK if BLAS is not found
-if test "$sc_blas_ok" = disable ; then
+if test "x$sc_blas_ok" = xdisable ; then
         sc_lapack_ok=disable
-elif test "$sc_blas_ok" != yes; then
+elif test "x$sc_blas_ok" != xyes; then
         sc_lapack_ok=noblas
 fi
 
 # First, check LAPACK_LIBS environment variable
-if test "$sc_lapack_ok" = no; then
+if test "x$sc_lapack_ok" = xno; then
 if test "x$LAPACK_LIBS" != x; then
         save_LIBS="$LIBS"; LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
         AC_MSG_CHECKING([for $sc_lapack_func in $LAPACK_LIBS])
@@ -111,7 +131,7 @@ if test "x$LAPACK_LIBS" != x; then
                        [sc_lapack_ok=yes], [user_spec_lapack_failed=yes])
         AC_MSG_RESULT($sc_lapack_ok)
         LIBS="$save_LIBS"
-        if test sc_lapack_ok = no; then
+        if test "x$sc_lapack_ok" = xno; then
                 LAPACK_LIBS=""
         fi
 fi
@@ -124,7 +144,7 @@ fi
 if test "x$user_spec_lapack_failed" != xyes; then
 
 # LAPACK linked to by default?  (is sometimes included in BLAS lib)
-if test $sc_lapack_ok = no; then
+if test "x$sc_lapack_ok" = xno; then
         save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS $FLIBS"
         AC_CHECK_FUNC($sc_lapack_func, [sc_lapack_ok=yes])
         LIBS="$save_LIBS"
@@ -132,7 +152,7 @@ fi
 
 # Generic LAPACK library?
 for lapack in lapack lapack_rs6k; do
-        if test $sc_lapack_ok = no; then
+        if test "x$sc_lapack_ok" = xno; then
                 save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS"
                 AC_CHECK_LIB($lapack, $sc_lapack_func,
                     [sc_lapack_ok=yes; LAPACK_LIBS="-l$lapack"], [], [$FLIBS])
@@ -140,39 +160,39 @@ for lapack in lapack lapack_rs6k; do
         fi
 done
 
-AC_SUBST(LAPACK_LIBS)
+dnl AC_SUBST(LAPACK_LIBS)
 
 fi # If the user specified library wasn't found, we skipped the remaining
    # checks.
 
+LAPACK_FLIBS=
+
 # Test link and run a LAPACK program
-if test "$sc_lapack_ok" = yes ; then
+if test "x$sc_lapack_ok" = xyes ; then
+    dnl Link without FLIBS, or with FLIBS if required by BLAS
+    sc_lapack_save_run_LIBS="$LIBS"
+    LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $BLAS_FLIBS"
+    SC_LAPACK_LINK([ w/ BLAS_FLIBS but w/o FLIBS])
+    LIBS="$sc_lapack_save_run_LIBS"
+
+    if test "x$sc_lapack_ok" = xno && test "x$BLAS_FLIBS" = x ; then
+        dnl Link with FLIBS it didn't work without
         sc_lapack_save_run_LIBS="$LIBS"
         LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
-        AC_MSG_CHECKING([for LAPACK by linking a C program])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(dnl
-[[#ifdef __cplusplus
-extern "C"
-void $sc_lapack_func (char *, int *, double *, int *, double *,
-                      double *, double *, int *, int *);
-#endif
-]],[[
-int     i = 1, info = 0, iwork[1];
-double  anorm = 1., rcond;
-double  A = 1., work[4];
-$sc_lapack_func ("1", &i, &A, &i, &anorm, &rcond, work, iwork, &info);
-]])],
-[AC_MSG_RESULT([successful])],
-[AC_MSG_RESULT([failed]); sc_lapack_ok=no])
+        sc_lapack_ok=yes
+        SC_LAPACK_LINK([ with FLIBS])
         LIBS="$sc_lapack_save_run_LIBS"
+        LAPACK_FLIBS="$FLIBS"
+    fi
 fi
+dnl Now at most one of BLAS_FLIBS and LAPACK_FLIBS may be set, but not both
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test "$sc_lapack_ok" = yes; then
+if test "x$sc_lapack_ok" = xyes; then
         ifelse([$3],,
                [AC_DEFINE(HAVE_LAPACK,1,[Define if you have LAPACK library.])],[$3])
         :
-elif test "$sc_lapack_ok" != disable ; then
+elif test "x$sc_lapack_ok" != xdisable ; then
         sc_lapack_ok=no
         $4
 fi
