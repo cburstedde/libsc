@@ -56,7 +56,7 @@ sc_polynom_is_valid (const sc_polynom_t * p)
   }
 #ifdef SC_ENABLE_DEBUG
   for (i = p->degree + 1; i < (int) p->c->elem_count; ++i) {
-    if (*(const double *) sc_array_index_int_const (p->c, i) != -1.) {
+    if (*sc_polynom_coefficient_const (p, i) != -1.) {
       return 0;
     }
   }
@@ -239,9 +239,7 @@ sc_polynom_new_from_sum (const sc_polynom_t * q, const sc_polynom_t * r)
 sc_polynom_t       *
 sc_polynom_new_from_product (const sc_polynom_t * q, const sc_polynom_t * r)
 {
-  const int           degree = q->degree + r->degree;
-  const double       *qca = (const double *) q->c->array;
-  const double       *rca = (const double *) r->c->array;
+  int                 degree;
   int                 i, j, k;
   double              sum;
   sc_polynom_t       *p;
@@ -249,12 +247,15 @@ sc_polynom_new_from_product (const sc_polynom_t * q, const sc_polynom_t * r)
   SC_ASSERT (sc_polynom_is_valid (q));
   SC_ASSERT (sc_polynom_is_valid (r));
 
-  p = sc_polynom_new_uninitialized (degree);
+  p = sc_polynom_new_uninitialized (degree = q->degree + r->degree);
+
   for (i = 0; i <= degree; ++i) {
     sum = 0.;
     k = SC_MIN (i, q->degree);
     for (j = SC_MAX (0, i - r->degree); j <= k; ++j) {
-      sum += qca[j] * rca[i - j];
+      sum +=
+        *sc_polynom_coefficient_const (q, j) *
+        *sc_polynom_coefficient_const (r, i - j);
     }
     *sc_polynom_coefficient (p, i) = sum;
   }
