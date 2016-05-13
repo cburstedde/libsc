@@ -72,7 +72,7 @@ sc_polynom_t       *sc_polynom_new_constant (double c);
  * \param [in] which            The index must be in [0, degree].
  * \param [in] points           A set of \a degree + 1 values.
  * \return                      The polynomial
- *      sum_{0 \le i \le degree, i \ne which} (x - p_i) / (p_which - p_i)
+ *      prod_{0 \le i \le degree, i \ne which} (x - p_i) / (p_which - p_i)
  */
 sc_polynom_t       *sc_polynom_new_lagrange (int degree, int which,
                                              const double *points);
