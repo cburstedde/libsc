@@ -21,6 +21,7 @@
   02110-1301, USA.
 */
 
+#include <sc_containers.h>
 #include <sc_polynom.h>
 
 struct sc_polynom

@@ -24,7 +24,7 @@
 #ifndef SC_POLYNOM_H
 #define SC_POLYNOM_H
 
-#include <sc_containers.h>
+#include <sc.h>
 
 SC_EXTERN_C_BEGIN;
 
