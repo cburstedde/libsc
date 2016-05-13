@@ -28,15 +28,32 @@
 
 SC_EXTERN_C_BEGIN;
 
-/* Data structure and basic constructor and destructor */
+/** Data structure is opaque */
+typedef struct sc_polynom sc_polynom_t;
 
-typedef struct sc_polynom
-{
-  int                 degree;   /* Degree of polynom sum_i=0^degree c_i x^i */
-  sc_array_t         *c;        /* Array of type double stores coefficients.
-                                   It holds degree < c->elem_count. */
-}
-sc_polynom_t;
+/** Access the degree of a polynomial.
+ * It is possible that the highest coefficient is zero,
+ * depending on prior manipulations of the polynom.
+ * \param [in] p        This polynom is accessed.
+ * \return              The degree of the polynomial.
+ */
+int                 sc_polynom_degree (sc_polynom_t * p);
+
+/** Access the coefficient to a given degree.
+ * \param [in] p        This polynom is accessed.
+ * \param [in] i        This index must be less equal the degree.
+ * \return              Pointer to the coefficient of degree \a i.
+ */
+double             *sc_polynom_index_int (sc_polynom_t * p, int i);
+
+/** Access the coefficient to a given degree.
+ * \param [in] p        This polynom is accessed and cannot be modified.
+ * \param [in] i        This index must be less equal the degree.
+ * \return              Pointer to the coefficient of degree \a i,
+ *                      whose value must not be modified.
+ */
+const double       *sc_polynom_index_int_const (const sc_polynom_t * p,
+                                                int i);
 
 /** Destroy all memory used by a polynom */
 void                sc_polynom_destroy (sc_polynom_t * p);

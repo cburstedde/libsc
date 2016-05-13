@@ -23,6 +23,13 @@
 
 #include <sc_polynom.h>
 
+struct sc_polynom
+{
+  int                 degree;   /* Degree of polynom sum_i=0^degree c_i x^i */
+  sc_array_t         *c;        /* Array of type double stores coefficients.
+                                   It holds degree < c->elem_count. */
+};
+
 static const void  *
 sc_array_index_int_const (const sc_array_t * array, int i)
 {
@@ -60,7 +67,15 @@ sc_polynom_is_valid (const sc_polynom_t * p)
 
 #endif
 
-static double      *
+int
+sc_polynom_degree (sc_polynom_t * p)
+{
+  SC_ASSERT (sc_polynom_is_valid (p));
+
+  return p->degree;
+}
+
+double             *
 sc_polynom_index_int (sc_polynom_t * p, int i)
 {
   SC_ASSERT (sc_polynom_is_valid (p));
@@ -69,7 +84,7 @@ sc_polynom_index_int (sc_polynom_t * p, int i)
   return (double *) sc_array_index_int (p->c, i);
 }
 
-static const double *
+const double       *
 sc_polynom_index_int_const (const sc_polynom_t * p, int i)
 {
   SC_ASSERT (sc_polynom_is_valid (p));
