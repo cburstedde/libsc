@@ -44,7 +44,7 @@ int                 sc_polynom_degree (sc_polynom_t * p);
  * \param [in] i        This index must be less equal the degree.
  * \return              Pointer to the coefficient of degree \a i.
  */
-double             *sc_polynom_index_int (sc_polynom_t * p, int i);
+double             *sc_polynom_coefficient (sc_polynom_t * p, int i);
 
 /** Access the coefficient to a given degree.
  * \param [in] p        This polynom is accessed and cannot be modified.
@@ -52,8 +52,8 @@ double             *sc_polynom_index_int (sc_polynom_t * p, int i);
  * \return              Pointer to the coefficient of degree \a i,
  *                      whose value must not be modified.
  */
-const double       *sc_polynom_index_int_const (const sc_polynom_t * p,
-                                                int i);
+const double       *sc_polynom_coefficient_const (const sc_polynom_t * p,
+                                                  int i);
 
 /** Destroy all memory used by a polynom */
 void                sc_polynom_destroy (sc_polynom_t * p);

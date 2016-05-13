@@ -76,7 +76,7 @@ sc_polynom_degree (sc_polynom_t * p)
 }
 
 double             *
-sc_polynom_index_int (sc_polynom_t * p, int i)
+sc_polynom_coefficient (sc_polynom_t * p, int i)
 {
   SC_ASSERT (sc_polynom_is_valid (p));
   SC_ASSERT (0 <= i && i <= p->degree);
@@ -85,7 +85,7 @@ sc_polynom_index_int (sc_polynom_t * p, int i)
 }
 
 const double       *
-sc_polynom_index_int_const (const sc_polynom_t * p, int i)
+sc_polynom_coefficient_const (const sc_polynom_t * p, int i)
 {
   SC_ASSERT (sc_polynom_is_valid (p));
   SC_ASSERT (0 <= i && i <= p->degree);
@@ -163,14 +163,14 @@ sc_polynom_new_lagrange (int degree, int which, const double *points)
 
   /* allocate memory for the linear factors */
   l = sc_polynom_new_uninitialized (1);
-  *sc_polynom_index_int (l, 1) = 1.;
+  *sc_polynom_coefficient (l, 1) = 1.;
 
   /* multiply the linear factors and update denominator */
   for (i = 0; i <= degree; ++i) {
     if (i == which) {
       continue;
     }
-    *sc_polynom_index_int (l, 0) = (mp = -points[i]);
+    *sc_polynom_coefficient (l, 0) = (mp = -points[i]);
     sc_polynom_multiply (p, l);
     denom *= mw + mp;
   }
@@ -256,7 +256,7 @@ sc_polynom_new_from_product (const sc_polynom_t * q, const sc_polynom_t * r)
     for (j = SC_MAX (0, i - r->degree); j <= k; ++j) {
       sum += qca[j] * rca[i - j];
     }
-    *sc_polynom_index_int (p, i) = sum;
+    *sc_polynom_coefficient (p, i) = sum;
   }
 
   SC_ASSERT (sc_polynom_is_valid (p));
@@ -273,12 +273,12 @@ sc_polynom_set_degree (sc_polynom_t * p, int degree)
 
 #ifdef SC_ENABLE_DEBUG
   for (i = degree; i < p->degree; ++i) {
-    *sc_polynom_index_int (p, i + 1) = -1.;
+    *sc_polynom_coefficient (p, i + 1) = -1.;
   }
 #endif
   sc_array_resize (p->c, (size_t) degree + 1);
   for (i = p->degree; i < degree; ++i) {
-    *sc_polynom_index_int (p, i + 1) = 0.;
+    *sc_polynom_coefficient (p, i + 1) = 0.;
   }
   p->degree = degree;
 
@@ -289,7 +289,7 @@ void
 sc_polynom_set_value (sc_polynom_t * p, double value)
 {
   sc_polynom_set_degree (p, 0);
-  *sc_polynom_index_int (p, 0) = value;
+  *sc_polynom_coefficient (p, 0) = value;
 
   SC_ASSERT (sc_polynom_is_valid (p));
 }
@@ -314,7 +314,7 @@ sc_polynom_shift (sc_polynom_t * p, int exponent, double factor)
   if (exponent > p->degree) {
     sc_polynom_set_degree (p, exponent);
   }
-  *sc_polynom_index_int (p, exponent) += factor;
+  *sc_polynom_coefficient (p, exponent) += factor;
 
   SC_ASSERT (sc_polynom_is_valid (p));
 }
@@ -330,18 +330,18 @@ sc_polynom_scale (sc_polynom_t * p, int exponent, double factor)
 
   if (exponent == 0) {
     for (i = 0; i <= degree; ++i) {
-      *sc_polynom_index_int (p, i) *= factor;
+      *sc_polynom_coefficient (p, i) *= factor;
     }
   }
   else {
     sc_polynom_set_degree (p, degree + exponent);
 
     for (i = degree; i >= 0; --i) {
-      *sc_polynom_index_int (p, i + exponent) =
-        factor * *sc_polynom_index_int (p, i);
+      *sc_polynom_coefficient (p, i + exponent) =
+        factor * *sc_polynom_coefficient (p, i);
     }
     for (i = 0; i < exponent; ++i) {
-      *sc_polynom_index_int (p, i) = 0.;
+      *sc_polynom_coefficient (p, i) = 0.;
     }
   }
 
@@ -369,7 +369,8 @@ sc_polynom_AXPY (double A, const sc_polynom_t * X, sc_polynom_t * Y)
 
   sc_polynom_set_degree (Y, SC_MAX (Y->degree, X->degree));
   for (i = 0; i <= X->degree; ++i) {
-    *sc_polynom_index_int (Y, i) += A * *sc_polynom_index_int_const (X, i);
+    *sc_polynom_coefficient (Y, i) +=
+      A * *sc_polynom_coefficient_const (X, i);
   }
 
   SC_ASSERT (sc_polynom_is_valid (Y));
