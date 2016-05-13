@@ -23,8 +23,6 @@
 
 #include <sc_polynom.h>
 
-#ifdef SC_ENABLE_DEBUG
-
 static const void  *
 sc_array_index_int_const (const sc_array_t * array, int i)
 {
@@ -32,6 +30,8 @@ sc_array_index_int_const (const sc_array_t * array, int i)
 
   return (const void *) (array->array + (array->elem_size * (size_t) i));
 }
+
+#ifdef SC_ENABLE_DEBUG
 
 static int
 sc_polynom_is_valid (const sc_polynom_t * p)
@@ -59,6 +59,24 @@ sc_polynom_is_valid (const sc_polynom_t * p)
 }
 
 #endif
+
+static double      *
+sc_polynom_index_int (sc_polynom_t * p, int i)
+{
+  SC_ASSERT (sc_polynom_is_valid (p));
+  SC_ASSERT (0 <= i && i <= p->degree);
+
+  return (double *) sc_array_index_int (p->c, i);
+}
+
+static const double *
+sc_polynom_index_int_const (const sc_polynom_t * p, int i)
+{
+  SC_ASSERT (sc_polynom_is_valid (p));
+  SC_ASSERT (0 <= i && i <= p->degree);
+
+  return (const double *) sc_array_index_int_const (p->c, i);
+}
 
 void
 sc_polynom_destroy (sc_polynom_t * p)
@@ -130,14 +148,14 @@ sc_polynom_new_lagrange (int degree, int which, const double *points)
 
   /* allocate memory for the linear factors */
   l = sc_polynom_new_uninitialized (1);
-  *(double *) sc_array_index_int (l->c, 1) = 1.;
+  *sc_polynom_index_int (l, 1) = 1.;
 
   /* multiply the linear factors and update denominator */
   for (i = 0; i <= degree; ++i) {
     if (i == which) {
       continue;
     }
-    *(double *) sc_array_index_int (l->c, 0) = (mp = -points[i]);
+    *sc_polynom_index_int (l, 0) = (mp = -points[i]);
     sc_polynom_multiply (p, l);
     denom *= mw + mp;
   }
@@ -223,7 +241,7 @@ sc_polynom_new_from_product (const sc_polynom_t * q, const sc_polynom_t * r)
     for (j = SC_MAX (0, i - r->degree); j <= k; ++j) {
       sum += qca[j] * rca[i - j];
     }
-    *((double *) sc_array_index_int (p->c, i)) = sum;
+    *sc_polynom_index_int (p, i) = sum;
   }
 
   SC_ASSERT (sc_polynom_is_valid (p));
@@ -240,12 +258,12 @@ sc_polynom_set_degree (sc_polynom_t * p, int degree)
 
 #ifdef SC_ENABLE_DEBUG
   for (i = degree; i < p->degree; ++i) {
-    *((double *) sc_array_index_int (p->c, i + 1)) = -1.;
+    *sc_polynom_index_int (p, i + 1) = -1.;
   }
 #endif
   sc_array_resize (p->c, (size_t) degree + 1);
   for (i = p->degree; i < degree; ++i) {
-    *((double *) sc_array_index_int (p->c, i + 1)) = 0.;
+    *sc_polynom_index_int (p, i + 1) = 0.;
   }
   p->degree = degree;
 
@@ -256,8 +274,7 @@ void
 sc_polynom_set_value (sc_polynom_t * p, double value)
 {
   sc_polynom_set_degree (p, 0);
-
-  *((double *) sc_array_index (p->c, 0)) = value;
+  *sc_polynom_index_int (p, 0) = value;
 
   SC_ASSERT (sc_polynom_is_valid (p));
 }
@@ -282,7 +299,7 @@ sc_polynom_shift (sc_polynom_t * p, int exponent, double factor)
   if (exponent > p->degree) {
     sc_polynom_set_degree (p, exponent);
   }
-  *((double *) sc_array_index_int (p->c, exponent)) += factor;
+  *sc_polynom_index_int (p, exponent) += factor;
 
   SC_ASSERT (sc_polynom_is_valid (p));
 }
@@ -298,18 +315,18 @@ sc_polynom_scale (sc_polynom_t * p, int exponent, double factor)
 
   if (exponent == 0) {
     for (i = 0; i <= degree; ++i) {
-      *((double *) sc_array_index_int (p->c, i)) *= factor;
+      *sc_polynom_index_int (p, i) *= factor;
     }
   }
   else {
     sc_polynom_set_degree (p, degree + exponent);
 
     for (i = degree; i >= 0; --i) {
-      *((double *) sc_array_index_int (p->c, i + exponent)) =
-        factor * *((double *) sc_array_index_int (p->c, i));
+      *sc_polynom_index_int (p, i + exponent) =
+        factor * *sc_polynom_index_int (p, i);
     }
     for (i = 0; i < exponent; ++i) {
-      *((double *) sc_array_index_int (p->c, i)) = 0.;
+      *sc_polynom_index_int (p, i) = 0.;
     }
   }
 
@@ -337,8 +354,7 @@ sc_polynom_AXPY (double A, const sc_polynom_t * X, sc_polynom_t * Y)
 
   sc_polynom_set_degree (Y, SC_MAX (Y->degree, X->degree));
   for (i = 0; i <= X->degree; ++i) {
-    *((double *) sc_array_index_int (Y->c, i)) +=
-      A * *((double *) sc_array_index_int (X->c, i));
+    *sc_polynom_index_int (Y, i) += A * *sc_polynom_index_int_const (X, i);
   }
 
   SC_ASSERT (sc_polynom_is_valid (Y));
