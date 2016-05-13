@@ -2,8 +2,13 @@
 dnl SC_CHECK_PTHREAD(PREFIX)
 dnl Check for POSIX thread support and link a test program
 dnl
+dnl This macro tries to link to pthread_create both as is and with -lpthread.
+dnl If neither of this works, we throw an error.
+dnl Use the LIBS variable on the configure line to specify a different library.
+dnl
 AC_DEFUN([SC_CHECK_PTHREAD], [
 
+dnl This link test changes the LIBS variable in place for posterity
 SC_CHECK_LIB([pthread], [pthread_create], [LPTHREAD], [$1])
 AC_MSG_CHECKING([for POSIX threads])
 
