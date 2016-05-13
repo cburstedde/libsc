@@ -143,7 +143,7 @@ sc_polynom_new_from_coefficients (int degree, const double *coefficients)
 }
 
 /*
- * sum_{0 \le i \le degree, i \ne which} (x - p_i) / (p_which - p_i)
+ * prod_{0 \le i \le degree, i \ne which} (x - p_i) / (p_which - p_i)
  */
 sc_polynom_t       *
 sc_polynom_new_lagrange (int degree, int which, const double *points)

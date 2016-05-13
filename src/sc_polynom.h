@@ -72,7 +72,7 @@ sc_polynom_t       *sc_polynom_new_constant (double c);
  * \param [in] which            The index must be in [0, degree].
  * \param [in] points           A set of \a degree + 1 values.
  * \return                      The polynomial
- *      sum_{0 \le i \le degree, i \ne which} (x - p_i) / (p_which - p_i)
+ *      prod_{0 \le i \le degree, i \ne which} (x - p_i) / (p_which - p_i)
  */
 sc_polynom_t       *sc_polynom_new_lagrange (int degree, int which,
                                              const double *points);
@@ -97,7 +97,7 @@ sc_polynom_t       *sc_polynom_new_from_product (const sc_polynom_t * q,
 
 /* Manipulating a polynom */
 
-/** Set degree of a polynomial.
+/** Set degree of a polynomial, keeping the coefficients.
  * If the new degree is larger than the old degree, the new coefficients
  * are set to zero.  If the new degree is smaller, the smaller set of
  * coefficients is unchanged and the others are set to zero.
@@ -110,7 +110,7 @@ void                sc_polynom_set_degree (sc_polynom_t * p, int degree);
  */
 void                sc_polynom_set_value (sc_polynom_t * p, double value);
 
-/** Set a polynom to another.
+/** Set a polynom to the copy of another.
  * \param[in,out] p A polynom that is set to q.
  * \param[in] q     The polynom that is used as the new value for p.
  */
