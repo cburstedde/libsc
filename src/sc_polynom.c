@@ -60,6 +60,15 @@ sc_polynom_is_valid (const sc_polynom_t * p)
 
 #endif
 
+void
+sc_polynom_destroy (sc_polynom_t * p)
+{
+  SC_ASSERT (sc_polynom_is_valid (p));
+
+  sc_array_destroy (p->c);
+  SC_FREE (p);
+}
+
 static sc_polynom_t *
 sc_polynom_new_uninitialized (int degree)
 {
@@ -78,18 +87,13 @@ sc_polynom_new_uninitialized (int degree)
 sc_polynom_t       *
 sc_polynom_new (void)
 {
-  const double        zero = 0.;
-
-  return sc_polynom_new_from_coefficients (0, &zero);
+  return sc_polynom_new_constant (0.);
 }
 
-void
-sc_polynom_destroy (sc_polynom_t * p)
+sc_polynom_t       *
+sc_polynom_new_constant (double c)
 {
-  SC_ASSERT (sc_polynom_is_valid (p));
-
-  sc_array_destroy (p->c);
-  SC_FREE (p);
+  return sc_polynom_new_from_coefficients (0, &c);
 }
 
 sc_polynom_t       *
@@ -99,6 +103,48 @@ sc_polynom_new_from_coefficients (int degree, const double *coefficients)
 
   p = sc_polynom_new_uninitialized (degree);
   memcpy (p->c->array, coefficients, p->c->elem_size * p->c->elem_count);
+
+  SC_ASSERT (sc_polynom_is_valid (p));
+  return p;
+}
+
+/*
+ * sum_{0 \le i \le degree, i \ne which} (x - p_i) / (p_which - p_i)
+ */
+sc_polynom_t       *
+sc_polynom_new_lagrange (int degree, int which, const double *points)
+{
+  int                 i;
+  double              denom, mp, mw;
+  sc_polynom_t       *p, *l;
+
+  SC_ASSERT (0 <= degree);
+  SC_ASSERT (0 <= which && which <= degree);
+
+  /* we will need these numbers */
+  denom = 1.;
+  mw = points[which];
+
+  /* begin with the unit polynom */
+  p = sc_polynom_new_constant (1.);
+
+  /* allocate memory for the linear factors */
+  l = sc_polynom_new_uninitialized (1);
+  *(double *) sc_array_index_int (l->c, 1) = 1.;
+
+  /* multiply the linear factors and update denominator */
+  for (i = 0; i <= degree; ++i) {
+    if (i == which) {
+      continue;
+    }
+    *(double *) sc_array_index_int (l->c, 0) = (mp = -points[i]);
+    sc_polynom_multiply (p, l);
+    denom *= mw + mp;
+  }
+  sc_polynom_destroy (l);
+
+  /* divide by denominator */
+  sc_polynom_scale (p, 0, 1. / denom);
 
   SC_ASSERT (sc_polynom_is_valid (p));
   return p;

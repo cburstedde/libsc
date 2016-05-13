@@ -38,13 +38,27 @@ typedef struct sc_polynom
 }
 sc_polynom_t;
 
-/** Create the zero polynom */
-sc_polynom_t       *sc_polynom_new (void);
-
 /** Destroy all memory used by a polynom */
 void                sc_polynom_destroy (sc_polynom_t * p);
 
+/** Create the zero polynom. */
+sc_polynom_t       *sc_polynom_new (void);
+
 /* Alternate constructors */
+
+/** Create the constant polynom. */
+sc_polynom_t       *sc_polynom_new_constant (double c);
+
+/** Construct a Lagrange interpolation polynomial.
+ * The computation is naive, successively multiplying linear factors.
+ * \param [in] degree           Must be non-negative.
+ * \param [in] which            The index must be in [0, degree].
+ * \param [in] points           A set of \a degree + 1 values.
+ * \return                      The polynomial
+ *      sum_{0 \le i \le degree, i \ne which} (x - p_i) / (p_which - p_i)
+ */
+sc_polynom_t       *sc_polynom_new_lagrange (int degree, int which,
+                                             const double *points);
 
 /** Create a polynom from given monomial coefficients.
  * \param[in] degree            Degree of the polynom, >= 0.
@@ -53,8 +67,6 @@ void                sc_polynom_destroy (sc_polynom_t * p);
 sc_polynom_t       *sc_polynom_new_from_coefficients (int degree,
                                                       const double
                                                       *coefficients);
-sc_polynom_t       *sc_polynom_new_from_lagrange (int degree, int which,
-                                                  const double *points);
 
 /* Alternate constructors using other polynoms */
 
