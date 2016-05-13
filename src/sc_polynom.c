@@ -141,9 +141,9 @@ sc_polynom_set_degree (sc_polynom_t * p, int degree)
 
   SC_ASSERT (degree >= 0);
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   for (i = degree; i < p->degree; ++i) {
-    *((double *) sc_array_index_int (p->c, i + 1)) = 0. / 0.;
+    *((double *) sc_array_index_int (p->c, i + 1)) = -1.;
   }
 #endif
   sc_array_resize (p->c, (size_t) degree + 1);
@@ -202,7 +202,7 @@ void
 sc_polynom_assign (sc_polynom_t * p, const sc_polynom_t * q)
 {
   sc_polynom_set_degree (p, q->degree);
-  memcpy (p->c->array, q->c->array, p->c->elem_size * p->c->elem_count);
+  sc_array_copy (p->c, q->c);
 }
 
 void
