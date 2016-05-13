@@ -382,9 +382,16 @@ size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
  *                                      sc will try to determine the correct
  *                                      shared memory communicators.
  */
-
 void                sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
                                                    int processes_per_node);
+
+/** Destroy ``sc_intranode_comm'' and ``sc_internode_comm''
+ * communicators that are stored as attributes to communicator ``comm''.
+ * This routine enforces a call to the destroy callback for these attributes.
+ *
+ * \param [in/out] comm                 MPI communicator
+ */
+void                sc_mpi_comm_detach_node_comms (sc_MPI_Comm comm);
 
 /** Get the communicators computed in sc_mpi_comm_attach_node_comms() if they
  * exist; return sc_MPI_COMM_NULL otherwise.

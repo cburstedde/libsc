@@ -39,6 +39,7 @@
   Johannes Holke <holke@ins.uni-bonn.de>
   Johann Rudi <johann@ices.utexas.edu>
   Cristiano Malossi <acm@zurich.ibm.com>
+  Pierre Kestener <pierre.kestener@cea.fr>
 */
 
 /*
@@ -64,6 +65,10 @@
 */
 
 /*
+  The SC library is free software under the GNU LGPL v2.1 or later.
+  This is in agreement with the fact that some contributions have been
+  placed under the FreeBSD license and/or in the public domain.
+
   The files under src/sc_builtin are copied from the GNU C library.
   See copyright information below.
 

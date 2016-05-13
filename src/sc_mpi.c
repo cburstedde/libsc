@@ -656,7 +656,7 @@ sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm, int processes_per_node)
       SC_GLOBAL_LDEBUG
         ("node communicators are not the same size: not attaching\n");
 
-      mpiret = MPI_Comm_free (&intrasize);
+      mpiret = MPI_Comm_free (&intranode);
       SC_CHECK_MPI (mpiret);
 
       return;
@@ -690,6 +690,19 @@ sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm, int processes_per_node)
 
   mpiret = MPI_Comm_set_attr (comm, sc_mpi_node_comm_keyval, node_comms);
   SC_CHECK_MPI (mpiret);
+#endif
+}
+
+void
+sc_mpi_comm_detach_node_comms (sc_MPI_Comm comm)
+{
+#if defined(SC_ENABLE_MPI)
+  if (comm != MPI_COMM_NULL) {
+    int                 mpiret;
+
+    mpiret = MPI_Comm_delete_attr (comm, sc_mpi_node_comm_keyval);
+    SC_CHECK_MPI (mpiret);
+  }
 #endif
 }
 
