@@ -387,3 +387,49 @@ sc_polynom_multiply (sc_polynom_t * p, const sc_polynom_t * q)
   sc_polynom_set_polynom (p, prod);
   sc_polynom_destroy (prod);
 }
+
+int
+sc_polynom_roots (const sc_polynom_t * p, double *roots)
+{
+  int                 deg;
+  double              a, b, c;
+
+  SC_ASSERT (sc_polynom_is_valid (p));
+  deg = sc_polynom_degree (p);
+  SC_ASSERT (0 <= deg && deg <= 2);
+
+  if (deg < 2 || (a = *sc_polynom_coefficient_const (p, 2)) == 0.) {
+    /* this polynomial is at most of linear degree */
+
+    if (deg < 1 || (b = *sc_polynom_coefficient_const (p, 1)) == 0.) {
+      /* this polynomial is a constant */
+      return 0;
+    }
+
+    /* we know now that the leading coefficient is in b and nonzero */
+    c = *sc_polynom_coefficient_const (p, 0);
+    roots[0] = -c / b;
+    return 1;
+  }
+  else {
+    /* solve quadratic equation */
+    /* we have set variable a above and normalize the polynomial */
+    b = *sc_polynom_coefficient_const (p, 1) / a;
+    c = *sc_polynom_coefficient_const (p, 0) / a;
+
+    /* reuse a as discriminant */
+    a = .25 * b * b - c;
+    if (a < 0) {
+      return 0;
+    }
+    if (a == 0.) {
+      /* The use of this case is questionable.
+       * We may want to ignore it, or return two roots of same value? */
+      roots[0] = -.5 * b;
+      return 1;
+    }
+    roots[0] = -.5 * b - sqrt (a);
+    roots[1] = -.5 * b + sqrt (a);
+    return 2;
+  }
+}

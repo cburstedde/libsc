@@ -158,6 +158,19 @@ void                sc_polynom_AXPY (double A, const sc_polynom_t * X,
 void                sc_polynom_multiply (sc_polynom_t * p,
                                          const sc_polynom_t * q);
 
+/***************** investigate properties of polynomials ****************/
+
+/** Compute the roots of a polynomial up to quadratic degree.
+ * We will only produce results for non-degenerate polynomials.
+ * This means that a constant polynomial will never have a root.
+ * \param [in] p        Polynom of at most degree 2.
+ * \param [out] roots   This array must have at least as many entries
+ *                      as the degree of the polynomial.
+ * \return              The number of roots found will be
+ *                      less equal the polynomial's degree.
+ */
+int                 sc_polynom_roots (const sc_polynom_t * p, double *roots);
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_POLYNOM_H */
