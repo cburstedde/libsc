@@ -69,7 +69,7 @@ sc_polynom_is_valid (const sc_polynom_t * p)
 #endif
 
 int
-sc_polynom_degree (sc_polynom_t * p)
+sc_polynom_degree (const sc_polynom_t * p)
 {
   SC_ASSERT (sc_polynom_is_valid (p));
 
@@ -288,7 +288,7 @@ sc_polynom_set_degree (sc_polynom_t * p, int degree)
 }
 
 void
-sc_polynom_set_value (sc_polynom_t * p, double value)
+sc_polynom_set_constant (sc_polynom_t * p, double value)
 {
   sc_polynom_set_degree (p, 0);
   *sc_polynom_coefficient (p, 0) = value;

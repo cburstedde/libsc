@@ -37,7 +37,7 @@ typedef struct sc_polynom sc_polynom_t;
  * \param [in] p        This polynom is accessed.
  * \return              The degree of the polynomial.
  */
-int                 sc_polynom_degree (sc_polynom_t * p);
+int                 sc_polynom_degree (const sc_polynom_t * p);
 
 /** Access the coefficient to a given degree.
  * \param [in] p        This polynom is accessed.
@@ -108,7 +108,7 @@ void                sc_polynom_set_degree (sc_polynom_t * p, int degree);
  * \param [in.out] p    This polynomial will be overwritten.
  * \param [in] value    This is the constant.
  */
-void                sc_polynom_set_value (sc_polynom_t * p, double value);
+void                sc_polynom_set_constant (sc_polynom_t * p, double value);
 
 /** Set a polynom to the copy of another.
  * \param[in,out] p A polynom that is set to q.
