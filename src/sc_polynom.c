@@ -422,12 +422,14 @@ sc_polynom_roots (const sc_polynom_t * p, double *roots)
     if (a < 0) {
       return 0;
     }
+#if 0
     if (a == 0.) {
       /* The use of this case is questionable.
        * We may want to ignore it, or return two roots of same value? */
       roots[0] = -.5 * b;
       return 1;
     }
+#endif
     roots[0] = -.5 * b - sqrt (a);
     roots[1] = -.5 * b + sqrt (a);
     return 2;

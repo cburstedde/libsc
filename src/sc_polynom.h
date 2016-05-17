@@ -161,8 +161,11 @@ void                sc_polynom_multiply (sc_polynom_t * p,
 /***************** investigate properties of polynomials ****************/
 
 /** Compute the roots of a polynomial up to quadratic degree.
- * We will only produce results for non-degenerate polynomials.
+ * We examine leading coefficients for being exactly 0.
+ * We will only produce results for non-degenerate cases.
  * This means that a constant polynomial will never have a root.
+ * It also means that a quadratic polynomial will have none or two roots,
+ * the latter possibly being identical.
  * \param [in] p        Polynom of at most degree 2.
  * \param [out] roots   This array must have at least as many entries
  *                      as the degree of the polynomial.
