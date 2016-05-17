@@ -15,6 +15,9 @@ dnl use the aligned version, relying on posix_memalign if it exists.
 dnl
 AC_DEFUN([SC_CHECK_MEMALIGN], [
 
+dnl check for size of types
+AC_CHECK_SIZEOF([void *])
+
 dnl check for presence of functions
 AC_CHECK_FUNCS([aligned_alloc posix_memalign])
 
