@@ -388,13 +388,29 @@ sc_polynom_multiply (sc_polynom_t * p, const sc_polynom_t * q)
   sc_polynom_destroy (prod);
 }
 
+double
+sc_polynom_eval (const sc_polynom_t * p, double x)
+{
+  int                 i;
+  int                 deg;
+  double              v;
+
+  deg = sc_polynom_degree (p);
+  SC_ASSERT (deg >= 0);
+
+  v = *sc_polynom_coefficient_const (p, deg);
+  for (i = deg - 1; i >= 0; --i) {
+    v = x * v + *sc_polynom_coefficient_const (p, i);
+  }
+  return v;
+}
+
 int
 sc_polynom_roots (const sc_polynom_t * p, double *roots)
 {
   int                 deg;
   double              a, b, c;
 
-  SC_ASSERT (sc_polynom_is_valid (p));
   deg = sc_polynom_degree (p);
   SC_ASSERT (0 <= deg && deg <= 2);
 

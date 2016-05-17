@@ -160,6 +160,13 @@ void                sc_polynom_multiply (sc_polynom_t * p,
 
 /***************** investigate properties of polynomials ****************/
 
+/** Evaluate a polynomial using Horner's scheme.
+ * \param [in] p        Valid polynomial.
+ * \param [in] x        Argument to use.
+ * \return              The value of the polynomial p at argument x.
+ */
+double              sc_polynom_eval (const sc_polynom_t * p, double x);
+
 /** Compute the roots of a polynomial up to quadratic degree.
  * We examine leading coefficients for being exactly 0.
  * We will only produce results for non-degenerate cases.
