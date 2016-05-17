@@ -372,15 +372,13 @@ sc_malloc_aligned (size_t alignment, size_t size)
     const size_t        alloc_size = extrasize + size + alignment;
     char               *alloc_ptr = (char *) malloc (alloc_size);
     char               *ptr;
-    ptrdiff_t           shift;
+    ptrdiff_t           shift, modu;
 
     SC_CHECK_ABORT (alloc_ptr != NULL, "Returned NULL from malloc");
 
     /* compute shift to the right where we put the actual data */
-    shift = (signalign - (ptrdiff_t) (alloc_ptr + extrasize)) % signalign;
-    if (shift < 0) {
-      shift += signalign;
-    }
+    modu = ((ptrdiff_t) alloc_ptr + extrasize) % signalign;
+    shift = (signalign - modu) % signalign;
     SC_ASSERT (0 <= shift && shift < signalign);
 
     /* make sure the resulting pointer is fine */
@@ -431,7 +429,7 @@ sc_free_aligned (void *ptr, size_t alignment)
 #ifdef SC_ENABLE_DEBUG
     const ptrdiff_t     extrasize = (const ptrdiff_t) (2 * sizeof (char **));
     const ptrdiff_t     signalign = (const ptrdiff_t) alignment;
-    ptrdiff_t           shift, ssize, i;
+    ptrdiff_t           shift, modu, ssize, i;
 #endif
 
     /* we excluded these cases earlier */
@@ -444,10 +442,8 @@ sc_free_aligned (void *ptr, size_t alignment)
 #ifdef SC_ENABLE_DEBUG
     /* compute shift to the right where we put the actual data */
     ssize = (ptrdiff_t) ((char **) ptr)[-2];
-    shift = (signalign - (ptrdiff_t) (alloc_ptr + extrasize)) % signalign;
-    if (shift < 0) {
-      shift += signalign;
-    }
+    modu = ((ptrdiff_t) alloc_ptr + extrasize) % signalign;
+    shift = (signalign - modu) % signalign;
     SC_ASSERT (0 <= shift && shift < signalign);
     SC_ASSERT ((char *) ptr == alloc_ptr + (extrasize + shift));
     for (i = 0; i < shift; ++i) {
