@@ -414,11 +414,13 @@ sc_polynom_roots (const sc_polynom_t * p, double *roots)
   deg = sc_polynom_degree (p);
   SC_ASSERT (0 <= deg && deg <= 2);
 
-  if (deg < 2 || (a = *sc_polynom_coefficient_const (p, 2)) == 0.) {
-    /* this polynomial is at most of linear degree */
+  if (deg < 2 ||
+      fabs (a = *sc_polynom_coefficient_const (p, 2)) < SC_1000_EPS) {
+    /* this polynomial is at most of linear degree (up to a tolerance) */
 
-    if (deg < 1 || (b = *sc_polynom_coefficient_const (p, 1)) == 0.) {
-      /* this polynomial is a constant */
+    if (deg < 1 ||
+        fabs (b = *sc_polynom_coefficient_const (p, 1)) < SC_1000_EPS) {
+      /* this polynomial is a constant (up to a tolerance) */
       return 0;
     }
 
@@ -433,19 +435,19 @@ sc_polynom_roots (const sc_polynom_t * p, double *roots)
     b = *sc_polynom_coefficient_const (p, 1) / a;
     c = *sc_polynom_coefficient_const (p, 0) / a;
 
-    /* reuse a as discriminant */
+    /* reuse a variable as discriminant */
     a = .25 * b * b - c;
-    if (a < 0) {
-      return 0;
-    }
-#if 0
-    if (a == 0.) {
-      /* The use of this case is questionable.
-       * We may want to ignore it, or return two roots of same value? */
+
+    /* isolate cases of less than two zeros */
+    if (a < SC_1000_EPS) {
+      if (a <= -SC_1000_EPS) {
+        return 0;
+      }
       roots[0] = -.5 * b;
       return 1;
     }
-#endif
+
+    /* return two distinct roots */
     roots[0] = -.5 * b - sqrt (a);
     roots[1] = -.5 * b + sqrt (a);
     return 2;

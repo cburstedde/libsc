@@ -31,11 +31,11 @@ SC_EXTERN_C_BEGIN;
 /** Data structure is opaque */
 typedef struct sc_polynom sc_polynom_t;
 
-/** Access the degree of a polynomial.
+/** Access the nominal (allocated) degree of a polynomial.
  * It is possible that the highest coefficient is zero,
- * depending on prior manipulations of the polynom.
+ * depending on prior manipulations of the polynom, which we ignore.
  * \param [in] p        This polynom is accessed.
- * \return              The degree of the polynomial.
+ * \return              The nominal (allocated) degree of the polynomial.
  */
 int                 sc_polynom_degree (const sc_polynom_t * p);
 
@@ -168,14 +168,20 @@ void                sc_polynom_multiply (sc_polynom_t * p,
 double              sc_polynom_eval (const sc_polynom_t * p, double x);
 
 /** Compute the roots of a polynomial up to quadratic degree.
- * We examine leading coefficients for being exactly 0.
- * We will only produce results for non-degenerate cases.
- * This means that a constant polynomial will never have a root.
- * It also means that a quadratic polynomial will have none or two roots,
- * the latter possibly being identical.
+ *
+ * We use fuzzy criteria with threshold SC_1000_EPS, thus this function
+ * may find more or less roots than the mathematically exact number.
+ * We only treat a finite number of zeros, thus an approximately
+ * constant polynomial will never reported to have a root.
+ *
+ * If the zeros are expected far outside of [0, 1], the fuzziness may be
+ * detrimental and cut out roots that would otherwise be present,
+ * or produce large errors in the values of the roots reported.
+ *
  * \param [in] p        Polynom of at most degree 2.
  * \param [out] roots   This array must have at least as many entries
- *                      as the degree of the polynomial.
+ *                      as the degree of the polynomial.  Entries that do not
+ *                      correspond to roots found will not be touched.
  * \return              The number of roots found will be
  *                      less equal the polynomial's degree.
  */
