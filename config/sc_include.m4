@@ -233,7 +233,7 @@ dnl which are called by SC_MPI_CONFIG/SC_MPI_ENGAGE.
 dnl
 AC_DEFUN([SC_CHECK_BLAS_LAPACK],
 [
-
+m4_ifset([SC_CHECK_MPI_F77],[
 dgemm=;AC_F77_FUNC(dgemm)
 if test "x$dgemm" = xunknown ; then dgemm=dgemm_ ; fi
 
@@ -270,6 +270,7 @@ AM_CONDITIONAL([$1_WITH_LAPACK], [test "x$sc_lapack_ok" = xyes])
 
 # Append the necessary blas/lapack and fortran libraries to LIBS
 LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $LAPACK_FLIBS $BLAS_FLIBS"
+])
 ])
 
 dnl SC_CHECK_LIBRARIES(PREFIX)
