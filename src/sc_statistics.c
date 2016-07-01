@@ -75,6 +75,7 @@ sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
   stats->sum_squares = value * value;
   stats->min = value;
   stats->max = value;
+  stats->average = 0.;
   stats->variable = variable;
 }
 
