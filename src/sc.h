@@ -44,6 +44,17 @@
 #define _sc_restrict restrict
 #endif
 
+/* test for gcc version without features.h */
+#define SC_CALC_VERSION(major,minor,patchlevel) \
+                       (((major) * 1000 + (minor)) * 1000 + (patchlevel))
+#ifdef __GNUC__
+#define SC_GCC_VERSION \
+        SC_CALC_VERSION(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
+#else
+#define SC_GCC_VERSION \
+        SC_CALC_VERSION (0, 0, 0)
+#endif
+
 /* use this feature macro, be minimally invasive */
 #ifdef SC_ENABLE_MEMALIGN
 /* we disable the system-provided functions for the time being */
@@ -269,7 +280,7 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_ARG_ALIGN(p,t,n) SC_NOOP ()
 #elif defined (__GNUC__) || defined (__GNUG__)
 
-#if __GNUC_PREREQ(4, 7)
+#if SC_GCC_VERSION >= SC_CALC_VERSION (4, 7, 0)
 #define SC_ARG_ALIGN(p,t,n) do {                              \
   (p) = (t) __builtin_assume_aligned((void *) (p), (n));      \
 } while (0)

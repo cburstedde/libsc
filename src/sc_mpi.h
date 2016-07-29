@@ -88,6 +88,8 @@ sc_tag_t;
 
 #define sc_MPI_REQUEST_NULL        MPI_REQUEST_NULL
 
+#define sc_MPI_DATATYPE_NULL       MPI_DATATYPE_NULL
+
 #define sc_MPI_CHAR                MPI_CHAR
 #define sc_MPI_SIGNED_CHAR         MPI_SIGNED_CHAR
 #define sc_MPI_UNSIGNED_CHAR       MPI_UNSIGNED_CHAR
@@ -99,6 +101,7 @@ sc_tag_t;
 #define sc_MPI_LONG                MPI_LONG
 #define sc_MPI_UNSIGNED_LONG       MPI_UNSIGNED_LONG
 #define sc_MPI_LONG_LONG_INT       MPI_LONG_LONG_INT
+#define sc_MPI_UNSIGNED_LONG_LONG  MPI_UNSIGNED_LONG_LONG
 #define sc_MPI_FLOAT               MPI_FLOAT
 #define sc_MPI_DOUBLE              MPI_DOUBLE
 #define sc_MPI_LONG_DOUBLE         MPI_LONG_DOUBLE
@@ -203,6 +206,8 @@ sc_tag_t;
 
 #define sc_MPI_REQUEST_NULL        ((sc_MPI_Request) 0x2c000000)
 
+#define sc_MPI_DATATYPE_NULL       ((sc_MPI_Datatype) 0x4c000000)
+
 #define sc_MPI_CHAR                ((sc_MPI_Datatype) 0x4c000101)
 #define sc_MPI_SIGNED_CHAR         ((sc_MPI_Datatype) 0x4c000118)
 #define sc_MPI_UNSIGNED_CHAR       ((sc_MPI_Datatype) 0x4c000102)
@@ -214,6 +219,7 @@ sc_tag_t;
 #define sc_MPI_LONG                ((sc_MPI_Datatype) 0x4c000407)
 #define sc_MPI_UNSIGNED_LONG       ((sc_MPI_Datatype) 0x4c000408)
 #define sc_MPI_LONG_LONG_INT       ((sc_MPI_Datatype) 0x4c000809)
+#define sc_MPI_UNSIGNED_LONG_LONG  ((sc_MPI_Datatype) 0x4c000409)
 #define sc_MPI_FLOAT               ((sc_MPI_Datatype) 0x4c00040a)
 #define sc_MPI_DOUBLE              ((sc_MPI_Datatype) 0x4c00080b)
 #define sc_MPI_LONG_DOUBLE         ((sc_MPI_Datatype) 0x4c000c0c)
