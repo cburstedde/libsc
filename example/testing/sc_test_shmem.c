@@ -20,7 +20,6 @@
   02110-1301, USA.
 */
 
-#include <sc_refcount.h>
 #include <sc_shmem.h>
 
 #define DATA_SIZE 10

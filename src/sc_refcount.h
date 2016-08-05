@@ -105,14 +105,14 @@ int                 sc_refcount_unref (sc_refcount_t * rc);
  * \param [in] rc   A reference counter.
  * \return          True if the count is greater zero, false otherwise.
  */
-int                 sc_refcount_is_active (sc_refcount_t * rc);
+int                 sc_refcount_is_active (const sc_refcount_t * rc);
 
 /** Check whether a reference counter has value one.
  * This means that this counter is the last of its kind, which we may optimize for.
  * \param [in] rc   A reference counter.
  * \return          True if the count is exactly one.
  */
-int                 sc_refcount_is_last (sc_refcount_t * rc);
+int                 sc_refcount_is_last (const sc_refcount_t * rc);
 
 SC_EXTERN_C_END;
 
