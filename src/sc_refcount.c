@@ -93,7 +93,7 @@ sc_refcount_unref (sc_refcount_t * rc)
 }
 
 int
-sc_refcount_is_active (sc_refcount_t * rc)
+sc_refcount_is_active (const sc_refcount_t * rc)
 {
   SC_ASSERT (rc != NULL);
 
@@ -101,7 +101,7 @@ sc_refcount_is_active (sc_refcount_t * rc)
 }
 
 int
-sc_refcount_is_last (sc_refcount_t * rc)
+sc_refcount_is_last (const sc_refcount_t * rc)
 {
   SC_ASSERT (rc != NULL);
 
