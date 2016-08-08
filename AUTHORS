@@ -69,6 +69,8 @@
   This is in agreement with the fact that some contributions have been
   placed under the FreeBSD license and/or in the public domain.
 
+  For information on individual contributions see doc/author_*.txt.
+
   The files under src/sc_builtin are copied from the GNU C library.
   See copyright information below.
 

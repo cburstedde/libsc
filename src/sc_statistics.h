@@ -3,6 +3,7 @@
   The SC Library provides support for parallel scientific applications.
 
   Copyright (C) 2010 The University of Texas System
+  Additional copyright (C) 2011 individual authors
 
   The SC Library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public

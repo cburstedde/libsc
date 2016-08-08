@@ -3,12 +3,14 @@ This is the README file for libsc.
 
 The SC Library provides support for parallel scientific applications.
 
-Copyright (C) 2010 The University of Texas System.
-libsc is written by Carsten Burstedde, Lucas C. Wilcox, Tobin Isaac, and others
-and released under the GNU Lesser General Public Licence version 2.1 (or, at
-your option, any later version).
+Copyright (C) 2010 The University of Texas System
+Additional copyright (C) 2011 individual authors
+
+libsc is written by Carsten Burstedde, Lucas C. Wilcox, Tobin Isaac, and
+others.  libsc is free software released under the GNU Lesser General Public
+Licence version 2.1 (or, at your option, any later version).
 
 The official web page for source code and documentation is www.p4est.org.
-Please send bug reports and ideas for contribution to p4est@librelist.com.
+Please send bug reports and ideas for contribution to info@p4est.org.
 
 The build instructions for p4est also apply to standalone builds of libsc.
