@@ -536,6 +536,8 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
     return sizeof (long);
   if (t == sc_MPI_LONG_LONG_INT)
     return sizeof (long long);
+  if (t == sc_MPI_UNSIGNED_LONG_LONG)
+    return sizeof (unsigned long long);
   if (t == sc_MPI_FLOAT)
     return sizeof (float);
   if (t == sc_MPI_DOUBLE)
