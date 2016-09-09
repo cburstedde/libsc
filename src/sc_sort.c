@@ -265,7 +265,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
         for (i = 0; i < outcount; ++i) {
           size_t              zz;
           char               *lo_data, *hi_data;
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
           sc_MPI_Status      *jstatus;
 
           jstatus = &recv_statuses[i];

@@ -27,7 +27,7 @@
 int
 main (int argc, char **argv)
 {
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   int                 mpiret;
   int                 rank, num_procs;
   int                 i, isizet;

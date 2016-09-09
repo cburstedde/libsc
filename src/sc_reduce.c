@@ -103,7 +103,7 @@ sc_reduce_alltoall (sc_MPI_Comm mpicomm,
     /* process received data in the same order as sc_reduce_recursive */
     for (shift = 0, l = level - 1; l >= 0; ++shift, --l) {
       for (i = 0; i < 1 << l; ++i) {
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
         peer = sc_search_bias (maxlevel, l + 1, 2 * i, target);
 #endif
         peer2 = sc_search_bias (maxlevel, l + 1, 2 * i + 1, target);

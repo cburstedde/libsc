@@ -215,7 +215,7 @@ sc_notify_recursive (sc_MPI_Comm mpicomm, int start, int me, int length,
   int                 num_ta;
   int                 length2, half;
   int                 torank, numfroms;
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   int                 j, fromrank, num_out;
 #endif
   int                 peer, peer2, source;
@@ -354,7 +354,7 @@ sc_notify_recursive (sc_MPI_Comm mpicomm, int start, int me, int length,
     sc_array_copy (output, input);
   }
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   /* verify recursion invariant */
   num_out = (int) output->elem_count;
   torank = -1;

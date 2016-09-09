@@ -94,7 +94,7 @@ sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, int init_zero)
   sc_dmatrix_t       *rdm;
   double             *data;
   size_t              size = (size_t) (m * n);
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   double              zero = 0.0;       /* no const to avoid warning */
   const double        anan = 0.0 / zero;
   size_t              zz;
@@ -109,7 +109,7 @@ sc_dmatrix_new_internal (sc_bint_t m, sc_bint_t n, int init_zero)
   }
   else {
     data = SC_ALLOC (double, size);
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
     /* In debug mode initialize the memory to NaN. */
     for (zz = 0; zz < size; ++zz) {
       data[zz] = anan;
@@ -635,7 +635,7 @@ sc_dmatrix_vector (sc_trans_t transa, sc_trans_t transx, sc_trans_t transy,
 {
   sc_bint_t           inc = 1;
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   sc_bint_t           dimX = (transx == SC_NO_TRANS) ? X->m : X->n;
   sc_bint_t           dimY = (transy == SC_NO_TRANS) ? Y->m : Y->n;
   sc_bint_t           dimX1 = (transx == SC_NO_TRANS) ? X->n : X->m;
@@ -663,7 +663,7 @@ sc_dmatrix_multiply (sc_trans_t transa, sc_trans_t transb, double alpha,
                      double beta, sc_dmatrix_t * C)
 {
   sc_bint_t           Acols, Crows, Ccols;
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   sc_bint_t           Arows, Brows, Bcols;
 
   Arows = (transa == SC_NO_TRANS) ? A->m : A->n;
@@ -699,7 +699,7 @@ sc_dmatrix_ldivide (sc_trans_t transa, const sc_dmatrix_t * A,
   sc_trans_t          invtransa =
     (transa == SC_NO_TRANS) ? SC_TRANS : SC_NO_TRANS;
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   sc_bint_t           A_nrows = (transa == SC_NO_TRANS) ? A->m : A->n;
   sc_bint_t           A_ncols = (transa == SC_NO_TRANS) ? A->n : A->m;
   sc_bint_t           B_nrows = B->m;
@@ -728,7 +728,7 @@ sc_dmatrix_rdivide (sc_trans_t transb, const sc_dmatrix_t * A,
   sc_bint_t           A_nrows = A->m;
   sc_bint_t           B_nrows = (transb == SC_NO_TRANS) ? B->m : B->n;
   sc_bint_t           B_ncols = (transb == SC_NO_TRANS) ? B->n : B->m;
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   sc_bint_t           A_ncols = A->n;
   sc_bint_t           C_nrows = C->m;
   sc_bint_t           C_ncols = C->n;
@@ -843,7 +843,7 @@ sc_dmatrix_pool_alloc (sc_dmatrix_pool_t * dmpool)
     dm = sc_dmatrix_new (dmpool->m, dmpool->n);
   }
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   sc_dmatrix_set_value (dm, -1.);
 #endif
 
