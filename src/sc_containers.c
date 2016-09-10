@@ -48,7 +48,7 @@ sc_array_new (size_t elem_size)
 }
 
 sc_array_t         *
-sc_array_new_size (size_t elem_size, size_t elem_count)
+sc_array_new_count (size_t elem_size, size_t elem_count)
 {
   sc_array_t         *array;
 

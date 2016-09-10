@@ -132,7 +132,10 @@ sc_array_t         *sc_array_new (size_t elem_size);
  * \return                  Return an allocated array
  *                          with allocated but uninitialized elements.
  */
-sc_array_t         *sc_array_new_size (size_t elem_size, size_t elem_count);
+sc_array_t         *sc_array_new_count (size_t elem_size, size_t elem_count);
+
+/** Deprecated: use \ref sc_array_new_count. */
+#define sc_array_new_size(s,c) (sc_array_new_count ((s), (c)))
 
 /** Creates a new view of an existing sc_array_t.
  * \param [in] array    The array must not be resized while view is alive.
