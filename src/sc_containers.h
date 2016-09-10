@@ -220,6 +220,17 @@ void                sc_array_reset (sc_array_t * array);
  */
 void                sc_array_truncate (sc_array_t * array);
 
+/** Shorten an array without reallocating it.
+ * \param [in,out] array    The element count of this array is modified.
+ * \param [in] new_count    Must be less or equal than the \b array's count.
+ *                          If it is less, the number of elements in the
+ *                          array is reduced without reallocating memory.
+ *                          The exception is a \b new_count of zero
+ *                          specified for an array that is not a view:
+ *                          In this case \ref sc_array_reset is equivalent.
+ */
+void                sc_array_rewind (sc_array_t * array, size_t new_count);
+
 /** Sets the element count to new_count.
  * If the array is not a view, reallocation takes place occasionally.
  * If the array is a view, new_count must not be greater than the element

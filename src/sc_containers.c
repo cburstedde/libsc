@@ -164,6 +164,20 @@ sc_array_truncate (sc_array_t * array)
 }
 
 void
+sc_array_rewind (sc_array_t * array, size_t new_count)
+{
+  SC_ASSERT (array != NULL);
+  SC_ASSERT (array->elem_count >= new_count);
+
+  if (new_count == 0 && SC_ARRAY_IS_OWNER (array)) {
+    sc_array_reset (array);
+  }
+  else {
+    array->elem_count = new_count;
+  }
+}
+
+void
 sc_array_resize (sc_array_t * array, size_t new_count)
 {
   size_t              newoffs, roundup, newsize;
