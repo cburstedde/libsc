@@ -239,7 +239,7 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 
 /* assertions, only enabled in debug mode */
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
 #define SC_ASSERT(c) SC_CHECK_ABORT ((c), "Assertion '" #c "'")
 #define SC_EXECUTE_ASSERT_FALSE(expression)                             \
   do { int _sc_i = (int) (expression);                                  \
@@ -362,7 +362,7 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #ifdef SC_LOG_PRIORITY
 #define SC_LP_THRESHOLD SC_LOG_PRIORITY
 #else
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
 #define SC_LP_THRESHOLD SC_LP_TRACE
 #else
 #define SC_LP_THRESHOLD SC_LP_INFO

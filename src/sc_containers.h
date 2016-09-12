@@ -81,14 +81,13 @@ typedef int         (*sc_equal_function_t) (const void *v1,
  */
 typedef int         (*sc_hash_foreach_t) (void **v, const void *u);
 
-/** The sc_array object provides a large array of equal-size elements.
- * The array can be resized.
- * Elements are accessed by their 0-based index, their address may change.
- * The size (== elem_count) of the array can be changed by array_resize.
- * Elements can be sorted with array_sort.
- * If the array is sorted elements can be binary searched with array_bsearch.
- * A priority queue is implemented with pqueue_add and pqueue_pop.
- * Use sort and search whenever possible, they are faster than the pqueue.
+/** The sc_array object provides a dynamic array of equal-size elements.
+ * Elements are accessed by their 0-based index.  Their address may change.
+ * The number of elements (== elem_count) of the array can be changed by 
+ * \ref sc_array_resize and \ref sc_array_rewind.
+ * Elements can be sorted with \ref sc_array_sort.
+ * If the array is sorted, it can be searched with \ref sc_array_bsearch.
+ * A priority queue is implemented with pqueue_add and pqueue_pop (untested).
  */
 typedef struct sc_array
 {
@@ -132,7 +131,10 @@ sc_array_t         *sc_array_new (size_t elem_size);
  * \return                  Return an allocated array
  *                          with allocated but uninitialized elements.
  */
-sc_array_t         *sc_array_new_size (size_t elem_size, size_t elem_count);
+sc_array_t         *sc_array_new_count (size_t elem_size, size_t elem_count);
+
+/** Deprecated: use \ref sc_array_new_count. */
+#define sc_array_new_size(s,c) (sc_array_new_count ((s), (c)))
 
 /** Creates a new view of an existing sc_array_t.
  * \param [in] array    The array must not be resized while view is alive.
@@ -218,12 +220,26 @@ void                sc_array_reset (sc_array_t * array);
  */
 void                sc_array_truncate (sc_array_t * array);
 
+/** Shorten an array without reallocating it.
+ * \param [in,out] array    The element count of this array is modified.
+ * \param [in] new_count    Must be less or equal than the \b array's count.
+ *                          If it is less, the number of elements in the
+ *                          array is reduced without reallocating memory.
+ *                          The exception is a \b new_count of zero
+ *                          specified for an array that is not a view:
+ *                          In this case \ref sc_array_reset is equivalent.
+ */
+void                sc_array_rewind (sc_array_t * array, size_t new_count);
+
 /** Sets the element count to new_count.
- * If this a view, new_count cannot be greater than the elem_count of
- * the view when it was created.  The original offset of the view cannot be
- * changed.
- * If this is an array, reallocation takes place only occasionally, so
- * this function is usually fast.
+ * If the array is not a view, reallocation takes place occasionally.
+ * If the array is a view, new_count must not be greater than the element
+ * count of the view when it was created.  The original offset of the view
+ * cannot be changed.
+ * \param [in,out] array    The element count and address is modified.
+ * \param [in] new_count    New element count of the array.
+ *                          If it is zero and the array is not a view,
+ *                          the effect equals \ref sc_array_reset.
  */
 void                sc_array_resize (sc_array_t * array, size_t new_count);
 
@@ -578,7 +594,7 @@ sc_mempool_alloc (sc_mempool_t * mempool)
     }
   }
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   if (!mempool->zero_and_persist) {
     memset (ret, -1, mempool->elem_size);
   }
@@ -598,7 +614,7 @@ sc_mempool_free (sc_mempool_t * mempool, void *elem)
 
   SC_ASSERT (mempool->elem_count > 0);
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   if (!mempool->zero_and_persist) {
     memset (elem, -1, mempool->elem_size);
   }

@@ -54,7 +54,7 @@ sc_ranges_compute (int package_id, int num_procs, const int *procs,
     return nwin;
   }
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   SC_ASSERT (0 <= first_peer && first_peer <= last_peer &&
              last_peer < num_procs);
   SC_ASSERT (first_peer != rank && last_peer != rank);
@@ -123,7 +123,7 @@ sc_ranges_compute (int package_id, int num_procs, const int *procs,
   /* sort empty ranges by start rank */
   qsort (ranges, (size_t) nwin, 2 * sizeof (int), sc_ranges_compare);
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   /* check consistency of empty ranges */
   for (i = 0; i < nwin; ++i) {
     SC_ASSERT (ranges[2 * i] <= ranges[2 * i + 1]);
@@ -151,7 +151,7 @@ sc_ranges_compute (int package_id, int num_procs, const int *procs,
   ranges[0] = first_peer;
   ++nwin;
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   for (i = 0; i < nwin; ++i) {
     SC_ASSERT (ranges[2 * i] <= ranges[2 * i + 1]);
     if (i < nwin - 1) {
@@ -236,7 +236,7 @@ sc_ranges_decode (int num_procs, int rank,
   int                 nr, ns;
   const int          *the_ranges;
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   int                 done;
 
   /* verify consistency of ranges */
