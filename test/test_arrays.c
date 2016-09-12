@@ -39,14 +39,14 @@ sc_array_bsearch_range (sc_array_t * array, size_t begin, size_t end,
 }
 
 static void
-test_new_size (sc_array_t * a)
+test_new_count (sc_array_t * a)
 {
   const size_t        S = a->elem_size;
   const size_t        N = a->elem_count;
   size_t              zz;
   sc_array_t         *v, *w;
 
-  v = sc_array_new_size (S, N);
+  v = sc_array_new_count (S, N);
   SC_CHECK_ABORT (v->elem_size == S && S == sizeof (int), "Size mismatch");
   SC_CHECK_ABORT (v->elem_count == N && N > 0, "Count mismatch");
   SC_CHECK_ABORT (v->byte_alloc <= a->byte_alloc, "Alloc mismatch");
@@ -142,7 +142,7 @@ main (int argc, char **argv)
     SC_CHECK_ABORT (0 <= result && result < (ssize_t) N, "Result failed");
   }
 
-  test_new_size (a);
+  test_new_count (a);
   test_new_view (a);
   test_new_data (a);
 

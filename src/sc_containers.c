@@ -48,7 +48,7 @@ sc_array_new (size_t elem_size)
 }
 
 sc_array_t         *
-sc_array_new_size (size_t elem_size, size_t elem_count)
+sc_array_new_count (size_t elem_size, size_t elem_count)
 {
   sc_array_t         *array;
 
@@ -161,6 +161,20 @@ sc_array_truncate (sc_array_t * array)
   SC_ASSERT (array->byte_alloc >= 0);
   memset (array->array, -1, array->byte_alloc);
 #endif
+}
+
+void
+sc_array_rewind (sc_array_t * array, size_t new_count)
+{
+  SC_ASSERT (array != NULL);
+  SC_ASSERT (array->elem_count >= new_count);
+
+  if (new_count == 0 && SC_ARRAY_IS_OWNER (array)) {
+    sc_array_reset (array);
+  }
+  else {
+    array->elem_count = new_count;
+  }
 }
 
 void
