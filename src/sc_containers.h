@@ -594,7 +594,7 @@ sc_mempool_alloc (sc_mempool_t * mempool)
     }
   }
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   if (!mempool->zero_and_persist) {
     memset (ret, -1, mempool->elem_size);
   }
@@ -614,7 +614,7 @@ sc_mempool_free (sc_mempool_t * mempool, void *elem)
 
   SC_ASSERT (mempool->elem_count > 0);
 
-#ifdef SC_DEBUG
+#ifdef SC_ENABLE_DEBUG
   if (!mempool->zero_and_persist) {
     memset (elem, -1, mempool->elem_size);
   }
