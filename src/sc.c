@@ -501,7 +501,7 @@ sc_realloc_aligned (void *ptr, size_t alignment, size_t size)
     min_size = SC_MIN (old_size, size);
     memcpy (new_ptr, ptr, min_size);
 #ifdef SC_ENABLE_DEBUG
-    memset ((char *) new_ptr + min_size, -3, size - min_size);
+    memset ((char *) new_ptr + min_size, (char) -3, size - min_size);
 #endif
 
     /* free old memory and return new pointer */

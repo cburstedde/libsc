@@ -159,7 +159,7 @@ sc_array_truncate (sc_array_t * array)
 
 #if SC_DEBUG
   SC_ASSERT (array->byte_alloc >= 0);
-  memset (array->array, -1, array->byte_alloc);
+  memset (array->array, (char) -1, array->byte_alloc);
 #endif
 }
 
@@ -210,7 +210,7 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   else {
 #ifdef SC_DEBUG
     if (newoffs < oldoffs) {
-      memset (array->array + newoffs, -1, oldoffs - newoffs);
+      memset (array->array + newoffs, (char) -1, oldoffs - newoffs);
     }
     for (i = oldoffs; i < newoffs; ++i) {
       SC_ASSERT (array->array[i] == (char) -1);
@@ -235,7 +235,7 @@ sc_array_resize (sc_array_t * array, size_t new_count)
 
 #ifdef SC_DEBUG
   SC_ASSERT (minoffs <= newsize);
-  memset (array->array + minoffs, -1, newsize - minoffs);
+  memset (array->array + minoffs, (char) -1, newsize - minoffs);
 #endif
 }
 
