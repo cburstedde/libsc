@@ -29,10 +29,12 @@ main (int argc, char **argv)
   int                 i;
   int                 mpiret;
   int                 mpisize, mpirank;
-  int                *senders, num_senders;
+  int                *senders1, num_senders1;
   int                *senders2, num_senders2;
+  int                *senders3, num_senders3;
   int                *receivers, num_receivers;
   double              elapsed_allgather;
+  double              elapsed_nary;
   double              elapsed_native;
   sc_MPI_Comm         mpicomm;
 
@@ -50,36 +52,48 @@ main (int argc, char **argv)
   num_receivers = SC_MIN (num_receivers, mpisize);
   receivers = SC_ALLOC (int, num_receivers);
   for (i = 0; i < num_receivers; ++i) {
-    receivers[i] = (3 * mpirank + i) % mpisize;
+    receivers[i] = (3 * mpirank + 17 * i) % mpisize;
   }
   qsort (receivers, num_receivers, sizeof (int), sc_int_compare);
 
   SC_GLOBAL_INFO ("Testing sc_notify_allgather\n");
-  senders = SC_ALLOC (int, mpisize);
+  senders1 = SC_ALLOC (int, mpisize);
   elapsed_allgather = -sc_MPI_Wtime ();
   mpiret = sc_notify_allgather (receivers, num_receivers,
-                                senders, &num_senders, mpicomm);
+                                senders1, &num_senders1, mpicomm);
   SC_CHECK_MPI (mpiret);
   elapsed_allgather += sc_MPI_Wtime ();
 
-  SC_GLOBAL_INFO ("Testing native sc_notify\n");
+  SC_GLOBAL_INFO ("Testing sc_notify_nary_ext\n");
   senders2 = SC_ALLOC (int, mpisize);
+  elapsed_nary = -sc_MPI_Wtime ();
+  mpiret = sc_notify_nary_ext (receivers, num_receivers,
+                               senders2, &num_senders2, mpicomm);
+  SC_CHECK_MPI (mpiret);
+  elapsed_nary += sc_MPI_Wtime ();
+
+  SC_GLOBAL_INFO ("Testing native sc_notify\n");
+  senders3 = SC_ALLOC (int, mpisize);
   elapsed_native = -sc_MPI_Wtime ();
   mpiret = sc_notify (receivers, num_receivers,
-                      senders2, &num_senders2, mpicomm);
+                      senders3, &num_senders3, mpicomm);
   SC_CHECK_MPI (mpiret);
   elapsed_native += sc_MPI_Wtime ();
 
-  SC_CHECK_ABORT (num_senders == num_senders2, "Mismatched sender numbers");
-  for (i = 0; i < num_senders; ++i) {
-    SC_CHECK_ABORTF (senders[i] == senders2[i], "Mismatched sender %d", i);
+  SC_CHECK_ABORT (num_senders1 == num_senders2, "Mismatch 12 sender count");
+  SC_CHECK_ABORT (num_senders1 == num_senders3, "Mismatch 13 sender count");
+  for (i = 0; i < num_senders1; ++i) {
+    SC_CHECK_ABORTF (senders1[i] == senders2[i], "Mismatch 12 sender %d", i);
+    SC_CHECK_ABORTF (senders1[i] == senders3[i], "Mismatch 13 sender %d", i);
   }
 
   SC_FREE (receivers);
-  SC_FREE (senders);
+  SC_FREE (senders1);
   SC_FREE (senders2);
+  SC_FREE (senders3);
 
   SC_GLOBAL_STATISTICSF ("   notify_allgather %g\n", elapsed_allgather);
+  SC_GLOBAL_STATISTICSF ("   notify_nary      %g\n", elapsed_nary);
   SC_GLOBAL_STATISTICSF ("   notify           %g\n", elapsed_native);
 
   sc_finalize ();
