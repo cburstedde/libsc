@@ -33,6 +33,7 @@ main (int argc, char **argv)
   int                *senders2, num_senders2;
   int                *senders3, num_senders3;
   int                *receivers, num_receivers;
+  int                 ntop, nint, nbot;
   double              elapsed_allgather;
   double              elapsed_nary;
   double              elapsed_native;
@@ -65,10 +66,12 @@ main (int argc, char **argv)
   elapsed_allgather += sc_MPI_Wtime ();
 
   SC_GLOBAL_INFO ("Testing sc_notify_nary_ext\n");
+  ntop = nint = nbot = 4;
   senders2 = SC_ALLOC (int, mpisize);
   elapsed_nary = -sc_MPI_Wtime ();
   mpiret = sc_notify_nary_ext (receivers, num_receivers,
-                               senders2, &num_senders2, mpicomm);
+                               senders2, &num_senders2,
+                               ntop, nint, nbot, mpicomm);
   SC_CHECK_MPI (mpiret);
   elapsed_nary += sc_MPI_Wtime ();
 

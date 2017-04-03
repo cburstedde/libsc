@@ -52,11 +52,19 @@ int                 sc_notify_allgather (int *receivers, int num_receivers,
  *                              On output it contains the notifying ranks,
  *                              whose number is returned in \b num_senders.
  * \param [out] num_senders     On output the number of notifying ranks.
+ * \param [in] ntop             Number of children of the root node.
+ *                              Only used if \b nbot leads to depth >= 2.
+ * \param [in] nint             Number of children of intermediate tree node.
+ *                              Only used if \b ntop and \b nbot lead to
+ *                              depth >= 3.
+ * \param [in] nbot             Number of children at the deepest level.
+ *                              Used first in determining depth of tree.
  * \param [in] mpicomm          MPI communicator to use.
  * \return                      Aborts on MPI error or returns sc_MPI_SUCCESS.
  */
 int                 sc_notify_nary_ext (int *receivers, int num_receivers,
                                         int *senders, int *num_senders,
+                                        int ntop, int nint, int nbot,
                                         sc_MPI_Comm mpicomm);
 
 /** Collective call to notif a set of receiver ranks of current rank.
