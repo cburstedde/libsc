@@ -77,6 +77,21 @@ sc_notify_allgather (int *receivers, int num_receivers,
   return sc_MPI_SUCCESS;
 }
 
+int
+sc_notify_nary_ext (int *receivers, int num_receivers,
+                    int *senders, int *num_senders, sc_MPI_Comm mpicomm)
+{
+  SC_ABORT ("Function sc_notify_nary_ext not yet implemented");
+}
+
+int
+sc_notify_nary (int *receivers, int num_receivers,
+                int *senders, int *num_senders, sc_MPI_Comm mpicomm)
+{
+  return sc_notify_nary_ext (receivers, num_receivers,
+                             senders, num_senders, mpicomm);
+}
+
 /** Internally used function to merge two data arrays.
  * The internal data format of the arrays is as follows:
  * forall(torank): (torank, howmanyfroms, listoffromranks).

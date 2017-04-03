@@ -43,6 +43,39 @@ int                 sc_notify_allgather (int *receivers, int num_receivers,
                                          int *senders, int *num_senders,
                                          sc_MPI_Comm mpicomm);
 
+/** Collective call to notif a set of receiver ranks of current rank.
+ * This implementation uses an n-ary tree for reduced latency.
+ * This function allows to configure the mode of operation in detail.
+ * \param [in] receivers        Sorted and unique array of MPI ranks to inform.
+ * \param [in] num_receivers    Count of ranks contained in receivers.
+ * \param [in,out] senders      Array of at least size sc_MPI_Comm_size.
+ *                              On output it contains the notifying ranks,
+ *                              whose number is returned in \b num_senders.
+ * \param [out] num_senders     On output the number of notifying ranks.
+ * \param [in] mpicomm          MPI communicator to use.
+ * \return                      Aborts on MPI error or returns sc_MPI_SUCCESS.
+ */
+int                 sc_notify_nary_ext (int *receivers, int num_receivers,
+                                        int *senders, int *num_senders,
+                                        sc_MPI_Comm mpicomm);
+
+/** Collective call to notif a set of receiver ranks of current rank.
+ * This implementation uses an n-ary tree for reduced latency.
+ * It chooses default parameters for \ref sc_notify_nary_ext.
+ * It can serve as drop-in replacement for \ref sc_notify.
+ * \param [in] receivers        Sorted and unique array of MPI ranks to inform.
+ * \param [in] num_receivers    Count of ranks contained in receivers.
+ * \param [in,out] senders      Array of at least size sc_MPI_Comm_size.
+ *                              On output it contains the notifying ranks,
+ *                              whose number is returned in \b num_senders.
+ * \param [out] num_senders     On output the number of notifying ranks.
+ * \param [in] mpicomm          MPI communicator to use.
+ * \return                      Aborts on MPI error or returns sc_MPI_SUCCESS.
+ */
+int                 sc_notify_nary (int *receivers, int num_receivers,
+                                    int *senders, int *num_senders,
+                                    sc_MPI_Comm mpicomm);
+
 /** Collective call to notify a set of receiver ranks of current rank.
  * More generally, this function serves to transpose the nonzero pattern of a
  * matrix, where each row and column corresponds to an MPI rank in order.
