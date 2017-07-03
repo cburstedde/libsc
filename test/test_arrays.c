@@ -104,17 +104,18 @@ test_new_data (sc_array_t * a)
 }
 
 static void
-test_insert(sc_array_t * a)
+test_insert (sc_array_t * a)
 {
-  int s = a->elem_count;
-  int idx = rand() % s;
+  int                 s = a->elem_count;
+  int                 idx = rand () % s;
 
-  int idxth_element = *(int *) sc_array_index (a, idx);
-  int *ins = (int*) sc_array_insert(a, idx);
+  int                 idxth_element = *(int *) sc_array_index (a, idx);
+  int                *ins = (int *) sc_array_insert (a, idx);
   *ins = -42;
-  SC_CHECK_ABORT(*(int *) sc_array_index(a, idx) == -42, "Inserting failed");
-  SC_CHECK_ABORT(*(int *) sc_array_index(a, ++idx) == idxth_element,
-                 "Moving elements failed");
+  SC_CHECK_ABORT (*(int *) sc_array_index (a, idx) == -42,
+                  "Inserting failed");
+  SC_CHECK_ABORT (*(int *) sc_array_index (a, ++idx) == idxth_element,
+                  "Moving elements failed");
 }
 
 int
