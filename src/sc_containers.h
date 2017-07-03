@@ -512,6 +512,38 @@ sc_array_push (sc_array_t * array)
   return sc_array_push_count (array, 1);
 }
 
+/** Enlarge an array by a number of elements. Grows the array if necessary. In
+ * contrast to \ref sc_array_push_count this function can insert elements at
+ * any arbitrary position between 0 and number_of_elements.
+ * This function is not allowed for views.
+ * \return Returns a pointer to the first uninitialized newly added element.
+ */
+static inline void *
+sc_array_insert_count (sc_array_t * array, size_t pos, size_t add_count)
+{
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+  SC_ASSERT (0 <= pos && pos < array->elem_count);
+
+  sc_array_push_count (array, add_count);
+  memmove (array->array + array->elem_size * (pos + add_count),
+           array->array + array->elem_size * pos,
+           array->elem_size * (array->elem_count - pos));
+
+  return (void *) (array->array + array->elem_size * pos);
+}
+
+/** Enlarge an array by one element. Grows the array if necessary. In contrast
+ * to \ref sc_array_push this function can insert elements at any arbitrary
+ * position between 0 and number_of_elements.
+ * This function is not allowed for views.
+ * \return Returns a pointer to the uninitialized newly added element.
+ */
+static inline void *
+sc_array_insert (sc_array_t * array, size_t pos)
+{
+  return sc_array_insert_count (array, pos, 1);
+}
+
 /** The sc_mempool object provides a large pool of equal-size elements.
  * The pool grows dynamically for element allocation.
  * Elements are referenced by their address which never changes.

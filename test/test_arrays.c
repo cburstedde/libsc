@@ -103,6 +103,21 @@ test_new_data (sc_array_t * a)
   sc_array_destroy (v);
 }
 
+static void
+test_insert (sc_array_t * a)
+{
+  int                 s = a->elem_count;
+  int                 idx = rand () % s;
+
+  int                 idxth_element = *(int *) sc_array_index (a, idx);
+  int                *ins = (int *) sc_array_insert (a, idx);
+  *ins = -42;
+  SC_CHECK_ABORT (*(int *) sc_array_index (a, idx) == -42,
+                  "Inserting failed");
+  SC_CHECK_ABORT (*(int *) sc_array_index (a, ++idx) == idxth_element,
+                  "Moving elements failed");
+}
+
 int
 main (int argc, char **argv)
 {
@@ -145,6 +160,7 @@ main (int argc, char **argv)
   test_new_count (a);
   test_new_view (a);
   test_new_data (a);
+  test_insert (a);
 
   for (i = 0; i < N; ++i) {
     pe = (int *) sc_array_index_int (a, i);
