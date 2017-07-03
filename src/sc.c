@@ -392,10 +392,10 @@ sc_malloc_aligned (size_t alignment, size_t size)
     ((char **) ptr)[-1] = alloc_ptr;
     ((char **) ptr)[-2] = (char *) size;
 #ifdef SC_ENABLE_DEBUG
-    memset (alloc_ptr, -2, shift);
+    memset (alloc_ptr, (char) -2, shift);
     SC_ASSERT (ptr + ((ptrdiff_t) size + signalign - shift) ==
                alloc_ptr + alloc_size);
-    memset (ptr + size, -2, signalign - shift);
+    memset (ptr + size, (char) -2, signalign - shift);
 #endif
 
     /* and we are done */
@@ -447,10 +447,10 @@ sc_free_aligned (void *ptr, size_t alignment)
     SC_ASSERT (0 <= shift && shift < signalign);
     SC_ASSERT ((char *) ptr == alloc_ptr + (extrasize + shift));
     for (i = 0; i < shift; ++i) {
-      SC_ASSERT (alloc_ptr[i] == -2);
+      SC_ASSERT (alloc_ptr[i] == (char) -2);
     }
     for (i = 0; i < signalign - shift; ++i) {
-      SC_ASSERT (((char *) ptr)[ssize + i] == -2);
+      SC_ASSERT (((char *) ptr)[ssize + i] == (char) -2);
     }
 #endif
 
@@ -501,7 +501,7 @@ sc_realloc_aligned (void *ptr, size_t alignment, size_t size)
     min_size = SC_MIN (old_size, size);
     memcpy (new_ptr, ptr, min_size);
 #ifdef SC_ENABLE_DEBUG
-    memset ((char *) new_ptr + min_size, -3, size - min_size);
+    memset ((char *) new_ptr + min_size, (char) -3, size - min_size);
 #endif
 
     /* free old memory and return new pointer */
