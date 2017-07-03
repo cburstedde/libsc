@@ -521,7 +521,7 @@ sc_array_push (sc_array_t * array)
 static inline void *
 sc_array_insert_count(sc_array_t * array, size_t pos, size_t add_count) {
   SC_ASSERT (SC_ARRAY_IS_OWNER (array));
-  SC_ASSERT (pos < array->elem_count);
+  SC_ASSERT (0 <= pos && pos < array->elem_count);
 
   sc_array_push_count(array, add_count);
   memmove(array->array + array->elem_size * (pos + add_count),
