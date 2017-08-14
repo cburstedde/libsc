@@ -147,18 +147,20 @@ m4_ifset([SC_CHECK_MPI_CXX], [
 else
 m4_ifset([SC_CHECK_MPI_F77], [
   if test "x$F77" = x ; then
-    AC_CHECK_PROGS([$1_F77_COMPILER], [gfortran g77 f77 ifort])
-    if test "x$$1_F77_COMPILER" != x ; then
-      F77="$$1_F77_COMPILER"
-    fi
+dnl    AC_CHECK_PROGS([$1_F77_COMPILER], [gfortran g77 f77 ifort])
+dnl    if test "x$$1_F77_COMPILER" != x ; then
+dnl      F77="$$1_F77_COMPILER"
+dnl    fi
+    :
   fi
 ], [:])
 m4_ifset([SC_CHECK_MPI_FC], [
   if test "x$FC" = x ; then
-    AC_CHECK_PROGS([$1_FC_COMPILER], [gfortran ifort])
-    if test "x$$1_FC_COMPILER" != x ; then
-      FC="$$1_FC_COMPILER"
-    fi
+dnl    AC_CHECK_PROGS([$1_FC_COMPILER], [gfortran ifort])
+dnl    if test "x$$1_FC_COMPILER" != x ; then
+dnl      FC="$$1_FC_COMPILER"
+dnl    fi
+    :
   fi
 ], [:])
 fi
@@ -401,16 +403,16 @@ AC_DEFUN([SC_MPI_ENGAGE],
 [
 dnl determine compilers
 m4_ifset([SC_CHECK_MPI_F77], [
-AC_REQUIRE([AC_PROG_F77])
-AC_PROG_F77_C_O
-AC_REQUIRE([AC_F77_LIBRARY_LDFLAGS])
-AC_F77_WRAPPERS
+dnl AC_PROG_F77
+dnl AC_PROG_F77_C_O
+dnl AC_F77_LIBRARY_LDFLAGS
+dnl AC_F77_WRAPPERS
 ])
 m4_ifset([SC_CHECK_MPI_FC], [
-AC_REQUIRE([AC_PROG_FC])
-AC_PROG_FC_C_O
-AC_REQUIRE([AC_FC_LIBRARY_LDFLAGS])
-AC_FC_WRAPPERS
+dnl AC_PROG_FC
+dnl AC_PROG_FC_C_O
+dnl AC_FC_LIBRARY_LDFLAGS
+dnl AC_FC_WRAPPERS
 ])
 AC_REQUIRE([AC_PROG_CC])
 AC_PROG_CC_C_O

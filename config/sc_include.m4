@@ -218,8 +218,8 @@ dnl
 AC_DEFUN([SC_CHECK_BLAS_LAPACK],
 [
 
-dgemm=;AC_F77_FUNC(dgemm)
-if test "x$dgemm" = xunknown ; then dgemm=dgemm_ ; fi
+dnl dgemm=;AC_F77_FUNC(dgemm)
+dnl if test "x$dgemm" = xunknown ; then dgemm=dgemm_ ; fi
 
 AC_MSG_NOTICE([Checking BLAS])
 SC_BLAS([$1], [$dgemm],
@@ -235,8 +235,8 @@ if test "x$sc_blas_ok" = xdisable ; then
 fi
 AM_CONDITIONAL([$1_WITH_BLAS], [test "x$sc_blas_ok" = xyes])
 
-dgecon=;AC_F77_FUNC(dgecon)
-if test "x$dgecon" = xunknown ; then dgecon=dgecon_ ; fi
+dnl dgecon=;AC_F77_FUNC(dgecon)
+dnl if test "x$dgecon" = xunknown ; then dgecon=dgecon_ ; fi
 
 AC_MSG_NOTICE([Checking LAPACK])
 SC_LAPACK([$1], [$dgecon],

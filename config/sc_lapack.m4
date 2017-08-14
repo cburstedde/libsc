@@ -124,6 +124,12 @@ fi
 
 # First, check LAPACK_LIBS environment variable
 if test "x$sc_lapack_ok" = xno; then
+
+dnl now we know that LAPACK should be tried
+dgecon=;AC_F77_FUNC(dgecon)
+if test "x$dgecon" = xunknown ; then dgecon=dgecon_ ; fi
+sc_lapack_fun="$dgecon"
+
 if test "x$LAPACK_LIBS" != x; then
         save_LIBS="$LIBS"; LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
         AC_MSG_CHECKING([for $sc_lapack_func in $LAPACK_LIBS])

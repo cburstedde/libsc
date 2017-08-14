@@ -126,6 +126,14 @@ LIBS="$LIBS $FLIBS"
 
 # First, check BLAS_LIBS environment variable
 if test "x$sc_blas_ok" = xno; then
+
+dnl now we know that BLAS should be tried
+dgemm=;
+AC_REQUIRE([AC_PROG_F77])
+AC_F77_FUNC(dgemm)
+if test "x$dgemm" = xunknown ; then dgemm=dgemm_ ; fi
+sc_blas_func="$dgemm"
+
 if test "x$BLAS_LIBS" != x; then
 	save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS"
 	AC_MSG_CHECKING([for $sc_blas_func in $BLAS_LIBS])
