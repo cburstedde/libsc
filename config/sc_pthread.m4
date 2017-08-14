@@ -9,20 +9,28 @@ dnl
 AC_DEFUN([SC_CHECK_PTHREAD], [
 
 dnl This link test changes the LIBS variable in place for posterity
-SC_CHECK_LIB([pthread], [pthread_create], [LPTHREAD], [$1])
+dnl ... which is bad if pthreads are NOT used
+dnl SAVE_LIBS="$LIBS"
+dnl SC_CHECK_LIB([pthread], [pthread_create], [LPTHREAD], [$1])
+dnl LIBS="$SAVE_LIBS"
 AC_MSG_CHECKING([for POSIX threads])
 
 SC_ARG_ENABLE_PREFIX([pthread],
-  [enable POSIX threads (optionally use --enable-pthread=<PTHREAD_CFLAGS>)],
+  [enable POSIX threads:
+     Using --enable-pthread without arguments does not use any CFLAGS
+       to supply CFLAGS use --enable-pthread=<PTHREAD_CFLAGS>
+     We check first for linking without any libraries and then with -lpthread
+       to avoid the latter, specify LIBS=<PTHREAD_LIBS> on configure line
+  ],
   [PTHREAD], [$1])
 if test "x$$1_ENABLE_PTHREAD" != xno ; then
   $1_PTHREAD_CFLAGS=
   if test "x$$1_ENABLE_PTHREAD" != xyes ; then
     $1_PTHREAD_CFLAGS="$$1_ENABLE_PTHREAD"
-    dnl AC_MSG_ERROR([Please provide --enable-pthread without arguments])
   fi
   PRE_PTHREAD_CFLAGS="$CFLAGS"
   CFLAGS="$CFLAGS $$1_PTHREAD_CFLAGS"
+  SC_CHECK_LIB_NOCOND([pthread], [pthread_create], [LPTHREAD], [$1])
   AC_LINK_IFELSE([AC_LANG_PROGRAM(
 [[
 #include <pthread.h>
