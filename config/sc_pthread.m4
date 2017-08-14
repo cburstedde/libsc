@@ -17,9 +17,9 @@ AC_MSG_CHECKING([for POSIX threads])
 
 SC_ARG_ENABLE_PREFIX([pthread],
   [enable POSIX threads:
-     Using --enable-pthread without arguments does not use any CFLAGS
-       to supply CFLAGS use --enable-pthread=<PTHREAD_CFLAGS>
-     We check first for linking without any libraries and then with -lpthread
+     Using --enable-pthread without arguments does not specify any CFLAGS;
+       to supply CFLAGS use --enable-pthread=<PTHREAD_CFLAGS>.
+     We check first for linking without any libraries and then with -lpthread;
        to avoid the latter, specify LIBS=<PTHREAD_LIBS> on configure line
   ],
   [PTHREAD], [$1])

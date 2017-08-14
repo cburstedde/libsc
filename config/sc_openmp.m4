@@ -20,9 +20,9 @@ AC_MSG_CHECKING([for OpenMP])
 
 SC_ARG_ENABLE_PREFIX([openmp],
   [enable OpenMP:
-     Using --enable-openmp without arguments does not use any CFLAGS
-       to supply CFLAGS use --enable-openmp=<OPENMP_CFLAGS>
-     We check first for linking without any libraries and then with -lgomp
+     Using --enable-openmp without arguments does not specify any CFLAGS;
+       to supply CFLAGS use --enable-openmp=<OPENMP_CFLAGS>.
+     We check first for linking without any libraries and then with -lgomp;
        to avoid the latter, specify LIBS=<OPENMP_LIBS> on configure line
   ],
   [OPENMP], [$1])
