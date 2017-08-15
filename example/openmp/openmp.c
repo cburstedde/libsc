@@ -23,7 +23,7 @@ main (int argc, char *argv[])
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   if (thread_lvl < sc_MPI_THREAD_MULTIPLE) {
-    SC_GLOBAL_PRODUCTIONF ("Mpi only supports thread level %d\n", thread_lvl);
+    SC_GLOBAL_PRODUCTIONF ("MPI only supports thread level %d\n", thread_lvl);
   }
   else {
     mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &mpisize);
