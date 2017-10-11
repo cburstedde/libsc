@@ -139,6 +139,12 @@ sc_array_init_data (sc_array_t * view, void *base, size_t elem_size,
 }
 
 void
+sc_array_memset (sc_array_t * array, int c)
+{
+  memset (array->array, c, array->elem_count * array->elem_size);
+}
+
+void
 sc_array_reset (sc_array_t * array)
 {
   if (SC_ARRAY_IS_OWNER (array)) {

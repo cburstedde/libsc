@@ -200,6 +200,14 @@ void                sc_array_init_view (sc_array_t * view, sc_array_t * array,
 void                sc_array_init_data (sc_array_t * view, void *base,
                                         size_t elem_size, size_t elem_count);
 
+/** Run memset on the array storage.
+ * We pass the character to memset unchanged.  Thus, care must be taken when
+ * setting values below -1 or above 127, just as with standard memset (3).
+ * \param [in,out] array    This array's storage will be overwritten.
+ * \param [in] c            Character to overwrite every byte with.
+ */
+void                sc_array_memset (sc_array_t * array, int c);
+
 /** Sets the array count to zero and frees all elements.
  * This function turns a view into a newly initialized array.
  * \param [in,out]  array       Array structure to be reset.
