@@ -168,12 +168,23 @@ void                sc_array_init (sc_array_t * array, size_t elem_size);
 
 /** Initializes an already allocated (or static) array structure
  * and allocates a given number of elements.
+ * Deprecated: use \ref sc_array_init_count.
  * \param [in,out]  array       Array structure to be initialized.
  * \param [in] elem_size        Size of one array element in bytes.
  * \param [in] elem_count       Number of initial array elements.
  */
 void                sc_array_init_size (sc_array_t * array,
                                         size_t elem_size, size_t elem_count);
+
+/** Initializes an already allocated (or static) array structure
+ * and allocates a given number of elements.
+ * This function supersedes \ref sc_array_init_size.
+ * \param [in,out]  array       Array structure to be initialized.
+ * \param [in] elem_size        Size of one array element in bytes.
+ * \param [in] elem_count       Number of initial array elements.
+ */
+void                sc_array_init_count (sc_array_t * array,
+                                         size_t elem_size, size_t elem_count);
 
 /** Initializes an already allocated (or static) view from existing sc_array_t.
  * The array view returned does not require sc_array_reset (doesn't hurt though).
