@@ -575,7 +575,7 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
 
   if (length > 1) {
     SC_ASSERT (level < depth);
-    tag = SC_TAG_NOTIFY_RECURSIVE + level;
+    tag = SC_TAG_NOTIFY_NARY + level;
 
     /* find my position within child branch */
     divn =
