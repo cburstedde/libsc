@@ -29,6 +29,31 @@ int                 sc_notify_nary_ntop = 4;
 int                 sc_notify_nary_nint = 4;
 int                 sc_notify_nary_nbot = 4;
 
+static void
+sc_array_init_invalid (sc_array_t * array)
+{
+  SC_ASSERT (array != NULL);
+
+  array->elem_size = (size_t) ULONG_MAX;
+  array->elem_count = (size_t) ULONG_MAX;
+  array->byte_alloc = -1;
+  array->array = NULL;
+}
+
+#ifdef SC_ENABLE_DEBUG
+
+static int
+sc_array_is_invalid (sc_array_t * array)
+{
+  SC_ASSERT (array != NULL);
+
+  return (array->elem_size == (size_t) ULONG_MAX &&
+          array->elem_count == (size_t) ULONG_MAX) &&
+    (array->byte_alloc == -1 && array->array == NULL);
+}
+
+#endif
+
 int
 sc_notify_allgather (int *receivers, int num_receivers,
                      int *senders, int *num_senders, sc_MPI_Comm mpicomm)
@@ -82,12 +107,78 @@ sc_notify_allgather (int *receivers, int num_receivers,
   return sc_MPI_SUCCESS;
 }
 
-/** Internally used function to merge two data arrays.
- * The internal data format of the arrays is as follows:
+/** Encode the receiver list into an array for input.
+ * \param [out] input       This function initializes the array.
+ *                          All prior content will be overwritten and lost.
+ *                          On output, array holding integers.
+ * \param [in] receivers        See \ref sc_notify.
+ * \param [in] num_receivers    See \ref sc_notify.
+ * \param [in] mpisize          Number of MPI processes.
+ * \param [in] mpirank          MPI rank of this process.
+ */
+static void
+sc_notify_input (sc_array_t * input,
+                 int *receivers, int num_receivers, int mpisize, int mpirank)
+{
+  int                 rec;
+  int                 i;
+  int                *pint;
+
+  SC_ASSERT (num_receivers >= 0);
+  SC_ASSERT (num_receivers == 0 || receivers != NULL);
+
+  SC_ASSERT (sc_array_is_invalid (input));
+  sc_array_init_size (input, sizeof (int), 3 * num_receivers);
+  rec = -1;
+  for (i = 0; i < num_receivers; ++i) {
+    SC_ASSERT (rec < receivers[i]);
+    rec = receivers[i];
+    SC_ASSERT (0 <= rec && rec < mpisize);
+    pint = (int *) sc_array_index_int (input, 3 * i);
+    pint[0] = rec;
+    pint[1] = 1;
+    pint[2] = mpirank;
+  }
+}
+
+/** Decode sender list into an array for output.
+ * \param [in] output       This function initializes the array.
+ *                          All prior content will be overwritten and lost.
+ *                          Empty array to hold int numbers.
+ * \param [in] senders      See \ref sc_notify.
+ * \param [in] num_senders  See \ref sc_notify.
+ * \param [in] mpisize      Number of MPI processes.
+ * \param [in] mpirank      MPI rank of this process.
+ */
+static void
+sc_notify_output (sc_array_t * output,
+                  int *senders, int *num_senders, int mpisize, int mpirank)
+{
+  int                 found_num_senders;
+  int                 i;
+  int                *pint;
+
+  SC_ASSERT (senders != NULL);
+  SC_ASSERT (num_senders != NULL);
+
+  found_num_senders = 0;
+  if (output->elem_count > 0) {
+    pint = (int *) sc_array_index_int (output, 0);
+    SC_ASSERT (pint[0] == mpirank);
+    found_num_senders = pint[1];
+    SC_ASSERT (found_num_senders > 0);
+    SC_ASSERT (output->elem_count == 2 + (size_t) found_num_senders);
+    for (i = 0; i < found_num_senders; ++i) {
+      senders[i] = pint[2 + i];
+    }
+  }
+  *num_senders = found_num_senders;
+}
+
+/*
+ * Format of variable-length records:
  * forall(torank): (torank, howmanyfroms, listoffromranks).
- * \param [in,out] output   Output array, must initially be empty.
- * \param [in] input        Input array.  Records torank = -1 are ignored.
- * \param [in] second       Second input array, valid records only.
+ * The records must be ordered ascending by torank.
  */
 static void
 sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second)
@@ -384,13 +475,9 @@ int
 sc_notify (int *receivers, int num_receivers,
            int *senders, int *num_senders, sc_MPI_Comm mpicomm)
 {
-  int                 i;
   int                 mpiret;
   int                 mpisize, mpirank;
   int                 pow2length;
-  int                 rec;
-  int                 found_num_senders;
-  int                *pint;
   sc_array_t          input, output;
 
   mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
@@ -403,36 +490,18 @@ sc_notify (int *receivers, int num_receivers,
   SC_ASSERT (senders != NULL && num_senders != NULL);
   SC_ASSERT (pow2length / 2 < mpisize && mpisize <= pow2length);
 
-  sc_array_init (&input, sizeof (int));
-  sc_array_resize (&input, 3 * num_receivers);
-  sc_array_init (&output, sizeof (int));
-  rec = -1;
-  for (i = 0; i < num_receivers; ++i) {
-    SC_ASSERT (rec < receivers[i]);
-    rec = receivers[i];
-    SC_ASSERT (rec < mpisize);
-    pint = (int *) sc_array_index_int (&input, 3 * i);
-    pint[0] = rec;
-    pint[1] = 1;
-    pint[2] = mpirank;
-  }
+  /* convert input variables into internal format */
+  sc_array_init_invalid (&input);
+  sc_notify_input (&input, receivers, num_receivers, mpisize, mpirank);
 
+  /* execute the recursive algorithm */
+  sc_array_init (&output, sizeof (int));
   sc_notify_recursive (mpicomm, 0, mpirank, pow2length,
                        mpisize, &input, &output);
   sc_array_reset (&input);
 
-  found_num_senders = 0;
-  if (output.elem_count > 0) {
-    pint = (int *) sc_array_index_int (&output, 0);
-    SC_ASSERT (pint[0] == mpirank);
-    found_num_senders = pint[1];
-    SC_ASSERT (found_num_senders > 0);
-    SC_ASSERT (output.elem_count == 2 + (size_t) found_num_senders);
-    for (i = 0; i < found_num_senders; ++i) {
-      senders[i] = pint[2 + i];
-    }
-  }
-  *num_senders = found_num_senders;
+  /* convert internal format to output variables */
+  sc_notify_output (&output, senders, num_senders, mpisize, mpirank);
   sc_array_reset (&output);
 
   return sc_MPI_SUCCESS;
