@@ -29,6 +29,8 @@ int                 sc_notify_nary_ntop = 2;
 int                 sc_notify_nary_nint = 2;
 int                 sc_notify_nary_nbot = 2;
 
+#if 0
+
 static void
 sc_array_init_invalid (sc_array_t * array)
 {
@@ -39,8 +41,6 @@ sc_array_init_invalid (sc_array_t * array)
   array->byte_alloc = -1;
   array->array = NULL;
 }
-
-#ifdef SC_ENABLE_DEBUG
 
 static int
 sc_array_is_invalid (sc_array_t * array)
@@ -117,17 +117,18 @@ sc_notify_allgather (int *receivers, int num_receivers,
  * \param [in] mpirank          MPI rank of this process.
  */
 static void
-sc_notify_input (sc_array_t * input,
-                 int *receivers, int num_receivers, int mpisize, int mpirank)
+sc_notify_init_input (sc_array_t * input, int *receivers, int num_receivers,
+                      int mpisize, int mpirank)
 {
   int                 rec;
   int                 i;
   int                *pint;
 
+  SC_ASSERT (input != NULL);
+
   SC_ASSERT (num_receivers >= 0);
   SC_ASSERT (num_receivers == 0 || receivers != NULL);
 
-  SC_ASSERT (sc_array_is_invalid (input));
   sc_array_init_size (input, sizeof (int), 3 * num_receivers);
   rec = -1;
   for (i = 0; i < num_receivers; ++i) {
@@ -142,21 +143,23 @@ sc_notify_input (sc_array_t * input,
 }
 
 /** Decode sender list into an array for output.
- * \param [in] output       This function initializes the array.
- *                          All prior content will be overwritten and lost.
- *                          Empty array to hold int numbers.
+ * \param [in] output       This array holds integer data in prescribed format.
+ *                          This function calls \ref sc_array_reset on it.
  * \param [in] senders      See \ref sc_notify.
  * \param [in] num_senders  See \ref sc_notify.
  * \param [in] mpisize      Number of MPI processes.
  * \param [in] mpirank      MPI rank of this process.
  */
 static void
-sc_notify_output (sc_array_t * output,
-                  int *senders, int *num_senders, int mpisize, int mpirank)
+sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
+                        int mpisize, int mpirank)
 {
   int                 found_num_senders;
   int                 i;
   int                *pint;
+
+  SC_ASSERT (output != NULL);
+  SC_ASSERT (output->elem_size == sizeof (int));
 
   SC_ASSERT (senders != NULL);
   SC_ASSERT (num_senders != NULL);
@@ -173,6 +176,8 @@ sc_notify_output (sc_array_t * output,
     }
   }
   *num_senders = found_num_senders;
+
+  sc_array_reset (output);
 }
 
 /*
@@ -330,8 +335,7 @@ sc_notify_recursive (sc_MPI_Comm mpicomm, int start, int me, int length,
     /* execute recursion in-place */
     if (me < start + length2) {
       half = 0;
-      sc_notify_recursive (mpicomm, start, me, length2,
-                           groupsize, array);
+      sc_notify_recursive (mpicomm, start, me, length2, groupsize, array);
     }
     else {
       half = 1;
@@ -487,15 +491,13 @@ sc_notify (int *receivers, int num_receivers,
   SC_ASSERT (pow2length / 2 < mpisize && mpisize <= pow2length);
 
   /* convert input variables into internal format */
-  sc_array_init_invalid (&array);
-  sc_notify_input (&array, receivers, num_receivers, mpisize, mpirank);
+  sc_notify_init_input (&array, receivers, num_receivers, mpisize, mpirank);
 
   /* execute the recursive algorithm */
   sc_notify_recursive (mpicomm, 0, mpirank, pow2length, mpisize, &array);
 
   /* convert internal format to output variables */
-  sc_notify_output (&array, senders, num_senders, mpisize, mpirank);
-  sc_array_reset (&array);
+  sc_notify_reset_output (&array, senders, num_senders, mpisize, mpirank);
 
   return sc_MPI_SUCCESS;
 }
@@ -856,15 +858,13 @@ sc_notify_nary_ext (int *receivers, int num_receivers,
   nary->depth = depth;
 
   /* convert input variables into internal format */
-  sc_array_init_invalid (array);
-  sc_notify_input (array, receivers, num_receivers, mpisize, mpirank);
+  sc_notify_init_input (array, receivers, num_receivers, mpisize, mpirank);
 
   /* the recursive algorithm works in-place */
   sc_notify_recursive_nary (nary, 0, 0, prod, array);
 
   /* convert internal format to output variables */
-  sc_notify_output (array, senders, num_senders, mpisize, mpirank);
-  sc_array_reset (array);
+  sc_notify_reset_output (array, senders, num_senders, mpisize, mpirank);
 
   return sc_MPI_SUCCESS;
 }
