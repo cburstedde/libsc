@@ -78,9 +78,9 @@ sc_notify_allgather (int *receivers, int num_receivers,
   return sc_MPI_SUCCESS;
 }
 
-static const int    sc_notify_nary_ntop = 4;
-static const int    sc_notify_nary_nint = 4;
-static const int    sc_notify_nary_nbot = 4;
+int                 sc_notify_nary_ntop = 4;
+int                 sc_notify_nary_nint = 4;
+int                 sc_notify_nary_nbot = 4;
 
 int
 sc_notify_nary_ext (int *receivers, int num_receivers,

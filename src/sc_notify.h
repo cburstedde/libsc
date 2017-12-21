@@ -28,6 +28,15 @@
 
 SC_EXTERN_C_BEGIN;
 
+/** Number of children at root node of nary tree; default is 2 */
+extern int          sc_notify_nary_ntop;
+
+/** Number of children at intermediate tree nodes; default is 2 */
+extern int          sc_notify_nary_nint;
+
+/** Number of children at deepest level of tree; default is 2 */
+extern int          sc_notify_nary_nbot;
+
 /** Collective call to notify a set of receiver ranks of current rank.
  * This version uses one call to sc_MPI_Allgather and one to sc_MPI_Allgatherv.
  * \see sc_notify
@@ -43,7 +52,7 @@ int                 sc_notify_allgather (int *receivers, int num_receivers,
                                          int *senders, int *num_senders,
                                          sc_MPI_Comm mpicomm);
 
-/** Collective call to notif a set of receiver ranks of current rank.
+/** Collective call to notify a set of receiver ranks of current rank.
  * This implementation uses an n-ary tree for reduced latency.
  * This function allows to configure the mode of operation in detail.
  * \param [in] receivers        Sorted and unique array of MPI ranks to inform.
@@ -67,10 +76,12 @@ int                 sc_notify_nary_ext (int *receivers, int num_receivers,
                                         int ntop, int nint, int nbot,
                                         sc_MPI_Comm mpicomm);
 
-/** Collective call to notif a set of receiver ranks of current rank.
+/** Collective call to notify a set of receiver ranks of current rank.
  * This implementation uses an n-ary tree for reduced latency.
- * It chooses default parameters for \ref sc_notify_nary_ext.
- * It can serve as drop-in replacement for \ref sc_notify.
+ * It chooses selected parameters for \ref sc_notify_nary_ext, namely
+ * \ref sc_notify_nary_ntop, \ref sc_notify_nary_nint, \ref sc_notify_nary_nbot.
+ * These may be overridden by the user.
+ * This function serves as drop-in replacement for \ref sc_notify.
  * \param [in] receivers        Sorted and unique array of MPI ranks to inform.
  * \param [in] num_receivers    Count of ranks contained in receivers.
  * \param [in,out] senders      Array of at least size sc_MPI_Comm_size.
