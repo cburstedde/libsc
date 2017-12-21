@@ -25,6 +25,10 @@
 #include <sc_functions.h>
 #include <sc_notify.h>
 
+int                 sc_notify_nary_ntop = 4;
+int                 sc_notify_nary_nint = 4;
+int                 sc_notify_nary_nbot = 4;
+
 int
 sc_notify_allgather (int *receivers, int num_receivers,
                      int *senders, int *num_senders, sc_MPI_Comm mpicomm)
@@ -76,100 +80,6 @@ sc_notify_allgather (int *receivers, int num_receivers,
   SC_FREE (all_receivers);
 
   return sc_MPI_SUCCESS;
-}
-
-int                 sc_notify_nary_ntop = 4;
-int                 sc_notify_nary_nint = 4;
-int                 sc_notify_nary_nbot = 4;
-
-int
-sc_notify_nary_ext (int *receivers, int num_receivers,
-                    int *senders, int *num_senders,
-                    int ntop, int nint, int nbot, sc_MPI_Comm mpicomm)
-{
-  int                 size, rank;
-  int                 mpiret;
-  int                 depth;
-  int                 prod, i;
-  int                 gsize, grank, group;
-  int                 q;
-
-  SC_ASSERT (receivers != NULL);
-  SC_ASSERT (senders != NULL);
-  SC_ASSERT (num_senders != NULL);
-
-  mpiret = sc_MPI_Comm_size (mpicomm, &size);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
-  SC_CHECK_MPI (mpiret);
-
-  SC_ASSERT (0 <= num_receivers && num_receivers <= size);
-  SC_ASSERT (ntop >= 2 && nint >= 2 && nbot >= 2);
-
-  /* determine depth of tree */
-  if (size == 1) {
-    /* depth = 0; */
-    if (num_receivers > 0) {
-      SC_ASSERT (num_receivers == 1);
-      SC_ASSERT (receivers[0] == 0);
-      senders[0] = 0;
-    }
-    *num_senders = num_receivers;
-
-    /* we return when there is only one process */
-    return MPI_SUCCESS;
-  }
-  if (size <= nbot) {
-    depth = 1;
-    prod = nbot;
-  }
-  else {
-    depth = 2;
-    for (prod = nbot * ntop; prod < size; prod *= nint) {
-      ++depth;
-    }
-    SC_ASSERT (size <= prod);
-    SC_ASSERT (prod == ntop * sc_intpow (nint, depth - 2) * nbot);
-    SC_ASSERT (depth < 3 || size > ntop * sc_intpow (nint, depth - 3) * nbot);
-  }
-
-  /* send top round */
-  SC_ASSERT (prod % ntop == 0);
-  gsize = prod / ntop;
-  group = rank / gsize;
-  SC_ASSERT (0 <= group && group < ntop);
-  grank = rank - group * gsize;
-  SC_ASSERT (0 <= grank && grank < gsize);
-  for (i = 0; i < ntop; ++i) {
-    if (i == group) {
-      /* don't send to my own group */
-      continue;
-    }
-    q = rank + (i - group) * gsize;
-    SC_ASSERT (0 <= q && q < prod);
-    if (q >= size) {
-      /* don't send to nonexisting receiver ranks */ ;
-      continue;
-    }
-
-    /* pack data into message and send it to q */
-  }
-
-  /* loop over probe and receive messages; send again when ready */
-
-  /* done */
-  SC_ABORT ("Function sc_notify_nary_ext not yet implemented");
-}
-
-int
-sc_notify_nary (int *receivers, int num_receivers,
-                int *senders, int *num_senders, sc_MPI_Comm mpicomm)
-{
-  return sc_notify_nary_ext (receivers, num_receivers,
-                             senders, num_senders,
-                             sc_notify_nary_ntop,
-                             sc_notify_nary_nint,
-                             sc_notify_nary_nbot, mpicomm);
 }
 
 /** Internally used function to merge two data arrays.
@@ -526,4 +436,94 @@ sc_notify (int *receivers, int num_receivers,
   sc_array_reset (&output);
 
   return sc_MPI_SUCCESS;
+}
+
+int
+sc_notify_nary_ext (int *receivers, int num_receivers,
+                    int *senders, int *num_senders,
+                    int ntop, int nint, int nbot, sc_MPI_Comm mpicomm)
+{
+  int                 size, rank;
+  int                 mpiret;
+  int                 depth;
+  int                 prod, i;
+  int                 gsize, grank, group;
+  int                 q;
+
+  SC_ASSERT (receivers != NULL);
+  SC_ASSERT (senders != NULL);
+  SC_ASSERT (num_senders != NULL);
+
+  mpiret = sc_MPI_Comm_size (mpicomm, &size);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
+  SC_CHECK_MPI (mpiret);
+
+  SC_ASSERT (0 <= num_receivers && num_receivers <= size);
+  SC_ASSERT (ntop >= 2 && nint >= 2 && nbot >= 2);
+
+  /* determine depth of tree */
+  if (size == 1) {
+    /* depth = 0; */
+    if (num_receivers > 0) {
+      SC_ASSERT (num_receivers == 1);
+      SC_ASSERT (receivers[0] == 0);
+      senders[0] = 0;
+    }
+    *num_senders = num_receivers;
+
+    /* we return when there is only one process */
+    return MPI_SUCCESS;
+  }
+  if (size <= nbot) {
+    depth = 1;
+    prod = nbot;
+  }
+  else {
+    depth = 2;
+    for (prod = nbot * ntop; prod < size; prod *= nint) {
+      ++depth;
+    }
+    SC_ASSERT (size <= prod);
+    SC_ASSERT (prod == ntop * sc_intpow (nint, depth - 2) * nbot);
+    SC_ASSERT (depth < 3 || size > ntop * sc_intpow (nint, depth - 3) * nbot);
+  }
+
+  /* send top round */
+  SC_ASSERT (prod % ntop == 0);
+  gsize = prod / ntop;
+  group = rank / gsize;
+  SC_ASSERT (0 <= group && group < ntop);
+  grank = rank - group * gsize;
+  SC_ASSERT (0 <= grank && grank < gsize);
+  for (i = 0; i < ntop; ++i) {
+    if (i == group) {
+      /* don't send to my own group */
+      continue;
+    }
+    q = rank + (i - group) * gsize;
+    SC_ASSERT (0 <= q && q < prod);
+    if (q >= size) {
+      /* don't send to nonexisting receiver ranks */ ;
+      continue;
+    }
+
+    /* pack data into message and send it to q */
+  }
+
+  /* loop over probe and receive messages; send again when ready */
+
+  /* done */
+  SC_ABORT ("Function sc_notify_nary_ext not yet implemented");
+}
+
+int
+sc_notify_nary (int *receivers, int num_receivers,
+                int *senders, int *num_senders, sc_MPI_Comm mpicomm)
+{
+  return sc_notify_nary_ext (receivers, num_receivers,
+                             senders, num_senders,
+                             sc_notify_nary_ntop,
+                             sc_notify_nary_nint,
+                             sc_notify_nary_nbot, mpicomm);
 }
