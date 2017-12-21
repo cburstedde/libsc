@@ -25,9 +25,9 @@
 #include <sc_functions.h>
 #include <sc_notify.h>
 
-int                 sc_notify_nary_ntop = 4;
-int                 sc_notify_nary_nint = 4;
-int                 sc_notify_nary_nbot = 4;
+int                 sc_notify_nary_ntop = 2;
+int                 sc_notify_nary_nint = 2;
+int                 sc_notify_nary_nbot = 2;
 
 static void
 sc_array_init_invalid (sc_array_t * array)
