@@ -22,6 +22,54 @@
 */
 
 #include <sc_notify.h>
+#include <sc_statistics.h>
+
+/** Remove duplicates from an array of non-decreasing non-negative integers */
+static void
+sc_uniq (int *list, int *count)
+{
+  int                 incount, skip;
+  int                 prev_item;
+  int                 i;
+
+  SC_ASSERT (list != NULL);
+  SC_ASSERT (count != NULL);
+
+  incount = *count;
+  SC_ASSERT (0 <= incount);
+  if (incount == 0) {
+    return;
+  }
+
+  skip = 0;
+  prev_item = -1;
+  for (i = 0; i < incount; ++i) {
+    SC_ASSERT (list[i] >= 0);
+    SC_ASSERT (list[i] >= prev_item);
+
+    if (list[i] == prev_item) {
+      ++skip;
+      continue;
+    }
+    prev_item = list[i];
+    if (skip > 0) {
+      SC_ASSERT (i >= skip);
+      list[i - skip] = prev_item;
+    }
+  }
+
+  SC_ASSERT (skip < incount);
+  *count = incount - skip;
+}
+
+typedef enum sc_test_stats
+{
+  SC_STAT_NOTIFY_ALLG,
+  SC_STAT_NOTIFY_NARY,
+  SC_STAT_NOTIFY_NATI,
+  SC_STAT_NOTIFY_LAST
+}
+sc_test_stats_t;
 
 int
 main (int argc, char **argv)
@@ -38,6 +86,7 @@ main (int argc, char **argv)
   double              elapsed_nary;
   double              elapsed_native;
   sc_MPI_Comm         mpicomm;
+  sc_statinfo_t       stats[SC_STAT_NOTIFY_LAST];
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -49,6 +98,23 @@ main (int argc, char **argv)
 
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
+  /* grap parameters for notify_nary from command line */
+  ntop = nint = nbot = 2;
+  if (argc == 4) {
+    ntop = atoi (argv[1]);
+    nint = atoi (argv[2]);
+    nbot = atoi (argv[3]);
+    if (ntop < 2) {
+      sc_abort_collective ("First argument ntop must be at least 2");
+    }
+    if (nint < 2) {
+      sc_abort_collective ("Second argument nint must be at least 2");
+    }
+    if (nbot < 2) {
+      sc_abort_collective ("Third argument nbot must be at least 2");
+    }
+  }
+
   num_receivers = (mpirank * (mpirank % 100)) % 7;
   num_receivers = SC_MIN (num_receivers, mpisize);
   receivers = SC_ALLOC (int, num_receivers);
@@ -56,6 +122,7 @@ main (int argc, char **argv)
     receivers[i] = (3 * mpirank + 17 * i) % mpisize;
   }
   qsort (receivers, num_receivers, sizeof (int), sc_int_compare);
+  sc_uniq (receivers, &num_receivers);
 
   SC_GLOBAL_INFO ("Testing sc_notify_allgather\n");
   senders1 = SC_ALLOC (int, mpisize);
@@ -64,9 +131,13 @@ main (int argc, char **argv)
                                 senders1, &num_senders1, mpicomm);
   SC_CHECK_MPI (mpiret);
   elapsed_allgather += sc_MPI_Wtime ();
+  sc_stats_set1 (stats + SC_STAT_NOTIFY_ALLG, elapsed_allgather, "Allgather");
 
-  SC_GLOBAL_INFO ("Testing sc_notify_nary_ext\n");
-  ntop = nint = nbot = 4;
+  mpiret = sc_MPI_Barrier (mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  SC_GLOBAL_INFOF ("Testing sc_notify_nary_ext with %d %d %d\n",
+                   ntop, nint, nbot);
   senders2 = SC_ALLOC (int, mpisize);
   elapsed_nary = -sc_MPI_Wtime ();
   mpiret = sc_notify_nary_ext (receivers, num_receivers,
@@ -74,6 +145,10 @@ main (int argc, char **argv)
                                ntop, nint, nbot, mpicomm);
   SC_CHECK_MPI (mpiret);
   elapsed_nary += sc_MPI_Wtime ();
+  sc_stats_set1 (stats + SC_STAT_NOTIFY_NARY, elapsed_nary, "Nary");
+
+  mpiret = sc_MPI_Barrier (mpicomm);
+  SC_CHECK_MPI (mpiret);
 
   SC_GLOBAL_INFO ("Testing native sc_notify\n");
   senders3 = SC_ALLOC (int, mpisize);
@@ -82,6 +157,7 @@ main (int argc, char **argv)
                       senders3, &num_senders3, mpicomm);
   SC_CHECK_MPI (mpiret);
   elapsed_native += sc_MPI_Wtime ();
+  sc_stats_set1 (stats + SC_STAT_NOTIFY_NATI, elapsed_native, "Native");
 
   SC_CHECK_ABORT (num_senders1 == num_senders2, "Mismatch 12 sender count");
   SC_CHECK_ABORT (num_senders1 == num_senders3, "Mismatch 13 sender count");
@@ -95,9 +171,15 @@ main (int argc, char **argv)
   SC_FREE (senders2);
   SC_FREE (senders3);
 
+  sc_stats_compute (mpicomm, SC_STAT_NOTIFY_LAST, stats);
+  sc_stats_print (sc_package_id, SC_LP_STATISTICS,
+                  SC_STAT_NOTIFY_LAST, stats, 1, 1);
+
+#if 0
   SC_GLOBAL_STATISTICSF ("   notify_allgather %g\n", elapsed_allgather);
   SC_GLOBAL_STATISTICSF ("   notify_nary      %g\n", elapsed_nary);
   SC_GLOBAL_STATISTICSF ("   notify           %g\n", elapsed_native);
+#endif
 
   sc_finalize ();
 
