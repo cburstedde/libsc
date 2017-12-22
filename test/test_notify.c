@@ -66,8 +66,8 @@ typedef enum sc_test_stats
 {
   SC_STAT_NOTIFY_ALLG,
   SC_STAT_NOTIFY_NARY,
-  SC_STAT_NOTIFY_NATI,
   SC_STAT_NOTIFY_PAYL,
+  SC_STAT_NOTIFY_NATI,
   SC_STAT_NOTIFY_LAST
 }
 sc_test_stats_t;
