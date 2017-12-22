@@ -139,7 +139,7 @@ main (int argc, char **argv)
   SC_GLOBAL_INFOF ("Testing sc_notify_ext with %d %d %d\n", ntop, nint, nbot);
   senders2 = SC_ALLOC (int, mpisize);
   elapsed_nary = -sc_MPI_Wtime ();
-  sc_notify_ext (receivers, num_receivers, senders2, &num_senders2,
+  sc_notify_ext (receivers, num_receivers, senders2, &num_senders2, NULL,
                  ntop, nint, nbot, mpicomm);
   elapsed_nary += sc_MPI_Wtime ();
   sc_stats_set1 (stats + SC_STAT_NOTIFY_NARY, elapsed_nary, "Nary");

@@ -111,7 +111,7 @@ int
 sc_notify_nary (int *receivers, int num_receivers,
                 int *senders, int *num_senders, sc_MPI_Comm mpicomm)
 {
-  sc_notify_ext (receivers, num_receivers, senders, num_senders,
+  sc_notify_ext (receivers, num_receivers, senders, num_senders, NULL,
                  sc_notify_nary_ntop, sc_notify_nary_nint,
                  sc_notify_nary_nbot, mpicomm);
 
@@ -809,7 +809,7 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
 
 void
 sc_notify_ext (int *receivers, int num_receivers,
-               int *senders, int *num_senders,
+               int *senders, int *num_senders, sc_array_t * payload,
                int ntop, int nint, int nbot, sc_MPI_Comm mpicomm)
 {
   int                 mpiret;

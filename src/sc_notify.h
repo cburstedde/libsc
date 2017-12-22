@@ -24,7 +24,7 @@
 #ifndef SC_NOTIFY_H
 #define SC_NOTIFY_H
 
-#include <sc.h>
+#include <sc_containers.h>
 
 SC_EXTERN_C_BEGIN;
 
@@ -99,6 +99,11 @@ int                 sc_notify (int *receivers, int num_receivers,
  *                              On output it contains the notifying ranks,
  *                              whose number is returned in \b num_senders.
  * \param [out] num_senders     On output the number of notifying ranks.
+ * \param [in,out] payload      This array pointer may be NULL.
+ *                              If not, it must have \b num_receivers entries
+ *                              on input.  This will be communicated along.
+ *                              On output, the array is resized to \b
+ *                              *num_senders and contains the result.
  * \param [in] ntop             Number of children of the root node.
  *                              Only used if \b nbot leads to depth >= 2.
  * \param [in] nint             Number of children of intermediate tree node.
@@ -110,6 +115,7 @@ int                 sc_notify (int *receivers, int num_receivers,
  */
 void                sc_notify_ext (int *receivers, int num_receivers,
                                    int *senders, int *num_senders,
+                                   sc_array_t * payload,
                                    int ntop, int nint, int nbot,
                                    sc_MPI_Comm mpicomm);
 
