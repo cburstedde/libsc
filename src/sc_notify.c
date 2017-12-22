@@ -107,6 +107,17 @@ sc_notify_allgather (int *receivers, int num_receivers,
   return sc_MPI_SUCCESS;
 }
 
+int
+sc_notify_nary (int *receivers, int num_receivers,
+                int *senders, int *num_senders, sc_MPI_Comm mpicomm)
+{
+  sc_notify_ext (receivers, num_receivers, senders, num_senders,
+                 sc_notify_nary_ntop, sc_notify_nary_nint,
+                 sc_notify_nary_nbot, mpicomm);
+
+  return sc_MPI_SUCCESS;
+}
+
 /** Encode the receiver list into an array for input.
  * \param [out] input       This function initializes the array.
  *                          All prior content will be overwritten and lost.
@@ -865,15 +876,4 @@ sc_notify_ext (int *receivers, int num_receivers,
 
   /* convert internal format to output variables */
   sc_notify_reset_output (array, senders, num_senders, mpisize, mpirank);
-}
-
-int
-sc_notify_nary (int *receivers, int num_receivers,
-                int *senders, int *num_senders, sc_MPI_Comm mpicomm)
-{
-  sc_notify_ext (receivers, num_receivers, senders, num_senders,
-                 sc_notify_nary_ntop, sc_notify_nary_nint,
-                 sc_notify_nary_nbot, mpicomm);
-
-  return sc_MPI_SUCCESS;
 }

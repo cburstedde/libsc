@@ -28,18 +28,18 @@
 
 SC_EXTERN_C_BEGIN;
 
-/** Number of children at root node of nary tree; default is 2 */
+/** Number of children at root node of nary tree; initialized to 2 */
 extern int          sc_notify_nary_ntop;
 
-/** Number of children at intermediate tree nodes; default is 2 */
+/** Number of children at intermediate tree nodes; initialized to 2 */
 extern int          sc_notify_nary_nint;
 
-/** Number of children at deepest level of tree; default is 2 */
+/** Number of children at deepest level of tree; initialized to 2 */
 extern int          sc_notify_nary_nbot;
 
 /** Collective call to notify a set of receiver ranks of current rank.
  * This version uses one call to sc_MPI_Allgather and one to sc_MPI_Allgatherv.
- * \see sc_notify
+ * We provide hand-coded alternatives \ref sc_notify and \ref sc_notify_nary.
  * \param [in] receivers        Array of MPI ranks to inform.
  * \param [in] num_receivers    Count of ranks contained in receivers.
  * \param [in,out] senders      Array of at least size sc_MPI_Comm_size.
@@ -54,10 +54,10 @@ int                 sc_notify_allgather (int *receivers, int num_receivers,
 
 /** Collective call to notify a set of receiver ranks of current rank.
  * This implementation uses an n-ary tree for reduced latency.
- * It chooses selected parameters for \ref sc_notify_nary_ext, namely
- * \ref sc_notify_nary_ntop, \ref sc_notify_nary_nint, \ref sc_notify_nary_nbot.
- * These may be overridden by the user.
- * This function serves as drop-in replacement for \ref sc_notify.
+ * It chooses external global parameters to call \ref sc_notify_ext, namely
+ * \ref sc_notify_nary_ntop, \ref sc_notify_nary_nint, \ref
+ * sc_notify_nary_nbot.  These may be overridden by the user.
+ * This function serves as backwards-compatible replacement for \ref sc_notify.
  * \param [in] receivers        Sorted and unique array of MPI ranks to inform.
  * \param [in] num_receivers    Count of ranks contained in receivers.
  * \param [in,out] senders      Array of at least size sc_MPI_Comm_size.
@@ -74,6 +74,9 @@ int                 sc_notify_nary (int *receivers, int num_receivers,
 /** Collective call to notify a set of receiver ranks of current rank.
  * More generally, this function serves to transpose the nonzero pattern of a
  * matrix, where each row and column corresponds to an MPI rank in order.
+ * We use a binary tree to construct the communication pattern.
+ * This minimizes the number of messages at the cost of more messages
+ * compared to a fatter tree such as configurable with \ref sc_notify_nary.
  * \param [in] receivers        Sorted and unique array of MPI ranks to inform.
  * \param [in] num_receivers    Count of ranks contained in receivers.
  * \param [in,out] senders      Array of at least size sc_MPI_Comm_size.
