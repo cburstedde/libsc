@@ -144,7 +144,7 @@ sc_notify_init_input (sc_array_t * input, int *receivers, int num_receivers,
   SC_ASSERT (payload == NULL || (int) payload->elem_count == num_receivers);
   withp = payload != NULL;
 
-  sc_array_init_size (input, sizeof (int), (3 + withp) * num_receivers);
+  sc_array_init_count (input, sizeof (int), (3 + withp) * num_receivers);
   rec = -1;
   for (i = 0; i < num_receivers; ++i) {
     SC_ASSERT (rec < receivers[i]);
@@ -669,12 +669,12 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
     SC_ASSERT (nrecv >= mypart);
 
     /* make room for one direct assignment buffer on same proc */
-    sc_array_init_size (&recvbufs, sizeof (sc_array_t), nrecv + 1);
+    sc_array_init_count (&recvbufs, sizeof (sc_array_t), nrecv + 1);
 
     /* prepare send buffers */
     nsent = 0;
-    sc_array_init_size (&sendbufs, sizeof (sc_array_t), divn);
-    sc_array_init_size (&sendreqs, sizeof (sc_MPI_Request), divn);
+    sc_array_init_count (&sendbufs, sizeof (sc_array_t), divn);
+    sc_array_init_count (&sendreqs, sizeof (sc_MPI_Request), divn);
     for (j = 0; j < divn; ++j) {
       /* all send buffers are initialized empty */
       sendbuf = (sc_array_t *) sc_array_index_int (&sendbufs, j);
@@ -785,7 +785,7 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
       mpiret = sc_MPI_Get_count (&instatus, sc_MPI_INT, &count);
       SC_CHECK_MPI (mpiret);
       recvbuf = (sc_array_t *) sc_array_index_int (&recvbufs, j);
-      sc_array_init_size (recvbuf, sizeof (int), (size_t) count);
+      sc_array_init_count (recvbuf, sizeof (int), (size_t) count);
       mpiret = sc_MPI_Recv (recvbuf->array, count, sc_MPI_INT, source,
                             tag, mpicomm, sc_MPI_STATUS_IGNORE);
       SC_CHECK_MPI (mpiret);
