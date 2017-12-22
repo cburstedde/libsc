@@ -54,7 +54,7 @@ sc_array_new_count (size_t elem_size, size_t elem_count)
 
   array = SC_ALLOC (sc_array_t, 1);
 
-  sc_array_init_size (array, elem_size, elem_count);
+  sc_array_init_count (array, elem_size, elem_count);
 
   return array;
 }
@@ -106,6 +106,12 @@ sc_array_init (sc_array_t * array, size_t elem_size)
 void
 sc_array_init_size (sc_array_t * array, size_t elem_size, size_t elem_count)
 {
+  sc_array_init_count (array, elem_size, elem_count);
+}
+
+void
+sc_array_init_count (sc_array_t * array, size_t elem_size, size_t elem_count)
+{
   SC_ASSERT (elem_size > 0);
 
   array->elem_size = elem_size;
@@ -136,6 +142,12 @@ sc_array_init_data (sc_array_t * view, void *base, size_t elem_size,
   view->elem_count = elem_count;
   view->byte_alloc = -(ssize_t) (elem_count * elem_size + 1);
   view->array = (char *) base;
+}
+
+void
+sc_array_memset (sc_array_t * array, int c)
+{
+  memset (array->array, c, array->elem_count * array->elem_size);
 }
 
 void
