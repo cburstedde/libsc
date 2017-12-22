@@ -101,7 +101,8 @@ int                 sc_notify (int *receivers, int num_receivers,
  * \param [out] num_senders     On output the number of notifying ranks.
  * \param [in,out] payload      This array pointer may be NULL.
  *                              If not, it must have \b num_receivers entries
- *                              on input.  This will be communicated along.
+ *                              of sizeof (int) on input.  This data will be
+ *                              communicated to the receivers.
  *                              On output, the array is resized to \b
  *                              *num_senders and contains the result.
  * \param [in] ntop             Number of children of the root node.
