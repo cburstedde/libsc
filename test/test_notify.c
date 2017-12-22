@@ -67,6 +67,7 @@ typedef enum sc_test_stats
   SC_STAT_NOTIFY_ALLG,
   SC_STAT_NOTIFY_NARY,
   SC_STAT_NOTIFY_NATI,
+  SC_STAT_NOTIFY_PAYL,
   SC_STAT_NOTIFY_LAST
 }
 sc_test_stats_t;
@@ -80,12 +81,15 @@ main (int argc, char **argv)
   int                *senders1, num_senders1;
   int                *senders2, num_senders2;
   int                *senders3, num_senders3;
+  int                *senders4, num_senders4;
   int                *receivers, num_receivers;
   int                 ntop, nint, nbot;
   double              elapsed_allgather;
   double              elapsed_nary;
   double              elapsed_native;
+  double              elapsed_payl;
   sc_MPI_Comm         mpicomm;
+  sc_array_t         *payload;
   sc_statinfo_t       stats[SC_STAT_NOTIFY_LAST];
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -147,6 +151,23 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Barrier (mpicomm);
   SC_CHECK_MPI (mpiret);
 
+  SC_GLOBAL_INFOF ("Testing sc_notify_ext with %d %d %d and payload\n",
+                   ntop, nint, nbot);
+  senders4 = SC_ALLOC (int, mpisize);
+  elapsed_payl = -sc_MPI_Wtime ();
+  payload = sc_array_new_size (sizeof (int), num_receivers);
+  for (i = 0; i < num_receivers; ++i) {
+    *(int *) sc_array_index_int (payload, i) = 2 * mpirank + 3;
+  }
+  sc_notify_ext (receivers, num_receivers, senders4, &num_senders4, payload,
+                 ntop, nint, nbot, mpicomm);
+  elapsed_payl += sc_MPI_Wtime ();
+  SC_ASSERT ((int) payload->elem_count == num_senders4);
+  sc_stats_set1 (stats + SC_STAT_NOTIFY_PAYL, elapsed_payl, "Payload");
+
+  mpiret = sc_MPI_Barrier (mpicomm);
+  SC_CHECK_MPI (mpiret);
+
   SC_GLOBAL_INFO ("Testing native sc_notify\n");
   senders3 = SC_ALLOC (int, mpisize);
   elapsed_native = -sc_MPI_Wtime ();
@@ -158,25 +179,25 @@ main (int argc, char **argv)
 
   SC_CHECK_ABORT (num_senders1 == num_senders2, "Mismatch 12 sender count");
   SC_CHECK_ABORT (num_senders1 == num_senders3, "Mismatch 13 sender count");
+  SC_CHECK_ABORT (num_senders1 == num_senders4, "Mismatch 14 sender count");
   for (i = 0; i < num_senders1; ++i) {
     SC_CHECK_ABORTF (senders1[i] == senders2[i], "Mismatch 12 sender %d", i);
     SC_CHECK_ABORTF (senders1[i] == senders3[i], "Mismatch 13 sender %d", i);
+    SC_CHECK_ABORTF (senders1[i] == senders4[i], "Mismatch 14 sender %d", i);
+    SC_CHECK_ABORTF (*(int *) sc_array_index_int (payload, i) ==
+                     2 * senders4[i] + 3, "Mismatch payload %d", i);
   }
+  sc_array_destroy (payload);
 
   SC_FREE (receivers);
   SC_FREE (senders1);
   SC_FREE (senders2);
   SC_FREE (senders3);
+  SC_FREE (senders4);
 
   sc_stats_compute (mpicomm, SC_STAT_NOTIFY_LAST, stats);
   sc_stats_print (sc_package_id, SC_LP_STATISTICS,
                   SC_STAT_NOTIFY_LAST, stats, 1, 1);
-
-#if 0
-  SC_GLOBAL_STATISTICSF ("   notify_allgather %g\n", elapsed_allgather);
-  SC_GLOBAL_STATISTICSF ("   notify_nary      %g\n", elapsed_nary);
-  SC_GLOBAL_STATISTICSF ("   notify           %g\n", elapsed_native);
-#endif
 
   sc_finalize ();
 
