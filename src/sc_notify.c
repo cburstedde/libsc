@@ -21,7 +21,6 @@
   02110-1301, USA.
 */
 
-#include <sc_containers.h>
 #include <sc_functions.h>
 #include <sc_notify.h>
 
@@ -129,8 +128,9 @@ sc_notify_nary (int *receivers, int num_receivers,
  */
 static void
 sc_notify_init_input (sc_array_t * input, int *receivers, int num_receivers,
-                      int mpisize, int mpirank)
+                      sc_array_t * payload, int mpisize, int mpirank)
 {
+  int                 withp;
   int                 rec;
   int                 i;
   int                *pint;
@@ -139,17 +139,28 @@ sc_notify_init_input (sc_array_t * input, int *receivers, int num_receivers,
 
   SC_ASSERT (num_receivers >= 0);
   SC_ASSERT (num_receivers == 0 || receivers != NULL);
+  SC_ASSERT (0 <= mpirank && mpirank < mpisize);
 
-  sc_array_init_size (input, sizeof (int), 3 * num_receivers);
+  SC_ASSERT (payload == NULL || (int) payload->elem_count == num_receivers);
+  withp = payload != NULL;
+
+  sc_array_init_size (input, sizeof (int), (3 + withp) * num_receivers);
   rec = -1;
   for (i = 0; i < num_receivers; ++i) {
     SC_ASSERT (rec < receivers[i]);
     rec = receivers[i];
     SC_ASSERT (0 <= rec && rec < mpisize);
-    pint = (int *) sc_array_index_int (input, 3 * i);
+    pint = (int *) sc_array_index_int (input, (3 + withp) * i);
     pint[0] = rec;
     pint[1] = 1;
     pint[2] = mpirank;
+    if (withp) {
+      pint[3] = *(int *) sc_array_index_int (payload, i);
+    }
+  }
+
+  if (payload != NULL) {
+    sc_array_reset (payload);
   }
 }
 
@@ -163,17 +174,27 @@ sc_notify_init_input (sc_array_t * input, int *receivers, int num_receivers,
  */
 static void
 sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
-                        int mpisize, int mpirank)
+                        sc_array_t * payload, int mpisize, int mpirank)
 {
+#ifdef SC_ENABLE_DEBUG
+  int                 withp, multi;
+#endif
   int                 found_num_senders;
   int                 i;
   int                *pint;
 
   SC_ASSERT (output != NULL);
   SC_ASSERT (output->elem_size == sizeof (int));
+  SC_ASSERT (0 <= mpirank && mpirank < mpisize);
 
   SC_ASSERT (senders != NULL);
   SC_ASSERT (num_senders != NULL);
+
+#ifdef SC_ENABLE_DEBUG
+  SC_ASSERT (payload == NULL || (int) payload->elem_count == 0);
+  withp = payload != NULL;
+  multi = 1 + withp;
+#endif
 
   found_num_senders = 0;
   if (output->elem_count > 0) {
@@ -181,9 +202,17 @@ sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
     SC_ASSERT (pint[0] == mpirank);
     found_num_senders = pint[1];
     SC_ASSERT (found_num_senders > 0);
-    SC_ASSERT (output->elem_count == 2 + (size_t) found_num_senders);
-    for (i = 0; i < found_num_senders; ++i) {
-      senders[i] = pint[2 + i];
+    SC_ASSERT ((int) output->elem_count == 2 + multi * found_num_senders);
+
+    if (payload == NULL) {
+      memcpy (senders, pint + 2, found_num_senders * sizeof (int));
+    }
+    else {
+      sc_array_resize (payload, found_num_senders);
+      for (i = 0; i < found_num_senders; ++i) {
+        senders[i] = pint[2 + 2 * i];
+        *(int *) sc_array_index_int (payload, i) = pint[3 + 2 * i];
+      }
     }
   }
   *num_senders = found_num_senders;
@@ -193,20 +222,26 @@ sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
 
 /*
  * Format of variable-length records:
- * forall(torank): (torank, howmanyfroms, listoffromranks).
+ * forall(torank): (torank, howmanyfroms, listof(fromrank, payload)).
  * The records must be ordered ascending by torank.
+ * The payload is optional and depends on the calling context via \b withp.
  */
 static void
-sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second)
+sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second,
+                 int withp)
 {
   int                 i, ir, j, jr, k;
   int                 torank, numfroms;
+  int                 multi, itemlen;
   int                *pint, *psec, *pout;
 
   SC_ASSERT (input->elem_size == sizeof (int));
   SC_ASSERT (second->elem_size == sizeof (int));
   SC_ASSERT (output->elem_size == sizeof (int));
   SC_ASSERT (output->elem_count == 0);
+
+  SC_ASSERT (withp == 0 || withp == 1);
+  multi = 1 + withp;
 
   i = ir = 0;
   torank = -1;
@@ -216,7 +251,7 @@ sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second)
       /* ignore data that was sent to the peer earlier */
       pint = (int *) sc_array_index_int (input, i);
       if (pint[0] == -1) {
-        i += 2 + pint[1];
+        i += 2 + multi * pint[1];
         SC_ASSERT (i <= (int) input->elem_count);
         pint = NULL;
       }
@@ -252,29 +287,39 @@ sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second)
         SC_ASSERT (torank < pint[0] && pint[0] == psec[0]);
         torank = pint[0];
         SC_ASSERT (pint[1] > 0 && psec[1] > 0);
-        SC_ASSERT (i + 2 + pint[1] <= (int) input->elem_count);
-        SC_ASSERT (ir + 2 + psec[1] <= (int) second->elem_count);
+        SC_ASSERT (i + 2 + multi * pint[1] <= (int) input->elem_count);
+        SC_ASSERT (ir + 2 + multi * psec[1] <= (int) second->elem_count);
         numfroms = pint[1] + psec[1];
-        pout = (int *) sc_array_push_count (output, 2 + numfroms);
+        itemlen = 2 + multi * numfroms;
+        pout = (int *) sc_array_push_count (output, itemlen);
         pout[0] = torank;
         pout[1] = numfroms;
         k = 2;
         j = jr = 0;
 
         while (j < pint[1] || jr < psec[1]) {
-          SC_ASSERT (j >= pint[1] || jr >= psec[1]
-                     || pint[2 + j] != psec[2 + jr]);
-          if (j < pint[1] && (jr >= psec[1] || pint[2 + j] < psec[2 + jr])) {
-            pout[k++] = pint[2 + j++];
+          SC_ASSERT (j >= pint[1] || jr >= psec[1] ||
+                     pint[2 + multi * j] != psec[2 + multi * jr]);
+          if (j < pint[1] &&
+              (jr >= psec[1] || pint[2 + multi * j] < psec[2 + multi * jr])) {
+            pout[k++] = pint[2 + multi * j];
+            if (withp) {
+              pout[k++] = pint[3 + 2 * j];
+            }
+            ++j;
           }
           else {
             SC_ASSERT (jr < psec[1]);
-            pout[k++] = psec[2 + jr++];
+            pout[k++] = psec[2 + multi * jr];
+            if (withp) {
+              pout[k++] = psec[3 + 2 * jr];
+            }
+            ++jr;
           }
         }
-        SC_ASSERT (k == 2 + numfroms);
-        i += 2 + pint[1];
-        ir += 2 + psec[1];
+        SC_ASSERT (k == itemlen);
+        i += 2 + multi * pint[1];
+        ir += 2 + multi * psec[1];
         continue;
       }
     }
@@ -284,23 +329,25 @@ sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second)
       SC_ASSERT (pint != NULL);
       SC_ASSERT (torank < pint[0]);
       torank = pint[0];
-      SC_ASSERT (i + 2 + pint[1] <= (int) input->elem_count);
+      SC_ASSERT (i + 2 + multi * pint[1] <= (int) input->elem_count);
       numfroms = pint[1];
       SC_ASSERT (numfroms > 0);
-      pout = (int *) sc_array_push_count (output, 2 + numfroms);
-      memcpy (pout, pint, (2 + numfroms) * sizeof (int));
-      i += 2 + numfroms;
+      itemlen = 2 + multi * numfroms;
+      pout = (int *) sc_array_push_count (output, itemlen);
+      memcpy (pout, pint, itemlen * sizeof (int));
+      i += itemlen;
     }
     else {
       SC_ASSERT (pint == NULL);
       SC_ASSERT (torank < psec[0]);
       torank = psec[0];
-      SC_ASSERT (ir + 2 + psec[1] <= (int) second->elem_count);
+      SC_ASSERT (ir + 2 + multi * psec[1] <= (int) second->elem_count);
       numfroms = psec[1];
       SC_ASSERT (numfroms > 0);
-      pout = (int *) sc_array_push_count (output, 2 + numfroms);
-      memcpy (pout, psec, (2 + numfroms) * sizeof (int));
-      ir += 2 + numfroms;
+      itemlen = 2 + multi * numfroms;
+      pout = (int *) sc_array_push_count (output, itemlen);
+      memcpy (pout, psec, itemlen * sizeof (int));
+      ir += itemlen;
     }
   }
   SC_ASSERT (i == (int) input->elem_count);
@@ -423,7 +470,7 @@ sc_notify_recursive (sc_MPI_Comm mpicomm, int start, int me, int length,
       if (peer2 >= 0) {
         /* merge the owned and received arrays */
         sc_array_init (&morebuf, sizeof (int));
-        sc_notify_merge (&morebuf, array, recvbuf);
+        sc_notify_merge (&morebuf, array, recvbuf, 0);
         sc_array_reset (array);
 
         /* receive second message */
@@ -438,13 +485,13 @@ sc_notify_recursive (sc_MPI_Comm mpicomm, int start, int me, int length,
         SC_CHECK_MPI (mpiret);
 
         /* merge the second received array */
-        sc_notify_merge (array, &morebuf, recvbuf);
+        sc_notify_merge (array, &morebuf, recvbuf, 0);
         sc_array_reset (&morebuf);
       }
     }
     if (peer2 == -1) {
       sc_array_init (&morebuf, sizeof (int));
-      sc_notify_merge (&morebuf, array, recvbuf);
+      sc_notify_merge (&morebuf, array, recvbuf, 0);
       sc_array_reset (array);
       *array = morebuf;
     }
@@ -502,13 +549,15 @@ sc_notify (int *receivers, int num_receivers,
   SC_ASSERT (pow2length / 2 < mpisize && mpisize <= pow2length);
 
   /* convert input variables into internal format */
-  sc_notify_init_input (&array, receivers, num_receivers, mpisize, mpirank);
+  sc_notify_init_input (&array, receivers, num_receivers, NULL,
+                        mpisize, mpirank);
 
   /* execute the recursive algorithm */
   sc_notify_recursive (mpicomm, 0, mpirank, pow2length, mpisize, &array);
 
   /* convert internal format to output variables */
-  sc_notify_reset_output (&array, senders, num_senders, mpisize, mpirank);
+  sc_notify_reset_output (&array, senders, num_senders, NULL,
+                          mpisize, mpirank);
 
   return sc_MPI_SUCCESS;
 }
@@ -520,6 +569,7 @@ typedef struct sc_notify_nary
   int                 mpirank;
   int                 ntop, nint, nbot;
   int                 depth;
+  int                 withp;
 }
 sc_notify_nary_t;
 
@@ -543,7 +593,7 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
   int                 torank, numfroms;
 #ifdef SC_ENABLE_DEBUG
   int                 fromrank, num_out, missing;
-  int                 freed;
+  int                 freed, multi;
 #endif
   int                 peer, source;
   int                 tag, count;
@@ -561,6 +611,7 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
   int                 remaining;
   int                 nsent, nrecv;
   int                 expon, power;
+  int                 itemlen;
   sc_array_t          sendbufs, recvbufs;
   sc_array_t          sendreqs;
   sc_array_t         *aone, *atwo;
@@ -668,12 +719,13 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
       SC_ASSERT (torank % lengthn == me % lengthn);
       numfroms = pint[1];
       SC_ASSERT (numfroms > 0);
+      itemlen = 2 + (1 + nary->withp) * numfroms;
       topart = (torank % length) / lengthn;
       sendbuf = (sc_array_t *) sc_array_index_int
         (topart == mypart ? &recvbufs : &sendbufs, topart);
-      pout = (int *) sc_array_push_count (sendbuf, 2 + numfroms);
-      memcpy (pout, pint, (2 + numfroms) * sizeof (int));
-      i += 2 + numfroms;
+      pout = (int *) sc_array_push_count (sendbuf, itemlen);
+      memcpy (pout, pint, itemlen * sizeof (int));
+      i += itemlen;
     }
     SC_ASSERT (i == num_ta);
     sc_array_reset (array);
@@ -751,7 +803,7 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
         aone = (sc_array_t *) sc_array_index_int (&recvbufs, i);
         atwo = (sc_array_t *) sc_array_index_int (&recvbufs, i + power);
         sc_array_init (array, sizeof (int));
-        sc_notify_merge (array, aone, atwo);
+        sc_notify_merge (array, aone, atwo, nary->withp);
 
         /* the surviving array lives on in aone */
         sc_array_reset (aone);
@@ -797,13 +849,15 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
     SC_ASSERT (torank % length == me % length);
     numfroms = pint[1];
     SC_ASSERT (numfroms > 0);
+    multi = 1 + nary->withp;
     fromrank = -1;
     for (j = 0; j < numfroms; ++j) {
-      SC_ASSERT (fromrank < pint[2 + j]);
-      fromrank = pint[2 + j];
+      SC_ASSERT (fromrank < pint[2 + multi * j]);
+      fromrank = pint[2 + multi * j];
     }
-    i += 2 + numfroms;
+    i += 2 + multi * numfroms;
   }
+  SC_ASSERT (i == num_out);
 #endif
 }
 
@@ -820,6 +874,9 @@ sc_notify_ext (int *receivers, int num_receivers,
 
   SC_ASSERT (num_receivers >= 0);
   SC_ASSERT (senders != NULL && num_senders != NULL);
+  SC_ASSERT (payload == NULL ||
+             (payload->elem_size == sizeof (int) &&
+              (int) payload->elem_count == num_receivers));
 
   mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
@@ -867,13 +924,16 @@ sc_notify_ext (int *receivers, int num_receivers,
   nary->nint = nint;
   nary->nbot = nbot;
   nary->depth = depth;
+  nary->withp = payload != NULL;
 
   /* convert input variables into internal format */
-  sc_notify_init_input (array, receivers, num_receivers, mpisize, mpirank);
+  sc_notify_init_input (array, receivers, num_receivers, payload,
+                        mpisize, mpirank);
 
   /* the recursive algorithm works in-place */
   sc_notify_recursive_nary (nary, 0, 0, prod, array);
 
   /* convert internal format to output variables */
-  sc_notify_reset_output (array, senders, num_senders, mpisize, mpirank);
+  sc_notify_reset_output (array, senders, num_senders, payload,
+                          mpisize, mpirank);
 }
