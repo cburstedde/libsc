@@ -136,14 +136,11 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Barrier (mpicomm);
   SC_CHECK_MPI (mpiret);
 
-  SC_GLOBAL_INFOF ("Testing sc_notify_nary_ext with %d %d %d\n",
-                   ntop, nint, nbot);
+  SC_GLOBAL_INFOF ("Testing sc_notify_ext with %d %d %d\n", ntop, nint, nbot);
   senders2 = SC_ALLOC (int, mpisize);
   elapsed_nary = -sc_MPI_Wtime ();
-  mpiret = sc_notify_nary_ext (receivers, num_receivers,
-                               senders2, &num_senders2,
-                               ntop, nint, nbot, mpicomm);
-  SC_CHECK_MPI (mpiret);
+  sc_notify_ext (receivers, num_receivers, senders2, &num_senders2,
+                 ntop, nint, nbot, mpicomm);
   elapsed_nary += sc_MPI_Wtime ();
   sc_stats_set1 (stats + SC_STAT_NOTIFY_NARY, elapsed_nary, "Nary");
 

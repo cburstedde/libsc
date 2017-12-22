@@ -796,10 +796,10 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
 #endif
 }
 
-int
-sc_notify_nary_ext (int *receivers, int num_receivers,
-                    int *senders, int *num_senders,
-                    int ntop, int nint, int nbot, sc_MPI_Comm mpicomm)
+void
+sc_notify_ext (int *receivers, int num_receivers,
+               int *senders, int *num_senders,
+               int ntop, int nint, int nbot, sc_MPI_Comm mpicomm)
 {
   int                 mpiret;
   int                 mpisize, mpirank;
@@ -826,7 +826,7 @@ sc_notify_nary_ext (int *receivers, int num_receivers,
     *num_senders = num_receivers;
 
     /* we return if there is only one process */
-    return sc_MPI_SUCCESS;
+    return;
   }
   if (mpisize <= nbot) {
     depth = 1;
@@ -865,17 +865,15 @@ sc_notify_nary_ext (int *receivers, int num_receivers,
 
   /* convert internal format to output variables */
   sc_notify_reset_output (array, senders, num_senders, mpisize, mpirank);
-
-  return sc_MPI_SUCCESS;
 }
 
 int
 sc_notify_nary (int *receivers, int num_receivers,
                 int *senders, int *num_senders, sc_MPI_Comm mpicomm)
 {
-  return sc_notify_nary_ext (receivers, num_receivers,
-                             senders, num_senders,
-                             sc_notify_nary_ntop,
-                             sc_notify_nary_nint,
-                             sc_notify_nary_nbot, mpicomm);
+  sc_notify_ext (receivers, num_receivers, senders, num_senders,
+                 sc_notify_nary_ntop, sc_notify_nary_nint,
+                 sc_notify_nary_nbot, mpicomm);
+
+  return sc_MPI_SUCCESS;
 }
