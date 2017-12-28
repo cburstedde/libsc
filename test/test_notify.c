@@ -89,8 +89,7 @@ main (int argc, char **argv)
   double              elapsed_native;
   double              elapsed_payl;
   sc_MPI_Comm         mpicomm;
-  sc_array_t         *rec2, *snd2, *rec4;
-  sc_array_t         *payload;
+  sc_array_t         *rec2, *snd2, *rec4, *pay4;
   sc_statinfo_t       stats[SC_STAT_NOTIFY_LAST];
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -157,17 +156,17 @@ main (int argc, char **argv)
   SC_GLOBAL_INFOF ("Testing sc_notify_ext with %d %d %d and payload\n",
                    ntop, nint, nbot);
   rec4 = sc_array_new_count (sizeof (int), num_receivers);
-  payload = sc_array_new_size (sizeof (int), num_receivers);
+  pay4 = sc_array_new_count (sizeof (int), num_receivers);
   for (i = 0; i < num_receivers; ++i) {
     *(int *) sc_array_index_int (rec4, i) = receivers[i];
-    *(int *) sc_array_index_int (payload, i) = 2 * mpirank + 3;
+    *(int *) sc_array_index_int (pay4, i) = 2 * mpirank + 3;
   }
   elapsed_payl = -sc_MPI_Wtime ();
-  sc_notify_ext (rec4, NULL, payload, ntop, nint, nbot, mpicomm);
+  sc_notify_ext (rec4, NULL, pay4, ntop, nint, nbot, mpicomm);
   elapsed_payl += sc_MPI_Wtime ();
   senders4 = (int *) rec4->array;
   num_senders4 = (int) rec4->elem_count;
-  SC_ASSERT ((int) payload->elem_count == num_senders4);
+  SC_ASSERT ((int) pay4->elem_count == num_senders4);
   sc_stats_set1 (stats + SC_STAT_NOTIFY_PAYL, elapsed_payl, "Payload");
 
   mpiret = sc_MPI_Barrier (mpicomm);
@@ -189,7 +188,7 @@ main (int argc, char **argv)
     SC_CHECK_ABORTF (senders1[i] == senders2[i], "Mismatch 12 sender %d", i);
     SC_CHECK_ABORTF (senders1[i] == senders3[i], "Mismatch 13 sender %d", i);
     SC_CHECK_ABORTF (senders1[i] == senders4[i], "Mismatch 14 sender %d", i);
-    SC_CHECK_ABORTF (*(int *) sc_array_index_int (payload, i) ==
+    SC_CHECK_ABORTF (*(int *) sc_array_index_int (pay4, i) ==
                      2 * senders4[i] + 3, "Mismatch payload %d", i);
   }
 
@@ -199,7 +198,7 @@ main (int argc, char **argv)
   sc_array_destroy (snd2);
   SC_FREE (senders3);
   sc_array_destroy (rec4);
-  sc_array_destroy (payload);
+  sc_array_destroy (pay4);
 
   sc_stats_compute (mpicomm, SC_STAT_NOTIFY_LAST, stats);
   sc_stats_print (sc_package_id, SC_LP_STATISTICS,

@@ -112,7 +112,8 @@ sc_notify_nary (int *receivers, int num_receivers,
 {
   sc_array_t          reca, snda;
 
-  SC_ASSERT (receivers != NULL && num_receivers >= 0);
+  SC_ASSERT (receivers != NULL || num_receivers == 0);
+  SC_ASSERT (num_receivers >= 0);
   sc_array_init_data (&reca, receivers, sizeof (int), num_receivers);
 
   SC_ASSERT (senders != NULL && num_senders != NULL);
@@ -150,8 +151,8 @@ sc_notify_init_input (sc_array_t * input, int *receivers, int num_receivers,
 
   SC_ASSERT (input != NULL);
 
+  SC_ASSERT (receivers != NULL || num_receivers == 0);
   SC_ASSERT (num_receivers >= 0);
-  SC_ASSERT (num_receivers == 0 || receivers != NULL);
   SC_ASSERT (0 <= mpirank && mpirank < mpisize);
 
   SC_ASSERT (payload == NULL || (int) payload->elem_count == num_receivers);
