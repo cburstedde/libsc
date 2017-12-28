@@ -89,6 +89,7 @@ main (int argc, char **argv)
   double              elapsed_native;
   double              elapsed_payl;
   sc_MPI_Comm         mpicomm;
+  sc_array_t         *rec2, *snd2, *rec4;
   sc_array_t         *payload;
   sc_statinfo_t       stats[SC_STAT_NOTIFY_LAST];
 
@@ -141,11 +142,13 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   SC_GLOBAL_INFOF ("Testing sc_notify_ext with %d %d %d\n", ntop, nint, nbot);
-  senders2 = SC_ALLOC (int, mpisize);
+  rec2 = sc_array_new_data (receivers, sizeof (int), num_receivers);
+  snd2 = sc_array_new (sizeof (int));
   elapsed_nary = -sc_MPI_Wtime ();
-  sc_notify_ext (receivers, num_receivers, senders2, &num_senders2, NULL,
-                 ntop, nint, nbot, mpicomm);
+  sc_notify_ext (rec2, snd2, NULL, ntop, nint, nbot, mpicomm);
   elapsed_nary += sc_MPI_Wtime ();
+  senders2 = (int *) snd2->array;
+  num_senders2 = (int) snd2->elem_count;
   sc_stats_set1 (stats + SC_STAT_NOTIFY_NARY, elapsed_nary, "Nary");
 
   mpiret = sc_MPI_Barrier (mpicomm);
@@ -153,15 +156,17 @@ main (int argc, char **argv)
 
   SC_GLOBAL_INFOF ("Testing sc_notify_ext with %d %d %d and payload\n",
                    ntop, nint, nbot);
-  senders4 = SC_ALLOC (int, mpisize);
-  elapsed_payl = -sc_MPI_Wtime ();
+  rec4 = sc_array_new_count (sizeof (int), num_receivers);
   payload = sc_array_new_size (sizeof (int), num_receivers);
   for (i = 0; i < num_receivers; ++i) {
+    *(int *) sc_array_index_int (rec4, i) = receivers[i];
     *(int *) sc_array_index_int (payload, i) = 2 * mpirank + 3;
   }
-  sc_notify_ext (receivers, num_receivers, senders4, &num_senders4, payload,
-                 ntop, nint, nbot, mpicomm);
+  elapsed_payl = -sc_MPI_Wtime ();
+  sc_notify_ext (rec4, NULL, payload, ntop, nint, nbot, mpicomm);
   elapsed_payl += sc_MPI_Wtime ();
+  senders4 = (int *) rec4->array;
+  num_senders4 = (int) rec4->elem_count;
   SC_ASSERT ((int) payload->elem_count == num_senders4);
   sc_stats_set1 (stats + SC_STAT_NOTIFY_PAYL, elapsed_payl, "Payload");
 
@@ -187,13 +192,14 @@ main (int argc, char **argv)
     SC_CHECK_ABORTF (*(int *) sc_array_index_int (payload, i) ==
                      2 * senders4[i] + 3, "Mismatch payload %d", i);
   }
-  sc_array_destroy (payload);
 
   SC_FREE (receivers);
   SC_FREE (senders1);
-  SC_FREE (senders2);
+  sc_array_destroy (rec2);
+  sc_array_destroy (snd2);
   SC_FREE (senders3);
-  SC_FREE (senders4);
+  sc_array_destroy (rec4);
+  sc_array_destroy (payload);
 
   sc_stats_compute (mpicomm, SC_STAT_NOTIFY_LAST, stats);
   sc_stats_print (sc_package_id, SC_LP_STATISTICS,

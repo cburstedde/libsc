@@ -93,16 +93,23 @@ int                 sc_notify (int *receivers, int num_receivers,
 /** Collective call to notify a set of receiver ranks of current rank.
  * This implementation uses a configurable n-ary tree for reduced latency.
  * This function allows to configure the mode of operation in detail.
- * \param [in] receivers        Sorted and unique array of MPI ranks to inform.
- * \param [in] num_receivers    Count of ranks contained in receivers.
- * \param [in,out] senders      Array of at least size sc_MPI_Comm_size.
- *                              On output it contains the notifying ranks,
- *                              whose number is returned in \b num_senders.
- * \param [out] num_senders     On output the number of notifying ranks.
+ * It is possible to use
+ * \param [in,out] receivers    On input, sorted and uniqued array of type int.
+ *                              Contains the MPI ranks to inform.
+ *                              If \b senders is not NULL, treated read-only.
+ *                              If \b senders is NULL, takes its role on output.
+ *                              In this case it must not be a view.
+ * \param [in,out] senders      If NULL, the result is placed in \b receivers
+ *                              as written below for the non-NULL case.
+ *                              If not NULL, array of type int and any length.
+ *                              Its entries on input are ignored and overwritten.
+ *                              On output it is resized to the number of
+ *                              notifying ranks, which it contains in order.
+ *                              Thus, it must not be a view.
  * \param [in,out] payload      This array pointer may be NULL.
- *                              If not, it must have \b num_receivers entries
- *                              of sizeof (int) on input.  This data will be
- *                              communicated to the receivers.
+ *                              If not, it must not be a view and have
+ *                              \b num_receivers entries of sizeof (int) on input.
+ *                              This data will be communicated to the receivers.
  *                              On output, the array is resized to \b
  *                              *num_senders and contains the result.
  * \param [in] ntop             Number of children of the root node.
@@ -114,9 +121,8 @@ int                 sc_notify (int *receivers, int num_receivers,
  *                              Used first in determining depth of tree.
  * \param [in] mpicomm          MPI communicator to use.
  */
-void                sc_notify_ext (int *receivers, int num_receivers,
-                                   int *senders, int *num_senders,
-                                   sc_array_t * payload,
+void                sc_notify_ext (sc_array_t * receivers,
+                                   sc_array_t * senders, sc_array_t * payload,
                                    int ntop, int nint, int nbot,
                                    sc_MPI_Comm mpicomm);
 

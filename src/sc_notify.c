@@ -110,9 +110,22 @@ int
 sc_notify_nary (int *receivers, int num_receivers,
                 int *senders, int *num_senders, sc_MPI_Comm mpicomm)
 {
-  sc_notify_ext (receivers, num_receivers, senders, num_senders, NULL,
+  sc_array_t          reca, snda;
+
+  SC_ASSERT (receivers != NULL && num_receivers >= 0);
+  sc_array_init_data (&reca, receivers, sizeof (int), num_receivers);
+
+  SC_ASSERT (senders != NULL && num_senders != NULL);
+  sc_array_init (&snda, sizeof (int));
+
+  sc_notify_ext (&reca, &snda, NULL,
                  sc_notify_nary_ntop, sc_notify_nary_nint,
                  sc_notify_nary_nbot, mpicomm);
+  sc_array_reset (&reca);
+
+  *num_senders = (int) snda.elem_count;
+  memcpy (senders, snda.array, *num_senders * sizeof (int));
+  sc_array_reset (&snda);
 
   return sc_MPI_SUCCESS;
 }
@@ -187,7 +200,6 @@ sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
   SC_ASSERT (output->elem_size == sizeof (int));
   SC_ASSERT (0 <= mpirank && mpirank < mpisize);
 
-  SC_ASSERT (senders != NULL);
   SC_ASSERT (num_senders != NULL);
 
 #ifdef SC_ENABLE_DEBUG
@@ -198,6 +210,8 @@ sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
 
   found_num_senders = 0;
   if (output->elem_count > 0) {
+    SC_ASSERT (senders != NULL);
+
     pint = (int *) sc_array_index_int (output, 0);
     SC_ASSERT (pint[0] == mpirank);
     found_num_senders = pint[1];
@@ -862,20 +876,32 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
 }
 
 void
-sc_notify_ext (int *receivers, int num_receivers,
-               int *senders, int *num_senders, sc_array_t * payload,
+sc_notify_ext (sc_array_t * receivers, sc_array_t * senders,
+               sc_array_t * payload,
                int ntop, int nint, int nbot, sc_MPI_Comm mpicomm)
 {
   int                 mpiret;
   int                 mpisize, mpirank;
   int                 depth, prod;
+  int                 num_receivers, num_senders;
   sc_array_t          sarray, *array = &sarray;
   sc_notify_nary_t    snary, *nary = &snary;
 
-  SC_ASSERT (num_receivers >= 0);
-  SC_ASSERT (senders != NULL && num_senders != NULL);
+  SC_ASSERT (receivers != NULL && receivers->elem_size == sizeof (int));
+  SC_ASSERT (senders == NULL || senders->elem_size == sizeof (int));
+
+  num_receivers = (int) receivers->elem_count;
+  if (senders == NULL) {
+    SC_ASSERT (SC_ARRAY_IS_OWNER (receivers));
+  }
+  else {
+    SC_ASSERT (SC_ARRAY_IS_OWNER (senders));
+    sc_array_reset (senders);
+  }
+
   SC_ASSERT (payload == NULL ||
-             (payload->elem_size == sizeof (int) &&
+             (SC_ARRAY_IS_OWNER (payload) &&
+              payload->elem_size == sizeof (int) &&
               (int) payload->elem_count == num_receivers));
 
   mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
@@ -888,10 +914,11 @@ sc_notify_ext (int *receivers, int num_receivers,
     /* depth = 0; */
     if (num_receivers > 0) {
       SC_ASSERT (num_receivers == 1);
-      SC_ASSERT (receivers[0] == 0);
-      senders[0] = 0;
+      SC_ASSERT (*(int *) sc_array_index_int (receivers, 0) == 0);
+      if (senders != NULL) {
+        *(int *) sc_array_push (senders) = 0;
+      }
     }
-    *num_senders = num_receivers;
 
     /* we return if there is only one process */
     return;
@@ -927,13 +954,22 @@ sc_notify_ext (int *receivers, int num_receivers,
   nary->withp = payload != NULL;
 
   /* convert input variables into internal format */
-  sc_notify_init_input (array, receivers, num_receivers, payload,
-                        mpisize, mpirank);
+  sc_notify_init_input (array, (int *) receivers->array, num_receivers,
+                        payload, mpisize, mpirank);
+  if (senders == NULL) {
+    sc_array_reset (receivers);
+    senders = receivers;
+  }
+  SC_ASSERT (senders != NULL && senders->elem_count == 0);
 
   /* the recursive algorithm works in-place */
   sc_notify_recursive_nary (nary, 0, 0, prod, array);
 
   /* convert internal format to output variables */
-  sc_notify_reset_output (array, senders, num_senders, payload,
-                          mpisize, mpirank);
+  if (array->elem_count > 0) {
+    num_senders = *(int *) sc_array_index_int (array, 1);
+    sc_array_resize (senders, num_senders);
+  }
+  sc_notify_reset_output (array, (int *) senders->array, &num_senders,
+                          payload, mpisize, mpirank);
 }
