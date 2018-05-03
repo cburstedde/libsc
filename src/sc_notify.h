@@ -120,6 +120,7 @@ int                 sc_notify (int *receivers, int num_receivers,
  * \param [in] nbot             Number of children at the deepest level.
  *                              Used first in determining depth of tree.
  * \param [in] mpicomm          MPI communicator to use.
+ *                              This function aborts on MPI error.
  */
 void                sc_notify_ext (sc_array_t * receivers,
                                    sc_array_t * senders, sc_array_t * payload,
