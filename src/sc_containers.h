@@ -168,12 +168,23 @@ void                sc_array_init (sc_array_t * array, size_t elem_size);
 
 /** Initializes an already allocated (or static) array structure
  * and allocates a given number of elements.
+ * Deprecated: use \ref sc_array_init_count.
  * \param [in,out]  array       Array structure to be initialized.
  * \param [in] elem_size        Size of one array element in bytes.
  * \param [in] elem_count       Number of initial array elements.
  */
 void                sc_array_init_size (sc_array_t * array,
                                         size_t elem_size, size_t elem_count);
+
+/** Initializes an already allocated (or static) array structure
+ * and allocates a given number of elements.
+ * This function supersedes \ref sc_array_init_size.
+ * \param [in,out]  array       Array structure to be initialized.
+ * \param [in] elem_size        Size of one array element in bytes.
+ * \param [in] elem_count       Number of initial array elements.
+ */
+void                sc_array_init_count (sc_array_t * array,
+                                         size_t elem_size, size_t elem_count);
 
 /** Initializes an already allocated (or static) view from existing sc_array_t.
  * The array view returned does not require sc_array_reset (doesn't hurt though).
@@ -199,6 +210,14 @@ void                sc_array_init_view (sc_array_t * view, sc_array_t * array,
  */
 void                sc_array_init_data (sc_array_t * view, void *base,
                                         size_t elem_size, size_t elem_count);
+
+/** Run memset on the array storage.
+ * We pass the character to memset unchanged.  Thus, care must be taken when
+ * setting values below -1 or above 127, just as with standard memset (3).
+ * \param [in,out] array    This array's storage will be overwritten.
+ * \param [in] c            Character to overwrite every byte with.
+ */
+void                sc_array_memset (sc_array_t * array, int c);
 
 /** Sets the array count to zero and frees all elements.
  * This function turns a view into a newly initialized array.
