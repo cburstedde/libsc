@@ -402,6 +402,8 @@ size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
  * takes \a processes_per_node passed by the user at face value: there is no
  * hardware checking to see if this is the true affinity.
  *
+ * This function does nothing if MPI_Comm_split_type is not found.
+ *
  * \param [in/out] comm                 MPI communicator
  * \param [in]     processes_per_node   the size of the intranode
  *                                      communicators. if < 1,
@@ -414,6 +416,8 @@ void                sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
 /** Destroy ``sc_intranode_comm'' and ``sc_internode_comm''
  * communicators that are stored as attributes to communicator ``comm''.
  * This routine enforces a call to the destroy callback for these attributes.
+ *
+ * This function does nothing if MPI_Comm_split_type is not found.
  *
  * \param [in/out] comm                 MPI communicator
  */
