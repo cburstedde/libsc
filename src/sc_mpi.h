@@ -434,6 +434,14 @@ void                sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
                                                 sc_MPI_Comm * intranode,
                                                 sc_MPI_Comm * internode);
 
+/** Convenience function to get a node comm and attach it as an attribute.
+ * \param [in,out] comm       As in \ref sc_mpu_comm_attach_node_comms.
+ * \return                    If the intranode communicator cannot be
+ *                            obtained, return 0.
+ *                            Otherwise return size of intranode communicator.
+ */
+int                 sc_mpi_comm_get_and_attach (sc_MPI_Comm comm);
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_MPI_H */

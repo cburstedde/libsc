@@ -721,3 +721,24 @@ sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
   }
 #endif
 }
+
+int
+sc_mpi_comm_get_and_attach (sc_MPI_Comm mpicomm)
+{
+  int                 mpiret;
+  int                 intrasize;
+  sc_MPI_Comm         intranode, internode;
+
+  /* compute the node comms */
+  sc_mpi_comm_attach_node_comms (mpicomm, 0);
+  sc_mpi_comm_get_node_comms (mpicomm, &intranode, &internode);
+
+  /* obtain the size of the intra node communicator */
+  intrasize = 0;
+  if (intranode != sc_MPI_COMM_NULL) {
+    mpiret = sc_MPI_Comm_size (intranode, &intrasize);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  return intrasize;
+}
