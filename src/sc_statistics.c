@@ -67,6 +67,9 @@ sc_stats_mpifunc (void *invec, void *inoutvec, int *len,
 
 #endif /* SC_ENABLE_MPI */
 
+const int           sc_stats_group_all = -2;
+const int           sc_stats_prio_all = -3;
+
 void
 sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
 {
@@ -78,17 +81,31 @@ sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
   stats->max = value;
   stats->average = 0.;
   stats->variable = variable;
+  stats->group = sc_stats_group_all;
+  stats->prio = sc_stats_prio_all;
 }
 
 void
-sc_stats_init (sc_statinfo_t * stats, const char *variable)
+sc_stats_init_ext (sc_statinfo_t * stats, const char *variable,
+                   int stats_group, int stats_prio)
 {
+  SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
+  SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
+
   stats->dirty = 1;
   stats->count = 0;
   stats->sum_values = stats->sum_squares = 0.;
   stats->min = stats->max = 0.;
   stats->average = 0.;
   stats->variable = variable;
+  stats->group = stats_group;
+  stats->prio = stats_prio;
+}
+
+void
+sc_stats_init (sc_statinfo_t * stats, const char *variable)
+{
+  sc_stats_init_ext (stats, variable, sc_stats_group_all, sc_stats_prio_all);
 }
 
 void
@@ -215,12 +232,16 @@ sc_stats_compute1 (sc_MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
 }
 
 void
-sc_stats_print (int package_id, int log_priority,
-                int nvars, sc_statinfo_t * stats, int full, int summary)
+sc_stats_print_ext (int package_id, int log_priority,
+                    int nvars, sc_statinfo_t * stats,
+                    int stats_group, int stats_prio, int full, int summary)
 {
   int                 i, count;
   sc_statinfo_t      *si;
   char                buffer[BUFSIZ];
+
+  SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
+  SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
 
   if (full) {
     for (i = 0; i < nvars; ++i) {
@@ -310,6 +331,14 @@ sc_stats_print (int package_id, int log_priority,
                   "Maximum overflow\n");
     }
   }
+}
+
+void
+sc_stats_print (int package_id, int log_priority,
+                int nvars, sc_statinfo_t * stats, int full, int summary)
+{
+  sc_stats_print_ext (package_id, log_priority, nvars, stats,
+                      sc_stats_group_all, sc_stats_prio_all, full, summary);
 }
 
 sc_statistics_t    *
