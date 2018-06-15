@@ -89,7 +89,7 @@ sc_tag_t;
 #define sc_MPI_STATUSES_IGNORE     MPI_STATUSES_IGNORE
 
 #define sc_MPI_REQUEST_NULL        MPI_REQUEST_NULL
-
+#define sc_MPI_INFO_NULL           MPI_INFO_NULL
 #define sc_MPI_DATATYPE_NULL       MPI_DATATYPE_NULL
 
 #define sc_MPI_CHAR                MPI_CHAR
@@ -126,6 +126,8 @@ sc_tag_t;
 
 #define sc_MPI_ERR_GROUP           MPI_ERR_GROUP
 
+#define sc_MPI_KEYVAL_INVALID      MPI_KEYVAL_INVALID
+
 /* types */
 
 #define sc_MPI_Comm                MPI_Comm
@@ -141,6 +143,12 @@ sc_tag_t;
 /*      sc_MPI_Init_thread is handled below */
 #define sc_MPI_Finalize            MPI_Finalize
 #define sc_MPI_Abort               MPI_Abort
+#define sc_MPI_Alloc_mem           MPI_Alloc_mem
+#define sc_MPI_Free_mem            MPI_Free_mem
+#define sc_MPI_Comm_set_attr       MPI_Comm_set_attr
+#define sc_MPI_Comm_get_attr       MPI_Comm_get_attr
+#define sc_MPI_Comm_delete_attr    MPI_Comm_delete_attr
+#define sc_MPI_Comm_create_keyval  MPI_Comm_create_keyval
 #define sc_MPI_Comm_dup            MPI_Comm_dup
 #define sc_MPI_Comm_create         MPI_Comm_create
 #define sc_MPI_Comm_split          MPI_Comm_split
@@ -241,8 +249,7 @@ sc_tag_t;
 #define sc_MPI_REPLACE             ((sc_MPI_Op) 0x5800000d)
 
 #define sc_MPI_UNDEFINED           (-32766)
-
-#define sc_MPI_ERR_GROUP           (-123456)    /* TODO change val */
+#define sc_MPI_ERR_GROUP           (-12345)
 
 /* types */
 
