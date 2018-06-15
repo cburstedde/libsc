@@ -278,35 +278,19 @@ int                 sc_MPI_Abort (sc_MPI_Comm, int)
   __attribute__ ((noreturn));
 
 int                 sc_MPI_Comm_dup (sc_MPI_Comm, sc_MPI_Comm *);
-int                 sc_MPI_Comm_create (sc_MPI_Comm, sc_MPI_Group,
-                                        sc_MPI_Comm *);
-int                 sc_MPI_Comm_split (sc_MPI_Comm, int, int, sc_MPI_Comm *);
 int                 sc_MPI_Comm_free (sc_MPI_Comm *);
-int                 sc_MPI_Comm_size (sc_MPI_Comm, int *);
-int                 sc_MPI_Comm_rank (sc_MPI_Comm, int *);
-int                 sc_MPI_Comm_compare (sc_MPI_Comm, sc_MPI_Comm, int *);
-int                 sc_MPI_Comm_group (sc_MPI_Comm, sc_MPI_Group *);
 
-int                 sc_MPI_Group_free (sc_MPI_Group *);
+/* Always sets size to 1. */
+int                 sc_MPI_Comm_size (sc_MPI_Comm, int *);
+
+/* Always sets rank to 0. */
+int                 sc_MPI_Comm_rank (sc_MPI_Comm, int *);
+
+/* Always sets size to 1. */
 int                 sc_MPI_Group_size (sc_MPI_Group, int *);
+
+/* Always sets rank to 0. */
 int                 sc_MPI_Group_rank (sc_MPI_Group, int *);
-int                 sc_MPI_Group_translate_ranks (sc_MPI_Group, int, int *,
-                                                  sc_MPI_Group, int *);
-int                 sc_MPI_Group_compare (sc_MPI_Group, sc_MPI_Group, int *);
-int                 sc_MPI_Group_union (sc_MPI_Group, sc_MPI_Group,
-                                        sc_MPI_Group *);
-int                 sc_MPI_Group_intersection (sc_MPI_Group, sc_MPI_Group,
-                                               sc_MPI_Group *);
-int                 sc_MPI_Group_difference (sc_MPI_Group, sc_MPI_Group,
-                                             sc_MPI_Group *);
-int                 sc_MPI_Group_incl (sc_MPI_Group, int, int *,
-                                       sc_MPI_Group *);
-int                 sc_MPI_Group_excl (sc_MPI_Group, int, int *,
-                                       sc_MPI_Group *);
-int                 sc_MPI_Group_range_incl (sc_MPI_Group, int,
-                                             int ranges[][3], sc_MPI_Group *);
-int                 sc_MPI_Group_range_excl (sc_MPI_Group, int,
-                                             int ranges[][3], sc_MPI_Group *);
 
 int                 sc_MPI_Barrier (sc_MPI_Comm);
 int                 sc_MPI_Bcast (void *, int, sc_MPI_Datatype, int,
@@ -333,6 +317,33 @@ int                 sc_MPI_Exscan (void *, void *, int, sc_MPI_Datatype,
                                    sc_MPI_Op, sc_MPI_Comm);
 
 double              sc_MPI_Wtime (void);
+
+/* These functions will run but their results/actions are not defined. */
+
+int                 sc_MPI_Comm_create (sc_MPI_Comm, sc_MPI_Group,
+                                        sc_MPI_Comm *);
+int                 sc_MPI_Comm_split (sc_MPI_Comm, int, int, sc_MPI_Comm *);
+int                 sc_MPI_Comm_compare (sc_MPI_Comm, sc_MPI_Comm, int *);
+int                 sc_MPI_Comm_group (sc_MPI_Comm, sc_MPI_Group *);
+
+int                 sc_MPI_Group_free (sc_MPI_Group *);
+int                 sc_MPI_Group_translate_ranks (sc_MPI_Group, int, int *,
+                                                  sc_MPI_Group, int *);
+int                 sc_MPI_Group_compare (sc_MPI_Group, sc_MPI_Group, int *);
+int                 sc_MPI_Group_union (sc_MPI_Group, sc_MPI_Group,
+                                        sc_MPI_Group *);
+int                 sc_MPI_Group_intersection (sc_MPI_Group, sc_MPI_Group,
+                                               sc_MPI_Group *);
+int                 sc_MPI_Group_difference (sc_MPI_Group, sc_MPI_Group,
+                                             sc_MPI_Group *);
+int                 sc_MPI_Group_incl (sc_MPI_Group, int, int *,
+                                       sc_MPI_Group *);
+int                 sc_MPI_Group_excl (sc_MPI_Group, int, int *,
+                                       sc_MPI_Group *);
+int                 sc_MPI_Group_range_incl (sc_MPI_Group, int,
+                                             int ranges[][3], sc_MPI_Group *);
+int                 sc_MPI_Group_range_excl (sc_MPI_Group, int,
+                                             int ranges[][3], sc_MPI_Group *);
 
 /* These functions will abort. */
 

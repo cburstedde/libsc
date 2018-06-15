@@ -137,12 +137,7 @@ sc_MPI_Comm_rank (sc_MPI_Comm comm, int *rank)
 int
 sc_MPI_Comm_compare (sc_MPI_Comm comm1, sc_MPI_Comm comm2, int *result)
 {
-  if (comm1 == comm2) {
-    *result = sc_MPI_IDENT;
-  }
-  else {
-    *result = sc_MPI_UNEQUAL;
-  }
+  *result = sc_MPI_IDENT;
 
   return sc_MPI_SUCCESS;
 }
@@ -166,19 +161,15 @@ sc_MPI_Group_free (sc_MPI_Group * group)
 int
 sc_MPI_Group_size (sc_MPI_Group group, int *size)
 {
-  if (group == sc_MPI_GROUP_NULL) {
-    return sc_MPI_ERR_GROUP;
-  }
-  else {
-    *size = 0;
-    return sc_MPI_SUCCESS;
-  }
+  *size = 1;
+
+  return sc_MPI_SUCCESS;
 }
 
 int
 sc_MPI_Group_rank (sc_MPI_Group group, int *rank)
 {
-  *rank = sc_MPI_UNDEFINED;
+  *rank = 0;
 
   return sc_MPI_SUCCESS;
 }
@@ -199,12 +190,7 @@ sc_MPI_Group_translate_ranks (sc_MPI_Group group1, int n, int *ranks1,
 int
 sc_MPI_Group_compare (sc_MPI_Group group1, sc_MPI_Group group2, int *result)
 {
-  if (group1 == group2) {
-    *result = sc_MPI_IDENT;
-  }
-  else {
-    *result = sc_MPI_UNEQUAL;
-  }
+  *result = sc_MPI_IDENT;
 
   return sc_MPI_SUCCESS;
 }
