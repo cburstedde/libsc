@@ -257,6 +257,18 @@ sc_stats_print_ext (int package_id, int log_priority,
   if (full) {
     for (i = 0; i < nvars; ++i) {
       si = &stats[i];
+
+      /* filter output by group and priority */
+      if (stats_group != sc_stats_group_all &&
+          si->group != sc_stats_group_all && si->group != stats_group) {
+        continue;
+      }
+      if (stats_prio != sc_stats_prio_all &&
+          si->prio != sc_stats_prio_all && si->prio < stats_prio) {
+        continue;
+      }
+
+      /* begin printing */
       if (si->variable != NULL) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
                      "Statistics for %s\n", si->variable);

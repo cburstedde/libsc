@@ -167,8 +167,14 @@ void                sc_stats_print (int package_id, int log_priority,
  * \param [in] stats            Input array of stats variable items.
  * \param [in] stats_group      Print only this group.
  *                              Non-negative or \ref sc_stats_group_all.
+ *                              We skip printing a variable if neither
+ *                              this parameter nor the item's group is all
+ *                              and if the item's group does not match this.
  * \param [in] stats_prio       Print this and higher priorities.
  *                              Non-negative or \ref sc_stats_prio_all.
+ *                              We skip printing a variable if neither
+ *                              this parameter nor the item's prio is all
+ *                              and if the item's prio is less than this.
  * \param [in] full             Print full information for every variable.
  * \param [in] summary          Print summary information all on 1 line.
  */
