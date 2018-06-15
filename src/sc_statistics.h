@@ -85,13 +85,26 @@ void                sc_stats_init (sc_statinfo_t * stats,
  * \param [in] variable        String to be reported by \ref sc_stats_print.
  * \param [in] stats_group     Non-negative number or \ref sc_stats_group_all.
  * \param [in] stats_prio      Non-negative number or \ref sc_stats_prio_all.
+ *                             Values increase by importance.
  */
 void                sc_stats_init_ext (sc_statinfo_t * stats,
                                        const char *variable,
                                        int stats_group, int stats_prio);
 
-/**
- * Add an instance of the random variable.
+/** Set/update the group and priority information for a stats item.
+ * \param [out] stats          Only group and stats entries are updated.
+ * \param [in] stats_group     Non-negative number or \ref sc_stats_group_all.
+ * \param [in] stats_prio      Non-negative number or \ref sc_stats_prio_all.
+ *                             Values increase by importance.
+ */
+void                sc_stats_set_group_prio (sc_statinfo_t * stats,
+                                             int stats_group, int stats_prio);
+
+/** Add an instance of the random variable.
+ * The counter of the variable is increased by one.
+ * The value is added into the present values of the variable.
+ * \param [out] stats          Must be dirty.  We bump count and values.
+ * \param [in] value           Value used to update statistics information.
  */
 void                sc_stats_accumulate (sc_statinfo_t * stats, double value);
 
@@ -100,7 +113,7 @@ void                sc_stats_accumulate (sc_statinfo_t * stats, double value);
  * Only updates dirty variables. Then removes the dirty flag.
  * \param [in]     mpicomm   MPI communicator to use.
  * \param [in]     nvars     Number of variables to be examined.
- * \param [in,out] stats     Set of statisitcs for each variable.
+ * \param [in,out] stats     Set of statisics items for each variable.
  * On input, set the following fields for each variable separately.
  *    count         Number of values for each process.
  *    sum_values    Sum of values for each process.
@@ -132,8 +145,11 @@ void                sc_stats_compute1 (sc_MPI_Comm mpicomm, int nvars,
  * This function uses the SC_LC_GLOBAL log category.
  * That means the default action is to print only on rank 0.
  * Applications can change that by providing a user-defined log handler.
+ * All groups and priorities are printed.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] log_priority     Log priority for output according to sc.h.
+ * \param [in] nvars            Number of stats items in input array.
+ * \param [in] stats            Input array of stats variable items.
  * \param [in] full             Print full information for every variable.
  * \param [in] summary          Print summary information all on 1 line.
  */
@@ -147,6 +163,8 @@ void                sc_stats_print (int package_id, int log_priority,
  * Applications can change that by providing a user-defined log handler.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] log_priority     Log priority for output according to sc.h.
+ * \param [in] nvars            Number of stats items in input array.
+ * \param [in] stats            Input array of stats variable items.
  * \param [in] stats_group      Print only this group.
  *                              Non-negative or \ref sc_stats_group_all.
  * \param [in] stats_prio       Print this and higher priorities.

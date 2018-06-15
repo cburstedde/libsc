@@ -109,6 +109,17 @@ sc_stats_init (sc_statinfo_t * stats, const char *variable)
 }
 
 void
+sc_stats_set_group_prio (sc_statinfo_t * stats,
+                         int stats_group, int stats_prio)
+{
+  SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
+  SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
+
+  stats->group = stats_group;
+  stats->prio = stats_prio;
+}
+
+void
 sc_stats_accumulate (sc_statinfo_t * stats, double value)
 {
   SC_ASSERT (stats->dirty);
