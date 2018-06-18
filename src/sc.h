@@ -103,6 +103,10 @@
 #include <string.h>
 #include <unistd.h>
 
+/* definitions to allow user code to query the sc library */
+/** Indicate that we do not modify the communicator in sc_init. */
+#define SC_INIT_COMM_CLEAN
+
 /* provide extern C defines */
 
 /* The hacks below enable semicolons after the SC_EXTERN_C_ macros
@@ -657,6 +661,8 @@ void                sc_package_print_summary (int log_priority);
  * \param [in] mpicomm          MPI communicator, can be sc_MPI_COMM_NULL.
  *                              If sc_MPI_COMM_NULL, the identifier is set to -1.
  *                              Otherwise, sc_MPI_Init must have been called.
+ *                              Nothing happens to this communicator.
+ *                              We just query size and rank.
  * \param [in] catch_signals    If true, signals INT SEGV USR2 are be caught.
  * \param [in] print_backtrace  If true, sc_abort prints a backtrace.
  */
