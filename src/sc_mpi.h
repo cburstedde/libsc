@@ -74,6 +74,7 @@ sc_tag_t;
 #define sc_MPI_COMM_NULL           MPI_COMM_NULL
 #define sc_MPI_COMM_WORLD          MPI_COMM_WORLD
 #define sc_MPI_COMM_SELF           MPI_COMM_SELF
+#define sc_MPI_COMM_TYPE_SHARED    MPI_COMM_TYPE_SHARED
 
 #define sc_MPI_GROUP_NULL          MPI_GROUP_NULL
 #define sc_MPI_GROUP_EMPTY         MPI_GROUP_EMPTY
@@ -152,6 +153,7 @@ sc_tag_t;
 #define sc_MPI_Comm_dup            MPI_Comm_dup
 #define sc_MPI_Comm_create         MPI_Comm_create
 #define sc_MPI_Comm_split          MPI_Comm_split
+#define sc_MPI_Comm_split_type     MPI_Comm_split_type
 #define sc_MPI_Comm_free           MPI_Comm_free
 #define sc_MPI_Comm_size           MPI_Comm_size
 #define sc_MPI_Comm_rank           MPI_Comm_rank
