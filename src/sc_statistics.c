@@ -242,6 +242,21 @@ sc_stats_compute1 (sc_MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   sc_stats_compute (mpicomm, nvars, stats);
 }
 
+static int
+sc_stats_item_printed (sc_statinfo_t * si, int stats_group, int stats_prio)
+{
+  /* filter by group and priority */
+  if (stats_group != sc_stats_group_all &&
+      si->group != sc_stats_group_all && si->group != stats_group) {
+    return 0;
+  }
+  if (stats_prio != sc_stats_prio_all &&
+      si->prio != sc_stats_prio_all && si->prio < stats_prio) {
+    return 0;
+  }
+  return 1;
+}
+
 void
 sc_stats_print_ext (int package_id, int log_priority,
                     int nvars, sc_statinfo_t * stats,
@@ -259,12 +274,7 @@ sc_stats_print_ext (int package_id, int log_priority,
       si = &stats[i];
 
       /* filter output by group and priority */
-      if (stats_group != sc_stats_group_all &&
-          si->group != sc_stats_group_all && si->group != stats_group) {
-        continue;
-      }
-      if (stats_prio != sc_stats_prio_all &&
-          si->prio != sc_stats_prio_all && si->prio < stats_prio) {
+      if (!sc_stats_item_printed (si, stats_group, stats_prio)) {
         continue;
       }
 
@@ -304,6 +314,13 @@ sc_stats_print_ext (int package_id, int log_priority,
   else {
     for (i = 0; i < nvars; ++i) {
       si = &stats[i];
+
+      /* filter output by group and priority */
+      if (!sc_stats_item_printed (si, stats_group, stats_prio)) {
+        continue;
+      }
+
+      /* print just the average */
       if (si->variable != NULL) {
         snprintf (buffer, BUFSIZ, "for %s:", si->variable);
       }
@@ -324,6 +341,7 @@ sc_stats_print_ext (int package_id, int log_priority,
     }
   }
 
+  /* the summary always contains all variables */
   if (summary) {
     count = snprintf (buffer, BUFSIZ, "Summary = ");
     for (i = 0; i < nvars && count >= 0 && (size_t) count < BUFSIZ; ++i) {
