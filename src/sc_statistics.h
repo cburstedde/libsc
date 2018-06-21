@@ -68,6 +68,17 @@ sc_statistics_t;
 void                sc_stats_set1 (sc_statinfo_t * stats,
                                    double value, const char *variable);
 
+/** Populate a sc_statinfo_t structure assuming count=1 and mark it dirty.
+ * \param [out] stats          Will be filled with count=1 and the value.
+ * \param [in] value           Value used to fill statistics information.
+ * \param [in] variable        String to be reported by \ref sc_stats_print.
+ * \param [in] stats_group     Non-negative number or \ref sc_stats_group_all.
+ * \param [in] stats_prio      Non-negative number or \ref sc_stats_prio_all.
+ */
+void                sc_stats_set1_ext (sc_statinfo_t * stats,
+                                       double value, const char *variable,
+                                       int stats_group, int stats_prio);
+
 /** Initialize a sc_statinfo_t structure assuming count=0 and mark it dirty.
  * This is useful if \a stats will be used to \ref sc_stats_accumulate
  * instances locally before global statistics are computed.
@@ -176,7 +187,12 @@ void                sc_stats_print (int package_id, int log_priority,
  *                              this parameter nor the item's prio is all
  *                              and if the item's prio is less than this.
  * \param [in] full             Print full information for every variable.
+ *                              This produces multiple lines including
+ *                              minimum, maximum, and standard deviation.
+ *                              If this is false, print one line per variable.
  * \param [in] summary          Print summary information all on 1 line.
+ *                              This always contains all variables.
+ *                              Not affected by stats_group and stats_prio.
  */
 void                sc_stats_print_ext (int package_id, int log_priority,
                                         int nvars, sc_statinfo_t * stats,

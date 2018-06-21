@@ -71,8 +71,12 @@ const int           sc_stats_group_all = -2;
 const int           sc_stats_prio_all = -3;
 
 void
-sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
+sc_stats_set_ext (sc_statinfo_t * stats, double value, const char *variable,
+                  int stats_group, int stats_prio)
 {
+  SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
+  SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
+
   stats->dirty = 1;
   stats->count = 1;
   stats->sum_values = value;
@@ -81,8 +85,15 @@ sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
   stats->max = value;
   stats->average = 0.;
   stats->variable = variable;
-  stats->group = sc_stats_group_all;
-  stats->prio = sc_stats_prio_all;
+  stats->group = stats_group;
+  stats->prio = stats_prio;
+}
+
+void
+sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
+{
+  sc_stats_set_ext (stats, value, variable,
+                    sc_stats_group_all, sc_stats_prio_all);
 }
 
 void
