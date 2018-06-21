@@ -71,6 +71,13 @@ const int           sc_stats_group_all = -2;
 const int           sc_stats_prio_all = -3;
 
 void
+sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
+{
+  sc_stats_set1_ext (stats, value, variable,
+                     sc_stats_group_all, sc_stats_prio_all);
+}
+
+void
 sc_stats_set1_ext (sc_statinfo_t * stats, double value, const char *variable,
                    int stats_group, int stats_prio)
 {
@@ -90,10 +97,9 @@ sc_stats_set1_ext (sc_statinfo_t * stats, double value, const char *variable,
 }
 
 void
-sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
+sc_stats_init (sc_statinfo_t * stats, const char *variable)
 {
-  sc_stats_set1_ext (stats, value, variable,
-                     sc_stats_group_all, sc_stats_prio_all);
+  sc_stats_init_ext (stats, variable, sc_stats_group_all, sc_stats_prio_all);
 }
 
 void
@@ -111,12 +117,6 @@ sc_stats_init_ext (sc_statinfo_t * stats, const char *variable,
   stats->variable = variable;
   stats->group = stats_group;
   stats->prio = stats_prio;
-}
-
-void
-sc_stats_init (sc_statinfo_t * stats, const char *variable)
-{
-  sc_stats_init_ext (stats, variable, sc_stats_group_all, sc_stats_prio_all);
 }
 
 void
@@ -269,6 +269,14 @@ sc_stats_item_printed (sc_statinfo_t * si, int stats_group, int stats_prio)
 }
 
 void
+sc_stats_print (int package_id, int log_priority,
+                int nvars, sc_statinfo_t * stats, int full, int summary)
+{
+  sc_stats_print_ext (package_id, log_priority, nvars, stats,
+                      sc_stats_group_all, sc_stats_prio_all, full, summary);
+}
+
+void
 sc_stats_print_ext (int package_id, int log_priority,
                     int nvars, sc_statinfo_t * stats,
                     int stats_group, int stats_prio, int full, int summary)
@@ -383,14 +391,6 @@ sc_stats_print_ext (int package_id, int log_priority,
                   "Maximum overflow\n");
     }
   }
-}
-
-void
-sc_stats_print (int package_id, int log_priority,
-                int nvars, sc_statinfo_t * stats, int full, int summary)
-{
-  sc_stats_print_ext (package_id, log_priority, nvars, stats,
-                      sc_stats_group_all, sc_stats_prio_all, full, summary);
 }
 
 sc_statistics_t    *
