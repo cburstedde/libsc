@@ -67,9 +67,23 @@ sc_stats_mpifunc (void *invec, void *inoutvec, int *len,
 
 #endif /* SC_ENABLE_MPI */
 
+const int           sc_stats_group_all = -2;
+const int           sc_stats_prio_all = -3;
+
 void
 sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
 {
+  sc_stats_set1_ext (stats, value, variable,
+                     sc_stats_group_all, sc_stats_prio_all);
+}
+
+void
+sc_stats_set1_ext (sc_statinfo_t * stats, double value, const char *variable,
+                   int stats_group, int stats_prio)
+{
+  SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
+  SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
+
   stats->dirty = 1;
   stats->count = 1;
   stats->sum_values = value;
@@ -78,17 +92,42 @@ sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
   stats->max = value;
   stats->average = 0.;
   stats->variable = variable;
+  stats->group = stats_group;
+  stats->prio = stats_prio;
 }
 
 void
 sc_stats_init (sc_statinfo_t * stats, const char *variable)
 {
+  sc_stats_init_ext (stats, variable, sc_stats_group_all, sc_stats_prio_all);
+}
+
+void
+sc_stats_init_ext (sc_statinfo_t * stats, const char *variable,
+                   int stats_group, int stats_prio)
+{
+  SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
+  SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
+
   stats->dirty = 1;
   stats->count = 0;
   stats->sum_values = stats->sum_squares = 0.;
   stats->min = stats->max = 0.;
   stats->average = 0.;
   stats->variable = variable;
+  stats->group = stats_group;
+  stats->prio = stats_prio;
+}
+
+void
+sc_stats_set_group_prio (sc_statinfo_t * stats,
+                         int stats_group, int stats_prio)
+{
+  SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
+  SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
+
+  stats->group = stats_group;
+  stats->prio = stats_prio;
 }
 
 void
@@ -214,17 +253,51 @@ sc_stats_compute1 (sc_MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
   sc_stats_compute (mpicomm, nvars, stats);
 }
 
+static int
+sc_stats_item_printed (sc_statinfo_t * si, int stats_group, int stats_prio)
+{
+  /* filter by group and priority */
+  if (stats_group != sc_stats_group_all &&
+      si->group != sc_stats_group_all && si->group != stats_group) {
+    return 0;
+  }
+  if (stats_prio != sc_stats_prio_all &&
+      si->prio != sc_stats_prio_all && si->prio < stats_prio) {
+    return 0;
+  }
+  return 1;
+}
+
 void
 sc_stats_print (int package_id, int log_priority,
                 int nvars, sc_statinfo_t * stats, int full, int summary)
+{
+  sc_stats_print_ext (package_id, log_priority, nvars, stats,
+                      sc_stats_group_all, sc_stats_prio_all, full, summary);
+}
+
+void
+sc_stats_print_ext (int package_id, int log_priority,
+                    int nvars, sc_statinfo_t * stats,
+                    int stats_group, int stats_prio, int full, int summary)
 {
   int                 i, count;
   sc_statinfo_t      *si;
   char                buffer[BUFSIZ];
 
+  SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
+  SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
+
   if (full) {
     for (i = 0; i < nvars; ++i) {
       si = &stats[i];
+
+      /* filter output by group and priority */
+      if (!sc_stats_item_printed (si, stats_group, stats_prio)) {
+        continue;
+      }
+
+      /* begin printing */
       if (si->variable != NULL) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
                      "Statistics for %s\n", si->variable);
@@ -260,6 +333,13 @@ sc_stats_print (int package_id, int log_priority,
   else {
     for (i = 0; i < nvars; ++i) {
       si = &stats[i];
+
+      /* filter output by group and priority */
+      if (!sc_stats_item_printed (si, stats_group, stats_prio)) {
+        continue;
+      }
+
+      /* print just the average */
       if (si->variable != NULL) {
         snprintf (buffer, BUFSIZ, "for %s:", si->variable);
       }
@@ -280,6 +360,7 @@ sc_stats_print (int package_id, int log_priority,
     }
   }
 
+  /* the summary always contains all variables */
   if (summary) {
     count = snprintf (buffer, BUFSIZ, "Summary = ");
     for (i = 0; i < nvars && count >= 0 && (size_t) count < BUFSIZ; ++i) {
