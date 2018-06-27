@@ -28,15 +28,6 @@
 
 SC_EXTERN_C_BEGIN;
 
-/** Number of children at root node of nary tree; initialized to 2 */
-extern int          sc_notify_nary_ntop;
-
-/** Number of children at intermediate tree nodes; initialized to 2 */
-extern int          sc_notify_nary_nint;
-
-/** Number of children at deepest level of tree; initialized to 2 */
-extern int          sc_notify_nary_nbot;
-
 /** Collective call to notify a set of receiver ranks of current rank.
  * This version uses one call to sc_MPI_Allgather and one to sc_MPI_Allgatherv.
  * We provide hand-coded alternatives \ref sc_notify and \ref sc_notify_nary.
@@ -52,11 +43,17 @@ int                 sc_notify_allgather (int *receivers, int num_receivers,
                                          int *senders, int *num_senders,
                                          sc_MPI_Comm mpicomm);
 
+/** Number of children at root node of nary tree; initialized to 2 */
+extern int          sc_notify_nary_ntop;
+
+/** Number of children at intermediate tree nodes; initialized to 2 */
+extern int          sc_notify_nary_nint;
+
+/** Number of children at deepest level of tree; initialized to 2 */
+extern int          sc_notify_nary_nbot;
+
 /** Collective call to notify a set of receiver ranks of current rank.
  * This implementation uses an n-ary tree for reduced latency.
- * It chooses external global parameters to call \ref sc_notify_ext, namely
- * \ref sc_notify_nary_ntop, \ref sc_notify_nary_nint, \ref
- * sc_notify_nary_nbot.  These may be overridden by the user.
  * This function serves as backwards-compatible replacement for \ref sc_notify.
  * \param [in] receivers        Sorted and unique array of MPI ranks to inform.
  * \param [in] num_receivers    Count of ranks contained in receivers.
@@ -64,11 +61,19 @@ int                 sc_notify_allgather (int *receivers, int num_receivers,
  *                              On output it contains the notifying ranks,
  *                              whose number is returned in \b num_senders.
  * \param [out] num_senders     On output the number of notifying ranks.
+ * \param [in] ntop             Number of children of the root node.
+ *                              Only used if \b nbot leads to depth >= 2.
+ * \param [in] nint             Number of children of intermediate tree node.
+ *                              Only used if \b ntop and \b nbot lead to
+ *                              depth >= 3.
+ * \param [in] nbot             Number of children at the deepest level.
+ *                              Used first in determining depth of tree.
  * \param [in] mpicomm          MPI communicator to use.
  * \return                      Aborts on MPI error or returns sc_MPI_SUCCESS.
  */
 int                 sc_notify_nary (int *receivers, int num_receivers,
                                     int *senders, int *num_senders,
+                                    int ntop, int nint, int nbot,
                                     sc_MPI_Comm mpicomm);
 
 /** Collective call to notify a set of receiver ranks of current rank.
@@ -112,20 +117,12 @@ int                 sc_notify (int *receivers, int num_receivers,
  *                              This data will be communicated to the receivers.
  *                              On output, the array is resized to \b
  *                              *num_senders and contains the result.
- * \param [in] ntop             Number of children of the root node.
- *                              Only used if \b nbot leads to depth >= 2.
- * \param [in] nint             Number of children of intermediate tree node.
- *                              Only used if \b ntop and \b nbot lead to
- *                              depth >= 3.
- * \param [in] nbot             Number of children at the deepest level.
- *                              Used first in determining depth of tree.
  * \param [in] mpicomm          MPI communicator to use.
  *                              This function aborts on MPI error.
  */
-void                sc_notify_ext (sc_array_t * receivers,
-                                   sc_array_t * senders, sc_array_t * payload,
-                                   int ntop, int nint, int nbot,
-                                   sc_MPI_Comm mpicomm);
+void                sc_notify_payload (sc_array_t * receivers,
+                                       sc_array_t * senders, sc_array_t * payload,
+                                       sc_MPI_Comm mpicomm);
 
 SC_EXTERN_C_END;
 

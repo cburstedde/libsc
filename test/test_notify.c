@@ -140,11 +140,14 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Barrier (mpicomm);
   SC_CHECK_MPI (mpiret);
 
-  SC_GLOBAL_INFOF ("Testing sc_notify_ext with %d %d %d\n", ntop, nint, nbot);
+  SC_GLOBAL_INFOF ("Testing sc_notify_payload nary with %d %d %d\n", ntop, nint, nbot);
   rec2 = sc_array_new_data (receivers, sizeof (int), num_receivers);
   snd2 = sc_array_new (sizeof (int));
+  sc_notify_nary_ntop = ntop;
+  sc_notify_nary_nint = nint;
+  sc_notify_nary_nbot = nbot;
   elapsed_nary = -sc_MPI_Wtime ();
-  sc_notify_ext (rec2, snd2, NULL, ntop, nint, nbot, mpicomm);
+  sc_notify_payload (rec2, snd2, NULL, mpicomm);
   elapsed_nary += sc_MPI_Wtime ();
   senders2 = (int *) snd2->array;
   num_senders2 = (int) snd2->elem_count;
@@ -153,7 +156,7 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Barrier (mpicomm);
   SC_CHECK_MPI (mpiret);
 
-  SC_GLOBAL_INFOF ("Testing sc_notify_ext with %d %d %d and payload\n",
+  SC_GLOBAL_INFOF ("Testing sc_notify_payload nary with %d %d %d and payload\n",
                    ntop, nint, nbot);
   rec4 = sc_array_new_count (sizeof (int), num_receivers);
   pay4 = sc_array_new_count (sizeof (int), num_receivers);
@@ -162,7 +165,7 @@ main (int argc, char **argv)
     *(int *) sc_array_index_int (pay4, i) = 2 * mpirank + 3;
   }
   elapsed_payl = -sc_MPI_Wtime ();
-  sc_notify_ext (rec4, NULL, pay4, ntop, nint, nbot, mpicomm);
+  sc_notify_payload (rec4, NULL, pay4, mpicomm);
   elapsed_payl += sc_MPI_Wtime ();
   senders4 = (int *) rec4->array;
   num_senders4 = (int) rec4->elem_count;
