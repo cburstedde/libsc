@@ -24,9 +24,110 @@
 #include <sc_functions.h>
 #include <sc_notify.h>
 
-int                 sc_notify_nary_ntop = 2;
-int                 sc_notify_nary_nint = 2;
-int                 sc_notify_nary_nbot = 2;
+/*== INTERFACE == */
+
+sc_notify_type_t    sc_notify_type_default = SC_NOTIFY_NARY;
+
+typedef struct sc_notify_nary_s
+{
+  sc_MPI_Comm         mpicomm;
+  int                 mpisize;
+  int                 mpirank;
+  int                 ntop, nint, nbot;
+  int                 depth;
+  int                 withp;
+}
+sc_notify_nary_t;
+
+struct sc_notify_s
+{
+  sc_MPI_Comm         mpicomm;
+  sc_notify_type_t    type;
+  union
+  {
+    sc_notify_nary_t    nary;
+  }
+  data;
+};
+
+const char         *sc_notify_type_strings[SC_NOTIFY_NUM_TYPES] = {
+  "allgather",
+  "binary",
+  "nary"
+};
+
+sc_notify_t        *
+sc_notify_new (sc_MPI_Comm comm)
+{
+  sc_notify_t        *notify;
+
+  notify = SC_ALLOC_ZERO (sc_notify_t, 1);
+  notify->mpicomm = comm;
+  notify->type = SC_NOTIFY_DEFAULT;
+  SC_ASSERT (sc_notify_type_default >= 0
+             && sc_notify_type_default < SC_NOTIFY_NUM_TYPES);
+  sc_notify_set_type (notify, sc_notify_type_default);
+  return notify;
+}
+
+void
+sc_notify_destroy (sc_notify_t * notify)
+{
+  sc_notify_type_t    type;
+
+  type = sc_notify_get_type (notify);
+  /* Reset type data */
+  switch (type) {
+  case SC_NOTIFY_ALLGATHER:
+  case SC_NOTIFY_BINARY:
+  case SC_NOTIFY_NARY:
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  SC_FREE (notify);
+}
+
+sc_MPI_Comm
+sc_notify_get_comm (sc_notify_t * notify)
+{
+  return notify->mpicomm;
+}
+
+sc_notify_type_t
+sc_notify_get_type (sc_notify_t * notify)
+{
+  return notify->type;
+}
+
+static void         sc_notify_nary_init (sc_notify_t * notify);
+
+void
+sc_notify_set_type (sc_notify_t * notify, sc_notify_type_t in_type)
+{
+  sc_notify_type_t    current_type;
+
+  current_type = sc_notify_get_type (notify);
+  if (in_type == SC_NOTIFY_DEFAULT) {
+    in_type = sc_notify_type_default;
+  }
+  SC_ASSERT (in_type >= 0 && in_type < SC_NOTIFY_NUM_TYPES);
+  if (current_type != in_type) {
+    notify->type = in_type;
+    /* initialize_data */
+    switch (in_type) {
+    case SC_NOTIFY_ALLGATHER:
+    case SC_NOTIFY_BINARY:
+      break;
+    case SC_NOTIFY_NARY:
+      sc_notify_nary_init (notify);
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  }
+}
 
 #if 0
 
@@ -53,57 +154,82 @@ sc_array_is_invalid (sc_array_t * array)
 
 #endif
 
-int
-sc_notify_allgather (int *receivers, int num_receivers,
-                     int *senders, int *num_senders, sc_MPI_Comm mpicomm)
+/*== HELPER FUNCTIONS ==*/
+
+/** Complete sc_notify_payload() using old-fashioned sc_notify()-like function
+ * */
+static void
+sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
+                           sc_array_t * payload, sc_notify_t * notify,
+                           int (*notify_fn) (int *, int, int *, int *,
+                                             sc_MPI_Comm))
 {
-  int                 i, j;
-  int                 found_num_senders;
-  int                 mpiret;
-  int                 mpisize, mpirank;
-  int                 total_num_receivers;
-  int                *procs_num_receivers;
-  int                *offsets_num_receivers;
-  int                *all_receivers;
+  int                 mpiret, size, rank;
+  int                *isenders, num_senders = -1;
+  sc_MPI_Comm         comm;
 
-  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
+  comm = sc_notify_get_comm (notify);
+  mpiret = sc_MPI_Comm_size (comm, &size);
   SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
+  mpiret = sc_MPI_Comm_rank (comm, &rank);
   SC_CHECK_MPI (mpiret);
 
-  procs_num_receivers = SC_ALLOC (int, mpisize);
-  mpiret = sc_MPI_Allgather (&num_receivers, 1, sc_MPI_INT,
-                             procs_num_receivers, 1, sc_MPI_INT, mpicomm);
-  SC_CHECK_MPI (mpiret);
-
-  offsets_num_receivers = SC_ALLOC (int, mpisize);
-  total_num_receivers = 0;
-  for (i = 0; i < mpisize; ++i) {
-    offsets_num_receivers[i] = total_num_receivers;
-    total_num_receivers += procs_num_receivers[i];
+  if (senders) {
+    sc_array_resize (senders, size);
+    isenders = (int *) senders->array;
   }
-  all_receivers = SC_ALLOC (int, total_num_receivers);
-  mpiret = sc_MPI_Allgatherv (receivers, num_receivers, sc_MPI_INT,
-                              all_receivers, procs_num_receivers,
-                              offsets_num_receivers, sc_MPI_INT, mpicomm);
+  else {
+    isenders = SC_ALLOC (int, (size_t) size);
+  }
+
+  mpiret = (*notify_fn) ((int *) receivers->array,
+                         (int) receivers->elem_count,
+                         isenders, &num_senders, comm);
   SC_CHECK_MPI (mpiret);
 
-  SC_ASSERT (procs_num_receivers[mpirank] == num_receivers);
-  found_num_senders = 0;
-  for (i = 0; i < mpisize; ++i) {
-    for (j = 0; j < procs_num_receivers[i]; ++j) {
-      if (all_receivers[offsets_num_receivers[i] + j] == mpirank) {
-        senders[found_num_senders++] = i;
-        break;
-      }
+  if (payload) {
+    MPI_Request        *sendreq, *recvreq;
+    int                *ipayload = (int *) payload->array;
+    int                *rpayload;
+    int                 j;
+    int                 mpiret;
+    int                 num_receivers = (int) receivers->elem_count;
+    int                *ireceivers = (int *) receivers->array;
+
+    sendreq = SC_ALLOC (MPI_Request, (num_receivers + num_senders));
+    recvreq = &sendreq[num_receivers];
+    rpayload = SC_ALLOC (int, num_senders);
+
+    for (j = 0; j < num_receivers; j++) {
+      mpiret =
+        sc_MPI_Isend (&ipayload[j], 1, sc_MPI_INT, ireceivers[j],
+                      SC_TAG_NOTIFY_WRAPPER, comm, sendreq + j);
+      SC_CHECK_MPI (mpiret);
     }
+    for (j = 0; j < num_senders; j++) {
+      mpiret =
+        sc_MPI_Irecv (&rpayload[j], 1, sc_MPI_INT, isenders[j],
+                      SC_TAG_NOTIFY_WRAPPER, comm, recvreq + j);
+      SC_CHECK_MPI (mpiret);
+    }
+    mpiret =
+      sc_MPI_Waitall (num_senders + num_receivers, sendreq,
+                      sc_MPI_STATUS_IGNORE);
+    SC_CHECK_MPI (mpiret);
+    sc_array_resize (payload, num_senders);
+    memcpy ((int *) payload->array, rpayload, num_senders * sizeof (int));
+    SC_FREE (rpayload);
+    SC_FREE (sendreq);
   }
-  *num_senders = found_num_senders;
-  SC_FREE (procs_num_receivers);
-  SC_FREE (offsets_num_receivers);
-  SC_FREE (all_receivers);
-
-  return sc_MPI_SUCCESS;
+  if (senders) {
+    sc_array_resize (senders, (size_t) num_senders);
+    isenders = (int *) senders->array;
+  }
+  else {
+    sc_array_resize (receivers, (size_t) num_senders);
+    memcpy (receivers->array, isenders, num_senders * sizeof (int));
+    SC_FREE (isenders);
+  }
 }
 
 /** Encode the receiver list into an array for input.
@@ -344,17 +470,113 @@ sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second,
   SC_ASSERT (ir == (int) second->elem_count);
 }
 
+/*== SC_NOTIFY_ALLGATHER ==*/
 
-typedef struct sc_notify_nary
+int
+sc_notify_allgather (int *receivers, int num_receivers,
+                     int *senders, int *num_senders, sc_MPI_Comm mpicomm)
 {
-  sc_MPI_Comm         mpicomm;
-  int                 mpisize;
-  int                 mpirank;
-  int                 ntop, nint, nbot;
-  int                 depth;
-  int                 withp;
+  int                 i, j;
+  int                 found_num_senders;
+  int                 mpiret;
+  int                 mpisize, mpirank;
+  int                 total_num_receivers;
+  int                *procs_num_receivers;
+  int                *offsets_num_receivers;
+  int                *all_receivers;
+
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  procs_num_receivers = SC_ALLOC (int, mpisize);
+  mpiret = sc_MPI_Allgather (&num_receivers, 1, sc_MPI_INT,
+                             procs_num_receivers, 1, sc_MPI_INT, mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  offsets_num_receivers = SC_ALLOC (int, mpisize);
+  total_num_receivers = 0;
+  for (i = 0; i < mpisize; ++i) {
+    offsets_num_receivers[i] = total_num_receivers;
+    total_num_receivers += procs_num_receivers[i];
+  }
+  all_receivers = SC_ALLOC (int, total_num_receivers);
+  mpiret = sc_MPI_Allgatherv (receivers, num_receivers, sc_MPI_INT,
+                              all_receivers, procs_num_receivers,
+                              offsets_num_receivers, sc_MPI_INT, mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  SC_ASSERT (procs_num_receivers[mpirank] == num_receivers);
+  found_num_senders = 0;
+  for (i = 0; i < mpisize; ++i) {
+    for (j = 0; j < procs_num_receivers[i]; ++j) {
+      if (all_receivers[offsets_num_receivers[i] + j] == mpirank) {
+        senders[found_num_senders++] = i;
+        break;
+      }
+    }
+  }
+  *num_senders = found_num_senders;
+  SC_FREE (procs_num_receivers);
+  SC_FREE (offsets_num_receivers);
+  SC_FREE (all_receivers);
+
+  return sc_MPI_SUCCESS;
 }
-sc_notify_nary_t;
+
+/*== SC_NOTIFY_NARY ==*/
+
+int                 sc_notify_nary_ntop_default = 2;
+int                 sc_notify_nary_nint_default = 2;
+int                 sc_notify_nary_nbot_default = 2;
+
+void
+sc_notify_nary_get_widths (sc_notify_t * notify, int *ntop, int *nint,
+                           int *nbot)
+{
+  sc_notify_type_t    type;
+
+  type = sc_notify_get_type (notify);
+  SC_ASSERT (type == SC_NOTIFY_NARY);
+  if (ntop)
+    *ntop = notify->data.nary.ntop;
+  if (nint)
+    *nint = notify->data.nary.nint;
+  if (nbot)
+    *nint = notify->data.nary.nbot;
+}
+
+void
+sc_notify_nary_set_widths (sc_notify_t * notify, int ntop, int nint, int nbot)
+{
+  sc_notify_type_t    type;
+
+  type = sc_notify_get_type (notify);
+  SC_ASSERT (type == SC_NOTIFY_NARY);
+  notify->data.nary.ntop = ntop;
+  notify->data.nary.nint = nint;
+  notify->data.nary.nbot = nint;
+}
+
+static void
+sc_notify_nary_init (sc_notify_t * notify)
+{
+  sc_MPI_Comm         comm;
+  int                 success, mpisize, mpirank;
+
+  notify->data.nary.mpicomm = comm = sc_notify_get_comm (notify);
+
+  success = sc_MPI_Comm_size (comm, &mpisize);
+  SC_CHECK_MPI (success);
+  notify->data.nary.mpisize = mpisize;
+  success = sc_MPI_Comm_rank (comm, &mpirank);
+  SC_CHECK_MPI (success);
+  notify->data.nary.mpirank = mpirank;
+  sc_notify_nary_set_widths (notify, sc_notify_nary_ntop_default,
+                             sc_notify_nary_nint_default,
+                             sc_notify_nary_nbot_default);
+}
 
 /** Internally used function to execute the sc_notify recursion.
  * The internal data format of the input and output arrays is as follows:
@@ -646,38 +868,22 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
 
 static void
 sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
-                        sc_array_t * payload,
-                        int ntop, int nint, int nbot, sc_MPI_Comm mpicomm)
+                        sc_array_t * payload, sc_notify_t * notify)
 {
-  int                 mpiret;
   int                 mpisize, mpirank;
   int                 depth, prod;
   int                 num_receivers, num_senders;
+  int                 ntop, nint, nbot;
   sc_array_t          sarray, *array = &sarray;
-  sc_notify_nary_t    snary, *nary = &snary;
+  sc_notify_nary_t    snary = notify->data.nary, *nary = &snary;
 
-  SC_ASSERT (receivers != NULL && receivers->elem_size == sizeof (int));
-  SC_ASSERT (senders == NULL || senders->elem_size == sizeof (int));
+  mpisize = nary->mpisize;
+  mpirank = nary->mpirank;
+  ntop = nary->ntop;
+  nint = nary->nint;
+  nbot = nary->nbot;
 
   num_receivers = (int) receivers->elem_count;
-  if (senders == NULL) {
-    SC_ASSERT (SC_ARRAY_IS_OWNER (receivers));
-  }
-  else {
-    SC_ASSERT (SC_ARRAY_IS_OWNER (senders));
-    sc_array_reset (senders);
-  }
-
-  SC_ASSERT (payload == NULL ||
-             (SC_ARRAY_IS_OWNER (payload) &&
-              payload->elem_size == sizeof (int) &&
-              (int) payload->elem_count == num_receivers));
-
-  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
-  SC_CHECK_MPI (mpiret);
-
   /* determine depth of tree */
   if (mpisize == 1) {
     /* depth = 0; */
@@ -713,12 +919,6 @@ sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
 #endif
 
   /* assign context data for recursion */
-  nary->mpicomm = mpicomm;
-  nary->mpisize = mpisize;
-  nary->mpirank = mpirank;
-  nary->ntop = ntop;
-  nary->nint = nint;
-  nary->nbot = nbot;
   nary->depth = depth;
   nary->withp = payload != NULL;
 
@@ -743,31 +943,7 @@ sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
                           payload, mpisize, mpirank);
 }
 
-int
-sc_notify_nary (int *receivers, int num_receivers,
-                int *senders, int *num_senders,
-                int ntop, int nint, int nbot,
-                sc_MPI_Comm mpicomm)
-{
-  sc_array_t          reca, snda;
-
-  SC_ASSERT (receivers != NULL || num_receivers == 0);
-  SC_ASSERT (num_receivers >= 0);
-  sc_array_init_data (&reca, receivers, sizeof (int), num_receivers);
-
-  SC_ASSERT (senders != NULL && num_senders != NULL);
-  sc_array_init (&snda, sizeof (int));
-
-  sc_notify_payload_nary (&reca, &snda, NULL,
-                          ntop, nint, nbot, mpicomm);
-  sc_array_reset (&reca);
-
-  *num_senders = (int) snda.elem_count;
-  memcpy (senders, snda.array, *num_senders * sizeof (int));
-  sc_array_reset (&snda);
-
-  return sc_MPI_SUCCESS;
-}
+/*== SC_NOTIFY_BINARY ==*/
 
 /** Internally used function to execute the sc_notify recursion.
  * The internal data format of the input and output arrays is as follows:
@@ -977,10 +1153,46 @@ sc_notify (int *receivers, int num_receivers,
   return sc_MPI_SUCCESS;
 }
 
+/*== SC_NOTIFY_PAYLOAD ==*/
+
 void
 sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
-                   sc_array_t * payload, sc_MPI_Comm mpicomm)
+                   sc_array_t * payload, sc_notify_t * notify)
 {
-  return sc_notify_payload_nary (receivers, senders, payload, sc_notify_nary_ntop, sc_notify_nary_nint, sc_notify_nary_nbot, mpicomm);
-}
+  int                 num_receivers;
+  sc_notify_type_t    type = sc_notify_get_type (notify);
 
+  SC_ASSERT (receivers != NULL && receivers->elem_size == sizeof (int));
+  SC_ASSERT (senders == NULL || senders->elem_size == sizeof (int));
+
+  num_receivers = (int) receivers->elem_count;
+  if (senders == NULL) {
+    SC_ASSERT (SC_ARRAY_IS_OWNER (receivers));
+  }
+  else {
+    SC_ASSERT (SC_ARRAY_IS_OWNER (senders));
+    sc_array_reset (senders);
+  }
+
+  SC_ASSERT (payload == NULL ||
+             (SC_ARRAY_IS_OWNER (payload) &&
+              payload->elem_size == sizeof (int) &&
+              (int) payload->elem_count == num_receivers));
+
+  switch (type) {
+  case SC_NOTIFY_ALLGATHER:
+    return sc_notify_payload_wrapper (receivers, senders, payload, notify,
+                                      sc_notify_allgather);
+    break;
+  case SC_NOTIFY_BINARY:
+    return sc_notify_payload_wrapper (receivers, senders, payload, notify,
+                                      sc_notify);
+    break;
+  case SC_NOTIFY_NARY:
+    return sc_notify_payload_nary (receivers, senders, payload, notify);
+    break;
+  default:
+    SC_ABORT_NOT_REACHED ();
+  }
+
+}
