@@ -52,7 +52,7 @@ extern sc_notify_type_t sc_notify_type_default;
 
 /** The default threshold for payload sizes (in bytes) that are communicated
  * with the notification packet.  Initialized to 1024 (2^10) */
-extern size_t sc_notify_eager_threshold_default;
+extern size_t       sc_notify_eager_threshold_default;
 
 /** Create a notify controller that can be used in sc_notify_payload() and
  * sc_notify_payloadv().
@@ -85,7 +85,8 @@ size_t              sc_notify_get_eager_threshold (sc_notify_t * notify);
  * \param[in]     thresh      The size in bytes of the maximum eager payload
  *                            size.
  */
-void                sc_notify_set_eager_threshold (sc_notify_t * notify, size_t thresh);
+void                sc_notify_set_eager_threshold (sc_notify_t * notify,
+                                                   size_t thresh);
 
 /** Get the MPI communicator of a notify controller.
  *
@@ -178,9 +179,6 @@ int                 sc_notify (int *receivers, int num_receivers,
                                sc_MPI_Comm mpicomm);
 
 /** Collective call to notify a set of receiver ranks of current rank.
- * This implementation uses a configurable n-ary tree for reduced latency.
- * This function allows to configure the mode of operation in detail.
- * It is possible to use
  * \param [in,out] receivers    On input, sorted and uniqued array of type int.
  *                              Contains the MPI ranks to inform.
  *                              If \b senders is not NULL, treated read-only.
@@ -195,7 +193,8 @@ int                 sc_notify (int *receivers, int num_receivers,
  *                              Thus, it must not be a view.
  * \param [in,out] payload      This array pointer may be NULL.
  *                              If not, it must not be a view and have
- *                              \b num_receivers entries of sizeof (int) on input.
+ *                              \b num_receivers entries that are the
+ *                              same size on every process.
  *                              This data will be communicated to the receivers.
  *                              On output, the array is resized to \b
  *                              *num_senders and contains the result.
@@ -207,6 +206,58 @@ void                sc_notify_payload (sc_array_t * receivers,
                                        sc_array_t * payload,
                                        sc_notify_t * notify);
 
+/** Collective call to notify a set of receiver ranks of current rank
+ * and send a variable size message to the receiver.
+ * \param [in,out] receivers    On input, sorted and uniqued array of type int.
+ *                              Contains the MPI ranks to inform.
+ *                              If \b senders is not NULL, treated read-only.
+ *                              If \b senders is NULL, takes its role on output.
+ *                              In this case it must not be a view.
+ * \param [in,out] senders      If NULL, the result is placed in \b receivers
+ *                              as written below for the non-NULL case.
+ *                              If not NULL, array of type int and any length.
+ *                              Its entries on input are ignored and overwritten.
+ *                              On output it is resized to the number of
+ *                              notifying ranks, which it contains in order.
+ *                              Thus, it must not be a view.
+ * \param [in,out] in_payload   This array pointer may be NULL.
+ *                              If not, it must not be a view and have
+ *                              entries that are the same size on every process.
+ *                              This data will be communicated to the receivers.
+ *                              If \b out_payload is NULL, this will be
+ *                              resized to contain the received payload.
+ * \param [in,out] out_payload  This array pointer may be NULL.
+ *                              If not, it must not be a view and have
+ *                              entries that are the same size on every process.
+ *                              If not NULL, this array will be resized to
+ *                              contain the received payload.
+ * \param [in,out] in_offsets   If \b in_payload is not NULL,
+ *                              this is an array of int's of size
+ *                              \b num_receivers + 1,
+ *                              giving offsets for the portion of the
+ *                              payload to be sent to every receiver.
+ *                              If \b out_offsets is NULL,
+ *                              it will be resized to give
+ *                              offsets of the received payload.
+ * \param [in,out] out_offsets  This array pointer may be NULL.
+ *                              If \b in_payload is not NULL,
+ *                              it is an array of int's that will be resized
+ *                              to \b num_senders + 1,
+ *                              giving offsets for the portion of the
+ *                              payload received from each sender.
+ * \param [in] sorted           whether \b receivers and \b senders
+ *                              (and thus \b in_offsets and \b out_offsets)
+ *                              are required to be sorted by MPI rank.
+ * \param [in] notify           Notify controller to use.
+ *                              This function aborts on MPI error.
+ */
+void                sc_notify_payloadv (sc_array_t * receivers,
+                                        sc_array_t * senders,
+                                        sc_array_t * out_payload,
+                                        sc_array_t * in_payload,
+                                        sc_array_t * out_offsets,
+                                        sc_array_t * in_offsets,
+                                        int sorted, sc_notify_t * notify);
 SC_EXTERN_C_END;
 
 #endif /* !SC_NOTIFY_H */

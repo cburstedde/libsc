@@ -65,24 +65,29 @@ sc_uniq (int *list, int *count)
 int
 main (int argc, char **argv)
 {
-  int                 i, j;
+  int                 i, j, k;
   int                 mpiret;
   int                 mpisize, mpirank;
   int                *senders1, num_senders1;
   int                *senders2, num_senders2;
   int                *senders3, num_senders3;
   int                *senders4, num_senders4;
+  int                *senders5, num_senders5;
   int                *receivers, num_receivers;
+  int                *off5;
+  int                *pay5;
   int                 ntop, nint, nbot;
   double              elapsed_allgather;
   double              elapsed_native;
   double              elapsed_nopayl;
   double              elapsed_payl;
+  double              elapsed_paylv;
   sc_MPI_Comm         mpicomm;
-  sc_array_t         *rec2, *snd2, *rec4, *pay4;
-  sc_statinfo_t       stats[2 * SC_NOTIFY_NUM_TYPES + 2];
+  sc_array_t         *rec2, *snd2, *rec4, *pay4, *rec5, *snd5, *inpay5,
+    *outpay5, *inoff5, *outoff5;
+  sc_statinfo_t       stats[3 * SC_NOTIFY_NUM_TYPES + 2];
   sc_notify_t        *notify;
-  char                namep[SC_NOTIFY_NUM_TYPES][BUFSIZ];
+  char                namep[SC_NOTIFY_NUM_TYPES][2][BUFSIZ];
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -131,9 +136,11 @@ main (int argc, char **argv)
                                 senders1, &num_senders1, mpicomm);
   SC_CHECK_MPI (mpiret);
   elapsed_allgather += sc_MPI_Wtime ();
-  sc_stats_set1 (stats + 2 * SC_NOTIFY_NUM_TYPES, elapsed_allgather,
+  sc_stats_set1 (stats + 3 * SC_NOTIFY_NUM_TYPES, elapsed_allgather,
                  "Allgather");
 
+  mpiret = sc_MPI_Barrier (mpicomm);
+  SC_CHECK_MPI (mpiret);
   SC_GLOBAL_INFO ("Testing native sc_notify\n");
   senders3 = SC_ALLOC (int, mpisize);
   mpiret = sc_MPI_Barrier (mpicomm);
@@ -144,7 +151,7 @@ main (int argc, char **argv)
                       senders3, &num_senders3, mpicomm);
   SC_CHECK_MPI (mpiret);
   elapsed_native += sc_MPI_Wtime ();
-  sc_stats_set1 (stats + 2 * SC_NOTIFY_NUM_TYPES + 1, elapsed_native,
+  sc_stats_set1 (stats + 3 * SC_NOTIFY_NUM_TYPES + 1, elapsed_native,
                  "Native");
 
   SC_CHECK_ABORT (num_senders1 == num_senders3, "Mismatch 13 sender count");
@@ -155,8 +162,11 @@ main (int argc, char **argv)
   for (j = 0; j < SC_NOTIFY_NUM_TYPES; j++) {
     const char         *name = sc_notify_type_strings[j];
 
-    snprintf (namep[j], BUFSIZ - 1, "%s payload", name);
+    snprintf (namep[j][0], BUFSIZ - 1, "%s payload", name);
+    snprintf (namep[j][1], BUFSIZ - 1, "%s payloadv", name);
 
+    mpiret = sc_MPI_Barrier (mpicomm);
+    SC_CHECK_MPI (mpiret);
     SC_GLOBAL_INFOF ("Testing sc_notify_payload %s\n", name);
     notify = sc_notify_new (mpicomm);
     sc_notify_set_type (notify, j);
@@ -174,8 +184,10 @@ main (int argc, char **argv)
     elapsed_nopayl += sc_MPI_Wtime ();
     senders2 = (int *) snd2->array;
     num_senders2 = (int) snd2->elem_count;
-    sc_stats_set1 (stats + 2 * j, elapsed_nopayl, name);
+    sc_stats_set1 (stats + 3 * j, elapsed_nopayl, name);
 
+    mpiret = sc_MPI_Barrier (mpicomm);
+    SC_CHECK_MPI (mpiret);
     SC_GLOBAL_INFOF ("Testing sc_notify_payload %s with payload\n", name);
     rec4 = sc_array_new_count (sizeof (int), num_receivers);
     pay4 = sc_array_new_count (sizeof (int), num_receivers);
@@ -191,24 +203,69 @@ main (int argc, char **argv)
     senders4 = (int *) rec4->array;
     num_senders4 = (int) rec4->elem_count;
     SC_ASSERT ((int) pay4->elem_count == num_senders4);
-    sc_stats_set1 (stats + 2 * j + 1, elapsed_payl, namep[j]);
+    sc_stats_set1 (stats + 3 * j + 1, elapsed_payl, namep[j][0]);
+
+    mpiret = sc_MPI_Barrier (mpicomm);
+    SC_CHECK_MPI (mpiret);
+    SC_GLOBAL_INFOF ("Testing sc_notify_payloadv %s\n", name);
+    rec5 = sc_array_new_count (sizeof (int), num_receivers);
+    snd5 = sc_array_new (sizeof (int));
+    inpay5 = sc_array_new_count (sizeof (int), num_receivers * mpirank);
+    outpay5 = sc_array_new (sizeof (int));
+    inoff5 = sc_array_new_count (sizeof (int), num_receivers + 1);
+    outoff5 = sc_array_new (sizeof (int));
+    *(int *) sc_array_index (inoff5, 0) = 0;
+    for (i = 0; i < num_receivers; ++i) {
+      *(int *) sc_array_index_int (rec5, i) = receivers[i];
+      *(int *) sc_array_index_int (inoff5, i + 1) = mpirank * (i + 1);
+      for (k = 0; k < mpirank; k++) {
+        *(int *) sc_array_index_int (inpay5, mpirank * i + k) =
+          3 * mpirank + 5;
+      }
+    }
+    mpiret = sc_MPI_Barrier (mpicomm);
+    SC_CHECK_MPI (mpiret);
+    elapsed_paylv = -sc_MPI_Wtime ();
+    sc_notify_payloadv (rec5, snd5, inpay5, outpay5, inoff5, outoff5, 1,
+                        notify);
+    elapsed_paylv += sc_MPI_Wtime ();
+    senders5 = (int *) snd5->array;
+    pay5 = (int *) outpay5->array;
+    off5 = (int *) outoff5->array;
+    num_senders5 = (int) snd5->elem_count;
+    sc_stats_set1 (stats + 3 * j + 2, elapsed_paylv, namep[j][1]);
 
     sc_notify_destroy (notify);
 
     SC_CHECK_ABORT (num_senders1 == num_senders2, "Mismatch 12 sender count");
     SC_CHECK_ABORT (num_senders1 == num_senders4, "Mismatch 14 sender count");
+    SC_CHECK_ABORT (num_senders1 == num_senders5, "Mismatch 15 sender count");
     for (i = 0; i < num_senders1; ++i) {
       SC_CHECK_ABORTF (senders1[i] == senders2[i], "Mismatch 12 sender %d",
                        i);
       SC_CHECK_ABORTF (senders1[i] == senders4[i], "Mismatch 14 sender %d",
                        i);
+      SC_CHECK_ABORTF (senders1[i] == senders5[i], "Mismatch 15 sender %d",
+                       i);
       SC_CHECK_ABORTF (*(int *) sc_array_index_int (pay4, i) ==
                        2 * senders4[i] + 3, "Mismatch payload %d", i);
+      SC_CHECK_ABORTF (off5[i + 1] - off5[i] == senders1[i],
+                       "Mismatch payloadv size %d", i);
+      for (k = 0; k < senders1[i]; k++) {
+        SC_CHECK_ABORTF (pay5[off5[i] + k] == 3 * senders1[i] + 5,
+                         "Mismatch payloadv %d", i);
+      }
     }
     sc_array_destroy (rec2);
     sc_array_destroy (snd2);
     sc_array_destroy (rec4);
     sc_array_destroy (pay4);
+    sc_array_destroy (rec5);
+    sc_array_destroy (snd5);
+    sc_array_destroy (inpay5);
+    sc_array_destroy (outpay5);
+    sc_array_destroy (inoff5);
+    sc_array_destroy (outoff5);
   }
 
   SC_FREE (receivers);
