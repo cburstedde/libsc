@@ -38,6 +38,7 @@ typedef enum
   SC_NOTIFY_ALLGATHER = 0, /**< choose allgather algorithm */
   SC_NOTIFY_BINARY,        /**< choose simple binary recursion */
   SC_NOTIFY_NARY,          /**< choose nary (k-way) recursion */
+  SC_NOTIFY_ALLTOALL,      /**< choose alltoall algorithm (AKA personalized exchange) */
   SC_NOTIFY_NUM_TYPES
 }
 sc_notify_type_t;
