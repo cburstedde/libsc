@@ -27,6 +27,7 @@
 /*== INTERFACE == */
 
 sc_notify_type_t    sc_notify_type_default = SC_NOTIFY_NARY;
+size_t              sc_notify_eager_threshold_default = 1024;
 
 typedef struct sc_notify_nary_s
 {
@@ -35,7 +36,7 @@ typedef struct sc_notify_nary_s
   int                 mpirank;
   int                 ntop, nint, nbot;
   int                 depth;
-  int                 withp;
+  int                 npay;
 }
 sc_notify_nary_t;
 
@@ -43,6 +44,7 @@ struct sc_notify_s
 {
   sc_MPI_Comm         mpicomm;
   sc_notify_type_t    type;
+  size_t              eager_threshold;
   union
   {
     sc_notify_nary_t    nary;
@@ -65,6 +67,7 @@ sc_notify_new (sc_MPI_Comm comm)
   notify = SC_ALLOC_ZERO (sc_notify_t, 1);
   notify->mpicomm = comm;
   notify->type = SC_NOTIFY_DEFAULT;
+  notify->eager_threshold = sc_notify_eager_threshold_default;
   SC_ASSERT (sc_notify_type_default >= 0
              && sc_notify_type_default < SC_NOTIFY_NUM_TYPES);
   sc_notify_set_type (notify, sc_notify_type_default);
@@ -132,6 +135,18 @@ sc_notify_set_type (sc_notify_t * notify, sc_notify_type_t in_type)
   }
 }
 
+size_t
+sc_notify_get_eager_threshold (sc_notify_t * notify)
+{
+  return notify->eager_threshold;
+}
+
+void
+sc_notify_set_eagher_threshold (sc_notify_t * notify, size_t thresh)
+{
+  notify->eager_threshold = thresh;
+}
+
 #if 0
 
 static void
@@ -192,26 +207,27 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
 
   if (payload) {
     MPI_Request        *sendreq, *recvreq;
-    int                *ipayload = (int *) payload->array;
-    int                *rpayload;
+    char               *cpayload = (char *) payload->array;
+    char               *rpayload;
     int                 j;
     int                 mpiret;
     int                 num_receivers = (int) receivers->elem_count;
     int                *ireceivers = (int *) receivers->array;
+    int                 msg_size = (int) payload->elem_size;
 
     sendreq = SC_ALLOC (MPI_Request, (num_receivers + num_senders));
     recvreq = &sendreq[num_receivers];
-    rpayload = SC_ALLOC (int, num_senders);
+    rpayload = SC_ALLOC (char, num_senders * msg_size);
 
     for (j = 0; j < num_receivers; j++) {
       mpiret =
-        sc_MPI_Isend (&ipayload[j], 1, sc_MPI_INT, ireceivers[j],
+        sc_MPI_Isend (&cpayload[j * msg_size], msg_size, sc_MPI_BYTE, ireceivers[j],
                       SC_TAG_NOTIFY_WRAPPER, comm, sendreq + j);
       SC_CHECK_MPI (mpiret);
     }
     for (j = 0; j < num_senders; j++) {
       mpiret =
-        sc_MPI_Irecv (&rpayload[j], 1, sc_MPI_INT, isenders[j],
+        sc_MPI_Irecv (&rpayload[j * msg_size], msg_size, sc_MPI_BYTE, isenders[j],
                       SC_TAG_NOTIFY_WRAPPER, comm, recvreq + j);
       SC_CHECK_MPI (mpiret);
     }
@@ -220,7 +236,7 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
                       sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
     sc_array_resize (payload, num_senders);
-    memcpy ((int *) payload->array, rpayload, num_senders * sizeof (int));
+    memcpy ((char *) payload->array, rpayload, num_senders * msg_size);
     SC_FREE (rpayload);
     SC_FREE (sendreq);
   }
@@ -248,7 +264,7 @@ static void
 sc_notify_init_input (sc_array_t * input, int *receivers, int num_receivers,
                       sc_array_t * payload, int mpisize, int mpirank)
 {
-  int                 withp;
+  int                 npay;
   int                 rec;
   int                 i;
   int                *pint;
@@ -260,20 +276,27 @@ sc_notify_init_input (sc_array_t * input, int *receivers, int num_receivers,
   SC_ASSERT (0 <= mpirank && mpirank < mpisize);
 
   SC_ASSERT (payload == NULL || (int) payload->elem_count == num_receivers);
-  withp = payload != NULL;
+  if (payload) {
+    size_t lowbound = (payload->elem_size > sizeof (int)) ? (payload->elem_size - sizeof(int)) : 0;
 
-  sc_array_init_count (input, sizeof (int), (3 + withp) * num_receivers);
+    npay = lowbound / sizeof(int) + 1;
+  }
+  else {
+    npay = 0;
+  }
+
+  sc_array_init_count (input, sizeof (int), (3 + npay) * num_receivers);
   rec = -1;
   for (i = 0; i < num_receivers; ++i) {
     SC_ASSERT (rec < receivers[i]);
     rec = receivers[i];
     SC_ASSERT (0 <= rec && rec < mpisize);
-    pint = (int *) sc_array_index_int (input, (3 + withp) * i);
+    pint = (int *) sc_array_index_int (input, (3 + npay) * i);
     pint[0] = rec;
     pint[1] = 1;
     pint[2] = mpirank;
-    if (withp) {
-      pint[3] = *(int *) sc_array_index_int (payload, i);
+    if (npay) {
+      memcpy((char *) &pint[3], sc_array_index_int (payload, i), payload->elem_size);
     }
   }
 
@@ -294,9 +317,8 @@ static void
 sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
                         sc_array_t * payload, int mpisize, int mpirank)
 {
-#ifdef SC_ENABLE_DEBUG
-  int                 withp, multi;
-#endif
+  int                 npay;
+  int                 multi;
   int                 found_num_senders;
   int                 i;
   int                *pint;
@@ -307,11 +329,16 @@ sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
 
   SC_ASSERT (num_senders != NULL);
 
-#ifdef SC_ENABLE_DEBUG
+  if (payload) {
+    size_t lowbound = (payload->elem_size > sizeof (int)) ? (payload->elem_size - sizeof(int)) : 0;
+
+    npay = lowbound / sizeof(int) + 1;
+  }
+  else {
+    npay = 0;
+  }
+  multi = 1 + npay;
   SC_ASSERT (payload == NULL || (int) payload->elem_count == 0);
-  withp = payload != NULL;
-  multi = 1 + withp;
-#endif
 
   found_num_senders = 0;
   if (output->elem_count > 0) {
@@ -329,8 +356,8 @@ sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
     else {
       sc_array_resize (payload, found_num_senders);
       for (i = 0; i < found_num_senders; ++i) {
-        senders[i] = pint[2 + 2 * i];
-        *(int *) sc_array_index_int (payload, i) = pint[3 + 2 * i];
+        senders[i] = pint[2 + multi * i];
+        memcpy (sc_array_index_int (payload, i), (char *) &pint[2 + multi * i + 1], payload->elem_size);
       }
     }
   }
@@ -343,13 +370,13 @@ sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
  * Format of variable-length records:
  * forall(torank): (torank, howmanyfroms, listof(fromrank, payload)).
  * The records must be ordered ascending by torank.
- * The payload is optional and depends on the calling context via \b withp.
+ * The payload is optional and depends on the calling context via \b npay.
  */
 static void
 sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second,
-                 int withp)
+                 int npay)
 {
-  int                 i, ir, j, jr, k;
+  int                 i, ir, j, jr, k, l;
   int                 torank, numfroms;
   int                 multi, itemlen;
   int                *pint, *psec, *pout;
@@ -359,8 +386,8 @@ sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second,
   SC_ASSERT (output->elem_size == sizeof (int));
   SC_ASSERT (output->elem_count == 0);
 
-  SC_ASSERT (withp == 0 || withp == 1);
-  multi = 1 + withp;
+  SC_ASSERT (npay >= 0);
+  multi = 1 + npay;
 
   i = ir = 0;
   torank = -1;
@@ -422,16 +449,16 @@ sc_notify_merge (sc_array_t * output, sc_array_t * input, sc_array_t * second,
           if (j < pint[1] &&
               (jr >= psec[1] || pint[2 + multi * j] < psec[2 + multi * jr])) {
             pout[k++] = pint[2 + multi * j];
-            if (withp) {
-              pout[k++] = pint[3 + 2 * j];
+            for (l = 0; l < npay; l++) {
+              pout[k++] = pint[2 + multi * j + 1 + l];
             }
             ++j;
           }
           else {
             SC_ASSERT (jr < psec[1]);
             pout[k++] = psec[2 + multi * jr];
-            if (withp) {
-              pout[k++] = psec[3 + 2 * jr];
+            for (l = 0; l < npay; l++) {
+              pout[k++] = psec[2 + multi * jr + 1 + l];
             }
             ++jr;
           }
@@ -727,7 +754,7 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
       SC_ASSERT (torank % lengthn == me % lengthn);
       numfroms = pint[1];
       SC_ASSERT (numfroms > 0);
-      itemlen = 2 + (1 + nary->withp) * numfroms;
+      itemlen = 2 + (1 + nary->npay) * numfroms;
       topart = (torank % length) / lengthn;
       sendbuf = (sc_array_t *) sc_array_index_int
         (topart == mypart ? &recvbufs : &sendbufs, topart);
@@ -811,7 +838,7 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
         aone = (sc_array_t *) sc_array_index_int (&recvbufs, i);
         atwo = (sc_array_t *) sc_array_index_int (&recvbufs, i + power);
         sc_array_init (array, sizeof (int));
-        sc_notify_merge (array, aone, atwo, nary->withp);
+        sc_notify_merge (array, aone, atwo, nary->npay);
 
         /* the surviving array lives on in aone */
         sc_array_reset (aone);
@@ -857,7 +884,7 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
     SC_ASSERT (torank % length == me % length);
     numfroms = pint[1];
     SC_ASSERT (numfroms > 0);
-    multi = 1 + nary->withp;
+    multi = 1 + nary->npay;
     fromrank = -1;
     for (j = 0; j < numfroms; ++j) {
       SC_ASSERT (fromrank < pint[2 + multi * j]);
@@ -923,7 +950,14 @@ sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
 
   /* assign context data for recursion */
   nary->depth = depth;
-  nary->withp = payload != NULL;
+  if (payload) {
+    size_t lowbound = (payload->elem_size > sizeof (int)) ? (payload->elem_size - sizeof(int)) : 0;
+
+    nary->npay = lowbound / sizeof(int) + 1;
+  }
+  else {
+    nary->npay = 0;
+  }
 
   /* convert input variables into internal format */
   sc_notify_init_input (array, (int *) receivers->array, num_receivers,
@@ -957,10 +991,10 @@ sc_notify_payload_alltoall (sc_array_t * receivers, sc_array_t * senders,
   int                 mpisize, mpirank;
   int                *buffered_receivers;
   int                *all_receivers;
-  int                *ipayload = NULL;
   int                *ireceivers = NULL;
   int                *isenders = NULL;
   int                 stride;
+  int                 npay = 0;
   sc_MPI_Comm         mpicomm;
 
   mpicomm = sc_notify_get_comm (notify);
@@ -971,11 +1005,12 @@ sc_notify_payload_alltoall (sc_array_t * receivers, sc_array_t * senders,
 
   ireceivers = (int *) receivers->array;
 
-  stride = 1;
   if (payload) {
-    stride = 2;
-    ipayload = (int *) payload->array;
+    size_t lowbound = (payload->elem_size > sizeof (int)) ? (payload->elem_size - sizeof(int)) : 0;
+
+    npay = lowbound / sizeof(int) + 1;
   }
+  stride = 1 + npay;
 
   buffered_receivers = SC_ALLOC_ZERO (int, stride * mpisize);
   num_receivers = (int) receivers->elem_count;
@@ -983,7 +1018,8 @@ sc_notify_payload_alltoall (sc_array_t * receivers, sc_array_t * senders,
     SC_ASSERT (ireceivers[i] >= 0 && ireceivers[i] < mpisize);
     buffered_receivers[stride * ireceivers[i] + 0] = 1;
     if (payload) {
-      buffered_receivers[stride * ireceivers[i] + 1] = ipayload[i];
+      memcpy (&buffered_receivers[stride * ireceivers[i] + 1],
+              sc_array_index_int (payload, i), payload->elem_size);
     }
   }
 
@@ -1008,14 +1044,14 @@ sc_notify_payload_alltoall (sc_array_t * receivers, sc_array_t * senders,
 
   if (payload) {
     sc_array_resize (payload, (size_t) found_num_senders);
-    ipayload = (int *) payload->array;
   }
 
   found_num_senders = 0;
   for (i = 0; i < mpisize; i++) {
     if (all_receivers[stride * i + 0]) {
       if (payload) {
-        ipayload[found_num_senders] = all_receivers[stride * i + 1];
+        memcpy (sc_array_index_int (payload, i),
+                &all_receivers[stride * i + 1], payload->elem_size);
       }
       isenders[found_num_senders++] = i;
     }
@@ -1242,6 +1278,8 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
 {
   int                 num_receivers;
   sc_notify_type_t    type = sc_notify_get_type (notify);
+  sc_array_t         *first_payload = NULL;
+  sc_array_t         *receivers_copy = NULL;
 
   SC_ASSERT (receivers != NULL && receivers->elem_size == sizeof (int));
   SC_ASSERT (senders == NULL || senders->elem_size == sizeof (int));
@@ -1257,26 +1295,77 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
 
   SC_ASSERT (payload == NULL ||
              (SC_ARRAY_IS_OWNER (payload) &&
-              payload->elem_size == sizeof (int) &&
               (int) payload->elem_count == num_receivers));
+
+  if (payload && payload->elem_size <= notify->eager_threshold) {
+    first_payload = payload;
+  }
+  else {
+    if (!senders) {
+      receivers_copy =
+        sc_array_new_count (receivers->elem_size, receivers->elem_count);
+      sc_array_copy (receivers_copy, receivers);
+    }
+  }
 
   switch (type) {
   case SC_NOTIFY_ALLGATHER:
-    return sc_notify_payload_wrapper (receivers, senders, payload, notify,
-                                      sc_notify_allgather);
+    return sc_notify_payload_wrapper (receivers, senders, first_payload,
+                                      notify, sc_notify_allgather);
     break;
   case SC_NOTIFY_BINARY:
-    return sc_notify_payload_wrapper (receivers, senders, payload, notify,
-                                      sc_notify);
+    return sc_notify_payload_wrapper (receivers, senders, first_payload,
+                                      notify, sc_notify);
     break;
   case SC_NOTIFY_NARY:
-    return sc_notify_payload_nary (receivers, senders, payload, notify);
+    return sc_notify_payload_nary (receivers, senders, first_payload, notify);
     break;
   case SC_NOTIFY_ALLTOALL:
-    return sc_notify_payload_alltoall (receivers, senders, payload, notify);
+    return sc_notify_payload_alltoall (receivers, senders, first_payload,
+                                       notify);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
   }
 
+  if (payload && first_payload != payload) {
+    sc_array_t         *arecv = receivers_copy ? receivers_copy : receivers;
+    sc_array_t         *asend = senders ? senders : receivers;
+    int                *irecv = (int *) arecv->array;
+    int                *isend = (int *) asend->array;
+    int                 i;
+    int                 num_receivers = (int) arecv->elem_count;
+    int                 num_senders = (int) asend->elem_count;
+    int                 mpiret;
+    int                 msg_size = (int) payload->elem_size;
+    char               *cpayload = (char *) payload->array;
+    MPI_Request        *sendreq;
+    sc_MPI_Comm         comm = sc_notify_get_comm (notify);
+    char               *recv_payload = NULL;
+
+    sendreq = SC_ALLOC (MPI_Request, num_receivers);
+    for (i = 0; i < num_receivers; i++) {
+      mpiret =
+        sc_MPI_Isend (&cpayload[i * msg_size], msg_size, sc_MPI_BYTE,
+                      irecv[i], SC_TAG_NOTIFY_PAYLOAD, comm, sendreq + i);
+      SC_CHECK_MPI (mpiret);
+    }
+    recv_payload = SC_ALLOC (char, msg_size * num_senders);
+    for (i = 0; i < num_senders; i++) {
+      mpiret =
+        sc_MPI_Recv (&recv_payload[i * msg_size], msg_size, sc_MPI_BYTE,
+                     isend[i], SC_TAG_NOTIFY_PAYLOAD, comm,
+                     sc_MPI_STATUS_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+    mpiret = sc_MPI_Waitall (num_receivers, sendreq, sc_MPI_STATUS_IGNORE);
+    SC_CHECK_MPI (mpiret);
+    sc_array_resize (payload, num_senders);
+    memcpy (payload->array, recv_payload, (size_t) msg_size * num_senders);
+    SC_FREE (recv_payload);
+    SC_FREE (sendreq);
+  }
+  if (receivers_copy) {
+    sc_array_destroy (receivers_copy);
+  }
 }

@@ -50,6 +50,10 @@ extern const char  *sc_notify_type_strings[SC_NOTIFY_NUM_TYPES];
  * to SC_NOTIFY_NARY */
 extern sc_notify_type_t sc_notify_type_default;
 
+/** The default threshold for payload sizes (in bytes) that are communicated
+ * with the notification packet.  Initialized to 1024 (2^10) */
+extern size_t sc_notify_eager_threshold_default;
+
 /** Create a notify controller that can be used in sc_notify_payload() and
  * sc_notify_payloadv().
  *
@@ -65,6 +69,23 @@ sc_notify_t        *sc_notify_new (sc_MPI_Comm mpicomm);
  *                        destroyed.  Pointer is invalid on completion.
  */
 void                sc_notify_destroy (sc_notify_t * notify);
+
+/** Get the payload size above which payloads are no longer transfered with
+ * notification packets in sc_notify_payload().  Default is 256k bytes.
+ *
+ * \param[in] notify      The notify controller.
+ * \return                The size in bytes of the maximum eager payload size.
+ */
+size_t              sc_notify_get_eager_threshold (sc_notify_t * notify);
+
+/** Get the payload size above which payloads are no longer transfered with
+ * notification packets in sc_notify_payload().
+ *
+ * \param[in,out] notify      The notify controller.
+ * \param[in]     thresh      The size in bytes of the maximum eager payload
+ *                            size.
+ */
+void                sc_notify_set_eager_threshold (sc_notify_t * notify, size_t thresh);
 
 /** Get the MPI communicator of a notify controller.
  *
