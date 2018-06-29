@@ -205,7 +205,7 @@ int                 sc_notify (int *receivers, int num_receivers,
 void                sc_notify_payload (sc_array_t * receivers,
                                        sc_array_t * senders,
                                        sc_array_t * payload,
-                                       sc_notify_t * notify);
+                                       int sorted, sc_notify_t * notify);
 
 /** Collective call to notify a set of receiver ranks of current rank
  * and send a variable size message to the receiver.

@@ -180,7 +180,7 @@ main (int argc, char **argv)
     mpiret = sc_MPI_Barrier (mpicomm);
     SC_CHECK_MPI (mpiret);
     elapsed_nopayl = -sc_MPI_Wtime ();
-    sc_notify_payload (rec2, snd2, NULL, notify);
+    sc_notify_payload (rec2, snd2, NULL, 1, notify);
     elapsed_nopayl += sc_MPI_Wtime ();
     senders2 = (int *) snd2->array;
     num_senders2 = (int) snd2->elem_count;
@@ -198,7 +198,7 @@ main (int argc, char **argv)
     mpiret = sc_MPI_Barrier (mpicomm);
     SC_CHECK_MPI (mpiret);
     elapsed_payl = -sc_MPI_Wtime ();
-    sc_notify_payload (rec4, NULL, pay4, notify);
+    sc_notify_payload (rec4, NULL, pay4, 1, notify);
     elapsed_payl += sc_MPI_Wtime ();
     senders4 = (int *) rec4->array;
     num_senders4 = (int) rec4->elem_count;

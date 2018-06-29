@@ -182,8 +182,8 @@ sc_array_is_invalid (sc_array_t * array)
 static void
 sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
                            sc_array_t * payload, sc_notify_t * notify,
-                           int (*notify_fn) (int *, int, int *, int *,
-                                             sc_MPI_Comm))
+                           int sorted, int (*notify_fn) (int *, int, int *,
+                                                         int *, sc_MPI_Comm))
 {
   int                 mpiret, size, rank;
   int                *isenders, num_senders = -1;
@@ -254,6 +254,36 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
     sc_array_resize (receivers, (size_t) num_senders);
     memcpy (receivers->array, isenders, num_senders * sizeof (int));
     SC_FREE (isenders);
+    senders = receivers;
+  }
+  if (sorted && !sc_array_is_sorted (senders, sc_int_compare)) {
+    if (!payload) {
+      sc_array_sort (senders, sc_int_compare);
+    }
+    else {
+      sc_array_t         *sorter;
+      size_t              msg_size = payload->elem_size;
+      int                 j;
+
+      sorter =
+        sc_array_new_count (sizeof (int) + msg_size, (size_t) num_senders);
+      for (j = 0; j < num_senders; j++) {
+        int                *entry = sc_array_index_int (sorter, j);
+        char               *payl = sc_array_index_int (payload, j);
+
+        entry[0] = *((int *) sc_array_index_int (senders, (size_t) j));
+        memcpy ((char *) (&entry[1]), payl, msg_size);
+      }
+      sc_array_sort (sorter, sc_int_compare);
+      for (j = 0; j < num_senders; j++) {
+        int                *entry = sc_array_index_int (sorter, j);
+        char               *payl = sc_array_index_int (payload, j);
+
+        *((int *) sc_array_index_int (senders, (size_t) j)) = entry[0];
+        memcpy (payl, (char *) (&entry[1]), msg_size);
+      }
+      sc_array_destroy (sorter);
+    }
   }
 }
 
@@ -290,7 +320,7 @@ sc_notify_payloadv_wrapper (sc_array_t * receivers, sc_array_t * senders,
   if (!first_senders) {
     first_senders = sc_array_new (sizeof (int));
   }
-  sc_notify_payload (receivers, first_senders, sizes, notify);
+  sc_notify_payload (receivers, first_senders, sizes, sorted, notify);
   num_senders = (int) first_senders->elem_count;
   recv_offsets = out_offsets;
   if (!recv_offsets) {
@@ -1675,7 +1705,7 @@ sc_notify (int *receivers, int num_receivers,
 
 void
 sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
-                   sc_array_t * payload, sc_notify_t * notify)
+                   sc_array_t * payload, int sorted, sc_notify_t * notify)
 {
   int                 num_receivers;
   sc_notify_type_t    type = sc_notify_get_type (notify);
@@ -1712,11 +1742,11 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
   switch (type) {
   case SC_NOTIFY_ALLGATHER:
     return sc_notify_payload_wrapper (receivers, senders, first_payload,
-                                      notify, sc_notify_allgather);
+                                      notify, sorted, sc_notify_allgather);
     break;
   case SC_NOTIFY_BINARY:
     return sc_notify_payload_wrapper (receivers, senders, first_payload,
-                                      notify, sc_notify);
+                                      notify, sorted, sc_notify);
     break;
   case SC_NOTIFY_NARY:
     return sc_notify_payload_nary (receivers, senders, first_payload, notify);
@@ -1726,7 +1756,7 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
                                        notify);
     break;
   case SC_NOTIFY_PCX:
-    return sc_notify_payload_pcx (receivers, senders, first_payload, 1,
+    return sc_notify_payload_pcx (receivers, senders, first_payload, sorted,
                                   notify);
     break;
   default:
@@ -1787,12 +1817,7 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
   if (in_payload == NULL) {
     SC_ASSERT (out_payload == NULL && in_offsets == NULL
                && out_offsets == NULL);
-    if (type == SC_NOTIFY_PCX) {
-      sc_notify_payload_pcx (receivers, senders, NULL, sorted, notify);
-    }
-    else {
-      sc_notify_payload (receivers, senders, NULL, notify);
-    }
+    sc_notify_payload (receivers, senders, NULL, sorted, notify);
     return;
   }
 
