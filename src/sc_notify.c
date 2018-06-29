@@ -56,7 +56,8 @@ const char         *sc_notify_type_strings[SC_NOTIFY_NUM_TYPES] = {
   "allgather",
   "binary",
   "nary",
-  "alltoall"
+  "alltoall",
+  "pcx"
 };
 
 sc_notify_t        *
@@ -86,6 +87,7 @@ sc_notify_destroy (sc_notify_t * notify)
   case SC_NOTIFY_BINARY:
   case SC_NOTIFY_NARY:
   case SC_NOTIFY_ALLTOALL:
+  case SC_NOTIFY_PCX:
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -125,6 +127,7 @@ sc_notify_set_type (sc_notify_t * notify, sc_notify_type_t in_type)
     case SC_NOTIFY_ALLGATHER:
     case SC_NOTIFY_BINARY:
     case SC_NOTIFY_ALLTOALL:
+    case SC_NOTIFY_PCX:
       break;
     case SC_NOTIFY_NARY:
       sc_notify_nary_init (notify);
@@ -193,6 +196,7 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
   SC_CHECK_MPI (mpiret);
 
   if (senders) {
+    sc_array_reset (senders);
     sc_array_resize (senders, size);
     isenders = (int *) senders->array;
   }
@@ -236,6 +240,7 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
       sc_MPI_Waitall (num_senders + num_receivers, sendreq,
                       sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
+    sc_array_reset (payload);
     sc_array_resize (payload, num_senders);
     memcpy ((char *) payload->array, rpayload, num_senders * msg_size);
     SC_FREE (rpayload);
@@ -243,9 +248,9 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
   }
   if (senders) {
     sc_array_resize (senders, (size_t) num_senders);
-    isenders = (int *) senders->array;
   }
   else {
+    sc_array_reset (receivers);
     sc_array_resize (receivers, (size_t) num_senders);
     memcpy (receivers->array, isenders, num_senders * sizeof (int));
     SC_FREE (isenders);
@@ -335,16 +340,19 @@ sc_notify_payloadv_wrapper (sc_array_t * receivers, sc_array_t * senders,
                     sc_MPI_STATUS_IGNORE);
   SC_CHECK_MPI (mpiret);
   if (!senders) {
+    sc_array_reset (receivers);
     sc_array_resize (receivers, first_senders->elem_count);
     sc_array_copy (receivers, first_senders);
     sc_array_destroy (first_senders);
   }
   if (!out_offsets) {
+    sc_array_reset (in_offsets);
     sc_array_resize (in_offsets, recv_offsets->elem_count);
     sc_array_copy (in_offsets, recv_offsets);
     sc_array_destroy (recv_offsets);
   }
   if (!out_payload) {
+    sc_array_reset (in_payload);
     sc_array_resize (in_payload, recv_payload->elem_count);
     sc_array_copy (in_payload, recv_payload);
     sc_array_destroy (recv_payload);
@@ -460,6 +468,7 @@ sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
       memcpy (senders, pint + 2, found_num_senders * sizeof (int));
     }
     else {
+      sc_array_reset (payload);
       sc_array_resize (payload, found_num_senders);
       for (i = 0; i < found_num_senders; ++i) {
         senders[i] = pint[2 + multi * i];
@@ -1090,6 +1099,7 @@ sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
 }
 
 /*== SC_NOTIFY_ALLTOALL ==*/
+
 static void
 sc_notify_payload_alltoall (sc_array_t * receivers, sc_array_t * senders,
                             sc_array_t * payload, sc_notify_t * notify)
@@ -1148,12 +1158,14 @@ sc_notify_payload_alltoall (sc_array_t * receivers, sc_array_t * senders,
   }
 
   if (!senders) {
+    sc_array_reset (receivers);
     senders = receivers;
   }
   sc_array_resize (senders, found_num_senders);
   isenders = (int *) senders->array;
 
   if (payload) {
+    sc_array_reset (payload);
     sc_array_resize (payload, (size_t) found_num_senders);
   }
 
@@ -1169,6 +1181,284 @@ sc_notify_payload_alltoall (sc_array_t * receivers, sc_array_t * senders,
   }
   SC_FREE (buffered_receivers);
   SC_FREE (all_receivers);
+}
+
+/*== SC_NOTIFY_PCX ==*/
+
+static void
+sc_notify_payload_pcx (sc_array_t * receivers, sc_array_t * senders,
+                       sc_array_t * payload, int sorted, sc_notify_t * notify)
+{
+  int                 i;
+  int                 num_senders, num_receivers;
+  int                 mpiret;
+  int                 mpisize, mpirank;
+  int                *buffered_receivers;
+  int                *ireceivers = NULL;
+  int                *isenders = NULL;
+  sc_array_t         *recv_buf;
+  size_t              msg_size = 0;
+  size_t              stride;
+  char               *cpayload = NULL;
+  char               *crecv;
+  MPI_Request        *sendreqs;
+  sc_MPI_Comm         mpicomm;
+
+  mpicomm = sc_notify_get_comm (notify);
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  ireceivers = (int *) receivers->array;
+
+  buffered_receivers = SC_ALLOC_ZERO (int, mpisize);
+  num_receivers = (int) receivers->elem_count;
+  for (i = 0; i < num_receivers; i++) {
+    SC_ASSERT (ireceivers[i] >= 0 && ireceivers[i] < mpisize);
+    buffered_receivers[ireceivers[i] + 0] = 1;
+  }
+
+  num_senders = 0;
+
+  mpiret =
+    sc_MPI_Reduce_scatter_block (buffered_receivers, &num_senders, 1,
+                                 sc_MPI_INT, sc_MPI_SUM, mpicomm);
+  SC_CHECK_MPI (mpiret);
+  SC_FREE (buffered_receivers);
+
+  if (payload) {
+    msg_size = payload->elem_size;
+    cpayload = (char *) payload->array;
+  }
+  stride = sizeof (int) + msg_size;
+
+  recv_buf = NULL;
+  if (!msg_size && senders) {
+    recv_buf = senders;
+    sc_array_resize (senders, num_senders);
+  }
+  else {
+    recv_buf = sc_array_new_count (stride, num_senders);
+  }
+  crecv = (char *) recv_buf->array;
+
+  sendreqs = SC_ALLOC (MPI_Request, num_receivers);
+  for (i = 0; i < num_receivers; i++) {
+
+    mpiret = sc_MPI_Isend (&cpayload[i * msg_size], msg_size, sc_MPI_BYTE,
+                           ireceivers[i], SC_TAG_NOTIFY_PCX, mpicomm,
+                           &sendreqs[i]);
+    SC_CHECK_MPI (mpiret);
+  }
+  for (i = 0; i < num_senders; i++) {
+    sc_MPI_Status       status;
+
+    mpiret =
+      sc_MPI_Recv (&crecv[i * stride + sizeof (int)], msg_size, sc_MPI_BYTE,
+                   sc_MPI_ANY_SOURCE, SC_TAG_NOTIFY_PCX, mpicomm, &status);
+    SC_CHECK_MPI (mpiret);
+    *((int *) &crecv[i * stride]) = status.MPI_SOURCE;
+  }
+
+  if (sorted) {
+    sc_array_sort (recv_buf, sc_int_compare);
+  }
+
+  mpiret = sc_MPI_Waitall (num_receivers, sendreqs, sc_MPI_STATUSES_IGNORE);
+  SC_CHECK_MPI (mpiret);
+  SC_FREE (sendreqs);
+
+  if (!msg_size && senders) {
+    if (payload) {
+      sc_array_reset (payload);
+      sc_array_resize (payload, num_senders);
+    }
+    return;
+  }
+
+  if (!senders) {
+    sc_array_reset (receivers);
+    senders = receivers;
+  }
+  sc_array_resize (senders, (size_t) num_senders);
+  isenders = (int *) senders->array;
+
+  if (payload) {
+    sc_array_reset (payload);
+    sc_array_resize (payload, (size_t) num_senders);
+  }
+  cpayload = (char *) payload->array;
+
+  for (i = 0; i < num_senders; i++) {
+    isenders[i] = *((int *) &crecv[i * stride]);
+    memcpy (&cpayload[i * msg_size], &crecv[i * stride + sizeof (int)],
+            msg_size);
+  }
+  sc_array_destroy (recv_buf);
+}
+
+static void
+sc_notify_payloadv_pcx (sc_array_t * receivers, sc_array_t * senders,
+                        sc_array_t * in_payload, sc_array_t * out_payload,
+                        sc_array_t * in_offsets, sc_array_t * out_offsets,
+                        int sorted, sc_notify_t * notify)
+{
+  int                 i;
+  int                 num_senders, num_receivers;
+  int                 mpiret;
+  int                 mpisize, mpirank;
+  int                *buffered_receivers;
+  int                *ireceivers = NULL;
+  int                *isenders = NULL;
+  sc_array_t         *recv_buf;
+  size_t              msg_size = 0;
+  char               *cpayload = NULL;
+  char               *crecv, *cout;
+  int                *inoff, *outoff;
+  int                 num_senders_size[2];
+  int                 recv_size;
+  sc_array_t         *first_senders;
+  MPI_Request        *sendreqs;
+  sc_MPI_Comm         mpicomm;
+
+  mpicomm = sc_notify_get_comm (notify);
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  ireceivers = (int *) receivers->array;
+  num_receivers = (int) receivers->elem_count;
+  inoff = (int *) in_offsets->array;
+
+  buffered_receivers = SC_ALLOC_ZERO (int, 2 * mpisize);
+  for (i = 0; i < num_receivers; i++) {
+    SC_ASSERT (ireceivers[i] >= 0 && ireceivers[i] < mpisize);
+    buffered_receivers[2 * ireceivers[i] + 0] = 1;
+    buffered_receivers[2 * ireceivers[i] + 1] = inoff[i + 1] - inoff[i];
+  }
+
+  num_senders_size[0] = 0;
+  num_senders_size[1] = 0;
+
+  mpiret =
+    sc_MPI_Reduce_scatter_block (buffered_receivers, &num_senders_size[0], 2,
+                                 sc_MPI_INT, sc_MPI_SUM, mpicomm);
+  SC_CHECK_MPI (mpiret);
+  SC_FREE (buffered_receivers);
+
+  /* send payloads */
+  msg_size = in_payload->elem_size;
+  sendreqs = SC_ALLOC (MPI_Request, num_receivers);
+  cpayload = (char *) in_payload->array;
+  for (i = 0; i < num_receivers; i++) {
+    mpiret =
+      sc_MPI_Isend (&cpayload[inoff[i] * msg_size],
+                    (inoff[i + 1] - inoff[i]) * msg_size, sc_MPI_BYTE,
+                    ireceivers[i], SC_TAG_NOTIFY_PCXV, mpicomm, &sendreqs[i]);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  /* how many messages and the total data we'll receive */
+  num_senders = num_senders_size[0];
+  recv_size = num_senders_size[1];
+  /* set up senders */
+  if (!senders) {
+    sc_array_reset (receivers);
+    senders = receivers;
+  }
+  sc_array_resize (senders, num_senders);
+  /* set up out_offsets */
+  if (!out_offsets) {
+    sc_array_reset (in_offsets);
+    out_offsets = in_offsets;
+  }
+  sc_array_resize (out_offsets, num_senders + 1);
+  outoff = (int *) out_offsets->array;
+
+  if (!sorted && out_payload) {
+    recv_buf = out_payload;
+    sc_array_resize (recv_buf, recv_size);
+  }
+  else {
+    recv_buf = sc_array_new_count (msg_size, (size_t) recv_size);
+  }
+  if (sorted) {
+    first_senders =
+      sc_array_new_count (3 * sizeof (int), (size_t) num_senders);
+  }
+  else {
+    first_senders = senders;
+  }
+
+  crecv = (char *) recv_buf->array;
+  outoff[0] = 0;
+  for (i = 0; i < num_senders; i++) {
+    sc_MPI_Status       status;
+    int                 this_payload;
+    int                 s;
+    int                *sender =
+      (int *) sc_array_index_int (first_senders, i);
+
+    mpiret =
+      sc_MPI_Recv (&crecv[outoff[i] * msg_size],
+                   (recv_size - outoff[i]) * msg_size, sc_MPI_BYTE,
+                   sc_MPI_ANY_SOURCE, SC_TAG_NOTIFY_PCXV, mpicomm, &status);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Get_count (&status, sc_MPI_BYTE, &this_payload);
+    SC_CHECK_MPI (mpiret);
+    SC_ASSERT ((this_payload % msg_size) == 0);
+    this_payload = this_payload / msg_size;
+    s = status.MPI_SOURCE;
+    sender[0] = s;
+    outoff[i + 1] = outoff[i] + this_payload;
+    if (sorted) {
+      sender[1] = outoff[i];
+      sender[2] = outoff[i + 1];
+    }
+  }
+
+  mpiret = sc_MPI_Waitall (num_receivers, sendreqs, sc_MPI_STATUS_IGNORE);
+  SC_CHECK_MPI (mpiret);
+
+  if (out_payload != recv_buf) {
+    if (!out_payload) {
+      sc_array_reset (in_payload);
+      out_payload = in_payload;
+    }
+    sc_array_resize (out_payload, recv_size);
+    if (!sorted) {
+      sc_array_copy (out_payload, recv_buf);
+    }
+    else {
+      sc_array_sort (first_senders, sc_int_compare);
+      isenders = (int *) senders->array;
+      cout = (char *) out_payload->array;
+      outoff[0] = 0;
+      for (i = 0; i < num_senders; i++) {
+        int                *sender =
+          (int *) sc_array_index_int (first_senders, i);
+        int                 roff, roffnext, roffsize;
+
+        isenders[i] = sender[0];
+        roff = sender[1];
+        roffnext = sender[2];
+        roffsize = roffnext - roff;
+        memcpy (&cout[outoff[i] * msg_size], &crecv[roff * msg_size],
+                roffsize * msg_size);
+        outoff[i + 1] = outoff[i] + roffsize;
+      }
+    }
+  }
+
+  if (first_senders != senders) {
+    sc_array_destroy (first_senders);
+  }
+  SC_FREE (sendreqs);
+  if (recv_buf != out_payload) {
+    sc_array_destroy (recv_buf);
+  }
 }
 
 /*== SC_NOTIFY_BINARY ==*/
@@ -1435,6 +1725,10 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
     return sc_notify_payload_alltoall (receivers, senders, first_payload,
                                        notify);
     break;
+  case SC_NOTIFY_PCX:
+    return sc_notify_payload_pcx (receivers, senders, first_payload, 1,
+                                  notify);
+    break;
   default:
     SC_ABORT_NOT_REACHED ();
   }
@@ -1493,7 +1787,12 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
   if (in_payload == NULL) {
     SC_ASSERT (out_payload == NULL && in_offsets == NULL
                && out_offsets == NULL);
-    sc_notify_payload (receivers, senders, NULL, notify);
+    if (type == SC_NOTIFY_PCX) {
+      sc_notify_payload_pcx (receivers, senders, NULL, sorted, notify);
+    }
+    else {
+      sc_notify_payload (receivers, senders, NULL, notify);
+    }
     return;
   }
 
@@ -1536,6 +1835,10 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
   case SC_NOTIFY_ALLTOALL:
     sc_notify_payloadv_wrapper (receivers, senders, in_payload, out_payload,
                                 in_offsets, out_offsets, sorted, notify);
+    break;
+  case SC_NOTIFY_PCX:
+    sc_notify_payloadv_pcx (receivers, senders, in_payload, out_payload,
+                            in_offsets, out_offsets, sorted, notify);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
