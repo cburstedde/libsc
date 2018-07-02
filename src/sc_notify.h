@@ -38,8 +38,8 @@ typedef enum
   SC_NOTIFY_ALLGATHER = 0, /**< choose allgather algorithm */
   SC_NOTIFY_BINARY,        /**< choose simple binary recursion */
   SC_NOTIFY_NARY,          /**< choose nary (k-way) recursion */
-  SC_NOTIFY_ALLTOALL,      /**< choose alltoall algorithm (AKA personalized exchange) */
-  SC_NOTIFY_PCX,           /**< choose reduce_scatter algorithm (AKA personalized consensus) */
+  SC_NOTIFY_PEX,           /**< choose alltoall algorithm (AKA personalized exchange) */
+  SC_NOTIFY_PCX,           /**< choose reduce_scatter algorithm (AKA personalized census) */
   SC_NOTIFY_NUM_TYPES
 }
 sc_notify_type_t;

@@ -56,7 +56,7 @@ const char         *sc_notify_type_strings[SC_NOTIFY_NUM_TYPES] = {
   "allgather",
   "binary",
   "nary",
-  "alltoall",
+  "pex",
   "pcx"
 };
 
@@ -86,7 +86,7 @@ sc_notify_destroy (sc_notify_t * notify)
   case SC_NOTIFY_ALLGATHER:
   case SC_NOTIFY_BINARY:
   case SC_NOTIFY_NARY:
-  case SC_NOTIFY_ALLTOALL:
+  case SC_NOTIFY_PEX:
   case SC_NOTIFY_PCX:
     break;
   default:
@@ -126,7 +126,7 @@ sc_notify_set_type (sc_notify_t * notify, sc_notify_type_t in_type)
     switch (in_type) {
     case SC_NOTIFY_ALLGATHER:
     case SC_NOTIFY_BINARY:
-    case SC_NOTIFY_ALLTOALL:
+    case SC_NOTIFY_PEX:
     case SC_NOTIFY_PCX:
       break;
     case SC_NOTIFY_NARY:
@@ -1128,11 +1128,11 @@ sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
                           payload, mpisize, mpirank);
 }
 
-/*== SC_NOTIFY_ALLTOALL ==*/
+/*== SC_NOTIFY_PEX ==*/
 
 static void
-sc_notify_payload_alltoall (sc_array_t * receivers, sc_array_t * senders,
-                            sc_array_t * payload, sc_notify_t * notify)
+sc_notify_payload_pex (sc_array_t * receivers, sc_array_t * senders,
+                       sc_array_t * payload, sc_notify_t * notify)
 {
   int                 i;
   int                 found_num_senders, num_receivers;
@@ -1751,8 +1751,8 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
   case SC_NOTIFY_NARY:
     return sc_notify_payload_nary (receivers, senders, first_payload, notify);
     break;
-  case SC_NOTIFY_ALLTOALL:
-    return sc_notify_payload_alltoall (receivers, senders, first_payload,
+  case SC_NOTIFY_PEX:
+    return sc_notify_payload_pex (receivers, senders, first_payload,
                                        notify);
     break;
   case SC_NOTIFY_PCX:
@@ -1857,7 +1857,7 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
   case SC_NOTIFY_ALLGATHER:
   case SC_NOTIFY_BINARY:
   case SC_NOTIFY_NARY:
-  case SC_NOTIFY_ALLTOALL:
+  case SC_NOTIFY_PEX:
     sc_notify_payloadv_wrapper (receivers, senders, in_payload, out_payload,
                                 in_offsets, out_offsets, sorted, notify);
     break;
