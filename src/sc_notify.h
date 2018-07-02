@@ -40,6 +40,7 @@ typedef enum
   SC_NOTIFY_NARY,          /**< choose nary (k-way) recursion */
   SC_NOTIFY_PEX,           /**< choose alltoall algorithm (AKA personalized exchange) */
   SC_NOTIFY_PCX,           /**< choose reduce_scatter algorithm (AKA personalized census) */
+  SC_NOTIFY_RANGES,        /**< use sc_ranges */
   SC_NOTIFY_NUM_TYPES
 }
 sc_notify_type_t;
@@ -144,6 +145,26 @@ void                sc_notify_nary_get_widths (sc_notify_t * notify,
  */
 void                sc_notify_nary_set_widths (sc_notify_t * notify, int ntop,
                                                int nint, int nbot);
+
+int                 sc_notify_ranges_get_num_ranges (sc_notify_t * notify);
+void                sc_notify_ranges_set_num_ranges (sc_notify_t * notify,
+                                                     int num_ranges);
+int                 sc_notify_ranges_get_package_id (sc_notify_t * notify);
+void                sc_notify_ranges_set_package_id (sc_notify_t * notify,
+                                                     int package_id);
+const int          *sc_notify_ranges_get_procs (sc_notify_t * notify,
+                                                int *num_procs);
+void                sc_notify_ranges_set_procs (sc_notify_t * notify,
+                                                int num_procs,
+                                                const int *procs);
+void                sc_notify_ranges_get_peer_range (sc_notify_t * notify,
+                                                     int *first_peer,
+                                                     int *last_peer);
+void                sc_notify_ranges_set_peer_range (sc_notify_t * notify,
+                                                     int first_peer,
+                                                     int last_peer);
+
+extern int          sc_notify_ranges_num_ranges_default;
 
 /** Collective call to notify a set of receiver ranks of current rank.
  * This version uses one call to sc_MPI_Allgather and one to sc_MPI_Allgatherv.

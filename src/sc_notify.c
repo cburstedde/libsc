@@ -23,6 +23,7 @@
 
 #include <sc_functions.h>
 #include <sc_notify.h>
+#include <sc_ranges.h>
 
 /*== INTERFACE == */
 
@@ -40,6 +41,13 @@ typedef struct sc_notify_nary_s
 }
 sc_notify_nary_t;
 
+typedef struct sc_notify_ranges_s
+{
+  int                 num_ranges;
+  int                 package_id;
+}
+sc_notify_ranges_t;
+
 struct sc_notify_s
 {
   sc_MPI_Comm         mpicomm;
@@ -48,6 +56,7 @@ struct sc_notify_s
   union
   {
     sc_notify_nary_t    nary;
+    sc_notify_ranges_t  ranges;
   }
   data;
 };
@@ -57,7 +66,8 @@ const char         *sc_notify_type_strings[SC_NOTIFY_NUM_TYPES] = {
   "binary",
   "nary",
   "pex",
-  "pcx"
+  "pcx",
+  "ranges",
 };
 
 sc_notify_t        *
@@ -88,6 +98,7 @@ sc_notify_destroy (sc_notify_t * notify)
   case SC_NOTIFY_NARY:
   case SC_NOTIFY_PEX:
   case SC_NOTIFY_PCX:
+  case SC_NOTIFY_RANGES:
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -109,6 +120,7 @@ sc_notify_get_type (sc_notify_t * notify)
 }
 
 static void         sc_notify_nary_init (sc_notify_t * notify);
+static void         sc_notify_ranges_init (sc_notify_t * notify);
 
 void
 sc_notify_set_type (sc_notify_t * notify, sc_notify_type_t in_type)
@@ -128,6 +140,9 @@ sc_notify_set_type (sc_notify_t * notify, sc_notify_type_t in_type)
     case SC_NOTIFY_BINARY:
     case SC_NOTIFY_PEX:
     case SC_NOTIFY_PCX:
+      break;
+    case SC_NOTIFY_RANGES:
+      sc_notify_ranges_init (notify);
       break;
     case SC_NOTIFY_NARY:
       sc_notify_nary_init (notify);
@@ -1491,6 +1506,233 @@ sc_notify_payloadv_pcx (sc_array_t * receivers, sc_array_t * senders,
   }
 }
 
+/*== SC_NOTIFY_RANGES ==*/
+
+int                 sc_notify_ranges_num_ranges_default = 25;
+
+int
+sc_notify_ranges_get_num_ranges (sc_notify_t * notify)
+{
+  SC_ASSERT (notify->type == SC_NOTIFY_RANGES);
+  return notify->data.ranges.num_ranges;
+}
+
+void
+sc_notify_ranges_set_num_ranges (sc_notify_t * notify, int num_ranges)
+{
+  SC_ASSERT (notify->type == SC_NOTIFY_RANGES);
+  SC_ASSERT (num_ranges > 0);
+  notify->data.ranges.num_ranges = num_ranges;
+}
+
+int
+sc_notify_ranges_get_package_id (sc_notify_t * notify)
+{
+  SC_ASSERT (notify->type == SC_NOTIFY_RANGES);
+  return notify->data.ranges.package_id;
+}
+
+void
+sc_notify_ranges_set_package_id (sc_notify_t * notify, int package_id)
+{
+  SC_ASSERT (notify->type == SC_NOTIFY_RANGES);
+  notify->data.ranges.package_id = package_id;
+}
+
+static void
+sc_notify_ranges_init (sc_notify_t * notify)
+{
+  notify->data.ranges.num_ranges = sc_notify_ranges_num_ranges_default;
+  notify->data.ranges.package_id = sc_package_id;
+}
+
+static void
+sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
+                          sc_array_t * payload, int sorted,
+                          sc_notify_t * notify)
+{
+  int                *my_ranges;
+  int                 max_ranges;
+  int                 maxwin;
+  int                 package_id;
+  int                 num_procs;
+  int                 maxpeers;
+  sc_MPI_Comm         comm;
+  int                 rank, size;
+  int                 mpiret;
+  int                *all_ranges;
+  int                 num_receivers_ranges = 0, num_senders_ranges = 0;
+  int                *procs;
+  int                *ireceivers;
+  int                 i;
+  int                 first_peer, last_peer;
+  int                *receiver_ranks_ranges;
+  int                *sender_ranks_ranges;
+  sc_array_t         *sendbuf;
+  sc_array_t         *recvbuf;
+  size_t              msg_size;
+  sc_MPI_Request     *sendreqs, *recvreqs;
+  int                 num_senders;
+  int                 my_pos = -1;
+  char               *my_payload = NULL;
+  int                 last_proc;
+
+  max_ranges = notify->data.ranges.num_ranges;
+  package_id = notify->data.ranges.package_id;
+  comm = sc_notify_get_comm (notify);
+  mpiret = sc_MPI_Comm_rank (comm, &rank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (comm, &size);
+  SC_CHECK_MPI (mpiret);
+
+  my_ranges = SC_ALLOC (int, 2 * max_ranges);
+  receiver_ranks_ranges = SC_ALLOC (int, size);
+  sender_ranks_ranges = SC_ALLOC (int, size);
+  procs = SC_ALLOC_ZERO (int, size);
+  num_procs = (int) receivers->elem_count;
+  ireceivers = (int *) receivers->array;
+  first_peer = size;
+  last_peer = -1;
+  for (i = 0; i < num_procs; i++) {
+    int                 peer = ireceivers[i];
+    if (peer == rank) {
+      my_pos = i;
+      if (payload) {
+        my_payload = SC_ALLOC (char, payload->elem_size);
+        memcpy (my_payload, sc_array_index_int (payload, i),
+                payload->elem_size);
+      }
+      continue;
+    }
+    first_peer = SC_MIN (peer, first_peer);
+    last_peer = SC_MAX (peer, last_peer);
+    procs[peer] = i + 1;
+  }
+  maxpeers = first_peer;
+  maxwin = last_peer;
+  (void) sc_ranges_adaptive (package_id, comm, procs, &maxpeers, &maxwin,
+                             max_ranges, my_ranges, &all_ranges);
+  sc_ranges_decode (size, rank, maxwin, all_ranges,
+                    &num_receivers_ranges, receiver_ranks_ranges,
+                    &num_senders_ranges, sender_ranks_ranges);
+#ifdef SC_ENABLE_DEBUG
+  sc_ranges_statistics (package_id, SC_LP_STATISTICS,
+                        comm, num_procs, procs, rank, max_ranges, my_ranges);
+#endif
+  SC_FREE (all_ranges);
+  SC_FREE (my_ranges);
+  msg_size = sizeof (int);
+  if (payload) {
+    msg_size += payload->elem_size;
+  }
+  sendbuf = sc_array_new_count (msg_size, (size_t) num_receivers_ranges);
+  sendreqs =
+    SC_ALLOC (sc_MPI_Request, (num_receivers_ranges + num_senders_ranges));
+  recvreqs = &sendreqs[num_receivers_ranges];
+  for (i = 0; i < num_receivers_ranges; i++) {
+    int                *send = (int *) sc_array_index_int (sendbuf, i);
+    int                 pos;
+
+    int                 proc = receiver_ranks_ranges[i];
+    pos = procs[proc];
+    if (pos > 0) {
+      send[0] = 1;
+    }
+    else {
+      send[0] = 0;
+    }
+    if (payload && pos > 0) {
+      memcpy (&send[1], sc_array_index_int (payload, pos - 1),
+              payload->elem_size);
+    }
+    mpiret = sc_MPI_Isend ((char *) &send[0], (int) msg_size, sc_MPI_BYTE,
+                           proc, SC_TAG_NOTIFY_RANGES, comm, &sendreqs[i]);
+    SC_CHECK_MPI (mpiret);
+  }
+  SC_FREE (procs);
+  if (!senders) {
+    sc_array_reset (receivers);
+    senders = receivers;
+  }
+  recvbuf = sc_array_new_count (msg_size, (size_t) num_senders_ranges);
+  for (i = 0; i < num_senders_ranges; i++) {
+    int                 proc;
+    char               *recv = sc_array_index_int (recvbuf, i);
+
+    proc = sender_ranks_ranges[i];
+    mpiret = sc_MPI_Irecv (recv, (int) msg_size, sc_MPI_BYTE,
+                           proc, SC_TAG_NOTIFY_RANGES, comm, &recvreqs[i]);
+    SC_CHECK_MPI (mpiret);
+  }
+  mpiret =
+    sc_MPI_Waitall (num_receivers_ranges + num_senders_ranges, sendreqs,
+                    sc_MPI_STATUSES_IGNORE);
+  SC_CHECK_MPI (mpiret);
+  num_senders = 0;
+  for (i = 0; i < num_senders_ranges; i++) {
+    int                *recv = (int *) sc_array_index_int (recvbuf, i);
+    if (recv[0]) {
+      num_senders++;
+    }
+  }
+  if (my_pos >= 0) {
+    num_senders++;
+  }
+  if (payload) {
+    sc_array_reset (payload);
+    sc_array_resize (payload, (size_t) num_senders);
+  }
+  sc_array_resize (senders, (size_t) num_senders);
+  num_senders = 0;
+  last_proc = -1;
+  for (i = 0; i < num_senders_ranges; i++) {
+    int                *recv = (int *) sc_array_index_int (recvbuf, i);
+
+    if (recv[0]) {
+      int                 proc = sender_ranks_ranges[i];
+      int                *sender =
+        sc_array_index_int (senders, (size_t) num_senders);
+
+      if (my_pos >= 0 && last_proc < rank && proc > rank) {
+        sender[0] = rank;
+        if (payload) {
+          memcpy (sc_array_index_int (payload, num_senders),
+                  my_payload, payload->elem_size);
+        }
+        num_senders++;
+        sender = sc_array_index_int (senders, (size_t) num_senders);
+      }
+
+      sender[0] = proc;
+      if (payload) {
+        memcpy (sc_array_index_int (payload, num_senders),
+                &recv[1], payload->elem_size);
+      }
+      num_senders++;
+      last_proc = proc;
+    }
+  }
+  if (my_pos >= 0 && last_proc < rank) {
+    int                *sender =
+      sc_array_index_int (senders, (size_t) num_senders);
+
+    sender[0] = rank;
+    if (payload) {
+      memcpy (sc_array_index_int (payload, num_senders),
+              my_payload, payload->elem_size);
+    }
+    num_senders++;
+  }
+  if (my_payload) {
+    SC_FREE (my_payload);
+  }
+  SC_FREE (sendreqs);
+  sc_array_destroy (recvbuf);
+  sc_array_destroy (sendbuf);
+  SC_FREE (sender_ranks_ranges);
+  SC_FREE (receiver_ranks_ranges);
+}
+
 /*== SC_NOTIFY_BINARY ==*/
 
 /** Internally used function to execute the sc_notify recursion.
@@ -1752,12 +1994,15 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
     return sc_notify_payload_nary (receivers, senders, first_payload, notify);
     break;
   case SC_NOTIFY_PEX:
-    return sc_notify_payload_pex (receivers, senders, first_payload,
-                                       notify);
+    return sc_notify_payload_pex (receivers, senders, first_payload, notify);
     break;
   case SC_NOTIFY_PCX:
     return sc_notify_payload_pcx (receivers, senders, first_payload, sorted,
                                   notify);
+    break;
+  case SC_NOTIFY_RANGES:
+    return sc_notify_payload_ranges (receivers, senders, first_payload,
+                                     sorted, notify);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
@@ -1858,6 +2103,7 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
   case SC_NOTIFY_BINARY:
   case SC_NOTIFY_NARY:
   case SC_NOTIFY_PEX:
+  case SC_NOTIFY_RANGES:
     sc_notify_payloadv_wrapper (receivers, senders, in_payload, out_payload,
                                 in_offsets, out_offsets, sorted, notify);
     break;
