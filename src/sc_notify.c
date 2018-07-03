@@ -196,7 +196,7 @@ sc_array_is_invalid (sc_array_t * array)
  * */
 static void
 sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
-                           sc_array_t * payload, sc_notify_t * notify,
+                           sc_array_t * in_payload, sc_array_t *out_payload, sc_notify_t * notify,
                            int sorted, int (*notify_fn) (int *, int, int *,
                                                          int *, sc_MPI_Comm))
 {
@@ -224,18 +224,22 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
                          isenders, &num_senders, comm);
   SC_CHECK_MPI (mpiret);
 
-  if (payload) {
+  if (in_payload) {
     MPI_Request        *sendreq, *recvreq;
-    char               *cpayload = (char *) payload->array;
+    char               *cpayload = (char *) in_payload->array;
     char               *rpayload;
     int                 j;
     int                 mpiret;
     int                 num_receivers = (int) receivers->elem_count;
     int                *ireceivers = (int *) receivers->array;
-    int                 msg_size = (int) payload->elem_size;
+    int                 msg_size = (int) in_payload->elem_size;
 
     sendreq = SC_ALLOC (MPI_Request, (num_receivers + num_senders));
     recvreq = &sendreq[num_receivers];
+    if (out_payload) {
+    }
+    else {
+    }
     rpayload = SC_ALLOC (char, num_senders * msg_size);
 
     for (j = 0; j < num_receivers; j++) {
@@ -1947,7 +1951,8 @@ sc_notify (int *receivers, int num_receivers,
 
 void
 sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
-                   sc_array_t * payload, int sorted, sc_notify_t * notify)
+                   sc_array_t * in_payload, sc_array_t * out_payload,
+                   int sorted, sc_notify_t * notify)
 {
   int                 num_receivers;
   sc_notify_type_t    type = sc_notify_get_type (notify);

@@ -213,19 +213,23 @@ int                 sc_notify (int *receivers, int num_receivers,
  *                              On output it is resized to the number of
  *                              notifying ranks, which it contains in order.
  *                              Thus, it must not be a view.
- * \param [in,out] payload      This array pointer may be NULL.
- *                              If not, it must not be a view and have
- *                              \b num_receivers entries that are the
- *                              same size on every process.
- *                              This data will be communicated to the receivers.
- *                              On output, the array is resized to \b
- *                              *num_senders and contains the result.
+ * \param [in,out] in_payload   This array pointer may be NULL.
+ *                              If not NULL, it msut have \b num_reivers
+ *                              entries that are the same size on every
+ *                              process.  If not NULL and \b out_payload is
+ *                              NULL, it must not be a view, and it will
+ *                              be resized to contain the output and have
+ *                              \b *num_senders entries.
+ * \param [in,out] out_payload  This array pointer may be NULL.
+ *                              If not, it must not be a view, and
+ *                              on output will have \b * num_senders entries.
  * \param [in] notify           Notify controller to use.
  *                              This function aborts on MPI error.
  */
 void                sc_notify_payload (sc_array_t * receivers,
                                        sc_array_t * senders,
-                                       sc_array_t * payload,
+                                       sc_array_t * in_payload,
+                                       sc_array_t * out_payload,
                                        int sorted, sc_notify_t * notify);
 
 /** Collective call to notify a set of receiver ranks of current rank
