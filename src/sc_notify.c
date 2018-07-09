@@ -2059,30 +2059,29 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
 
   switch (type) {
   case SC_NOTIFY_ALLGATHER:
-    return sc_notify_payload_wrapper (receivers, senders, first_in_payload,
-                                      first_out_payload,
-                                      notify, sorted, sc_notify_allgather);
+    sc_notify_payload_wrapper (receivers, senders, first_in_payload,
+                               first_out_payload,
+                               notify, sorted, sc_notify_allgather);
     break;
   case SC_NOTIFY_BINARY:
-    return sc_notify_payload_wrapper (receivers, senders, first_in_payload,
-                                      first_out_payload,
-                                      notify, sorted, sc_notify);
+    sc_notify_payload_wrapper (receivers, senders, first_in_payload,
+                               first_out_payload, notify, sorted, sc_notify);
     break;
   case SC_NOTIFY_NARY:
-    return sc_notify_payload_nary (receivers, senders, first_in_payload,
-                                   first_out_payload, notify);
+    sc_notify_payload_nary (receivers, senders, first_in_payload,
+                            first_out_payload, notify);
     break;
   case SC_NOTIFY_PEX:
-    return sc_notify_payload_pex (receivers, senders, first_in_payload,
-                                  first_out_payload, notify);
+    sc_notify_payload_pex (receivers, senders, first_in_payload,
+                           first_out_payload, notify);
     break;
   case SC_NOTIFY_PCX:
-    return sc_notify_payload_pcx (receivers, senders, first_in_payload,
-                                  first_out_payload, sorted, notify);
+    sc_notify_payload_pcx (receivers, senders, first_in_payload,
+                           first_out_payload, sorted, notify);
     break;
   case SC_NOTIFY_RANGES:
-    return sc_notify_payload_ranges (receivers, senders, first_in_payload,
-                                     first_out_payload, sorted, notify);
+    sc_notify_payload_ranges (receivers, senders, first_in_payload,
+                              first_out_payload, sorted, notify);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
