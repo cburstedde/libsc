@@ -53,6 +53,7 @@ struct sc_notify_s
   sc_MPI_Comm         mpicomm;
   sc_notify_type_t    type;
   size_t              eager_threshold;
+  sc_array_t         *stats;
   union
   {
     sc_notify_nary_t    nary;
@@ -79,6 +80,7 @@ sc_notify_new (sc_MPI_Comm comm)
   notify->mpicomm = comm;
   notify->type = SC_NOTIFY_DEFAULT;
   notify->eager_threshold = sc_notify_eager_threshold_default;
+  notify->stats = sc_array_new (sizeof (sc_statinfo_t *));
   SC_ASSERT (sc_notify_type_default >= 0
              && sc_notify_type_default < SC_NOTIFY_NUM_TYPES);
   sc_notify_set_type (notify, sc_notify_type_default);
@@ -103,7 +105,7 @@ sc_notify_destroy (sc_notify_t * notify)
   default:
     SC_ABORT_NOT_REACHED ();
   }
-
+  sc_array_destroy (notify->stats);
   SC_FREE (notify);
 }
 
@@ -189,6 +191,21 @@ sc_array_is_invalid (sc_array_t * array)
 }
 
 #endif
+
+void
+sc_notify_stats_push (sc_notify_t * notify, sc_statinfo_t * stat)
+{
+  *((sc_statinfo_t **) sc_array_push (notify->stats)) = stat;
+}
+
+sc_statinfo_t      *
+sc_notify_stats_pop (sc_notify_t * notify)
+{
+  if (!notify->stats->elem_count) {
+    return NULL;
+  }
+  return *((sc_statinfo_t **) sc_array_pop (notify->stats));
+}
 
 /*== HELPER FUNCTIONS ==*/
 
@@ -1989,9 +2006,18 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
   sc_array_t         *first_in_payload = NULL;
   sc_array_t         *first_out_payload = NULL;
   sc_array_t         *receivers_copy = NULL;
+  sc_statinfo_t      *stat = NULL;
+  double              time = -1.;
 
   SC_GLOBAL_LDEBUGF ("Into sc_notify_payload, type %s\n",
                      sc_notify_type_strings[type]);
+
+  if (notify->stats->elem_count) {
+    stat = *((sc_statinfo_t **) sc_array_pop (notify->stats));
+  }
+  if (stat) {
+    time = -sc_MPI_Wtime ();
+  }
 
   SC_ASSERT (receivers != NULL && receivers->elem_size == sizeof (int));
   SC_ASSERT (senders == NULL || senders->elem_size == sizeof (int));
@@ -2111,6 +2137,13 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
   if (receivers_copy) {
     sc_array_destroy (receivers_copy);
   }
+
+  if (stat) {
+    time += sc_MPI_Wtime ();
+    sc_stats_accumulate (stat, time);
+    *((sc_statinfo_t **) sc_array_push (notify->stats)) = stat;
+  }
+
   SC_GLOBAL_LDEBUG ("Done sc_notify_payload\n");
 }
 
@@ -2122,6 +2155,18 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
 {
   size_t              num_receivers;
   sc_notify_type_t    type = sc_notify_get_type (notify);
+  sc_statinfo_t      *stat;
+  double              time = -1.;
+
+  SC_GLOBAL_LDEBUGF ("Into sc_notify_payloadv, type %s\n",
+                     sc_notify_type_strings[type]);
+
+  if (notify->stats->elem_count) {
+    stat = *((sc_statinfo_t **) sc_array_pop (notify->stats));
+  }
+  if (stat) {
+    time = -sc_MPI_Wtime ();
+  }
 
   if (in_payload == NULL) {
     SC_ASSERT (out_payload == NULL && in_offsets == NULL
@@ -2178,4 +2223,12 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
   default:
     SC_ABORT_NOT_REACHED ();
   }
+
+  if (stat) {
+    time += sc_MPI_Wtime ();
+    sc_stats_accumulate (stat, time);
+    *((sc_statinfo_t **) sc_array_push (notify->stats)) = stat;
+  }
+
+  SC_GLOBAL_LDEBUG ("Done sc_notify_payload\n");
 }

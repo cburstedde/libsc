@@ -25,6 +25,7 @@
 #define SC_NOTIFY_H
 
 #include <sc_containers.h>
+#include <sc_statistics.h>
 
 SC_EXTERN_C_BEGIN;
 
@@ -96,6 +97,10 @@ size_t              sc_notify_get_eager_threshold (sc_notify_t * notify);
  */
 void                sc_notify_set_eager_threshold (sc_notify_t * notify,
                                                    size_t thresh);
+
+void                sc_notify_stats_push (sc_notify_t * notify,
+                                          sc_statinfo_t * stats);
+sc_statinfo_t      *sc_notify_stats_pop (sc_notify_t * notify);
 
 /** Get the MPI communicator of a notify controller.
  *
