@@ -62,12 +62,12 @@ struct sc_notify_s
 };
 
 const char         *sc_notify_type_strings[SC_NOTIFY_NUM_TYPES] = {
-  "allgather",
-  "binary",
-  "nary",
-  "pex",
-  "pcx",
-  "ranges",
+  SC_NOTIFY_STR_ALLGATHER,
+  SC_NOTIFY_STR_BINARY,
+  SC_NOTIFY_STR_NARY,
+  SC_NOTIFY_STR_PEX,
+  SC_NOTIFY_STR_PCX,
+  SC_NOTIFY_STR_RANGES,
 };
 
 sc_notify_t        *
@@ -1990,6 +1990,9 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
   sc_array_t         *first_out_payload = NULL;
   sc_array_t         *receivers_copy = NULL;
 
+  SC_GLOBAL_LDEBUGF ("Into sc_notify_payload, type %s\n",
+                     sc_notify_type_strings[type]);
+
   SC_ASSERT (receivers != NULL && receivers->elem_size == sizeof (int));
   SC_ASSERT (senders == NULL || senders->elem_size == sizeof (int));
 
@@ -2108,6 +2111,7 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
   if (receivers_copy) {
     sc_array_destroy (receivers_copy);
   }
+  SC_GLOBAL_LDEBUG ("Done sc_notify_payload\n");
 }
 
 void

@@ -45,6 +45,13 @@ typedef enum
 }
 sc_notify_type_t;
 
+#define SC_NOTIFY_STR_ALLGATHER "allgather"
+#define SC_NOTIFY_STR_BINARY "binary"
+#define SC_NOTIFY_STR_NARY "nary"
+#define SC_NOTIFY_STR_PEX "pex"
+#define SC_NOTIFY_STR_PCX "pcx"
+#define SC_NOTIFY_STR_RANGES "ranges"
+
 /** Names for each notify method */
 extern const char  *sc_notify_type_strings[SC_NOTIFY_NUM_TYPES];
 
