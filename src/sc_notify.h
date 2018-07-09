@@ -41,6 +41,7 @@ typedef enum
   SC_NOTIFY_NARY,          /**< choose nary (k-way) recursion */
   SC_NOTIFY_PEX,           /**< choose alltoall algorithm (AKA personalized exchange) */
   SC_NOTIFY_PCX,           /**< choose reduce_scatter algorithm (AKA personalized census) */
+  SC_NOTIFY_RSX,           /**< choose remote summation algorithm */
   SC_NOTIFY_RANGES,        /**< use sc_ranges */
   SC_NOTIFY_NUM_TYPES
 }
@@ -51,6 +52,7 @@ sc_notify_type_t;
 #define SC_NOTIFY_STR_NARY "nary"
 #define SC_NOTIFY_STR_PEX "pex"
 #define SC_NOTIFY_STR_PCX "pcx"
+#define SC_NOTIFY_STR_RSX "rsx"
 #define SC_NOTIFY_STR_RANGES "ranges"
 
 /** Names for each notify method */
