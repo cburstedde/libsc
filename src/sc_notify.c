@@ -196,9 +196,10 @@ sc_array_is_invalid (sc_array_t * array)
  * */
 static void
 sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
-                           sc_array_t * in_payload, sc_array_t *out_payload, sc_notify_t * notify,
-                           int sorted, int (*notify_fn) (int *, int, int *,
-                                                         int *, sc_MPI_Comm))
+                           sc_array_t * in_payload, sc_array_t * out_payload,
+                           sc_notify_t * notify, int sorted,
+                           int (*notify_fn) (int *, int, int *, int *,
+                                             sc_MPI_Comm))
 {
   int                 mpiret, size, rank;
   int                *isenders, num_senders = -1;
@@ -237,10 +238,12 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
     sendreq = SC_ALLOC (MPI_Request, (num_receivers + num_senders));
     recvreq = &sendreq[num_receivers];
     if (out_payload) {
+      sc_array_resize (out_payload, (size_t) num_senders);
+      rpayload = (char *) out_payload->array;
     }
     else {
+      rpayload = SC_ALLOC (char, num_senders * msg_size);
     }
-    rpayload = SC_ALLOC (char, num_senders * msg_size);
 
     for (j = 0; j < num_receivers; j++) {
       mpiret =
@@ -259,10 +262,13 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
       sc_MPI_Waitall (num_senders + num_receivers, sendreq,
                       sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
-    sc_array_reset (payload);
-    sc_array_resize (payload, num_senders);
-    memcpy ((char *) payload->array, rpayload, num_senders * msg_size);
-    SC_FREE (rpayload);
+    if (!out_payload) {
+      sc_array_reset (in_payload);
+      sc_array_resize (in_payload, num_senders);
+      memcpy ((char *) in_payload->array, rpayload, num_senders * msg_size);
+      SC_FREE (rpayload);
+      out_payload = in_payload;
+    }
     SC_FREE (sendreq);
   }
   if (senders) {
@@ -276,19 +282,19 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
     senders = receivers;
   }
   if (sorted && !sc_array_is_sorted (senders, sc_int_compare)) {
-    if (!payload) {
+    if (!out_payload) {
       sc_array_sort (senders, sc_int_compare);
     }
     else {
       sc_array_t         *sorter;
-      size_t              msg_size = payload->elem_size;
+      size_t              msg_size = out_payload->elem_size;
       int                 j;
 
       sorter =
         sc_array_new_count (sizeof (int) + msg_size, (size_t) num_senders);
       for (j = 0; j < num_senders; j++) {
         int                *entry = sc_array_index_int (sorter, j);
-        char               *payl = sc_array_index_int (payload, j);
+        char               *payl = sc_array_index_int (out_payload, j);
 
         entry[0] = *((int *) sc_array_index_int (senders, (size_t) j));
         memcpy ((char *) (&entry[1]), payl, msg_size);
@@ -296,7 +302,7 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
       sc_array_sort (sorter, sc_int_compare);
       for (j = 0; j < num_senders; j++) {
         int                *entry = sc_array_index_int (sorter, j);
-        char               *payl = sc_array_index_int (payload, j);
+        char               *payl = sc_array_index_int (out_payload, j);
 
         *((int *) sc_array_index_int (senders, (size_t) j)) = entry[0];
         memcpy (payl, (char *) (&entry[1]), msg_size);
@@ -339,7 +345,7 @@ sc_notify_payloadv_wrapper (sc_array_t * receivers, sc_array_t * senders,
   if (!first_senders) {
     first_senders = sc_array_new (sizeof (int));
   }
-  sc_notify_payload (receivers, first_senders, sizes, sorted, notify);
+  sc_notify_payload (receivers, first_senders, sizes, NULL, sorted, notify);
   num_senders = (int) first_senders->elem_count;
   recv_offsets = out_offsets;
   if (!recv_offsets) {
@@ -1063,7 +1069,8 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
 
 static void
 sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
-                        sc_array_t * payload, sc_notify_t * notify)
+                        sc_array_t * in_payload, sc_array_t * out_payload,
+                        sc_notify_t * notify)
 {
   int                 mpisize, mpirank;
   int                 depth, prod;
@@ -1115,10 +1122,10 @@ sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
 
   /* assign context data for recursion */
   nary->depth = depth;
-  if (payload) {
+  if (in_payload) {
     size_t              lowbound =
-      (payload->elem_size >
-       sizeof (int)) ? (payload->elem_size - sizeof (int)) : 0;
+      (in_payload->elem_size >
+       sizeof (int)) ? (in_payload->elem_size - sizeof (int)) : 0;
 
     nary->npay = lowbound / sizeof (int) + 1;
   }
@@ -1128,12 +1135,15 @@ sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
 
   /* convert input variables into internal format */
   sc_notify_init_input (array, (int *) receivers->array, num_receivers,
-                        payload, mpisize, mpirank);
+                        in_payload, mpisize, mpirank);
   if (senders == NULL) {
     sc_array_reset (receivers);
     senders = receivers;
   }
   SC_ASSERT (senders != NULL && senders->elem_count == 0);
+  if (in_payload && out_payload == NULL) {
+    out_payload = in_payload;
+  }
 
   /* the recursive algorithm works in-place */
   sc_notify_recursive_nary (nary, 0, 0, prod, array);
@@ -1144,14 +1154,15 @@ sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
     sc_array_resize (senders, num_senders);
   }
   sc_notify_reset_output (array, (int *) senders->array, &num_senders,
-                          payload, mpisize, mpirank);
+                          out_payload, mpisize, mpirank);
 }
 
 /*== SC_NOTIFY_PEX ==*/
 
 static void
 sc_notify_payload_pex (sc_array_t * receivers, sc_array_t * senders,
-                       sc_array_t * payload, sc_notify_t * notify)
+                       sc_array_t * in_payload,
+                       sc_array_t * out_payload, sc_notify_t * notify)
 {
   int                 i;
   int                 found_num_senders, num_receivers;
@@ -1173,10 +1184,10 @@ sc_notify_payload_pex (sc_array_t * receivers, sc_array_t * senders,
 
   ireceivers = (int *) receivers->array;
 
-  if (payload) {
+  if (in_payload) {
     size_t              lowbound =
-      (payload->elem_size >
-       sizeof (int)) ? (payload->elem_size - sizeof (int)) : 0;
+      (in_payload->elem_size >
+       sizeof (int)) ? (in_payload->elem_size - sizeof (int)) : 0;
 
     npay = lowbound / sizeof (int) + 1;
   }
@@ -1187,9 +1198,9 @@ sc_notify_payload_pex (sc_array_t * receivers, sc_array_t * senders,
   for (i = 0; i < num_receivers; i++) {
     SC_ASSERT (ireceivers[i] >= 0 && ireceivers[i] < mpisize);
     buffered_receivers[stride * ireceivers[i] + 0] = 1;
-    if (payload) {
+    if (in_payload) {
       memcpy (&buffered_receivers[stride * ireceivers[i] + 1],
-              sc_array_index_int (payload, i), payload->elem_size);
+              sc_array_index_int (in_payload, i), in_payload->elem_size);
     }
   }
 
@@ -1212,18 +1223,21 @@ sc_notify_payload_pex (sc_array_t * receivers, sc_array_t * senders,
   }
   sc_array_resize (senders, found_num_senders);
   isenders = (int *) senders->array;
+  if (in_payload && out_payload == NULL) {
+    sc_array_reset (in_payload);
+    out_payload = in_payload;
+  }
 
-  if (payload) {
-    sc_array_reset (payload);
-    sc_array_resize (payload, (size_t) found_num_senders);
+  if (out_payload) {
+    sc_array_resize (out_payload, (size_t) found_num_senders);
   }
 
   found_num_senders = 0;
   for (i = 0; i < mpisize; i++) {
     if (all_receivers[stride * i + 0]) {
-      if (payload) {
-        memcpy (sc_array_index_int (payload, found_num_senders),
-                &all_receivers[stride * i + 1], payload->elem_size);
+      if (out_payload) {
+        memcpy (sc_array_index_int (out_payload, found_num_senders),
+                &all_receivers[stride * i + 1], out_payload->elem_size);
       }
       isenders[found_num_senders++] = i;
     }
@@ -1236,7 +1250,8 @@ sc_notify_payload_pex (sc_array_t * receivers, sc_array_t * senders,
 
 static void
 sc_notify_payload_pcx (sc_array_t * receivers, sc_array_t * senders,
-                       sc_array_t * payload, int sorted, sc_notify_t * notify)
+                       sc_array_t * in_payload, sc_array_t * out_payload,
+                       int sorted, sc_notify_t * notify)
 {
   int                 i;
   int                 num_senders, num_receivers;
@@ -1276,9 +1291,9 @@ sc_notify_payload_pcx (sc_array_t * receivers, sc_array_t * senders,
   SC_CHECK_MPI (mpiret);
   SC_FREE (buffered_receivers);
 
-  if (payload) {
-    msg_size = payload->elem_size;
-    cpayload = (char *) payload->array;
+  if (in_payload) {
+    msg_size = in_payload->elem_size;
+    cpayload = (char *) in_payload->array;
   }
   stride = sizeof (int) + msg_size;
 
@@ -1319,9 +1334,12 @@ sc_notify_payload_pcx (sc_array_t * receivers, sc_array_t * senders,
   SC_FREE (sendreqs);
 
   if (!msg_size && senders) {
-    if (payload) {
-      sc_array_reset (payload);
-      sc_array_resize (payload, num_senders);
+    if (in_payload && out_payload == NULL) {
+      sc_array_reset (in_payload);
+      out_payload = in_payload;
+    }
+    if (out_payload) {
+      sc_array_resize (out_payload, num_senders);
     }
     return;
   }
@@ -1333,17 +1351,25 @@ sc_notify_payload_pcx (sc_array_t * receivers, sc_array_t * senders,
   sc_array_resize (senders, (size_t) num_senders);
   isenders = (int *) senders->array;
 
-  if (payload) {
-    sc_array_reset (payload);
-    sc_array_resize (payload, (size_t) num_senders);
+  if (in_payload && out_payload == NULL) {
+    sc_array_reset (in_payload);
+    out_payload = in_payload;
   }
-  cpayload = (char *) payload->array;
+  if (out_payload) {
+    sc_array_resize (out_payload, (size_t) num_senders);
+    cpayload = (char *) out_payload->array;
+    for (i = 0; i < num_senders; i++) {
+      isenders[i] = *((int *) &crecv[i * stride]);
+      memcpy (&cpayload[i * msg_size], &crecv[i * stride + sizeof (int)],
+              msg_size);
+    }
+  }
+  else {
+    for (i = 0; i < num_senders; i++) {
+      isenders[i] = *((int *) &crecv[i * stride]);
+    }
+  }
 
-  for (i = 0; i < num_senders; i++) {
-    isenders[i] = *((int *) &crecv[i * stride]);
-    memcpy (&cpayload[i * msg_size], &crecv[i * stride + sizeof (int)],
-            msg_size);
-  }
   sc_array_destroy (recv_buf);
 }
 
@@ -1552,8 +1578,9 @@ sc_notify_ranges_init (sc_notify_t * notify)
 
 static void
 sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
-                          sc_array_t * payload, int sorted,
-                          sc_notify_t * notify)
+                          sc_array_t * in_payload,
+                          sc_array_t * out_payload,
+                          int sorted, sc_notify_t * notify)
 {
   int                *my_ranges;
   int                 max_ranges;
@@ -1601,10 +1628,10 @@ sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
     int                 peer = ireceivers[i];
     if (peer == rank) {
       my_pos = i;
-      if (payload) {
-        my_payload = SC_ALLOC (char, payload->elem_size);
-        memcpy (my_payload, sc_array_index_int (payload, i),
-                payload->elem_size);
+      if (in_payload) {
+        my_payload = SC_ALLOC (char, in_payload->elem_size);
+        memcpy (my_payload, sc_array_index_int (in_payload, i),
+                in_payload->elem_size);
       }
       continue;
     }
@@ -1626,8 +1653,8 @@ sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
   SC_FREE (all_ranges);
   SC_FREE (my_ranges);
   msg_size = sizeof (int);
-  if (payload) {
-    msg_size += payload->elem_size;
+  if (in_payload) {
+    msg_size += in_payload->elem_size;
   }
   sendbuf = sc_array_new_count (msg_size, (size_t) num_receivers_ranges);
   sendreqs =
@@ -1645,9 +1672,9 @@ sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
     else {
       send[0] = 0;
     }
-    if (payload && pos > 0) {
-      memcpy (&send[1], sc_array_index_int (payload, pos - 1),
-              payload->elem_size);
+    if (in_payload && pos > 0) {
+      memcpy (&send[1], sc_array_index_int (in_payload, pos - 1),
+              in_payload->elem_size);
     }
     mpiret = sc_MPI_Isend ((char *) &send[0], (int) msg_size, sc_MPI_BYTE,
                            proc, SC_TAG_NOTIFY_RANGES, comm, &sendreqs[i]);
@@ -1682,9 +1709,12 @@ sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
   if (my_pos >= 0) {
     num_senders++;
   }
-  if (payload) {
-    sc_array_reset (payload);
-    sc_array_resize (payload, (size_t) num_senders);
+  if (in_payload && out_payload == NULL) {
+    sc_array_reset (in_payload);
+    out_payload = in_payload;
+  }
+  if (out_payload) {
+    sc_array_resize (out_payload, (size_t) num_senders);
   }
   sc_array_resize (senders, (size_t) num_senders);
   num_senders = 0;
@@ -1699,18 +1729,18 @@ sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
 
       if (my_pos >= 0 && last_proc < rank && proc > rank) {
         sender[0] = rank;
-        if (payload) {
-          memcpy (sc_array_index_int (payload, num_senders),
-                  my_payload, payload->elem_size);
+        if (out_payload) {
+          memcpy (sc_array_index_int (out_payload, num_senders),
+                  my_payload, out_payload->elem_size);
         }
         num_senders++;
         sender = sc_array_index_int (senders, (size_t) num_senders);
       }
 
       sender[0] = proc;
-      if (payload) {
-        memcpy (sc_array_index_int (payload, num_senders),
-                &recv[1], payload->elem_size);
+      if (out_payload) {
+        memcpy (sc_array_index_int (out_payload, num_senders),
+                &recv[1], out_payload->elem_size);
       }
       num_senders++;
       last_proc = proc;
@@ -1721,9 +1751,9 @@ sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
       sc_array_index_int (senders, (size_t) num_senders);
 
     sender[0] = rank;
-    if (payload) {
-      memcpy (sc_array_index_int (payload, num_senders),
-              my_payload, payload->elem_size);
+    if (out_payload) {
+      memcpy (sc_array_index_int (out_payload, num_senders),
+              my_payload, out_payload->elem_size);
     }
     num_senders++;
   }
@@ -1956,7 +1986,8 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
 {
   int                 num_receivers;
   sc_notify_type_t    type = sc_notify_get_type (notify);
-  sc_array_t         *first_payload = NULL;
+  sc_array_t         *first_in_payload = NULL;
+  sc_array_t         *first_out_payload = NULL;
   sc_array_t         *receivers_copy = NULL;
 
   SC_ASSERT (receivers != NULL && receivers->elem_size == sizeof (int));
@@ -1971,12 +2002,23 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
     sc_array_reset (senders);
   }
 
-  SC_ASSERT (payload == NULL ||
-             (SC_ARRAY_IS_OWNER (payload) &&
-              (int) payload->elem_count == num_receivers));
+  if (in_payload != NULL) {
+    SC_ASSERT ((int) in_payload->elem_count == num_receivers);
+    if (out_payload) {
+      SC_ASSERT (SC_ARRAY_IS_OWNER (out_payload));
+      SC_ASSERT (out_payload->elem_size == in_payload->elem_size);
+    }
+    else {
+      SC_ASSERT (SC_ARRAY_IS_OWNER (in_payload));
+    }
+  }
+  else {
+    SC_ASSERT (out_payload == NULL);
+  }
 
-  if (payload && payload->elem_size <= notify->eager_threshold) {
-    first_payload = payload;
+  if (in_payload && in_payload->elem_size <= notify->eager_threshold) {
+    first_in_payload = in_payload;
+    first_out_payload = out_payload;
   }
   else {
     if (!senders) {
@@ -1988,32 +2030,36 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
 
   switch (type) {
   case SC_NOTIFY_ALLGATHER:
-    return sc_notify_payload_wrapper (receivers, senders, first_payload,
+    return sc_notify_payload_wrapper (receivers, senders, first_in_payload,
+                                      first_out_payload,
                                       notify, sorted, sc_notify_allgather);
     break;
   case SC_NOTIFY_BINARY:
-    return sc_notify_payload_wrapper (receivers, senders, first_payload,
+    return sc_notify_payload_wrapper (receivers, senders, first_in_payload,
+                                      first_out_payload,
                                       notify, sorted, sc_notify);
     break;
   case SC_NOTIFY_NARY:
-    return sc_notify_payload_nary (receivers, senders, first_payload, notify);
+    return sc_notify_payload_nary (receivers, senders, first_in_payload,
+                                   first_out_payload, notify);
     break;
   case SC_NOTIFY_PEX:
-    return sc_notify_payload_pex (receivers, senders, first_payload, notify);
+    return sc_notify_payload_pex (receivers, senders, first_in_payload,
+                                  first_out_payload, notify);
     break;
   case SC_NOTIFY_PCX:
-    return sc_notify_payload_pcx (receivers, senders, first_payload, sorted,
-                                  notify);
+    return sc_notify_payload_pcx (receivers, senders, first_in_payload,
+                                  first_out_payload, sorted, notify);
     break;
   case SC_NOTIFY_RANGES:
-    return sc_notify_payload_ranges (receivers, senders, first_payload,
-                                     sorted, notify);
+    return sc_notify_payload_ranges (receivers, senders, first_in_payload,
+                                     first_out_payload, sorted, notify);
     break;
   default:
     SC_ABORT_NOT_REACHED ();
   }
 
-  if (payload && first_payload != payload) {
+  if (in_payload && first_in_payload != in_payload) {
     sc_array_t         *arecv = receivers_copy ? receivers_copy : receivers;
     sc_array_t         *asend = senders ? senders : receivers;
     int                *irecv = (int *) arecv->array;
@@ -2022,8 +2068,8 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
     int                 num_receivers = (int) arecv->elem_count;
     int                 num_senders = (int) asend->elem_count;
     int                 mpiret;
-    int                 msg_size = (int) payload->elem_size;
-    char               *cpayload = (char *) payload->array;
+    int                 msg_size = (int) in_payload->elem_size;
+    char               *cpayload = (char *) in_payload->array;
     MPI_Request        *sendreq;
     sc_MPI_Comm         comm = sc_notify_get_comm (notify);
     char               *recv_payload = NULL;
@@ -2035,7 +2081,13 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
                       irecv[i], SC_TAG_NOTIFY_PAYLOAD, comm, sendreq + i);
       SC_CHECK_MPI (mpiret);
     }
-    recv_payload = SC_ALLOC (char, msg_size * num_senders);
+    if (out_payload) {
+      sc_array_resize (out_payload, (size_t) num_senders);
+      recv_payload = (char *) out_payload->array;
+    }
+    else {
+      recv_payload = SC_ALLOC (char, msg_size * num_senders);
+    }
     for (i = 0; i < num_senders; i++) {
       mpiret =
         sc_MPI_Recv (&recv_payload[i * msg_size], msg_size, sc_MPI_BYTE,
@@ -2045,9 +2097,12 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
     }
     mpiret = sc_MPI_Waitall (num_receivers, sendreq, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
-    sc_array_resize (payload, num_senders);
-    memcpy (payload->array, recv_payload, (size_t) msg_size * num_senders);
-    SC_FREE (recv_payload);
+    if (!out_payload) {
+      sc_array_resize (in_payload, num_senders);
+      memcpy (in_payload->array, recv_payload,
+              (size_t) msg_size * num_senders);
+      SC_FREE (recv_payload);
+    }
     SC_FREE (sendreq);
   }
   if (receivers_copy) {
@@ -2067,7 +2122,7 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
   if (in_payload == NULL) {
     SC_ASSERT (out_payload == NULL && in_offsets == NULL
                && out_offsets == NULL);
-    sc_notify_payload (receivers, senders, NULL, sorted, notify);
+    sc_notify_payload (receivers, senders, NULL, NULL, sorted, notify);
     return;
   }
 
