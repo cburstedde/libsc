@@ -1048,7 +1048,7 @@ sc_notify_nary_set_widths (sc_notify_t * notify, int ntop, int nint, int nbot)
   SC_ASSERT (type == SC_NOTIFY_NARY);
   notify->data.nary.ntop = ntop;
   notify->data.nary.nint = nint;
-  notify->data.nary.nbot = nint;
+  notify->data.nary.nbot = nbot;
 }
 
 static void
