@@ -69,6 +69,7 @@ const char         *sc_notify_type_strings[SC_NOTIFY_NUM_TYPES] = {
   SC_NOTIFY_STR_PEX,
   SC_NOTIFY_STR_PCX,
   SC_NOTIFY_STR_RSX,
+  SC_NOTIFY_STR_NBX,
   SC_NOTIFY_STR_RANGES,
 };
 
@@ -102,6 +103,7 @@ sc_notify_destroy (sc_notify_t * notify)
   case SC_NOTIFY_PEX:
   case SC_NOTIFY_PCX:
   case SC_NOTIFY_RSX:
+  case SC_NOTIFY_NBX:
   case SC_NOTIFY_RANGES:
     break;
   default:
@@ -145,6 +147,7 @@ sc_notify_set_type (sc_notify_t * notify, sc_notify_type_t in_type)
     case SC_NOTIFY_PEX:
     case SC_NOTIFY_PCX:
     case SC_NOTIFY_RSX:
+    case SC_NOTIFY_NBX:
       break;
     case SC_NOTIFY_RANGES:
       sc_notify_ranges_init (notify);
@@ -1745,6 +1748,286 @@ sc_notify_censusv_rsx (sc_array_t * receivers, sc_array_t * in_offsets,
 #endif
 }
 
+/*== SC_NOTIFY_NBX ==*/
+
+static void
+sc_notify_payload_nbx (sc_array_t * receivers, sc_array_t * senders,
+                       sc_array_t * in_payload, sc_array_t * out_payload,
+                       int sorted, sc_notify_t * notify)
+{
+#if defined(SC_ENABLE_MPI) && MPI_VERSION >= 3
+  int                 num_receivers, num_senders;
+  int                *ireceivers, i;
+  int                *isenders;
+  int                 mpiret, rank, size;
+  char               *cpayload = NULL;
+  int                 msg_size = 0;
+  MPI_Request        *sendreqs;
+  MPI_Comm            comm;
+  int                 done;
+  int                 barr;
+  sc_array_t         *recv_buf = NULL;
+  MPI_Request         barreq = MPI_REQUEST_NULL;
+
+  comm = sc_notify_get_comm (notify);
+  mpiret = MPI_Comm_size (comm, &size);
+  SC_CHECK_MPI (mpiret);
+  mpiret = MPI_Comm_rank (comm, &rank);
+  SC_CHECK_MPI (mpiret);
+
+  num_receivers = (int) receivers->elem_count;
+  ireceivers = (int *) receivers->array;
+  if (in_payload) {
+    msg_size = (int) in_payload->elem_size;
+    cpayload = (char *) in_payload->array;
+  }
+
+  sendreqs = SC_ALLOC (MPI_Request, num_receivers);
+
+  for (i = 0; i < num_receivers; i++) {
+    int                 j = ireceivers[i];
+    char               *buf = msg_size ? &cpayload[i * msg_size] : NULL;
+
+    mpiret =
+      MPI_Issend (buf, msg_size, MPI_BYTE, j, SC_TAG_NOTIFY_NBX, comm,
+                  &sendreqs[i]);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  if (!senders) {
+    sc_array_reset (receivers);
+    senders = receivers;
+  }
+
+  if (sorted && msg_size) {
+    recv_buf = sc_array_new ((size_t) msg_size + sizeof (int));
+  }
+  else if (msg_size) {
+    if (out_payload) {
+      recv_buf = out_payload;
+    }
+    else {
+      recv_buf = sc_array_new ((size_t) msg_size);
+    }
+  }
+
+  barr = 0;
+  for (done = 0; !done;) {
+    int                 j, flag;
+    MPI_Status          status;
+
+    mpiret =
+      MPI_Iprobe (MPI_ANY_SOURCE, SC_TAG_NOTIFY_NBX, comm, &flag, &status);
+    SC_CHECK_MPI (mpiret);
+    if (flag) {
+      int                *r;
+      char               *rc = NULL;
+      j = status.MPI_SOURCE;
+
+      if (sorted && msg_size) {
+        r = (int *) sc_array_push (recv_buf);
+      }
+      else {
+        r = (int *) sc_array_push (senders);
+      }
+      r[0] = j;
+      if (msg_size) {
+        rc = sorted ? (char *) &r[1] : (char *) sc_array_push (recv_buf);
+      }
+
+      mpiret =
+        MPI_Recv (rc, msg_size, MPI_BYTE, j, SC_TAG_NOTIFY_NBX, comm,
+                  MPI_STATUS_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+    if (!barr) {
+      int                 sent;
+
+      mpiret =
+        MPI_Testall (num_receivers, sendreqs, &sent, MPI_STATUSES_IGNORE);
+      SC_CHECK_MPI (mpiret);
+      if (sent) {
+        mpiret = MPI_Ibarrier (comm, &barreq);
+        SC_CHECK_MPI (mpiret);
+        barr = 1;
+      }
+    }
+    else {
+      mpiret = MPI_Test (&barreq, &done, MPI_STATUS_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+  }
+  SC_FREE (sendreqs);
+
+  num_senders =
+    recv_buf ? (int) recv_buf->elem_count : (int) senders->elem_count;
+  sc_array_resize (senders, num_senders);
+  isenders = (int *) senders->array;
+
+  if (sorted) {
+    if (msg_size) {
+      sc_array_sort (recv_buf, sc_int_compare);
+      for (i = 0; i < num_senders; i++) {
+        int                *r = (int *) sc_array_index_int (recv_buf, i);
+
+        isenders[i] = r[0];
+      }
+    }
+    else {
+      sc_array_sort (senders, sc_int_compare);
+    }
+  }
+
+  if (in_payload) {
+    if (!out_payload) {
+      sc_array_reset (in_payload);
+      out_payload = in_payload;
+    }
+    sc_array_resize (out_payload, (size_t) num_senders);
+    cpayload = (char *) out_payload->array;
+    if (recv_buf != out_payload) {
+      for (i = 0; i < num_senders; i++) {
+        int                *r = (int *) sc_array_index_int (recv_buf, i);
+
+        memcpy (&cpayload[msg_size * i], &r[1], (size_t) msg_size);
+      }
+      sc_array_destroy (recv_buf);
+    }
+  }
+#else
+  SC_ABORT ("nbx implementation of sc_notify requires MPI-3 or greater");
+#endif
+}
+
+static void
+sc_notify_payloadv_nbx (sc_array_t * receivers, sc_array_t * senders,
+                        sc_array_t * in_payload, sc_array_t * out_payload,
+                        sc_array_t * in_offsets, sc_array_t * out_offsets,
+                        int sorted, sc_notify_t * notify)
+{
+#if defined(SC_ENABLE_MPI) && MPI_VERSION >= 3
+  int                 num_receivers;
+  int                *ireceivers, i;
+  int                *inoff;
+  int                 mpiret, rank, size;
+  char               *cpayload = NULL;
+  int                 msg_size = 0;
+  MPI_Request        *sendreqs;
+  MPI_Comm            comm;
+  int                 done;
+  int                 barr;
+  sc_array_t         *recv_buf = NULL;
+  MPI_Request         barreq = MPI_REQUEST_NULL;
+
+  if (sorted) {
+    sc_notify_payloadv_wrapper (receivers, senders, in_payload, out_payload,
+                                in_offsets, out_offsets, sorted, notify);
+    return;
+  }
+
+  comm = sc_notify_get_comm (notify);
+  mpiret = MPI_Comm_size (comm, &size);
+  SC_CHECK_MPI (mpiret);
+  mpiret = MPI_Comm_rank (comm, &rank);
+  SC_CHECK_MPI (mpiret);
+
+  num_receivers = (int) receivers->elem_count;
+  ireceivers = (int *) receivers->array;
+  msg_size = (int) in_payload->elem_size;
+  cpayload = (char *) in_payload->array;
+  inoff = (int *) in_offsets->array;
+
+  sendreqs = SC_ALLOC (MPI_Request, num_receivers);
+
+  for (i = 0; i < num_receivers; i++) {
+    int                 j = ireceivers[i];
+    char               *buf = &cpayload[inoff[i] * msg_size];
+    int                 total = msg_size * (inoff[i + 1] - inoff[i]);
+
+    mpiret =
+      MPI_Issend (buf, total, MPI_BYTE, j, SC_TAG_NOTIFY_NBXV, comm,
+                  &sendreqs[i]);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  if (!senders) {
+    sc_array_reset (receivers);
+    senders = receivers;
+  }
+
+  if (!out_offsets) {
+    sc_array_reset (in_offsets);
+    out_offsets = in_offsets;
+  }
+
+  if (!out_payload) {
+    recv_buf = sc_array_new ((size_t) msg_size);
+  }
+  else {
+    recv_buf = out_payload;
+  }
+
+  barr = 0;
+  *((int *) sc_array_push (out_offsets)) = 0;
+  for (done = 0; !done;) {
+    int                 j, flag;
+    MPI_Status          status;
+
+    mpiret =
+      MPI_Iprobe (MPI_ANY_SOURCE, SC_TAG_NOTIFY_NBX, comm, &flag, &status);
+    SC_CHECK_MPI (mpiret);
+    if (flag) {
+      int                *r;
+      char               *rc = NULL;
+      int                 count;
+      int                *off;
+      j = status.MPI_SOURCE;
+
+      r = (int *) sc_array_push (senders);
+      r[0] = j;
+      mpiret = MPI_Get_count (&status, MPI_BYTE, &count);
+      SC_ASSERT ((count % msg_size) == 0);
+      count = count / msg_size;
+      rc = sc_array_push_count (recv_buf, count);
+      off = (int *) sc_array_push (out_offsets);
+      *off = (int) recv_buf->elem_count;
+
+      mpiret =
+        MPI_Recv (rc, msg_size * count, MPI_BYTE, j, SC_TAG_NOTIFY_NBX, comm,
+                  MPI_STATUS_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+    if (!barr) {
+      int                 sent;
+
+      mpiret =
+        MPI_Testall (num_receivers, sendreqs, &sent, MPI_STATUSES_IGNORE);
+      SC_CHECK_MPI (mpiret);
+      if (sent) {
+        mpiret = MPI_Ibarrier (comm, &barreq);
+        SC_CHECK_MPI (mpiret);
+        barr = 1;
+      }
+    }
+    else {
+      mpiret = MPI_Test (&barreq, &done, MPI_STATUS_IGNORE);
+      SC_CHECK_MPI (mpiret);
+    }
+  }
+  SC_FREE (sendreqs);
+
+  if (!out_payload) {
+    sc_array_reset (in_payload);
+    out_payload = in_payload;
+    sc_array_resize (out_payload, recv_buf->elem_count);
+    sc_array_copy (recv_buf, out_payload);
+    sc_array_destroy (recv_buf);
+  }
+#else
+  SC_ABORT ("nbx implementation of sc_notify requires MPI-3 or greater");
+#endif
+}
+
 /*== SC_NOTIFY_RANGES ==*/
 
 int                 sc_notify_ranges_num_ranges_default = 25;
@@ -2277,6 +2560,10 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
                               first_out_payload, sorted, notify,
                               sc_notify_census_rsx);
     break;
+  case SC_NOTIFY_NBX:
+    sc_notify_payload_nbx (receivers, senders, first_in_payload,
+                           first_out_payload, sorted, notify);
+    break;
   case SC_NOTIFY_RANGES:
     sc_notify_payload_ranges (receivers, senders, first_in_payload,
                               first_out_payload, sorted, notify);
@@ -2417,6 +2704,10 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
     sc_notify_payloadv_census (receivers, senders, in_payload, out_payload,
                                in_offsets, out_offsets, sorted, notify,
                                sc_notify_censusv_pcx);
+    break;
+  case SC_NOTIFY_NBX:
+    sc_notify_payloadv_nbx (receivers, senders, in_payload, out_payload,
+                            in_offsets, out_offsets, sorted, notify);
     break;
   case SC_NOTIFY_RSX:
     sc_notify_payloadv_census (receivers, senders, in_payload, out_payload,
