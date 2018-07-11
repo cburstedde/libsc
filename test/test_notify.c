@@ -62,6 +62,46 @@ sc_uniq (int *list, int *count)
   *count = incount - skip;
 }
 
+static void
+compute_superset_trivial (sc_array_t * receivers,
+                          sc_array_t * extra_receivers,
+                          sc_array_t * super_senders, sc_notify_t * notify,
+                          void *ctx)
+{
+  sc_MPI_Comm         comm = sc_notify_get_comm (notify);
+  sc_array_t         *recv_sorted = NULL;
+  int                 size, i;
+  int                *isenders;
+  int                 mpiret;
+
+  if (sc_array_is_sorted (receivers, sc_int_compare)) {
+    recv_sorted = receivers;
+  }
+  else {
+    recv_sorted = sc_array_new_count (sizeof (int), receivers->elem_count);
+    sc_array_copy (recv_sorted, receivers);
+    sc_array_sort (recv_sorted, sc_int_compare);
+  }
+
+  mpiret = sc_MPI_Comm_size (comm, &size);
+  SC_CHECK_MPI (mpiret);
+
+  sc_array_resize (super_senders, (size_t) size);
+  isenders = (int *) super_senders->array;
+  sc_array_resize (extra_receivers, (size_t) size - recv_sorted->elem_count);
+  sc_array_truncate (extra_receivers);
+
+  for (i = 0; i < size; i++) {
+    isenders[i] = i;
+    if (sc_array_bsearch (recv_sorted, &i, sc_int_compare) < 0) {
+      *((int *) sc_array_push (extra_receivers)) = i;
+    }
+  }
+  if (recv_sorted != receivers) {
+    sc_array_destroy (recv_sorted);
+  }
+}
+
 int
 main (int argc, char **argv)
 {
@@ -174,6 +214,10 @@ main (int argc, char **argv)
       SC_GLOBAL_INFOF ("  SC_NOTIFY_NARY widths %d %d %d\n", ntop, nint,
                        nbot);
       sc_notify_nary_set_widths (notify, ntop, nint, nbot);
+    }
+    if (j == SC_NOTIFY_SUPERSET) {
+      sc_notify_superset_set_callback (notify, compute_superset_trivial,
+                                       NULL);
     }
     rec2 = sc_array_new_data (receivers, sizeof (int), num_receivers);
     snd2 = sc_array_new (sizeof (int));

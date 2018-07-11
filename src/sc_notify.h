@@ -44,6 +44,8 @@ typedef enum
   SC_NOTIFY_RSX,           /**< choose remote summation algorithm */
   SC_NOTIFY_NBX,           /**< choose non-blocking consensus algorithm */
   SC_NOTIFY_RANGES,        /**< use sc_ranges */
+  SC_NOTIFY_SUPERSET,      /**< use a computable superset of communicators, computed by
+                                a callback function */
   SC_NOTIFY_NUM_TYPES
 }
 sc_notify_type_t;
@@ -56,6 +58,7 @@ sc_notify_type_t;
 #define SC_NOTIFY_STR_RSX "rsx"
 #define SC_NOTIFY_STR_NBX "nbx"
 #define SC_NOTIFY_STR_RANGES "ranges"
+#define SC_NOTIFY_STR_SUPERSET "superset"
 
 /** Names for each notify method */
 extern const char  *sc_notify_type_strings[SC_NOTIFY_NUM_TYPES];
@@ -181,6 +184,22 @@ void                sc_notify_ranges_set_peer_range (sc_notify_t * notify,
                                                      int last_peer);
 
 extern int          sc_notify_ranges_num_ranges_default;
+
+void                sc_notify_superset_set_callback (sc_notify_t * notify,
+                                                     void (*compute_superset)
+                                                     (sc_array_t *,
+                                                      sc_array_t *,
+                                                      sc_array_t *,
+                                                      sc_notify_t *, void *),
+                                                     void *ctx);
+
+void                sc_notify_superset_get_callback (sc_notify_t * notify,
+                                                     void (**compute_superset)
+                                                     (sc_array_t *,
+                                                      sc_array_t *,
+                                                      sc_array_t *,
+                                                      sc_notify_t *, void *),
+                                                     void *ctx_p);
 
 /** Collective call to notify a set of receiver ranks of current rank.
  * This version uses one call to sc_MPI_Allgather and one to sc_MPI_Allgatherv.
