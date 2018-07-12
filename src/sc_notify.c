@@ -2388,7 +2388,6 @@ sc_notify_payload_superset (sc_array_t * receivers, sc_array_t * senders,
     SC_CHECK_MPI (mpiret);
   }
 
-  sc_array_destroy (extra_receivers);
 
 #ifdef SC_ENABLE_DEBUG
   sc_array_sort (super_senders, sc_int_compare);
@@ -2477,6 +2476,7 @@ sc_notify_payload_superset (sc_array_t * receivers, sc_array_t * senders,
   mpiret = sc_MPI_Waitall (num_receivers, sendreqs, sc_MPI_STATUSES_IGNORE);
   SC_CHECK_MPI (mpiret);
   SC_FREE (sendreqs);
+  sc_array_destroy (extra_receivers);
   sc_array_destroy (super_senders);
 
   sc_notify_payload_cleanup (senders, recv_buf, in_payload, out_payload,
