@@ -437,19 +437,21 @@ sc_polynom_roots (const sc_polynom_t * p, double *roots)
 
     /* reuse a variable as discriminant */
     a = .25 * b * b - c;
+    b *= -.5;
 
     /* isolate cases of less than two zeros */
     if (a < SC_1000_EPS) {
       if (a <= -SC_1000_EPS) {
         return 0;
       }
-      roots[0] = -.5 * b;
+      roots[0] = b;
       return 1;
     }
 
     /* return two distinct roots */
-    roots[0] = -.5 * b - sqrt (a);
-    roots[1] = -.5 * b + sqrt (a);
+    a = sqrt (a);
+    roots[0] = b - a;
+    roots[1] = b + a;
     return 2;
   }
 }
