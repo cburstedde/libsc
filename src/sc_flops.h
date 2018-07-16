@@ -104,6 +104,23 @@ void                sc_flops_shot (sc_flopinfo_t * fi,
  */
 void                sc_flops_shotv (sc_flopinfo_t * fi, ...);
 
+/**
+ * Accumulate sc_flops_snap()/sc_flops_shot() statistics for a function into
+ * an (sc_statistics_t *) */
+#define SC_FUNC_SNAP(stat,flop,snap)              \
+  do {                                            \
+    if (!sc_statistics_has ((stat), __func__)) {  \
+      sc_statistics_add_empty ((stat), __func__); \
+    }                                             \
+    sc_flops_snap ((flop), (snap));               \
+  } while (0)
+
+#define SC_FUNC_SHOT(stat,flop,snap)                             \
+  do {                                                           \
+    sc_flops_shot ((flop), (snap));                              \
+    sc_statistics_accumulate ((stat), __func__, (snap)->iwtime); \
+  } while (0)
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_FLOPS_H */

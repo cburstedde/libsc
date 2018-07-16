@@ -105,9 +105,25 @@ size_t              sc_notify_get_eager_threshold (sc_notify_t * notify);
 void                sc_notify_set_eager_threshold (sc_notify_t * notify,
                                                    size_t thresh);
 
-void                sc_notify_stats_push (sc_notify_t * notify,
-                                          sc_statinfo_t * stats);
-sc_statinfo_t      *sc_notify_stats_pop (sc_notify_t * notify);
+/** Set a sc_statistics_t * object for logging runtimes (added by function
+ * name).
+ *
+ * \param[in,out] notify      The notify controller.
+ * \param[in]     stats       The sc_statistics_t * object.  The notify
+ *                            controller will add timings for functions
+ *                            to the object, listed under their function
+ *                            names.
+ */
+void                sc_notify_set_stats (sc_notify_t * notify,
+                                         sc_statistics_t * stats);
+
+/** Get the sc_statistics_t * object for logging runtimes (added by function
+ * name).
+ *
+ * \param[in,out] notify      The notify controller.
+ * \return                    The sc_statistics_t * object, may be NULL.
+ */
+sc_statistics_t    *sc_notify_get_stats (sc_notify_t * notify);
 
 /** Get the MPI communicator of a notify controller.
  *
@@ -187,6 +203,16 @@ extern int          sc_notify_ranges_num_ranges_default;
 
 void                sc_notify_superset_set_callback (sc_notify_t * notify,
                                                      void (*compute_superset)
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
                                                      (sc_array_t *,
                                                       sc_array_t *,
                                                       sc_array_t *,
@@ -195,6 +221,16 @@ void                sc_notify_superset_set_callback (sc_notify_t * notify,
 
 void                sc_notify_superset_get_callback (sc_notify_t * notify,
                                                      void (**compute_superset)
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
+                                                      
                                                      (sc_array_t *,
                                                       sc_array_t *,
                                                       sc_array_t *,
