@@ -73,13 +73,13 @@ const int           sc_stats_prio_all = -3;
 void
 sc_stats_set1 (sc_statinfo_t * stats, double value, const char *variable)
 {
-  sc_stats_set1_ext (stats, value, variable,
+  sc_stats_set1_ext (stats, value, variable, 0,
                      sc_stats_group_all, sc_stats_prio_all);
 }
 
 void
 sc_stats_set1_ext (sc_statinfo_t * stats, double value, const char *variable,
-                   int stats_group, int stats_prio)
+                   int copy_variable, int stats_group, int stats_prio)
 {
   SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
   SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
@@ -90,8 +90,15 @@ sc_stats_set1_ext (sc_statinfo_t * stats, double value, const char *variable,
   stats->sum_squares = value * value;
   stats->min = value;
   stats->max = value;
-  stats->average = 0.;
-  stats->variable = variable;
+  stats->average = 0.;          /* zero is ok: computed in sc_stats_compute */
+  if (copy_variable) {
+    stats->variable_owned = SC_STRDUP (variable);
+    stats->variable = stats->variable_owned;
+  }
+  else {
+    stats->variable = variable;
+    stats->variable_owned = NULL;
+  }
   stats->group = stats_group;
   stats->prio = stats_prio;
 }
@@ -99,12 +106,13 @@ sc_stats_set1_ext (sc_statinfo_t * stats, double value, const char *variable,
 void
 sc_stats_init (sc_statinfo_t * stats, const char *variable)
 {
-  sc_stats_init_ext (stats, variable, sc_stats_group_all, sc_stats_prio_all);
+  sc_stats_init_ext (stats, variable, 0,
+                     sc_stats_group_all, sc_stats_prio_all);
 }
 
 void
 sc_stats_init_ext (sc_statinfo_t * stats, const char *variable,
-                   int stats_group, int stats_prio)
+                   int copy_variable, int stats_group, int stats_prio)
 {
   SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
   SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
@@ -114,9 +122,35 @@ sc_stats_init_ext (sc_statinfo_t * stats, const char *variable,
   stats->sum_values = stats->sum_squares = 0.;
   stats->min = stats->max = 0.;
   stats->average = 0.;
-  stats->variable = variable;
+  if (copy_variable) {
+    stats->variable_owned = SC_STRDUP (variable);
+    stats->variable = stats->variable_owned;
+  }
+  else {
+    stats->variable = variable;
+    stats->variable_owned = NULL;
+  }
   stats->group = stats_group;
   stats->prio = stats_prio;
+}
+
+void
+sc_stats_reset (sc_statinfo_t * stats, int reset_vgp)
+{
+  stats->dirty = 1;
+  stats->count = 0;
+  stats->sum_values = stats->sum_squares = 0.;
+  stats->min = stats->max = 0.;
+  stats->average = 0.;
+  if (reset_vgp) {
+    stats->variable = NULL;
+    if (stats->variable_owned != NULL) {
+      SC_FREE (stats->variable_owned);
+      stats->variable_owned = NULL;
+    }
+    stats->group = sc_stats_group_all;
+    stats->prio = sc_stats_prio_all;
+  }
 }
 
 void
