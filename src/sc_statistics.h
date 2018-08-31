@@ -45,6 +45,7 @@ typedef struct sc_statinfo
   double              average, variance, standev;       /* out */
   double              variance_mean, standev_mean;      /* out */
   const char         *variable; /* name of the variable for output */
+  char               *variable_owned;   /* NULL or deep copy of variable */
   int                 group;
   int                 prio;
 }
@@ -64,6 +65,8 @@ sc_statistics_t;
  * \param [out] stats          Will be filled with count=1 and the value.
  * \param [in] value           Value used to fill statistics information.
  * \param [in] variable        String to be reported by \ref sc_stats_print.
+ *                             This string is assigned by pointer, not copied.
+ *                             Thus, it must stay alive while stats is in use.
  */
 void                sc_stats_set1 (sc_statinfo_t * stats,
                                    double value, const char *variable);
@@ -72,11 +75,14 @@ void                sc_stats_set1 (sc_statinfo_t * stats,
  * \param [out] stats          Will be filled with count=1 and the value.
  * \param [in] value           Value used to fill statistics information.
  * \param [in] variable        String to be reported by \ref sc_stats_print.
+ * \param [in] copy_variable   If true, make internal copy of variable.
+ *                             Otherwise just assign the pointer.
  * \param [in] stats_group     Non-negative number or \ref sc_stats_group_all.
  * \param [in] stats_prio      Non-negative number or \ref sc_stats_prio_all.
  */
 void                sc_stats_set1_ext (sc_statinfo_t * stats,
                                        double value, const char *variable,
+                                       int copy_variable,
                                        int stats_group, int stats_prio);
 
 /** Initialize a sc_statinfo_t structure assuming count=0 and mark it dirty.
@@ -85,6 +91,8 @@ void                sc_stats_set1_ext (sc_statinfo_t * stats,
  * We set \ref sc_stats_group_all and \ref sc_stats_prio_all internally.
  * \param [out] stats          Will be filled with count 0 and values of 0.
  * \param [in] variable        String to be reported by \ref sc_stats_print.
+ *                             This string is assigned by pointer, not copied.
+ *                             Thus, it must stay alive while stats is in use.
  */
 void                sc_stats_init (sc_statinfo_t * stats,
                                    const char *variable);
@@ -94,13 +102,26 @@ void                sc_stats_init (sc_statinfo_t * stats,
  * instances locally before global statistics are computed.
  * \param [out] stats          Will be filled with count 0 and values of 0.
  * \param [in] variable        String to be reported by \ref sc_stats_print.
+ * \param [in] copy_variable   If true, make internal copy of variable.
+ *                             Otherwise just assign the pointer.
  * \param [in] stats_group     Non-negative number or \ref sc_stats_group_all.
  * \param [in] stats_prio      Non-negative number or \ref sc_stats_prio_all.
  *                             Values increase by importance.
  */
 void                sc_stats_init_ext (sc_statinfo_t * stats,
                                        const char *variable,
+                                       int copy_variable,
                                        int stats_group, int stats_prio);
+
+/** Reset all values to zero, optionally unassign name, group, and priority.
+ * \param [in,out] stats       Variables are zeroed.
+ *                             They can be set again by set1 or accumulate.
+ * \param [in] reset_vgp       If true, the variable name string is zeroed
+ *                             and if we did a copy, the copy is freed.
+ *                             If true, group and priority are set to all.
+ *                             If false, we don't touch any of the above.
+ */
+void                sc_stats_reset (sc_statinfo_t * stats, int reset_vgp);
 
 /** Set/update the group and priority information for a stats item.
  * \param [out] stats          Only group and stats entries are updated.
