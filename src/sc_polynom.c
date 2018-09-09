@@ -435,9 +435,9 @@ sc_polynom_roots (const sc_polynom_t * p, double *roots)
     b = *sc_polynom_coefficient_const (p, 1) / a;
     c = *sc_polynom_coefficient_const (p, 0) / a;
 
-    /* reuse a variable as discriminant */
-    a = .25 * b * b - c;
+    /* reuse a variable as discriminant and rescale b */
     b *= -.5;
+    a = b * b - c;
 
     /* isolate cases of less than two zeros */
     if (a < SC_1000_EPS) {
