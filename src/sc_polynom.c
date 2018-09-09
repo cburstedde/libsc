@@ -450,8 +450,14 @@ sc_polynom_roots (const sc_polynom_t * p, double *roots)
 
     /* return two distinct roots */
     a = sqrt (a);
-    roots[0] = b - a;
-    roots[1] = b + a;
+    if (b >= 0.) {
+      roots[1] = b + a;
+      roots[0] = c / roots[1];
+    }
+    else {
+      roots[0] = b - a;
+      roots[1] = c / roots[0];
+    }
     return 2;
   }
 }
