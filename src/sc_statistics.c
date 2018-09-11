@@ -84,13 +84,13 @@ sc_stats_set1_ext (sc_statinfo_t * stats, double value, const char *variable,
   SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
   SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
 
+  /* we leave output variables undefined */
   stats->dirty = 1;
   stats->count = 1;
   stats->sum_values = value;
   stats->sum_squares = value * value;
   stats->min = value;
   stats->max = value;
-  stats->average = 0.;          /* zero is ok: computed in sc_stats_compute */
   if (copy_variable) {
     stats->variable_owned = SC_STRDUP (variable);
     stats->variable = stats->variable_owned;
@@ -117,11 +117,11 @@ sc_stats_init_ext (sc_statinfo_t * stats, const char *variable,
   SC_ASSERT (stats_group == sc_stats_group_all || stats_group >= 0);
   SC_ASSERT (stats_prio == sc_stats_prio_all || stats_prio >= 0);
 
+  /* we leave output variables undefined */
   stats->dirty = 1;
   stats->count = 0;
   stats->sum_values = stats->sum_squares = 0.;
   stats->min = stats->max = 0.;
-  stats->average = 0.;
   if (copy_variable) {
     stats->variable_owned = SC_STRDUP (variable);
     stats->variable = stats->variable_owned;
@@ -137,11 +137,11 @@ sc_stats_init_ext (sc_statinfo_t * stats, const char *variable,
 void
 sc_stats_reset (sc_statinfo_t * stats, int reset_vgp)
 {
+  /* we leave output variables undefined */
   stats->dirty = 1;
   stats->count = 0;
   stats->sum_values = stats->sum_squares = 0.;
   stats->min = stats->max = 0.;
-  stats->average = 0.;
   if (reset_vgp) {
     stats->variable = NULL;
     if (stats->variable_owned != NULL) {
@@ -249,21 +249,25 @@ sc_stats_compute (sc_MPI_Comm mpicomm, int nvars, sc_statinfo_t * stats)
     cnt = flatout[7 * i + 0];
     stats[i].count = (long) cnt;
     if (!cnt) {
-      continue;
+      /* initialize output variables */
+      stats[i].min_at_rank = stats[i].max_at_rank = 0;
+      stats[i].average = stats[i].variance = stats[i].variance_mean = 0.;
     }
-    stats[i].sum_values = flatout[7 * i + 1];
-    stats[i].sum_squares = flatout[7 * i + 2];
-    stats[i].min = flatout[7 * i + 3];
-    stats[i].max = flatout[7 * i + 4];
-    stats[i].min_at_rank = (int) flatout[7 * i + 5];
-    stats[i].max_at_rank = (int) flatout[7 * i + 6];
-    stats[i].average = avg = stats[i].sum_values / cnt;
-    stats[i].variance = stats[i].sum_squares / cnt - avg * avg;
-    stats[i].variance = SC_MAX (stats[i].variance, 0.);
-    stats[i].variance_mean = stats[i].variance / cnt;
+    else {
+      stats[i].dirty = 0;
+      stats[i].sum_values = flatout[7 * i + 1];
+      stats[i].sum_squares = flatout[7 * i + 2];
+      stats[i].min = flatout[7 * i + 3];
+      stats[i].max = flatout[7 * i + 4];
+      stats[i].min_at_rank = (int) flatout[7 * i + 5];
+      stats[i].max_at_rank = (int) flatout[7 * i + 6];
+      stats[i].average = avg = stats[i].sum_values / cnt;
+      stats[i].variance = stats[i].sum_squares / cnt - avg * avg;
+      stats[i].variance = SC_MAX (stats[i].variance, 0.);
+      stats[i].variance_mean = stats[i].variance / cnt;
+    }
     stats[i].standev = sqrt (stats[i].variance);
     stats[i].standev_mean = sqrt (stats[i].variance_mean);
-    stats[i].dirty = 0;
   }
 
   SC_FREE (flat);
