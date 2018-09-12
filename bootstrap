@@ -6,7 +6,7 @@ echo "Development requires a libtool recent enough to contain LT_INIT" \
     "(2.2 works)"
 echo "Current directory is $PWD"
 
-LIBTOOLIZE=`which glibtoolize`
+LIBTOOLIZE=`which glibtoolize 2>/dev/null`
 if test ! -x "$LIBTOOLIZE" ; then LIBTOOLIZE=`which libtoolize` ; fi
 if test ! -x "$LIBTOOLIZE" ; then echo "bootstrap requires libtoolize" ; exit 1 ; fi
 
