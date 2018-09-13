@@ -702,6 +702,86 @@ sc_array_pqueue_pop (sc_array_t * array, void *result,
   return swaps;
 }
 
+/* mstamp routines */
+
+void
+sc_mstamp_init (sc_mstamp_t * obs, size_t stamp_unit, size_t elem_size)
+{
+  SC_ASSERT (obs != NULL);
+
+  /* basic initialization */
+  memset (obs, 0, sizeof (sc_mstamp_t));
+  obs->elem_size = elem_size;
+  sc_array_init (&obs->remember, sizeof (void *));
+
+  /* how many items per stamp we use */
+  if (elem_size > 0) {
+    obs->per_stamp = stamp_unit / elem_size;
+    if (obs->per_stamp == 0) {
+      /* Each item uses more memory than a usual stamp */
+      obs->per_stamp = 1;
+    }
+    obs->stamp_size = obs->per_stamp * elem_size;
+
+    /* make new stamp; the pointer is aligned to any builtin type */
+    *(void **) sc_array_push (&obs->remember) =
+      obs->current = SC_ALLOC (char, obs->stamp_size);
+  }
+}
+
+void
+sc_mstamp_reset (sc_mstamp_t * obs)
+{
+  size_t              znum, zz;
+
+  SC_ASSERT (obs != NULL);
+
+  /* free all memory stampm we have created */
+  znum = obs->remember.elem_count;
+  for (zz = 0; zz < znum; zz++) {
+    SC_FREE (*(void **) sc_array_index (&obs->remember, zz));
+  }
+  sc_array_reset (&obs->remember);
+}
+
+void               *
+sc_mstamp_alloc (sc_mstamp_t * obs)
+{
+  void               *ret;
+
+  SC_ASSERT (obs != NULL);
+
+  if (obs->elem_size == 0) {
+    /* item size zero is legal */
+    return NULL;
+  }
+
+  /* we know that at least one item will fit */
+  SC_ASSERT (obs->cur_snext < obs->per_stamp);
+  ret = obs->current + obs->cur_snext * obs->elem_size;
+
+  /* if this was the last item on the current stamp, we need a new one */
+  if (++obs->cur_snext == obs->per_stamp) {
+    obs->cur_snext = 0;
+    *(void **) sc_array_push (&obs->remember) =
+      obs->current = SC_ALLOC (char, obs->stamp_size);
+  }
+  return ret;
+}
+
+size_t
+sc_mstamp_memory_used (sc_mstamp_t * obs)
+{
+  size_t              s;
+
+  SC_ASSERT (obs != NULL);
+
+  s = sizeof (sc_mstamp_t);
+  s += obs->remember.elem_count * obs->stamp_size;
+  s += sc_array_memory_used (&obs->remember, 0);
+  return s;
+}
+
 /* mempool routines */
 
 size_t

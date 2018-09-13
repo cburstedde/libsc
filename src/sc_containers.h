@@ -531,6 +531,51 @@ sc_array_push (sc_array_t * array)
   return sc_array_push_count (array, 1);
 }
 
+/** A data container to create memory items of the same size.
+ * Allocations are bundled so it's fast for small memory sizes.
+ * The items created will remain valid until the container is destroyed.
+ * There is no option to return an item to the container.
+ * See \ref sc_mempool_t for that purpose.
+ */
+typedef struct sc_mstamp
+{
+  size_t              elem_size;   /**< Input parameter: size per item */
+  size_t              per_stamp;   /**< Number of items per stamp */
+  size_t              stamp_size;  /**< Bytes allocated in a stamp */
+  size_t              cur_snext;   /**< Next number within a stamp */
+  char               *current;     /**< Memory of current stamp */
+  sc_array_t          remember;    /**< Collects all stamps */
+}
+sc_mstamp_t;
+
+/** Initialize a stamp container.
+ * We provide allocation of fixed-size memory items
+ * without allocating one for every request.
+ * Instead we block the allocations in what we call a stamp of multiple items.
+ *
+ * \param [in,out] obs   Legal pointer to a stamp structure.
+ * \param [in] stamp_unit       Size of each memory block that we allocate.
+ *                              If it is larger than the element size,
+ *                              we may place more than one element in it.
+ *                              Passing 0 is legal and force
+ *                              stamps that hold one item each.
+ * \param [in] elem_size        Size of each item.
+ *                              Passing 0 is legal.
+ */
+void                sc_mstamp_init (sc_mstamp_t * obs,
+                                    size_t stamp_unit, size_t elem_size);
+
+/** Free all memory in a stamp structure and all items previously returned.
+ */
+void                sc_mstamp_reset (sc_mstamp_t * obs);
+
+/** Return a new item.  Its memory will stay legal until container is destroyed.
+ */
+void               *sc_mstamp_alloc (sc_mstamp_t * obs);
+
+/** Return memory size in bytes of all data allocated in the container. */
+size_t              sc_mstamp_memory_used (sc_mstamp_t * obs);
+
 /** The sc_mempool object provides a large pool of equal-size elements.
  * The pool grows dynamically for element allocation.
  * Elements are referenced by their address which never changes.
