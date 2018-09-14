@@ -566,14 +566,29 @@ void                sc_mstamp_init (sc_mstamp_t * obs,
                                     size_t stamp_unit, size_t elem_size);
 
 /** Free all memory in a stamp structure and all items previously returned.
+ * \param [in,out]              Properly initialized stamp container.
+ *                              On output, the structure is undefined.
  */
 void                sc_mstamp_reset (sc_mstamp_t * obs);
 
+/** Free all memory in a stamp structure initialize it anew.
+ * Equivalent to calling \ref sc_mstamp_reset followed by
+ *                       \ref sc_mstamp_init with the same
+ *                            stamp_unit and elem_size.
+ *
+ * \param [in,out]              Properly initialized stamp container.
+ *                              On output, its elements have been freed.
+ */
+void                sc_mstamp_truncate (sc_mstamp_t * obs);
+
 /** Return a new item.  Its memory will stay legal until container is destroyed.
+ * \param [in,out]              Properly initialized stamp container.
  */
 void               *sc_mstamp_alloc (sc_mstamp_t * obs);
 
-/** Return memory size in bytes of all data allocated in the container. */
+/** Return memory size in bytes of all data allocated in the container.
+ * \param [in]                  Properly initialized stamp container.
+ */
 size_t              sc_mstamp_memory_used (sc_mstamp_t * obs);
 
 /** The sc_mempool object provides a large pool of equal-size elements.

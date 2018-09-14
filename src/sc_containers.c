@@ -704,6 +704,19 @@ sc_array_pqueue_pop (sc_array_t * array, void *result,
 
 /* mstamp routines */
 
+static void
+sc_mstamp_stamp (sc_mstamp_t * obs)
+{
+  SC_ASSERT (obs != NULL);
+  SC_ASSERT (obs->elem_size > 0);
+  SC_ASSERT (obs->stamp_size > 0);
+
+  /* make new stamp; the pointer is aligned to any builtin type */
+  obs->cur_snext = 0;
+  *(void **) sc_array_push (&obs->remember) =
+    obs->current = SC_ALLOC (char, obs->stamp_size);
+}
+
 void
 sc_mstamp_init (sc_mstamp_t * obs, size_t stamp_unit, size_t elem_size)
 {
@@ -722,10 +735,7 @@ sc_mstamp_init (sc_mstamp_t * obs, size_t stamp_unit, size_t elem_size)
       obs->per_stamp = 1;
     }
     obs->stamp_size = obs->per_stamp * elem_size;
-
-    /* make new stamp; the pointer is aligned to any builtin type */
-    *(void **) sc_array_push (&obs->remember) =
-      obs->current = SC_ALLOC (char, obs->stamp_size);
+    sc_mstamp_stamp (obs);
   }
 }
 
@@ -742,6 +752,18 @@ sc_mstamp_reset (sc_mstamp_t * obs)
     SC_FREE (*(void **) sc_array_index (&obs->remember, zz));
   }
   sc_array_reset (&obs->remember);
+}
+
+void
+sc_mstamp_truncate (sc_mstamp_t * obs)
+{
+  /* free all memory in structure; the array obs->remember will be legal */
+  sc_mstamp_reset (obs);
+
+  /* we will use the container is if freshly initialized */
+  if (obs->elem_size > 0) {
+    sc_mstamp_stamp (obs);
+  }
 }
 
 void               *
@@ -762,9 +784,7 @@ sc_mstamp_alloc (sc_mstamp_t * obs)
 
   /* if this was the last item on the current stamp, we need a new one */
   if (++obs->cur_snext == obs->per_stamp) {
-    obs->cur_snext = 0;
-    *(void **) sc_array_push (&obs->remember) =
-      obs->current = SC_ALLOC (char, obs->stamp_size);
+    sc_mstamp_stamp (obs);
   }
   return ret;
 }
