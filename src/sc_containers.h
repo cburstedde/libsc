@@ -38,6 +38,7 @@
  * \ingroup sc
  */
 
+/** We are using sc_mstamp_t instead of GNU obstack in sc_mempool_t. */
 #define SC_MEMPOOL_MSTAMP
 
 #include <sc_obstack.h>
@@ -550,48 +551,58 @@ typedef struct sc_mstamp
 }
 sc_mstamp_t;
 
-/** Initialize a stamp container.
+/** Initialize a memory stamp container.
  * We provide allocation of fixed-size memory items
- * without allocating one for every request.
+ * without allocating new memory in every request.
  * Instead we block the allocations in what we call a stamp of multiple items.
+ * Even if no allocations are done, the container's internal memory
+ * must be freed eventually by \ref sc_mstamp_reset.
  *
- * \param [in,out] obs   Legal pointer to a stamp structure.
+ * \param [in,out] mst          Legal pointer to a stamp structure.
  * \param [in] stamp_unit       Size of each memory block that we allocate.
  *                              If it is larger than the element size,
  *                              we may place more than one element in it.
- *                              Passing 0 is legal and force
+ *                              Passing 0 is legal and forces
  *                              stamps that hold one item each.
  * \param [in] elem_size        Size of each item.
- *                              Passing 0 is legal.
+ *                              Passing 0 is legal.  In that case,
+ *                              \ref sc_mstamp_alloc returns NULL.
  */
-void                sc_mstamp_init (sc_mstamp_t * obs,
+void                sc_mstamp_init (sc_mstamp_t * mst,
                                     size_t stamp_unit, size_t elem_size);
 
 /** Free all memory in a stamp structure and all items previously returned.
  * \param [in,out]              Properly initialized stamp container.
  *                              On output, the structure is undefined.
  */
-void                sc_mstamp_reset (sc_mstamp_t * obs);
+void                sc_mstamp_reset (sc_mstamp_t * mst);
 
-/** Free all memory in a stamp structure initialize it anew.
+/** Free all memory in a stamp structure and initialize it anew.
  * Equivalent to calling \ref sc_mstamp_reset followed by
  *                       \ref sc_mstamp_init with the same
  *                            stamp_unit and elem_size.
  *
  * \param [in,out]              Properly initialized stamp container.
- *                              On output, its elements have been freed.
+ *                              On output, its elements have been freed
+ *                              and it is ready for further use.
  */
-void                sc_mstamp_truncate (sc_mstamp_t * obs);
+void                sc_mstamp_truncate (sc_mstamp_t * mst);
 
-/** Return a new item.  Its memory will stay legal until container is destroyed.
+/** Return a new item.
+ * The memory returned will stay legal
+ * until container is destroyed or truncated.
  * \param [in,out]              Properly initialized stamp container.
+ * \return                      Pointer to an item ready to use.
+ *                              Legal until \ref sc_stamp_destroy or
+ *                              \ref sc_stamp_truncate is called on mst.
  */
-void               *sc_mstamp_alloc (sc_mstamp_t * obs);
+void               *sc_mstamp_alloc (sc_mstamp_t * mst);
 
 /** Return memory size in bytes of all data allocated in the container.
  * \param [in]                  Properly initialized stamp container.
+ * \return                      Total container memory size in bytes.
  */
-size_t              sc_mstamp_memory_used (sc_mstamp_t * obs);
+size_t              sc_mstamp_memory_used (sc_mstamp_t * mst);
 
 /** The sc_mempool object provides a large pool of equal-size elements.
  * The pool grows dynamically for element allocation.

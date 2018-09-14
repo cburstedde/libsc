@@ -702,103 +702,104 @@ sc_array_pqueue_pop (sc_array_t * array, void *result,
   return swaps;
 }
 
-/* mstamp routines */
+/* memory stamp routines */
 
 static void
-sc_mstamp_stamp (sc_mstamp_t * obs)
+sc_mstamp_stamp (sc_mstamp_t * mst)
 {
-  SC_ASSERT (obs != NULL);
-  SC_ASSERT (obs->elem_size > 0);
-  SC_ASSERT (obs->stamp_size > 0);
+  SC_ASSERT (mst != NULL);
+  SC_ASSERT (mst->elem_size > 0);
+  SC_ASSERT (mst->stamp_size > 0);
 
   /* make new stamp; the pointer is aligned to any builtin type */
-  obs->cur_snext = 0;
-  *(void **) sc_array_push (&obs->remember) =
-    obs->current = SC_ALLOC (char, obs->stamp_size);
+  mst->cur_snext = 0;
+  *(void **) sc_array_push (&mst->remember) =
+    mst->current = SC_ALLOC (char, mst->stamp_size);
 }
 
 void
-sc_mstamp_init (sc_mstamp_t * obs, size_t stamp_unit, size_t elem_size)
+sc_mstamp_init (sc_mstamp_t * mst, size_t stamp_unit, size_t elem_size)
 {
-  SC_ASSERT (obs != NULL);
+  SC_ASSERT (mst != NULL);
 
   /* basic initialization */
-  memset (obs, 0, sizeof (sc_mstamp_t));
-  obs->elem_size = elem_size;
-  sc_array_init (&obs->remember, sizeof (void *));
+  memset (mst, 0, sizeof (sc_mstamp_t));
+  mst->elem_size = elem_size;
+  sc_array_init (&mst->remember, sizeof (void *));
 
   /* how many items per stamp we use */
   if (elem_size > 0) {
-    obs->per_stamp = stamp_unit / elem_size;
-    if (obs->per_stamp == 0) {
-      /* Each item uses more memory than a usual stamp */
-      obs->per_stamp = 1;
+    mst->per_stamp = stamp_unit / elem_size;
+    if (mst->per_stamp == 0) {
+      /* Each item uses more memory than we had specified for one stamp */
+      mst->per_stamp = 1;
     }
-    obs->stamp_size = obs->per_stamp * elem_size;
-    sc_mstamp_stamp (obs);
+    mst->stamp_size = mst->per_stamp * elem_size;
+    sc_mstamp_stamp (mst);
   }
 }
 
 void
-sc_mstamp_reset (sc_mstamp_t * obs)
+sc_mstamp_reset (sc_mstamp_t * mst)
 {
   size_t              znum, zz;
 
-  SC_ASSERT (obs != NULL);
+  SC_ASSERT (mst != NULL);
 
-  /* free all memory stampm we have created */
-  znum = obs->remember.elem_count;
+  /* free all memory stamps we have created */
+  znum = mst->remember.elem_count;
   for (zz = 0; zz < znum; zz++) {
-    SC_FREE (*(void **) sc_array_index (&obs->remember, zz));
+    SC_FREE (*(void **) sc_array_index (&mst->remember, zz));
   }
-  sc_array_reset (&obs->remember);
+  sc_array_reset (&mst->remember);
 }
 
 void
-sc_mstamp_truncate (sc_mstamp_t * obs)
+sc_mstamp_truncate (sc_mstamp_t * mst)
 {
-  /* free all memory in structure; the array obs->remember will be legal */
-  sc_mstamp_reset (obs);
+  /* free all memory in structure; the array mst->remember will be legal */
+  sc_mstamp_reset (mst);
 
   /* we will use the container is if freshly initialized */
-  if (obs->elem_size > 0) {
-    sc_mstamp_stamp (obs);
+  if (mst->elem_size > 0) {
+    sc_mstamp_stamp (mst);
   }
 }
 
 void               *
-sc_mstamp_alloc (sc_mstamp_t * obs)
+sc_mstamp_alloc (sc_mstamp_t * mst)
 {
   void               *ret;
 
-  SC_ASSERT (obs != NULL);
+  SC_ASSERT (mst != NULL);
 
-  if (obs->elem_size == 0) {
+  if (mst->elem_size == 0) {
     /* item size zero is legal */
     return NULL;
   }
 
   /* we know that at least one item will fit */
-  SC_ASSERT (obs->cur_snext < obs->per_stamp);
-  ret = obs->current + obs->cur_snext * obs->elem_size;
+  SC_ASSERT (mst->current != NULL);
+  SC_ASSERT (mst->cur_snext < mst->per_stamp);
+  ret = mst->current + mst->cur_snext * mst->elem_size;
 
   /* if this was the last item on the current stamp, we need a new one */
-  if (++obs->cur_snext == obs->per_stamp) {
-    sc_mstamp_stamp (obs);
+  if (++mst->cur_snext == mst->per_stamp) {
+    sc_mstamp_stamp (mst);
   }
   return ret;
 }
 
 size_t
-sc_mstamp_memory_used (sc_mstamp_t * obs)
+sc_mstamp_memory_used (sc_mstamp_t * mst)
 {
   size_t              s;
 
-  SC_ASSERT (obs != NULL);
+  SC_ASSERT (mst != NULL);
 
   s = sizeof (sc_mstamp_t);
-  s += obs->remember.elem_count * obs->stamp_size;
-  s += sc_array_memory_used (&obs->remember, 0);
+  s += mst->remember.elem_count * mst->stamp_size;
+  s += sc_array_memory_used (&mst->remember, 0);
   return s;
 }
 
