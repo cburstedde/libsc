@@ -117,7 +117,7 @@ test_mstamp (void)
     /* zero data size */
     sc_mstamp_init (mst, munit[j], 0);
     for (i = 0; i < 8 + 3 * j; ++i) {
-      pc = sc_mstamp_alloc (mst);
+      pc = (char *) sc_mstamp_alloc (mst);
       SC_CHECK_ABORT (pc == NULL, "Mstamp alloc NULL");
     }
     SC_GLOBAL_INFOF ("Memory used A %lld\n",
@@ -128,14 +128,14 @@ test_mstamp (void)
     isize = msize[j];
     sc_mstamp_init (mst, munit[j], isize);
     for (i = 0; i < 7829; ++i) {
-      pc = sc_mstamp_alloc (mst);
+      pc = (char *) sc_mstamp_alloc (mst);
       memset (pc, -1, isize);
     }
     SC_GLOBAL_INFOF ("Memory used B %lld\n",
                      (long long) sc_mstamp_memory_used (mst));
     sc_mstamp_truncate (mst);
     for (i = 0; i < 3124; ++i) {
-      pc = sc_mstamp_alloc (mst);
+      pc = (char *) sc_mstamp_alloc (mst);
       memset (pc, -1, isize);
     }
     SC_GLOBAL_INFOF ("Memory used C %lld\n",
