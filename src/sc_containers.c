@@ -917,6 +917,16 @@ sc_mempool_destroy (sc_mempool_t * mempool)
 }
 
 void
+sc_mempool_destroy_null (sc_mempool_t ** pmempool)
+{
+  SC_ASSERT (pmempool != NULL);
+  SC_ASSERT (*pmempool != NULL);
+
+  sc_mempool_destroy (*pmempool);
+  *pmempool = NULL;
+}
+
+void
 sc_mempool_truncate (sc_mempool_t * mempool)
 {
   sc_array_reset (&mempool->freed);
@@ -1284,6 +1294,16 @@ sc_hash_destroy (sc_hash_t * hash)
   sc_array_destroy (hash->slots);
 
   SC_FREE (hash);
+}
+
+void
+sc_hash_destroy_null (sc_hash_t ** phash)
+{
+  SC_ASSERT (phash != NULL);
+  SC_ASSERT (*phash != NULL);
+
+  sc_hash_destroy (*phash);
+  *phash = NULL;
 }
 
 void
