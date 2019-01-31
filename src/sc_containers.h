@@ -38,6 +38,9 @@
  * \ingroup sc
  */
 
+/** We are using sc_mstamp_t instead of GNU obstack in sc_mempool_t. */
+#define SC_MEMPOOL_MSTAMP
+
 #include <sc_obstack.h>
 
 SC_EXTERN_C_BEGIN;
@@ -531,6 +534,76 @@ sc_array_push (sc_array_t * array)
   return sc_array_push_count (array, 1);
 }
 
+/** A data container to create memory items of the same size.
+ * Allocations are bundled so it's fast for small memory sizes.
+ * The items created will remain valid until the container is destroyed.
+ * There is no option to return an item to the container.
+ * See \ref sc_mempool_t for that purpose.
+ */
+typedef struct sc_mstamp
+{
+  size_t              elem_size;   /**< Input parameter: size per item */
+  size_t              per_stamp;   /**< Number of items per stamp */
+  size_t              stamp_size;  /**< Bytes allocated in a stamp */
+  size_t              cur_snext;   /**< Next number within a stamp */
+  char               *current;     /**< Memory of current stamp */
+  sc_array_t          remember;    /**< Collects all stamps */
+}
+sc_mstamp_t;
+
+/** Initialize a memory stamp container.
+ * We provide allocation of fixed-size memory items
+ * without allocating new memory in every request.
+ * Instead we block the allocations in what we call a stamp of multiple items.
+ * Even if no allocations are done, the container's internal memory
+ * must be freed eventually by \ref sc_mstamp_reset.
+ *
+ * \param [in,out] mst          Legal pointer to a stamp structure.
+ * \param [in] stamp_unit       Size of each memory block that we allocate.
+ *                              If it is larger than the element size,
+ *                              we may place more than one element in it.
+ *                              Passing 0 is legal and forces
+ *                              stamps that hold one item each.
+ * \param [in] elem_size        Size of each item.
+ *                              Passing 0 is legal.  In that case,
+ *                              \ref sc_mstamp_alloc returns NULL.
+ */
+void                sc_mstamp_init (sc_mstamp_t * mst,
+                                    size_t stamp_unit, size_t elem_size);
+
+/** Free all memory in a stamp structure and all items previously returned.
+ * \param [in,out]              Properly initialized stamp container.
+ *                              On output, the structure is undefined.
+ */
+void                sc_mstamp_reset (sc_mstamp_t * mst);
+
+/** Free all memory in a stamp structure and initialize it anew.
+ * Equivalent to calling \ref sc_mstamp_reset followed by
+ *                       \ref sc_mstamp_init with the same
+ *                            stamp_unit and elem_size.
+ *
+ * \param [in,out]              Properly initialized stamp container.
+ *                              On output, its elements have been freed
+ *                              and it is ready for further use.
+ */
+void                sc_mstamp_truncate (sc_mstamp_t * mst);
+
+/** Return a new item.
+ * The memory returned will stay legal
+ * until container is destroyed or truncated.
+ * \param [in,out]              Properly initialized stamp container.
+ * \return                      Pointer to an item ready to use.
+ *                              Legal until \ref sc_stamp_destroy or
+ *                              \ref sc_stamp_truncate is called on mst.
+ */
+void               *sc_mstamp_alloc (sc_mstamp_t * mst);
+
+/** Return memory size in bytes of all data allocated in the container.
+ * \param [in]                  Properly initialized stamp container.
+ * \return                      Total container memory size in bytes.
+ */
+size_t              sc_mstamp_memory_used (sc_mstamp_t * mst);
+
 /** The sc_mempool object provides a large pool of equal-size elements.
  * The pool grows dynamically for element allocation.
  * Elements are referenced by their address which never changes.
@@ -548,7 +621,11 @@ typedef struct sc_mempool
   int                 zero_and_persist; /**< Boolean; is set in constructor. */
 
   /* implementation variables */
+#ifdef SC_MEMPOOL_MSTAMP
+  sc_mstamp_t         mstamp;   /**< our own obstack replacement */
+#else
   struct obstack      obstack;  /**< holds the allocated elements */
+#endif
   sc_array_t          freed;    /**< buffers the freed elements */
 }
 sc_mempool_t;
@@ -607,7 +684,11 @@ sc_mempool_alloc (sc_mempool_t * mempool)
     ret = *(void **) sc_array_pop (freed);
   }
   else {
+#ifdef SC_MEMPOOL_MSTAMP
+    ret = sc_mstamp_alloc (&mempool->mstamp);
+#else
     ret = obstack_alloc (&mempool->obstack, (int) mempool->elem_size);
+#endif
     if (mempool->zero_and_persist) {
       memset (ret, 0, mempool->elem_size);
     }

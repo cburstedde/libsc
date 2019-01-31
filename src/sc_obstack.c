@@ -22,10 +22,11 @@
 
 /* renamed from glibc 2.7 to sc_obstack.h and modified */
 
-#include <sc.h>
+/* we might add our own code at the end of the file */
+
+#include <sc_obstack.h>
 
 #ifdef SC_PROVIDE_OBSTACK
-#include "sc_builtin/obstack.h"
 
 /* Determine default alignment.  */
 union fooround

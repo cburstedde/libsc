@@ -702,15 +702,122 @@ sc_array_pqueue_pop (sc_array_t * array, void *result,
   return swaps;
 }
 
+/* memory stamp routines */
+
+static void
+sc_mstamp_stamp (sc_mstamp_t * mst)
+{
+  SC_ASSERT (mst != NULL);
+  SC_ASSERT (mst->elem_size > 0);
+  SC_ASSERT (mst->stamp_size > 0);
+
+  /* make new stamp; the pointer is aligned to any builtin type */
+  mst->cur_snext = 0;
+  *(void **) sc_array_push (&mst->remember) =
+    mst->current = SC_ALLOC (char, mst->stamp_size);
+}
+
+void
+sc_mstamp_init (sc_mstamp_t * mst, size_t stamp_unit, size_t elem_size)
+{
+  SC_ASSERT (mst != NULL);
+
+  /* basic initialization */
+  memset (mst, 0, sizeof (sc_mstamp_t));
+  mst->elem_size = elem_size;
+  sc_array_init (&mst->remember, sizeof (void *));
+
+  /* how many items per stamp we use */
+  if (elem_size > 0) {
+    mst->per_stamp = stamp_unit / elem_size;
+    if (mst->per_stamp == 0) {
+      /* Each item uses more memory than we had specified for one stamp */
+      mst->per_stamp = 1;
+    }
+    mst->stamp_size = mst->per_stamp * elem_size;
+    sc_mstamp_stamp (mst);
+  }
+}
+
+void
+sc_mstamp_reset (sc_mstamp_t * mst)
+{
+  size_t              znum, zz;
+
+  SC_ASSERT (mst != NULL);
+
+  /* free all memory stamps we have created */
+  znum = mst->remember.elem_count;
+  for (zz = 0; zz < znum; zz++) {
+    SC_FREE (*(void **) sc_array_index (&mst->remember, zz));
+  }
+  sc_array_reset (&mst->remember);
+}
+
+void
+sc_mstamp_truncate (sc_mstamp_t * mst)
+{
+  /* free all memory in structure; the array mst->remember will be legal */
+  sc_mstamp_reset (mst);
+
+  /* we will use the container is if freshly initialized */
+  if (mst->elem_size > 0) {
+    sc_mstamp_stamp (mst);
+  }
+}
+
+void               *
+sc_mstamp_alloc (sc_mstamp_t * mst)
+{
+  void               *ret;
+
+  SC_ASSERT (mst != NULL);
+
+  if (mst->elem_size == 0) {
+    /* item size zero is legal */
+    return NULL;
+  }
+
+  /* we know that at least one item will fit */
+  SC_ASSERT (mst->current != NULL);
+  SC_ASSERT (mst->cur_snext < mst->per_stamp);
+  ret = mst->current + mst->cur_snext * mst->elem_size;
+
+  /* if this was the last item on the current stamp, we need a new one */
+  if (++mst->cur_snext == mst->per_stamp) {
+    sc_mstamp_stamp (mst);
+  }
+  return ret;
+}
+
+size_t
+sc_mstamp_memory_used (sc_mstamp_t * mst)
+{
+  size_t              s;
+
+  SC_ASSERT (mst != NULL);
+
+  s = sizeof (sc_mstamp_t);
+  s += mst->remember.elem_count * mst->stamp_size;
+  s += sc_array_memory_used (&mst->remember, 0);
+  return s;
+}
+
 /* mempool routines */
 
 size_t
 sc_mempool_memory_used (sc_mempool_t * mempool)
 {
   return sizeof (sc_mempool_t) +
+#ifdef SC_MEMPOOL_MSTAMP
+    sc_mstamp_memory_used (&mempool->mstamp) +
+#else
     obstack_memory_used (&mempool->obstack) +
+#endif
     sc_array_memory_used (&mempool->freed, 0);
 }
+
+#ifndef SC_MEMPOOL_MSTAMP
 
 static void        *
 sc_containers_malloc (size_t n)
@@ -728,6 +835,8 @@ sc_containers_free (void *p)
 
 static void         (*obstack_chunk_free) (void *) = sc_containers_free;
 
+#endif /* !SC_MEMPOOL_MSTAMP */
+
 /** This function is static; we do not like to expose _ext functions in libsc. */
 static void
 sc_mempool_init_ext (sc_mempool_t * mempool, size_t elem_size,
@@ -737,7 +846,11 @@ sc_mempool_init_ext (sc_mempool_t * mempool, size_t elem_size,
   mempool->elem_count = 0;
   mempool->zero_and_persist = zero_and_persist;
 
+#ifdef SC_MEMPOOL_MSTAMP
+  sc_mstamp_init (&mempool->mstamp, 4096, elem_size);
+#else
   obstack_init (&mempool->obstack);
+#endif
   sc_array_init (&mempool->freed, sizeof (void *));
 }
 
@@ -779,7 +892,11 @@ void
 sc_mempool_reset (sc_mempool_t * mempool)
 {
   sc_array_reset (&mempool->freed);
+#ifdef SC_MEMPOOL_MSTAMP
+  sc_mstamp_reset (&mempool->mstamp);
+#else
   obstack_free (&mempool->obstack, NULL);
+#endif
 }
 
 void
@@ -793,8 +910,12 @@ void
 sc_mempool_truncate (sc_mempool_t * mempool)
 {
   sc_array_reset (&mempool->freed);
+#ifdef SC_MEMPOOL_MSTAMP
+  sc_mstamp_truncate (&mempool->mstamp);
+#else
   obstack_free (&mempool->obstack, NULL);
   obstack_init (&mempool->obstack);
+#endif
   mempool->elem_count = 0;
 }
 
