@@ -79,6 +79,24 @@ sc_intpow64u (uint64_t base, int exp)
 }
 
 double
+sc_intpowf (double base, int exp)
+{
+  double              result = 1.;
+
+  SC_ASSERT (exp >= 0);
+
+  while (exp) {
+    if (exp & 1) {
+      result *= base;
+    }
+    exp >>= 1;
+    base *= base;
+  }
+
+  return result;
+}
+
+double
 sc_function1_invert (sc_function1_t func, void *data,
                      double x_low, double x_high, double y, double rtol)
 {

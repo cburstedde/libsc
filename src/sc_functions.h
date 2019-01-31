@@ -57,6 +57,14 @@ int64_t             sc_intpow64 (int64_t base, int exp);
  */
 uint64_t            sc_intpow64u (uint64_t base, int exp);
 
+/* Power routine for floating point numbers.
+ * \see sc_intpow.
+ * \param [in] base         This number is taken to the power of \exp.
+ * \param [in] exp          This non-negative integer is the exponent.
+ * \return                  We compute \b base ** \b exp.
+ */
+double              sc_intpowf (double base, int exp);
+
 typedef double      (*sc_function1_t) (double x, void *data);
 
 typedef double      (*sc_function3_t) (double x, double y, double z,
