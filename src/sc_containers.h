@@ -163,6 +163,12 @@ sc_array_t         *sc_array_new_data (void *base,
  */
 void                sc_array_destroy (sc_array_t * array);
 
+/** Destroys an array structure and sets the pointer to NULL.
+ * \param [in,out] parray       Pointer to address of array to be destroyed.
+ *                              On output, *parray is NULL.
+ */
+void                sc_array_destroy_null (sc_array_t ** parray);
+
 /** Initializes an already allocated (or static) array structure.
  * \param [in,out]  array       Array structure to be initialized.
  * \param [in] elem_size        Size of one array element in bytes.
@@ -407,7 +413,9 @@ size_t              sc_array_pqueue_pop (sc_array_t * array,
                                                         const void *));
 
 /** Returns a pointer to an array element.
+ * \param [in] array Valid array.
  * \param [in] index needs to be in [0]..[elem_count-1].
+ * \return           Pointer to the indexed array element.
  */
 /*@unused@*/
 static inline void *
@@ -415,7 +423,23 @@ sc_array_index (sc_array_t * array, size_t iz)
 {
   SC_ASSERT (iz < array->elem_count);
 
-  return (void *) (array->array + (array->elem_size * iz));
+  return (void *) (array->array + array->elem_size * iz);
+}
+
+/** Returns a pointer to an array element or NULL at the array's end.
+ * \param [in] array Valid array.
+ * \param [in] index needs to be in [0]..[elem_count].
+ * \return           Pointer to the indexed array element or
+ *                   NULL if the specified index is elem_count.
+ */
+/*@unused@*/
+static inline void *
+sc_array_index_null (sc_array_t * array, size_t iz)
+{
+  SC_ASSERT (iz <= array->elem_count);
+
+  return iz == array->elem_count ? NULL :
+    (void *) (array->array + array->elem_size * iz);
 }
 
 /** Returns a pointer to an array element indexed by a plain int.

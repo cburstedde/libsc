@@ -93,6 +93,16 @@ sc_array_destroy (sc_array_t * array)
 }
 
 void
+sc_array_destroy_null (sc_array_t ** parray)
+{
+  SC_ASSERT (parray != NULL);
+  SC_ASSERT (*parray != NULL);
+
+  sc_array_destroy (*parray);
+  *parray = NULL;
+}
+
+void
 sc_array_init (sc_array_t * array, size_t elem_size)
 {
   SC_ASSERT (elem_size > 0);
