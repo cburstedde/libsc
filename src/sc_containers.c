@@ -264,7 +264,10 @@ sc_array_resize (sc_array_t * array, size_t new_count)
   array->array = SC_REALLOC (array->array, char, newsize);
 #else
   ptr = SC_ALLOC (char, newsize);
-  memcpy (ptr, array->array, minoffs);
+  if (minoffs > 0) {
+    /* avoid calling memcpy on less well supported corner cases */
+    memcpy (ptr, array->array, minoffs);
+  }
   SC_FREE (array->array);
   array->array = ptr;
 #endif
@@ -281,7 +284,13 @@ sc_array_copy (sc_array_t * dest, sc_array_t * src)
   SC_ASSERT (SC_ARRAY_IS_OWNER (dest));
   SC_ASSERT (dest->elem_size == src->elem_size);
 
+  /* always resize the destination array as documented */
   sc_array_resize (dest, src->elem_count);
+
+  if (src->elem_count == 0 || src->elem_size == 0) {
+    /* avoid calling memcpy on less well supported corner cases */
+    return;
+  }
   memcpy (dest->array, src->array, src->elem_count * src->elem_size);
 }
 
@@ -291,6 +300,10 @@ sc_array_copy_into (sc_array_t * dest, size_t dest_offset, sc_array_t * src)
   SC_ASSERT (dest->elem_size == src->elem_size);
   SC_ASSERT (dest_offset + src->elem_count <= dest->elem_count);
 
+  if (src->elem_count == 0 || src->elem_size == 0) {
+    /* avoid calling memcpy on less well supported corner cases */
+    return;
+  }
   memcpy (dest->array + dest_offset * dest->elem_size,
           src->array, src->elem_count * src->elem_size);
 }
@@ -303,6 +316,10 @@ sc_array_move_part (sc_array_t * dest, size_t dest_offset,
   SC_ASSERT (dest_offset + count <= dest->elem_count);
   SC_ASSERT (src_offset + count <= src->elem_count);
 
+  if (count == 0 || src->elem_size == 0) {
+    /* avoid calling memmove on less well supported corner cases */
+    return;
+  }
   memmove (dest->array + dest_offset * dest->elem_size,
            src->array + src_offset * src->elem_size, count * src->elem_size);
 }
