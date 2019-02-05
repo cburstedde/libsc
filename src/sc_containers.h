@@ -275,12 +275,45 @@ void                sc_array_rewind (sc_array_t * array, size_t new_count);
  */
 void                sc_array_resize (sc_array_t * array, size_t new_count);
 
-/** Copy the contents of an array into another.
+/** Copy the contents of one array into another.
  * Both arrays must have equal element sizes.
- * \param [in] dest Array (not a view) will be resized and get new data.
- * \param [in] src  Array used as source of new data, will not be changed.
+ * The source array may be a view.
+ * We use memcpy (3):  If the two arrays overlap, results are undefined.
+ * \param [in] dest     Array (not a view) will be resized and get new data.
+ * \param [in] src      Array used as source of new data, will not be changed.
  */
 void                sc_array_copy (sc_array_t * dest, sc_array_t * src);
+
+/** Copy the contents of one array into some portion of another.
+ * Both arrays must have equal element sizes.
+ * Either array may be a view.  The destination array must be large enough.
+ * We use memcpy (3):  If the two arrays overlap, results are undefined.
+ * \param [in] dest     Array will be written into.  Its element count must
+ *                      be at least \b dest_offset + \b src->elem_count.
+ * \param [in] dest_offset  First index in \b dest array to be overwritten.
+ *                      As every index, it refers to elements, not bytes.
+ * \param [in] src      Array used as source of new data, will not be changed.
+ */
+void                sc_array_copy_into (sc_array_t * dest, size_t dest_offset,
+                                        sc_array_t * src);
+
+/** Copy part of one array into another using memmove (3).
+ * Both arrays must have equal element sizes.
+ * Either array may be a view.  The destination array must be large enough.
+ * We use memmove (3):  The two arrays may overlap.
+ * \param [in] dest     Array will be written into.  Its element count must
+ *                      be at least \b dest_offset + \b count.
+ * \param [in] dest_offset  First index in \b dest array to be overwritten.
+ *                      As every index, it refers to elements, not bytes.
+ * \param [in] src      Array will be read from.  Its element count must
+ *                      be at least \b src_offset + \b count.
+ * \param [in] src_offset   First index in \b src array to be used.
+ *                      As every index, it refers to elements, not bytes.
+ * \param [in] count    Number of entries copied.
+ */
+void                sc_array_move_part (sc_array_t * dest, size_t dest_offset,
+                                        sc_array_t * src, size_t src_offset,
+                                        size_t count);
 
 /** Sorts the array in ascending order wrt. the comparison function.
  * \param [in] array    The array to sort.

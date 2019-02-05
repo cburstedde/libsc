@@ -286,6 +286,28 @@ sc_array_copy (sc_array_t * dest, sc_array_t * src)
 }
 
 void
+sc_array_copy_into (sc_array_t * dest, size_t dest_offset, sc_array_t * src)
+{
+  SC_ASSERT (dest->elem_size == src->elem_size);
+  SC_ASSERT (dest_offset + src->elem_count <= dest->elem_count);
+
+  memcpy (dest->array + dest_offset * dest->elem_size,
+          src->array, src->elem_count * src->elem_size);
+}
+
+void
+sc_array_move_part (sc_array_t * dest, size_t dest_offset,
+                    sc_array_t * src, size_t src_offset, size_t count)
+{
+  SC_ASSERT (dest->elem_size == src->elem_size);
+  SC_ASSERT (dest_offset + count <= dest->elem_count);
+  SC_ASSERT (src_offset + count <= src->elem_count);
+
+  memmove (dest->array + dest_offset * dest->elem_size,
+           src->array + src_offset * src->elem_size, count * src->elem_size);
+}
+
+void
 sc_array_sort (sc_array_t * array, int (*compar) (const void *, const void *))
 {
   qsort (array->array, array->elem_count, array->elem_size, compar);
