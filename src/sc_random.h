@@ -41,6 +41,18 @@ typedef uint64_t    sc_rand_state_t;
  */
 double              sc_rand (sc_rand_state_t * state);
 
+/** Sample the Gauss standard normal distribution.
+ * Implements polar form of the Box Muller transform based on \ref sc_rand.
+ * \param [in,out] state        Internal state of random number generator.
+ * \param [in,out] second_result        We compute two independent samples.
+ *                                      The first is the return value.
+ *                                      The second is placed in *second_result
+ *                                      unless second_result == NULL.
+ * \return            Random sample from the standard normal distribution.
+ */
+double              sc_rand_normal (sc_rand_state_t * state,
+                                    double *second_result);
+
 /** Randomly draw either 0 or 1 where the probability for 1 is small.
  * \param [in,out] state        Internal state of random number generator.
  * \param [in] d                Probability of drawing ones.

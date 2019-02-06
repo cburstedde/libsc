@@ -71,6 +71,25 @@ sc_rand (sc_rand_state_t * state)
   return rword * iump;
 }
 
+double
+sc_rand_normal (sc_rand_state_t * state, double *second_result)
+{
+  double              u, v, s;
+
+  do {
+    u = 2. * (sc_rand (state) - .5);
+    v = 2. * (sc_rand (state) - .5);
+    s = u * u + v * v;
+  }
+  while (s <= 0. || s > 1.);
+  s = sqrt (-2. * log (s) / s);
+
+  if (second_result != NULL) {
+    *second_result = v * s;
+  }
+  return u * s;
+}
+
 int
 sc_rand_small (sc_rand_state_t * state, double d)
 {

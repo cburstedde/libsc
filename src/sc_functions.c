@@ -22,7 +22,6 @@
 */
 
 #include <sc_functions.h>
-#include <time.h>
 
 int
 sc_intpow (int base, int exp)
@@ -141,54 +140,6 @@ sc_function1_invert (sc_function1_t func, void *data,
       return x;
   }
   SC_ABORTF ("sc_function1_invert did not converge after %d iterations", k);
-}
-
-void
-sc_srand (unsigned int seed)
-{
-  int                 mpiret;
-  int                 mpirank;
-
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-  SC_CHECK_MPI (mpiret);
-
-  /* mpirank + seed * large_prime */
-  srand ((unsigned int) mpirank + seed * 393919);
-}
-
-void
-sc_srand_time ()
-{
-  int                 mpiret;
-  int                 mpirank;
-
-  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpirank);
-  SC_CHECK_MPI (mpiret);
-
-  /* time + mpirank * small_prime */
-  srand ((unsigned int) time (NULL) + mpirank * 353);
-}
-
-double
-sc_rand_uniform (void)
-{
-  return rand () / (RAND_MAX + 1.0);
-}
-
-double
-sc_rand_normal (void)
-{
-  double              u, v, s;
-
-  do {
-    u = 2.0 * (sc_rand_uniform () - 0.5);       /* uniform on [-1,1) */
-    v = 2.0 * (sc_rand_uniform () - 0.5);       /* uniform on [-1,1) */
-    s = u * u + v * v;
-  } while (s > 1.0 || s <= 0.0);
-
-  s = sqrt (-2.0 * log (s) / s);
-
-  return u * s;
 }
 
 double
