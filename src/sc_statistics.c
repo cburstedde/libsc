@@ -338,33 +338,33 @@ sc_stats_print_ext (int package_id, int log_priority,
       /* begin printing */
       if (si->variable != NULL) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                     "Statistics for %s\n", si->variable);
+                     "Statistics for   %s\n", si->variable);
       }
       else {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
                      "Statistics for %d\n", i);
       }
       SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                   "   Global number of values: %5ld\n", si->count);
+                   "   Global number of values: %7ld\n", si->count);
       if (!si->count) {
         continue;
       }
       if (si->average != 0.) {  /* ignore the comparison warning */
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                     "   Mean value (std. dev.):         %g (%.3g = %.3g%%)\n",
+                     "   Mean value (std. dev.):           %g (%.3g = %.3g%%)\n",
                      si->average, si->standev,
                      100. * si->standev / fabs (si->average));
       }
       else {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                     "   Mean value (std. dev.):         %g (%.3g)\n",
+                     "   Mean value (std. dev.):           %g (%.3g)\n",
                      si->average, si->standev);
       }
       SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                   "   Minimum attained at rank %5d: %g\n",
+                   "   Minimum attained at rank %7d: %g\n",
                    si->min_at_rank, si->min);
       SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                   "   Maximum attained at rank %5d: %g\n",
+                   "   Maximum attained at rank %7d: %g\n",
                    si->max_at_rank, si->max);
     }
   }
@@ -382,17 +382,17 @@ sc_stats_print_ext (int package_id, int log_priority,
         snprintf (buffer, BUFSIZ, "for %s:", si->variable);
       }
       else {
-        snprintf (buffer, BUFSIZ, "for %d:", i);
+        snprintf (buffer, BUFSIZ, "for %3d:", i);
       }
       if (si->average != 0.) {  /* ignore the comparison warning */
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                     "Mean (sigma) %-28s %g (%.3g = %.3g%%)\n",
+                     "Mean (sigma) %-23s %g (%.3g = %.3g%%)\n",
                      buffer, si->average, si->standev,
                      100. * si->standev / fabs (si->average));
       }
       else {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
-                     "Mean (sigma) %-28s %g (%.3g)\n", buffer,
+                     "Mean (sigma) %-23s %g (%.3g)\n", buffer,
                      si->average, si->standev);
       }
     }
