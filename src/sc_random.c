@@ -81,7 +81,7 @@ sc_rand_normal (sc_rand_state_t * state, double *second_result)
     v = 2. * (sc_rand (state) - .5);
     s = u * u + v * v;
   }
-  while (s <= 0. || s > 1.);
+  while (s <= 0. || s >= 1.);
   s = sqrt (-2. * log (s) / s);
 
   if (second_result != NULL) {
