@@ -209,7 +209,7 @@ main (int argc, char **argv)
     SC_CHECK_MPI (mpiret);
     SC_GLOBAL_INFOF ("Testing sc_notify_payload %s\n", name);
     notify = sc_notify_new (mpicomm);
-    sc_notify_set_type (notify, j);
+    sc_notify_set_type (notify, (sc_notify_type_t) j);
     if (j == SC_NOTIFY_NARY) {
       SC_GLOBAL_INFOF ("  SC_NOTIFY_NARY widths %d %d %d\n", ntop, nint,
                        nbot);
