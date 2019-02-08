@@ -331,8 +331,9 @@ int                 sc_MPI_Alltoall (void *, int, sc_MPI_Datatype, void *,
                                      int, sc_MPI_Datatype, sc_MPI_Comm);
 int                 sc_MPI_Reduce (void *, void *, int, sc_MPI_Datatype,
                                    sc_MPI_Op, int, sc_MPI_Comm);
-int                 sc_MPI_Reduce (const void *, void *, int, sc_MPI_Datatype,
-                                   sc_MPI_Op, int, sc_MPI_Comm);
+int                 sc_MPI_Reduce_scatter_block (void *, void *,
+                                                 int, sc_MPI_Datatype,
+                                                 sc_MPI_Op, sc_MPI_Comm);
 int                 sc_MPI_Allreduce (void *, void *, int, sc_MPI_Datatype,
                                       sc_MPI_Op, sc_MPI_Comm);
 int                 sc_MPI_Scan (void *, void *, int, sc_MPI_Datatype,

@@ -277,7 +277,7 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
   SC_CHECK_MPI (mpiret);
 
   if (in_payload) {
-    MPI_Request        *sendreq, *recvreq;
+    sc_MPI_Request     *sendreq, *recvreq;
     char               *cpayload = (char *) in_payload->array;
     char               *rpayload;
     int                 j;
@@ -286,7 +286,7 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
     int                *ireceivers = (int *) receivers->array;
     int                 msg_size = (int) in_payload->elem_size;
 
-    sendreq = SC_ALLOC (MPI_Request, (num_receivers + num_senders));
+    sendreq = SC_ALLOC (sc_MPI_Request, (num_receivers + num_senders));
     recvreq = &sendreq[num_receivers];
     if (out_payload) {
       sc_array_resize (out_payload, (size_t) num_senders);
@@ -384,7 +384,7 @@ sc_notify_payload_census (sc_array_t * receivers, sc_array_t * senders,
   size_t              stride;
   char               *cpayload = NULL;
   char               *crecv;
-  MPI_Request        *sendreqs;
+  sc_MPI_Request     *sendreqs;
   sc_MPI_Comm         mpicomm;
   sc_flopinfo_t       snap;
 
@@ -417,7 +417,7 @@ sc_notify_payload_census (sc_array_t * receivers, sc_array_t * senders,
   }
   crecv = (char *) recv_buf->array;
 
-  sendreqs = SC_ALLOC (MPI_Request, num_receivers);
+  sendreqs = SC_ALLOC (sc_MPI_Request, num_receivers);
   for (i = 0; i < num_receivers; i++) {
 
     mpiret = sc_MPI_Isend (&cpayload[i * msg_size], msg_size, sc_MPI_BYTE,
@@ -551,7 +551,7 @@ sc_notify_payloadv_wrapper (sc_array_t * receivers, sc_array_t * senders,
   sc_array_t         *first_senders;
   sc_array_t         *recv_offsets;
   sc_array_t         *recv_payload;
-  MPI_Request        *sendreqs, *recvreqs;
+  sc_MPI_Request     *sendreqs, *recvreqs;
   char               *cpayload, *rpayload;
   size_t              msg_size;
   sc_flopinfo_t       snap;
@@ -591,7 +591,7 @@ sc_notify_payloadv_wrapper (sc_array_t * receivers, sc_array_t * senders,
     recv_payload = sc_array_new (msg_size);
   }
   sc_array_resize (recv_payload, roffsets[num_senders]);
-  sendreqs = SC_ALLOC (MPI_Request, (num_receivers + num_senders));
+  sendreqs = SC_ALLOC (sc_MPI_Request, (num_receivers + num_senders));
   recvreqs = &sendreqs[num_receivers];
   cpayload = (char *) in_payload->array;
   rpayload = (char *) recv_payload->array;
@@ -663,7 +663,7 @@ sc_notify_payloadv_census (sc_array_t * receivers, sc_array_t * senders,
   int                 num_senders_size[2];
   int                 recv_size;
   sc_array_t         *first_senders;
-  MPI_Request        *sendreqs;
+  sc_MPI_Request     *sendreqs;
   sc_MPI_Comm         mpicomm;
   sc_flopinfo_t       snap;
 
@@ -683,7 +683,7 @@ sc_notify_payloadv_census (sc_array_t * receivers, sc_array_t * senders,
 
   /* send payloads */
   msg_size = in_payload->elem_size;
-  sendreqs = SC_ALLOC (MPI_Request, num_receivers);
+  sendreqs = SC_ALLOC (sc_MPI_Request, num_receivers);
   cpayload = (char *) in_payload->array;
   for (i = 0; i < num_receivers; i++) {
     mpiret =
@@ -2865,11 +2865,11 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
     int                 mpiret;
     int                 msg_size = (int) in_payload->elem_size;
     char               *cpayload = (char *) in_payload->array;
-    MPI_Request        *sendreq;
+    sc_MPI_Request     *sendreq;
     sc_MPI_Comm         comm = sc_notify_get_comm (notify);
     char               *recv_payload = NULL;
 
-    sendreq = SC_ALLOC (MPI_Request, num_receivers);
+    sendreq = SC_ALLOC (sc_MPI_Request, num_receivers);
     for (i = 0; i < num_receivers; i++) {
       mpiret =
         sc_MPI_Isend (&cpayload[i * msg_size], msg_size, sc_MPI_BYTE,
