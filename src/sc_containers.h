@@ -38,7 +38,14 @@
  * \ingroup sc
  */
 
+/** We are using sc_mstamp_t instead of GNU obstack in sc_mempool_t. */
+#define SC_MEMPOOL_MSTAMP
+
+#ifndef SC_MEMPOOL_MSTAMP
 #include <sc_obstack.h>
+#else
+#include <sc.h>
+#endif
 
 SC_EXTERN_C_BEGIN;
 
@@ -160,6 +167,12 @@ sc_array_t         *sc_array_new_data (void *base,
  */
 void                sc_array_destroy (sc_array_t * array);
 
+/** Destroys an array structure and sets the pointer to NULL.
+ * \param [in,out] parray       Pointer to address of array to be destroyed.
+ *                              On output, *parray is NULL.
+ */
+void                sc_array_destroy_null (sc_array_t ** parray);
+
 /** Initializes an already allocated (or static) array structure.
  * \param [in,out]  array       Array structure to be initialized.
  * \param [in] elem_size        Size of one array element in bytes.
@@ -262,12 +275,45 @@ void                sc_array_rewind (sc_array_t * array, size_t new_count);
  */
 void                sc_array_resize (sc_array_t * array, size_t new_count);
 
-/** Copy the contents of an array into another.
+/** Copy the contents of one array into another.
  * Both arrays must have equal element sizes.
- * \param [in] dest Array (not a view) will be resized and get new data.
- * \param [in] src  Array used as source of new data, will not be changed.
+ * The source array may be a view.
+ * We use memcpy (3):  If the two arrays overlap, results are undefined.
+ * \param [in] dest     Array (not a view) will be resized and get new data.
+ * \param [in] src      Array used as source of new data, will not be changed.
  */
 void                sc_array_copy (sc_array_t * dest, sc_array_t * src);
+
+/** Copy the contents of one array into some portion of another.
+ * Both arrays must have equal element sizes.
+ * Either array may be a view.  The destination array must be large enough.
+ * We use memcpy (3):  If the two arrays overlap, results are undefined.
+ * \param [in] dest     Array will be written into.  Its element count must
+ *                      be at least \b dest_offset + \b src->elem_count.
+ * \param [in] dest_offset  First index in \b dest array to be overwritten.
+ *                      As every index, it refers to elements, not bytes.
+ * \param [in] src      Array used as source of new data, will not be changed.
+ */
+void                sc_array_copy_into (sc_array_t * dest, size_t dest_offset,
+                                        sc_array_t * src);
+
+/** Copy part of one array into another using memmove (3).
+ * Both arrays must have equal element sizes.
+ * Either array may be a view.  The destination array must be large enough.
+ * We use memmove (3):  The two arrays may overlap.
+ * \param [in] dest     Array will be written into.  Its element count must
+ *                      be at least \b dest_offset + \b count.
+ * \param [in] dest_offset  First index in \b dest array to be overwritten.
+ *                      As every index, it refers to elements, not bytes.
+ * \param [in] src      Array will be read from.  Its element count must
+ *                      be at least \b src_offset + \b count.
+ * \param [in] src_offset   First index in \b src array to be used.
+ *                      As every index, it refers to elements, not bytes.
+ * \param [in] count    Number of entries copied.
+ */
+void                sc_array_move_part (sc_array_t * dest, size_t dest_offset,
+                                        sc_array_t * src, size_t src_offset,
+                                        size_t count);
 
 /** Sorts the array in ascending order wrt. the comparison function.
  * \param [in] array    The array to sort.
@@ -404,7 +450,9 @@ size_t              sc_array_pqueue_pop (sc_array_t * array,
                                                         const void *));
 
 /** Returns a pointer to an array element.
+ * \param [in] array Valid array.
  * \param [in] index needs to be in [0]..[elem_count-1].
+ * \return           Pointer to the indexed array element.
  */
 /*@unused@*/
 static inline void *
@@ -412,7 +460,23 @@ sc_array_index (sc_array_t * array, size_t iz)
 {
   SC_ASSERT (iz < array->elem_count);
 
-  return (void *) (array->array + (array->elem_size * iz));
+  return (void *) (array->array + array->elem_size * iz);
+}
+
+/** Returns a pointer to an array element or NULL at the array's end.
+ * \param [in] array Valid array.
+ * \param [in] index needs to be in [0]..[elem_count].
+ * \return           Pointer to the indexed array element or
+ *                   NULL if the specified index is elem_count.
+ */
+/*@unused@*/
+static inline void *
+sc_array_index_null (sc_array_t * array, size_t iz)
+{
+  SC_ASSERT (iz <= array->elem_count);
+
+  return iz == array->elem_count ? NULL :
+    (void *) (array->array + array->elem_size * iz);
 }
 
 /** Returns a pointer to an array element indexed by a plain int.
@@ -531,6 +595,76 @@ sc_array_push (sc_array_t * array)
   return sc_array_push_count (array, 1);
 }
 
+/** A data container to create memory items of the same size.
+ * Allocations are bundled so it's fast for small memory sizes.
+ * The items created will remain valid until the container is destroyed.
+ * There is no option to return an item to the container.
+ * See \ref sc_mempool_t for that purpose.
+ */
+typedef struct sc_mstamp
+{
+  size_t              elem_size;   /**< Input parameter: size per item */
+  size_t              per_stamp;   /**< Number of items per stamp */
+  size_t              stamp_size;  /**< Bytes allocated in a stamp */
+  size_t              cur_snext;   /**< Next number within a stamp */
+  char               *current;     /**< Memory of current stamp */
+  sc_array_t          remember;    /**< Collects all stamps */
+}
+sc_mstamp_t;
+
+/** Initialize a memory stamp container.
+ * We provide allocation of fixed-size memory items
+ * without allocating new memory in every request.
+ * Instead we block the allocations in what we call a stamp of multiple items.
+ * Even if no allocations are done, the container's internal memory
+ * must be freed eventually by \ref sc_mstamp_reset.
+ *
+ * \param [in,out] mst          Legal pointer to a stamp structure.
+ * \param [in] stamp_unit       Size of each memory block that we allocate.
+ *                              If it is larger than the element size,
+ *                              we may place more than one element in it.
+ *                              Passing 0 is legal and forces
+ *                              stamps that hold one item each.
+ * \param [in] elem_size        Size of each item.
+ *                              Passing 0 is legal.  In that case,
+ *                              \ref sc_mstamp_alloc returns NULL.
+ */
+void                sc_mstamp_init (sc_mstamp_t * mst,
+                                    size_t stamp_unit, size_t elem_size);
+
+/** Free all memory in a stamp structure and all items previously returned.
+ * \param [in,out]              Properly initialized stamp container.
+ *                              On output, the structure is undefined.
+ */
+void                sc_mstamp_reset (sc_mstamp_t * mst);
+
+/** Free all memory in a stamp structure and initialize it anew.
+ * Equivalent to calling \ref sc_mstamp_reset followed by
+ *                       \ref sc_mstamp_init with the same
+ *                            stamp_unit and elem_size.
+ *
+ * \param [in,out]              Properly initialized stamp container.
+ *                              On output, its elements have been freed
+ *                              and it is ready for further use.
+ */
+void                sc_mstamp_truncate (sc_mstamp_t * mst);
+
+/** Return a new item.
+ * The memory returned will stay legal
+ * until container is destroyed or truncated.
+ * \param [in,out]              Properly initialized stamp container.
+ * \return                      Pointer to an item ready to use.
+ *                              Legal until \ref sc_stamp_destroy or
+ *                              \ref sc_stamp_truncate is called on mst.
+ */
+void               *sc_mstamp_alloc (sc_mstamp_t * mst);
+
+/** Return memory size in bytes of all data allocated in the container.
+ * \param [in]                  Properly initialized stamp container.
+ * \return                      Total container memory size in bytes.
+ */
+size_t              sc_mstamp_memory_used (sc_mstamp_t * mst);
+
 /** The sc_mempool object provides a large pool of equal-size elements.
  * The pool grows dynamically for element allocation.
  * Elements are referenced by their address which never changes.
@@ -548,7 +682,11 @@ typedef struct sc_mempool
   int                 zero_and_persist; /**< Boolean; is set in constructor. */
 
   /* implementation variables */
+#ifdef SC_MEMPOOL_MSTAMP
+  sc_mstamp_t         mstamp;   /**< our own obstack replacement */
+#else
   struct obstack      obstack;  /**< holds the allocated elements */
+#endif
   sc_array_t          freed;    /**< buffers the freed elements */
 }
 sc_mempool_t;
@@ -578,10 +716,18 @@ sc_mempool_t       *sc_mempool_new_zero_and_persist (size_t elem_size);
 void                sc_mempool_init (sc_mempool_t * mempool,
                                      size_t elem_size);
 
-/** Destroys a mempool structure.
+/** Destroy a mempool structure.
  * All elements that are still in use are invalidated.
+ * \param [in,out] mempool      Its memory is freed.
  */
 void                sc_mempool_destroy (sc_mempool_t * mempool);
+
+/** Destroy a mempool structure.
+ * All elements that are still in use are invalidated.
+ * \param [in,out] pmempool     Address of pointer to memory pool.
+ *                              Its memory is freed, pointer is NULLed.
+ */
+void                sc_mempool_destroy_null (sc_mempool_t ** pmempool);
 
 /** Same as sc_mempool_destroy, but does not free the pointer */
 void                sc_mempool_reset (sc_mempool_t * mempool);
@@ -607,7 +753,11 @@ sc_mempool_alloc (sc_mempool_t * mempool)
     ret = *(void **) sc_array_pop (freed);
   }
   else {
+#ifdef SC_MEMPOOL_MSTAMP
+    ret = sc_mstamp_alloc (&mempool->mstamp);
+#else
     ret = obstack_alloc (&mempool->obstack, (int) mempool->elem_size);
+#endif
     if (mempool->zero_and_persist) {
       memset (ret, 0, mempool->elem_size);
     }
@@ -797,6 +947,13 @@ sc_hash_t          *sc_hash_new (sc_hash_function_t hash_fn,
  * \note If allocator was provided in sc_hash_new, it will not be destroyed.
  */
 void                sc_hash_destroy (sc_hash_t * hash);
+
+/** Destroy a hash table and set its pointer to NULL.
+ * Destruction is done using \ref sc_hash_destroy.
+ * \param [in,out] phash        Address of pointer to hash table.
+ *                              On output, pointer is NULLed.
+ */
+void                sc_hash_destroy_null (sc_hash_t ** phash);
 
 /** Remove all entries from a hash table in O(N).
  *

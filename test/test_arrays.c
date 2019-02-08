@@ -103,6 +103,47 @@ test_new_data (sc_array_t * a)
   sc_array_destroy (v);
 }
 
+static void
+test_mstamp (void)
+{
+  const size_t        munit[3] = { 0, 17, 5138 };
+  const size_t        msize[3] = { 20, 37, 537 };
+  int                 i, j;
+  size_t              isize;
+  char               *pc;
+  sc_mstamp_t         smst, *mst = &smst;
+
+  for (j = 0; j < 3; ++j) {
+    /* zero data size */
+    sc_mstamp_init (mst, munit[j], 0);
+    for (i = 0; i < 8 + 3 * j; ++i) {
+      pc = (char *) sc_mstamp_alloc (mst);
+      SC_CHECK_ABORT (pc == NULL, "Mstamp alloc NULL");
+    }
+    SC_GLOBAL_INFOF ("Memory used A %lld\n",
+                     (long long) sc_mstamp_memory_used (mst));
+    sc_mstamp_reset (mst);
+
+    /* proper data size */
+    isize = msize[j];
+    sc_mstamp_init (mst, munit[j], isize);
+    for (i = 0; i < 7829; ++i) {
+      pc = (char *) sc_mstamp_alloc (mst);
+      memset (pc, -1, isize);
+    }
+    SC_GLOBAL_INFOF ("Memory used B %lld\n",
+                     (long long) sc_mstamp_memory_used (mst));
+    sc_mstamp_truncate (mst);
+    for (i = 0; i < 3124; ++i) {
+      pc = (char *) sc_mstamp_alloc (mst);
+      memset (pc, -1, isize);
+    }
+    SC_GLOBAL_INFOF ("Memory used C %lld\n",
+                     (long long) sc_mstamp_memory_used (mst));
+    sc_mstamp_reset (mst);
+  }
+}
+
 int
 main (int argc, char **argv)
 {
@@ -229,6 +270,8 @@ main (int argc, char **argv)
   sc_array_destroy (a);
   SC_FREE (perm);
   SC_FREE (data);
+
+  test_mstamp ();
 
   sc_finalize ();
 

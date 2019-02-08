@@ -29,6 +29,12 @@
 
 SC_EXTERN_C_BEGIN;
 
+/** This special group number (negative) will refer to any group. */
+extern const int    sc_stats_group_all;
+
+/** This special group number (negative) will refer to any priority. */
+extern const int    sc_stats_prio_all;
+
 /* sc_statinfo_t stores information for one random variable */
 typedef struct sc_statinfo
 {
@@ -39,6 +45,9 @@ typedef struct sc_statinfo
   double              average, variance, standev;       /* out */
   double              variance_mean, standev_mean;      /* out */
   const char         *variable; /* name of the variable for output */
+  char               *variable_owned;   /* NULL or deep copy of variable */
+  int                 group;
+  int                 prio;
 }
 sc_statinfo_t;
 
@@ -51,22 +60,83 @@ typedef struct sc_stats
 }
 sc_statistics_t;
 
-/**
- * Populate a sc_statinfo_t structure assuming count=1 and mark it dirty.
+/** Populate a sc_statinfo_t structure assuming count=1 and mark it dirty.
+ * We set \ref sc_stats_group_all and \ref sc_stats_prio_all internally.
+ * \param [out] stats          Will be filled with count=1 and the value.
+ * \param [in] value           Value used to fill statistics information.
+ * \param [in] variable        String to be reported by \ref sc_stats_print.
+ *                             This string is assigned by pointer, not copied.
+ *                             Thus, it must stay alive while stats is in use.
  */
 void                sc_stats_set1 (sc_statinfo_t * stats,
                                    double value, const char *variable);
 
-/**
- * Initialize a sc_statinfo_t structure assuming count=0 and mark it dirty.
- * This is useful if \a stats will be used to accumulate instances locally
- * before global statistics are computed.
+/** Populate a sc_statinfo_t structure assuming count=1 and mark it dirty.
+ * \param [out] stats          Will be filled with count=1 and the value.
+ * \param [in] value           Value used to fill statistics information.
+ * \param [in] variable        String to be reported by \ref sc_stats_print.
+ * \param [in] copy_variable   If true, make internal copy of variable.
+ *                             Otherwise just assign the pointer.
+ * \param [in] stats_group     Non-negative number or \ref sc_stats_group_all.
+ * \param [in] stats_prio      Non-negative number or \ref sc_stats_prio_all.
+ */
+void                sc_stats_set1_ext (sc_statinfo_t * stats,
+                                       double value, const char *variable,
+                                       int copy_variable,
+                                       int stats_group, int stats_prio);
+
+/** Initialize a sc_statinfo_t structure assuming count=0 and mark it dirty.
+ * This is useful if \a stats will be used to \ref sc_stats_accumulate
+ * instances locally before global statistics are computed.
+ * We set \ref sc_stats_group_all and \ref sc_stats_prio_all internally.
+ * \param [out] stats          Will be filled with count 0 and values of 0.
+ * \param [in] variable        String to be reported by \ref sc_stats_print.
+ *                             This string is assigned by pointer, not copied.
+ *                             Thus, it must stay alive while stats is in use.
  */
 void                sc_stats_init (sc_statinfo_t * stats,
                                    const char *variable);
 
-/**
- * Add an instance of the random variable.
+/** Initialize a sc_statinfo_t structure assuming count=0 and mark it dirty.
+ * This is useful if \a stats will be used to \ref sc_stats_accumulate
+ * instances locally before global statistics are computed.
+ * \param [out] stats          Will be filled with count 0 and values of 0.
+ * \param [in] variable        String to be reported by \ref sc_stats_print.
+ * \param [in] copy_variable   If true, make internal copy of variable.
+ *                             Otherwise just assign the pointer.
+ * \param [in] stats_group     Non-negative number or \ref sc_stats_group_all.
+ * \param [in] stats_prio      Non-negative number or \ref sc_stats_prio_all.
+ *                             Values increase by importance.
+ */
+void                sc_stats_init_ext (sc_statinfo_t * stats,
+                                       const char *variable,
+                                       int copy_variable,
+                                       int stats_group, int stats_prio);
+
+/** Reset all values to zero, optionally unassign name, group, and priority.
+ * \param [in,out] stats       Variables are zeroed.
+ *                             They can be set again by set1 or accumulate.
+ * \param [in] reset_vgp       If true, the variable name string is zeroed
+ *                             and if we did a copy, the copy is freed.
+ *                             If true, group and priority are set to all.
+ *                             If false, we don't touch any of the above.
+ */
+void                sc_stats_reset (sc_statinfo_t * stats, int reset_vgp);
+
+/** Set/update the group and priority information for a stats item.
+ * \param [out] stats          Only group and stats entries are updated.
+ * \param [in] stats_group     Non-negative number or \ref sc_stats_group_all.
+ * \param [in] stats_prio      Non-negative number or \ref sc_stats_prio_all.
+ *                             Values increase by importance.
+ */
+void                sc_stats_set_group_prio (sc_statinfo_t * stats,
+                                             int stats_group, int stats_prio);
+
+/** Add an instance of the random variable.
+ * The counter of the variable is increased by one.
+ * The value is added into the present values of the variable.
+ * \param [out] stats          Must be dirty.  We bump count and values.
+ * \param [in] value           Value used to update statistics information.
  */
 void                sc_stats_accumulate (sc_statinfo_t * stats, double value);
 
@@ -75,7 +145,7 @@ void                sc_stats_accumulate (sc_statinfo_t * stats, double value);
  * Only updates dirty variables. Then removes the dirty flag.
  * \param [in]     mpicomm   MPI communicator to use.
  * \param [in]     nvars     Number of variables to be examined.
- * \param [in,out] stats     Set of statisitcs for each variable.
+ * \param [in,out] stats     Set of statisics items for each variable.
  * On input, set the following fields for each variable separately.
  *    count         Number of values for each process.
  *    sum_values    Sum of values for each process.
@@ -103,19 +173,52 @@ void                sc_stats_compute (sc_MPI_Comm mpicomm, int nvars,
 void                sc_stats_compute1 (sc_MPI_Comm mpicomm, int nvars,
                                        sc_statinfo_t * stats);
 
-/**
- * Print measured statistics.
+/** Print measured statistics.
  * This function uses the SC_LC_GLOBAL log category.
  * That means the default action is to print only on rank 0.
  * Applications can change that by providing a user-defined log handler.
+ * All groups and priorities are printed.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] log_priority     Log priority for output according to sc.h.
+ * \param [in] nvars            Number of stats items in input array.
+ * \param [in] stats            Input array of stats variable items.
  * \param [in] full             Print full information for every variable.
  * \param [in] summary          Print summary information all on 1 line.
  */
 void                sc_stats_print (int package_id, int log_priority,
                                     int nvars, sc_statinfo_t * stats,
                                     int full, int summary);
+
+/** Print measured statistics, filter by group and/or priority.
+ * This function uses the SC_LC_GLOBAL log category.
+ * That means the default action is to print only on rank 0.
+ * Applications can change that by providing a user-defined log handler.
+ * \param [in] package_id       Registered package id or -1.
+ * \param [in] log_priority     Log priority for output according to sc.h.
+ * \param [in] nvars            Number of stats items in input array.
+ * \param [in] stats            Input array of stats variable items.
+ * \param [in] stats_group      Print only this group.
+ *                              Non-negative or \ref sc_stats_group_all.
+ *                              We skip printing a variable if neither
+ *                              this parameter nor the item's group is all
+ *                              and if the item's group does not match this.
+ * \param [in] stats_prio       Print this and higher priorities.
+ *                              Non-negative or \ref sc_stats_prio_all.
+ *                              We skip printing a variable if neither
+ *                              this parameter nor the item's prio is all
+ *                              and if the item's prio is less than this.
+ * \param [in] full             Print full information for every variable.
+ *                              This produces multiple lines including
+ *                              minimum, maximum, and standard deviation.
+ *                              If this is false, print one line per variable.
+ * \param [in] summary          Print summary information all on 1 line.
+ *                              This always contains all variables.
+ *                              Not affected by stats_group and stats_prio.
+ */
+void                sc_stats_print_ext (int package_id, int log_priority,
+                                        int nvars, sc_statinfo_t * stats,
+                                        int stats_group, int stats_prio,
+                                        int full, int summary);
 
 /** Create a new statistics structure that can grow dynamically.
  */
