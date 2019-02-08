@@ -65,9 +65,7 @@ sc_notify_ranges_t;
 
 typedef struct sc_notify_superset_s
 {
-  void                (*compute_superset) (sc_array_t *, sc_array_t *,
-                                           sc_array_t *, sc_notify_t *,
-                                           void *);
+  sc_compute_superset_t compute_superset;
   void               *ctx;
 }
 sc_notify_superset_t;
@@ -2350,11 +2348,7 @@ sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
 
 void
 sc_notify_superset_set_callback (sc_notify_t * notify,
-                                 void (*compute_superset) (sc_array_t *,
-                                                           sc_array_t *,
-                                                           sc_array_t *,
-                                                           sc_notify_t *
-                                                           notify, void *),
+                                 sc_compute_superset_t compute_superset,
                                  void *ctx)
 {
   sc_notify_type_t    type = sc_notify_get_type (notify);
@@ -2367,11 +2361,7 @@ sc_notify_superset_set_callback (sc_notify_t * notify,
 
 void
 sc_notify_superset_get_callback (sc_notify_t * notify,
-                                 void (**compute_superset) (sc_array_t *,
-                                                            sc_array_t *,
-                                                            sc_array_t *,
-                                                            sc_notify_t *
-                                                            notify, void *),
+                                 sc_compute_superset_t * compute_superset,
                                  void *ctx)
 {
   sc_notify_type_t    type = sc_notify_get_type (notify);
@@ -2398,9 +2388,7 @@ sc_notify_payload_superset (sc_array_t * receivers, sc_array_t * senders,
   sc_MPI_Comm         comm;
   int                 queue;
   sc_array_t         *recv_buf = NULL;
-  void                (*compute_superset) (sc_array_t *, sc_array_t *,
-                                           sc_array_t *, sc_notify_t * notify,
-                                           void *) = NULL;
+  sc_compute_superset_t compute_superset = NULL;
   void               *ctx = NULL;
   sc_array_t         *extra_receivers, *super_senders;
   sc_flopinfo_t       snap;

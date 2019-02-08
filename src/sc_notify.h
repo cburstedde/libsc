@@ -32,6 +32,11 @@ SC_EXTERN_C_BEGIN;
 /** Opaque object used for controlling notification (AKA dynamic sparse data exchange) operations */
 typedef struct sc_notify_s sc_notify_t;
 
+/** Type of callback function for the superset variant */
+typedef void        (*sc_compute_superset_t) (sc_array_t *, sc_array_t *,
+                                              sc_array_t *, sc_notify_t *,
+                                              void *);
+
 /** Existing implementations */
 typedef enum
 {
@@ -201,41 +206,11 @@ void                sc_notify_ranges_set_peer_range (sc_notify_t * notify,
 
 extern int          sc_notify_ranges_num_ranges_default;
 
-void                sc_notify_superset_set_callback (sc_notify_t * notify,
-                                                     void (*compute_superset)
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                     (sc_array_t *,
-                                                      sc_array_t *,
-                                                      sc_array_t *,
-                                                      sc_notify_t *, void *),
-                                                     void *ctx);
+void                sc_notify_superset_set_callback
+  (sc_notify_t * notify, sc_compute_superset_t compute_superset, void *ctx);
 
-void                sc_notify_superset_get_callback (sc_notify_t * notify,
-                                                     void (**compute_superset)
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                      
-                                                     (sc_array_t *,
-                                                      sc_array_t *,
-                                                      sc_array_t *,
-                                                      sc_notify_t *, void *),
-                                                     void *ctx_p);
+void                sc_notify_superset_get_callback
+  (sc_notify_t * notify, sc_compute_superset_t * compute_superset, void *ctx);
 
 /** Collective call to notify a set of receiver ranks of current rank.
  * This version uses one call to sc_MPI_Allgather and one to sc_MPI_Allgatherv.
@@ -355,6 +330,7 @@ void                sc_notify_payloadv (sc_array_t * receivers,
                                         sc_array_t * out_offsets,
                                         sc_array_t * in_offsets,
                                         int sorted, sc_notify_t * notify);
+
 SC_EXTERN_C_END;
 
 #endif /* !SC_NOTIFY_H */
