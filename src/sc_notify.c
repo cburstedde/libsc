@@ -2991,3 +2991,17 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
   SC_GLOBAL_LDEBUG ("Done sc_notify_payload\n");
   SC_NOTIFY_FUNC_SHOT (notify, &snap);
 }
+
+void
+sc_notify_ext (sc_array_t * receivers, sc_array_t * senders,
+               sc_array_t * in_payload, sc_array_t * out_payload,
+               sc_MPI_Comm mpicomm)
+{
+  sc_notify_t          *notifyc;
+
+  notifyc = sc_notify_new (mpicomm);
+  sc_notify_set_type (notifyc, SC_NOTIFY_PEX);
+  sc_notify_payload (receivers, senders, in_payload, out_payload,
+                     1, notifyc);
+  sc_notify_destroy (notifyc);
+}

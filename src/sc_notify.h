@@ -246,7 +246,19 @@ int                 sc_notify (int *receivers, int num_receivers,
                                int *senders, int *num_senders,
                                sc_MPI_Comm mpicomm);
 
+/** Default implementation of notify functionality.
+ * The array arguments are as for \ref sc_notify_payload.
+ * We require sorted parameter arrays.
+ * This function aborts on MPI error.
+ */
+void                sc_notify_ext (sc_array_t * receivers,
+                                   sc_array_t * senders,
+                                   sc_array_t * in_payload,
+                                   sc_array_t * out_payload,
+                                   sc_MPI_Comm mpicomm);
+
 /** Collective call to notify a set of receiver ranks of current rank.
+ * This function aborts on MPI error.
  * \param [in,out] receivers    On input, sorted and uniqued array of type int.
  *                              Contains the MPI ranks to inform.
  *                              If \b senders is not NULL, treated read-only.
@@ -269,8 +281,9 @@ int                 sc_notify (int *receivers, int num_receivers,
  * \param [in,out] out_payload  This array pointer may be NULL.
  *                              If not, it must not be a view, and
  *                              on output will have \b * num_senders entries.
+ * \param [in] sorted           whether \b receivers and \b senders
+ *                              are required to be sorted by MPI rank.
  * \param [in] notify           Notify controller to use.
- *                              This function aborts on MPI error.
  */
 void                sc_notify_payload (sc_array_t * receivers,
                                        sc_array_t * senders,
@@ -280,6 +293,7 @@ void                sc_notify_payload (sc_array_t * receivers,
 
 /** Collective call to notify a set of receiver ranks of current rank
  * and send a variable size message to the receiver.
+ * This function aborts on MPI error.
  * \param [in,out] receivers    On input, sorted and uniqued array of type int.
  *                              Contains the MPI ranks to inform.
  *                              If \b senders is not NULL, treated read-only.
@@ -321,7 +335,6 @@ void                sc_notify_payload (sc_array_t * receivers,
  *                              (and thus \b in_offsets and \b out_offsets)
  *                              are required to be sorted by MPI rank.
  * \param [in] notify           Notify controller to use.
- *                              This function aborts on MPI error.
  */
 void                sc_notify_payloadv (sc_array_t * receivers,
                                         sc_array_t * senders,
