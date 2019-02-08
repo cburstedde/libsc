@@ -110,7 +110,11 @@ sc_notify_new (sc_MPI_Comm comm)
   SC_ASSERT (sc_notify_type_default >= 0
              && sc_notify_type_default < SC_NOTIFY_NUM_TYPES);
   sc_notify_set_type (notify, sc_notify_type_default);
+#if 0
+  /* This must only be called once per program.
+     We don't do this here so we don't interfere with the caller. */
   sc_flops_start (&(notify->flop));
+#endif
   return notify;
 }
 
@@ -227,7 +231,11 @@ sc_array_is_invalid (sc_array_t * array)
 void
 sc_notify_set_stats (sc_notify_t * notify, sc_statistics_t * stats)
 {
+#if 0
+  /* This is currently disabled
+     until we decide about the sc_flops_start problem. */
   notify->stats = stats;
+#endif
 }
 
 sc_statistics_t    *

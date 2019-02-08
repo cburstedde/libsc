@@ -202,6 +202,12 @@ main (int argc, char **argv)
   for (j = 0; j < SC_NOTIFY_NUM_TYPES; j++) {
     const char         *name = sc_notify_type_strings[j];
 
+    /* temporarily skip this; we need to catch this softly for non-MPI */
+    if (j == SC_NOTIFY_PCX || j == SC_NOTIFY_RSX || j == SC_NOTIFY_NBX ||
+        j == SC_NOTIFY_SUPERSET) {
+      continue;
+    }
+
     snprintf (namep[j][0], BUFSIZ - 1, "%s payload", name);
     snprintf (namep[j][1], BUFSIZ - 1, "%s payloadv", name);
 
