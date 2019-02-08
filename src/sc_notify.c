@@ -342,16 +342,18 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
       sorter =
         sc_array_new_count (sizeof (int) + msg_size, (size_t) num_senders);
       for (j = 0; j < num_senders; j++) {
-        int                *entry = sc_array_index_int (sorter, j);
-        char               *payl = sc_array_index_int (out_payload, j);
+        int                *entry = (int *) sc_array_index_int (sorter, j);
+        char               *payl =
+          (char *) sc_array_index_int (out_payload, j);
 
         entry[0] = *((int *) sc_array_index_int (senders, (size_t) j));
         memcpy ((char *) (&entry[1]), payl, msg_size);
       }
       sc_array_sort (sorter, sc_int_compare);
       for (j = 0; j < num_senders; j++) {
-        int                *entry = sc_array_index_int (sorter, j);
-        char               *payl = sc_array_index_int (out_payload, j);
+        int                *entry = (int *) sc_array_index_int (sorter, j);
+        char               *payl =
+          (char *) sc_array_index_int (out_payload, j);
 
         *((int *) sc_array_index_int (senders, (size_t) j)) = entry[0];
         memcpy (payl, (char *) (&entry[1]), msg_size);
@@ -2069,7 +2071,7 @@ sc_notify_payloadv_nbx (sc_array_t * receivers, sc_array_t * senders,
       mpiret = MPI_Get_count (&status, MPI_BYTE, &count);
       SC_ASSERT ((count % msg_size) == 0);
       count = count / msg_size;
-      rc = sc_array_push_count (recv_buf, count);
+      rc = (char *) sc_array_push_count (recv_buf, count);
       off = (int *) sc_array_push (out_offsets);
       *off = (int) recv_buf->elem_count;
 
@@ -2264,7 +2266,7 @@ sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
   recvbuf = sc_array_new_count (msg_size, (size_t) num_senders_ranges);
   for (i = 0; i < num_senders_ranges; i++) {
     int                 proc;
-    char               *recv = sc_array_index_int (recvbuf, i);
+    char               *recv = (char *) sc_array_index_int (recvbuf, i);
 
     proc = sender_ranks_ranges[i];
     mpiret = sc_MPI_Irecv (recv, (int) msg_size, sc_MPI_BYTE,
@@ -2300,7 +2302,7 @@ sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
 
     if (recv[0]) {
       int                 proc = sender_ranks_ranges[i];
-      int                *sender =
+      int                *sender = (int *)
         sc_array_index_int (senders, (size_t) num_senders);
 
       if (my_pos >= 0 && last_proc < rank && proc > rank) {
@@ -2310,7 +2312,7 @@ sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
                   my_payload, out_payload->elem_size);
         }
         num_senders++;
-        sender = sc_array_index_int (senders, (size_t) num_senders);
+        sender = (int *) sc_array_index_int (senders, (size_t) num_senders);
       }
 
       sender[0] = proc;
@@ -2323,7 +2325,7 @@ sc_notify_payload_ranges (sc_array_t * receivers, sc_array_t * senders,
     }
   }
   if (my_pos >= 0 && last_proc < rank) {
-    int                *sender =
+    int                *sender = (int *)
       sc_array_index_int (senders, (size_t) num_senders);
 
     sender[0] = rank;
