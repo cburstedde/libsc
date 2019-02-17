@@ -153,7 +153,7 @@ sc_notify_get_type (sc_notify_t * notify)
 static void         sc_notify_nary_init (sc_notify_t * notify);
 static void         sc_notify_ranges_init (sc_notify_t * notify);
 
-void
+int
 sc_notify_set_type (sc_notify_t * notify, sc_notify_type_t in_type)
 {
   sc_notify_type_t    current_type;
@@ -185,6 +185,9 @@ sc_notify_set_type (sc_notify_t * notify, sc_notify_type_t in_type)
       SC_ABORT_NOT_REACHED ();
     }
   }
+  /* TODO: make this return -1 with the right feature test for support */
+
+  return 0;
 }
 
 size_t

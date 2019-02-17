@@ -150,9 +150,14 @@ sc_notify_type_t    sc_notify_get_type (sc_notify_t * notify);
  * \param[in,out] notify   The notify controller.
  * \param[in]     type     The type of algorithm used to affect the dynamic
  *                         sparse data exchange.
+ *
+ * \return                 false if the type is supported by the current MPI
+ *                         version, true otherwise.
  */
-void                sc_notify_set_type (sc_notify_t * notify,
+int                 sc_notify_set_type (sc_notify_t * notify,
                                         sc_notify_type_t type);
+
+/* TODO: sc_notify_supports_type() */
 
 /** Default number of children at root node of nary tree; initialized to 2 */
 extern int          sc_notify_nary_ntop_default;

@@ -202,6 +202,7 @@ main (int argc, char **argv)
   for (j = 0; j < SC_NOTIFY_NUM_TYPES; j++) {
     const char         *name = sc_notify_type_strings[j];
 
+    /* TODO: if (!sc_notify_supports_type(j)) continue; */
     /* temporarily skip this; we need to catch this softly for non-MPI */
     if (j == SC_NOTIFY_PCX || j == SC_NOTIFY_RSX || j == SC_NOTIFY_NBX ||
         j == SC_NOTIFY_SUPERSET) {
