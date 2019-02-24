@@ -206,6 +206,9 @@ main (int argc, char **argv)
     /* temporarily skip this; we need to catch this softly for non-MPI */
     if (j == SC_NOTIFY_PCX || j == SC_NOTIFY_RSX || j == SC_NOTIFY_NBX ||
         j == SC_NOTIFY_SUPERSET) {
+      for (k = 0; k < 3; ++k) {
+        sc_stats_init (stats + 3 * j + k, "untested");
+      }
       continue;
     }
 
