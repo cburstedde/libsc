@@ -1121,10 +1121,12 @@ void
 sc_notify_nary_get_widths (sc_notify_t * notify, int *ntop, int *nint,
                            int *nbot)
 {
+#ifdef SC_ENABLE_DEBUG
   sc_notify_type_t    type;
 
   type = sc_notify_get_type (notify);
   SC_ASSERT (type == SC_NOTIFY_NARY);
+#endif
   if (ntop)
     *ntop = notify->data.nary.ntop;
   if (nint)
@@ -1136,10 +1138,12 @@ sc_notify_nary_get_widths (sc_notify_t * notify, int *ntop, int *nint,
 void
 sc_notify_nary_set_widths (sc_notify_t * notify, int ntop, int nint, int nbot)
 {
+#ifdef SC_ENABLE_DEBUG
   sc_notify_type_t    type;
 
   type = sc_notify_get_type (notify);
   SC_ASSERT (type == SC_NOTIFY_NARY);
+#endif
   notify->data.nary.ntop = ntop;
   notify->data.nary.nint = nint;
   notify->data.nary.nbot = nbot;
@@ -2356,10 +2360,11 @@ sc_notify_superset_set_callback (sc_notify_t * notify,
                                  sc_compute_superset_t compute_superset,
                                  void *ctx)
 {
+#ifdef SC_ENABLE_DEBUG
   sc_notify_type_t    type = sc_notify_get_type (notify);
 
   SC_ASSERT (type == SC_NOTIFY_SUPERSET);
-
+#endif
   notify->data.superset.compute_superset = compute_superset;
   notify->data.superset.ctx = ctx;
 }
@@ -2369,10 +2374,11 @@ sc_notify_superset_get_callback (sc_notify_t * notify,
                                  sc_compute_superset_t * compute_superset,
                                  void *ctx)
 {
+#ifdef SC_ENABLE_DEBUG
   sc_notify_type_t    type = sc_notify_get_type (notify);
 
   SC_ASSERT (type == SC_NOTIFY_SUPERSET);
-
+#endif
   *compute_superset = notify->data.superset.compute_superset;
   *((void **) ctx) = notify->data.superset.ctx;
 }
@@ -2853,7 +2859,6 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
     int                *irecv = (int *) arecv->array;
     int                *isend = (int *) asend->array;
     int                 i;
-    int                 num_receivers = (int) arecv->elem_count;
     int                 num_senders = (int) asend->elem_count;
     int                 mpiret;
     int                 msg_size = (int) in_payload->elem_size;
@@ -2862,6 +2867,7 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
     sc_MPI_Comm         comm = sc_notify_get_comm (notify);
     char               *recv_payload = NULL;
 
+    num_receivers = (int) arecv->elem_count;
     sendreq = SC_ALLOC (sc_MPI_Request, num_receivers);
     for (i = 0; i < num_receivers; i++) {
       mpiret =
@@ -2907,7 +2913,9 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
                     sc_array_t * in_offsets, sc_array_t * out_offsets,
                     int sorted, sc_notify_t * notify)
 {
+#ifdef SC_ENABLE_DEBUG
   size_t              num_receivers;
+#endif
   sc_notify_type_t    type = sc_notify_get_type (notify);
   sc_flopinfo_t       snap;
 
@@ -2926,7 +2934,9 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
   SC_ASSERT (receivers != NULL && receivers->elem_size == sizeof (int));
   SC_ASSERT (senders == NULL || senders->elem_size == sizeof (int));
 
+#ifdef SC_ENABLE_DEBUG
   num_receivers = receivers->elem_count;
+#endif
   if (senders == NULL) {
     SC_ASSERT (SC_ARRAY_IS_OWNER (receivers));
   }
