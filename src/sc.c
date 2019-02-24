@@ -1249,29 +1249,6 @@ sc_init (sc_MPI_Comm mpicomm,
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LAPACK_LIBS", SC_LAPACK_LIBS);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FLIBS", SC_FLIBS);
 #endif
-
-#if defined(SC_ENABLE_MPI) && defined(SC_ENABLE_MPICOMMSHARED)
-  if (mpicomm != MPI_COMM_NULL) {
-    int                 mpiret;
-    MPI_Comm            intranode, internode;
-
-    /* compute the node comms by default */
-    sc_mpi_comm_attach_node_comms (mpicomm, 0);
-    sc_mpi_comm_get_node_comms (mpicomm, &intranode, &internode);
-    if (intranode == MPI_COMM_NULL) {
-      SC_GLOBAL_STATISTICS ("No shared memory node communicators\n");
-    }
-    else {
-      int                 intrasize;
-
-      mpiret = MPI_Comm_size (intranode, &intrasize);
-      SC_CHECK_MPI (mpiret);
-
-      SC_GLOBAL_STATISTICSF ("Shared memory node communicator size: %d\n",
-                             intrasize);
-    }
-  }
-#endif
 }
 
 void
@@ -1279,10 +1256,6 @@ sc_finalize (void)
 {
   int                 i;
   int                 retval;
-
-#if defined(SC_ENABLE_MPI) && defined(SC_ENABLE_MPICOMMSHARED)
-  sc_mpi_comm_detach_node_comms (sc_mpicomm);
-#endif
 
   /* sc_packages is static and thus initialized to all zeros */
   for (i = sc_num_packages_alloc - 1; i >= 0; --i)

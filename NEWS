@@ -1,4 +1,16 @@
-The SC Library is now free software
-under the GNU Lesser General Public License version 2.1 (or later).
+NEWS
+====
 
-See the files COPYING and AUTHORS for details.
+ * We begin introducing #define for backwards compatibility queries.
+   These defines are placed in src/sc.h.
+   Please see the paragraph COMPATIBLIITY below for a list.
+
+COMPATIBILITY
+=============
+
+Compatibility #define variables in sc.h:
+
+ * SC_INIT_COMM_CLEAN
+   indicates that the communication is no longer modified in sc_init.
+   The functionality is still there as an option; please see sc_mpi.h
+   and look into the functions sc_mpi_comm_attach_node_comms and friends.
