@@ -46,7 +46,7 @@ typedef struct sc_flopinfo
   float               mflops;   /* MFlop/s rate in this interval */
 
   /* without SC_PAPI only seconds, ?wtime and ?rtime are meaningful */
-  if                  use_papi;
+  int                 use_papi;
 }
 sc_flopinfo_t;
 

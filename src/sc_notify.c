@@ -282,7 +282,6 @@ sc_notify_payload_wrapper (sc_array_t * receivers, sc_array_t * senders,
     char               *cpayload = (char *) in_payload->array;
     char               *rpayload;
     int                 j;
-    int                 mpiret;
     int                 num_receivers = (int) receivers->elem_count;
     int                *ireceivers = (int *) receivers->array;
     int                 msg_size = (int) in_payload->elem_size;
@@ -2415,9 +2414,9 @@ sc_notify_payload_superset (sc_array_t * receivers, sc_array_t * senders,
   sendreqs = SC_ALLOC (sc_MPI_Request, num_receivers);
 
   for (i = 0; i < num_receivers; i++) {
-    int                 j = ireceivers[i];
     char               *buf = msg_size ? &cpayload[i * msg_size] : NULL;
 
+    j = ireceivers[i];
     mpiret = sc_MPI_Isend (buf, msg_size, sc_MPI_BYTE, j,
                            SC_TAG_NOTIFY_SUPER_TRUE, comm, &sendreqs[i]);
     SC_CHECK_MPI (mpiret);
@@ -2435,8 +2434,7 @@ sc_notify_payload_superset (sc_array_t * receivers, sc_array_t * senders,
   ireceivers = (int *) extra_receivers->array;
 
   for (i = 0; i < num_extra_receivers; i++) {
-    int                 j = ireceivers[i];
-
+    j = ireceivers[i];
     mpiret = sc_MPI_Isend (NULL, 0, sc_MPI_BYTE, j, SC_TAG_NOTIFY_SUPER_EXTRA,
                            comm, &extrasendreqs[i]);
     SC_CHECK_MPI (mpiret);
@@ -2853,7 +2851,6 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
     int                *irecv = (int *) arecv->array;
     int                *isend = (int *) asend->array;
     int                 i;
-    int                 num_receivers = (int) arecv->elem_count;
     int                 num_senders = (int) asend->elem_count;
     int                 mpiret;
     int                 msg_size = (int) in_payload->elem_size;
@@ -2862,6 +2859,7 @@ sc_notify_payload (sc_array_t * receivers, sc_array_t * senders,
     sc_MPI_Comm         comm = sc_notify_get_comm (notify);
     char               *recv_payload = NULL;
 
+    num_receivers = (int) arecv->elem_count;
     sendreq = SC_ALLOC (sc_MPI_Request, num_receivers);
     for (i = 0; i < num_receivers; i++) {
       mpiret =
@@ -2992,11 +2990,10 @@ sc_notify_ext (sc_array_t * receivers, sc_array_t * senders,
                sc_array_t * in_payload, sc_array_t * out_payload,
                sc_MPI_Comm mpicomm)
 {
-  sc_notify_t          *notifyc;
+  sc_notify_t        *notifyc;
 
   notifyc = sc_notify_new (mpicomm);
   sc_notify_set_type (notifyc, SC_NOTIFY_PEX);
-  sc_notify_payload (receivers, senders, in_payload, out_payload,
-                     1, notifyc);
+  sc_notify_payload (receivers, senders, in_payload, out_payload, 1, notifyc);
   sc_notify_destroy (notifyc);
 }
