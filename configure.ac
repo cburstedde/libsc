@@ -80,7 +80,7 @@ echo "o---------------------------------------"
 echo "| Checking functions"
 echo "o---------------------------------------"
 
-AC_CHECK_FUNCS([backtrace backtrace_symbols strtol strtoll])
+AC_CHECK_FUNCS([backtrace backtrace_symbols strtol strtoll qsort_r])
 
 echo "o---------------------------------------"
 echo "| Checking libraries"

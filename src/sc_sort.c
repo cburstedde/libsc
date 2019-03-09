@@ -21,6 +21,9 @@
   02110-1301, USA.
 */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include <sc_containers.h>
 #include <sc_sort.h>
 
@@ -43,8 +46,11 @@ typedef struct sc_psort
   size_t              my_lo, my_hi, my_count;
   size_t             *gmemb;
   char               *my_base;
+  int                 (*compar) (const void *, const void *);
 }
 sc_psort_t;
+
+#ifndef SC_HAVE_QSORT_R
 
 /* qsort is not reentrant, so we do the inverse static */
 static int          (*sc_compare) (const void *, const void *);
@@ -53,6 +59,24 @@ sc_icompare (const void *v1, const void *v2)
 {
   return sc_compare (v2, v1);
 }
+
+#else
+
+/** Pass qsort-style comparison function as third argument */
+static int
+sc_compare_r (const void *v1, const void *v2, void *arg)
+{
+  return ((int (*)(const void *, const void *)) arg) (v1, v2);
+}
+
+/** Pass qsort-style comparison function as third argument */
+static int
+sc_icompare_r (const void *v1, const void *v2, void *arg)
+{
+  return ((int (*)(const void *, const void *)) arg) (v2, v1);
+}
+
+#endif
 
 static              size_t
 sc_bsearch_cumulative (const size_t * cumulative, size_t nmemb,
@@ -230,7 +254,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
         lo_data = pst->my_base + (lo + offset - pst->my_lo) * size;
         hi_data = pst->my_base + (hi_beg + offset - pst->my_lo) * size;
         for (zz = 0; zz < max_length; ++zz) {
-          if (dir == (sc_compare (lo_data, hi_data) > 0)) {
+          if (dir == (pst->compar (lo_data, hi_data) > 0)) {
             memcpy (temp, lo_data, size);
             memcpy (lo_data, hi_data, size);
             memcpy (hi_data, temp, size);
@@ -285,7 +309,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
               lo_data = peer->my_start;
               hi_data = peer->buffer;
               for (zz = 0; zz < peer->length; ++zz) {
-                if (dir == (sc_compare (lo_data, hi_data) > 0)) {
+                if (dir == (pst->compar (lo_data, hi_data) > 0)) {
                   memcpy (lo_data, hi_data, size);
                 }
                 lo_data += size;
@@ -296,7 +320,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
               lo_data = peer->buffer;
               hi_data = peer->my_start;
               for (zz = 0; zz < peer->length; ++zz) {
-                if (dir == (sc_compare (lo_data, hi_data) > 0)) {
+                if (dir == (pst->compar (lo_data, hi_data) > 0)) {
                   memcpy (hi_data, lo_data, size);
                 }
                 lo_data += size;
@@ -334,7 +358,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
               lo_data = peer->my_start;
               hi_data = peer->buffer;
               for (zz = 0; zz < peer->length; ++zz) {
-                if (dir == (sc_compare (lo_data, hi_data) > 0)) {
+                if (dir == (pst->compar (lo_data, hi_data) > 0)) {
                   memcpy (lo_data, hi_data, size);
                 }
                 lo_data += size;
@@ -345,7 +369,7 @@ sc_merge_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
               lo_data = peer->buffer;
               hi_data = peer->my_start;
               for (zz = 0; zz < peer->length; ++zz) {
-                if (dir == (sc_compare (lo_data, hi_data) > 0)) {
+                if (dir == (pst->compar (lo_data, hi_data) > 0)) {
                   memcpy (hi_data, lo_data, size);
                 }
                 lo_data += size;
@@ -390,8 +414,15 @@ sc_psort_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
 
   if (n > 1 && pst->my_hi > lo && pst->my_lo < hi) {
     if (lo >= pst->my_lo && hi <= pst->my_hi) {
+#ifndef SC_HAVE_QSORT_R
       qsort (pst->my_base + (lo - pst->my_lo) * pst->size,
              n, pst->size, dir ? sc_compare : sc_icompare);
+#else
+      qsort_r (pst->my_base + (lo - pst->my_lo) * pst->size,
+               n, pst->size, dir ? sc_compare_r : sc_icompare_r,
+               (void *) pst->compar);
+
+#endif
     }
     else {
       const size_t        n2 = n / 2;
@@ -414,7 +445,9 @@ sc_psort (sc_MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
   size_t             *gmemb;
   sc_psort_t          pst;
 
+#ifndef SC_HAVE_QSORT_R
   SC_ASSERT (sc_compare == NULL);
+#endif
 
   /* get basic MPI information */
   mpiret = sc_MPI_Comm_size (mpicomm, &num_procs);
@@ -440,12 +473,17 @@ sc_psort (sc_MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
   SC_ASSERT (pst.my_lo + pst.my_count == pst.my_hi);
   pst.gmemb = gmemb;
   pst.my_base = (char *) base;
+  pst.compar = compar;
+#ifndef SC_HAVE_QSORT_R
   sc_compare = compar;
+#endif
   total = gmemb[num_procs];
   SC_GLOBAL_LDEBUGF ("Total values to sort %lld\n", (long long) total);
   sc_psort_bitonic (&pst, 0, total, 1);
 
   /* clean up and free memory */
+#ifndef SC_HAVE_QSORT_R
   sc_compare = NULL;
+#endif
   SC_FREE (gmemb);
 }
