@@ -534,12 +534,16 @@ sc_malloc (int package, size_t size)
 #ifdef SC_ENABLE_PTHREAD
   sc_package_lock (package);
 #endif
+
+#ifndef SC_NOCOUNT_MALLOC
   if (size > 0) {
     ++*malloc_count;
   }
   else {
     *malloc_count += ((ret == NULL) ? 0 : 1);
   }
+#endif
+
 #ifdef SC_ENABLE_PTHREAD
   sc_package_unlock (package);
 #endif
@@ -569,12 +573,16 @@ sc_calloc (int package, size_t nmemb, size_t size)
 #ifdef SC_ENABLE_PTHREAD
   sc_package_lock (package);
 #endif
+
+#ifndef SC_NOCOUNT_MALLOC
   if (nmemb * size > 0) {
     ++*malloc_count;
   }
   else {
     *malloc_count += ((ret == NULL) ? 0 : 1);
   }
+#endif
+
 #ifdef SC_ENABLE_PTHREAD
   sc_package_unlock (package);
 #endif
@@ -637,7 +645,11 @@ sc_free (int package, void *ptr)
 #ifdef SC_ENABLE_PTHREAD
     sc_package_lock (package);
 #endif
+
+#ifndef SC_NOCOUNT_MALLOC
     ++*free_count;
+#endif
+
 #ifdef SC_ENABLE_PTHREAD
     sc_package_unlock (package);
 #endif
