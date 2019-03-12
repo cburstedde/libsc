@@ -181,6 +181,7 @@ sc_package_unlock (int package)
 void
 sc_package_rc_count_add (int package_id, int toadd)
 {
+#ifndef SC_NOCOUNT_REFCOUNT
   int                *pcount;
 #ifdef SC_ENABLE_DEBUG
   int                 newvalue;
@@ -202,6 +203,7 @@ sc_package_rc_count_add (int package_id, int toadd)
   sc_package_unlock (package_id);
 
   SC_ASSERT (newvalue >= 0);
+#endif
 }
 
 static void
@@ -893,6 +895,7 @@ void
 sc_log_indent_push_count (int package, int count)
 {
   /* TODO: figure out a version that makes sense with threads */
+#ifndef SC_NOCOUNT_LOGINDENT
 #ifndef SC_ENABLE_PTHREAD
   SC_ASSERT (package < sc_num_packages);
 
@@ -900,12 +903,14 @@ sc_log_indent_push_count (int package, int count)
     sc_packages[package].log_indent += SC_MAX (0, count);
   }
 #endif
+#endif
 }
 
 void
 sc_log_indent_pop_count (int package, int count)
 {
   /* TODO: figure out a version that makes sense with threads */
+#ifndef SC_NOCOUNT_LOGINDENT
 #ifndef SC_ENABLE_PTHREAD
   int                 new_indent;
 
@@ -915,6 +920,7 @@ sc_log_indent_pop_count (int package, int count)
     new_indent = sc_packages[package].log_indent - SC_MAX (0, count);
     sc_packages[package].log_indent = SC_MAX (0, new_indent);
   }
+#endif
 #endif
 }
 
