@@ -295,6 +295,8 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
   fflush (log_stream);
 }
 
+#ifndef SC_NOCOUNT_MALLOC
+
 static int         *
 sc_malloc_count (int package)
 {
@@ -314,6 +316,8 @@ sc_free_count (int package)
   SC_ASSERT (sc_package_is_registered (package));
   return &sc_packages[package].free_count;
 }
+
+#endif
 
 #ifdef SC_ENABLE_MEMALIGN
 
@@ -517,7 +521,9 @@ void               *
 sc_malloc (int package, size_t size)
 {
   void               *ret;
+#ifndef SC_NOCOUNT_MALLOC
   int                *malloc_count = sc_malloc_count (package);
+#endif
 
   /* allocate memory */
 #if defined SC_ENABLE_MEMALIGN
@@ -555,7 +561,9 @@ void               *
 sc_calloc (int package, size_t nmemb, size_t size)
 {
   void               *ret;
+#ifndef SC_NOCOUNT_MALLOC
   int                *malloc_count = sc_malloc_count (package);
+#endif
 
   /* allocate memory */
 #if defined SC_ENABLE_MEMALIGN
@@ -640,7 +648,9 @@ sc_free (int package, void *ptr)
   }
   else {
     /* uncount the allocations */
+#ifndef SC_NOCOUNT_MALLOC
     int                *free_count = sc_free_count (package);
+#endif
 
 #ifdef SC_ENABLE_PTHREAD
     sc_package_lock (package);
