@@ -90,10 +90,14 @@ SC_CHECK_LIBRARIES([SC])
 
 # Print summary.
 
+m4_ifset([SC_CHECK_MPI_F77], [
 AC_DEFINE_UNQUOTED(F77,         ["${F77}"],         [F77 compiler])
 AC_DEFINE_UNQUOTED(FFLAGS,      ["${FFLAGS}"],      [F77 compiler flags])
+])
+m4_ifset([SC_CHECK_MPI_FC], [
 AC_DEFINE_UNQUOTED(FC,          ["${FC}"],          [FC compiler])
 AC_DEFINE_UNQUOTED(FCFLAGS,     ["${FCFLAGS}"],     [FC compiler flags])
+])
 AC_DEFINE_UNQUOTED(CPP,         ["${CPP}"],         [C preprocessor])
 AC_DEFINE_UNQUOTED(CPPFLAGS,    ["${CPPFLAGS}"],    [C preprocessor flags])
 AC_DEFINE_UNQUOTED(CC,          ["${CC}"],          [C compiler])
@@ -110,10 +114,14 @@ dnl AC_DEFINE_UNQUOTED(FLIBS,       ["${FLIBS}"],       [Fortran libraries])
 echo "o----------------------------------"
 echo "| Results for libsc are"
 echo "o----------------------------------"
+m4_ifset([SC_CHECK_MPI_F77], [
 echo "| F77:         $F77"
 echo "| FFLAGS:      $FFLAGS"
+])
+m4_ifset([SC_CHECK_MPI_FC], [
 echo "| FC:          $FC"
 echo "| FCFLAGS:     $FCFLAGS"
+])
 echo "| CPP:         $CPP"
 echo "| CPPFLAGS:    $CPPFLAGS"
 echo "| CC:          $CC"
