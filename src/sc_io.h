@@ -282,6 +282,18 @@ void                sc_fread (void *ptr, size_t size,
 
 #ifdef SC_ENABLE_MPIIO
 
+/** Read MPI file content into memory.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] ptr      Data array to read from disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                This function aborts on MPI file and count errors.
+ */
+void                sc_mpi_read (MPI_File mpifile, const void *ptr,
+                                 size_t zcount, sc_MPI_Datatype t,
+                                 const char *errmsg);
+
 /** Write memory content to an MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
