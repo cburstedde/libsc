@@ -128,6 +128,7 @@ echo "| LIBS:        $LIBS"
 dnl echo "| FLIBS:       $FLIBS"
 dnl echo "| BLAS_LIBS:   $BLAS_LIBS"
 dnl echo "| LAPACK_LIBS: $LAPACK_LIBS"
+echo "| TESTS:       $SC_MPIRUN $SC_MPI_TEST_FLAGS"
 echo "o----------------------------------"
 
 # Create output files.
