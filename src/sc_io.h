@@ -280,6 +280,11 @@ void                sc_fwrite (const void *ptr, size_t size,
 void                sc_fread (void *ptr, size_t size,
                               size_t nmemb, FILE * file, const char *errmsg);
 
+/** Best effort to flush a file's data to disc and close it.
+ * \param [in,out] file         File open for writing.
+ */
+void                sc_fflush_fsync_fclose (FILE * file);
+
 #ifdef SC_ENABLE_MPIIO
 
 /** Read MPI file content into memory.

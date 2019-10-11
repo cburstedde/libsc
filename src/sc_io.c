@@ -569,6 +569,22 @@ sc_fread (void *ptr, size_t size, size_t nmemb, FILE * file,
   SC_CHECK_ABORT (nread == nmemb, errmsg);
 }
 
+void
+sc_fflush_fsync_fclose (FILE * file)
+{
+  int                 retval;
+
+  /* best attempt to flush file to disk */
+  retval = fflush (file);
+  SC_CHECK_ABORT (!retval, "file flush");
+#ifdef SC_HAVE_FSYNC
+  retval = fsync (fileno (file));
+  SC_CHECK_ABORT (!retval, "file fsync");
+#endif
+  retval = fclose (file);
+  SC_CHECK_ABORT (!retval, "file close");
+}
+
 #ifdef SC_ENABLE_MPIIO
 
 void
