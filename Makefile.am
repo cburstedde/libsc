@@ -36,7 +36,9 @@ dist_scaclocal_DATA = \
         config/sc_c_version.m4 config/sc_cuda.m4 config/sc_include.m4 \
         config/sc_lapack.m4 config/sc_lint.m4 config/sc_mpi.m4 \
         config/ax_prefix_config_h.m4 config/ax_split_version.m4 \
-        config/sc_package.m4 config/sc_trilinos.m4
+        config/sc_package.m4 config/sc_trilinos.m4 config/sc_pthread.m4 \
+		config/sc_openmp.m4 config/sc_memalign.m4
+
 
 # install example .ini files in a dedicated directory
 scinidir = $(datadir)/ini
