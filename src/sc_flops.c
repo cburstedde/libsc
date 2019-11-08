@@ -44,14 +44,16 @@ sc_flops_papi (float *rtime, float *ptime, long long *flpops, float *mflops)
 #endif
 }
 
-void
-sc_flops_start (sc_flopinfo_t * fi)
+static void
+sc_flops_start_internal (sc_flopinfo_t * fi, int use_papi)
 {
   float               rtime, ptime, mflops;
   long long           flpops;
 
   fi->seconds = sc_MPI_Wtime ();
-  sc_flops_papi (&rtime, &ptime, &flpops, &mflops);     /* ignore results */
+  if (use_papi) {
+    sc_flops_papi (&rtime, &ptime, &flpops, &mflops);     /* ignore results */
+  }
 
   fi->cwtime = 0.;
   fi->crtime = fi->cptime = 0.;
@@ -60,17 +62,33 @@ sc_flops_start (sc_flopinfo_t * fi)
   fi->iwtime = 0.;
   fi->irtime = fi->iptime = fi->mflops = 0.;
   fi->iflpops = 0;
+
+  fi->use_papi = use_papi;
+}
+
+void
+sc_flops_start (sc_flopinfo_t *fi)
+{
+  sc_flops_start_internal (fi, 1);
+}
+
+void
+sc_flops_start_nopapi (sc_flopinfo_t *fi)
+{
+  sc_flops_start_internal (fi, 0);
 }
 
 void
 sc_flops_count (sc_flopinfo_t * fi)
 {
   double              seconds;
-  float               rtime, ptime;
-  long long           flpops;
+  float               rtime = 0., ptime = 0.;
+  long long           flpops = 0;
 
   seconds = sc_MPI_Wtime ();
-  sc_flops_papi (&rtime, &ptime, &flpops, &fi->mflops);
+  if (fi->use_papi) {
+    sc_flops_papi (&rtime, &ptime, &flpops, &fi->mflops);
+  }
 
   fi->iwtime = seconds - fi->seconds;
   fi->cwtime += fi->iwtime;
@@ -82,12 +100,19 @@ sc_flops_count (sc_flopinfo_t * fi)
   fi->cflpops = flpops;
 
 #ifdef SC_PAPI
-  fi->irtime = rtime - fi->crtime;
-  fi->crtime = rtime;
+  if (fi->use_papi) {
+    fi->irtime = rtime - fi->crtime;
+    fi->crtime = rtime;
+  }
+  else {
+    fi->irtime = (float) fi->iwtime;
+    fi->crtime = (float) fi->cwtime;
+  }
 #else
   fi->irtime = (float) fi->iwtime;
   fi->crtime = (float) fi->cwtime;
 #endif
+
   fi->seconds = seconds;
 }
 

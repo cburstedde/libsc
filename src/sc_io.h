@@ -280,7 +280,24 @@ void                sc_fwrite (const void *ptr, size_t size,
 void                sc_fread (void *ptr, size_t size,
                               size_t nmemb, FILE * file, const char *errmsg);
 
+/** Best effort to flush a file's data to disc and close it.
+ * \param [in,out] file         File open for writing.
+ */
+void                sc_fflush_fsync_fclose (FILE * file);
+
 #ifdef SC_ENABLE_MPIIO
+
+/** Read MPI file content into memory.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] ptr      Data array to read from disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                This function aborts on MPI file and count errors.
+ */
+void                sc_mpi_read (MPI_File mpifile, const void *ptr,
+                                 size_t zcount, sc_MPI_Datatype t,
+                                 const char *errmsg);
 
 /** Write memory content to an MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.

@@ -46,6 +46,7 @@ typedef struct sc_flopinfo
   float               mflops;   /* MFlop/s rate in this interval */
 
   /* without SC_PAPI only seconds, ?wtime and ?rtime are meaningful */
+  int                 use_papi;
 }
 sc_flopinfo_t;
 
@@ -54,6 +55,8 @@ sc_flopinfo_t;
  * The first call sets up the performance counters.
  * Subsequent calls return cumulative real and process times,
  * cumulative floating point operations and the flop rate since the last call.
+ * This is a compatibility wrapper: users should only need to use the
+ * sc_flopinfo_t interface functions below.
  */
 void                sc_flops_papi (float *rtime, float *ptime,
                                    long long *flpops, float *mflops);
@@ -66,6 +69,15 @@ void                sc_flops_papi (float *rtime, float *ptime,
  * \param [out] fi  Members will be initialized.
  */
 void                sc_flops_start (sc_flopinfo_t * fi);
+
+/**
+ * Prepare sc_flopinfo_t structure and ignore the flop counters.
+ * This sc_flopinfo_t does not call PAPI_flops() in this function
+ * or in sc_flops_count().
+ *
+ * \param [out] fi  Members will be initialized.
+ */
+void                sc_flops_start_nopapi (sc_flopinfo_t * fi);
 
 /**
  * Update sc_flopinfo_t structure with current measurement.
@@ -103,6 +115,23 @@ void                sc_flops_shot (sc_flopinfo_t * fi,
  * of type sc_flopinfo_t * as in sc_flops_shot.  Last argument must be NULL.
  */
 void                sc_flops_shotv (sc_flopinfo_t * fi, ...);
+
+/**
+ * Accumulate sc_flops_snap()/sc_flops_shot() statistics for a function into
+ * an (sc_statistics_t *) */
+#define SC_FUNC_SNAP(stat,flop,snap)              \
+  do {                                            \
+    if (!sc_statistics_has ((stat), __func__)) {  \
+      sc_statistics_add_empty ((stat), __func__); \
+    }                                             \
+    sc_flops_snap ((flop), (snap));               \
+  } while (0)
+
+#define SC_FUNC_SHOT(stat,flop,snap)                             \
+  do {                                                           \
+    sc_flops_shot ((flop), (snap));                              \
+    sc_statistics_accumulate ((stat), __func__, (snap)->iwtime); \
+  } while (0)
 
 SC_EXTERN_C_END;
 

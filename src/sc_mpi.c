@@ -365,6 +365,13 @@ sc_MPI_Reduce (void *p, void *q, int n, sc_MPI_Datatype t,
 }
 
 int
+sc_MPI_Reduce_scatter_block (void *p, void *q, int n, sc_MPI_Datatype t,
+                             sc_MPI_Op op, sc_MPI_Comm comm)
+{
+  return sc_MPI_Reduce (p, q, n, t, op, 0, comm);
+}
+
+int
 sc_MPI_Allreduce (void *p, void *q, int n, sc_MPI_Datatype t,
                   sc_MPI_Op op, sc_MPI_Comm comm)
 {
@@ -530,6 +537,8 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
     return sizeof (double);
   if (t == sc_MPI_LONG_DOUBLE)
     return sizeof (long double);
+  if (t == sc_MPI_2INT)
+    return 2 * sizeof (int);
 
   SC_ABORT_NOT_REACHED ();
 }

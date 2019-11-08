@@ -57,6 +57,16 @@ typedef enum
   SC_TAG_AG_RECURSIVE_A,
   SC_TAG_AG_RECURSIVE_B,
   SC_TAG_AG_RECURSIVE_C,
+  SC_TAG_NOTIFY_CENSUS,
+  SC_TAG_NOTIFY_CENSUSV,
+  SC_TAG_NOTIFY_NBX,
+  SC_TAG_NOTIFY_NBXV,
+  SC_TAG_NOTIFY_WRAPPER,
+  SC_TAG_NOTIFY_WRAPPERV,
+  SC_TAG_NOTIFY_RANGES,
+  SC_TAG_NOTIFY_PAYLOAD,
+  SC_TAG_NOTIFY_SUPER_TRUE,
+  SC_TAG_NOTIFY_SUPER_EXTRA,
   SC_TAG_NOTIFY_RECURSIVE,
   SC_TAG_NOTIFY_NARY = SC_TAG_NOTIFY_RECURSIVE + 32,
   SC_TAG_REDUCE = SC_TAG_NOTIFY_NARY + 32,
@@ -100,6 +110,7 @@ sc_tag_t;
 #define sc_MPI_SHORT               MPI_SHORT
 #define sc_MPI_UNSIGNED_SHORT      MPI_UNSIGNED_SHORT
 #define sc_MPI_INT                 MPI_INT
+#define sc_MPI_2INT                MPI_2INT
 #define sc_MPI_UNSIGNED            MPI_UNSIGNED
 #define sc_MPI_LONG                MPI_LONG
 #define sc_MPI_UNSIGNED_LONG       MPI_UNSIGNED_LONG
@@ -179,6 +190,7 @@ sc_tag_t;
 #define sc_MPI_Allgatherv          MPI_Allgatherv
 #define sc_MPI_Alltoall            MPI_Alltoall
 #define sc_MPI_Reduce              MPI_Reduce
+#define sc_MPI_Reduce_scatter_block MPI_Reduce_scatter_block
 #define sc_MPI_Allreduce           MPI_Allreduce
 #define sc_MPI_Scan                MPI_Scan
 #define sc_MPI_Exscan              MPI_Exscan
@@ -235,6 +247,7 @@ sc_tag_t;
 #define sc_MPI_FLOAT               ((sc_MPI_Datatype) 0x4c00040a)
 #define sc_MPI_DOUBLE              ((sc_MPI_Datatype) 0x4c00080b)
 #define sc_MPI_LONG_DOUBLE         ((sc_MPI_Datatype) 0x4c000c0c)
+#define sc_MPI_2INT                ((sc_MPI_Datatype) 0x4c000816)
 
 #define sc_MPI_MAX                 ((sc_MPI_Op) 0x58000001)
 #define sc_MPI_MIN                 ((sc_MPI_Op) 0x58000002)
@@ -311,6 +324,9 @@ int                 sc_MPI_Alltoall (void *, int, sc_MPI_Datatype, void *,
                                      int, sc_MPI_Datatype, sc_MPI_Comm);
 int                 sc_MPI_Reduce (void *, void *, int, sc_MPI_Datatype,
                                    sc_MPI_Op, int, sc_MPI_Comm);
+int                 sc_MPI_Reduce_scatter_block (void *, void *,
+                                                 int, sc_MPI_Datatype,
+                                                 sc_MPI_Op, sc_MPI_Comm);
 int                 sc_MPI_Allreduce (void *, void *, int, sc_MPI_Datatype,
                                       sc_MPI_Op, sc_MPI_Comm);
 int                 sc_MPI_Scan (void *, void *, int, sc_MPI_Datatype,
