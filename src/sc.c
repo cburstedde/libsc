@@ -181,6 +181,7 @@ sc_package_unlock (int package)
 void
 sc_package_rc_count_add (int package_id, int toadd)
 {
+#ifndef SC_NOCOUNT_REFCOUNT
   int                *pcount;
 #ifdef SC_ENABLE_DEBUG
   int                 newvalue;
@@ -202,6 +203,7 @@ sc_package_rc_count_add (int package_id, int toadd)
   sc_package_unlock (package_id);
 
   SC_ASSERT (newvalue >= 0);
+#endif
 }
 
 static void
@@ -295,6 +297,8 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
   fflush (log_stream);
 }
 
+#ifndef SC_NOCOUNT_MALLOC
+
 static int         *
 sc_malloc_count (int package)
 {
@@ -314,6 +318,8 @@ sc_free_count (int package)
   SC_ASSERT (sc_package_is_registered (package));
   return &sc_packages[package].free_count;
 }
+
+#endif
 
 #ifdef SC_ENABLE_MEMALIGN
 
@@ -517,7 +523,9 @@ void               *
 sc_malloc (int package, size_t size)
 {
   void               *ret;
+#ifndef SC_NOCOUNT_MALLOC
   int                *malloc_count = sc_malloc_count (package);
+#endif
 
   /* allocate memory */
 #if defined SC_ENABLE_MEMALIGN
@@ -534,12 +542,16 @@ sc_malloc (int package, size_t size)
 #ifdef SC_ENABLE_PTHREAD
   sc_package_lock (package);
 #endif
+
+#ifndef SC_NOCOUNT_MALLOC
   if (size > 0) {
     ++*malloc_count;
   }
   else {
     *malloc_count += ((ret == NULL) ? 0 : 1);
   }
+#endif
+
 #ifdef SC_ENABLE_PTHREAD
   sc_package_unlock (package);
 #endif
@@ -551,7 +563,9 @@ void               *
 sc_calloc (int package, size_t nmemb, size_t size)
 {
   void               *ret;
+#ifndef SC_NOCOUNT_MALLOC
   int                *malloc_count = sc_malloc_count (package);
+#endif
 
   /* allocate memory */
 #if defined SC_ENABLE_MEMALIGN
@@ -569,12 +583,16 @@ sc_calloc (int package, size_t nmemb, size_t size)
 #ifdef SC_ENABLE_PTHREAD
   sc_package_lock (package);
 #endif
+
+#ifndef SC_NOCOUNT_MALLOC
   if (nmemb * size > 0) {
     ++*malloc_count;
   }
   else {
     *malloc_count += ((ret == NULL) ? 0 : 1);
   }
+#endif
+
 #ifdef SC_ENABLE_PTHREAD
   sc_package_unlock (package);
 #endif
@@ -632,12 +650,18 @@ sc_free (int package, void *ptr)
   }
   else {
     /* uncount the allocations */
+#ifndef SC_NOCOUNT_MALLOC
     int                *free_count = sc_free_count (package);
+#endif
 
 #ifdef SC_ENABLE_PTHREAD
     sc_package_lock (package);
 #endif
+
+#ifndef SC_NOCOUNT_MALLOC
     ++*free_count;
+#endif
+
 #ifdef SC_ENABLE_PTHREAD
     sc_package_unlock (package);
 #endif
@@ -871,6 +895,7 @@ void
 sc_log_indent_push_count (int package, int count)
 {
   /* TODO: figure out a version that makes sense with threads */
+#ifndef SC_NOCOUNT_LOGINDENT
 #ifndef SC_ENABLE_PTHREAD
   SC_ASSERT (package < sc_num_packages);
 
@@ -878,12 +903,14 @@ sc_log_indent_push_count (int package, int count)
     sc_packages[package].log_indent += SC_MAX (0, count);
   }
 #endif
+#endif
 }
 
 void
 sc_log_indent_pop_count (int package, int count)
 {
   /* TODO: figure out a version that makes sense with threads */
+#ifndef SC_NOCOUNT_LOGINDENT
 #ifndef SC_ENABLE_PTHREAD
   int                 new_indent;
 
@@ -893,6 +920,7 @@ sc_log_indent_pop_count (int package, int count)
     new_indent = sc_packages[package].log_indent - SC_MAX (0, count);
     sc_packages[package].log_indent = SC_MAX (0, new_indent);
   }
+#endif
 #endif
 }
 

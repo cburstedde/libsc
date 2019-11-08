@@ -72,6 +72,13 @@
 /* done with memalign macros */
 #endif
 
+/* disable global counters that are not thread-safe (say when using TBB) */
+#ifndef SC_ENABLE_USE_COUNTERS
+#define SC_NOCOUNT_MALLOC
+#define SC_NOCOUNT_REFCOUNT
+#define SC_NOCOUNT_LOGINDENT
+#endif
+
 /* use this in case mpi.h includes stdint.h */
 
 #ifndef __STDC_LIMIT_MACROS

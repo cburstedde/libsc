@@ -37,6 +37,8 @@ SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
 SC_ARG_DISABLE([realloc], [replace array/dmatrix resize with malloc/copy/free],
                [USE_REALLOC])
+SC_ARG_DISABLE([counters], [disable non-thread-safe internal debug counters],
+               [USE_COUNTERS])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 
 echo "o---------------------------------------"
