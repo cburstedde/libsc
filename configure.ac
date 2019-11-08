@@ -44,7 +44,7 @@ echo "| Checking MPI and related programs"
 echo "o---------------------------------------"
 
 dnl A nonempty second/third argument causes to enable F77+FC/CXX, respectively.
-SC_MPI_CONFIG([SC], [], [yes])
+SC_MPI_CONFIG([SC], [], [])
 SC_MPI_ENGAGE([SC])
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
@@ -103,8 +103,10 @@ AC_DEFINE_UNQUOTED(CPPFLAGS,    ["${CPPFLAGS}"],    [C preprocessor flags])
 AC_DEFINE_UNQUOTED(CC,          ["${CC}"],          [C compiler])
 dnl AC_DEFINE_UNQUOTED(C_VERSION,   ["${C_VERSION}"],   [C compiler version])
 AC_DEFINE_UNQUOTED(CFLAGS,      ["${CFLAGS}"],      [C compiler flags])
+m4_ifset([SC_CHECK_MPI_CXX], [
 AC_DEFINE_UNQUOTED(CXX,         ["${CXX}"],         [CXX compiler])
 AC_DEFINE_UNQUOTED(CXXFLAGS,    ["${CXXFLAGS}"],    [CXX compiler flags])
+])
 AC_DEFINE_UNQUOTED(LDFLAGS,     ["${LDFLAGS}"],     [Linker flags])
 AC_DEFINE_UNQUOTED(LIBS,        ["${LIBS}"],        [Libraries])
 dnl AC_DEFINE_UNQUOTED(BLAS_LIBS,   ["${BLAS_LIBS}"],   [BLAS libraries])
@@ -127,8 +129,10 @@ echo "| CPPFLAGS:    $CPPFLAGS"
 echo "| CC:          $CC"
 dnl echo "| C_VERSION:   $C_VERSION"
 echo "| CFLAGS:      $CFLAGS"
+m4_ifset([SC_CHECK_MPI_CXX], [
 echo "| CXX:         $CXX"
 echo "| CXXFLAGS:    $CXXFLAGS"
+])
 echo "| LDFLAGS:     $LDFLAGS"
 echo "| LIBS:        $LIBS"
 dnl echo "| FLIBS:       $FLIBS"
