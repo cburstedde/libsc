@@ -24,14 +24,16 @@ AC_CHECK_FUNCS([aligned_alloc posix_memalign])
 dnl custom memory alignment option
 AC_MSG_CHECKING([for memory alignment option])
 SC_ARG_DISABLE_PREFIX([memalign],
-  [use aligned malloc (optionally use --enable-memalign=<bytes>)],
+  [While the default alignment is sizeof (void *),
+   this switch will choose the standard system malloc.
+   For custom alignment use --enable-memalign=<bytes>],
   [MEMALIGN], [$1])
 
 dnl read the value of the configuration argument
 if test "x$$1_ENABLE_MEMALIGN" != xno ; then
   if test "x$$1_ENABLE_MEMALIGN" != xyes ; then
 
-    dnl make sure the alignment is a number 
+    dnl make sure the alignment is a number
     $1_MEMALIGN_BYTES=`echo "$$1_ENABLE_MEMALIGN" | tr -c -d '[[:digit:]]'`
     $1_MEMALIGN_BYTES_LINK="$$1_MEMALIGN_BYTES"
     if test "x$$1_MEMALIGN_BYTES" = x ; then
