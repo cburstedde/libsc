@@ -1,5 +1,5 @@
 /*
-  This file is part of the SC Library, version 3+.
+  This file is part of the SC Library, version 3.
   The SC Library provides support for parallel scientific applications.
 
   Copyright (C) 2019 individual authors
