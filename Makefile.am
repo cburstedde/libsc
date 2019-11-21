@@ -47,7 +47,7 @@ dist_scini_DATA =
 EXTRA_DIST += \
         bootstrap scindent build-aux/git-version-gen build-aux/git2cl bugs doc
 DISTCLEANFILES += \
-        _configs.sed src/sc_config.h
+        _configs.sed src/sc3_config.h
 .PHONY: lint ChangeLog
 
 # setup test environment
