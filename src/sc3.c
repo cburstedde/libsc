@@ -22,4 +22,4 @@
 
 #include <sc3.h>
 
-static const int    sc3_dummy;
+static const int    sc3_dummy = 0;
