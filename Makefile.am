@@ -69,6 +69,7 @@ include example/logging/Makefile.am
 include example/options/Makefile.am
 include example/pthread/Makefile.am
 include example/openmp/Makefile.am
+include example/v3basics/Makefile.am
 include example/warp/Makefile.am
 include example/testing/Makefile.am
 
