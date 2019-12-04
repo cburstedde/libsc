@@ -28,6 +28,9 @@
 
 #include <sc3_config.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern              "C"
 {

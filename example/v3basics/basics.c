@@ -20,10 +20,37 @@
   02110-1301, USA.
 */
 
-#include <sc3.h>
+#include <sc3_error.h>
+
+static sc3_error_t *
+child_function (int a, int *retval)
+{
+  SC3A_RETVAL (retval);
+  SC3A_FIRST (a < 50, "Child needs a < 50");
+
+  return NULL;
+}
+
+static sc3_error_t *
+parent_function (int a, int *retval)
+{
+  SC3A_RETVAL (retval);
+  SC3A_FIRST (a < 100, "Parent needs a < 100");
+  SC3A_EXEC (child_function (a, retval), "Child function failed");
+
+  return NULL;
+}
 
 int
 main (int argc, char **argv)
 {
+  int                 retval;
+  sc3_error_t        *e;
+
+  e = parent_function (167, &retval);
+  if (e) {
+    sc3_error_destroy (e);
+  }
+
   return 0;
 }

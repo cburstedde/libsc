@@ -36,6 +36,30 @@ extern              "C"
 #endif
 #endif
 
+#ifndef SC_ENABLE_DEBUG
+#define SC3A_FIRST(x,m) do ; while (0)
+#define SC3A_EXEC(f,m) do {                                             \
+  /* TODO shall we return even in non-debug mode? */                    \
+  sc3_error_t *_e = (f);                                                \
+  if (_e != NULL) {                                                     \
+    sc3_error_destroy (_e);                                             \
+  }} while (0)
+#else
+#define SC3A_FIRST(x,m) do {                                            \
+  if (!(x)) {                                                           \
+    return sc3_error_new_fatal (__FILE__, __LINE__, m);                 \
+  }} while (0)
+#define SC3A_EXEC(f,m) do {                                             \
+  sc3_error_t *_e = (f);                                                \
+  if (_e != NULL) {                                                     \
+    return sc3_error_new_stack (_e, __FILE__, __LINE__, m);             \
+  }} while (0)
+#endif
+#define SC3A_RETVAL(r) do {                                             \
+    SC3A_FIRST ((r) != NULL, "Return value pointer is NULL");           \
+    *(r) = 0;                                                           \
+  } while (0)
+
 typedef struct sc3_error sc3_error_t;
 typedef struct sc3_error_args sc3_error_args_t;
 
@@ -62,25 +86,30 @@ sc3_error_sync_t;
 /*** TODO implement reference counting */
 
 sc3_error_args_t   *sc3_error_args_new (void);
-void                sc3_error_args_set_from (sc3_error_args_t * ea,
-                                             sc3_error_t from);
+void                sc3_error_args_set_child (sc3_error_args_t * ea,
+                                              sc3_error_t ec);
 void                sc3_error_args_set_severity (sc3_error_args_t * ea,
                                                  sc3_error_severity_t sev);
 void                sc3_error_args_set_sync (sc3_error_args_t * ea,
                                              sc3_error_sync_t syn);
-void                sc3_error_args_set_msg (sc3_error_args_t * ea,
-                                            const char *errmsg);
+void                sc3_error_args_set_file (sc3_error_args_t * ea,
+                                             const char *filename);
+void                sc3_error_args_set_line (sc3_error_args_t * ea, int line);
 void                sc3_error_args_set_msgf (sc3_error_args_t * ea,
-                                             const char *errfmt, ...);
+                                             const char *errfmt, ...)
+  __attribute__ ((format (printf, 2, 3)));
 void                sc3_error_args_destroy (sc3_error_args_t * ea);
 
-sc3_error_t        *sc3_error_new (sc3_error_args_t ea);
+sc3_error_t        *sc3_error_new (sc3_error_args_t * ea);
 
-sc3_error_t        *sc3_error_new_new (sc3_error_severity_t sev,
+sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,
                                        sc3_error_sync_t syn,
                                        const char *errmsg);
-sc3_error_t        *sc3_error_new_from (sc3_error_t * from,
-                                        const char *errmsg);
+sc3_error_t        *sc3_error_new_stack (sc3_error_t * stack,
+                                         const char *filename,
+                                         int line, const char *errmsg);
+sc3_error_t        *sc3_error_new_fatal (const char *filename,
+                                         int line, const char *errmsg);
 
 /*** TODO need a bunch of _get_ and/or _is_ functions ***/
 
