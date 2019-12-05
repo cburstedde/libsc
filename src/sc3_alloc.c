@@ -92,16 +92,12 @@ sc3_allocator_new (sc3_allocator_args_t * aa, sc3_allocator_t ** ar)
 sc3_error_t        *
 sc3_allocator_destroy (sc3_allocator_t * a)
 {
-  sc3_error_t        *e = NULL;
-
   SC3A_CHECK (a != NULL);
 
   if (a->counting) {
-    if (a->num_malloc + a->num_calloc != a->num_free) {
-      e = sc3_error_new_fatal (__FILE__, __LINE__, "Memory leak detected");
-    }
+    SC3E_DEMAND (a->num_malloc + a->num_calloc != a->num_free);
   }
 
   SC3_FREE (a);
-  return e;
+  return NULL;
 }

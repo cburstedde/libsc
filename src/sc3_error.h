@@ -65,6 +65,10 @@ extern              "C"
     return sc3_error_new_stack (_e, __FILE__, __LINE__, #f);            \
   }} while (0)
 #endif
+#define SC3E_DEMAND(x) do {                                             \
+  if (!(x)) {                                                           \
+    return sc3_error_new_fatal (__FILE__, __LINE__, #x);                \
+  }} while (0)
 #define SC3A_RETVAL(r,v) do {                                           \
   SC3A_CHECK ((r) != NULL);                                             \
     *(r) = (v);                                                         \
