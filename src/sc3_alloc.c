@@ -32,6 +32,8 @@ struct sc3_allocator_args
 struct sc3_allocator
 {
   int                 align;
+  int                 counting;
+  size_t              num_malloc, num_calloc, num_free;
 };
 
 sc3_error_t        *
@@ -39,7 +41,7 @@ sc3_allocator_args_new (sc3_allocator_args_t ** aar)
 {
   sc3_allocator_args_t *aa;
 
-  SC3A_CHECK (aar != NULL);
+  SC3A_RETVAL (aar, NULL);
 
   /* TODO error-ize malloc/free functions */
 
@@ -69,13 +71,37 @@ sc3_allocator_args_set_align (sc3_allocator_args_t * aa, int align)
   return NULL;
 }
 
-sc3_allocator_t    *
-sc3_allocator_new (sc3_allocator_args_t * aa)
+sc3_error_t        *
+sc3_allocator_new (sc3_allocator_args_t * aa, sc3_allocator_t ** ar)
 {
+  sc3_allocator_t    *a;
+
+  SC3A_CHECK (aa != NULL);
+  SC3A_RETVAL (ar, NULL);
+
+  /* TODO catch NULL return value */
+  a = SC3_MALLOC (sc3_allocator_t, 1);
+  a->align = aa->align;
+  a->counting = 1;
+  a->num_malloc = a->num_calloc = a->num_free = 0;
+
+  *ar = a;
   return NULL;
 }
 
-void
+sc3_error_t        *
 sc3_allocator_destroy (sc3_allocator_t * a)
 {
+  sc3_error_t        *e = NULL;
+
+  SC3A_CHECK (a != NULL);
+
+  if (a->counting) {
+    if (a->num_malloc + a->num_calloc != a->num_free) {
+      e = sc3_error_new_fatal (__FILE__, __LINE__, "Memory leak detected");
+    }
+  }
+
+  SC3_FREE (a);
+  return e;
 }

@@ -47,15 +47,16 @@ sc3_error_t        *sc3_allocator_args_destroy (sc3_allocator_args_t * aa);
 sc3_error_t        *sc3_allocator_args_set_align (sc3_allocator_args_t * aa,
                                                   int align);
 
-/* TODO error-ize below functions */
+sc3_error_t        *sc3_allocator_new (sc3_allocator_args_t * aa,
+                                       sc3_allocator_t ** ar);
+sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t * a);
 
-sc3_allocator_t    *sc3_allocator_new (sc3_allocator_args_t * aa);
-void                sc3_allocator_destroy (sc3_allocator_t * a);
-
-void               *sc3_allocator_malloc (sc3_allocator_t * a, size_t size);
-void               *sc3_allocator_calloc (sc3_allocator_t * a,
-                                          size_t nmemb, size_t size);
-void                sc3_allocator_free (sc3_allocator_t * a, void *ptr);
+sc3_error_t        *sc3_allocator_malloc (sc3_allocator_t * a, size_t size,
+                                          void **ptr);
+sc3_error_t        *sc3_allocator_calloc (sc3_allocator_t * a,
+                                          size_t nmemb, size_t size,
+                                          void **ptr);
+sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *ptr);
 
 #ifdef __cplusplus
 #if 0

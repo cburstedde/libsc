@@ -43,8 +43,8 @@ extern              "C"
 
 #ifndef SC_ENABLE_DEBUG
 #define SC3A_CHECK(x) do ; while (0)
-#define SC3A_STACK(x) do ; while (0)
-#define SC3A_EXEC(f) do {                                               \
+#define SC3A_STACK(f) do ; while (0)
+#define SC3E(f) do {                                                    \
   sc3_error_t *_e = (f);                                                \
   if (_e != NULL) {                                                     \
     sc3_error_destroy (_e);                                             \
@@ -59,7 +59,7 @@ extern              "C"
   if (_e != NULL) {                                                     \
     return sc3_error_new_stack (_e, __FILE__, __LINE__, #f);            \
   }} while (0)
-#define SC3A_EXEC(f) do {                                               \
+#define SC3E(f) do {                                                    \
   sc3_error_t *_e = (f);                                                \
   if (_e != NULL) {                                                     \
     return sc3_error_new_stack (_e, __FILE__, __LINE__, #f);            \
@@ -91,6 +91,8 @@ sc3_error_sync_t;
 /*** TODO pass counting memory allocator to constructor */
 
 /*** TODO implement reference counting */
+
+/* TODO error functions shall not throw new errors themselves */
 
 sc3_error_args_t   *sc3_error_args_new (void);
 void                sc3_error_args_set_child (sc3_error_args_t * ea,

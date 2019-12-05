@@ -37,7 +37,7 @@ parent_function (int a, int *retval)
 {
   SC3A_RETVAL (retval, 0);
   SC3A_CHECK (a < 100);
-  SC3A_EXEC (child_function (a, retval));
+  SC3E (child_function (a, retval));
 
   *retval *= 3;
   return NULL;
