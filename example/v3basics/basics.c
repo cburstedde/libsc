@@ -25,19 +25,21 @@
 static sc3_error_t *
 child_function (int a, int *retval)
 {
-  SC3A_RETVAL (retval);
-  SC3A_FIRST (a < 50, "Child needs a < 50");
+  SC3A_RETVAL (retval, 0);
+  SC3A_CHECK (a < 50);
 
+  *retval = a + 1;
   return NULL;
 }
 
 static sc3_error_t *
 parent_function (int a, int *retval)
 {
-  SC3A_RETVAL (retval);
-  SC3A_FIRST (a < 100, "Parent needs a < 100");
-  SC3A_EXEC (child_function (a, retval), "Child function failed");
+  SC3A_RETVAL (retval, 0);
+  SC3A_CHECK (a < 100);
+  SC3A_EXEC (child_function (a, retval));
 
+  *retval *= 3;
   return NULL;
 }
 

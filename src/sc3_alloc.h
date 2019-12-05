@@ -20,22 +20,18 @@
   02110-1301, USA.
 */
 
-/** \file sc3.h
+/** \file sc3_alloc.h
  */
 
-#ifndef SC3_H
-#define SC3_H
+#ifndef SC3_ALLOC_H
+#define SC3_ALLOC_H
 
-#include <sc3_config.h>
+#include <sc3.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+typedef struct sc3_allocator_args sc3_allocator_args_t;
+typedef struct sc3_allocator sc3_allocator_t;
 
-#define SC3_ISPOWOF2(a) ((a) > 0 && ((a) & ((a) - 1)) == 0)
-
-#define SC3_MALLOC(typ,nmemb) ((typ *) malloc ((nmemb) * sizeof (typ)))
-#define SC3_CALLOC(typ,nmemb) ((typ *) calloc (nmemb, sizeof (typ)))
-#define SC3_FREE(ptr) do { free (ptr); } while (0)
+#include <sc3_error.h>
 
 #ifdef __cplusplus
 extern              "C"
@@ -45,6 +41,22 @@ extern              "C"
 #endif
 #endif
 
+sc3_error_t        *sc3_allocator_args_new (sc3_allocator_args_t ** aar);
+sc3_error_t        *sc3_allocator_args_destroy (sc3_allocator_args_t * aa);
+
+sc3_error_t        *sc3_allocator_args_set_align (sc3_allocator_args_t * aa,
+                                                  int align);
+
+/* TODO error-ize below functions */
+
+sc3_allocator_t    *sc3_allocator_new (sc3_allocator_args_t * aa);
+void                sc3_allocator_destroy (sc3_allocator_t * a);
+
+void               *sc3_allocator_malloc (sc3_allocator_t * a, size_t size);
+void               *sc3_allocator_calloc (sc3_allocator_t * a,
+                                          size_t nmemb, size_t size);
+void                sc3_allocator_free (sc3_allocator_t * a, void *ptr);
+
 #ifdef __cplusplus
 #if 0
 {
@@ -52,4 +64,4 @@ extern              "C"
 }
 #endif
 
-#endif /* !SC3_H */
+#endif /* !SC3_ALLOC_H */

@@ -20,41 +20,62 @@
   02110-1301, USA.
 */
 
-#include <sc3_error.h>
+#include <sc3_alloc.h>
 
-struct sc3_error
+/*** TODO implement reference counting */
+
+struct sc3_allocator_args
 {
-  char               *filename;
-  int                 line;
-  char               *errmsg;
-  sc3_error_t        *stack;
+  int                 align;
+};
+
+struct sc3_allocator
+{
+  int                 align;
 };
 
 sc3_error_t        *
-sc3_error_new_stack (sc3_error_t * stack, const char *filename,
-                     int line, const char *errmsg)
+sc3_allocator_args_new (sc3_allocator_args_t ** aar)
 {
-  /* TODO write */
+  sc3_allocator_args_t *aa;
+
+  SC3A_CHECK (aar != NULL);
+
+  /* TODO error-ize malloc/free functions */
+
+  aa = SC3_MALLOC (sc3_allocator_args_t, 1);
+  aa->align = SC_SIZEOF_VOID_P;
+
+  *aar = aa;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
+sc3_allocator_args_destroy (sc3_allocator_args_t * aa)
 {
-  sc3_error_t        *e;
+  SC3A_CHECK (aa != NULL);
 
-  /* TODO: generalize memory allocation */
+  SC3_FREE (aa);
+  return NULL;
+}
 
-  e = SC3_MALLOC (sc3_error_t, 1);
-  e->filename = NULL;
-  e->line = line;
-  e->errmsg = NULL;
-  e->stack = NULL;
-  return e;
+sc3_error_t        *
+sc3_allocator_args_set_align (sc3_allocator_args_t * aa, int align)
+{
+  SC3A_CHECK (aa != NULL);
+  SC3A_CHECK (SC3_ISPOWOF2 (align));
+
+  aa->align = align;
+  return NULL;
+}
+
+sc3_allocator_t    *
+sc3_allocator_new (sc3_allocator_args_t * aa)
+{
+  return NULL;
 }
 
 void
-sc3_error_destroy (sc3_error_t * e)
+sc3_allocator_destroy (sc3_allocator_t * a)
 {
-  free (e);
 }

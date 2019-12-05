@@ -28,6 +28,11 @@
 
 #include <sc3.h>
 
+typedef struct sc3_error sc3_error_t;
+typedef struct sc3_error_args sc3_error_args_t;
+
+#include <sc3_alloc.h>
+
 #ifdef __cplusplus
 extern              "C"
 {
@@ -37,31 +42,33 @@ extern              "C"
 #endif
 
 #ifndef SC_ENABLE_DEBUG
-#define SC3A_FIRST(x,m) do ; while (0)
-#define SC3A_EXEC(f,m) do {                                             \
-  /* TODO shall we return even in non-debug mode? */                    \
+#define SC3A_CHECK(x) do ; while (0)
+#define SC3A_STACK(x) do ; while (0)
+#define SC3A_EXEC(f) do {                                               \
   sc3_error_t *_e = (f);                                                \
   if (_e != NULL) {                                                     \
     sc3_error_destroy (_e);                                             \
   }} while (0)
 #else
-#define SC3A_FIRST(x,m) do {                                            \
+#define SC3A_CHECK(x) do {                                              \
   if (!(x)) {                                                           \
-    return sc3_error_new_fatal (__FILE__, __LINE__, m);                 \
+    return sc3_error_new_fatal (__FILE__, __LINE__, #x);                \
   }} while (0)
-#define SC3A_EXEC(f,m) do {                                             \
+#define SC3A_STACK(f) do {                                              \
   sc3_error_t *_e = (f);                                                \
   if (_e != NULL) {                                                     \
-    return sc3_error_new_stack (_e, __FILE__, __LINE__, m);             \
+    return sc3_error_new_stack (_e, __FILE__, __LINE__, #f);            \
+  }} while (0)
+#define SC3A_EXEC(f) do {                                               \
+  sc3_error_t *_e = (f);                                                \
+  if (_e != NULL) {                                                     \
+    return sc3_error_new_stack (_e, __FILE__, __LINE__, #f);            \
   }} while (0)
 #endif
-#define SC3A_RETVAL(r) do {                                             \
-    SC3A_FIRST ((r) != NULL, "Return value pointer is NULL");           \
-    *(r) = 0;                                                           \
+#define SC3A_RETVAL(r,v) do {                                           \
+  SC3A_CHECK ((r) != NULL);                                             \
+    *(r) = (v);                                                         \
   } while (0)
-
-typedef struct sc3_error sc3_error_t;
-typedef struct sc3_error_args sc3_error_args_t;
 
 typedef enum sc3_error_severity
 {
