@@ -21,43 +21,67 @@
 */
 
 #include <sc3_alloc.h>
+#include <sc3_refcount.h>
 
 /*** TODO implement reference counting */
 
 struct sc3_allocator_args
 {
   int                 align;
+  sc3_allocator_t    *oa;
 };
 
 struct sc3_allocator
 {
   int                 align;
+  int                 alloced;
   int                 counting;
   size_t              num_malloc, num_calloc, num_free;
+  sc3_refcount_t      rc;
+  sc3_allocator_t    *oa;
 };
 
+static sc3_allocator_t nca = { 0, 0, 0, 0, 0, 0, {1}, NULL };
+
+static sc3_allocator_t *
+sc3_nca (void)
+{
+  return &nca;
+}
+
 sc3_error_t        *
-sc3_allocator_args_new (sc3_allocator_args_t ** aar)
+sc3_allocator_args_new (sc3_allocator_t * oa, sc3_allocator_args_t ** aap)
 {
   sc3_allocator_args_t *aa;
 
-  SC3A_RETVAL (aar, NULL);
+  SC3A_RETVAL (aap, NULL);
 
-  /* TODO error-ize malloc/free functions */
+  if (oa == NULL)
+    oa = sc3_nca ();
+  else
+    SC3E (sc3_allocator_ref (oa));
 
-  aa = SC3_MALLOC (sc3_allocator_args_t, 1);
-  aa->align = SC_SIZEOF_VOID_P;
+  SC3E_ALLOCATOR_MALLOC (oa, sc3_allocator_args_t, 1, aa);
+  aa->align = 0;
+  aa->oa = oa;
 
-  *aar = aa;
+  *aap = aa;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_allocator_args_destroy (sc3_allocator_args_t * aa)
+sc3_allocator_args_destroy (sc3_allocator_args_t ** aap)
 {
-  SC3A_CHECK (aa != NULL);
+  sc3_allocator_args_t *aa;
+  sc3_allocator_t    *oa;
 
-  SC3_FREE (aa);
+  SC3A_INOUTP (aap, aa);
+
+  oa = aa->oa;
+  SC3E_ALLOCATOR_FREE (oa, sc3_allocator_args_t, aa);
+  *aap = NULL;
+
+  SC3E (sc3_allocator_unref (&oa));
   return NULL;
 }
 
@@ -65,39 +89,115 @@ sc3_error_t        *
 sc3_allocator_args_set_align (sc3_allocator_args_t * aa, int align)
 {
   SC3A_CHECK (aa != NULL);
-  SC3A_CHECK (SC3_ISPOWOF2 (align));
+  SC3A_CHECK (align == 0 || SC3_ISPOWOF2 (align));
 
   aa->align = align;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_allocator_new (sc3_allocator_args_t * aa, sc3_allocator_t ** ar)
+sc3_allocator_new (sc3_allocator_args_t * aa, sc3_allocator_t ** ap)
 {
   sc3_allocator_t    *a;
 
   SC3A_CHECK (aa != NULL);
-  SC3A_RETVAL (ar, NULL);
+  SC3A_RETVAL (ap, NULL);
 
-  /* TODO catch NULL return value */
-  a = SC3_MALLOC (sc3_allocator_t, 1);
+  SC3E_ALLOCATOR_MALLOC (aa->oa, sc3_allocator_t, 1, a);
   a->align = aa->align;
+  a->alloced = 1;
   a->counting = 1;
   a->num_malloc = a->num_calloc = a->num_free = 0;
+  sc3_refcount_init (&a->rc);
+  a->oa = aa->oa;
+  SC3E (sc3_allocator_ref (a->oa));
 
-  *ar = a;
+  SC3E (sc3_allocator_args_destroy (&aa));
+
+  *ap = a;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_allocator_destroy (sc3_allocator_t * a)
+sc3_allocator_ref (sc3_allocator_t * a)
+{
+  SC3A_CHECK (a != NULL);
+  SC3E (sc3_refcount_ref (&a->rc));
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_allocator_unref (sc3_allocator_t ** ap)
+{
+  int                 waslast;
+  sc3_allocator_t    *a, *oa;
+
+  SC3A_INOUTP (ap, a);
+  SC3E (sc3_refcount_unref (&a->rc, &waslast));
+
+  if (waslast) {
+    if (a->counting) {
+      SC3E_DEMAND (a->num_malloc + a->num_calloc != a->num_free);
+    }
+
+    oa = a->oa;
+    SC3E_ALLOCATOR_FREE (oa, sc3_allocator_t, a);
+    *ap = NULL;
+
+    SC3E (sc3_allocator_unref (&oa));
+  }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_allocator_destroy (sc3_allocator_t ** ap)
+{
+  SC3E (sc3_allocator_unref (ap));
+  SC3E_DEMAND (*ap == NULL);
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
+{
+  char               *p;
+
+  SC3A_CHECK (a != NULL);
+  SC3A_RETVAL (ptr, NULL);
+
+  /* TODO: alloc bigger block and write align and debug info into beginning */
+
+  p = SC3_MALLOC (char, size);
+  SC3E_DEMAND (size == 0 || p != NULL);
+
+  if (a->counting)
+    ++a->num_malloc;
+
+  *ptr = (void *) p;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
+                      void **ptr)
+{
+  /* TODO: adapt allocator_malloc function and call calloc inside */
+  SC3E (sc3_allocator_malloc (a, nmemb * size, ptr));
+  memset (*ptr, 0, nmemb * size);
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_allocator_free (sc3_allocator_t * a, void *ptr)
 {
   SC3A_CHECK (a != NULL);
 
+  /* TODO: verify that ptr has been allocated by this allocator */
+
   if (a->counting) {
-    SC3E_DEMAND (a->num_malloc + a->num_calloc != a->num_free);
+    ++a->num_free;
   }
 
-  SC3_FREE (a);
+  SC3_FREE (ptr);
   return NULL;
 }

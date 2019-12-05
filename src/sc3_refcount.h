@@ -20,23 +20,13 @@
   02110-1301, USA.
 */
 
-/** \file sc3.h
+/** \file sc3_refcount.h
  */
 
-#ifndef SC3_H
-#define SC3_H
+#ifndef SC3_REFCOUNT_H
+#define SC3_REFCOUNT_H
 
-#include <sc3_config.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define SC3_ISPOWOF2(a) ((a) > 0 && ((a) & ((a) - 1)) == 0)
-
-#define SC3_MALLOC(typ,nmemb) ((typ *) malloc ((nmemb) * sizeof (typ)))
-#define SC3_CALLOC(typ,nmemb) ((typ *) calloc (nmemb, sizeof (typ)))
-#define SC3_FREE(ptr) do { free (ptr); } while (0)
+#include <sc3_error.h>
 
 #ifdef __cplusplus
 extern              "C"
@@ -46,6 +36,16 @@ extern              "C"
 #endif
 #endif
 
+typedef struct sc3_refcount
+{
+  long                rc;
+}
+sc3_refcount_t;
+
+sc3_error_t        *sc3_refcount_init (sc3_refcount_t * r);
+sc3_error_t        *sc3_refcount_ref (sc3_refcount_t * r);
+sc3_error_t        *sc3_refcount_unref (sc3_refcount_t * r, int *waslast);
+
 #ifdef __cplusplus
 #if 0
 {
@@ -53,4 +53,4 @@ extern              "C"
 }
 #endif
 
-#endif /* !SC3_H */
+#endif /* !SC3_REFCOUNT_H */

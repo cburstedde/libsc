@@ -20,54 +20,34 @@
   02110-1301, USA.
 */
 
-#include <sc3_error.h>
-
-struct sc3_error
-{
-  sc3_error_severity_t sev;
-  sc3_error_sync_t    syn;
-  char               *filename;
-  int                 line;
-  char               *errmsg;
-  sc3_error_t        *stack;
-};
-
-/* TODO write error_new */
-
-void
-sc3_error_destroy (sc3_error_t * e)
-{
-  /* TODO: finish and think about allocation */
-  SC3_FREE (e);
-}
+#include <sc3_refcount.h>
 
 sc3_error_t        *
-sc3_error_new_stack (sc3_error_t * stack, const char *filename,
-                     int line, const char *errmsg)
+sc3_refcount_init (sc3_refcount_t * r)
 {
-  /* TODO write */
+  SC3A_CHECK (r != NULL);
+
+  r->rc = 1;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
+sc3_refcount_ref (sc3_refcount_t * r)
 {
-  sc3_error_t        *e;
+  SC3A_CHECK (r != NULL);
+  SC3A_CHECK (r->rc >= 1);
 
-  /* TODO: generalize memory allocation */
-
-  e = SC3_MALLOC (sc3_error_t, 1);
-  e->filename = NULL;
-  e->line = line;
-  e->errmsg = NULL;
-  e->stack = NULL;
-  return e;
+  ++r->rc;
+  return NULL;
 }
 
 sc3_error_t        *
-sc3_error_is_fatal (sc3_error_t * e, int *ir)
+sc3_refcount_unref (sc3_refcount_t * r, int *waslast)
 {
-  SC3A_CHECK (e != NULL);
-  SC3A_RETVAL (ir, e->sev == SC3_ERROR_FATAL);
+  SC3A_CHECK (r != NULL);
+  SC3A_CHECK (r->rc >= 1);
+  SC3A_CHECK (waslast != NULL);
+
+  *waslast = (--r->rc == 0);
   return NULL;
 }

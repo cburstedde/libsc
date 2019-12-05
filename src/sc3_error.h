@@ -29,7 +29,6 @@
 #include <sc3.h>
 
 typedef struct sc3_error sc3_error_t;
-typedef struct sc3_error_args sc3_error_args_t;
 
 #include <sc3_alloc.h>
 
@@ -40,6 +39,9 @@ extern              "C"
 }
 #endif
 #endif
+
+/* TODO: what is our philosophy for SC3E?
+         Propagate errors always, only in debug, only when fatal? */
 
 #ifndef SC_ENABLE_DEBUG
 #define SC3A_CHECK(x) do ; while (0)
@@ -73,24 +75,34 @@ extern              "C"
   SC3A_CHECK ((r) != NULL);                                             \
     *(r) = (v);                                                         \
   } while (0)
+#define SC3A_INOUTP(pp,p) do {                                          \
+  SC3A_CHECK ((pp) != NULL && *(pp) != NULL);                           \
+  (p) = *(pp);                                                          \
+  } while (0)
+#define SC3A_FNULLP(pp) do {                                            \
+  SC3A_CHECK ((pp) != NULL);                                            \
+  free (*(pp)); *(pp) = NULL;                                           \
+  } while (0)
 
 typedef enum sc3_error_severity
 {
-  SC3_RUNTIME,
-  SC3_WARNING,
-  SC3_FATAL,
+  SC3_ERROR_RUNTIME,
+  SC3_ERROR_WARNING,
+  SC3_ERROR_FATAL,
   SC3_ERROR_SEVERITY_LAST
 }
 sc3_error_severity_t;
 
 typedef enum sc3_error_sync
 {
-  SC3_LOCAL,
-  SC3_SYNCED,
-  SC3_DISAGREE,
+  SC3_ERROR_LOCAL,
+  SC3_ERROR_SYNCED,
+  SC3_ERROR_DISAGREE,
   SC3_ERROR_SYNC_LAST
 }
 sc3_error_sync_t;
+
+typedef struct sc3_error_args sc3_error_args_t;
 
 /*** TODO pass counting memory allocator to constructor */
 
@@ -114,19 +126,26 @@ void                sc3_error_args_set_msgf (sc3_error_args_t * ea,
 void                sc3_error_args_destroy (sc3_error_args_t * ea);
 
 sc3_error_t        *sc3_error_new (sc3_error_args_t * ea);
+void                sc3_error_destroy (sc3_error_t * e);
 
 sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,
                                        sc3_error_sync_t syn,
                                        const char *errmsg);
+
+/* TODO new_fatal and new_stack always return consistent results */
+
 sc3_error_t        *sc3_error_new_stack (sc3_error_t * stack,
                                          const char *filename,
                                          int line, const char *errmsg);
 sc3_error_t        *sc3_error_new_fatal (const char *filename,
                                          int line, const char *errmsg);
 
+/* TODO add function to stack if e is non-NULL and return NULL otherwise */
+
 /*** TODO need a bunch of _get_ and/or _is_ functions ***/
 
-void                sc3_error_destroy (sc3_error_t * e);
+/* TODO: escalate error by stacking input to output */
+sc3_error_t        *sc3_error_is_fatal (sc3_error_t * e, int *ir);
 
 #ifdef __cplusplus
 #if 0

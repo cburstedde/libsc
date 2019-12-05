@@ -48,6 +48,10 @@ main (int argc, char **argv)
 {
   int                 retval;
   sc3_error_t        *e;
+  sc3_allocator_t    *a;
+
+  /* TODO: on error return, unravel error stack and print messages */
+  /* a = sc3_allocator_new (); */
 
   e = parent_function (167, &retval);
   if (e) {

@@ -28,7 +28,6 @@
 
 #include <sc3.h>
 
-typedef struct sc3_allocator_args sc3_allocator_args_t;
 typedef struct sc3_allocator sc3_allocator_t;
 
 #include <sc3_error.h>
@@ -41,15 +40,39 @@ extern              "C"
 #endif
 #endif
 
-sc3_error_t        *sc3_allocator_args_new (sc3_allocator_args_t ** aar);
-sc3_error_t        *sc3_allocator_args_destroy (sc3_allocator_args_t * aa);
+#define SC3E_ALLOCATOR_MALLOC(a,t,n,p) do {                             \
+  void *_ptr;                                                           \
+  SC3E (sc3_allocator_malloc (a, (n) * sizeof (t), &_ptr));             \
+  (p) = (t *) _ptr; } while (0)
+#define SC3E_ALLOCATOR_CALLOC(a,t,n,p) do {                             \
+  void *_ptr;                                                           \
+  SC3E (sc3_allocator_calloc (a, n, sizeof (t), &_ptr);                 \
+  (p) = (t *) _ptr; } while (0)
+#define SC3E_ALLOCATOR_FREE(a,t,p) do {                                 \
+  SC3E (sc3_allocator_free (a, p));                                     \
+  (p) = (t *) 0; } while (0)
+
+typedef struct sc3_allocator_args sc3_allocator_args_t;
+
+extern sc3_allocator_t const *sc3_nocount_allocator;
+
+/* TODO: refcounting the arguments? */
+
+sc3_error_t        *sc3_allocator_args_new (sc3_allocator_t * oa,
+                                            sc3_allocator_args_t ** aap);
+sc3_error_t        *sc3_allocator_args_destroy (sc3_allocator_args_t ** aap);
 
 sc3_error_t        *sc3_allocator_args_set_align (sc3_allocator_args_t * aa,
                                                   int align);
 
+/** Creates a new allocator from arguments.
+ * \param [in,out] aa   We call \ref sc3_allocator_args_destroy on it.
+ */
 sc3_error_t        *sc3_allocator_new (sc3_allocator_args_t * aa,
-                                       sc3_allocator_t ** ar);
-sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t * a);
+                                       sc3_allocator_t ** ap);
+sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
+sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
+sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
 
 sc3_error_t        *sc3_allocator_malloc (sc3_allocator_t * a, size_t size,
                                           void **ptr);
