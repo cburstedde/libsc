@@ -23,10 +23,21 @@
 #include <sc3_refcount.h>
 
 sc3_error_t        *
+sc3_refcount_init_invalid (sc3_refcount_t * r)
+{
+  SC3A_CHECK (r != NULL);
+
+  r->magic = 0;
+  r->rc = 0;
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_refcount_init (sc3_refcount_t * r)
 {
   SC3A_CHECK (r != NULL);
 
+  r->magic = SC3_REFCOUNT_MAGIC;
   r->rc = 1;
   return NULL;
 }
@@ -34,7 +45,7 @@ sc3_refcount_init (sc3_refcount_t * r)
 sc3_error_t        *
 sc3_refcount_ref (sc3_refcount_t * r)
 {
-  SC3A_CHECK (r != NULL);
+  SC3A_CHECK (r != NULL && r->magic == SC3_REFCOUNT_MAGIC);
   SC3A_CHECK (r->rc >= 1);
 
   ++r->rc;
@@ -44,10 +55,13 @@ sc3_refcount_ref (sc3_refcount_t * r)
 sc3_error_t        *
 sc3_refcount_unref (sc3_refcount_t * r, int *waslast)
 {
-  SC3A_CHECK (r != NULL);
+  SC3A_CHECK (r != NULL && r->magic == SC3_REFCOUNT_MAGIC);
   SC3A_CHECK (r->rc >= 1);
-  SC3A_CHECK (waslast != NULL);
+  SC3A_RETVAL (waslast, 0);
 
-  *waslast = (--r->rc == 0);
+  if (--r->rc == 0) {
+    r->magic = 0;
+    *waslast = 1;
+  }
   return NULL;
 }

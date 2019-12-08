@@ -28,6 +28,8 @@
 
 #include <sc3_error.h>
 
+#define SC3_REFCOUNT_MAGIC 0x6CA9EFC08917AF1C
+
 #ifdef __cplusplus
 extern              "C"
 {
@@ -38,10 +40,12 @@ extern              "C"
 
 typedef struct sc3_refcount
 {
+  long                magic;
   long                rc;
 }
 sc3_refcount_t;
 
+sc3_error_t        *sc3_refcount_init_invalid (sc3_refcount_t * r);
 sc3_error_t        *sc3_refcount_init (sc3_refcount_t * r);
 sc3_error_t        *sc3_refcount_ref (sc3_refcount_t * r);
 sc3_error_t        *sc3_refcount_unref (sc3_refcount_t * r, int *waslast);
