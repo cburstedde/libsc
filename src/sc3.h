@@ -34,6 +34,7 @@
 
 #define SC3_ISPOWOF2(a) ((a) > 0 && ((a) & ((a) - 1)) == 0)
 
+#define SC3_STRDUP(src) (strdup (src))
 #define SC3_MALLOC(typ,nmemb) ((typ *) malloc ((nmemb) * sizeof (typ)))
 #define SC3_CALLOC(typ,nmemb) ((typ *) calloc (nmemb, sizeof (typ)))
 #define SC3_FREE(ptr) do { free (ptr); } while (0)
