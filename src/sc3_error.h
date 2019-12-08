@@ -42,6 +42,9 @@ extern              "C"
 
 /* TODO: what is our philosophy for SC3E?
          Propagate errors always, only in debug, only when fatal? */
+/* TODO: what about return values of error_destroy? */
+/* TODO: Rename to SC3E_INOUTP, same for RETVAL, FNULLP ? */
+/* TODO: Remove FNULLP ? */
 
 #ifndef SC_ENABLE_DEBUG
 #define SC3A_CHECK(x) do ; while (0)
@@ -49,7 +52,7 @@ extern              "C"
 #define SC3E(f) do {                                                    \
   sc3_error_t *_e = (f);                                                \
   if (_e != NULL) {                                                     \
-    sc3_error_destroy (_e);                                             \
+    sc3_error_destroy (&_e);                                            \
   }} while (0)
 #else
 #define SC3A_CHECK(x) do {                                              \
@@ -110,9 +113,15 @@ typedef struct sc3_error_args sc3_error_args_t;
 
 /* TODO error functions shall not throw new errors themselves */
 
-sc3_error_args_t   *sc3_error_args_new (void);
-void                sc3_error_args_set_child (sc3_error_args_t * ea,
-                                              sc3_error_t ec);
+sc3_error_t        *sc3_error_args_new (sc3_allocator_t * eator,
+                                        sc3_error_args_t ** eap);
+sc3_error_t        *sc3_error_args_destroy (sc3_error_args_t ** eap);
+
+sc3_error_t        *sc3_error_args_set_stack (sc3_error_args_t * ea,
+                                              sc3_error_t * stack);
+sc3_error_t        *sc3_error_args_set_msg (sc3_error_args_t * ea,
+                                            const char *errmsg);
+#if 0
 void                sc3_error_args_set_severity (sc3_error_args_t * ea,
                                                  sc3_error_severity_t sev);
 void                sc3_error_args_set_sync (sc3_error_args_t * ea,
@@ -120,13 +129,15 @@ void                sc3_error_args_set_sync (sc3_error_args_t * ea,
 void                sc3_error_args_set_file (sc3_error_args_t * ea,
                                              const char *filename);
 void                sc3_error_args_set_line (sc3_error_args_t * ea, int line);
-void                sc3_error_args_set_msgf (sc3_error_args_t * ea,
+sc3_error_t        *sc3_error_args_set_msgf (sc3_error_args_t * ea,
                                              const char *errfmt, ...)
   __attribute__ ((format (printf, 2, 3)));
-void                sc3_error_args_destroy (sc3_error_args_t * ea);
+#endif
 
-sc3_error_t        *sc3_error_new (sc3_error_args_t * ea);
-void                sc3_error_destroy (sc3_error_t * e);
+sc3_error_t        *sc3_error_new (sc3_error_args_t ** ea, sc3_error_t ** ep);
+sc3_error_t        *sc3_error_ref (sc3_error_t * e);
+sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
+sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 
 sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,
                                        sc3_error_sync_t syn,

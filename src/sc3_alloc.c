@@ -33,18 +33,20 @@ struct sc3_allocator_args
 
 struct sc3_allocator
 {
+  sc3_refcount_t      rc;
   int                 align;
   int                 alloced;
   int                 counting;
-  size_t              num_malloc, num_calloc, num_free;
-  sc3_refcount_t      rc;
+  long                num_malloc, num_calloc, num_free;
   sc3_allocator_t    *oa;
 };
 
-static sc3_allocator_t nca = { 0, 0, 0, 0, 0, 0, {1}, NULL };
+/** This allocator is thread-safe since it is not counting anything. */
+static sc3_allocator_t nca =
+  { {SC3_REFCOUNT_MAGIC, 1}, 0, 0, 0, 0, 0, 0, NULL };
 
-static sc3_allocator_t *
-sc3_nca (void)
+sc3_allocator_t *
+sc3_allocator_nocount (void)
 {
   return &nca;
 }
@@ -57,7 +59,7 @@ sc3_allocator_args_new (sc3_allocator_t * oa, sc3_allocator_args_t ** aap)
   SC3A_RETVAL (aap, NULL);
 
   if (oa == NULL)
-    oa = sc3_nca ();
+    oa = sc3_allocator_nocount ();
   SC3E (sc3_allocator_ref (oa));
 
   SC3E_ALLOCATOR_MALLOC (oa, sc3_allocator_args_t, 1, aa);
@@ -95,11 +97,12 @@ sc3_allocator_args_set_align (sc3_allocator_args_t * aa, int align)
 }
 
 sc3_error_t        *
-sc3_allocator_new (sc3_allocator_args_t * aa, sc3_allocator_t ** ap)
+sc3_allocator_new (sc3_allocator_args_t ** aap, sc3_allocator_t ** ap)
 {
+  sc3_allocator_args_t *aa;
   sc3_allocator_t    *a;
 
-  SC3A_CHECK (aa != NULL);
+  SC3A_INOUTP (aap, aa);
   SC3A_RETVAL (ap, NULL);
 
   SC3E_ALLOCATOR_MALLOC (aa->oa, sc3_allocator_t, 1, a);
@@ -111,8 +114,7 @@ sc3_allocator_new (sc3_allocator_args_t * aa, sc3_allocator_t ** ap)
   a->oa = aa->oa;
   SC3E (sc3_allocator_ref (a->oa));
 
-  SC3E (sc3_allocator_args_destroy (&aa));
-
+  SC3E (sc3_allocator_args_destroy (aap));
   *ap = a;
   return NULL;
 }
@@ -155,6 +157,28 @@ sc3_allocator_destroy (sc3_allocator_t ** ap)
 {
   SC3E (sc3_allocator_unref (ap));
   SC3E_DEMAND (*ap == NULL);
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_allocator_strdup (sc3_allocator_t * a,
+                      const char * src, char ** dest)
+{
+  char               *p;
+
+  SC3A_CHECK (a != NULL);
+  SC3A_CHECK (src != NULL);
+  SC3A_RETVAL (dest, NULL);
+
+  /* TODO: use same allocation mechanism as allocator_malloc below */
+
+  p = SC3_STRDUP (src);
+  SC3E_DEMAND (src == NULL || p != NULL);
+
+  if (a->counting)
+    ++a->num_malloc;
+
+  *dest = p;
   return NULL;
 }
 

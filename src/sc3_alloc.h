@@ -54,7 +54,7 @@ extern              "C"
 
 typedef struct sc3_allocator_args sc3_allocator_args_t;
 
-extern sc3_allocator_t const *sc3_nocount_allocator;
+sc3_allocator_t    *sc3_allocator_nocount (void);
 
 /* TODO: refcounting the arguments? */
 
@@ -67,13 +67,17 @@ sc3_error_t        *sc3_allocator_args_set_align (sc3_allocator_args_t * aa,
 
 /** Creates a new allocator from arguments.
  * \param [in,out] aa   We call \ref sc3_allocator_args_destroy on it.
+ * \param [out] ap      On output, the initialized allocator with refcount 1.
+ * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_allocator_new (sc3_allocator_args_t * aa,
+sc3_error_t        *sc3_allocator_new (sc3_allocator_args_t ** aap,
                                        sc3_allocator_t ** ap);
 sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
 sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
 
+sc3_error_t        *sc3_allocator_strdup (sc3_allocator_t * a,
+                                          const char * src, char ** dest);
 sc3_error_t        *sc3_allocator_malloc (sc3_allocator_t * a, size_t size,
                                           void **ptr);
 sc3_error_t        *sc3_allocator_calloc (sc3_allocator_t * a,

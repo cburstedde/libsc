@@ -53,9 +53,11 @@ main (int argc, char **argv)
   /* TODO: on error return, unravel error stack and print messages */
   /* a = sc3_allocator_new (); */
 
+  /* TODO: catch return values in main () */
+
   e = parent_function (167, &retval);
   if (e) {
-    sc3_error_destroy (e);
+    sc3_error_destroy (&e);
   }
 
   return 0;
