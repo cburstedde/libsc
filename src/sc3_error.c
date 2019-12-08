@@ -224,6 +224,7 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
 {
   /* TODO: generalize memory allocation */
 
+  sc3_error_args_t   *ea;
 #if 0
   sc3_error_t        *e;
 
@@ -234,6 +235,11 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
   e->stack = NULL;
   return e;
 #endif
+
+  /* TODO: avoid infinite loop when out of memory */
+  SC3E (sc3_error_args_new (NULL, &ea));
+
+
   return NULL;
 }
 

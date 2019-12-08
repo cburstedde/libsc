@@ -193,6 +193,10 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
   /* TODO: alloc bigger block and write align and debug info into beginning */
 
   p = SC3_MALLOC (char, size);
+
+  /* TODO: when malloc fails, don't go into SC3E macros.
+           Return some static error object that states this. */
+
   SC3E_DEMAND (size == 0 || p != NULL);
 
   if (a->counting)
