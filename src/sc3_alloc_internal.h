@@ -20,15 +20,13 @@
   02110-1301, USA.
 */
 
-/** \file sc3_refcount.h
+/** \file sc3_alloc_internal.h
  */
 
-#ifndef SC3_REFCOUNT_H
-#define SC3_REFCOUNT_H
+#ifndef SC3_ALLOC_INTERNAL_H
+#define SC3_ALLOC_INTERNAL_H
 
-#include <sc3_error.h>
-
-#define SC3_REFCOUNT_MAGIC 0x6CA9EFC08917AF1C
+#include <sc3_alloc.h>
 
 #ifdef __cplusplus
 extern              "C"
@@ -38,16 +36,8 @@ extern              "C"
 #endif
 #endif
 
-typedef struct sc3_refcount
-{
-  long                magic;
-  long                rc;
-}
-sc3_refcount_t;
-
-sc3_error_t        *sc3_refcount_init (sc3_refcount_t * r);
-sc3_error_t        *sc3_refcount_ref (sc3_refcount_t * r);
-sc3_error_t        *sc3_refcount_unref (sc3_refcount_t * r, int *waslast);
+void               *sc3_allocator_malloc_noerr (sc3_allocator_t * a,
+                                                size_t size);
 
 #ifdef __cplusplus
 #if 0
@@ -56,4 +46,4 @@ sc3_error_t        *sc3_refcount_unref (sc3_refcount_t * r, int *waslast);
 }
 #endif
 
-#endif /* !SC3_REFCOUNT_H */
+#endif /* !SC3_ALLOC_INTERNAL_H */

@@ -118,6 +118,9 @@ sc3_error_t        *sc3_error_args_new (sc3_allocator_t * eator,
                                         sc3_error_args_t ** eap);
 sc3_error_t        *sc3_error_args_destroy (sc3_error_args_t ** eap);
 
+/** Takes ownership of stack (i.e. does not ref it).
+ * If called multiple times, the stack passed earlier is unref'd.
+ */
 sc3_error_t        *sc3_error_args_set_stack (sc3_error_args_t * ea,
                                               sc3_error_t * stack);
 sc3_error_t        *sc3_error_args_set_msg (sc3_error_args_t * ea,
@@ -147,10 +150,12 @@ sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,
 /* TODO: new_fatal and new_stack always return consistent results.
          They must not lead to an infinite loop (e.g. when out of memory). */
 
+sc3_error_t        *sc3_error_new_fatal (const char *filename,
+                                         int line, const char *errmsg);
+
+/** Takes owership of stack (i.e. does not ref it) */
 sc3_error_t        *sc3_error_new_stack (sc3_error_t * stack,
                                          const char *filename,
-                                         int line, const char *errmsg);
-sc3_error_t        *sc3_error_new_fatal (const char *filename,
                                          int line, const char *errmsg);
 
 /* TODO add function to stack if e is non-NULL and return NULL otherwise */
@@ -158,7 +163,7 @@ sc3_error_t        *sc3_error_new_fatal (const char *filename,
 /*** TODO need a bunch of _get_ and/or _is_ functions ***/
 
 /* TODO: escalate error by stacking input to output */
-sc3_error_t        *sc3_error_is_fatal (sc3_error_t * e, int *ir);
+int                 sc3_error_is_fatal (sc3_error_t * e);
 
 #ifdef __cplusplus
 #if 0

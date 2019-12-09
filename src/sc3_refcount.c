@@ -20,7 +20,13 @@
   02110-1301, USA.
 */
 
-#include <sc3_refcount.h>
+#include <sc3_refcount_internal.h>
+
+int
+sc3_refcount_is_valid (sc3_refcount_t * r)
+{
+  return r != NULL && r->magic == SC3_REFCOUNT_MAGIC && r->rc >= 1;
+}
 
 sc3_error_t        *
 sc3_refcount_init_invalid (sc3_refcount_t * r)

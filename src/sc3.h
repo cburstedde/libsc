@@ -34,6 +34,8 @@
 
 #define SC3_BUFLEN 160
 #define SC3_BUFINIT(b) do { memset (b, 0, SC3_BUFLEN); } while (0)
+#define SC3_BUFCOPY(b,s) \
+          do { (void) snprintf (b, SC3_BUFLEN, "%s", s); } while (0)
 
 #define SC3_ISPOWOF2(a) ((a) > 0 && ((a) & ((a) - 1)) == 0)
 

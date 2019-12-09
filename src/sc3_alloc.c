@@ -20,7 +20,7 @@
   02110-1301, USA.
 */
 
-#include <sc3_alloc.h>
+#include <sc3_alloc_internal.h>
 #include <sc3_refcount.h>
 
 /*** TODO implement reference counting */
@@ -45,7 +45,7 @@ struct sc3_allocator
 static sc3_allocator_t nca =
   { {SC3_REFCOUNT_MAGIC, 1}, 0, 0, 0, 0, 0, 0, NULL };
 
-sc3_allocator_t *
+sc3_allocator_t    *
 sc3_allocator_nocount (void)
 {
   return &nca;
@@ -161,8 +161,7 @@ sc3_allocator_destroy (sc3_allocator_t ** ap)
 }
 
 sc3_error_t        *
-sc3_allocator_strdup (sc3_allocator_t * a,
-                      const char * src, char ** dest)
+sc3_allocator_strdup (sc3_allocator_t * a, const char *src, char **dest)
 {
   char               *p;
 
@@ -182,6 +181,26 @@ sc3_allocator_strdup (sc3_allocator_t * a,
   return NULL;
 }
 
+void               *
+sc3_allocator_malloc_noerr (sc3_allocator_t * a, size_t size)
+{
+  char               *p;
+
+  /* TODO: use same allocation mechanism as allocator_malloc below */
+
+  if (a == NULL)
+    return NULL;
+
+  p = SC3_MALLOC (char, size);
+  if (size > 0 && p == NULL)
+    return NULL;
+
+  if (a->counting)
+    ++a->num_malloc;
+
+  return (void *) p;
+}
+
 sc3_error_t        *
 sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
 {
@@ -193,10 +212,6 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
   /* TODO: alloc bigger block and write align and debug info into beginning */
 
   p = SC3_MALLOC (char, size);
-
-  /* TODO: when malloc fails, don't go into SC3E macros.
-           Return some static error object that states this. */
-
   SC3E_DEMAND (size == 0 || p != NULL);
 
   if (a->counting)
