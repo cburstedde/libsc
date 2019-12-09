@@ -3,7 +3,7 @@
 # Makefile.am in example/v3basics
 # included non-recursively from toplevel directory
 
-bin_PROGRAMS += example/v3basics/sc_v3basics
-example_v3basics_sc_v3basics_SOURCES = example/v3basics/basics.c
+bin_PROGRAMS += example/v3basics/sc3_basics
+example_v3basics_sc3_basics_SOURCES = example/v3basics/basics.c
 
-LINT_CSOURCES += $(example_v3basics_sc_v3basics_SOURCES)
+LINT_CSOURCES += $(example_v3basics_sc3_basics_SOURCES)
