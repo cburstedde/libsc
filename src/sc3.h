@@ -50,6 +50,8 @@ extern              "C"
 #endif
 #endif
 
+void                sc3_dummy (void);
+
 #ifdef __cplusplus
 #if 0
 {
