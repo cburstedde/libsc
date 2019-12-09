@@ -62,7 +62,7 @@ sc3_refcount_unref (sc3_refcount_t * r, int *waslast)
 {
   SC3A_CHECK (r != NULL && r->magic == SC3_REFCOUNT_MAGIC);
   SC3A_CHECK (r->rc >= 1);
-  SC3A_RETVAL (waslast, 0);
+  SC3E_RETVAL (waslast, 0);
 
   if (--r->rc == 0) {
     r->magic = 0;

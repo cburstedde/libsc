@@ -81,7 +81,7 @@ sc3_error_args_new (sc3_allocator_t * eator, sc3_error_args_t ** eap)
   sc3_error_args_t   *ea;
   sc3_error_t        *v;
 
-  SC3A_RETVAL (eap, NULL);
+  SC3E_RETVAL (eap, NULL);
   if (eator == NULL)
     eator = sc3_allocator_nocount ();
   SC3E (sc3_allocator_ref (eator));
@@ -120,7 +120,7 @@ sc3_error_args_destroy (sc3_error_args_t ** eap)
   sc3_error_args_t   *ea;
   sc3_allocator_t    *eator;
 
-  SC3A_INOUTP (eap, ea);
+  SC3E_INOUTP (eap, ea);
   SC3A_CHECK (ea->values != NULL);
   eator = ea->values->eator;
 
@@ -179,10 +179,10 @@ sc3_error_new (sc3_error_args_t ** eap, sc3_error_t ** ep)
   sc3_error_t        *e;
   sc3_allocator_t    *eator;
 
-  SC3A_INOUTP (eap, ea);
+  SC3E_INOUTP (eap, ea);
   SC3A_CHECK (!ea->used && ea->values != NULL);
   eator = ea->values->eator;
-  SC3A_RETVAL (ep, NULL);
+  SC3E_RETVAL (ep, NULL);
 
   e = ea->values;
   ea->values = NULL;
@@ -209,7 +209,7 @@ sc3_error_unref (sc3_error_t ** ep)
   int                 waslast;
   sc3_error_t        *e;
 
-  SC3A_INOUTP (ep, e);
+  SC3E_INOUTP (ep, e);
   if (!e->alloced) {
     /* It is our convention that non-alloced errors must not have a stack. */
     SC3A_CHECK (e->stack == NULL);

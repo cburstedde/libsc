@@ -56,7 +56,7 @@ sc3_allocator_args_new (sc3_allocator_t * oa, sc3_allocator_args_t ** aap)
 {
   sc3_allocator_args_t *aa;
 
-  SC3A_RETVAL (aap, NULL);
+  SC3E_RETVAL (aap, NULL);
 
   if (oa == NULL)
     oa = sc3_allocator_nocount ();
@@ -76,7 +76,7 @@ sc3_allocator_args_destroy (sc3_allocator_args_t ** aap)
   sc3_allocator_args_t *aa;
   sc3_allocator_t    *oa;
 
-  SC3A_INOUTP (aap, aa);
+  SC3E_INOUTP (aap, aa);
 
   oa = aa->oa;
   SC3E_ALLOCATOR_FREE (oa, sc3_allocator_args_t, aa);
@@ -107,8 +107,8 @@ sc3_allocator_new (sc3_allocator_args_t ** aap, sc3_allocator_t ** ap)
     SC3E (sc3_allocator_args_new (NULL, aap));
   }
   else
-    SC3A_INOUTP (aap, aa);
-  SC3A_RETVAL (ap, NULL);
+    SC3E_INOUTP (aap, aa);
+  SC3E_RETVAL (ap, NULL);
 
   SC3E_ALLOCATOR_MALLOC (aa->oa, sc3_allocator_t, 1, a);
   a->align = aa->align;
@@ -139,7 +139,7 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
   int                 waslast;
   sc3_allocator_t    *a, *oa;
 
-  SC3A_INOUTP (ap, a);
+  SC3E_INOUTP (ap, a);
   if (!a->alloced)
     return NULL;
 
@@ -172,7 +172,7 @@ sc3_allocator_strdup (sc3_allocator_t * a, const char *src, char **dest)
 
   SC3A_CHECK (a != NULL);
   SC3A_CHECK (src != NULL);
-  SC3A_RETVAL (dest, NULL);
+  SC3E_RETVAL (dest, NULL);
 
   /* TODO: use same allocation mechanism as allocator_malloc below */
 
@@ -212,7 +212,7 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
   char               *p;
 
   SC3A_CHECK (a != NULL);
-  SC3A_RETVAL (ptr, NULL);
+  SC3E_RETVAL (ptr, NULL);
 
   /* TODO: alloc bigger block and write align and debug info into beginning */
 

@@ -25,7 +25,7 @@
 static sc3_error_t *
 child_function (int a, int *result)
 {
-  SC3A_RETVAL (result, 0);
+  SC3E_RETVAL (result, 0);
   SC3A_CHECK (a < 50);
 
   *result = a + 1;
@@ -35,7 +35,7 @@ child_function (int a, int *result)
 static sc3_error_t *
 parent_function (int a, int *result)
 {
-  SC3A_RETVAL (result, 0);
+  SC3E_RETVAL (result, 0);
   SC3A_CHECK (a < 100);
   SC3E (child_function (a, result));
 
