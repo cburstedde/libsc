@@ -227,7 +227,7 @@ sc3_error_unref (sc3_error_t ** ep)
 int
 sc3_error_destroy (sc3_error_t ** ep)
 {
-  return ep != NULL && sc3_error_unref (ep) == NULL && *ep != NULL ? 0 : -1;
+  return ep != NULL && sc3_error_unref (ep) == NULL && *ep == NULL ? 0 : -1;
 }
 
 sc3_error_t        *
