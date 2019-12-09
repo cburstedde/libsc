@@ -23,42 +23,75 @@
 #include <sc3_error.h>
 
 static sc3_error_t *
-child_function (int a, int *retval)
+child_function (int a, int *result)
 {
-  SC3A_RETVAL (retval, 0);
+  SC3A_RETVAL (result, 0);
   SC3A_CHECK (a < 50);
 
-  *retval = a + 1;
+  *result = a + 1;
   return NULL;
 }
 
 static sc3_error_t *
-parent_function (int a, int *retval)
+parent_function (int a, int *result)
 {
-  SC3A_RETVAL (retval, 0);
+  SC3A_RETVAL (result, 0);
   SC3A_CHECK (a < 100);
-  SC3E (child_function (a, retval));
+  SC3E (child_function (a, result));
 
-  *retval *= 3;
+  *result *= 3;
+  return NULL;
+}
+
+static sc3_error_t *
+run (int input, int *result)
+{
+#if 0
+  sc3_allocator_t    *a;
+
+  SC3E (sc3_allocator_new (NULL, &a));
+#endif
+
+  SC3E (parent_function (input, result));
+
+  /* TODO: If we return before here, we will never destroy the allocator.
+     This is ok if we only expect fatal errors to occur. */
+
+#if 0
+  SC3E (sc3_allocator_destroy (&a));
+#endif
   return NULL;
 }
 
 int
 main (int argc, char **argv)
 {
-  int                 retval;
+  const int           inputs[3] = { 167, 84, 23 };
+  int                 input, i;
+  int                 result;
+  int                 num_fatal;
   sc3_error_t        *e;
-  sc3_allocator_t    *a;
 
-  /* TODO: on error return, unravel error stack and print messages */
-  /* a = sc3_allocator_new (); */
+  num_fatal = 0;
+  for (i = 0; i < 3; ++i) {
+    input = inputs[i];
+    e = run (input, &result);
+    if (e) {
+      printf ("Error return with input %d\n", input);
 
-  /* TODO: catch return values in main () */
+      if (sc3_error_is_fatal (e))
+        ++num_fatal;
 
-  e = parent_function (167, &retval);
-  if (e) {
-    sc3_error_destroy (&e);
+      /* TODO: unravel error stack and print messages */
+
+      if (sc3_error_destroy (&e))
+        ++num_fatal;
+    }
+    else {
+      printf ("Clean execution with input %d result %d\n", input, result);
+    }
   }
+  printf ("Fatal errors total %d\n", num_fatal);
 
-  return 0;
+  return EXIT_SUCCESS;
 }

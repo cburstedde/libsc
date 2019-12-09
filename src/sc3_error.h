@@ -40,18 +40,16 @@ extern              "C"
 #endif
 #endif
 
-/* TODO: what is our philosophy for SC3E?
-         Propagate errors always, only in debug, only when fatal? */
-/* TODO: what about return values of error_destroy? */
-/* TODO: Rename to SC3E_INOUTP, same for RETVAL, FNULLP ? */
-/* TODO: Remove FNULLP ? */
+/* TODO: Rename to SC3E_INOUTP, same for RETVAL ? */
 
 #ifndef SC_ENABLE_DEBUG
 #define SC3A_CHECK(x) do ; while (0)
 #define SC3A_STACK(f) do ; while (0)
 #define SC3E(f) do {                                                    \
   sc3_error_t *_e = (f);                                                \
-  if (_e != NULL) {                                                     \
+  if (sc3_error_is_fatal (_e)) {                                        \
+    return sc3_error_new_stack (_e, __FILE__, __LINE__, #f);            \
+  } else if (_e != NULL) {                                              \
     sc3_error_destroy (&_e);                                            \
   }} while (0)
 #else
@@ -82,10 +80,6 @@ extern              "C"
 #define SC3A_INOUTP(pp,p) do {                                          \
   SC3A_CHECK ((pp) != NULL && *(pp) != NULL);                           \
   (p) = *(pp);                                                          \
-  } while (0)
-#define SC3A_FNULLP(pp) do {                                            \
-  SC3A_CHECK ((pp) != NULL);                                            \
-  free (*(pp)); *(pp) = NULL;                                           \
   } while (0)
 
 typedef enum sc3_error_severity
@@ -142,8 +136,10 @@ sc3_error_t        *sc3_error_new (sc3_error_args_t ** ea, sc3_error_t ** ep);
 sc3_error_t        *sc3_error_ref (sc3_error_t * e);
 sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
 
-/** It is an error to destroy an error that is not allocated. */
-sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
+/** It is an error to destroy an error that is not allocated.
+ * \return          0 if input error object is cleanly deallocated, -1 otherwise.
+ */
+int                 sc3_error_destroy (sc3_error_t ** ep);
 
 sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,
                                        sc3_error_sync_t syn,

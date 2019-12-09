@@ -224,12 +224,10 @@ sc3_error_unref (sc3_error_t ** ep)
   return NULL;
 }
 
-sc3_error_t        *
+int
 sc3_error_destroy (sc3_error_t ** ep)
 {
-  SC3E (sc3_error_unref (ep));
-  SC3E_DEMAND (*ep == NULL);
-  return NULL;
+  return ep != NULL && sc3_error_unref (ep) == NULL && *ep != NULL ? 0 : -1;
 }
 
 sc3_error_t        *
