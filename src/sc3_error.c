@@ -43,6 +43,8 @@ struct sc3_error_args
   sc3_error_t        *values;
 };
 
+/* TODO: write functions to make bug and nom available */
+
 static sc3_error_t  bug =
   { {SC3_REFCOUNT_MAGIC, 1}, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
 "Inconsistency or bug", "", 0, 0, NULL, NULL
@@ -242,7 +244,7 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
   if (filename == NULL || errmsg == NULL)
     return &bug;
 
-  /* Any allocated allocator would have to be ref'd here */
+  /* Any allocated allocator would have to be ref'd here. */
   ea = sc3_allocator_nocount ();
   e = (sc3_error_t *) sc3_allocator_malloc_noerr (ea, sizeof (sc3_error_t));
   if (e == NULL)
@@ -272,7 +274,7 @@ sc3_error_new_stack (sc3_error_t * stack, const char *filename,
   if (filename == NULL || errmsg == NULL)
     return stack;
 
-  /* Any allocated allocator would have to be ref'd here */
+  /* Any allocated allocator would have to be ref'd here. */
   ea = sc3_allocator_nocount ();
   e = (sc3_error_t *) sc3_allocator_malloc_noerr (ea, sizeof (sc3_error_t));
   if (e == NULL) {

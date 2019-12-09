@@ -151,6 +151,7 @@ sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,
 
 /* TODO: new_fatal and new_stack always return consistent results.
          They must not lead to an infinite loop (e.g. when out of memory). */
+/* TODO: shall we pass an allocator parameter to new_fatal and new_stack? */
 
 sc3_error_t        *sc3_error_new_fatal (const char *filename,
                                          int line, const char *errmsg);
