@@ -74,6 +74,7 @@ extern              "C"
   if (!(x)) {                                                           \
     return sc3_error_new_fatal (__FILE__, __LINE__, #x);                \
   }} while (0)
+#define SC3E_NONNEG(r) SC3E_DEMAND ((r) >= 0)
 #define SC3A_RETVAL(r,v) do {                                           \
   SC3A_CHECK ((r) != NULL);                                             \
     *(r) = (v);                                                         \
@@ -143,7 +144,8 @@ sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,
                                        sc3_error_sync_t syn,
                                        const char *errmsg);
 
-/* TODO new_fatal and new_stack always return consistent results */
+/* TODO: new_fatal and new_stack always return consistent results.
+         They must not lead to an infinite loop (e.g. when out of memory). */
 
 sc3_error_t        *sc3_error_new_stack (sc3_error_t * stack,
                                          const char *filename,

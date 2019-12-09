@@ -28,9 +28,9 @@ struct sc3_error
   sc3_refcount_t      rc;
   sc3_error_severity_t sev;
   sc3_error_sync_t    syn;
-  char               *filename;
+  char                errmsg[SC3_BUFLEN];
+  char                filename[SC3_BUFLEN];
   int                 line;
-  char               *errmsg;
   sc3_error_t        *stack;
   sc3_allocator_t    *eator;
 };
@@ -59,9 +59,9 @@ sc3_error_args_new (sc3_allocator_t * eator, sc3_error_args_t ** eap)
   SC3E (sc3_refcount_init_invalid (&v->rc));
   v->sev = SC3_ERROR_FATAL;
   v->syn = SC3_ERROR_LOCAL;
-  v->filename = NULL;
+  SC3_BUFINIT (v->errmsg);
+  SC3_BUFINIT (v->filename);
   v->line = 0;
-  v->errmsg = NULL;
   v->stack = NULL;
   v->eator = eator;
   ea->values = v;
@@ -78,8 +78,6 @@ sc3_error_unalloc (sc3_error_t * e)
   SC3A_CHECK (e != NULL);
   eator = e->eator;
 
-  SC3E_ALLOCATOR_FREE (eator, char, e->filename);
-  SC3E_ALLOCATOR_FREE (eator, char, e->errmsg);
   if (e->stack != NULL)
     SC3E (sc3_error_unref (&e->stack));
 
@@ -132,11 +130,7 @@ sc3_error_args_set_msg (sc3_error_args_t * ea, const char *errmsg)
   SC3A_CHECK (ea != NULL);
   SC3A_CHECK (!ea->used && ea->values != NULL);
 
-  if (ea->values->errmsg != NULL)
-    SC3E (sc3_allocator_free (ea->values->eator, &ea->values->errmsg));
-  SC3E (sc3_allocator_strdup
-        (ea->values->eator, errmsg, &ea->values->errmsg));
-
+  SC3E_NONNEG (snprintf (ea->values->errmsg, SC3_BUFLEN, "%s", errmsg));
   return NULL;
 }
 
@@ -238,7 +232,6 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
 
   /* TODO: avoid infinite loop when out of memory */
   SC3E (sc3_error_args_new (NULL, &ea));
-
 
   return NULL;
 }

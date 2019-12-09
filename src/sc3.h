@@ -32,6 +32,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define SC3_BUFLEN 160
+#define SC3_BUFINIT(b) do { memset (b, 0, SC3_BUFLEN); } while (0)
+
 #define SC3_ISPOWOF2(a) ((a) > 0 && ((a) & ((a) - 1)) == 0)
 
 #define SC3_STRDUP(src) (strdup (src))
