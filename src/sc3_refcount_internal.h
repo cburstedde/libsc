@@ -37,7 +37,7 @@ extern              "C"
 #endif
 
 int                 sc3_refcount_is_valid (sc3_refcount_t * r);
-sc3_error_t        *sc3_refcount_init_invalid (sc3_refcount_t * r);
+void                sc3_refcount_init_invalid (sc3_refcount_t * r);
 
 #ifdef __cplusplus
 #if 0

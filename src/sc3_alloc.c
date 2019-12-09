@@ -102,7 +102,12 @@ sc3_allocator_new (sc3_allocator_args_t ** aap, sc3_allocator_t ** ap)
   sc3_allocator_args_t *aa;
   sc3_allocator_t    *a;
 
-  SC3A_INOUTP (aap, aa);
+  if (aap == NULL) {
+    aap = &aa;
+    SC3E (sc3_allocator_args_new (NULL, aap));
+  }
+  else
+    SC3A_INOUTP (aap, aa);
   SC3A_RETVAL (ap, NULL);
 
   SC3E_ALLOCATOR_MALLOC (aa->oa, sc3_allocator_t, 1, a);
@@ -110,7 +115,7 @@ sc3_allocator_new (sc3_allocator_args_t ** aap, sc3_allocator_t ** ap)
   a->alloced = 1;
   a->counting = 1;
   a->num_malloc = a->num_calloc = a->num_free = 0;
-  sc3_refcount_init (&a->rc);
+  SC3E (sc3_refcount_init (&a->rc));
   a->oa = aa->oa;
   SC3E (sc3_allocator_ref (a->oa));
 

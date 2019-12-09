@@ -79,7 +79,7 @@ sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
 sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
 
 sc3_error_t        *sc3_allocator_strdup (sc3_allocator_t * a,
-                                          const char * src, char ** dest);
+                                          const char *src, char **dest);
 sc3_error_t        *sc3_allocator_malloc (sc3_allocator_t * a, size_t size,
                                           void **ptr);
 sc3_error_t        *sc3_allocator_calloc (sc3_allocator_t * a,

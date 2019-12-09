@@ -28,14 +28,13 @@ sc3_refcount_is_valid (sc3_refcount_t * r)
   return r != NULL && r->magic == SC3_REFCOUNT_MAGIC && r->rc >= 1;
 }
 
-sc3_error_t        *
+void
 sc3_refcount_init_invalid (sc3_refcount_t * r)
 {
-  SC3A_CHECK (r != NULL);
-
-  r->magic = 0;
-  r->rc = 0;
-  return NULL;
+  if (r != NULL) {
+    r->magic = 0;
+    r->rc = 0;
+  }
 }
 
 sc3_error_t        *

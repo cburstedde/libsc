@@ -64,7 +64,7 @@ static void
 sc3_error_defaults (sc3_error_t * e,
                     sc3_error_t * stack, sc3_allocator_t * eator)
 {
-  (void) sc3_refcount_init_invalid (&e->rc);
+  sc3_refcount_init (&e->rc);
   e->sev = SC3_ERROR_FATAL;
   e->syn = SC3_ERROR_LOCAL;
   SC3_BUFINIT (e->errmsg);
@@ -187,7 +187,6 @@ sc3_error_new (sc3_error_args_t ** eap, sc3_error_t ** ep)
   e = ea->values;
   ea->values = NULL;
   ea->used = 1;
-  sc3_refcount_init (&e->rc);
   SC3E (sc3_allocator_ref (eator));
 
   SC3E (sc3_error_args_destroy (eap));
