@@ -141,6 +141,8 @@ sc3_error_t        *sc3_error_args_set_msgf (sc3_error_args_t * ea,
 sc3_error_t        *sc3_error_new (sc3_error_args_t ** ea, sc3_error_t ** ep);
 sc3_error_t        *sc3_error_ref (sc3_error_t * e);
 sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
+
+/** It is an error to destroy an error that is not allocated. */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 
 sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,

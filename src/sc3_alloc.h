@@ -74,6 +74,8 @@ sc3_error_t        *sc3_allocator_new (sc3_allocator_args_t ** aap,
                                        sc3_allocator_t ** ap);
 sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
+
+/** It is an error to destroy an allocator that is not allocated. */
 sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
 
 sc3_error_t        *sc3_allocator_strdup (sc3_allocator_t * a,

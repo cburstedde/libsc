@@ -55,6 +55,7 @@ static sc3_error_t  nom =
 
 /** Initialize members of an error object.
  * This function is used internally.
+ * It references neither stack nor eator.
  * We do not want it to call any error recursion, thus it uses no assertions.
  */
 static void
@@ -169,8 +170,6 @@ void                sc3_error_args_set_msgf (sc3_error_args_t * ea,
   __attribute__ ((format (printf, 2, 3)));
 #endif
 
-/* TODO write error_new and make it ref allocator */
-
 sc3_error_t        *
 sc3_error_new (sc3_error_args_t ** eap, sc3_error_t ** ep)
 {
@@ -243,6 +242,7 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
   if (filename == NULL || errmsg == NULL)
     return &bug;
 
+  /* Any allocated allocator would have to be ref'd here */
   ea = sc3_allocator_nocount ();
   e = (sc3_error_t *) sc3_allocator_malloc_noerr (ea, sizeof (sc3_error_t));
   if (e == NULL)
@@ -272,12 +272,13 @@ sc3_error_new_stack (sc3_error_t * stack, const char *filename,
   if (filename == NULL || errmsg == NULL)
     return stack;
 
+  /* Any allocated allocator would have to be ref'd here */
   ea = sc3_allocator_nocount ();
   e = (sc3_error_t *) sc3_allocator_malloc_noerr (ea, sizeof (sc3_error_t));
   if (e == NULL) {
     return stack;
   }
-  sc3_error_defaults (e, stack, NULL);
+  sc3_error_defaults (e, stack, ea);
 
   SC3_BUFCOPY (e->errmsg, errmsg);
   SC3_BUFCOPY (e->filename, filename);
