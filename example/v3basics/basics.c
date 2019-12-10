@@ -89,8 +89,7 @@ main (int argc, char **argv)
       for (j = 0; e != NULL; num_fatal += sc3_error_pop (&e) ? 1 : 0, ++j) {
         sc3_error_get_location (e, &filename, &line);
         sc3_error_get_message (e, &errmsg);
-        printf ("Error stack level %d from %s:%d message %s\n",
-                j, filename, line, errmsg);
+        printf ("Error stack %d:%s:%d: %s\n", j, filename, line, errmsg);
       }
     }
     else {

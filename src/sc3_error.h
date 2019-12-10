@@ -48,7 +48,7 @@ extern              "C"
   if (sc3_error_is_fatal (_e)) {                                        \
     return sc3_error_new_stack (_e, __FILE__, __LINE__, #f);            \
   } else if (_e != NULL) {                                              \
-    sc3_error_destroy (&_e);                                            \
+    (void) sc3_error_destroy (&_e);                                     \
   }} while (0)
 #else
 #define SC3A_CHECK(x) do {                                              \
