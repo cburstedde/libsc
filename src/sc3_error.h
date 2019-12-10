@@ -155,18 +155,14 @@ sc3_error_t        *sc3_error_new_stack (sc3_error_t * stack,
 
 /*** TODO need a bunch of _get_ and/or _is_ functions ***/
 
-/* TODO: escalate error by stacking input to output */
+/** Return true if e is not NULL and has severity SC3_ERROR_FATAL. */
 int                 sc3_error_is_fatal (sc3_error_t * e);
 
-/* TODO: Choose simplicity over export/release and error checking? */
+/* TODO: Choose simplicity over export/release and error checking. */
 void                sc3_error_get_location (sc3_error_t * e,
                                             const char **filename, int *line);
 void                sc3_error_get_message (sc3_error_t * e,
                                            const char **errmsg);
-void                sc3_error_get_stack (sc3_error_t * e,
-                                         sc3_error_t ** stack);
-
-/* TODO alternative: Return a stack iterator that refs the error object. */
 
 #ifdef __cplusplus
 #if 0

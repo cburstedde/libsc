@@ -321,27 +321,15 @@ sc3_error_is_fatal (sc3_error_t * e)
 void
 sc3_error_get_location (sc3_error_t * e, const char **filename, int *line)
 {
-  if (e != NULL) {
-    if (filename != NULL)
-      *filename = e->filename;
-    if (line != NULL)
-      *line = e->line;
-  }
+  if (filename != NULL)
+    *filename = e != NULL && e->filename != NULL ? e->filename : "";
+  if (line != NULL)
+    *line = e != NULL ? e->line : 0;
 }
 
 void
 sc3_error_get_message (sc3_error_t * e, const char **errmsg)
 {
-  if (e != NULL) {
-    if (errmsg != NULL)
-      *errmsg = e->errmsg;
-  }
-}
-
-void
-sc3_error_get_stack (sc3_error_t * e, sc3_error_t ** stack)
-{
-  if (e != NULL)
-    if (stack != NULL)
-      *stack = e->stack;
+  if (errmsg != NULL)
+    *errmsg = e != NULL && e->errmsg != NULL ? e->errmsg : "";
 }

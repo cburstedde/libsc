@@ -67,9 +67,12 @@ int
 main (int argc, char **argv)
 {
   const int           inputs[3] = { 167, 84, 23 };
-  int                 input, i;
+  int                 input;
   int                 result;
   int                 num_fatal;
+  int                 line;
+  int                 i, j;
+  const char         *filename, *errmsg;
   sc3_error_t        *e;
 
   num_fatal = 0;
@@ -82,10 +85,13 @@ main (int argc, char **argv)
       if (sc3_error_is_fatal (e))
         ++num_fatal;
 
-      /* TODO: unravel error stack and print messages */
-
-      if (sc3_error_destroy (&e))
-        ++num_fatal;
+      /* unravel error stack and print messages */
+      for (j = 0; e != NULL; num_fatal += sc3_error_pop (&e) ? 1 : 0, ++j) {
+        sc3_error_get_location (e, &filename, &line);
+        sc3_error_get_message (e, &errmsg);
+        printf ("Error stack level %d from %s:%d message %s\n",
+                j, filename, line, errmsg);
+      }
     }
     else {
       printf ("Clean execution with input %d result %d\n", input, result);
