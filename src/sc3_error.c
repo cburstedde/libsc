@@ -227,7 +227,31 @@ sc3_error_unref (sc3_error_t ** ep)
 int
 sc3_error_destroy (sc3_error_t ** ep)
 {
-  return ep != NULL && sc3_error_unref (ep) == NULL && *ep == NULL ? 0 : -1;
+  if (ep == NULL || sc3_error_unref (ep) != NULL) {
+    return -1;
+  }
+  if (*ep != NULL) {
+    *ep = NULL;
+    return -1;
+  }
+  return 0;
+}
+
+int
+sc3_error_pop (sc3_error_t ** ep)
+{
+  sc3_error_t        *stack;
+
+  if (ep == NULL || *ep == NULL) {
+    return -1;
+  }
+  if ((stack = (*ep)->stack) != NULL) {
+    (*ep)->stack = NULL;
+  }
+  (void) sc3_error_destroy (ep);
+
+  *ep = stack;
+  return 0;
 }
 
 sc3_error_t        *

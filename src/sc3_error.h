@@ -134,6 +134,7 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
  * \return          0 if input error object is cleanly deallocated, -1 otherwise.
  */
 int                 sc3_error_destroy (sc3_error_t ** ep);
+int                 sc3_error_pop (sc3_error_t ** ep);
 
 /* TODO: Should we pass an allocator? */
 sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,
