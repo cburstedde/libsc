@@ -22,6 +22,28 @@
 
 #include <sc3_error.h>
 
+static int
+unravel_error (sc3_error_t ** e)
+{
+  int                 j;
+  int                 num_weird;
+  int                 line;
+  const char         *filename, *errmsg;
+
+  if (e == NULL || *e == NULL) {
+    return 1;
+  }
+
+  num_weird = 0;
+  for (j = 0; *e != NULL; num_weird += sc3_error_pop (e) ? 1 : 0, ++j) {
+    sc3_error_get_location (*e, &filename, &line);
+    sc3_error_get_message (*e, &errmsg);
+    printf ("Error stack %d:%s:%d: %s\n", j, filename, line, errmsg);
+  }
+
+  return num_weird;
+}
+
 static sc3_error_t *
 child_function (int a, int *result)
 {
@@ -44,22 +66,68 @@ parent_function (int a, int *result)
 }
 
 static sc3_error_t *
-run (int input, int *result)
+io_error (sc3_allocator_t * a, const char *errmsg)
 {
-#if 0
+  sc3_error_args_t   *ea;
+  sc3_error_t        *e;
+
+  SC3E (sc3_error_args_new (a, &ea));
+  SC3E (sc3_error_args_set_msg (ea, errmsg));
+  SC3E (sc3_error_args_set_severity (ea, SC3_ERROR_RUNTIME));
+  SC3E (sc3_error_new (&ea, &e));
+
+  return e;
+}
+
+static sc3_error_t *
+run_io (sc3_allocator_t * a, int result)
+{
+  FILE               *file;
+
+  if ((file = fopen ("sc3_basics_run_io.txt", "wb")) == NULL) {
+    return io_error (a, "File open failed");
+  }
+  if (fprintf (file, "Hello world from sc3_basics %d\n", result) < 0) {
+    (void) fclose (file);
+    return io_error (a, "File fprintf failed");
+  }
+  if (fclose (file)) {
+    return io_error (a, "File close failed");
+  }
+
+  return NULL;
+}
+
+static sc3_error_t *
+run_prog (int input, int *result, int *num_io)
+{
   sc3_allocator_t    *a;
+  sc3_error_t        *e;
 
-  SC3E (sc3_allocator_new (NULL, &a));
-#endif
-
+  /* Test assertions */
   SC3E (parent_function (input, result));
+  SC3A_CHECK (num_io != NULL);
 
-  /* TODO: If we return before here, we will never destroy the allocator.
+  /* Make allocator for this context block */
+  SC3E (sc3_allocator_new (NULL, &a));
+
+  /* Test file input/output and recoverable errors */
+  if ((e = run_io (a, *result)) != NULL) {
+    SC3E_DEMAND (!sc3_error_is_fatal (e));
+
+    /* do something with the runtime error */
+    unravel_error (&e);
+    ++*num_io;
+
+    /* TODO instead return a suitable error to the outside */
+  }
+
+  /*  If we return before here, we will never destroy the allocator.
      This is ok if we only expect fatal errors to occur. */
 
-#if 0
+  /* The allocator is now done.
+     Must not pass any allocated objects to the outside of this function. */
   SC3E (sc3_allocator_destroy (&a));
-#endif
   return NULL;
 }
 
@@ -69,16 +137,14 @@ main (int argc, char **argv)
   const int           inputs[3] = { 167, 84, 23 };
   int                 input;
   int                 result;
-  int                 num_fatal;
-  int                 line;
-  int                 i, j;
-  const char         *filename, *errmsg;
+  int                 num_fatal, num_weird, num_io;
+  int                 i;
   sc3_error_t        *e;
 
-  num_fatal = 0;
+  num_fatal = num_weird = num_io = 0;
   for (i = 0; i < 3; ++i) {
     input = inputs[i];
-    e = run (input, &result);
+    e = run_prog (input, &result, &num_io);
     if (e) {
       printf ("Error return with input %d\n", input);
 
@@ -86,17 +152,13 @@ main (int argc, char **argv)
         ++num_fatal;
 
       /* unravel error stack and print messages */
-      for (j = 0; e != NULL; num_fatal += sc3_error_pop (&e) ? 1 : 0, ++j) {
-        sc3_error_get_location (e, &filename, &line);
-        sc3_error_get_message (e, &errmsg);
-        printf ("Error stack %d:%s:%d: %s\n", j, filename, line, errmsg);
-      }
+      num_weird += unravel_error (&e);
     }
     else {
       printf ("Clean execution with input %d result %d\n", input, result);
     }
   }
-  printf ("Fatal errors total %d\n", num_fatal);
+  printf ("Fatal errors %d weird %d IO %d\n", num_fatal, num_weird, num_io);
 
   return EXIT_SUCCESS;
 }
