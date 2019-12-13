@@ -103,17 +103,20 @@ run_io (sc3_allocator_t * a, int result)
 }
 
 static sc3_error_t *
-run_prog (int input, int *result, int *num_io)
+run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
 {
-  sc3_allocator_t    *a;
   sc3_error_t        *e;
+  sc3_error_args_t   *ea;
+  sc3_allocator_t    *a;
+  sc3_allocator_args_t *aa;
 
   /* Test assertions */
   SC3E (parent_function (input, result));
   SC3A_CHECK (num_io != NULL);
 
   /* Make allocator for this context block */
-  SC3E (sc3_allocator_new (NULL, &a));
+  SC3E (sc3_allocator_args_new (origa, &aa));
+  SC3E (sc3_allocator_new (&aa, &a));
 
   /* Test file input/output and recoverable errors */
   if ((e = run_io (a, *result)) != NULL) {
@@ -123,16 +126,26 @@ run_prog (int input, int *result, int *num_io)
     unravel_error (&e);
     ++*num_io;
 
-    /* TODO instead return a suitable error to the outside */
+    /* return a suitable error to the outside */
+    SC3E (sc3_error_args_new (origa, &ea));
+    SC3E (sc3_error_args_set_location (ea, __FILE__, __LINE__));
+    SC3E (sc3_error_args_set_msg (ea, "Encountered I/O error"));
+    SC3E (sc3_error_args_set_severity (ea, SC3_ERROR_RUNTIME));
+    SC3E (sc3_error_new (&ea, &e));
+
+    /* The alternative is to stack the error form run_io into a new one.
+       Then we would have to change below to sc3_allocator_unref. */
   }
 
-  /*  If we return before here, we will never destroy the allocator.
+  /* If we return before here, we will never destroy the allocator.
      This is ok if we only expect fatal errors to occur. */
 
   /* The allocator is now done.
      Must not pass any allocated objects to the outside of this function. */
   SC3E (sc3_allocator_destroy (&a));
-  return NULL;
+
+  /* Make sure not to mess with this error variable in between */
+  return e;
 }
 
 static int
@@ -176,7 +189,7 @@ main (int argc, char **argv)
 
   for (i = 0; i < 3; ++i) {
     input = inputs[i];
-    e = run_prog (input, &result, &num_io);
+    e = run_prog (a, input, &result, &num_io);
     if (!main_error_check (&e, &num_fatal, &num_weird)) {
       printf ("Clean execution with input %d result %d\n", input, result);
     }
