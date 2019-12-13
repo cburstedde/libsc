@@ -135,6 +135,24 @@ run_prog (int input, int *result, int *num_io)
   return NULL;
 }
 
+static int
+main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
+{
+  if (num_fatal == NULL || num_weird == NULL) {
+    return -1;
+  }
+
+  if (ep != NULL && *ep != NULL) {
+    if (sc3_error_is_fatal (*ep))
+      ++ * num_fatal;
+
+    /* unravel error stack and print messages */
+    *num_weird += unravel_error (ep);
+    return -1;
+  }
+  return 0;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -144,24 +162,30 @@ main (int argc, char **argv)
   int                 num_fatal, num_weird, num_io;
   int                 i;
   sc3_error_t        *e;
+  sc3_allocator_t    *a;
+  sc3_allocator_args_t *aa;
 
   num_fatal = num_weird = num_io = 0;
+
+  if ((e = sc3_allocator_args_new (NULL, &aa)) == NULL) {
+    e = sc3_allocator_new (&aa, &a);
+  }
+  if (main_error_check (&e, &num_fatal, &num_weird)) {
+    goto main_end;
+  }
+
   for (i = 0; i < 3; ++i) {
     input = inputs[i];
     e = run_prog (input, &result, &num_io);
-    if (e) {
-      printf ("Error return with input %d\n", input);
-
-      if (sc3_error_is_fatal (e))
-        ++num_fatal;
-
-      /* unravel error stack and print messages */
-      num_weird += unravel_error (&e);
-    }
-    else {
+    if (!main_error_check (&e, &num_fatal, &num_weird)) {
       printf ("Clean execution with input %d result %d\n", input, result);
     }
   }
+
+  e = sc3_allocator_destroy (&a);
+  (void) main_error_check (&e, &num_fatal, &num_weird);
+
+main_end:
   printf ("Fatal errors %d weird %d IO %d\n", num_fatal, num_weird, num_io);
 
   return EXIT_SUCCESS;
