@@ -124,10 +124,9 @@ sc3_error_args_destroy (sc3_error_args_t ** eap)
   SC3A_CHECK (ea->values != NULL);
   eator = ea->values->eator;
 
-  if (!ea->used)
+  if (!ea->used) {
     SC3E (sc3_error_unalloc (ea->values));
-  else
-    SC3A_CHECK (ea->values == NULL);
+  }
 
   SC3E_ALLOCATOR_FREE (eator, sc3_error_args_t, ea);
   *eap = NULL;
@@ -176,21 +175,17 @@ sc3_error_t        *
 sc3_error_new (sc3_error_args_t ** eap, sc3_error_t ** ep)
 {
   sc3_error_args_t   *ea;
-  sc3_error_t        *e;
   sc3_allocator_t    *eator;
 
   SC3E_INOUTP (eap, ea);
   SC3A_CHECK (!ea->used && ea->values != NULL);
-  eator = ea->values->eator;
-  SC3E_RETVAL (ep, NULL);
 
-  e = ea->values;
-  ea->values = NULL;
   ea->used = 1;
+  eator = ea->values->eator;
   SC3E (sc3_allocator_ref (eator));
+  SC3E_RETVAL (ep, ea->values);
 
   SC3E (sc3_error_args_destroy (eap));
-  *ep = e;
   return NULL;
 }
 

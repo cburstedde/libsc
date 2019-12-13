@@ -71,6 +71,9 @@ extern              "C"
     return sc3_error_new_fatal (__FILE__, __LINE__, #x);                \
   }} while (0)
 #define SC3E_NONNEG(r) SC3E_DEMAND ((r) >= 0)
+#define SC3E_UNREACH() do {                                             \
+  return sc3_error_new_fatal (__FILE__, __LINE__, "Unreachable code");  \
+  } while (0)
 #define SC3E_RETVAL(r,v) do {                                           \
   SC3A_CHECK ((r) != NULL);                                             \
     *(r) = (v);                                                         \
