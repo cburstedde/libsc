@@ -116,9 +116,9 @@ sc3_error_t        *sc3_error_args_set_stack (sc3_error_args_t * ea,
                                               sc3_error_t * stack);
 sc3_error_t        *sc3_error_args_set_msg (sc3_error_args_t * ea,
                                             const char *errmsg);
-#if 0
-void                sc3_error_args_set_severity (sc3_error_args_t * ea,
+sc3_error_t        *sc3_error_args_set_severity (sc3_error_args_t * ea,
                                                  sc3_error_severity_t sev);
+#if 0
 void                sc3_error_args_set_sync (sc3_error_args_t * ea,
                                              sc3_error_sync_t syn);
 void                sc3_error_args_set_file (sc3_error_args_t * ea,
