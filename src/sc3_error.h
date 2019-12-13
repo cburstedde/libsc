@@ -114,6 +114,9 @@ sc3_error_t        *sc3_error_args_destroy (sc3_error_args_t ** eap);
  */
 sc3_error_t        *sc3_error_args_set_stack (sc3_error_args_t * ea,
                                               sc3_error_t * stack);
+sc3_error_t        *sc3_error_args_set_location (sc3_error_args_t * ea,
+                                                 const char *filename,
+                                                 int line);
 sc3_error_t        *sc3_error_args_set_msg (sc3_error_args_t * ea,
                                             const char *errmsg);
 sc3_error_t        *sc3_error_args_set_severity (sc3_error_args_t * ea,
@@ -121,9 +124,6 @@ sc3_error_t        *sc3_error_args_set_severity (sc3_error_args_t * ea,
 #if 0
 void                sc3_error_args_set_sync (sc3_error_args_t * ea,
                                              sc3_error_sync_t syn);
-void                sc3_error_args_set_file (sc3_error_args_t * ea,
-                                             const char *filename);
-void                sc3_error_args_set_line (sc3_error_args_t * ea, int line);
 sc3_error_t        *sc3_error_args_set_msgf (sc3_error_args_t * ea,
                                              const char *errfmt, ...)
   __attribute__ ((format (printf, 2, 3)));

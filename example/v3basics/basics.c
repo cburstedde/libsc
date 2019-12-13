@@ -66,12 +66,14 @@ parent_function (int a, int *result)
 }
 
 static sc3_error_t *
-io_error (sc3_allocator_t * a, const char *errmsg)
+io_error (sc3_allocator_t * a,
+          const char *filename, int line, const char *errmsg)
 {
   sc3_error_args_t   *ea;
   sc3_error_t        *e;
 
   SC3E (sc3_error_args_new (a, &ea));
+  SC3E (sc3_error_args_set_location (ea, filename, line));
   SC3E (sc3_error_args_set_msg (ea, errmsg));
   SC3E (sc3_error_args_set_severity (ea, SC3_ERROR_RUNTIME));
   SC3E (sc3_error_new (&ea, &e));
@@ -79,20 +81,22 @@ io_error (sc3_allocator_t * a, const char *errmsg)
   return e;
 }
 
+#define SC3_BASICS_IO_ERROR(a,m) (io_error (a, __FILE__, __LINE__, m))
+
 static sc3_error_t *
 run_io (sc3_allocator_t * a, int result)
 {
   FILE               *file;
 
   if ((file = fopen ("sc3_basics_run_io.txt", "wb")) == NULL) {
-    return io_error (a, "File open failed");
+    return SC3_BASICS_IO_ERROR (a, "File open failed");
   }
   if (fprintf (file, "Hello world from sc3_basics %d\n", result) < 0) {
     (void) fclose (file);
-    return io_error (a, "File fprintf failed");
+    return SC3_BASICS_IO_ERROR (a, "File fprintf failed");
   }
   if (fclose (file)) {
-    return io_error (a, "File close failed");
+    return SC3_BASICS_IO_ERROR (a, "File close failed");
   }
 
   return NULL;

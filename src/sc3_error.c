@@ -149,10 +149,25 @@ sc3_error_args_set_stack (sc3_error_args_t * ea, sc3_error_t * stack)
 }
 
 sc3_error_t        *
+sc3_error_args_set_location (sc3_error_args_t * ea,
+                             const char *filename, int line)
+{
+  SC3A_CHECK (ea != NULL);
+  SC3A_CHECK (!ea->used && ea->values != NULL);
+  SC3A_CHECK (filename != NULL);
+
+  SC3_BUFCOPY (ea->values->filename, filename);
+  ea->values->line = line;
+  return NULL;
+
+}
+
+sc3_error_t        *
 sc3_error_args_set_msg (sc3_error_args_t * ea, const char *errmsg)
 {
   SC3A_CHECK (ea != NULL);
   SC3A_CHECK (!ea->used && ea->values != NULL);
+  SC3A_CHECK (errmsg != NULL);
 
   SC3_BUFCOPY (ea->values->errmsg, errmsg);
   return NULL;
