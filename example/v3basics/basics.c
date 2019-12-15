@@ -22,6 +22,10 @@
 
 #include <sc3_error.h>
 
+#if 0
+#define SC3_BASICS_DEALLOCATE
+#endif
+
 static int
 unravel_error (sc3_error_t ** e)
 {
@@ -121,28 +125,41 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
   /* Test file input/output and recoverable errors */
   if ((e = run_io (a, *result)) != NULL) {
     SC3E_DEMAND (!sc3_error_is_fatal (e));
-
-    /* do something with the runtime error */
-    unravel_error (&e);
     ++*num_io;
 
-    /* return a suitable error to the outside */
+#ifdef SC3_BASICS_DEALLOCATE
+    /* do something with the runtime error */
+    unravel_error (&e);
+
+    /* return a new error to the outside */
     SC3E (sc3_error_args_new (origa, &ea));
     SC3E (sc3_error_args_set_location (ea, __FILE__, __LINE__));
     SC3E (sc3_error_args_set_msg (ea, "Encountered I/O error"));
     SC3E (sc3_error_args_set_severity (ea, SC3_ERROR_RUNTIME));
     SC3E (sc3_error_new (&ea, &e));
-
-    /* The alternative is to stack the error form run_io into a new one.
-       Then we would have to change below to sc3_allocator_unref. */
+#else
+    /* return the original error to the outside */
+    SC3E (sc3_error_args_new (origa, &ea));
+    SC3E (sc3_error_args_set_location (ea, __FILE__, __LINE__));
+    SC3E (sc3_error_args_set_msg (ea, "Encountered I/O error"));
+    SC3E (sc3_error_args_set_severity (ea, SC3_ERROR_RUNTIME));
+    SC3E (sc3_error_args_set_stack (ea, e));
+    SC3E (sc3_error_new (&ea, &e));
+#endif
   }
 
   /* If we return before here, we will never destroy the allocator.
-     This is ok if we only expect fatal errors to occur. */
+     This is ok if we only do this on fatal errors. */
 
+#ifdef SC3_BASICS_DEALLOCATE
   /* The allocator is now done.
      Must not pass any allocated objects to the outside of this function. */
   SC3E (sc3_allocator_destroy (&a));
+#else
+  /* We allow allocated objects to be passed to the outside.
+     These carry references to this allocator beyond this scope. */
+  SC3E (sc3_allocator_unref (&a));
+#endif
 
   /* Make sure not to mess with this error variable in between */
   return e;
