@@ -132,6 +132,8 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
     unravel_error (&e);
 
     /* return a new error to the outside */
+    /* TODO: this will not be practicable.
+     * origa must not be used since it may be shared between threads. */
     SC3E (sc3_error_args_new (origa, &ea));
     SC3E (sc3_error_args_set_location (ea, __FILE__, __LINE__));
     SC3E (sc3_error_args_set_message (ea, "Encountered I/O error"));
@@ -139,7 +141,7 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
     SC3E (sc3_error_new (&ea, &e));
 #else
     /* return the original error to the outside */
-    SC3E (sc3_error_args_new (origa, &ea));
+    SC3E (sc3_error_args_new (a, &ea));
     SC3E (sc3_error_args_set_location (ea, __FILE__, __LINE__));
     SC3E (sc3_error_args_set_message (ea, "Encountered I/O error"));
     SC3E (sc3_error_args_set_severity (ea, SC3_ERROR_RUNTIME));
