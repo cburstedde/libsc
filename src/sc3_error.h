@@ -40,16 +40,10 @@ extern              "C"
 #endif
 #endif
 
+/*** DEBUG macros do nothing unless configured with --enable-debug. ***/
 #ifndef SC_ENABLE_DEBUG
 #define SC3A_CHECK(x) do ; while (0)
 #define SC3A_STACK(f) do ; while (0)
-#define SC3E(f) do {                                                    \
-  sc3_error_t *_e = (f);                                                \
-  if (sc3_error_is_fatal (_e)) {                                        \
-    return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
-  } else if (_e != NULL) {                                              \
-    (void) sc3_error_destroy (&_e);                                     \
-  }} while (0)
 #else
 #define SC3A_CHECK(x) do {                                              \
   if (!(x)) {                                                           \
@@ -60,12 +54,14 @@ extern              "C"
   if (_e != NULL) {                                                     \
     return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
   }} while (0)
+#endif
+
+/*** ERROR macros.  They are always active and create fatal errors. ***/
 #define SC3E(f) do {                                                    \
   sc3_error_t *_e = (f);                                                \
   if (_e != NULL) {                                                     \
     return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
   }} while (0)
-#endif
 #define SC3E_DEMAND(x) do {                                             \
   if (!(x)) {                                                           \
     return sc3_error_new_fatal (__FILE__, __LINE__, #x);                \
@@ -81,6 +77,17 @@ extern              "C"
 #define SC3E_INOUTP(pp,p) do {                                          \
   SC3A_CHECK ((pp) != NULL && *(pp) != NULL);                           \
   (p) = *(pp);                                                          \
+  } while (0)
+
+/*** ERROR macros.  Do not call return and inherit the severity. ***/
+#define SC3E_SET(e,f) do {                                              \
+  sc3_error_t *_e = (f);                                                \
+  if (_e != NULL) {                                                     \
+    (e) = sc3_error_new_inherit (&_e, __FILE__, __LINE__, #f);          \
+  } else { (e) = NULL; }                                                \
+  } while (0)
+#define SC3E_NULL_SET(e,f) do {                                         \
+  if ((e) == NULL) SC3E_SET(e,f);                                       \
   } while (0)
 
 typedef enum sc3_error_severity
@@ -144,17 +151,24 @@ sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,
                                        sc3_error_sync_t syn,
                                        const char *errmsg);
 
-/* TODO: new_fatal and new_stack always return consistent results.
+/* TODO: new_fatal, new_stack, new_inherit always return consistent results.
          They must not lead to an infinite loop (e.g. when out of memory). */
 /* TODO: shall we pass an allocator parameter to new_fatal and new_stack? */
 
 sc3_error_t        *sc3_error_new_fatal (const char *filename,
                                          int line, const char *errmsg);
 
-/** Takes owership of stack (i.e. does not ref it and NULLs the pointer) */
+/** Takes owership of stack (i.e. does not ref it and NULLs the pointer).
+ * The new error severity is set to SC3_ERROR_FATAL. */
 sc3_error_t        *sc3_error_new_stack (sc3_error_t ** stack,
                                          const char *filename,
                                          int line, const char *errmsg);
+
+/** Takes owership of stack (i.e. does not ref it and NULLs the pointer).
+ * The new error inherits the severity of the old. */
+sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** stack,
+                                           const char *filename,
+                                           int line, const char *errmsg);
 
 /*** TODO need a bunch of _get_ and/or _is_ functions ***/
 

@@ -151,6 +151,9 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
   /* If we return before here, we will never destroy the allocator.
      This is ok if we only do this on fatal errors. */
 
+  /* TODO: If e is set and we return a new fatal error, we will never
+     report on e, even if e is inderectly responsible for the error. */
+
 #ifdef SC3_BASICS_DEALLOCATE
   /* The allocator is now done.
      Must not pass any allocated objects to the outside of this function. */
@@ -197,22 +200,21 @@ main (int argc, char **argv)
 
   num_fatal = num_weird = num_io = 0;
 
-  if ((e = sc3_allocator_args_new (NULL, &aa)) == NULL) {
-    e = sc3_allocator_new (&aa, &a);
-  }
+  SC3E_SET (e, sc3_allocator_args_new (NULL, &aa));
+  SC3E_NULL_SET (e, sc3_allocator_new (&aa, &a));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
     goto main_end;
   }
 
   for (i = 0; i < 3; ++i) {
     input = inputs[i];
-    e = run_prog (a, input, &result, &num_io);
+    SC3E_SET (e, run_prog (a, input, &result, &num_io));
     if (!main_error_check (&e, &num_fatal, &num_weird)) {
       printf ("Clean execution with input %d result %d\n", input, result);
     }
   }
 
-  e = sc3_allocator_destroy (&a);
+  SC3E_SET (e, sc3_allocator_destroy (&a));
   (void) main_error_check (&e, &num_fatal, &num_weird);
 
 main_end:

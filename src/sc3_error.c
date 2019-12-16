@@ -61,8 +61,8 @@ static sc3_error_t  nom =
  * We do not want it to call any error recursion, thus it uses no assertions.
  */
 static void
-sc3_error_defaults (sc3_error_t * e,
-                    sc3_error_t * stack, sc3_allocator_t * eator)
+sc3_error_defaults (sc3_error_t * e, sc3_error_t * stack, int inherit,
+                    sc3_allocator_t * eator)
 {
   sc3_refcount_init (&e->rc);
   e->sev = SC3_ERROR_FATAL;
@@ -72,6 +72,9 @@ sc3_error_defaults (sc3_error_t * e,
   e->line = 0;
   e->alloced = 1;
   e->stack = stack;
+  if (inherit && stack != NULL) {
+    e->sev = stack->sev;
+  }
   e->eator = eator;
 }
 
@@ -90,7 +93,7 @@ sc3_error_args_new (sc3_allocator_t * eator, sc3_error_args_t ** eap)
   ea->used = 0;
 
   SC3E_ALLOCATOR_MALLOC (eator, sc3_error_t, 1, v);
-  sc3_error_defaults (v, NULL, eator);
+  sc3_error_defaults (v, NULL, 0, eator);
   ea->values = v;
 
   *eap = ea;
@@ -291,7 +294,7 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
   e = (sc3_error_t *) sc3_allocator_malloc_noerr (ea, sizeof (sc3_error_t));
   if (e == NULL)
     return &nom;
-  sc3_error_defaults (e, NULL, ea);
+  sc3_error_defaults (e, NULL, 0, ea);
 
   SC3_BUFCOPY (e->errmsg, errmsg);
   SC3_BUFCOPY (e->filename, filename);
@@ -302,9 +305,10 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
 }
 
 /** This function takes over one reference to stack. */
-sc3_error_t        *
-sc3_error_new_stack (sc3_error_t ** pstack, const char *filename,
-                     int line, const char *errmsg)
+static sc3_error_t *
+sc3_error_new_stack_inherit (sc3_error_t ** pstack, int inherit,
+                             const char *filename, int line,
+                             const char *errmsg)
 {
   sc3_error_t        *stack, *e;
   sc3_allocator_t    *ea;
@@ -329,7 +333,7 @@ sc3_error_new_stack (sc3_error_t ** pstack, const char *filename,
   if (e == NULL) {
     return stack;
   }
-  sc3_error_defaults (e, stack, ea);
+  sc3_error_defaults (e, stack, inherit, ea);
 
   SC3_BUFCOPY (e->errmsg, errmsg);
   SC3_BUFCOPY (e->filename, filename);
@@ -337,6 +341,20 @@ sc3_error_new_stack (sc3_error_t ** pstack, const char *filename,
 
   /* This function returns the new error object and has no error code. */
   return e;
+}
+
+sc3_error_t        *
+sc3_error_new_stack (sc3_error_t ** pstack,
+                     const char *filename, int line, const char *errmsg)
+{
+  return sc3_error_new_stack_inherit (pstack, 0, filename, line, errmsg);
+}
+
+sc3_error_t        *
+sc3_error_new_inherit (sc3_error_t ** pstack,
+                       const char *filename, int line, const char *errmsg)
+{
+  return sc3_error_new_stack_inherit (pstack, 1, filename, line, errmsg);
 }
 
 int
