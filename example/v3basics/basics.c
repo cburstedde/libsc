@@ -78,7 +78,7 @@ io_error (sc3_allocator_t * a,
 
   SC3E (sc3_error_args_new (a, &ea));
   SC3E (sc3_error_args_set_location (ea, filename, line));
-  SC3E (sc3_error_args_set_msg (ea, errmsg));
+  SC3E (sc3_error_args_set_message (ea, errmsg));
   SC3E (sc3_error_args_set_severity (ea, SC3_ERROR_RUNTIME));
   SC3E (sc3_error_new (&ea, &e));
 
@@ -134,14 +134,14 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
     /* return a new error to the outside */
     SC3E (sc3_error_args_new (origa, &ea));
     SC3E (sc3_error_args_set_location (ea, __FILE__, __LINE__));
-    SC3E (sc3_error_args_set_msg (ea, "Encountered I/O error"));
+    SC3E (sc3_error_args_set_message (ea, "Encountered I/O error"));
     SC3E (sc3_error_args_set_severity (ea, SC3_ERROR_RUNTIME));
     SC3E (sc3_error_new (&ea, &e));
 #else
     /* return the original error to the outside */
     SC3E (sc3_error_args_new (origa, &ea));
     SC3E (sc3_error_args_set_location (ea, __FILE__, __LINE__));
-    SC3E (sc3_error_args_set_msg (ea, "Encountered I/O error"));
+    SC3E (sc3_error_args_set_message (ea, "Encountered I/O error"));
     SC3E (sc3_error_args_set_severity (ea, SC3_ERROR_RUNTIME));
     SC3E (sc3_error_args_set_stack (ea, &e));
     SC3E (sc3_error_new (&ea, &e));

@@ -165,7 +165,7 @@ sc3_error_args_set_location (sc3_error_args_t * ea,
 }
 
 sc3_error_t        *
-sc3_error_args_set_msg (sc3_error_args_t * ea, const char *errmsg)
+sc3_error_args_set_message (sc3_error_args_t * ea, const char *errmsg)
 {
   SC3A_CHECK (ea != NULL);
   SC3A_CHECK (!ea->used && ea->values != NULL);
@@ -349,15 +349,26 @@ sc3_error_is_fatal (sc3_error_t * e)
 void
 sc3_error_get_location (sc3_error_t * e, const char **filename, int *line)
 {
-  if (filename != NULL)
+  if (filename != NULL) {
     *filename = e != NULL && e->filename != NULL ? e->filename : "";
-  if (line != NULL)
+  }
+  if (line != NULL) {
     *line = e != NULL ? e->line : 0;
+  }
 }
 
 void
 sc3_error_get_message (sc3_error_t * e, const char **errmsg)
 {
-  if (errmsg != NULL)
+  if (errmsg != NULL) {
     *errmsg = e != NULL && e->errmsg != NULL ? e->errmsg : "";
+  }
+}
+
+void
+sc3_error_get_severity (sc3_error_t * e, sc3_error_severity_t * sev)
+{
+  if (sev != NULL) {
+    *sev = e != NULL ? e->sev : SC3_ERROR_FATAL;
+  }
 }
