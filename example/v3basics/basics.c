@@ -143,7 +143,7 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
     SC3E (sc3_error_args_set_location (ea, __FILE__, __LINE__));
     SC3E (sc3_error_args_set_msg (ea, "Encountered I/O error"));
     SC3E (sc3_error_args_set_severity (ea, SC3_ERROR_RUNTIME));
-    SC3E (sc3_error_args_set_stack (ea, e));
+    SC3E (sc3_error_args_set_stack (ea, &e));
     SC3E (sc3_error_new (&ea, &e));
 #endif
   }

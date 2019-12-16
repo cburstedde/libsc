@@ -46,7 +46,7 @@ extern              "C"
 #define SC3E(f) do {                                                    \
   sc3_error_t *_e = (f);                                                \
   if (sc3_error_is_fatal (_e)) {                                        \
-    return sc3_error_new_stack (_e, __FILE__, __LINE__, #f);            \
+    return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
   } else if (_e != NULL) {                                              \
     (void) sc3_error_destroy (&_e);                                     \
   }} while (0)
@@ -58,12 +58,12 @@ extern              "C"
 #define SC3A_STACK(f) do {                                              \
   sc3_error_t *_e = (f);                                                \
   if (_e != NULL) {                                                     \
-    return sc3_error_new_stack (_e, __FILE__, __LINE__, #f);            \
+    return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
   }} while (0)
 #define SC3E(f) do {                                                    \
   sc3_error_t *_e = (f);                                                \
   if (_e != NULL) {                                                     \
-    return sc3_error_new_stack (_e, __FILE__, __LINE__, #f);            \
+    return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
   }} while (0)
 #endif
 #define SC3E_DEMAND(x) do {                                             \
@@ -109,11 +109,11 @@ sc3_error_t        *sc3_error_args_new (sc3_allocator_t * eator,
                                         sc3_error_args_t ** eap);
 sc3_error_t        *sc3_error_args_destroy (sc3_error_args_t ** eap);
 
-/** Takes ownership of stack (i.e. does not ref it).
+/** Takes ownership of stack (i.e. does not ref it), stack is NULLed.
  * If called multiple times, the stack passed earlier is unref'd.
  */
 sc3_error_t        *sc3_error_args_set_stack (sc3_error_args_t * ea,
-                                              sc3_error_t * stack);
+                                              sc3_error_t ** stack);
 sc3_error_t        *sc3_error_args_set_location (sc3_error_args_t * ea,
                                                  const char *filename,
                                                  int line);
@@ -151,8 +151,8 @@ sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,
 sc3_error_t        *sc3_error_new_fatal (const char *filename,
                                          int line, const char *errmsg);
 
-/** Takes owership of stack (i.e. does not ref it) */
-sc3_error_t        *sc3_error_new_stack (sc3_error_t * stack,
+/** Takes owership of stack (i.e. does not ref it and NULLs the pointer) */
+sc3_error_t        *sc3_error_new_stack (sc3_error_t ** stack,
                                          const char *filename,
                                          int line, const char *errmsg);
 

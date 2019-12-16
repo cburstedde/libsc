@@ -136,14 +136,16 @@ sc3_error_args_destroy (sc3_error_args_t ** eap)
 }
 
 sc3_error_t        *
-sc3_error_args_set_stack (sc3_error_args_t * ea, sc3_error_t * stack)
+sc3_error_args_set_stack (sc3_error_args_t * ea, sc3_error_t ** pstack)
 {
   SC3A_CHECK (ea != NULL);
   SC3A_CHECK (!ea->used && ea->values != NULL);
+  SC3A_CHECK (pstack != NULL);
 
   if (ea->values->stack != NULL)
     SC3E (sc3_error_unref (&ea->values->stack));
-  ea->values->stack = stack;
+  ea->values->stack = *pstack;
+  *pstack = NULL;
 
   return NULL;
 }
@@ -301,18 +303,25 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
 
 /** This function takes over one reference to stack. */
 sc3_error_t        *
-sc3_error_new_stack (sc3_error_t * stack, const char *filename,
+sc3_error_new_stack (sc3_error_t ** pstack, const char *filename,
                      int line, const char *errmsg)
 {
-  sc3_error_t        *e;
+  sc3_error_t        *stack, *e;
   sc3_allocator_t    *ea;
 
   /* Avoid infinite loop when out of memory. */
 
-  if (stack == NULL || !sc3_refcount_is_valid (&stack->rc))
+  if (pstack == NULL) {
     return &bug;
-  if (filename == NULL || errmsg == NULL)
+  }
+  stack = *pstack;
+  if (stack == NULL || !sc3_refcount_is_valid (&stack->rc)) {
+    return &bug;
+  }
+  *pstack = NULL;
+  if (filename == NULL || errmsg == NULL) {
     return stack;
+  }
 
   /* Any allocated allocator would have to be ref'd here. */
   ea = sc3_allocator_nocount ();
