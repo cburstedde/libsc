@@ -21,6 +21,7 @@
 */
 
 #include <sc3_error.h>
+#include <sc3_openmp.h>
 
 #if 0
 #define SC3_BASICS_DEALLOCATE
@@ -188,6 +189,22 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
   return 0;
 }
 
+static void
+openmp_info (void)
+{
+  int                 tmax = sc3_openmp_get_max_threads ();
+
+  printf ("Max threads %d\n", tmax);
+
+#pragma omp parallel
+  {
+    int                 tnum = sc3_openmp_get_num_threads ();
+    int                 tid = sc3_openmp_get_thread_num ();
+
+    printf ("Thread %d out of %d\n", tid, tnum);
+  }
+}
+
 int
 main (int argc, char **argv)
 {
@@ -201,6 +218,8 @@ main (int argc, char **argv)
   sc3_allocator_args_t *aa;
 
   num_fatal = num_weird = num_io = 0;
+
+  openmp_info ();
 
   SC3E_SET (e, sc3_allocator_args_new (NULL, &aa));
   SC3E_NULL_SET (e, sc3_allocator_new (&aa, &a));
