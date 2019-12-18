@@ -193,16 +193,28 @@ static void
 openmp_info (void)
 {
   int                 tmax = sc3_openmp_get_max_threads ();
+  int                 minid, maxid, tcount;
 
   printf ("Max threads %d\n", tmax);
 
-#pragma omp parallel
+  minid = tmax;
+  maxid = -1;
+  tcount = 0;
+
+#pragma omp parallel reduction (min: minid) \
+                     reduction (max: maxid) \
+                     reduction (+: tcount)
   {
     int                 tnum = sc3_openmp_get_num_threads ();
     int                 tid = sc3_openmp_get_thread_num ();
 
     printf ("Thread %d out of %d\n", tid, tnum);
+
+    SC3_MIN (minid, tid);
+    SC3_MAX (maxid, tid);
+    ++tcount;
   }
+  printf ("Reductions min %d max %d count %d\n", minid, maxid, tcount);
 }
 
 int
