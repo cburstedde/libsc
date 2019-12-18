@@ -189,7 +189,7 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
   return 0;
 }
 
-static void
+static sc3_error_t *
 openmp_info (void)
 {
   int                 tmax = sc3_openmp_get_max_threads ();
@@ -215,6 +215,9 @@ openmp_info (void)
     ++tcount;
   }
   printf ("Reductions min %d max %d count %d\n", minid, maxid, tcount);
+
+  SC3E_DEMAND (0 <= minid && minid <= maxid && maxid < tmax);
+  return NULL;
 }
 
 int
@@ -231,12 +234,15 @@ main (int argc, char **argv)
 
   num_fatal = num_weird = num_io = 0;
 
-  openmp_info ();
-
   SC3E_SET (e, sc3_allocator_args_new (NULL, &aa));
   SC3E_NULL_SET (e, sc3_allocator_new (&aa, &a));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
     goto main_end;
+  }
+
+  SC3E_SET (e, openmp_info ());
+  if (!main_error_check (&e, &num_fatal, &num_weird)) {
+    printf ("OpenMP code ok\n");
   }
 
   for (i = 0; i < 3; ++i) {
