@@ -75,7 +75,7 @@ echo "o---------------------------------------"
 echo "| Checking headers"
 echo "o---------------------------------------"
 
-AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h sys/types.h time.h])
+AC_CHECK_HEADERS([execinfo.h libgen.h signal.h sys/time.h sys/types.h time.h])
 AC_CHECK_HEADERS([lua.h lua5.1/lua.h lua5.2/lua.h lua5.3/lua.h])
 
 echo "o---------------------------------------"
@@ -83,6 +83,7 @@ echo "| Checking functions"
 echo "o---------------------------------------"
 
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
+AC_CHECK_FUNCS([basename dirname])
 AC_CHECK_FUNCS([strtol strtoll])
 AC_CHECK_FUNCS([fsync])
 

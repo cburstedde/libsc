@@ -21,8 +21,16 @@
 */
 
 #include <sc3.h>
+#ifdef SC_HAVE_LIBGEN_H
+#include <libgen.h>
+#endif
 
-void
-sc3_dummy (void)
+char               *
+sc3_basename (char *path)
 {
+#ifndef SC_HAVE_BASENAME
+  return path;
+#else
+  return basename (path);
+#endif
 }

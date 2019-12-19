@@ -57,7 +57,7 @@ extern              "C"
 #endif
 #endif
 
-void                sc3_dummy (void);
+char               *sc3_basename (char *path);
 
 #ifdef __cplusplus
 #if 0
