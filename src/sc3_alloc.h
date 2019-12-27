@@ -26,7 +26,7 @@
 #ifndef SC3_ALLOC_H
 #define SC3_ALLOC_H
 
-#include <sc3.h>
+#include <sc3_base.h>
 
 typedef struct sc3_allocator sc3_allocator_t;
 

@@ -20,11 +20,11 @@
   02110-1301, USA.
 */
 
-/** \file sc3.h
+/** \file sc3_base.h
  */
 
-#ifndef SC3_H
-#define SC3_H
+#ifndef SC3_BASE_H
+#define SC3_BASE_H
 
 #include <sc3_config.h>
 
@@ -66,4 +66,4 @@ char               *sc3_basename (char *path);
 }
 #endif
 
-#endif /* !SC3_H */
+#endif /* !SC3_BASE_H */

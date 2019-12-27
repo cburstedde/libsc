@@ -26,7 +26,7 @@
 #ifndef SC3_OPENMP_H
 #define SC3_OPENMP_H
 
-#include <sc3.h>
+#include <sc3_base.h>
 
 #ifdef __cplusplus
 extern              "C"

@@ -20,7 +20,7 @@
   02110-1301, USA.
 */
 
-#include <sc3.h>
+#include <sc3_base.h>
 #ifdef SC_HAVE_LIBGEN_H
 #include <libgen.h>
 #endif

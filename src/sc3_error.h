@@ -26,7 +26,7 @@
 #ifndef SC3_ERROR_H
 #define SC3_ERROR_H
 
-#include <sc3.h>
+#include <sc3_base.h>
 
 typedef struct sc3_error sc3_error_t;
 
