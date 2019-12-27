@@ -67,8 +67,8 @@ sc3_error_defaults (sc3_error_t * e, sc3_error_t * stack, int inherit,
   sc3_refcount_init (&e->rc);
   e->sev = SC3_ERROR_FATAL;
   e->syn = SC3_ERROR_LOCAL;
-  SC3_BUFINIT (e->errmsg);
-  SC3_BUFINIT (e->filename);
+  SC3_BUFZERO (e->errmsg);
+  SC3_BUFZERO (e->filename);
   e->line = 0;
   e->alloced = 1;
   e->stack = stack;
