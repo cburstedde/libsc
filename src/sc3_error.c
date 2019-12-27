@@ -29,8 +29,8 @@ struct sc3_error
   sc3_refcount_t      rc;
   sc3_error_severity_t sev;
   sc3_error_sync_t    syn;
-  char                errmsg[SC3_BUFLEN];
-  char                filename[SC3_BUFLEN];
+  char                errmsg[SC3_BUFSIZE];
+  char                filename[SC3_BUFSIZE];
   int                 line;
   int                 alloced;
   sc3_error_t        *stack;

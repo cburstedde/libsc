@@ -42,8 +42,8 @@ extern              "C"
 
 /*** DEBUG macros do nothing unless configured with --enable-debug. ***/
 #ifndef SC_ENABLE_DEBUG
-#define SC3A_CHECK(x) do ; while (0)
-#define SC3A_STACK(f) do ; while (0)
+#define SC3A_CHECK(x) do { ; } while (0)
+#define SC3A_STACK(f) do { ; } while (0)
 #else
 #define SC3A_CHECK(x) do {                                              \
   if (!(x)) {                                                           \
@@ -67,8 +67,10 @@ extern              "C"
     return sc3_error_new_fatal (__FILE__, __LINE__, #x);                \
   }} while (0)
 #define SC3E_NONNEG(r) SC3E_DEMAND ((r) >= 0)
-#define SC3E_UNREACH() do {                                             \
-  return sc3_error_new_fatal (__FILE__, __LINE__, "Unreachable code");  \
+#define SC3E_UNREACH(s) do {                                            \
+  char _errmsg[SC3_BUFSIZE];                                            \
+  (void) snprintf (_errmsg, SC3_BUFSIZE, "Unreachable: %s", s);         \
+  return sc3_error_new_fatal (__FILE__, __LINE__, _errmsg);             \
   } while (0)
 #define SC3E_RETVAL(r,v) do {                                           \
   SC3A_CHECK ((r) != NULL);                                             \

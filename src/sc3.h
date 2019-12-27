@@ -32,10 +32,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SC3_BUFLEN 160
-#define SC3_BUFINIT(b) do { memset (b, 0, SC3_BUFLEN); } while (0)
+#define SC3_BUFSIZE 160
+#define SC3_BUFINIT(b) do { memset (b, 0, SC3_BUFSIZE); } while (0)
 #define SC3_BUFCOPY(b,s) \
-          do { (void) snprintf (b, SC3_BUFLEN, "%s", s); } while (0)
+          do { (void) snprintf (b, SC3_BUFSIZE, "%s", s); } while (0)
 
 #define SC3_ISPOWOF2(a) ((a) > 0 && ((a) & ((a) - 1)) == 0)
 
