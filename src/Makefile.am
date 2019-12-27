@@ -16,7 +16,8 @@ libsc_installed_headers = src/sc_config.h \
         src/sc_getopt.h src/sc_obstack.h src/sc_lua.h src/sc_polynom.h \
         src/sc_keyvalue.h src/sc_refcount.h src/sc_warp.h src/sc_shmem.h \
         src/sc_allgather.h src/sc_reduce.h src/sc_notify.h \
-        src/sc3_base.h src/sc3_alloc.h src/sc3_error.h src/sc3_refcount.h \
+        src/sc3_base.h src/sc3_alloc.h src/sc3_alloc_internal.h \
+        src/sc3_error.h src/sc3_refcount.h src/sc3_refcount_internal.h \
         src/sc3_openmp.h src/sc3_mpi.h
 libsc_internal_headers =
 libsc_compiled_sources = \
