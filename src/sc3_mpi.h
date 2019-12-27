@@ -30,6 +30,7 @@
 
 #ifndef SC_ENABLE_MPI
 
+typedef struct sc3_MPI_Errhandler *sc3_MPI_Errhandler_t;
 typedef struct sc3_MPI_Comm *sc3_MPI_Comm_t;
 typedef enum sc3_MPI_Datatype
 {
@@ -48,12 +49,21 @@ typedef enum sc3_MPI_Op
 }
 sc3_MPI_Op_t;
 
+#define sc3_MPI_ERRORS_RETURN NULL
+#define sc3_MPI_COMM_WORLD NULL
+#define sc3_MPI_COMM_SELF NULL
+
 #else
 #include <mpi.h>
 
+typedef MPI_Errhandler sc3_MPI_Errhandler_t;
 typedef MPI_Comm    sc3_MPI_Comm_t;
 typedef MPI_Datatype sc3_MPI_Datatype_t;
 typedef MPI_Op      sc3_MPI_Op_t;
+
+#define sc3_MPI_ERRORS_RETURN MPI_ERRORS_RETURN
+#define sc3_MPI_COMM_WORLD MPI_COMM_WORLD
+#define sc3_MPI_COMM_SELF MPI_COMM_SELF
 
 #endif /* SC_ENABLE_MPI */
 
@@ -65,8 +75,14 @@ extern              "C"
 #endif
 #endif
 
+sc3_error_t        *sc3_MPI_Init (int *argc, char ***argv);
+sc3_error_t        *sc3_MPI_Finalize (void);
+
+sc3_error_t        *sc3_MPI_Comm_set_errhandler (sc3_MPI_Comm_t comm,
+                                                 sc3_MPI_Errhandler_t errh);
 sc3_error_t        *sc3_MPI_Comm_size (sc3_MPI_Comm_t comm, int *size);
 sc3_error_t        *sc3_MPI_Comm_rank (sc3_MPI_Comm_t comm, int *rank);
+
 sc3_error_t        *sc3_MPI_Allgather (const void *sendbuf, int sendcount,
                                        sc3_MPI_Datatype_t sendtype,
                                        void *recvbuf, int recvcount,

@@ -52,6 +52,33 @@ sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t * size)
 #endif /* !SC_ENABLE_MPI */
 
 sc3_error_t        *
+sc3_MPI_Init (int *argc, char ***argv)
+{
+#ifdef SC_ENABLE_MPI
+  SC3E_DEMAND (MPI_Init (argc, argv) == MPI_SUCCESS);
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_MPI_Finalize (void)
+{
+#ifdef SC_ENABLE_MPI
+  SC3E_DEMAND (MPI_Finalize () == MPI_SUCCESS);
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_MPI_Comm_set_errhandler (sc3_MPI_Comm_t comm, sc3_MPI_Errhandler_t errh)
+{
+#ifdef SC_ENABLE_MPI
+  SC3E_DEMAND (MPI_Comm_set_errhandler (comm, errh) == MPI_SUCCESS);
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_MPI_Comm_size (sc3_MPI_Comm_t comm, int *size)
 {
   SC3A_CHECK (size != NULL);
