@@ -61,6 +61,16 @@ typedef MPI_Comm    sc3_MPI_Comm_t;
 typedef MPI_Datatype sc3_MPI_Datatype_t;
 typedef MPI_Op      sc3_MPI_Op_t;
 
+#define sc3_MPI_BYTE MPI_BYTE
+#define sc3_MPI_INT MPI_INT
+#define sc3_MPI_LONG MPI_LONG
+#define sc3_MPI_FLOAT MPI_FLOAT
+#define sc3_MPI_DOUBLE MPI_DOUBLE
+
+#define sc3_MPI_MIN MPI_MIN
+#define sc3_MPI_MAX MPI_MAX
+#define sc3_MPI_SUM MPI_SUM
+
 #define sc3_MPI_ERRORS_RETURN MPI_ERRORS_RETURN
 #define sc3_MPI_COMM_WORLD MPI_COMM_WORLD
 #define sc3_MPI_COMM_SELF MPI_COMM_SELF
