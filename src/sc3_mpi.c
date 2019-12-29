@@ -103,6 +103,27 @@ sc3_MPI_Comm_rank (sc3_MPI_Comm_t comm, int *rank)
 }
 
 sc3_error_t        *
+sc3_MPI_Comm_dup (sc3_MPI_Comm_t comm, sc3_MPI_Comm_t * newcomm)
+{
+  SC3A_CHECK (newcomm != NULL);
+#ifndef SC_ENABLE_MPI
+  *newcomm = comm;
+#else
+  SC3E_DEMAND (MPI_Comm_dup (comm, newcomm) == MPI_SUCCESS);
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm)
+{
+#ifdef SC_ENABLE_MPI
+  SC3E_DEMAND (MPI_Comm_free (comm) == MPI_SUCCESS);
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_MPI_Allgather (void *sendbuf, int sendcount, sc3_MPI_Datatype_t sendtype,
                    void *recvbuf, int recvcount, sc3_MPI_Datatype_t recvtype,
                    sc3_MPI_Comm_t comm)

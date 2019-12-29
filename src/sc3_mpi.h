@@ -82,6 +82,9 @@ sc3_error_t        *sc3_MPI_Comm_set_errhandler (sc3_MPI_Comm_t comm,
                                                  sc3_MPI_Errhandler_t errh);
 sc3_error_t        *sc3_MPI_Comm_size (sc3_MPI_Comm_t comm, int *size);
 sc3_error_t        *sc3_MPI_Comm_rank (sc3_MPI_Comm_t comm, int *rank);
+sc3_error_t        *sc3_MPI_Comm_dup (sc3_MPI_Comm_t comm,
+                                      sc3_MPI_Comm_t * newcomm);
+sc3_error_t        *sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm);
 
 sc3_error_t        *sc3_MPI_Allgather (void *sendbuf, int sendcount,
                                        sc3_MPI_Datatype_t sendtype,
