@@ -22,6 +22,7 @@
 
 #include <sc3_error.h>
 #include <sc3_openmp.h>
+#include <sc3_mpi.h>
 
 #if 0
 #define SC3_BASICS_DEALLOCATE
@@ -195,6 +196,23 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
 }
 
 static sc3_error_t *
+test_mpi (int *rank)
+{
+  sc3_MPI_Comm_t      mpicomm = sc3_MPI_COMM_WORLD;
+  int                 size;
+
+  SC3E (sc3_MPI_Comm_set_errhandler (mpicomm, sc3_MPI_ERRORS_RETURN));
+
+  SC3E (sc3_MPI_Comm_size (mpicomm, &size));
+  SC3E (sc3_MPI_Comm_rank (mpicomm, rank));
+
+  SC3E_DEMAND (0 <= *rank && *rank < size);
+  printf ("MPI rank %d out of %d\n", *rank, size);
+
+  return NULL;
+}
+
+static sc3_error_t *
 openmp_info (void)
 {
   int                 tmax = sc3_openmp_get_max_threads ();
@@ -229,6 +247,7 @@ int
 main (int argc, char **argv)
 {
   const int           inputs[3] = { 167, 84, 23 };
+  int                 mpirank;
   int                 input;
   int                 result;
   int                 num_fatal, num_weird, num_io;
@@ -239,10 +258,22 @@ main (int argc, char **argv)
 
   num_fatal = num_weird = num_io = 0;
 
+  SC3E_SET (e, sc3_MPI_Init (&argc, &argv));
+  if (main_error_check (&e, &num_fatal, &num_weird)) {
+    printf ("MPI_Init failed\n");
+    goto main_end;
+  }
+
   SC3E_SET (e, sc3_allocator_args_new (NULL, &aa));
   SC3E_NULL_SET (e, sc3_allocator_new (&aa, &a));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
+    printf ("Main allocator_new failed\n");
     goto main_end;
+  }
+
+  SC3E_SET (e, test_mpi (&mpirank));
+  if (!main_error_check (&e, &num_fatal, &num_weird)) {
+    printf ("MPI code ok\n");
   }
 
   SC3E_SET (e, openmp_info ());
@@ -259,7 +290,14 @@ main (int argc, char **argv)
   }
 
   SC3E_SET (e, sc3_allocator_destroy (&a));
-  (void) main_error_check (&e, &num_fatal, &num_weird);
+  if (main_error_check (&e, &num_fatal, &num_weird)) {
+    printf ("Main allocator destroy failed\n");
+  }
+
+  SC3E_SET (e, sc3_MPI_Finalize ());
+  if (main_error_check (&e, &num_fatal, &num_weird)) {
+    printf ("MPI_Finalize failed\n");
+  }
 
 main_end:
   printf ("Fatal errors %d weird %d IO %d\n", num_fatal, num_weird, num_io);
