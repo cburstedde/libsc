@@ -49,13 +49,28 @@ sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t * size)
   }
 }
 
-#endif /* !SC_ENABLE_MPI */
+#else /* SC_ENABLE_MPI */
+
+#define SC3E_MPI(f) do {                                                \
+  int _mpiret = (f);                                                    \
+  if (_mpiret != sc3_MPI_SUCCESS) {                                     \
+    char _errorstring[sc3_MPI_MAX_ERROR_STRING];                        \
+    int _errlen;                                                        \
+    int _mpiret2 = MPI_Error_string (_mpiret, _errorstring, &_errlen);  \
+    if (_mpiret2 != sc3_MPI_SUCCESS) {                                  \
+      (void) snprintf  (_errorstring, sc3_MPI_MAX_ERROR_STRING,         \
+                        "%s", "Unknown MPI error");                     \
+    }                                                                   \
+    return sc3_error_new_fatal (__FILE__, __LINE__, _errorstring);      \
+  }} while (0)
+
+#endif /* SC_ENABLE_MPI */
 
 sc3_error_t        *
 sc3_MPI_Init (int *argc, char ***argv)
 {
 #ifdef SC_ENABLE_MPI
-  SC3E_DEMAND (MPI_Init (argc, argv) == MPI_SUCCESS);
+  SC3E_MPI (MPI_Init (argc, argv));
 #endif
   return NULL;
 }
@@ -64,7 +79,7 @@ sc3_error_t        *
 sc3_MPI_Finalize (void)
 {
 #ifdef SC_ENABLE_MPI
-  SC3E_DEMAND (MPI_Finalize () == MPI_SUCCESS);
+  SC3E_MPI (MPI_Finalize ());
 #endif
   return NULL;
 }
@@ -73,7 +88,7 @@ sc3_error_t        *
 sc3_MPI_Comm_set_errhandler (sc3_MPI_Comm_t comm, sc3_MPI_Errhandler_t errh)
 {
 #ifdef SC_ENABLE_MPI
-  SC3E_DEMAND (MPI_Comm_set_errhandler (comm, errh) == MPI_SUCCESS);
+  SC3E_MPI (MPI_Comm_set_errhandler (comm, errh));
 #endif
   return NULL;
 }
@@ -85,7 +100,7 @@ sc3_MPI_Comm_size (sc3_MPI_Comm_t comm, int *size)
 #ifndef SC_ENABLE_MPI
   *size = 1;
 #else
-  SC3E_DEMAND (MPI_Comm_size (comm, size) == MPI_SUCCESS);
+  SC3E_MPI (MPI_Comm_size (comm, size));
 #endif
   return NULL;
 }
@@ -97,7 +112,7 @@ sc3_MPI_Comm_rank (sc3_MPI_Comm_t comm, int *rank)
 #ifndef SC_ENABLE_MPI
   *rank = 0;
 #else
-  SC3E_DEMAND (MPI_Comm_rank (comm, rank) == MPI_SUCCESS);
+  SC3E_MPI (MPI_Comm_rank (comm, rank));
 #endif
   return NULL;
 }
@@ -109,7 +124,7 @@ sc3_MPI_Comm_dup (sc3_MPI_Comm_t comm, sc3_MPI_Comm_t * newcomm)
 #ifndef SC_ENABLE_MPI
   *newcomm = comm;
 #else
-  SC3E_DEMAND (MPI_Comm_dup (comm, newcomm) == MPI_SUCCESS);
+  SC3E_MPI (MPI_Comm_dup (comm, newcomm));
 #endif
   return NULL;
 }
@@ -121,7 +136,7 @@ sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm)
 #ifndef SC_ENABLE_MPI
   *comm = sc3_MPI_COMM_NULL;
 #else
-  SC3E_DEMAND (MPI_Comm_free (comm) == MPI_SUCCESS);
+  SC3E_MPI (MPI_Comm_free (comm));
 #endif
   return NULL;
 }
@@ -147,9 +162,8 @@ sc3_MPI_Allgather (void *sendbuf, int sendcount, sc3_MPI_Datatype_t sendtype,
     (void) memmove (recvbuf, sendbuf, sendsize);
   }
 #else
-  SC3E_DEMAND (MPI_Allgather (sendbuf, sendcount, sendtype,
-                              recvbuf, recvcount, recvtype, comm) ==
-               MPI_SUCCESS);
+  SC3E_MPI (MPI_Allgather (sendbuf, sendcount, sendtype,
+                           recvbuf, recvcount, recvtype, comm));
 #endif
   return NULL;
 }
@@ -171,8 +185,7 @@ sc3_MPI_Allreduce (void *sendbuf, void *recvbuf, int count,
     (void) memmove (recvbuf, sendbuf, datasize);
   }
 #else
-  SC3E_DEMAND (MPI_Allreduce (sendbuf, recvbuf, count, datatype, op, comm) ==
-               MPI_SUCCESS);
+  SC3E_MPI (MPI_Allreduce (sendbuf, recvbuf, count, datatype, op, comm));
 #endif
   return NULL;
 }
