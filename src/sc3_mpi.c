@@ -117,7 +117,10 @@ sc3_MPI_Comm_dup (sc3_MPI_Comm_t comm, sc3_MPI_Comm_t * newcomm)
 sc3_error_t        *
 sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm)
 {
-#ifdef SC_ENABLE_MPI
+  SC3A_CHECK (comm != NULL);
+#ifndef SC_ENABLE_MPI
+  *comm = sc3_MPI_COMM_NULL;
+#else
   SC3E_DEMAND (MPI_Comm_free (comm) == MPI_SUCCESS);
 #endif
   return NULL;

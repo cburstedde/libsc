@@ -48,10 +48,18 @@ typedef enum sc3_MPI_Op
   sc3_MPI_SUM
 }
 sc3_MPI_Op_t;
+typedef enum sc3_MPI_Errorcode
+{
+  sc3_MPI_SUCCESS,
+  sc3_MPI_ERR_OTHER
+}
+sc3_MPI_Errorcode_t;
 
 #define sc3_MPI_ERRORS_RETURN NULL
 #define sc3_MPI_COMM_WORLD NULL
 #define sc3_MPI_COMM_SELF NULL
+#define sc3_MPI_COMM_NULL NULL
+#define sc3_MPI_MAX_ERROR_STRING SC3_BUFSIZE
 
 #else
 #include <mpi.h>
@@ -74,6 +82,11 @@ typedef MPI_Op      sc3_MPI_Op_t;
 #define sc3_MPI_ERRORS_RETURN MPI_ERRORS_RETURN
 #define sc3_MPI_COMM_WORLD MPI_COMM_WORLD
 #define sc3_MPI_COMM_SELF MPI_COMM_SELF
+#define sc3_MPI_COMM_NULL MPI_COMM_NULL
+
+#define sc3_MPI_MAX_ERROR_STRING MPI_MAX_ERROR_STRING
+#define sc3_MPI_SUCCESS MPI_SUCCESS
+#define sc3_MPI_ERR_OTHER MPI_ERR_OTHER
 
 #endif /* SC_ENABLE_MPI */
 
