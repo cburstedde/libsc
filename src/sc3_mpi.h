@@ -34,32 +34,32 @@ typedef struct sc3_MPI_Errhandler *sc3_MPI_Errhandler_t;
 typedef struct sc3_MPI_Comm *sc3_MPI_Comm_t;
 typedef enum sc3_MPI_Datatype
 {
-  sc3_MPI_BYTE,
-  sc3_MPI_INT,
-  sc3_MPI_LONG,
-  sc3_MPI_FLOAT,
-  sc3_MPI_DOUBLE
+  SC3_MPI_BYTE,
+  SC3_MPI_INT,
+  SC3_MPI_LONG,
+  SC3_MPI_FLOAT,
+  SC3_MPI_DOUBLE
 }
 sc3_MPI_Datatype_t;
 typedef enum sc3_MPI_Op
 {
-  sc3_MPI_MIN,
-  sc3_MPI_MAX,
-  sc3_MPI_SUM
+  SC3_MPI_MIN,
+  SC3_MPI_MAX,
+  SC3_MPI_SUM
 }
 sc3_MPI_Op_t;
 typedef enum sc3_MPI_Errorcode
 {
-  sc3_MPI_SUCCESS,
-  sc3_MPI_ERR_OTHER
+  SC3_MPI_SUCCESS,
+  SC3_MPI_ERR_OTHER
 }
 sc3_MPI_Errorcode_t;
 
-#define sc3_MPI_ERRORS_RETURN NULL
-#define sc3_MPI_COMM_WORLD NULL
-#define sc3_MPI_COMM_SELF NULL
-#define sc3_MPI_COMM_NULL NULL
-#define sc3_MPI_MAX_ERROR_STRING SC3_BUFSIZE
+#define SC3_MPI_ERRORS_RETURN NULL
+#define SC3_MPI_COMM_WORLD NULL
+#define SC3_MPI_COMM_SELF NULL
+#define SC3_MPI_COMM_NULL NULL
+#define SC3_MPI_MAX_ERROR_STRING SC3_BUFSIZE
 
 #else
 #include <mpi.h>
@@ -69,32 +69,32 @@ typedef MPI_Comm    sc3_MPI_Comm_t;
 typedef MPI_Datatype sc3_MPI_Datatype_t;
 typedef MPI_Op      sc3_MPI_Op_t;
 
-#define sc3_MPI_BYTE MPI_BYTE
-#define sc3_MPI_INT MPI_INT
-#define sc3_MPI_LONG MPI_LONG
-#define sc3_MPI_FLOAT MPI_FLOAT
-#define sc3_MPI_DOUBLE MPI_DOUBLE
+#define SC3_MPI_BYTE MPI_BYTE
+#define SC3_MPI_INT MPI_INT
+#define SC3_MPI_LONG MPI_LONG
+#define SC3_MPI_FLOAT MPI_FLOAT
+#define SC3_MPI_DOUBLE MPI_DOUBLE
 
-#define sc3_MPI_MIN MPI_MIN
-#define sc3_MPI_MAX MPI_MAX
-#define sc3_MPI_SUM MPI_SUM
+#define SC3_MPI_MIN MPI_MIN
+#define SC3_MPI_MAX MPI_MAX
+#define SC3_MPI_SUM MPI_SUM
 
-#define sc3_MPI_ERRORS_RETURN MPI_ERRORS_RETURN
-#define sc3_MPI_COMM_WORLD MPI_COMM_WORLD
-#define sc3_MPI_COMM_SELF MPI_COMM_SELF
-#define sc3_MPI_COMM_NULL MPI_COMM_NULL
+#define SC3_MPI_ERRORS_RETURN MPI_ERRORS_RETURN
+#define SC3_MPI_COMM_WORLD MPI_COMM_WORLD
+#define SC3_MPI_COMM_SELF MPI_COMM_SELF
+#define SC3_MPI_COMM_NULL MPI_COMM_NULL
 
-#define sc3_MPI_MAX_ERROR_STRING MPI_MAX_ERROR_STRING
-#define sc3_MPI_SUCCESS MPI_SUCCESS
-#define sc3_MPI_ERR_OTHER MPI_ERR_OTHER
+#define SC3_MPI_MAX_ERROR_STRING MPI_MAX_ERROR_STRING
+#define SC3_MPI_SUCCESS MPI_SUCCESS
+#define SC3_MPI_ERR_OTHER MPI_ERR_OTHER
 
 #endif /* SC_ENABLE_MPI */
 
 #define SC3E_MPI(f) do {                                                \
   int _mpiret = (f);                                                    \
-  if (_mpiret != sc3_MPI_SUCCESS) {                                     \
+  if (_mpiret != SC3_MPI_SUCCESS) {                                     \
     int _errlen;                                                        \
-    char _errstr[sc3_MPI_MAX_ERROR_STRING];                             \
+    char _errstr[SC3_MPI_MAX_ERROR_STRING];                             \
     char _errmsg[SC3_BUFSIZE];                                          \
     sc3_MPI_Error_string (_mpiret, _errstr, &_errlen);                  \
     (void) snprintf (_errmsg, SC3_BUFSIZE, "%s: %s", #f, _errstr);      \

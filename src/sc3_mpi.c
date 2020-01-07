@@ -29,19 +29,19 @@ sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t * size)
 {
   SC3A_CHECK (size != NULL);
   switch (datatype) {
-  case sc3_MPI_BYTE:
+  case SC3_MPI_BYTE:
     *size = 1;
     return NULL;
-  case sc3_MPI_INT:
+  case SC3_MPI_INT:
     *size = sizeof (int);
     return NULL;
-  case sc3_MPI_LONG:
+  case SC3_MPI_LONG:
     *size = sizeof (long);
     return NULL;
-  case sc3_MPI_FLOAT:
+  case SC3_MPI_FLOAT:
     *size = sizeof (float);
     return NULL;
-  case sc3_MPI_DOUBLE:
+  case SC3_MPI_DOUBLE:
     *size = sizeof (double);
     return NULL;
   default:
@@ -59,8 +59,8 @@ sc3_MPI_Error_class (int errorcode, int *errorclass)
     *errorclass = errorcode;
 #else
     int                 mpiret = MPI_Error_class (errorcode, errorclass);
-    if (mpiret != sc3_MPI_SUCCESS) {
-      *errorclass = sc3_MPI_ERR_OTHER;
+    if (mpiret != SC3_MPI_SUCCESS) {
+      *errorclass = SC3_MPI_ERR_OTHER;
     }
 #endif
   }
@@ -80,12 +80,12 @@ sc3_MPI_Error_string (int errorcode, char *errstr, int *errlen)
   }
 #ifdef SC_ENABLE_MPI
   errorcode = MPI_Error_string (errorcode, errstr, errlen);
-  if (errorcode != sc3_MPI_SUCCESS) {
+  if (errorcode != SC3_MPI_SUCCESS) {
 #endif
-    res = snprintf (errstr, sc3_MPI_MAX_ERROR_STRING, "MPI %s",
-                    errorcode == sc3_MPI_SUCCESS ? "Success" : "Error");
-    if (res >= sc3_MPI_MAX_ERROR_STRING) {
-      res = sc3_MPI_MAX_ERROR_STRING - 1;
+    res = snprintf (errstr, SC3_MPI_MAX_ERROR_STRING, "MPI %s",
+                    errorcode == SC3_MPI_SUCCESS ? "Success" : "Error");
+    if (res >= SC3_MPI_MAX_ERROR_STRING) {
+      res = SC3_MPI_MAX_ERROR_STRING - 1;
     }
     if (res <= 0) {
       *errstr = '\0';
@@ -166,7 +166,7 @@ sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm)
 {
   SC3A_CHECK (comm != NULL);
 #ifndef SC_ENABLE_MPI
-  *comm = sc3_MPI_COMM_NULL;
+  *comm = SC3_MPI_COMM_NULL;
 #else
   SC3E_MPI (MPI_Comm_free (comm));
 #endif

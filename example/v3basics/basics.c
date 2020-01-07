@@ -198,10 +198,10 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
 static sc3_error_t *
 test_mpi (int *rank)
 {
-  sc3_MPI_Comm_t      mpicomm = sc3_MPI_COMM_WORLD;
+  sc3_MPI_Comm_t      mpicomm = SC3_MPI_COMM_WORLD;
   int                 size;
 
-  SC3E (sc3_MPI_Comm_set_errhandler (mpicomm, sc3_MPI_ERRORS_RETURN));
+  SC3E (sc3_MPI_Comm_set_errhandler (mpicomm, SC3_MPI_ERRORS_RETURN));
 
   SC3E (sc3_MPI_Comm_size (mpicomm, &size));
   SC3E (sc3_MPI_Comm_rank (mpicomm, rank));
