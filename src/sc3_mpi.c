@@ -54,17 +54,60 @@ sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t * size)
 #define SC3E_MPI(f) do {                                                \
   int _mpiret = (f);                                                    \
   if (_mpiret != sc3_MPI_SUCCESS) {                                     \
-    char _errorstring[sc3_MPI_MAX_ERROR_STRING];                        \
     int _errlen;                                                        \
-    int _mpiret2 = MPI_Error_string (_mpiret, _errorstring, &_errlen);  \
-    if (_mpiret2 != sc3_MPI_SUCCESS) {                                  \
-      (void) snprintf  (_errorstring, sc3_MPI_MAX_ERROR_STRING,         \
-                        "%s", "Unknown MPI error");                     \
-    }                                                                   \
-    return sc3_error_new_fatal (__FILE__, __LINE__, _errorstring);      \
+    char _errstr[sc3_MPI_MAX_ERROR_STRING];                             \
+    sc3_MPI_Error_string (_mpiret, _errstr, &_errlen);                  \
+    return sc3_error_new_fatal (__FILE__, __LINE__, _errstr);           \
   }} while (0)
 
 #endif /* SC_ENABLE_MPI */
+
+void
+sc3_MPI_Error_class (int errorcode, int *errorclass)
+{
+  if (errorclass != NULL) {
+#ifndef SC_ENABLE_MPI
+    *errorclass = errorcode;
+#else
+    int                 mpiret = MPI_Error_class (errorcode, errorclass);
+    if (mpiret != sc3_MPI_SUCCESS) {
+      *errorclass = sc3_MPI_ERR_OTHER;
+    }
+#endif
+  }
+}
+
+void
+sc3_MPI_Error_string (int errorcode, char *errstr, int *errlen)
+{
+  int                 res;
+
+  if (errstr == NULL) {
+    return;
+  }
+  if (errlen == NULL) {
+    *errstr = '\0';
+    return;
+  }
+#ifdef SC_ENABLE_MPI
+  errorcode = MPI_Error_string (errorcode, errstr, errlen);
+  if (errorcode != sc3_MPI_SUCCESS) {
+#endif
+    res = snprintf (errstr, sc3_MPI_MAX_ERROR_STRING, "MPI %s",
+                    errorcode == sc3_MPI_SUCCESS ? "Success" : "Error");
+    if (res >= sc3_MPI_MAX_ERROR_STRING) {
+      res = sc3_MPI_MAX_ERROR_STRING - 1;
+    }
+    if (res <= 0) {
+      *errstr = '\0';
+      *errlen = 0;
+      return;
+    }
+    *errlen = res;
+#ifdef SC_ENABLE_MPI
+  }
+#endif
+}
 
 sc3_error_t        *
 sc3_MPI_Init (int *argc, char ***argv)

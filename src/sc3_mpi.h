@@ -98,6 +98,10 @@ extern              "C"
 #endif
 #endif
 
+void                sc3_MPI_Error_class (int errorcode, int *errorclass);
+void                sc3_MPI_Error_string (int errorcode,
+                                          char *errstr, int *errlen);
+
 sc3_error_t        *sc3_MPI_Init (int *argc, char ***argv);
 sc3_error_t        *sc3_MPI_Finalize (void);
 
