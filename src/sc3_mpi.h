@@ -90,6 +90,17 @@ typedef MPI_Op      sc3_MPI_Op_t;
 
 #endif /* SC_ENABLE_MPI */
 
+#define SC3E_MPI(f) do {                                                \
+  int _mpiret = (f);                                                    \
+  if (_mpiret != sc3_MPI_SUCCESS) {                                     \
+    int _errlen;                                                        \
+    char _errstr[sc3_MPI_MAX_ERROR_STRING];                             \
+    char _errmsg[SC3_BUFSIZE];                                          \
+    sc3_MPI_Error_string (_mpiret, _errstr, &_errlen);                  \
+    (void) snprintf (_errmsg, SC3_BUFSIZE, "%s: %s", #f, _errstr);      \
+    return sc3_error_new_fatal (__FILE__, __LINE__, _errmsg);           \
+  }} while (0)
+
 #ifdef __cplusplus
 extern              "C"
 {
