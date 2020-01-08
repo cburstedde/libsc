@@ -85,8 +85,9 @@ sc3_error_args_new (sc3_allocator_t * eator, sc3_error_args_t ** eap)
   sc3_error_t        *v;
 
   SC3E_RETVAL (eap, NULL);
-  if (eator == NULL)
+  if (eator == NULL) {
     eator = sc3_allocator_nocount ();
+  }
   SC3E (sc3_allocator_ref (eator));
 
   SC3E_ALLOCATOR_MALLOC (eator, sc3_error_args_t, 1, ea);
@@ -108,12 +109,12 @@ sc3_error_unalloc (sc3_error_t * e)
   SC3A_CHECK (e != NULL);
   eator = e->eator;
 
-  if (e->stack != NULL)
+  if (e->stack != NULL) {
     SC3E (sc3_error_unref (&e->stack));
-
+  }
   SC3E_ALLOCATOR_FREE (eator, sc3_error_t, e);
-  SC3E (sc3_allocator_unref (&eator));
 
+  SC3E (sc3_allocator_unref (&eator));
   return NULL;
 }
 
@@ -123,16 +124,15 @@ sc3_error_args_destroy (sc3_error_args_t ** eap)
   sc3_error_args_t   *ea;
   sc3_allocator_t    *eator;
 
-  SC3E_INOUTP (eap, ea);
+  SC3E_INULLP (eap, ea);
+
   SC3A_CHECK (ea->values != NULL);
   eator = ea->values->eator;
 
   if (!ea->used) {
     SC3E (sc3_error_unalloc (ea->values));
   }
-
   SC3E_ALLOCATOR_FREE (eator, sc3_error_args_t, ea);
-  *eap = NULL;
 
   SC3E (sc3_allocator_unref (&eator));
   return NULL;
@@ -204,17 +204,16 @@ sc3_error_t        *
 sc3_error_new (sc3_error_args_t ** eap, sc3_error_t ** ep)
 {
   sc3_error_args_t   *ea;
-  sc3_allocator_t    *eator;
 
-  SC3E_INOUTP (eap, ea);
+  SC3E_INULLP (eap, ea);
+  SC3E_RETVAL (ep, NULL);
+
   SC3A_CHECK (!ea->used && ea->values != NULL);
-
   ea->used = 1;
-  eator = ea->values->eator;
-  SC3E (sc3_allocator_ref (eator));
-  SC3E_RETVAL (ep, ea->values);
+  SC3E (sc3_allocator_ref (ea->values->eator));
+  SC3E (sc3_error_args_destroy (&ea));
 
-  SC3E (sc3_error_args_destroy (eap));
+  *ep = ea->values;
   return NULL;
 }
 
@@ -222,8 +221,9 @@ sc3_error_t        *
 sc3_error_ref (sc3_error_t * e)
 {
   SC3A_CHECK (e != NULL);
-  if (e->alloced)
+  if (e->alloced) {
     SC3E (sc3_refcount_ref (&e->rc));
+  }
   return NULL;
 }
 
@@ -242,8 +242,8 @@ sc3_error_unref (sc3_error_t ** ep)
 
   SC3E (sc3_refcount_unref (&e->rc, &waslast));
   if (waslast) {
-    SC3E (sc3_error_unalloc (e));
     *ep = NULL;
+    SC3E (sc3_error_unalloc (e));
   }
   return NULL;
 }
@@ -251,10 +251,7 @@ sc3_error_unref (sc3_error_t ** ep)
 int
 sc3_error_destroy (sc3_error_t ** ep)
 {
-  if (ep == NULL || sc3_error_unref (ep) != NULL) {
-    return -1;
-  }
-  if (*ep != NULL) {
+  if (sc3_error_unref (ep) != NULL || *ep != NULL) {
     *ep = NULL;
     return -1;
   }
@@ -264,6 +261,7 @@ sc3_error_destroy (sc3_error_t ** ep)
 int
 sc3_error_pop (sc3_error_t ** ep)
 {
+  int                 retval;
   sc3_error_t        *stack;
 
   if (ep == NULL || *ep == NULL) {
@@ -272,7 +270,12 @@ sc3_error_pop (sc3_error_t ** ep)
   if ((stack = (*ep)->stack) != NULL) {
     (*ep)->stack = NULL;
   }
-  (void) sc3_error_destroy (ep);
+
+  retval = sc3_error_destroy (ep);
+  if (retval && stack == NULL) {
+    return -1;
+  }
+  /* ignore an error return value if we can sensibly return the stack */
 
   *ep = stack;
   return 0;
@@ -328,6 +331,8 @@ sc3_error_new_stack_inherit (sc3_error_t ** pstack, int inherit,
   }
 
   /* Any allocated allocator would have to be ref'd here. */
+  /* Any counting allocator would need to be thread private.
+     Alternative: only allow malloc_noerr for non-counting allocators. */
   ea = sc3_allocator_nocount ();
   e = (sc3_error_t *) sc3_allocator_malloc_noerr (ea, sizeof (sc3_error_t));
   if (e == NULL) {

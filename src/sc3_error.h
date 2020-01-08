@@ -80,6 +80,11 @@ extern              "C"
   SC3A_CHECK ((pp) != NULL && *(pp) != NULL);                           \
   (p) = *(pp);                                                          \
   } while (0)
+#define SC3E_INULLP(pp,p) do {                                          \
+  SC3A_CHECK ((pp) != NULL && *(pp) != NULL);                           \
+  (p) = *(pp);                                                          \
+  *(pp) = NULL;                                                         \
+  } while (0)
 
 /*** ERROR macros.  Do not call return and inherit the severity. ***/
 #define SC3E_SET(e,f) do {                                              \
@@ -112,10 +117,26 @@ sc3_error_sync_t;
 
 typedef struct sc3_error_args sc3_error_args_t;
 
-/* TODO error functions shall not throw new errors themselves */
+/*** TODO error functions shall not throw new errors themselves? ***/
 
+/** Create a new error argument object.
+ * \param [in] eator    An existing allocator or NULL.
+ *                      The allocator is refd and remembered internally
+ *                      and will be unrefd on destruction.
+ *                      If NULL, calls \ref sc3_allocator_nocount.
+ * \param [out] eap     Pointer must not be NULL.
+ *                      If the function returns an error, value set to NULL.
+ *                      Otherwise, value set to arguments with default values.
+ * \return              An error object or NULL without errors.
+ */
 sc3_error_t        *sc3_error_args_new (sc3_allocator_t * eator,
                                         sc3_error_args_t ** eap);
+
+/** Destroy an allocator argument object and unrefs its allocator.
+ * \param [in,out] eap  Pointer and value must not be NULL.
+ *                      Value is set to NULL.
+ * \return              An error object or NULL without errors.
+ */
 sc3_error_t        *sc3_error_args_destroy (sc3_error_args_t ** eap);
 
 /** Takes ownership of stack (i.e. does not ref it), stack is NULLed.
@@ -138,18 +159,48 @@ sc3_error_t        *sc3_error_args_set_msgf (sc3_error_args_t * ea,
   __attribute__ ((format (printf, 2, 3)));
 #endif
 
+/** Create a new allocated error object from an argument structure.
+ * \param [in,out] ea   The argument structure is destroyed and set to NULL.
+ * \param [out] ep      If the function returns an error, value set to NULL.
+ *                      Otherwise, value set to new error object.
+ * \return              An error object or NULL without errors.
+ */
 sc3_error_t        *sc3_error_new (sc3_error_args_t ** ea, sc3_error_t ** ep);
+
+/** Add a reference to an error object.
+ * \param [in] e        Pointer must not be NULL.
+ *                      If the error is allocated, its refcount is increased.
+ * \return              An error object or NULL without errors.
+ */
 sc3_error_t        *sc3_error_ref (sc3_error_t * e);
+
+/** Remove a reference from an error object and deallocate if it was the last.
+ * \param [in,out] e    Pointer must not be NULL.
+ *                      If the error is allocated, its refcount is decreased
+ *                      and it is checked if it reaches zero.
+ *                      In this case, the error is deallocated and set to NULL.
+ * \return              An error object or NULL without errors.
+ */
 sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
 
-/** It is an error to destroy an error that is not allocated.
- * \return          0 if input error object is cleanly deallocated, -1 otherwise.
+/** Takes an error object with one remaining reference and deallocates it.
+ * It is an error to destroy an error that is multiply refd or not allocated.
+ * \param [in,out] ep   Allocated error with one reference.  NULL on output.
+ * \return              0 if error object is cleanly deallocated, -1 otherwise.
  */
 int                 sc3_error_destroy (sc3_error_t ** ep);
+
+/** Frees the top object on an error stack and returns the next deepest.
+ * \param [in,out] ep   Pointer and value must not be NULL.
+ *                      When output is 0, set to next deepest error object.
+ *                      Otherwise, value set to NULL.
+ * \return              0 if it is possible to return the next deepest error
+ *                      in the stack, -1 otherwise.
+ */
 int                 sc3_error_pop (sc3_error_t ** ep);
 
-/* TODO: Should we pass an allocator? */
-sc3_error_t        *sc3_error_new_ssm (sc3_error_severity_t sev,
+sc3_error_t        *sc3_error_new_ssm (sc3_allocator_t * alloc,
+                                       sc3_error_severity_t sev,
                                        sc3_error_sync_t syn,
                                        const char *errmsg);
 
@@ -174,14 +225,41 @@ sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** stack,
 
 /*** TODO need a bunch of _get_ and/or _is_ functions ***/
 
-/** Return true if e is not NULL and has severity SC3_ERROR_FATAL. */
+/** Check an error object to be valid and fatal.
+ * \return              true if e is not NULL and has severity
+ *                      SC3_ERROR_FATAL, false otherwise.
+ */
 int                 sc3_error_is_fatal (sc3_error_t * e);
 
-/* TODO: Choose simplicity over export/release and error checking. */
+/*** Choose simplicity over export/release and error checking. ***/
+
+/** Return pointer to the filename in an error object.
+ * The filename output pointer is only valid as long as the error is alive.
+ * It is ok to call this function on NULL or non-filenamed errors.
+ * \param [in] e        Error object.
+ * \param [out] filename    Set to error's filename if it is not NULL.
+ *                          the empty string otherwise.
+ * \param [out] line        Set to error's line number if it is not NULL.
+ */
 void                sc3_error_get_location (sc3_error_t * e,
                                             const char **filename, int *line);
+
+/** Return pointer to the message string in an error object.
+ * The message output pointer is only valid as long as the error is alive.
+ * It is ok to call this function on NULL or non-messaged errors.
+ * \param [in] e        Error object.
+ * \param [out] errmsg  Set to error's message if it is not NULL,
+ *                      the empty string otherwise.
+ */
 void                sc3_error_get_message (sc3_error_t * e,
                                            const char **errmsg);
+
+/** Return the severity of an error object.
+ * It is ok to call this function on NULL errors.
+ * \param [in] e        Error object or NULL.
+ * \param [out] sev     Set to error's severity if the error and \b sev
+ *                      are not NULL, SC3_ERROR_FATAL otherwise.
+ */
 void                sc3_error_get_severity (sc3_error_t * e,
                                             sc3_error_severity_t * sev);
 
