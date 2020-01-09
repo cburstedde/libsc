@@ -28,7 +28,7 @@
 */
 
 #include <sc3_alloc_internal.h>
-#include <sc3_refcount.h>
+#include <sc3_refcount_internal.h>
 
 /*** TODO implement reference counting */
 
@@ -52,10 +52,20 @@ struct sc3_allocator
 static sc3_allocator_t nca =
   { {SC3_REFCOUNT_MAGIC, 1}, 0, 0, 0, 0, 0, 0, NULL };
 
+/** This allocator is not thread-safe since it is counting and not locked. */
+static sc3_allocator_t nta =
+  { {SC3_REFCOUNT_MAGIC, 1}, 0, 0, 1, 0, 0, 0, NULL };
+
 sc3_allocator_t    *
 sc3_allocator_nocount (void)
 {
   return &nca;
+}
+
+sc3_allocator_t    *
+sc3_allocator_nothread (void)
+{
+  return &nta;
 }
 
 sc3_error_t        *
@@ -64,11 +74,9 @@ sc3_allocator_args_new (sc3_allocator_t * oa, sc3_allocator_args_t ** aap)
   sc3_allocator_args_t *aa;
 
   SC3E_RETVAL (aap, NULL);
+  SC3A_CHECK (oa != NULL);
 
-  if (oa == NULL)
-    oa = sc3_allocator_nocount ();
   SC3E (sc3_allocator_ref (oa));
-
   SC3E_ALLOCATOR_MALLOC (oa, sc3_allocator_args_t, 1, aa);
   aa->align = 0;
   aa->oa = oa;
@@ -83,13 +91,12 @@ sc3_allocator_args_destroy (sc3_allocator_args_t ** aap)
   sc3_allocator_args_t *aa;
   sc3_allocator_t    *oa;
 
-  SC3E_INOUTP (aap, aa);
+  SC3E_INULLP (aap, aa);
 
   oa = aa->oa;
   SC3E_ALLOCATOR_FREE (oa, sc3_allocator_args_t, aa);
-  *aap = NULL;
-
   SC3E (sc3_allocator_unref (&oa));
+
   return NULL;
 }
 
@@ -109,24 +116,19 @@ sc3_allocator_new (sc3_allocator_args_t ** aap, sc3_allocator_t ** ap)
   sc3_allocator_args_t *aa;
   sc3_allocator_t    *a;
 
-  if (aap == NULL) {
-    aap = &aa;
-    SC3E (sc3_allocator_args_new (NULL, aap));
-  }
-  else
-    SC3E_INOUTP (aap, aa);
+  SC3E_INULLP (aap, aa);
   SC3E_RETVAL (ap, NULL);
 
   SC3E_ALLOCATOR_MALLOC (aa->oa, sc3_allocator_t, 1, a);
+  SC3E (sc3_refcount_init (&a->rc));
   a->align = aa->align;
   a->alloced = 1;
   a->counting = 1;
   a->num_malloc = a->num_calloc = a->num_free = 0;
-  SC3E (sc3_refcount_init (&a->rc));
   a->oa = aa->oa;
   SC3E (sc3_allocator_ref (a->oa));
+  SC3E (sc3_allocator_args_destroy (&aa));
 
-  SC3E (sc3_allocator_args_destroy (aap));
   *ap = a;
   return NULL;
 }
@@ -147,18 +149,20 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
   sc3_allocator_t    *a, *oa;
 
   SC3E_INOUTP (ap, a);
-  if (!a->alloced)
+  if (!a->alloced) {
     return NULL;
+  }
 
   SC3E (sc3_refcount_unref (&a->rc, &waslast));
   if (waslast) {
-    if (a->counting)
+    *ap = NULL;
+
+    if (a->counting) {
       SC3E_DEMAND (a->num_malloc + a->num_calloc == a->num_free);
+    }
 
     oa = a->oa;
     SC3E_ALLOCATOR_FREE (oa, sc3_allocator_t, a);
-    *ap = NULL;
-
     SC3E (sc3_allocator_unref (&oa));
   }
   return NULL;

@@ -264,7 +264,7 @@ main (int argc, char **argv)
     goto main_end;
   }
 
-  SC3E_SET (e, sc3_allocator_args_new (NULL, &aa));
+  SC3E_SET (e, sc3_allocator_args_new (sc3_allocator_nothread (), &aa));
   SC3E_NULL_SET (e, sc3_allocator_new (&aa, &a));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("Main allocator_new failed\n");

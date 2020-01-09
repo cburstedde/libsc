@@ -61,10 +61,32 @@ extern              "C"
 
 typedef struct sc3_allocator_args sc3_allocator_args_t;
 
+/** Return a non-counting allocator that is safe to use in threads.
+ * This allocator thus does not check for matched alloc/free calls.
+ * Use only if there is no other option.
+ * \return              Allocator that does not count its allocations.
+ */
 sc3_allocator_t    *sc3_allocator_nocount (void);
 
-/* TODO: refcounting the arguments? */
+/** Return a counting allocator that is not protected from threads.
+ * This allocator is not safe to use concurrently from multiple threads.
+ * Use this function to create the first allocator in main ().
+ * Use only if there is no other option.
+ * \return              Allocator unprotected from concurrent access.
+ */
+sc3_allocator_t    *sc3_allocator_nothread (void);
 
+/* TODO: refcounting the arguments object?  Maybe not. */
+
+/** Create a new allocator argument object.
+ * \param [in] oa       A valid allocator.
+ *                      The allocator is refd and remembered internally
+ *                      and will be unrefd on destruction.
+ * \param [out] aap     Pointer must not be NULL.
+ *                      If the function returns an error, value set to NULL.
+ *                      Otherwise, value set to arguments with default values.
+ * \return              An error object or NULL without errors.
+ */
 sc3_error_t        *sc3_allocator_args_new (sc3_allocator_t * oa,
                                             sc3_allocator_args_t ** aap);
 sc3_error_t        *sc3_allocator_args_destroy (sc3_allocator_args_t ** aap);
@@ -73,8 +95,11 @@ sc3_error_t        *sc3_allocator_args_set_align (sc3_allocator_args_t * aa,
                                                   int align);
 
 /** Creates a new allocator from arguments.
- * \param [in,out] aa   We call \ref sc3_allocator_args_destroy on it.
- * \param [out] ap      On output, the initialized allocator with refcount 1.
+ * \param [in,out] aap  Properly initialized allocator arguments.
+ *                      We call \ref sc3_allocator_args_destroy on it.
+ *                      The value is set to NULL on output.
+ * \param [out] ap      On output, the initialized allocator with refcount 1
+ *                      unless there is an internal error, then set to NULL.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_new (sc3_allocator_args_t ** aap,
