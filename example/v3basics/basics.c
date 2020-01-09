@@ -254,8 +254,10 @@ main (int argc, char **argv)
   int                 i;
   sc3_error_t        *e;
   sc3_allocator_t    *a;
+  sc3_allocator_t    *mainalloc;
   sc3_allocator_args_t *aa;
 
+  mainalloc = sc3_allocator_nothread ();
   num_fatal = num_weird = num_io = 0;
 
   SC3E_SET (e, sc3_MPI_Init (&argc, &argv));
@@ -264,7 +266,7 @@ main (int argc, char **argv)
     goto main_end;
   }
 
-  SC3E_SET (e, sc3_allocator_args_new (sc3_allocator_nothread (), &aa));
+  SC3E_SET (e, sc3_allocator_args_new (mainalloc, &aa));
   SC3E_NULL_SET (e, sc3_allocator_new (&aa, &a));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("Main allocator_new failed\n");
@@ -290,7 +292,8 @@ main (int argc, char **argv)
   }
 
   SC3E_SET (e, sc3_allocator_destroy (&a));
-  if (main_error_check (&e, &num_fatal, &num_weird)) {
+  if (main_error_check (&e, &num_fatal, &num_weird) ||
+      !sc3_allocator_is_free (mainalloc)) {
     printf ("Main allocator destroy failed\n");
   }
 

@@ -94,6 +94,18 @@ sc3_error_t        *sc3_allocator_args_destroy (sc3_allocator_args_t ** aap);
 sc3_error_t        *sc3_allocator_args_set_align (sc3_allocator_args_t * aa,
                                                   int align);
 
+/** Return true if allocator is not NULL and internally valid.
+ * \param [in] a        NULL or an allocator.
+ * \return              True iff \b a not NULL and internally valid.
+ */
+int                 sc3_allocator_is_valid (sc3_allocator_t * a);
+
+/** Return whether an allocator does not hold any allocations.
+ * \param [in]          NULL or an allocator.
+ * \return              True iff \b a valid and not holding allocations.
+ */
+int                 sc3_allocator_is_free (sc3_allocator_t * a);
+
 /** Creates a new allocator from arguments.
  * \param [in,out] aap  Properly initialized allocator arguments.
  *                      We call \ref sc3_allocator_args_destroy on it.
