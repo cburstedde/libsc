@@ -139,7 +139,7 @@ sc3_array_setup (sc3_array_t * a)
 sc3_error_t        *
 sc3_array_ref (sc3_array_t * a)
 {
-  SC3A_CHECK (sc3_array_is_valid (a));
+  SC3A_CHECK (sc3_array_is_setup (a));
   SC3E (sc3_refcount_ref (&a->rc));
   return NULL;
 }

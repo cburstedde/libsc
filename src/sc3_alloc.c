@@ -155,7 +155,7 @@ sc3_allocator_setup (sc3_allocator_t * a)
 sc3_error_t        *
 sc3_allocator_ref (sc3_allocator_t * a)
 {
-  SC3A_CHECK (sc3_allocator_is_valid (a));
+  SC3A_CHECK (sc3_allocator_is_setup (a));
   if (a->alloced) {
     SC3E (sc3_refcount_ref (&a->rc));
   }

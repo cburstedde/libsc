@@ -96,7 +96,8 @@ sc3_error_t        *sc3_array_set_resizable (sc3_array_t * a, int resizable);
 sc3_error_t        *sc3_array_setup (sc3_array_t * a);
 
 /** Increase the reference count on an array by 1.
- * \param [in] a        This array must be valid.  Its refcount is increased.
+ * This is only allowed after the array has been setup.
+ * \param [in] a        This array must be setup.  Its refcount is increased.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_ref (sc3_array_t * a);
