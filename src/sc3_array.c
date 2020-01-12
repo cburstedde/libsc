@@ -77,7 +77,7 @@ sc3_array_new (sc3_allocator_t * aator, sc3_array_t ** ap)
   sc3_array_t        *a;
 
   SC3E_RETVAL (ap, NULL);
-  SC3A_CHECK (sc3_allocator_is_valid (aator));
+  SC3A_CHECK (sc3_allocator_is_setup (aator));
 
   SC3E (sc3_allocator_ref (aator));
   SC3E_ALLOCATOR_CALLOC (aator, sc3_array_t, 1, a);

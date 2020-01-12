@@ -65,7 +65,7 @@ sc3_error_t        *
 sc3_refcount_ref (sc3_refcount_t * r)
 {
   SC3A_CHECK (r != NULL && r->magic == SC3_REFCOUNT_MAGIC);
-  SC3A_CHECK (r->rc >= 1);
+  SC3E_DEMAND (r->rc >= 1);
 
   ++r->rc;
   return NULL;
@@ -75,7 +75,7 @@ sc3_error_t        *
 sc3_refcount_unref (sc3_refcount_t * r, int *waslast)
 {
   SC3A_CHECK (r != NULL && r->magic == SC3_REFCOUNT_MAGIC);
-  SC3A_CHECK (r->rc >= 1);
+  SC3E_DEMAND (r->rc >= 1);
   SC3E_RETVAL (waslast, 0);
 
   if (--r->rc == 0) {

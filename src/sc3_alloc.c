@@ -115,10 +115,10 @@ sc3_allocator_nothread (void)
 sc3_error_t        *
 sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
 {
-  sc3_allocator_t *a;
+  sc3_allocator_t    *a;
 
   SC3E_RETVAL (ap, NULL);
-  SC3A_CHECK (sc3_allocator_is_valid (oa));
+  SC3A_CHECK (sc3_allocator_is_setup (oa));
 
   SC3E (sc3_allocator_ref (oa));
   SC3E_ALLOCATOR_CALLOC (oa, sc3_allocator_t, 1, a);
@@ -193,7 +193,7 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
 sc3_error_t        *
 sc3_allocator_destroy (sc3_allocator_t ** ap)
 {
-  sc3_allocator_t        *a;
+  sc3_allocator_t    *a;
 
   SC3E_INULLP (ap, a);
   SC3E_DEMAND (sc3_refcount_is_last (&a->rc));
