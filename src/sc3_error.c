@@ -95,6 +95,7 @@ sc3_error_args_new (sc3_allocator_t * eator, sc3_error_args_t ** eap)
   if (eator == NULL) {
     eator = sc3_allocator_nocount ();
   }
+  SC3A_CHECK (sc3_allocator_is_setup (eator));
   SC3E (sc3_allocator_ref (eator));
 
   SC3E_ALLOCATOR_MALLOC (eator, sc3_error_args_t, 1, ea);

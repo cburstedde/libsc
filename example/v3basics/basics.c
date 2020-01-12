@@ -119,15 +119,14 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
   sc3_error_t        *e;
   sc3_error_args_t   *ea;
   sc3_allocator_t    *a;
-  sc3_allocator_args_t *aa;
 
   /* Test assertions */
   SC3E (parent_function (input, result));
   SC3A_CHECK (num_io != NULL);
 
   /* Make allocator for this context block */
-  SC3E (sc3_allocator_args_new (origa, &aa));
-  SC3E (sc3_allocator_new (&aa, &a));
+  SC3E (sc3_allocator_new (origa, &a));
+  SC3E (sc3_allocator_setup (a));
 
   /* Test file input/output and recoverable errors */
   if ((e = run_io (a, *result)) != NULL) {
@@ -255,7 +254,6 @@ main (int argc, char **argv)
   sc3_error_t        *e;
   sc3_allocator_t    *a;
   sc3_allocator_t    *mainalloc;
-  sc3_allocator_args_t *aa;
 
   mainalloc = sc3_allocator_nothread ();
   num_fatal = num_weird = num_io = 0;
@@ -266,8 +264,8 @@ main (int argc, char **argv)
     goto main_end;
   }
 
-  SC3E_SET (e, sc3_allocator_args_new (mainalloc, &aa));
-  SC3E_NULL_SET (e, sc3_allocator_new (&aa, &a));
+  SC3E_SET (e, sc3_allocator_new (mainalloc, &a));
+  SC3E_NULL_SET (e, sc3_allocator_setup (a));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("Main allocator_new failed\n");
     goto main_end;

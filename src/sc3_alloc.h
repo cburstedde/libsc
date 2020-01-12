@@ -59,63 +59,77 @@ extern              "C"
   SC3E (sc3_allocator_free (a, p));                                     \
   (p) = (t *) 0; } while (0)
 
-typedef struct sc3_allocator_args sc3_allocator_args_t;
+/** Check whether an allocator is not NULL and internally consistent.
+ * The allocator may be valid in both its setup and usage phases.
+ * \param [in] a        Any pointer.
+ * \return              True iff pointer is not NULL and allocator consistent.
+ */
+int                 sc3_allocator_is_valid (sc3_allocator_t * a);
 
-/** Return a non-counting allocator that is safe to use in threads.
+/** Check whether an allocator is not NULL, consistent and not setup.
+ * This means that the allocator is not in its usage phase.
+ * \param [in] a    Any pointer.
+ * \return          True iff pointer not NULL, allocator consistent, not setup.
+ */
+int                 sc3_allocator_is_new (sc3_allocator_t * a);
+
+/** Check whether an allocator is not NULL, internally consistent and setup.
+ * This means that the allocator is in its usage phase.
+ * \param [in] a    Any pointer.
+ * \return          True iff pointer not NULL, allocator consistent and setup.
+ */
+int                 sc3_allocator_is_setup (sc3_allocator_t * a);
+
+/** Return whether a setup allocator does not hold any allocations.
+ * \param [in]      Any pointer.
+ * \return          True iff pointer not NULL, allocator setup
+ *                  and not holding any allocations.
+ */
+int                 sc3_allocator_is_free (sc3_allocator_t * a);
+
+/** Return a non-counting allocator setup and safe to use in threads.
  * This allocator thus does not check for matched alloc/free calls.
  * Use only if there is no other option.
  * \return              Allocator that does not count its allocations.
+ *                      It is not allowed to destroy this allocator.
  */
 sc3_allocator_t    *sc3_allocator_nocount (void);
 
-/** Return a counting allocator that is not protected from threads.
+/** Return a counting allocator setup and not protected from threads.
  * This allocator is not safe to use concurrently from multiple threads.
  * Use this function to create the first allocator in main ().
  * Use only if there is no other option.
  * \return              Allocator unprotected from concurrent access.
+ *                      It is not allowed to destroy this allocator.
  */
 sc3_allocator_t    *sc3_allocator_nothread (void);
 
-/* TODO: refcounting the arguments object?  Maybe not. */
-
-/** Create a new allocator argument object.
+/** Create a new allocator object in its setup phase.
+ * It begins with default parameters that can be overridden explicitly.
+ * Setting and modifying parameters is only allowed in the setup phase.
+ * Call \ref sc3_allocator_setup to change it into its usage phase.
+ * After that, no more parameters may be set.
  * \param [in] oa       A valid allocator.
  *                      The allocator is refd and remembered internally
  *                      and will be unrefd on destruction.
- * \param [out] aap     Pointer must not be NULL.
+ * \param [out] ap      Pointer must not be NULL.
  *                      If the function returns an error, value set to NULL.
  *                      Otherwise, value set to arguments with default values.
  * \return              An error object or NULL without errors.
  */
-sc3_error_t        *sc3_allocator_args_new (sc3_allocator_t * oa,
-                                            sc3_allocator_args_t ** aap);
-sc3_error_t        *sc3_allocator_args_destroy (sc3_allocator_args_t ** aap);
+sc3_error_t        *sc3_allocator_new (sc3_allocator_t * oa,
+                                       sc3_allocator_t ** ap);
 
-sc3_error_t        *sc3_allocator_args_set_align (sc3_allocator_args_t * aa,
-                                                  int align);
-
-/** Return true if allocator is not NULL and internally valid.
- * \param [in] a        NULL or an allocator.
- * \return              True iff \b a not NULL and internally valid.
- */
-int                 sc3_allocator_is_valid (sc3_allocator_t * a);
-
-/** Return whether an allocator does not hold any allocations.
- * \param [in]          NULL or an allocator.
- * \return              True iff \b a valid and not holding allocations.
- */
-int                 sc3_allocator_is_free (sc3_allocator_t * a);
-
-/** Creates a new allocator from arguments.
- * \param [in,out] aap  Properly initialized allocator arguments.
- *                      We call \ref sc3_allocator_args_destroy on it.
- *                      The value is set to NULL on output.
- * \param [out] ap      On output, the initialized allocator with refcount 1
- *                      unless there is an internal error, then set to NULL.
+sc3_error_t        *sc3_allocator_set_align (sc3_allocator_t * a,
+                                             int align);
+/** Setup an allocator and put it into its usable phase.
+ * \param [in] a        This allocator must not yet be setup.
+ *                      Internal storage is allocated, the setup phase ends,
+ *                      and the allocator is put into its usable phase.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_allocator_new (sc3_allocator_args_t ** aap,
-                                       sc3_allocator_t ** ap);
+sc3_error_t        *sc3_allocator_setup (sc3_allocator_t * a);
+
 sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
 
