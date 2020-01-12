@@ -35,7 +35,6 @@
 
 #include <sc3_error.h>
 
-typedef struct sc3_array_args sc3_array_args_t;
 typedef struct sc3_array sc3_array_t;
 
 #ifdef __cplusplus
@@ -46,51 +45,55 @@ extern              "C"
 #endif
 #endif
 
-/** Create a new array argument object.
- * \param [in] aator    A valid allocator.
- *                      The allocator is refd and remembered internally
- *                      and will be unrefd on destruction.
- * \param [out] aap     Pointer must not be NULL.
- *                      If the function returns an error, value set to NULL.
- *                      Otherwise, value set to arguments with default values.
- * \return              An error object or NULL without errors.
- */
-sc3_error_t        *sc3_array_args_new (sc3_allocator_t * aator,
-                                        sc3_array_args_t ** aap);
-
-/** Destroy an array argument object and unrefs its allocator.
- * \param [in,out] aap  Pointer and value must not be NULL.
- *                      Value is set to NULL.
- * \return              An error object or NULL without errors.
- */
-sc3_error_t        *sc3_array_args_destroy (sc3_array_args_t ** aap);
-
-sc3_error_t        *sc3_array_args_set_elem_size (sc3_array_args_t * aa,
-                                                  size_t esize);
-sc3_error_t        *sc3_array_args_set_elem_count (sc3_array_args_t * aa,
-                                                   size_t ecount);
-sc3_error_t        *sc3_array_args_set_elem_alloc (sc3_array_args_t * aa,
-                                                   size_t ealloc);
-sc3_error_t        *sc3_array_args_set_resizable (sc3_array_args_t * aa,
-                                                  int resizable);
-
 /** Check whether an array is not NULL and internally consistent.
- * \param [in] a        Any pointer to an array.
+ * The array may be valid in both its setup and usage phases.
+ * \param [in] a        Any pointer.
  * \return              True iff pointer is not NULL and array consistent.
  */
 int                 sc3_array_is_valid (sc3_array_t * a);
 
-/** Creates a new array from arguments.
- * \param [in,out] aap  Properly initialized array arguments.
- *                      Its allocator is passed into the output array.
- *                      We call \ref sc3_array_args_destroy on the arguments.
- *                      Their value is set to NULL on output.
- * \param [out] ap      On output, the initialized array with refcount 1
- *                      unless there is an internal error, then set to NULL.
+/** Check whether an array is not NULL, consistent and not setup.
+ * This means that the array is not in its usage phase.
+ * \param [in] a        Any pointer.
+ * \return              True iff pointer not NULL, array consistent, not setup.
+ */
+int                 sc3_array_is_new (sc3_array_t * a);
+
+/** Check whether an array is not NULL, internally consistent and setup.
+ * This means that the array is in its usage phase.
+ * \param [in] a        Any pointer.
+ * \return              True iff pointer not NULL, array consistent and setup.
+ */
+int                 sc3_array_is_setup (sc3_array_t * a);
+
+/** Create a new array object in its setup phase.
+ * It begins with default parameters that can be overridden explicitly.
+ * Setting and modifying parameters is only allowed in the setup phase.
+ * Call \ref sc3_array_setup to change the array into its usage phase.
+ * After that, no more parameters may be set.
+ * \param [in] aator    A valid allocator.
+ *                      The allocator is refd and remembered internally
+ *                      and will be unrefd on array destruction.
+ * \param [out] ap      Pointer must not be NULL.
+ *                      If the function returns an error, value set to NULL.
+ *                      Otherwise, value set to an array with default values.
+ * \return              An error object or NULL without errors.
+ */
+sc3_error_t        *sc3_array_new (sc3_allocator_t * aator,
+                                   sc3_array_t ** ap);
+
+sc3_error_t        *sc3_array_set_elem_size (sc3_array_t * a, size_t esize);
+sc3_error_t        *sc3_array_set_elem_count (sc3_array_t * a, size_t ecount);
+sc3_error_t        *sc3_array_set_elem_alloc (sc3_array_t * a, size_t ealloc);
+sc3_error_t        *sc3_array_set_resizable (sc3_array_t * a, int resizable);
+
+/** Setup an array and put it into its usable phase.
+ * \param [in] a        This array must not yet be setup.
+ *                      Internal storage is allocated, the setup phase ends,
+ *                      and the array is put into its usable phase.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_new (sc3_array_args_t ** aap,
-                                   sc3_array_t ** ap);
+sc3_error_t        *sc3_array_setup (sc3_array_t * a);
 
 /** Increase the reference count on an array by 1.
  * \param [in] a        This array must be valid.  Its refcount is increased.

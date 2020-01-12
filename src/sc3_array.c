@@ -30,88 +30,19 @@
 #include <sc3_array.h>
 #include <sc3_refcount_internal.h>
 
-struct sc3_array_args
-{
-  size_t              esize, ecount, ealloc;
-  int                 resizable;
-  sc3_allocator_t    *aator;
-};
-
 struct sc3_array
 {
   sc3_refcount_t      rc;
-  size_t              esize, ecount, ealloc;
+  sc3_allocator_t    *aator;
+  int                 setup;
+
+  /* parameters fixed after setup call */
   int                 resizable;
-  sc3_allocator_t    *aator;
+  size_t              esize, ecount, ealloc;
+
+  /* member variables initialized in setup call */
+
 };
-
-sc3_error_t        *
-sc3_array_args_new (sc3_allocator_t * aator, sc3_array_args_t ** aap)
-{
-  sc3_array_args_t   *aa;
-
-  SC3E_RETVAL (aap, NULL);
-  SC3A_CHECK (sc3_allocator_is_valid (aator));
-
-  SC3E (sc3_allocator_ref (aator));
-  SC3E_ALLOCATOR_MALLOC (aator, sc3_array_args_t, 1, aa);
-  aa->aator = aator;
-
-  aa->esize = 1;
-  aa->ecount = 0;
-  aa->ealloc = 8;
-  aa->resizable = 1;
-
-  *aap = aa;
-  return NULL;
-}
-
-sc3_error_t        *
-sc3_array_args_destroy (sc3_array_args_t ** aap)
-{
-  sc3_array_args_t   *aa;
-  sc3_allocator_t    *aator;
-
-  SC3E_INULLP (aap, aa);
-
-  aator = aa->aator;
-  SC3E_ALLOCATOR_FREE (aator, sc3_array_args_t, aa);
-  SC3E (sc3_allocator_unref (&aator));
-
-  return NULL;
-}
-
-sc3_error_t        *
-sc3_array_args_set_elem_size (sc3_array_args_t * aa, size_t esize)
-{
-  SC3A_CHECK (aa != NULL);
-  aa->esize = esize;
-  return NULL;
-}
-
-sc3_error_t        *
-sc3_array_args_set_elem_count (sc3_array_args_t * aa, size_t ecount)
-{
-  SC3A_CHECK (aa != NULL);
-  aa->ecount = ecount;
-  return NULL;
-}
-
-sc3_error_t        *
-sc3_array_args_set_elem_alloc (sc3_array_args_t * aa, size_t ealloc)
-{
-  SC3A_CHECK (aa != NULL);
-  aa->ealloc = ealloc;
-  return NULL;
-}
-
-sc3_error_t        *
-sc3_array_args_set_resizable (sc3_array_args_t * aa, int resizable)
-{
-  SC3A_CHECK (aa != NULL);
-  aa->resizable = resizable;
-  return NULL;
-}
 
 int
 sc3_array_is_valid (sc3_array_t * a)
@@ -119,35 +50,89 @@ sc3_array_is_valid (sc3_array_t * a)
   if (a == NULL || !sc3_refcount_is_valid (&a->rc)) {
     return 0;
   }
+  if (!sc3_allocator_is_valid (a->aator)) {
+    return 0;
+  }
 
-  /* TODO check internal allocation logic */
+  /* TODO check internal allocation logic depending on setup status */
 
-  return sc3_allocator_is_valid (a->aator);
+  return 1;
+}
+
+int
+sc3_array_is_new (sc3_array_t * a)
+{
+  return sc3_array_is_valid (a) && !a->setup;
+}
+
+int
+sc3_array_is_setup (sc3_array_t * a)
+{
+  return sc3_array_is_valid (a) && a->setup;
 }
 
 sc3_error_t        *
-sc3_array_new (sc3_array_args_t ** aap, sc3_array_t ** ap)
+sc3_array_new (sc3_allocator_t * aator, sc3_array_t ** ap)
 {
-  sc3_array_args_t   *aa;
   sc3_array_t        *a;
 
-  SC3E_INULLP (aap, aa);
   SC3E_RETVAL (ap, NULL);
+  SC3A_CHECK (sc3_allocator_is_valid (aator));
 
-  SC3E_ALLOCATOR_MALLOC (aa->aator, sc3_array_t, 1, a);
+  SC3E (sc3_allocator_ref (aator));
+  SC3E_ALLOCATOR_CALLOC (aator, sc3_array_t, 1, a);
   SC3E (sc3_refcount_init (&a->rc));
-  a->esize = aa->esize;
-  a->ecount = aa->ecount;
-  a->ealloc = aa->ealloc;
-  a->resizable = aa->resizable;
-  a->aator = aa->aator;
-  SC3E (sc3_allocator_ref (a->aator));
-  SC3E (sc3_array_args_destroy (&aa));
+  a->esize = 1;
+  a->ealloc = 8;
+  a->resizable = 1;
+  a->aator = aator;
+  SC3A_CHECK (sc3_array_is_new (a));
+
+  *ap = a;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_array_set_elem_size (sc3_array_t * a, size_t esize)
+{
+  SC3A_CHECK (sc3_array_is_new (a));
+  a->esize = esize;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_array_set_elem_count (sc3_array_t * a, size_t ecount)
+{
+  SC3A_CHECK (sc3_array_is_new (a));
+  a->ecount = ecount;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_array_set_elem_alloc (sc3_array_t * a, size_t ealloc)
+{
+  SC3A_CHECK (sc3_array_is_new (a));
+  a->ealloc = ealloc;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_array_set_resizable (sc3_array_t * a, int resizable)
+{
+  SC3A_CHECK (sc3_array_is_new (a));
+  a->resizable = resizable;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_array_setup (sc3_array_t * a)
+{
+  SC3A_CHECK (sc3_array_is_new (a));
 
   /* TODO allocate array storage */
 
-  SC3A_CHECK (sc3_array_is_valid (a));
-  *ap = a;
+  a->setup = 1;
+  SC3A_CHECK (sc3_array_is_setup (a));
   return NULL;
 }
 
@@ -172,7 +157,7 @@ sc3_array_unref (sc3_array_t ** ap)
   if (waslast) {
     *ap = NULL;
 
-    /* TODO deallocate array storage */
+    /* TODO deallocate array storage if setup */
 
     aator = a->aator;
     SC3E_ALLOCATOR_FREE (aator, sc3_array_t, a);
@@ -184,7 +169,12 @@ sc3_array_unref (sc3_array_t ** ap)
 sc3_error_t        *
 sc3_array_destroy (sc3_array_t ** ap)
 {
-  SC3E (sc3_array_unref (ap));
-  SC3E_DEMAND (*ap == NULL);
+  sc3_array_t        *a;
+
+  SC3E_INULLP (ap, a);
+  SC3E_DEMAND (sc3_refcount_is_last (&a->rc));
+  SC3E (sc3_array_unref (&a));
+
+  SC3A_CHECK (a == NULL);
   return NULL;
 }
