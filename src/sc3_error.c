@@ -211,16 +211,18 @@ sc3_error_t        *
 sc3_error_new (sc3_error_args_t ** eap, sc3_error_t ** ep)
 {
   sc3_error_args_t   *ea;
+  sc3_error_t        *v;
 
   SC3E_INULLP (eap, ea);
   SC3E_RETVAL (ep, NULL);
 
   SC3A_CHECK (!ea->used && ea->values != NULL);
   ea->used = 1;
-  SC3E (sc3_allocator_ref (ea->values->eator));
+  v = ea->values;
+  SC3E (sc3_allocator_ref (v->eator));
   SC3E (sc3_error_args_destroy (&ea));
 
-  *ep = ea->values;
+  *ep = v;
   return NULL;
 }
 

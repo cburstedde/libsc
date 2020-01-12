@@ -53,7 +53,7 @@ extern              "C"
   (p) = (t *) _ptr; } while (0)
 #define SC3E_ALLOCATOR_CALLOC(a,t,n,p) do {                             \
   void *_ptr;                                                           \
-  SC3E (sc3_allocator_calloc (a, n, sizeof (t), &_ptr);                 \
+  SC3E (sc3_allocator_calloc (a, n, sizeof (t), &_ptr));                \
   (p) = (t *) _ptr; } while (0)
 #define SC3E_ALLOCATOR_FREE(a,t,p) do {                                 \
   SC3E (sc3_allocator_free (a, p));                                     \
