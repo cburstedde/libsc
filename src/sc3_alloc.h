@@ -122,7 +122,13 @@ sc3_allocator_t    *sc3_allocator_nothread (void);
 sc3_error_t        *sc3_allocator_new (sc3_allocator_t * oa,
                                        sc3_allocator_t ** ap);
 
+/** Set byte alignment followed by the allocator.
+ * \param [in] a        Valid allocator not setup.
+ * \param [in] align    Power of two designating byte alignment of memory,
+ *                      or zero for default alignment.
+ */
 sc3_error_t        *sc3_allocator_set_align (sc3_allocator_t * a, int align);
+
 /** Setup an allocator and put it into its usable phase.
  * \param [in] a        This allocator must not yet be setup.
  *                      Internal storage is allocated, the setup phase ends,
