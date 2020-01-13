@@ -111,12 +111,12 @@ sc3_allocator_t    *sc3_allocator_nothread (void);
  * Setting and modifying parameters is only allowed in the setup phase.
  * Call \ref sc3_allocator_setup to change it into its usage phase.
  * After that, no more parameters may be set.
- * \param [in] oa       A valid allocator.
+ * \param [in] oa       An allocator that is setup.
  *                      The allocator is refd and remembered internally
  *                      and will be unrefd on destruction.
  * \param [out] ap      Pointer must not be NULL.
  *                      If the function returns an error, value set to NULL.
- *                      Otherwise, value set to arguments with default values.
+ *                      Otherwise, value set to allocator with default values.
  * \return              An error object or NULL without errors.
  */
 sc3_error_t        *sc3_allocator_new (sc3_allocator_t * oa,
@@ -145,6 +145,7 @@ sc3_error_t        *sc3_allocator_setup (sc3_allocator_t * a);
 sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 
 /** Decrease the reference count on an allocator by 1.
+ * If the reference count drops to zero, the allocator is deallocated.
  * \param [in] ap       The pointer must not be NULL and the allocator valid.
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the allocator is destroyed and the value set to NULL.
@@ -153,7 +154,7 @@ sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
 
 /** Destroy an allocator with a reference count of 1.
- * It is an error to destroy an allocator that is not allocated.
+ * Do not destroy an allocator that is multiply refd or not allocated.
  * \param [in,out] ap   This allocator must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.

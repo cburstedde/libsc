@@ -50,7 +50,7 @@ sc3_array_is_valid (sc3_array_t * a)
   if (a == NULL || !sc3_refcount_is_valid (&a->rc)) {
     return 0;
   }
-  if (!sc3_allocator_is_valid (a->aator)) {
+  if (!sc3_allocator_is_setup (a->aator)) {
     return 0;
   }
 

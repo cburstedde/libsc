@@ -58,7 +58,7 @@ sc3_allocator_is_valid (sc3_allocator_t * a)
     return 0;
   }
   /* this goes into a recursion up the allocator tree */
-  if (a->oa != NULL && !sc3_allocator_is_valid (a->oa)) {
+  if (a->oa != NULL && !sc3_allocator_is_setup (a->oa)) {
     return 0;
   }
   if (a->align < 0 || a->alloced < 0) {

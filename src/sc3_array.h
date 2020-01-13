@@ -71,7 +71,7 @@ int                 sc3_array_is_setup (sc3_array_t * a);
  * Setting and modifying parameters is only allowed in the setup phase.
  * Call \ref sc3_array_setup to change the array into its usage phase.
  * After that, no more parameters may be set.
- * \param [in] aator    A valid allocator.
+ * \param [in] aator    An allocator that is setup.
  *                      The allocator is refd and remembered internally
  *                      and will be unrefd on array destruction.
  * \param [out] ap      Pointer must not be NULL.
@@ -103,6 +103,7 @@ sc3_error_t        *sc3_array_setup (sc3_array_t * a);
 sc3_error_t        *sc3_array_ref (sc3_array_t * a);
 
 /** Decrease the reference count on an array by 1.
+ * If the reference count drops to zero, the allocator is deallocated.
  * \param [in] ap       The pointer must not be NULL and the array valid.
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the array is destroyed and the value set to NULL.
@@ -111,6 +112,7 @@ sc3_error_t        *sc3_array_ref (sc3_array_t * a);
 sc3_error_t        *sc3_array_unref (sc3_array_t ** ap);
 
 /** Destroy an array with a reference count of 1.
+ * It is an error to destroy an array that is multiply refd.
  * \param [in,out] ap   This array must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
