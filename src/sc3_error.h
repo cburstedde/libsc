@@ -178,8 +178,7 @@ sc3_error_t        *sc3_error_new (sc3_allocator_t * eator,
 sc3_error_t        *sc3_error_set_stack (sc3_error_t * e,
                                          sc3_error_t ** stack);
 sc3_error_t        *sc3_error_set_location (sc3_error_t * e,
-                                            const char *filename,
-                                            int line);
+                                            const char *filename, int line);
 sc3_error_t        *sc3_error_set_message (sc3_error_t * e,
                                            const char *errmsg);
 sc3_error_t        *sc3_error_set_severity (sc3_error_t * e,
@@ -243,6 +242,7 @@ sc3_error_t        *sc3_error_new_ssm (sc3_allocator_t * alloc,
          They must not lead to an infinite loop (e.g. when out of memory). */
 /* TODO: shall we pass an allocator parameter to new_fatal and new_stack? */
 
+/* This function returns the new error object and has no error code. */
 sc3_error_t        *sc3_error_new_fatal (const char *filename,
                                          int line, const char *errmsg);
 
