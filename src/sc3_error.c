@@ -34,6 +34,9 @@
 struct sc3_error
 {
   sc3_refcount_t      rc;
+  sc3_allocator_t    *eator;
+  int                 setup;
+
   sc3_error_severity_t sev;
   sc3_error_sync_t    syn;
   char                errmsg[SC3_BUFSIZE];
@@ -41,196 +44,163 @@ struct sc3_error
   int                 line;
   int                 alloced;
   sc3_error_t        *stack;
-  sc3_allocator_t    *eator;
-};
-
-struct sc3_error_args
-{
-  int                 used;
-  sc3_error_t        *values;
 };
 
 /* TODO: write functions to make bug and nom available */
 
 static sc3_error_t  bug =
-  { {SC3_REFCOUNT_MAGIC, 1}, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
-"Inconsistency or bug", "", 0, 0, NULL, NULL
+  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
+"Inconsistency or bug", "", 0, 0, NULL
 };
 
 static sc3_error_t  nom =
-  { {SC3_REFCOUNT_MAGIC, 1}, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
-"Out of memory", "", 0, 0, NULL, NULL
+  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
+"Out of memory", "", 0, 0, NULL
 };
 
-/** Initialize members of an error object.
- * This function is used internally.
- * It references neither stack nor eator.
- * We do not want it to call any error recursion, thus it uses no assertions.
- */
-static void
-sc3_error_defaults (sc3_error_t * e, sc3_error_t * stack, int inherit,
-                    sc3_allocator_t * eator)
+int
+sc3_error_is_valid (sc3_error_t * e)
 {
+  if (e == NULL || !sc3_refcount_is_valid (&e->rc)) {
+    return 0;
+  }
+  if (!sc3_allocator_is_setup (e->eator)) {
+    return 0;
+  }
+  if (e->stack != NULL && !sc3_error_is_setup (e->stack)) {
+    return 0;
+  }
+  if (!(0 <= e->sev && e->sev < SC3_ERROR_SEVERITY_LAST)) {
+    return 0;
+  }
+  if (!(0 <= e->syn && e->syn < SC3_ERROR_SYNC_LAST)) {
+    return 0;
+  }
+  return 1;
+}
+
+int
+sc3_error_is_new (sc3_error_t * e)
+{
+  return sc3_error_is_valid (e) && !e->setup;
+}
+
+int
+sc3_error_is_setup (sc3_error_t * e)
+{
+  return sc3_error_is_valid (e) && e->setup;
+}
+
+int
+sc3_error_is_fatal (sc3_error_t * e)
+{
+  return sc3_error_is_setup (e) && e->sev == SC3_ERROR_FATAL;
+}
+
+static void
+sc3_error_defaults (sc3_error_t * e, sc3_error_t * stack,
+                    int setup, int inherit, sc3_allocator_t * eator)
+{
+  memset (e, 0, sizeof (sc3_error_t));
   sc3_refcount_init (&e->rc);
+  e->eator = eator;
+  e->setup = setup;
+
   e->sev = SC3_ERROR_FATAL;
   e->syn = SC3_ERROR_LOCAL;
-  SC3_BUFZERO (e->errmsg);
-  SC3_BUFZERO (e->filename);
-  e->line = 0;
   e->alloced = 1;
   e->stack = stack;
   if (inherit && stack != NULL) {
     e->sev = stack->sev;
   }
-  e->eator = eator;
 }
 
 sc3_error_t        *
-sc3_error_args_new (sc3_allocator_t * eator, sc3_error_args_t ** eap)
+sc3_error_new (sc3_allocator_t * eator, sc3_error_t ** ep)
 {
-  sc3_error_args_t   *ea;
-  sc3_error_t        *v;
+  sc3_error_t        *e;
 
-  SC3E_RETVAL (eap, NULL);
-  if (eator == NULL) {
-    eator = sc3_allocator_nocount ();
-  }
+  SC3E_RETVAL (ep, NULL);
   SC3A_CHECK (sc3_allocator_is_setup (eator));
+
   SC3E (sc3_allocator_ref (eator));
+  SC3E_ALLOCATOR_MALLOC (eator, sc3_error_t, 1, e);
+  sc3_error_defaults (e, NULL, 0, 0, eator);
+  SC3A_CHECK (sc3_error_is_new (e));
 
-  SC3E_ALLOCATOR_MALLOC (eator, sc3_error_args_t, 1, ea);
-  ea->used = 0;
-
-  SC3E_ALLOCATOR_MALLOC (eator, sc3_error_t, 1, v);
-  sc3_error_defaults (v, NULL, 0, eator);
-  ea->values = v;
-
-  *eap = ea;
+  *ep = e;
   return NULL;
 }
 
-static sc3_error_t *
-sc3_error_unalloc (sc3_error_t * e)
+sc3_error_t        *
+sc3_error_set_stack (sc3_error_t * e, sc3_error_t ** pstack)
 {
-  sc3_allocator_t    *eator;
+  sc3_error_t        *stack;
 
-  SC3A_CHECK (e != NULL);
-  eator = e->eator;
+  SC3E_INULLP (pstack, stack);
+  SC3A_CHECK (sc3_error_is_new (e));
+  SC3A_CHECK (stack == NULL || sc3_error_is_setup (stack));
 
   if (e->stack != NULL) {
     SC3E (sc3_error_unref (&e->stack));
   }
-  SC3E_ALLOCATOR_FREE (eator, sc3_error_t, e);
-
-  SC3E (sc3_allocator_unref (&eator));
+  e->stack = stack;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_error_args_destroy (sc3_error_args_t ** eap)
+sc3_error_set_location (sc3_error_t * e, const char *filename, int line)
 {
-  sc3_error_args_t   *ea;
-  sc3_allocator_t    *eator;
-
-  SC3E_INULLP (eap, ea);
-
-  SC3A_CHECK (ea->values != NULL);
-  eator = ea->values->eator;
-
-  if (!ea->used) {
-    SC3E (sc3_error_unalloc (ea->values));
-  }
-  SC3E_ALLOCATOR_FREE (eator, sc3_error_args_t, ea);
-
-  SC3E (sc3_allocator_unref (&eator));
-  return NULL;
-}
-
-sc3_error_t        *
-sc3_error_args_set_stack (sc3_error_args_t * ea, sc3_error_t ** pstack)
-{
-  SC3A_CHECK (ea != NULL);
-  SC3A_CHECK (!ea->used && ea->values != NULL);
-  SC3A_CHECK (pstack != NULL);
-
-  if (ea->values->stack != NULL)
-    SC3E (sc3_error_unref (&ea->values->stack));
-  ea->values->stack = *pstack;
-  *pstack = NULL;
-
-  return NULL;
-}
-
-sc3_error_t        *
-sc3_error_args_set_location (sc3_error_args_t * ea,
-                             const char *filename, int line)
-{
-  SC3A_CHECK (ea != NULL);
-  SC3A_CHECK (!ea->used && ea->values != NULL);
+  SC3A_CHECK (sc3_error_is_new (e));
   SC3A_CHECK (filename != NULL);
 
-  SC3_BUFCOPY (ea->values->filename, filename);
-  ea->values->line = line;
+  SC3_BUFCOPY (e->filename, filename);
+  e->line = line;
   return NULL;
-
 }
 
 sc3_error_t        *
-sc3_error_args_set_message (sc3_error_args_t * ea, const char *errmsg)
+sc3_error_set_message (sc3_error_t * e, const char *errmsg)
 {
-  SC3A_CHECK (ea != NULL);
-  SC3A_CHECK (!ea->used && ea->values != NULL);
+  SC3A_CHECK (sc3_error_is_new (e));
   SC3A_CHECK (errmsg != NULL);
 
-  SC3_BUFCOPY (ea->values->errmsg, errmsg);
+  SC3_BUFCOPY (e->errmsg, errmsg);
   return NULL;
 }
 
 sc3_error_t        *
-sc3_error_args_set_severity (sc3_error_args_t * ea, sc3_error_severity_t sev)
+sc3_error_set_severity (sc3_error_t * e, sc3_error_severity_t sev)
 {
-  SC3A_CHECK (ea != NULL);
-  SC3A_CHECK (!ea->used && ea->values != NULL);
+  SC3A_CHECK (sc3_error_is_new (e));
   SC3A_CHECK (0 <= sev && sev < SC3_ERROR_SEVERITY_LAST);
 
-  ea->values->sev = sev;
+  e->sev = sev;
   return NULL;
 }
 
 #if 0
-void                sc3_error_args_set_sync (sc3_error_args_t * ea,
-                                             sc3_error_sync_t syn);
-void                sc3_error_args_set_file (sc3_error_args_t * ea,
-                                             const char *filename);
-void                sc3_error_args_set_line (sc3_error_args_t * ea, int line);
-void                sc3_error_args_set_msgf (sc3_error_args_t * ea,
-                                             const char *errfmt, ...)
+void                sc3_error_set_sync (sc3_error_t * ea,
+                                        sc3_error_sync_t syn);
+void                sc3_error_set_msgf (sc3_error_t * ea,
+                                        const char *errfmt, ...)
   __attribute__ ((format (printf, 2, 3)));
 #endif
 
 sc3_error_t        *
-sc3_error_new (sc3_error_args_t ** eap, sc3_error_t ** ep)
+sc3_error_setup (sc3_error_t * e)
 {
-  sc3_error_args_t   *ea;
-  sc3_error_t        *v;
+  SC3A_CHECK (sc3_error_is_new (e));
 
-  SC3E_INULLP (eap, ea);
-  SC3E_RETVAL (ep, NULL);
-
-  SC3A_CHECK (!ea->used && ea->values != NULL);
-  ea->used = 1;
-  v = ea->values;
-  SC3E (sc3_allocator_ref (v->eator));
-  SC3E (sc3_error_args_destroy (&ea));
-
-  *ep = v;
+  e->setup = 1;
+  SC3A_CHECK (sc3_error_is_setup (e));
   return NULL;
 }
 
 sc3_error_t        *
 sc3_error_ref (sc3_error_t * e)
 {
-  SC3A_CHECK (e != NULL);
+  SC3A_CHECK (sc3_error_is_setup (e));
   if (e->alloced) {
     SC3E (sc3_refcount_ref (&e->rc));
   }
@@ -241,9 +211,12 @@ sc3_error_t        *
 sc3_error_unref (sc3_error_t ** ep)
 {
   int                 waslast;
+  sc3_allocator_t    *eator;
   sc3_error_t        *e;
 
   SC3E_INOUTP (ep, e);
+  SC3A_CHECK (sc3_error_is_valid (e));
+
   if (!e->alloced) {
     /* It is our convention that non-alloced errors must not have a stack. */
     SC3A_CHECK (e->stack == NULL);
@@ -253,7 +226,14 @@ sc3_error_unref (sc3_error_t ** ep)
   SC3E (sc3_refcount_unref (&e->rc, &waslast));
   if (waslast) {
     *ep = NULL;
-    SC3E (sc3_error_unalloc (e));
+
+    if (e->stack != NULL) {
+      SC3E (sc3_error_unref (&e->stack));
+    }
+
+    eator = e->eator;
+    SC3E_ALLOCATOR_FREE (eator, sc3_error_t, e);
+    SC3E (sc3_allocator_unref (&eator));
   }
   return NULL;
 }
@@ -261,8 +241,18 @@ sc3_error_unref (sc3_error_t ** ep)
 int
 sc3_error_destroy (sc3_error_t ** ep)
 {
-  if (sc3_error_unref (ep) != NULL || *ep != NULL) {
-    *ep = NULL;
+  sc3_error_t        *e;
+
+  if (ep == NULL) {
+    return -1;
+  }
+  e = *ep;
+  *ep = NULL;
+
+  if (e == NULL || !sc3_refcount_is_last (&e->rc)) {
+    return -1;
+  }
+  if (sc3_error_unref (&e) != NULL || e != NULL) {
     return -1;
   }
   return 0;
@@ -272,22 +262,28 @@ int
 sc3_error_pop (sc3_error_t ** ep)
 {
   int                 retval;
-  sc3_error_t        *stack;
+  sc3_error_t        *e;
 
-  if (ep == NULL || *ep == NULL) {
+  if (ep == NULL) {
     return -1;
   }
-  if ((stack = (*ep)->stack) != NULL) {
-    (*ep)->stack = NULL;
-  }
+  e = *ep;
+  *ep = NULL;
 
-  retval = sc3_error_destroy (ep);
-  if (retval && stack == NULL) {
+  if (e == NULL || !sc3_refcount_is_last (&e->rc)) {
     return -1;
   }
-  /* ignore an error return value if we can sensibly return the stack */
 
-  *ep = stack;
+  /* do not return an error if we can sensibly output the stack */
+
+  if (sc3_error_is_setup (e->stack)) {
+    *ep = e->stack;
+    e->stack = NULL;
+  }
+  retval = sc3_error_destroy (&e);
+  if (retval && *ep == NULL) {
+    return -1;
+  }
   return 0;
 }
 
@@ -299,15 +295,17 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
 
   /* Avoid infinite loop when out of memory. */
 
-  if (filename == NULL || errmsg == NULL)
+  if (filename == NULL || errmsg == NULL) {
     return &bug;
+  }
 
   /* Any allocated allocator would have to be ref'd here. */
   ea = sc3_allocator_nocount ();
   e = (sc3_error_t *) sc3_allocator_malloc_noerr (ea, sizeof (sc3_error_t));
-  if (e == NULL)
+  if (e == NULL) {
     return &nom;
-  sc3_error_defaults (e, NULL, 0, ea);
+  }
+  sc3_error_defaults (e, NULL, 1, 0, ea);
 
   SC3_BUFCOPY (e->errmsg, errmsg);
   SC3_BUFCOPY (e->filename, filename);
@@ -332,10 +330,10 @@ sc3_error_new_stack_inherit (sc3_error_t ** pstack, int inherit,
     return &bug;
   }
   stack = *pstack;
-  if (stack == NULL || !sc3_refcount_is_valid (&stack->rc)) {
+  *pstack = NULL;
+  if (!sc3_error_is_setup (stack)) {
     return &bug;
   }
-  *pstack = NULL;
   if (filename == NULL || errmsg == NULL) {
     return stack;
   }
@@ -348,7 +346,7 @@ sc3_error_new_stack_inherit (sc3_error_t ** pstack, int inherit,
   if (e == NULL) {
     return stack;
   }
-  sc3_error_defaults (e, stack, inherit, ea);
+  sc3_error_defaults (e, stack, 1, inherit, ea);
 
   SC3_BUFCOPY (e->errmsg, errmsg);
   SC3_BUFCOPY (e->filename, filename);
@@ -370,13 +368,6 @@ sc3_error_new_inherit (sc3_error_t ** pstack,
                        const char *filename, int line, const char *errmsg)
 {
   return sc3_error_new_stack_inherit (pstack, 1, filename, line, errmsg);
-}
-
-int
-sc3_error_is_fatal (sc3_error_t * e)
-{
-  return e != NULL && sc3_refcount_is_valid (&e->rc) &&
-    e->sev == SC3_ERROR_FATAL;
 }
 
 void
