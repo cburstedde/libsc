@@ -139,6 +139,7 @@ sc3_error_t        *sc3_allocator_setup (sc3_allocator_t * a);
 
 /** Increase the reference count on an allocator by 1.
  * This is only allowed after the allocator has been setup.
+ * Does nothing if allocator has not been created by \ref sc3_allocator_new.
  * \param [in] a        Allocator must be setup.  Its refcount is increased.
  * \return              NULL on success, error object otherwise.
  */
@@ -146,6 +147,7 @@ sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 
 /** Decrease the reference count on an allocator by 1.
  * If the reference count drops to zero, the allocator is deallocated.
+ * Does nothing if allocator has not been created by \ref sc3_allocator_new.
  * \param [in] ap       The pointer must not be NULL and the allocator valid.
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the allocator is destroyed and the value set to NULL.
@@ -154,7 +156,8 @@ sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
 
 /** Destroy an allocator with a reference count of 1.
- * Do not destroy an allocator that is multiply refd or not allocated.
+ * It is an error to destroy an allocator that is multiply refd.
+ * Does nothing if allocator has not been created by \ref sc3_allocator_new.
  * \param [in,out] ap   This allocator must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.

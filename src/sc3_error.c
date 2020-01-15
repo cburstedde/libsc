@@ -238,24 +238,17 @@ sc3_error_unref (sc3_error_t ** ep)
   return NULL;
 }
 
-int
+sc3_error_t         *
 sc3_error_destroy (sc3_error_t ** ep)
 {
   sc3_error_t        *e;
 
-  if (ep == NULL) {
-    return -1;
-  }
-  e = *ep;
-  *ep = NULL;
+  SC3E_INULLP (ep, e);
+  SC3E_DEMAND (sc3_refcount_is_last (&e->rc));
+  SC3E (sc3_error_unref (&e));
 
-  if (e == NULL || !sc3_refcount_is_last (&e->rc)) {
-    return -1;
-  }
-  if (sc3_error_unref (&e) != NULL || e != NULL) {
-    return -1;
-  }
-  return 0;
+  SC3A_CHECK (e == NULL || !e->alloced);
+  return NULL;
 }
 
 sc3_error_t        *

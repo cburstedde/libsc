@@ -205,6 +205,7 @@ sc3_error_t        *sc3_error_setup (sc3_error_t * e);
 
 /** Increase the reference count on an error object by 1.
  * This is only allowed after the error has been setup.
+ * Does nothing if error has not been created by \ref sc3_error_new.
  * \param [in] e        This error must be setup.  Its refcount is increased.
  * \return              NULL on success, error object otherwise.
  */
@@ -212,6 +213,7 @@ sc3_error_t        *sc3_error_ref (sc3_error_t * e);
 
 /** Decrease the reference of an error object by 1.
  * If the count reaches zero the error object is deallocated.
+ * Does nothing if error has not been created by \ref sc3_error_new.
  * \param [in,out] e    Pointer must not be NULL and the error valid.
  *                      The refcount is decreased.  If it reaches zero,
  *                      the error is deallocated and the value to NULL.
@@ -220,11 +222,12 @@ sc3_error_t        *sc3_error_ref (sc3_error_t * e);
 sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
 
 /** Takes an error object with one remaining reference and deallocates it.
- * It is an error to destroy an error that is multiply refd or not allocated.
- * \param [in,out] ep   Allocated error with one reference.  NULL on output.
- * \return              0 if error object is cleanly deallocated, -1 otherwise.
+ * It is an error to destroy an error that is multiply refd.
+ * Does nothing if error has not been created by \ref sc3_error_new.
+ * \param [in,out] ep   Setup error with one reference.  NULL on output.
+ * \return              An error object or NULL without errors.
  */
-int                 sc3_error_destroy (sc3_error_t ** ep);
+sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 
 sc3_error_t        *sc3_error_new_ssm (sc3_allocator_t * alloc,
                                        sc3_error_severity_t sev,

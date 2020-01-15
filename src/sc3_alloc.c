@@ -199,7 +199,7 @@ sc3_allocator_destroy (sc3_allocator_t ** ap)
   SC3E_DEMAND (sc3_refcount_is_last (&a->rc));
   SC3E (sc3_allocator_unref (&a));
 
-  SC3A_CHECK (a == NULL);
+  SC3A_CHECK (a == NULL || !a->alloced);
   return NULL;
 }
 

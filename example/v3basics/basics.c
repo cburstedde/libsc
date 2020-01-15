@@ -52,7 +52,7 @@ unravel_error (sc3_error_t ** ep)
 
     /* go down the stack */
     SC3E (sc3_error_get_stack (e, &stack));
-    sc3_error_destroy (&e);
+    SC3E (sc3_error_destroy (&e));
     e = stack;
     ++j;
   }
@@ -186,13 +186,16 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
   }
 
   if (ep != NULL && *ep != NULL) {
-    if (sc3_error_is_fatal (*ep))
+    if (sc3_error_is_fatal (*ep)) {
       ++ * num_fatal;
+    }
 
     /* unravel error stack and print messages */
-    e = unravel_error (ep);
-    if (e != NULL) {
-      num_weird += sc3_error_destroy (&e) ? 1 : 0;
+    if ((e = unravel_error (ep)) != NULL) {
+      ++num_weird;
+      if (sc3_error_destroy (&e) != NULL) {
+        ++num_weird;
+      }
     }
     return -1;
   }
