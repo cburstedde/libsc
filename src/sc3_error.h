@@ -254,37 +254,35 @@ sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** stack,
                                            const char *filename,
                                            int line, const char *errmsg);
 
-/*** TODO Choose simplicity over error checking? ***/
-
-/** Return pointer to the filename in an error object.
+/** Access location string and line number in a setup error object.
  * The filename output pointer is only valid as long as the error is alive.
- * It is ok to call this function on NULL or non-filenamed errors.
- * \param [in] e        Error object.
- * \param [out] filename    Set to error's filename if error is setup,
- *                          the empty string otherwise.  Pointer may be NULL.
- * \param [out] line        Set to error's line number if error is setup.
- *                          Pointer may be NULL.
+ * This can be ensured, optionally, by refing and later unrefing the error.
+ * We do not ensure this by default to simplify short-time usage.
+ * \param [in] e            Setup error object.
+ * \param [out] filename    Must not be NULL; set to error's filename.
+ * \param [out] line        Must not be NULL; set to error's line number.
+ * \return                  NULL on success, error object otherwise.
  */
-void                sc3_error_get_location (sc3_error_t * e,
+sc3_error_t        *sc3_error_get_location (sc3_error_t * e,
                                             const char **filename, int *line);
 
-/** Return pointer to the message string in an error object.
+/** Access pointer to the message string in a setup error object.
  * The message output pointer is only valid as long as the error is alive.
- * It is ok to call this function on NULL or non-messaged errors.
- * \param [in] e        Error object.
- * \param [out] errmsg  Set to error's message if error is setup,
- *                      the empty string otherwise.  Pointer may be NULL.
+ * This can be ensured, optionally, by refing and later unrefing the error.
+ * We do not ensure this by default to simplify short-time usage.
+ * \param [in] e        Setup error object.
+ * \param [out] errmsg  Must not be NULL; set to error's message.
+ * \return              NULL on success, error object otherwise.
  */
-void                sc3_error_get_message (sc3_error_t * e,
+sc3_error_t        *sc3_error_get_message (sc3_error_t * e,
                                            const char **errmsg);
 
-/** Return the severity of an error object.
- * It is ok to call this function on NULL errors.
- * \param [in] e        Error object or NULL.
- * \param [out] sev     Set to error's severity if the error is setup and
- *                      \b sev not NULL, SC3_ERROR_FATAL otherwise.
+/** Access the severity of a setup error object.
+ * \param [in] e        Setup error object.
+ * \param [out] sev     Must not be NULL; set to error's severity.
+ * \return              NULL on success, error object otherwise.
  */
-void                sc3_error_get_severity (sc3_error_t * e,
+sc3_error_t        *sc3_error_get_severity (sc3_error_t * e,
                                             sc3_error_severity_t * sev);
 
 /** Return the next deepest error stack with an added reference.
@@ -295,7 +293,7 @@ void                sc3_error_get_severity (sc3_error_t * e,
  *                      When function returns cleanly, set to input error's
  *                      stack object.  If the stack is not NULL, it is refd.
  *                      In this case it must be unrefd when no longer needed.
- * \return              Error object or NULL without error encountered.
+ * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_get_stack (sc3_error_t * e,
                                          sc3_error_t ** stack);
