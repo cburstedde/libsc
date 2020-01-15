@@ -258,35 +258,6 @@ sc3_error_destroy (sc3_error_t ** ep)
   return 0;
 }
 
-int
-sc3_error_pop (sc3_error_t ** ep)
-{
-  int                 retval;
-  sc3_error_t        *e;
-
-  if (ep == NULL) {
-    return -1;
-  }
-  e = *ep;
-  *ep = NULL;
-
-  if (e == NULL || !sc3_refcount_is_last (&e->rc)) {
-    return -1;
-  }
-
-  /* do not return an error if we can sensibly output the stack */
-
-  if (sc3_error_is_setup (e->stack)) {
-    *ep = e->stack;
-    e->stack = NULL;
-  }
-  retval = sc3_error_destroy (&e);
-  if (retval && *ep == NULL) {
-    return -1;
-  }
-  return 0;
-}
-
 sc3_error_t        *
 sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
 {
@@ -395,4 +366,16 @@ sc3_error_get_severity (sc3_error_t * e, sc3_error_severity_t * sev)
   if (sev != NULL) {
     *sev = e != NULL ? e->sev : SC3_ERROR_FATAL;
   }
+}
+
+sc3_error_t        *
+sc3_error_get_stack (sc3_error_t * e, sc3_error_t ** pstack)
+{
+  SC3E_ONULLP (pstack);
+  SC3A_CHECK (sc3_error_is_setup (e));
+
+  if (e->stack != NULL) {
+    SC3E (sc3_error_ref (*pstack = e->stack));
+  }
+  return NULL;
 }

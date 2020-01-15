@@ -28,31 +28,35 @@
 #define SC3_BASICS_DEALLOCATE
 #endif
 
-static int
-unravel_error (sc3_error_t ** e)
+static sc3_error_t *
+unravel_error (sc3_error_t ** ep)
 {
   int                 j;
-  int                 num_weird;
   int                 line;
   const char         *filename, *errmsg;
   char               *bname;
+  sc3_error_t        *e, *stack;
 
-  if (e == NULL || *e == NULL) {
-    return 1;
-  }
+  SC3E_INULLP (ep, e);
 
-  num_weird = 0;
-  for (j = 0; *e != NULL; num_weird += sc3_error_pop (e) ? 1 : 0, ++j) {
-    sc3_error_get_location (*e, &filename, &line);
+  j = 0;
+  while (e != NULL) {
+    /* print error information */
+    sc3_error_get_location (e, &filename, &line);
     if ((bname = SC3_STRDUP (filename)) != NULL) {
       filename = sc3_basename (bname);
     }
-    sc3_error_get_message (*e, &errmsg);
+    sc3_error_get_message (e, &errmsg);
     printf ("Error stack %d:%s:%d: %s\n", j, filename, line, errmsg);
     SC3_FREE (bname);
-  }
 
-  return num_weird;
+    /* go down the stack */
+    SC3E (sc3_error_get_stack (e, &stack));
+    sc3_error_destroy (&e);
+    e = stack;
+    ++j;
+  }
+  return NULL;
 }
 
 static sc3_error_t *
@@ -133,7 +137,7 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
 
 #ifdef SC3_BASICS_DEALLOCATE
     /* do something with the runtime error */
-    unravel_error (&e);
+    SC3E (unravel_error (&e));
 
     /* return a new error to the outside */
     /* TODO: this will not be practicable.
@@ -175,6 +179,8 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
 static int
 main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
 {
+  sc3_error_t        *e;
+
   if (num_fatal == NULL || num_weird == NULL) {
     return -1;
   }
@@ -184,7 +190,10 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
       ++ * num_fatal;
 
     /* unravel error stack and print messages */
-    *num_weird += unravel_error (ep);
+    e = unravel_error (ep);
+    if (e != NULL) {
+      num_weird += sc3_error_destroy (&e) ? 1 : 0;
+    }
     return -1;
   }
   return 0;

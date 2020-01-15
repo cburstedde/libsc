@@ -92,6 +92,10 @@ extern              "C"
   (p) = *(pp);                                                          \
   *(pp) = NULL;                                                         \
   } while (0)
+#define SC3E_ONULLP(pp) do {                                            \
+  SC3A_CHECK ((pp) != NULL);                                            \
+  *(pp) = NULL;                                                         \
+  } while (0)
 
 /*** ERROR macros.  Do not call return and inherit the severity. ***/
 #define SC3E_SET(e,f) do {                                              \
@@ -143,7 +147,7 @@ int                 sc3_error_is_new (sc3_error_t * e);
  */
 int                 sc3_error_is_setup (sc3_error_t * e);
 
-/** Check an error object to be valid and fatal.
+/** Check an error object to be setup and fatal.
  * \return              True if error is not NULL, setup, and has severity
  *                      SC3_ERROR_FATAL, false otherwise.
  */
@@ -222,17 +226,6 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
  */
 int                 sc3_error_destroy (sc3_error_t ** ep);
 
-/** Frees the top object on an error stack and returns the next deepest.
- * The error object must be setup and have a reference count of 1.
- * TODO this functionality is not really compatible with refcounting.
- * \param [in,out] ep   Pointer must not be NULL and error object setup.
- *                      When return value is 0, the next deepest error object.
- *                      Otherwise, value set to NULL.
- * \return              0 if it is possible to return the next deepest error
- *                      in the stack, -1 otherwise.
- */
-int                 sc3_error_pop (sc3_error_t ** ep);
-
 sc3_error_t        *sc3_error_new_ssm (sc3_allocator_t * alloc,
                                        sc3_error_severity_t sev,
                                        sc3_error_sync_t syn,
@@ -258,9 +251,7 @@ sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** stack,
                                            const char *filename,
                                            int line, const char *errmsg);
 
-/*** TODO need a bunch of _get_ and/or _is_ functions ***/
-
-/*** Choose simplicity over export/release and error checking. ***/
+/*** TODO Choose simplicity over error checking? ***/
 
 /** Return pointer to the filename in an error object.
  * The filename output pointer is only valid as long as the error is alive.
@@ -292,6 +283,19 @@ void                sc3_error_get_message (sc3_error_t * e,
  */
 void                sc3_error_get_severity (sc3_error_t * e,
                                             sc3_error_severity_t * sev);
+
+/** Return the next deepest error stack with an added reference.
+ * The input error object must be setup.  Its stack is allowed to be NULL.
+ * It is not changed by the call except for its stack to get referenced.
+ * \param [in] e        The error object must be setup.
+ * \param [out] pstack  Pointer must not be NULL.
+ *                      When function returns cleanly, set to input error's
+ *                      stack object.  If the stack is not NULL, it is refd.
+ *                      In this case it must be unrefd when no longer needed.
+ * \return              Error object or NULL without error encountered.
+ */
+sc3_error_t        *sc3_error_get_stack (sc3_error_t * e,
+                                         sc3_error_t ** stack);
 
 #ifdef __cplusplus
 #if 0
