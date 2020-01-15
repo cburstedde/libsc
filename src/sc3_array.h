@@ -77,15 +77,49 @@ int                 sc3_array_is_setup (sc3_array_t * a);
  * \param [out] ap      Pointer must not be NULL.
  *                      If the function returns an error, value set to NULL.
  *                      Otherwise, value set to an array with default values.
- * \return              An error object or NULL without errors.
+ * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_new (sc3_allocator_t * aator,
                                    sc3_array_t ** ap);
 
+/** Set the size of each array element in bytes.
+ * \param [in,out] a    The array must not be setup.
+ * \param [in] esize    Element size in bytes.  Zero is legal, one the default.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_array_set_elem_size (sc3_array_t * a, size_t esize);
+
+/** Set the initial number of array elements.
+ * \param [in,out] a    The array must not be setup.
+ * \param [in] ecount   Element count on setup.  Zero is legal and default.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_array_set_elem_count (sc3_array_t * a, size_t ecount);
+
+/** Set the minimum required number of array elements to allocate on setup.
+ * \param [in,out] a    The array must not be setup.
+ * \param [in] ealloc   Minimum number of elements initially allocated.
+ *                      Legal if this is smaller than the initial count.
+ *                      Default is 8.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_array_set_elem_alloc (sc3_array_t * a, size_t ealloc);
+
+/** Set the resizable property of an array.
+ * It determines whether the array may be resized after setup.
+ * \param [in,out] a        The array must not be setup.
+ * \param [in] resizable    Boolean; default is true.
+ * \return                  NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_array_set_resizable (sc3_array_t * a, int resizable);
+
+/** Set the initzero property of an array.
+ * If set to true, the array memory is zeroed during setup.
+ * \param [in,out] a        The array must not be setup.
+ * \param [in] initzero     Boolean; default is false.
+ * \return                  NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_set_initzero (sc3_array_t * a, int initzero);
 
 /** Setup an array and put it into its usable phase.
  * \param [in,out] a    This array must not yet be setup.
@@ -118,6 +152,14 @@ sc3_error_t        *sc3_array_unref (sc3_array_t ** ap);
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
+
+/** Index an array element.
+ * \param [in] a        The array must be setup.
+ * \param [in] i        Index must be in [0, element count).
+ * \param [out] pe      Address of array element at index \b i.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void **p);
 
 #ifdef __cplusplus
 #if 0

@@ -20,6 +20,7 @@
   02110-1301, USA.
 */
 
+#include <sc3_array.h>
 #include <sc3_error.h>
 #include <sc3_openmp.h>
 #include <sc3_mpi.h>
@@ -203,6 +204,19 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
 }
 
 static sc3_error_t *
+test_array (sc3_allocator_t * ator)
+{
+  sc3_array_t        *arr;
+
+  SC3E (sc3_array_new (ator, &arr));
+  SC3E (sc3_array_set_elem_size (arr, 0));
+  SC3E (sc3_array_setup (arr));
+
+  SC3E (sc3_array_destroy (&arr));
+  return NULL;
+}
+
+static sc3_error_t *
 test_mpi (int *rank)
 {
   sc3_MPI_Comm_t      mpicomm = SC3_MPI_COMM_WORLD;
@@ -277,6 +291,11 @@ main (int argc, char **argv)
   if (main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("Main allocator_new failed\n");
     goto main_end;
+  }
+
+  SC3E_SET (e, test_array (a));
+  if (!main_error_check (&e, &num_fatal, &num_weird)) {
+    printf ("Array test ok\n");
   }
 
   SC3E_SET (e, test_mpi (&mpirank));

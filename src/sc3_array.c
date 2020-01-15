@@ -37,11 +37,11 @@ struct sc3_array
   int                 setup;
 
   /* parameters fixed after setup call */
-  int                 resizable;
+  int                 resizable, initzero;
   size_t              esize, ecount, ealloc;
 
   /* member variables initialized in setup call */
-
+  char               *mem;
 };
 
 int
@@ -54,8 +54,17 @@ sc3_array_is_valid (sc3_array_t * a)
     return 0;
   }
 
-  /* TODO check internal allocation logic depending on setup status */
-
+  /* check internal allocation logic depending on setup status */
+  if (!a->setup) {
+    if (a->mem != NULL) {
+      return 0;
+    }
+  }
+  else {
+    if (a->mem == NULL && a->ecount * a->esize > 0) {
+      return 0;
+    }
+  }
   return 1;
 }
 
@@ -125,11 +134,30 @@ sc3_array_set_resizable (sc3_array_t * a, int resizable)
 }
 
 sc3_error_t        *
-sc3_array_setup (sc3_array_t * a)
+sc3_array_set_initzero (sc3_array_t * a, int initzero)
 {
   SC3A_CHECK (sc3_array_is_new (a));
+  a->initzero = initzero;
+  return NULL;
+}
 
-  /* TODO allocate array storage */
+sc3_error_t        *
+sc3_array_setup (sc3_array_t * a)
+{
+  size_t              abytes;
+
+  SC3A_CHECK (sc3_array_is_new (a));
+
+  /* determine amount of memory to allocate */
+  abytes = SC3_MAX (a->ealloc, a->ecount) * a->esize;
+
+  /* allocate array storage */
+  if (!a->initzero) {
+    SC3E_ALLOCATOR_MALLOC (a->aator, char, abytes, a->mem);
+  }
+  else {
+    SC3E_ALLOCATOR_CALLOC (a->aator, char, abytes, a->mem);
+  }
 
   a->setup = 1;
   SC3A_CHECK (sc3_array_is_setup (a));
@@ -157,9 +185,11 @@ sc3_array_unref (sc3_array_t ** ap)
   if (waslast) {
     *ap = NULL;
 
-    /* TODO deallocate array storage if setup */
-
     aator = a->aator;
+    if (a->setup) {
+      /* deallocate element storage */
+      SC3E_ALLOCATOR_FREE (aator, char, a->mem);
+    }
     SC3E_ALLOCATOR_FREE (aator, sc3_array_t, a);
     SC3E (sc3_allocator_unref (&aator));
   }
@@ -176,5 +206,16 @@ sc3_array_destroy (sc3_array_t ** ap)
   SC3E (sc3_array_unref (&a));
 
   SC3A_CHECK (a == NULL);
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_array_index (sc3_array_t * a, int i, void **p)
+{
+  SC3E_RETVAL (p, NULL);
+  SC3A_CHECK (sc3_array_is_setup (a));
+  SC3A_CHECK (0 <= i && (size_t) i < a->ecount);
+
+  *p = a->mem + i * a->esize;
   return NULL;
 }
