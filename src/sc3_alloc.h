@@ -111,7 +111,7 @@ sc3_allocator_t    *sc3_allocator_nothread (void);
  * Setting and modifying parameters is only allowed in the setup phase.
  * Call \ref sc3_allocator_setup to change it into its usage phase.
  * After that, no more parameters may be set.
- * \param [in] oa       An allocator that is setup.
+ * \param [in,out] oa   An allocator that is setup.
  *                      The allocator is refd and remembered internally
  *                      and will be unrefd on destruction.
  * \param [out] ap      Pointer must not be NULL.
@@ -123,14 +123,14 @@ sc3_error_t        *sc3_allocator_new (sc3_allocator_t * oa,
                                        sc3_allocator_t ** ap);
 
 /** Set byte alignment followed by the allocator.
- * \param [in] a        Valid allocator not setup.
+ * \param [in,out] a    Valid allocator not setup.
  * \param [in] align    Power of two designating byte alignment of memory,
  *                      or zero for default alignment.
  */
 sc3_error_t        *sc3_allocator_set_align (sc3_allocator_t * a, int align);
 
 /** Setup an allocator and put it into its usable phase.
- * \param [in] a        This allocator must not yet be setup.
+ * \param [in,out] a    This allocator must not yet be setup.
  *                      Internal storage is allocated, the setup phase ends,
  *                      and the allocator is put into its usable phase.
  * \return              NULL on success, error object otherwise.
@@ -140,7 +140,7 @@ sc3_error_t        *sc3_allocator_setup (sc3_allocator_t * a);
 /** Increase the reference count on an allocator by 1.
  * This is only allowed after the allocator has been setup.
  * Does nothing if allocator has not been created by \ref sc3_allocator_new.
- * \param [in] a        Allocator must be setup.  Its refcount is increased.
+ * \param [in,out] a    Allocator must be setup.  Its refcount is increased.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
@@ -148,7 +148,7 @@ sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 /** Decrease the reference count on an allocator by 1.
  * If the reference count drops to zero, the allocator is deallocated.
  * Does nothing if allocator has not been created by \ref sc3_allocator_new.
- * \param [in] ap       The pointer must not be NULL and the allocator valid.
+ * \param [in,out] ap   The pointer must not be NULL and the allocator valid.
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the allocator is destroyed and the value set to NULL.
  * \return              NULL on success, error object otherwise.

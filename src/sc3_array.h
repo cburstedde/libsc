@@ -71,9 +71,9 @@ int                 sc3_array_is_setup (sc3_array_t * a);
  * Setting and modifying parameters is only allowed in the setup phase.
  * Call \ref sc3_array_setup to change the array into its usage phase.
  * After that, no more parameters may be set.
- * \param [in] aator    An allocator that is setup.
- *                      The allocator is refd and remembered internally
- *                      and will be unrefd on array destruction.
+ * \param [in,out] aator    An allocator that is setup.
+ *                          The allocator is refd and remembered internally
+ *                          and will be unrefd on array destruction.
  * \param [out] ap      Pointer must not be NULL.
  *                      If the function returns an error, value set to NULL.
  *                      Otherwise, value set to an array with default values.
@@ -88,7 +88,7 @@ sc3_error_t        *sc3_array_set_elem_alloc (sc3_array_t * a, size_t ealloc);
 sc3_error_t        *sc3_array_set_resizable (sc3_array_t * a, int resizable);
 
 /** Setup an array and put it into its usable phase.
- * \param [in] a        This array must not yet be setup.
+ * \param [in,out] a    This array must not yet be setup.
  *                      Internal storage is allocated, the setup phase ends,
  *                      and the array is put into its usable phase.
  * \return              NULL on success, error object otherwise.
@@ -97,14 +97,14 @@ sc3_error_t        *sc3_array_setup (sc3_array_t * a);
 
 /** Increase the reference count on an array by 1.
  * This is only allowed after the array has been setup.
- * \param [in] a        This array must be setup.  Its refcount is increased.
+ * \param [in,out] a    This array must be setup.  Its refcount is increased.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_ref (sc3_array_t * a);
 
 /** Decrease the reference count on an array by 1.
  * If the reference count drops to zero, the allocator is deallocated.
- * \param [in] ap       The pointer must not be NULL and the array valid.
+ * \param [in,out] ap   The pointer must not be NULL and the array valid.
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the array is destroyed and the value set to NULL.
  * \return              NULL on success, error object otherwise.

@@ -160,9 +160,9 @@ int                 sc3_error_is_fatal (sc3_error_t * e);
  * Setting and modifying parameters is only allowed in the setup phase.
  * Call \ref sc3_error_setup to change the error into its usage phase.
  * After that, no more parameters may be set.
- * \param [in] aator    An allocator that is setup.
- *                      The allocator is refd and remembered internally
- *                      and will be unrefd on error destruction.
+ * \param [in,out] aator    An allocator that is setup.
+ *                          The allocator is refd and remembered internally
+ *                          and will be unrefd on error destruction.
  * \param [out] eap     Pointer must not be NULL.
  *                      If the function returns an error, value set to NULL.
  *                      Otherwise, value set to an error with default values.
@@ -172,7 +172,7 @@ sc3_error_t        *sc3_error_new (sc3_allocator_t * eator,
                                    sc3_error_t ** ep);
 
 /** Set the error to be the top of a stack of existing errors.
- * \param [in] e        Error object before \ref sc3_error_setup.
+ * \param [in,out] e        Error object before \ref sc3_error_setup.
  * \param [in,out] stack    This function takes ownership of stack
  *                          (i.e. does not ref it), the pointer is NULLed.
  *                          If called multiple times, a stack passed earlier
@@ -196,7 +196,7 @@ sc3_error_t        *sc3_error_set_msgf (sc3_error_t * e,
 #endif
 
 /** Setup an error and put it into its usable phase.
- * \param [in] e        This error must not yet be setup.
+ * \param [in,out] e    This error must not yet be setup.
  *                      Internal storage is allocated, the setup phase ends,
  *                      and the error is put into its usable phase.
  * \return              NULL on success, error object otherwise.
@@ -206,7 +206,7 @@ sc3_error_t        *sc3_error_setup (sc3_error_t * e);
 /** Increase the reference count on an error object by 1.
  * This is only allowed after the error has been setup.
  * Does nothing if error has not been created by \ref sc3_error_new.
- * \param [in] e        This error must be setup.  Its refcount is increased.
+ * \param [in,out] e    This error must be setup.  Its refcount is increased.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_ref (sc3_error_t * e);
@@ -288,7 +288,7 @@ sc3_error_t        *sc3_error_get_severity (sc3_error_t * e,
 /** Return the next deepest error stack with an added reference.
  * The input error object must be setup.  Its stack is allowed to be NULL.
  * It is not changed by the call except for its stack to get referenced.
- * \param [in] e        The error object must be setup.
+ * \param [in,out] e    The error object must be setup.
  * \param [out] pstack  Pointer must not be NULL.
  *                      When function returns cleanly, set to input error's
  *                      stack object.  If the stack is not NULL, it is refd.
