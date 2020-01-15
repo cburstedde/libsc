@@ -240,8 +240,8 @@ openmp_info (void)
 
     printf ("Thread %d out of %d\n", tid, tnum);
 
-    SC3_MIN (minid, tid);
-    SC3_MAX (maxid, tid);
+    minid = SC3_MIN (minid, tid);
+    maxid = SC3_MAX (maxid, tid);
     ++tcount;
   }
   printf ("Reductions min %d max %d count %d\n", minid, maxid, tcount);

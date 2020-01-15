@@ -51,10 +51,8 @@
 #define SC3_CALLOC(typ,nmemb) ((typ *) calloc (nmemb, sizeof (typ)))
 #define SC3_FREE(ptr) do { free (ptr); } while (0)
 
-#define SC3_MIN(out,in) \
-  do { (out) = (in) < (out) ? (in) : (out); } while (0)
-#define SC3_MAX(out,in) \
-  do { (out) = (in) > (out) ? (in) : (out); } while (0)
+#define SC3_MIN(in1,in2) ((in1) <= (in2) ? (in1) : (in2))
+#define SC3_MAX(in1,in2) ((in1) >= (in2) ? (in1) : (in2))
 
 #ifdef __cplusplus
 extern              "C"
