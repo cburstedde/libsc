@@ -54,7 +54,7 @@ static sc3_allocator_t nta =
 int
 sc3_allocator_is_valid (sc3_allocator_t * a)
 {
-  if (a == NULL || !sc3_refcount_is_valid (&a->rc)) {
+  if (a == NULL || !sc3_refcount_is_valid (&a->rc, NULL)) {
     return 0;
   }
   /* this goes into a recursion up the allocator tree */
@@ -180,7 +180,8 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
     *ap = NULL;
 
     if (a->counting) {
-      SC3E_DEMAND (a->num_malloc + a->num_calloc == a->num_free);
+      SC3E_DEMAND (a->num_malloc + a->num_calloc == a->num_free,
+                   "Memory balance");
     }
 
     oa = a->oa;
@@ -196,7 +197,7 @@ sc3_allocator_destroy (sc3_allocator_t ** ap)
   sc3_allocator_t    *a;
 
   SC3E_INULLP (ap, a);
-  SC3E_DEMAND (sc3_refcount_is_last (&a->rc));
+  SC3E_DEMIS (sc3_refcount_is_last, &a->rc);
   SC3E (sc3_allocator_unref (&a));
 
   SC3A_CHECK (a == NULL || !a->alloced);
@@ -215,7 +216,7 @@ sc3_allocator_strdup (sc3_allocator_t * a, const char *src, char **dest)
   /* TODO: use same allocation mechanism as allocator_malloc below */
 
   p = SC3_STRDUP (src);
-  SC3E_DEMAND (src == NULL || p != NULL);
+  SC3E_DEMAND (src == NULL || p != NULL, "Allocation");
 
   if (a->counting) {
     ++a->num_malloc;
@@ -259,7 +260,7 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
   /* TODO: alloc bigger block and write align and debug info into beginning */
 
   p = SC3_MALLOC (char, size);
-  SC3E_DEMAND (size == 0 || p != NULL);
+  SC3E_DEMAND (size == 0 || p != NULL, "Allocation");
 
   if (a->counting) {
     ++a->num_malloc;

@@ -133,7 +133,6 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
 
   /* Test file input/output and recoverable errors */
   if ((e = run_io (a, *result)) != NULL) {
-    SC3E_DEMAND (!sc3_error_is_fatal (e));
     ++*num_io;
 
 #ifdef SC3_BASICS_DEALLOCATE
@@ -227,7 +226,7 @@ test_mpi (int *rank)
   SC3E (sc3_MPI_Comm_size (mpicomm, &size));
   SC3E (sc3_MPI_Comm_rank (mpicomm, rank));
 
-  SC3E_DEMAND (0 <= *rank && *rank < size);
+  SC3E_DEMAND (0 <= *rank && *rank < size, "Rank out of range");
   printf ("MPI rank %d out of %d\n", *rank, size);
 
   return NULL;
@@ -260,7 +259,8 @@ openmp_info (void)
   }
   printf ("Reductions min %d max %d count %d\n", minid, maxid, tcount);
 
-  SC3E_DEMAND (0 <= minid && minid <= maxid && maxid < tmax);
+  SC3E_DEMAND (0 <= minid && minid <= maxid && maxid < tmax,
+               "Thread numbers out of range");
   return NULL;
 }
 

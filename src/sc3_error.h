@@ -49,9 +49,11 @@ extern              "C"
 
 /*** DEBUG macros do nothing unless configured with --enable-debug. ***/
 #ifndef SC_ENABLE_DEBUG
+#define SC3A_IS(f,o) do { ; } while (0)
 #define SC3A_CHECK(x) do { ; } while (0)
 #define SC3A_STACK(f) do { ; } while (0)
 #else
+#define SC3A_IS(f,o) SC3E_DEMIS(f,o)
 #define SC3A_CHECK(x) do {                                              \
   if (!(x)) {                                                           \
     return sc3_error_new_fatal (__FILE__, __LINE__, #x);                \
@@ -69,14 +71,22 @@ extern              "C"
   if (_e != NULL) {                                                     \
     return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
   }} while (0)
-#define SC3E_DEMAND(x) do {                                             \
+#define SC3E_DEMAND(x,s) do {                                           \
   if (!(x)) {                                                           \
-    return sc3_error_new_fatal (__FILE__, __LINE__, #x);                \
+    char _errmsg[SC3_BUFSIZE];                                          \
+    (void) snprintf (_errmsg, SC3_BUFSIZE, "%s: %s", #x, (s));          \
+    return sc3_error_new_fatal (__FILE__, __LINE__, _errmsg);           \
   }} while (0)
-#define SC3E_NONNEG(r) SC3E_DEMAND ((r) >= 0)
+#define SC3E_DEMIS(f,o) do {                                            \
+  char _r[SC3_BUFSIZE];                                                 \
+  if (!((f) ((o), _r))) {                                               \
+    char _errmsg[SC3_BUFSIZE];                                          \
+    (void) snprintf (_errmsg, SC3_BUFSIZE, "%s(%s): %s", #f, #o, _r);   \
+    return sc3_error_new_fatal (__FILE__, __LINE__, _errmsg);           \
+  }} while (0)
 #define SC3E_UNREACH(s) do {                                            \
   char _errmsg[SC3_BUFSIZE];                                            \
-  (void) snprintf (_errmsg, SC3_BUFSIZE, "Unreachable: %s", s);         \
+  (void) snprintf (_errmsg, SC3_BUFSIZE, "Unreachable: %s", (s));       \
   return sc3_error_new_fatal (__FILE__, __LINE__, _errmsg);             \
   } while (0)
 #define SC3E_RETVAL(r,v) do {                                           \
@@ -111,6 +121,21 @@ extern              "C"
   if ((e) == NULL) SC3E_SET(e,f);                                       \
   } while (0)
 
+/*** TEST macros.  Always executed. */
+#define SC3E_YES(r) do {                                                \
+  if ((r) != NULL) { (r)[0] = '\0'; } return 1; } while (0)
+#define SC3E_TEST(x,r)                                                  \
+  do { if (!(x)) {                                                      \
+    if ((r) != NULL) { SC3_BUFCOPY ((r), #x); }                         \
+    return 0; }} while (0)
+#define SC3E_IS(f,o,r)                                                  \
+  do { if ((r) == NULL) {                                               \
+    if (!((f) ((o), NULL))) { return 0; }} else {                       \
+    char _r[SC3_BUFSIZE];                                               \
+    if (!((f) ((o), _r))) {                                             \
+      (void) snprintf ((r), SC3_BUFSIZE, "%s(%s): %s", #f, #o, _r);     \
+      return 0; }}} while (0)
+
 typedef enum sc3_error_severity
 {
   SC3_ERROR_RUNTIME,
@@ -132,9 +157,10 @@ sc3_error_sync_t;
 /** Check whether an error is not NULL and internally consistent.
  * The error may be valid in both its setup and usage phases.
  * \param [in] a        Any pointer.
+ * \param [out] reason  If not NULL, empty string or reason for invalidity.
  * \return              True iff pointer is not NULL and error consistent.
  */
-int                 sc3_error_is_valid (sc3_error_t * e);
+int                 sc3_error_is_valid (sc3_error_t * e, char *reason);
 
 /** Check whether an error is not NULL, consistent and not setup.
  * This means that the error is not in its usage phase.

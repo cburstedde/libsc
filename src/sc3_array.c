@@ -47,7 +47,7 @@ struct sc3_array
 int
 sc3_array_is_valid (sc3_array_t * a)
 {
-  if (a == NULL || !sc3_refcount_is_valid (&a->rc)) {
+  if (a == NULL || !sc3_refcount_is_valid (&a->rc, NULL)) {
     return 0;
   }
   if (!sc3_allocator_is_setup (a->aator)) {
@@ -202,7 +202,7 @@ sc3_array_destroy (sc3_array_t ** ap)
   sc3_array_t        *a;
 
   SC3E_INULLP (ap, a);
-  SC3E_DEMAND (sc3_refcount_is_last (&a->rc));
+  SC3E_DEMIS (sc3_refcount_is_last, &a->rc);
   SC3E (sc3_array_unref (&a));
 
   SC3A_CHECK (a == NULL);

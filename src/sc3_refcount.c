@@ -30,15 +30,20 @@
 #include <sc3_refcount_internal.h>
 
 int
-sc3_refcount_is_valid (sc3_refcount_t * r)
+sc3_refcount_is_valid (sc3_refcount_t * r, char *reason)
 {
-  return r != NULL && r->magic == SC3_REFCOUNT_MAGIC && r->rc >= 1;
+  SC3E_TEST (r != NULL, reason);
+  SC3E_TEST (r->magic == SC3_REFCOUNT_MAGIC, reason);
+  SC3E_TEST (r->rc >= 1, reason);
+  SC3E_YES (reason);
 }
 
 int
-sc3_refcount_is_last (sc3_refcount_t * r)
+sc3_refcount_is_last (sc3_refcount_t * r, char *reason)
 {
-  return r != NULL && r->magic == SC3_REFCOUNT_MAGIC && r->rc == 1;
+  SC3E_IS (sc3_refcount_is_valid, r, reason);
+  SC3E_TEST (r->rc == 1, reason);
+  SC3E_YES (reason);
 }
 
 sc3_error_t        *
@@ -64,8 +69,7 @@ sc3_refcount_init (sc3_refcount_t * r)
 sc3_error_t        *
 sc3_refcount_ref (sc3_refcount_t * r)
 {
-  SC3A_CHECK (r != NULL && r->magic == SC3_REFCOUNT_MAGIC);
-  SC3E_DEMAND (r->rc >= 1);
+  SC3A_IS (sc3_refcount_is_valid, r);
 
   ++r->rc;
   return NULL;
@@ -74,9 +78,8 @@ sc3_refcount_ref (sc3_refcount_t * r)
 sc3_error_t        *
 sc3_refcount_unref (sc3_refcount_t * r, int *waslast)
 {
-  SC3A_CHECK (r != NULL && r->magic == SC3_REFCOUNT_MAGIC);
-  SC3E_DEMAND (r->rc >= 1);
   SC3E_RETVAL (waslast, 0);
+  SC3A_IS (sc3_refcount_is_valid, r);
 
   if (--r->rc == 0) {
     r->magic = 0;

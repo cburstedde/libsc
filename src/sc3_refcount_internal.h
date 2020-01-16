@@ -43,8 +43,8 @@ extern              "C"
 #endif
 #endif
 
-int                 sc3_refcount_is_valid (sc3_refcount_t * r);
-int                 sc3_refcount_is_last (sc3_refcount_t * r);
+int                 sc3_refcount_is_valid (sc3_refcount_t * r, char *reason);
+int                 sc3_refcount_is_last (sc3_refcount_t * r, char *reason);
 sc3_error_t        *sc3_refcount_init_invalid (sc3_refcount_t * r);
 
 #ifdef __cplusplus

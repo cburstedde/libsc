@@ -59,36 +59,35 @@ static sc3_error_t  nom =
 };
 
 int
-sc3_error_is_valid (sc3_error_t * e)
+sc3_error_is_valid (sc3_error_t * e, char *reason)
 {
-  if (e == NULL || !sc3_refcount_is_valid (&e->rc)) {
-    return 0;
-  }
+  SC3E_TEST (e != NULL, reason);
+  SC3E_IS (sc3_refcount_is_valid, &e->rc, reason);
+
   if (!sc3_allocator_is_setup (e->eator)) {
+    reason[0] = '\0';
     return 0;
   }
   if (e->stack != NULL && !sc3_error_is_setup (e->stack)) {
+    reason[0] = '\0';
     return 0;
   }
-  if (!(0 <= e->sev && e->sev < SC3_ERROR_SEVERITY_LAST)) {
-    return 0;
-  }
-  if (!(0 <= e->syn && e->syn < SC3_ERROR_SYNC_LAST)) {
-    return 0;
-  }
-  return 1;
+
+  SC3E_TEST (0 <= e->sev && e->sev < SC3_ERROR_SEVERITY_LAST, reason);
+  SC3E_TEST (0 <= e->syn && e->syn < SC3_ERROR_SYNC_LAST, reason);
+  SC3E_YES (reason);
 }
 
 int
 sc3_error_is_new (sc3_error_t * e)
 {
-  return sc3_error_is_valid (e) && !e->setup;
+  return sc3_error_is_valid (e, NULL) && !e->setup;
 }
 
 int
 sc3_error_is_setup (sc3_error_t * e)
 {
-  return sc3_error_is_valid (e) && e->setup;
+  return sc3_error_is_valid (e, NULL) && e->setup;
 }
 
 int
@@ -215,7 +214,7 @@ sc3_error_unref (sc3_error_t ** ep)
   sc3_error_t        *e;
 
   SC3E_INOUTP (ep, e);
-  SC3A_CHECK (sc3_error_is_valid (e));
+  SC3A_IS (sc3_error_is_valid, e);
 
   if (!e->alloced) {
     /* It is our convention that non-alloced errors must not have a stack. */
@@ -244,7 +243,7 @@ sc3_error_destroy (sc3_error_t ** ep)
   sc3_error_t        *e;
 
   SC3E_INULLP (ep, e);
-  SC3E_DEMAND (sc3_refcount_is_last (&e->rc));
+  SC3E_DEMIS (sc3_refcount_is_last, &e->rc);
   SC3E (sc3_error_unref (&e));
 
   SC3A_CHECK (e == NULL || !e->alloced);
