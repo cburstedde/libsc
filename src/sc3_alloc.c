@@ -52,52 +52,49 @@ static sc3_allocator_t nta =
   { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, 0, 0, 0 };
 
 int
-sc3_allocator_is_valid (sc3_allocator_t * a)
+sc3_allocator_is_valid (sc3_allocator_t * a, char *reason)
 {
-  if (a == NULL || !sc3_refcount_is_valid (&a->rc, NULL)) {
-    return 0;
+  SC3E_TEST (a != NULL, reason);
+  SC3E_IS (sc3_refcount_is_valid, &a->rc, reason);
+  if (a->oa != NULL) {
+    /* this goes into a recursion up the allocator tree */
+    SC3E_IS (sc3_allocator_is_setup, a->oa, reason);
   }
-  /* this goes into a recursion up the allocator tree */
-  if (a->oa != NULL && !sc3_allocator_is_setup (a->oa)) {
-    return 0;
-  }
-  if (a->align < 0 || a->alloced < 0) {
-    return 0;
-  }
-
+  SC3E_TEST (a->align >= 0 && a->alloced >= 0, reason);
   if (!a->setup) {
-    if (a->num_malloc != 0 || a->num_calloc != 0 || a->num_free != 0) {
-      return 0;
-    }
+    SC3E_TEST (a->num_malloc == 0 && a->num_calloc == 0 && a->num_free == 0,
+               reason);
   }
   else {
-    if (a->num_malloc < 0 || a->num_calloc < 0 || a->num_free < 0) {
-      return 0;
-    }
-    if (a->num_malloc + a->num_calloc < a->num_free) {
-      return 0;
-    }
+    SC3E_TEST (a->num_malloc >= 0 && a->num_calloc >= 0 && a->num_free >= 0,
+               reason);
+    SC3E_TEST (a->num_malloc + a->num_calloc >= a->num_free, reason);
   }
-  return 1;
+  SC3E_YES (reason);
 }
 
 int
-sc3_allocator_is_new (sc3_allocator_t * a)
+sc3_allocator_is_new (sc3_allocator_t * a, char *reason)
 {
-  return sc3_allocator_is_valid (a) && !a->setup;
+  SC3E_IS (sc3_allocator_is_valid, a, reason);
+  SC3E_TEST (!a->setup, reason);
+  SC3E_YES (reason);
 }
 
 int
-sc3_allocator_is_setup (sc3_allocator_t * a)
+sc3_allocator_is_setup (sc3_allocator_t * a, char *reason)
 {
-  return sc3_allocator_is_valid (a) && a->setup;
+  SC3E_IS (sc3_allocator_is_valid, a, reason);
+  SC3E_TEST (a->setup, reason);
+  SC3E_YES (reason);
 }
 
 int
-sc3_allocator_is_free (sc3_allocator_t * a)
+sc3_allocator_is_free (sc3_allocator_t * a, char *reason)
 {
-  return sc3_allocator_is_setup (a) &&
-    a->num_malloc + a->num_calloc == a->num_free;
+  SC3E_IS (sc3_allocator_is_setup, a, reason);
+  SC3E_TEST (a->num_malloc + a->num_calloc == a->num_free, reason);
+  SC3E_YES (reason);
 }
 
 sc3_allocator_t    *
@@ -118,7 +115,7 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   sc3_allocator_t    *a;
 
   SC3E_RETVAL (ap, NULL);
-  SC3A_CHECK (sc3_allocator_is_setup (oa));
+  SC3A_IS (sc3_allocator_is_setup, oa);
 
   SC3E (sc3_allocator_ref (oa));
   SC3E_ALLOCATOR_CALLOC (oa, sc3_allocator_t, 1, a);
@@ -126,7 +123,7 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   a->alloced = 1;
   a->counting = 1;
   a->oa = oa;
-  SC3A_CHECK (sc3_allocator_is_new (a));
+  SC3A_IS (sc3_allocator_is_new, a);
 
   *ap = a;
   return NULL;
@@ -135,7 +132,7 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
 sc3_error_t        *
 sc3_allocator_set_align (sc3_allocator_t * a, int align)
 {
-  SC3A_CHECK (sc3_allocator_is_new (a));
+  SC3A_IS (sc3_allocator_is_new, a);
   SC3A_CHECK (align == 0 || SC3_ISPOWOF2 (align));
 
   a->align = align;
@@ -145,17 +142,17 @@ sc3_allocator_set_align (sc3_allocator_t * a, int align)
 sc3_error_t        *
 sc3_allocator_setup (sc3_allocator_t * a)
 {
-  SC3A_CHECK (sc3_allocator_is_new (a));
+  SC3A_IS (sc3_allocator_is_new, a);
 
   a->setup = 1;
-  SC3A_CHECK (sc3_allocator_is_setup (a));
+  SC3A_IS (sc3_allocator_is_setup, a);
   return NULL;
 }
 
 sc3_error_t        *
 sc3_allocator_ref (sc3_allocator_t * a)
 {
-  SC3A_CHECK (sc3_allocator_is_setup (a));
+  SC3A_IS (sc3_allocator_is_setup, a);
   if (a->alloced) {
     SC3E (sc3_refcount_ref (&a->rc));
   }
@@ -169,7 +166,7 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
   sc3_allocator_t    *a, *oa;
 
   SC3E_INOUTP (ap, a);
-  SC3A_CHECK (sc3_allocator_is_valid (a));
+  SC3A_IS (sc3_allocator_is_valid, a);
 
   if (!a->alloced) {
     return NULL;
@@ -209,7 +206,7 @@ sc3_allocator_strdup (sc3_allocator_t * a, const char *src, char **dest)
 {
   char               *p;
 
-  SC3A_CHECK (sc3_allocator_is_setup (a));
+  SC3A_IS (sc3_allocator_is_setup, a);
   SC3A_CHECK (src != NULL);
   SC3E_RETVAL (dest, NULL);
 
@@ -233,7 +230,7 @@ sc3_allocator_malloc_noerr (sc3_allocator_t * a, size_t size)
 
   /* TODO: use same allocation mechanism as allocator_malloc below */
 
-  if (!sc3_allocator_is_setup (a)) {
+  if (!sc3_allocator_is_setup (a, NULL)) {
     return NULL;
   }
 
@@ -254,7 +251,7 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
 {
   char               *p;
 
-  SC3A_CHECK (sc3_allocator_is_setup (a));
+  SC3A_IS (sc3_allocator_is_setup, a);
   SC3E_RETVAL (ptr, NULL);
 
   /* TODO: alloc bigger block and write align and debug info into beginning */
@@ -274,7 +271,7 @@ sc3_error_t        *
 sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
                       void **ptr)
 {
-  SC3A_CHECK (sc3_allocator_is_setup (a));
+  SC3A_IS (sc3_allocator_is_setup, a);
 
   /* TODO: adapt allocator_malloc function and call calloc inside */
   SC3E (sc3_allocator_malloc (a, nmemb * size, ptr));
@@ -286,7 +283,7 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
 sc3_error_t        *
 sc3_allocator_free (sc3_allocator_t * a, void *ptr)
 {
-  SC3A_CHECK (sc3_allocator_is_setup (a));
+  SC3A_IS (sc3_allocator_is_setup, a);
 
   /* TODO: verify that ptr has been allocated by this allocator */
 

@@ -277,6 +277,7 @@ main (int argc, char **argv)
   int                 result;
   int                 num_fatal, num_weird, num_io;
   int                 i;
+  char                reason[SC3_BUFSIZE];
   sc3_error_t        *e;
   sc3_allocator_t    *a;
   sc3_allocator_t    *mainalloc;
@@ -321,9 +322,11 @@ main (int argc, char **argv)
   }
 
   SC3E_SET (e, sc3_allocator_destroy (&a));
-  if (main_error_check (&e, &num_fatal, &num_weird) ||
-      !sc3_allocator_is_free (mainalloc)) {
+  if (main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("Main allocator destroy failed\n");
+  }
+  if (!sc3_allocator_is_free (mainalloc, reason)) {
+    printf ("Static allocator not free: %s\n", reason);
   }
 
   SC3E_SET (e, sc3_MPI_Finalize ());

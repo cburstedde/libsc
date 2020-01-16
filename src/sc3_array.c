@@ -49,10 +49,7 @@ sc3_array_is_valid (sc3_array_t * a, char *reason)
 {
   SC3E_TEST (a != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &a->rc, reason);
-  if (!sc3_allocator_is_setup (a->aator)) {
-    reason[0] = '\0';
-    return 0;
-  }
+  SC3E_IS (sc3_allocator_is_setup, a->aator, reason);
 
   /* check internal allocation logic depending on setup status */
   if (!a->setup) {
@@ -86,7 +83,7 @@ sc3_array_new (sc3_allocator_t * aator, sc3_array_t ** ap)
   sc3_array_t        *a;
 
   SC3E_RETVAL (ap, NULL);
-  SC3A_CHECK (sc3_allocator_is_setup (aator));
+  SC3A_IS (sc3_allocator_is_setup, aator);
 
   SC3E (sc3_allocator_ref (aator));
   SC3E_ALLOCATOR_CALLOC (aator, sc3_array_t, 1, a);

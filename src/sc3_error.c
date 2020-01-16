@@ -63,12 +63,7 @@ sc3_error_is_valid (sc3_error_t * e, char *reason)
 {
   SC3E_TEST (e != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &e->rc, reason);
-
-  if (!sc3_allocator_is_setup (e->eator)) {
-    reason[0] = '\0';
-    return 0;
-  }
-
+  SC3E_IS (sc3_allocator_is_setup, e->eator, reason);
   if (e->stack != NULL) {
     SC3E_IS (sc3_error_is_setup, e->stack, reason);
   }
@@ -125,7 +120,7 @@ sc3_error_new (sc3_allocator_t * eator, sc3_error_t ** ep)
   sc3_error_t        *e;
 
   SC3E_RETVAL (ep, NULL);
-  SC3A_CHECK (sc3_allocator_is_setup (eator));
+  SC3A_IS (sc3_allocator_is_setup, eator);
 
   SC3E (sc3_allocator_ref (eator));
   SC3E_ALLOCATOR_MALLOC (eator, sc3_error_t, 1, e);

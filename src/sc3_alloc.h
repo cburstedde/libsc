@@ -62,30 +62,36 @@ extern              "C"
 /** Check whether an allocator is not NULL and internally consistent.
  * The allocator may be valid in both its setup and usage phases.
  * \param [in] a        Any pointer.
+ * \param [out] reason  If not NULL, "" if answer is yes or reason for no.
  * \return              True iff pointer is not NULL and allocator consistent.
  */
-int                 sc3_allocator_is_valid (sc3_allocator_t * a);
+int                 sc3_allocator_is_valid (sc3_allocator_t * a,
+                                            char *reason);
 
 /** Check whether an allocator is not NULL, consistent and not setup.
  * This means that the allocator is not in its usage phase.
  * \param [in] a    Any pointer.
+ * \param [out] reason  If not NULL, "" if answer is yes or reason for no.
  * \return          True iff pointer not NULL, allocator consistent, not setup.
  */
-int                 sc3_allocator_is_new (sc3_allocator_t * a);
+int                 sc3_allocator_is_new (sc3_allocator_t * a, char *reason);
 
 /** Check whether an allocator is not NULL, internally consistent and setup.
  * This means that the allocator is in its usage phase.
  * \param [in] a    Any pointer.
+ * \param [out] reason  If not NULL, "" if answer is yes or reason for no.
  * \return          True iff pointer not NULL, allocator consistent and setup.
  */
-int                 sc3_allocator_is_setup (sc3_allocator_t * a);
+int                 sc3_allocator_is_setup (sc3_allocator_t * a,
+                                            char *reason);
 
 /** Return whether a setup allocator does not hold any allocations.
  * \param [in]      Any pointer.
+ * \param [out] reason  If not NULL, "" if answer is yes or reason for no.
  * \return          True iff pointer not NULL, allocator setup
  *                  and not holding any allocations.
  */
-int                 sc3_allocator_is_free (sc3_allocator_t * a);
+int                 sc3_allocator_is_free (sc3_allocator_t * a, char *reason);
 
 /** Return a non-counting allocator setup and safe to use in threads.
  * This allocator thus does not check for matched alloc/free calls.
