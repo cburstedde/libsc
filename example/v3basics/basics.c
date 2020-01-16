@@ -44,12 +44,12 @@ unravel_error (sc3_error_t ** ep)
   while (e != NULL) {
     /* print error information */
     SC3E (sc3_error_get_location (e, &filename, &line));
-    if ((bname = SC3_STRDUP (filename)) != NULL) {
+    if ((bname = strdup (filename)) != NULL) {
       filename = sc3_basename (bname);
     }
     SC3E (sc3_error_get_message (e, &errmsg));
     printf ("Error stack %d:%s:%d: %s\n", j, filename, line, errmsg);
-    SC3_FREE (bname);
+    free (bname);
 
     /* go down the stack */
     SC3E (sc3_error_get_stack (e, &stack));
