@@ -337,8 +337,8 @@ sc3_error_new_inherit (sc3_error_t ** pstack,
 sc3_error_t        *
 sc3_error_get_location (sc3_error_t * e, const char **filename, int *line)
 {
-  SC3E_RETVAL (filename, "");
-  SC3E_RETVAL (line, 0);
+  SC3E_RETOPT (filename, "");
+  SC3E_RETOPT (line, 0);
   SC3A_CHECK (sc3_error_is_setup (e));
 
   if (filename != NULL) {
@@ -353,7 +353,7 @@ sc3_error_get_location (sc3_error_t * e, const char **filename, int *line)
 sc3_error_t        *
 sc3_error_get_message (sc3_error_t * e, const char **errmsg)
 {
-  SC3E_RETVAL (errmsg, "");
+  SC3E_RETOPT (errmsg, "");
   SC3A_CHECK (sc3_error_is_setup (e));
 
   if (errmsg != NULL) {
@@ -365,7 +365,7 @@ sc3_error_get_message (sc3_error_t * e, const char **errmsg)
 sc3_error_t        *
 sc3_error_get_severity (sc3_error_t * e, sc3_error_severity_t * sev)
 {
-  SC3E_RETVAL (sev, SC3_ERROR_FATAL);
+  SC3E_RETOPT (sev, SC3_ERROR_FATAL);
   SC3A_CHECK (sc3_error_is_setup (e));
 
   if (sev != NULL) {
@@ -377,7 +377,7 @@ sc3_error_get_severity (sc3_error_t * e, sc3_error_severity_t * sev)
 sc3_error_t        *
 sc3_error_get_stack (sc3_error_t * e, sc3_error_t ** pstack)
 {
-  SC3E_ONULLP (pstack);
+  SC3E_RETOPT (pstack, NULL);
   SC3A_CHECK (sc3_error_is_setup (e));
 
   if (e->stack != NULL) {

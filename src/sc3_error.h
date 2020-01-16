@@ -83,6 +83,9 @@ extern              "C"
   SC3A_CHECK ((r) != NULL);                                             \
     *(r) = (v);                                                         \
   } while (0)
+#define SC3E_RETOPT(r,v) do {                                           \
+  if ((r) != NULL) *(r) = (v);                                          \
+  } while (0)
 #define SC3E_INOUTP(pp,p) do {                                          \
   SC3A_CHECK ((pp) != NULL && *(pp) != NULL);                           \
   (p) = *(pp);                                                          \
@@ -259,8 +262,10 @@ sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** stack,
  * This can be ensured, optionally, by refing and later unrefing the error.
  * We do not ensure this by default to simplify short-time usage.
  * \param [in] e            Setup error object.
- * \param [out] filename    Must not be NULL; set to error's filename.
- * \param [out] line        Must not be NULL; set to error's line number.
+ * \param [out] filename    Pointer may be NULL, then it is not assigned.
+ *                          On success, set to error's filename.
+ * \param [out] line        Pointer may be NULL, then it is not assigned.
+ *                          On success, set to error's line number.
  * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_get_location (sc3_error_t * e,
@@ -271,7 +276,8 @@ sc3_error_t        *sc3_error_get_location (sc3_error_t * e,
  * This can be ensured, optionally, by refing and later unrefing the error.
  * We do not ensure this by default to simplify short-time usage.
  * \param [in] e        Setup error object.
- * \param [out] errmsg  Must not be NULL; set to error's message.
+ * \param [out] errmsg  Pointer may be NULL, then it is not assigned.
+ *                      On success, set to error's message.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_get_message (sc3_error_t * e,
@@ -279,7 +285,8 @@ sc3_error_t        *sc3_error_get_message (sc3_error_t * e,
 
 /** Access the severity of a setup error object.
  * \param [in] e        Setup error object.
- * \param [out] sev     Must not be NULL; set to error's severity.
+ * \param [out] sev     Pointer may be NULL, then it is not assigned.
+ *                      On success, set to error's severity.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_get_severity (sc3_error_t * e,
@@ -289,7 +296,7 @@ sc3_error_t        *sc3_error_get_severity (sc3_error_t * e,
  * The input error object must be setup.  Its stack is allowed to be NULL.
  * It is not changed by the call except for its stack to get referenced.
  * \param [in,out] e    The error object must be setup.
- * \param [out] pstack  Pointer must not be NULL.
+ * \param [out] pstack  Pointer may be NULL, then it is not assigned.
  *                      When function returns cleanly, set to input error's
  *                      stack object.  If the stack is not NULL, it is refd.
  *                      In this case it must be unrefd when no longer needed.
