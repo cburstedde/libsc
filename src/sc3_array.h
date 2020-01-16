@@ -48,23 +48,26 @@ extern              "C"
 /** Check whether an array is not NULL and internally consistent.
  * The array may be valid in both its setup and usage phases.
  * \param [in] a        Any pointer.
+ * \param [out] reason  If not NULL, "" if answer is yes or reason for no.
  * \return              True iff pointer is not NULL and array consistent.
  */
-int                 sc3_array_is_valid (sc3_array_t * a);
+int                 sc3_array_is_valid (sc3_array_t * a, char *reason);
 
 /** Check whether an array is not NULL, consistent and not setup.
  * This means that the array is not in its usage phase.
  * \param [in] a        Any pointer.
+ * \param [out] reason  If not NULL, "" if answer is yes or reason for no.
  * \return              True iff pointer not NULL, array consistent, not setup.
  */
-int                 sc3_array_is_new (sc3_array_t * a);
+int                 sc3_array_is_new (sc3_array_t * a, char *reason);
 
 /** Check whether an array is not NULL, internally consistent and setup.
  * This means that the array is in its usage phase.
  * \param [in] a        Any pointer.
+ * \param [out] reason  If not NULL, "" if answer is yes or reason for no.
  * \return              True iff pointer not NULL, array consistent and setup.
  */
-int                 sc3_array_is_setup (sc3_array_t * a);
+int                 sc3_array_is_setup (sc3_array_t * a, char *reason);
 
 /** Create a new array object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.

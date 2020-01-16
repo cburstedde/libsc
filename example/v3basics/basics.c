@@ -209,7 +209,11 @@ test_array (sc3_allocator_t * ator)
 
   SC3E (sc3_array_new (ator, &arr));
   SC3E (sc3_array_set_elem_size (arr, 0));
+  SC3E_DEMIS (sc3_array_is_new, arr);
+
   SC3E (sc3_array_setup (arr));
+  SC3E_DEMIS (!sc3_array_is_new, arr);
+  SC3E_DEMIS (sc3_array_is_setup, arr);
 
   SC3E (sc3_array_destroy (&arr));
   return NULL;

@@ -45,39 +45,39 @@ struct sc3_array
 };
 
 int
-sc3_array_is_valid (sc3_array_t * a)
+sc3_array_is_valid (sc3_array_t * a, char *reason)
 {
-  if (a == NULL || !sc3_refcount_is_valid (&a->rc, NULL)) {
-    return 0;
-  }
+  SC3E_TEST (a != NULL, reason);
+  SC3E_IS (sc3_refcount_is_valid, &a->rc, reason);
   if (!sc3_allocator_is_setup (a->aator)) {
+    reason[0] = '\0';
     return 0;
   }
 
   /* check internal allocation logic depending on setup status */
   if (!a->setup) {
-    if (a->mem != NULL) {
-      return 0;
-    }
+    SC3E_TEST (a->mem == NULL, reason);
   }
   else {
-    if (a->mem == NULL && a->ecount * a->esize > 0) {
-      return 0;
-    }
+    SC3E_TEST (a->mem != NULL || a->ecount * a->esize == 0, reason);
   }
-  return 1;
+  SC3E_YES (reason);
 }
 
 int
-sc3_array_is_new (sc3_array_t * a)
+sc3_array_is_new (sc3_array_t * a, char *reason)
 {
-  return sc3_array_is_valid (a) && !a->setup;
+  SC3E_IS (sc3_array_is_valid, a, reason);
+  SC3E_TEST (!a->setup, reason);
+  SC3E_YES (reason);
 }
 
 int
-sc3_array_is_setup (sc3_array_t * a)
+sc3_array_is_setup (sc3_array_t * a, char *reason)
 {
-  return sc3_array_is_valid (a) && a->setup;
+  SC3E_IS (sc3_array_is_valid, a, reason);
+  SC3E_TEST (a->setup, reason);
+  SC3E_YES (reason);
 }
 
 sc3_error_t        *
@@ -95,7 +95,7 @@ sc3_array_new (sc3_allocator_t * aator, sc3_array_t ** ap)
   a->ealloc = 8;
   a->resizable = 1;
   a->aator = aator;
-  SC3A_CHECK (sc3_array_is_new (a));
+  SC3A_IS (sc3_array_is_new, a);
 
   *ap = a;
   return NULL;
@@ -104,7 +104,7 @@ sc3_array_new (sc3_allocator_t * aator, sc3_array_t ** ap)
 sc3_error_t        *
 sc3_array_set_elem_size (sc3_array_t * a, size_t esize)
 {
-  SC3A_CHECK (sc3_array_is_new (a));
+  SC3A_IS (sc3_array_is_new, a);
   a->esize = esize;
   return NULL;
 }
@@ -112,7 +112,7 @@ sc3_array_set_elem_size (sc3_array_t * a, size_t esize)
 sc3_error_t        *
 sc3_array_set_elem_count (sc3_array_t * a, size_t ecount)
 {
-  SC3A_CHECK (sc3_array_is_new (a));
+  SC3A_IS (sc3_array_is_new, a);
   a->ecount = ecount;
   return NULL;
 }
@@ -120,7 +120,7 @@ sc3_array_set_elem_count (sc3_array_t * a, size_t ecount)
 sc3_error_t        *
 sc3_array_set_elem_alloc (sc3_array_t * a, size_t ealloc)
 {
-  SC3A_CHECK (sc3_array_is_new (a));
+  SC3A_IS (sc3_array_is_new, a);
   a->ealloc = ealloc;
   return NULL;
 }
@@ -128,7 +128,7 @@ sc3_array_set_elem_alloc (sc3_array_t * a, size_t ealloc)
 sc3_error_t        *
 sc3_array_set_resizable (sc3_array_t * a, int resizable)
 {
-  SC3A_CHECK (sc3_array_is_new (a));
+  SC3A_IS (sc3_array_is_new, a);
   a->resizable = resizable;
   return NULL;
 }
@@ -136,7 +136,7 @@ sc3_array_set_resizable (sc3_array_t * a, int resizable)
 sc3_error_t        *
 sc3_array_set_initzero (sc3_array_t * a, int initzero)
 {
-  SC3A_CHECK (sc3_array_is_new (a));
+  SC3A_IS (sc3_array_is_new, a);
   a->initzero = initzero;
   return NULL;
 }
@@ -146,7 +146,7 @@ sc3_array_setup (sc3_array_t * a)
 {
   size_t              abytes;
 
-  SC3A_CHECK (sc3_array_is_new (a));
+  SC3A_IS (sc3_array_is_new, a);
 
   /* determine amount of memory to allocate */
   abytes = SC3_MAX (a->ealloc, a->ecount) * a->esize;
@@ -160,14 +160,14 @@ sc3_array_setup (sc3_array_t * a)
   }
 
   a->setup = 1;
-  SC3A_CHECK (sc3_array_is_setup (a));
+  SC3A_IS (sc3_array_is_setup, a);
   return NULL;
 }
 
 sc3_error_t        *
 sc3_array_ref (sc3_array_t * a)
 {
-  SC3A_CHECK (sc3_array_is_setup (a));
+  SC3A_IS (sc3_array_is_setup, a);
   SC3E (sc3_refcount_ref (&a->rc));
   return NULL;
 }
@@ -180,7 +180,7 @@ sc3_array_unref (sc3_array_t ** ap)
   sc3_array_t        *a;
 
   SC3E_INOUTP (ap, a);
-  SC3A_CHECK (sc3_array_is_valid (a));
+  SC3A_IS (sc3_array_is_valid, a);
   SC3E (sc3_refcount_unref (&a->rc, &waslast));
   if (waslast) {
     *ap = NULL;
@@ -213,7 +213,7 @@ sc3_error_t        *
 sc3_array_index (sc3_array_t * a, int i, void **p)
 {
   SC3E_RETVAL (p, NULL);
-  SC3A_CHECK (sc3_array_is_setup (a));
+  SC3A_IS (sc3_array_is_setup, a);
   SC3A_CHECK (0 <= i && (size_t) i < a->ecount);
 
   *p = a->mem + i * a->esize;
