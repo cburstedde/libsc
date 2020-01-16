@@ -118,6 +118,7 @@ sc3_allocator_t    *sc3_allocator_nothread (void);
 
 /** Create a new allocator object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
+ * Default alignment is sizeof (void *); see \ref sc3_allocator_set_align.
  * Setting and modifying parameters is only allowed in the setup phase.
  * Call \ref sc3_allocator_setup to change it into its usage phase.
  * After that, no more parameters may be set.
@@ -136,8 +137,11 @@ sc3_error_t        *sc3_allocator_new (sc3_allocator_t * oa,
  * \param [in,out] a    Valid allocator not setup.
  * \param [in] align    Power of two designating byte alignment of memory,
  *                      or zero for default alignment.
+ *                      Zero alignment uses system defaults and
+ *                      disables internal consistency checking.
  */
-sc3_error_t        *sc3_allocator_set_align (sc3_allocator_t * a, int align);
+sc3_error_t        *sc3_allocator_set_align (sc3_allocator_t * a,
+                                             size_t align);
 
 /** Setup an allocator and put it into its usable phase.
  * \param [in,out] a    This allocator must not yet be setup.

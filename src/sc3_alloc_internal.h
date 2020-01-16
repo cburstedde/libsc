@@ -43,6 +43,11 @@ extern              "C"
 #endif
 #endif
 
+/** Allocate memory without internal error checking and alignment.
+ * \param [in,out] a    Allocator must be setup and have zero alignment.
+ * \param [in] size     Amount of memory to allocate.
+ * \return          Allocated memory on success, NULL otherwise.
+ */
 void               *sc3_allocator_malloc_noerr (sc3_allocator_t * a,
                                                 size_t size);
 
