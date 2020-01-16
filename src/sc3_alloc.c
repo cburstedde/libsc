@@ -41,6 +41,7 @@ struct sc3_allocator
   int                 counting;
 
   long                num_malloc, num_calloc, num_free;
+  size_t              total_size;
 };
 
 typedef union sc3_alloc_item
@@ -52,11 +53,11 @@ sc3_alloc_item_t;
 
 /** This allocator is thread-safe since it is not counting anything. */
 static sc3_allocator_t nca =
-  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, 0, 0, 0 };
+  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, 0, 0, 0, 0 };
 
 /** This allocator is not thread-safe since it is counting and not locked. */
 static sc3_allocator_t nta =
-  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, 0, 0, 0 };
+  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, 0, 0, 0, 0 };
 
 int
 sc3_allocator_is_valid (sc3_allocator_t * a, char *reason)
@@ -70,6 +71,7 @@ sc3_allocator_is_valid (sc3_allocator_t * a, char *reason)
   if (!a->setup) {
     SC3E_TEST (a->num_malloc == 0 && a->num_calloc == 0 && a->num_free == 0,
                reason);
+    SC3E_TEST (a->total_size == 0, reason);
   }
   else {
     SC3E_TEST (a->num_malloc >= 0 && a->num_calloc >= 0 && a->num_free >= 0,
@@ -100,6 +102,7 @@ sc3_allocator_is_free (sc3_allocator_t * a, char *reason)
 {
   SC3E_IS (sc3_allocator_is_setup, a, reason);
   SC3E_TEST (a->num_malloc + a->num_calloc == a->num_free, reason);
+  SC3E_TEST (a->total_size == 0, reason);
   SC3E_YES (reason);
 }
 
@@ -185,7 +188,8 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
 
     if (a->counting) {
       SC3E_DEMAND (a->num_malloc + a->num_calloc == a->num_free,
-                   "Memory balance");
+                   "Memory allocation count");
+      SC3E_DEMAND (a->total_size == 0, "Memory allocation size");
     }
 
     oa = a->oa;
@@ -285,6 +289,11 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
     aitem[2].siz = size;
     p = (char *) &aitem[3];
     SC3A_CHECK (((size_t) p) % a->align == 0);
+
+    /* keep track of total allocated size */
+    if (a->counting) {
+      a->total_size += size;
+    }
   }
 
   if (a->counting) {
@@ -319,12 +328,20 @@ sc3_allocator_free (sc3_allocator_t * a, void *ptr)
     SC3_FREE (ptr);
   }
   else {
+    size_t              size;
     sc3_alloc_item_t   *aitem;
 
     /* verify that memory had been allocated by this allocator */
     SC3A_CHECK (ptr != NULL);
     aitem = ((sc3_alloc_item_t *) ptr) - 3;
     SC3A_CHECK (aitem[0].ptr == (void *) a);
+
+    /* keep track of total allocated size */
+    if (a->counting) {
+      size = aitem[2].siz;
+      SC3A_CHECK (size <= a->total_size);
+      a->total_size -= size;
+    }
     SC3_FREE (aitem[1].ptr);
   }
 
