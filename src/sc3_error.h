@@ -192,6 +192,8 @@ int                 sc3_error_is_fatal (sc3_error_t * e, char *reason);
 
 /*** TODO error functions shall not throw new errors themselves?! ***/
 
+/*** TODO document all default values after _new. ***/
+
 /** Create a new error object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
  * Setting and modifying parameters is only allowed in the setup phase.
@@ -212,18 +214,39 @@ sc3_error_t        *sc3_error_new (sc3_allocator_t * eator,
  * \param [in,out] e        Error object before \ref sc3_error_setup.
  * \param [in,out] stack    This function takes ownership of stack
  *                          (i.e. does not ref it), the pointer is NULLed.
+ *                          The stack may be NULL or must be setup.
  *                          If called multiple times, a stack passed earlier
- *                          internally is unrefd.
+ *                          is unrefd internally.
  * \return              An error object or NULL without errors.
  */
 sc3_error_t        *sc3_error_set_stack (sc3_error_t * e,
                                          sc3_error_t ** stack);
+
+/** Set the filename and line number of an error.
+ * \param [in,out] e    Error object before \ref sc3_error_setup.
+ * \param [in] filename Null-terminated string.  Pointer must not be NULL.
+ * \param [in] line     Line number, non-negative.
+ * \return              An error object or NULL without errors.
+ */
 sc3_error_t        *sc3_error_set_location (sc3_error_t * e,
                                             const char *filename, int line);
+
+/** Set the message of an error.
+ * \param [in,out] e    Error object before \ref sc3_error_setup.
+ * \param [in] message  Null-terminated string.  Pointer must not be NULL.
+ * \return              An error object or NULL without errors.
+ */
 sc3_error_t        *sc3_error_set_message (sc3_error_t * e,
                                            const char *errmsg);
+
+/** Set the severity of an error.
+ * \param [in,out] e    Error object before \ref sc3_error_setup.
+ * \param [in] sev      Enum value in [0, SC3_ERROR_SEVERITY_LAST).
+ * \return              An error object or NULL without errors.
+ */
 sc3_error_t        *sc3_error_set_severity (sc3_error_t * e,
                                             sc3_error_severity_t sev);
+
 #if 0
 void                sc3_error_set_sync (sc3_error_t * e,
                                         sc3_error_sync_t syn);
@@ -266,27 +289,52 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
  */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 
+#if 0
 sc3_error_t        *sc3_error_new_ssm (sc3_allocator_t * alloc,
                                        sc3_error_severity_t sev,
                                        sc3_error_sync_t syn,
                                        const char *errmsg);
+#endif
 
-/* TODO: new_fatal, new_stack, new_inherit always return consistent results.
-         They must not lead to an infinite loop (e.g. when out of memory). */
-/* TODO: shall we pass an allocator parameter to new_fatal and new_stack? */
-
-/* This function returns the new error object and has no error code. */
+/** Create a new fatal error without relying on dynamic memory allocation.
+ * This is useful when allocating an error with \ref sc3_error_new might fail.
+ * \param [in] filename The filename is copied into the error object.
+ *                      Pointer not NULL, string null-terminated.
+ * \param [in] line     Line number set in the error.
+ * \param [in] errmsg   The error message is copied into the error.
+ *                      Pointer not NULL, string null-terminated.
+ * \return          The new error object; there is no other error handling.
+ */
 sc3_error_t        *sc3_error_new_fatal (const char *filename,
                                          int line, const char *errmsg);
 
-/** Takes owership of stack (i.e. does not ref it and NULLs the pointer).
- * The new error severity is set to SC3_ERROR_FATAL. */
+/** Create a new fatal error without relying on dynamic memory allocation.
+ * This is useful when allocating an error with \ref sc3_error_new might fail.
+ * This function expects a setup error as stack.
+ * \param [in] pstack   We take owership of the stack, pointer is NULLed.
+ * \param [in] filename The filename is copied into the error object.
+ *                      Pointer not NULL, string null-terminated.
+ * \param [in] line     Line number set in the error.
+ * \param [in] errmsg   The error message is copied into the error.
+ *                      Pointer not NULL, string null-terminated.
+ * \return          The new error object; there is no other error handling.
+ */
 sc3_error_t        *sc3_error_new_stack (sc3_error_t ** stack,
                                          const char *filename,
                                          int line, const char *errmsg);
 
-/** Takes owership of stack (i.e. does not ref it and NULLs the pointer).
- * The new error inherits the severity of the old. */
+/** Create a new error without relying on dynamic memory allocation.
+ * This is useful when allocating an error with \ref sc3_error_new might fail.
+ * This function expects a setup error as stack and uses its severity value.
+ * \param [in] pstack   We take owership of the stack, pointer is NULLed.
+ *                      The severity of *pstack is used for the result error.
+ * \param [in] filename The filename is copied into the error object.
+ *                      Pointer not NULL, string null-terminated.
+ * \param [in] line     Line number set in the error.
+ * \param [in] errmsg   The error message is copied into the error.
+ *                      Pointer not NULL, string null-terminated.
+ * \return          The new error object; there is no other error handling.
+ */
 sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** stack,
                                            const char *filename,
                                            int line, const char *errmsg);

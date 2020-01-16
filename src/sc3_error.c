@@ -46,16 +46,26 @@ struct sc3_error
   sc3_error_t        *stack;
 };
 
-/* TODO: write functions to make bug and nom available */
-
-static sc3_error_t  bug =
+#if 0
+static sc3_error_t  ebug =
   { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
-"Inconsistency or bug", "", 0, 0, NULL
+"Inconsistency or bug", __FILE__, __LINE__, 0, NULL
+};
+#endif
+
+static sc3_error_t  enom =
+  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
+"Out of memory", __FILE__, __LINE__, 0, NULL
 };
 
-static sc3_error_t  nom =
+static sc3_error_t  enull =
   { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
-"Out of memory", "", 0, 0, NULL
+"Argument must not be NULL", __FILE__, __LINE__, 0, NULL
+};
+
+static sc3_error_t  esetup =
+  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
+"Error argument must be setup", __FILE__, __LINE__, 0, NULL
 };
 
 int
@@ -260,14 +270,14 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
   /* Avoid infinite loop when out of memory. */
 
   if (filename == NULL || errmsg == NULL) {
-    return &bug;
+    return &enull;
   }
 
   /* Any allocated allocator would have to be ref'd here. */
   ea = sc3_allocator_nocount ();
   e = (sc3_error_t *) sc3_allocator_malloc_noerr (ea, sizeof (sc3_error_t));
   if (e == NULL) {
-    return &nom;
+    return &enom;
   }
   sc3_error_defaults (e, NULL, 1, 0, ea);
 
@@ -291,12 +301,12 @@ sc3_error_new_stack_inherit (sc3_error_t ** pstack, int inherit,
   /* Avoid infinite loop when out of memory. */
 
   if (pstack == NULL) {
-    return &bug;
+    return &enull;
   }
   stack = *pstack;
   *pstack = NULL;
   if (!sc3_error_is_setup (stack, NULL)) {
-    return &bug;
+    return &esetup;
   }
   if (filename == NULL || errmsg == NULL) {
     return stack;
