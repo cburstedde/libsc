@@ -68,32 +68,37 @@ sc3_error_is_valid (sc3_error_t * e, char *reason)
     reason[0] = '\0';
     return 0;
   }
-  if (e->stack != NULL && !sc3_error_is_setup (e->stack)) {
-    reason[0] = '\0';
-    return 0;
-  }
 
+  if (e->stack != NULL) {
+    SC3E_IS (sc3_error_is_setup, e->stack, reason);
+  }
   SC3E_TEST (0 <= e->sev && e->sev < SC3_ERROR_SEVERITY_LAST, reason);
   SC3E_TEST (0 <= e->syn && e->syn < SC3_ERROR_SYNC_LAST, reason);
   SC3E_YES (reason);
 }
 
 int
-sc3_error_is_new (sc3_error_t * e)
+sc3_error_is_new (sc3_error_t * e, char *reason)
 {
-  return sc3_error_is_valid (e, NULL) && !e->setup;
+  SC3E_IS (sc3_error_is_valid, e, reason);
+  SC3E_TEST (!e->setup, reason);
+  SC3E_YES (reason);
 }
 
 int
-sc3_error_is_setup (sc3_error_t * e)
+sc3_error_is_setup (sc3_error_t * e, char *reason)
 {
-  return sc3_error_is_valid (e, NULL) && e->setup;
+  SC3E_IS (sc3_error_is_valid, e, reason);
+  SC3E_TEST (e->setup, reason);
+  SC3E_YES (reason);
 }
 
 int
-sc3_error_is_fatal (sc3_error_t * e)
+sc3_error_is_fatal (sc3_error_t * e, char *reason)
 {
-  return sc3_error_is_setup (e) && e->sev == SC3_ERROR_FATAL;
+  SC3E_IS (sc3_error_is_setup, e, reason);
+  SC3E_TEST (e->sev == SC3_ERROR_FATAL, reason);
+  SC3E_YES (reason);
 }
 
 static void
@@ -125,7 +130,7 @@ sc3_error_new (sc3_allocator_t * eator, sc3_error_t ** ep)
   SC3E (sc3_allocator_ref (eator));
   SC3E_ALLOCATOR_MALLOC (eator, sc3_error_t, 1, e);
   sc3_error_defaults (e, NULL, 0, 0, eator);
-  SC3A_CHECK (sc3_error_is_new (e));
+  SC3A_IS (sc3_error_is_new, e);
 
   *ep = e;
   return NULL;
@@ -137,9 +142,10 @@ sc3_error_set_stack (sc3_error_t * e, sc3_error_t ** pstack)
   sc3_error_t        *stack;
 
   SC3E_INULLP (pstack, stack);
-  SC3A_CHECK (sc3_error_is_new (e));
-  SC3A_CHECK (stack == NULL || sc3_error_is_setup (stack));
-
+  SC3A_IS (sc3_error_is_new, e);
+  if (stack != NULL) {
+    SC3A_IS (sc3_error_is_setup, stack);
+  }
   if (e->stack != NULL) {
     SC3E (sc3_error_unref (&e->stack));
   }
@@ -150,7 +156,7 @@ sc3_error_set_stack (sc3_error_t * e, sc3_error_t ** pstack)
 sc3_error_t        *
 sc3_error_set_location (sc3_error_t * e, const char *filename, int line)
 {
-  SC3A_CHECK (sc3_error_is_new (e));
+  SC3A_IS (sc3_error_is_new, e);
   SC3A_CHECK (filename != NULL);
 
   SC3_BUFCOPY (e->filename, filename);
@@ -161,7 +167,7 @@ sc3_error_set_location (sc3_error_t * e, const char *filename, int line)
 sc3_error_t        *
 sc3_error_set_message (sc3_error_t * e, const char *errmsg)
 {
-  SC3A_CHECK (sc3_error_is_new (e));
+  SC3A_IS (sc3_error_is_new, e);
   SC3A_CHECK (errmsg != NULL);
 
   SC3_BUFCOPY (e->errmsg, errmsg);
@@ -171,7 +177,7 @@ sc3_error_set_message (sc3_error_t * e, const char *errmsg)
 sc3_error_t        *
 sc3_error_set_severity (sc3_error_t * e, sc3_error_severity_t sev)
 {
-  SC3A_CHECK (sc3_error_is_new (e));
+  SC3A_IS (sc3_error_is_new, e);
   SC3A_CHECK (0 <= sev && sev < SC3_ERROR_SEVERITY_LAST);
 
   e->sev = sev;
@@ -189,17 +195,17 @@ void                sc3_error_set_msgf (sc3_error_t * ea,
 sc3_error_t        *
 sc3_error_setup (sc3_error_t * e)
 {
-  SC3A_CHECK (sc3_error_is_new (e));
+  SC3A_IS (sc3_error_is_new, e);
 
   e->setup = 1;
-  SC3A_CHECK (sc3_error_is_setup (e));
+  SC3A_IS (sc3_error_is_setup, e);
   return NULL;
 }
 
 sc3_error_t        *
 sc3_error_ref (sc3_error_t * e)
 {
-  SC3A_CHECK (sc3_error_is_setup (e));
+  SC3A_IS (sc3_error_is_setup, e);
   if (e->alloced) {
     SC3E (sc3_refcount_ref (&e->rc));
   }
@@ -294,7 +300,7 @@ sc3_error_new_stack_inherit (sc3_error_t ** pstack, int inherit,
   }
   stack = *pstack;
   *pstack = NULL;
-  if (!sc3_error_is_setup (stack)) {
+  if (!sc3_error_is_setup (stack, NULL)) {
     return &bug;
   }
   if (filename == NULL || errmsg == NULL) {
@@ -338,7 +344,7 @@ sc3_error_get_location (sc3_error_t * e, const char **filename, int *line)
 {
   SC3E_RETOPT (filename, "");
   SC3E_RETOPT (line, 0);
-  SC3A_CHECK (sc3_error_is_setup (e));
+  SC3A_IS (sc3_error_is_setup, e);
 
   if (filename != NULL) {
     *filename = e->filename;
@@ -353,7 +359,7 @@ sc3_error_t        *
 sc3_error_get_message (sc3_error_t * e, const char **errmsg)
 {
   SC3E_RETOPT (errmsg, "");
-  SC3A_CHECK (sc3_error_is_setup (e));
+  SC3A_IS (sc3_error_is_setup, e);
 
   if (errmsg != NULL) {
     *errmsg = e->errmsg;
@@ -365,7 +371,7 @@ sc3_error_t        *
 sc3_error_get_severity (sc3_error_t * e, sc3_error_severity_t * sev)
 {
   SC3E_RETOPT (sev, SC3_ERROR_FATAL);
-  SC3A_CHECK (sc3_error_is_setup (e));
+  SC3A_IS (sc3_error_is_setup, e);
 
   if (sev != NULL) {
     *sev = e->sev;
@@ -377,7 +383,7 @@ sc3_error_t        *
 sc3_error_get_stack (sc3_error_t * e, sc3_error_t ** pstack)
 {
   SC3E_RETOPT (pstack, NULL);
-  SC3A_CHECK (sc3_error_is_setup (e));
+  SC3A_IS (sc3_error_is_setup, e);
 
   if (e->stack != NULL) {
     SC3E (sc3_error_ref (*pstack = e->stack));

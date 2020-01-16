@@ -186,7 +186,7 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
   }
 
   if (ep != NULL && *ep != NULL) {
-    if (sc3_error_is_fatal (*ep)) {
+    if (sc3_error_is_fatal (*ep, NULL)) {
       ++*num_fatal;
     }
 
