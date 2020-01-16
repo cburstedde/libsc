@@ -215,22 +215,17 @@ sc3_allocator_destroy (sc3_allocator_t ** ap)
 sc3_error_t        *
 sc3_allocator_strdup (sc3_allocator_t * a, const char *src, char **dest)
 {
-  char               *p;
+  size_t              len;
+  void               *ptr;
 
-  SC3A_IS (sc3_allocator_is_setup, a);
-  SC3A_CHECK (src != NULL);
   SC3E_RETVAL (dest, NULL);
+  SC3A_CHECK (src != NULL);
 
-  /* TODO: use same allocation mechanism as allocator_malloc below */
+  len = strlen (src) + 1;
+  SC3E (sc3_allocator_malloc (a, len, &ptr));
+  memcpy (ptr, src, len);
 
-  p = SC3_STRDUP (src);
-  SC3E_DEMAND (src == NULL || p != NULL, "Allocation");
-
-  if (a->counting) {
-    ++a->num_malloc;
-  }
-
-  *dest = p;
+  *dest = (char *) ptr;
   return NULL;
 }
 
@@ -308,7 +303,7 @@ sc3_error_t        *
 sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
                       void **ptr)
 {
-  /* TODO: adapt allocator_malloc function and call calloc inside */
+  /* TODO adapt allocator_malloc function to call calloc inside? */
   SC3E (sc3_allocator_malloc (a, nmemb * size, ptr));
   memset (*ptr, 0, nmemb * size);
   return NULL;

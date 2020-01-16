@@ -205,7 +205,11 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
 static sc3_error_t *
 test_array (sc3_allocator_t * ator)
 {
+  char               *abc;
   sc3_array_t        *arr;
+
+  SC3E (sc3_allocator_strdup (ator, "abc", &abc));
+  SC3E_ALLOCATOR_FREE (ator, char, abc);
 
   SC3E (sc3_array_new (ator, &arr));
   SC3E (sc3_array_set_elem_size (arr, 0));
