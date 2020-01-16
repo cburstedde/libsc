@@ -52,8 +52,25 @@ typedef struct sc3_refcount
 }
 sc3_refcount_t;
 
+/** Initialize reference counter to be valid and have a count of one.
+ * \param [out] r       Existing reference counter memory.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_refcount_init (sc3_refcount_t * r);
+
+/** Increase the reference count of a valid counter by one.
+ * \param [in,out] r    Valid reference counter.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_refcount_ref (sc3_refcount_t * r);
+
+/** Decrease the reference count of a valid counter by one.
+ * If the count drops to zero, the counter is invalidated.
+ * Such is also considered success of the function.
+ * \param [in,out] r    Valid reference counter.
+ * \param [out] waslast Must not be NULL.  True iff the count drops to zero.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_refcount_unref (sc3_refcount_t * r, int *waslast);
 
 #ifdef __cplusplus

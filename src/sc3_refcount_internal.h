@@ -43,8 +43,27 @@ extern              "C"
 #endif
 #endif
 
+/** Query a reference counter for validity.
+ * \param [in] r        NULL or existing reference counter.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff pointer not NULL and refcounter valid.
+ */
 int                 sc3_refcount_is_valid (sc3_refcount_t * r, char *reason);
+
+/** Query a reference counter for validity and holding exactly one reference.
+ * \param [in] r        NULL or existing reference counter.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff pointer not NULL and refcounter valid
+ *                      with exactly one reference.
+ */
 int                 sc3_refcount_is_last (sc3_refcount_t * r, char *reason);
+
+/** Initialize reference counter to be invalid (thus unusable).
+ * \param [out] r       Existing reference counter memory.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_refcount_init_invalid (sc3_refcount_t * r);
 
 #ifdef __cplusplus
