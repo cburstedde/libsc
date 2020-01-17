@@ -183,6 +183,9 @@ sc3_error_t        *sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm);
 sc3_error_t        *sc3_MPI_Win_allocate_shared
   (sc3_MPI_Aint_t size, int disp_unit, sc3_MPI_Info_t info,
    sc3_MPI_Comm_t comm, void *baseptr, sc3_MPI_Win_t * win);
+sc3_error_t        *sc3_MPI_Win_shared_query
+  (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size, int *disp_unit,
+   void *baseptr);
 sc3_error_t        *sc3_MPI_Win_free (sc3_MPI_Win_t * win);
 
 sc3_error_t        *sc3_MPI_Allgather (void *sendbuf, int sendcount,

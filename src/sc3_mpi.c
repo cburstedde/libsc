@@ -77,6 +77,9 @@ sc3_MPI_Info_t      SC3_MPI_INFO_NULL = &info_null;
 static struct sc3_MPI_Win
 {
   int                 win;
+  int                 rank;
+  int                 disp_unit;
+  int                 size;
   char               *baseptr;
 } win_null;
 sc3_MPI_Win_t       SC3_MPI_WIN_NULL = &win_null;
@@ -271,6 +274,9 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
   SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
   newin = SC3_MALLOC (struct sc3_MPI_Win, 1);
   newin->win = 1;
+  SC3E (sc3_MPI_Comm_rank (comm, &newin->rank));
+  newin->disp_unit = disp_unit;
+  newin->size = size;
   newin->baseptr = SC3_MALLOC (char, size);
   *(void **) baseptr = newin->baseptr;
   *win = newin;
@@ -282,11 +288,36 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
 }
 
 sc3_error_t        *
+sc3_MPI_Win_shared_query (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size,
+                          int *disp_unit, void *baseptr)
+{
+  SC3A_CHECK (size != NULL);
+  SC3A_CHECK (disp_unit != NULL);
+  SC3A_CHECK (baseptr != NULL);
+#ifndef SC_ENABLE_MPIWINSHARED
+  /* TODO this is not standard conforming, disable altogether? */
+  *disp_unit = win->disp_unit;
+  if (rank == win->rank) {
+    *size = win->size;
+    *(void **) baseptr = win->baseptr;
+  }
+  else {
+    *size = 0;
+    *(void **) baseptr = NULL;
+  }
+#else
+  SC3E_MPI (MPI_Win_shared_query (win, rank, size, disp_unit, baseptr));
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_MPI_Win_free (sc3_MPI_Win_t * win)
 {
   SC3A_CHECK (win != NULL);
 #ifndef SC_ENABLE_MPIWINSHARED
   SC3A_CHECK ((*win)->win == 1);
+  SC3A_CHECK ((*win)->baseptr != NULL || (*win)->size == 0);
   SC3_FREE ((*win)->baseptr);
   SC3_FREE (*win);
   *win = SC3_MPI_WIN_NULL;
