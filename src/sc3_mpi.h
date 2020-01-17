@@ -158,6 +158,12 @@ sc3_error_t        *sc3_MPI_Allgather (void *sendbuf, int sendcount,
                                        void *recvbuf, int recvcount,
                                        sc3_MPI_Datatype_t recvtype,
                                        sc3_MPI_Comm_t comm);
+sc3_error_t        *sc3_MPI_Allgatherv (void *sendbuf, int sendcount,
+                                        sc3_MPI_Datatype_t sendtype,
+                                        void *recvbuf, int *recvcounts,
+                                        int *displs,
+                                        sc3_MPI_Datatype_t recvtype,
+                                        sc3_MPI_Comm_t comm);
 sc3_error_t        *sc3_MPI_Allreduce (void *sendbuf, void *recvbuf,
                                        int count, sc3_MPI_Datatype_t datatype,
                                        sc3_MPI_Op_t op, sc3_MPI_Comm_t comm);

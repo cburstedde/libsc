@@ -239,6 +239,24 @@ sc3_MPI_Allgather (void *sendbuf, int sendcount, sc3_MPI_Datatype_t sendtype,
 }
 
 sc3_error_t        *
+sc3_MPI_Allgatherv (void *sendbuf, int sendcount, sc3_MPI_Datatype_t sendtype,
+                    void *recvbuf, int *recvcounts, int *displs,
+                    sc3_MPI_Datatype_t recvtype, sc3_MPI_Comm_t comm)
+{
+  SC3A_CHECK (recvcounts != NULL);
+  SC3A_CHECK (displs != NULL);
+#ifndef SC_ENABLE_MPI
+  SC3A_CHECK (displs[0] == 0);
+  SC3E (sc3_MPI_Allgather (sendbuf, sendcount, sendtype,
+                           recvbuf, recvcounts[0], recvtype, comm));
+#else
+  SC3E_MPI (MPI_Allgatherv (sendbuf, sendcount, sendtype,
+                            recvbuf, recvcounts, displs, recvtype, comm));
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_MPI_Allreduce (void *sendbuf, void *recvbuf, int count,
                    sc3_MPI_Datatype_t datatype,
                    sc3_MPI_Op_t op, sc3_MPI_Comm_t comm)
