@@ -228,7 +228,10 @@ test_mpi (int *rank)
 {
   sc3_MPI_Comm_t      mpicomm = SC3_MPI_COMM_WORLD;
   sc3_MPI_Comm_t      sharedcomm, headcomm;
+  sc3_MPI_Win_t       sharedwin;
   int                 size, sharedsize, sharedrank, headsize, headrank;
+  int                *sharedptr;
+  int                 bytesize;
 
   SC3E (sc3_MPI_Comm_set_errhandler (mpicomm, SC3_MPI_ERRORS_RETURN));
 
@@ -245,6 +248,15 @@ test_mpi (int *rank)
   SC3E (sc3_MPI_Comm_rank (sharedcomm, &sharedrank));
   printf ("MPI size %d rank %d shared size %d rank %d\n",
           size, *rank, sharedsize, sharedrank);
+
+  /* allocate shared memory */
+  bytesize = sharedrank == 0 ? sizeof (int) : 0;
+  SC3E (sc3_MPI_Win_allocate_shared (bytesize, 1, SC3_MPI_INFO_NULL,
+                                     sharedcomm, &sharedptr, &sharedwin));
+  if (sharedrank == 0) {
+    sharedptr[0] = 0;
+  }
+  SC3E (sc3_MPI_Win_free (&sharedwin));
 
   /* create communicator with the first rank on each node */
   SC3E (sc3_MPI_Comm_split (mpicomm, sharedrank == 0 ? 0 :

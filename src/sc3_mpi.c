@@ -72,6 +72,17 @@ sc3_MPI_Info_t      SC3_MPI_INFO_NULL = &info_null;
 
 #endif /* !SC_ENABLE_MPI */
 
+#ifndef SC_ENABLE_MPIWINSHARED
+
+static struct sc3_MPI_Win
+{
+  int                 win;
+  char               *baseptr;
+} win_null;
+sc3_MPI_Win_t       SC3_MPI_WIN_NULL = &win_null;
+
+#endif /* !SC_ENABLE_MPIWINSHARED */
+
 void
 sc3_MPI_Error_class (int errorcode, int *errorclass)
 {
@@ -242,6 +253,45 @@ sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm)
   *comm = SC3_MPI_COMM_NULL;
 #else
   SC3E_MPI (MPI_Comm_free (comm));
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
+                             sc3_MPI_Info_t info, sc3_MPI_Comm_t comm,
+                             void *baseptr, sc3_MPI_Win_t * win)
+{
+#ifndef SC_ENABLE_MPIWINSHARED
+  sc3_MPI_Win_t       newin;
+#endif
+
+  SC3A_CHECK (win != NULL);
+#ifndef SC_ENABLE_MPIWINSHARED
+  SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
+  newin = SC3_MALLOC (struct sc3_MPI_Win, 1);
+  newin->win = 1;
+  newin->baseptr = SC3_MALLOC (char, size);
+  *(void **) baseptr = newin->baseptr;
+  *win = newin;
+#else
+  SC3E_MPI (MPI_Win_allocate_shared (size, disp_unit, info, comm,
+                                     baseptr, win));
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_MPI_Win_free (sc3_MPI_Win_t * win)
+{
+  SC3A_CHECK (win != NULL);
+#ifndef SC_ENABLE_MPIWINSHARED
+  SC3A_CHECK ((*win)->win == 1);
+  SC3_FREE ((*win)->baseptr);
+  SC3_FREE (*win);
+  *win = SC3_MPI_WIN_NULL;
+#else
+  SC3E_MPI (MPI_Win_free (win));
 #endif
   return NULL;
 }

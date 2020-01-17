@@ -107,15 +107,36 @@ typedef MPI_Op      sc3_MPI_Op_t;
 #define SC3_MPI_UNDEFINED MPI_UNDEFINED
 
 #endif /* SC_ENABLE_MPI */
+
 #ifndef SC_ENABLE_MPICOMMSHARED
+
 typedef enum sc3_MPI_Comm_type
 {
   SC3_MPI_COMM_TYPE_SHARED = -2
 }
 sc3_MPI_Comm_type_t;
+
 #else
+
 #define SC3_MPI_COMM_TYPE_SHARED MPI_COMM_TYPE_SHARED
+
 #endif /* SC_ENABLE_MPICOMMSHARED */
+
+#ifndef SC_ENABLE_MPIWINSHARED
+
+typedef int         sc3_MPI_Aint_t;
+typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
+
+extern sc3_MPI_Win_t SC3_MPI_WIN_NULL;
+
+#else
+
+typedef MPI_Aint    sc3_MPI_Aint_t;
+typedef MPI_Win     sc3_MPI_Win_t;
+
+#define SC3_MPI_WIN_NULL MPI_WIN_NULL
+
+#endif /* SC_ENABLE_MPIWINSHARED */
 
 #define SC3E_MPI(f) do {                                                \
   int _mpiret = (f);                                                    \
@@ -157,8 +178,12 @@ sc3_error_t        *sc3_MPI_Comm_split_type (sc3_MPI_Comm_t comm,
                                              int split_type, int key,
                                              sc3_MPI_Info_t info,
                                              sc3_MPI_Comm_t * newcomm);
-
 sc3_error_t        *sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm);
+
+sc3_error_t        *sc3_MPI_Win_allocate_shared
+  (sc3_MPI_Aint_t size, int disp_unit, sc3_MPI_Info_t info,
+   sc3_MPI_Comm_t comm, void *baseptr, sc3_MPI_Win_t * win);
+sc3_error_t        *sc3_MPI_Win_free (sc3_MPI_Win_t * win);
 
 sc3_error_t        *sc3_MPI_Allgather (void *sendbuf, int sendcount,
                                        sc3_MPI_Datatype_t sendtype,
