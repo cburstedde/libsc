@@ -227,7 +227,8 @@ static sc3_error_t *
 test_mpi (int *rank)
 {
   sc3_MPI_Comm_t      mpicomm = SC3_MPI_COMM_WORLD;
-  int                 size;
+  sc3_MPI_Comm_t      sharedcomm;
+  int                 size, sharedrank;
 
   SC3E (sc3_MPI_Comm_set_errhandler (mpicomm, SC3_MPI_ERRORS_RETURN));
 
@@ -236,6 +237,13 @@ test_mpi (int *rank)
 
   SC3E_DEMAND (0 <= *rank && *rank < size, "Rank out of range");
   printf ("MPI rank %d out of %d\n", *rank, size);
+
+  SC3E (sc3_MPI_Comm_split_type (mpicomm, SC3_MPI_COMM_TYPE_SHARED,
+                                 0, SC3_MPI_INFO_NULL, &sharedcomm));
+
+  SC3E (sc3_MPI_Comm_rank (sharedcomm, &sharedrank));
+  SC3E (sc3_MPI_Comm_free (&sharedcomm));
+  printf ("MPI rank %d shared rank %d\n", *rank, sharedrank);
 
   return NULL;
 }

@@ -39,6 +39,7 @@
 
 typedef struct sc3_MPI_Errhandler *sc3_MPI_Errhandler_t;
 typedef struct sc3_MPI_Comm *sc3_MPI_Comm_t;
+typedef struct sc3_MPI_Info *sc3_MPI_Info_t;
 typedef enum sc3_MPI_Datatype
 {
   SC3_MPI_BYTE,
@@ -66,6 +67,7 @@ sc3_MPI_Errorcode_t;
 #define SC3_MPI_COMM_WORLD NULL
 #define SC3_MPI_COMM_SELF NULL
 #define SC3_MPI_COMM_NULL NULL
+#define SC3_MPI_INFO_NULL NULL
 #define SC3_MPI_MAX_ERROR_STRING SC3_BUFSIZE
 
 #else
@@ -73,6 +75,7 @@ sc3_MPI_Errorcode_t;
 
 typedef MPI_Errhandler sc3_MPI_Errhandler_t;
 typedef MPI_Comm    sc3_MPI_Comm_t;
+typedef MPI_Info    sc3_MPI_Info_t;
 typedef MPI_Datatype sc3_MPI_Datatype_t;
 typedef MPI_Op      sc3_MPI_Op_t;
 
@@ -90,12 +93,22 @@ typedef MPI_Op      sc3_MPI_Op_t;
 #define SC3_MPI_COMM_WORLD MPI_COMM_WORLD
 #define SC3_MPI_COMM_SELF MPI_COMM_SELF
 #define SC3_MPI_COMM_NULL MPI_COMM_NULL
+#define SC3_MPI_INFO_NULL MPI_INFO_NULL
 
 #define SC3_MPI_MAX_ERROR_STRING MPI_MAX_ERROR_STRING
 #define SC3_MPI_SUCCESS MPI_SUCCESS
 #define SC3_MPI_ERR_OTHER MPI_ERR_OTHER
 
 #endif /* SC_ENABLE_MPI */
+#ifndef SC_ENABLE_MPICOMMSHARED
+typedef enum sc3_MPI_Type
+{
+  SC3_MPI_COMM_TYPE_SHARED
+}
+sc3_MPI_Type_t;
+#else
+#define SC3_MPI_COMM_TYPE_SHARED MPI_COMM_TYPE_SHARED
+#endif /* SC_ENABLE_MPICOMMSHARED */
 
 #define SC3E_MPI(f) do {                                                \
   int _mpiret = (f);                                                    \
@@ -125,10 +138,19 @@ sc3_error_t        *sc3_MPI_Finalize (void);
 
 sc3_error_t        *sc3_MPI_Comm_set_errhandler (sc3_MPI_Comm_t comm,
                                                  sc3_MPI_Errhandler_t errh);
+
 sc3_error_t        *sc3_MPI_Comm_size (sc3_MPI_Comm_t comm, int *size);
 sc3_error_t        *sc3_MPI_Comm_rank (sc3_MPI_Comm_t comm, int *rank);
+
 sc3_error_t        *sc3_MPI_Comm_dup (sc3_MPI_Comm_t comm,
                                       sc3_MPI_Comm_t * newcomm);
+sc3_error_t        *sc3_MPI_Comm_split (sc3_MPI_Comm_t comm, int color,
+                                        int key, sc3_MPI_Comm_t * newcomm);
+sc3_error_t        *sc3_MPI_Comm_split_type (sc3_MPI_Comm_t comm,
+                                             int split_type, int key,
+                                             sc3_MPI_Info_t info,
+                                             sc3_MPI_Comm_t * newcomm);
+
 sc3_error_t        *sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm);
 
 sc3_error_t        *sc3_MPI_Allgather (void *sendbuf, int sendcount,

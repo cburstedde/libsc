@@ -169,6 +169,37 @@ sc3_MPI_Comm_dup (sc3_MPI_Comm_t comm, sc3_MPI_Comm_t * newcomm)
 }
 
 sc3_error_t        *
+sc3_MPI_Comm_split (sc3_MPI_Comm_t comm, int color, int key,
+                    sc3_MPI_Comm_t * newcomm)
+{
+  SC3A_CHECK (newcomm != NULL);
+#ifndef SC_ENABLE_MPI
+  *newcomm = comm;
+#else
+  SC3E_MPI (MPI_Comm_split (comm, color, key, newcomm));
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_MPI_Comm_split_type (sc3_MPI_Comm_t comm, int split_type, int key,
+                         sc3_MPI_Info_t info, sc3_MPI_Comm_t * newcomm)
+{
+#ifndef SC_ENABLE_MPICOMMSHARED
+  int                 rank;
+#endif
+
+  SC3A_CHECK (newcomm != NULL);
+#ifndef SC_ENABLE_MPICOMMSHARED
+  SC3E (sc3_MPI_Comm_rank (comm, &rank));
+  SC3E (sc3_MPI_Comm_split (comm, rank, key, newcomm));
+#else
+  SC3E_MPI (MPI_Comm_split_type (comm, split_type, key, info, newcomm));
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm)
 {
   SC3A_CHECK (comm != NULL);
