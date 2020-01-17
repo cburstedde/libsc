@@ -56,6 +56,20 @@ sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t * size)
   }
 }
 
+static struct sc3_MPI_Comm
+{
+  int                 comm;
+} comm_world       , comm_null;
+sc3_MPI_Comm_t      SC3_MPI_COMM_WORLD = &comm_world;
+sc3_MPI_Comm_t      SC3_MPI_COMM_SELF = &comm_world;
+sc3_MPI_Comm_t      SC3_MPI_COMM_NULL = &comm_null;
+
+static struct sc3_MPI_Info
+{
+  int                 info;
+} info_null;
+sc3_MPI_Info_t      SC3_MPI_INFO_NULL = &info_null;
+
 #endif /* !SC_ENABLE_MPI */
 
 void
@@ -134,7 +148,9 @@ sc3_MPI_Finalize (void)
 sc3_error_t        *
 sc3_MPI_Comm_set_errhandler (sc3_MPI_Comm_t comm, sc3_MPI_Errhandler_t errh)
 {
-#ifdef SC_ENABLE_MPI
+#ifndef SC_ENABLE_MPI
+  SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
+#else
   SC3E_MPI (MPI_Comm_set_errhandler (comm, errh));
 #endif
   return NULL;
@@ -145,6 +161,7 @@ sc3_MPI_Comm_size (sc3_MPI_Comm_t comm, int *size)
 {
   SC3A_CHECK (size != NULL);
 #ifndef SC_ENABLE_MPI
+  SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
   *size = 1;
 #else
   SC3E_MPI (MPI_Comm_size (comm, size));
@@ -157,6 +174,7 @@ sc3_MPI_Comm_rank (sc3_MPI_Comm_t comm, int *rank)
 {
   SC3A_CHECK (rank != NULL);
 #ifndef SC_ENABLE_MPI
+  SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
   *rank = 0;
 #else
   SC3E_MPI (MPI_Comm_rank (comm, rank));
@@ -169,6 +187,7 @@ sc3_MPI_Comm_dup (sc3_MPI_Comm_t comm, sc3_MPI_Comm_t * newcomm)
 {
   SC3A_CHECK (newcomm != NULL);
 #ifndef SC_ENABLE_MPI
+  SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
   *newcomm = comm;
 #else
   SC3E_MPI (MPI_Comm_dup (comm, newcomm));
@@ -182,7 +201,13 @@ sc3_MPI_Comm_split (sc3_MPI_Comm_t comm, int color, int key,
 {
   SC3A_CHECK (newcomm != NULL);
 #ifndef SC_ENABLE_MPI
-  *newcomm = comm;
+  SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
+  if (color == SC3_MPI_UNDEFINED) {
+    *newcomm = SC3_MPI_COMM_NULL;
+  }
+  else {
+    *newcomm = comm;
+  }
 #else
   SC3E_MPI (MPI_Comm_split (comm, color, key, newcomm));
 #endif
@@ -199,6 +224,7 @@ sc3_MPI_Comm_split_type (sc3_MPI_Comm_t comm, int split_type, int key,
 
   SC3A_CHECK (newcomm != NULL);
 #ifndef SC_ENABLE_MPICOMMSHARED
+  SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
   SC3E (sc3_MPI_Comm_rank (comm, &rank));
   SC3E (sc3_MPI_Comm_split (comm, rank, key, newcomm));
 #else
@@ -212,6 +238,7 @@ sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm)
 {
   SC3A_CHECK (comm != NULL);
 #ifndef SC_ENABLE_MPI
+  SC3A_CHECK (*comm != SC3_MPI_COMM_NULL);
   *comm = SC3_MPI_COMM_NULL;
 #else
   SC3E_MPI (MPI_Comm_free (comm));
@@ -227,6 +254,7 @@ sc3_MPI_Allgather (void *sendbuf, int sendcount, sc3_MPI_Datatype_t sendtype,
 #ifndef SC_ENABLE_MPI
   size_t              sendsize, recvsize;
 
+  SC3A_CHECK (comm != NULL);
   SC3A_CHECK (sendcount >= 0);
   SC3A_CHECK (recvcount >= 0);
   SC3E (sc3_MPI_Datatype_size (sendtype, &sendsize));
@@ -272,6 +300,7 @@ sc3_MPI_Allreduce (void *sendbuf, void *recvbuf, int count,
 #ifndef SC_ENABLE_MPI
   size_t              datasize;
 
+  SC3A_CHECK (comm != NULL);
   SC3A_CHECK (count >= 0);
   SC3E (sc3_MPI_Datatype_size (datatype, &datasize));
   datasize *= count;

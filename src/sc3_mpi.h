@@ -62,13 +62,19 @@ typedef enum sc3_MPI_Errorcode
   SC3_MPI_ERR_OTHER
 }
 sc3_MPI_Errorcode_t;
+typedef enum sc3_MPI_Enum
+{
+  SC3_MPI_UNDEFINED = -1
+}
+sc3_MPI_Enum_t;
 
 #define SC3_MPI_ERRORS_RETURN NULL
-#define SC3_MPI_COMM_WORLD NULL
-#define SC3_MPI_COMM_SELF NULL
-#define SC3_MPI_COMM_NULL NULL
-#define SC3_MPI_INFO_NULL NULL
 #define SC3_MPI_MAX_ERROR_STRING SC3_BUFSIZE
+
+extern sc3_MPI_Comm_t SC3_MPI_COMM_WORLD;
+extern sc3_MPI_Comm_t SC3_MPI_COMM_SELF;
+extern sc3_MPI_Comm_t SC3_MPI_COMM_NULL;
+extern sc3_MPI_Info_t SC3_MPI_INFO_NULL;
 
 #else
 #include <mpi.h>
@@ -98,14 +104,15 @@ typedef MPI_Op      sc3_MPI_Op_t;
 #define SC3_MPI_MAX_ERROR_STRING MPI_MAX_ERROR_STRING
 #define SC3_MPI_SUCCESS MPI_SUCCESS
 #define SC3_MPI_ERR_OTHER MPI_ERR_OTHER
+#define SC3_MPI_UNDEFINED MPI_UNDEFINED
 
 #endif /* SC_ENABLE_MPI */
 #ifndef SC_ENABLE_MPICOMMSHARED
-typedef enum sc3_MPI_Type
+typedef enum sc3_MPI_Comm_type
 {
-  SC3_MPI_COMM_TYPE_SHARED
+  SC3_MPI_COMM_TYPE_SHARED = -2
 }
-sc3_MPI_Type_t;
+sc3_MPI_Comm_type_t;
 #else
 #define SC3_MPI_COMM_TYPE_SHARED MPI_COMM_TYPE_SHARED
 #endif /* SC_ENABLE_MPICOMMSHARED */

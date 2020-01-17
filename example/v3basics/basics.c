@@ -227,8 +227,8 @@ static sc3_error_t *
 test_mpi (int *rank)
 {
   sc3_MPI_Comm_t      mpicomm = SC3_MPI_COMM_WORLD;
-  sc3_MPI_Comm_t      sharedcomm;
-  int                 size, sharedrank;
+  sc3_MPI_Comm_t      sharedcomm, headcomm;
+  int                 size, sharedsize, sharedrank, headsize, headrank;
 
   SC3E (sc3_MPI_Comm_set_errhandler (mpicomm, SC3_MPI_ERRORS_RETURN));
 
@@ -236,14 +236,31 @@ test_mpi (int *rank)
   SC3E (sc3_MPI_Comm_rank (mpicomm, rank));
 
   SC3E_DEMAND (0 <= *rank && *rank < size, "Rank out of range");
-  printf ("MPI rank %d out of %d\n", *rank, size);
+  printf ("MPI size %d rank %d\n", size, *rank);
 
+  /* create intra-node communicator */
   SC3E (sc3_MPI_Comm_split_type (mpicomm, SC3_MPI_COMM_TYPE_SHARED,
                                  0, SC3_MPI_INFO_NULL, &sharedcomm));
-
+  SC3E (sc3_MPI_Comm_size (sharedcomm, &sharedsize));
   SC3E (sc3_MPI_Comm_rank (sharedcomm, &sharedrank));
+  printf ("MPI size %d rank %d shared size %d rank %d\n",
+          size, *rank, sharedsize, sharedrank);
+
+  /* create communicator with the first rank on each node */
+  SC3E (sc3_MPI_Comm_split (mpicomm, sharedrank == 0 ? 0 :
+                            SC3_MPI_UNDEFINED, 0, &headcomm));
+  SC3A_CHECK ((sharedrank != 0) == (headcomm == SC3_MPI_COMM_NULL));
+  if (headcomm != SC3_MPI_COMM_NULL) {
+    SC3E (sc3_MPI_Comm_size (headcomm, &headsize));
+    SC3E (sc3_MPI_Comm_rank (headcomm, &headrank));
+    printf
+      ("MPI size %d rank %d shared size %d rank %d head size %d rank %d\n",
+       size, *rank, sharedsize, sharedrank, headsize, headrank);
+    SC3E (sc3_MPI_Comm_free (&headcomm));
+  }
+
+  /* clean up user communicators */
   SC3E (sc3_MPI_Comm_free (&sharedcomm));
-  printf ("MPI rank %d shared rank %d\n", *rank, sharedrank);
 
   return NULL;
 }
