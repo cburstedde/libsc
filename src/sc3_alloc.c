@@ -30,8 +30,6 @@
 #include <sc3_alloc_internal.h>
 #include <sc3_refcount_internal.h>
 
-#define SC3_MALLOC(typ,nmemb) ((typ *) malloc ((nmemb) * sizeof (typ)))
-
 struct sc3_allocator
 {
   sc3_refcount_t      rc;
@@ -308,6 +306,8 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
   /* TODO adapt allocator_malloc function to call calloc inside? */
   SC3E (sc3_allocator_malloc (a, nmemb * size, ptr));
   memset (*ptr, 0, nmemb * size);
+  ++a->num_calloc;
+  --a->num_malloc;
   return NULL;
 }
 
@@ -322,7 +322,7 @@ sc3_allocator_free (sc3_allocator_t * a, void *ptr)
 
   if (a->align == 0) {
     /* use system allocation */
-    free (ptr);
+    SC3_FREE (ptr);
   }
   else {
     size_t              size;
@@ -339,7 +339,7 @@ sc3_allocator_free (sc3_allocator_t * a, void *ptr)
       SC3A_CHECK (size <= a->total_size);
       a->total_size -= size;
     }
-    free (aitem[1].ptr);
+    SC3_FREE (aitem[1].ptr);
   }
 
   return NULL;

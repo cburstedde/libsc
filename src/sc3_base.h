@@ -44,6 +44,9 @@
 #define SC3_BUFCOPY(b,s) \
           do { (void) snprintf (b, SC3_BUFSIZE, "%s", s); } while (0)
 
+#define SC3_MALLOC(typ,nmemb) ((typ *) malloc ((nmemb) * sizeof (typ)))
+#define SC3_FREE(p) do { free (p); } while (0)
+
 #define SC3_ISPOWOF2(a) ((a) > 0 && ((a) & ((a) - 1)) == 0)
 
 #define SC3_MIN(in1,in2) ((in1) <= (in2) ? (in1) : (in2))
