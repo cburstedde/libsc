@@ -39,7 +39,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SC3_BUFSIZE 160
+#define SC3_BUFSIZE 512
 #define SC3_BUFZERO(b) do { memset (b, 0, SC3_BUFSIZE); } while (0)
 #define SC3_BUFCOPY(b,s) \
           do { (void) snprintf (b, SC3_BUFSIZE, "%s", s); } while (0)

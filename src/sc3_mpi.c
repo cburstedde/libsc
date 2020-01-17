@@ -87,7 +87,15 @@ sc3_MPI_Error_string (int errorcode, char *errstr, int *errlen)
   }
 #ifdef SC_ENABLE_MPI
   errorcode = MPI_Error_string (errorcode, errstr, errlen);
-  if (errorcode != SC3_MPI_SUCCESS) {
+  if (errorcode == SC3_MPI_SUCCESS) {
+    int                 i;
+    for (i = 0; i < *errlen; ++i) {
+      if (errstr[i] == '\n') {
+        errstr[i] = ' ';
+      }
+    }
+  }
+  else {
 #endif
     res = snprintf (errstr, SC3_MPI_MAX_ERROR_STRING, "MPI %s",
                     errorcode == SC3_MPI_SUCCESS ? "Success" : "Error");
