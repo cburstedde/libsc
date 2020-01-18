@@ -330,6 +330,17 @@ sc3_MPI_Win_free (sc3_MPI_Win_t * win)
 }
 
 sc3_error_t        *
+sc3_MPI_Barrier (sc3_MPI_Comm_t comm)
+{
+#ifndef SC_ENABLE_MPI
+  SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
+#else
+  SC3E_MPI (MPI_Barrier (comm));
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_MPI_Allgather (void *sendbuf, int sendcount, sc3_MPI_Datatype_t sendtype,
                    void *recvbuf, int recvcount, sc3_MPI_Datatype_t recvtype,
                    sc3_MPI_Comm_t comm)
@@ -337,7 +348,7 @@ sc3_MPI_Allgather (void *sendbuf, int sendcount, sc3_MPI_Datatype_t sendtype,
 #ifndef SC_ENABLE_MPI
   size_t              sendsize, recvsize;
 
-  SC3A_CHECK (comm != NULL);
+  SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
   SC3A_CHECK (sendcount >= 0);
   SC3A_CHECK (recvcount >= 0);
   SC3E (sc3_MPI_Datatype_size (sendtype, &sendsize));
@@ -383,7 +394,7 @@ sc3_MPI_Allreduce (void *sendbuf, void *recvbuf, int count,
 #ifndef SC_ENABLE_MPI
   size_t              datasize;
 
-  SC3A_CHECK (comm != NULL);
+  SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
   SC3A_CHECK (count >= 0);
   SC3E (sc3_MPI_Datatype_size (datatype, &datasize));
   datasize *= count;

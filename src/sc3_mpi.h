@@ -194,6 +194,7 @@ sc3_error_t        *sc3_MPI_Win_shared_query
    void *baseptr);
 sc3_error_t        *sc3_MPI_Win_free (sc3_MPI_Win_t * win);
 
+sc3_error_t        *sc3_MPI_Barrier (sc3_MPI_Comm_t comm);
 sc3_error_t        *sc3_MPI_Allgather (void *sendbuf, int sendcount,
                                        sc3_MPI_Datatype_t sendtype,
                                        void *recvbuf, int recvcount,

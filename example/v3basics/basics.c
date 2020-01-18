@@ -87,6 +87,8 @@ io_error (sc3_allocator_t * a,
 {
   sc3_error_t        *e;
 
+  SC3A_IS (sc3_allocator_is_setup, a);
+
   SC3E (sc3_error_new (a, &e));
   SC3E (sc3_error_set_location (e, filename, line));
   SC3E (sc3_error_set_message (e, errmsg));
@@ -102,6 +104,8 @@ static sc3_error_t *
 run_io (sc3_allocator_t * a, int result)
 {
   FILE               *file;
+
+  SC3A_IS (sc3_allocator_is_setup, a);
 
   if ((file = fopen ("sc3_basics_run_io.txt", "wb")) == NULL) {
     return SC3_BASICS_IO_ERROR (a, "File open failed");
@@ -122,6 +126,8 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
 {
   sc3_error_t        *e, *e2;
   sc3_allocator_t    *a;
+
+  SC3A_IS (sc3_allocator_is_setup, origa);
 
   /* Test assertions */
   SC3E (parent_function (input, result));
@@ -208,6 +214,8 @@ test_array (sc3_allocator_t * ator)
   char               *abc;
   sc3_array_t        *arr;
 
+  SC3A_IS (sc3_allocator_is_setup, ator);
+
   SC3E (sc3_allocator_strdup (ator, "abc", &abc));
   SC3E_ALLOCATOR_FREE (ator, char, abc);
 
@@ -224,7 +232,7 @@ test_array (sc3_allocator_t * ator)
 }
 
 static sc3_error_t *
-test_mpi (int *rank)
+test_mpi (sc3_allocator_t * alloc, int *rank)
 {
   sc3_MPI_Comm_t      mpicomm = SC3_MPI_COMM_WORLD;
   sc3_MPI_Comm_t      sharedcomm, headcomm;
@@ -232,8 +240,10 @@ test_mpi (int *rank)
   sc3_MPI_Aint_t      bytesize, querysize;
   int                 disp_unit;
   int                 size, sharedsize, sharedrank, headsize, headrank;
-  int                *sharedptr, *queryptr;
+  int                *sharedptr, *queryptr, *headptr;
   int                 p;
+
+  SC3A_IS (sc3_allocator_is_setup, alloc);
 
   SC3E (sc3_MPI_Comm_set_errhandler (mpicomm, SC3_MPI_ERRORS_RETURN));
 
@@ -278,7 +288,6 @@ test_mpi (int *rank)
     }
 #endif
   }
-  SC3E (sc3_MPI_Win_free (&sharedwin));
 
   /* create communicator with the first rank on each node */
   SC3E (sc3_MPI_Comm_split (mpicomm, sharedrank == 0 ? 0 :
@@ -290,11 +299,22 @@ test_mpi (int *rank)
     printf
       ("MPI size %d rank %d shared size %d rank %d head size %d rank %d\n",
        size, *rank, sharedsize, sharedrank, headsize, headrank);
+
+    SC3E_ALLOCATOR_MALLOC (alloc, int, headsize, headptr);
+    sharedptr[0] = headrank;
+    SC3E (sc3_MPI_Allgather (sharedptr, 1, SC3_MPI_INT,
+                             headptr, 1, SC3_MPI_INT, headcomm));
+    for (p = 0; p < headsize; ++p) {
+      SC3E_DEMAND (headptr[p] == p, "Head rank mismatch");
+    }
+    SC3E_ALLOCATOR_FREE (alloc, int, headptr);
     SC3E (sc3_MPI_Comm_free (&headcomm));
   }
 
   /* clean up user communicators */
+  SC3E (sc3_MPI_Win_free (&sharedwin));
   SC3E (sc3_MPI_Comm_free (&sharedcomm));
+  SC3E (sc3_MPI_Barrier (mpicomm));
 
   return NULL;
 }
@@ -366,7 +386,7 @@ main (int argc, char **argv)
     printf ("Array test ok\n");
   }
 
-  SC3E_SET (e, test_mpi (&mpirank));
+  SC3E_SET (e, test_mpi (a, &mpirank));
   if (!main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("MPI code ok\n");
   }
