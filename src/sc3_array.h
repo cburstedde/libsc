@@ -100,16 +100,16 @@ sc3_error_t        *sc3_array_set_elem_size (sc3_array_t * a, size_t esize);
  * \param [in] ecount   Element count on setup.  Zero is legal and default.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_set_elem_count (sc3_array_t * a, size_t ecount);
+sc3_error_t        *sc3_array_set_elem_count (sc3_array_t * a, int ecount);
 
 /** Set the minimum required number of array elements to allocate on setup.
  * \param [in,out] a    The array must not be setup.
  * \param [in] ealloc   Minimum number of elements initially allocated.
  *                      Legal if this is smaller than the initial count.
- *                      Default is 8.
+ *                      Must be non-negative; default is 8.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_set_elem_alloc (sc3_array_t * a, size_t ealloc);
+sc3_error_t        *sc3_array_set_elem_alloc (sc3_array_t * a, int ealloc);
 
 /** Set the resizable property of an array.
  * It determines whether the array may be resized after setup.

@@ -38,7 +38,8 @@ struct sc3_array
 
   /* parameters fixed after setup call */
   int                 resizable, initzero;
-  size_t              esize, ecount, ealloc;
+  int                 ecount, ealloc;
+  size_t              esize;
 
   /* member variables initialized in setup call */
   char               *mem;
@@ -107,17 +108,19 @@ sc3_array_set_elem_size (sc3_array_t * a, size_t esize)
 }
 
 sc3_error_t        *
-sc3_array_set_elem_count (sc3_array_t * a, size_t ecount)
+sc3_array_set_elem_count (sc3_array_t * a, int ecount)
 {
   SC3A_IS (sc3_array_is_new, a);
+  SC3A_CHECK (ecount >= 0);
   a->ecount = ecount;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_array_set_elem_alloc (sc3_array_t * a, size_t ealloc)
+sc3_array_set_elem_alloc (sc3_array_t * a, int ealloc)
 {
   SC3A_IS (sc3_array_is_new, a);
+  SC3A_CHECK (ealloc >= 0);
   a->ealloc = ealloc;
   return NULL;
 }
@@ -211,7 +214,7 @@ sc3_array_index (sc3_array_t * a, int i, void **p)
 {
   SC3E_RETVAL (p, NULL);
   SC3A_IS (sc3_array_is_setup, a);
-  SC3A_CHECK (0 <= i && (size_t) i < a->ecount);
+  SC3A_CHECK (0 <= i && i < a->ecount);
 
   *p = a->mem + i * a->esize;
   return NULL;
