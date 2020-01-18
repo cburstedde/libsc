@@ -180,10 +180,16 @@ sc3_error_t        *sc3_MPI_Comm_dup (sc3_MPI_Comm_t comm,
                                       sc3_MPI_Comm_t * newcomm);
 sc3_error_t        *sc3_MPI_Comm_split (sc3_MPI_Comm_t comm, int color,
                                         int key, sc3_MPI_Comm_t * newcomm);
+
+/** Split a communicator into sub-communicators by type.
+ * If MPI_Comm_split_type or MPI_Win_allocate_shared are missing,
+ * then we split by rank unless split_type is SC3_MPI_UNDEFINED.
+ */
 sc3_error_t        *sc3_MPI_Comm_split_type (sc3_MPI_Comm_t comm,
                                              int split_type, int key,
                                              sc3_MPI_Info_t info,
                                              sc3_MPI_Comm_t * newcomm);
+
 sc3_error_t        *sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm);
 
 sc3_error_t        *sc3_MPI_Win_allocate_shared

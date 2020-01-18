@@ -233,15 +233,18 @@ sc3_error_t        *
 sc3_MPI_Comm_split_type (sc3_MPI_Comm_t comm, int split_type, int key,
                          sc3_MPI_Info_t info, sc3_MPI_Comm_t * newcomm)
 {
-#ifndef SC_ENABLE_MPICOMMSHARED
+#ifndef SC3_ENABLE_MPI3
   int                 rank;
 #endif
 
   SC3A_CHECK (newcomm != NULL);
-#ifndef SC_ENABLE_MPICOMMSHARED
+#ifndef SC3_ENABLE_MPI3
   SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
   SC3E (sc3_MPI_Comm_rank (comm, &rank));
   SC3E (sc3_MPI_Comm_split (comm, rank, key, newcomm));
+  if (split_type == SC3_MPI_UNDEFINED) {
+    SC3E (sc3_MPI_Comm_free (newcomm));
+  }
 #else
   SC3E_MPI (MPI_Comm_split_type (comm, split_type, key, info, newcomm));
 #endif
@@ -297,13 +300,8 @@ sc3_MPI_Win_shared_query (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size,
   SC3A_CHECK (disp_unit != NULL);
   SC3A_CHECK (baseptr != NULL);
 #ifndef SC_ENABLE_MPIWINSHARED
-  SC3A_CHECK (0 <= rank && rank < win->size);
-
-  /* if the comm is shared with more than one rank and we ask for a remote rank,
-     we have no way to access the memory on that rank */
-  SC3E_DEMAND (rank == win->rank,
-               "Win_shared_query for remote ranks not supported");
-
+  SC3A_CHECK (0 <= win->rank && win->rank < win->size);
+  SC3A_CHECK (rank == win->rank);
   *disp_unit = win->disp_unit;
   *size = win->memsize;
   *(void **) baseptr = win->baseptr;

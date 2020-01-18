@@ -269,24 +269,17 @@ test_mpi (sc3_allocator_t * alloc, int *rank)
     sharedptr[0] = 1;
   }
   for (p = 0; p < sharedsize; ++p) {
-#ifndef SC3_ENABLE_MPI3
+    SC3E (sc3_MPI_Win_shared_query (sharedwin, p,
+                                    &querysize, &disp_unit, &queryptr));
+    SC3E_DEMAND (querysize == (sc3_MPI_Aint_t) (p == 0 ? sizeof (int) : 0),
+                 "Remote size mismatch");
+    SC3E_DEMAND (disp_unit == 1, "Disp unit mismatch");
     if (p == sharedrank) {
-#endif
-      SC3E (sc3_MPI_Win_shared_query (sharedwin, p,
-                                      &querysize, &disp_unit, &queryptr));
-      SC3E_DEMAND (querysize == (sc3_MPI_Aint_t) (p == 0 ? sizeof (int) : 0),
-                   "Remote size mismatch");
-      SC3E_DEMAND (disp_unit == 1, "Disp unit mismatch");
-      if (p == sharedrank) {
-        SC3E_DEMAND (queryptr == sharedptr, "Shared pointer mismatch");
-        if (sharedrank == 0) {
-          SC3E_DEMAND (queryptr[0] == sharedptr[0],
-                       "Shared content mismatch");
-        }
+      SC3E_DEMAND (queryptr == sharedptr, "Shared pointer mismatch");
+      if (sharedrank == 0) {
+        SC3E_DEMAND (queryptr[0] == sharedptr[0], "Shared content mismatch");
       }
-#ifndef SC3_ENABLE_MPI3
     }
-#endif
   }
 
   /* create communicator with the first rank on each node */
@@ -309,6 +302,7 @@ test_mpi (sc3_allocator_t * alloc, int *rank)
     }
     SC3E_ALLOCATOR_FREE (alloc, int, headptr);
     SC3E (sc3_MPI_Comm_free (&headcomm));
+    printf ("Head comm rank %d ok\n", headrank);
   }
 
   /* clean up user communicators */
