@@ -229,9 +229,11 @@ test_mpi (int *rank)
   sc3_MPI_Comm_t      mpicomm = SC3_MPI_COMM_WORLD;
   sc3_MPI_Comm_t      sharedcomm, headcomm;
   sc3_MPI_Win_t       sharedwin;
+  sc3_MPI_Aint_t      bytesize, querysize;
+  int                 disp_unit;
   int                 size, sharedsize, sharedrank, headsize, headrank;
-  int                *sharedptr;
-  int                 bytesize;
+  int                *sharedptr, *queryptr;
+  int                 p;
 
   SC3E (sc3_MPI_Comm_set_errhandler (mpicomm, SC3_MPI_ERRORS_RETURN));
 
@@ -254,7 +256,27 @@ test_mpi (int *rank)
   SC3E (sc3_MPI_Win_allocate_shared (bytesize, 1, SC3_MPI_INFO_NULL,
                                      sharedcomm, &sharedptr, &sharedwin));
   if (sharedrank == 0) {
-    sharedptr[0] = 0;
+    sharedptr[0] = 1;
+  }
+  for (p = 0; p < sharedsize; ++p) {
+#ifndef SC3_ENABLE_MPI3
+    if (p == sharedrank) {
+#endif
+      SC3E (sc3_MPI_Win_shared_query (sharedwin, p,
+                                      &querysize, &disp_unit, &queryptr));
+      SC3E_DEMAND (querysize == (sc3_MPI_Aint_t) (p == 0 ? sizeof (int) : 0),
+                   "Remote size mismatch");
+      SC3E_DEMAND (disp_unit == 1, "Disp unit mismatch");
+      if (p == sharedrank) {
+        SC3E_DEMAND (queryptr == sharedptr, "Shared pointer mismatch");
+        if (sharedrank == 0) {
+          SC3E_DEMAND (queryptr[0] == sharedptr[0],
+                       "Shared content mismatch");
+        }
+      }
+#ifndef SC3_ENABLE_MPI3
+    }
+#endif
   }
   SC3E (sc3_MPI_Win_free (&sharedwin));
 

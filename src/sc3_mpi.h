@@ -106,6 +106,12 @@ typedef MPI_Op      sc3_MPI_Op_t;
 #define SC3_MPI_ERR_OTHER MPI_ERR_OTHER
 #define SC3_MPI_UNDEFINED MPI_UNDEFINED
 
+#ifdef SC_ENABLE_MPICOMMSHARED
+#ifdef SC_ENABLE_MPIWINSHARED
+#define SC3_ENABLE_MPI3
+#endif /* SC_ENABLE_MPIWINSHARED */
+#endif /* SC_ENABLE_MPICOMMSHARED */
+
 #endif /* SC_ENABLE_MPI */
 
 #ifndef SC_ENABLE_MPICOMMSHARED
@@ -124,7 +130,7 @@ sc3_MPI_Comm_type_t;
 
 #ifndef SC_ENABLE_MPIWINSHARED
 
-typedef int         sc3_MPI_Aint_t;
+typedef long        sc3_MPI_Aint_t;
 typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
 
 extern sc3_MPI_Win_t SC3_MPI_WIN_NULL;
