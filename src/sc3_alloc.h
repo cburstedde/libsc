@@ -58,6 +58,10 @@ extern              "C"
 #define SC3E_ALLOCATOR_FREE(a,t,p) do {                                 \
   SC3E (sc3_allocator_free (a, p));                                     \
   (p) = (t *) 0; } while (0)
+#define SC3E_ALLOCATOR_REALLOC(a,t,n,p) do {                            \
+  void *_ptr = p;                                                       \
+  SC3E (sc3_allocator_realloc (a, (n) * sizeof (t), &_ptr));            \
+  (p) = (t *) *_ptr; } while (0)
 
 /** Check whether an allocator is not NULL and internally consistent.
  * The allocator may be valid in both its setup and usage phases.
@@ -186,6 +190,18 @@ sc3_error_t        *sc3_allocator_calloc (sc3_allocator_t * a,
                                           size_t nmemb, size_t size,
                                           void **ptr);
 sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *ptr);
+
+/** Change the allocated size of a previously allocated pointer.
+ * \param [in,out] a    Allocator must be setup.
+ * \param [in] new_size New byte allocation for pointer.
+ * \param [in,out]      On input, pointer created by \ref sc3_allocator_malloc
+ *                      or \ref sc3_allocator_calloc.  On output reallocated.
+ *                      If pointer is NULL on input, freshly allocate memory.
+ *                      If \b new_size is 0, pointer is freed and set to NULL.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_allocator_realloc (sc3_allocator_t * a,
+                                           size_t new_size, void **ptr);
 
 #ifdef __cplusplus
 #if 0

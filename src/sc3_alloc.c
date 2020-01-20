@@ -344,3 +344,46 @@ sc3_allocator_free (sc3_allocator_t * a, void *ptr)
 
   return NULL;
 }
+
+sc3_error_t        *
+sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void **ptr)
+{
+  void               *p;
+
+  /* TODO write macro for this */
+  SC3A_CHECK (ptr != NULL);
+  p = *ptr;
+  *ptr = NULL;
+  SC3A_IS (sc3_allocator_is_setup, a);
+
+  if (p == NULL) {
+    SC3E (sc3_allocator_malloc (a, new_size, ptr));
+  }
+  else if (new_size == 0) {
+    SC3E (sc3_allocator_free (a, p));
+  }
+  else {
+    if (a->align == 0) {
+      *ptr = SC3_REALLOC (p, char, new_size);
+      SC3E_DEMAND (*ptr != NULL, "Reallocation");
+    }
+    else {
+      size_t              size;
+      sc3_alloc_item_t   *aitem;
+
+      /* verify that memory had been allocated by this allocator */
+      aitem = ((sc3_alloc_item_t *) ptr) - 3;
+      SC3A_CHECK (aitem[0].ptr == (void *) a);
+
+      /* retrieve previous size of allocation */
+      size = aitem[2].siz;
+      if (size != new_size) {
+        /* we have to manually allocate, copy, and free due to alignment */
+        SC3E (sc3_allocator_malloc (a, new_size, ptr));
+        memcpy (*ptr, p, SC3_MIN (size, new_size));
+        SC3E (sc3_allocator_free (a, p));
+      }
+    }
+  }
+  return NULL;
+}
