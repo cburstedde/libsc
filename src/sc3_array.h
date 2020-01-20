@@ -72,6 +72,14 @@ int                 sc3_array_is_new (sc3_array_t * a, char *reason);
  */
 int                 sc3_array_is_setup (sc3_array_t * a, char *reason);
 
+/** Check whether an array is setup and resizable.
+ * \param [in] a        Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff pointer not NULL, array setup and resizable.
+ */
+int                 sc3_array_is_resizable (sc3_array_t * a, char *reason);
+
 /** Create a new array object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
  * Setting and modifying parameters is only allowed in the setup phase.
@@ -166,6 +174,15 @@ sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void **p);
+
+/** Index an array element without returning an error object.
+ * \param [in] a        The array must be setup.
+ * \param [in] i        Index must be in [0, element count).
+ * \return              Address of array element at index \b i.
+ *                      With SC_ENABLE_DEBUG, returns NULL if index
+ *                      is out of bounds.  Otherwise it may crash.
+ */
+void               *sc3_array_index_noerr (sc3_array_t * a, int i);
 
 #ifdef __cplusplus
 #if 0

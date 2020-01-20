@@ -78,6 +78,14 @@ sc3_array_is_setup (sc3_array_t * a, char *reason)
   SC3E_YES (reason);
 }
 
+int
+sc3_array_is_resizable (sc3_array_t * a, char *reason)
+{
+  SC3E_IS (sc3_array_is_setup, a, reason);
+  SC3E_TEST (a->resizable, reason);
+  SC3E_YES (reason);
+}
+
 sc3_error_t        *
 sc3_array_new (sc3_allocator_t * aator, sc3_array_t ** ap)
 {
@@ -218,4 +226,15 @@ sc3_array_index (sc3_array_t * a, int i, void **p)
 
   *p = a->mem + i * a->esize;
   return NULL;
+}
+
+void               *
+sc3_array_index_noerr (sc3_array_t * a, int i)
+{
+#ifdef SC_ENABLE_DEBUG
+  if (!sc3_array_is_setup (a, NULL) || i < 0 || i >= a->ecount) {
+    return NULL;
+  }
+#endif
+  return a->mem + i * a->esize;
 }
