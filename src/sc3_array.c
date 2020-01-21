@@ -58,6 +58,7 @@ sc3_array_is_valid (sc3_array_t * a, char *reason)
   }
   else {
     SC3E_TEST (a->mem != NULL || a->ecount * a->esize == 0, reason);
+    SC3E_TEST (SC3_ISPOWOF2 (a->ealloc), reason);
   }
   SC3E_YES (reason);
 }
@@ -119,7 +120,7 @@ sc3_error_t        *
 sc3_array_set_elem_count (sc3_array_t * a, int ecount)
 {
   SC3A_IS (sc3_array_is_new, a);
-  SC3A_CHECK (ecount >= 0);
+  SC3A_CHECK (0 <= ecount && ecount <= SC3_INT_HPOW);
   a->ecount = ecount;
   return NULL;
 }
@@ -128,7 +129,7 @@ sc3_error_t        *
 sc3_array_set_elem_alloc (sc3_array_t * a, int ealloc)
 {
   SC3A_IS (sc3_array_is_new, a);
-  SC3A_CHECK (ealloc >= 0);
+  SC3A_CHECK (0 <= ealloc && ealloc <= SC3_INT_HPOW);
   a->ealloc = ealloc;
   return NULL;
 }
@@ -152,12 +153,18 @@ sc3_array_set_initzero (sc3_array_t * a, int initzero)
 sc3_error_t        *
 sc3_array_setup (sc3_array_t * a)
 {
+  const int           ib = SC3_INT_BITS;
+  int                 lg;
   size_t              abytes;
 
   SC3A_IS (sc3_array_is_new, a);
 
-  /* determine amount of memory to allocate */
-  abytes = SC3_MAX (a->ealloc, a->ecount) * a->esize;
+  /* set a->ealloc to a fitting power of 2 */
+  lg = sc3_log2_ceil (SC3_MAX (a->ealloc, a->ecount), ib - 1);
+  SC3A_CHECK (0 <= lg && lg < ib - 1);
+  SC3A_CHECK (a->ecount <= (1 << lg));
+  SC3A_CHECK (a->ealloc <= (1 << lg));
+  abytes = (a->ealloc = 1 << lg) * a->esize;
 
   /* allocate array storage */
   if (!a->initzero) {
@@ -167,6 +174,7 @@ sc3_array_setup (sc3_array_t * a)
     SC3E_ALLOCATOR_CALLOC (a->aator, char, abytes, a->mem);
   }
 
+  /* set array to setup state */
   a->setup = 1;
   SC3A_IS (sc3_array_is_setup, a);
   return NULL;
@@ -214,6 +222,50 @@ sc3_array_destroy (sc3_array_t ** ap)
   SC3E (sc3_array_unref (&a));
 
   SC3A_CHECK (a == NULL);
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_array_resize (sc3_array_t * a, int new_ecount)
+{
+  SC3A_IS (sc3_array_is_resizable, a);
+  SC3A_CHECK (0 <= new_ecount && new_ecount <= SC3_INT_HPOW);
+
+  /* query whether the allocation is sufficient */
+  if (new_ecount > a->ealloc) {
+
+    /* we need to enlarge allocation */
+    do {
+      a->ealloc *= 2;
+    }
+    while (new_ecount > a->ealloc);
+    SC3E_ALLOCATOR_REALLOC (a->aator, char, a->ealloc * a->esize, a->mem);
+  }
+
+  /* record new element count */
+  a->ecount = new_ecount;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_array_push_count (sc3_array_t * a, int n, void **p)
+{
+  SC3E_ONULL (p);
+  SC3A_IS (sc3_array_is_resizable, a);
+  SC3A_CHECK (0 <= n && a->ecount + n <= SC3_INT_HPOW);
+
+  if (n > 0) {
+    int                 old_ecount = a->ecount;
+    SC3E (sc3_array_resize (a, old_ecount + n));
+    SC3E (sc3_array_index (a, old_ecount, p));
+  }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_array_push (sc3_array_t * a, void **p)
+{
+  SC3E (sc3_array_push_count (a, 1, p));
   return NULL;
 }
 
