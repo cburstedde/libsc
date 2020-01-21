@@ -105,7 +105,12 @@ extern              "C"
   (p) = *(pp);                                                          \
   *(pp) = NULL;                                                         \
   } while (0)
-#define SC3E_ONULLP(pp) do {                                            \
+#define SC3E_ONULLP(pp,p) do {                                          \
+  SC3A_CHECK ((pp) != NULL);                                            \
+  (p) = *(pp);                                                          \
+  *(pp) = NULL;                                                         \
+  } while (0)
+#define SC3E_ONULL(pp) do {                                             \
   SC3A_CHECK ((pp) != NULL);                                            \
   *(pp) = NULL;                                                         \
   } while (0)

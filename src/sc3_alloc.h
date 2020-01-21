@@ -61,7 +61,7 @@ extern              "C"
 #define SC3E_ALLOCATOR_REALLOC(a,t,n,p) do {                            \
   void *_ptr = p;                                                       \
   SC3E (sc3_allocator_realloc (a, (n) * sizeof (t), &_ptr));            \
-  (p) = (t *) *_ptr; } while (0)
+  (p) = (t *) _ptr; } while (0)
 
 /** Check whether an allocator is not NULL and internally consistent.
  * The allocator may be valid in both its setup and usage phases.

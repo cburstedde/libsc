@@ -209,25 +209,51 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
 }
 
 static sc3_error_t *
-test_array (sc3_allocator_t * ator)
+test_alloc (sc3_allocator_t * ator)
 {
-  char               *abc;
+  int                 i;
+  char               *abc, *def, *ghi;
+  sc3_allocator_t    *aligned;
   sc3_array_t        *arr;
 
   SC3A_IS (sc3_allocator_is_setup, ator);
-
   SC3E (sc3_allocator_strdup (ator, "abc", &abc));
+
+  for (i = 0; i < 3; ++i) {
+    SC3E (sc3_allocator_new (ator, &aligned));
+    SC3E (sc3_allocator_set_align (aligned, i * 8));
+    SC3E_DEMIS (sc3_allocator_is_new, aligned);
+    SC3E (sc3_allocator_setup (aligned));
+    SC3E_DEMIS (!sc3_allocator_is_new, aligned);
+    SC3E_DEMIS (sc3_allocator_is_setup, aligned);
+
+    SC3E_ALLOCATOR_CALLOC (aligned, char, SC3_BUFSIZE, def);
+    SC3_BUFCOPY (def, "def");
+    SC3E_ALLOCATOR_REALLOC (aligned, char, strlen (def) + 1, def);
+    SC3E_DEMAND (!memcmp (def, "def", strlen (def)), "String comparison 1");
+
+    SC3E_ALLOCATOR_MALLOC (aligned, char, 0, ghi);
+    SC3E_ALLOCATOR_REALLOC (aligned, char, strlen (def) + 1, ghi);
+    snprintf (ghi, 4, "%s", def);
+    SC3E_DEMAND (!memcmp (ghi, def, strlen (ghi)), "String comparison 2");
+
+    SC3E_ALLOCATOR_FREE (aligned, char, def);
+    SC3E_ALLOCATOR_FREE (aligned, char, ghi);
+
+    SC3E (sc3_array_new (aligned, &arr));
+    SC3E (sc3_array_set_elem_size (arr, 0));
+    SC3E_DEMIS (sc3_array_is_new, arr);
+    SC3E (sc3_array_setup (arr));
+    SC3E_DEMIS (!sc3_array_is_new, arr);
+    SC3E_DEMIS (sc3_array_is_setup, arr);
+
+    /* TODO do something with array */
+
+    SC3E (sc3_array_destroy (&arr));
+    SC3E (sc3_allocator_destroy (&aligned));
+  }
+
   SC3E_ALLOCATOR_FREE (ator, char, abc);
-
-  SC3E (sc3_array_new (ator, &arr));
-  SC3E (sc3_array_set_elem_size (arr, 0));
-  SC3E_DEMIS (sc3_array_is_new, arr);
-
-  SC3E (sc3_array_setup (arr));
-  SC3E_DEMIS (!sc3_array_is_new, arr);
-  SC3E_DEMIS (sc3_array_is_setup, arr);
-
-  SC3E (sc3_array_destroy (&arr));
   return NULL;
 }
 
@@ -375,9 +401,9 @@ main (int argc, char **argv)
     goto main_end;
   }
 
-  SC3E_SET (e, test_array (a));
+  SC3E_SET (e, test_alloc (a));
   if (!main_error_check (&e, &num_fatal, &num_weird)) {
-    printf ("Array test ok\n");
+    printf ("Alloc test ok\n");
   }
 
   SC3E_SET (e, test_mpi (a, &mpirank));
@@ -404,6 +430,7 @@ main (int argc, char **argv)
   }
   if (!sc3_allocator_is_free (mainalloc, reason)) {
     printf ("Static allocator not free: %s\n", reason);
+    ++num_fatal;
   }
 
   SC3E_SET (e, sc3_MPI_Finalize ());
