@@ -39,6 +39,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define SC3_INT_BITS (8 * SC_SIZEOF_INT)
+#define SC3_INT_HPOW (1 << (SC3_INT_BITS - 2))
+
 #define SC3_BUFSIZE 512
 #define SC3_BUFZERO(b) do { memset (b, 0, SC3_BUFSIZE); } while (0)
 #define SC3_BUFCOPY(b,s) \
@@ -60,6 +63,17 @@ extern              "C"
 }
 #endif
 #endif
+
+/** Determine the highest bit position of a positive integer.
+ * \param [in] a, bits  The lowest *bits* bits of *a* are examined.
+ *                      Higher bits are silently assumed to be zero.
+ *                      *a* and *bits* must be positive.
+ * \return              We return the zero-based position from the right
+ *                      of the highest 1-bit of *a*,
+ *                      or -1 if *a* or *bits* non-negative.
+ */
+int                 sc3_highbit (int a, int bits);
+int                 sc3_log2_ceil (int a, int bits);
 
 char               *sc3_basename (char *path);
 

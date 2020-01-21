@@ -32,6 +32,37 @@
 #include <libgen.h>
 #endif
 
+int
+sc3_highbit (int a, int bits)
+{
+  if (a <= 0 || bits <= 0) {
+    return -1;
+  }
+  else if (bits == 1) {
+    return 0;
+  }
+  else {
+    const int           b2 = bits / 2;
+    const int           a2 = a >> b2;
+
+    if (a2 > 0) {
+      return sc3_highbit (a2, bits - b2) + b2;
+    }
+    else {
+      return sc3_highbit (a, b2);
+    }
+  }
+}
+
+int
+sc3_log2_ceil (int a, int bits)
+{
+  if (a < 0 || bits <= 0) {
+    return -1;
+  }
+  return sc3_highbit (a - 1, bits) + 1;
+}
+
 char               *
 sc3_basename (char *path)
 {
