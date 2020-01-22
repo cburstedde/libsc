@@ -306,8 +306,10 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
   /* TODO adapt allocator_malloc function to call calloc inside? */
   SC3E (sc3_allocator_malloc (a, nmemb * size, ptr));
   memset (*ptr, 0, nmemb * size);
-  ++a->num_calloc;
-  --a->num_malloc;
+  if (a->counting) {
+    ++a->num_calloc;
+    --a->num_malloc;
+  }
   return NULL;
 }
 
@@ -328,8 +330,12 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
     size_t              size;
     sc3_alloc_item_t   *aitem;
 
+    /* It is legal to pass NULL values to free.  Counting must be respected. */
+    if (p == NULL) {
+      return NULL;
+    }
+
     /* verify that memory had been allocated by this allocator */
-    SC3A_CHECK (p != NULL);
     aitem = ((sc3_alloc_item_t *) p) - 3;
     SC3A_CHECK (aitem[0].ptr == (void *) a);
 
@@ -355,9 +361,15 @@ sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void **ptr)
 
   if (p == NULL) {
     SC3E (sc3_allocator_malloc (a, new_size, ptr));
+    if (a->counting) {
+      --a->num_malloc;
+    }
   }
   else if (new_size == 0) {
     SC3E (sc3_allocator_free (a, p));
+    if (a->counting) {
+      --a->num_free;
+    }
   }
   else {
     if (a->align == 0) {

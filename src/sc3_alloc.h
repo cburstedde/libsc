@@ -65,6 +65,9 @@ extern              "C"
 
 /** Check whether an allocator is not NULL and internally consistent.
  * The allocator may be valid in both its setup and usage phases.
+ * Any allocation by \ref sc3_allocator_malloc or \ref sc3_allocator_calloc
+ * may be followed by an arbitrary number of \ref sc3_allocator_realloc calls
+ * and must then be followed by \sc3_allocator_free.
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
@@ -182,22 +185,68 @@ sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
  */
 sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
 
+/** Allocate memory and copy a null-terminated string into it.
+ * \param [in,out] a    The allocator must be setup.
+ * \param [in] src      Pointer to null-terminated string.
+ * \param [out] dest    On output, freshly allocated memory with the
+ *                      input string copied into it.
+ *                      May be passed to \ref sc3_allocator_realloc
+ *                      any number of times and must eventually be
+ *                      released with \ref sc3_allocator_free.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_allocator_strdup (sc3_allocator_t * a,
                                           const char *src, char **dest);
+
+/** Allocate memory.
+ * \param [in,out] a    The allocator must be setup.
+ * \param [in] size     Bytes to allocate, zero is legal.
+ * \param [out] ptr     Contains newly allocated pointer on output.
+ *                      The user must not depend on it to be NULL or not.
+ *                      This pointer may be passed zero or more times to
+ *                      \ref sc3_allocator_realloc and must eventually be
+ *                      passed to \ref sc3_allocator_free.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_allocator_malloc (sc3_allocator_t * a, size_t size,
                                           void **ptr);
+
+/** Allocate memory that is initialized to zero.
+ * \param [in,out] a    The allocator must be setup.
+ * \param [in] nmemb    Number of items to allocate, zero is legal.
+ * \param [in] size     Bytes to allocate for each item, zero is legal.
+ * \param [out] ptr     Contains newly allocated pointer on output.
+ *                      The user must not depend on it to be NULL or not.
+ *                      This pointer may be passed zero or more times to
+ *                      \ref sc3_allocator_realloc and must eventually be
+ *                      passed to \ref sc3_allocator_free.
+ *                      If nmemb * size is greater zero, memory is zeroed.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_allocator_calloc (sc3_allocator_t * a,
                                           size_t nmemb, size_t size,
                                           void **ptr);
+
+/** Free previously allocated memory.
+ * \param [in,out] a    Allocator must be setup and the same used for allocation.
+ * \param [in,out] ptr  Previously allocated pointer on input, NULL on output.
+ *                      This pointer must have been obtained by
+ *                      \ref sc3_allocator_malloc, \ref sc3_allocator_calloc
+ *                      or \ref sc3_allocator_realloc.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *ptr);
 
 /** Change the allocated size of a previously allocated pointer.
- * \param [in,out] a    Allocator must be setup.
- * \param [in] new_size New byte allocation for pointer.
- * \param [in,out]      On input, pointer created by \ref sc3_allocator_malloc
- *                      or \ref sc3_allocator_calloc.  On output reallocated.
- *                      If pointer is NULL on input, freshly allocate memory.
- *                      If \b new_size is 0, pointer is freed and set to NULL.
+ * \param [in,out] a    Allocator must be setup and the same used for allocation.
+ * \param [in] new_size New byte allocation for pointer, zero is legal.
+ * \param [in,out]      On input, pointer created by \ref sc3_allocator_malloc,
+ *                      \ref sc3_allocator_calloc or \ref sc3_allocator_realloc.
+ *                      Reallocated on output.  Whether the output is NULL or not
+ *                      when *new_size* is 0 is not specified; both may happen.
+ *                      Must in every case be passed to \ref sc3_allocator_free.
+ *                      Not following this sequence will render the internal
+ *                      allocation and free counters inconsistent.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_realloc (sc3_allocator_t * a,

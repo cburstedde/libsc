@@ -211,10 +211,12 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
 static sc3_error_t *
 test_alloc (sc3_allocator_t * ator)
 {
-  int                 i;
+  int                 i, j, k;
   char               *abc, *def, *ghi;
+  void               *p;
   sc3_allocator_t    *aligned;
   sc3_array_t        *arr;
+  const char         *arraytest = "Array test";
 
   SC3A_IS (sc3_allocator_is_setup, ator);
   SC3E (sc3_allocator_strdup (ator, "abc", &abc));
@@ -240,16 +242,25 @@ test_alloc (sc3_allocator_t * ator)
     SC3E_ALLOCATOR_FREE (aligned, char, def);
     SC3E_ALLOCATOR_FREE (aligned, char, ghi);
 
-    SC3E (sc3_array_new (aligned, &arr));
-    SC3E (sc3_array_set_elem_size (arr, 0));
-    SC3E_DEMIS (sc3_array_is_new, arr);
-    SC3E (sc3_array_setup (arr));
-    SC3E_DEMIS (!sc3_array_is_new, arr);
-    SC3E_DEMIS (sc3_array_is_setup, arr);
+    for (j = 0; j < 3; ++j) {
+      SC3E (sc3_array_new (aligned, &arr));
+      SC3E (sc3_array_set_elem_size (arr, j * 173));
+      SC3E_DEMIS (sc3_array_is_new, arr);
+      SC3E (sc3_array_setup (arr));
+      SC3E_DEMIS (!sc3_array_is_new, arr);
+      SC3E_DEMIS (sc3_array_is_setup, arr);
 
-    /* TODO do something with array */
+      SC3E (sc3_array_resize (arr, 5329));
+      for (k = 0; k < 148; ++k) {
+        SC3E (sc3_array_index (arr, k, &p));
+        if (j > 0) {
+          memcpy (p, arraytest, strlen (arraytest) + 1);
+        }
+      }
+      SC3E (sc3_array_resize (arr, (j + 1) % 3));
 
-    SC3E (sc3_array_destroy (&arr));
+      SC3E (sc3_array_destroy (&arr));
+    }
     SC3E (sc3_allocator_destroy (&aligned));
   }
 
