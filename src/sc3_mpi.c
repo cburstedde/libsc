@@ -357,7 +357,7 @@ sc3_MPI_Allgather (void *sendbuf, int sendcount, sc3_MPI_Datatype_t sendtype,
   if (sendsize > 0) {
     SC3A_CHECK (sendbuf != NULL);
     SC3A_CHECK (recvbuf != NULL);
-    (void) memmove (recvbuf, sendbuf, sendsize);
+    memmove (recvbuf, sendbuf, sendsize);
   }
 #else
   SC3E_MPI (MPI_Allgather (sendbuf, sendcount, sendtype,
@@ -399,7 +399,7 @@ sc3_MPI_Allreduce (void *sendbuf, void *recvbuf, int count,
   if (datasize > 0) {
     SC3A_CHECK (sendbuf != NULL);
     SC3A_CHECK (recvbuf != NULL);
-    (void) memmove (recvbuf, sendbuf, datasize);
+    memmove (recvbuf, sendbuf, datasize);
   }
 #else
   SC3E_MPI (MPI_Allreduce (sendbuf, recvbuf, count, datatype, op, comm));

@@ -47,7 +47,7 @@
 #define SC3_BUFSIZE 512
 #define SC3_BUFZERO(b) do { memset (b, 0, SC3_BUFSIZE); } while (0)
 #define SC3_BUFCOPY(b,s) \
-          do { (void) snprintf (b, SC3_BUFSIZE, "%s", s); } while (0)
+          do { snprintf (b, SC3_BUFSIZE, "%s", s); } while (0)
 
 #define SC3_MALLOC(typ,nmemb) ((typ *) malloc ((nmemb) * sizeof (typ)))
 #define SC3_FREE(p) do { free (p); } while (0)

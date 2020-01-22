@@ -288,7 +288,7 @@ sc3_array_push_noerr (sc3_array_t * a)
     p = a->mem;
     if ((e = sc3_allocator_realloc
          (a->aator, (a->ealloc *= 2) * a->esize, &p)) != NULL) {
-      (void *) sc3_error_destroy (&e);
+      sc3_error_destroy (&e);
       return NULL;
     }
     a->mem = (char *) p;
