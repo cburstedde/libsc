@@ -167,16 +167,16 @@ sc3_error_t        *sc3_array_unref (sc3_array_t ** ap);
  */
 sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
 
-/** Resize an array.
+/** Resize an array, reallocating internally as needed.
  * The array elements are preserved to the minimum of old and new counts.
- * \param [in] a        The array must be setup and resizable.
- * \parma [in] new_ecount   The new element count.  May be 0.
- * \return              NULL on success, error object otherwise.
+ * \param [in] a            The array must be resizable.
+ * \parma [in] new_ecount   The new element count.  0 is legal.
+ * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
 
 /** Enlarge an array by a number of elements and provide a pointer.
- * \param [in] a        The array must be setup and resizable.
+ * \param [in] a        The array must be resizable.
  * \param [in] n        Non-negative number.  If n == 0, do nothing.
  * \param [out] p       Address of array element at previously last index,
  *                      or NULL if n == 0, which is explicitly allowed.
@@ -185,16 +185,27 @@ sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
 sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void **p);
 
 /** Enlarge an array by one element and provide a pointer to it.
- * \param [in] a        The array must be setup and resizable.
+ * \param [in] a        The array must be resizable.
  * \param [out] p       Address of array element at previously last index.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_push (sc3_array_t * a, void **p);
 
+/** Enlarge an array by one element without returning an error object.
+ * \param [in] a        The array must be resizable.
+ * \return              Address of array element at previously last index.
+ *                      With SC_ENABLE_DEBUG, returns NULL if the array
+ *                      is not resizable or the allocation fails.
+ *                      Otherwise it may crash on error.
+ */
+void               *sc3_array_push_noerr (sc3_array_t * a);
+
 /** Index an array element.
  * \param [in] a        The array must be setup.
  * \param [in] i        Index must be in [0, element count).
  * \param [out] p       Address of array element at index \b i.
+ *                      If the array element size is zero, the pointer
+ *                      must not be dereferenced.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void **p);
@@ -203,8 +214,11 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void **p);
  * \param [in] a        The array must be setup.
  * \param [in] i        Index must be in [0, element count).
  * \return              Address of array element at index \b i.
+ *                      If the array element size is zero, the pointer
+ *                      must not be dereferenced.
  *                      With SC_ENABLE_DEBUG, returns NULL if index
- *                      is out of bounds.  Otherwise it may crash.
+ *                      is out of bounds or the array is not setup.
+ *                      Otherwise it may crash on error.
  */
 void               *sc3_array_index_noerr (sc3_array_t * a, int i);
 

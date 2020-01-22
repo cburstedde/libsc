@@ -51,6 +51,7 @@ sc3_array_is_valid (sc3_array_t * a, char *reason)
   SC3E_TEST (a != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &a->rc, reason);
   SC3E_IS (sc3_allocator_is_setup, a->aator, reason);
+  SC3E_TEST (a->ecount >= 0 && a->ealloc >= 0, reason);
 
   /* check internal allocation logic depending on setup status */
   if (!a->setup) {
@@ -59,6 +60,7 @@ sc3_array_is_valid (sc3_array_t * a, char *reason)
   else {
     SC3E_TEST (a->mem != NULL || a->ecount * a->esize == 0, reason);
     SC3E_TEST (SC3_ISPOWOF2 (a->ealloc), reason);
+    SC3E_TEST (a->ecount <= a->ealloc, reason);
   }
   SC3E_YES (reason);
 }
@@ -267,6 +269,33 @@ sc3_array_push (sc3_array_t * a, void **p)
 {
   SC3E (sc3_array_push_count (a, 1, p));
   return NULL;
+}
+
+void               *
+sc3_array_push_noerr (sc3_array_t * a)
+{
+#ifdef SC_ENABLE_DEBUG
+  if (!sc3_array_is_resizable (a, NULL) || a->ecount >= SC3_INT_HPOW) {
+    return NULL;
+  }
+#endif
+
+  /* we may need to enlarge allocation */
+  if (a->ecount == a->ealloc) {
+    void               *p;
+    sc3_error_t        *e;
+
+    p = a->mem;
+    if ((e = sc3_allocator_realloc
+         (a->aator, (a->ealloc *= 2) * a->esize, &p)) != NULL) {
+      (void *) sc3_error_destroy (&e);
+      return NULL;
+    }
+    a->mem = (char *) p;
+  }
+
+  /* record new element count */
+  return a->mem + a->ecount++ * a->esize;
 }
 
 sc3_error_t        *
