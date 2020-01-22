@@ -252,7 +252,7 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
 sc3_error_t        *
 sc3_array_push_count (sc3_array_t * a, int n, void **p)
 {
-  SC3E_ONULL (p);
+  SC3E_RETVAL (p, NULL);
   SC3A_IS (sc3_array_is_resizable, a);
   SC3A_CHECK (0 <= n && a->ecount + n <= SC3_INT_HPOW);
 
@@ -301,7 +301,7 @@ sc3_array_push_noerr (sc3_array_t * a)
 sc3_error_t        *
 sc3_array_index (sc3_array_t * a, int i, void **p)
 {
-  SC3E_RETVAL (p, NULL);
+  SC3A_ONULL (p);
   SC3A_IS (sc3_array_is_setup, a);
   SC3A_CHECK (0 <= i && i < a->ecount);
 

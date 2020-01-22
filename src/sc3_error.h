@@ -49,9 +49,10 @@ extern              "C"
 
 /*** DEBUG macros do nothing unless configured with --enable-debug. ***/
 #ifndef SC_ENABLE_DEBUG
-#define SC3A_IS(f,o) do { ; } while (0)
-#define SC3A_CHECK(x) do { ; } while (0)
-#define SC3A_STACK(f) do { ; } while (0)
+#define SC3A_IS(f,o) SC3_NOOP
+#define SC3A_CHECK(x) SC3_NOOP
+#define SC3A_STACK(f) SC3_NOOP
+#define SC3A_ONULL(r) SC3_NOOP
 #else
 #define SC3A_IS(f,o) SC3E_DEMIS(f,o)
 #define SC3A_CHECK(x) do {                                              \
@@ -63,6 +64,10 @@ extern              "C"
   if (_e != NULL) {                                                     \
     return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
   }} while (0)
+#define SC3A_ONULL(r) do {                                              \
+  SC3A_CHECK ((r) != NULL);                                             \
+  *(r) = NULL;                                                          \
+  } while (0)
 #endif
 
 /*** ERROR macros.  They are always active and create fatal errors. ***/
@@ -91,7 +96,7 @@ extern              "C"
   } while (0)
 #define SC3E_RETVAL(r,v) do {                                           \
   SC3A_CHECK ((r) != NULL);                                             \
-    *(r) = (v);                                                         \
+  *(r) = (v);                                                           \
   } while (0)
 #define SC3E_RETOPT(r,v) do {                                           \
   if ((r) != NULL) *(r) = (v);                                          \
@@ -108,10 +113,6 @@ extern              "C"
 #define SC3E_ONULLP(pp,p) do {                                          \
   SC3A_CHECK ((pp) != NULL);                                            \
   (p) = *(pp);                                                          \
-  *(pp) = NULL;                                                         \
-  } while (0)
-#define SC3E_ONULL(pp) do {                                             \
-  SC3A_CHECK ((pp) != NULL);                                            \
   *(pp) = NULL;                                                         \
   } while (0)
 

@@ -39,6 +39,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define SC3_NOOP do { ; } while (0)
+
 #define SC3_INT_BITS (8 * SC_SIZEOF_INT)
 #define SC3_INT_HPOW (1 << (SC3_INT_BITS - 2))
 
