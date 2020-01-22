@@ -79,28 +79,29 @@ void
 sc3_openmp_esync_in_critical (sc3_error_t * e, int *rcount, int *ecount,
                               int *error_tid, sc3_error_t ** shared_error)
 {
-
-  /* TODO input parameter checks */
-
+  /* this function is written to survive NULL input parameters */
   if (e != NULL) {
     int                 tid = sc3_openmp_get_thread_num ();
 
-    if (*error_tid > tid) {
-      /* we are the lowest numbered error thread */
+    if (error_tid != NULL && shared_error != NULL && *error_tid > tid) {
+      /* we are the lowest numbered sane error thread */
       if (*shared_error != NULL) {
-        if (sc3_error_destroy (shared_error) != NULL) {
+        if (sc3_error_destroy (shared_error) != NULL && rcount != NULL) {
           ++*rcount;
         }
       }
+      /* TODO stack the error instead and set to thread-synced */
       *shared_error = e;
       *error_tid = tid;
     }
     else {
       /* another error thread has lower number */
-      if (sc3_error_destroy (&e) != NULL) {
+      if (sc3_error_destroy (&e) != NULL && rcount != NULL) {
         ++*rcount;
       }
     }
-    ++*ecount;
+    if (ecount != NULL) {
+      ++*ecount;
+    }
   }
 }

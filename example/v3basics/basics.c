@@ -354,6 +354,7 @@ static sc3_error_t *
 openmp_work (sc3_allocator_t * talloc)
 {
   SC3A_IS (sc3_allocator_is_setup, talloc);
+  SC3A_CHECK (sc3_openmp_get_thread_num () % 3 == 1);
 
   return NULL;
 }
@@ -364,7 +365,7 @@ openmp_info (sc3_allocator_t * origa)
   int                 tmax = sc3_openmp_get_max_threads ();
   int                 minid, maxid, tcount;
   int                 error_tid, ecount, rcount;
-  sc3_error_t         *terror;
+  sc3_error_t        *terror;
 
   SC3A_IS (sc3_allocator_is_setup, origa);
 
@@ -390,10 +391,9 @@ openmp_info (sc3_allocator_t * origa)
   printf ("Reductions min %d max %d count %d\n", minid, maxid, tcount);
   SC3E_DEMAND (0 <= minid && minid <= maxid && maxid < tmax,
                "Thread ids out of range");
-  SC3E_DEMAND (maxid < tcount && tcount <= tmax,
-               "Thread ids inconsistent");
+  SC3E_DEMAND (maxid < tcount && tcount <= tmax, "Thread ids inconsistent");
 
-   /* Test 2 -- per-thread memory allocation */
+  /* Test 2 -- per-thread memory allocation */
   SC3E (sc3_openmp_esync_pre_critical
         (&rcount, &ecount, &error_tid, &terror));
 #pragma omp parallel
@@ -405,32 +405,36 @@ openmp_info (sc3_allocator_t * origa)
 #pragma omp critical
     {
       SC3E_SET (e, sc3_allocator_new (origa, &talloc));
-      sc3_openmp_esync_in_critical
-        (e, &rcount, &ecount, &error_tid, &terror);
-
-      /* TODO handle in_critical error return */
+      SC3E_NULL_SET (e, sc3_allocator_setup (talloc));
+      sc3_openmp_esync_in_critical (e, &rcount, &ecount, &error_tid, &terror);
     }
 #pragma omp barrier
     /* now terror is either NULL or the same error object in all threads */
 
     /* do parallel work in threads */
     if (terror == NULL) {
-      e = openmp_work (talloc);
+      SC3E_SET (e, openmp_work (talloc));
+
+      /* synchronize error result */
+#pragma omp critical
+      sc3_openmp_esync_in_critical (e, &rcount, &ecount, &error_tid, &terror);
+#pragma omp barrier
     }
-    /* TODO synchronize error result */
+    /* now terror is either NULL or the same error object in all threads */
 
     /* clean up thread */
 #pragma omp critical
     {
-      SC3E_SET (e, sc3_allocator_destroy (&talloc));
-
-      /* TODO sync error from freeing thread allocator */
+      /* we must unref, not destroy the thread allocator
+         since it may have been used to create the error object */
+      SC3E_SET (e, sc3_allocator_unref (&talloc));
+      sc3_openmp_esync_in_critical (e, &rcount, &ecount, &error_tid, &terror);
     }
   }
+  printf ("Thread weird %d error %d count\n", rcount, ecount);
 
-  /* TODO: error mechanism inside a parallel statement */
-
-  return NULL;
+  /* this error is the only one remaining from all threads */
+  return terror;
 }
 
 int
