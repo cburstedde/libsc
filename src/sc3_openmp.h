@@ -33,7 +33,7 @@
 #ifndef SC3_OPENMP_H
 #define SC3_OPENMP_H
 
-#include <sc3_base.h>
+#include <sc3_error.h>
 
 #ifdef __cplusplus
 extern              "C"
@@ -46,6 +46,13 @@ extern              "C"
 int                 sc3_openmp_get_max_threads (void);
 int                 sc3_openmp_get_num_threads (void);
 int                 sc3_openmp_get_thread_num (void);
+
+sc3_error_t        *sc3_openmp_esync_pre_critical
+  (int *rcount, int *ecount, int *error_tid, sc3_error_t ** shared_error);
+
+void                sc3_openmp_esync_in_critical
+  (sc3_error_t * e, int *rcount, int *ecount,
+   int *error_tid, sc3_error_t ** shared_error);
 
 #ifdef __cplusplus
 #if 0

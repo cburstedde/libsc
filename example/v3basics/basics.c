@@ -351,17 +351,29 @@ test_mpi (sc3_allocator_t * alloc, int *rank)
 }
 
 static sc3_error_t *
-openmp_info (void)
+openmp_work (sc3_allocator_t * talloc)
+{
+  SC3A_IS (sc3_allocator_is_setup, talloc);
+
+  return NULL;
+}
+
+static sc3_error_t *
+openmp_info (sc3_allocator_t * origa)
 {
   int                 tmax = sc3_openmp_get_max_threads ();
   int                 minid, maxid, tcount;
+  int                 error_tid, ecount, rcount;
+  sc3_error_t         *terror;
+
+  SC3A_IS (sc3_allocator_is_setup, origa);
 
   printf ("Max threads %d\n", tmax);
 
+  /* Test 1 -- thread counting */
   minid = tmax;
   maxid = -1;
   tcount = 0;
-
 #pragma omp parallel reduction (min: minid) \
                      reduction (max: maxid) \
                      reduction (+: tcount)
@@ -376,9 +388,48 @@ openmp_info (void)
     ++tcount;
   }
   printf ("Reductions min %d max %d count %d\n", minid, maxid, tcount);
-
   SC3E_DEMAND (0 <= minid && minid <= maxid && maxid < tmax,
-               "Thread numbers out of range");
+               "Thread ids out of range");
+  SC3E_DEMAND (maxid < tcount && tcount <= tmax,
+               "Thread ids inconsistent");
+
+   /* Test 2 -- per-thread memory allocation */
+  SC3E (sc3_openmp_esync_pre_critical
+        (&rcount, &ecount, &error_tid, &terror));
+#pragma omp parallel
+  {
+    sc3_allocator_t    *talloc;
+    sc3_error_t        *e;
+
+    /* initialize thread and per-thread allocator */
+#pragma omp critical
+    {
+      SC3E_SET (e, sc3_allocator_new (origa, &talloc));
+      sc3_openmp_esync_in_critical
+        (e, &rcount, &ecount, &error_tid, &terror);
+
+      /* TODO handle in_critical error return */
+    }
+#pragma omp barrier
+    /* now terror is either NULL or the same error object in all threads */
+
+    /* do parallel work in threads */
+    if (terror == NULL) {
+      e = openmp_work (talloc);
+    }
+    /* TODO synchronize error result */
+
+    /* clean up thread */
+#pragma omp critical
+    {
+      SC3E_SET (e, sc3_allocator_destroy (&talloc));
+
+      /* TODO sync error from freeing thread allocator */
+    }
+  }
+
+  /* TODO: error mechanism inside a parallel statement */
+
   return NULL;
 }
 
@@ -422,7 +473,7 @@ main (int argc, char **argv)
     printf ("MPI code ok\n");
   }
 
-  SC3E_SET (e, openmp_info ());
+  SC3E_SET (e, openmp_info (a));
   if (!main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("OpenMP code ok\n");
   }
