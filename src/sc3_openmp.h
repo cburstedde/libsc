@@ -51,7 +51,7 @@ sc3_error_t        *sc3_openmp_esync_pre_critical
   (int *rcount, int *ecount, int *error_tid, sc3_error_t ** shared_error);
 
 void                sc3_openmp_esync_in_critical
-  (sc3_error_t * e, int *rcount, int *ecount,
+  (sc3_error_t ** e, int *rcount, int *ecount,
    int *error_tid, sc3_error_t ** shared_error);
 
 #ifdef __cplusplus

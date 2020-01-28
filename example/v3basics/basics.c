@@ -399,27 +399,31 @@ openmp_info (sc3_allocator_t * origa)
 #pragma omp parallel
   {
     sc3_allocator_t    *talloc;
-    sc3_error_t        *e;
+    sc3_error_t        *e = NULL;
 
     /* initialize thread and per-thread allocator */
 #pragma omp critical
     {
       SC3E_SET (e, sc3_allocator_new (origa, &talloc));
       SC3E_NULL_SET (e, sc3_allocator_setup (talloc));
-      sc3_openmp_esync_in_critical (e, &rcount, &ecount, &error_tid, &terror);
+      sc3_openmp_esync_in_critical
+        (&e, &rcount, &ecount, &error_tid, &terror);
     }
 #pragma omp barrier
     /* now terror is either NULL or the same error object in all threads */
 
-    /* do parallel work in threads */
     if (terror == NULL) {
+      /* do parallel work in threads */
       SC3E_SET (e, openmp_work (talloc));
-
-      /* synchronize error result */
-#pragma omp critical
-      sc3_openmp_esync_in_critical (e, &rcount, &ecount, &error_tid, &terror);
-#pragma omp barrier
     }
+
+    /* synchronize error result */
+#pragma omp critical
+    {
+      sc3_openmp_esync_in_critical
+        (&e, &rcount, &ecount, &error_tid, &terror);
+    }
+#pragma omp barrier
     /* now terror is either NULL or the same error object in all threads */
 
     /* clean up thread */
@@ -428,7 +432,8 @@ openmp_info (sc3_allocator_t * origa)
       /* we must unref, not destroy the thread allocator
          since it may have been used to create the error object */
       SC3E_SET (e, sc3_allocator_unref (&talloc));
-      sc3_openmp_esync_in_critical (e, &rcount, &ecount, &error_tid, &terror);
+      sc3_openmp_esync_in_critical
+        (&e, &rcount, &ecount, &error_tid, &terror);
     }
   }
   printf ("Thread weird %d error %d count\n", rcount, ecount);
