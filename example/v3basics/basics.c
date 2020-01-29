@@ -245,6 +245,8 @@ test_alloc (sc3_allocator_t * ator)
     for (j = 0; j < 3; ++j) {
       SC3E (sc3_array_new (aligned, &arr));
       SC3E (sc3_array_set_elem_size (arr, j * 173));
+      SC3E (sc3_array_set_resizable (arr, 1));
+      SC3E (sc3_array_set_tighten (arr, 1));
       SC3E_DEMIS (sc3_array_is_new, arr);
       SC3E (sc3_array_setup (arr));
       SC3E_DEMIS (!sc3_array_is_new, arr);

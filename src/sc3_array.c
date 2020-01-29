@@ -37,7 +37,7 @@ struct sc3_array
   int                 setup;
 
   /* parameters fixed after setup call */
-  int                 resizable, initzero;
+  int                 initzero, resizable, tighten;
   int                 ecount, ealloc;
   size_t              esize;
 
@@ -59,7 +59,7 @@ sc3_array_is_valid (sc3_array_t * a, char *reason)
   }
   else {
     SC3E_TEST (a->mem != NULL || a->ecount * a->esize == 0, reason);
-    SC3E_TEST (SC3_ISPOWOF2 (a->ealloc), reason);
+    SC3E_TEST (a->ealloc == 0 || SC3_ISPOWOF2 (a->ealloc), reason);
     SC3E_TEST (a->ecount <= a->ealloc, reason);
   }
   SC3E_YES (reason);
@@ -102,7 +102,6 @@ sc3_array_new (sc3_allocator_t * aator, sc3_array_t ** ap)
   SC3E (sc3_refcount_init (&a->rc));
   a->esize = 1;
   a->ealloc = 8;
-  a->resizable = 1;
   a->aator = aator;
   SC3A_IS (sc3_array_is_new, a);
 
@@ -137,6 +136,14 @@ sc3_array_set_elem_alloc (sc3_array_t * a, int ealloc)
 }
 
 sc3_error_t        *
+sc3_array_set_initzero (sc3_array_t * a, int initzero)
+{
+  SC3A_IS (sc3_array_is_new, a);
+  a->initzero = initzero;
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_array_set_resizable (sc3_array_t * a, int resizable)
 {
   SC3A_IS (sc3_array_is_new, a);
@@ -145,10 +152,10 @@ sc3_array_set_resizable (sc3_array_t * a, int resizable)
 }
 
 sc3_error_t        *
-sc3_array_set_initzero (sc3_array_t * a, int initzero)
+sc3_array_set_tighten (sc3_array_t * a, int tighten)
 {
   SC3A_IS (sc3_array_is_new, a);
-  a->initzero = initzero;
+  a->tighten = tighten;
   return NULL;
 }
 
@@ -186,6 +193,7 @@ sc3_error_t        *
 sc3_array_ref (sc3_array_t * a)
 {
   SC3A_IS (sc3_array_is_setup, a);
+  SC3A_CHECK (!a->resizable);
   SC3E (sc3_refcount_ref (&a->rc));
   return NULL;
 }
@@ -241,7 +249,28 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
       a->ealloc *= 2;
     }
     while (new_ecount > a->ealloc);
+    SC3A_CHECK (new_ecount <= a->ealloc);
     SC3E_ALLOCATOR_REALLOC (a->aator, char, a->ealloc * a->esize, a->mem);
+  }
+  else if (a->tighten && new_ecount < a->ealloc) {
+    int                 newalloc;
+
+    /* we shall try to reduce memory usage */
+    if (new_ecount == 0) {
+      newalloc = 0;
+    }
+    else {
+      newalloc = a->ealloc;
+      while (newalloc / 2 >= new_ecount) {
+        newalloc /= 2;
+      }
+      SC3A_CHECK (newalloc > 0);
+    }
+    if (newalloc < a->ealloc) {
+      a->ealloc = newalloc;
+      SC3A_CHECK (new_ecount <= a->ealloc);
+      SC3E_ALLOCATOR_REALLOC (a->aator, char, a->ealloc * a->esize, a->mem);
+    }
   }
 
   /* record new element count */
@@ -296,6 +325,20 @@ sc3_array_push_noerr (sc3_array_t * a)
 
   /* record new element count */
   return a->mem + a->ecount++ * a->esize;
+}
+
+sc3_error_t        *
+sc3_array_freeze (sc3_array_t * a)
+{
+  SC3A_IS (sc3_array_is_setup, a);
+  if (a->resizable) {
+    if (a->tighten && a->ecount < a->ealloc) {
+      a->ealloc = a->ecount;
+      SC3E_ALLOCATOR_REALLOC (a->aator, char, a->ealloc * a->esize, a->mem);
+    }
+    a->resizable = 0;
+  }
+  return NULL;
 }
 
 sc3_error_t        *
