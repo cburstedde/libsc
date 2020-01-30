@@ -262,6 +262,11 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
     /* use system allocation */
     p = SC3_MALLOC (char, size);
     SC3E_DEMAND (size == 0 || p != NULL, "Allocation");
+
+    /* when allocating zero bytes we may obtain a NULL pointer */
+    if (a->counting && p != NULL) {
+      ++a->num_malloc;
+    }
   }
   else {
     /* allocate bigger block and write debug and size info into header */
@@ -288,11 +293,8 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
     /* keep track of total allocated size */
     if (a->counting) {
       a->total_size += size;
+      ++a->num_malloc;
     }
-  }
-
-  if (a->counting) {
-    ++a->num_malloc;
   }
 
   *ptr = (void *) p;
@@ -306,7 +308,7 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
   /* TODO adapt allocator_malloc function to call calloc inside? */
   SC3E (sc3_allocator_malloc (a, nmemb * size, ptr));
   memset (*ptr, 0, nmemb * size);
-  if (a->counting) {
+  if (a->counting && *ptr != NULL) {
     ++a->num_calloc;
     --a->num_malloc;
   }
@@ -318,6 +320,10 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
 {
   SC3A_IS (sc3_allocator_is_setup, a);
 
+  /* It is legal to pass NULL values to free.  This is not counted. */
+  if (p == NULL) {
+    return NULL;
+  }
   if (a->counting) {
     ++a->num_free;
   }
@@ -329,11 +335,6 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
   else {
     size_t              size;
     sc3_alloc_item_t   *aitem;
-
-    /* It is legal to pass NULL values to free.  Counting must be respected. */
-    if (p == NULL) {
-      return NULL;
-    }
 
     /* verify that memory had been allocated by this allocator */
     aitem = ((sc3_alloc_item_t *) p) - 3;
@@ -347,7 +348,6 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
     }
     SC3_FREE (aitem[1].ptr);
   }
-
   return NULL;
 }
 
@@ -361,15 +361,9 @@ sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void **ptr)
 
   if (p == NULL) {
     SC3E (sc3_allocator_malloc (a, new_size, ptr));
-    if (a->counting) {
-      --a->num_malloc;
-    }
   }
   else if (new_size == 0) {
     SC3E (sc3_allocator_free (a, p));
-    if (a->counting) {
-      --a->num_free;
-    }
   }
   else {
     if (a->align == 0) {
