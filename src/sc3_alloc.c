@@ -247,57 +247,75 @@ sc3_allocator_malloc_noerr (sc3_allocator_t * a, size_t size)
     ++a->num_malloc;
   }
 
-  return (void *) p;
+  return p;
+}
+
+static sc3_error_t *
+sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
+                             void **ptr)
+{
+  const size_t        hsize = 3 * sizeof (sc3_alloc_item_t);
+  size_t              actual, shift;
+  char               *p;
+  sc3_alloc_item_t   *aitem;
+
+  SC3A_IS (sc3_allocator_is_setup, a);
+  SC3A_CHECK (ptr != NULL && *ptr == NULL);
+
+  /* allocate bigger block and write debug and size info into header */
+  actual = a->align + hsize + size;
+
+  /* allocate memory big enough for shift and meta information */
+  p = initzero ? SC3_CALLOC (char, actual) : SC3_MALLOC (char, actual);
+  SC3E_DEMAND (p != NULL, "Allocation");
+
+  /* record allocator's address, original pointer, and allocated size */
+  shift = a->align - ((size_t) p + hsize) % a->align;
+  SC3A_CHECK (0 < shift && shift <= a->align);
+  memset (p, -1, shift);
+  aitem = (sc3_alloc_item_t *) (p + shift);
+  aitem[0].ptr = a;
+  aitem[1].ptr = p;
+  aitem[2].siz = size;
+  p = (char *) &aitem[3];
+  SC3A_CHECK (((size_t) p) % a->align == 0);
+
+  /* keep track of total allocated size */
+  if (a->counting) {
+    if (initzero) {
+      ++a->num_calloc;
+    }
+    else {
+      ++a->num_malloc;
+    }
+    a->total_size += size;
+  }
+
+  /* return new memory */
+  *ptr = p;
+  return NULL;
 }
 
 sc3_error_t        *
 sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
 {
-  char               *p;
-
   SC3E_RETVAL (ptr, NULL);
   SC3A_IS (sc3_allocator_is_setup, a);
 
   if (a->align == 0) {
     /* use system allocation */
-    p = SC3_MALLOC (char, size);
-    SC3E_DEMAND (size == 0 || p != NULL, "Allocation");
+    char               *p = SC3_MALLOC (char, size);
+    SC3E_DEMAND (size == 0 || p != NULL, "Allocation by malloc");
 
     /* when allocating zero bytes we may obtain a NULL pointer */
     if (a->counting && p != NULL) {
       ++a->num_malloc;
     }
+    *ptr = p;
   }
   else {
-    /* allocate bigger block and write debug and size info into header */
-    size_t              hsize = 3 * sizeof (sc3_alloc_item_t);
-    size_t              actual = a->align + hsize + size;
-    size_t              shift;
-    sc3_alloc_item_t   *aitem;
-
-    /* allocate memory big enough for shift and meta information */
-    p = SC3_MALLOC (char, actual);
-    SC3E_DEMAND (p != NULL, "Allocation");
-
-    /* record allocator's address, original pointer, and allocated size */
-    shift = a->align - ((size_t) p + hsize) % a->align;
-    SC3A_CHECK (0 < shift && shift <= a->align);
-    memset (p, -1, shift);
-    aitem = (sc3_alloc_item_t *) (p + shift);
-    aitem[0].ptr = a;
-    aitem[1].ptr = p;
-    aitem[2].siz = size;
-    p = (char *) &aitem[3];
-    SC3A_CHECK (((size_t) p) % a->align == 0);
-
-    /* keep track of total allocated size */
-    if (a->counting) {
-      a->total_size += size;
-      ++a->num_malloc;
-    }
+    SC3E (sc3_allocator_alloc_aligned (a, size, 0, ptr));
   }
-
-  *ptr = (void *) p;
   return NULL;
 }
 
@@ -305,12 +323,23 @@ sc3_error_t        *
 sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
                       void **ptr)
 {
-  /* TODO adapt allocator_malloc function to call calloc inside? */
-  SC3E (sc3_allocator_malloc (a, nmemb * size, ptr));
-  memset (*ptr, 0, nmemb * size);
-  if (a->counting && *ptr != NULL) {
-    ++a->num_calloc;
-    --a->num_malloc;
+  SC3E_RETVAL (ptr, NULL);
+  SC3A_IS (sc3_allocator_is_setup, a);
+
+  size *= nmemb;
+  if (a->align == 0) {
+    /* use system allocation */
+    char               *p = SC3_CALLOC (char, size);
+    SC3E_DEMAND (size == 0 || p != NULL, "Allocation by calloc");
+
+    /* when allocating zero bytes we may obtain a NULL pointer */
+    if (a->counting && p != NULL) {
+      ++a->num_calloc;
+    }
+    *ptr = p;
+  }
+  else {
+    SC3E (sc3_allocator_alloc_aligned (a, size, 1, ptr));
   }
   return NULL;
 }
@@ -338,7 +367,7 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
 
     /* verify that memory had been allocated by this allocator */
     aitem = ((sc3_alloc_item_t *) p) - 3;
-    SC3A_CHECK (aitem[0].ptr == (void *) a);
+    SC3A_CHECK (aitem[0].ptr == a);
 
     /* keep track of total allocated size */
     if (a->counting) {
@@ -376,7 +405,7 @@ sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void **ptr)
 
       /* verify that memory had been allocated by this allocator */
       aitem = ((sc3_alloc_item_t *) p) - 3;
-      SC3A_CHECK (aitem[0].ptr == (void *) a);
+      SC3A_CHECK (aitem[0].ptr == a);
 
       /* retrieve previous size of allocation */
       size = aitem[2].siz;

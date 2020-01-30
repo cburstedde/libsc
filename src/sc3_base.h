@@ -50,6 +50,7 @@
           do { snprintf (b, SC3_BUFSIZE, "%s", s); } while (0)
 
 #define SC3_MALLOC(typ,nmemb) ((typ *) malloc ((nmemb) * sizeof (typ)))
+#define SC3_CALLOC(typ,nmemb) ((typ *) calloc (nmemb, sizeof (typ)))
 #define SC3_FREE(p) do { free (p); } while (0)
 #define SC3_REALLOC(p,typ,nmemb) ((typ *) realloc (p, (nmemb) * sizeof (typ)))
 
