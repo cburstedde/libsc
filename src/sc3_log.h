@@ -34,7 +34,6 @@
 #define SC3_LOG_H
 
 #include <sc3_mpi.h>
-#include <sc3_trace.h>
 
 typedef struct sc3_log sc3_log_t;
 
@@ -84,13 +83,14 @@ sc3_error_t        *sc3_log_setup (sc3_log_t * log);
 sc3_error_t        *sc3_log_unref (sc3_log_t ** logp);
 sc3_error_t        *sc3_log_destroy (sc3_log_t ** logp);
 
-void                sc3_log (sc3_log_t * log, sc3_trace_t * t,
+void                sc3_log (sc3_log_t * log, int depth,
                              sc3_log_role_t role, sc3_log_level_t level,
                              const char *msg);
-void                sc3_logf (sc3_log_t * log, sc3_trace_t * t,
+void                sc3_logf (sc3_log_t * log, int depth,
                               sc3_log_role_t role, sc3_log_level_t level,
-                              const char *fmt, ...);
-void                sc3_logv (sc3_log_t * log, sc3_trace_t * t,
+                              const char *fmt, ...)
+  __attribute__ ((format (printf, 5, 6)));
+void                sc3_logv (sc3_log_t * log, int depth,
                               sc3_log_role_t role, sc3_log_level_t level,
                               const char *fmt, va_list ap);
 

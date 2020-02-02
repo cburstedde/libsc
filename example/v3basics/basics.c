@@ -124,7 +124,7 @@ run_io (sc3_allocator_t * a, int result)
 }
 
 static sc3_error_t *
-run_prog (sc3_allocator_t * origa, sc3_trace_t * trace, sc3_log_t * log,
+run_prog (sc3_allocator_t * origa, sc3_trace_t * t, sc3_log_t * log,
           int input, int *result, int *num_io)
 {
   sc3_trace_t         stacktrace;
@@ -134,8 +134,8 @@ run_prog (sc3_allocator_t * origa, sc3_trace_t * trace, sc3_log_t * log,
   SC3A_IS (sc3_allocator_is_setup, origa);
 
   /* Push call trace and indent log message */
-  sc3_trace_push (&trace, &stacktrace, "run_prog", __FILE__, __LINE__, NULL);
-  sc3_log (log, trace, SC3_LOG_THREAD0, SC3_LOG_PROGRAM, "In run_prog");
+  sc3_trace_push (&t, &stacktrace, "run_prog", __FILE__, __LINE__, NULL);
+  sc3_log (log, t->depth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM, "In run_prog");
 
   /* Test assertions */
   SC3E (parent_function (input, result));
@@ -477,9 +477,9 @@ main (int argc, char **argv)
   sc3_allocator_t    *a;
   sc3_allocator_t    *mainalloc;
   sc3_log_t          *mainlog;
-  sc3_trace_t         stacktrace, *trace = &stacktrace;
+  sc3_trace_t         stacktrace, *t = &stacktrace;
 
-  sc3_trace_init (trace, NULL, __FILE__, __LINE__, NULL);
+  sc3_trace_init (t, NULL, __FILE__, __LINE__, NULL);
   mainalloc = sc3_allocator_nothread ();
   num_fatal = num_weird = num_io = 0;
 
@@ -501,7 +501,8 @@ main (int argc, char **argv)
     printf ("Main log creation failed\n");
     goto main_end;
   }
-  sc3_log (mainlog, trace, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM, "Main is here");
+  sc3_logf (mainlog, t->depth, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM,
+           "Main is %s", "here");
 
   SC3E_SET (e, test_alloc (a));
   if (!main_error_check (&e, &num_fatal, &num_weird)) {
@@ -520,13 +521,14 @@ main (int argc, char **argv)
 
   for (i = 0; i < 3; ++i) {
     input = inputs[i];
-    SC3E_SET (e, run_prog (a, trace, mainlog, input, &result, &num_io));
+    SC3E_SET (e, run_prog (a, t, mainlog, input, &result, &num_io));
     if (!main_error_check (&e, &num_fatal, &num_weird)) {
       printf ("Clean execution with input %d result %d\n", input, result);
     }
   }
 
-  sc3_log (mainlog, trace, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM, "Main is done");
+  sc3_logf (mainlog, t->depth, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM,
+           "Main is %s", "done");
   SC3E_SET (e, sc3_log_destroy (&mainlog));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("Main log destroy failed\n");

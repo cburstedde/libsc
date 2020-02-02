@@ -220,11 +220,10 @@ sc3_log_destroy (sc3_log_t ** logp)
 }
 
 void
-sc3_log (sc3_log_t * log, sc3_trace_t * t,
+sc3_log (sc3_log_t * log, int depth,
          sc3_log_role_t role, sc3_log_level_t level, const char *msg)
 {
   int                 tid;
-  int                 spaces;
   char                header[SC3_BUFSIZE];
 
   /* catch invalid usage */
@@ -234,14 +233,6 @@ sc3_log (sc3_log_t * log, sc3_trace_t * t,
   }
   if (!(0 <= level && level < SC3_LOG_LEVEL_LAST) || msg == NULL) {
     return;
-  }
-
-  /* take depth of indentation from call stack */
-  if (t != NULL && t->depth >= 0) {
-    spaces = log->indent * t->depth;
-  }
-  else {
-    spaces = 0;
   }
 
   if (level < log->level) {
@@ -269,24 +260,25 @@ sc3_log (sc3_log_t * log, sc3_trace_t * t,
   else {
     snprintf (header, SC3_BUFSIZE, "%s %d:%d", "SC3", log->rank, tid);
   }
-  fprintf (log->file, "[%s] %*s%s\n", header, spaces, "", msg);
+  fprintf (log->file, "[%s] %*s%s\n", header,
+           depth >= 0 ? depth * log->indent : 0, "", msg);
 }
 
 void
-sc3_logf (sc3_log_t * log, sc3_trace_t * t,
+sc3_logf (sc3_log_t * log, int depth,
           sc3_log_role_t role, sc3_log_level_t level, const char *fmt, ...)
 {
   if (sc3_log_is_setup (log, NULL) && fmt != NULL) {
     va_list             ap;
 
     va_start (ap, fmt);
-    sc3_logv (log, t, role, level, fmt, ap);
+    sc3_logv (log, depth, role, level, fmt, ap);
     va_end (ap);
   }
 }
 
 void
-sc3_logv (sc3_log_t * log, sc3_trace_t * t,
+sc3_logv (sc3_log_t * log, int depth,
           sc3_log_role_t role, sc3_log_level_t level,
           const char *fmt, va_list ap)
 {
@@ -294,7 +286,7 @@ sc3_logv (sc3_log_t * log, sc3_trace_t * t,
     char                msg[SC3_BUFSIZE];
 
     if (0 <= vsnprintf (msg, SC3_BUFSIZE, fmt, ap)) {
-      sc3_log (log, t, role, level, msg);
+      sc3_log (log, depth, role, level, msg);
     }
   }
 }
