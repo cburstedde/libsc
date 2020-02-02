@@ -82,10 +82,18 @@ sc3_array_is_setup (sc3_array_t * a, char *reason)
 }
 
 int
-sc3_array_is_resizable (sc3_array_t * a, char *reason)
+sc3_array_is_mutable (sc3_array_t * a, char *reason)
 {
   SC3E_IS (sc3_array_is_setup, a, reason);
   SC3E_TEST (a->resizable, reason);
+  SC3E_YES (reason);
+}
+
+int
+sc3_array_is_immutable (sc3_array_t * a, char *reason)
+{
+  SC3E_IS (sc3_array_is_setup, a, reason);
+  SC3E_TEST (!a->resizable, reason);
   SC3E_YES (reason);
 }
 
@@ -192,8 +200,7 @@ sc3_array_setup (sc3_array_t * a)
 sc3_error_t        *
 sc3_array_ref (sc3_array_t * a)
 {
-  SC3A_IS (sc3_array_is_setup, a);
-  SC3A_CHECK (!a->resizable);
+  SC3A_IS (sc3_array_is_immutable, a);
   SC3E (sc3_refcount_ref (&a->rc));
   return NULL;
 }
@@ -238,7 +245,7 @@ sc3_array_destroy (sc3_array_t ** ap)
 sc3_error_t        *
 sc3_array_resize (sc3_array_t * a, int new_ecount)
 {
-  SC3A_IS (sc3_array_is_resizable, a);
+  SC3A_IS (sc3_array_is_mutable, a);
   SC3A_CHECK (0 <= new_ecount && new_ecount <= SC3_INT_HPOW);
 
   /* query whether the allocation is sufficient */
@@ -284,7 +291,7 @@ sc3_error_t        *
 sc3_array_push_count (sc3_array_t * a, int n, void **pp)
 {
   SC3E_RETVAL (pp, NULL);
-  SC3A_IS (sc3_array_is_resizable, a);
+  SC3A_IS (sc3_array_is_mutable, a);
   SC3A_CHECK (0 <= n && a->ecount + n <= SC3_INT_HPOW);
 
   if (n > 0) {
@@ -302,7 +309,7 @@ sc3_array_push (sc3_array_t * a, void *p)
 {
   int                 old_ecount;
 
-  SC3A_IS (sc3_array_is_resizable, a);
+  SC3A_IS (sc3_array_is_mutable, a);
   SC3A_CHECK (a->ecount < SC3_INT_HPOW);
 
   /* enlarge array by one */
@@ -320,7 +327,7 @@ void               *
 sc3_array_push_noerr (sc3_array_t * a)
 {
 #ifdef SC_ENABLE_DEBUG
-  if (!sc3_array_is_resizable (a, NULL) || a->ecount >= SC3_INT_HPOW) {
+  if (!sc3_array_is_mutable (a, NULL) || a->ecount >= SC3_INT_HPOW) {
     return NULL;
   }
 #endif
@@ -349,7 +356,7 @@ sc3_array_pop (sc3_array_t * a, void *p)
 {
   int                 ecount_mone;
 
-  SC3A_IS (sc3_array_is_resizable, a);
+  SC3A_IS (sc3_array_is_mutable, a);
   SC3A_CHECK (a->ecount > 0);
 
   /* copy out last element */
@@ -364,7 +371,7 @@ sc3_array_pop (sc3_array_t * a, void *p)
 }
 
 sc3_error_t        *
-sc3_array_freeze (sc3_array_t * a)
+sc3_array_immutify (sc3_array_t * a)
 {
   SC3A_IS (sc3_array_is_setup, a);
   if (a->resizable) {

@@ -107,6 +107,14 @@ sc3_log_is_mutable (sc3_log_t * log, char *reason)
   SC3E_YES (reason);
 }
 
+int
+sc3_log_is_immutable (sc3_log_t * log, char *reason)
+{
+  SC3E_IS (sc3_log_is_setup, log, reason);
+  SC3E_TEST (log->immutable, reason);
+  SC3E_YES (reason);
+}
+
 sc3_error_t        *
 sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
 {
@@ -200,8 +208,7 @@ sc3_log_setup (sc3_log_t * log)
 sc3_error_t        *
 sc3_log_ref (sc3_log_t * log)
 {
-  SC3A_IS (sc3_log_is_setup, log);
-  SC3A_CHECK (log->immutable);
+  SC3A_IS (sc3_log_is_immutable, log);
   SC3E (sc3_refcount_ref (&log->rc));
   return NULL;
 }
@@ -279,11 +286,9 @@ sc3_log_indent_pop (sc3_log_t * log, int indent)
 sc3_error_t        *
 sc3_log_immutify (sc3_log_t * log)
 {
-  SC3A_IS (sc3_log_is_valid, log);
+  SC3A_IS (sc3_log_is_setup, log);
   if (!log->immutable) {
-    if (log->setup) {
-      SC3E (sc3_array_freeze (log->istack));
-    }
+    SC3E (sc3_array_immutify (log->istack));
     log->immutable = 1;
   }
   return NULL;

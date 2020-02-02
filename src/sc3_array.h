@@ -73,13 +73,22 @@ int                 sc3_array_is_new (sc3_array_t * a, char *reason);
 int                 sc3_array_is_setup (sc3_array_t * a, char *reason);
 
 /** Check whether an array is setup and resizable.
- * A resizable array becomes non-resizable by \ref sc3_array_freeze.
+ * A resizable array becomes non-resizable by \ref sc3_array_immutify.
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer not NULL, array setup and resizable.
  */
-int                 sc3_array_is_resizable (sc3_array_t * a, char *reason);
+int                 sc3_array_is_mutable (sc3_array_t * a, char *reason);
+
+/** Check whether an array is setup and not (or no longer) resizable.
+ * A resizable array becomes non-resizable by \ref sc3_array_immutify.
+ * \param [in] a        Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff pointer not NULL, array setup and resizable.
+ */
+int                 sc3_array_is_immutable (sc3_array_t * a, char *reason);
 
 /** Create a new array object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
@@ -138,7 +147,8 @@ sc3_error_t        *sc3_array_set_initzero (sc3_array_t * a, int initzero);
 sc3_error_t        *sc3_array_set_resizable (sc3_array_t * a, int resizable);
 
 /** Set the tighten property of an array.
- * If set to true, the array memory is shrunk on resize and freeze.
+ * If set to true, the array memory is shrunk if possible on \ref
+ *                          sc3_array_resize and \ref sc3_array_immutify.
  * \param [in,out] a        The array must not be setup.
  * \param [in] initzero     Boolean; default is false.
  * \return                  NULL on success, error object otherwise.
@@ -155,7 +165,7 @@ sc3_error_t        *sc3_array_setup (sc3_array_t * a);
 
 /** Increase the reference count on an array by 1.
  * This is only allowed after the array has been setup.  The array must not
- * be resizable, by initialization or by calling \ref sc3_array_freeze.
+ * be resizable, by initialization or by calling \ref sc3_array_immutify.
  * \param [in,out] a    This array must be setup.  Its refcount is increased.
  * \return              NULL on success, error object otherwise.
  */
@@ -231,7 +241,7 @@ sc3_error_t        *sc3_array_pop (sc3_array_t * a, void *p);
  * \param [in,out] a    The array must be setup.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_freeze (sc3_array_t * a);
+sc3_error_t        *sc3_array_immutify (sc3_array_t * a);
 
 /** Index an array element.
  * \param [in] a        The array must be setup.
