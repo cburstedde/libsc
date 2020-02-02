@@ -33,7 +33,8 @@ void
 sc3_trace_init (sc3_trace_t * t, const char *func, void *user)
 {
   if (t != NULL) {
-    t->depth = 0;
+    t->sdepth = 0;
+    t->idepth = 0;
     t->caller = NULL;
     SC3_BUFCOPY (t->func, func != NULL ? func : "main");
     t->user = user;
@@ -41,8 +42,8 @@ sc3_trace_init (sc3_trace_t * t, const char *func, void *user)
 }
 
 void
-sc3_trace_push (sc3_trace_t ** t, sc3_trace_t * stackvar, const char *func,
-                void *user)
+sc3_trace_push (sc3_trace_t ** t, sc3_trace_t * stackvar,
+                int idepth, const char *func, void *user)
 {
   /* catch invalid calls */
   if (t == NULL || stackvar == NULL) {
@@ -51,13 +52,14 @@ sc3_trace_push (sc3_trace_t ** t, sc3_trace_t * stackvar, const char *func,
   sc3_trace_init (stackvar, func, user);
 
   /* if there is no or an invalid input argument, start from scratch */
-  if (*t == NULL || (*t)->depth < 0) {
+  if (*t == NULL || (*t)->sdepth < 0 || (*t)->idepth < 0) {
     *t = stackvar;
     return;
   }
 
   /* this is the intended use */
-  stackvar->depth = (*t)->depth + 1;
+  stackvar->sdepth = (*t)->sdepth + 1;
+  stackvar->idepth = (*t)->idepth + SC3_MAX (idepth, 0);
   stackvar->caller = *t;
   *t = stackvar;
 }

@@ -134,8 +134,8 @@ run_prog (sc3_allocator_t * origa, sc3_trace_t * t, sc3_log_t * log,
   SC3A_IS (sc3_allocator_is_setup, origa);
 
   /* Push call trace and indent log message */
-  sc3_trace_push (&t, &stacktrace, "run_prog", NULL);
-  sc3_log (log, t->depth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM, "In run_prog");
+  sc3_trace_push (&t, &stacktrace, 1, "run_prog", NULL);
+  sc3_log (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM, "In run_prog");
 
   /* Test assertions */
   SC3E (parent_function (input, result));
@@ -306,8 +306,8 @@ test_mpi (sc3_allocator_t * alloc,
   SC3A_IS (sc3_allocator_is_setup, alloc);
 
   /* Push call trace and indent log message */
-  sc3_trace_push (&t, &stacktrace, "test_mpi", NULL);
-  sc3_log (log, t->depth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM, "In test_mpi");
+  sc3_trace_push (&t, &stacktrace, 0, "test_mpi", NULL);
+  sc3_log (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM, "In test_mpi");
 
   SC3E (sc3_MPI_Comm_set_errhandler (mpicomm, SC3_MPI_ERRORS_RETURN));
 
@@ -315,7 +315,7 @@ test_mpi (sc3_allocator_t * alloc,
   SC3E (sc3_MPI_Comm_rank (mpicomm, rank));
 
   SC3E_DEMAND (0 <= *rank && *rank < size, "Rank out of range");
-  sc3_logf (log, t->depth, SC3_LOG_THREAD0, SC3_LOG_INFO,
+  sc3_logf (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_INFO,
             "MPI size %d rank %d", size, *rank);
 
   /* create intra-node communicator */
@@ -323,7 +323,7 @@ test_mpi (sc3_allocator_t * alloc,
                                  0, SC3_MPI_INFO_NULL, &sharedcomm));
   SC3E (sc3_MPI_Comm_size (sharedcomm, &sharedsize));
   SC3E (sc3_MPI_Comm_rank (sharedcomm, &sharedrank));
-  sc3_logf (log, t->depth, SC3_LOG_THREAD0, SC3_LOG_INFO,
+  sc3_logf (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_INFO,
             "MPI size %d rank %d shared size %d rank %d",
             size, *rank, sharedsize, sharedrank);
 
@@ -355,7 +355,7 @@ test_mpi (sc3_allocator_t * alloc,
   if (headcomm != SC3_MPI_COMM_NULL) {
     SC3E (sc3_MPI_Comm_size (headcomm, &headsize));
     SC3E (sc3_MPI_Comm_rank (headcomm, &headrank));
-    sc3_logf (log, t->depth, SC3_LOG_THREAD0, SC3_LOG_INFO,
+    sc3_logf (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_INFO,
               "MPI size %d rank %d "
               "shared size %d rank %d head size %d rank %d",
               size, *rank, sharedsize, sharedrank, headsize, headrank);
@@ -369,7 +369,7 @@ test_mpi (sc3_allocator_t * alloc,
     }
     SC3E_ALLOCATOR_FREE (alloc, int, headptr);
     SC3E (sc3_MPI_Comm_free (&headcomm));
-    sc3_logf (log, t->depth, SC3_LOG_THREAD0, SC3_LOG_INFO,
+    sc3_logf (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_INFO,
               "Head comm rank %d ok", headrank);
   }
 
@@ -509,28 +509,28 @@ main (int argc, char **argv)
 
   SC3E_SET (e, make_log (a, &mainlog));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
-    sc3_log (mainlog, t->depth, SC3_LOG_THREAD0, SC3_LOG_ERROR,
+    sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_ERROR,
              "Main log creation failed");
     goto main_end;
   }
-  sc3_logf (mainlog, t->depth, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM,
+  sc3_logf (mainlog, t->idepth, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM,
             "Main is %s", "here");
 
   SC3E_SET (e, test_alloc (a));
   if (!main_error_check (&e, &num_fatal, &num_weird)) {
-    sc3_log (mainlog, t->depth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM,
+    sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM,
              "Alloc test ok");
   }
 
   SC3E_SET (e, test_mpi (a, t, mainlog, &mpirank));
   if (!main_error_check (&e, &num_fatal, &num_weird)) {
-    sc3_log (mainlog, t->depth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM,
+    sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM,
              "MPI code ok");
   }
 
   SC3E_SET (e, openmp_info (a));
   if (!main_error_check (&e, &num_fatal, &num_weird)) {
-    sc3_log (mainlog, t->depth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM,
+    sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM,
              "OpenMP code ok");
   }
 
@@ -538,12 +538,12 @@ main (int argc, char **argv)
     input = inputs[i];
     SC3E_SET (e, run_prog (a, t, mainlog, input, &result, &num_io));
     if (!main_error_check (&e, &num_fatal, &num_weird)) {
-      sc3_logf (mainlog, t->depth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM,
+      sc3_logf (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM,
                 "Clean execution with input %d result %d", input, result);
     }
   }
 
-  sc3_logf (mainlog, t->depth, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM,
+  sc3_logf (mainlog, t->idepth, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM,
             "Main is %s", "done");
   SC3E_SET (e, sc3_log_destroy (&mainlog));
 
@@ -565,7 +565,7 @@ main (int argc, char **argv)
   }
 
 main_end:
-  sc3_logf (pred, t->depth, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM,
+  sc3_logf (pred, t->idepth, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM,
             "Rank %d fatal errors %d weird %d IO %d", mpirank,
             num_fatal, num_weird, num_io);
 
