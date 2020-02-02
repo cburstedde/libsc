@@ -134,7 +134,7 @@ run_prog (sc3_allocator_t * origa, sc3_trace_t * t, sc3_log_t * log,
   SC3A_IS (sc3_allocator_is_setup, origa);
 
   /* Push call trace and indent log message */
-  sc3_trace_push (&t, &stacktrace, "run_prog", __FILE__, __LINE__, NULL);
+  sc3_trace_push (&t, &stacktrace, "run_prog", NULL);
   sc3_log (log, t->depth, SC3_LOG_THREAD0, SC3_LOG_PROGRAM, "In run_prog");
 
   /* Test assertions */
@@ -479,7 +479,7 @@ main (int argc, char **argv)
   sc3_log_t          *mainlog;
   sc3_trace_t         stacktrace, *t = &stacktrace;
 
-  sc3_trace_init (t, NULL, __FILE__, __LINE__, NULL);
+  sc3_trace_init (t, NULL, NULL);
   mainalloc = sc3_allocator_nothread ();
   num_fatal = num_weird = num_io = 0;
 
@@ -502,7 +502,7 @@ main (int argc, char **argv)
     goto main_end;
   }
   sc3_logf (mainlog, t->depth, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM,
-           "Main is %s", "here");
+            "Main is %s", "here");
 
   SC3E_SET (e, test_alloc (a));
   if (!main_error_check (&e, &num_fatal, &num_weird)) {
@@ -528,7 +528,7 @@ main (int argc, char **argv)
   }
 
   sc3_logf (mainlog, t->depth, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM,
-           "Main is %s", "done");
+            "Main is %s", "done");
   SC3E_SET (e, sc3_log_destroy (&mainlog));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("Main log destroy failed\n");

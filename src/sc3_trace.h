@@ -38,8 +38,6 @@
 typedef struct sc3_trace
 {
   char                func[SC3_BUFSIZE];
-  char                file[SC3_BUFSIZE];
-  int                 line;
   int                 depth;
   struct sc3_trace   *caller;
   void               *user;
@@ -55,10 +53,10 @@ extern              "C"
 #endif
 
 void                sc3_trace_init (sc3_trace_t * t, const char *func,
-                                    const char *file, int line, void *user);
+                                    void *user);
 void                sc3_trace_push (sc3_trace_t ** t,
                                     sc3_trace_t * stackvar, const char *func,
-                                    const char *file, int line, void *user);
+                                    void *user);
 
 #ifdef __cplusplus
 #if 0

@@ -30,28 +30,25 @@
 #include <sc3_trace.h>
 
 void
-sc3_trace_init (sc3_trace_t * t, const char *func,
-                const char *file, int line, void *user)
+sc3_trace_init (sc3_trace_t * t, const char *func, void *user)
 {
   if (t != NULL) {
     t->depth = 0;
     t->caller = NULL;
     SC3_BUFCOPY (t->func, func != NULL ? func : "main");
-    SC3_BUFCOPY (t->file, file != NULL ? file : "");
-    t->line = line >= 0 ? line : 0;
     t->user = user;
   }
 }
 
 void
 sc3_trace_push (sc3_trace_t ** t, sc3_trace_t * stackvar, const char *func,
-                const char *file, int line, void *user)
+                void *user)
 {
   /* catch invalid calls */
   if (t == NULL || stackvar == NULL) {
     return;
   }
-  sc3_trace_init (stackvar, func, file, line, user);
+  sc3_trace_init (stackvar, func, user);
 
   /* if there is no or an invalid input argument, start from scratch */
   if (*t == NULL || (*t)->depth < 0) {
