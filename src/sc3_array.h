@@ -255,6 +255,28 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void **p);
  */
 void               *sc3_array_index_noerr (sc3_array_t * a, int i);
 
+/** Return element size of an array that is setup.
+ * \param [in] a        Array must be setup.
+ * \param [out] esize   Element size of the array in bytes, or 0 on error.
+ *                      Pointer may be NULL.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_get_elem_size (sc3_array_t * a, size_t * esize);
+
+/** Return element count of an array that is setup.
+ * \param [in] a        Array must be setup.
+ * \param [out] ecount  Element count of the array, or 0 on error.
+ *                      Pointer may be NULL.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_get_elem_count (sc3_array_t * a, int *ecount);
+
+/** Return the array's element count without creating error objects.
+ * \param [in] a        The array must be setup.  Otherwise, return 0.
+ * \return              The array's element count or 0 on error.
+ */
+int                 sc3_array_elem_count_noerr (sc3_array_t * a);
+
 #ifdef __cplusplus
 #if 0
 {

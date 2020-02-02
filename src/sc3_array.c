@@ -396,3 +396,37 @@ sc3_array_index_noerr (sc3_array_t * a, int i)
 #endif
   return a->mem + i * a->esize;
 }
+
+sc3_error_t        *
+sc3_array_get_elem_size (sc3_array_t * a, size_t * esize)
+{
+  SC3E_RETOPT (esize, 0);
+  SC3A_IS (sc3_array_is_setup, a);
+
+  if (esize != NULL) {
+    *esize = a->esize;
+  }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_array_get_elem_count (sc3_array_t * a, int *ecount)
+{
+  SC3E_RETOPT (ecount, 0);
+  SC3A_IS (sc3_array_is_setup, a);
+
+  if (ecount != NULL) {
+    *ecount = a->ecount;
+  }
+  return NULL;
+}
+
+int
+sc3_array_elem_count_noerr (sc3_array_t * a)
+{
+#ifdef SC_ENABLE_DEBUG
+  return sc3_array_is_setup (a, NULL) ? a->ecount : 0;
+#else
+  return a->ecount;
+#endif
+}
