@@ -29,7 +29,9 @@
 
 #include <sc3_array.h>
 #include <sc3_log.h>
+#include <sc3_openmp.h>
 #include <sc3_refcount_internal.h>
+#include <stdarg.h>
 
 struct sc3_log
 {
@@ -42,10 +44,12 @@ struct sc3_log
   sc3_log_level_t     level;
   int                 rank;
   int                 indent;
-  sc3_array_t        *istack;
+  int                 idepth;
 
   FILE               *file;
   int                 call_fclose;
+
+  int                 indent_spaces;
 };
 
 int
@@ -59,24 +63,7 @@ sc3_log_is_valid (sc3_log_t * log, char *reason)
   SC3E_TEST (0 <= log->level && log->level < SC3_LOG_LEVEL_LAST, reason);
   SC3E_TEST (0 <= log->rank, reason);
   SC3E_TEST (0 <= log->indent, reason);
-
-  SC3E_TEST (!log->setup == (log->istack == NULL), reason);
-  if (log->istack != NULL) {
-    int                 i, ecount;
-    int                 isum = 0;
-    size_t              esize;
-
-    /* verify indent stack element size */
-    SC3E_TERR (sc3_array_get_elem_size (log->istack, &esize), reason);
-    SC3E_TEST (esize == sizeof (int), reason);
-
-    /* count indentation and check consistency */
-    ecount = sc3_array_elem_count_noerr (log->istack);
-    for (i = 0; i < ecount; ++i) {
-      isum += *(int *) sc3_array_index_noerr (log->istack, i);
-    }
-    SC3E_TEST (isum == log->indent, reason);
-  }
+  SC3E_TEST (0 <= log->idepth, reason);
 
   SC3E_TEST (log->file != NULL || !log->call_fclose, reason);
 
@@ -188,17 +175,18 @@ sc3_log_set_file (sc3_log_t * log, FILE * file, int call_fclose)
 }
 
 sc3_error_t        *
+sc3_log_set_indent (sc3_log_t * log, int indent)
+{
+  SC3A_IS (sc3_log_is_new, log);
+  SC3A_CHECK (0 <= indent);
+  log->indent = indent;
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_log_setup (sc3_log_t * log)
 {
   SC3A_IS (sc3_log_is_new, log);
-
-  /* create stack to keep track of indent history */
-  /* we do this even if log as already immutable to simplify the code */
-  SC3E (sc3_array_new (log->lator, &log->istack));
-  SC3E (sc3_array_set_elem_size (log->istack, sizeof (int)));
-  SC3E (sc3_array_set_resizable (log->istack, 1));
-  SC3E (sc3_array_set_tighten (log->istack, 1));
-  SC3E (sc3_array_setup (log->istack));
 
   log->setup = 1;
   SC3A_IS (sc3_log_is_setup, log);
@@ -228,10 +216,6 @@ sc3_log_unref (sc3_log_t ** logp)
     *logp = NULL;
 
     lator = log->lator;
-    if (log->istack != NULL) {
-      /* free stack of indent counts */
-      SC3E (sc3_array_destroy (&log->istack));
-    }
     if (log->call_fclose && fclose (log->file)) {
 
       /* TODO create runtime error when close fails */
@@ -257,18 +241,17 @@ sc3_log_destroy (sc3_log_t ** logp)
 }
 
 sc3_error_t        *
-sc3_log_indent_push (sc3_log_t * log, int indent)
+sc3_log_indent_push (sc3_log_t * log, int lde)
 {
   SC3A_IS (sc3_log_is_mutable, log);
-  SC3A_CHECK (indent >= 0);
+  SC3A_CHECK (lde >= 0);
 
-  SC3E (sc3_array_push (log->istack, &indent));
-  log->indent += indent;
-
+  log->indent_spaces = log->indent * (log->idepth = lde);
   return NULL;
 }
 
-sc3_error_t        *
+#if 0
+static sc3_error_t *
 sc3_log_indent_pop (sc3_log_t * log, int indent)
 {
   int                 pi;
@@ -282,14 +265,73 @@ sc3_log_indent_pop (sc3_log_t * log, int indent)
 
   return NULL;
 }
+#endif
 
 sc3_error_t        *
 sc3_log_immutify (sc3_log_t * log)
 {
   SC3A_IS (sc3_log_is_setup, log);
   if (!log->immutable) {
-    SC3E (sc3_array_immutify (log->istack));
     log->immutable = 1;
   }
   return NULL;
+}
+
+void
+sc3_log (sc3_log_t * log, int lde, sc3_log_level_t level, const char *msg)
+{
+  /* catch invalid usage */
+  if (!sc3_log_is_setup (log, NULL) || log->file == NULL) {
+    /* currently the file can never be NULL, but we check anyway */
+    return;
+  }
+  if (!(0 <= level && level < SC3_LOG_LEVEL_LAST) || lde < 0 || msg == NULL) {
+    return;
+  }
+
+  /* adjust depth of call stack */
+  if (lde != log->idepth) {
+    log->indent_spaces = log->indent * (log->idepth = lde);
+  }
+
+  if (level < log->level) {
+    /* the log level is not sufficiently large */
+    return;
+  }
+
+  if (log->role == SC3_LOG_PROCESS0 && log->rank != 0) {
+    /* only log for the master process */
+    return;
+  }
+  if (log->role == SC3_LOG_THREAD0 && sc3_openmp_thread_num () != 0) {
+    /* only log for the master thread */
+    return;
+  }
+  fprintf (log->file, "Hello %*s%s\n", log->indent_spaces, "", msg);
+}
+
+void
+sc3_logf (sc3_log_t * log, int lde,
+          sc3_log_level_t level, const char *fmt, ...)
+{
+  if (sc3_log_is_setup (log, NULL) && fmt != NULL) {
+    va_list             ap;
+
+    va_start (ap, fmt);
+    sc3_logv (log, lde, level, fmt, ap);
+    va_end (ap);
+  }
+}
+
+void
+sc3_logv (sc3_log_t * log, int lde,
+          sc3_log_level_t level, const char *fmt, va_list ap)
+{
+  if (sc3_log_is_setup (log, NULL) && fmt != NULL) {
+    char                msg[SC3_BUFSIZE];
+
+    if (0 <= vsnprintf (msg, SC3_BUFSIZE, fmt, ap)) {
+      sc3_log (log, lde, level, msg);
+    }
+  }
 }

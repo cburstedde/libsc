@@ -25,6 +25,7 @@
 #include <sc3_log.h>
 #include <sc3_mpi.h>
 #include <sc3_openmp.h>
+#include <sc3_trace.h>
 
 #if 0
 #define SC3_BASICS_DEALLOCATE
@@ -123,16 +124,20 @@ run_io (sc3_allocator_t * a, int result)
 }
 
 static sc3_error_t *
-run_prog (sc3_allocator_t * origa, sc3_log_t * log,
+run_prog (sc3_allocator_t * origa, sc3_trace_t * trace, sc3_log_t * log,
           int input, int *result, int *num_io)
 {
+  int                 lde;
+  sc3_trace_t         stacktrace;
   sc3_error_t        *e, *e2;
   sc3_allocator_t    *a;
 
   SC3A_IS (sc3_allocator_is_setup, origa);
 
-  /* Indent log message */
-  SC3E (sc3_log_indent_push (log, 3));
+  /* Push call trace and indent log message */
+  sc3_trace_push (&trace, &stacktrace, "run_prog", __FILE__, __LINE__, NULL);
+  SC3E (sc3_log_indent_push (log, lde = trace->depth));
+  sc3_log (log, lde, SC3_LOG_PROGRAM, "In run_prog");
 
   /* Test assertions */
   SC3E (parent_function (input, result));
@@ -183,9 +188,6 @@ run_prog (sc3_allocator_t * origa, sc3_log_t * log,
   SC3E (sc3_allocator_unref (&a));
 #endif
 
-  /* Indent log message */
-  SC3E (sc3_log_indent_pop (log, 3));
-
   /* Make sure not to mess with this error variable in between */
   return e;
 }
@@ -222,6 +224,7 @@ make_log (sc3_allocator_t * ator, sc3_log_t ** plog)
   SC3E (sc3_log_new (ator, plog));
   SC3E (sc3_log_set_level (*plog, SC3_LOG_INFO));
   SC3E (sc3_log_set_comm (*plog, SC3_MPI_COMM_WORLD));
+  SC3E (sc3_log_set_indent (*plog, 3));
   SC3E (sc3_log_setup (*plog));
   return NULL;
 }
@@ -476,7 +479,9 @@ main (int argc, char **argv)
   sc3_allocator_t    *a;
   sc3_allocator_t    *mainalloc;
   sc3_log_t          *mainlog;
+  sc3_trace_t         trace;
 
+  sc3_trace_init (&trace, NULL, __FILE__, __LINE__, NULL);
   mainalloc = sc3_allocator_nothread ();
   num_fatal = num_weird = num_io = 0;
 
@@ -516,7 +521,7 @@ main (int argc, char **argv)
 
   for (i = 0; i < 3; ++i) {
     input = inputs[i];
-    SC3E_SET (e, run_prog (a, mainlog, input, &result, &num_io));
+    SC3E_SET (e, run_prog (a, &trace, mainlog, input, &result, &num_io));
     if (!main_error_check (&e, &num_fatal, &num_weird)) {
       printf ("Clean execution with input %d result %d\n", input, result);
     }

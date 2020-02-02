@@ -80,15 +80,23 @@ sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
                                       sc3_MPI_Comm_t mpicomm);
 sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
                                       FILE * file, int call_fclose);
+sc3_error_t        *sc3_log_set_indent (sc3_log_t * log, int indent);
 
 sc3_error_t        *sc3_log_setup (sc3_log_t * log);
 sc3_error_t        *sc3_log_unref (sc3_log_t ** logp);
 sc3_error_t        *sc3_log_destroy (sc3_log_t ** logp);
 
-sc3_error_t        *sc3_log_indent_push (sc3_log_t * log, int indent);
-sc3_error_t        *sc3_log_indent_pop (sc3_log_t * log, int indent);
+sc3_error_t        *sc3_log_indent_push (sc3_log_t * log, int lde);
 
 sc3_error_t        *sc3_log_immutify (sc3_log_t * log);
+
+void                sc3_log (sc3_log_t * log, int lde,
+                             sc3_log_level_t level, const char *msg);
+void                sc3_logf (sc3_log_t * log, int lde,
+                              sc3_log_level_t level, const char *fmt, ...);
+void                sc3_logv (sc3_log_t * log, int lde,
+                              sc3_log_level_t level,
+                              const char *fmt, va_list ap);
 
 #ifdef __cplusplus
 #if 0
