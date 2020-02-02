@@ -356,7 +356,7 @@ static sc3_error_t *
 openmp_work (sc3_allocator_t * talloc)
 {
   SC3A_IS (sc3_allocator_is_setup, talloc);
-  SC3A_CHECK (sc3_openmp_get_thread_num () % 3 == 1);
+  SC3A_CHECK (sc3_openmp_thread_num () % 3 == 1);
 
   return NULL;
 }
@@ -364,7 +364,7 @@ openmp_work (sc3_allocator_t * talloc)
 static sc3_error_t *
 openmp_info (sc3_allocator_t * origa)
 {
-  int                 tmax = sc3_openmp_get_max_threads ();
+  int                 tmax = sc3_openmp_max_threads ();
   int                 minid, maxid, tcount;
   int                 error_tid, ecount, rcount;
   sc3_error_t        *terror;
@@ -381,8 +381,8 @@ openmp_info (sc3_allocator_t * origa)
                      reduction (max: maxid) \
                      reduction (+: tcount)
   {
-    int                 tnum = sc3_openmp_get_num_threads ();
-    int                 tid = sc3_openmp_get_thread_num ();
+    int                 tnum = sc3_openmp_num_threads ();
+    int                 tid = sc3_openmp_thread_num ();
 
     printf ("Thread %d out of %d\n", tid, tnum);
 
