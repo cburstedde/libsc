@@ -261,6 +261,67 @@ sc3_error_destroy (sc3_error_t ** ep)
   return NULL;
 }
 
+void
+sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
+{
+  int                 remain, result;
+  int                 line;
+  const char         *filename, *msg;
+  char               *pos, *bname;
+  sc3_error_t        *e, *inte, *stack;
+
+  /* catch invalid calls */
+  if (flatmsg == NULL) {
+    return;
+  }
+  if (pe == NULL || *pe == NULL) {
+    SC3_BUFCOPY (flatmsg, "No error supplied");
+    return;
+  }
+
+  /* now the incoming error object must be analyzed and cleaned up */
+  e = *pe;
+  *pe = NULL;
+
+  /* go through error stack's messages */
+  remain = SC3_BUFSIZE;
+  *(pos = flatmsg) = '\0';
+  do {
+    /* append error location and message to output string */
+    bname = NULL;
+    SC3E_SET (inte, sc3_error_get_location (e, &filename, &line));
+    if (inte == NULL && (bname = strdup (filename)) != NULL) {
+      filename = sc3_basename (bname);
+    }
+    SC3E_NULL_SET (inte, sc3_error_get_message (e, &msg));
+    if (inte == NULL && remain > 0) {
+      result = snprintf (pos, remain, "%s%s:%d: %s",
+                         pos == flatmsg ? "" : ": ", filename, line, msg);
+      if (result < 0 || result >= remain) {
+        pos = NULL;
+        remain = 0;
+      }
+      else {
+        pos += result;
+        remain -= result;
+      }
+    }
+    free (bname);
+
+    /* do down the error stack */
+    stack = NULL;
+    SC3E_NULL_SET (inte, sc3_error_get_stack (e, &stack));
+    SC3E_NULL_SET (inte, sc3_error_destroy (&e));
+    if (inte != NULL) {
+      sc3_error_destroy (&inte);
+    }
+
+    /* continue if there is a stack left */
+    e = stack;
+  }
+  while (e != NULL);
+}
+
 sc3_error_t        *
 sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
 {
@@ -390,7 +451,7 @@ sc3_error_get_stack (sc3_error_t * e, sc3_error_t ** pstack)
   SC3E_RETOPT (pstack, NULL);
   SC3A_IS (sc3_error_is_setup, e);
 
-  if (e->stack != NULL) {
+  if (pstack != NULL && e->stack != NULL) {
     SC3E (sc3_error_ref (*pstack = e->stack));
   }
   return NULL;

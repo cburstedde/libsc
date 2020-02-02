@@ -141,6 +141,10 @@ extern              "C"
     if (!(f ((o), _r))) {                                               \
       snprintf ((r), SC3_BUFSIZE, "%s(%s): %s", #f, #o, _r);            \
       return 0; }}} while (0)
+#define SC3E_TERR(f,r) do {                                             \
+  sc3_error_t * _e = (f);                                               \
+  if (_e != NULL) {                                                     \
+    sc3_error_destroy_noerr (&_e, r); return 0; }} while (0)
 
 typedef enum sc3_error_severity
 {
@@ -295,12 +299,15 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
  */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 
-#if 0
-sc3_error_t        *sc3_error_new_ssm (sc3_allocator_t * alloc,
-                                       sc3_error_severity_t sev,
-                                       sc3_error_sync_t syn,
-                                       const char *errmsg);
-#endif
+/** Destroy an error object and condense its messages into a string.
+ * \param [in,out] pe   This error will be destroyed and pointer NULLed.
+ *                      If any errors occur in the process, they are ignored.
+ *                      One would be that the error has multiple references.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is filled with the error stack messages flattened.
+ */
+void                sc3_error_destroy_noerr (sc3_error_t ** pe,
+                                             char *flatmsg);
 
 /** Create a new fatal error without relying on dynamic memory allocation.
  * This is useful when allocating an error with \ref sc3_error_new might fail.
