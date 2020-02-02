@@ -305,7 +305,7 @@ sc3_array_push_count (sc3_array_t * a, int n, void **pp)
 }
 
 sc3_error_t        *
-sc3_array_push (sc3_array_t * a, void *p)
+sc3_array_push (sc3_array_t * a, const void *p)
 {
   int                 old_ecount;
 

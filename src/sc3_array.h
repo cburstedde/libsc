@@ -172,7 +172,7 @@ sc3_error_t        *sc3_array_setup (sc3_array_t * a);
 sc3_error_t        *sc3_array_ref (sc3_array_t * a);
 
 /** Decrease the reference count on an array by 1.
- * If the reference count drops to zero, the allocator is deallocated.
+ * If the reference count drops to zero, the array is deallocated.
  * \param [in,out] ap   The pointer must not be NULL and the array valid.
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the array is destroyed and the value set to NULL.
@@ -181,7 +181,7 @@ sc3_error_t        *sc3_array_ref (sc3_array_t * a);
 sc3_error_t        *sc3_array_unref (sc3_array_t ** ap);
 
 /** Destroy an array with a reference count of 1.
- * It is an error to destroy an array that is multiply refd.
+ * It is an error to destroy an array that is multiply referenced.
  * \param [in,out] ap   This array must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
@@ -214,7 +214,7 @@ sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void **pp);
  *                      points to a memory location of sufficient size.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_push (sc3_array_t * a, void *p);
+sc3_error_t        *sc3_array_push (sc3_array_t * a, const void *p);
 
 /** Reduce array size by one element, copying out the last element.
  * \param [in,out] a    The array must be resizable and have > 0 elements.
