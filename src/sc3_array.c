@@ -245,10 +245,12 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
   if (new_ecount > a->ealloc) {
 
     /* we need to enlarge allocation */
-    do {
+    if (a->ealloc == 0) {
+      a->ealloc = 1;
+    }
+    while (new_ecount > a->ealloc) {
       a->ealloc *= 2;
     }
-    while (new_ecount > a->ealloc);
     SC3A_CHECK (new_ecount <= a->ealloc);
     SC3E_ALLOCATOR_REALLOC (a->aator, char, a->ealloc * a->esize, a->mem);
   }
