@@ -39,23 +39,35 @@ struct sc3_log
   sc3_allocator_t    *lator;
   int                 setup;
 
-  sc3_log_role_t      role;
-  sc3_log_level_t     level;
+  int                 alloced;
   int                 rank;
   int                 indent;
+  sc3_log_level_t     level;
 
   FILE               *file;
   int                 call_fclose;
 };
+
+static sc3_log_t    statlog = {
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, SC3_LOG_PROGRAM, NULL, 0
+};
+
+sc3_log_t          *
+sc3_log_predef (void)
+{
+  return &statlog;
+}
 
 int
 sc3_log_is_valid (sc3_log_t * log, char *reason)
 {
   SC3E_TEST (log != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &log->rc, reason);
-  SC3E_IS (sc3_allocator_is_setup, log->lator, reason);
+  SC3E_TEST (!log->alloced == (log->lator == NULL), reason);
+  if (log->lator != NULL) {
+    SC3E_IS (sc3_allocator_is_setup, log->lator, reason);
+  }
 
-  SC3E_TEST (0 <= log->role && log->role < SC3_LOG_ROLE_LAST, reason);
   SC3E_TEST (0 <= log->level && log->level < SC3_LOG_LEVEL_LAST, reason);
   SC3E_TEST (0 <= log->rank, reason);
   SC3E_TEST (0 <= log->indent, reason);
@@ -92,7 +104,7 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
   SC3E (sc3_allocator_ref (lator));
   SC3E_ALLOCATOR_CALLOC (lator, sc3_log_t, 1, log);
   SC3E (sc3_refcount_init (&log->rc));
-  log->role = SC3_LOG_ANY;
+  log->alloced = 1;
 #ifdef SC_ENABLE_DEBUG
   log->level = SC3_LOG_DEBUG;
 #else
@@ -104,15 +116,6 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
   SC3A_IS (sc3_log_is_new, log);
 
   *logp = log;
-  return NULL;
-}
-
-sc3_error_t        *
-sc3_log_set_role (sc3_log_t * log, sc3_log_role_t role)
-{
-  SC3A_IS (sc3_log_is_new, log);
-  SC3A_CHECK (0 <= role && role < SC3_LOG_ROLE_LAST);
-  log->role = role;
   return NULL;
 }
 
@@ -176,7 +179,9 @@ sc3_error_t        *
 sc3_log_ref (sc3_log_t * log)
 {
   SC3A_IS (sc3_log_is_setup, log);
-  SC3E (sc3_refcount_ref (&log->rc));
+  if (log->alloced) {
+    SC3E (sc3_refcount_ref (&log->rc));
+  }
   return NULL;
 }
 
@@ -188,6 +193,11 @@ sc3_log_unref (sc3_log_t ** logp)
 
   SC3E_INOUTP (logp, log);
   SC3A_IS (sc3_log_is_valid, log);
+
+  if (!log->alloced) {
+    return NULL;
+  }
+
   SC3E (sc3_refcount_unref (&log->rc, &waslast));
   if (waslast) {
     sc3_allocator_t    *lator;
@@ -215,7 +225,7 @@ sc3_log_destroy (sc3_log_t ** logp)
   SC3E_DEMIS (sc3_refcount_is_last, &log->rc);
   SC3E (sc3_log_unref (&log));
 
-  SC3A_CHECK (log == NULL);
+  SC3A_CHECK (log == NULL || !log->alloced);
   return NULL;
 }
 
@@ -227,11 +237,9 @@ sc3_log (sc3_log_t * log, int depth,
   char                header[SC3_BUFSIZE];
 
   /* catch invalid usage */
-  if (!sc3_log_is_setup (log, NULL) || log->file == NULL) {
-    /* currently the file can never be NULL, but we check anyway */
-    return;
-  }
-  if (!(0 <= level && level < SC3_LOG_LEVEL_LAST) || msg == NULL) {
+  if (!sc3_log_is_setup (log, NULL) ||
+      !(0 <= role && role < SC3_LOG_ROLE_LAST) ||
+      !(0 <= level && level < SC3_LOG_LEVEL_LAST) || msg == NULL) {
     return;
   }
 
@@ -260,7 +268,7 @@ sc3_log (sc3_log_t * log, int depth,
   else {
     snprintf (header, SC3_BUFSIZE, "%s %d:%d", "SC3", log->rank, tid);
   }
-  fprintf (log->file, "[%s] %*s%s\n", header,
+  fprintf (log->file != NULL ? log->file : stderr, "[%s] %*s%s\n", header,
            depth >= 0 ? depth * log->indent : 0, "", msg);
 }
 

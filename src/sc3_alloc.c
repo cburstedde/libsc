@@ -64,6 +64,7 @@ sc3_allocator_is_valid (sc3_allocator_t * a, char *reason)
 {
   SC3E_TEST (a != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &a->rc, reason);
+  SC3E_TEST (!a->alloced == (a->oa == NULL), reason);
   if (a->oa != NULL) {
     /* this goes into a recursion up the allocator tree */
     SC3E_IS (sc3_allocator_is_setup, a->oa, reason);

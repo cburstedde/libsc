@@ -70,6 +70,8 @@ int                 sc3_log_is_valid (sc3_log_t * log, char *reason);
 int                 sc3_log_is_new (sc3_log_t * log, char *reason);
 int                 sc3_log_is_setup (sc3_log_t * log, char *reason);
 
+sc3_log_t          *sc3_log_predef (void);
+
 sc3_error_t        *sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp);
 sc3_error_t        *sc3_log_set_level (sc3_log_t * log,
                                        sc3_log_level_t level);
