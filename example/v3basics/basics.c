@@ -22,8 +22,9 @@
 
 #include <sc3_array.h>
 #include <sc3_error.h>
-#include <sc3_openmp.h>
+#include <sc3_log.h>
 #include <sc3_mpi.h>
+#include <sc3_openmp.h>
 
 #if 0
 #define SC3_BASICS_DEALLOCATE
@@ -122,12 +123,16 @@ run_io (sc3_allocator_t * a, int result)
 }
 
 static sc3_error_t *
-run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
+run_prog (sc3_allocator_t * origa, sc3_log_t * log,
+          int input, int *result, int *num_io)
 {
   sc3_error_t        *e, *e2;
   sc3_allocator_t    *a;
 
   SC3A_IS (sc3_allocator_is_setup, origa);
+
+  /* Indent log message */
+  SC3E (sc3_log_indent_push (log, 3));
 
   /* Test assertions */
   SC3E (parent_function (input, result));
@@ -178,6 +183,9 @@ run_prog (sc3_allocator_t * origa, int input, int *result, int *num_io)
   SC3E (sc3_allocator_unref (&a));
 #endif
 
+  /* Indent log message */
+  SC3E (sc3_log_indent_pop (log, 3));
+
   /* Make sure not to mess with this error variable in between */
   return e;
 }
@@ -206,6 +214,16 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
     return -1;
   }
   return 0;
+}
+
+static sc3_error_t *
+make_log (sc3_allocator_t * ator, sc3_log_t ** plog)
+{
+  SC3E (sc3_log_new (ator, plog));
+  SC3E (sc3_log_set_level (*plog, SC3_LOG_INFO));
+  SC3E (sc3_log_set_comm (*plog, SC3_MPI_COMM_WORLD));
+  SC3E (sc3_log_setup (*plog));
+  return NULL;
 }
 
 static sc3_error_t *
@@ -457,6 +475,7 @@ main (int argc, char **argv)
   sc3_error_t        *e;
   sc3_allocator_t    *a;
   sc3_allocator_t    *mainalloc;
+  sc3_log_t          *mainlog;
 
   mainalloc = sc3_allocator_nothread ();
   num_fatal = num_weird = num_io = 0;
@@ -471,6 +490,12 @@ main (int argc, char **argv)
   SC3E_NULL_SET (e, sc3_allocator_setup (a));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("Main allocator_new failed\n");
+    goto main_end;
+  }
+
+  SC3E_SET (e, make_log (a, &mainlog));
+  if (main_error_check (&e, &num_fatal, &num_weird)) {
+    printf ("Main log creation failed\n");
     goto main_end;
   }
 
@@ -491,12 +516,16 @@ main (int argc, char **argv)
 
   for (i = 0; i < 3; ++i) {
     input = inputs[i];
-    SC3E_SET (e, run_prog (a, input, &result, &num_io));
+    SC3E_SET (e, run_prog (a, mainlog, input, &result, &num_io));
     if (!main_error_check (&e, &num_fatal, &num_weird)) {
       printf ("Clean execution with input %d result %d\n", input, result);
     }
   }
 
+  SC3E_SET (e, sc3_log_destroy (&mainlog));
+  if (main_error_check (&e, &num_fatal, &num_weird)) {
+    printf ("Main log destroy failed\n");
+  }
   SC3E_SET (e, sc3_allocator_destroy (&a));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("Main allocator destroy failed\n");
