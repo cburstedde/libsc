@@ -75,7 +75,8 @@ echo "o---------------------------------------"
 echo "| Checking headers"
 echo "o---------------------------------------"
 
-AC_CHECK_HEADERS([execinfo.h libgen.h signal.h sys/time.h sys/types.h time.h])
+AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h sys/types.h])
+AC_CHECK_HEADERS([libgen.h limits.h time.h])
 AC_CHECK_HEADERS([lua.h lua5.1/lua.h lua5.2/lua.h lua5.3/lua.h])
 
 echo "o---------------------------------------"

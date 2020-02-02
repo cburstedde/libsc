@@ -35,6 +35,11 @@
 
 #include <sc3_config.h>
 
+#ifdef SC_HAVE_LIMITS_H
+#include <limits.h>
+#else
+#define INT_MAX 0x7FFFFFFF
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -58,6 +63,8 @@
 
 #define SC3_MIN(in1,in2) ((in1) <= (in2) ? (in1) : (in2))
 #define SC3_MAX(in1,in2) ((in1) >= (in2) ? (in1) : (in2))
+
+#define SC3_SIZET_INT(s) ((s) <= INT_MAX ? (int) s : -1)
 
 #ifdef __cplusplus
 extern              "C"
