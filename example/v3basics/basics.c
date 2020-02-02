@@ -127,7 +127,6 @@ static sc3_error_t *
 run_prog (sc3_allocator_t * origa, sc3_trace_t * trace, sc3_log_t * log,
           int input, int *result, int *num_io)
 {
-  int                 lde;
   sc3_trace_t         stacktrace;
   sc3_error_t        *e, *e2;
   sc3_allocator_t    *a;
@@ -136,8 +135,7 @@ run_prog (sc3_allocator_t * origa, sc3_trace_t * trace, sc3_log_t * log,
 
   /* Push call trace and indent log message */
   sc3_trace_push (&trace, &stacktrace, "run_prog", __FILE__, __LINE__, NULL);
-  SC3E (sc3_log_indent_push (log, lde = trace->depth));
-  sc3_log (log, lde, SC3_LOG_PROGRAM, "In run_prog");
+  sc3_log (log, trace, SC3_LOG_THREAD0, SC3_LOG_PROGRAM, "In run_prog");
 
   /* Test assertions */
   SC3E (parent_function (input, result));
@@ -479,9 +477,9 @@ main (int argc, char **argv)
   sc3_allocator_t    *a;
   sc3_allocator_t    *mainalloc;
   sc3_log_t          *mainlog;
-  sc3_trace_t         trace;
+  sc3_trace_t         stacktrace, *trace = &stacktrace;
 
-  sc3_trace_init (&trace, NULL, __FILE__, __LINE__, NULL);
+  sc3_trace_init (trace, NULL, __FILE__, __LINE__, NULL);
   mainalloc = sc3_allocator_nothread ();
   num_fatal = num_weird = num_io = 0;
 
@@ -503,6 +501,7 @@ main (int argc, char **argv)
     printf ("Main log creation failed\n");
     goto main_end;
   }
+  sc3_log (mainlog, trace, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM, "Main is here");
 
   SC3E_SET (e, test_alloc (a));
   if (!main_error_check (&e, &num_fatal, &num_weird)) {
@@ -521,12 +520,13 @@ main (int argc, char **argv)
 
   for (i = 0; i < 3; ++i) {
     input = inputs[i];
-    SC3E_SET (e, run_prog (a, &trace, mainlog, input, &result, &num_io));
+    SC3E_SET (e, run_prog (a, trace, mainlog, input, &result, &num_io));
     if (!main_error_check (&e, &num_fatal, &num_weird)) {
       printf ("Clean execution with input %d result %d\n", input, result);
     }
   }
 
+  sc3_log (mainlog, trace, SC3_LOG_PROCESS0, SC3_LOG_PROGRAM, "Main is done");
   SC3E_SET (e, sc3_log_destroy (&mainlog));
   if (main_error_check (&e, &num_fatal, &num_weird)) {
     printf ("Main log destroy failed\n");

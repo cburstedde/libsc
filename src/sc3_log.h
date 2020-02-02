@@ -34,6 +34,7 @@
 #define SC3_LOG_H
 
 #include <sc3_mpi.h>
+#include <sc3_trace.h>
 
 typedef struct sc3_log sc3_log_t;
 
@@ -69,11 +70,8 @@ extern              "C"
 int                 sc3_log_is_valid (sc3_log_t * log, char *reason);
 int                 sc3_log_is_new (sc3_log_t * log, char *reason);
 int                 sc3_log_is_setup (sc3_log_t * log, char *reason);
-int                 sc3_log_is_mutable (sc3_log_t * log, char *reason);
-int                 sc3_log_is_immutable (sc3_log_t * log, char *reason);
 
 sc3_error_t        *sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp);
-sc3_error_t        *sc3_log_set_role (sc3_log_t * log, sc3_log_role_t role);
 sc3_error_t        *sc3_log_set_level (sc3_log_t * log,
                                        sc3_log_level_t level);
 sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
@@ -86,16 +84,14 @@ sc3_error_t        *sc3_log_setup (sc3_log_t * log);
 sc3_error_t        *sc3_log_unref (sc3_log_t ** logp);
 sc3_error_t        *sc3_log_destroy (sc3_log_t ** logp);
 
-sc3_error_t        *sc3_log_indent_push (sc3_log_t * log, int lde);
-
-sc3_error_t        *sc3_log_immutify (sc3_log_t * log);
-
-void                sc3_log (sc3_log_t * log, int lde,
-                             sc3_log_level_t level, const char *msg);
-void                sc3_logf (sc3_log_t * log, int lde,
-                              sc3_log_level_t level, const char *fmt, ...);
-void                sc3_logv (sc3_log_t * log, int lde,
-                              sc3_log_level_t level,
+void                sc3_log (sc3_log_t * log, sc3_trace_t * t,
+                             sc3_log_role_t role, sc3_log_level_t level,
+                             const char *msg);
+void                sc3_logf (sc3_log_t * log, sc3_trace_t * t,
+                              sc3_log_role_t role, sc3_log_level_t level,
+                              const char *fmt, ...);
+void                sc3_logv (sc3_log_t * log, sc3_trace_t * t,
+                              sc3_log_role_t role, sc3_log_level_t level,
                               const char *fmt, va_list ap);
 
 #ifdef __cplusplus
