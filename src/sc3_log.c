@@ -49,7 +49,7 @@ struct sc3_log
 };
 
 static sc3_log_t    statlog = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, SC3_LOG_PROGRAM, NULL, 0
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, SC3_LOG_TOP, NULL, 0
 };
 
 sc3_log_t          *
