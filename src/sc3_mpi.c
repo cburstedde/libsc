@@ -264,6 +264,18 @@ sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm)
   return NULL;
 }
 
+#ifndef SC_ENABLE_MPIWINSHARED
+static int
+sc3_MPI_Win_is_valid (sc3_MPI_Win_t win, char *reason)
+{
+  SC3E_TEST (win != NULL, reason);
+  SC3E_TEST (win->win == 1, reason);
+  SC3E_TEST (win->baseptr != NULL || win->memsize == 0, reason);
+  SC3E_TEST (0 <= win->rank && win->rank < win->size, reason);
+  SC3E_YES (reason);
+}
+#endif
+
 sc3_error_t        *
 sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
                              sc3_MPI_Info_t info, sc3_MPI_Comm_t comm,
@@ -283,6 +295,9 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
   newin->disp_unit = disp_unit;
   newin->memsize = size;
   newin->baseptr = SC3_MALLOC (char, size);
+  SC3A_IS (sc3_MPI_Win_is_valid, newin);
+
+  /* assign output values */
   *(void **) baseptr = newin->baseptr;
   *win = newin;
 #else
@@ -300,7 +315,7 @@ sc3_MPI_Win_shared_query (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size,
   SC3A_CHECK (disp_unit != NULL);
   SC3A_CHECK (baseptr != NULL);
 #ifndef SC_ENABLE_MPIWINSHARED
-  SC3A_CHECK (0 <= win->rank && win->rank < win->size);
+  SC3A_IS (sc3_MPI_Win_is_valid, win);
   SC3A_CHECK (rank == win->rank);
   *disp_unit = win->disp_unit;
   *size = win->memsize;
@@ -312,12 +327,22 @@ sc3_MPI_Win_shared_query (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size,
 }
 
 sc3_error_t        *
+sc3_MPI_Win_sync (sc3_MPI_Win_t win)
+{
+#ifndef SC_ENABLE_MPIWINSHARED
+  SC3A_IS (sc3_MPI_Win_is_valid, win);
+#else
+  SC3E_MPI (MPI_Win_sync (win));
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_MPI_Win_free (sc3_MPI_Win_t * win)
 {
   SC3A_CHECK (win != NULL);
 #ifndef SC_ENABLE_MPIWINSHARED
-  SC3A_CHECK ((*win)->win == 1);
-  SC3A_CHECK ((*win)->baseptr != NULL || (*win)->memsize == 0);
+  SC3A_IS (sc3_MPI_Win_is_valid, *win);
   SC3_FREE ((*win)->baseptr);
   SC3_FREE (*win);
   *win = SC3_MPI_WIN_NULL;
