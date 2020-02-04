@@ -35,11 +35,7 @@
 
 #include <sc3_config.h>
 
-#ifdef SC_HAVE_LIMITS_H
 #include <limits.h>
-#else
-#define INT_MAX 0x7FFFFFFF
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -84,6 +80,9 @@ extern              "C"
  */
 int                 sc3_highbit (int a, int bits);
 int                 sc3_log2_ceil (int a, int bits);
+
+int                 sc3_intpow (int base, int exp);
+long                sc3_longpow (long base, int exp);
 
 char               *sc3_basename (char *path);
 

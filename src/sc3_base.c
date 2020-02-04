@@ -63,6 +63,42 @@ sc3_log2_ceil (int a, int bits)
   return sc3_highbit (a - 1, bits) + 1;
 }
 
+int
+sc3_intpow (int base, int exp)
+{
+  int                 result = 1;
+
+  if (exp < 0) {
+    return 0;
+  }
+  while (exp) {
+    if (exp & 1) {
+      result *= base;
+    }
+    exp >>= 1;
+    base *= base;
+  }
+  return result;
+}
+
+long
+sc3_longpow (long base, int exp)
+{
+  long                result = 1;
+
+  if (exp < 0) {
+    return 0;
+  }
+  while (exp) {
+    if (exp & 1) {
+      result *= base;
+    }
+    exp >>= 1;
+    base *= base;
+  }
+  return result;
+}
+
 char               *
 sc3_basename (char *path)
 {
