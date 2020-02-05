@@ -24,7 +24,7 @@
 #include <sc3_error.h>
 #include <sc3_log.h>
 #include <sc3_mpi.h>
-#include <sc3_openmp.h>
+#include <sc3_omp.h>
 #include <sc3_trace.h>
 
 #if 0
@@ -385,18 +385,18 @@ test_mpi (sc3_allocator_t * alloc,
 }
 
 static sc3_error_t *
-openmp_work (sc3_allocator_t * talloc)
+omp_work (sc3_allocator_t * talloc)
 {
   SC3A_IS (sc3_allocator_is_setup, talloc);
-  SC3A_CHECK (sc3_openmp_thread_num () % 3 == 1);
+  SC3A_CHECK (sc3_omp_thread_num () % 3 == 1);
 
   return NULL;
 }
 
 static sc3_error_t *
-openmp_info (sc3_allocator_t * origa)
+omp_info (sc3_allocator_t * origa)
 {
-  int                 tmax = sc3_openmp_max_threads ();
+  int                 tmax = sc3_omp_max_threads ();
   int                 minid, maxid, tcount;
   int                 error_tid, ecount, rcount;
   sc3_error_t        *terror;
@@ -413,8 +413,8 @@ openmp_info (sc3_allocator_t * origa)
                      reduction (max: maxid) \
                      reduction (+: tcount)
   {
-    int                 tnum = sc3_openmp_num_threads ();
-    int                 tid = sc3_openmp_thread_num ();
+    int                 tnum = sc3_omp_num_threads ();
+    int                 tid = sc3_omp_thread_num ();
 
     printf ("Thread %d out of %d\n", tid, tnum);
 
@@ -428,8 +428,7 @@ openmp_info (sc3_allocator_t * origa)
   SC3E_DEMAND (maxid < tcount && tcount <= tmax, "Thread ids inconsistent");
 
   /* Test 2 -- per-thread memory allocation */
-  SC3E (sc3_openmp_esync_pre_critical
-        (&rcount, &ecount, &error_tid, &terror));
+  SC3E (sc3_omp_esync_pre_critical (&rcount, &ecount, &error_tid, &terror));
 #pragma omp parallel
   {
     sc3_allocator_t    *talloc;
@@ -440,22 +439,20 @@ openmp_info (sc3_allocator_t * origa)
     {
       SC3E_SET (e, sc3_allocator_new (origa, &talloc));
       SC3E_NULL_SET (e, sc3_allocator_setup (talloc));
-      sc3_openmp_esync_in_critical
-        (&e, &rcount, &ecount, &error_tid, &terror);
+      sc3_omp_esync_in_critical (&e, &rcount, &ecount, &error_tid, &terror);
     }
 #pragma omp barrier
     /* now terror is either NULL or the same error object in all threads */
 
     if (terror == NULL) {
       /* do parallel work in threads */
-      SC3E_SET (e, openmp_work (talloc));
+      SC3E_SET (e, omp_work (talloc));
     }
 
     /* synchronize error result */
 #pragma omp critical
     {
-      sc3_openmp_esync_in_critical
-        (&e, &rcount, &ecount, &error_tid, &terror);
+      sc3_omp_esync_in_critical (&e, &rcount, &ecount, &error_tid, &terror);
     }
 #pragma omp barrier
     /* now terror is either NULL or the same error object in all threads */
@@ -466,8 +463,7 @@ openmp_info (sc3_allocator_t * origa)
       /* we must unref, not destroy the thread allocator
          since it may have been used to create the error object */
       SC3E_SET (e, sc3_allocator_unref (&talloc));
-      sc3_openmp_esync_in_critical
-        (&e, &rcount, &ecount, &error_tid, &terror);
+      sc3_omp_esync_in_critical (&e, &rcount, &ecount, &error_tid, &terror);
     }
   }
   printf ("Thread weird %d error %d count\n", rcount, ecount);
@@ -530,7 +526,7 @@ main (int argc, char **argv)
     sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP, "MPI code ok");
   }
 
-  SC3E_SET (e, openmp_info (a));
+  SC3E_SET (e, omp_info (a));
   if (!main_error_check (&e, &num_fatal, &num_weird)) {
     sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP,
              "OpenMP code ok");

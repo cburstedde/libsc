@@ -27,11 +27,11 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-/** \file sc3_openmp.h
+/** \file sc3_omp.h
  */
 
-#ifndef SC3_OPENMP_H
-#define SC3_OPENMP_H
+#ifndef SC3_OMP_H
+#define SC3_OMP_H
 
 #include <sc3_error.h>
 
@@ -43,14 +43,14 @@ extern              "C"
 #endif
 #endif
 
-int                 sc3_openmp_max_threads (void);
-int                 sc3_openmp_num_threads (void);
-int                 sc3_openmp_thread_num (void);
+int                 sc3_omp_max_threads (void);
+int                 sc3_omp_num_threads (void);
+int                 sc3_omp_thread_num (void);
 
-sc3_error_t        *sc3_openmp_esync_pre_critical
+sc3_error_t        *sc3_omp_esync_pre_critical
   (int *rcount, int *ecount, int *error_tid, sc3_error_t ** shared_error);
 
-void                sc3_openmp_esync_in_critical
+void                sc3_omp_esync_in_critical
   (sc3_error_t ** e, int *rcount, int *ecount,
    int *error_tid, sc3_error_t ** shared_error);
 
@@ -61,4 +61,4 @@ void                sc3_openmp_esync_in_critical
 }
 #endif
 
-#endif /* !SC3_OPENMP_H */
+#endif /* !SC3_OMP_H */

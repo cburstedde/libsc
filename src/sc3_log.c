@@ -29,7 +29,7 @@
 
 #include <sc3_array.h>
 #include <sc3_log.h>
-#include <sc3_openmp.h>
+#include <sc3_omp.h>
 #include <sc3_refcount_internal.h>
 #include <stdarg.h>
 
@@ -248,7 +248,7 @@ sc3_log (sc3_log_t * log, int depth,
     return;
   }
 
-  tid = sc3_openmp_thread_num ();
+  tid = sc3_omp_thread_num ();
   if (role == SC3_LOG_PROCESS0 && (log->rank != 0 || tid != 0)) {
     /* only log for the master thread in master process */
     return;

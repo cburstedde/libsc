@@ -27,13 +27,13 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <sc3_openmp.h>
+#include <sc3_omp.h>
 #ifdef SC_ENABLE_OPENMP
 #include <omp.h>
 #endif
 
 int
-sc3_openmp_max_threads (void)
+sc3_omp_max_threads (void)
 {
 #ifndef SC_ENABLE_OPENMP
   return 1;
@@ -43,7 +43,7 @@ sc3_openmp_max_threads (void)
 }
 
 int
-sc3_openmp_num_threads (void)
+sc3_omp_num_threads (void)
 {
 #ifndef SC_ENABLE_OPENMP
   return 1;
@@ -53,7 +53,7 @@ sc3_openmp_num_threads (void)
 }
 
 int
-sc3_openmp_thread_num (void)
+sc3_omp_thread_num (void)
 {
 #ifndef SC_ENABLE_OPENMP
   return 0;
@@ -63,10 +63,10 @@ sc3_openmp_thread_num (void)
 }
 
 sc3_error_t        *
-sc3_openmp_esync_pre_critical (int *rcount, int *ecount,
-                               int *error_tid, sc3_error_t ** shared_error)
+sc3_omp_esync_pre_critical (int *rcount, int *ecount,
+                            int *error_tid, sc3_error_t ** shared_error)
 {
-  int                 tmax = sc3_openmp_max_threads ();
+  int                 tmax = sc3_omp_max_threads ();
 
   SC3E_RETVAL (rcount, 0);
   SC3E_RETVAL (ecount, 0);
@@ -76,12 +76,12 @@ sc3_openmp_esync_pre_critical (int *rcount, int *ecount,
 }
 
 void
-sc3_openmp_esync_in_critical (sc3_error_t ** e, int *rcount, int *ecount,
-                              int *error_tid, sc3_error_t ** shared_error)
+sc3_omp_esync_in_critical (sc3_error_t ** e, int *rcount, int *ecount,
+                           int *error_tid, sc3_error_t ** shared_error)
 {
   /* this function is written to survive NULL input parameters */
   if (e != NULL && *e != NULL) {
-    int                 tid = sc3_openmp_thread_num ();
+    int                 tid = sc3_omp_thread_num ();
 
     if (error_tid != NULL && shared_error != NULL && *error_tid > tid) {
       /* we are the lowest numbered sane error thread */
