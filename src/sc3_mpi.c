@@ -265,6 +265,7 @@ sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm)
   return NULL;
 }
 
+#ifdef SC_ENABLE_DEBUG
 #ifndef SC_ENABLE_MPIWINSHARED
 static int
 sc3_MPI_Win_is_valid (sc3_MPI_Win_t win, char *reason)
@@ -275,6 +276,7 @@ sc3_MPI_Win_is_valid (sc3_MPI_Win_t win, char *reason)
   SC3E_TEST (0 <= win->rank && win->rank < win->size, reason);
   SC3E_YES (reason);
 }
+#endif
 #endif
 
 sc3_error_t        *
