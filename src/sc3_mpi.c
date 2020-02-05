@@ -335,7 +335,10 @@ sc3_MPI_Win_lock (int lock_type, int rank, int assert, sc3_MPI_Win_t win)
 {
 #ifndef SC_ENABLE_MPIWINSHARED
   SC3A_IS (sc3_MPI_Win_is_valid, win);
+  SC3A_CHECK (lock_type == SC3_MPI_LOCK_SHARED ||
+              lock_type == SC3_MPI_LOCK_EXCLUSIVE);
   SC3A_CHECK (rank == win->rank);
+  SC3A_CHECK (assert == 0 || assert == SC3_MPI_MODE_NOCHECK);
   SC3A_CHECK (!win->locked);
   win->locked = 1;
 #else

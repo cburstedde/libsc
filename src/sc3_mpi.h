@@ -135,9 +135,9 @@ typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
 
 typedef enum sc3_MPI_Win_mode
 {
-  SC3_MPI_LOCK_SHARED,
-  SC3_MPI_LOCK_EXCLUSIVE,
-  SC3_MPI_MODE_NOCHECK,
+  SC3_MPI_LOCK_SHARED = -3,
+  SC3_MPI_LOCK_EXCLUSIVE = -4,
+  SC3_MPI_MODE_NOCHECK = -5,
 }
 sc3_MPI_Win_mode_t;
 
