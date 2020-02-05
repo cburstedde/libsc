@@ -332,6 +332,8 @@ test_mpi (sc3_allocator_t * alloc,
   SC3E (sc3_MPI_Win_allocate_shared (bytesize, 1, SC3_MPI_INFO_NULL,
                                      sharedcomm, &sharedptr, &sharedwin));
   if (sharedrank == 0) {
+    SC3E (sc3_MPI_Win_lock (SC3_MPI_LOCK_EXCLUSIVE, 0,
+                            SC3_MPI_MODE_NOCHECK, sharedwin));
     sharedptr[0] = 1;
   }
   for (p = 0; p < sharedsize; ++p) {
@@ -371,6 +373,7 @@ test_mpi (sc3_allocator_t * alloc,
     SC3E (sc3_MPI_Comm_free (&headcomm));
     sc3_logf (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_INFO,
               "Head comm rank %d ok", headrank);
+    SC3E (sc3_MPI_Win_unlock (0, sharedwin));
   }
 
   /* clean up user communicators */

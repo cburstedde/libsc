@@ -133,12 +133,24 @@ sc3_MPI_Comm_type_t;
 typedef long        sc3_MPI_Aint_t;
 typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
 
+typedef enum sc3_MPI_Win_mode
+{
+  SC3_MPI_LOCK_SHARED,
+  SC3_MPI_LOCK_EXCLUSIVE,
+  SC3_MPI_MODE_NOCHECK,
+}
+sc3_MPI_Win_mode_t;
+
 extern sc3_MPI_Win_t SC3_MPI_WIN_NULL;
 
 #else
 
 typedef MPI_Aint    sc3_MPI_Aint_t;
 typedef MPI_Win     sc3_MPI_Win_t;
+
+#define SC3_MPI_LOCK_SHARED MPI_LOCK_SHARED
+#define SC3_MPI_LOCK_EXCLUSIVE MPI_LOCK_EXCLUSIVE
+#define SC3_MPI_MODE_NOCHECK MPI_MODE_NOCHECK
 
 #define SC3_MPI_WIN_NULL MPI_WIN_NULL
 
@@ -198,6 +210,9 @@ sc3_error_t        *sc3_MPI_Win_allocate_shared
 sc3_error_t        *sc3_MPI_Win_shared_query
   (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size, int *disp_unit,
    void *baseptr);
+sc3_error_t        *sc3_MPI_Win_lock (int lock_type, int rank,
+                                      int assert, sc3_MPI_Win_t win);
+sc3_error_t        *sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win);
 sc3_error_t        *sc3_MPI_Win_sync (sc3_MPI_Win_t win);
 sc3_error_t        *sc3_MPI_Win_free (sc3_MPI_Win_t * win);
 
