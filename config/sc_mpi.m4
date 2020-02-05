@@ -364,42 +364,44 @@ mpiret = MPI_Finalize ();
  $2])
 ])
 
-dnl SC_MPI_INCLUDES
-dnl Call the compiler with various --show* options
-dnl to figure out the MPI_INCLUDES and MPI_INCLUDE_PATH varables
+dnl This was only used for our lint code, which needs to be replaced.
 dnl
-AC_DEFUN([SC_MPI_INCLUDES],
-[
-MPI_INCLUDES=
-MPI_INCLUDE_PATH=
-if test "x$HAVE_PKG_MPI" = xyes ; then
-  AC_MSG_NOTICE([Trying to determine MPI_INCLUDES])
-  for SHOW in -showme:compile -showme:incdirs -showme -show ; do
-    if test "x$MPI_INCLUDES" = x ; then
-      AC_MSG_CHECKING([$SHOW])
-      if MPI_CC_RESULT=`$CC $SHOW 2> /dev/null` ; then
-        AC_MSG_RESULT([Successful])
-        for CCARG in $MPI_CC_RESULT ; do
-          MPI_INCLUDES="$MPI_INCLUDES `echo $CCARG | grep '^-I'`"
-        done
-      else
-        AC_MSG_RESULT([Failed])
-      fi
-    fi
-  done
-  if test "x$MPI_INCLUDES" != x; then
-    MPI_INCLUDES=`echo $MPI_INCLUDES | sed -e 's/^ *//' -e 's/  */ /g'`
-    AC_MSG_NOTICE([   Found MPI_INCLUDES $MPI_INCLUDES])
-  fi
-  if test "x$MPI_INCLUDES" != x ; then
-    MPI_INCLUDE_PATH=`echo $MPI_INCLUDES | sed -e 's/^-I//'`
-    MPI_INCLUDE_PATH=`echo $MPI_INCLUDE_PATH | sed -e 's/-I/:/g'`
-    AC_MSG_NOTICE([   Found MPI_INCLUDE_PATH $MPI_INCLUDE_PATH])
-  fi
-fi
-AC_SUBST([MPI_INCLUDES])
-AC_SUBST([MPI_INCLUDE_PATH])
-])
+dnl dnl SC_MPI_INCLUDES
+dnl dnl Call the compiler with various --show* options
+dnl dnl to figure out the MPI_INCLUDES and MPI_INCLUDE_PATH varables
+dnl dnl
+dnl AC_DEFUN([SC_MPI_INCLUDES],
+dnl [
+dnl MPI_INCLUDES=
+dnl MPI_INCLUDE_PATH=
+dnl if test "x$HAVE_PKG_MPI" = xyes ; then
+dnl   AC_MSG_NOTICE([Trying to determine MPI_INCLUDES])
+dnl   for SHOW in -showme:compile -showme:incdirs -showme -show ; do
+dnl     if test "x$MPI_INCLUDES" = x ; then
+dnl       AC_MSG_CHECKING([$SHOW])
+dnl       if MPI_CC_RESULT=`$CC $SHOW 2> /dev/null` ; then
+dnl         AC_MSG_RESULT([Successful])
+dnl         for CCARG in $MPI_CC_RESULT ; do
+dnl           MPI_INCLUDES="$MPI_INCLUDES `echo $CCARG | grep '^-I'`"
+dnl         done
+dnl       else
+dnl         AC_MSG_RESULT([Failed])
+dnl       fi
+dnl     fi
+dnl   done
+dnl   if test "x$MPI_INCLUDES" != x; then
+dnl     MPI_INCLUDES=`echo $MPI_INCLUDES | sed -e 's/^ *//' -e 's/  */ /g'`
+dnl     AC_MSG_NOTICE([   Found MPI_INCLUDES $MPI_INCLUDES])
+dnl   fi
+dnl   if test "x$MPI_INCLUDES" != x ; then
+dnl     MPI_INCLUDE_PATH=`echo $MPI_INCLUDES | sed -e 's/^-I//'`
+dnl     MPI_INCLUDE_PATH=`echo $MPI_INCLUDE_PATH | sed -e 's/-I/:/g'`
+dnl     AC_MSG_NOTICE([   Found MPI_INCLUDE_PATH $MPI_INCLUDE_PATH])
+dnl   fi
+dnl fi
+dnl AC_SUBST([MPI_INCLUDES])
+dnl AC_SUBST([MPI_INCLUDE_PATH])
+dnl ])
 
 AC_DEFUN([SC_MPI_ENGAGE],
 [
@@ -462,6 +464,6 @@ dnl  ])
   fi
 fi
 
-dnl figure out the MPI include directories
-SC_MPI_INCLUDES
+dnl dnl figure out the MPI include directories
+dnl SC_MPI_INCLUDES
 ])
