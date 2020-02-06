@@ -56,19 +56,26 @@ sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t * size)
   }
 }
 
-static struct sc3_MPI_Comm
+struct sc3_MPI_Comm
 {
   int                 comm;
-} comm_world       , comm_null;
-sc3_MPI_Comm_t      SC3_MPI_COMM_WORLD = &comm_world;
-sc3_MPI_Comm_t      SC3_MPI_COMM_SELF = &comm_world;
-sc3_MPI_Comm_t      SC3_MPI_COMM_NULL = &comm_null;
+};
+static struct sc3_MPI_Comm comm_null = { 0 };
+static struct sc3_MPI_Comm comm_world = { 1 };
 
-static struct sc3_MPI_Info
+sc3_MPI_Comm_t      SC3_MPI_COMM_NULL = &comm_null;
+sc3_MPI_Comm_t      SC3_MPI_COMM_SELF = &comm_world;
+sc3_MPI_Comm_t      SC3_MPI_COMM_WORLD = &comm_world;
+
+struct sc3_MPI_Info
 {
   int                 info;
-} info_null;
+};
+static struct sc3_MPI_Info info_null = { 0 };
+static struct sc3_MPI_Info info_static = { 1 };
+
 sc3_MPI_Info_t      SC3_MPI_INFO_NULL = &info_null;
+static sc3_MPI_Info_t INFO_STATIC = &info_static;
 
 #endif /* !SC_ENABLE_MPI */
 
@@ -261,6 +268,44 @@ sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm)
   *comm = SC3_MPI_COMM_NULL;
 #else
   SC3E_MPI (MPI_Comm_free (comm));
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_MPI_Info_create (sc3_MPI_Info_t * info)
+{
+#ifndef SC_ENABLE_MPI
+  SC3A_CHECK (info != NULL);
+  *info = INFO_STATIC;
+#else
+  SC3E_MPI (MPI_Info_create (info));
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_MPI_Info_set (sc3_MPI_Info_t info, const char *key, const char *value)
+{
+#ifndef SC_ENABLE_MPI
+  SC3A_CHECK (info == INFO_STATIC);
+  SC3A_CHECK (key != NULL);
+#else
+  /* depending on the MPI implementation the strings may not be const */
+  SC3E_MPI (MPI_Info_set (info, (char *) key, (char *) value));
+#endif
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_MPI_Info_free (sc3_MPI_Info_t * info)
+{
+#ifndef SC_ENABLE_MPI
+  SC3A_CHECK (info != NULL);
+  SC3A_CHECK (*info == INFO_STATIC);
+  *info = SC3_MPI_INFO_NULL;
+#else
+  SC3E_MPI (MPI_Info_free (info));
 #endif
   return NULL;
 }

@@ -204,6 +204,11 @@ sc3_error_t        *sc3_MPI_Comm_split_type (sc3_MPI_Comm_t comm,
 
 sc3_error_t        *sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm);
 
+sc3_error_t        *sc3_MPI_Info_create (sc3_MPI_Info_t * info);
+sc3_error_t        *sc3_MPI_Info_set (sc3_MPI_Info_t info,
+                                      const char *key, const char *value);
+sc3_error_t        *sc3_MPI_Info_free (sc3_MPI_Info_t * info);
+
 sc3_error_t        *sc3_MPI_Win_allocate_shared
   (sc3_MPI_Aint_t size, int disp_unit, sc3_MPI_Info_t info,
    sc3_MPI_Comm_t comm, void *baseptr, sc3_MPI_Win_t * win);
