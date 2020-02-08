@@ -56,6 +56,8 @@ int                 sc3_omp_max_threads (void);
 int                 sc3_omp_num_threads (void);
 int                 sc3_omp_thread_num (void);
 
+void                sc3_omp_thread_intrange (int *beginr, int *endr);
+
 /** Initialize OpenMP error synchronization context.
  * Must be called outside of the OpenMP parallel construct.
  */

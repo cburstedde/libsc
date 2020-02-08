@@ -62,6 +62,19 @@ sc3_omp_thread_num (void)
 #endif
 }
 
+void
+sc3_omp_thread_intrange (int *beginr, int *endr)
+{
+  if (beginr != NULL && endr != NULL) {
+    const int              tnum = sc3_omp_num_threads ();
+    const int              tid = sc3_omp_thread_num ();
+    const int              ranger = *endr - *beginr;
+
+    *endr = *beginr + sc3_intcut (ranger, tnum, tid + 1);
+    *beginr += sc3_intcut (ranger, tnum, tid);
+  }
+}
+
 sc3_error_t        *
 sc3_omp_esync_init (sc3_omp_esync_t * s)
 {
