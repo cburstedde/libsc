@@ -126,6 +126,8 @@ extern              "C"
 #define SC3E_NULL_SET(e,f) do {                                         \
   if ((e) == NULL) SC3E_SET(e,f);                                       \
   } while (0)
+#define SC3E_NULL_BREAK(e) do {                                         \
+  if ((e) != NULL) { break; }} while (0)
 
 /*** TEST macros.  Always executed. */
 #define SC3E_YES(r) do {                                                \
