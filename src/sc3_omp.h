@@ -35,6 +35,15 @@
 
 #include <sc3_error.h>
 
+typedef struct sc3_omp_esync
+{
+  int                 rcount;
+  int                 ecount;
+  int                 error_tid;
+  sc3_error_t        *shared_error;
+}
+sc3_omp_esync_t;
+
 #ifdef __cplusplus
 extern              "C"
 {
@@ -47,12 +56,12 @@ int                 sc3_omp_max_threads (void);
 int                 sc3_omp_num_threads (void);
 int                 sc3_omp_thread_num (void);
 
-sc3_error_t        *sc3_omp_esync_pre_critical
-  (int *rcount, int *ecount, int *error_tid, sc3_error_t ** shared_error);
-
-void                sc3_omp_esync_in_critical
-  (sc3_error_t ** e, int *rcount, int *ecount,
-   int *error_tid, sc3_error_t ** shared_error);
+/** Initialize OpenMP error synchronization context.
+ * Must be called outside of the OpenMP parallel construct.
+ */
+sc3_error_t        *sc3_omp_esync_init (sc3_omp_esync_t * s);
+sc3_error_t        *sc3_omp_esync_critical (sc3_omp_esync_t * s,
+                                            sc3_error_t ** e);
 
 #ifdef __cplusplus
 #if 0

@@ -398,8 +398,8 @@ omp_info (sc3_allocator_t * origa)
 {
   int                 tmax = sc3_omp_max_threads ();
   int                 minid, maxid, tcount;
-  int                 error_tid, ecount, rcount;
   sc3_error_t        *terror;
+  sc3_omp_esync_t     esync, *s = &esync;
 
   SC3A_IS (sc3_allocator_is_setup, origa);
 
@@ -428,7 +428,7 @@ omp_info (sc3_allocator_t * origa)
   SC3E_DEMAND (maxid < tcount && tcount <= tmax, "Thread ids inconsistent");
 
   /* Test 2 -- per-thread memory allocation */
-  SC3E (sc3_omp_esync_pre_critical (&rcount, &ecount, &error_tid, &terror));
+  SC3E (sc3_omp_esync_init (s));
 #pragma omp parallel
   {
     sc3_allocator_t    *talloc;
@@ -439,7 +439,7 @@ omp_info (sc3_allocator_t * origa)
     {
       SC3E_SET (e, sc3_allocator_new (origa, &talloc));
       SC3E_NULL_SET (e, sc3_allocator_setup (talloc));
-      sc3_omp_esync_in_critical (&e, &rcount, &ecount, &error_tid, &terror);
+      terror = sc3_omp_esync_critical (s, &e);
     }
 #pragma omp barrier
     /* now terror is either NULL or the same error object in all threads */
@@ -452,7 +452,7 @@ omp_info (sc3_allocator_t * origa)
     /* synchronize error result */
 #pragma omp critical
     {
-      sc3_omp_esync_in_critical (&e, &rcount, &ecount, &error_tid, &terror);
+      terror = sc3_omp_esync_critical (s, &e);
     }
 #pragma omp barrier
     /* now terror is either NULL or the same error object in all threads */
@@ -463,10 +463,11 @@ omp_info (sc3_allocator_t * origa)
       /* we must unref, not destroy the thread allocator
          since it may have been used to create the error object */
       SC3E_SET (e, sc3_allocator_unref (&talloc));
-      sc3_omp_esync_in_critical (&e, &rcount, &ecount, &error_tid, &terror);
+      terror = sc3_omp_esync_critical (s, &e);
     }
   }
-  printf ("Thread weird %d error %d count\n", rcount, ecount);
+  /* TODO: create an esync summary error return value */
+  printf ("Thread weird %d error %d count\n", s->rcount, s->ecount);
 
   /* this error is the only one remaining from all threads */
   return terror;

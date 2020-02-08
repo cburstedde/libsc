@@ -63,46 +63,66 @@ sc3_omp_thread_num (void)
 }
 
 sc3_error_t        *
-sc3_omp_esync_pre_critical (int *rcount, int *ecount,
-                            int *error_tid, sc3_error_t ** shared_error)
+sc3_omp_esync_init (sc3_omp_esync_t * s)
 {
-  int                 tmax = sc3_omp_max_threads ();
-
-  SC3E_RETVAL (rcount, 0);
-  SC3E_RETVAL (ecount, 0);
-  SC3E_RETVAL (error_tid, tmax);
-  SC3E_RETVAL (shared_error, NULL);
+  SC3A_CHECK (s != NULL);
+  s->rcount = 0;
+  s->ecount = 0;
+  s->error_tid = sc3_omp_max_threads ();
+  s->shared_error = NULL;
   return NULL;
 }
 
-void
-sc3_omp_esync_in_critical (sc3_error_t ** e, int *rcount, int *ecount,
-                           int *error_tid, sc3_error_t ** shared_error)
+sc3_error_t        *
+sc3_omp_esync_critical (sc3_omp_esync_t * s, sc3_error_t ** e)
 {
   /* this function is written to survive NULL input parameters */
-  if (e != NULL && *e != NULL) {
-    int                 tid = sc3_omp_thread_num ();
-
-    if (error_tid != NULL && shared_error != NULL && *error_tid > tid) {
-      /* we are the lowest numbered sane error thread */
-      if (*shared_error != NULL) {
-        if (sc3_error_destroy (shared_error) != NULL && rcount != NULL) {
-          ++*rcount;
-        }
-      }
-      /* TODO stack the error instead and set to thread-synced */
-      *error_tid = tid;
-      *shared_error = *e;
+  if (s == NULL) {
+    if (e != NULL && *e != NULL) {
+      sc3_error_t        *reterr = *e;
       *e = NULL;
+      return reterr;
+    }
+    return NULL;
+  }
+
+  /* the error synchronization context exists */
+  if (e == NULL) {
+    /* this is not the expected call convention */
+    ++s->rcount;
+  }
+  else if (*e != NULL) {
+    int                 tid = sc3_omp_thread_num ();
+    /* we have been called as expected */
+
+    if (s->shared_error == NULL) {
+      /* we are the first thread to encounter an error */
+      s->error_tid = tid;
+      s->shared_error = *e;
     }
     else {
-      /* another error thread has lower number */
-      if (sc3_error_destroy (e) != NULL && rcount != NULL) {
-        ++*rcount;
+      /* some other thread had set an error */
+      if (s->error_tid > tid) {
+        /* we are now the lowest numbered sane error thread */
+
+        /* TODO stack error instead of destroying the previous one */
+        if (sc3_error_destroy (&s->shared_error) != NULL) {
+          ++s->rcount;
+        }
+        s->error_tid = tid;
+        s->shared_error = *e;
+      }
+      else {
+        /* the other thread has higher priority so we remove our error */
+
+        /* TODO stack this thread's error instead of destroying it */
+        if (sc3_error_destroy (e) != NULL) {
+          ++s->rcount;
+        }
       }
     }
-    if (ecount != NULL) {
-      ++*ecount;
-    }
+    *e = NULL;
+    ++s->ecount;
   }
+  return s->shared_error;
 }
