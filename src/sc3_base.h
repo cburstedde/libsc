@@ -85,7 +85,19 @@ int                 sc3_intpow (int base, int exp);
 long                sc3_longpow (long base, int exp);
 
 /** Compute a cumulative partition cut by floor (Np / P).
- * In particular, for p <= 0 we return 0 and for p >= P we return N.
+ * The product NP must fit into a long integer.
+ * For p <= 0 we return 0 and for p >= P we return N.
+ * \param [in] N       Non-negative integer to divide between P slots.
+ * \param [in] P       The total number of slots, a positive integer.
+ * \param [in] p       Slot number is trimmed to satisfy 0 <= p <= P.
+ * \return             floor (Np / P) in long integer arithmetic or
+ *                     0 if any argument is invalid.
+ */
+int                 sc3_intcut (int N, int P, int p);
+
+/** Compute a cumulative partition cut by floor (Np / P).
+ * The product NP must fit into a long integer.
+ * For p <= 0 we return 0 and for p >= P we return N.
  * \param [in] N       Non-negative integer to divide between P slots.
  * \param [in] P       The total number of slots, a positive integer.
  * \param [in] p       Slot number is trimmed to satisfy 0 <= p <= P.

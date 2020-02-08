@@ -99,6 +99,15 @@ sc3_longpow (long base, int exp)
   return result;
 }
 
+int
+sc3_intcut (int N, int P, int p)
+{
+  if (N <= 0 || P <= 0 || p <= 0) {
+    return 0;
+  }
+  return p < P ? (int) (((long) N * (long) p) / P) : N;
+}
+
 long
 sc3_longcut (long N, int P, int p)
 {
