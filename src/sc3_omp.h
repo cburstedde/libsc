@@ -58,12 +58,17 @@ int                 sc3_omp_thread_num (void);
 
 void                sc3_omp_thread_intrange (int *beginr, int *endr);
 
+int                 sc3_omp_esync_is_clean (sc3_omp_esync_t * s);
+
 /** Initialize OpenMP error synchronization context.
  * Must be called outside of the OpenMP parallel construct.
  */
 sc3_error_t        *sc3_omp_esync_init (sc3_omp_esync_t * s);
-sc3_error_t        *sc3_omp_esync_critical (sc3_omp_esync_t * s,
-                                            sc3_error_t ** e);
+void                sc3_omp_esync_in_critical (sc3_omp_esync_t * s,
+                                               sc3_error_t ** e);
+void                sc3_omp_esync_barrier (sc3_omp_esync_t * s,
+                                           sc3_error_t ** e);
+sc3_error_t        *sc3_omp_esync_summary (sc3_omp_esync_t * s);
 
 #ifdef __cplusplus
 #if 0

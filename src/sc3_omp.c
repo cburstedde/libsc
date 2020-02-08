@@ -75,6 +75,12 @@ sc3_omp_thread_intrange (int *beginr, int *endr)
   }
 }
 
+int
+sc3_omp_esync_is_clean (sc3_omp_esync_t * s)
+{
+  return s != NULL && s->shared_error == NULL;
+}
+
 sc3_error_t        *
 sc3_omp_esync_init (sc3_omp_esync_t * s)
 {
@@ -86,32 +92,28 @@ sc3_omp_esync_init (sc3_omp_esync_t * s)
   return NULL;
 }
 
-sc3_error_t        *
-sc3_omp_esync_critical (sc3_omp_esync_t * s, sc3_error_t ** e)
+void
+sc3_omp_esync_in_critical (sc3_omp_esync_t * s, sc3_error_t ** e)
 {
-  /* this function is written to survive NULL input parameters */
   if (s == NULL) {
+    /* survive NULL input parameters */
     if (e != NULL && *e != NULL) {
-      sc3_error_t        *reterr = *e;
-      *e = NULL;
-      return reterr;
+      sc3_error_destroy (e);
     }
-    return NULL;
   }
-
-  /* the error synchronization context exists */
-  if (e == NULL) {
+  else if (e == NULL) {
     /* this is not the expected call convention */
     ++s->rcount;
   }
   else if (*e != NULL) {
-    int                 tid = sc3_omp_thread_num ();
-    /* we have been called as expected */
+    const int                 tid = sc3_omp_thread_num ();
 
+    /* we have been called as expected */
     if (s->shared_error == NULL) {
       /* we are the first thread to encounter an error */
       s->error_tid = tid;
       s->shared_error = *e;
+      *e = NULL;
     }
     else {
       /* some other thread had set an error */
@@ -124,6 +126,7 @@ sc3_omp_esync_critical (sc3_omp_esync_t * s, sc3_error_t ** e)
         }
         s->error_tid = tid;
         s->shared_error = *e;
+        *e = NULL;
       }
       else {
         /* the other thread has higher priority so we remove our error */
@@ -134,8 +137,21 @@ sc3_omp_esync_critical (sc3_omp_esync_t * s, sc3_error_t ** e)
         }
       }
     }
-    *e = NULL;
     ++s->ecount;
   }
+}
+
+void
+sc3_omp_esync_barrier (sc3_omp_esync_t * s, sc3_error_t ** e)
+{
+#pragma omp critical (sc3_omp_esync)
+  sc3_omp_esync_in_critical (s, e);
+#pragma omp barrier
+}
+
+sc3_error_t        *
+sc3_omp_esync_summary (sc3_omp_esync_t * s)
+{
+  /* TODO create a new error with rcount and ecount information */
   return s->shared_error;
 }
