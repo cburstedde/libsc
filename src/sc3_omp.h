@@ -66,8 +66,7 @@ int                 sc3_omp_esync_is_clean (sc3_omp_esync_t * s);
 sc3_error_t        *sc3_omp_esync_init (sc3_omp_esync_t * s);
 void                sc3_omp_esync_in_critical (sc3_omp_esync_t * s,
                                                sc3_error_t ** e);
-void                sc3_omp_esync_barrier (sc3_omp_esync_t * s,
-                                           sc3_error_t ** e);
+void                sc3_omp_esync (sc3_omp_esync_t * s, sc3_error_t ** e);
 sc3_error_t        *sc3_omp_esync_summary (sc3_omp_esync_t * s);
 
 #ifdef __cplusplus

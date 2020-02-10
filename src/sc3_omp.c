@@ -66,9 +66,9 @@ void
 sc3_omp_thread_intrange (int *beginr, int *endr)
 {
   if (beginr != NULL && endr != NULL) {
-    const int              tnum = sc3_omp_num_threads ();
-    const int              tid = sc3_omp_thread_num ();
-    const int              ranger = *endr - *beginr;
+    const int           tnum = sc3_omp_num_threads ();
+    const int           tid = sc3_omp_thread_num ();
+    const int           ranger = *endr - *beginr;
 
     *endr = *beginr + sc3_intcut (ranger, tnum, tid + 1);
     *beginr += sc3_intcut (ranger, tnum, tid);
@@ -106,7 +106,9 @@ sc3_omp_esync_in_critical (sc3_omp_esync_t * s, sc3_error_t ** e)
     ++s->rcount;
   }
   else if (*e != NULL) {
-    const int                 tid = sc3_omp_thread_num ();
+    const int           tid = sc3_omp_thread_num ();
+
+    /* TODO would be nice to include thread number in shared error */
 
     /* we have been called as expected */
     if (s->shared_error == NULL) {
@@ -142,11 +144,10 @@ sc3_omp_esync_in_critical (sc3_omp_esync_t * s, sc3_error_t ** e)
 }
 
 void
-sc3_omp_esync_barrier (sc3_omp_esync_t * s, sc3_error_t ** e)
+sc3_omp_esync (sc3_omp_esync_t * s, sc3_error_t ** e)
 {
 #pragma omp critical (sc3_omp_esync)
   sc3_omp_esync_in_critical (s, e);
-#pragma omp barrier
 }
 
 sc3_error_t        *
