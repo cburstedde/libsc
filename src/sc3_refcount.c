@@ -30,7 +30,7 @@
 #include <sc3_refcount_internal.h>
 
 int
-sc3_refcount_is_valid (sc3_refcount_t * r, char *reason)
+sc3_refcount_is_valid (const sc3_refcount_t * r, char *reason)
 {
   SC3E_TEST (r != NULL, reason);
   SC3E_TEST (r->magic == SC3_REFCOUNT_MAGIC, reason);
@@ -39,7 +39,7 @@ sc3_refcount_is_valid (sc3_refcount_t * r, char *reason)
 }
 
 int
-sc3_refcount_is_last (sc3_refcount_t * r, char *reason)
+sc3_refcount_is_last (const sc3_refcount_t * r, char *reason)
 {
   SC3E_IS (sc3_refcount_is_valid, r, reason);
   SC3E_TEST (r->rc == 1, reason);

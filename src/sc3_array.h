@@ -52,7 +52,7 @@ extern              "C"
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer is not NULL and array consistent.
  */
-int                 sc3_array_is_valid (sc3_array_t * a, char *reason);
+int                 sc3_array_is_valid (const sc3_array_t * a, char *reason);
 
 /** Check whether an array is not NULL, consistent and not setup.
  * This means that the array is not in its usage phase.
@@ -61,7 +61,7 @@ int                 sc3_array_is_valid (sc3_array_t * a, char *reason);
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer not NULL, array consistent, not setup.
  */
-int                 sc3_array_is_new (sc3_array_t * a, char *reason);
+int                 sc3_array_is_new (const sc3_array_t * a, char *reason);
 
 /** Check whether an array is not NULL, internally consistent and setup.
  * This means that the array is in its usage phase.
@@ -70,7 +70,7 @@ int                 sc3_array_is_new (sc3_array_t * a, char *reason);
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer not NULL, array consistent and setup.
  */
-int                 sc3_array_is_setup (sc3_array_t * a, char *reason);
+int                 sc3_array_is_setup (const sc3_array_t * a, char *reason);
 
 /** Check whether an array is setup and resizable.
  * A resizable array becomes non-resizable by \ref sc3_array_freeze.
@@ -79,7 +79,8 @@ int                 sc3_array_is_setup (sc3_array_t * a, char *reason);
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer not NULL, array setup and resizable.
  */
-int                 sc3_array_is_resizable (sc3_array_t * a, char *reason);
+int                 sc3_array_is_resizable (const sc3_array_t * a,
+                                            char *reason);
 
 /** Check whether an array is setup and not (or no longer) resizable.
  * A resizable array becomes non-resizable by \ref sc3_array_freeze.
@@ -88,7 +89,8 @@ int                 sc3_array_is_resizable (sc3_array_t * a, char *reason);
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer not NULL, array setup and resizable.
  */
-int                 sc3_array_is_unresizable (sc3_array_t * a, char *reason);
+int                 sc3_array_is_unresizable (const sc3_array_t * a,
+                                              char *reason);
 
 /** Create a new array object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
@@ -252,7 +254,7 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void **p);
  *                      is out of bounds or the array is not setup.
  *                      Otherwise it may crash on error.
  */
-void               *sc3_array_index_noerr (sc3_array_t * a, int i);
+void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
 
 /** Return element size of an array that is setup.
  * \param [in] a        Array must be setup.
@@ -274,7 +276,7 @@ sc3_error_t        *sc3_array_get_elem_count (sc3_array_t * a, int *ecount);
  * \param [in] a        The array must be setup.  Otherwise, return 0.
  * \return              The array's element count or 0 on error.
  */
-int                 sc3_array_elem_count_noerr (sc3_array_t * a);
+int                 sc3_array_elem_count_noerr (const sc3_array_t * a);
 
 #ifdef __cplusplus
 #if 0

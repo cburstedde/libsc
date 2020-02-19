@@ -177,7 +177,7 @@ sc3_error_sync_t;
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer is not NULL and error consistent.
  */
-int                 sc3_error_is_valid (sc3_error_t * e, char *reason);
+int                 sc3_error_is_valid (const sc3_error_t * e, char *reason);
 
 /** Check whether an error is not NULL, consistent and not setup.
  * This means that the error is not in its usage phase.
@@ -186,7 +186,7 @@ int                 sc3_error_is_valid (sc3_error_t * e, char *reason);
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer not NULL, error consistent, not setup.
  */
-int                 sc3_error_is_new (sc3_error_t * e, char *reason);
+int                 sc3_error_is_new (const sc3_error_t * e, char *reason);
 
 /** Check whether an error is not NULL, internally consistent and setup.
  * This means that the error is in its usage phase.
@@ -195,7 +195,7 @@ int                 sc3_error_is_new (sc3_error_t * e, char *reason);
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer not NULL, error consistent and setup.
  */
-int                 sc3_error_is_setup (sc3_error_t * e, char *reason);
+int                 sc3_error_is_setup (const sc3_error_t * e, char *reason);
 
 /** Check an error object to be setup and fatal.
  * \param [in] a        Any pointer.
@@ -204,7 +204,7 @@ int                 sc3_error_is_setup (sc3_error_t * e, char *reason);
  * \return              True if error is not NULL, setup, and has severity
  *                      SC3_ERROR_FATAL, false otherwise.
  */
-int                 sc3_error_is_fatal (sc3_error_t * e, char *reason);
+int                 sc3_error_is_fatal (const sc3_error_t * e, char *reason);
 
 /*** TODO error functions shall not throw new errors themselves?! ***/
 

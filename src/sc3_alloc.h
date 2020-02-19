@@ -73,7 +73,7 @@ extern              "C"
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer is not NULL and allocator consistent.
  */
-int                 sc3_allocator_is_valid (sc3_allocator_t * a,
+int                 sc3_allocator_is_valid (const sc3_allocator_t * a,
                                             char *reason);
 
 /** Check whether an allocator is not NULL, consistent and not setup.
@@ -83,7 +83,8 @@ int                 sc3_allocator_is_valid (sc3_allocator_t * a,
  *                      is set to "" if answer is yes or reason if no.
  * \return          True iff pointer not NULL, allocator consistent, not setup.
  */
-int                 sc3_allocator_is_new (sc3_allocator_t * a, char *reason);
+int                 sc3_allocator_is_new (const sc3_allocator_t * a,
+                                          char *reason);
 
 /** Check whether an allocator is not NULL, internally consistent and setup.
  * This means that the allocator is in its usage phase.
@@ -92,7 +93,7 @@ int                 sc3_allocator_is_new (sc3_allocator_t * a, char *reason);
  *                      is set to "" if answer is yes or reason if no.
  * \return          True iff pointer not NULL, allocator consistent and setup.
  */
-int                 sc3_allocator_is_setup (sc3_allocator_t * a,
+int                 sc3_allocator_is_setup (const sc3_allocator_t * a,
                                             char *reason);
 
 /** Return whether a setup allocator does not hold any allocations.
@@ -102,7 +103,8 @@ int                 sc3_allocator_is_setup (sc3_allocator_t * a,
  * \return          True iff pointer not NULL, allocator setup
  *                  and not holding any allocations.
  */
-int                 sc3_allocator_is_free (sc3_allocator_t * a, char *reason);
+int                 sc3_allocator_is_free (const sc3_allocator_t * a,
+                                           char *reason);
 
 /** Return a non-counting allocator setup and safe to use in threads.
  * This allocator thus does not check for matched alloc/free calls.

@@ -66,9 +66,9 @@ extern              "C"
 #endif
 #endif
 
-int                 sc3_log_is_valid (sc3_log_t * log, char *reason);
-int                 sc3_log_is_new (sc3_log_t * log, char *reason);
-int                 sc3_log_is_setup (sc3_log_t * log, char *reason);
+int                 sc3_log_is_valid (const sc3_log_t * log, char *reason);
+int                 sc3_log_is_new (const sc3_log_t * log, char *reason);
+int                 sc3_log_is_setup (const sc3_log_t * log, char *reason);
 
 sc3_log_t          *sc3_log_predef (void);
 

@@ -59,7 +59,7 @@ sc3_log_predef (void)
 }
 
 int
-sc3_log_is_valid (sc3_log_t * log, char *reason)
+sc3_log_is_valid (const sc3_log_t * log, char *reason)
 {
   SC3E_TEST (log != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &log->rc, reason);
@@ -78,7 +78,7 @@ sc3_log_is_valid (sc3_log_t * log, char *reason)
 }
 
 int
-sc3_log_is_new (sc3_log_t * log, char *reason)
+sc3_log_is_new (const sc3_log_t * log, char *reason)
 {
   SC3E_IS (sc3_log_is_valid, log, reason);
   SC3E_TEST (!log->setup, reason);
@@ -86,7 +86,7 @@ sc3_log_is_new (sc3_log_t * log, char *reason)
 }
 
 int
-sc3_log_is_setup (sc3_log_t * log, char *reason)
+sc3_log_is_setup (const sc3_log_t * log, char *reason)
 {
   SC3E_IS (sc3_log_is_valid, log, reason);
   SC3E_TEST (log->setup, reason);

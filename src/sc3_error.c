@@ -69,7 +69,7 @@ static sc3_error_t  esetup =
 };
 
 int
-sc3_error_is_valid (sc3_error_t * e, char *reason)
+sc3_error_is_valid (const sc3_error_t * e, char *reason)
 {
   SC3E_TEST (e != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &e->rc, reason);
@@ -86,7 +86,7 @@ sc3_error_is_valid (sc3_error_t * e, char *reason)
 }
 
 int
-sc3_error_is_new (sc3_error_t * e, char *reason)
+sc3_error_is_new (const sc3_error_t * e, char *reason)
 {
   SC3E_IS (sc3_error_is_valid, e, reason);
   SC3E_TEST (!e->setup, reason);
@@ -94,7 +94,7 @@ sc3_error_is_new (sc3_error_t * e, char *reason)
 }
 
 int
-sc3_error_is_setup (sc3_error_t * e, char *reason)
+sc3_error_is_setup (const sc3_error_t * e, char *reason)
 {
   SC3E_IS (sc3_error_is_valid, e, reason);
   SC3E_TEST (e->setup, reason);
@@ -102,7 +102,7 @@ sc3_error_is_setup (sc3_error_t * e, char *reason)
 }
 
 int
-sc3_error_is_fatal (sc3_error_t * e, char *reason)
+sc3_error_is_fatal (const sc3_error_t * e, char *reason)
 {
   SC3E_IS (sc3_error_is_setup, e, reason);
   SC3E_TEST (e->sev == SC3_ERROR_FATAL, reason);

@@ -46,7 +46,7 @@ struct sc3_array
 };
 
 int
-sc3_array_is_valid (sc3_array_t * a, char *reason)
+sc3_array_is_valid (const sc3_array_t * a, char *reason)
 {
   SC3E_TEST (a != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &a->rc, reason);
@@ -66,7 +66,7 @@ sc3_array_is_valid (sc3_array_t * a, char *reason)
 }
 
 int
-sc3_array_is_new (sc3_array_t * a, char *reason)
+sc3_array_is_new (const sc3_array_t * a, char *reason)
 {
   SC3E_IS (sc3_array_is_valid, a, reason);
   SC3E_TEST (!a->setup, reason);
@@ -74,7 +74,7 @@ sc3_array_is_new (sc3_array_t * a, char *reason)
 }
 
 int
-sc3_array_is_setup (sc3_array_t * a, char *reason)
+sc3_array_is_setup (const sc3_array_t * a, char *reason)
 {
   SC3E_IS (sc3_array_is_valid, a, reason);
   SC3E_TEST (a->setup, reason);
@@ -82,7 +82,7 @@ sc3_array_is_setup (sc3_array_t * a, char *reason)
 }
 
 int
-sc3_array_is_resizable (sc3_array_t * a, char *reason)
+sc3_array_is_resizable (const sc3_array_t * a, char *reason)
 {
   SC3E_IS (sc3_array_is_setup, a, reason);
   SC3E_TEST (a->resizable, reason);
@@ -90,7 +90,7 @@ sc3_array_is_resizable (sc3_array_t * a, char *reason)
 }
 
 int
-sc3_array_is_unresizable (sc3_array_t * a, char *reason)
+sc3_array_is_unresizable (const sc3_array_t * a, char *reason)
 {
   SC3E_IS (sc3_array_is_setup, a, reason);
   SC3E_TEST (!a->resizable, reason);
@@ -367,7 +367,7 @@ sc3_array_index (sc3_array_t * a, int i, void **p)
 }
 
 void               *
-sc3_array_index_noerr (sc3_array_t * a, int i)
+sc3_array_index_noerr (const sc3_array_t * a, int i)
 {
 #ifdef SC_ENABLE_DEBUG
   if (!sc3_array_is_setup (a, NULL) || i < 0 || i >= a->ecount) {
@@ -402,7 +402,7 @@ sc3_array_get_elem_count (sc3_array_t * a, int *ecount)
 }
 
 int
-sc3_array_elem_count_noerr (sc3_array_t * a)
+sc3_array_elem_count_noerr (const sc3_array_t * a)
 {
 #ifdef SC_ENABLE_DEBUG
   return sc3_array_is_setup (a, NULL) ? a->ecount : 0;

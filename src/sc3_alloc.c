@@ -60,7 +60,7 @@ static sc3_allocator_t nta =
   { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, 0, 0, 0, 0 };
 
 int
-sc3_allocator_is_valid (sc3_allocator_t * a, char *reason)
+sc3_allocator_is_valid (const sc3_allocator_t * a, char *reason)
 {
   SC3E_TEST (a != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &a->rc, reason);
@@ -83,7 +83,7 @@ sc3_allocator_is_valid (sc3_allocator_t * a, char *reason)
 }
 
 int
-sc3_allocator_is_new (sc3_allocator_t * a, char *reason)
+sc3_allocator_is_new (const sc3_allocator_t * a, char *reason)
 {
   SC3E_IS (sc3_allocator_is_valid, a, reason);
   SC3E_TEST (!a->setup, reason);
@@ -91,7 +91,7 @@ sc3_allocator_is_new (sc3_allocator_t * a, char *reason)
 }
 
 int
-sc3_allocator_is_setup (sc3_allocator_t * a, char *reason)
+sc3_allocator_is_setup (const sc3_allocator_t * a, char *reason)
 {
   SC3E_IS (sc3_allocator_is_valid, a, reason);
   SC3E_TEST (a->setup, reason);
@@ -99,7 +99,7 @@ sc3_allocator_is_setup (sc3_allocator_t * a, char *reason)
 }
 
 int
-sc3_allocator_is_free (sc3_allocator_t * a, char *reason)
+sc3_allocator_is_free (const sc3_allocator_t * a, char *reason)
 {
   SC3E_IS (sc3_allocator_is_setup, a, reason);
   SC3E_TEST (a->num_malloc + a->num_calloc == a->num_free, reason);

@@ -49,7 +49,8 @@ extern              "C"
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer not NULL and refcounter valid.
  */
-int                 sc3_refcount_is_valid (sc3_refcount_t * r, char *reason);
+int                 sc3_refcount_is_valid (const sc3_refcount_t * r,
+                                           char *reason);
 
 /** Query a reference counter for validity and holding exactly one reference.
  * \param [in] r        NULL or existing reference counter.
@@ -58,7 +59,8 @@ int                 sc3_refcount_is_valid (sc3_refcount_t * r, char *reason);
  * \return              True iff pointer not NULL and refcounter valid
  *                      with exactly one reference.
  */
-int                 sc3_refcount_is_last (sc3_refcount_t * r, char *reason);
+int                 sc3_refcount_is_last (const sc3_refcount_t * r,
+                                          char *reason);
 
 /** Initialize reference counter to be invalid (thus unusable).
  * \param [out] r       Existing reference counter memory.
