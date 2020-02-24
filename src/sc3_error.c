@@ -31,6 +31,8 @@
 #include <sc3_alloc_internal.h>
 #include <sc3_refcount_internal.h>
 
+/* TODO think about an error having multiple messages/parents */
+
 struct sc3_error
 {
   sc3_refcount_t      rc;
