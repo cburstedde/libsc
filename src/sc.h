@@ -34,9 +34,9 @@
 #ifndef SC_H
 #define SC_H
 
-/* include the sc_config header first */
+/* include the libsc config header first */
 
-#include <sc_config.h>
+#include <sc3_config.h>
 #ifndef _sc_const
 #define _sc_const const
 #endif
