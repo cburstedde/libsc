@@ -511,6 +511,9 @@ void                sc_free (int package, void *ptr);
 int                 sc_memory_status (int package);
 void                sc_memory_check (int package);
 
+/** Return error count or zero if all is ok. */
+int                 sc_memory_check_noerr (int package);
+
 /* comparison functions for various integer sizes */
 
 int                 sc_int_compare (const void *v1, const void *v2);
@@ -679,10 +682,21 @@ void                sc_init (sc_MPI_Comm mpicomm,
 
 /** Unregisters all packages, runs the memory check, removes the
  * signal handlers and resets sc_identifier and sc_root_*.
+ * This function aborts on any inconsistency found unless
+ * the global variable default_abort_mismatch is false.
  * This function is optional.
  * This function does not require sc_init to be called first.
  */
 void                sc_finalize (void);
+
+/** Unregisters all packages, runs the memory check, removes the
+ * signal handlers and resets sc_identifier and sc_root_*.
+ * This function never aborts but returns the number of errors encountered.
+ * This function is optional.
+ * This function does not require sc_init to be called first.
+ * \return          0 when everything is consistent, nonzero otherwise.
+ */
+int                 sc_finalize_noabort (void);
 
 /** Identify the root process.
  * Only meaningful between sc_init and sc_finalize and
