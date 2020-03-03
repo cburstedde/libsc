@@ -112,7 +112,6 @@ static sc_abort_handler_t sc_default_abort_handler = sc_abort_handler;
 static int          sc_signals_caught = 0;
 static sc_sig_t     system_int_handler = NULL;
 static sc_sig_t     system_segv_handler = NULL;
-static sc_sig_t     system_usr2_handler = NULL;
 
 static int          sc_print_backtrace = 0;
 
@@ -216,9 +215,6 @@ sc_signal_handler (int sig)
   case SIGSEGV:
     sigstr = "SEGV";
     break;
-  case SIGUSR2:
-    sigstr = "USR2";
-    break;
   default:
     sigstr = "<unknown>";
     break;
@@ -228,8 +224,8 @@ sc_signal_handler (int sig)
   sc_abort ();
 }
 
-/** Installs or removes a signal handler for INT SEGV USR2 that aborts.
- * \param [in] catch    If true, catch signals INT SEGV USR2.
+/** Installs or removes a signal handler for INT SEGV that aborts.
+ * \param [in] catch    If true, catch signals INT SEGV.
  *                      If false, reinstate previous signal handler.
  */
 static void
@@ -240,8 +236,6 @@ sc_set_signal_handler (int catch_signals)
     SC_CHECK_ABORT (system_int_handler != SIG_ERR, "catching INT");
     system_segv_handler = signal (SIGSEGV, sc_signal_handler);
     SC_CHECK_ABORT (system_segv_handler != SIG_ERR, "catching SEGV");
-    system_usr2_handler = signal (SIGUSR2, sc_signal_handler);
-    SC_CHECK_ABORT (system_usr2_handler != SIG_ERR, "catching USR2");
     sc_signals_caught = 1;
   }
   else if (!catch_signals && sc_signals_caught) {
@@ -249,8 +243,6 @@ sc_set_signal_handler (int catch_signals)
     system_int_handler = NULL;
     (void) signal (SIGSEGV, system_segv_handler);
     system_segv_handler = NULL;
-    (void) signal (SIGUSR2, system_usr2_handler);
-    system_usr2_handler = NULL;
     sc_signals_caught = 0;
   }
 }
