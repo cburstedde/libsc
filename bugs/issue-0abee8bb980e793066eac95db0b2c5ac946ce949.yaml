@@ -29,5 +29,5 @@ log_events:
     set as the abort handler, and the rank is retrieved and stored
     as identifier.
     The next two boolean arguments specify if the signals
-    INT, SEGV and USR2 are caught and trigger an sc_abort,
+    INT and SEGV are caught and trigger an sc_abort,
     and if a backtrace is printed from within sc_abort.
