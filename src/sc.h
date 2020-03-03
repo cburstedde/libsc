@@ -671,9 +671,8 @@ void                sc_package_print_summary (int log_priority);
  * \param [in] mpicomm          MPI communicator, can be sc_MPI_COMM_NULL.
  *                              If sc_MPI_COMM_NULL, the identifier is set to -1.
  *                              Otherwise, sc_MPI_Init must have been called.
- *                              Nothing happens to this communicator.
- *                              We just query size and rank.
- * \param [in] catch_signals    If true, signals INT SEGV USR2 are be caught.
+ *                              Effectively, we just query size and rank.
+ * \param [in] catch_signals    If true, signals INT and SEGV are caught.
  * \param [in] print_backtrace  If true, sc_abort prints a backtrace.
  */
 void                sc_init (sc_MPI_Comm mpicomm,
