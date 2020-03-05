@@ -5,7 +5,7 @@
 
 # append to these variables in subdirectories as necessary
 libsc_generated_headers = src/sc3_config.h
-libsc_installed_headers = src/sc_config.h \
+libsc_installed_headers = \
         src/sc.h src/sc_mpi.h src/sc_containers.h src/sc_avl.h \
         src/sc_string.h src/sc_unique_counter.h src/sc_private.h \
         src/sc_options.h src/sc_functions.h src/sc_statistics.h \
