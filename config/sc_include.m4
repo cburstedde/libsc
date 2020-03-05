@@ -282,8 +282,6 @@ AC_DEFUN([SC_CHECK_LIBRARIES],
 [
 SC_REQUIRE_LIB([m], [fabs])
 SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [$1])
-SC_CHECK_LIB([lua52 lua5.2 lua51 lua5.1 lua lua5], [lua_createtable],
-	     [LUA], [$1])
 SC_CHECK_BLAS_LAPACK([$1])
 SC_BUILTIN_ALL_PREFIX([$1])
 SC_CHECK_PTHREAD([$1])
@@ -310,15 +308,7 @@ We did not find a recent zlib containing the function adler32_combine.
 This is OK if the following does not matter to you:
 Calling any sc functions that rely on zlib will abort your program.
 These functions include sc_array_checksum and sc_vtk_write_compressed.
-You can fix this by compiling a working zlib and pointing LIBS to it.
-])
-fi
-if test "x$$1_HAVE_LUA" = x ; then
-AC_MSG_NOTICE([- $1 -------------------------------------------------
-We did not find a recent lua containing the function lua_createtable.
-This is OK if the following does not matter to you:
-Including sc_lua.h in your code will abort the compilation.
-You can fix this by compiling a working lua and pointing LIBS to it.
+You can fix this by compiling a recent zlib and pointing LIBS to it.
 ])
 fi
 ])

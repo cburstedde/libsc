@@ -13,7 +13,7 @@ libsc_installed_headers = src/sc_config.h \
         src/sc_amr.h src/sc_search.h src/sc_sort.h \
         src/sc_dmatrix.h src/sc_blas.h src/sc_lapack.h \
         src/sc_bspline.h src/sc_flops.h src/sc_random.h \
-        src/sc_getopt.h src/sc_obstack.h src/sc_lua.h src/sc_polynom.h \
+        src/sc_getopt.h src/sc_polynom.h \
         src/sc_keyvalue.h src/sc_refcount.h src/sc_warp.h src/sc_shmem.h \
         src/sc_allgather.h src/sc_reduce.h src/sc_notify.h \
         src/sc3_base.h src/sc3_alloc.h src/sc3_alloc_internal.h \
@@ -29,15 +29,14 @@ libsc_compiled_sources = \
         src/sc_amr.c src/sc_search.c src/sc_sort.c \
         src/sc_dmatrix.c src/sc_blas.c src/sc_lapack.c \
         src/sc_bspline.c src/sc_flops.c src/sc_random.c \
-        src/sc_getopt.c src/sc_obstack.c src/sc_getopt1.c \
-        src/sc_keyvalue.c src/sc_refcount.c src/sc_warp.c src/sc_polynom.c \
-        src/sc_shmem.c src/sc_allgather.c src/sc_reduce.c src/sc_notify.c \
+        src/sc_getopt.c src/sc_getopt1.c src/sc_polynom.c \
+        src/sc_keyvalue.c src/sc_refcount.c src/sc_warp.c src/sc_shmem.c \
+        src/sc_allgather.c src/sc_reduce.c src/sc_notify.c \
         src/sc3_base.c src/sc3_alloc.c src/sc3_error.c src/sc3_refcount.c \
         src/sc3_omp.c src/sc3_mpi.c src/sc3_array.c src/sc3_log.c \
         src/sc3_trace.c
 libsc_original_headers = \
-        src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h \
-        src/sc_builtin/obstack.h
+        src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h
 
 # this variable is used for headers that are not publicly installed
 LIBSC_CPPFLAGS =
