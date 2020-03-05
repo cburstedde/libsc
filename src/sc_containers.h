@@ -38,14 +38,7 @@
  * \ingroup sc
  */
 
-/** We are using sc_mstamp_t instead of GNU obstack in sc_mempool_t. */
-#define SC_MEMPOOL_MSTAMP
-
-#ifndef SC_MEMPOOL_MSTAMP
-#include <sc_obstack.h>
-#else
 #include <sc.h>
-#endif
 
 SC_EXTERN_C_BEGIN;
 
@@ -682,11 +675,7 @@ typedef struct sc_mempool
   int                 zero_and_persist; /**< Boolean; is set in constructor. */
 
   /* implementation variables */
-#ifdef SC_MEMPOOL_MSTAMP
-  sc_mstamp_t         mstamp;   /**< our own obstack replacement */
-#else
-  struct obstack      obstack;  /**< holds the allocated elements */
-#endif
+  sc_mstamp_t         mstamp;   /**< fixed-size chunk allocator */
   sc_array_t          freed;    /**< buffers the freed elements */
 }
 sc_mempool_t;
@@ -753,11 +742,7 @@ sc_mempool_alloc (sc_mempool_t * mempool)
     ret = *(void **) sc_array_pop (freed);
   }
   else {
-#ifdef SC_MEMPOOL_MSTAMP
     ret = sc_mstamp_alloc (&mempool->mstamp);
-#else
-    ret = obstack_alloc (&mempool->obstack, (int) mempool->elem_size);
-#endif
     if (mempool->zero_and_persist) {
       memset (ret, 0, mempool->elem_size);
     }

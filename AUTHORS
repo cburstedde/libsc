@@ -78,8 +78,8 @@
   Copyright (C) 1998  Michael H. Buselli <cosine@cosine.org>
   Copyright (C) 2000-2002  Wessel Dankers <wsl@nl.linux.org>.
 
-  The files sc_obstack.c and sc_getopt*.c are derived from the GNU C
-  library 2.7, Copyright (C) Free Software Foundation, Inc.
+  The files sc_getopt*.c are derived from the GNU C library 2.7,
+  Copyright (C) Free Software Foundation, Inc.
 
   The source files under libb64 are derived from libb64.  libb64 is public
   domain software, see the LICENSE and AUTHORS files in that directory.
