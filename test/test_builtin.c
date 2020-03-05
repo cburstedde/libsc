@@ -30,9 +30,6 @@
 #ifdef SC_HAVE_ZLIB
 #include <zlib.h>
 #endif
-#ifdef SC_HAVE_LUA
-#include <sc_lua.h>
-#endif
 
 static int
 test_getopt (int argc, char **argv)
@@ -104,20 +101,6 @@ test_zlib (void)
 
 #endif /* SC_HAVE_ZLIB */
 
-#ifdef SC_HAVE_LUA
-
-static int
-test_lua (void)
-{
-  lua_State          *L = luaL_newstate ();
-
-  lua_close (L);
-
-  return 0;
-}
-
-#endif /* SC_HAVE_LUA */
-
 int
 main (int argc, char **argv)
 {
@@ -128,9 +111,6 @@ main (int argc, char **argv)
   num_errors += test_getopt (argc, argv);
 #ifdef SC_HAVE_ZLIB
   num_errors += test_zlib ();
-#endif
-#ifdef SC_HAVE_LUA
-  num_errors += test_lua ();
 #endif
 
   sc_finalize ();
