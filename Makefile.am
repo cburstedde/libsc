@@ -61,15 +61,15 @@ include src/Makefile.am
 include iniparser/Makefile.am
 include libb64/Makefile.am
 include test/Makefile.am
-include example/bspline/Makefile.am
+## include example/bspline/Makefile.am
 ## include example/cuda/Makefile.am
-include example/dmatrix/Makefile.am
+## include example/dmatrix/Makefile.am
 include example/function/Makefile.am
 include example/logging/Makefile.am
 include example/options/Makefile.am
 include example/pthread/Makefile.am
 include example/openmp/Makefile.am
-include example/warp/Makefile.am
+## include example/warp/Makefile.am
 include example/testing/Makefile.am
 
 ## This was only used for our lint code, which needs to be replaced.
