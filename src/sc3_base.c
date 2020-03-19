@@ -28,9 +28,39 @@
 */
 
 #include <sc3_base.h>
+#include <stdarg.h>
 #ifdef SC_HAVE_LIBGEN_H
 #include <libgen.h>
 #endif
+
+void
+sc3_strcopy (char *dest, size_t size, const char *src)
+{
+  sc3_snprintf (dest, size, "%s", src);
+}
+
+void
+sc3_snprintf (char *str, size_t size, const char *fmt, ...)
+{
+  int                 retval;
+  va_list             ap;
+
+  /* If there is no space, we do not access the buffer at all.
+     Further down we expect it to be at least 1 byte wide */
+  if (str == NULL || size == 0) {
+    return;
+  }
+
+  /* Writing this function just to catch the return value.
+     Avoiding -Wnoformat-truncation gcc option this way */
+  va_start (ap, fmt);
+  retval = vsnprintf (str, size, fmt, ap);
+  if (retval < 0) {
+    str[0] = '\0';
+  }
+  /* We do not handle truncation, since it is expected in our design. */
+  va_end (ap);
+}
 
 int
 sc3_highbit (int a, int bits)

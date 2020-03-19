@@ -79,19 +79,19 @@ extern              "C"
 #define SC3E_DEMAND(x,s) do {                                           \
   if (!(x)) {                                                           \
     char _errmsg[SC3_BUFSIZE];                                          \
-    snprintf (_errmsg, SC3_BUFSIZE, "%s: %s", #x, (s));                 \
+    sc3_snprintf (_errmsg, SC3_BUFSIZE, "%s: %s", #x, (s));             \
     return sc3_error_new_fatal (__FILE__, __LINE__, _errmsg);           \
   }} while (0)
 #define SC3E_DEMIS(f,o) do {                                            \
   char _r[SC3_BUFSIZE];                                                 \
   if (!(f ((o), _r))) {                                                 \
     char _errmsg[SC3_BUFSIZE];                                          \
-    snprintf (_errmsg, SC3_BUFSIZE, "%s(%s): %s", #f, #o, _r);          \
+    sc3_snprintf (_errmsg, SC3_BUFSIZE, "%s(%s): %s", #f, #o, _r);      \
     return sc3_error_new_fatal (__FILE__, __LINE__, _errmsg);           \
   }} while (0)
 #define SC3E_UNREACH(s) do {                                            \
   char _errmsg[SC3_BUFSIZE];                                            \
-  snprintf (_errmsg, SC3_BUFSIZE, "Unreachable: %s", (s));              \
+  sc3_snprintf (_errmsg, SC3_BUFSIZE, "Unreachable: %s", (s));          \
   return sc3_error_new_fatal (__FILE__, __LINE__, _errmsg);             \
   } while (0)
 #define SC3E_RETVAL(r,v) do {                                           \
@@ -145,7 +145,7 @@ extern              "C"
     if (!(f ((o), NULL))) { return 0; }} else {                         \
     char _r[SC3_BUFSIZE];                                               \
     if (!(f ((o), _r))) {                                               \
-      snprintf ((r), SC3_BUFSIZE, "%s(%s): %s", #f, #o, _r);            \
+      sc3_snprintf ((r), SC3_BUFSIZE, "%s(%s): %s", #f, #o, _r);        \
       return 0; }}} while (0)
 #define SC3E_TERR(f,r) do {                                             \
   sc3_error_t * _e = (f);                                               \
@@ -268,7 +268,7 @@ void                sc3_error_set_sync (sc3_error_t * e,
                                         sc3_error_sync_t syn);
 sc3_error_t        *sc3_error_set_msgf (sc3_error_t * e,
                                         const char *errfmt, ...)
-  __attribute__ ((format (printf, 2, 3)));
+  __attribute__((format (printf, 2, 3)));
 #endif
 
 /** Setup an error and put it into its usable phase.
