@@ -13,6 +13,7 @@
 /*---------------------------------------------------------------------------
                                 Includes
  ---------------------------------------------------------------------------*/
+#include <sc3_base.h>
 #include "dictionary.h"
 
 #include <stdio.h>
@@ -60,12 +61,14 @@ static void * mem_double(void * ptr, int size)
 /*--------------------------------------------------------------------------*/
 static char * xstrdup(const char * s)
 {
+    int lenp1 ;
     char * t ;
     if (!s)
         return NULL ;
-    t = (char*)malloc(strlen(s)+1) ;
+    lenp1 = strlen(s) + 1 ;
+    t = (char*)malloc(lenp1) ;
     if (t) {
-        strcpy(t,s);
+        sc3_strcopy(t,lenp1,s);
     }
     return t ;
 }
@@ -371,12 +374,12 @@ int main(int argc, char *argv[])
     /* Set values in dictionary */
     printf("setting %d values...\n", NVALS);
     for (i=0 ; i<NVALS ; i++) {
-        sprintf(cval, "%04d", i);
+        sc3_snprintf (cval, 90, "%04d", i);
         dictionary_set(d, cval, "salut");
     }
     printf("getting %d values...\n", NVALS);
     for (i=0 ; i<NVALS ; i++) {
-        sprintf(cval, "%04d", i);
+        sc3_snprintf (cval, 90, "%04d", i);
         val = dictionary_get(d, cval, DICT_INVALID_KEY);
         if (val==DICT_INVALID_KEY) {
             printf("cannot get value for key [%s]\n", cval);
@@ -384,7 +387,7 @@ int main(int argc, char *argv[])
     }
     printf("unsetting %d values...\n", NVALS);
     for (i=0 ; i<NVALS ; i++) {
-        sprintf(cval, "%04d", i);
+        sc3_snprintf (cval, 90, "%04d", i);
         dictionary_unset(d, cval);
     }
     if (d->n != 0) {

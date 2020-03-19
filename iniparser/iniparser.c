@@ -8,6 +8,7 @@
 /*--------------------------------------------------------------------------*/
 /*---------------------------- Includes ------------------------------------*/
 #include <ctype.h>
+#include <sc3_base.h>
 #include "iniparser.h"
 
 /*---------------------------- Defines -------------------------------------*/
@@ -80,7 +81,7 @@ static char * strstrip(const char * s)
     
     while (isspace((int)*s) && *s) s++;
     memset(l, 0, ASCIILINESZ+1);
-    strcpy(l, s);
+    sc3_strcopy (l, ASCIILINESZ + 1, s);
     last = l + strlen(l);
     while (last > l) {
         if (!isspace((int)*(last-1)))
@@ -252,7 +253,7 @@ void iniparser_dumpsection_ini(dictionary * d, char * s, FILE * f)
 
     seclen  = (int)strlen(s);
     fprintf(f, "\n[%s]\n", s);
-    sprintf(keym, "%s:", s);
+    sc3_snprintf (keym, ASCIILINESZ + 1, "%s:", s);
     for (j=0 ; j<d->size ; j++) {
         if (d->key[j]==NULL)
             continue ;
@@ -287,7 +288,7 @@ int iniparser_getsecnkeys(dictionary * d, char * s)
     if (! iniparser_find_entry(d, s)) return nkeys;
 
     seclen  = (int)strlen(s);
-    sprintf(keym, "%s:", s);
+    sc3_snprintf (keym, ASCIILINESZ + 1, "%s:", s);
 
     for (j=0 ; j<d->size ; j++) {
         if (d->key[j]==NULL)
@@ -333,7 +334,7 @@ char ** iniparser_getseckeys(dictionary * d, char * s)
     keys = (char**) malloc(nkeys*sizeof(char*));
 
     seclen  = (int)strlen(s);
-    sprintf(keym, "%s:", s);
+    sc3_snprintf (keym, ASCIILINESZ + 1, "%s:", s);
     
     i = 0;
 
@@ -546,9 +547,12 @@ void iniparser_unset(dictionary * ini, const char * entry)
 /**
   @brief    Load a single line from an INI file
   @param    input_line  Input line, may be concatenated multi-line input
-  @param    section     Output space to store section
-  @param    key         Output space to store key
-  @param    value       Output space to store value
+  @param    section     Output space to store section.
+                        Required to have size >= ASCIILINES + 1
+  @param    key         Output space to store key.
+                        Required to have size >= ASCIILINES + 1
+  @param    value       Output space to store value.
+                        Required to have size >= ASCIILINES + 1
   @return   line_status value
  */
 /*--------------------------------------------------------------------------*/
@@ -562,7 +566,7 @@ static line_status iniparser_line(
     char        line[ASCIILINESZ+1];
     int         len ;
 
-    strcpy(line, strstrip(input_line));
+    sc3_strcopy (line, ASCIILINESZ + 1, strstrip(input_line));
     len = (int)strlen(line);
 
     sta = LINE_UNPROCESSED ;
@@ -575,16 +579,16 @@ static line_status iniparser_line(
     } else if (line[0]=='[' && line[len-1]==']') {
         /* Section name */
         sscanf(line, "[%[^]]", section);
-        strcpy(section, strstrip(section));
-        strcpy(section, strlwc(section));
+        sc3_strcopy (section, ASCIILINESZ + 1, strstrip(section));
+        sc3_strcopy (section, ASCIILINESZ + 1, strlwc(section));
         sta = LINE_SECTION ;
     } else if (sscanf (line, "%[^=] = \"%[^\"]\"", key, value) == 2
            ||  sscanf (line, "%[^=] = '%[^\']'",   key, value) == 2
            ||  sscanf (line, "%[^=] = %[^;#]",     key, value) == 2) {
         /* Usual key=value, with or without comments */
-        strcpy(key, strstrip(key));
-        strcpy(key, strlwc(key));
-        strcpy(value, strstrip(value));
+        sc3_strcopy (key, ASCIILINESZ + 1, strstrip(key));
+        sc3_strcopy (key, ASCIILINESZ + 1, strlwc(key));
+        sc3_strcopy (value, ASCIILINESZ + 1, strstrip(value));
         /*
          * sscanf cannot handle '' or "" as empty values
          * this is done here
@@ -601,8 +605,8 @@ static line_status iniparser_line(
          * key=;
          * key=#
          */
-        strcpy(key, strstrip(key));
-        strcpy(key, strlwc(key));
+        sc3_strcopy (key, ASCIILINESZ + 1, strstrip(key));
+        sc3_strcopy (key, ASCIILINESZ + 1, strlwc(key));
         value[0]=0 ;
         sta = LINE_VALUE ;
     } else {
@@ -699,7 +703,7 @@ dictionary * iniparser_load(const char * ininame)
             break ;
 
             case LINE_VALUE:
-            sprintf(tmp, "%s:%s", section, key);
+            sc3_snprintf (tmp, ASCIILINESZ + 1, "%s:%s", section, key);
             errs = dictionary_set(dict, tmp, val) ;
             break ;
 
