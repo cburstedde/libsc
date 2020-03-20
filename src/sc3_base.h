@@ -111,26 +111,48 @@
 #include <stdlib.h>
 #include <string.h>
 
+/** This macro is usable as a no-operation statement. */
 #define SC3_NOOP do { ; } while (0)
 
+/** The number of bits in an int variable on this architecture. */
 #define SC3_INT_BITS (8 * SC_SIZEOF_INT)
+
+/** The highest power of two representable in an int variable. */
 #define SC3_INT_HPOW (1 << (SC3_INT_BITS - 2))
 
+/** Standard buffer size for string handling in the library. */
 #define SC3_BUFSIZE 512
+
+/** Set a buffer of standard size to all zeros. */
 #define SC3_BUFZERO(b) do { memset (b, 0, SC3_BUFSIZE); } while (0)
+
+/** Cope a null-terminated string into a buffer of standard size.*/
 #define SC3_BUFCOPY(b,s) \
           do { snprintf (b, SC3_BUFSIZE, "%s", s); } while (0)
 
+/** Type-safe wrapper of the stdlib malloc function. */
 #define SC3_MALLOC(typ,nmemb) ((typ *) malloc ((nmemb) * sizeof (typ)))
+
+/** Type-safe wrapper of the stdlib calloc function. */
 #define SC3_CALLOC(typ,nmemb) ((typ *) calloc (nmemb, sizeof (typ)))
-#define SC3_FREE(p) do { free (p); } while (0)
+
+/** Wrap the stdlib free function for consistency. */
+#define SC3_FREE(p) (free (p))
+
+/** Type-safe wrapper of the stdlib realloc function. */
 #define SC3_REALLOC(p,typ,nmemb) ((typ *) realloc (p, (nmemb) * sizeof (typ)))
 
+/** Return whether a non-negative integer is a power of two. */
 #define SC3_ISPOWOF2(a) ((a) > 0 && ((a) & ((a) - 1)) == 0)
 
+/** Return the minimum of two values. */
 #define SC3_MIN(in1,in2) ((in1) <= (in2) ? (in1) : (in2))
+
+/** Return the maximum of two values. */
 #define SC3_MAX(in1,in2) ((in1) >= (in2) ? (in1) : (in2))
 
+/** Turn a size_t variable into an integer,
+    unless it is too large and we return -1. */
 #define SC3_SIZET_INT(s) ((s) <= INT_MAX ? (int) s : -1)
 
 #ifdef __cplusplus
@@ -141,24 +163,63 @@ extern              "C"
 #endif
 #endif
 
+/** Provide a string copy function.
+ * \param [out] dest    Buffer of length at least \a size.
+ *                      On output, not touched if NULL or \a size == 0.
+ * \param [in] size     Allocation length of \a dest.
+ * \param [in] src      Null-terminated string.
+ * \return              Equivalent to \ref
+ *                      sc3_snprintf (dest, size, "%s", src).
+ */
 void                sc3_strcopy (char *dest, size_t size, const char *src);
 
+/** Wrap the system snprintf function, allowing for truncation.
+ * The snprintf function may truncate the string written to the specified length.
+ * In some cases, compilers warn when this may occur.
+ * For the usage in sc3, this is permitted behavior and we avoid the warning.
+ * \param [out] str     Buffer of length at least \a size.
+ *                      On output, not touched if NULL or \a size == 0.
+ *                      Otherwise, "" on snprintf error or the proper result.
+ * \param [in] size     Allocation length of \a str.
+ * \param [in] format   Format string as in man (3) snprintf.
+ */
 void                sc3_snprintf (char *str, size_t size,
                                   const char *format, ...)
   __attribute__ ((format (printf, 3, 4)));
 
 /** Determine the highest bit position of a positive integer.
- * \param [in] a, bits  The lowest *bits* bits of *a* are examined.
+ * \param [in] a, bits  The lowest *bits* bits of \a a are examined.
  *                      Higher bits are silently assumed to be zero.
- *                      *a* and *bits* must be positive.
+ *                      \a a and \a bits are assumed positive.
  * \return              We return the zero-based position from the right
- *                      of the highest 1-bit of *a*,
- *                      or -1 if *a* or *bits* non-negative.
+ *                      of the highest 1-bit of \a a,
+ *                      or -1 if \a a or \a bits are zero or negative.
  */
 int                 sc3_highbit (int a, int bits);
+
+/** Return the base-2 logarithm of an integer rounded up.
+ * \param [in] a, bits  The lowest *bits* bits of \a a are examined.
+ *                      Higher bits are silently assumed to be zero.
+ *                      \a a and \a bits are assumed positive.
+ * \return              The rounded-up binary logarithm of
+ *                      the first \a bits of the argument \a a.
+ */
 int                 sc3_log2_ceil (int a, int bits);
 
+/** Fast algorithm to compute integer exponentials.
+ * Compute \a base to the power of \a exp.
+ * \param [in] base     This number can be arbitrary.
+ * \param [in] exp      If negative, the function returns 0.
+ * \return \a base ** \a exp except 0 when the exponent is -1.
+ */
 int                 sc3_intpow (int base, int exp);
+
+/** Fast algorithm to compute integer exponentials.
+ * Compute \a base to the power of \a exp.
+ * \param [in] base     This number can be arbitrary.
+ * \param [in] exp      If negative, the function returns 0.
+ * \return \a base ** \a exp except 0 when the exponent is -1.
+ */
 long                sc3_longpow (long base, int exp);
 
 /** Compute a cumulative partition cut by floor (Np / P).
