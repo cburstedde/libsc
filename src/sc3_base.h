@@ -145,7 +145,7 @@ void                sc3_strcopy (char *dest, size_t size, const char *src);
 
 void                sc3_snprintf (char *str, size_t size,
                                   const char *format, ...)
-  __attribute__((format (printf, 3, 4)));
+  __attribute__ ((format (printf, 3, 4)));
 
 /** Determine the highest bit position of a positive integer.
  * \param [in] a, bits  The lowest *bits* bits of *a* are examined.
@@ -183,6 +183,15 @@ int                 sc3_intcut (int N, int P, int p);
  */
 long                sc3_longcut (long N, int P, int p);
 
+/** Extract the basename of a path.
+ * This function uses the system's `basename` function if available
+ * and falls back to returning the input string otherwise.
+ * \param [in,out] path   If this is NULL, the function returns ".".
+ *                        Otherwise, it must be a null-terminated string
+ *                        that may be modified by this function.
+ * \return                Pointer to statically allocated memory,
+ *                        overwritten by subsequent calls.
+ */
 char               *sc3_basename (char *path);
 
 #ifdef __cplusplus

@@ -150,8 +150,9 @@ sc3_longcut (long N, int P, int p)
 char               *
 sc3_basename (char *path)
 {
+  static char         dotstring[] = ".";
 #ifndef SC_HAVE_BASENAME
-  return path;
+  return path == NULL ? dotstring : path;
 #else
   return basename (path);
 #endif
