@@ -28,7 +28,7 @@
 */
 
 #include <sc3_alloc_internal.h>
-#include <sc3_refcount_internal.h>
+#include <sc3_refcount.h>
 
 struct sc3_allocator
 {

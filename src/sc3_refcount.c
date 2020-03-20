@@ -27,7 +27,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <sc3_refcount_internal.h>
+#include <sc3_refcount.h>
 
 int
 sc3_refcount_is_valid (const sc3_refcount_t * r, char *reason)

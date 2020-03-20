@@ -47,11 +47,9 @@
  * We removed the global initialization and finalize functions.
  * There is no more global state to the library.
  *
- * We use a minimal reference counting mechanism declared in
- * \ref sc3_refcount.h and \ref sc3_refcount_internal.h.
- * (Internal header files are not part of the public API but allow access to
- * lower levels of the code.)  While the \ref sc3_refcount_t object is public,
- * most objects in sc3 are opaque and manipulated by API functions only.
+ * We use a minimal reference counting mechanism declared in \ref
+ * sc3_refcount.h.  While the \ref sc3_refcount_t object is public, most
+ * objects in sc3 are opaque and manipulated by API functions only.
  *
  * Allocators are declared in \ref sc3_alloc.h, and errors in \ref sc3_error.h.
  * These two files depend on each other and, combined with the reference
@@ -107,6 +105,7 @@
 #include <sc3_config.h>
 
 #include <limits.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -185,7 +184,7 @@ void                sc3_strcopy (char *dest, size_t size, const char *src);
  */
 void                sc3_snprintf (char *str, size_t size,
                                   const char *format, ...)
-  __attribute__ ((format (printf, 3, 4)));
+  __attribute__((format (printf, 3, 4)));
 
 /** Determine the highest bit position of a positive integer.
  * \param [in] a, bits  The lowest *bits* bits of \a a are examined.

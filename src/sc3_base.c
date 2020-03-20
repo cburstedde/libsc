@@ -28,7 +28,6 @@
 */
 
 #include <sc3_base.h>
-#include <stdarg.h>
 #ifdef SC_HAVE_LIBGEN_H
 #include <libgen.h>
 #endif
@@ -150,8 +149,8 @@ sc3_longcut (long N, int P, int p)
 char               *
 sc3_basename (char *path)
 {
-  static char         dotstring[] = ".";
 #ifndef SC_HAVE_BASENAME
+  static char         dotstring[] = ".";
   return path == NULL ? dotstring : path;
 #else
   return basename (path);

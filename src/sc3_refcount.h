@@ -27,7 +27,22 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-/** \file sc3_refcount.h
+/** \file sc3_refcount.h \ingroup sc3
+ * We implement a minimal reference counting mechanism.
+ *
+ * The reference counter is a public struct with an \a rc member variable.
+ * Its value begins at 1 and may be arbitrarily incremented.
+ * It may also be decremented.
+ * When it reaches 0, the object that contains the reference counter is
+ * considered expired.
+ * Values below zero cannot occur within this convention.
+ *
+ * The reference counter functions return an \ref sc3_error_t object.
+ * This is NULL if the function executed successfully.
+ * The functions may return a non-NULL object if an assertion fails,
+ * such as passing a NULL reference counter argument to \ref sc3_refcount_init
+ * or an invalid object pointer or NULL \a waslast parameter to \ref
+ * sc3_refcount_unref.
  */
 
 #ifndef SC3_REFCOUNT_H
@@ -35,6 +50,7 @@
 
 #include <sc3_error.h>
 
+/** Arbitrarily chosen number to catch uninitialized objects. */
 #define SC3_REFCOUNT_MAGIC 0x6CA9EFC08917AF1C
 
 #ifdef __cplusplus
@@ -45,12 +61,44 @@ extern              "C"
 #endif
 #endif
 
+/** The reference counter is a public struct.
+ * We count references from 1 upwards.
+ * If a counter is decremented to zero, the object's life is over.
+ */
 typedef struct sc3_refcount
 {
+  /** This structure is only valid if the value is \ref SC3_REFCOUNT_MAGIC. */
   long                magic;
+
+  /** The reference count is 1 or higher for a valid object. */
   long                rc;
 }
 sc3_refcount_t;
+
+/** Query a reference counter for validity.
+ * \param [in] r        NULL or existing reference counter.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff pointer not NULL and refcounter valid.
+ */
+int                 sc3_refcount_is_valid (const sc3_refcount_t * r,
+                                           char *reason);
+
+/** Query a reference counter for validity and holding exactly one reference.
+ * \param [in] r        NULL or existing reference counter.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff pointer not NULL and refcounter valid
+ *                      with exactly one reference.
+ */
+int                 sc3_refcount_is_last (const sc3_refcount_t * r,
+                                          char *reason);
+
+/** Initialize reference counter to be invalid (thus unusable).
+ * \param [out] r       Existing reference counter memory.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_refcount_init_invalid (sc3_refcount_t * r);
 
 /** Initialize reference counter to be valid and have a count of one.
  * \param [out] r       Existing reference counter memory.
@@ -65,10 +113,11 @@ sc3_error_t        *sc3_refcount_init (sc3_refcount_t * r);
 sc3_error_t        *sc3_refcount_ref (sc3_refcount_t * r);
 
 /** Decrease the reference count of a valid counter by one.
- * If the count drops to zero, the counter is invalidated.
- * Such is also considered success of the function.
+ * If the count drops to zero, the counter is invalidated,
+ * which is also considered a success of the function.
  * \param [in,out] r    Valid reference counter.
- * \param [out] waslast Must not be NULL.  True iff the count drops to zero.
+ * \param [out] waslast Must not be NULL.  Becomes 0 on error.
+ *                      Otherwise true iff the count drops to zero.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_refcount_unref (sc3_refcount_t * r, int *waslast);

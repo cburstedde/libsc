@@ -35,6 +35,7 @@
 
 #include <sc3_base.h>
 
+/** The sc3 error object is an opaque structure. */
 typedef struct sc3_error sc3_error_t;
 
 #include <sc3_alloc.h>

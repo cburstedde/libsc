@@ -28,7 +28,7 @@
 */
 
 #include <sc3_array.h>
-#include <sc3_refcount_internal.h>
+#include <sc3_refcount.h>
 
 struct sc3_array
 {
@@ -378,7 +378,7 @@ sc3_array_index_noerr (const sc3_array_t * a, int i)
 }
 
 sc3_error_t        *
-sc3_array_get_elem_size (sc3_array_t * a, size_t * esize)
+sc3_array_get_elem_size (sc3_array_t * a, size_t *esize)
 {
   SC3E_RETOPT (esize, 0);
   SC3A_IS (sc3_array_is_setup, a);

@@ -30,8 +30,7 @@
 #include <sc3_array.h>
 #include <sc3_log.h>
 #include <sc3_omp.h>
-#include <sc3_refcount_internal.h>
-#include <stdarg.h>
+#include <sc3_refcount.h>
 
 struct sc3_log
 {
