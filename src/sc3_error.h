@@ -27,7 +27,26 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-/** \file sc3_error.h
+/** \file sc3_error.h \ingroup sc3
+ * The error object is fundamental to the design of the library.
+ *
+ * It may be used to indicate both fatal and non-fatal errors.
+ * The fatal sort arises when out of memory, encountering unreachable code, on
+ * assertion failures and memory and counter leaks.
+ * We also consider MPI errors fatal.
+ * Non-fatal errors are imaginable when accessing files on disk or parsing
+ * input.
+ *
+ * Assertion are checked if and only if the library is configured
+ * --enable-debug, otherwise they do nothing.
+ *
+ * A function that returns a pointer to \ref sc3_error_t must return NULL if
+ * the function executes without error.
+ * If the function encountered an error, it must return an error object.
+ * If this error is fatal, we may presume that the function returned
+ * prematurely, possibly leaving dangling resources or references.
+ * Even worse, communication channels may be left open and cause blocking.
+ * It is the application's responsibility to take this into account.
  */
 
 #ifndef SC3_ERROR_H
@@ -50,8 +69,12 @@ extern              "C"
 
 /*** DEBUG macros do nothing unless configured with --enable-debug. ***/
 #ifndef SC_ENABLE_DEBUG
+/** Assertion macro to require a true sc3_object_is_* return value.
+ * The argument \a f is such a function and \a o the object to query. */
 #define SC3A_IS(f,o) SC3_NOOP
+/** Assertion macro requires some condition \a x to be true. */
 #define SC3A_CHECK(x) SC3_NOOP
+
 #define SC3A_STACK(f) SC3_NOOP
 #define SC3A_ONULL(r) SC3_NOOP
 #else
@@ -95,10 +118,13 @@ extern              "C"
   sc3_snprintf (_errmsg, SC3_BUFSIZE, "Unreachable: %s", (s));          \
   return sc3_error_new_fatal (__FILE__, __LINE__, _errmsg);             \
   } while (0)
+
+/** Assert a pointer parameter not to be NULL and initialize its value. */
 #define SC3E_RETVAL(r,v) do {                                           \
   SC3A_CHECK ((r) != NULL);                                             \
   *(r) = (v);                                                           \
   } while (0)
+
 #define SC3E_RETOPT(r,v) do {                                           \
   if ((r) != NULL) *(r) = (v);                                          \
   } while (0)
@@ -135,12 +161,23 @@ extern              "C"
   if ((e) != NULL) { break; }} while (0)
 
 /*** TEST macros.  Always executed. */
+/** Set the reason output parameter \a r inside an sc3_object_is_* function to
+ * "".  This is done to confirm that the test returned true.
+ * \a r may be NULL in which case it is not updated. */
 #define SC3E_YES(r) do {                                                \
   if ((r) != NULL) { (r)[0] = '\0'; } return 1; } while (0)
+/** Query a condition to be true, in which case the macro does nothing.
+ * If the condition is false, the put the reason into \a r, a pointer
+ * to a string of size \ref SC3_BUFSIZE, and return 0. */
 #define SC3E_TEST(x,r)                                                  \
   do { if (!(x)) {                                                      \
     if ((r) != NULL) { SC3_BUFCOPY ((r), #x); }                         \
     return 0; }} while (0)
+/** Query an sc3_object_is_* function.
+ * The argument \a f shall be such a function and \a o an object to query.
+ * If the test returns false, the function puts the reason into \a r,
+ * a pointer to a string of size \ref SC3_BUFSIZE, and returns 0.
+ * Otherwise the function does nothing.  \a r may be NULL. */
 #define SC3E_IS(f,o,r)                                                  \
   do { if ((r) == NULL) {                                               \
     if (!(f ((o), NULL))) { return 0; }} else {                         \

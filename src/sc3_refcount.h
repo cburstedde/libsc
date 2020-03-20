@@ -43,6 +43,9 @@
  * such as passing a NULL reference counter argument to \ref sc3_refcount_init
  * or an invalid object pointer or NULL \a waslast parameter to \ref
  * sc3_refcount_unref.
+ *
+ * We do not lock the \ref sc3_refcount_t struct.
+ * It is the application's responsibility to ensure thread safety.
  */
 
 #ifndef SC3_REFCOUNT_H

@@ -49,7 +49,7 @@
  *
  * We use a minimal reference counting mechanism declared in \ref
  * sc3_refcount.h.  While the \ref sc3_refcount_t object is public, most
- * objects in sc3 are opaque and manipulated by API functions only.
+ * objects in \ref sc3 are opaque and manipulated by API functions only.
  *
  * Allocators are declared in \ref sc3_alloc.h, and errors in \ref sc3_error.h.
  * These two files depend on each other and, combined with the reference
