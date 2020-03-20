@@ -112,8 +112,8 @@ clean-local:
 maintainer-clean-local:
 	rm -rf doxygen
 
-doxygen: Doxyfile
-	doxygen
+doxygen: doc/Doxyfile
+	cd doc && doxygen Doxyfile
 
 .PHONY: doxygen
 
