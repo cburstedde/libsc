@@ -37,7 +37,8 @@
  * considered expired.
  * Values below zero cannot occur within this convention.
  *
- * The reference counter functions return an \ref sc3_error_t object.
+ * Except for the query functions, the reference counter functions return an
+ * \ref sc3_error_t object.
  * This is NULL if the function executed successfully.
  * The functions may return a non-NULL object if an assertion fails,
  * such as passing a NULL reference counter argument to \ref sc3_refcount_init

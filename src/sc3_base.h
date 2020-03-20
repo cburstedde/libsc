@@ -77,15 +77,17 @@
  *   resized after setup, but the size of each element may not be changed.
  * - When removing an object's last reference with `sc3_object_unref`, it is
  *   deallocated together with all its internal resources.
+ *   When calling unref, do not assume anything about the input reference
+ *   count since other references may have been created and passed around.
  *   The `sc3_object_destroy` functions must only be called if the program
- *   ensures that at this point the reference count is 1.
- * - The `sc3_object_is_*` functions may be called on any pointer to this
- *   object type including `NULL`.
- *   They query properties of the object that are false if the pointer is
- *   `NULL`.
+ *   can guarantee that at this point the reference count is 1.
+ * - The `sc3_object_is_*` functions implement queries that may be called for
+ *   any pointer to this object type, including `NULL`, at any stage.
+ *   They query properties of the object and always return false if the pointer
+ *   is `NULL`.
  *   One convention is to provide for `sc3_object_is_new`,
- *   `sc3_object_is_setup` and `sc3_object_is_valid`.
- *   The first two refer to the mutually exclusive phases of its life,
+ *   `sc3_object_is_setup` and `sc3_object_is_valid`, plus more as needed.
+ *   The first two refer to the mutually exclusive phases of its lifetime,
  *   while the third may be used anytime to verify internal consistency.
  */
 
