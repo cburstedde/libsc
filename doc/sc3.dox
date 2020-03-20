@@ -36,32 +36,32 @@
  * that use p4est.
  * Some of the more important features are the following:
  *
- *  * The build system is based on the GNU autotools.  Several macro files
- *    reside in the config/ subdirectory.  These are used in sc but also
- *    available to other projects for convenience.  It is possible to nest
- *    packages this way.
- *  * The library provides MPI wrappers in case it is configured without
- *    MPI.  They implement initialize/finalize and collective calls as
- *    noops, which means that these do not have to be protected with the
- *    \c "#ifdef SC_ENABLE_MPI" construct in the code.
- *  * The library provides a logging framework that can be adapted by other
- *    packages.  Multiple log levels are available, as well as options to
- *    output on just one or all MPI processes.
- *  * The library provides a set of data containers, such as dynamically
- *    resizable arrays.
+ * - The build system is based on the GNU autotools.  Several macro files
+ *   reside in the config/ subdirectory.  These are used in sc but also
+ *   available to other projects for convenience.  It is possible to nest
+ *   packages this way.
+ * - The library provides MPI wrappers in case it is configured without
+ *   MPI.  They implement initialize/finalize and collective calls as
+ *   noops, which means that these do not have to be protected with the
+ *   \c "#ifdef SC_ENABLE_MPI" construct in the code.
+ * - The library provides a logging framework that can be adapted by other
+ *   packages.  Multiple log levels are available, as well as options to
+ *   output on just one or all MPI processes.
+ * - The library provides a set of data containers, such as dynamically
+ *   resizable arrays.
  *
  * To build the sc library from a tar distribution, use the standard
  * procedure of the GNU autotools.  The configure script takes the following
  * options:
  *
- * * `--enable-debug` lowers the default log level for increased verbosity and
+ * - `--enable-debug` lowers the default log level for increased verbosity and
  *                    activates assertions for consistency checks.
- * * `--enable-mpi`   pulls in the `mpi.h` include file and activates the MPI
+ * - `--enable-mpi`   pulls in the `mpi.h` include file and activates the MPI
  *                    compiler wrappers.  If this option is not given, wrappers
  *                    for MPI routines are used instead and the code is compiled
  *                    in serial only.
- * * `--disable-mpiio`  may be used to avoid using `MPI_File` based calls.
- * * `--disable-shared` forces static-only builds, for example to run
+ * - `--disable-mpiio`  may be used to avoid using `MPI_File` based calls.
+ * - `--disable-shared` forces static-only builds, for example to run
  *                    [Valgrind](http://www.valgrind.org).
  *
  * A typical development configure line looks as follows:

@@ -88,11 +88,17 @@
  *   One convention is to provide for `sc3_object_is_new`,
  *   `sc3_object_is_setup` and `sc3_object_is_valid`.
  *   The first two refer to the mutually exclusive phases of its life,
- *   while the third may be used any time to verify internal consistency.
+ *   while the third may be used anytime to verify internal consistency.
  */
 
-/** \file sc3_base.h
- * \ingroup sc3
+/** \file sc3_base.h \ingroup sc3
+ * This file includes configuration definitions and
+ * provides some generic helper functions.
+ *
+ * It is included by all other sc3 header files, thus usually not needed
+ * to be explicitly included.
+ * When starting new and independent functionality however, include this file
+ * first.
  */
 
 #ifndef SC3_BASE_H
