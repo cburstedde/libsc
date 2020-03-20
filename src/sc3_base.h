@@ -27,7 +27,11 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+/** \defgroup sc3 sc3
+ */
+
 /** \file sc3_base.h
+ * \ingroup sc3
  */
 
 #ifndef SC3_BASE_H

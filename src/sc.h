@@ -26,7 +26,7 @@
  * Support for process management (memory allocation, logging, etc.)
  */
 
-/** \defgroup sc libsc
+/** \defgroup sc sc2
  *
  * The SC Library provides support for parallel scientific applications.
  */
