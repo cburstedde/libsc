@@ -208,9 +208,22 @@ typedef enum sc3_error_sync
 }
 sc3_error_sync_t;
 
+/** The error handler callback can be invoked on some errors.
+ * It takes ownership of the passed in error \a e.
+ * It may return NULL if the error was handled or an error object
+ * whose ownership is passed to the caller.
+ * Thus, when returning NULL, the input error should be unrefd.
+ * When not returning NULL, the simplest is to return \a e.
+ * Otherwise, \a e must be unrefd and an error with a one up reference
+ * returned.
+ * In other words, one reference goes in and one goes out.
+ */
+typedef sc3_error_t * (*sc3_error_handler_t)
+  (sc3_error_t *e, const char *file, int line, void *user);
+
 /** Check whether an error is not NULL and internally consistent.
  * The error may be valid in both its setup and usage phases.
- * \param [in] a        Any pointer.
+ * \param [in] e        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer is not NULL and error consistent.
@@ -218,8 +231,8 @@ sc3_error_sync_t;
 int                 sc3_error_is_valid (const sc3_error_t * e, char *reason);
 
 /** Check whether an error is not NULL, consistent and not setup.
- * This means that the error is not in its usage phase.
- * \param [in] a        Any pointer.
+ * This means that the error is not (yet) in its usage phase.
+ * \param [in] e        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer not NULL, error consistent, not setup.
@@ -228,7 +241,7 @@ int                 sc3_error_is_new (const sc3_error_t * e, char *reason);
 
 /** Check whether an error is not NULL, internally consistent and setup.
  * This means that the error is in its usage phase.
- * \param [in] a        Any pointer.
+ * \param [in] e        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff pointer not NULL, error consistent and setup.
@@ -236,7 +249,8 @@ int                 sc3_error_is_new (const sc3_error_t * e, char *reason);
 int                 sc3_error_is_setup (const sc3_error_t * e, char *reason);
 
 /** Check an error object to be setup and fatal.
- * \param [in] a        Any pointer.
+ * \deprecated          We may not need this function.
+ * \param [in] e        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return              True if error is not NULL, setup, and has severity
@@ -251,12 +265,13 @@ int                 sc3_error_is_fatal (const sc3_error_t * e, char *reason);
 /** Create a new error object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
  * Setting and modifying parameters is only allowed in the setup phase.
+ * The default settings are documented with the sc3_error_set_* functions.
  * Call \ref sc3_error_setup to change the error into its usage phase.
  * After that, no more parameters may be set.
- * \param [in,out] aator    An allocator that is setup.
+ * \param [in,out] eator    An allocator that is setup.
  *                          The allocator is refd and remembered internally
  *                          and will be unrefd on error destruction.
- * \param [out] eap     Pointer must not be NULL.
+ * \param [out] ep      Pointer must not be NULL.
  *                      If the function returns an error, value set to NULL.
  *                      Otherwise, value set to an error with default values.
  * \return              An error object or NULL without errors.
@@ -265,6 +280,7 @@ sc3_error_t        *sc3_error_new (sc3_allocator_t * eator,
                                    sc3_error_t ** ep);
 
 /** Set the error to be the top of a stack of existing errors.
+ * The default stack is NULL.
  * \param [in,out] e        Error object before \ref sc3_error_setup.
  * \param [in,out] stack    This function takes ownership of stack
  *                          (i.e. does not ref it), the pointer is NULLed.
@@ -277,6 +293,7 @@ sc3_error_t        *sc3_error_set_stack (sc3_error_t * e,
                                          sc3_error_t ** stack);
 
 /** Set the filename and line number of an error.
+ * The default location is ("", 0).
  * \param [in,out] e    Error object before \ref sc3_error_setup.
  * \param [in] filename Null-terminated string.  Pointer must not be NULL.
  * \param [in] line     Line number, non-negative.
@@ -286,14 +303,17 @@ sc3_error_t        *sc3_error_set_location (sc3_error_t * e,
                                             const char *filename, int line);
 
 /** Set the message of an error.
+ * The default message is "".
  * \param [in,out] e    Error object before \ref sc3_error_setup.
- * \param [in] message  Null-terminated string.  Pointer must not be NULL.
+ * \param [in] errmsg   Null-terminated string.  Pointer must not be NULL.
+ *
  * \return              An error object or NULL without errors.
  */
 sc3_error_t        *sc3_error_set_message (sc3_error_t * e,
                                            const char *errmsg);
 
 /** Set the severity of an error.
+ * The default severity is \ref SC3_ERROR_FATAL.
  * \param [in,out] e    Error object before \ref sc3_error_setup.
  * \param [in] sev      Enum value in [0, SC3_ERROR_SEVERITY_LAST).
  * \return              An error object or NULL without errors.
@@ -328,7 +348,7 @@ sc3_error_t        *sc3_error_ref (sc3_error_t * e);
 /** Decrease the reference of an error object by 1.
  * If the count reaches zero the error object is deallocated.
  * Does nothing if error has not been created by \ref sc3_error_new.
- * \param [in,out] e    Pointer must not be NULL and the error valid.
+ * \param [in,out] ep   Pointer must not be NULL and the error valid.
  *                      The refcount is decreased.  If it reaches zero,
  *                      the error is deallocated and the value to NULL.
  * \return              An error object or NULL without errors.
@@ -347,7 +367,7 @@ sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
  * \param [in,out] pe   This error will be destroyed and pointer NULLed.
  *                      If any errors occur in the process, they are ignored.
  *                      One would be that the error has multiple references.
- * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ * \param [out] flatmsg If not NULL, existing string of length SC3_BUFSIZE
  *                      is filled with the error stack messages flattened.
  */
 void                sc3_error_destroy_noerr (sc3_error_t ** pe,
@@ -376,7 +396,7 @@ sc3_error_t        *sc3_error_new_fatal (const char *filename,
  *                      Pointer not NULL, string null-terminated.
  * \return          The new error object; there is no other error handling.
  */
-sc3_error_t        *sc3_error_new_stack (sc3_error_t ** stack,
+sc3_error_t        *sc3_error_new_stack (sc3_error_t ** pstack,
                                          const char *filename,
                                          int line, const char *errmsg);
 
@@ -392,7 +412,7 @@ sc3_error_t        *sc3_error_new_stack (sc3_error_t ** stack,
  *                      Pointer not NULL, string null-terminated.
  * \return          The new error object; there is no other error handling.
  */
-sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** stack,
+sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** pstack,
                                            const char *filename,
                                            int line, const char *errmsg);
 
@@ -442,7 +462,7 @@ sc3_error_t        *sc3_error_get_severity (sc3_error_t * e,
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_get_stack (sc3_error_t * e,
-                                         sc3_error_t ** stack);
+                                         sc3_error_t ** pstack);
 
 #ifdef __cplusplus
 #if 0

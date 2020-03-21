@@ -35,6 +35,7 @@
 
 #include <sc3_base.h>
 
+/** The allocator object is an opaque struct. */
 typedef struct sc3_allocator sc3_allocator_t;
 
 #include <sc3_error.h>
@@ -67,7 +68,7 @@ extern              "C"
  * The allocator may be valid in both its setup and usage phases.
  * Any allocation by \ref sc3_allocator_malloc or \ref sc3_allocator_calloc
  * may be followed by an arbitrary number of \ref sc3_allocator_realloc calls
- * and must then be followed by \sc3_allocator_free.
+ * and must then be followed by \ref sc3_allocator_free.
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
@@ -88,7 +89,7 @@ int                 sc3_allocator_is_new (const sc3_allocator_t * a,
 
 /** Check whether an allocator is not NULL, internally consistent and setup.
  * This means that the allocator is in its usage phase.
- * \param [in] a    Any pointer.
+ * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return          True iff pointer not NULL, allocator consistent and setup.
@@ -97,7 +98,7 @@ int                 sc3_allocator_is_setup (const sc3_allocator_t * a,
                                             char *reason);
 
 /** Return whether a setup allocator does not hold any allocations.
- * \param [in]      Any pointer.
+ * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return          True iff pointer not NULL, allocator setup
@@ -148,6 +149,7 @@ sc3_error_t        *sc3_allocator_new (sc3_allocator_t * oa,
  *                      or zero for default alignment.
  *                      Zero alignment uses system defaults and
  *                      disables internal consistency checking.
+ * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_set_align (sc3_allocator_t * a,
                                              size_t align);
