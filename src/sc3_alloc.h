@@ -110,7 +110,7 @@ int                 sc3_allocator_is_free (const sc3_allocator_t * a,
 /** Return a non-counting allocator setup and safe to use in threads.
  * This allocator thus does not check for matched alloc/free calls.
  * It can be arbitrarily refd and unrefd but must not be destroyed.
- * Use only if there is no other option.
+ * Use only if there is no other option, such as to create errors.
  * \return              Allocator that does not count its allocations.
  *                      It is not allowed to destroy this allocator.
  */

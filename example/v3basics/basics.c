@@ -94,7 +94,7 @@ io_error (sc3_allocator_t * a,
   SC3E (sc3_error_new (a, &e));
   SC3E (sc3_error_set_location (e, filename, line));
   SC3E (sc3_error_set_message (e, errmsg));
-  SC3E (sc3_error_set_severity (e, SC3_ERROR_RUNTIME));
+  SC3E (sc3_error_set_kind (e, SC3_ERROR_IO));
   SC3E (sc3_error_setup (e));
 
   return e;
@@ -164,7 +164,7 @@ run_prog (sc3_allocator_t * origa, sc3_trace_t * t, sc3_log_t * log,
 #endif
     SC3E (sc3_error_set_location (e2, __FILE__, __LINE__));
     SC3E (sc3_error_set_message (e2, "Encountered I/O error"));
-    SC3E (sc3_error_set_severity (e2, SC3_ERROR_RUNTIME));
+    SC3E (sc3_error_set_kind (e2, SC3_ERROR_IO));
     SC3E (sc3_error_setup (e2));
     SC3A_CHECK (e == NULL);
     e = e2;
@@ -200,6 +200,7 @@ main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
   }
 
   if (ep != NULL && *ep != NULL) {
+    /* TODO: do this differently, for example making error lists. */
     if (sc3_error_is_fatal (*ep, NULL)) {
       ++*num_fatal;
     }

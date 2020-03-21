@@ -75,6 +75,9 @@
  *   thus it is immutable and safe to be referenced and passed to other code.
  *   There may be exceptions to immutability, for example an array may be
  *   resized after setup, but the size of each element may not be changed.
+ * - An object that is setup may be queried for properties set with
+ *   sc3_object_get_*.
+ *   These functions are generally tolerant to NULL output arguments.
  * - When removing an object's last reference with `sc3_object_unref`, it is
  *   deallocated together with all its internal resources.
  *   When calling unref, do not assume anything about the input reference

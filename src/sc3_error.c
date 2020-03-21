@@ -39,8 +39,11 @@ struct sc3_error
   sc3_allocator_t    *eator;
   int                 setup;
 
+  sc3_error_kind_t    kind;
+#if 0
   sc3_error_severity_t sev;
   sc3_error_sync_t    syn;
+#endif
   char                errmsg[SC3_BUFSIZE];
   char                filename[SC3_BUFSIZE];
   int                 line;
@@ -49,24 +52,22 @@ struct sc3_error
 };
 
 #if 0
-static sc3_error_t  ebug =
-  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
+static sc3_error_t  ebug = { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_BUG,
 "Inconsistency or bug", __FILE__, __LINE__, 0, NULL
 };
 #endif
 
 static sc3_error_t  enom =
-  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
+  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_MEMORY,
 "Out of memory", __FILE__, __LINE__, 0, NULL
 };
 
-static sc3_error_t  enull =
-  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
+static sc3_error_t  enull = { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_BUG,
 "Argument must not be NULL", __FILE__, __LINE__, 0, NULL
 };
 
 static sc3_error_t  esetup =
-  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_FATAL, SC3_ERROR_LOCAL,
+  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_BUG,
 "Error argument must be setup", __FILE__, __LINE__, 0, NULL
 };
 
@@ -82,8 +83,11 @@ sc3_error_is_valid (const sc3_error_t * e, char *reason)
   if (e->stack != NULL) {
     SC3E_IS (sc3_error_is_setup, e->stack, reason);
   }
+  SC3E_TEST (0 <= e->kind && e->kind < SC3_ERROR_KIND_LAST, reason);
+#if 0
   SC3E_TEST (0 <= e->sev && e->sev < SC3_ERROR_SEVERITY_LAST, reason);
   SC3E_TEST (0 <= e->syn && e->syn < SC3_ERROR_SYNC_LAST, reason);
+#endif
   SC3E_YES (reason);
 }
 
@@ -107,8 +111,16 @@ int
 sc3_error_is_fatal (const sc3_error_t * e, char *reason)
 {
   SC3E_IS (sc3_error_is_setup, e, reason);
-  SC3E_TEST (e->sev == SC3_ERROR_FATAL, reason);
-  SC3E_YES (reason);
+  switch (e->kind) {
+  case SC3_ERROR_FATAL:
+  case SC3_ERROR_BUG:
+  case SC3_ERROR_MEMORY:
+  case SC3_ERROR_NETWORK:
+  case SC3_ERROR_LEAK:
+    SC3E_YES (reason);
+  default:
+    SC3E_NO (reason, "Error is not of the fatal kind");
+  }
 }
 
 static void
@@ -120,12 +132,18 @@ sc3_error_defaults (sc3_error_t * e, sc3_error_t * stack,
   e->eator = eator;
   e->setup = setup;
 
-  e->sev = SC3_ERROR_FATAL;
-  e->syn = SC3_ERROR_LOCAL;
+  e->kind = SC3_ERROR_FATAL;
+#if 0
+  e->sev = SC3_ERROR_SEVERITY_LAST;
+  e->syn = SC3_ERROR_SYNC_LAST;
+#endif
   e->alloced = 1;
   e->stack = stack;
   if (inherit && stack != NULL) {
+    e->kind = stack->kind;
+#if 0
     e->sev = stack->sev;
+#endif
   }
 }
 
@@ -185,6 +203,17 @@ sc3_error_set_message (sc3_error_t * e, const char *errmsg)
 }
 
 sc3_error_t        *
+sc3_error_set_kind (sc3_error_t * e, sc3_error_kind_t kind)
+{
+  SC3A_IS (sc3_error_is_new, e);
+  SC3A_CHECK (0 <= kind && kind < SC3_ERROR_KIND_LAST);
+
+  e->kind = kind;
+  return NULL;
+}
+
+#if 0
+sc3_error_t        *
 sc3_error_set_severity (sc3_error_t * e, sc3_error_severity_t sev)
 {
   SC3A_IS (sc3_error_is_new, e);
@@ -194,7 +223,6 @@ sc3_error_set_severity (sc3_error_t * e, sc3_error_severity_t sev)
   return NULL;
 }
 
-#if 0
 void                sc3_error_set_sync (sc3_error_t * ea,
                                         sc3_error_sync_t syn);
 void                sc3_error_set_msgf (sc3_error_t * ea,
@@ -328,7 +356,8 @@ sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
 }
 
 sc3_error_t        *
-sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
+sc3_error_new_kind (sc3_error_kind_t kind,
+                    const char *filename, int line, const char *errmsg)
 {
   sc3_error_t        *e;
   sc3_allocator_t    *ea;
@@ -346,6 +375,9 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
     return &enom;
   }
   sc3_error_defaults (e, NULL, 1, 0, ea);
+  if (0 <= kind && kind < SC3_ERROR_KIND_LAST) {
+    e->kind = kind;
+  }
 
   SC3_BUFCOPY (e->errmsg, errmsg);
   SC3_BUFCOPY (e->filename, filename);
@@ -355,7 +387,13 @@ sc3_error_new_fatal (const char *filename, int line, const char *errmsg)
   return e;
 }
 
-/** This function takes over one reference to stack. */
+sc3_error_t        *
+sc3_error_new_bug (const char *filename, int line, const char *errmsg)
+{
+  return sc3_error_new_kind (SC3_ERROR_BUG, filename, line, errmsg);
+}
+
+/* This function takes over one reference to stack. */
 static sc3_error_t *
 sc3_error_new_stack_inherit (sc3_error_t ** pstack, int inherit,
                              const char *filename, int line,
@@ -439,9 +477,22 @@ sc3_error_get_message (sc3_error_t * e, const char **errmsg)
 }
 
 sc3_error_t        *
+sc3_error_get_kind (sc3_error_t * e, sc3_error_kind_t * kind)
+{
+  SC3E_RETOPT (kind, SC3_ERROR_BUG);
+  SC3A_IS (sc3_error_is_setup, e);
+
+  if (kind != NULL) {
+    *kind = e->kind;
+  }
+  return NULL;
+}
+
+#if 0
+sc3_error_t        *
 sc3_error_get_severity (sc3_error_t * e, sc3_error_severity_t * sev)
 {
-  SC3E_RETOPT (sev, SC3_ERROR_FATAL);
+  SC3E_RETOPT (sev, SC3_ERROR_BUG);
   SC3A_IS (sc3_error_is_setup, e);
 
   if (sev != NULL) {
@@ -449,6 +500,7 @@ sc3_error_get_severity (sc3_error_t * e, sc3_error_severity_t * sev)
   }
   return NULL;
 }
+#endif
 
 sc3_error_t        *
 sc3_error_get_stack (sc3_error_t * e, sc3_error_t ** pstack)

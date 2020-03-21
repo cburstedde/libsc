@@ -164,7 +164,8 @@ typedef MPI_Win     sc3_MPI_Win_t;
     char _errmsg[SC3_BUFSIZE];                                          \
     sc3_MPI_Error_string (_mpiret, _errstr, &_errlen);                  \
     sc3_snprintf (_errmsg, SC3_BUFSIZE, "%s: %s", #f, _errstr);         \
-    return sc3_error_new_fatal (__FILE__, __LINE__, _errmsg);           \
+    return sc3_error_new_kind (SC3_ERROR_NETWORK,                       \
+                               __FILE__, __LINE__, _errmsg);            \
   }} while (0)
 
 #ifdef __cplusplus
