@@ -145,8 +145,8 @@ extern              "C"
   }} while (0)
 
 /** If a condition \a x is not met, create a fatal error and return it.
- * The error created is of type \ref SC3_ERROR_BUG
- * and its message is set to the failed condition and argument \a s.
+ * The error created is of type \ref SC3_ERROR_BUG and its message is set
+ * to the failed condition and argument \a s.
  * For graceful handling of non-fatal errors, please use something else.
  */
 #define SC3E_DEMAND(x,s) do {                                           \
@@ -156,6 +156,11 @@ extern              "C"
     return sc3_error_new_bug (__FILE__, __LINE__, _errmsg);             \
   }} while (0)
 
+/** Execute an is_* query \a f and return a fatal error if it returns false.
+ * The error created is of type \ref SC3_ERROR_BUG and its message is set
+ * to the failed query function and its object \a o.
+ * For graceful handling of non-fatal errors, please use something else.
+ */
 #define SC3E_DEMIS(f,o) do {                                            \
   char _r[SC3_BUFSIZE];                                                 \
   if (!(f ((o), _r))) {                                                 \
@@ -274,11 +279,6 @@ extern              "C"
     if (!(f ((o), _r))) {                                               \
       sc3_snprintf ((r), SC3_BUFSIZE, "%s(%s): %s", #f, #o, _r);        \
       return 0; }}} while (0)
-
-#define SC3E_TERR(f,r) do {                                             \
-  sc3_error_t * _e = (f);                                               \
-  if (_e != NULL) {                                                     \
-    sc3_error_destroy_noerr (&_e, r); return 0; }} while (0)
 
 #if 0
 /** The severity of an error used to be a proper enum.
