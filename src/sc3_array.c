@@ -233,13 +233,18 @@ sc3_error_t        *
 sc3_array_destroy (sc3_array_t ** ap)
 {
   sc3_array_t        *a;
+  int                 leak = 0;
 
   SC3E_INULLP (ap, a);
-  SC3E_DEMIS (sc3_refcount_is_last, &a->rc);
+  if (sc3_refcount_is_last (&a->rc, NULL)) {
+    leak = 1;
+  }
   SC3E (sc3_array_unref (&a));
 
-  SC3A_CHECK (a == NULL);
-  return NULL;
+  SC3A_CHECK (a == NULL || leak);
+  return leak ?
+    sc3_error_new_kind (SC3_ERROR_LEAK, __FILE__, __LINE__,
+                        "Reference leak in sc3_array_destroy") : NULL;
 }
 
 sc3_error_t        *

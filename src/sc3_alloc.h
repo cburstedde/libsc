@@ -186,6 +186,8 @@ sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
  * \param [in,out] ap   This allocator must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
+ *                      When the allocator had more than one reference,
+ *                      return an error of kind \ref SC3_ERROR_LEAK.
  */
 sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
 

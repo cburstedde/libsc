@@ -204,13 +204,21 @@ sc3_error_t        *
 sc3_allocator_destroy (sc3_allocator_t ** ap)
 {
   sc3_allocator_t    *a;
+  int                 leak = 0;
 
   SC3E_INULLP (ap, a);
-  SC3E_DEMIS (sc3_refcount_is_last, &a->rc);
+  if (!sc3_refcount_is_last (&a->rc, NULL)) {
+    /* Reference leak encountered, which may not occur with static allocators. */
+    SC3A_CHECK (a->alloced);
+    leak = 1;
+  }
+  /* This function checks error object consistency as a side effect.  */
   SC3E (sc3_allocator_unref (&a));
 
-  SC3A_CHECK (a == NULL || !a->alloced);
-  return NULL;
+  SC3A_CHECK (a == NULL || (!a->alloced ^ leak));
+  return leak ?
+    sc3_error_new_kind (SC3_ERROR_LEAK, __FILE__, __LINE__,
+                        "Reference leak in sc3_allocator_destroy") : NULL;
 }
 
 sc3_error_t        *

@@ -187,6 +187,8 @@ sc3_error_t        *sc3_array_unref (sc3_array_t ** ap);
  * \param [in,out] ap   This array must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
+ *                      When the array had more than one reference,
+ *                      return an error of kind \ref SC3_ERROR_LEAK.
  */
 sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
 
@@ -262,7 +264,7 @@ void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
  *                      Pointer may be NULL.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_get_elem_size (sc3_array_t * a, size_t * esize);
+sc3_error_t        *sc3_array_get_elem_size (sc3_array_t * a, size_t *esize);
 
 /** Return element count of an array that is setup.
  * \param [in] a        Array must be setup.

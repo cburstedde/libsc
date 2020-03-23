@@ -219,13 +219,19 @@ sc3_error_t        *
 sc3_log_destroy (sc3_log_t ** logp)
 {
   sc3_log_t          *log;
+  int                 leak = 0;
 
   SC3E_INULLP (logp, log);
-  SC3E_DEMIS (sc3_refcount_is_last, &log->rc);
+  if (!sc3_refcount_is_last (&log->rc, NULL)) {
+    SC3A_CHECK (log->alloced);
+    leak = 1;
+  }
   SC3E (sc3_log_unref (&log));
 
-  SC3A_CHECK (log == NULL || !log->alloced);
-  return NULL;
+  SC3A_CHECK (log == NULL || (!log->alloced ^ leak));
+  return leak ?
+    sc3_error_new_kind (SC3_ERROR_LEAK, __FILE__, __LINE__,
+                        "Reference leak in sc3_log_destroy") : NULL;
 }
 
 void
