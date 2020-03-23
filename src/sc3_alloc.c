@@ -174,6 +174,7 @@ sc3_error_t        *
 sc3_allocator_unref (sc3_allocator_t ** ap)
 {
   int                 waslast;
+  sc3_error_t        *leak = NULL;
   sc3_allocator_t    *a, *oa;
 
   SC3E_INOUTP (ap, a);
@@ -188,37 +189,29 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
     *ap = NULL;
 
     if (a->counting) {
-      SC3E_DEMAND (a->num_malloc + a->num_calloc == a->num_free,
-                   "Memory allocation count");
-      SC3E_DEMAND (a->total_size == 0, "Memory allocation size");
+      SC3L_DEMAND (&leak, a->num_malloc + a->num_calloc == a->num_free);
+      SC3L_DEMAND (&leak, a->total_size == 0);
     }
 
     oa = a->oa;
     SC3E_ALLOCATOR_FREE (oa, sc3_allocator_t, a);
-    SC3E (sc3_allocator_unref (&oa));
+    SC3L (&leak, sc3_allocator_unref (&oa));
   }
-  return NULL;
+  return leak;
 }
 
 sc3_error_t        *
 sc3_allocator_destroy (sc3_allocator_t ** ap)
 {
+  sc3_error_t        *leak = NULL;
   sc3_allocator_t    *a;
-  int                 leak = 0;
 
   SC3E_INULLP (ap, a);
-  if (!sc3_refcount_is_last (&a->rc, NULL)) {
-    /* Reference leak encountered, which may not occur with static allocators. */
-    SC3A_CHECK (a->alloced);
-    leak = 1;
-  }
-  /* This function checks error object consistency as a side effect.  */
-  SC3E (sc3_allocator_unref (&a));
+  SC3L_DEMAND (&leak, sc3_refcount_is_last (&a->rc, NULL));
+  SC3L (&leak, sc3_allocator_unref (&a));
 
-  SC3A_CHECK (a == NULL || (!a->alloced ^ leak));
-  return leak ?
-    sc3_error_new_kind (SC3_ERROR_LEAK, __FILE__, __LINE__,
-                        "Reference leak in sc3_allocator_destroy") : NULL;
+  SC3A_CHECK (a == NULL || !a->alloced);
+  return leak;
 }
 
 sc3_error_t        *

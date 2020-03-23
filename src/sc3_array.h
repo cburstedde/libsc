@@ -179,6 +179,7 @@ sc3_error_t        *sc3_array_ref (sc3_array_t * a);
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the array is destroyed and the value set to NULL.
  * \return              NULL on success, error object otherwise.
+ *                      We may also return a leak.
  */
 sc3_error_t        *sc3_array_unref (sc3_array_t ** ap);
 

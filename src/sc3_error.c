@@ -183,6 +183,7 @@ sc3_error_set_stack (sc3_error_t * e, sc3_error_t ** pstack)
     SC3A_IS (sc3_error_is_setup, stack);
   }
   if (e->stack != NULL) {
+    /* At this point in the code, we do not catch leaks. */
     SC3E (sc3_error_unref (&e->stack));
   }
   e->stack = stack;
@@ -263,7 +264,7 @@ sc3_error_unref (sc3_error_t ** ep)
 {
   int                 waslast;
   sc3_allocator_t    *eator;
-  sc3_error_t        *e;
+  sc3_error_t        *e, *leak = NULL;
 
   SC3E_INOUTP (ep, e);
   SC3A_IS (sc3_error_is_valid, e);
@@ -279,35 +280,27 @@ sc3_error_unref (sc3_error_t ** ep)
     *ep = NULL;
 
     if (e->stack != NULL) {
-      SC3E (sc3_error_unref (&e->stack));
+      SC3L (&leak, sc3_error_unref (&e->stack));
     }
 
     eator = e->eator;
     SC3E_ALLOCATOR_FREE (eator, sc3_error_t, e);
-    SC3E (sc3_allocator_unref (&eator));
+    SC3L (&leak, sc3_allocator_unref (&eator));
   }
-  return NULL;
+  return leak;
 }
 
 sc3_error_t        *
 sc3_error_destroy (sc3_error_t ** ep)
 {
-  sc3_error_t        *e;
-  int                 leak = 0;
+  sc3_error_t        *e, *leak = NULL;
 
   SC3E_INULLP (ep, e);
-  if (!sc3_refcount_is_last (&e->rc, NULL)) {
-    /* Reference leak encountered, which may not occur with static errors. */
-    SC3A_CHECK (e->alloced);
-    leak = 1;
-  }
-  /* This function checks error object consistency as a side effect.  */
-  SC3E (sc3_error_unref (&e));
+  SC3L_DEMAND (&leak, sc3_refcount_is_last (&e->rc, NULL));
+  SC3L (&leak, sc3_error_unref (&e));
 
-  SC3A_CHECK (e == NULL || (!e->alloced ^ leak));
-  return leak ?
-    sc3_error_new_kind (SC3_ERROR_LEAK, __FILE__, __LINE__,
-                        "Reference leak in sc3_error_destroy") : NULL;
+  SC3A_CHECK (e == NULL || !e->alloced);
+  return leak;
 }
 
 void

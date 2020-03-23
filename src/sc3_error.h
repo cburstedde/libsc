@@ -67,7 +67,8 @@
  * when encountering leftover memory, references, or other resources,
  * but ensure that the program may continue cleanly.
  * Thus, an application is free to treat leaks as fatal or not.
- * The library functions may return leaks on any sc3_object_destroy call.
+ * Library functions may return leaks on any unref or destroy call.
+ * To catch leak errors gracefully, consider using the SC3L macros.
  *
  * Non-fatal errors are imaginable when accessing files on disk or parsing
  * input.  It is up to the application to define and implement error handling.
@@ -509,6 +510,7 @@ sc3_error_t        *sc3_error_ref (sc3_error_t * e);
  *                      The refcount is decreased.  If it reaches zero,
  *                      the error is deallocated and the value to NULL.
  * \return              An error object or NULL without errors.
+ *                      We may return a fatal or a leak error.
  */
 sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
 

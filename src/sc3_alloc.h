@@ -216,7 +216,7 @@ sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the allocator is destroyed and the value set to NULL.
  * \return              NULL on success, error object otherwise.
- *                      If the reference dropped to zero and we still
+ *                      If the reference dropped to zero and still members
  *                      hold memory, return an \ref SC3_ERROR_LEAK error.
  */
 sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
