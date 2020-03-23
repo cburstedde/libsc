@@ -465,6 +465,55 @@ sc3_error_new_inherit (sc3_error_t ** pstack,
 }
 
 sc3_error_t        *
+sc3_error_accumulate (sc3_error_t ** pe, sc3_error_kind_t kind,
+                      const char *filename, int line, const char *errmsg)
+{
+  sc3_error_t        *e, *res;
+
+  SC3E_INOUTP (pe, e);
+  SC3A_CHECK (!sc3_error_kind_is_fatal (kind));
+  if (e == NULL) {
+    res = sc3_error_new_kind (kind, filename, line, errmsg);
+  }
+  else {
+    SC3A_IS (sc3_error_is_setup, e);
+    SC3A_CHECK (kind == e->kind);
+    res = sc3_error_new_inherit (&e, filename, line, errmsg);
+  }
+  SC3A_CHECK (e == NULL);
+  SC3A_IS (sc3_error_is_setup, res);
+
+  /* This function is supposed to accumulate non-fatal errors.
+     If a fatal error occurs, something has gone wrong */
+  SC3E_DEMIS (!sc3_error_is_fatal, e);
+
+  /* We return the newly created error of type kind in the inout argument. */
+  *pe = res;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
+                const char *filename, int line, const char *errmsg)
+{
+  if (sc3_error_is_leak (e, NULL)) {
+    char                flatmsg[SC3_BUFSIZE];
+    char                finalmsg[SC3_BUFSIZE];
+
+    sc3_error_destroy_noerr (&e, flatmsg);
+    sc3_snprintf (finalmsg, SC3_BUFSIZE, "%s: %s", errmsg, flatmsg);
+    SC3E (sc3_error_accumulate
+          (leak, SC3_ERROR_LEAK, filename, line, finalmsg));
+  }
+  else if (e != NULL) {
+    return sc3_error_new_stack (&e, filename, line, errmsg);
+  }
+
+  SC3A_CHECK (e == NULL);
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_error_get_location (sc3_error_t * e, const char **filename, int *line)
 {
   SC3E_RETOPT (filename, "");
