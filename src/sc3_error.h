@@ -97,18 +97,18 @@ extern              "C"
 #endif
 #endif
 
-/*** DEBUG macros do nothing unless configured with --enable-debug. ***/
+/*** DEBUG statements do nothing unless configured with --enable-debug. ***/
 
 #ifndef SC_ENABLE_DEBUG
 
-/** Assertion macro to require a true sc3_object_is_* return value.
+/** Assertion statement to require a true sc3_object_is_* return value.
  * The argument \a f is such a function and \a o the object to query. */
 #define SC3A_IS(f,o) SC3_NOOP
 
-/** Assertion macro requires some condition \a x to be true. */
+/** Assertion statement requires some condition \a x to be true. */
 #define SC3A_CHECK(x) SC3_NOOP
 
-/** Assertion macro checks an error expression \a f and returns if set.
+/** Assertion statement checks an error expression \a f and returns if set.
  * The error object returned is stacked into a new fatal error. */
 #define SC3A_STACK(f) SC3_NOOP
 
@@ -125,7 +125,7 @@ extern              "C"
   }} while (0)
 #endif
 
-/*** ERROR macros.  They are always active and return fatal errors. ***/
+/*** ERROR statements are always active and return fatal errors. ***/
 
 /** Execute an expression \a f that produces an \ref sc3_error_t object.
  * If that error is not NULL, create a fatal error and return it.
@@ -201,7 +201,7 @@ extern              "C"
   *(pp) = NULL;                                                         \
   } while (0)
 
-/*** ERROR macros for proceeding without returning in case of errors. ***/
+/*** ERROR statements for proceeding without return in case of errors. ***/
 
 /** Initialize an error object \a e using the result of an expression \a f.
  * If the result is NULL, that becomes the value of the error object.
@@ -235,7 +235,7 @@ extern              "C"
 #define SC3E_NULL_BREAK(e) do {                                         \
   if ((e) != NULL) { break; }} while (0)
 
-/*** TEST macros.  Always executed. */
+/*** TEST statements.  Always executed. */
 
 /** Set the reason output parameter \a r inside an sc3_object_is_* furction
  * to a given value \a reason before returning false.
@@ -518,14 +518,13 @@ void                sc3_error_destroy_noerr (sc3_error_t ** pe,
 /** Create a new error of parameterizable kind.
  * If internal allocation fails, return a working static error object.
  * This is useful when allocating an error with \ref sc3_error_new might fail.
- * This should generally be used when the error indicates a buggy program.
  * \param [in] kind     Any valid \ref sc3_error_kind_t.
  * \param [in] filename The filename is copied into the error object.
  *                      Pointer not NULL, string null-terminated.
  * \param [in] line     Line number set in the error.
  * \param [in] errmsg   The error message is copied into the error.
  *                      Pointer not NULL, string null-terminated.
- * \return          The new error object; there is no other error handling.
+ * \return              The new error object or a static fatal fallback.
  */
 sc3_error_t        *sc3_error_new_kind (sc3_error_kind_t kind,
                                         const char *filename,
@@ -540,7 +539,7 @@ sc3_error_t        *sc3_error_new_kind (sc3_error_kind_t kind,
  * \param [in] line     Line number set in the error.
  * \param [in] errmsg   The error message is copied into the error.
  *                      Pointer not NULL, string null-terminated.
- * \return              The new error object or a static fallback.
+ * \return              The new error object or a static fatal fallback.
  */
 sc3_error_t        *sc3_error_new_bug (const char *filename,
                                        int line, const char *errmsg);
@@ -556,30 +555,29 @@ sc3_error_t        *sc3_error_new_bug (const char *filename,
  * \param [in] line     Line number set in the error.
  * \param [in] errmsg   The error message is copied into the error.
  *                      Pointer not NULL, string null-terminated.
- * \return              The new error object or a static fallback.
+ * \return              The new error object or a static fatal fallback.
  */
 sc3_error_t        *sc3_error_new_stack (sc3_error_t ** pstack,
                                          const char *filename,
                                          int line, const char *errmsg);
 
-#if 0
-/** Create a new error without relying on dynamic memory allocation.
+/** Stack a given error into a new one of the same kind.
+ * If internal allocation fails, return a working static error object.
  * This is useful when allocating an error with \ref sc3_error_new might fail.
- * This function expects a setup error as stack and uses its severity value.
- * \todo Do we need this function?
+ * This function expects a setup error as stack, which may in turn have stack.
+ * Function may be used when multiple errors of the same kind accumulate.
  * \param [in] pstack   We take owership of the stack, pointer is NULLed.
- *                      The severity of *pstack is used for the result error.
+ *                      The error kind of *pstack is used for the result.
  * \param [in] filename The filename is copied into the error object.
  *                      Pointer not NULL, string null-terminated.
  * \param [in] line     Line number set in the error.
  * \param [in] errmsg   The error message is copied into the error.
  *                      Pointer not NULL, string null-terminated.
- * \return          The new error object; there is no other error handling.
+ * \return              The new error object or a static fatal fallback.
  */
 sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** pstack,
                                            const char *filename,
                                            int line, const char *errmsg);
-#endif
 
 /** Access location string and line number in a setup error object.
  * The filename output pointer is only valid as long as the error is alive.

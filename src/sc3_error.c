@@ -107,21 +107,20 @@ sc3_error_is_setup (const sc3_error_t * e, char *reason)
   SC3E_YES (reason);
 }
 
+static int
+sc3_error_kind_is_fatal (sc3_error_kind_t kind)
+{
+  /* We do not classify the kind SC3_ERROR_LEAK as fatal. */
+  return kind == SC3_ERROR_FATAL || kind == SC3_ERROR_BUG ||
+    kind == SC3_ERROR_MEMORY || kind == SC3_ERROR_NETWORK;
+}
+
 int
 sc3_error_is_fatal (const sc3_error_t * e, char *reason)
 {
-  /* We do not classify the kind SC3_ERROR_LEAK as fatal. */
-
   SC3E_IS (sc3_error_is_setup, e, reason);
-  switch (e->kind) {
-  case SC3_ERROR_FATAL:
-  case SC3_ERROR_BUG:
-  case SC3_ERROR_MEMORY:
-  case SC3_ERROR_NETWORK:
-    SC3E_YES (reason);
-  default:
-    SC3E_NO (reason, "Error is not of the fatal kind");
-  }
+  SC3E_TEST (sc3_error_kind_is_fatal (e->kind), reason);
+  SC3E_YES (reason);
 }
 
 int
