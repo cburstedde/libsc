@@ -27,7 +27,30 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-/** \file sc3_alloc.h
+/** \file sc3_alloc.h \ingroup sc3
+ * The allocator is a fundamental object to allocate memory on the heap.
+ *
+ * An allocator provides malloc and free equivalents with counters.
+ * It keeps track of the number of allocs and frees to aid in dedugging.
+ * Different allocators are independent objects with independent counters.
+ * This feature is useful for example to isolate memory between threads:
+ * Each thread may create a new allocator, derived from a global allocator
+ * with proper locking, and then use the new allocator without locking.
+ *
+ * Most sc3_object_new functions take an allocator as argument.
+ * It will be used for allocations throughout the lifetime of the object.
+ * \ref sc3_allocator_new is no exception:
+ * Allocators can be arranged in a forest-type dependency graph.
+ * Having different allocators for different functionalities or algorithms
+ * improves modularity of allocation and the associated debugging.
+ * Each allocator can be configured with its own alignment requirements.
+ *
+ * Allocators can be refd and unrefd.
+ * Dropping the last reference deallocates the allocator.
+ * The function \ref sc3_allocator_destroy must only be called when it
+ * is known that it has only one reference to it, and when it is known
+ * that the allocator is presently counting zero allocations.
+ * Otherwise the function returns an error of kind \ref SC3_ERROR_LEAK.
  */
 
 #ifndef SC3_ALLOC_H
@@ -48,17 +71,31 @@ extern              "C"
 #endif
 #endif
 
+/** Allocate \a n items of a given type \a t, uninitialized.
+ * Allocator \a a's malloc function is invoked using sizeof (t)
+ * to produce an alllocation that is assigned to the variable \a p. */
 #define SC3E_ALLOCATOR_MALLOC(a,t,n,p) do {                             \
   void *_ptr;                                                           \
   SC3E (sc3_allocator_malloc (a, (n) * sizeof (t), &_ptr));             \
   (p) = (t *) _ptr; } while (0)
+
+/** Allocate \a n items of a given type \a t, initialized to all zeros.
+ * Allocator \a a's calloc function is invoked using sizeof (t)
+ * to produce an alllocation that is assigned to the variable \a p. */
 #define SC3E_ALLOCATOR_CALLOC(a,t,n,p) do {                             \
   void *_ptr;                                                           \
   SC3E (sc3_allocator_calloc (a, n, sizeof (t), &_ptr));                \
   (p) = (t *) _ptr; } while (0)
+
+/** Free memory \a p that has previously been allocated by \a a.
+ * We take a type argument \a t to safely set the input \a p to NULL. */
 #define SC3E_ALLOCATOR_FREE(a,t,p) do {                                 \
   SC3E (sc3_allocator_free (a, p));                                     \
-  (p) = (t *) 0; } while (0)
+  (p) = (t *) NULL; } while (0)
+
+/** Reallocate memory that was previously allocated by \a a.
+ * Allocator \a a's realloc function is invoked with \a n items of
+ * sizeof (t) to allocate.  The new memory is assigned to variable \a p. */
 #define SC3E_ALLOCATOR_REALLOC(a,t,n,p) do {                            \
   void *_ptr = p;                                                       \
   SC3E (sc3_allocator_realloc (a, (n) * sizeof (t), &_ptr));            \
@@ -69,6 +106,8 @@ extern              "C"
  * Any allocation by \ref sc3_allocator_malloc or \ref sc3_allocator_calloc
  * may be followed by an arbitrary number of \ref sc3_allocator_realloc calls
  * and must then be followed by \ref sc3_allocator_free.
+ * The rules for zero input sizes and NULL input pointers are the same
+ * as those in the C standard library.
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
@@ -78,7 +117,7 @@ int                 sc3_allocator_is_valid (const sc3_allocator_t * a,
                                             char *reason);
 
 /** Check whether an allocator is not NULL, consistent and not setup.
- * This means that the allocator is not in its usage phase.
+ * This means that the allocator is not (yet) in its usage phase.
  * \param [in] a    Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
@@ -177,6 +216,8 @@ sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the allocator is destroyed and the value set to NULL.
  * \return              NULL on success, error object otherwise.
+ *                      If the reference dropped to zero and we still
+ *                      hold memory, return an \ref SC3_ERROR_LEAK error.
  */
 sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
 
@@ -234,7 +275,7 @@ sc3_error_t        *sc3_allocator_calloc (sc3_allocator_t * a,
 /** Free previously allocated memory.
  * \param [in,out] a    Allocator must be setup.  If input is non-NULL, must
  *                      be the same as used on (re-)allocation.
- * \param [in,out] ptr  If input is NULL, we do nothing.  Otherwise, 
+ * \param [in,out] ptr  If input is NULL, we do nothing.  Otherwise,
  *                      a pointer previously allocated by this allocator by
  *                      \ref sc3_allocator_malloc, \ref sc3_allocator_calloc or
  *                      \ref sc3_allocator_realloc.  NULL on output.

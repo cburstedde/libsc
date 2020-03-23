@@ -88,6 +88,10 @@
  *   count since other references may have been created and passed around.
  *   The `sc3_object_destroy` functions must only be called if the program
  *   can guarantee that at this point the reference count is 1.
+ * - There is on means to query the present reference count of an object.
+ *   This is on purpose:  The whole point of reference counting is that
+ *   different references to the object can be used independently.
+ *   In practice, this means that destroy functions should be used sparingly.
  * - The `sc3_object_is_*` functions implement queries that may be called for
  *   any pointer to this object type, including `NULL`, at any stage.
  *   They query properties of the object and always return false if the pointer
