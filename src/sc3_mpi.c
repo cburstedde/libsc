@@ -31,7 +31,6 @@
 
 #ifndef SC_ENABLE_MPI
 
-/* TODO: use break and return at the end */
 static sc3_error_t *
 sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t *size)
 {
@@ -39,22 +38,23 @@ sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t *size)
   switch (datatype) {
   case SC3_MPI_BYTE:
     *size = 1;
-    return NULL;
+    break;
   case SC3_MPI_INT:
     *size = sizeof (int);
-    return NULL;
+    break;
   case SC3_MPI_LONG:
     *size = sizeof (long);
-    return NULL;
+    break;
   case SC3_MPI_FLOAT:
     *size = sizeof (float);
-    return NULL;
+    break;
   case SC3_MPI_DOUBLE:
     *size = sizeof (double);
-    return NULL;
+    break;
   default:
     SC3E_UNREACH ("Invalid MPI type");
   }
+  return NULL;
 }
 
 struct sc3_MPI_Comm
