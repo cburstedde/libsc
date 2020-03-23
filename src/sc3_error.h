@@ -109,9 +109,9 @@ extern              "C"
 #define SC3A_CHECK(x) SC3_NOOP
 
 /** Assertion macro checks an error expression \a f and returns if set.
- * The error object returned is stacked into a new fatal error.
- */
+ * The error object returned is stacked into a new fatal error. */
 #define SC3A_STACK(f) SC3_NOOP
+
 #else
 #define SC3A_IS(f,o) SC3E_DEMIS(f,o)
 #define SC3A_CHECK(x) do {                                              \

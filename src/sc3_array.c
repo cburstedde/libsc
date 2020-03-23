@@ -236,7 +236,7 @@ sc3_array_destroy (sc3_array_t ** ap)
   int                 leak = 0;
 
   SC3E_INULLP (ap, a);
-  if (sc3_refcount_is_last (&a->rc, NULL)) {
+  if (!sc3_refcount_is_last (&a->rc, NULL)) {
     leak = 1;
   }
   SC3E (sc3_array_unref (&a));
