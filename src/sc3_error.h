@@ -56,7 +56,7 @@
  * The SC3E macros (Execute) are always active.
  * Both check conditions or error returns and propagate fatal errors upward.
  * These macros are understood to return prematurely on error.
- * When used on non-fatal conditions, they create fatal errors themmselves.
+ * When used on non-fatal conditions, they create fatal errors themselves.
  * An application should use them on any condition it considers fatal.
  * To handle some error gracefully, an application should *not* use them.
  *
@@ -112,8 +112,6 @@ extern              "C"
  * The error object returned is stacked into a new fatal error.
  */
 #define SC3A_STACK(f) SC3_NOOP
-
-#define SC3A_ONULL(r) SC3_NOOP
 #else
 #define SC3A_IS(f,o) SC3E_DEMIS(f,o)
 #define SC3A_CHECK(x) do {                                              \
@@ -125,10 +123,6 @@ extern              "C"
   if (_e != NULL) {                                                     \
     return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
   }} while (0)
-#define SC3A_ONULL(r) do {                                              \
-  SC3A_CHECK ((r) != NULL);                                             \
-  *(r) = NULL;                                                          \
-  } while (0)
 #endif
 
 /*** ERROR macros.  They are always active and return fatal errors. ***/
@@ -198,11 +192,6 @@ extern              "C"
   } while (0)
 #define SC3E_INULLP(pp,p) do {                                          \
   SC3A_CHECK ((pp) != NULL && *(pp) != NULL);                           \
-  (p) = *(pp);                                                          \
-  *(pp) = NULL;                                                         \
-  } while (0)
-#define SC3E_ONULLP(pp,p) do {                                          \
-  SC3A_CHECK ((pp) != NULL);                                            \
   (p) = *(pp);                                                          \
   *(pp) = NULL;                                                         \
   } while (0)

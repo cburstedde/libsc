@@ -151,7 +151,7 @@ sc3_basename (char *path)
 {
 #ifndef SC_HAVE_BASENAME
   static char         dotstring[] = ".";
-  return path == NULL ? dotstring : path;
+  return (path == NULL || path[0] == '\0') ? dotstring : path;
 #else
   return basename (path);
 #endif

@@ -392,18 +392,19 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
 sc3_error_t        *
 sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void **ptr)
 {
-  void               *p;
-
-  SC3E_ONULLP (ptr, p);
   SC3A_IS (sc3_allocator_is_setup, a);
+  SC3A_CHECK (ptr != NULL);
 
-  if (p == NULL) {
+  if (*ptr == NULL) {
     SC3E (sc3_allocator_malloc (a, new_size, ptr));
   }
   else if (new_size == 0) {
-    SC3E (sc3_allocator_free (a, p));
+    SC3E (sc3_allocator_free (a, *ptr));
+    *ptr = NULL;
   }
   else {
+    void               *p = *ptr;
+
     if (a->align == 0) {
       *ptr = SC3_REALLOC (p, char, new_size);
       SC3E_DEMAND (*ptr != NULL, "Reallocation");

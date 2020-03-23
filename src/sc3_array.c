@@ -363,9 +363,9 @@ sc3_array_freeze (sc3_array_t * a)
 sc3_error_t        *
 sc3_array_index (sc3_array_t * a, int i, void **p)
 {
-  SC3A_ONULL (p);
   SC3A_IS (sc3_array_is_setup, a);
   SC3A_CHECK (0 <= i && i < a->ecount);
+  SC3A_CHECK (p != NULL);
 
   *p = a->mem + i * a->esize;
   return NULL;
