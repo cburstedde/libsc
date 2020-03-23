@@ -31,8 +31,9 @@
 
 #ifndef SC_ENABLE_MPI
 
+/* TODO: use break and return at the end */
 static sc3_error_t *
-sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t * size)
+sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t *size)
 {
   SC3A_CHECK (size != NULL);
   switch (datatype) {

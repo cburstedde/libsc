@@ -30,23 +30,53 @@
 /** \file sc3_error.h \ingroup sc3
  * The error object is fundamental to the design of the library.
  *
- * It may be used to indicate both fatal and non-fatal errors.
- * The fatal sort arises when out of memory, encountering unreachable code, on
- * assertion failures and memory and counter leaks.
- * We also consider MPI errors fatal.
- * Non-fatal errors are imaginable when accessing files on disk or parsing
- * input.
+ * We propagate errors up the call stack by returning a pointer of type
+ * \ref sc3_error_t from most library functions.
+ * If a function returns NULL, it has executed successfully.
+ * Otherwise, it encountered an error condition encoded in the return value.
  *
- * Assertion are checked if and only if the library is configured
- * --enable-debug, otherwise they do nothing.
- *
- * A function that returns a pointer to \ref sc3_error_t must return NULL if
- * the function executes without error.
- * If the function encountered an error, it must return an error object.
- * If this error is fatal, we may presume that the function returned
- * prematurely, possibly leaving dangling resources or references.
- * Even worse, communication channels may be left open and cause blocking.
+ * The error object may be used to indicate both fatal and non-fatal errors.
+ * The fatal sort arises when out of memory, encountering unreachable code
+ * and on assertion failures, or whenever a function decides to return fatal.
+ * If a function returns any of these hard error conditions, the application
+ * must consider that it returned prematurely and may have left resources open.
+ * Even worse, communication and I/O may be left open and cause blocking.
  * It is the application's responsibility to take this into account.
+ *
+ * Logically, a function returns non-fatal => it must not leak any resources.
+ * This invariant is preserved if non-fatal errors are propagated upward as
+ * fatal.  It is incorrect to propagate a fatal error up as non-fatal.
+ *
+ * In other words, a function may return not fully cleaned up only if it
+ * returns an error of the fatal kind.  This only-if-condition is one-way.
+ *
+ * To propagate fatal errors up the call stack, the SC3A and SC3E types of
+ * macros are provided.
+ * The SC3A macros (Assert) are only active when configured --enable-debug.
+ * The SC3E macros (Execute) are always active.
+ * Both check conditions or error returns and propagate fatal errors upward.
+ * These macros are understood to return prematurely on error.
+ * When used on non-fatal conditions, they create fatal errors themmselves.
+ * An application should use them on any condition it considers fatal.
+ * To handle some error gracefully, an application should *not* use them.
+ *
+ * An application may imply any additional condition as a fatal error.
+ * This is fine if it never propagates a fatal error up as non-fatal.
+ *
+ * The library functions return an error of kind \ref SC3_ERROR_LEAK
+ * when encountering leftover memory, references, or other resources,
+ * but ensure that the program may continue cleanly.
+ * Thus, an application is free to treat leaks as fatal or not.
+ * The library functions may return leaks on any sc3_object_destroy call.
+ *
+ * Non-fatal errors are imaginable when accessing files on disk or parsing
+ * input.  It is up to the application to define and implement error handling.
+ *
+ * The object query functions sc3_object_is_* shall return cleanly on
+ * any kind of input parameters, even those that do not make sense.
+ * Query functions must be designed not to crash under any circumstance.
+ * On incorrect or undefined input, they must return false.
+ * On defined input, they return the proper query result.
  */
 
 #ifndef SC3_ERROR_H
@@ -263,7 +293,7 @@ sc3_error_severity_t;
 #endif
 
 /** We indicate the kind of an error condition;
- * see also \ref sc3_error_is_fatal. */
+ * see also \ref sc3_error_is_fatal and \ref sc3_error_is_leak. */
 typedef enum sc3_error_kind
 {
   SC3_ERROR_FATAL,      /**< Generic error indicating a failed program. */
@@ -277,10 +307,8 @@ typedef enum sc3_error_kind
   SC3_ERROR_NETWORK,    /**< Network error, possibly unrecoverable.
                              Network subsystem is assumed dysfunctional. */
   SC3_ERROR_LEAK,       /**< Leftover allocation or reference count.
-                             Must assume that resources are left dangling.
-                             An application can decide if this is fatal.
-                             We provide error handler functionality
-                             to support this decision process. */
+                             The library does not consider this error fatal,
+                              but the application should report it. */
   SC3_ERROR_IO,         /**< Input/output error due to external reasons.
                              For example, file permissions may be missing.
                              The application should attempt to recover. */
@@ -319,8 +347,8 @@ sc3_error_sync_t;
  * returned.
  * In other words, one reference goes in and one goes out.
  */
-typedef sc3_error_t * (*sc3_error_handler_t)
-  (sc3_error_t *e, const char *filename, int line, void *user);
+typedef sc3_error_t *(*sc3_error_handler_t)
+                    (sc3_error_t * e, const char *funcname, void *user);
 
 /** Check whether an error is not NULL and internally consistent.
  * The error may be valid in both its setup and usage phases.
@@ -351,8 +379,8 @@ int                 sc3_error_is_setup (const sc3_error_t * e, char *reason);
 
 /** Check an error object to be setup and fatal.
  * An error is considered fatal if it is of the kind \ref SC3_ERROR_FATAL,
- * \ref SC3_ERROR_BUG, \ref SC3_ERROR_MEMORY, \ref SC3_ERROR_NETWORK,
- * or \ref SC3_ERROR_LEAK.
+ * \ref SC3_ERROR_BUG, \ref SC3_ERROR_MEMORY or \ref SC3_ERROR_NETWORK.
+ * An application may implicitly define any other condition as fatal.
  * \param [in] e        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
@@ -360,6 +388,14 @@ int                 sc3_error_is_setup (const sc3_error_t * e, char *reason);
  *                      fatal kind, false otherwise.
  */
 int                 sc3_error_is_fatal (const sc3_error_t * e, char *reason);
+
+/** Check an error object to be setup and of kind \ref SC3_ERROR_LEAK.
+ * \param [in] e        Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff error is not NULL, setup, and a leak.
+ */
+int                 sc3_error_is_leak (const sc3_error_t * e, char *reason);
 
 /*** TODO error functions shall not throw new errors themselves?! ***/
 
@@ -463,11 +499,15 @@ sc3_error_t        *sc3_error_ref (sc3_error_t * e);
 sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
 
 /** Takes an error object with one remaining reference and deallocates it.
- * It is an error to destroy an error that is multiply refd.
- * Does nothing if error has not been created by \ref sc3_error_new.
- * \todo                Implement leak error handling.
- * \param [in,out] ep   Setup error with one reference.  NULL on output.
- * \return              An error object or NULL without errors.
+ * Destroying an error that is multiply refd produces a reference leak.
+ * The caller can provide an error handler for this case to avoid
+ * returning a fatal error, which would occur with it being NULL.
+ * Does nothing if error has not been created by \ref sc3_error_new,
+ * i.e. if it is a static fallback.
+ * \param [in,out] ep       Setup error with one reference.  NULL on output.
+ * \return                  An error object or NULL without errors.
+ *                          When the error had more than one reference,
+ *                          return an error of kind \ref SC3_ERROR_LEAK.
  */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 

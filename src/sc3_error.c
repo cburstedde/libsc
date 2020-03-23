@@ -110,17 +110,26 @@ sc3_error_is_setup (const sc3_error_t * e, char *reason)
 int
 sc3_error_is_fatal (const sc3_error_t * e, char *reason)
 {
+  /* We do not classify the kind SC3_ERROR_LEAK as fatal. */
+
   SC3E_IS (sc3_error_is_setup, e, reason);
   switch (e->kind) {
   case SC3_ERROR_FATAL:
   case SC3_ERROR_BUG:
   case SC3_ERROR_MEMORY:
   case SC3_ERROR_NETWORK:
-  case SC3_ERROR_LEAK:
     SC3E_YES (reason);
   default:
     SC3E_NO (reason, "Error is not of the fatal kind");
   }
+}
+
+int
+sc3_error_is_leak (const sc3_error_t * e, char *reason)
+{
+  SC3E_IS (sc3_error_is_setup, e, reason);
+  SC3E_TEST (e->kind == SC3_ERROR_LEAK, reason);
+  SC3E_YES (reason);
 }
 
 static void
@@ -285,13 +294,21 @@ sc3_error_t        *
 sc3_error_destroy (sc3_error_t ** ep)
 {
   sc3_error_t        *e;
+  int                 leak = 0;
 
   SC3E_INULLP (ep, e);
-  SC3E_DEMIS (sc3_refcount_is_last, &e->rc);
+  if (!sc3_refcount_is_last (&e->rc, NULL)) {
+    /* Reference leak encountered, which may not occur with static errors. */
+    SC3A_CHECK (e->alloced);
+    leak = 1;
+  }
+  /* This function checks error object consistency as a side effect.  */
   SC3E (sc3_error_unref (&e));
 
-  SC3A_CHECK (e == NULL || !e->alloced);
-  return NULL;
+  SC3A_CHECK (e == NULL || (!e->alloced ^ leak));
+  return leak ?
+    sc3_error_new_kind (SC3_ERROR_LEAK, __FILE__, __LINE__,
+                        "Reference leak in sc3_error_destroy") : NULL;
 }
 
 void

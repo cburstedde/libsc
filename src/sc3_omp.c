@@ -92,6 +92,7 @@ sc3_omp_esync_init (sc3_omp_esync_t * s)
   return NULL;
 }
 
+/* TODO: what to do when sc3_error_destroy produces a leak? */
 void
 sc3_omp_esync_in_critical (sc3_omp_esync_t * s, sc3_error_t ** e)
 {

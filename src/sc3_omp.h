@@ -27,7 +27,13 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-/** \file sc3_omp.h
+/** \file sc3_omp.h \ingroup sc3
+ * We provide functions to work with OpenMP.
+ *
+ * We provide simple wrappers as well as synchronization of
+ * \ref sc3_error_t objects between threads.
+ *
+ * \todo Check error synchronization again and TODO notes in the .c file.
  */
 
 #ifndef SC3_OMP_H

@@ -55,6 +55,8 @@ unravel_error (sc3_error_t ** ep)
 
     /* go down the stack */
     SC3E (sc3_error_get_stack (e, &stack));
+
+    /* we treat leaks as fatal in this application */
     SC3E (sc3_error_destroy (&e));
     e = stack;
     ++j;
