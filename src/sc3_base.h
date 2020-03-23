@@ -57,6 +57,10 @@
  *
  * Containers are declared in \ref sc3_array.h.
  *
+ * We use the C convention for boolean variables:
+ * They are of type `int` and false if and only of their value is 0.
+ * An application must be careful to interpret any non-negative number as true.
+ *
  * The design we provide is not meant to reinvent object oriented programming.
  * It is a set of minimal conventions that establish a consistent call pattern
  * of the code.

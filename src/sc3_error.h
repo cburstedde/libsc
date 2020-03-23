@@ -186,10 +186,15 @@ extern              "C"
   if ((r) != NULL) *(r) = (v);                                          \
   } while (0)
 
+/** Require an input pointer \a pp to dereference to a non-NULL value.
+ * The value is assigned to the pointer \a p for future use. */
 #define SC3E_INOUTP(pp,p) do {                                          \
   SC3A_CHECK ((pp) != NULL && *(pp) != NULL);                           \
   (p) = *(pp);                                                          \
   } while (0)
+
+/** Require an input pointer \a pp to dereference to a non-NULL value,
+ * assign its value to \a p for future use, then set input value to NULL. */
 #define SC3E_INULLP(pp,p) do {                                          \
   SC3A_CHECK ((pp) != NULL && *(pp) != NULL);                           \
   (p) = *(pp);                                                          \
