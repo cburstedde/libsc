@@ -494,7 +494,7 @@ sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
     char                finalmsg[SC3_BUFSIZE];
 
     sc3_error_destroy_noerr (&e, flatmsg);
-    sc3_snprintf (finalmsg, SC3_BUFSIZE, "%s: %s", errmsg, flatmsg);
+    sc3_snprintf (finalmsg, SC3_BUFSIZE, "%s: (%s)", errmsg, flatmsg);
     SC3E (sc3_error_accumulate
           (leak, SC3_ERROR_LEAK, filename, line, finalmsg));
   }
