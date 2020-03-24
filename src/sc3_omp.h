@@ -28,10 +28,10 @@
 */
 
 /** \file sc3_omp.h \ingroup sc3
- * We provide functions to work with OpenMP.
+ * We provide support functions to work with OpenMP.
  *
- * We provide simple wrappers as well as synchronization of
- * \ref sc3_error_t objects between threads.
+ * We provide simple wrappers to OpenMP functions as well as a synchronization
+ * mechanism for \ref sc3_error_t objects encountered in parallel threads.
  *
  * \todo Check error synchronization again and TODO notes in the .c file.
  */
@@ -58,10 +58,34 @@ extern              "C"
 #endif
 #endif
 
+/** Wrap the omp_get_max_threads function.
+ * \return          The maximum number of threads that may be spawned.
+ */
 int                 sc3_omp_max_threads (void);
+
+/** Wrap the omp_get_num_threads function.
+ * \return          The current number of parallel threads.
+ */
 int                 sc3_omp_num_threads (void);
+
+/** Wrap the omp_get_thread_num function.
+ * \return          The number of the calling thread.
+ */
 int                 sc3_omp_thread_num (void);
 
+/** Divide a contiguous range of numbers into subranges by thread.
+ * Often, each MPI process works on a range within a global number of tasks.
+ * The threads in each MPI process can subdivide the range among them.
+ * This function computes this subrange based on the current number of threads.
+ * We guarantee that the subranges are contiguous and ascending among threads.
+ * They are disjoint and their union is onto the input range.
+ * \param [in,out] beginr   On input, start index of the range to subdivide.
+ *                          On output, start index of this thread's subrange.
+ *                          If \a beginr is NULL, the function noops.
+ * \param [in,out] endr     On input, end index (exclusive) of the range.
+ *                          On output, end index (exclusive) of thread range.
+ *                          If \a endr is NULL, the function noops.
+ */
 void                sc3_omp_thread_intrange (int *beginr, int *endr);
 
 int                 sc3_omp_esync_is_clean (sc3_omp_esync_t * s);

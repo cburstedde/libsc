@@ -28,7 +28,7 @@
 */
 
 /** \file sc3_mpi.h \ingroup sc3
- * We provide MPI wrappers for configuring without an MPI installation.
+ * We provide MPI wrappers for configuring both with or without MPI.
  *
  * If we configure --enable-mpi, the wrappers call the original MPI
  * functions and translate their return values into \ref sc3_error_t
@@ -58,7 +58,7 @@
 /** Wrapped MPI error handler object. */
 typedef struct sc3_MPI_Errhandler *sc3_MPI_Errhandler_t;
 
-/** Wrarpped MPI communicator.
+/** Wrapped MPI communicator.
  * Without --enable-mpi, it reports size 1 and rank 0. */
 typedef struct sc3_MPI_Comm *sc3_MPI_Comm_t;
 
