@@ -344,9 +344,25 @@ sc3_error_t        *sc3_MPI_Comm_split_type (sc3_MPI_Comm_t comm,
  */
 sc3_error_t        *sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm);
 
+/** Wrap MPI_Info_create.
+ * \param [out] info    Valid MPI info object.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Info_create (sc3_MPI_Info_t * info);
+
+/** Wrap MPI_Info_set.
+ * Without --enable-mpi, do nothing.
+ * \param [in] info         Valid MPI info object.
+ * \param [in] key, value   See original function.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Info_set (sc3_MPI_Info_t info,
                                       const char *key, const char *value);
+
+/** Wrap MPI_Info_free.
+ * \param [in] info Valid MPI info object.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Info_free (sc3_MPI_Info_t * info);
 
 sc3_error_t        *sc3_MPI_Win_allocate_shared
