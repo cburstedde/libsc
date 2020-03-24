@@ -82,17 +82,17 @@ sc3_MPI_Datatype_t;
 /** We wrap the MPI operation types we use. */
 typedef enum sc3_MPI_Op
 {
-  SC3_MPI_MIN,
-  SC3_MPI_MAX,
-  SC3_MPI_SUM
+  SC3_MPI_MIN,          /**< The usual minimum reduction operation. */
+  SC3_MPI_MAX,          /**< The usual maximum reduction operation. */
+  SC3_MPI_SUM           /**< The usual sum reduction operation. */
 }
 sc3_MPI_Op_t;
 
 /** We wrap two MPI error codes. */
 typedef enum sc3_MPI_Errorcode
 {
-  SC3_MPI_SUCCESS,
-  SC3_MPI_ERR_OTHER
+  SC3_MPI_SUCCESS,      /**< An MPI function has exited successfully. */
+  SC3_MPI_ERR_OTHER     /**< An MPI function has produced an error. */
 }
 sc3_MPI_Errorcode_t;
 
@@ -187,9 +187,9 @@ typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
 /** Wrap MPI 3 window lock modes. */
 typedef enum sc3_MPI_Win_mode
 {
-  SC3_MPI_LOCK_SHARED = -3,
-  SC3_MPI_LOCK_EXCLUSIVE = -4,
-  SC3_MPI_MODE_NOCHECK = -5,
+  SC3_MPI_LOCK_SHARED = -3,     /**< Shared (multiple readers) lock. */
+  SC3_MPI_LOCK_EXCLUSIVE = -4,  /**< Exclusive (usually reader) lock. */
+  SC3_MPI_MODE_NOCHECK = -5,    /**< Option to \ref sc3_MPI_Win_lock. */
 }
 sc3_MPI_Win_mode_t;
 
@@ -365,16 +365,60 @@ sc3_error_t        *sc3_MPI_Info_set (sc3_MPI_Info_t info,
  */
 sc3_error_t        *sc3_MPI_Info_free (sc3_MPI_Info_t * info);
 
+/** Wrap MPI_Win_allocate_shared.
+ * \param [in] size, disp_unit, info    See original function.
+ * \param [in] comm     Valid MPI communicator.
+ * \param [out] baseptr Start of window memory.
+ * \param [out] win     New valid MPI window.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Win_allocate_shared
   (sc3_MPI_Aint_t size, int disp_unit, sc3_MPI_Info_t info,
    sc3_MPI_Comm_t comm, void *baseptr, sc3_MPI_Win_t * win);
+
+/** Wrap MPI_Win_shared_query.
+ * \param [in] win      New valid MPI window.
+ * \param [in] rank     Without --enable-mpi, must match the rank of
+ *                      the communicator used for creating the window.
+ * \param [out] size    Size of this rank's window allocation.
+ * \param [out] disp_unit   The unit provided on window creation.
+ * \param [out] baseptr     Start of the rank's window memory.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Win_shared_query
   (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size, int *disp_unit,
    void *baseptr);
+
+/** Wrap MPI_Win_lock.
+ * Without --enable-mpi, we verify that lock and unlock have correct sequence.
+ * \param [in] lock_type, assert    Without --enable-mpi, must be one of
+ *                                  the enumeration values defined above.
+ * \param [in] rank     Rank in window to lock.
+ * \param [in] win      MPI window to unlock.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Win_lock (int lock_type, int rank,
                                       int assert, sc3_MPI_Win_t win);
+
+/** Wrap MPI_Win_unlock.
+ * Without --enable-mpi, we verify that lock and unlock have correct sequence.
+ * \param [in] rank     Rank in window to lock.
+ * \param [in] win      MPI window to unlock.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win);
+
+/** Wrap MPI_Win_sync.
+ * \param [in] win      Valid MPI window.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Win_sync (sc3_MPI_Win_t win);
+
+/** Wrap MPI_Win_free.
+ * \param [in] win      Without --enable-mpi, we verify that this MPI window
+ *                      is valid and unlocked.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Win_free (sc3_MPI_Win_t * win);
 
 /** Wrap MPI_Allgather.
