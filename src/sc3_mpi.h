@@ -274,14 +274,49 @@ sc3_error_t        *sc3_MPI_Init (int *argc, char ***argv);
  */
 sc3_error_t        *sc3_MPI_Finalize (void);
 
+/** Wrap MPI_Comm_set_errhandler.
+ * \param [in] comm     Valid MPI communicator.
+ * \param [in] errh     Valid MPI errror handler object.
+ *                      May use it \ref SC3_MPI_ERRORS_RETURN.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Comm_set_errhandler (sc3_MPI_Comm_t comm,
                                                  sc3_MPI_Errhandler_t errh);
 
+/** Wrap MPI_Comm_size.
+ * \param [in] comm     Valid MPI communicator.
+ * \param [out] size    Without --enable-mpi, return 1.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Comm_size (sc3_MPI_Comm_t comm, int *size);
+
+/** Wrap MPI_Comm_rank.
+ * \param [in] comm     Valid MPI communicator.
+ * \param [out] rank    Without --enable-mpi, return 0.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Comm_rank (sc3_MPI_Comm_t comm, int *rank);
 
+/** Wrap MPI_Comm_dup.
+ * \param [in] comm     Valid MPI communicator.
+ * \param [out] newcomm Valid MPI communicator.
+ *                      Without --enable-mpi, the same as \a comm.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Comm_dup (sc3_MPI_Comm_t comm,
                                       sc3_MPI_Comm_t * newcomm);
+
+/** Wrap MPI_Comm_split.
+ * \param [in] comm     Valid MPI communicator.
+ * \param [in] color    See original function.
+ *                      Without --enable-mpi, if color is \ref SC3_MPI_UNDEFINED,
+ *                      we set \a newcomm to the invalid \ref SC3_MPI_COMM_NULL.
+ *                      Otherwise, we set \a newcomm to \a comm.
+ * \param [in] key      See original function.  Ignored without --enable-mpi.
+ * \param [out] newcomm Valid MPI communicator.  Without --enable-mpi and
+ *                      with valid \a color, the same as \a comm.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Comm_split (sc3_MPI_Comm_t comm, int color,
                                         int key, sc3_MPI_Comm_t * newcomm);
 
@@ -302,6 +337,11 @@ sc3_error_t        *sc3_MPI_Comm_split_type (sc3_MPI_Comm_t comm,
                                              sc3_MPI_Info_t info,
                                              sc3_MPI_Comm_t * newcomm);
 
+/** Wrap MPI_Comm_free.
+ * \param [in] comm     Valid MPI communicator.
+ *                      On output, \ref SC3_MPI_COMM_NULL.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Comm_free (sc3_MPI_Comm_t * comm);
 
 sc3_error_t        *sc3_MPI_Info_create (sc3_MPI_Info_t * info);
@@ -321,18 +361,45 @@ sc3_error_t        *sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win);
 sc3_error_t        *sc3_MPI_Win_sync (sc3_MPI_Win_t win);
 sc3_error_t        *sc3_MPI_Win_free (sc3_MPI_Win_t * win);
 
+/** Wrap MPI_Allgather.
+ * \param [in] comm     Valid MPI communicator.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Barrier (sc3_MPI_Comm_t comm);
+
+/** Wrap MPI_Allgather.
+ * \param [in] sendbuf, sendcount, sendtype     See original function.
+ * \param [in] recvbuf, recvcount, recvtype     See original function.
+ *                      Without --enable-mpi, it represents one rank.
+ * \param [in] comm     Valid MPI communicator.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Allgather (void *sendbuf, int sendcount,
                                        sc3_MPI_Datatype_t sendtype,
                                        void *recvbuf, int recvcount,
                                        sc3_MPI_Datatype_t recvtype,
                                        sc3_MPI_Comm_t comm);
+
+/** Wrap MPI_Allgatherv.
+ * \param [in] sendbuf, sendcount, sendtype     See original function.
+ * \param [in] recvbuf, recvcounts, displs, recvtype     See original.
+ *                      Without --enable-mpi, it represents one rank.
+ * \param [in] comm     Valid MPI communicator.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Allgatherv (void *sendbuf, int sendcount,
                                         sc3_MPI_Datatype_t sendtype,
                                         void *recvbuf, int *recvcounts,
                                         int *displs,
                                         sc3_MPI_Datatype_t recvtype,
                                         sc3_MPI_Comm_t comm);
+
+/** Wrap MPI_Allreduce.
+ * \param [in] sendbuf, recvbuf, count, datatype    See original function.
+ * \param [in] op       Valid MPI operation type.
+ * \param [in] comm     Valid MPI communicator.
+ * \return          NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_MPI_Allreduce (void *sendbuf, void *recvbuf,
                                        int count, sc3_MPI_Datatype_t datatype,
                                        sc3_MPI_Op_t op, sc3_MPI_Comm_t comm);
