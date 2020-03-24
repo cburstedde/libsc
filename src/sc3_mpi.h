@@ -40,7 +40,7 @@
  * On failed assertions and pre/post-conditions, we return some fatal kind.
  * Without --enable-mpi, the wrappers present communicators of size one that
  * are suitable for size and rank queries and most collective communication.
- * The advantage is that the code needs only few \#ifdef SC_ENABLE_MPI.
+ * The advantage is that the code needs only few #`ifdef SC_ENABLE_MPI`.
  *
  * MPI 3 shared window creation is thinly wrapped if it exists.
  * Otherwise the wrappers present a shared communicator of size one.
@@ -213,7 +213,7 @@ typedef MPI_Win     sc3_MPI_Win_t;
  *
  * This macro is primarily intended for use inside our wrappers.
  * The MPI function \a f must exist, thus we call this inside
- * an \#ifdef SC_ENABLE_MPI macro.
+ * an #`ifdef SC_ENABLE_MPI` macro.
  *
  * If the MPI function returns MPI_SUCCESS, this macro does nothing.
  * Otherwise, we query the MPI error string and return a proper sc3 error.

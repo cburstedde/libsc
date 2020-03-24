@@ -154,6 +154,9 @@ sc3_omp_esync (sc3_omp_esync_t * s, sc3_error_t ** e)
 sc3_error_t        *
 sc3_omp_esync_summary (sc3_omp_esync_t * s)
 {
+  /* TODO don't mix assertion checks with parallel errors */
+  SC3A_CHECK (s != NULL);
+
   /* TODO create a new error with rcount and ecount information */
   return s->shared_error;
 }
