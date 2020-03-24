@@ -434,15 +434,16 @@ sc3_error_t        *sc3_error_new (sc3_allocator_t * eator,
 /** Set the error to be the top of a stack of existing errors.
  * The default stack is NULL.
  * \param [in,out] e        Error object before \ref sc3_error_setup.
- * \param [in,out] stack    This function takes ownership of stack
- *                          (i.e. does not ref it), the pointer is NULLed.
- *                          The stack may be NULL or must be setup.
+ * \param [in,out] pstack   This pointer to a pointer must not be NULL.
+ *                          The function takes ownership of pointed-to stack
+ *                          (i.e. does not ref it) and NULLs the argument.
+ *                          Pointed-to stack may be NULL or must be setup.
  *                          If called multiple times, a stack passed earlier
  *                          is unrefd internally.
  * \return              An error object or NULL without errors.
  */
 sc3_error_t        *sc3_error_set_stack (sc3_error_t * e,
-                                         sc3_error_t ** stack);
+                                         sc3_error_t ** pstack);
 
 /** Set the filename and line number of an error.
  * The default location is ("", 0).

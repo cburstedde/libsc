@@ -177,13 +177,14 @@ sc3_error_set_stack (sc3_error_t * e, sc3_error_t ** pstack)
 {
   sc3_error_t        *stack;
 
-  SC3E_INULLP (pstack, stack);
   SC3A_IS (sc3_error_is_new, e);
-  if (stack != NULL) {
+  SC3A_CHECK (pstack != NULL);
+  if ((stack = *pstack) != NULL) {
+    *pstack = NULL;
     SC3A_IS (sc3_error_is_setup, stack);
   }
   if (e->stack != NULL) {
-    /* At this point in the code, we do not catch leaks. */
+    /* At this point in the code, we treat leaks as fatal. */
     SC3E (sc3_error_unref (&e->stack));
   }
   e->stack = stack;
