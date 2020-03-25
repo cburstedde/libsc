@@ -31,7 +31,7 @@ sc_uint128_init (sc_uint128_t * input, uint64_t high, uint64_t low)
 }
 
 void
-sc_uint128_init_pow2 (sc_uint128_t * input, int exponent)
+sc_uint128_bitwise_pow2 (sc_uint128_t * input, int exponent)
 {
   SC_ASSERT (exponent >= 0);
 
@@ -147,8 +147,8 @@ sc_uint128_shift_right (const sc_uint128_t * input, int shift_count,
   }
   else {
     result->low_bits =
-      (result->high_bits << (64 - shift_count)) | (input->
-                                                   low_bits >> shift_count);
+      (result->
+       high_bits << (64 - shift_count)) | (input->low_bits >> shift_count);
     result->high_bits >>= shift_count;
   }
 }
@@ -170,8 +170,8 @@ sc_uint128_shift_left (const sc_uint128_t * input, int shift_count,
   }
   else {
     result->high_bits =
-      (result->high_bits << shift_count) | (input->
-                                            low_bits >> (64 - shift_count));
+      (result->
+       high_bits << shift_count) | (input->low_bits >> (64 - shift_count));
     result->low_bits <<= shift_count;
   }
 }

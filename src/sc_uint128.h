@@ -25,6 +25,14 @@
  *
  * Routines for managing unsigned 128 bit integer.
  *
+ * \todo If result == a or result == b, or any other precondition,
+ *       is not allowed, enforce it with SC_ASSERT.
+ *       Please make sure that the documentation reflects this.
+ * \todo We do not provide for allocation.
+ *       Throughout the file, it is not important whether a pointer
+ *       points to static or heap storage.  Let us remove the
+ *       corresponding text from the documentation.
+ *
  * \ingroup libsc
  */
 
@@ -61,38 +69,37 @@ int                 sc_uint128_is_equal (const sc_uint128_t * a,
 
 /** Initializes an unsigned 128 bit integer to a given value.
  * \param [in,out] a        A pointer to the sc_uint128_t that will be intialized.
- * \param [in] high   	    The given high bits to intialize \a input.
- * \param [in] low          The given low bits to initialize \a input.
+ * \param [in] high   	    The given high bits to intialize \a a.
+ * \param [in] low          The given low bits to initialize \a a.
  */
 void                sc_uint128_init (sc_uint128_t * a,
                                      uint64_t high, uint64_t low);
 
-/** Sets the exponent-th bit of \a input to one.
- * \param [in,out] input        A pointer to allocated/static sc_uint128_t.
- * \param[in]			 exponent     The bit (counted from the right hand side)
- *                              that is set to one. 
- *                              0 <= \a exponent < 128.
+/** Sets the exponent-th bit of \a a to one.
+ * This function modifies an existing, initialized value.
+ * \param [in,out] a        A pointer to allocated/static sc_uint128_t.
+ * \param[in] exponent      The bit (counted from the right hand side)
+ *                          that is set to one by logical or.
+ *                          0 <= \a exponent < 128.
  */
-void                sc_uint128_init_pow2 (sc_uint128_t * a, int exponent);
+void                sc_uint128_bitwise_pow2 (sc_uint128_t * a, int exponent);
 
-/** Copies an intialized sc_uint128 to an allocated/static sc_uint128_t. 
+/** Copies an intialized sc_uint128 to an allocated/static sc_uint128_t.
  * \param [in]      input      A pointer to the sc_uint128 that is copied.
  * \param [in,out]  output     A pointer to allocated/static sc_uint128_t.
  *                             The high and low bits of \a output will
  *                             be set to the high and low bits of
- *                             \a input respectively.
+ *                             \a input, respectively.
  */
 void                sc_uint128_copy (const sc_uint128_t * input,
                                      sc_uint128_t * output);
 
 /** Adds the uint128_t \a b to the uint128_t \a a.
- * \a result = \a a or \a result = \a b is not
- * allowed.
+ * \a result = \a a or \a result = \a b is not allowed.
  * \param [in]	a       A pointer to a sc_uint128_t.
  * \param [in]	b       A pointer to a sc_uint128_t.
  * \param[out] result	A pointer to an allocated sc_uint128_t.
- *                      The sum \a a + \a b will be saved.
- *                      in \a result.
+ *                      The sum \a a + \a b will be saved in \a result.
  */
 void                sc_uint128_add (const sc_uint128_t * a,
                                     const sc_uint128_t * b,
@@ -100,13 +107,11 @@ void                sc_uint128_add (const sc_uint128_t * a,
 
 /** Substracts the uint128_t \a b from the uint128_t \a a.
  * This function assumes that the result is >= 0.
- * \a result = \a a or \a result = \a b is not
- * allowed
+ * \a result = \a a or \a result = \a b is not allowed.
  * \param [in]	a       A pointer to a sc_uint128_t.
  * \param [in]	b       A pointer to a sc_uint128_t.
- * \param[out] result	  A pointer to an allocated sc_uint128_t.
- *                      The difference \a a - \a b will be saved.
- *                      in \a result.
+ * \param[out] result	A pointer to an allocated sc_uint128_t.
+ *                      The difference \a a - \a b will be saved in \a result.
  */
 void                sc_uint128_sub (const sc_uint128_t * a,
                                     const sc_uint128_t * b,
@@ -115,11 +120,11 @@ void                sc_uint128_sub (const sc_uint128_t * a,
 /** Calculates the bitwise negation of the uint128_t \a a.
  * \param[in]  a        A pointer to a sc_uint128_t.
  * \param[out] result   A pointer to an allocated sc_uint128_t.
- *                      The bitwise negation of \a a will be
- *                      saved in \a result.
+ *                  The bitwise negation of \a a will be saved in \a result.
  */
 void                sc_uint128_bitwise_neg (const sc_uint128_t * a,
                                             sc_uint128_t * result);
+
 /** Calculates the bitwise or of the uint128_t \a a and \a b.
  * \param[in]  a        A pointer to a sc_uint128_t.
  * \param[in]  b        A pointer to a sc_uint128_t.
@@ -143,9 +148,11 @@ void                sc_uint128_bitwise_and (const sc_uint128_t * a,
                                             sc_uint128_t * result);
 
 /** Calculates the bit left shift of the uint128_t \a input by shift_count bits.
- * If \a shift_count > 128, \a result is set to 0.
+ * We shift in zeros from the right.  If \a shift_count >= 128, \a result is 0.
+ * \todo Make it legal to shift by 128 bits or more, and that the semantics
+ *       Of left and right shift are the exact same.
  * \param [in]      input       A pointer to a sc_uint128_t.
- * \param [in]      shift_count Length of the shift.
+ * \param [in]      shift_count Bits to shift.
  * \param [in,out]  result      A pointer to a allocated sc_uint128_t.
  *                              The left shifted number will be saved \a result.
  */
@@ -154,8 +161,9 @@ void                sc_uint128_shift_left (const sc_uint128_t * input,
                                            sc_uint128_t * result);
 
 /** Calculates the bit right shift of the uint128_t \a input by shift_count bits.
+ * We shift in zeros from the left.  If \a shift_count >= 128, \a result is 0.
  * \param [in]      input       A pointer to a sc_uint128_t.
- * \param [in]      shift_count	Length of the shift.
+ * \param [in]      shift_count	Bits to shift.
  * \param [in,out]  result      A pointer to a allocated sc_uint128_t.
  *                              The right shifted number will be saved \a result.
  */
@@ -164,7 +172,8 @@ void                sc_uint128_shift_right (const sc_uint128_t * input,
                                             sc_uint128_t * result);
 
 /** Adds the uint128 \a b to the uint128_t \a a.
- * The result is saved in \a a. \a a = \a b is allowed.
+ * The result is saved in \a a. \a a == \a b is allowed.
+ * \todo I'm not sure we should allow a == b.  Results may be undefined.
  * \param [in, out] a  A pointer to a sc_uint128_t. \a a
  *                     will be overwritten by \a a + \a b.
  * \param [in]      b	 A pointer to a sc_uint128_t.
@@ -173,6 +182,7 @@ void                sc_uint128_add_inplace (sc_uint128_t * a,
                                             const sc_uint128_t * b);
 
 /** Substracts the uint128_t \a b from the uint128_t \a a.
+ * \todo Please align documentation of inplace add and sub.
  * The result is saved in \a a.
  * This function assumes that the result is >= 0.
  * \a a = \a b is allowed.
@@ -185,6 +195,7 @@ void                sc_uint128_sub_inplace (sc_uint128_t * a,
                                             const sc_uint128_t * b);
 
 /** Calculates the bitwise or of the uint128_t \a a and the uint128_t \a b.
+ * \todo I'm not sure we should allow a == b.  Results may be undefined.
  * \param [in,out]  a   A pointer to a sc_uint128_t.
  *                      The bitwise or will be saved in \a a.
  * \param [in]      b   A pointer to a sc_uint128_t.
@@ -193,6 +204,7 @@ void                sc_uint128_bitwise_or_inplace (sc_uint128_t * a,
                                                    const sc_uint128_t * b);
 
 /** Calculates the bitwise and of the uint128_t \a a and the uint128_t \a b.
+ * \todo I'm not sure we should allow a == b.  Results may be undefined.
  * \param [in,out]  a   A pointer to a sc_uint128_t.
  *                      The bitwise and will be saved in \a a.
  * \param [in]      b   A pointer to a sc_uint128_t.
