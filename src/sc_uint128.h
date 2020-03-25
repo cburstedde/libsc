@@ -33,34 +33,34 @@
 
 #include <sc.h>
 
-/** An unsigned 128 Bit integer represented as two uint64_t.
- */
+/** An unsigned 128 bit integer represented as two uint64_t. */
 typedef struct sc_uint128
 {
-  uint64_t            high_bits;
-  uint64_t            low_bits;
+  uint64_t            high_bits;        /**< The more significant 64 bits. */
+  uint64_t            low_bits;         /**< The less significant 64 bits. */
 }
 sc_uint128_t;
 
 /** Compare the sc_uint128_t \a a and the sc_uint128_t \a b.
  * \param [in]	a	A pointer to allocated/static sc_uint128_t.
  * \param [in]	b	A pointer to allocated/static sc_uint128_t.
- * \return                  Returns -1 if a < b,
- *													returns 1 if a > b and
- *													returns 0 if a == b.
+ * \return              Returns -1 if a < b,
+ *			         1 if a > b and
+ *			 	 0 if a == b.
  */
 int                 sc_uint128_compare (const void *a, const void *b);
 
 /** Checks if the sc_uint128_t \a a and the sc_uint128_t \a b are equal.
  * \param [in]	a	A pointer to allocated/static sc_uint128_t.
  * \param [in]	b	A pointer to allocated/static sc_uint128_t.
- * \return		Returns a value > 0 if a is equal to b and a value <= 0 else.
+ * \return		Returns a true value if \a a and \a b are equal,
+ *                      false otherwise.
  */
 int                 sc_uint128_is_equal (const sc_uint128_t * a,
                                          const sc_uint128_t * b);
 
 /** Initializes an unsigned 128 bit integer to a given value.
- * \param [in,out] input    A pointer to the sc_uint128_t that will be intialized.
+ * \param [in,out] a        A pointer to the sc_uint128_t that will be intialized.
  * \param [in] high   	    The given high bits to intialize \a input.
  * \param [in] low          The given low bits to initialize \a input.
  */
@@ -176,8 +176,8 @@ void                sc_uint128_add_inplace (sc_uint128_t * a,
  * The result is saved in \a a.
  * This function assumes that the result is >= 0.
  * \a a = \a b is allowed.
- * \param [in,out]  a A pointer to a sc_uint128_t. 
- *                    The difference \a a - \a b 
+ * \param [in,out]  a A pointer to a sc_uint128_t.
+ *                    The difference \a a - \a b
  *                    will be saved in \a a.
  * \param [in]      b A pointer to a sc_uint128_t.
  */
