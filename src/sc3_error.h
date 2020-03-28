@@ -290,9 +290,9 @@ extern              "C"
 
 /** Examine a condition \a x and add to the inout leak error \a l.
  * The pointer \a l must be of type \ref sc3_error_t ** and not NULL.
- * It may contain a leak or NULL.  On fatal errors, we return one. */
+ * That may contain a leak or NULL.  On fatal error, we return it. */
 #define SC3L_DEMAND(l,x) do {                                           \
-  if (!(x)) { SC3E (sc3_error_accumulate (l, SC3_ERROR_LEAK,            \
+  if (!(x)) { SC3E (sc3_error_accum_kind (l, SC3_ERROR_LEAK,            \
                     __FILE__, __LINE__, #x)); }} while (0)
 
 #if 0
@@ -617,14 +617,14 @@ sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** pstack,
  * \param [in] errmsg   Message to include in the new error object.
  * \return              Null on success, otherwise a fatal error.
  */
-sc3_error_t        *sc3_error_accumulate
+sc3_error_t        *sc3_error_accum_kind
   (sc3_error_t ** pe, sc3_error_kind_t kind,
    const char *filename, int line, const char *errmsg);
 
 /** Act on an error \a e depending on it being a leak, NULL, or other.
  * If the error is neither NULL nor a leak, we \ref sc3_error_new_stack.
  * If it is a leak, we flatten its messages by \ref sc3_error_destroy_noerr
- * and pass them to \ref sc3_error_accumulate, adding it to the inout \a leak.
+ * and pass them to \ref sc3_error_accum_kind, adding it to the inout \a leak.
  * It it is NULL, we return NULL.
  * \param [in,out] leak Pointer to an error must not be NULL.
  *                      Its value may be NULL or of kind \ref SC3_ERROR_LEAK.

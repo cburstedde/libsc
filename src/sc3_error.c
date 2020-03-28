@@ -459,7 +459,7 @@ sc3_error_new_inherit (sc3_error_t ** pstack,
 }
 
 sc3_error_t        *
-sc3_error_accumulate (sc3_error_t ** pe, sc3_error_kind_t kind,
+sc3_error_accum_kind (sc3_error_t ** pe, sc3_error_kind_t kind,
                       const char *filename, int line, const char *errmsg)
 {
   sc3_error_t        *e, *res;
@@ -496,7 +496,7 @@ sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
 
     sc3_error_destroy_noerr (&e, flatmsg);
     sc3_snprintf (finalmsg, SC3_BUFSIZE, "%s: (%s)", errmsg, flatmsg);
-    SC3E (sc3_error_accumulate
+    SC3E (sc3_error_accum_kind
           (leak, SC3_ERROR_LEAK, filename, line, finalmsg));
   }
   else if (e != NULL) {
