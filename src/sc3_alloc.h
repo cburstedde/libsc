@@ -32,6 +32,11 @@
  *
  * An allocator provides malloc and free equivalents with counters.
  * It keeps track of the number of allocs and frees to aid in dedugging.
+ * Furthermore, it is refd by every allocation and unrefd by deallocation.
+ * The latter feature avoids error returns on dropping the last reference
+ * to an allocator, and in turn any other object, with live allocations.
+ * The counting mechanism can be disabled.
+ *
  * Different allocators are independent objects with independent counters.
  * This feature is useful for example to isolate memory between threads:
  * Each thread may create a new allocator, derived from a global allocator
@@ -42,7 +47,7 @@
  * \ref sc3_allocator_new is no exception:
  * Allocators can be arranged in a forest-type dependency graph.
  * Having different allocators for different functionalities or algorithms
- * improves modularity of allocation and the associated debugging.
+ * can improve modularity of allocation and the associated debugging.
  * Each allocator can be configured with its own alignment requirements.
  *
  * Allocators can be refd and unrefd.
@@ -185,13 +190,43 @@ sc3_error_t        *sc3_allocator_new (sc3_allocator_t * oa,
 /** Set byte alignment followed by the allocator.
  * \param [in,out] a    Valid allocator not setup.
  * \param [in] align    Power of two designating byte alignment of memory,
- *                      or zero for default alignment.
- *                      Zero alignment uses system defaults and
- *                      disables internal consistency checking.
+ *                      or zero for system default alignment.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_set_align (sc3_allocator_t * a,
                                              size_t align);
+
+/** Set whether the allocator keeps track of malloc and free counts.
+ * If true, it requires the count to be zero when its last reference drops,
+ * otherwise exiting with a fatal error out of that \ref sc3_allocator_unref.
+ * If the keepalive parameter is set to true, such condition cannot occur.
+ * The count status can be queried by \ref sc3_allocator_is_free either way.
+ * \param [in,out] a    Valid allocator not setup.
+ * \param [in] counting Boolean to enable counting.  Default is true.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_allocator_set_counting (sc3_allocator_t * a,
+                                                int counting);
+
+/** Set whether the allocator must have zero allocations when being freed.
+ * If this parameter is true, we ref the allocator on every allocation
+ * and unref it on every deallocation.
+ * As a consequence, if an application unrefs an allocator and there are
+ * remaining allocations, the allocator will not yet be deallocated.
+ * The allocator will be deallocated when its last allocation is freed and
+ * it is unrefd properly by the application, whichever comes last.
+ * If this parameter is true, \ref sc3_allocator_unref cannot fail due to
+ * remaining allocations.
+ * \param [in,out] a    Valid allocator not setup.
+ * \param [in] keepalive    Bool to enable self-referencing.  Default true.
+ *                      If enabled, we add a reference to the allocator
+ *                      on every allocation and drop it on deallocating.
+ *                      This keeps the allocator alive as long as not all
+ *                      allocations have been freed.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_allocator_set_keepalive (sc3_allocator_t * a,
+                                                 int keepalive);
 
 /** Setup an allocator and put it into its usable phase.
  * \param [in,out] a    This allocator must not yet be setup.
@@ -211,24 +246,30 @@ sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 
 /** Decrease the reference count on an allocator by 1.
  * If the reference count drops to zero, the allocator is deallocated.
+ * If the keepalive parameter is set, the reference count can only become
+ * zero of all allocations of this allocator are freed as well.
  * Does nothing if allocator has not been created by \ref sc3_allocator_new.
  * \param [in,out] ap   The pointer must not be NULL and the allocator valid.
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the allocator is destroyed and the value set to NULL.
  * \return              NULL on success, error object otherwise.
- *                      If the reference dropped to zero and still members
- *                      hold memory, return an \ref SC3_ERROR_LEAK error.
+ *                      If the reference count drops to zero and members
+ *                      still hold memory, which can only occur with counting
+ *                      and without keepalive, a fatal error is returned.
  */
 sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
 
 /** Destroy an allocator with a reference count of 1.
- * It is an error to destroy an allocator that is multiply refd.
+ * It is a leak error to destroy an allocator that is multiply refd.
  * Does nothing if allocator has not been created by \ref sc3_allocator_new.
  * \param [in,out] ap   This allocator must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
- *                      When the allocator had more than one reference,
- *                      return an error of kind \ref SC3_ERROR_LEAK.
+ *                      When the allocator had more than one reference to it,
+ *                      return an error of kind \ref SC3_ERROR_LEAK.  This
+ *                      also occurs with keepalive and remaining allocations.
+ *                      If keepalive is false, counting true, and allocations
+ *                      remain, return a fatal error.
  */
 sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
 

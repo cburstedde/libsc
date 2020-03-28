@@ -39,6 +39,7 @@ struct sc3_allocator
   size_t              align;
   int                 alloced;
   int                 counting;
+  int                 keepalive;
 
   long                num_malloc, num_calloc, num_free;
   size_t              total_size;
@@ -53,11 +54,11 @@ sc3_alloc_item_t;
 
 /** This allocator is thread-safe since it is not counting anything. */
 static sc3_allocator_t nca =
-  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, 0, 0, 0, 0 };
+  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /** This allocator is not thread-safe since it is counting and not locked. */
 static sc3_allocator_t nta =
-  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, 0, 0, 0, 0 };
+  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, 0, 0, 0, 0, 0 };
 
 int
 sc3_allocator_is_valid (const sc3_allocator_t * a, char *reason)
@@ -70,6 +71,7 @@ sc3_allocator_is_valid (const sc3_allocator_t * a, char *reason)
     SC3E_IS (sc3_allocator_is_setup, a->oa, reason);
   }
   if (!a->setup) {
+    SC3E_IS (sc3_refcount_is_last, &a->rc, reason);
     SC3E_TEST (a->num_malloc == 0 && a->num_calloc == 0 && a->num_free == 0,
                reason);
     SC3E_TEST (a->total_size == 0, reason);
@@ -133,6 +135,7 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   a->align = SC3_MAX (sizeof (void *), sizeof (sc3_alloc_item_t));
   a->alloced = 1;
   a->counting = 1;
+  a->keepalive = 1;
   a->oa = oa;
   SC3A_IS (sc3_allocator_is_new, a);
 
@@ -147,6 +150,22 @@ sc3_allocator_set_align (sc3_allocator_t * a, size_t align)
   SC3A_CHECK (align == 0 || SC3_ISPOWOF2 (align));
 
   a->align = align == 0 ? 0 : SC3_MAX (align, sizeof (sc3_alloc_item_t));
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_allocator_set_counting (sc3_allocator_t * a, int counting)
+{
+  SC3A_IS (sc3_allocator_is_new, a);
+  a->counting = counting;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_allocator_set_keepalive (sc3_allocator_t * a, int keepalive)
+{
+  SC3A_IS (sc3_allocator_is_new, a);
+  a->keepalive = keepalive;
   return NULL;
 }
 
@@ -174,7 +193,6 @@ sc3_error_t        *
 sc3_allocator_unref (sc3_allocator_t ** ap)
 {
   int                 waslast;
-  sc3_error_t        *leak = NULL;
   sc3_allocator_t    *a, *oa;
 
   SC3E_INOUTP (ap, a);
@@ -189,15 +207,16 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
     *ap = NULL;
 
     if (a->counting) {
-      SC3L_DEMAND (&leak, a->num_malloc + a->num_calloc == a->num_free);
-      SC3L_DEMAND (&leak, a->total_size == 0);
+      SC3E_DEMAND (a->num_malloc + a->num_calloc == a->num_free,
+                   "Allocator alloc and free balance");
+      SC3E_DEMAND (a->total_size == 0, "Allocator total size");
     }
 
     oa = a->oa;
     SC3E_ALLOCATOR_FREE (oa, sc3_allocator_t, a);
-    SC3L (&leak, sc3_allocator_unref (&oa));
+    SC3E (sc3_allocator_unref (&oa));
   }
-  return leak;
+  return NULL;
 }
 
 sc3_error_t        *
@@ -208,9 +227,9 @@ sc3_allocator_destroy (sc3_allocator_t ** ap)
 
   SC3E_INULLP (ap, a);
   SC3L_DEMAND (&leak, sc3_refcount_is_last (&a->rc, NULL));
-  SC3L (&leak, sc3_allocator_unref (&a));
+  SC3E (sc3_allocator_unref (&a));
 
-  SC3A_CHECK (a == NULL || !a->alloced);
+  SC3A_CHECK (a == NULL || !a->alloced || leak != NULL);
   return leak;
 }
 
@@ -239,6 +258,8 @@ sc3_allocator_malloc_noerr (sc3_allocator_t * a, size_t size)
   if (!sc3_allocator_is_setup (a, NULL) || a->align != 0) {
     return NULL;
   }
+
+  /** TODO This will crash if alignment is nonzero or with counting */
 
   p = SC3_MALLOC (char, size);
   if (size > 0 && p == NULL) {
@@ -272,15 +293,20 @@ sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
   SC3E_DEMAND (p != NULL, "Allocation");
 
   /* record allocator's address, original pointer, and allocated size */
-  shift = a->align - ((size_t) p + hsize) % a->align;
-  SC3A_CHECK (0 < shift && shift <= a->align);
-  memset (p, -1, shift);
+  if (a->align == 0) {
+    shift = 0;
+  }
+  else {
+    shift = a->align - ((size_t) p + hsize) % a->align;
+    SC3A_CHECK (0 < shift && shift <= a->align);
+    memset (p, -1, shift);
+  }
   aitem = (sc3_alloc_item_t *) (p + shift);
   aitem[0].ptr = a;
   aitem[1].ptr = p;
   aitem[2].siz = size;
   p = (char *) &aitem[3];
-  SC3A_CHECK (((size_t) p) % a->align == 0);
+  SC3A_CHECK (a->align == 0 || ((size_t) p) % a->align == 0);
 
   /* keep track of total allocated size */
   if (a->counting) {
@@ -291,6 +317,9 @@ sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
       ++a->num_malloc;
     }
     a->total_size += size;
+  }
+  if (a->keepalive) {
+    SC3E (sc3_allocator_ref (a));
   }
 
   /* return new memory */
@@ -304,7 +333,7 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
   SC3E_RETVAL (ptr, NULL);
   SC3A_IS (sc3_allocator_is_setup, a);
 
-  if (a->align == 0) {
+  if (a->align == 0 && !a->keepalive) {
     /* use system allocation */
     char               *p = SC3_MALLOC (char, size);
     SC3E_DEMAND (size == 0 || p != NULL, "Allocation by malloc");
@@ -329,7 +358,7 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
   SC3A_IS (sc3_allocator_is_setup, a);
 
   size *= nmemb;
-  if (a->align == 0) {
+  if (a->align == 0 && !a->keepalive) {
     /* use system allocation */
     char               *p = SC3_CALLOC (char, size);
     SC3E_DEMAND (size == 0 || p != NULL, "Allocation by calloc");
@@ -359,7 +388,7 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
     ++a->num_free;
   }
 
-  if (a->align == 0) {
+  if (a->align == 0 && !a->keepalive) {
     /* use system allocation */
     SC3_FREE (p);
   }
@@ -378,6 +407,11 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
       a->total_size -= size;
     }
     SC3_FREE (aitem[1].ptr);
+
+    /* do this at the end since the allocator may go out of scope */
+    if (a->keepalive) {
+      SC3E (sc3_allocator_unref (&a));
+    }
   }
   return NULL;
 }
@@ -398,7 +432,7 @@ sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void **ptr)
   else {
     void               *p = *ptr;
 
-    if (a->align == 0) {
+    if (a->align == 0 && !a->keepalive) {
       *ptr = SC3_REALLOC (p, char, new_size);
       SC3E_DEMAND (*ptr != NULL, "Reallocation");
     }
