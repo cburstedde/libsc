@@ -523,8 +523,8 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
 }
 
 sc3_error_t        *
-sc3_error_accum_kind (sc3_error_t ** pe, sc3_error_kind_t kind,
-                      const char *filename, int line, const char *errmsg)
+sc3_error_accum_nonfatal (sc3_error_t ** pe, sc3_error_kind_t kind,
+                          const char *filename, int line, const char *errmsg)
 {
   sc3_error_t        *e, *res;
 
@@ -558,7 +558,7 @@ sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
     char                flatmsg[SC3_BUFSIZE];
 
     sc3_error_flatten (&e, errmsg, flatmsg);
-    SC3E (sc3_error_accum_kind
+    SC3E (sc3_error_accum_nonfatal
           (leak, SC3_ERROR_LEAK, filename, line, flatmsg));
   }
   else if (e != NULL) {
