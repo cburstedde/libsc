@@ -459,6 +459,70 @@ sc3_error_new_inherit (sc3_error_t ** pstack,
 }
 
 sc3_error_t        *
+sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
+{
+  int                 stline;
+  int                 remain, result;
+  char                tempmsg[SC3_BUFSIZE];
+  char                stbname[SC3_BUFSIZE];
+  char               *pos, *out;
+  const char         *stfilename, *stmsg;
+  sc3_error_t        *e, *stack;
+
+  /* We take ownership of *pe and expect an existing error */
+  SC3E_INULLP (pe, e);
+
+  /* If there is no output argument, we just drop the reference */
+  if (flatmsg == NULL) {
+    SC3E (sc3_error_unref (&e));
+    return NULL;
+  }
+
+  /* So now we can go to work */
+  SC3A_IS (sc3_error_is_setup, e);
+  out = (prefix != NULL ? tempmsg : flatmsg);
+
+  /* go through error stack's messages */
+  remain = SC3_BUFSIZE;
+  *(pos = out) = '\0';
+  do {
+    if (remain > 0) {
+      /* access information on current stack top */
+      SC3E (sc3_error_get_location (e, &stfilename, &stline));
+      sc3_strcopy (stbname, SC3_BUFSIZE, stfilename);
+      SC3E (sc3_error_get_message (e, &stmsg));
+
+      /* append error location and message to output string */
+      result = snprintf (pos, remain, "%s%s:%d: %s",
+                         pos == out ? "" : ": ",
+                         sc3_basename (stbname), stline, stmsg);
+      if (result < 0 || result >= remain) {
+        pos = NULL;
+        remain = 0;
+      }
+      else {
+        pos += result;
+        remain -= result;
+      }
+    }
+
+    /* do down the error stack, we get a stack with a bumped reference */
+    SC3E (sc3_error_get_stack (e, &stack));
+
+    /* TODO treat leaks */
+    SC3E (sc3_error_unref (&e));
+    e = stack;
+  }
+  while (e != NULL);
+
+  /* construct a new flat error string */
+  if (prefix != NULL) {
+    sc3_snprintf (flatmsg, SC3_BUFSIZE, "%s: (%s)", prefix, tempmsg);
+  }
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_error_accum_kind (sc3_error_t ** pe, sc3_error_kind_t kind,
                       const char *filename, int line, const char *errmsg)
 {
@@ -492,12 +556,10 @@ sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
 {
   if (sc3_error_is_leak (e, NULL)) {
     char                flatmsg[SC3_BUFSIZE];
-    char                finalmsg[SC3_BUFSIZE];
 
-    sc3_error_destroy_noerr (&e, flatmsg);
-    sc3_snprintf (finalmsg, SC3_BUFSIZE, "%s: (%s)", errmsg, flatmsg);
+    sc3_error_flatten (&e, errmsg, flatmsg);
     SC3E (sc3_error_accum_kind
-          (leak, SC3_ERROR_LEAK, filename, line, finalmsg));
+          (leak, SC3_ERROR_LEAK, filename, line, flatmsg));
   }
   else if (e != NULL) {
     return sc3_error_new_stack (&e, filename, line, errmsg);

@@ -281,8 +281,8 @@ extern              "C"
  * If the expression is not a leak error, we behave as \ref SC3E, that is,
  * stack the error into a new fatal error object and return it.
  * If the expression is a leak, we stack it into the inout argument \a l,
- * flattening its stack into one message by \ref sc3_error_destroy_noerr,
- * and return NULL, doing the latter as well if the expression is NULL.
+ * flattening its stack into one message, and return NULL,
+ * doing the latter as well if the expression is NULL.
  */
 #define SC3L(l,f) do {                                                  \
   SC3E (sc3_error_leak (l, f, __FILE__, __LINE__, #f));                 \
@@ -602,6 +602,19 @@ sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** pstack,
                                            const char *filename,
                                            int line, const char *errmsg);
 
+/** Take an error, flatten its stack into one message, and unref it.
+ * \param [in,out] pe       Not NULL and pointing to an error that is setup.
+ *                          NULL on output.
+ * \param [in] prefix       String to prepend to flattened message.
+ *                          We create "prefix: (flattened message)".
+ *                          If NULL, we just create the flat message.
+ * \param [out] flatmsg     String buffer of size at least \ref SC3_BUFSIZE.
+ *                          If NULL, we only call \ref sc3_error_unref on \a e.
+ * \return                  NULL on success, fatal error otherwise.
+ */
+sc3_error_t        *sc3_error_flatten (sc3_error_t ** pe, const char *prefix,
+                                       char *flatmsg);
+
 /** Take a non-fatal error as in-out argument and stack it.
  * This functions is designed to accumulate non-fatal errors.
  * This allows for using SC3A and SC3E macros on the return value while at
@@ -623,8 +636,8 @@ sc3_error_t        *sc3_error_accum_kind
 
 /** Act on an error \a e depending on it being a leak, NULL, or other.
  * If the error is neither NULL nor a leak, we \ref sc3_error_new_stack.
- * If it is a leak, we flatten its messages by \ref sc3_error_destroy_noerr
- * and pass them to \ref sc3_error_accum_kind, adding it to the inout \a leak.
+ * If it is a leak, we flatten its messages and pass them to \ref
+ * sc3_error_accum_kind, adding it to the inout \a leak.
  * It it is NULL, we return NULL.
  * \param [in,out] leak Pointer to an error must not be NULL.
  *                      Its value may be NULL or of kind \ref SC3_ERROR_LEAK.
@@ -648,6 +661,8 @@ sc3_error_t        *sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
  * \param [in] e            Setup error object.
  * \param [out] filename    Pointer may be NULL, then it is not assigned.
  *                          On success, set to error's filename.
+ *                          We point to an internal resource of \a e, which
+ *                          must only be dereferenced while \a e is alive.
  * \param [out] line        Pointer may be NULL, then it is not assigned.
  *                          On success, set to error's line number.
  * \return                  NULL on success, error object otherwise.
@@ -662,6 +677,8 @@ sc3_error_t        *sc3_error_get_location (sc3_error_t * e,
  * \param [in] e        Setup error object.
  * \param [out] errmsg  Pointer may be NULL, then it is not assigned.
  *                      On success, set to error's message.
+ *                      We point to an internal resource of \a e, which
+ *                      must only be dereferenced while \a e is alive.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_get_message (sc3_error_t * e,
