@@ -184,7 +184,6 @@ sc3_error_set_stack (sc3_error_t * e, sc3_error_t ** pstack)
     SC3A_IS (sc3_error_is_setup, stack);
   }
   if (e->stack != NULL) {
-    /* At this point in the code, we treat leaks as fatal. */
     SC3E (sc3_error_unref (&e->stack));
   }
   e->stack = stack;
@@ -265,7 +264,7 @@ sc3_error_unref (sc3_error_t ** ep)
 {
   int                 waslast;
   sc3_allocator_t    *eator;
-  sc3_error_t        *e, *leak = NULL;
+  sc3_error_t        *e;
 
   SC3E_INOUTP (ep, e);
   SC3A_IS (sc3_error_is_valid, e);
@@ -281,14 +280,14 @@ sc3_error_unref (sc3_error_t ** ep)
     *ep = NULL;
 
     if (e->stack != NULL) {
-      SC3L (&leak, sc3_error_unref (&e->stack));
+      SC3E (sc3_error_unref (&e->stack));
     }
 
     eator = e->eator;
     SC3E_ALLOCATOR_FREE (eator, sc3_error_t, e);
-    SC3L (&leak, sc3_allocator_unref (&eator));
+    SC3E (sc3_allocator_unref (&eator));
   }
-  return leak;
+  return NULL;
 }
 
 sc3_error_t        *
@@ -298,9 +297,9 @@ sc3_error_destroy (sc3_error_t ** ep)
 
   SC3E_INULLP (ep, e);
   SC3L_DEMAND (&leak, sc3_refcount_is_last (&e->rc, NULL));
-  SC3L (&leak, sc3_error_unref (&e));
+  SC3E (sc3_error_unref (&e));
 
-  SC3A_CHECK (e == NULL || !e->alloced);
+  SC3A_CHECK (e == NULL || !e->alloced || leak != NULL);
   return leak;
 }
 
@@ -508,8 +507,6 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
 
     /* do down the error stack, we get a stack with a bumped reference */
     SC3E (sc3_error_get_stack (e, &stack));
-
-    /* TODO treat leaks */
     SC3E (sc3_error_unref (&e));
     e = stack;
   }

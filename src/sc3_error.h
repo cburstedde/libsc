@@ -80,6 +80,15 @@
  * On defined input, they return the proper query result.
  */
 
+/*
+ * TODO:  Are we on top of this.  Document accordingly.
+ * If the allocator is set to keepalive, the error_unref calls cannot fail
+ * due to mismatched alloc and free counts.
+ * If the allocator is not set to keepalive, but is counting, unref is fatal on
+ * mismatch.
+ * Leak errors can only occur on destroy, which we do not call here.
+ */
+
 #ifndef SC3_ERROR_H
 #define SC3_ERROR_H
 

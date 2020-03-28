@@ -189,7 +189,6 @@ sc3_log_unref (sc3_log_t ** logp)
 {
   int                 waslast;
   sc3_log_t          *log;
-  sc3_error_t        *leak = NULL;
 
   SC3E_INOUTP (logp, log);
   SC3A_IS (sc3_log_is_valid, log);
@@ -211,9 +210,9 @@ sc3_log_unref (sc3_log_t ** logp)
 
     }
     SC3E_ALLOCATOR_FREE (lator, sc3_log_t, log);
-    SC3L (&leak, sc3_allocator_unref (&lator));
+    SC3E (sc3_allocator_unref (&lator));
   }
-  return leak;
+  return NULL;
 }
 
 sc3_error_t        *
@@ -224,9 +223,9 @@ sc3_log_destroy (sc3_log_t ** logp)
 
   SC3E_INULLP (logp, log);
   SC3L_DEMAND (&leak, sc3_refcount_is_last (&log->rc, NULL));
-  SC3L (&leak, sc3_log_unref (&log));
+  SC3E (sc3_log_unref (&log));
 
-  SC3A_CHECK (log == NULL || !log->alloced);
+  SC3A_CHECK (log == NULL || !log->alloced || leak != NULL);
   return leak;
 }
 
