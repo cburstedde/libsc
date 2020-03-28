@@ -619,6 +619,33 @@ sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** pstack,
 sc3_error_t        *sc3_error_flatten (sc3_error_t ** pe, const char *prefix,
                                        char *flatmsg);
 
+/** Extend a collection of errors by one, working on an inout argument.
+ * This functions accumulates multiple errors and their messages.
+ * If the incoming error has a stack, all messages in the hierarchy
+ * are flattened into one.  The flattening works recursively.
+ * Thus, we expect the collection to keep one (long) message per error.
+ * This allows for using SC3A and SC3E macros on the return value while at
+ * the same time preserving all error information in the inout argument.
+ * \param [in,out] alloc    Allocator must be setup.
+ *                          Used to allocate the error returned in \a pcollect.
+ *                          You may unref but not destroy the allocator while
+ *                          any error created by this function is still around.
+ * \param [in,out] pcollect Pointer to the collection inout error.
+ *                      Pointer must not be NULL, its value may be
+ *                      NULL for an empty collection, or an error setup.
+ * \param [in,out] pe   Pointer to an error to accumulate must not be NULL.
+ *                      Its value may be NULL, then the function noops.
+ *                      We take ownership, value is NULL on output.
+ * \param [in] filename Filename to use in the new error object.
+ * \param [in] line     Line number to use in the new error object.
+ * \param [in] errmsg   Message to include in the new error object.
+ *                      Prepended to the flattened message from \a pe.
+ * \return              Null on success, otherwise a fatal error.
+ */
+sc3_error_t        *sc3_error_accumulate
+  (sc3_allocator_t * alloc, sc3_error_t ** pcollect, sc3_error_t ** pe,
+   const char *filename, int line, const char *errmsg);
+
 /** Take a non-fatal error as in-out argument and stack it.
  * This functions is designed to accumulate non-fatal errors.
  * This allows for using SC3A and SC3E macros on the return value while at

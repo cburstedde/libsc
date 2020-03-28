@@ -523,6 +523,48 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
 }
 
 sc3_error_t        *
+sc3_error_accumulate (sc3_allocator_t * alloc,
+                      sc3_error_t ** pcollect, sc3_error_t ** pe,
+                      const char *filename, int line, const char *errmsg)
+{
+  sc3_error_t        *c, *e;
+  sc3_error_kind_t    kind;
+  char                flatmsg[SC3_BUFSIZE];
+
+  /* check call convention */
+  SC3A_IS (sc3_allocator_is_setup, alloc);
+  SC3A_CHECK (pcollect != NULL);
+  SC3A_CHECK (pe != NULL);
+
+  /* If no error comes in, there is nothing to do. */
+  if ((e = *pe) == NULL) {
+    return NULL;
+  }
+
+  /* The input error is owned and flattened. */
+  *pe = NULL;
+  SC3E (sc3_error_get_kind (e, &kind));
+  SC3E (sc3_error_flatten (&e, errmsg, flatmsg));
+
+  /* Construct a new error to hold the flat message. */
+  SC3E (sc3_error_new (alloc, &e));
+  SC3E (sc3_error_set_location (e, filename, line));
+  SC3E (sc3_error_set_message (e, flatmsg));
+  SC3E (sc3_error_set_kind (e, kind));
+
+  /* if the collection is not empty, take it with us as stack */
+  if ((c = *pcollect) != NULL) {
+    *pcollect = NULL;
+    SC3E (sc3_error_set_stack (e, &c));
+  }
+
+  /* Finalize the error object and place it as new collection. */
+  SC3E (sc3_error_setup (e));
+  *pcollect = e;
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_error_accum_nonfatal (sc3_error_t ** pe, sc3_error_kind_t kind,
                           const char *filename, int line, const char *errmsg)
 {
