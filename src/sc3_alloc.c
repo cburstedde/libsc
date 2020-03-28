@@ -255,11 +255,12 @@ sc3_allocator_malloc_noerr (sc3_allocator_t * a, size_t size)
 {
   char               *p;
 
-  if (!sc3_allocator_is_setup (a, NULL) || a->align != 0) {
+  if (!sc3_allocator_is_setup (a, NULL)) {
     return NULL;
   }
-
-  /** TODO This will crash if alignment is nonzero or with counting */
+  if (!(a->align == 0 && !a->keepalive)) {
+    return NULL;
+  }
 
   p = SC3_MALLOC (char, size);
   if (size > 0 && p == NULL) {

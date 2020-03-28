@@ -35,7 +35,7 @@
  * Furthermore, it is refd by every allocation and unrefd by deallocation.
  * The latter feature avoids error returns on dropping the last reference
  * to an allocator, and in turn any other object, with live allocations.
- * The counting mechanism can be disabled.
+ * These counting mechanisms can be disabled.
  *
  * Different allocators are independent objects with independent counters.
  * This feature is useful for example to isolate memory between threads:
@@ -53,8 +53,8 @@
  * Allocators can be refd and unrefd.
  * Dropping the last reference deallocates the allocator.
  * The function \ref sc3_allocator_destroy must only be called when it
- * is known that it has only one reference to it, and when it is known
- * that the allocator is presently counting zero allocations.
+ * is known that the allocator has only one reference to it, and when it
+ * is known that it is presently counting zero allocations.
  * Otherwise the function returns an error of kind \ref SC3_ERROR_LEAK.
  */
 

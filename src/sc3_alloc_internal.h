@@ -27,7 +27,8 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-/** \file sc3_alloc_internal.h
+/** \file sc3_alloc_internal.h \ingroup sc3_internal
+ * We document auxiliary allocation functions used by the library.
  */
 
 #ifndef SC3_ALLOC_INTERNAL_H
@@ -43,9 +44,15 @@ extern              "C"
 #endif
 #endif
 
-/** Allocate memory without internal error checking and alignment.
- * \param [in,out] a    Allocator must be setup and have zero alignment.
- * \param [in] size     Amount of memory to allocate, 0 is legal.
+/** Allocate memory without alignment and internal referencing.
+ * It is legal to call \ref sc3_allocator_realloc and \ref
+ * sc3_allocator_free on this memory with the allocator passed here.
+ * Effectively, we call the system malloc function.
+ * \param [in,out] a    Allocator \a a must be setup, have zero alignment
+ *                      and not be set to keepalive.  One is obtained,
+ *                      e.g., by \ref sc3_allocator_nocount.
+ *                      Return NULL if conditions are not met.
+ * \param [in] size     Amount of memory to allocate; 0 is legal.
  * \return          Allocated memory on success, NULL otherwise.
  */
 void               *sc3_allocator_malloc_noerr (sc3_allocator_t * a,

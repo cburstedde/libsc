@@ -102,6 +102,11 @@
  *   while the third may be used anytime to verify internal consistency.
  */
 
+/** \defgroup sc3_internal sc3 internal
+ * We keep some declarations for internal library use in separate files.
+ * Applications may use them, but this is not usually recommended.
+ */
+
 /** \file sc3_base.h \ingroup sc3
  * This file includes configuration definitions and
  * provides some generic helper functions.

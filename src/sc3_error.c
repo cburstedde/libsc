@@ -371,13 +371,12 @@ sc3_error_new_kind (sc3_error_kind_t kind,
   sc3_error_t        *e;
   sc3_allocator_t    *ea;
 
-  /* Avoid infinite loop when out of memory. */
-
+  /* Avoid infinite loop when out of memory by returning static errors. */
   if (filename == NULL || errmsg == NULL) {
     return &enull;
   }
 
-  /* Any allocated allocator would have to be ref'd here. */
+  /* Call system malloc without additional internal tracking of memory. */
   ea = sc3_allocator_nocount ();
   e = (sc3_error_t *) sc3_allocator_malloc_noerr (ea, sizeof (sc3_error_t));
   if (e == NULL) {
@@ -411,8 +410,7 @@ sc3_error_new_stack_inherit (sc3_error_t ** pstack, int inherit,
   sc3_error_t        *stack, *e;
   sc3_allocator_t    *ea;
 
-  /* Avoid infinite loop when out of memory. */
-
+  /* Avoid infinite loop when out of memory by returning static errors. */
   if (pstack == NULL) {
     return &enull;
   }
@@ -425,9 +423,7 @@ sc3_error_new_stack_inherit (sc3_error_t ** pstack, int inherit,
     return stack;
   }
 
-  /* Any allocated allocator would have to be ref'd here. */
-  /* Any counting allocator would need to be thread private.
-     Alternative: only allow malloc_noerr for non-counting allocators. */
+  /* Call system malloc without additional internal tracking of memory. */
   ea = sc3_allocator_nocount ();
   e = (sc3_error_t *) sc3_allocator_malloc_noerr (ea, sizeof (sc3_error_t));
   if (e == NULL) {
