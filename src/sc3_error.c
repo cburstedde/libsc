@@ -488,8 +488,12 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
       SC3E (sc3_error_get_message (e, &stmsg));
 
       /* append error location and message to output string */
-      result = snprintf (pos, remain, "%s%s:%d: %s",
-                         pos == out ? "" : ": ",
+      result = snprintf (pos, remain,
+#if 0
+                         "%s%s:%d: %s", pos == out ? "" : ": ",
+#else
+                         "%s(%s:%d: %s)", pos == out ? "" : " ",
+#endif
                          sc3_basename (stbname), stline, stmsg);
       if (result < 0 || result >= remain) {
         pos = NULL;
@@ -508,9 +512,9 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
   }
   while (e != NULL);
 
-  /* construct a new flat error string */
+  /* finish construction of new flat error string */
   if (prefix != NULL) {
-    sc3_snprintf (flatmsg, SC3_BUFSIZE, "%s: (%s)", prefix, tempmsg);
+    sc3_snprintf (flatmsg, SC3_BUFSIZE, "%s %s", prefix, tempmsg);
   }
   return NULL;
 }

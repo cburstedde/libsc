@@ -627,7 +627,7 @@ sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** pstack,
  *                          NULL on output.
  * \param [in] prefix       String to prepend to flattened message.
  *                          We create "prefix: (flattened message)".
- *                          If NULL, we just create the flat message.
+ *                          If NULL, we just use the flattened message.
  * \param [out] flatmsg     String buffer of size at least \ref SC3_BUFSIZE.
  *                          If NULL, we only call \ref sc3_error_unref on \a e.
  * \return                  NULL on success, fatal error otherwise.
