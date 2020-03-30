@@ -39,6 +39,7 @@ unravel_error (sc3_error_t ** ep)
   char               *bname;
   const char         *filename, *errmsg;
   sc3_error_t        *e, *stack;
+  sc3_error_kind_t    kind;
 
   SC3E_INULLP (ep, e);
 
@@ -50,7 +51,9 @@ unravel_error (sc3_error_t ** ep)
       filename = sc3_basename (bname);
     }
     SC3E (sc3_error_get_message (e, &errmsg));
-    printf ("Error stack %d:%s:%d: %s\n", j, filename, line, errmsg);
+    SC3E (sc3_error_get_kind (e, &kind));
+    printf ("Error stack %d:%s:%d:%c %s\n", j, filename, line,
+            sc3_error_kind_char[kind], errmsg);
     free (bname);
 
     /* go down the stack */

@@ -323,6 +323,7 @@ sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
   const char         *filename, *msg;
   char               *pos, *bname;
   sc3_error_t        *e, *inte, *stack;
+  sc3_error_kind_t    kind;
 
   /* catch invalid calls */
   if (flatmsg == NULL) {
@@ -348,9 +349,11 @@ sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
       filename = sc3_basename (bname);
     }
     SC3E_NULL_SET (inte, sc3_error_get_message (e, &msg));
+    SC3E_NULL_SET (inte, sc3_error_get_kind (e, &kind));
     if (inte == NULL && remain > 0) {
-      result = snprintf (pos, remain, "%s%s:%d: %s",
-                         pos == flatmsg ? "" : ": ", filename, line, msg);
+      result = snprintf (pos, remain, "%s%s:%d:%c %s",
+                         pos == flatmsg ? "" : ": ", filename, line,
+                         sc3_error_kind_char[kind], msg);
       if (result < 0 || result >= remain) {
         pos = NULL;
         remain = 0;
@@ -475,6 +478,7 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
   char               *pos, *out;
   const char         *stfilename, *stmsg;
   sc3_error_t        *e, *stack;
+  sc3_error_kind_t    kind;
 
   /* We take ownership of *pe and expect an existing error */
   SC3E_INULLP (pe, e);
@@ -498,15 +502,17 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
       SC3E (sc3_error_get_location (e, &stfilename, &stline));
       sc3_strcopy (stbname, SC3_BUFSIZE, stfilename);
       SC3E (sc3_error_get_message (e, &stmsg));
+      SC3E (sc3_error_get_kind (e, &kind));
 
       /* append error location and message to output string */
       result = snprintf (pos, remain,
 #if 0
-                         "%s%s:%d: %s", pos == out ? "" : ": ",
+                         "%s%s:%d:%c %s", pos == out ? "" : ": ",
 #else
-                         "%s(%s:%d: %s)", pos == out ? "" : " ",
+                         "%s(%s:%d:%c %s)", pos == out ? "" : " ",
 #endif
-                         sc3_basename (stbname), stline, stmsg);
+                         sc3_basename (stbname), stline,
+                         sc3_error_kind_char[kind], stmsg);
       if (result < 0 || result >= remain) {
         pos = NULL;
         remain = 0;
