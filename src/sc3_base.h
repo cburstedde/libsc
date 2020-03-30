@@ -142,8 +142,11 @@
 /** The highest power of two representable in an int variable. */
 #define SC3_INT_HPOW (1 << (SC3_INT_BITS - 2))
 
-/** Standard buffer size for string handling in the library. */
-#define SC3_BUFSIZE 512
+/** Standard buffer size for string handling in the library.
+ * \todo Convert \ref sc3_error_t implementation to use dynamic memory
+ *       for messages whenever the error's allocator is dynamic.
+ */
+#define SC3_BUFSIZE 1024
 
 /** Set a buffer of standard size to all zeros. */
 #define SC3_BUFZERO(b) do { memset (b, 0, SC3_BUFSIZE); } while (0)
