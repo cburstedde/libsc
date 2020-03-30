@@ -40,7 +40,7 @@
  * and on assertion failures, or whenever a function decides to return fatal.
  * If a function returns any of these hard error conditions, the application
  * must consider that it returned prematurely and may have left resources open.
- * Even worse, communication and I/O may be left open and cause blocking.
+ * Even worse, communication and I/O may be pending and cause future blocking.
  * It is the application's responsibility to take this into account.
  *
  * Logically, a function returns non-fatal => it must not leak any resources.
@@ -51,23 +51,20 @@
  * returns an error of the fatal kind.  This only-if-condition is one-way.
  *
  * To propagate fatal errors up the call stack, the SC3A and SC3E types of
- * macros are provided.
+ * macros are provided for convenience.
  * The SC3A macros (Assert) are only active when configured --enable-debug.
  * The SC3E macros (Execute) are always active.
  * Both check conditions or error returns and propagate fatal errors upward.
  * These macros are understood to return prematurely on error.
  * When used on non-fatal conditions, they create fatal errors themselves.
- * An application should use them on any condition it considers fatal.
+ * An application may use them on any condition considered fatal.
  * To handle some error gracefully, an application should *not* use them.
- *
- * An application may imply any additional condition as a fatal error.
- * This is fine if it never propagates a fatal error up as non-fatal.
  *
  * The library functions return an error of kind \ref SC3_ERROR_LEAK
  * when encountering leftover memory, references, or other resources,
  * but ensure that the program may continue cleanly.
  * Thus, an application is free to treat leaks as fatal or not.
- * Library functions may return leaks on any unref or destroy call.
+ * Library functions may return leaks on an object destroy call.
  * To catch leak errors gracefully, consider using the SC3L macros.
  *
  * Non-fatal errors are imaginable when accessing files on disk or parsing
@@ -87,6 +84,9 @@
  * If the allocator is not set to keepalive, but is counting, unref is fatal on
  * mismatch.
  * Leak errors can only occur on destroy, which we do not call here.
+ *
+ * TODO:  Is leak handling finalized, and do we need
+ * all current macros and functions?
  */
 
 #ifndef SC3_ERROR_H
@@ -300,8 +300,9 @@ extern              "C"
 
 /** Examine a condition \a x and add to the inout leak error \a l.
  * The pointer \a l must be of type \ref sc3_error_t ** and not NULL.
- * That may contain a leak or NULL.  On fatal error, we return it.
- * In other words, when \a x is true, we do nothing.
+ * Value may contain an error of kind \ref SC3_ERROR_LEAK or NULL.
+ * On fatal error, we return a fatal error object.
+ * When \a x is true, we do nothing.
  */
 #define SC3L_DEMAND(l,x) do {                                           \
   if (!(x)) { SC3E (sc3_error_accum_nonfatal (l, SC3_ERROR_LEAK,        \
@@ -519,23 +520,29 @@ sc3_error_t        *sc3_error_ref (sc3_error_t * e);
 /** Decrease the reference of an error object by 1.
  * If the count reaches zero the error object is deallocated.
  * Does nothing if error has not been created by \ref sc3_error_new.
+ *
+ * An indirect way to crash this function, and any other unref in the library:
+ * Consider the object has been created with an \ref sc3_allocator_t that is
+ * set counting and non-keepalive.
+ * Use the same allocator elsewhere to allocate memory and unref it there.
+ * Now this error has the last remaining reference to the allocator.
+ * Since the allocator has a live allocation, when this function internally
+ * calls \ref sc3_allocator_unref, we will meet and return a fatal error.
+ *
  * \param [in,out] ep   Pointer must not be NULL and the error valid.
  *                      The refcount is decreased.  If it reaches zero,
- *                      the error is deallocated and the value to NULL.
- * \return              An error object or NULL without errors.
- *                      We may return a fatal or a leak error.
+ *                      the error is deallocated and the value set NULL.
+ * \return              A fatal error object or NULL without errors.
  */
 sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
 
 /** Takes an error object with one remaining reference and deallocates it.
  * Destroying an error that is multiply refd produces a reference leak.
- * The caller can provide an error handler for this case to avoid
- * returning a fatal error, which would occur with it being NULL.
  * Does nothing if error has not been created by \ref sc3_error_new,
  * i.e. if it is a static fallback.
  * \param [in,out] ep       Setup error with one reference.  NULL on output.
  * \return                  An error object or NULL without errors.
- *                          When the error had more than one reference,
+ *                          When the error has more than one reference,
  *                          return an error of kind \ref SC3_ERROR_LEAK.
  */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);

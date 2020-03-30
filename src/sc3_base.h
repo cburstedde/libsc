@@ -86,17 +86,22 @@
  *   deallocated together with all its internal resources.
  *   When calling unref, do not assume anything about the input reference
  *   count since other references may have been created and passed around.
- *   The `sc3_object_destroy` functions must only be called if the program
+ *   Likewise, it is generally unsafe to rely on the inout argument to unref,
+ *   and best to consider an unrefd pointer to be no longer valid.
+ * - The `sc3_object_destroy` functions must only be called if the program
  *   can guarantee that at this point the reference count is 1.
- * - There is on means to query the present reference count of an object.
+ *   In some situations, when we do not pass references to the object to
+ *   other parts of the code, this is easy to enforce.
+ *   Otherwise, it may be best not to use destroy and rely on unref entirely.
+ * - There is no means to query the present reference count of an object.
  *   This is on purpose:  The whole point of reference counting is that
  *   different references to the object can be used independently.
- *   In practice, this means that destroy functions should be used sparingly.
+ *   Again, this means that destroy functions should only be used with reason.
  * - The `sc3_object_is_*` functions implement queries that may be called for
  *   any pointer to this object type, including `NULL`, at any stage.
  *   They query properties of the object and always return false if the pointer
  *   is `NULL`.
- *   One convention is to provide for `sc3_object_is_new`,
+ *   One convention is to generally provide for `sc3_object_is_new`,
  *   `sc3_object_is_setup` and `sc3_object_is_valid`, plus more as needed.
  *   The first two refer to the mutually exclusive phases of its lifetime,
  *   while the third may be used anytime to verify internal consistency.

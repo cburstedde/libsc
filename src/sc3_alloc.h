@@ -53,9 +53,19 @@
  * Allocators can be refd and unrefd.
  * Dropping the last reference deallocates the allocator.
  * The function \ref sc3_allocator_destroy must only be called when it
- * is known that the allocator has only one reference to it, and when it
- * is known that it is presently counting zero allocations.
+ * is known that the allocator has only one reference to it.
  * Otherwise the function returns an error of kind \ref SC3_ERROR_LEAK.
+ *
+ * By default, a keepalive mechanism is enabled:
+ * Then any allocation refs the allocator, and every deallocation unref it.
+ * In this case it follows that the refcount of an allocator stays nonzero
+ * as long as allocations are live, and \ref sc3_allocator_destroy cannot
+ * possibly return a leak.
+ * On the other hand, when keepalive is disabled and counting enabled,
+ * it is guaranteed to have \ref sc3_allocator_destroy fail fatally
+ * by calling it on an allocator with live allocations.
+ * We still return a leak when destroying an allocator without live
+ * allocations but with multiple references to it.
  */
 
 #ifndef SC3_ALLOC_H
@@ -208,9 +218,7 @@ sc3_error_t        *sc3_allocator_set_align (sc3_allocator_t * a,
 sc3_error_t        *sc3_allocator_set_counting (sc3_allocator_t * a,
                                                 int counting);
 
-/** Set whether the allocator must have zero allocations when being freed.
- * If this parameter is true, we ref the allocator on every allocation
- * and unref it on every deallocation.
+/** Set whether allocator refs and unrefs itself on allocation/deallocation.
  * As a consequence, if an application unrefs an allocator and there are
  * remaining allocations, the allocator will not yet be deallocated.
  * The allocator will be deallocated when its last allocation is freed and
@@ -247,7 +255,7 @@ sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 /** Decrease the reference count on an allocator by 1.
  * If the reference count drops to zero, the allocator is deallocated.
  * If the keepalive parameter is set, the reference count can only become
- * zero of all allocations of this allocator are freed as well.
+ * zero of all allocations of this allocator have been freed beforehand.
  * Does nothing if allocator has not been created by \ref sc3_allocator_new.
  * \param [in,out] ap   The pointer must not be NULL and the allocator valid.
  *                      Its refcount is decreased.  If it reaches zero,
