@@ -406,6 +406,7 @@ omp_info (sc3_allocator_t * origa)
   int                 minid, maxid, tcount;
   sc3_omp_esync_t     esync, *s = &esync;
   sc3_omp_esync_t     esync2, *s2 = &esync2;
+  sc3_error_t        *ompe, *e;
 
   SC3A_IS (sc3_allocator_is_setup, origa);
 
@@ -470,11 +471,16 @@ omp_info (sc3_allocator_t * origa)
     }
     /* we require a barrier for s2, which is implicit at end of parallel */
   }
-  /* TODO: create an esync summary error return value */
-  printf ("Thread weird %d error %d count\n", s->rcount, s->ecount);
-  SC3E (sc3_omp_esync_summary (s));
-  SC3E (sc3_omp_esync_summary (s2));
-  return NULL;
+
+  /* create an esync summary error return value */
+  ompe = NULL;
+  printf ("Threads 1 weird %d error %d count\n", s->rcount, s->ecount);
+  e = sc3_omp_esync_summary (s);
+  SC3E (sc3_error_accumulate (origa, &ompe, &e, __FILE__, __LINE__, "s1"));
+  printf ("Threads 2 weird %d error %d count\n", s2->rcount, s2->ecount);
+  e = sc3_omp_esync_summary (s2);
+  SC3E (sc3_error_accumulate (origa, &ompe, &e, __FILE__, __LINE__, "s2"));
+  return ompe;
 }
 
 int

@@ -33,8 +33,6 @@
  * We provide simple wrappers to OpenMP functions as well as a synchronization
  * mechanism for \ref sc3_error_t objects encountered in parallel threads.
  * If we configure without --enable-openmp, we report a single thread.
- *
- * \todo Check error synchronization again and TODO notes in the .c file.
  */
 
 #ifndef SC3_OMP_H
