@@ -433,6 +433,13 @@ sc3_error_t        *sc3_error_new (sc3_allocator_t * eator,
 
 /** Set the error to be the top of a stack of existing errors.
  * The default stack is NULL.
+ *
+ * An error may only have one parent (stack) pointer.
+ * To aggregate multiple ancestors into the same error,
+ * a workaround is to aggregate the ancestors' messages.
+ * \see sc3_error_flatten
+ * \see sc3_error_accumulate
+ *
  * \param [in,out] e        Error object before \ref sc3_error_setup.
  * \param [in,out] pstack   This pointer to a pointer must not be NULL.
  *                          The function takes ownership of pointed-to stack

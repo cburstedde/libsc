@@ -92,7 +92,6 @@ sc3_omp_esync_init (sc3_omp_esync_t * s)
   return NULL;
 }
 
-/* TODO: what to do when sc3_error_destroy produces a leak? */
 void
 sc3_omp_esync_in_critical (sc3_omp_esync_t * s, sc3_error_t ** e)
 {
@@ -107,39 +106,31 @@ sc3_omp_esync_in_critical (sc3_omp_esync_t * s, sc3_error_t ** e)
     ++s->rcount;
   }
   else if (*e != NULL) {
-    const int           tid = sc3_omp_thread_num ();
-
-    /* TODO would be nice to include thread number in shared error */
-
     /* we have been called as expected */
-    if (s->shared_error == NULL) {
-      /* we are the first thread to encounter an error */
+    const int           tid = sc3_omp_thread_num ();
+    char                tprefix[SC3_BUFSIZE];
+    sc3_error_t        *res;
+
+    if (s->error_tid > tid) {
+      /* we are the first or lowest numbered thread to encounter an error */
       s->error_tid = tid;
-      s->shared_error = *e;
-      *e = NULL;
     }
-    else {
-      /* some other thread had set an error */
-      if (s->error_tid > tid) {
-        /* we are now the lowest numbered sane error thread */
 
-        /* TODO stack error instead of destroying the previous one */
-        if (sc3_error_destroy (&s->shared_error) != NULL) {
-          ++s->rcount;
-        }
-        s->error_tid = tid;
-        s->shared_error = *e;
-        *e = NULL;
-      }
-      else {
-        /* the other thread has higher priority so we remove our error */
+    /* use the incoming error as new top of the shared error stack */
+    sc3_snprintf (tprefix, SC3_BUFSIZE, "T%02d", tid);
+    res = sc3_error_accumulate (sc3_allocator_nocount (), &s->shared_error, e,
+                                __FILE__, __LINE__, tprefix);
 
-        /* TODO stack this thread's error instead of destroying it */
-        if (sc3_error_destroy (e) != NULL) {
-          ++s->rcount;
-        }
+    /* On fatal error return, we have an internal bug and return that instead. */
+    if (res != NULL) {
+      ++s->rcount;
+      if (sc3_error_destroy (&s->shared_error) != NULL) {
+        ++s->rcount;
       }
+      s->shared_error = res;
     }
+
+    /* count a proper error added */
     ++s->ecount;
   }
 }
@@ -154,9 +145,25 @@ sc3_omp_esync (sc3_omp_esync_t * s, sc3_error_t ** e)
 sc3_error_t        *
 sc3_omp_esync_summary (sc3_omp_esync_t * s)
 {
-  /* TODO don't mix assertion checks with parallel errors */
+  sc3_error_t        *res;
   SC3A_CHECK (s != NULL);
+  if (s->rcount > 0) {
+    char                srcount[SC3_BUFSIZE];
 
-  /* TODO create a new error with rcount and ecount information */
-  return s->shared_error;
+    /* Unexpected (buggy) behavior is reported in addition */
+    sc3_snprintf (srcount, SC3_BUFSIZE, "s->count: %d", s->rcount);
+    SC3E (sc3_error_accum_kind (sc3_allocator_nocount (),
+                                &s->shared_error, SC3_ERROR_FATAL,
+                                __FILE__, __LINE__, srcount));
+    s->rcount = 0;
+  }
+
+  /* Return the accumulated error only once */
+  res = s->shared_error;
+  s->ecount = 0;
+  s->error_tid = sc3_omp_max_threads ();
+  s->shared_error = NULL;
+
+  /* Recommend to \ref sc3_omp_esync_init before using the struct again */
+  return res;
 }

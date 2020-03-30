@@ -55,8 +55,8 @@
  */
 typedef struct sc3_omp_esync
 {
-  int                 rcount;   /**< Count problems freeing errors.
-                                 * These *should* not occur. */
+  int                 rcount;   /**< Count problems freeing errors and misuse.
+                                 * Such *should* not occur. */
   int                 ecount;   /**< Count the errors among the threads. */
   int                 error_tid;        /**< Thread number of the remaining
                                          * error object. */
@@ -136,11 +136,12 @@ void                sc3_omp_esync_in_critical (sc3_omp_esync_t * s,
  */
 void                sc3_omp_esync (sc3_omp_esync_t * s, sc3_error_t ** e);
 
-/** Return the error collected in the synchronization stuct.
+/** Return the error collected in the synchronization struct.
  * Ownership of the error is transferred to the caller.
- * Call this function *after* the end of the parallel region, exactly once.
- * \param [in] s        Initialized synchronization struct.
- * \return              Possible assertion on bad usage,
+ * Call this function *after* the end of the parallel region *exactly once*.
+ * \param [in,out] s    Initialized synchronization struct.
+ *                      The error inside is cleared by this function.
+ * \return              Possible assertion on bad usage or internal bug,
  *                      otherwise the error in \a s, be it NULL or not.
  */
 sc3_error_t        *sc3_omp_esync_summary (sc3_omp_esync_t * s);
