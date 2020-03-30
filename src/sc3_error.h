@@ -336,6 +336,9 @@ typedef enum sc3_error_kind
 }
 sc3_error_kind_t;
 
+/** One capital letter abbreviating the error kind. */
+extern const char   sc3_error_kind_char[SC3_ERROR_KIND_LAST];
+
 #if 0
 /** Errors may be synchronized between multiple programs or threads.
  * \deprecated We are not sure how we will be indicating synchronization.
@@ -352,7 +355,6 @@ typedef enum sc3_error_sync
   SC3_ERROR_SYNC_LAST   /**< Guard range of possible enumeration values. */
 }
 sc3_error_sync_t;
-#endif
 
 /** The error handler callback can be invoked on some errors.
  * It takes ownership of the passed in error \a e.
@@ -366,6 +368,7 @@ sc3_error_sync_t;
  */
 typedef sc3_error_t *(*sc3_error_handler_t)
                     (sc3_error_t * e, const char *funcname, void *user);
+#endif
 
 /** Check whether an error is not NULL and internally consistent.
  * The error may be valid in both its setup and usage phases.

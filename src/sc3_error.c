@@ -49,6 +49,9 @@ struct sc3_error
   sc3_error_t        *stack;
 };
 
+const char          sc3_error_kind_char[SC3_ERROR_KIND_LAST] =
+  { 'F', 'W', 'R', 'B', 'M', 'N', 'L', 'I', 'U' };
+
 #if 0
 static sc3_error_t  ebug = { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_BUG,
 "Inconsistency or bug", __FILE__, __LINE__, 0, NULL
