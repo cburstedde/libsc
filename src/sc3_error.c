@@ -520,33 +520,21 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
 }
 
 sc3_error_t        *
-sc3_error_accumulate (sc3_allocator_t * alloc,
-                      sc3_error_t ** pcollect, sc3_error_t ** pe,
+sc3_error_accum_kind (sc3_allocator_t * alloc,
+                      sc3_error_t ** pcollect, sc3_error_kind_t kind,
                       const char *filename, int line, const char *errmsg)
 {
   sc3_error_t        *c, *e;
-  sc3_error_kind_t    kind;
-  char                flatmsg[SC3_BUFSIZE];
 
   /* check call convention */
   SC3A_IS (sc3_allocator_is_setup, alloc);
   SC3A_CHECK (pcollect != NULL);
-  SC3A_CHECK (pe != NULL);
-
-  /* If no error comes in, there is nothing to do. */
-  if ((e = *pe) == NULL) {
-    return NULL;
-  }
-
-  /* The input error is owned and flattened. */
-  *pe = NULL;
-  SC3E (sc3_error_get_kind (e, &kind));
-  SC3E (sc3_error_flatten (&e, errmsg, flatmsg));
+  SC3A_CHECK (0 <= kind && kind < SC3_ERROR_KIND_LAST);
 
   /* Construct a new error to hold the flat message. */
   SC3E (sc3_error_new (alloc, &e));
   SC3E (sc3_error_set_location (e, filename, line));
-  SC3E (sc3_error_set_message (e, flatmsg));
+  SC3E (sc3_error_set_message (e, errmsg));
   SC3E (sc3_error_set_kind (e, kind));
 
   /* if the collection is not empty, take it with us as stack */
@@ -562,30 +550,41 @@ sc3_error_accumulate (sc3_allocator_t * alloc,
 }
 
 sc3_error_t        *
-sc3_error_accum_nonfatal (sc3_error_t ** pe, sc3_error_kind_t kind,
-                          const char *filename, int line, const char *errmsg)
+sc3_error_accumulate (sc3_allocator_t * alloc,
+                      sc3_error_t ** pcollect, sc3_error_t ** pe,
+                      const char *filename, int line, const char *errmsg)
 {
-  sc3_error_t        *e, *res;
+  sc3_error_t        *e;
+  sc3_error_kind_t    kind;
+  char                flatmsg[SC3_BUFSIZE];
 
-  SC3E_INOUTP (pe, e);
-  SC3A_CHECK (!sc3_error_kind_is_fatal (kind));
-  if (e == NULL) {
-    res = sc3_error_new_kind (kind, filename, line, errmsg);
+  /* If no error comes in, there is nothing to do. */
+  SC3A_CHECK (pe != NULL);
+  if ((e = *pe) == NULL) {
+    return NULL;
   }
-  else {
-    SC3A_IS (sc3_error_is_setup, e);
-    SC3A_CHECK (kind == e->kind);
-    res = sc3_error_new_inherit (&e, filename, line, errmsg);
+
+  /* The input error is owned and flattened. */
+  *pe = NULL;
+  SC3E (sc3_error_get_kind (e, &kind));
+  SC3E (sc3_error_flatten (&e, errmsg, flatmsg));
+
+  /* Accumulate a new error to hold the flat message. */
+  SC3E (sc3_error_accum_kind (alloc, pcollect,
+                              kind, filename, line, flatmsg));
+  return NULL;
+}
+
+static sc3_error_t *
+sc3_error_accum_leak (sc3_error_t ** pe,
+                      const char *filename, int line, const char *errmsg)
+{
+  SC3A_CHECK (pe != NULL);
+  if (*pe != NULL) {
+    SC3A_IS (sc3_error_is_leak, *pe);
   }
-  SC3A_CHECK (e == NULL);
-  SC3A_IS (sc3_error_is_setup, res);
-
-  /* This function is supposed to accumulate non-fatal errors.
-     If a fatal error occurs, something has gone wrong */
-  SC3E_DEMIS (!sc3_error_is_fatal, e);
-
-  /* We return the newly created error of type kind in the inout argument. */
-  *pe = res;
+  SC3E (sc3_error_accum_kind (sc3_allocator_nocount (), pe,
+                              SC3_ERROR_LEAK, filename, line, errmsg));
   return NULL;
 }
 
@@ -593,18 +592,29 @@ sc3_error_t        *
 sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
                 const char *filename, int line, const char *errmsg)
 {
+  SC3A_CHECK (leak != NULL);
   if (sc3_error_is_leak (e, NULL)) {
     char                flatmsg[SC3_BUFSIZE];
 
-    sc3_error_flatten (&e, errmsg, flatmsg);
-    SC3E (sc3_error_accum_nonfatal
-          (leak, SC3_ERROR_LEAK, filename, line, flatmsg));
+    SC3E (sc3_error_flatten (&e, errmsg, flatmsg));
+    SC3E (sc3_error_accum_leak (leak, filename, line, flatmsg));
   }
   else if (e != NULL) {
     return sc3_error_new_stack (&e, filename, line, errmsg);
   }
 
   SC3A_CHECK (e == NULL);
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_error_leak_demand (sc3_error_t ** leak, int x,
+                       const char *filename, int line, const char *errmsg)
+{
+  SC3A_CHECK (leak != NULL);
+  if (!x) {
+    SC3E (sc3_error_accum_leak (leak, filename, line, errmsg));
+  }
   return NULL;
 }
 
