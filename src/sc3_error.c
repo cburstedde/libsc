@@ -71,6 +71,14 @@ static sc3_error_t  esetup =
 "Error argument must be setup", __FILE__, __LINE__, 0, NULL
 };
 
+static int
+sc3_error_kind_is_fatal (sc3_error_kind_t kind)
+{
+  /* We do not classify the kind SC3_ERROR_LEAK as fatal. */
+  return kind == SC3_ERROR_FATAL || kind == SC3_ERROR_BUG ||
+    kind == SC3_ERROR_MEMORY || kind == SC3_ERROR_NETWORK;
+}
+
 int
 sc3_error_is_valid (const sc3_error_t * e, char *reason)
 {
@@ -82,6 +90,10 @@ sc3_error_is_valid (const sc3_error_t * e, char *reason)
   }
   if (e->stack != NULL) {
     SC3E_IS (sc3_error_is_setup, e->stack, reason);
+    if (e->setup) {
+      SC3E_TEST (!(sc3_error_kind_is_fatal (e->stack->kind) &&
+                   !sc3_error_kind_is_fatal (e->kind)), reason);
+    }
   }
   SC3E_TEST (0 <= e->kind && e->kind < SC3_ERROR_KIND_LAST, reason);
 #if 0
@@ -105,14 +117,6 @@ sc3_error_is_setup (const sc3_error_t * e, char *reason)
   SC3E_IS (sc3_error_is_valid, e, reason);
   SC3E_TEST (e->setup, reason);
   SC3E_YES (reason);
-}
-
-static int
-sc3_error_kind_is_fatal (sc3_error_kind_t kind)
-{
-  /* We do not classify the kind SC3_ERROR_LEAK as fatal. */
-  return kind == SC3_ERROR_FATAL || kind == SC3_ERROR_BUG ||
-    kind == SC3_ERROR_MEMORY || kind == SC3_ERROR_NETWORK;
 }
 
 int
@@ -244,6 +248,13 @@ sc3_error_setup (sc3_error_t * e)
 {
   SC3A_IS (sc3_error_is_new, e);
 
+  /* promote error to fatal if stack is fatal */
+  if (e->stack != NULL && sc3_error_kind_is_fatal (e->stack->kind) &&
+      !sc3_error_kind_is_fatal (e->kind)) {
+    e->kind = SC3_ERROR_FATAL;
+  }
+
+  /* we are done with setup */
   e->setup = 1;
   SC3A_IS (sc3_error_is_setup, e);
   return NULL;

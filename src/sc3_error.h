@@ -489,6 +489,8 @@ sc3_error_t        *sc3_error_set_msgf (sc3_error_t * e,
 #endif
 
 /** Setup an error and put it into its usable phase.
+ * If a fatal stack is specified and e is not set to a
+ * fatal kind, we silently promote \a e to \ref SC3_ERROR_FATAL.
  * \param [in,out] e    This error must not yet be setup.
  *                      Internal storage is allocated, the setup phase ends,
  *                      and the error is put into its usable phase.
