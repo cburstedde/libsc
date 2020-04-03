@@ -705,6 +705,30 @@ int                 sc_finalize_noabort (void);
  */
 int                 sc_is_root (void);
 
+/** Provide a string copy function.
+ * \param [out] dest    Buffer of length at least \a size.
+ *                      On output, not touched if NULL or \a size == 0.
+ * \param [in] size     Allocation length of \a dest.
+ * \param [in] src      Null-terminated string.
+ * \return              Equivalent to \ref
+ *                      sc_snprintf (dest, size, "%s", src).
+ */
+void                sc_strcopy (char *dest, size_t size, const char *src);
+
+/** Wrap the system snprintf function, allowing for truncation.
+ * The snprintf function may truncate the string written to the specified length.
+ * In some cases, compilers warn when this may occur.
+ * Here this is permitted behavior and we avoid the warning.
+ * \param [out] str     Buffer of length at least \a size.
+ *                      On output, not touched if NULL or \a size == 0.
+ *                      Otherwise, "" on snprintf error or the proper result.
+ * \param [in] size     Allocation length of \a str.
+ * \param [in] format   Format string as in man (3) snprintf.
+ */
+void                sc_snprintf (char *str, size_t size,
+                                 const char *format, ...)
+  __attribute__((format (printf, 3, 4)));
+
 SC_EXTERN_C_END;
 
 #endif /* SC_H */

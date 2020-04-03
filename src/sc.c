@@ -365,8 +365,8 @@ sc_malloc_aligned (size_t alignment, size_t size)
      * size up front, then the real data shifted by at most alignment - 1
      * bytes.  This way there is always at least one stop byte at the end that
      * we can use for debugging. */
-    const ptrdiff_t     extrasize = (const ptrdiff_t) (2 * sizeof (char **));
-    const ptrdiff_t     signalign = (const ptrdiff_t) alignment;
+    const ptrdiff_t     extrasize = (ptrdiff_t) (2 * sizeof (char **));
+    const ptrdiff_t     signalign = (ptrdiff_t) alignment;
     const size_t        alloc_size = extrasize + size + alignment;
     char               *alloc_ptr = (char *) malloc (alloc_size);
     char               *ptr;
@@ -425,8 +425,8 @@ sc_free_aligned (void *ptr, size_t alignment)
     /* this mirrors the function sc_malloc_aligned above */
     char               *alloc_ptr;
 #ifdef SC_ENABLE_DEBUG
-    const ptrdiff_t     extrasize = (const ptrdiff_t) (2 * sizeof (char **));
-    const ptrdiff_t     signalign = (const ptrdiff_t) alignment;
+    const ptrdiff_t     extrasize = (ptrdiff_t) (2 * sizeof (char **));
+    const ptrdiff_t     signalign = (ptrdiff_t) alignment;
     ptrdiff_t           shift, modu, ssize, i;
 #endif
 
@@ -480,7 +480,7 @@ sc_realloc_aligned (void *ptr, size_t alignment, size_t size)
 #else
   {
 #ifdef SC_ENABLE_DEBUG
-    const ptrdiff_t     signalign = (const ptrdiff_t) alignment;
+    const ptrdiff_t     signalign = (ptrdiff_t) alignment;
 #endif
     size_t              old_size, min_size;
     void               *new_ptr;
@@ -1478,5 +1478,34 @@ SC_LOG_IMP (PRODUCTION, PRODUCTION)
 SC_LOG_IMP (ESSENTIAL, ESSENTIAL)
 SC_LOG_IMP (LERROR, ERROR)
 /* *INDENT-ON* */
+
+void
+sc_strcopy (char *dest, size_t size, const char *src)
+{
+  sc_snprintf (dest, size, "%s", src);
+}
+
+void
+sc_snprintf (char *str, size_t size, const char *fmt, ...)
+{
+  int                 retval;
+  va_list             ap;
+
+  /* If there is no space, we do not access the buffer at all.
+     Further down we expect it to be at least 1 byte wide */
+  if (str == NULL || size == 0) {
+    return;
+  }
+
+  /* Writing this function just to catch the return value.
+     Avoiding -Wnoformat-truncation gcc option this way */
+  va_start (ap, fmt);
+  retval = vsnprintf (str, size, fmt, ap);
+  if (retval < 0) {
+    str[0] = '\0';
+  }
+  /* We do not handle truncation, since it is expected in our design. */
+  va_end (ap);
+}
 
 #endif
