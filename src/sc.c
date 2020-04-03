@@ -359,8 +359,8 @@ sc_malloc_aligned (size_t alignment, size_t size)
      * size up front, then the real data shifted by at most alignment - 1
      * bytes.  This way there is always at least one stop byte at the end that
      * we can use for debugging. */
-    const ptrdiff_t     extrasize = (const ptrdiff_t) (2 * sizeof (char **));
-    const ptrdiff_t     signalign = (const ptrdiff_t) alignment;
+    const ptrdiff_t     extrasize = (ptrdiff_t) (2 * sizeof (char **));
+    const ptrdiff_t     signalign = (ptrdiff_t) alignment;
     const size_t        alloc_size = extrasize + size + alignment;
     char               *alloc_ptr = (char *) malloc (alloc_size);
     char               *ptr;
@@ -419,8 +419,8 @@ sc_free_aligned (void *ptr, size_t alignment)
     /* this mirrors the function sc_malloc_aligned above */
     char               *alloc_ptr;
 #ifdef SC_ENABLE_DEBUG
-    const ptrdiff_t     extrasize = (const ptrdiff_t) (2 * sizeof (char **));
-    const ptrdiff_t     signalign = (const ptrdiff_t) alignment;
+    const ptrdiff_t     extrasize = (ptrdiff_t) (2 * sizeof (char **));
+    const ptrdiff_t     signalign = (ptrdiff_t) alignment;
     ptrdiff_t           shift, modu, ssize, i;
 #endif
 
@@ -474,7 +474,7 @@ sc_realloc_aligned (void *ptr, size_t alignment, size_t size)
 #else
   {
 #ifdef SC_ENABLE_DEBUG
-    const ptrdiff_t     signalign = (const ptrdiff_t) alignment;
+    const ptrdiff_t     signalign = (ptrdiff_t) alignment;
 #endif
     size_t              old_size, min_size;
     void               *new_ptr;
