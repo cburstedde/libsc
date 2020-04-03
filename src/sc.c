@@ -1420,4 +1420,33 @@ SC_LOG_IMP (ESSENTIAL, ESSENTIAL)
 SC_LOG_IMP (LERROR, ERROR)
 /* *INDENT-ON* */
 
+void
+sc_strcopy (char *dest, size_t size, const char *src)
+{
+  sc_snprintf (dest, size, "%s", src);
+}
+
+void
+sc_snprintf (char *str, size_t size, const char *fmt, ...)
+{
+  int                 retval;
+  va_list             ap;
+
+  /* If there is no space, we do not access the buffer at all.
+     Further down we expect it to be at least 1 byte wide */
+  if (str == NULL || size == 0) {
+    return;
+  }
+
+  /* Writing this function just to catch the return value.
+     Avoiding -Wnoformat-truncation gcc option this way */
+  va_start (ap, fmt);
+  retval = vsnprintf (str, size, fmt, ap);
+  if (retval < 0) {
+    str[0] = '\0';
+  }
+  /* We do not handle truncation, since it is expected in our design. */
+  va_end (ap);
+}
+
 #endif
