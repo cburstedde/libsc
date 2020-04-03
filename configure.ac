@@ -50,7 +50,7 @@ SC_MPI_CONFIG([SC], [], [])
 SC_MPI_ENGAGE([SC])
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
-SC_PROG_LINT
+dnl SC_PROG_LINT
 dnl SC_C_VERSION
 LT_INIT
 
