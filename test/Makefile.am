@@ -7,9 +7,6 @@ sc_test_programs = \
         test/sc_test_allgather \
         test/sc_test_arrays \
         test/sc_test_builtin \
-        test/sc_test_darray_work \
-        test/sc_test_dmatrix \
-        test/sc_test_dmatrix_pool \
         test/sc_test_io_sink \
         test/sc_test_keyvalue \
         test/sc_test_node_comm \
@@ -26,9 +23,6 @@ check_PROGRAMS += $(sc_test_programs)
 test_sc_test_allgather_SOURCES = test/test_allgather.c
 test_sc_test_arrays_SOURCES = test/test_arrays.c
 test_sc_test_builtin_SOURCES = test/test_builtin.c
-test_sc_test_darray_work_SOURCES = test/test_darray_work.c
-test_sc_test_dmatrix_SOURCES = test/test_dmatrix.c
-test_sc_test_dmatrix_pool_SOURCES = test/test_dmatrix_pool.c
 test_sc_test_io_sink_SOURCES = test/test_io_sink.c
 test_sc_test_keyvalue_SOURCES = test/test_keyvalue.c
 test_sc_test_notify_SOURCES = test/test_notify.c
@@ -46,9 +40,6 @@ LINT_CSOURCES += \
         $(test_sc_test_allgather_SOURCES) \
         $(test_sc_test_arrays_SOURCES) \
         $(test_sc_test_builtin_SOURCES) \
-        $(test_sc_test_darray_work) \
-        $(test_sc_test_dmatrix_SOURCES) \
-        $(test_sc_test_dmatrix_pool_SOURCES) \
         $(test_sc_test_io_sink_SOURCES) \
         $(test_sc_test_keyvalue_SOURCES) \
         $(test_sc_test_notify_SOURCES) \

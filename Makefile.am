@@ -32,12 +32,10 @@ Makefile.sc.mk : Makefile.sc.pre
 # install libsc m4 macros in a dedicated directory
 scaclocaldir = $(datadir)/aclocal
 dist_scaclocal_DATA = \
-        config/sc_blas.m4 config/sc_builtin.m4 config/sc_c_check_flag.m4 \
-        config/sc_c_version.m4 config/sc_cuda.m4 config/sc_include.m4 \
-        config/sc_lapack.m4 config/sc_lint.m4 config/sc_mpi.m4 \
+        config/sc_builtin.m4 config/sc_memalign.m4 config/sc_include.m4 \
         config/ax_prefix_config_h.m4 config/ax_split_version.m4 \
-        config/sc_package.m4 config/sc_trilinos.m4 \
-        config/sc_pthread.m4 config/sc_openmp.m4 config/sc_memalign.m4
+        config/sc_package.m4 config/sc_mpi.m4 \
+        config/sc_pthread.m4 config/sc_openmp.m4
 
 # install example .ini files in a dedicated directory
 scinidir = $(datadir)/ini
@@ -61,16 +59,16 @@ include src/Makefile.am
 include iniparser/Makefile.am
 include libb64/Makefile.am
 include test/Makefile.am
-include example/bspline/Makefile.am
+## include example/bspline/Makefile.am
 ## include example/cuda/Makefile.am
-include example/dmatrix/Makefile.am
+## include example/dmatrix/Makefile.am
 include example/function/Makefile.am
 include example/logging/Makefile.am
 include example/options/Makefile.am
 include example/pthread/Makefile.am
 include example/openmp/Makefile.am
 include example/v3basics/Makefile.am
-include example/warp/Makefile.am
+## include example/warp/Makefile.am
 include example/testing/Makefile.am
 
 ## This was only used for our lint code, which needs to be replaced.
