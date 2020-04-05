@@ -27,7 +27,7 @@
 int
 main (int argc, char **argv)
 {
-#ifdef SC_ENABLE_DEBUG
+
   int                 mpiret;
   int                 rank, num_procs;
   int                 i, isizet;
@@ -51,13 +51,13 @@ main (int argc, char **argv)
 
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
-  if (argc >= 2) {
+  srand ((unsigned) rank << 15);
+  if (argc == 2) {
     timing = 1;
     lcount = (size_t) strtol (argv[1], NULL, 0);
   }
   else {
     timing = 0;
-    srand ((unsigned) rank << 15);
     lcount = 8 + (size_t) (16. * rand () / (RAND_MAX + 1.0));
   }
 
@@ -74,10 +74,25 @@ main (int argc, char **argv)
   for (zz = 0; zz < lcount; ++zz) {
     ldata[zz] = -50. + (100. * rand () / (RAND_MAX + 1.0));
   }
+
+  /* output result before sort*/
+  if (!timing || lcount < 1000) {
+	SC_GLOBAL_PRODUCTION ("Values before sort\n");
+    sleep ((unsigned) rank);
+    for (zz = 0; zz < lcount;) {
+      printed = 0;
+      for (k = 0; zz < lcount && k < 8; ++zz, ++k) {
+        printed += snprintf (buffer + printed, BUFSIZ - printed,
+                             "%8.3g", ldata[zz]);
+      }
+      SC_STATISTICSF ("%s\n", buffer);
+    }
+  }
+
   sc_psort (mpicomm, ldata, nmemb, sizeof (double), sc_double_compare);
 
   /* output result */
-  if (!timing) {
+  if (!timing || lcount < 1000) {
     sleep ((unsigned) rank);
     for (zz = 0; zz < lcount;) {
       printed = 0;
@@ -128,7 +143,6 @@ main (int argc, char **argv)
 
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
-#endif
 
   return 0;
 }
