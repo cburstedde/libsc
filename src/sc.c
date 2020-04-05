@@ -45,6 +45,10 @@ typedef void        (*sc_sig_t) (int);
 #include <pthread.h>
 #endif
 
+#ifdef SC_HAVE_TIME_H
+#include <time.h>
+#endif
+
 typedef struct sc_package
 {
   int                 is_registered;
@@ -290,6 +294,15 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
     bp = basename (bn);
     fprintf (log_stream, "%s:%d ", bp, lineno);
   }
+
+  #ifdef SC_HAVE_TIME_H
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+
+    char tst[BUFSIZ];
+    snprintf(tst,BUFSIZ,"[%d-%d-%d %d:%d:%d] ", tm.tm_year + 1900, tm.tm_mon + 1,tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+    fputs (tst, log_stream);
+  #endif
 
   fputs (msg, log_stream);
   fflush (log_stream);
