@@ -83,6 +83,7 @@ void
 sc_uint128_add (const sc_uint128_t * a, const sc_uint128_t * b,
                 sc_uint128_t * result)
 {
+  SC_ASSERT (result != a && result != b);
   result->high_bits = a->high_bits + b->high_bits;
   result->low_bits = a->low_bits + b->low_bits;
   if (result->low_bits < a->low_bits) {
@@ -95,6 +96,7 @@ void
 sc_uint128_sub (const sc_uint128_t * a, const sc_uint128_t * b,
                 sc_uint128_t * result)
 {
+  SC_ASSERT (result != a && result != b);
   result->high_bits = a->high_bits - b->high_bits;
   result->low_bits = a->low_bits - b->low_bits;
   if (a->low_bits < result->low_bits) {
@@ -129,7 +131,8 @@ void
 sc_uint128_shift_right (const sc_uint128_t * input, int shift_count,
                         sc_uint128_t * result)
 {
-  if (shift_count > 128) {
+  SC_ASSERT (shift_count >= 0);
+  if (shift_count >= 128) {
     result->high_bits = 0;
     result->low_bits = 0;
     return;
@@ -157,7 +160,13 @@ void
 sc_uint128_shift_left (const sc_uint128_t * input, int shift_count,
                        sc_uint128_t * result)
 {
-  SC_ASSERT (shift_count >= 0 && shift_count <= 128);
+  SC_ASSERT (shift_count >= 0);
+  if (shift_count >= 128) {
+    result->high_bits = 0;
+    result->low_bits = 0;
+    return;
+  }  
+
   result->high_bits = input->high_bits;
   result->low_bits = input->low_bits;
   if (shift_count == 0)
