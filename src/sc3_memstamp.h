@@ -180,6 +180,38 @@ sc3_error_t        *sc3_mstamp_setup (sc3_mstamp_t * mst);
 sc3_error_t        *sc3_mstamp_init (sc3_allocator_t * aator, size_t ssize,
                                      size_t esize, sc3_mstamp_t ** mstp);
 
+/** Increase the reference count on a memory stamp container by 1.
+ * This is only allowed after the memory stamp container has been setup.
+ * \param [in,out] mst  Its refcount is increased.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mstamp_ref (sc3_mstamp_t * mst);
+
+/** Decrease the reference count on a memory stamp container by 1.
+ * If the reference count drops to zero, the container is deallocated.
+ * \param [in,out] mstp The pointer must not be NULL and the container valid.
+ *                      Its refcount is decreased.  If it reaches zero,
+ *                      the memory stamp container is destroyed and
+ *                      the value set to NULL.
+ * \return              NULL on success, error object otherwise.
+ *                      We return a leak if we find one.
+ */
+sc3_error_t        *sc3_mstamp_unref (sc3_mstamp_t ** mstp);
+
+/** Destroy a memory stamp container by freeing all memory
+ * in a stamps structure.
+ * It is a leak error to destroy a memory stamp container that is
+ * multiply referenced. We unref its internal allocator, which may
+ * cause a fatal error if that allocator has been used against
+ * specification elsewhere in the code.
+ * \param [in,out] mstp This container must be valid and have a refcount of 1.
+ *                      On output, value is set to NULL.
+ * \return              NULL on success, error object otherwise.
+ *                      When the memory stamp container had more than one
+ *                      reference, return an error of kind \ref SC3_ERROR_LEAK.
+ */
+sc3_error_t        *sc3_mstamp_destroy (sc3_mstamp_t ** mstp);
+
 /** Return a new item.
  * The memory returned will stay legal until container is destroyed or
  * reference count drops to zero.

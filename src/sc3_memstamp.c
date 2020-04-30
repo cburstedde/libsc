@@ -203,6 +203,60 @@ sc3_mstamp_init (sc3_allocator_t * aator, size_t ssize, size_t esize,
   *mstp = mst;
   return NULL;
 }
+
+sc3_error_t        *
+sc3_mstamp_ref (sc3_mstamp_t * mst)
+{
+  SC3E (sc3_refcount_ref (&mst->rc));
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mstamp_unref (sc3_mstamp_t ** mstp)
+{
+  int                 waslast, i;
+  sc3_allocator_t    *aator;
+  sc3_mstamp_t       *mst;
+  void               *item;
+  int                 ecount;
+
+  SC3E_INOUTP (mstp, mst);
+  SC3A_IS (sc3_mstamp_is_valid, mst);
+  SC3E (sc3_refcount_unref (&mst->rc, &waslast));
+  if (waslast) {
+    *mstp = NULL;
+
+    aator = mst->aator;
+    if (mst->setup) {
+      /* deallocate element storage */
+      SC3E (sc3_array_get_elem_count (mst->remember, &ecount));
+      for (i = 0; i < ecount; ++i) {
+        SC3E (sc3_array_index (mst->remember, i, &item));
+        SC3E_ALLOCATOR_FREE (aator, char, *(void **) item);
+      }
+      SC3E (sc3_array_unref (&mst->remember));
+      SC3E (sc3_array_unref (&mst->freed));
+    }
+    SC3E_ALLOCATOR_FREE (aator, sc3_mstamp_t, mst);
+    SC3E (sc3_allocator_unref (&aator));
+  }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mstamp_destroy (sc3_mstamp_t ** mstp)
+{
+  sc3_error_t        *leak = NULL;
+  sc3_mstamp_t       *mst;
+
+  SC3E_INULLP (mstp, mst);
+  SC3L_DEMAND (&leak, sc3_refcount_is_last (&mst->rc, NULL));
+  SC3E (sc3_mstamp_unref (&mst));
+
+  SC3A_CHECK (mst == NULL || leak != NULL);
+  return leak;
+}
+
 sc3_error_t        *
 sc3_mstamp_alloc (sc3_mstamp_t * mst, void **itemp)
 {
