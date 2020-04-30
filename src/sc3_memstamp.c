@@ -88,3 +88,62 @@ sc3_mstamp_is_setup (const sc3_mstamp_t * mst, char *reason)
   SC3E_YES (reason);
 }
 
+sc3_error_t        *
+sc3_mstamp_set_elem_size (sc3_mstamp_t * mst, size_t esize)
+{
+  SC3A_IS (sc3_mstamp_is_new, mst);
+  mst->esize = esize;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mstamp_set_stamp_size (sc3_mstamp_t * mst, size_t ssize)
+{
+  SC3A_IS (sc3_mstamp_is_new, mst);
+  mst->ssize = ssize;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mstamp_set_initzero (sc3_mstamp_t * mst, int initzero)
+{
+  SC3A_IS (sc3_mstamp_is_new, mst);
+  mst->initzero = initzero;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mstamp_get_elem_size (sc3_mstamp_t * mst, size_t *esize)
+{
+  SC3E_RETOPT (esize, 0);
+  SC3A_IS (sc3_mstamp_is_setup, mst);
+
+  if (esize != NULL) {
+    *esize = mst->esize;
+  }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mstamp_get_stamp_size (sc3_mstamp_t * mst, size_t *ssize)
+{
+  SC3E_RETOPT (ssize, 0);
+  SC3A_IS (sc3_mstamp_is_setup, mst);
+
+  if (ssize != NULL) {
+    *ssize = mst->ssize;
+  }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mstamp_get_stamp_count (sc3_mstamp_t * mst, int *scount)
+{
+  SC3E_RETOPT (scount, 0);
+  SC3A_IS (sc3_mstamp_is_setup, mst);
+
+  if (scount != NULL) {
+    *scount = mst->scount;
+  }
+  return NULL;
+}

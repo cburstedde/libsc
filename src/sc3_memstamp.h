@@ -98,6 +98,66 @@ int                 sc3_mstamp_is_new (const sc3_mstamp_t * mst,
 int                 sc3_mstamp_is_setup (const sc3_mstamp_t * mst,
                                          char *reason);
 
+/** Set the size of each memory stamp element in bytes.
+ * \param [in,out] mst  The memory stamp must not be setup.
+ * \param [in] esize    Element size in bytes. Zero is legal, in that case
+ *                      \ref sc3_mstamp_alloc output is NULL. One is default.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mstamp_set_elem_size (sc3_mstamp_t * mst,
+                                              size_t esize);
+
+/** Set the size of each memory stamp in bytes.
+ * \param [in,out] mst  The memory stamp must not be setup.
+ * \param [in] ssize    Size of each memory block that we allocate.
+ *                      If it is larger than the element size,
+ *                      we may place more than one element in it.
+ *                      Passing 0 is legal and forces
+ *                      stamps that hold one item each. One is default.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mstamp_set_stamp_size (sc3_mstamp_t * mst,
+                                               size_t ssize);
+
+/** Set the initzero property of a memory stamp container.
+ * If set to true, every new stamp will be initialized with zeros.
+ * \param [in,out] mst      The memory stamp container must not be setup.
+ * \param [in] initzero     Boolean; default is false.
+ * \return                  NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mstamp_set_initzero (sc3_mstamp_t * mst,
+                                             int initzero);
+
+/** Return element size of a memory stamp container that is setup.
+ * \param [in] mst      Memory stamp container must be setup.
+ * \param [out] esize   Element size of the container in bytes, or 0 on error.
+ *                      Pointer may be NULL, then we do nothing.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mstamp_get_elem_size (sc3_mstamp_t * mst,
+                                              size_t *esize);
+
+/** Return stamp size of a memory stamp container that is setup.
+ * \param [in] mst      Memory stamp container must be setup.
+ * \param [out] ssize   Stamp size of the container in bytes, or 0 on error.
+ *                      Pointer may be NULL, then we do nothing.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mstamp_get_stamp_size (sc3_mstamp_t * mst,
+                                               size_t *ssize);
+
+/** Return the number of valid elementsof a memory stamp
+ * container that is setup.
+ * \param [in] mst      Memory stamp container must be setup.
+ * \param [out] scount  The number of stamps in the container or 0 on error.
+ *                      Pointer may be NULL, then we do nothing.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mstamp_get_stamp_count (sc3_mstamp_t * mst,
+                                                int *scount);
+
+/* noerr options? */
+
 #ifdef __cplusplus
 #if 0
 {
