@@ -49,3 +49,42 @@ struct sc3_mstamp
   sc3_array_t        *remember;    /**< Collects all stamps */
   sc3_array_t        *freed;       /**< Buffers the freed elements */
 };
+
+int
+sc3_mstamp_is_valid (const sc3_mstamp_t * mst, char *reason)
+{
+  SC3E_TEST (mst != NULL, reason);
+  SC3E_IS (sc3_refcount_is_valid, &mst->rc, reason);
+  SC3E_IS (sc3_allocator_is_setup, mst->aator, reason);
+  SC3E_IS (sc3_array_is_valid, mst->remember, reason);
+  SC3E_IS (sc3_array_is_valid, mst->freed, reason);
+
+  /* check internal allocation logic depending on setup status */
+  if (!mst->setup) {
+    SC3E_TEST (mst->cur == NULL, reason);
+  }
+  else {
+    SC3E_TEST (mst->cur != NULL || mst->ssize == 0, reason);
+    SC3E_TEST (mst->cur_snext < mst->per_stamp, reason);
+  }
+  SC3E_YES (reason);
+}
+
+int
+sc3_mstamp_is_new (const sc3_mstamp_t * mst, char *reason)
+{
+  SC3E_IS (sc3_mstamp_is_valid, mst, reason);
+  SC3E_TEST (!mst->setup, reason);
+  SC3E_YES (reason);
+}
+
+int
+sc3_mstamp_is_setup (const sc3_mstamp_t * mst, char *reason)
+{
+  SC3E_IS (sc3_mstamp_is_valid, mst, reason);
+  SC3E_IS (sc3_array_is_setup, mst->remember, reason);
+  SC3E_IS (sc3_array_is_setup, mst->freed, reason);
+  SC3E_TEST (mst->setup, reason);
+  SC3E_YES (reason);
+}
+

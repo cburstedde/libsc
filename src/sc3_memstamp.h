@@ -60,6 +60,44 @@ extern              "C"
 #endif
 #endif
 
+/** Query whether a memory stamp container is not NULL and internally
+ * consistent.
+ * The container may be valid in both its setup and usage phases.
+ * \param [in] mst      Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff pointer is not NULL and container consistent.
+ */
+int                 sc3_mstamp_is_valid (const sc3_mstamp_t * mst,
+                                         char *reason);
+
+/** Query whether a memory stamp is not NULL, consistent and not setup.
+ * This means that the memory stamp is not (yet) in its usage phase.
+ * \param [in] mst      Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff pointer not NULL, memory stamp consistent,
+ *                      not setup.
+ */
+int                 sc3_mstamp_is_new (const sc3_mstamp_t * mst,
+                                       char *reason);
+
+/** Query whether a memory stamp is not NULL, internally consistent and setup.
+ * This means that the memory stamp is in its usage phase.
+ * We provide allocation of fixed-size memory items
+ * without allocating new memory in every request.
+ * Instead we block the allocations in what we call a stamp of multiple items.
+ * Even if no allocations are done, the container's internal memory
+ * must be freed eventually by \ref sc3_mstamp_destroy.
+ * \param [in] mst      Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff pointer not NULL, memory stamp consistent and
+ *                      setup.
+ */
+int                 sc3_mstamp_is_setup (const sc3_mstamp_t * mst,
+                                         char *reason);
+
 #ifdef __cplusplus
 #if 0
 {
