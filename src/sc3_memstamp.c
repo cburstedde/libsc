@@ -89,6 +89,36 @@ sc3_mstamp_is_setup (const sc3_mstamp_t * mst, char *reason)
 }
 
 sc3_error_t        *
+sc3_mstamp_new (sc3_allocator_t * aator, sc3_mstamp_t ** mstp)
+{
+  sc3_mstamp_t       *mst;
+
+  SC3E_RETVAL (mstp, NULL);
+  SC3A_IS (sc3_allocator_is_setup, aator);
+
+  SC3E (sc3_allocator_ref (aator));
+  SC3E_ALLOCATOR_CALLOC (aator, sc3_mstamp_t, 1, mst);
+  SC3E (sc3_refcount_init (&mst->rc));
+  mst->esize = 1;
+  mst->ssize = 1;
+  mst->per_stamp = 0;
+  mst->initzero = 0;
+  mst->aator = aator;
+  mst->scount = 0;
+  mst->cur_snext = 0;
+  mst->cur = NULL;
+  SC3E (sc3_array_new (aator, &mst->remember));
+  SC3E (sc3_array_set_elem_size (mst->remember, sizeof (void *)));
+  SC3E (sc3_array_set_resizable (mst->remember, 1));
+  SC3E (sc3_array_new (aator, &mst->freed));
+  SC3E (sc3_array_set_elem_size (mst->freed, sizeof (void *)));
+  SC3E (sc3_array_set_resizable (mst->freed, 1));
+  SC3A_IS (sc3_mstamp_is_new, mst);
+  *mstp = mst;
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_mstamp_set_elem_size (sc3_mstamp_t * mst, size_t esize)
 {
   SC3A_IS (sc3_mstamp_is_new, mst);
@@ -109,6 +139,118 @@ sc3_mstamp_set_initzero (sc3_mstamp_t * mst, int initzero)
 {
   SC3A_IS (sc3_mstamp_is_new, mst);
   mst->initzero = initzero;
+  return NULL;
+}
+
+static sc3_error_t *
+sc3_mstamp_stamp (sc3_mstamp_t * mst)
+{
+  SC3A_CHECK (mst != NULL);
+  SC3A_CHECK (mst->esize > 0);
+  SC3A_CHECK (mst->ssize > 0);
+
+  /* make new stamp; the pointer is aligned to any builtin type */
+  mst->cur_snext = 0;
+
+  if (!mst->initzero) {
+    SC3E_ALLOCATOR_MALLOC (mst->aator, char, mst->ssize, mst->cur);
+  }
+  else {
+    SC3E_ALLOCATOR_CALLOC (mst->aator, char, mst->ssize, mst->cur);
+  }
+  SC3E (sc3_array_push (mst->remember, &mst->cur));
+
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mstamp_setup (sc3_mstamp_t * mst)
+{
+  SC3A_IS (sc3_mstamp_is_new, mst);
+
+  SC3E (sc3_array_setup (mst->remember));
+  SC3E (sc3_array_setup (mst->freed));
+  /* how many items per stamp we use */
+  if (mst->esize > 0) {
+    mst->per_stamp = mst->ssize / mst->esize;
+    if (mst->per_stamp == 0) {
+      /* Each item uses more memory than we had specified for one stamp */
+      mst->per_stamp = 1;
+    }
+    mst->ssize = mst->per_stamp * mst->esize;
+    SC3E (sc3_mstamp_stamp (mst));
+  }
+  else {
+    /* keep default values for other parameters */
+    mst->ssize = 0;
+  }
+  /* set array to setup state */
+  mst->setup = 1;
+  SC3A_IS (sc3_mstamp_is_setup, mst);
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mstamp_init (sc3_allocator_t * aator, size_t ssize, size_t esize,
+                 sc3_mstamp_t ** mstp)
+{
+  sc3_mstamp_t       *mst;
+
+  SC3E (sc3_mstamp_new (aator, &mst));
+  SC3E (sc3_mstamp_set_stamp_size (mst, ssize));
+  SC3E (sc3_mstamp_set_elem_size (mst, esize));
+  SC3E (sc3_mstamp_setup (mst));
+  *mstp = mst;
+  return NULL;
+}
+sc3_error_t        *
+sc3_mstamp_alloc (sc3_mstamp_t * mst, void **itemp)
+{
+  sc3_array_t        *freed = mst->freed;
+  int                 ecount;
+
+  SC3A_CHECK (mst != NULL);
+
+  ++mst->scount;
+  sc3_array_get_elem_count (freed, &ecount);
+  if (ecount > 0) {
+    sc3_array_pop (freed, *itemp);
+    return NULL;
+  }
+  if (mst->esize == 0) {
+    /* item size zero is legal */
+    *itemp = NULL;
+    return NULL;
+  }
+
+  /* we know that at least one item will fit */
+  SC3A_CHECK (mst->cur != NULL);
+  SC3A_CHECK (mst->cur_snext < mst->per_stamp);
+  *itemp = mst->cur + mst->cur_snext * mst->esize;
+
+  /* if this was the last item on the current stamp, we need a new one */
+  if (++mst->cur_snext == mst->per_stamp) {
+    SC3E (sc3_mstamp_stamp (mst));
+  }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
+{
+  sc3_array_t        *freed = mst->freed;
+
+  SC3A_CHECK (mst->scount > 0);
+
+#ifdef SC_ENABLE_DEBUG
+  if (!mst->initzero) {
+    memset (elem, -1, mst->esize);
+  }
+#endif
+
+  --mst->scount;
+
+  SC3E (sc3_array_push (freed, &elem));
   return NULL;
 }
 
