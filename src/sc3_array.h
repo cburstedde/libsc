@@ -246,6 +246,9 @@ sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void **pp);
  *                      It is the application's responsibility that p
  *                      points to a memory location of sufficient size.
  * \return              NULL on success, error object otherwise.
+ *
+ * \todo Think about whether passing a pointer to the element may be better.
+ *       But then such functionality is available with \ref sc3_array_push_count.
  */
 sc3_error_t        *sc3_array_push (sc3_array_t * a, const void *p);
 
