@@ -31,9 +31,10 @@
  * A data container to create memory items of the same size.
  * Allocations are bundled so it's fast for small memory sizes.
  * The items created will remain valid until the container is destroyed.
+ * It is possible to return allocated items to the container for reuse.
  * 
  * The memstamp container stores any number of fixed-size items within a new
- * stamp. If needed, memory is reallocated internally.
+ * allocation, or stamp. If needed, memory is reallocated internally.
  *
  * We use standard `int` types for indexing.
  *
@@ -127,11 +128,11 @@ sc3_error_t        *sc3_mstamp_set_elem_size (sc3_mstamp_t * mst,
 
 /** Set the size of each memory stamp in bytes.
  * \param [in,out] mst  The memory stamp must not be setup.
- * \param [in] ssize    Size of each memory block that we allocate.
+ * \param [in] ssize    Size in bytes of each memory block that we allocate.
  *                      If it is larger than the element size,
  *                      we may place more than one element in it.
  *                      Passing 0 is legal and forces
- *                      stamps that hold one item each. One is default.
+ *                      stamps that hold one item each.  Default is 4096.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mstamp_set_stamp_size (sc3_mstamp_t * mst,
@@ -154,7 +155,7 @@ sc3_error_t        *sc3_mstamp_set_initzero (sc3_mstamp_t * mst,
  * must be freed eventually by \ref sc3_mstamp_destroy.
  * \param [in,out] mst  This memory stamp container must not yet be setup.
  *                      Internal storage is allocated, the setup phase ends,
- *                      and the array is put into its usable phase.
+ *                      and the container is put into its usable phase.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mstamp_setup (sc3_mstamp_t * mst);
@@ -176,6 +177,8 @@ sc3_error_t        *sc3_mstamp_setup (sc3_mstamp_t * mst);
  *                      \ref sc3_mstamp_alloc output is NULL. One is default.
  * \param [out] mstp    Legal pointer to a stamp structure.
  * \return              NULL on success, error object otherwise.
+ *
+ * \todo Think about generalizing the _init concept.
  */
 sc3_error_t        *sc3_mstamp_init (sc3_allocator_t * aator, size_t ssize,
                                      size_t esize, sc3_mstamp_t ** mstp);
@@ -195,15 +198,16 @@ sc3_error_t        *sc3_mstamp_ref (sc3_mstamp_t * mst);
  *                      the value set to NULL.
  * \return              NULL on success, error object otherwise.
  *                      We return a leak if we find one.
+ *
+ * \todo Think about returning a NULL value in unref in all cases.
  */
 sc3_error_t        *sc3_mstamp_unref (sc3_mstamp_t ** mstp);
 
 /** Destroy a memory stamp container by freeing all memory
  * in a stamps structure.
  * It is a leak error to destroy a memory stamp container that is
- * multiply referenced. We unref its internal allocator, which may
- * cause a fatal error if that allocator has been used against
- * specification elsewhere in the code.
+ * multiply referenced. We unref its internal allocator, which may cause a
+ * fatal error if that allocator has been overly unrefd elsewhere in the code.
  * \param [in,out] mstp This container must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
@@ -213,21 +217,20 @@ sc3_error_t        *sc3_mstamp_unref (sc3_mstamp_t ** mstp);
 sc3_error_t        *sc3_mstamp_destroy (sc3_mstamp_t ** mstp);
 
 /** Return a new item.
- * The memory returned will stay legal until container is destroyed or
- * reference count drops to zero.
+ * The memory returned will stay legal until container is destroyed,
+ * or equivalently, its reference count drops to zero.
  * \param [in,out] mst  Memory stamp container must be setup.
  * \param [out] itemp   Pointer to an item ready to use.
  *                      Legal until \ref sc3_mstamp_destroy or
  *                      \ref sc3_mstamp_unref (with one ref)
- *                      is called on mst.
+ *                      is called on \a mst.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mstamp_alloc (sc3_mstamp_t * mst, void **itemp);
 
-/** Return a previously allocated element to the pool.
+/** Return a previously allocated element to the container.
  * \param [in] mst      Memory stamp container must be setup.
  * \param [in] elem     Pointer to an element to be returned to the pool.
- * 
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mstamp_free (sc3_mstamp_t * mst, void *elem);
@@ -250,8 +253,7 @@ sc3_error_t        *sc3_mstamp_get_elem_size (sc3_mstamp_t * mst,
 sc3_error_t        *sc3_mstamp_get_stamp_size (sc3_mstamp_t * mst,
                                                size_t *ssize);
 
-/** Return the number of valid elementsof a memory stamp
- * container that is setup.
+/** Return number of valid elements of a memory stamp container that is setup.
  * \param [in] mst      Memory stamp container must be setup.
  * \param [out] scount  The number of stamps in the container or 0 on error.
  *                      Pointer may be NULL, then we do nothing.
@@ -259,8 +261,6 @@ sc3_error_t        *sc3_mstamp_get_stamp_size (sc3_mstamp_t * mst,
  */
 sc3_error_t        *sc3_mstamp_get_stamp_count (sc3_mstamp_t * mst,
                                                 int *scount);
-
-/* noerr options? */
 
 #ifdef __cplusplus
 #if 0

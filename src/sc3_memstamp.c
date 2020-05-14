@@ -39,7 +39,7 @@ struct sc3_mstamp
   int                 scount;       /**< Number of valid stamps */
 
   /* parameters fixed after setup call */
-  int                 initzero;     /**< Is fill in new items with zeros. */
+  int                 initzero;     /**< Fill new items with zeros. */
   int                 per_stamp;    /**< Number of items per stamp */
   size_t              esize, ssize; /**< Size per item and per stamp */
 
@@ -99,20 +99,23 @@ sc3_mstamp_new (sc3_allocator_t * aator, sc3_mstamp_t ** mstp)
   SC3E (sc3_allocator_ref (aator));
   SC3E_ALLOCATOR_CALLOC (aator, sc3_mstamp_t, 1, mst);
   SC3E (sc3_refcount_init (&mst->rc));
+  mst->aator = aator;
+
   mst->esize = 1;
-  mst->ssize = 1;
+  mst->ssize = 4096;
   mst->per_stamp = 0;
   mst->initzero = 0;
-  mst->aator = aator;
   mst->scount = 0;
   mst->cur_snext = 0;
   mst->cur = NULL;
+
   SC3E (sc3_array_new (aator, &mst->remember));
   SC3E (sc3_array_set_elem_size (mst->remember, sizeof (void *)));
   SC3E (sc3_array_set_resizable (mst->remember, 1));
   SC3E (sc3_array_new (aator, &mst->freed));
   SC3E (sc3_array_set_elem_size (mst->freed, sizeof (void *)));
   SC3E (sc3_array_set_resizable (mst->freed, 1));
+
   SC3A_IS (sc3_mstamp_is_new, mst);
   *mstp = mst;
   return NULL;
@@ -168,8 +171,10 @@ sc3_mstamp_setup (sc3_mstamp_t * mst)
 {
   SC3A_IS (sc3_mstamp_is_new, mst);
 
+  /* begin using internal arrays */
   SC3E (sc3_array_setup (mst->remember));
   SC3E (sc3_array_setup (mst->freed));
+
   /* how many items per stamp we use */
   if (mst->esize > 0) {
     mst->per_stamp = mst->ssize / mst->esize;
@@ -184,6 +189,7 @@ sc3_mstamp_setup (sc3_mstamp_t * mst)
     /* keep default values for other parameters */
     mst->ssize = 0;
   }
+
   /* set array to setup state */
   mst->setup = 1;
   SC3A_IS (sc3_mstamp_is_setup, mst);
@@ -196,10 +202,13 @@ sc3_mstamp_init (sc3_allocator_t * aator, size_t ssize, size_t esize,
 {
   sc3_mstamp_t       *mst;
 
+  SC3E_RETVAL (mstp, NULL);
+
   SC3E (sc3_mstamp_new (aator, &mst));
   SC3E (sc3_mstamp_set_stamp_size (mst, ssize));
   SC3E (sc3_mstamp_set_elem_size (mst, esize));
   SC3E (sc3_mstamp_setup (mst));
+
   *mstp = mst;
   return NULL;
 }
@@ -215,10 +224,10 @@ sc3_error_t        *
 sc3_mstamp_unref (sc3_mstamp_t ** mstp)
 {
   int                 waslast, i;
+  int                 ecount;
+  void               *item;
   sc3_allocator_t    *aator;
   sc3_mstamp_t       *mst;
-  void               *item;
-  int                 ecount;
 
   SC3E_INOUTP (mstp, mst);
   SC3A_IS (sc3_mstamp_is_valid, mst);
@@ -234,8 +243,10 @@ sc3_mstamp_unref (sc3_mstamp_t ** mstp)
         SC3E (sc3_array_index (mst->remember, i, &item));
         SC3E_ALLOCATOR_FREE (aator, char, *(void **) item);
       }
-      SC3E (sc3_array_unref (&mst->remember));
-      SC3E (sc3_array_unref (&mst->freed));
+
+      /* it is impossible for these to have more than one reference */
+      SC3E (sc3_array_destroy (&mst->remember));
+      SC3E (sc3_array_destroy (&mst->freed));
     }
     SC3E_ALLOCATOR_FREE (aator, sc3_mstamp_t, mst);
     SC3E (sc3_allocator_unref (&aator));
@@ -265,9 +276,12 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void **itemp)
 
   SC3A_CHECK (mst != NULL);
 
+  /* TODO: scount is number of elements, not stamps.
+           Shall we rename it to ecount?  Then ecount below should be fcount. */
   ++mst->scount;
   sc3_array_get_elem_count (freed, &ecount);
   if (ecount > 0) {
+    /* TODO: use itemp without * */
     sc3_array_pop (freed, *itemp);
     return NULL;
   }
@@ -296,8 +310,13 @@ sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
 
   SC3A_CHECK (mst->scount > 0);
 
+  if (mst->initzero) {
+    /* freed items must be zeroed for reuse */
+    /* TODO: rather do this in the alloc function */
+    memset (elem, 0, mst->esize);
+  }
 #ifdef SC_ENABLE_DEBUG
-  if (!mst->initzero) {
+  else {
     memset (elem, -1, mst->esize);
   }
 #endif
