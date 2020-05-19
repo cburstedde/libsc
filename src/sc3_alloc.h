@@ -57,10 +57,10 @@
  * Otherwise the function returns an error of kind \ref SC3_ERROR_LEAK.
  *
  * By default, a keepalive mechanism is enabled:
- * Then any allocation refs the allocator, and every deallocation unref it.
- * In this case it follows that the refcount of an allocator stays nonzero
- * as long as allocations are live, and \ref sc3_allocator_destroy cannot
- * possibly return a leak.
+ * Then any allocation refs the allocator, and every deallocation unrefs it.
+ * In this case it follows that the refcount of an allocator stays above one
+ * as long as allocations are live, and \ref sc3_allocator_destroy may return
+ * a leak but not a fatal error.
  * On the other hand, when keepalive is disabled and counting enabled,
  * it is guaranteed to have \ref sc3_allocator_destroy fail fatally
  * by calling it on an allocator with live allocations.
@@ -173,7 +173,7 @@ sc3_allocator_t    *sc3_allocator_nocount (void);
 /** Return a counting allocator setup and not protected from threads.
  * This allocator is not safe to use concurrently from multiple threads.
  * It can be arbitrarily refd and unrefd but must not be destroyed.
- * Use this function to create the first allocator in main ().
+ * Can use this function to create the first allocator in main ().
  * Use only if there is no other option.
  * \return              Allocator unprotected from concurrent access.
  *                      It is not allowed to destroy this allocator.
@@ -198,6 +198,7 @@ sc3_error_t        *sc3_allocator_new (sc3_allocator_t * oa,
                                        sc3_allocator_t ** ap);
 
 /** Set byte alignment followed by the allocator.
+ * Default is at least sizeof (void *).
  * \param [in,out] a    Valid allocator not setup.
  * \param [in] align    Power of two designating byte alignment of memory,
  *                      or zero for system default alignment.
