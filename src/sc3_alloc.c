@@ -39,7 +39,7 @@ struct sc3_allocator
   size_t              align;
   int                 alloced;
   int                 counting;
-  int                 keepalive;
+  int                 keepalive;    /**< Repurposed to be same as counting */
 
   long                num_malloc, num_calloc, num_free;
   size_t              total_size;
@@ -134,8 +134,7 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   SC3E (sc3_refcount_init (&a->rc));
   a->align = SC3_MAX (sizeof (void *), sizeof (sc3_alloc_item_t));
   a->alloced = 1;
-  a->counting = 1;
-  a->keepalive = 1;
+  a->counting = a->keepalive = 1;
   a->oa = oa;
   SC3A_IS (sc3_allocator_is_new, a);
 
@@ -157,10 +156,11 @@ sc3_error_t        *
 sc3_allocator_set_counting (sc3_allocator_t * a, int counting)
 {
   SC3A_IS (sc3_allocator_is_new, a);
-  a->counting = counting;
+  a->counting = a->keepalive = counting;
   return NULL;
 }
 
+#if 0
 sc3_error_t        *
 sc3_allocator_set_keepalive (sc3_allocator_t * a, int keepalive)
 {
@@ -168,6 +168,7 @@ sc3_allocator_set_keepalive (sc3_allocator_t * a, int keepalive)
   a->keepalive = keepalive;
   return NULL;
 }
+#endif
 
 sc3_error_t        *
 sc3_allocator_setup (sc3_allocator_t * a)
@@ -319,9 +320,11 @@ sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
     }
     a->total_size += size;
   }
+#if 0
   if (a->keepalive) {
     SC3E (sc3_allocator_ref (a));
   }
+#endif
 
   /* return new memory */
   *ptr = p;
@@ -409,10 +412,12 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
     }
     SC3_FREE (aitem[1].ptr);
 
+#if 0
     /* do this at the end since the allocator may go out of scope */
     if (a->keepalive) {
       SC3E (sc3_allocator_unref (&a));
     }
+#endif
   }
   return NULL;
 }
