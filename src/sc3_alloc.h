@@ -77,36 +77,6 @@ extern              "C"
 #endif
 #endif
 
-/** Allocate \a n items of a given type \a t, uninitialized.
- * Allocator \a a's malloc function is invoked using sizeof (t)
- * to produce an alllocation that is assigned to the variable \a p. */
-#define SC3E_ALLOCATOR_MALLOC(a,t,n,p) do {                             \
-  void *_ptr;                                                           \
-  SC3E (sc3_allocator_malloc (a, (n) * sizeof (t), &_ptr));             \
-  (p) = (t *) _ptr; } while (0)
-
-/** Allocate \a n items of a given type \a t, initialized to all zeros.
- * Allocator \a a's calloc function is invoked using sizeof (t)
- * to produce an alllocation that is assigned to the variable \a p. */
-#define SC3E_ALLOCATOR_CALLOC(a,t,n,p) do {                             \
-  void *_ptr;                                                           \
-  SC3E (sc3_allocator_calloc (a, n, sizeof (t), &_ptr));                \
-  (p) = (t *) _ptr; } while (0)
-
-/** Free memory \a p that has previously been allocated by \a a.
- * We take a type argument \a t to safely set the input \a p to NULL. */
-#define SC3E_ALLOCATOR_FREE(a,t,p) do {                                 \
-  SC3E (sc3_allocator_free (a, p));                                     \
-  (p) = (t *) NULL; } while (0)
-
-/** Reallocate memory that was previously allocated by \a a.
- * Allocator \a a's realloc function is invoked with \a n items of
- * sizeof (t) to allocate.  The new memory is assigned to variable \a p. */
-#define SC3E_ALLOCATOR_REALLOC(a,t,n,p) do {                            \
-  void *_ptr = p;                                                       \
-  SC3E (sc3_allocator_realloc (a, (n) * sizeof (t), &_ptr));            \
-  (p) = (t *) _ptr; } while (0)
-
 /** Check whether an allocator is not NULL and internally consistent.
  * The allocator may be valid in both its setup and usage phases.
  * Any allocation by \ref sc3_allocator_malloc or \ref sc3_allocator_calloc
@@ -266,46 +236,38 @@ sc3_error_t        *sc3_allocator_strdup (sc3_allocator_t * a,
 /** Allocate memory that is not initialized.
  * \param [in,out] a    The allocator must be setup.
  * \param [in] size     Bytes to allocate, zero is legal.
- * \param [out] ptr     Contains newly allocated pointer on output.
- *                      When size is zero, returns NULL or a pointer suitable
+ * \param [out] ptr     Address of a pointer.
+ *                      Contains newly allocated pointer on output.
+ *                      When size is zero, assigns NULL or a pointer suitable
  *                      for \ref sc3_allocator_realloc and/or \ref
- *                      sc3_allocator_free.
+ *                      sc3_allocator_free to the address.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_malloc (sc3_allocator_t * a, size_t size,
-                                          void **ptr);
+                                          void *ptr);
 
 /** Allocate memory that is initialized to zero.
  * \param [in,out] a    The allocator must be setup.
  * \param [in] nmemb    Number of items to allocate, zero is legal.
  * \param [in] size     Bytes to allocate for each item, zero is legal.
- * \param [out] ptr     Contains newly allocated pointer on output.
- *                      When size is zero, returns NULL or a pointer suitable
+ * \param [out] ptr     Address of a pointer.
+ *                      Contains newly allocated pointer on output.
+ *                      When size is zero, assigns NULL or a pointer suitable
  *                      for \ref sc3_allocator_realloc and/or \ref
- *                      sc3_allocator_free.
+ *                      sc3_allocator_free to the address.
  *                      If nmemb * size is greater zero, memory is zeroed.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_calloc (sc3_allocator_t * a,
                                           size_t nmemb, size_t size,
-                                          void **ptr);
-
-/** Free previously allocated memory.
- * \param [in,out] a    Allocator must be setup.  If input is non-NULL, must
- *                      be the same as used on (re-)allocation.
- * \param [in,out] ptr  If input is NULL, we do nothing.  Otherwise,
- *                      a pointer previously allocated by this allocator by
- *                      \ref sc3_allocator_malloc, \ref sc3_allocator_calloc or
- *                      \ref sc3_allocator_realloc.  NULL on output.
- * \return              NULL on success, error object otherwise.
- */
-sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *ptr);
+                                          void *ptr);
 
 /** Change the allocated size of a previously allocated pointer.
  * \param [in,out] a    Allocator must be setup.  If input is non-NULL, must
  *                      be the same as used on (re-)allocation.
  * \param [in] new_size New byte allocation for pointer, zero is legal.
- * \param [in,out] ptr  On input, NULL or pointer created by \ref
+ * \param [in,out] ptr  Address of pointer.
+ *                      On input, value is NULL or pointer created by \ref
  *                      sc3_allocator_malloc, \ref sc3_allocator_calloc or \ref
  *                      sc3_allocator_realloc.  Reallocated memory on output.
  *                      If input is NULL, the call is equivalent to \ref
@@ -316,7 +278,18 @@ sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *ptr);
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_realloc (sc3_allocator_t * a,
-                                           size_t new_size, void **ptr);
+                                           size_t new_size, void *ptr);
+
+/** Free previously allocated memory.
+ * \param [in,out] a    Allocator must be setup.  If input is non-NULL, must
+ *                      be the same as used on (re-)allocation.
+ * \param [in] p        If input is NULL, we do nothing.  Otherwise,
+ *                      a pointer previously allocated by this allocator by
+ *                      \ref sc3_allocator_malloc, \ref sc3_allocator_calloc or
+ *                      \ref sc3_allocator_realloc.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *p);
 
 #ifdef __cplusplus
 #if 0

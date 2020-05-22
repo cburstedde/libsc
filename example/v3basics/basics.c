@@ -254,18 +254,18 @@ test_alloc (sc3_allocator_t * ator)
     SC3E_DEMIS (!sc3_allocator_is_new, aligned);
     SC3E_DEMIS (sc3_allocator_is_setup, aligned);
 
-    SC3E_ALLOCATOR_CALLOC (aligned, char, SC3_BUFSIZE, def);
+    SC3E (sc3_allocator_calloc (aligned, SC3_BUFSIZE, 1, &def));
     SC3_BUFCOPY (def, "def");
-    SC3E_ALLOCATOR_REALLOC (aligned, char, strlen (def) + 1, def);
+    SC3E (sc3_allocator_realloc (aligned, strlen (def) + 1, &def));
     SC3E_DEMAND (!memcmp (def, "def", strlen (def)), "String comparison 1");
 
-    SC3E_ALLOCATOR_MALLOC (aligned, char, 0, ghi);
-    SC3E_ALLOCATOR_REALLOC (aligned, char, strlen (def) + 1, ghi);
+    SC3E (sc3_allocator_malloc (aligned, 0, &ghi));
+    SC3E (sc3_allocator_realloc (aligned, strlen (def) + 1, &ghi));
     snprintf (ghi, 4, "%s", def);
     SC3E_DEMAND (!memcmp (ghi, def, strlen (ghi)), "String comparison 2");
 
-    SC3E_ALLOCATOR_FREE (aligned, char, def);
-    SC3E_ALLOCATOR_FREE (aligned, char, ghi);
+    SC3E (sc3_allocator_free (aligned, def));
+    SC3E (sc3_allocator_free (aligned, ghi));
 
     for (j = 0; j < 3; ++j) {
       SC3E (sc3_array_new (aligned, &arr));
@@ -291,7 +291,7 @@ test_alloc (sc3_allocator_t * ator)
     SC3E (sc3_allocator_destroy (&aligned));
   }
 
-  SC3E_ALLOCATOR_FREE (ator, char, abc);
+  SC3E (sc3_allocator_free (ator, abc));
   return NULL;
 }
 
@@ -368,14 +368,14 @@ test_mpi (sc3_allocator_t * alloc,
               "shared size %d rank %d head size %d rank %d",
               size, *rank, sharedsize, sharedrank, headsize, headrank);
 
-    SC3E_ALLOCATOR_MALLOC (alloc, int, headsize, headptr);
+    SC3E (sc3_allocator_malloc (alloc, headsize * sizeof (int), &headptr));
     sharedptr[0] = headrank;
     SC3E (sc3_MPI_Allgather (sharedptr, 1, SC3_MPI_INT,
                              headptr, 1, SC3_MPI_INT, headcomm));
     for (p = 0; p < headsize; ++p) {
       SC3E_DEMAND (headptr[p] == p, "Head rank mismatch");
     }
-    SC3E_ALLOCATOR_FREE (alloc, int, headptr);
+    SC3E (sc3_allocator_free (alloc, headptr));
     SC3E (sc3_MPI_Comm_free (&headcomm));
     sc3_logf (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_INFO,
               "Head comm rank %d ok", headrank);

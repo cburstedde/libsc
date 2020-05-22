@@ -169,7 +169,7 @@ sc3_error_new (sc3_allocator_t * eator, sc3_error_t ** ep)
   SC3A_IS (sc3_allocator_is_setup, eator);
 
   SC3E (sc3_allocator_ref (eator));
-  SC3E_ALLOCATOR_MALLOC (eator, sc3_error_t, 1, e);
+  SC3E (sc3_allocator_malloc (eator, sizeof (sc3_error_t), &e));
   sc3_error_defaults (e, NULL, 0, 0, eator);
   SC3A_IS (sc3_error_is_new, e);
 
@@ -296,7 +296,7 @@ sc3_error_unref (sc3_error_t ** ep)
     }
 
     eator = e->eator;
-    SC3E_ALLOCATOR_FREE (eator, sc3_error_t, e);
+    SC3E (sc3_allocator_free (eator, e));
     SC3E (sc3_allocator_unref (&eator));
   }
   return NULL;
