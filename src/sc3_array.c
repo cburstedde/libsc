@@ -106,7 +106,7 @@ sc3_array_new (sc3_allocator_t * aator, sc3_array_t ** ap)
   SC3A_IS (sc3_allocator_is_setup, aator);
 
   SC3E (sc3_allocator_ref (aator));
-  SC3E (sc3_allocator_calloc (aator, 1, sizeof (sc3_array_t), &a));
+  SC3E (sc3_allocator_calloc_one (aator, sizeof (sc3_array_t), &a));
   SC3E (sc3_refcount_init (&a->rc));
   a->esize = 1;
   a->ealloc = 8;
@@ -188,7 +188,7 @@ sc3_array_setup (sc3_array_t * a)
     SC3E (sc3_allocator_malloc (a->aator, abytes, &a->mem));
   }
   else {
-    SC3E (sc3_allocator_calloc (a->aator, abytes, 1, &a->mem));
+    SC3E (sc3_allocator_calloc_one (a->aator, abytes, &a->mem));
   }
 
   /* set array to setup state */

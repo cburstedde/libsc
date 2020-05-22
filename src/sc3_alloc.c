@@ -130,7 +130,7 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   SC3A_IS (sc3_allocator_is_setup, oa);
 
   SC3E (sc3_allocator_ref (oa));
-  SC3E (sc3_allocator_calloc (oa, 1, sizeof (sc3_allocator_t), &a));
+  SC3E (sc3_allocator_calloc_one (oa, sizeof (sc3_allocator_t), &a));
   SC3E (sc3_refcount_init (&a->rc));
   a->align = SC3_MAX (sizeof (void *), sizeof (sc3_alloc_item_t));
   a->alloced = 1;
@@ -378,6 +378,13 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
   else {
     SC3E (sc3_allocator_alloc_aligned (a, size, 1, ptr));
   }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_allocator_calloc_one (sc3_allocator_t * a, size_t size, void *ptr)
+{
+  SC3E (sc3_allocator_calloc (a, 1, size, ptr));
   return NULL;
 }
 

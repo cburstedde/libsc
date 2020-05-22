@@ -252,8 +252,8 @@ sc3_error_t        *sc3_allocator_malloc (sc3_allocator_t * a, size_t size,
  * \param [in] size     Bytes to allocate for each item, zero is legal.
  * \param [out] ptr     Address of a pointer.
  *                      Contains newly allocated pointer on output.
- *                      When size is zero, assigns NULL or a pointer suitable
- *                      for \ref sc3_allocator_realloc and/or \ref
+ *                      When nmemb * size is zero, assigns NULL or a pointer
+ *                      suitable for \ref sc3_allocator_realloc and/or \ref
  *                      sc3_allocator_free to the address.
  *                      If nmemb * size is greater zero, memory is zeroed.
  * \return              NULL on success, error object otherwise.
@@ -261,6 +261,20 @@ sc3_error_t        *sc3_allocator_malloc (sc3_allocator_t * a, size_t size,
 sc3_error_t        *sc3_allocator_calloc (sc3_allocator_t * a,
                                           size_t nmemb, size_t size,
                                           void *ptr);
+
+/** Allocate memory that is initialized to zero.
+ * \param [in,out] a    The allocator must be setup.
+ * \param [in] size     Number of bytes to allocate, zero is legal.
+ * \param [out] ptr     Address of a pointer.
+ *                      Contains newly allocated pointer on output.
+ *                      When size is zero, assigns NULL or a pointer suitable
+ *                      for \ref sc3_allocator_realloc and/or \ref
+ *                      sc3_allocator_free to the address.
+ *                      If size is greater zero, memory is zeroed.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_allocator_calloc_one (sc3_allocator_t * a,
+                                              size_t size, void *ptr);
 
 /** Change the allocated size of a previously allocated pointer.
  * \param [in,out] a    Allocator must be setup.  If input is non-NULL, must

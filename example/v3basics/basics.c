@@ -254,7 +254,7 @@ test_alloc (sc3_allocator_t * ator)
     SC3E_DEMIS (!sc3_allocator_is_new, aligned);
     SC3E_DEMIS (sc3_allocator_is_setup, aligned);
 
-    SC3E (sc3_allocator_calloc (aligned, SC3_BUFSIZE, 1, &def));
+    SC3E (sc3_allocator_calloc_one (aligned, SC3_BUFSIZE, &def));
     SC3_BUFCOPY (def, "def");
     SC3E (sc3_allocator_realloc (aligned, strlen (def) + 1, &def));
     SC3E_DEMAND (!memcmp (def, "def", strlen (def)), "String comparison 1");
