@@ -289,56 +289,42 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
 }
 
 sc3_error_t        *
-sc3_array_push_count (sc3_array_t * a, int n, void **pp)
+sc3_array_push_count (sc3_array_t * a, int n, void *ptr)
 {
-  SC3E_RETVAL (pp, NULL);
   SC3A_IS (sc3_array_is_resizable, a);
   SC3A_CHECK (0 <= n && a->ecount + n <= SC3_INT_HPOW);
 
+  /* preinitialize output variable */
+  if (ptr != NULL) {
+    *(void **) ptr = NULL;
+  }
+
+  /* reallocate to fit the new members */
   if (n > 0) {
     int                 old_ecount = a->ecount;
     SC3E (sc3_array_resize (a, old_ecount + n));
-    if (pp != NULL) {
-      SC3E (sc3_array_index (a, old_ecount, pp));
+    if (ptr != NULL) {
+      SC3E (sc3_array_index (a, old_ecount, ptr));
     }
   }
   return NULL;
 }
 
 sc3_error_t        *
-sc3_array_push (sc3_array_t * a, const void *p)
+sc3_array_push (sc3_array_t * a, void *ptr)
 {
-  int                 old_ecount;
-
-  SC3A_IS (sc3_array_is_resizable, a);
-  SC3A_CHECK (a->ecount < SC3_INT_HPOW);
-
-  /* enlarge array by one */
-  SC3E (sc3_array_resize (a, (old_ecount = a->ecount) + 1));
-
-  /* copy into last element */
-  if (p != NULL && a->esize > 0) {
-    memcpy (a->mem + old_ecount * a->esize, p, a->esize);
-  }
+  SC3E (sc3_array_push_count (a, 1, ptr));
   return NULL;
 }
 
 sc3_error_t        *
-sc3_array_pop (sc3_array_t * a, void *p)
+sc3_array_pop (sc3_array_t * a)
 {
-  int                 ecount_mone;
-
   SC3A_IS (sc3_array_is_resizable, a);
   SC3A_CHECK (a->ecount > 0);
 
-  /* copy out last element */
-  ecount_mone = a->ecount - 1;
-  if (p != NULL && a->esize > 0) {
-    memcpy (p, a->mem + ecount_mone * a->esize, a->esize);
-  }
-
   /* shrink array by one */
-  SC3E (sc3_array_resize (a, ecount_mone));
+  SC3E (sc3_array_resize (a, a->ecount - 1));
   return NULL;
 }
 
@@ -357,13 +343,13 @@ sc3_array_freeze (sc3_array_t * a)
 }
 
 sc3_error_t        *
-sc3_array_index (sc3_array_t * a, int i, void **p)
+sc3_array_index (sc3_array_t * a, int i, void *ptr)
 {
   SC3A_IS (sc3_array_is_setup, a);
   SC3A_CHECK (0 <= i && i < a->ecount);
-  SC3A_CHECK (p != NULL);
+  SC3A_CHECK (ptr != NULL);
 
-  *p = a->mem + i * a->esize;
+  *(void **) ptr = a->mem + i * a->esize;
   return NULL;
 }
 

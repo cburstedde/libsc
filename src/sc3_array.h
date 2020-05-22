@@ -228,36 +228,33 @@ sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
  */
 sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
 
-/** Enlarge an array by a number of elements and provide a pointer.
- * The pointer points to the beginning of the memory for the new elements.
+/** Enlarge an array by a number of elements.
+ * The output points to the beginning of the memory for the new elements.
  * \param [in,out] a    The array must be resizable.
  * \param [in] n        Non-negative number.  If n == 0, do nothing.
- * \param [out] pp      Address of array element at previously last index,
+ * \param [out] ptr     Address of pointer.
+ *                      On output set to array element at previously last index,
  *                      or NULL if n == 0, which is explicitly allowed.
  *                      This argument may be NULL for no assignment.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void **pp);
+sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void *ptr);
 
-/** Enlarge an array by one element and copy into that new element.
+/** Enlarge an array by one element.
+ * The output points to the beginning of the memory for the new element.
  * \param [in,out] a    The array must be resizable.
- * \param [in] p        If not NULL, its content is copied into array's
- *                      newly pushed element using memcpy (elem_size).
- *                      It is the application's responsibility that p
- *                      points to a memory location of sufficient size.
+ * \param [out] ptr     Address of pointer.
+ *                      On output set to array element at previously last index.
+ *                      This argument may be NULL for no assignment.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_push (sc3_array_t * a, const void *p);
+sc3_error_t        *sc3_array_push (sc3_array_t * a, void *ptr);
 
 /** Reduce array size by one element, copying out the last element.
  * \param [in,out] a    The array must be resizable and have > 0 elements.
- * \param [out] p       If not NULL, the array's removed element is
- *                      copied to this address using memcpy (elem_size).
- *                      It is the application's responsibility that p
- *                      points to a memory location of sufficient size.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_pop (sc3_array_t * a, void *p);
+sc3_error_t        *sc3_array_pop (sc3_array_t * a);
 
 /** Set array to non-resizable after it has been setup.
  * If the array is initially resizable, this call is required to allow refing.
@@ -269,12 +266,13 @@ sc3_error_t        *sc3_array_freeze (sc3_array_t * a);
 /** Index an array element.
  * \param [in] a        The array must be setup.
  * \param [in] i        Index must be in [0, element count).
- * \param [out] p       Address of array element at index \b i.
+ * \param [out] ptr     Address of a pointer.
+ *                      Assigned address of array element at index \b i.
  *                      If the array element size is zero, the pointer
  *                      must not be dereferenced.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void **p);
+sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
 
 /** Index an array element without returning an error object.
  * \param [in] a        The array must be setup.
