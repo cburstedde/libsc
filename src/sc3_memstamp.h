@@ -160,29 +160,6 @@ sc3_error_t        *sc3_mstamp_set_initzero (sc3_mstamp_t * mst,
  */
 sc3_error_t        *sc3_mstamp_setup (sc3_mstamp_t * mst);
 
-/** Initialize a memory stamp container.
- * Equivalent to calling \ref sc3_mstamp_new followed by \ref sc3_mstamp_init,
- * \ref sc3_mstamp_set_stamp_size, \ref sc3_mstamp_set_elem_size and 
- * \ref sc3_mstamp_set_elem_size with the given ssize and esize respectively.
- * \param [in,out] aator    An allocator that is setup.
- *                          The allocator is refd and remembered internally
- *                          and will be unrefd on memory stamp container
- *                          destruction.
- * \param [in] ssize    Size of each memory block that we allocate.
- *                      If it is larger than the element size,
- *                      we may place more than one element in it.
- *                      Passing 0 is legal and forces
- *                      stamps that hold one item each. One is default.
- * \param [in] esize    Element size in bytes. Zero is legal, in that case
- *                      \ref sc3_mstamp_alloc output is NULL. One is default.
- * \param [out] mstp    Legal pointer to a stamp structure.
- * \return              NULL on success, error object otherwise.
- *
- * \todo Think about generalizing the _init concept.
- */
-sc3_error_t        *sc3_mstamp_init (sc3_allocator_t * aator, size_t ssize,
-                                     size_t esize, sc3_mstamp_t ** mstp);
-
 /** Increase the reference count on a memory stamp container by 1.
  * This is only allowed after the memory stamp container has been setup.
  * \param [in,out] mst  Its refcount is increased.

@@ -42,7 +42,10 @@ test_mstamp (void)
 
   for (j = 0; j < 3; ++j) {
     /* zero data size */
-    SC3E (sc3_mstamp_init (sc3_allocator_nocount (), munit[j], 0, &mst));
+    SC3E (sc3_mstamp_new (sc3_allocator_nocount (), &mst));
+    SC3E (sc3_mstamp_set_stamp_size (mst, munit[j]));
+    SC3E (sc3_mstamp_set_elem_size (mst, 0));
+    SC3E (sc3_mstamp_setup (mst));
     for (i = 0; i < 8 + 3 * j; ++i) {
       SC3E (sc3_mstamp_alloc (mst, &pc));
       SC_CHECK_ABORT (pc == NULL, "Mstamp alloc NULL");
@@ -50,13 +53,20 @@ test_mstamp (void)
     SC3E (sc3_mstamp_destroy (&mst));
     /* proper data size */
     isize = msize[j];
-    SC3E (sc3_mstamp_init (sc3_allocator_nocount (), munit[j], isize, &mst));
+    SC3E (sc3_mstamp_new (sc3_allocator_nocount (), &mst));
+    SC3E (sc3_mstamp_set_stamp_size (mst, munit[j]));
+    SC3E (sc3_mstamp_set_elem_size (mst, isize));
+    SC3E (sc3_mstamp_setup (mst));
     for (i = 0; i < 7829; ++i) {
       SC3E (sc3_mstamp_alloc (mst, &pc));
       memset (pc, -1, isize);
     }
     SC3E (sc3_mstamp_destroy (&mst));
-    SC3E (sc3_mstamp_init (sc3_allocator_nocount (), munit[j], isize, &mst));
+
+    SC3E (sc3_mstamp_new (sc3_allocator_nocount (), &mst));
+    SC3E (sc3_mstamp_set_stamp_size (mst, munit[j]));
+    SC3E (sc3_mstamp_set_elem_size (mst, isize));
+    SC3E (sc3_mstamp_setup (mst));
     for (i = 0; i < 3124; ++i) {
       SC3E (sc3_mstamp_alloc (mst, &pc));
       memset (pc, -1, isize);

@@ -197,23 +197,6 @@ sc3_mstamp_setup (sc3_mstamp_t * mst)
 }
 
 sc3_error_t        *
-sc3_mstamp_init (sc3_allocator_t * aator, size_t ssize, size_t esize,
-                 sc3_mstamp_t ** mstp)
-{
-  sc3_mstamp_t       *mst;
-
-  SC3E_RETVAL (mstp, NULL);
-
-  SC3E (sc3_mstamp_new (aator, &mst));
-  SC3E (sc3_mstamp_set_stamp_size (mst, ssize));
-  SC3E (sc3_mstamp_set_elem_size (mst, esize));
-  SC3E (sc3_mstamp_setup (mst));
-
-  *mstp = mst;
-  return NULL;
-}
-
-sc3_error_t        *
 sc3_mstamp_ref (sc3_mstamp_t * mst)
 {
   SC3E (sc3_refcount_ref (&mst->rc));
