@@ -323,18 +323,6 @@ sc3_mstamp_get_elem_size (sc3_mstamp_t * mst, size_t *esize)
 }
 
 sc3_error_t        *
-sc3_mstamp_get_stamp_size (sc3_mstamp_t * mst, size_t *ssize)
-{
-  SC3E_RETOPT (ssize, 0);
-  SC3A_IS (sc3_mstamp_is_setup, mst);
-
-  if (ssize != NULL) {
-    *ssize = mst->ssize;
-  }
-  return NULL;
-}
-
-sc3_error_t        *
 sc3_mstamp_get_stamp_count (sc3_mstamp_t * mst, int *scount)
 {
   SC3E_RETOPT (scount, 0);
