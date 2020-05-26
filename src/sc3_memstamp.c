@@ -260,27 +260,38 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void **itemp)
   SC3A_CHECK (mst != NULL);
 
   ++mst->ecount;
-  sc3_array_get_elem_count (freed, &fcount);
-  if (fcount > 0) {
-    /* TODO: use itemp without * */
-    sc3_array_pop (freed, *itemp);
-    return NULL;
-  }
   if (mst->esize == 0) {
     /* item size zero is legal */
     *itemp = NULL;
     return NULL;
   }
 
-  /* we know that at least one item will fit */
-  SC3A_CHECK (mst->cur != NULL);
-  SC3A_CHECK (mst->cur_snext < mst->per_stamp);
-  *itemp = mst->cur + mst->cur_snext * mst->esize;
-
-  /* if this was the last item on the current stamp, we need a new one */
-  if (++mst->cur_snext == mst->per_stamp) {
-    SC3E (sc3_mstamp_stamp (mst));
+  sc3_array_get_elem_count (freed, &fcount);
+  if (fcount > 0) {
+    /* TODO: use itemp without * */
+    sc3_array_pop (freed, *itemp);
   }
+  else {
+    /* we know that at least one item will fit */
+    SC3A_CHECK (mst->cur != NULL);
+    SC3A_CHECK (mst->cur_snext < mst->per_stamp);
+    *itemp = mst->cur + mst->cur_snext * mst->esize;
+
+    /* if this was the last item on the current stamp, we need a new one */
+    if (++mst->cur_snext == mst->per_stamp) {
+      SC3E (sc3_mstamp_stamp (mst));
+    }
+  }
+
+  if (mst->initzero) {
+    memset (*itemp, 0, mst->esize);
+  }
+#ifdef SC_ENABLE_DEBUG
+  else {
+    memset (*itemp, -1, mst->esize);
+  }
+#endif
+
   return NULL;
 }
 
@@ -291,13 +302,8 @@ sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
 
   SC3A_CHECK (mst->ecount > 0);
 
-  if (mst->initzero) {
-    /* freed items must be zeroed for reuse */
-    /* TODO: rather do this in the alloc function */
-    memset (elem, 0, mst->esize);
-  }
 #ifdef SC_ENABLE_DEBUG
-  else {
+  if (!mst->initzero) {
     memset (elem, -1, mst->esize);
   }
 #endif
