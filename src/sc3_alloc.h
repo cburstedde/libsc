@@ -55,17 +55,8 @@
  * The function \ref sc3_allocator_destroy must only be called when it
  * is known that the allocator has only one reference to it.
  * Otherwise the function returns an error of kind \ref SC3_ERROR_LEAK.
- *
- * By default, a keepalive mechanism is enabled:
- * Then any allocation refs the allocator, and every deallocation unref it.
- * In this case it follows that the refcount of an allocator stays nonzero
- * as long as allocations are live, and \ref sc3_allocator_destroy cannot
- * possibly return a leak.
- * On the other hand, when keepalive is disabled and counting enabled,
- * it is guaranteed to have \ref sc3_allocator_destroy fail fatally
- * by calling it on an allocator with live allocations.
- * We still return a leak when destroying an allocator without live
- * allocations but with multiple references to it.
+ * With counting enabled, \ref sc3_allocator_destroy will fail fatally
+ * When calling it on an allocator with live allocations.
  */
 
 #ifndef SC3_ALLOC_H
@@ -85,36 +76,6 @@ extern              "C"
 }
 #endif
 #endif
-
-/** Allocate \a n items of a given type \a t, uninitialized.
- * Allocator \a a's malloc function is invoked using sizeof (t)
- * to produce an alllocation that is assigned to the variable \a p. */
-#define SC3E_ALLOCATOR_MALLOC(a,t,n,p) do {                             \
-  void *_ptr;                                                           \
-  SC3E (sc3_allocator_malloc (a, (n) * sizeof (t), &_ptr));             \
-  (p) = (t *) _ptr; } while (0)
-
-/** Allocate \a n items of a given type \a t, initialized to all zeros.
- * Allocator \a a's calloc function is invoked using sizeof (t)
- * to produce an alllocation that is assigned to the variable \a p. */
-#define SC3E_ALLOCATOR_CALLOC(a,t,n,p) do {                             \
-  void *_ptr;                                                           \
-  SC3E (sc3_allocator_calloc (a, n, sizeof (t), &_ptr));                \
-  (p) = (t *) _ptr; } while (0)
-
-/** Free memory \a p that has previously been allocated by \a a.
- * We take a type argument \a t to safely set the input \a p to NULL. */
-#define SC3E_ALLOCATOR_FREE(a,t,p) do {                                 \
-  SC3E (sc3_allocator_free (a, p));                                     \
-  (p) = (t *) NULL; } while (0)
-
-/** Reallocate memory that was previously allocated by \a a.
- * Allocator \a a's realloc function is invoked with \a n items of
- * sizeof (t) to allocate.  The new memory is assigned to variable \a p. */
-#define SC3E_ALLOCATOR_REALLOC(a,t,n,p) do {                            \
-  void *_ptr = p;                                                       \
-  SC3E (sc3_allocator_realloc (a, (n) * sizeof (t), &_ptr));            \
-  (p) = (t *) _ptr; } while (0)
 
 /** Check whether an allocator is not NULL and internally consistent.
  * The allocator may be valid in both its setup and usage phases.
@@ -173,7 +134,7 @@ sc3_allocator_t    *sc3_allocator_nocount (void);
 /** Return a counting allocator setup and not protected from threads.
  * This allocator is not safe to use concurrently from multiple threads.
  * It can be arbitrarily refd and unrefd but must not be destroyed.
- * Use this function to create the first allocator in main ().
+ * Can use this function to create the first allocator in main ().
  * Use only if there is no other option.
  * \return              Allocator unprotected from concurrent access.
  *                      It is not allowed to destroy this allocator.
@@ -198,6 +159,7 @@ sc3_error_t        *sc3_allocator_new (sc3_allocator_t * oa,
                                        sc3_allocator_t ** ap);
 
 /** Set byte alignment followed by the allocator.
+ * Default is at least sizeof (void *).
  * \param [in,out] a    Valid allocator not setup.
  * \param [in] align    Power of two designating byte alignment of memory,
  *                      or zero for system default alignment.
@@ -209,7 +171,6 @@ sc3_error_t        *sc3_allocator_set_align (sc3_allocator_t * a,
 /** Set whether the allocator keeps track of malloc and free counts.
  * If true, it requires the count to be zero when its last reference drops,
  * otherwise exiting with a fatal error out of that \ref sc3_allocator_unref.
- * If the keepalive parameter is set to true, such condition cannot occur.
  * The count status can be queried by \ref sc3_allocator_is_free either way.
  * \param [in,out] a    Valid allocator not setup.
  * \param [in] counting Boolean to enable counting.  Default is true.
@@ -217,24 +178,6 @@ sc3_error_t        *sc3_allocator_set_align (sc3_allocator_t * a,
  */
 sc3_error_t        *sc3_allocator_set_counting (sc3_allocator_t * a,
                                                 int counting);
-
-/** Set whether allocator refs and unrefs itself on allocation/deallocation.
- * As a consequence, if an application unrefs an allocator and there are
- * remaining allocations, the allocator will not yet be deallocated.
- * The allocator will be deallocated when its last allocation is freed and
- * it is unrefd properly by the application, whichever comes last.
- * If this parameter is true, \ref sc3_allocator_unref cannot fail due to
- * remaining allocations.
- * \param [in,out] a    Valid allocator not setup.
- * \param [in] keepalive    Bool to enable self-referencing.  Default true.
- *                      If enabled, we add a reference to the allocator
- *                      on every allocation and drop it on deallocating.
- *                      This keeps the allocator alive as long as not all
- *                      allocations have been freed.
- * \return              NULL on success, error object otherwise.
- */
-sc3_error_t        *sc3_allocator_set_keepalive (sc3_allocator_t * a,
-                                                 int keepalive);
 
 /** Setup an allocator and put it into its usable phase.
  * \param [in,out] a    This allocator must not yet be setup.
@@ -254,16 +197,13 @@ sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 
 /** Decrease the reference count on an allocator by 1.
  * If the reference count drops to zero, the allocator is deallocated.
- * If the keepalive parameter is set, the reference count can only become
- * zero of all allocations of this allocator have been freed beforehand.
  * Does nothing if allocator has not been created by \ref sc3_allocator_new.
  * \param [in,out] ap   The pointer must not be NULL and the allocator valid.
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the allocator is destroyed and the value set to NULL.
  * \return              NULL on success, error object otherwise.
- *                      If the reference count drops to zero and members
- *                      still hold memory, which can only occur with counting
- *                      and without keepalive, a fatal error is returned.
+ *                      If the reference count drops to zero while still
+ *                      holding memory, a fatal error is returned.
  */
 sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
 
@@ -274,10 +214,9 @@ sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
  *                      When the allocator had more than one reference to it,
- *                      return an error of kind \ref SC3_ERROR_LEAK.  This
- *                      also occurs with keepalive and remaining allocations.
- *                      If keepalive is false, counting true, and allocations
- *                      remain, return a fatal error.
+ *                      return an error of kind \ref SC3_ERROR_LEAK.
+ *                      If counting is true and allocations remain,
+ *                      return a fatal error.
  */
 sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
 
@@ -297,46 +236,52 @@ sc3_error_t        *sc3_allocator_strdup (sc3_allocator_t * a,
 /** Allocate memory that is not initialized.
  * \param [in,out] a    The allocator must be setup.
  * \param [in] size     Bytes to allocate, zero is legal.
- * \param [out] ptr     Contains newly allocated pointer on output.
- *                      When size is zero, returns NULL or a pointer suitable
+ * \param [out] ptr     Address of a pointer.
+ *                      Contains newly allocated pointer on output.
+ *                      When size is zero, assigns NULL or a pointer suitable
  *                      for \ref sc3_allocator_realloc and/or \ref
- *                      sc3_allocator_free.
+ *                      sc3_allocator_free to the address.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_malloc (sc3_allocator_t * a, size_t size,
-                                          void **ptr);
+                                          void *ptr);
 
 /** Allocate memory that is initialized to zero.
  * \param [in,out] a    The allocator must be setup.
  * \param [in] nmemb    Number of items to allocate, zero is legal.
  * \param [in] size     Bytes to allocate for each item, zero is legal.
- * \param [out] ptr     Contains newly allocated pointer on output.
- *                      When size is zero, returns NULL or a pointer suitable
- *                      for \ref sc3_allocator_realloc and/or \ref
- *                      sc3_allocator_free.
+ * \param [out] ptr     Address of a pointer.
+ *                      Contains newly allocated pointer on output.
+ *                      When nmemb * size is zero, assigns NULL or a pointer
+ *                      suitable for \ref sc3_allocator_realloc and/or \ref
+ *                      sc3_allocator_free to the address.
  *                      If nmemb * size is greater zero, memory is zeroed.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_calloc (sc3_allocator_t * a,
                                           size_t nmemb, size_t size,
-                                          void **ptr);
+                                          void *ptr);
 
-/** Free previously allocated memory.
- * \param [in,out] a    Allocator must be setup.  If input is non-NULL, must
- *                      be the same as used on (re-)allocation.
- * \param [in,out] ptr  If input is NULL, we do nothing.  Otherwise,
- *                      a pointer previously allocated by this allocator by
- *                      \ref sc3_allocator_malloc, \ref sc3_allocator_calloc or
- *                      \ref sc3_allocator_realloc.  NULL on output.
+/** Allocate memory that is initialized to zero.
+ * \param [in,out] a    The allocator must be setup.
+ * \param [in] size     Number of bytes to allocate, zero is legal.
+ * \param [out] ptr     Address of a pointer.
+ *                      Contains newly allocated pointer on output.
+ *                      When size is zero, assigns NULL or a pointer suitable
+ *                      for \ref sc3_allocator_realloc and/or \ref
+ *                      sc3_allocator_free to the address.
+ *                      If size is greater zero, memory is zeroed.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *ptr);
+sc3_error_t        *sc3_allocator_calloc_one (sc3_allocator_t * a,
+                                              size_t size, void *ptr);
 
 /** Change the allocated size of a previously allocated pointer.
  * \param [in,out] a    Allocator must be setup.  If input is non-NULL, must
  *                      be the same as used on (re-)allocation.
  * \param [in] new_size New byte allocation for pointer, zero is legal.
- * \param [in,out] ptr  On input, NULL or pointer created by \ref
+ * \param [in,out] ptr  Address of pointer.
+ *                      On input, value is NULL or pointer created by \ref
  *                      sc3_allocator_malloc, \ref sc3_allocator_calloc or \ref
  *                      sc3_allocator_realloc.  Reallocated memory on output.
  *                      If input is NULL, the call is equivalent to \ref
@@ -347,7 +292,18 @@ sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *ptr);
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_realloc (sc3_allocator_t * a,
-                                           size_t new_size, void **ptr);
+                                           size_t new_size, void *ptr);
+
+/** Free previously allocated memory.
+ * \param [in,out] a    Allocator must be setup.  If input is non-NULL, must
+ *                      be the same as used on (re-)allocation.
+ * \param [in] p        If input is NULL, we do nothing.  Otherwise,
+ *                      a pointer previously allocated by this allocator by
+ *                      \ref sc3_allocator_malloc, \ref sc3_allocator_calloc or
+ *                      \ref sc3_allocator_realloc.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *p);
 
 #ifdef __cplusplus
 #if 0

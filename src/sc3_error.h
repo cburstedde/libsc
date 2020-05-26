@@ -42,6 +42,7 @@
  * must consider that it returned prematurely and may have left resources open.
  * Even worse, communication and I/O may be pending and cause future blocking.
  * It is the application's responsibility to take this into account.
+ * See \ref sc3_error_is_fatal for the kinds considered fatal.
  *
  * Logically, a function returns non-fatal => it must not leak any resources.
  * This invariant is preserved if non-fatal errors are propagated upward as
@@ -75,6 +76,8 @@
  * Query functions must be designed not to crash under any circumstance.
  * On incorrect or undefined input, they must return false.
  * On defined input, they return the proper query result.
+ * This may lead to the situation that sc3_object_is_A and sc3_object_is_not_A
+ * both return false, say when the call convention is violated.
  */
 
 #ifndef SC3_ERROR_H
@@ -107,7 +110,7 @@ extern              "C"
 #define SC3A_CHECK(x) SC3_NOOP
 
 /** Assertion statement checks an error expression \a f and returns if set.
- * The error object returned is stacked into a new fatal error. */
+ * The error object encountered is stacked into a new fatal error. */
 #define SC3A_STACK(f) SC3_NOOP
 
 #else
@@ -178,7 +181,7 @@ extern              "C"
   *(r) = (v);                                                           \
   } while (0)
 
-/** Assign a return value \a r to value \a v only
+/** Assign a value \a v to a pointer parameter only
  * if the variable pointer \a r is not NULL. */
 #define SC3E_RETOPT(r,v) do {                                           \
   if ((r) != NULL) *(r) = (v);                                          \
@@ -235,15 +238,15 @@ extern              "C"
 
 /*** QUERY statements.  Always executed. ***/
 
-/** Set the reason output parameter \a r inside an sc3_object_is_* furction
- * to a given value \a reason before returning false.
+/** Set the reason output parameter \a r inside an sc3_object_is_* function
+ * to a given value \a reason before unconditionally returning false.
  * \a r may be NULL in which case it is not updated.
  */
 #define SC3E_NO(r,reason) do {                                          \
   if ((r) != NULL) { SC3_BUFCOPY ((r), (reason)); } return 0; } while (0)
 
 /** Set the reason output parameter \a r inside an sc3_object_is_* function
- * to "" before returning true.
+ * to "" before returning true unconditionally.
  * \a r may be NULL in which case it is not updated.
  */
 #define SC3E_YES(r) do {                                                \
@@ -331,7 +334,7 @@ typedef enum sc3_error_kind
                              The application should attempt to recover. */
   SC3_ERROR_USER,       /**< Interactive usage or configuration error.
                              The application must handle this cleanly
-                             without producing leaks or incensistencies. */
+                             without producing leaks or inconsistencies. */
   SC3_ERROR_KIND_LAST   /**< Guard range of possible enumeration values. */
 }
 sc3_error_kind_t;
@@ -400,7 +403,8 @@ int                 sc3_error_is_setup (const sc3_error_t * e, char *reason);
 /** Check an error object to be setup and fatal.
  * An error is considered fatal if it is of the kind \ref SC3_ERROR_FATAL,
  * \ref SC3_ERROR_BUG, \ref SC3_ERROR_MEMORY or \ref SC3_ERROR_NETWORK.
- * An application may implicitly define any other condition as fatal.
+ * An application may implicitly define any other condition as fatal,
+ * that is, stacking/promoting such other error into one of the fatal kind.
  * \param [in] e        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.

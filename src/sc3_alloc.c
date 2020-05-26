@@ -39,7 +39,7 @@ struct sc3_allocator
   size_t              align;
   int                 alloced;
   int                 counting;
-  int                 keepalive;
+  int                 keepalive;    /**< Repurposed to be same as counting */
 
   long                num_malloc, num_calloc, num_free;
   size_t              total_size;
@@ -130,12 +130,11 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   SC3A_IS (sc3_allocator_is_setup, oa);
 
   SC3E (sc3_allocator_ref (oa));
-  SC3E_ALLOCATOR_CALLOC (oa, sc3_allocator_t, 1, a);
+  SC3E (sc3_allocator_calloc_one (oa, sizeof (sc3_allocator_t), &a));
   SC3E (sc3_refcount_init (&a->rc));
   a->align = SC3_MAX (sizeof (void *), sizeof (sc3_alloc_item_t));
   a->alloced = 1;
-  a->counting = 1;
-  a->keepalive = 1;
+  a->counting = a->keepalive = 1;
   a->oa = oa;
   SC3A_IS (sc3_allocator_is_new, a);
 
@@ -157,10 +156,11 @@ sc3_error_t        *
 sc3_allocator_set_counting (sc3_allocator_t * a, int counting)
 {
   SC3A_IS (sc3_allocator_is_new, a);
-  a->counting = counting;
+  a->counting = a->keepalive = counting;
   return NULL;
 }
 
+#if 0
 sc3_error_t        *
 sc3_allocator_set_keepalive (sc3_allocator_t * a, int keepalive)
 {
@@ -168,6 +168,7 @@ sc3_allocator_set_keepalive (sc3_allocator_t * a, int keepalive)
   a->keepalive = keepalive;
   return NULL;
 }
+#endif
 
 sc3_error_t        *
 sc3_allocator_setup (sc3_allocator_t * a)
@@ -213,7 +214,7 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
     }
 
     oa = a->oa;
-    SC3E_ALLOCATOR_FREE (oa, sc3_allocator_t, a);
+    SC3E (sc3_allocator_free (oa, a));
     SC3E (sc3_allocator_unref (&oa));
   }
   return NULL;
@@ -276,7 +277,7 @@ sc3_allocator_malloc_noerr (sc3_allocator_t * a, size_t size)
 
 static sc3_error_t *
 sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
-                             void **ptr)
+                             void *ptr)
 {
   const size_t        hsize = 3 * sizeof (sc3_alloc_item_t);
   size_t              actual, shift;
@@ -284,7 +285,7 @@ sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
   sc3_alloc_item_t   *aitem;
 
   SC3A_IS (sc3_allocator_is_setup, a);
-  SC3A_CHECK (ptr != NULL && *ptr == NULL);
+  SC3A_CHECK (ptr != NULL && *(void **) ptr == NULL);
 
   /* allocate bigger block and write debug and size info into header */
   actual = a->align + hsize + size;
@@ -319,20 +320,23 @@ sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
     }
     a->total_size += size;
   }
+#if 0
   if (a->keepalive) {
     SC3E (sc3_allocator_ref (a));
   }
+#endif
 
   /* return new memory */
-  *ptr = p;
+  *(void **) ptr = p;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
+sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void *ptr)
 {
-  SC3E_RETVAL (ptr, NULL);
   SC3A_IS (sc3_allocator_is_setup, a);
+  SC3A_CHECK (ptr != NULL);
+  *(void **) ptr = NULL;
 
   if (a->align == 0 && !a->keepalive) {
     /* use system allocation */
@@ -343,7 +347,7 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
     if (a->counting && p != NULL) {
       ++a->num_malloc;
     }
-    *ptr = p;
+    *(void **) ptr = p;
   }
   else {
     SC3E (sc3_allocator_alloc_aligned (a, size, 0, ptr));
@@ -353,10 +357,11 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void **ptr)
 
 sc3_error_t        *
 sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
-                      void **ptr)
+                      void *ptr)
 {
-  SC3E_RETVAL (ptr, NULL);
   SC3A_IS (sc3_allocator_is_setup, a);
+  SC3A_CHECK (ptr != NULL);
+  *(void **) ptr = NULL;
 
   size *= nmemb;
   if (a->align == 0 && !a->keepalive) {
@@ -368,11 +373,18 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
     if (a->counting && p != NULL) {
       ++a->num_calloc;
     }
-    *ptr = p;
+    *(void **) ptr = p;
   }
   else {
     SC3E (sc3_allocator_alloc_aligned (a, size, 1, ptr));
   }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_allocator_calloc_one (sc3_allocator_t * a, size_t size, void *ptr)
+{
+  SC3E (sc3_allocator_calloc (a, 1, size, ptr));
   return NULL;
 }
 
@@ -409,33 +421,35 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
     }
     SC3_FREE (aitem[1].ptr);
 
+#if 0
     /* do this at the end since the allocator may go out of scope */
     if (a->keepalive) {
       SC3E (sc3_allocator_unref (&a));
     }
+#endif
   }
   return NULL;
 }
 
 sc3_error_t        *
-sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void **ptr)
+sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void *ptr)
 {
   SC3A_IS (sc3_allocator_is_setup, a);
   SC3A_CHECK (ptr != NULL);
 
-  if (*ptr == NULL) {
+  if (*(void **) ptr == NULL) {
     SC3E (sc3_allocator_malloc (a, new_size, ptr));
   }
   else if (new_size == 0) {
-    SC3E (sc3_allocator_free (a, *ptr));
-    *ptr = NULL;
+    SC3E (sc3_allocator_free (a, *(void **) ptr));
+    *(void **) ptr = NULL;
   }
   else {
-    void               *p = *ptr;
+    void               *p = *(void **) ptr;
 
     if (a->align == 0 && !a->keepalive) {
-      *ptr = SC3_REALLOC (p, char, new_size);
-      SC3E_DEMAND (*ptr != NULL, "Reallocation");
+      *(void **) ptr = SC3_REALLOC (p, char, new_size);
+      SC3E_DEMAND (*(void **) ptr != NULL, "Reallocation");
     }
     else {
       size_t              size;
@@ -450,7 +464,7 @@ sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void **ptr)
       if (size != new_size) {
         /* we have to manually allocate, copy, and free due to alignment */
         SC3E (sc3_allocator_malloc (a, new_size, ptr));
-        memcpy (*ptr, p, SC3_MIN (size, new_size));
+        memcpy (*(void **) ptr, p, SC3_MIN (size, new_size));
         SC3E (sc3_allocator_free (a, p));
       }
     }
