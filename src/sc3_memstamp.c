@@ -97,7 +97,7 @@ sc3_mstamp_new (sc3_allocator_t * aator, sc3_mstamp_t ** mstp)
   SC3A_IS (sc3_allocator_is_setup, aator);
 
   SC3E (sc3_allocator_ref (aator));
-  SC3E_ALLOCATOR_CALLOC (aator, sc3_mstamp_t, 1, mst);
+  SC3E (sc3_allocator_calloc_one (aator, sizeof (sc3_mstamp_t), &mst));
   SC3E (sc3_refcount_init (&mst->rc));
   mst->aator = aator;
 
@@ -156,10 +156,10 @@ sc3_mstamp_stamp (sc3_mstamp_t * mst)
   mst->cur_snext = 0;
 
   if (!mst->initzero) {
-    SC3E_ALLOCATOR_MALLOC (mst->aator, char, mst->ssize, mst->cur);
+    SC3E (sc3_allocator_malloc (mst->aator, mst->ssize, &mst->cur));
   }
   else {
-    SC3E_ALLOCATOR_CALLOC (mst->aator, char, mst->ssize, mst->cur);
+    SC3E (sc3_allocator_calloc_one (mst->aator, mst->ssize, &mst->cur));
   }
   SC3E (sc3_array_push (mst->remember, &mst->cur));
 
@@ -224,14 +224,14 @@ sc3_mstamp_unref (sc3_mstamp_t ** mstp)
       SC3E (sc3_array_get_elem_count (mst->remember, &ecount));
       for (i = 0; i < ecount; ++i) {
         SC3E (sc3_array_index (mst->remember, i, &item));
-        SC3E_ALLOCATOR_FREE (aator, char, *(void **) item);
+        SC3E (sc3_allocator_free (aator, *(void **) item));
       }
 
       /* it is impossible for these to have more than one reference */
       SC3E (sc3_array_destroy (&mst->remember));
       SC3E (sc3_array_destroy (&mst->freed));
     }
-    SC3E_ALLOCATOR_FREE (aator, sc3_mstamp_t, mst);
+    SC3E (sc3_allocator_free (aator, mst));
     SC3E (sc3_allocator_unref (&aator));
   }
   return NULL;
@@ -262,13 +262,14 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
   ++mst->ecount;
   if (mst->esize == 0) {
     /* item size zero is legal */
-    *(void **)ptr = NULL;
+    *(void **) ptr = NULL;
     return NULL;
   }
 
   sc3_array_get_elem_count (freed, &fcount);
   if (fcount > 0) {
-    SC3E (sc3_array_pop (freed, ptr));
+    SC3E (sc3_array_index (freed, fcount - 1, ptr));
+    SC3E (sc3_array_pop (freed));
   }
   else {
     /* we know that at least one item will fit */
