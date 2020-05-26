@@ -36,7 +36,7 @@ struct sc3_mstamp
   sc3_refcount_t      rc;
   sc3_allocator_t    *aator;
   int                 setup;        /**< Boolean; is setup */
-  int                 scount;       /**< Number of valid stamps */
+  int                 ecount;       /**< Number of valid elements */
 
   /* parameters fixed after setup call */
   int                 initzero;     /**< Fill new items with zeros. */
@@ -105,7 +105,7 @@ sc3_mstamp_new (sc3_allocator_t * aator, sc3_mstamp_t ** mstp)
   mst->ssize = 4096;
   mst->per_stamp = 0;
   mst->initzero = 0;
-  mst->scount = 0;
+  mst->ecount = 0;
   mst->cur_snext = 0;
   mst->cur = NULL;
 
@@ -255,15 +255,13 @@ sc3_error_t        *
 sc3_mstamp_alloc (sc3_mstamp_t * mst, void **itemp)
 {
   sc3_array_t        *freed = mst->freed;
-  int                 ecount;
+  int                 fcount;
 
   SC3A_CHECK (mst != NULL);
 
-  /* TODO: scount is number of elements, not stamps.
-           Shall we rename it to ecount?  Then ecount below should be fcount. */
-  ++mst->scount;
-  sc3_array_get_elem_count (freed, &ecount);
-  if (ecount > 0) {
+  ++mst->ecount;
+  sc3_array_get_elem_count (freed, &fcount);
+  if (fcount > 0) {
     /* TODO: use itemp without * */
     sc3_array_pop (freed, *itemp);
     return NULL;
@@ -291,7 +289,7 @@ sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
 {
   sc3_array_t        *freed = mst->freed;
 
-  SC3A_CHECK (mst->scount > 0);
+  SC3A_CHECK (mst->ecount > 0);
 
   if (mst->initzero) {
     /* freed items must be zeroed for reuse */
@@ -304,7 +302,7 @@ sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
   }
 #endif
 
-  --mst->scount;
+  --mst->ecount;
 
   SC3E (sc3_array_push (freed, &elem));
   return NULL;
@@ -323,13 +321,13 @@ sc3_mstamp_get_elem_size (sc3_mstamp_t * mst, size_t *esize)
 }
 
 sc3_error_t        *
-sc3_mstamp_get_stamp_count (sc3_mstamp_t * mst, int *scount)
+sc3_mstamp_get_elem_count (sc3_mstamp_t * mst, int *ecount)
 {
-  SC3E_RETOPT (scount, 0);
+  SC3E_RETOPT (ecount, 0);
   SC3A_IS (sc3_mstamp_is_setup, mst);
 
-  if (scount != NULL) {
-    *scount = mst->scount;
+  if (ecount != NULL) {
+    *ecount = mst->ecount;
   }
   return NULL;
 }

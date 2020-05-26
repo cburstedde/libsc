@@ -227,8 +227,8 @@ sc3_error_t        *sc3_mstamp_get_elem_size (sc3_mstamp_t * mst,
  *                      Pointer may be NULL, then we do nothing.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_mstamp_get_stamp_count (sc3_mstamp_t * mst,
-                                                int *scount);
+sc3_error_t        *sc3_mstamp_get_elem_count (sc3_mstamp_t * mst,
+                                               int *scount);
 
 #ifdef __cplusplus
 #if 0
