@@ -197,13 +197,14 @@ sc3_error_t        *sc3_mstamp_destroy (sc3_mstamp_t ** mstp);
  * The memory returned will stay legal until container is destroyed,
  * or equivalently, its reference count drops to zero.
  * \param [in,out] mst  Memory stamp container must be setup.
- * \param [out] itemp   Pointer to an item ready to use.
+ * \param [out] ptr     Address of pointer.
+ *                      On output set to item ready to use.
  *                      Legal until \ref sc3_mstamp_destroy or
  *                      \ref sc3_mstamp_unref (with one ref)
  *                      is called on \a mst.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_mstamp_alloc (sc3_mstamp_t * mst, void **itemp);
+sc3_error_t        *sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr);
 
 /** Return a previously allocated element to the container.
  * \param [in] mst      Memory stamp container must be setup.
