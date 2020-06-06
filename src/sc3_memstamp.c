@@ -58,6 +58,8 @@ sc3_mstamp_is_valid (const sc3_mstamp_t * mst, char *reason)
   SC3E_IS (sc3_allocator_is_setup, mst->aator, reason);
   SC3E_IS (sc3_array_is_valid, mst->remember, reason);
   SC3E_IS (sc3_array_is_valid, mst->freed, reason);
+  SC3E_TEST (mst->per_stamp >= 0, reason);
+  SC3E_TEST (mst->cur_snext >= 0, reason);
 
   /* check internal allocation logic depending on setup status */
   if (!mst->setup) {
@@ -103,11 +105,6 @@ sc3_mstamp_new (sc3_allocator_t * aator, sc3_mstamp_t ** mstp)
 
   mst->esize = 1;
   mst->ssize = 4096;
-  mst->per_stamp = 0;
-  mst->initzero = 0;
-  mst->ecount = 0;
-  mst->cur_snext = 0;
-  mst->cur = NULL;
 
   SC3E (sc3_array_new (aator, &mst->remember));
   SC3E (sc3_array_set_elem_size (mst->remember, sizeof (void *)));
@@ -148,6 +145,8 @@ sc3_mstamp_set_initzero (sc3_mstamp_t * mst, int initzero)
 static sc3_error_t *
 sc3_mstamp_stamp (sc3_mstamp_t * mst)
 {
+  void                   **news;
+
   SC3A_CHECK (mst != NULL);
   SC3A_CHECK (mst->esize > 0);
   SC3A_CHECK (mst->ssize > 0);
@@ -161,7 +160,10 @@ sc3_mstamp_stamp (sc3_mstamp_t * mst)
   else {
     SC3E (sc3_allocator_calloc_one (mst->aator, mst->ssize, &mst->cur));
   }
-  SC3E (sc3_array_push (mst->remember, &mst->cur));
+
+  /* remember this allocation */
+  SC3E (sc3_array_push (mst->remember, &news));
+  *news = mst->cur;
 
   return NULL;
 }
@@ -199,6 +201,7 @@ sc3_mstamp_setup (sc3_mstamp_t * mst)
 sc3_error_t        *
 sc3_mstamp_ref (sc3_mstamp_t * mst)
 {
+  SC3A_IS (sc3_mstamp_is_setup, mst);
   SC3E (sc3_refcount_ref (&mst->rc));
   return NULL;
 }
@@ -257,21 +260,31 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
   sc3_array_t        *freed = mst->freed;
   int                 fcount;
 
-  SC3A_CHECK (mst != NULL);
+  SC3A_IS (sc3_mstamp_is_setup, mst);
 
+  /* we return a new valid item an any case */
   ++mst->ecount;
-  if (mst->esize == 0) {
-    /* item size zero is legal */
-    *(void **) ptr = NULL;
-    return NULL;
-  }
 
   sc3_array_get_elem_count (freed, &fcount);
   if (fcount > 0) {
+    if (mst->esize == 0) {
+      /* item size zero is legal */
+      *(void **) ptr = NULL;
+      SC3E (sc3_array_pop (freed));
+      return NULL;
+    }
+
+    /* we return a cached item */
     SC3E (sc3_array_index (freed, fcount - 1, ptr));
     SC3E (sc3_array_pop (freed));
   }
   else {
+    if (mst->esize == 0) {
+      /* item size zero is legal */
+      *(void **) ptr = NULL;
+      return NULL;
+    }
+
     /* we know that at least one item will fit */
     SC3A_CHECK (mst->cur != NULL);
     SC3A_CHECK (mst->cur_snext < mst->per_stamp);
@@ -283,6 +296,7 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
     }
   }
 
+  /* we have returned a non-trivial element */
   if (mst->initzero) {
     memset (*(void **) ptr, 0, mst->esize);
   }
@@ -299,7 +313,9 @@ sc3_error_t        *
 sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
 {
   sc3_array_t        *freed = mst->freed;
+  void               **newp;
 
+  SC3A_IS (sc3_mstamp_is_setup, mst);
   SC3A_CHECK (mst->ecount > 0);
 
 #ifdef SC_ENABLE_DEBUG
@@ -308,9 +324,10 @@ sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
   }
 #endif
 
+  SC3E (sc3_array_push (freed, &newp));
+  *newp = elem;
   --mst->ecount;
 
-  SC3E (sc3_array_push (freed, &elem));
   return NULL;
 }
 

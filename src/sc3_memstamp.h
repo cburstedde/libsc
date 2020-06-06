@@ -196,6 +196,7 @@ sc3_error_t        *sc3_mstamp_destroy (sc3_mstamp_t ** mstp);
 /** Return a new item.
  * The memory returned will stay legal until container is destroyed,
  * or equivalently, its reference count drops to zero.
+ * It can be returned to the container by \ref sc3_mstamp_free.
  * \param [in,out] mst  Memory stamp container must be setup.
  * \param [out] ptr     Address of pointer.
  *                      On output set to item ready to use.
@@ -222,7 +223,7 @@ sc3_error_t        *sc3_mstamp_free (sc3_mstamp_t * mst, void *elem);
 sc3_error_t        *sc3_mstamp_get_elem_size (sc3_mstamp_t * mst,
                                               size_t *esize);
 
-/** Return number of valid elements of a memory stamp container that is setup.
+/** Return number of live elements returned by a memory stamp container.
  * \param [in] mst      Memory stamp container must be setup.
  * \param [out] scount  The number of stamps in the container or 0 on error.
  *                      Pointer may be NULL, then we do nothing.
