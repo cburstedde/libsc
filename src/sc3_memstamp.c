@@ -267,6 +267,8 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
 
   sc3_array_get_elem_count (freed, &fcount);
   if (fcount > 0) {
+    /* we return a cached item */
+
     if (mst->esize == 0) {
       /* item size zero is legal */
       *(void **) ptr = NULL;
@@ -274,11 +276,23 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
       return NULL;
     }
 
-    /* we return a cached item */
+    /* access previously returned item */
     SC3E (sc3_array_index (freed, fcount - 1, ptr));
     SC3E (sc3_array_pop (freed));
+
+    /* prepare item before reuse */
+    if (mst->initzero) {
+      memset (*(void **) ptr, 0, mst->esize);
+    }
+#ifdef SC_ENABLE_DEBUG
+    else {
+      memset (*(void **) ptr, -1, mst->esize);
+    }
+#endif
   }
   else {
+    /* we return a pointer to an unused section of the memory stamp */
+
     if (mst->esize == 0) {
       /* item size zero is legal */
       *(void **) ptr = NULL;
@@ -290,21 +304,18 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
     SC3A_CHECK (mst->cur_snext < mst->per_stamp);
     *(void **) ptr = mst->cur + mst->cur_snext * mst->esize;
 
+    /* we have returned a non-trivial element */
+#ifdef SC_ENABLE_DEBUG
+    if (!mst->initzero) {
+      memset (*(void **) ptr, -1, mst->esize);
+    }
+#endif
+
     /* if this was the last item on the current stamp, we need a new one */
     if (++mst->cur_snext == mst->per_stamp) {
       SC3E (sc3_mstamp_stamp (mst));
     }
   }
-
-  /* we have returned a non-trivial element */
-  if (mst->initzero) {
-    memset (*(void **) ptr, 0, mst->esize);
-  }
-#ifdef SC_ENABLE_DEBUG
-  else {
-    memset (*(void **) ptr, -1, mst->esize);
-  }
-#endif
 
   return NULL;
 }
@@ -317,12 +328,6 @@ sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
 
   SC3A_IS (sc3_mstamp_is_setup, mst);
   SC3A_CHECK (mst->ecount > 0);
-
-#ifdef SC_ENABLE_DEBUG
-  if (!mst->initzero) {
-    memset (elem, -1, mst->esize);
-  }
-#endif
 
   SC3E (sc3_array_push (freed, &newp));
   *newp = elem;
