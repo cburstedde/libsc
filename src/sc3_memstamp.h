@@ -221,7 +221,7 @@ sc3_error_t        *sc3_mstamp_free (sc3_mstamp_t * mst, void *elem);
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mstamp_get_elem_size (sc3_mstamp_t * mst,
-                                              size_t *esize);
+                                              size_t * esize);
 
 /** Return number of live elements returned by a memory stamp container.
  * \param [in] mst      Memory stamp container must be setup.

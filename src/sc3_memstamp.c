@@ -145,7 +145,7 @@ sc3_mstamp_set_initzero (sc3_mstamp_t * mst, int initzero)
 static sc3_error_t *
 sc3_mstamp_stamp (sc3_mstamp_t * mst)
 {
-  void                   **news;
+  void              **news;
 
   SC3A_CHECK (mst != NULL);
   SC3A_CHECK (mst->esize > 0);
@@ -312,7 +312,7 @@ sc3_error_t        *
 sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
 {
   sc3_array_t        *freed = mst->freed;
-  void               **newp;
+  void              **newp;
 
   SC3A_IS (sc3_mstamp_is_setup, mst);
   SC3A_CHECK (mst->ecount > 0);
@@ -330,7 +330,7 @@ sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
 }
 
 sc3_error_t        *
-sc3_mstamp_get_elem_size (sc3_mstamp_t * mst, size_t *esize)
+sc3_mstamp_get_elem_size (sc3_mstamp_t * mst, size_t * esize)
 {
   SC3E_RETOPT (esize, 0);
   SC3A_IS (sc3_mstamp_is_setup, mst);
