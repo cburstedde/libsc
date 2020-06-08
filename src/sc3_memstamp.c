@@ -264,18 +264,14 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
 
   /* we return a new valid item an any case */
   ++mst->ecount;
+  if (mst->esize == 0) {
+    /* item size zero is legal */
+    *(void **) ptr = NULL;
+    return NULL;
+  }
 
   sc3_array_get_elem_count (freed, &fcount);
   if (fcount > 0) {
-    /* we return a cached item */
-
-    if (mst->esize == 0) {
-      /* item size zero is legal */
-      *(void **) ptr = NULL;
-      SC3E (sc3_array_pop (freed));
-      return NULL;
-    }
-
     /* access previously returned item */
     SC3E (sc3_array_index (freed, fcount - 1, ptr));
     SC3E (sc3_array_pop (freed));
@@ -291,14 +287,6 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
 #endif
   }
   else {
-    /* we return a pointer to an unused section of the memory stamp */
-
-    if (mst->esize == 0) {
-      /* item size zero is legal */
-      *(void **) ptr = NULL;
-      return NULL;
-    }
-
     /* we know that at least one item will fit */
     SC3A_CHECK (mst->cur != NULL);
     SC3A_CHECK (mst->cur_snext < mst->per_stamp);
@@ -329,8 +317,13 @@ sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
   SC3A_IS (sc3_mstamp_is_setup, mst);
   SC3A_CHECK (mst->ecount > 0);
 
-  SC3E (sc3_array_push (freed, &newp));
-  *newp = elem;
+  if (mst->esize == 0) {
+    SC3A_CHECK (elem == NULL);
+  }
+  else {
+    SC3E (sc3_array_push (freed, &newp));
+    *newp = elem;
+  }
   --mst->ecount;
 
   return NULL;
