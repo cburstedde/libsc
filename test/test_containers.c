@@ -83,6 +83,56 @@ test_allocations (void)
   return NULL;
 }
 
+static sc3_error_t *
+test_correctness (void)
+{
+  const int           nelems = 7829;
+  const int           shift = 1;
+  const int           per_stamp = 3;
+  int                 i, ecount;
+  size_t              isize;
+  void               *pc;
+  sc3_mstamp_t       *mst;
+  long               *tv;
+
+  isize = sizeof (long);
+
+  SC3E (sc3_mstamp_new (sc3_allocator_nocount (), &mst));
+  SC3E (sc3_mstamp_set_stamp_size (mst, per_stamp * isize + 1));
+  SC3E (sc3_mstamp_set_elem_size (mst, isize));
+  SC3E (sc3_mstamp_set_initzero (mst, 1));
+  SC3E (sc3_mstamp_setup (mst));
+  for (i = 0; i < nelems; ++i) {
+    SC3E (sc3_mstamp_alloc (mst, &pc));
+    tv = (long *) pc;
+    SC3E_DEMAND (*tv == 0L, "initzero doesn't work");
+    *tv = 42L;
+    SC3E_DEMAND (*(long *) pc == 42L, "wrong stamp access");
+  }
+  SC3E (sc3_mstamp_get_elem_count (mst, &ecount));
+  SC3E_DEMAND (ecount == nelems, "wrong number of elements");
+
+  for (i = 0; i < nelems - shift; ++i) {
+    SC3E (sc3_mstamp_free (mst, pc));
+    *(long *) pc = 21L;
+  }
+  SC3E (sc3_mstamp_get_elem_count (mst, &ecount));
+  SC3E_DEMAND (ecount == shift, "wrong number of elements after freeing");
+
+  for (i = 0; i < nelems; ++i) {
+    SC3E (sc3_mstamp_alloc (mst, &pc));
+    tv = (long *) pc;
+    SC3E_DEMAND (*tv == 0L, "initzero doesn't work after freeing");
+    *tv = 42L;
+    SC3E_DEMAND (*(long *) pc == 42L, "wrong stamp access after freeing");
+  }
+  SC3E (sc3_mstamp_get_elem_count (mst, &ecount));
+  SC3E_DEMAND (ecount == nelems + shift, "wrong number of elements");
+  SC3E (sc3_mstamp_destroy (&mst));
+
+  return NULL;
+}
+
 static void
 report_errors (sc3_error_t ** pe)
 {
@@ -100,6 +150,7 @@ main (int argc, char **argv)
 {
   sc3_error_t        *e;
   SC3E_SET (e, test_allocations ());
+  SC3E_NULL_SET (e, test_correctness ());
   report_errors (&e);
   return 0;
 }
