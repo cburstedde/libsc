@@ -216,6 +216,7 @@ extern              "C"
   } else { (e) = NULL; }                                                \
   } while (0)
 
+/* TODO think about propagating leak errors correctly */
 /** Set an error object \a e that is NULL using the result of an expression.
  * The update is perforrmed as in \ref SC3E_SET with expression \a f.
  * If the error object is not NULL, the macro does not evaluate \a f.

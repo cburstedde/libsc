@@ -107,7 +107,7 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
 #ifdef SC_ENABLE_DEBUG
   log->level = SC3_LOG_DEBUG;
 #else
-  log->level = SC3_LOG_INFO;
+  log->level = SC3_LOG_TOP;
 #endif
   log->lator = lator;
   log->rank = 0;

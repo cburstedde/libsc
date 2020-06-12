@@ -37,6 +37,9 @@
 
 typedef struct sc3_log sc3_log_t;
 
+typedef int         (*sc3_log_function_t) (FILE * stream, const char *format,
+                                           ...);
+
 typedef enum sc3_log_role
 {
   SC3_LOG_ANY,
@@ -70,21 +73,36 @@ int                 sc3_log_is_valid (const sc3_log_t * log, char *reason);
 int                 sc3_log_is_new (const sc3_log_t * log, char *reason);
 int                 sc3_log_is_setup (const sc3_log_t * log, char *reason);
 
+/* TODO do we really need this? */
 sc3_log_t          *sc3_log_predef (void);
 
 sc3_error_t        *sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp);
+
+/** Default with --enable-debug SC3_LOG_DEBUG, otherwise SC3_LOG_TOP */
 sc3_error_t        *sc3_log_set_level (sc3_log_t * log,
                                        sc3_log_level_t level);
+
+/** Default SC3_COMM_NULL */
 sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
                                       sc3_MPI_Comm_t mpicomm);
+
+/** Default stderr */
 sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
                                       FILE * file, int call_fclose);
+
+/** Default fprintf */
+sc3_error_t        *sc3_log_set_function (sc3_log_t * log,
+                                          sc3_log_function_t logfun);
+
+/** Default 0 */
 sc3_error_t        *sc3_log_set_indent (sc3_log_t * log, int indent);
 
 sc3_error_t        *sc3_log_setup (sc3_log_t * log);
+sc3_error_t        *sc3_log_ref (sc3_log_t * log);
 sc3_error_t        *sc3_log_unref (sc3_log_t ** logp);
 sc3_error_t        *sc3_log_destroy (sc3_log_t ** logp);
 
+/* TODO think about returning error types and logging to stderr on error */
 void                sc3_log (sc3_log_t * log, int depth,
                              sc3_log_role_t role, sc3_log_level_t level,
                              const char *msg);
