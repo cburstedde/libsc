@@ -247,6 +247,9 @@ sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void *ptr);
  *                      On output set to array element at previously last index.
  *                      This argument may be NULL for no assignment.
  * \return              NULL on success, error object otherwise.
+ *
+ * \todo Think about whether passing a pointer to the element may be better.
+ *       But then such functionality is available with \ref sc3_array_push_count.
  */
 sc3_error_t        *sc3_array_push (sc3_array_t * a, void *ptr);
 

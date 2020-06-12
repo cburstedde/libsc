@@ -28,7 +28,9 @@
 */
 
 /** \defgroup sc3 sc3
- * Version 3 of the sc library is a rewrite.
+ * Version 3 of the sc library is new code.
+ *
+ * Earlier code up to version 2.x remains usable and supported.
  *
  * The main goals compared to previous versions are to improve the error
  * handling and to remove any global/static variables.
@@ -55,7 +57,7 @@
  * These two files depend on each other and, combined with the reference
  * counters, constitute the basis of the code.
  *
- * Containers are declared in \ref sc3_array.h.
+ * Containers are declared in \ref sc3_array.h and \ref sc3_memstamp.h.
  *
  * We use the C convention for boolean variables:
  * They are of type `int` and false if and only of their value is 0.
