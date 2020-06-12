@@ -32,7 +32,8 @@
 
 /** \file sc_uint128.h
  *
- * Routines for managing unsigned 128 bit integer.
+ * Routines for managing unsigned 128 bit integers.
+ * We do this to have a portable way on systems that have no native support.
  *
  * \ingroup sc
  */
@@ -74,14 +75,14 @@ int                 sc_uint128_is_equal (const sc_uint128_t * a,
 void                sc_uint128_init (sc_uint128_t * a,
                                      uint64_t high, uint64_t low);
 
-/** Sets the exponent-th bit of \a a to one.
+/** Sets the exponent-th bit of \a a to one and keep all other bits.
  * This function modifies an existing, initialized value.
  * \param [in,out] a        A pointer to a sc_uint128_t.
- * \param[in]      exponent The bit (counted from the right hand side)
+ * \param[in] exponent      The bit (0-based from the rightmost bit)
  *                          that is set to one by logical or.
  *                          0 <= \a exponent < 128.
  */
-void                sc_uint128_bitwise_pow2 (sc_uint128_t * a, int exponent);
+void                sc_uint128_set_bit (sc_uint128_t * a, int exponent);
 
 /** Copies an initialized sc_uint128_t to a sc_uint128_t.
  * \param [in]     input    A pointer to the sc_uint128 that is copied.

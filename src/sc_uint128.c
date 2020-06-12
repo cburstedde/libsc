@@ -37,7 +37,7 @@ sc_uint128_init (sc_uint128_t * input, uint64_t high, uint64_t low)
 }
 
 void
-sc_uint128_bitwise_pow2 (sc_uint128_t * input, int exponent)
+sc_uint128_set_bit (sc_uint128_t * input, int exponent)
 {
   SC_ASSERT (exponent >= 0);
 
@@ -46,8 +46,7 @@ sc_uint128_bitwise_pow2 (sc_uint128_t * input, int exponent)
   }
   else {
     SC_ASSERT (exponent < 128);
-    exponent -= 64;
-    input->high_bits |= ((uint64_t) 1) << exponent;
+    input->high_bits |= ((uint64_t) 1) << (exponent - 64);
   }
 }
 
@@ -97,7 +96,7 @@ sc_uint128_add (const sc_uint128_t * a, const sc_uint128_t * b,
   }
 }
 
- /* we assume result => 0 and calculate a - b */
+ /* we assume result >= 0 and calculate a - b */
 void
 sc_uint128_sub (const sc_uint128_t * a, const sc_uint128_t * b,
                 sc_uint128_t * result)
