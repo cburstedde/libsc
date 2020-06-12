@@ -155,8 +155,8 @@ sc_uint128_shift_right (const sc_uint128_t * input, int shift_count,
   }
   else {
     result->low_bits =
-      (result->
-       high_bits << (64 - shift_count)) | (input->low_bits >> shift_count);
+      (result->high_bits << (64 - shift_count)) |
+      (input->low_bits >> shift_count);
     result->high_bits >>= shift_count;
   }
 }
@@ -170,7 +170,7 @@ sc_uint128_shift_left (const sc_uint128_t * input, int shift_count,
     result->high_bits = 0;
     result->low_bits = 0;
     return;
-  }  
+  }
 
   result->high_bits = input->high_bits;
   result->low_bits = input->low_bits;
