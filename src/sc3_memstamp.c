@@ -67,7 +67,6 @@ sc3_mstamp_is_valid (const sc3_mstamp_t * mst, char *reason)
   }
   else {
     SC3E_TEST (mst->cur != NULL || mst->ssize == 0, reason);
-    SC3E_TEST (mst->cur_snext < mst->per_stamp, reason);
   }
   SC3E_YES (reason);
 }

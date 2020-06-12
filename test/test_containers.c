@@ -31,7 +31,7 @@
 #include <sc3_memstamp.h>
 
 static sc3_error_t *
-test_mstamp (void)
+test_allocations (void)
 {
   const size_t        munit[3] = { 0, 17, 5138 };
   const size_t        msize[3] = { 20, 37, 537 };
@@ -74,6 +74,10 @@ test_mstamp (void)
     for (i = 0; i < 3124; ++i) {
       SC3E (sc3_mstamp_free (mst, pc));
     }
+    for (i = 0; i < 3124; ++i) {
+      SC3E (sc3_mstamp_alloc (mst, &pc));
+      memset (pc, -1, isize);
+    }
     SC3E (sc3_mstamp_destroy (&mst));
   }
   return NULL;
@@ -87,6 +91,7 @@ report_errors (sc3_error_t ** pe)
   if (pe != NULL && *pe != NULL) {
     sc3_error_destroy_noerr (pe, eflat);
     fprintf (stderr, "Error: %s\n", eflat);
+    SC_CHECK_ABORT (0, "Memory stamp's tests failed\n");
   }
 }
 
@@ -94,8 +99,7 @@ int
 main (int argc, char **argv)
 {
   sc3_error_t        *e;
-  SC3E_SET (e, test_mstamp ());
+  SC3E_SET (e, test_allocations ());
   report_errors (&e);
-  SC_CHECK_ABORT (e == NULL, "Memory stamp's tests failed\n");
   return 0;
 }
