@@ -34,11 +34,11 @@ main_exit_failure (const char *prefix, sc3_error_t * e)
 }
 
 static void
-main_report_leak (const char *prefix, sc3_error_t * e)
+main_report_leak (const char *prefix, sc3_error_t ** e)
 {
   char                flatmsg[SC3_BUFSIZE];
 
-  sc3_error_destroy_noerr (&e, flatmsg);
+  sc3_error_destroy_noerr (e, flatmsg);
   fprintf (stderr, "%s: %s\n", prefix, flatmsg);
 }
 
@@ -121,7 +121,7 @@ main (int argc, char **argv)
 
   /* As a bonus, treat leaks separately */
   if (sc3_error_is_leak (e, NULL)) {
-    main_report_leak ("Main report", e);
+    main_report_leak ("Main report", &e);
   }
 
   /* Finalize MPI.  This is representative of any external cleanup code */
