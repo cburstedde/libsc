@@ -67,7 +67,7 @@ int                 sc_uint128_is_equal (const sc_uint128_t * a,
                                          const sc_uint128_t * b);
 
 /** Initializes an unsigned 128 bit integer to a given value.
- * \param [in,out] a        A pointer to the sc_uint128_t that will be 
+ * \param [in,out] a        A pointer to the sc_uint128_t that will be
  *                          initialized.
  * \param [in]     high     The given high bits to intialize \a a.
  * \param [in]     low      The given low bits to initialize \a a.
@@ -123,7 +123,7 @@ void                sc_uint128_sub (const sc_uint128_t * a,
  * \a a == \a result is allowed.
  * \param[in]  a        A pointer to a sc_uint128_t.
  * \param[out] result   A pointer to a sc_uint128_t.
- *                      The bitwise negation of \a a will be saved in 
+ *                      The bitwise negation of \a a will be saved in
  *                      \a result.
  */
 void                sc_uint128_bitwise_neg (const sc_uint128_t * a,
@@ -157,12 +157,12 @@ void                sc_uint128_bitwise_and (const sc_uint128_t * a,
 
 /** Calculates the bit right shift of uint128_t \a input by shift_count bits.
  * We shift in zeros from the left. If \a shift_count >= 128, \a result is 0.
- * All bits right from the zeroth bit (counted from the right hand side) 
+ * All bits right from the zeroth bit (counted from the right hand side)
  * drop out. \a input == \a result is allowed.
  * \param [in]      input       A pointer to a sc_uint128_t.
  * \param [in]      shift_count Bits to shift. \a shift_count >= 0.
  * \param [in,out]  result      A pointer to a sc_uint128_t.
- *                              The right shifted number will be saved 
+ *                              The right shifted number will be saved
  *                              in \a result.
  */
 void                sc_uint128_shift_right (const sc_uint128_t * input,
@@ -176,7 +176,7 @@ void                sc_uint128_shift_right (const sc_uint128_t * input,
  * \param [in]      input       A pointer to a sc_uint128_t.
  * \param [in]      shift_count Bits to shift. \a shift_count >= 0.
  * \param [in,out]  result      A pointer to a sc_uint128_t.
- *                              The left shifted number will be saved 
+ *                              The left shifted number will be saved
  *                              in \a result.
  */
 void                sc_uint128_shift_left (const sc_uint128_t * input,
