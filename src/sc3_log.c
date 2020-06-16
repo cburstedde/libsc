@@ -50,7 +50,7 @@ struct sc3_log
 };
 
 static sc3_log_t    statlog = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, SC3_LOG_TOP, 0, NULL, 1, fprintf
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, SC3_LOG_TOP, 0, NULL, 1, fputs
 };
 
 sc3_log_t          *
@@ -116,7 +116,7 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
   log->rank = 0;
   log->file = stderr;
   log->pretty = 1;
-  log->func = fprintf;
+  log->func = fputs;
   SC3A_IS (sc3_log_is_new, log);
 
   *logp = log;
@@ -272,6 +272,7 @@ sc3_log (sc3_log_t * log, int depth,
 
   if (log->pretty) {
     char                header[SC3_BUFSIZE];
+    char                output[SC3_BUFSIZE];
 
     /* construct elaborate message and write it */
     if (role == SC3_LOG_PROCESS0) {
@@ -283,11 +284,12 @@ sc3_log (sc3_log_t * log, int depth,
     else {
       snprintf (header, SC3_BUFSIZE, "%s %d:%d", "sc3", log->rank, tid);
     }
-    log->func (log->file != NULL ? log->file : stderr, "[%s] %*s%s\n", header,
-               depth >= 0 ? depth * log->indent : 0, "", msg);
+    sc3_snprintf (output, SC3_BUFSIZE, "[%s] %*s%s\n", header,
+                  depth >= 0 ? depth * log->indent : 0, "", msg);
+    log->func (output, log->file != NULL ? log->file : stderr);
   }
   else {
-    log->func (log->file != NULL ? log->file : stderr, "%s", msg);
+    log->func (msg, log->file != NULL ? log->file : stderr);
   }
 }
 

@@ -23,24 +23,14 @@
 #include <sc3_log.h>
 #include <stdarg.h>
 
-__attribute__ ((format (printf, 2, 3)))
 static int
-main_fprintf (FILE *file, const char *format, ...)
+main_fputs (const char *s, FILE *file)
 {
-  va_list ap;
-  va_start (ap, format);
-
   /* example of custom log function */
   if (fputs ("sc3_log ", file) < 0) {
     return -1;
   }
-  return vfprintf (file, format, ap);
-
-#if 0
-  /* unneeded */
-  va_end (ap);
-  return 0;
-#endif
+  return fputs (s, file);
 }
 
 static void
@@ -100,7 +90,7 @@ work_init_log (sc3_MPI_Comm_t mpicomm,
   SC3E (sc3_log_set_level (*log, SC3_LOG_INFO));
   SC3E (sc3_log_set_comm (*log, mpicomm));
   SC3E (sc3_log_set_indent (*log, indent));
-  SC3E (sc3_log_set_function (*log, main_fprintf, 1));
+  SC3E (sc3_log_set_function (*log, main_fputs, 1));
   SC3E (sc3_log_setup (*log));
   return NULL;
 }
@@ -126,7 +116,7 @@ work_work (sc3_allocator_t * alloc, sc3_log_t * log)
 static sc3_error_t *
 work_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
 {
-  sc3_error_t *leak = NULL;
+  sc3_error_t        *leak = NULL;
 
   sc3_log (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "Enter work_finalize");
 
