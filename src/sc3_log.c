@@ -204,10 +204,11 @@ sc3_log_unref (sc3_log_t ** logp)
     *logp = NULL;
 
     lator = log->lator;
+    if (!log->call_fclose && fflush (log->file)) {
+      /* TODO create runtime error when flush fails */
+    }
     if (log->call_fclose && fclose (log->file)) {
-
       /* TODO create runtime error when close fails */
-
     }
     SC3E (sc3_allocator_free (lator, log));
     SC3E (sc3_allocator_unref (&lator));
