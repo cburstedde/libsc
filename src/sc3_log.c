@@ -260,13 +260,13 @@ sc3_log (sc3_log_t * log, int depth,
 
   /* construct message and write it */
   if (role == SC3_LOG_PROCESS0) {
-    snprintf (header, SC3_BUFSIZE, "%s", "SC3");
+    snprintf (header, SC3_BUFSIZE, "%s", "sc3");
   }
   else if (role == SC3_LOG_THREAD0) {
-    snprintf (header, SC3_BUFSIZE, "%s %d", "SC3", log->rank);
+    snprintf (header, SC3_BUFSIZE, "%s %d", "sc3", log->rank);
   }
   else {
-    snprintf (header, SC3_BUFSIZE, "%s %d:%d", "SC3", log->rank, tid);
+    snprintf (header, SC3_BUFSIZE, "%s %d:%d", "sc3", log->rank, tid);
   }
   fprintf (log->file != NULL ? log->file : stderr, "[%s] %*s%s\n", header,
            depth >= 0 ? depth * log->indent : 0, "", msg);
