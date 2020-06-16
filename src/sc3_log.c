@@ -43,12 +43,13 @@ struct sc3_log
   int                 indent;
   sc3_log_level_t     level;
 
-  FILE               *file;
   int                 call_fclose;
+  FILE               *file;
+  sc3_log_function_t  func;
 };
 
 static sc3_log_t    statlog = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, SC3_LOG_TOP, NULL, 0
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, SC3_LOG_TOP, 0, NULL, fprintf
 };
 
 sc3_log_t          *
@@ -72,6 +73,7 @@ sc3_log_is_valid (const sc3_log_t * log, char *reason)
   SC3E_TEST (0 <= log->indent, reason);
 
   SC3E_TEST (log->file != NULL || !log->call_fclose, reason);
+  SC3E_TEST (log->func != NULL, reason);
 
   SC3E_YES (reason);
 }
@@ -112,6 +114,7 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
   log->lator = lator;
   log->rank = 0;
   log->file = stderr;
+  log->func = fprintf;
   SC3A_IS (sc3_log_is_new, log);
 
   *logp = log;
@@ -144,14 +147,20 @@ sc3_error_t        *
 sc3_log_set_file (sc3_log_t * log, FILE * file, int call_fclose)
 {
   SC3A_IS (sc3_log_is_new, log);
-  if (file == NULL) {
-    log->file = stderr;
-    log->call_fclose = 0;
-  }
-  else {
-    log->file = file;
-    log->call_fclose = call_fclose;
-  }
+  SC3A_CHECK (file != NULL);
+
+  log->call_fclose = call_fclose;
+  log->file = file;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_log_set_function (sc3_log_t * log, sc3_log_function_t func)
+{
+  SC3A_IS (sc3_log_is_new, log);
+  SC3A_CHECK (func != NULL);
+
+  log->func = func;
   return NULL;
 }
 
@@ -269,8 +278,8 @@ sc3_log (sc3_log_t * log, int depth,
   else {
     snprintf (header, SC3_BUFSIZE, "%s %d:%d", "sc3", log->rank, tid);
   }
-  fprintf (log->file != NULL ? log->file : stderr, "[%s] %*s%s\n", header,
-           depth >= 0 ? depth * log->indent : 0, "", msg);
+  log->func (log->file != NULL ? log->file : stderr, "[%s] %*s%s\n", header,
+             depth >= 0 ? depth * log->indent : 0, "", msg);
 }
 
 void
