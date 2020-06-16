@@ -252,6 +252,7 @@ sc3_log (sc3_log_t * log, int depth,
   if (!sc3_log_is_setup (log, NULL) ||
       !(0 <= role && role < SC3_LOG_ROLE_LAST) ||
       !(0 <= level && level < SC3_LOG_LEVEL_LAST) || msg == NULL) {
+    fprintf (stderr, "[sc3] BAD sc3_log: %s\n", msg);
     return;
   }
 
@@ -297,12 +298,15 @@ void
 sc3_logf (sc3_log_t * log, int depth,
           sc3_log_role_t role, sc3_log_level_t level, const char *fmt, ...)
 {
-  if (sc3_log_is_setup (log, NULL) && fmt != NULL) {
+  if (fmt != NULL) {
     va_list             ap;
 
     va_start (ap, fmt);
     sc3_logv (log, depth, role, level, fmt, ap);
     va_end (ap);
+  }
+  else {
+    fprintf (stderr, "[sc3] BAD fmt in sc3_logf\n");
   }
 }
 
@@ -311,11 +315,17 @@ sc3_logv (sc3_log_t * log, int depth,
           sc3_log_role_t role, sc3_log_level_t level,
           const char *fmt, va_list ap)
 {
-  if (sc3_log_is_setup (log, NULL) && fmt != NULL) {
+  if (fmt != NULL) {
     char                msg[SC3_BUFSIZE];
 
     if (0 <= vsnprintf (msg, SC3_BUFSIZE, fmt, ap)) {
       sc3_log (log, depth, role, level, msg);
     }
+    else {
+      fprintf (stderr, "[sc3] BAD vsnprintf in sc3_logv\n");
+    }
+  }
+  else {
+    fprintf (stderr, "[sc3] BAD fmt in sc3_logv\n");
   }
 }

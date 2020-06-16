@@ -109,7 +109,10 @@ sc3_error_t        *sc3_log_ref (sc3_log_t * log);
 sc3_error_t        *sc3_log_unref (sc3_log_t ** logp);
 sc3_error_t        *sc3_log_destroy (sc3_log_t ** logp);
 
-/* TODO think about returning error types and logging to stderr on error */
+/* TODO think about returning error types? */
+/* Right now, they try to do the right thing always.
+   If log == NULL, fprintf to stderr */
+
 void                sc3_log (sc3_log_t * log, int depth,
                              sc3_log_role_t role, sc3_log_level_t level,
                              const char *msg);
