@@ -21,6 +21,27 @@
 */
 
 #include <sc3_log.h>
+#include <stdarg.h>
+
+__attribute__ ((format (printf, 2, 3)))
+static int
+main_fprintf (FILE *file, const char *format, ...)
+{
+  va_list ap;
+  va_start (ap, format);
+
+  /* example of custom log function */
+  if (fputs ("sc3_log ", file) < 0) {
+    return -1;
+  }
+  return vfprintf (file, format, ap);
+
+#if 0
+  /* unneeded */
+  va_end (ap);
+  return 0;
+#endif
+}
 
 static void
 main_exit_failure (sc3_error_t **e, const char *prefix)
@@ -79,6 +100,7 @@ work_init_log (sc3_MPI_Comm_t mpicomm,
   SC3E (sc3_log_set_level (*log, SC3_LOG_INFO));
   SC3E (sc3_log_set_comm (*log, mpicomm));
   SC3E (sc3_log_set_indent (*log, indent));
+  SC3E (sc3_log_set_function (*log, main_fprintf, 1));
   SC3E (sc3_log_setup (*log));
   return NULL;
 }
