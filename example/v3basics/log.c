@@ -23,27 +23,47 @@
 #include <sc3_log.h>
 
 static void
-main_exit_failure (const char *prefix, sc3_error_t * e)
-{
-  char                flatmsg[SC3_BUFSIZE];
-
-  sc3_error_destroy_noerr (&e, flatmsg);
-  fprintf (stderr, "%s: %s\n", prefix, flatmsg);
-
-  exit (EXIT_FAILURE);
-}
-
-static void
-main_report_leak (const char *prefix, sc3_error_t ** e)
+main_exit_failure (sc3_error_t **e, const char *prefix)
 {
   char                flatmsg[SC3_BUFSIZE];
 
   sc3_error_destroy_noerr (e, flatmsg);
   fprintf (stderr, "%s: %s\n", prefix, flatmsg);
+
+  exit (EXIT_FAILURE);
+}
+
+static int
+work_error (sc3_error_t **e, sc3_log_t *log, const char *prefix)
+{
+  char                flatmsg[SC3_BUFSIZE];
+
+  /* bad call convention is reported and accepted */
+  if (e == NULL || *e == NULL) {
+    sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR,
+              "NULL error: %s", prefix);
+    return 0;
+  }
+
+  /* if needed, treat user/recoverable errors here */
+
+  /* leak error we just report and then continue */
+  if (sc3_error_is_leak (*e, NULL)) {
+    sc3_error_destroy_noerr (e, flatmsg);
+    sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR,
+              "Leak error: %s", prefix);
+    return 0;
+  }
+
+  /* fatal error out of an sc3 call, unsafe to continue */
+  sc3_error_destroy_noerr (e, flatmsg);
+  sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR,
+            "Fatal error: %s", prefix);
+  return 1;
 }
 
 static sc3_error_t *
-main_init_allocator (sc3_allocator_t ** alloc, int align)
+work_init_allocator (sc3_allocator_t ** alloc, int align)
 {
   SC3E (sc3_allocator_new (sc3_allocator_nothread (), alloc));
   SC3E (sc3_allocator_set_align (*alloc, align));
@@ -52,39 +72,41 @@ main_init_allocator (sc3_allocator_t ** alloc, int align)
 }
 
 static sc3_error_t *
-main_init_log (sc3_log_t ** log, sc3_allocator_t * alloc, int indent)
+work_init_log (sc3_MPI_Comm_t mpicomm,
+               sc3_log_t ** log, sc3_allocator_t * alloc, int indent)
 {
   SC3E (sc3_log_new (alloc, log));
   SC3E (sc3_log_set_level (*log, SC3_LOG_INFO));
-  SC3E (sc3_log_set_comm (*log, SC3_MPI_COMM_WORLD));
+  SC3E (sc3_log_set_comm (*log, mpicomm));
   SC3E (sc3_log_set_indent (*log, indent));
   SC3E (sc3_log_setup (*log));
   return NULL;
 }
 
 static sc3_error_t *
-main_init (int *pargc, char ***pargv,
+work_init (int *pargc, char ***pargv, sc3_MPI_Comm_t mpicomm,
            sc3_allocator_t ** alloc, sc3_log_t ** log)
 {
-  SC3E (main_init_allocator (alloc, 16));
-  SC3E (main_init_log (log, *alloc, 3));
-  sc3_log (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "Leave main_init");
+  SC3E (work_init_allocator (alloc, 16));
+  SC3E (work_init_log (mpicomm, log, *alloc, 3));
+  sc3_log (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "Leave work_init");
   return NULL;
 }
 
 static sc3_error_t *
-main_work (sc3_allocator_t * alloc, sc3_log_t * log)
+work_work (sc3_allocator_t * alloc, sc3_log_t * log)
 {
-  sc3_log (log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "In main_work");
+  sc3_log (log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "In work_work");
+  sc3_log (log, 0, SC3_LOG_THREAD0, SC3_LOG_TOP, "In work_work");
   return NULL;
 }
 
 static sc3_error_t *
-main_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
+work_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
 {
   sc3_error_t *leak = NULL;
 
-  sc3_log (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "Enter main_finalize");
+  sc3_log (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "Enter work_finalize");
 
   sc3_log_ref (*log);
 
@@ -97,36 +119,45 @@ main_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
 int
 main (int argc, char **argv)
 {
+  int                 scdead = 0;
+  sc3_MPI_Comm_t      mpicomm = SC3_MPI_COMM_WORLD;
   sc3_allocator_t    *alloc;
-  sc3_error_t        *e;
   sc3_log_t          *log;
+  sc3_error_t        *e;
 
   /* Initialize MPI.  This is representative of any external startup code */
   if ((e = sc3_MPI_Init (&argc, &argv)) != NULL) {
-    main_exit_failure ("Main init", e);
+    main_exit_failure (&e, "Main init");
   }
-  /* Note we'll be relying below on the fact that e is NULL. */
 
   /* Initialization of toplevel allocator and logger.
+     We initialize logging and basic allocation here, on errors we exit.
      This is representative of entering sc3 code from any larger program */
-  SC3E_NULL_SET (e, main_init (&argc, &argv, &alloc, &log));
+  if (!scdead && (e = work_init (&argc, &argv, mpicomm,
+                                 &alloc, &log)) != NULL) {
+    main_exit_failure (&e, "Work init");
+  }
 
   /* This is representative of calling sc3 code from any larger program */
-  SC3E_NULL_SET (e, main_work (alloc, log));
+  if (!scdead && (e = work_work (alloc, log)) != NULL) {
+    scdead = work_error (&e, log, "Work work");
+  }
 
   /* Free toplevel allocator and logger.
      This is representative of leaving sc3 code from any larger program */
-  SC3E_NULL_SET (e, main_finalize (&alloc, &log));
-  /* TODO this turns leaks into fatal errors */
+  if (!scdead && (e = work_finalize (&alloc, &log)) != NULL) {
+    scdead = work_error (&e, log, "Work finalize");
+  }
 
-  /* As a bonus, treat leaks separately */
-  if (sc3_error_is_leak (e, NULL)) {
-    main_report_leak ("Main report", &e);
+  /* Application reporting on fatal sc3 error status */
+  if (scdead) {
+    fprintf (stderr, "%s", "Main fatal error out of sc3\n");
   }
 
   /* Finalize MPI.  This is representative of any external cleanup code */
-  if (e != NULL || (e = sc3_MPI_Finalize ()) != NULL) {
-    main_exit_failure ("Main finalize", e);
+  if ((e = sc3_MPI_Barrier (mpicomm)) != NULL ||
+      (e = sc3_MPI_Finalize ()) != NULL) {
+    main_exit_failure (&e, "Main finalize");
   }
   return 0;
 }
