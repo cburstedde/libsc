@@ -23,6 +23,8 @@
 #include <sc3_log.h>
 #include <stdarg.h>
 
+static int provoke_leaks;
+
 static int
 main_fputs (const char *s, FILE *file)
 {
@@ -80,8 +82,10 @@ work_init_allocator (sc3_allocator_t ** alloc, int align)
   SC3E (sc3_allocator_set_align (*alloc, align));
   SC3E (sc3_allocator_setup (*alloc));
 
-  /* Provoke leak */
-  SC3E (sc3_allocator_ref (*alloc));
+  if (provoke_leaks) {
+    /* Provoke leak */
+    SC3E (sc3_allocator_ref (*alloc));
+  }
 
   return NULL;
 }
@@ -124,8 +128,10 @@ work_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
 
   sc3_log (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "Enter work_finalize");
 
-  /* Provoke leak */
-  SC3E (sc3_log_ref (*log));
+  if (provoke_leaks) {
+    /* Provoke leak */
+    SC3E (sc3_log_ref (*log));
+  }
 
   /* if we find any leaks, propagate them to the outside */
   SC3L (&leak, sc3_log_destroy (log));
@@ -146,6 +152,11 @@ main (int argc, char **argv)
   /* Initialize MPI.  This is representative of any external startup code */
   if ((e = sc3_MPI_Init (&argc, &argv)) != NULL) {
     main_exit_failure (&e, "Main init");
+  }
+
+  /* Process command line options */
+  if (argc == 2 && strchr (argv[1], 'L')) {
+    provoke_leaks = 1;
   }
 
   /* Initialization of toplevel allocator and logger.
