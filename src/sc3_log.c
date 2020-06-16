@@ -45,11 +45,12 @@ struct sc3_log
 
   int                 call_fclose;
   FILE               *file;
+  int                 pretty;
   sc3_log_function_t  func;
 };
 
 static sc3_log_t    statlog = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, SC3_LOG_TOP, 0, NULL, fprintf
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, SC3_LOG_TOP, 0, NULL, 1, fprintf
 };
 
 sc3_log_t          *
@@ -114,6 +115,7 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
   log->lator = lator;
   log->rank = 0;
   log->file = stderr;
+  log->pretty = 1;
   log->func = fprintf;
   SC3A_IS (sc3_log_is_new, log);
 
@@ -155,12 +157,13 @@ sc3_log_set_file (sc3_log_t * log, FILE * file, int call_fclose)
 }
 
 sc3_error_t        *
-sc3_log_set_function (sc3_log_t * log, sc3_log_function_t func)
+sc3_log_set_function (sc3_log_t * log, sc3_log_function_t func, int pretty)
 {
   SC3A_IS (sc3_log_is_new, log);
   SC3A_CHECK (func != NULL);
 
   log->func = func;
+  log->pretty = pretty;
   return NULL;
 }
 
@@ -244,7 +247,6 @@ sc3_log (sc3_log_t * log, int depth,
          sc3_log_role_t role, sc3_log_level_t level, const char *msg)
 {
   int                 tid;
-  char                header[SC3_BUFSIZE];
 
   /* catch invalid usage */
   if (!sc3_log_is_setup (log, NULL) ||
@@ -268,18 +270,25 @@ sc3_log (sc3_log_t * log, int depth,
     return;
   }
 
-  /* construct message and write it */
-  if (role == SC3_LOG_PROCESS0) {
-    snprintf (header, SC3_BUFSIZE, "%s", "sc3");
-  }
-  else if (role == SC3_LOG_THREAD0) {
-    snprintf (header, SC3_BUFSIZE, "%s %d", "sc3", log->rank);
+  if (log->pretty) {
+    char                header[SC3_BUFSIZE];
+
+    /* construct elaborate message and write it */
+    if (role == SC3_LOG_PROCESS0) {
+      snprintf (header, SC3_BUFSIZE, "%s", "sc3");
+    }
+    else if (role == SC3_LOG_THREAD0) {
+      snprintf (header, SC3_BUFSIZE, "%s %d", "sc3", log->rank);
+    }
+    else {
+      snprintf (header, SC3_BUFSIZE, "%s %d:%d", "sc3", log->rank, tid);
+    }
+    log->func (log->file != NULL ? log->file : stderr, "[%s] %*s%s\n", header,
+               depth >= 0 ? depth * log->indent : 0, "", msg);
   }
   else {
-    snprintf (header, SC3_BUFSIZE, "%s %d:%d", "sc3", log->rank, tid);
+    log->func (log->file != NULL ? log->file : stderr, "%s", msg);
   }
-  log->func (log->file != NULL ? log->file : stderr, "[%s] %*s%s\n", header,
-             depth >= 0 ? depth * log->indent : 0, "", msg);
 }
 
 void

@@ -37,8 +37,10 @@
 
 typedef struct sc3_log sc3_log_t;
 
-typedef int         (*sc3_log_function_t) (FILE * stream, const char *format,
-                                           ...);
+/* *INDENT-OFF* */
+typedef __attribute__ ((format (printf, 2, 3)))
+int (*sc3_log_function_t) (FILE * stream, const char *format, ...);
+/* *INDENT-ON* */
 
 typedef enum sc3_log_role
 {
@@ -90,9 +92,14 @@ sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
 sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
                                       FILE * file, int call_fclose);
 
-/** Default fprintf */
+/** Default fprintf
+ * \param [in] pretty   If true, prepend header with prefix, rank/thread
+ *                      numbers and append a newline at end of message.
+ *                      Otherwise, pass message to log function as is.
+ */
 sc3_error_t        *sc3_log_set_function (sc3_log_t * log,
-                                          sc3_log_function_t logfun);
+                                          sc3_log_function_t logfun,
+                                          int pretty);
 
 /** Default 0 */
 sc3_error_t        *sc3_log_set_indent (sc3_log_t * log, int indent);
