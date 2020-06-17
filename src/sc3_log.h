@@ -52,12 +52,14 @@ sc3_log_role_t;
 
 typedef enum sc3_log_level
 {
-  SC3_LOG_NOISE,
-  SC3_LOG_DEBUG,
-  SC3_LOG_INFO,
-  SC3_LOG_TOP,
-  SC3_LOG_ERROR,
-  SC3_LOG_SILENT,
+  SC3_LOG_NOISE,        /**< Anything at all and all sorts of nonsense */
+  SC3_LOG_DEBUG,        /**< Information only useful for debugging.
+                             Too much to be acceptable for production runs */
+  SC3_LOG_INFO,         /**< Detailed, but still acceptable for production */
+  SC3_LOG_TOP,          /**< Sparse flow logging, for toplevel functions */
+  SC3_LOG_ESSENTIAL,    /**< Couple lines per program: options, stats */
+  SC3_LOG_ERROR,        /**< Errors by misusage, internal bugs, I/O */
+  SC3_LOG_SILENT,       /**< This log level will not print anything */
   SC3_LOG_LEVEL_LAST
 }
 sc3_log_level_t;

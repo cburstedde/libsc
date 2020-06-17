@@ -256,7 +256,7 @@ sc3_log (sc3_log_t * log, int depth,
     return;
   }
 
-  if (level < log->level) {
+  if (level < log->level || level == SC3_LOG_SILENT) {
     /* the log level is not sufficiently large */
     return;
   }
