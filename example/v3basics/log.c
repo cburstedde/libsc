@@ -23,7 +23,7 @@
 #include <sc3_log.h>
 #include <stdarg.h>
 
-static int provoke_leaks;
+static int          provoke_fatal, provoke_leaks, provoke_which;
 
 static int
 main_fputs (const char *s, FILE *file)
@@ -82,7 +82,7 @@ work_init_allocator (sc3_allocator_t ** alloc, int align)
   SC3E (sc3_allocator_set_align (*alloc, align));
   SC3E (sc3_allocator_setup (*alloc));
 
-  if (provoke_leaks) {
+  if (provoke_leaks && provoke_which == 1) {
     /* Provoke leak */
     SC3E (sc3_allocator_ref (*alloc));
   }
@@ -107,9 +107,16 @@ static sc3_error_t *
 work_init (int *pargc, char ***pargv, sc3_MPI_Comm_t mpicomm,
            sc3_allocator_t ** alloc, sc3_log_t ** log)
 {
+  char                tmp[SC3_BUFSIZE];
+
   SC3E (work_init_allocator (alloc, 16));
   SC3E (work_init_log (mpicomm, log, *alloc, 3));
-  sc3_log (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "Leave work_init");
+  sc3_logf (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_ESSENTIAL,
+            "Command line flags %s%s%s",
+            provoke_fatal ? "F" : "", provoke_leaks ? "L" : "",
+            provoke_which > 0 ?
+            (snprintf (tmp, SC3_BUFSIZE, "%d", provoke_which), tmp) : "");
+  sc3_log (*log, 0, SC3_LOG_THREAD0, SC3_LOG_TOP, "Leave work_init");
   return NULL;
 }
 
@@ -118,6 +125,16 @@ work_work (sc3_allocator_t * alloc, sc3_log_t * log)
 {
   sc3_log (log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "In work_work");
   sc3_log (log, 0, SC3_LOG_THREAD0, SC3_LOG_TOP, "In work_work");
+
+  if (provoke_fatal && provoke_which == 1) {
+    int                 bogus = 1;
+    SC3E (sc3_allocator_free (alloc, &bogus));
+  }
+  if (provoke_leaks && provoke_which == 2) {
+    int                *bogus;
+    SC3E (sc3_allocator_malloc (alloc, sizeof (int), &bogus));
+  }
+
   return NULL;
 }
 
@@ -128,7 +145,7 @@ work_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
 
   sc3_log (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "Enter work_finalize");
 
-  if (provoke_leaks) {
+  if (provoke_leaks && provoke_which == 3) {
     /* Provoke leak */
     SC3E (sc3_log_ref (*log));
   }
@@ -155,9 +172,20 @@ main (int argc, char **argv)
   }
 
   /* Process command line options */
-  if (argc == 2 && strchr (argv[1], 'L')) {
-    provoke_leaks = 1;
+  if (argc == 2) {
+    if (strchr (argv[1], 'F')) {
+      provoke_fatal = 1;
+    }
+    if (strchr (argv[1], 'L')) {
+      provoke_leaks = 1;
+    }
+    for (i = 1; i <= 3; ++i) {
+      if (strchr (argv[1], '0' + i)) {
+        provoke_which = i;
+      }
+    }
   }
+  /* there is no logger object yet */
 
   /* Initialization of toplevel allocator and logger.
      We initialize logging and basic allocation here, on errors we exit.
@@ -192,5 +220,5 @@ main (int argc, char **argv)
       (e = sc3_MPI_Finalize ()) != NULL) {
     main_exit_failure (&e, "Main finalize");
   }
-  return 0;
+  return EXIT_SUCCESS;
 }
