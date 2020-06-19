@@ -597,6 +597,18 @@ sc3_error_accumulate (sc3_allocator_t * alloc,
   return NULL;
 }
 
+/** Accumulate a newly created error into a collection of leaks.
+ * This function is a restricted version of \ref sc3_error_accum_kind.
+ * We use a static allocator, which is ok for macros without context.
+ * \param [in,out] pe       Pointer to error collection must not be NULL.
+ *                          If the pointed-to error is not NULL, it must be
+ *                          of kind \ref SC3_ERROR_LEAK or we return fatal.
+ *                          On output, new leak error with input as stack.
+ * \param [in] filename     File name to report in the new error object.
+ * \param [in] line         Line number to report.
+ * \param [in] errmsg       The message to report.
+ * \return              NULL on success, fatal error otherwise.
+ */
 static sc3_error_t *
 sc3_error_accum_leak (sc3_error_t ** pe,
                       const char *filename, int line, const char *errmsg)
