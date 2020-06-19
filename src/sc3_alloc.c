@@ -399,6 +399,7 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
   }
   if (a->counting) {
     ++a->num_free;
+    SC3A_CHECK (a->num_free <= a->num_malloc + a->num_calloc);
   }
 
   if (a->align == 0 && !a->keepalive) {

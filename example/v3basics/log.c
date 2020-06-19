@@ -152,6 +152,14 @@ work_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
 
   /* if we find any leaks, propagate them to the outside */
   SC3L (&leak, sc3_log_destroy (log));
+
+  if (provoke_fatal && provoke_which == 2) {
+    int               a = 1;
+    int              *bogus = &a;
+    SC3E (sc3_allocator_free (*alloc, bogus));
+  }
+
+  /* the allocator is destroyed last */
   SC3L (&leak, sc3_allocator_destroy (alloc));
   return leak;
 }
