@@ -576,8 +576,12 @@ sc3_error_accumulate (sc3_allocator_t * alloc,
   sc3_error_kind_t    kind;
   char                flatmsg[SC3_BUFSIZE];
 
-  /* If no error comes in, there is nothing to do. */
+  /* check call convention */
+  SC3A_IS (sc3_allocator_is_setup, alloc);
+  SC3A_CHECK (pcollect != NULL);
   SC3A_CHECK (pe != NULL);
+
+  /* If no error comes in, there is nothing to do. */
   if ((e = *pe) == NULL) {
     return NULL;
   }
