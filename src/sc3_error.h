@@ -216,6 +216,7 @@ extern              "C"
   } else { (e) = NULL; }                                                \
   } while (0)
 
+/* TODO think about propagating leak errors correctly */
 /** Set an error object \a e that is NULL using the result of an expression.
  * The update is perforrmed as in \ref SC3E_SET with expression \a f.
  * If the error object is not NULL, the macro does not evaluate \a f.
@@ -281,24 +282,24 @@ extern              "C"
  * If the expression is not a leak error, we behave as \ref SC3E, that is,
  * stack the error into a new fatal error object and return it.
  * If the expression is a leak, we stack it into the inout argument \a l
- * after flattening its stack into one message, and return NULL,
- * doing the latter as well if the expression is NULL.
- * In other words, when \a f is NULL, we do nothing.
+ * after flattening its stack into one message.  Noop if \a f is NULL.
+ * The inout pointer \a l must be of type \ref sc3_error_t ** and not NULL.
+ * Value may contain an error of kind \ref SC3_ERROR_LEAK or NULL.
+ * We only return out of the calling context on fatal error.
  */
 #define SC3L(l,f) do {                                                  \
-  SC3E (sc3_error_leak (l, f, __FILE__, __LINE__, #f));                 \
-} while (0)
+  sc3_error_t * _e = sc3_error_leak (l, f, __FILE__, __LINE__, #f);     \
+  if (_e != NULL) { return _e; }} while (0)
 
-/** Examine a condition \a x and add to the inout leak error \a l.
- * The pointer \a l must be of type \ref sc3_error_t ** and not NULL.
+/** Examine a condition \a x and add to the inout leak error \a l if false.
+ * The inout pointer \a l must be of type \ref sc3_error_t ** and not NULL.
  * Value may contain an error of kind \ref SC3_ERROR_LEAK or NULL.
  * We stack the inout error with a newly generated leak error.
- * On any other error, we return a fatal error object.
- * When \a x is true, we do nothing.
+ * We only return out of the calling context on fatal error.
  */
-#define SC3L_DEMAND(l,x) do {                                           \
-  SC3E (sc3_error_leak_demand (l, x, __FILE__, __LINE__, #x));          \
-} while (0)
+#define SC3L_DEMAND(l,x) do {                                               \
+  sc3_error_t * _e = sc3_error_leak_demand (l, x, __FILE__, __LINE__, #x);  \
+  if (_e != NULL) { return _e; }} while (0)
 
 #if 0
 /** The severity of an error used to be a proper enum.
@@ -313,7 +314,10 @@ sc3_error_severity_t;
 #endif
 
 /** We indicate the kind of an error condition;
- * see also \ref sc3_error_is_fatal and \ref sc3_error_is_leak. */
+ * see also \ref sc3_error_is_fatal and \ref sc3_error_is_leak.
+ * It must be documented if any call may return a non-fatal error,
+ * since without further action such is promoted to fatal by \ref SC3E.
+ */
 typedef enum sc3_error_kind
 {
   SC3_ERROR_FATAL,      /**< Generic error indicating a failed program. */
@@ -641,6 +645,9 @@ sc3_error_t        *sc3_error_flatten (sc3_error_t ** pe, const char *prefix,
 /** Extend a collection of errors by one, working on an inout argument.
  * This allows for using SC3A and SC3E macros on the return value while at
  * the same time preserving all error information in the inout argument.
+ * The newly created error takes the input error as stack.
+ * Use this function to construct the new error in this function.
+ * If one existing error object shall be added, use \ref sc3_error_accumulate.
  * \param [in,out] alloc    Allocator must be setup.
  *                          Used to allocate the error returned in \a pcollect.
  *                          You may unref but not destroy the allocator while
@@ -648,6 +655,8 @@ sc3_error_t        *sc3_error_flatten (sc3_error_t ** pe, const char *prefix,
  * \param [in,out] pcollect Pointer to the collection inout error.
  *                      Pointer must not be NULL, its value may be
  *                      NULL for an empty collection, or an error setup.
+ *                      The error on input may be of an arbitrary kind.
+ *                      The input error is not refd.  New error on output.
  * \param [in] kind     The error added to \a pcollect will be of this kind.
  * \param [in] filename Filename to use in the new error object.
  * \param [in] line     Line number to use in the new error object.
@@ -661,12 +670,12 @@ sc3_error_t        *sc3_error_accum_kind (sc3_allocator_t * alloc,
                                           const char *errmsg);
 
 /** Extend a collection of errors by one, working on an inout argument.
+ * This allows for using SC3A and SC3E macros on the return value while at
+ * the same time preserving all error information in the inout argument.
  * This functions accumulates multiple errors and their messages.
  * If the incoming error \a pe has a stack, all messages in the hierarchy
  * are flattened into one.  (The flattening will work recursively.)
- * We add one (potentially long) message to the inout \a pcollect.
- * This allows for using SC3A and SC3E macros on the return value while at
- * the same time preserving all error information in the inout argument.
+ * We add a new error with (potentially long) message to the inout \a pcollect.
  * \param [in,out] alloc    Allocator must be setup.
  *                          Used to allocate the error returned in \a pcollect.
  *                          You may unref but not destroy the allocator while
@@ -674,6 +683,8 @@ sc3_error_t        *sc3_error_accum_kind (sc3_allocator_t * alloc,
  * \param [in,out] pcollect Pointer to the collection inout error.
  *                      Pointer must not be NULL, its value may be
  *                      NULL for an empty collection, or an error setup.
+ *                      The input error is not refd.  New error on output.
+ *                      The new error is of the same \a kind as \a pe.
  * \param [in,out] pe   Pointer to an error to accumulate must not be NULL.
  *                      Its value may be NULL, then the function noops.
  *                      Otherwise we take ownership.  Value NULL on output.
@@ -689,10 +700,12 @@ sc3_error_t        *sc3_error_accumulate
    const char *filename, int line, const char *errmsg);
 
 /** Act on an error \a e depending on it being a leak, NULL, or other.
- * If the error is neither NULL nor a leak, we \ref sc3_error_new_stack.
- * If it is a leak, we flatten its messages and add to the inout \a leak.
- * It it is NULL, we return NULL.
- * This function is intended for use in macros when no allocator is available.
+ * If the error is neither NULL nor a leak we return a fatal error.
+ * If it is a leak, we flatten its messages and add to the inout
+ * error collection \a leak.  If it is NULL, we do nothing.
+ * We maintain and grow an error collection of kind \ref SC3_ERROR_LEAK.
+ * This function is a restriction of \ref sc3_error_accumulate to leaks.
+ * The function is intended for use in macros when no allocator is available.
  * \param [in,out] leak Pointer to an error must not be NULL.
  *                      Its value may be NULL or of kind \ref SC3_ERROR_LEAK.
  *                      On output, it is a new error stacked with a message
@@ -710,14 +723,15 @@ sc3_error_t        *sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
                                     const char *errmsg);
 
 /** Act on a condition that indicates a leak if false.
+ * We maintain and grow an error collection of kind \ref SC3_ERROR_LEAK.
  * This function is intended for use in macros when no allocator is available.
  * \param [in,out] leak Pointer to an error must not be NULL.
  *                      Its value may be NULL or of kind \ref SC3_ERROR_LEAK.
  *                      On output, a new leak error stacked with the previous.
- * \param [in] x        If true, we do nothing and return NULL.
- * \param [in] filename Filename to use in the new error object.
- * \param [in] line     Line number to use in the new error object.
- * \param [in] errmsg   Message to include in the new error object.
+ * \param [in] x        If true, we do nothing.
+ * \param [in] filename Filename to use in the new leak error object.
+ * \param [in] line     Line number to use in the new leak error object.
+ * \param [in] errmsg   Message to include in the new leak error object.
  * \return              Null on success, otherwise a fatal error.
  */
 sc3_error_t        *sc3_error_leak_demand (sc3_error_t ** leak, int x,

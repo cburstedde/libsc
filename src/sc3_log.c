@@ -43,12 +43,15 @@ struct sc3_log
   int                 indent;
   sc3_log_level_t     level;
 
-  FILE               *file;
   int                 call_fclose;
+  FILE               *file;
+  sc3_log_function_t  func;
+  void               *user;
 };
 
 static sc3_log_t    statlog = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, SC3_LOG_TOP, NULL, 0
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, SC3_LOG_TOP, 0, NULL,
+  sc3_log_function_default, NULL
 };
 
 sc3_log_t          *
@@ -72,6 +75,7 @@ sc3_log_is_valid (const sc3_log_t * log, char *reason)
   SC3E_TEST (0 <= log->indent, reason);
 
   SC3E_TEST (log->file != NULL || !log->call_fclose, reason);
+  SC3E_TEST (log->func != NULL, reason);
 
   SC3E_YES (reason);
 }
@@ -107,11 +111,12 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
 #ifdef SC_ENABLE_DEBUG
   log->level = SC3_LOG_DEBUG;
 #else
-  log->level = SC3_LOG_INFO;
+  log->level = SC3_LOG_TOP;
 #endif
   log->lator = lator;
   log->rank = 0;
   log->file = stderr;
+  log->func = sc3_log_function_default;
   SC3A_IS (sc3_log_is_new, log);
 
   *logp = log;
@@ -144,14 +149,51 @@ sc3_error_t        *
 sc3_log_set_file (sc3_log_t * log, FILE * file, int call_fclose)
 {
   SC3A_IS (sc3_log_is_new, log);
-  if (file == NULL) {
-    log->file = stderr;
-    log->call_fclose = 0;
+  SC3A_CHECK (file != NULL);
+
+  log->call_fclose = call_fclose;
+  log->file = file;
+  return NULL;
+}
+
+void
+sc3_log_function_bare (void * user, const char *msg,
+                       sc3_log_role_t role, int rank, int tid,
+                       sc3_log_level_t level, int spaces, FILE *outfile)
+{
+  /* output message as is */
+  fprintf (outfile != NULL ? outfile : stderr, "%s\n", msg);
+}
+
+void
+sc3_log_function_default (void * user, const char *msg,
+                          sc3_log_role_t role, int rank, int tid,
+                          sc3_log_level_t level, int spaces, FILE *outfile)
+{
+  char                header[SC3_BUFSIZE];
+
+  /* construct elaborate message and write it */
+  if (role == SC3_LOG_PROCESS0) {
+    snprintf (header, SC3_BUFSIZE, "%s", "sc3");
+  }
+  else if (role == SC3_LOG_THREAD0) {
+    snprintf (header, SC3_BUFSIZE, "%s %d", "sc3", rank);
   }
   else {
-    log->file = file;
-    log->call_fclose = call_fclose;
+    snprintf (header, SC3_BUFSIZE, "%s %d:%d", "sc3", rank, tid);
   }
+  fprintf (outfile != NULL ? outfile : stderr,
+           "[%s] %*s%s\n", header, spaces, "", msg);
+}
+
+sc3_error_t        *
+sc3_log_set_function (sc3_log_t * log, sc3_log_function_t func, void * user)
+{
+  SC3A_IS (sc3_log_is_new, log);
+  SC3A_CHECK (func != NULL);
+
+  log->func = func;
+  log->user = user;
   return NULL;
 }
 
@@ -204,10 +246,11 @@ sc3_log_unref (sc3_log_t ** logp)
     *logp = NULL;
 
     lator = log->lator;
+    if (!log->call_fclose && fflush (log->file)) {
+      /* TODO create runtime error when flush fails */
+    }
     if (log->call_fclose && fclose (log->file)) {
-
       /* TODO create runtime error when close fails */
-
     }
     SC3E (sc3_allocator_free (lator, log));
     SC3E (sc3_allocator_unref (&lator));
@@ -234,16 +277,21 @@ sc3_log (sc3_log_t * log, int depth,
          sc3_log_role_t role, sc3_log_level_t level, const char *msg)
 {
   int                 tid;
-  char                header[SC3_BUFSIZE];
+
+  /* survive NULL message */
+  if (msg == NULL) {
+    msg = "NULL message";
+  }
 
   /* catch invalid usage */
   if (!sc3_log_is_setup (log, NULL) ||
       !(0 <= role && role < SC3_LOG_ROLE_LAST) ||
-      !(0 <= level && level < SC3_LOG_LEVEL_LAST) || msg == NULL) {
+      !(0 <= level && level < SC3_LOG_LEVEL_LAST)) {
+    fprintf (stderr, "[sc3] BAD sc3_log: %s\n", msg);
     return;
   }
 
-  if (level < log->level) {
+  if (level < log->level || level == SC3_LOG_SILENT) {
     /* the log level is not sufficiently large */
     return;
   }
@@ -258,30 +306,30 @@ sc3_log (sc3_log_t * log, int depth,
     return;
   }
 
-  /* construct message and write it */
-  if (role == SC3_LOG_PROCESS0) {
-    snprintf (header, SC3_BUFSIZE, "%s", "SC3");
-  }
-  else if (role == SC3_LOG_THREAD0) {
-    snprintf (header, SC3_BUFSIZE, "%s %d", "SC3", log->rank);
+  /* output message */
+  if (log->func != NULL) {
+    log->func (log->user, msg, role, log->rank, tid, level,
+               depth >= 0 ? depth * log->indent : 0,
+               log->file != NULL ? log->file : stderr);
   }
   else {
-    snprintf (header, SC3_BUFSIZE, "%s %d:%d", "SC3", log->rank, tid);
+    fputs (msg, log->file != NULL ? log->file : stderr);
   }
-  fprintf (log->file != NULL ? log->file : stderr, "[%s] %*s%s\n", header,
-           depth >= 0 ? depth * log->indent : 0, "", msg);
 }
 
 void
 sc3_logf (sc3_log_t * log, int depth,
           sc3_log_role_t role, sc3_log_level_t level, const char *fmt, ...)
 {
-  if (sc3_log_is_setup (log, NULL) && fmt != NULL) {
+  if (fmt != NULL) {
     va_list             ap;
 
     va_start (ap, fmt);
     sc3_logv (log, depth, role, level, fmt, ap);
     va_end (ap);
+  }
+  else {
+    fprintf (stderr, "[sc3] BAD fmt in sc3_logf\n");
   }
 }
 
@@ -290,11 +338,17 @@ sc3_logv (sc3_log_t * log, int depth,
           sc3_log_role_t role, sc3_log_level_t level,
           const char *fmt, va_list ap)
 {
-  if (sc3_log_is_setup (log, NULL) && fmt != NULL) {
+  if (fmt != NULL) {
     char                msg[SC3_BUFSIZE];
 
     if (0 <= vsnprintf (msg, SC3_BUFSIZE, fmt, ap)) {
       sc3_log (log, depth, role, level, msg);
     }
+    else {
+      fprintf (stderr, "[sc3] BAD vsnprintf in sc3_logv\n");
+    }
+  }
+  else {
+    fprintf (stderr, "[sc3] BAD fmt in sc3_logv\n");
   }
 }
