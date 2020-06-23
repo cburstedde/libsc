@@ -46,11 +46,12 @@ struct sc3_log
   int                 call_fclose;
   FILE               *file;
   sc3_log_function_t  func;
+  void               *user;
 };
 
 static sc3_log_t    statlog = {
   {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, SC3_LOG_TOP, 0, NULL,
-  sc3_log_function_default
+  sc3_log_function_default, NULL
 };
 
 sc3_log_t          *
@@ -156,7 +157,7 @@ sc3_log_set_file (sc3_log_t * log, FILE * file, int call_fclose)
 }
 
 void
-sc3_log_function_bare (const char *msg,
+sc3_log_function_bare (void * user, const char *msg,
                        sc3_log_role_t role, int rank, int tid,
                        sc3_log_level_t level, int spaces, FILE *outfile)
 {
@@ -165,7 +166,7 @@ sc3_log_function_bare (const char *msg,
 }
 
 void
-sc3_log_function_default (const char *msg,
+sc3_log_function_default (void * user, const char *msg,
                           sc3_log_role_t role, int rank, int tid,
                           sc3_log_level_t level, int spaces, FILE *outfile)
 {
@@ -186,12 +187,13 @@ sc3_log_function_default (const char *msg,
 }
 
 sc3_error_t        *
-sc3_log_set_function (sc3_log_t * log, sc3_log_function_t func)
+sc3_log_set_function (sc3_log_t * log, sc3_log_function_t func, void * user)
 {
   SC3A_IS (sc3_log_is_new, log);
   SC3A_CHECK (func != NULL);
 
   log->func = func;
+  log->user = user;
   return NULL;
 }
 
@@ -306,7 +308,7 @@ sc3_log (sc3_log_t * log, int depth,
 
   /* output message */
   if (log->func != NULL) {
-    log->func (msg, role, log->rank, tid, level,
+    log->func (log->user, msg, role, log->rank, tid, level,
                depth >= 0 ? depth * log->indent : 0,
                log->file != NULL ? log->file : stderr);
   }

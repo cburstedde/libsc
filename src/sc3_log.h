@@ -77,13 +77,15 @@ sc3_log_level_t;
  * This is done before calling this function, or not calling it depending.
  * This function is just responsible for formatting, if desired, and output.
  */
-typedef void (*sc3_log_function_t) (const char *msg,
+typedef void (*sc3_log_function_t) (void *user, const char *msg,
                                     sc3_log_role_t role, int rank, int tid,
                                     sc3_log_level_t level, int spaces,
                                     FILE *outfile);
 /* *INDENT-ON* */
 
 /** Log function that prints the incoming message without formatting.
+ * \param [in,out] user    This function ignores the user-defined context
+ *                         which may be passed to \ref sc3_log_set_function.
  * \param [in] msg     This function adds a newline to the end of the message.
  * \param [in] role    Used for deciding whether to log, not used in formatting.
  * \param [in] rank    Used for deciding whether to log, not used in formatting.
@@ -93,13 +95,13 @@ typedef void (*sc3_log_function_t) (const char *msg,
  * \param [in,out] outfile      File printed to.
  */
 void
-sc3_log_function_bare (const char *msg,
+sc3_log_function_bare (void * user, const char *msg,
                        sc3_log_role_t role, int rank, int tid,
                        sc3_log_level_t level, int spaces, FILE *outfile);
 
 /** Log function that adds rank/thread information and indent spacing. */
 void
-sc3_log_function_default (const char *msg,
+sc3_log_function_default (void * user, const char *msg,
                           sc3_log_role_t role, int rank, int tid,
                           sc3_log_level_t level, int spaces, FILE *outfile);
 
@@ -134,10 +136,12 @@ sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
  * It default to \ref sc3_log_function_default.
  * \param [in,out] log  Logger must not yet be setup.
  * \param [in] func     Non-NULL function; see \ref sc3_log_function_t.
+ * \param [in] user     Pointer is passed through to log function \a func.
  * \return              NULL on success, fatal error otherwise.
  */
 sc3_error_t        *sc3_log_set_function (sc3_log_t * log,
-                                          sc3_log_function_t func);
+                                          sc3_log_function_t func,
+                                          void *user);
 
 /** Set number of spaces to indent each depth level.
  * \param [in,out] log  Logger must not yet be setup.

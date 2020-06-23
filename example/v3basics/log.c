@@ -26,12 +26,15 @@
 static int          provoke_fatal, provoke_leaks, provoke_which;
 static int          main_log_bare;
 
+static const char  *main_log_user = "sc3_log";
+
 static void
-main_log (const char *msg, sc3_log_role_t role, int rank, int tid,
+main_log (void * user, const char *msg,
+          sc3_log_role_t role, int rank, int tid,
           sc3_log_level_t level, int spaces, FILE *outfile)
 {
   /* example of custom log function */
-  fprintf (outfile, "sc3_log: %s\n", msg);
+  fprintf (outfile, "%s: %s\n", (const char *) user, msg);
 }
 
 static void
@@ -98,7 +101,7 @@ work_init_log (sc3_MPI_Comm_t mpicomm,
   SC3E (sc3_log_set_comm (*log, mpicomm));
   SC3E (sc3_log_set_indent (*log, indent));
   if (main_log_bare) {
-    SC3E (sc3_log_set_function (*log, main_log));
+    SC3E (sc3_log_set_function (*log, main_log, (void *) main_log_user));
   }
   SC3E (sc3_log_setup (*log));
   return NULL;
