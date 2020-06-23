@@ -45,12 +45,12 @@ struct sc3_log
 
   int                 call_fclose;
   FILE               *file;
-  int                 pretty;
   sc3_log_function_t  func;
 };
 
 static sc3_log_t    statlog = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, SC3_LOG_TOP, 0, NULL, 1, fputs
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, SC3_LOG_TOP, 0, NULL,
+  sc3_log_function_default
 };
 
 sc3_log_t          *
@@ -115,8 +115,7 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
   log->lator = lator;
   log->rank = 0;
   log->file = stderr;
-  log->pretty = 1;
-  log->func = fputs;
+  log->func = sc3_log_function_default;
   SC3A_IS (sc3_log_is_new, log);
 
   *logp = log;
@@ -156,14 +155,43 @@ sc3_log_set_file (sc3_log_t * log, FILE * file, int call_fclose)
   return NULL;
 }
 
+void
+sc3_log_function_bare (const char *msg,
+                       sc3_log_role_t role, int rank, int tid,
+                       sc3_log_level_t level, int spaces, FILE *outfile)
+{
+  /* output message as is */
+  fprintf (outfile != NULL ? outfile : stderr, "%s\n", msg);
+}
+
+void
+sc3_log_function_default (const char *msg,
+                          sc3_log_role_t role, int rank, int tid,
+                          sc3_log_level_t level, int spaces, FILE *outfile)
+{
+  char                header[SC3_BUFSIZE];
+
+  /* construct elaborate message and write it */
+  if (role == SC3_LOG_PROCESS0) {
+    snprintf (header, SC3_BUFSIZE, "%s", "sc3");
+  }
+  else if (role == SC3_LOG_THREAD0) {
+    snprintf (header, SC3_BUFSIZE, "%s %d", "sc3", rank);
+  }
+  else {
+    snprintf (header, SC3_BUFSIZE, "%s %d:%d", "sc3", rank, tid);
+  }
+  fprintf (outfile != NULL ? outfile : stderr,
+           "[%s] %*s%s\n", header, spaces, "", msg);
+}
+
 sc3_error_t        *
-sc3_log_set_function (sc3_log_t * log, sc3_log_function_t func, int pretty)
+sc3_log_set_function (sc3_log_t * log, sc3_log_function_t func)
 {
   SC3A_IS (sc3_log_is_new, log);
   SC3A_CHECK (func != NULL);
 
   log->func = func;
-  log->pretty = pretty;
   return NULL;
 }
 
@@ -276,26 +304,14 @@ sc3_log (sc3_log_t * log, int depth,
     return;
   }
 
-  if (log->pretty) {
-    char                header[SC3_BUFSIZE];
-    char                output[SC3_BUFSIZE];
-
-    /* construct elaborate message and write it */
-    if (role == SC3_LOG_PROCESS0) {
-      snprintf (header, SC3_BUFSIZE, "%s", "sc3");
-    }
-    else if (role == SC3_LOG_THREAD0) {
-      snprintf (header, SC3_BUFSIZE, "%s %d", "sc3", log->rank);
-    }
-    else {
-      snprintf (header, SC3_BUFSIZE, "%s %d:%d", "sc3", log->rank, tid);
-    }
-    sc3_snprintf (output, SC3_BUFSIZE, "[%s] %*s%s\n", header,
-                  depth >= 0 ? depth * log->indent : 0, "", msg);
-    log->func (output, log->file != NULL ? log->file : stderr);
+  /* output message */
+  if (log->func != NULL) {
+    log->func (msg, role, log->rank, tid, level,
+               depth >= 0 ? depth * log->indent : 0,
+               log->file != NULL ? log->file : stderr);
   }
   else {
-    log->func (msg, log->file != NULL ? log->file : stderr);
+    fputs (msg, log->file != NULL ? log->file : stderr);
   }
 }
 

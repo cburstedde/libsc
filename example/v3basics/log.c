@@ -24,15 +24,14 @@
 #include <stdarg.h>
 
 static int          provoke_fatal, provoke_leaks, provoke_which;
+static int          main_log_bare;
 
-static int
-main_fputs (const char *s, FILE *file)
+static void
+main_log (const char *msg, sc3_log_role_t role, int rank, int tid,
+          sc3_log_level_t level, int spaces, FILE *outfile)
 {
   /* example of custom log function */
-  if (fputs ("sc3_log ", file) < 0) {
-    return -1;
-  }
-  return fputs (s, file);
+  fprintf (outfile, "sc3_log: %s\n", msg);
 }
 
 static void
@@ -98,7 +97,9 @@ work_init_log (sc3_MPI_Comm_t mpicomm,
   SC3E (sc3_log_set_level (*log, SC3_LOG_INFO));
   SC3E (sc3_log_set_comm (*log, mpicomm));
   SC3E (sc3_log_set_indent (*log, indent));
-  SC3E (sc3_log_set_function (*log, main_fputs, 1));
+  if (main_log_bare) {
+    SC3E (sc3_log_set_function (*log, main_log));
+  }
   SC3E (sc3_log_setup (*log));
   return NULL;
 }
@@ -112,10 +113,11 @@ work_init (int *pargc, char ***pargv, sc3_MPI_Comm_t mpicomm,
   SC3E (work_init_allocator (alloc, 16));
   SC3E (work_init_log (mpicomm, log, *alloc, 3));
   sc3_logf (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_ESSENTIAL,
-            "Command line flags %s%s%s",
+            "Command line flags %s%s%s%s",
             provoke_fatal ? "F" : "", provoke_leaks ? "L" : "",
             provoke_which > 0 ?
-            (snprintf (tmp, SC3_BUFSIZE, "%d", provoke_which), tmp) : "");
+            (snprintf (tmp, SC3_BUFSIZE, "%d", provoke_which), tmp) : "",
+            main_log_bare ? "B" : "");
   sc3_log (*log, 0, SC3_LOG_THREAD0, SC3_LOG_TOP, "Leave work_init");
   return NULL;
 }
@@ -179,6 +181,18 @@ main (int argc, char **argv)
     main_exit_failure (&e, "Main init");
   }
 
+  /* Testing predefined static logger: It has no concept of MPI */
+  {
+    /* No error checking for the MPI calls; valgrind will tell */
+    int rank;
+    sc3_MPI_Comm_rank (mpicomm, &rank);
+    if (rank == 0) {
+      sc3_log (sc3_log_predef (), 8, SC3_LOG_PROCESS0, SC3_LOG_TOP,
+               "sc3_log example begin: calling static log");
+    }
+    sc3_MPI_Barrier (mpicomm);
+  }
+
   /* Process command line options */
   if (argc == 2) {
     if (strchr (argv[1], 'F')) {
@@ -191,6 +205,9 @@ main (int argc, char **argv)
       if (strchr (argv[1], '0' + i)) {
         provoke_which = i;
       }
+    }
+    if (strchr (argv[1], 'B')) {
+      main_log_bare = 1;
     }
   }
   /* there is no logger object yet */

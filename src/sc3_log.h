@@ -35,13 +35,16 @@
 
 #include <sc3_mpi.h>
 
+#ifdef __cplusplus
+extern              "C"
+{
+#if 0
+}
+#endif
+#endif
+
 /** Opaque object to encapsulate options to the logging mechanism. */
 typedef struct sc3_log sc3_log_t;
-
-/* *INDENT-OFF* */
-/** Prototype for the user-selectable output function. */
-typedef int (*sc3_log_function_t) (const char *s, FILE * stream);
-/* *INDENT-ON* */
 
 /** We may log per root MPI rank, for each MPI process, or for each thread. */
 typedef enum sc3_log_role
@@ -68,19 +71,49 @@ typedef enum sc3_log_level
 }
 sc3_log_level_t;
 
-#ifdef __cplusplus
-extern              "C"
-{
-#if 0
-}
-#endif
-#endif
+/* *INDENT-OFF* */
+/** Prototype for the user-selectable output function.
+ * This function does not need to decide whether to log based on role or level.
+ * This is done before calling this function, or not calling it depending.
+ * This function is just responsible for formatting, if desired, and output.
+ */
+typedef void (*sc3_log_function_t) (const char *msg,
+                                    sc3_log_role_t role, int rank, int tid,
+                                    sc3_log_level_t level, int spaces,
+                                    FILE *outfile);
+/* *INDENT-ON* */
+
+/** Log function that prints the incoming message without formatting.
+ * \param [in] msg     This function adds a newline to the end of the message.
+ * \param [in] role    Used for deciding whether to log, not used in formatting.
+ * \param [in] rank    Used for deciding whether to log, not used in formatting.
+ * \param [in] tid     Used for deciding whether to log, not used in formatting.
+ * \param [in] level   Used for deciding whether to log, not used in formatting.
+ * \param [in] spaces  Ignored.
+ * \param [in,out] outfile      File printed to.
+ */
+void
+sc3_log_function_bare (const char *msg,
+                       sc3_log_role_t role, int rank, int tid,
+                       sc3_log_level_t level, int spaces, FILE *outfile);
+
+/** Log function that adds rank/thread information and indent spacing. */
+void
+sc3_log_function_default (const char *msg,
+                          sc3_log_role_t role, int rank, int tid,
+                          sc3_log_level_t level, int spaces, FILE *outfile);
 
 int                 sc3_log_is_valid (const sc3_log_t * log, char *reason);
 int                 sc3_log_is_new (const sc3_log_t * log, char *reason);
 int                 sc3_log_is_setup (const sc3_log_t * log, char *reason);
 
-/* TODO do we really need this? */
+/** Return a predefined static logger that has no concept of MPI.
+ * \return          Valid and setup logger object.
+ *                  It will respect the indent spacing but not the role.
+ *                  It is always registered with rank and thread id 0.
+ *                  Its log level is fixed at \ref SC3_LOG_TOP,
+ *                  and it prints to stderr.
+ */
 sc3_log_t          *sc3_log_predef (void);
 
 sc3_error_t        *sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp);
@@ -97,18 +130,14 @@ sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
 sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
                                       FILE * file, int call_fclose);
 
-/** Set function that effectively outputs the log message.
- * It default to fputs (3) and must be of the same signature.
+/** Set function that effectively formats and outputs the log message.
+ * It default to \ref sc3_log_function_default.
  * \param [in,out] log  Logger must not yet be setup.
- * \param [in] func     Non-NULL function with same prototype as fputs (3).
- * \param [in] pretty   If true, prepend header with prefix, rank/thread
- *                      numbers and append a newline at end of message.
- *                      Otherwise, pass message to log function as is.
+ * \param [in] func     Non-NULL function; see \ref sc3_log_function_t.
  * \return              NULL on success, fatal error otherwise.
  */
 sc3_error_t        *sc3_log_set_function (sc3_log_t * log,
-                                          sc3_log_function_t func,
-                                          int pretty);
+                                          sc3_log_function_t func);
 
 /** Set number of spaces to indent each depth level.
  * \param [in,out] log  Logger must not yet be setup.
