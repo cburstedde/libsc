@@ -35,12 +35,15 @@
 
 #include <sc3_mpi.h>
 
+/** Opaque object to encapsulate options to the logging mechanism. */
 typedef struct sc3_log sc3_log_t;
 
 /* *INDENT-OFF* */
+/** Prototype for the user-selectable output function. */
 typedef int (*sc3_log_function_t) (const char *s, FILE * stream);
 /* *INDENT-ON* */
 
+/** We may log per root MPI rank, for each MPI process, or for each thread. */
 typedef enum sc3_log_role
 {
   SC3_LOG_ANY,
@@ -50,6 +53,7 @@ typedef enum sc3_log_role
 }
 sc3_log_role_t;
 
+/** Log level or priority.  Used to ignore messages of low priority. */
 typedef enum sc3_log_level
 {
   SC3_LOG_NOISE,        /**< Anything at all and all sorts of nonsense */
@@ -93,17 +97,24 @@ sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
 sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
                                       FILE * file, int call_fclose);
 
-/** Default fprintf
+/** Set function that effectively outputs the log message.
+ * It default to fputs (3) and must be of the same signature.
+ * \param [in,out] log  Logger must not yet be setup.
  * \param [in] func     Non-NULL function with same prototype as fputs (3).
  * \param [in] pretty   If true, prepend header with prefix, rank/thread
  *                      numbers and append a newline at end of message.
  *                      Otherwise, pass message to log function as is.
+ * \return              NULL on success, fatal error otherwise.
  */
 sc3_error_t        *sc3_log_set_function (sc3_log_t * log,
                                           sc3_log_function_t func,
                                           int pretty);
 
-/** Default 0 */
+/** Set number of spaces to indent each depth level.
+ * \param [in,out] log  Logger must not yet be setup.
+ * \param [in] indent   Non-negative number, default 0.
+ * \return              NULL on success, fatal error otherwise.
+ */
 sc3_error_t        *sc3_log_set_indent (sc3_log_t * log, int indent);
 
 sc3_error_t        *sc3_log_setup (sc3_log_t * log);
@@ -111,17 +122,31 @@ sc3_error_t        *sc3_log_ref (sc3_log_t * log);
 sc3_error_t        *sc3_log_unref (sc3_log_t ** logp);
 sc3_error_t        *sc3_log_destroy (sc3_log_t ** logp);
 
-/* TODO think about returning error types? */
 /* Right now, they try to do the right thing always.
    If log == NULL, fprintf to stderr */
 
+/** Log a message depending on selection criteria.
+ * This function does not return any error status.
+ * If parameters passed in are illegal or the logger NULL, output to stderr.
+ * \param [in] log       If NULL, print a simple message to stderr.
+ *                       Otherwise, logger must be setup and will be queried
+ *                       for log level and format options, etc.
+ * \param [in] depth     Number of indentation steps to use.  Non-negative.
+ * \param [in] role      See \ref sc3_log_role_t for legal values.
+ * \param [in] level     See \ref sc3_log_level_t for legal values.
+ * \param [in] msg       If NULL, print "NULL message," otherwise \a msg.
+ */
 void                sc3_log (sc3_log_t * log, int depth,
                              sc3_log_role_t role, sc3_log_level_t level,
                              const char *msg);
+
+/** See \ref sc3_log. */
 void                sc3_logf (sc3_log_t * log, int depth,
                               sc3_log_role_t role, sc3_log_level_t level,
                               const char *fmt, ...)
   __attribute__ ((format (printf, 5, 6)));
+
+/** See \ref sc3_log. */
 void                sc3_logv (sc3_log_t * log, int depth,
                               sc3_log_role_t role, sc3_log_level_t level,
                               const char *fmt, va_list ap);

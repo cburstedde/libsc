@@ -248,10 +248,15 @@ sc3_log (sc3_log_t * log, int depth,
 {
   int                 tid;
 
+  /* survive NULL message */
+  if (msg == NULL) {
+    msg = "NULL message";
+  }
+
   /* catch invalid usage */
   if (!sc3_log_is_setup (log, NULL) ||
       !(0 <= role && role < SC3_LOG_ROLE_LAST) ||
-      !(0 <= level && level < SC3_LOG_LEVEL_LAST) || msg == NULL) {
+      !(0 <= level && level < SC3_LOG_LEVEL_LAST)) {
     fprintf (stderr, "[sc3] BAD sc3_log: %s\n", msg);
     return;
   }
