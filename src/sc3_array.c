@@ -211,6 +211,7 @@ sc3_array_unref (sc3_array_t ** ap)
   int                 waslast;
   sc3_allocator_t    *aator;
   sc3_array_t        *a;
+  sc3_error_t        *leak = NULL;
 
   SC3E_INOUTP (ap, a);
   SC3A_IS (sc3_array_is_valid, a);
@@ -224,9 +225,9 @@ sc3_array_unref (sc3_array_t ** ap)
       SC3E (sc3_allocator_free (aator, a->mem));
     }
     SC3E (sc3_allocator_free (aator, a));
-    SC3E (sc3_allocator_unref (&aator));
+    SC3L (&leak, sc3_allocator_unref (&aator));
   }
-  return NULL;
+  return leak;
 }
 
 sc3_error_t        *
@@ -237,7 +238,7 @@ sc3_array_destroy (sc3_array_t ** ap)
 
   SC3E_INULLP (ap, a);
   SC3L_DEMAND (&leak, sc3_refcount_is_last (&a->rc, NULL));
-  SC3E (sc3_array_unref (&a));
+  SC3L (&leak, sc3_array_unref (&a));
 
   SC3A_CHECK (a == NULL || leak != NULL);
   return leak;

@@ -175,16 +175,13 @@ sc3_error_t        *sc3_mstamp_ref (sc3_mstamp_t * mst);
  *                      the value set to NULL.
  * \return              NULL on success, error object otherwise.
  *                      We return a leak if we find one.
- *
- * \todo Think about returning a NULL value in unref in all cases.
  */
 sc3_error_t        *sc3_mstamp_unref (sc3_mstamp_t ** mstp);
 
-/** Destroy a memory stamp container by freeing all memory
- * in a stamps structure.
+/** Destroy a memory stamp container by freeing all memory in the structure.
  * It is a leak error to destroy a memory stamp container that is
- * multiply referenced. We unref its internal allocator, which may cause a
- * fatal error if that allocator has been overly unrefd elsewhere in the code.
+ * multiply referenced.  We unref its internal allocator, which may cause a
+ * leak error if that allocator has been overly unrefd elsewhere in the code.
  * \param [in,out] mstp This container must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.

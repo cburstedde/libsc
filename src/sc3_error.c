@@ -136,6 +136,15 @@ sc3_error_is_leak (const sc3_error_t * e, char *reason)
   SC3E_YES (reason);
 }
 
+static int
+sc3_error_is_null_or_leak (const sc3_error_t * e, char *reason)
+{
+  if (e == NULL) {
+    SC3E_YES (reason);
+  }
+  return sc3_error_is_leak (e, reason);
+}
+
 static void
 sc3_error_defaults (sc3_error_t * e, sc3_error_t * stack,
                     int setup, int inherit, sc3_allocator_t * eator)
@@ -189,6 +198,7 @@ sc3_error_set_stack (sc3_error_t * e, sc3_error_t ** pstack)
     SC3A_IS (sc3_error_is_setup, stack);
   }
   if (e->stack != NULL) {
+    /* a leak error at this point is considered fatal */
     SC3E (sc3_error_unref (&e->stack));
   }
   e->stack = stack;
@@ -277,6 +287,7 @@ sc3_error_unref (sc3_error_t ** ep)
   int                 waslast;
   sc3_allocator_t    *eator;
   sc3_error_t        *e;
+  sc3_error_t        *leak = NULL;
 
   SC3E_INOUTP (ep, e);
   SC3A_IS (sc3_error_is_valid, e);
@@ -292,14 +303,14 @@ sc3_error_unref (sc3_error_t ** ep)
     *ep = NULL;
 
     if (e->stack != NULL) {
-      SC3E (sc3_error_unref (&e->stack));
+      SC3L (&leak, sc3_error_unref (&e->stack));
     }
 
     eator = e->eator;
     SC3E (sc3_allocator_free (eator, e));
-    SC3E (sc3_allocator_unref (&eator));
+    SC3L (&leak, sc3_allocator_unref (&eator));
   }
-  return NULL;
+  return leak;
 }
 
 sc3_error_t        *
@@ -309,7 +320,7 @@ sc3_error_destroy (sc3_error_t ** ep)
 
   SC3E_INULLP (ep, e);
   SC3L_DEMAND (&leak, sc3_refcount_is_last (&e->rc, NULL));
-  SC3E (sc3_error_unref (&e));
+  SC3L (&leak, sc3_error_unref (&e));
 
   SC3A_CHECK (e == NULL || !e->alloced || leak != NULL);
   return leak;
@@ -480,14 +491,9 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
   sc3_error_t        *e, *stack;
   sc3_error_kind_t    kind;
 
-  /* We take ownership of *pe and expect an existing error */
+  /* We take ownership of *pe and expect an existing error and buffer */
   SC3E_INULLP (pe, e);
-
-  /* If there is no output argument, we just drop the reference */
-  if (flatmsg == NULL) {
-    SC3E (sc3_error_unref (&e));
-    return NULL;
-  }
+  SC3A_CHECK (flatmsg != NULL);
 
   /* So now we can go to work */
   SC3A_IS (sc3_error_is_setup, e);
@@ -525,6 +531,8 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
 
     /* do down the error stack, we get a stack with a bumped reference */
     SC3E (sc3_error_get_stack (e, &stack));
+
+    /* leak errors in this function are fatal to avoid infinite recursion */
     SC3E (sc3_error_unref (&e));
     e = stack;
   }
@@ -600,7 +608,7 @@ sc3_error_accumulate (sc3_allocator_t * alloc,
 /** Accumulate a newly created error into a collection of leaks.
  * This function is a restricted version of \ref sc3_error_accum_kind.
  * We use a static allocator, which is ok for macros without context.
- * \param [in,out] pe       Pointer to error collection must not be NULL.
+ * \param [in,out] leak     Pointer to error collection must not be NULL.
  *                          If the pointed-to error is not NULL, it must be
  *                          of kind \ref SC3_ERROR_LEAK or we return fatal.
  *                          On output, new leak error with input as stack.
@@ -610,14 +618,13 @@ sc3_error_accumulate (sc3_allocator_t * alloc,
  * \return              NULL on success, fatal error otherwise.
  */
 static sc3_error_t *
-sc3_error_accum_leak (sc3_error_t ** pe,
+sc3_error_accum_leak (sc3_error_t ** leak,
                       const char *filename, int line, const char *errmsg)
 {
-  SC3A_CHECK (pe != NULL);
-  if (*pe != NULL) {
-    SC3A_IS (sc3_error_is_leak, *pe);
-  }
-  SC3E (sc3_error_accum_kind (sc3_allocator_nocount (), pe,
+  SC3A_CHECK (leak != NULL);
+  SC3A_IS (sc3_error_is_null_or_leak, *leak);
+
+  SC3E (sc3_error_accum_kind (sc3_allocator_nocount (), leak,
                               SC3_ERROR_LEAK, filename, line, errmsg));
   return NULL;
 }
@@ -626,18 +633,17 @@ sc3_error_t        *
 sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
                 const char *filename, int line, const char *errmsg)
 {
+
   SC3A_CHECK (leak != NULL);
-  if (sc3_error_is_leak (e, NULL)) {
+  SC3A_IS (sc3_error_is_null_or_leak, *leak);
+
+  if (e != NULL) {
     char                flatmsg[SC3_BUFSIZE];
 
+    SC3E_DEMIS (!sc3_error_is_fatal, e);
     SC3E (sc3_error_flatten (&e, errmsg, flatmsg));
     SC3E (sc3_error_accum_leak (leak, filename, line, flatmsg));
   }
-  else if (e != NULL) {
-    return sc3_error_new_stack (&e, filename, line, errmsg);
-  }
-
-  SC3A_CHECK (e == NULL);
   return NULL;
 }
 
@@ -646,6 +652,8 @@ sc3_error_leak_demand (sc3_error_t ** leak, int x,
                        const char *filename, int line, const char *errmsg)
 {
   SC3A_CHECK (leak != NULL);
+  SC3A_IS (sc3_error_is_null_or_leak, *leak);
+
   if (!x) {
     SC3E (sc3_error_accum_leak (leak, filename, line, errmsg));
   }

@@ -44,7 +44,7 @@
  * The caller may also decide during setup if the array is resizable.
  * After setup, the array may be resized while it is resizable.
  * Resizability can be terminated by calling \ref sc3_array_freeze
- * (only after \sc3_array_setup).  The freeze is not reversible.
+ * (only after \ref sc3_array_setup).  The freeze is not reversible.
  *
  * An array can only be refd if it is setup and non-resizable.
  * Otherwise, the usual ref-, unref- and destroy semantics hold.
@@ -210,8 +210,8 @@ sc3_error_t        *sc3_array_unref (sc3_array_t ** ap);
 
 /** Destroy an array with a reference count of one.
  * It is a leak error to destroy an array that is multiply referenced.
- * We unref its internal allocator, which may cause a fatal error if
- * that allocator has been used against specification elsewhere in the code.
+ * We unref its internal allocator, which may cause a leak error if that
+ * allocator has been used against specification elsewhere in the code.
  * \param [in,out] ap   This array must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.

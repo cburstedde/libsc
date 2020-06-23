@@ -202,21 +202,22 @@ sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the allocator is destroyed and the value set to NULL.
  * \return              NULL on success, error object otherwise.
- *                      If the reference count drops to zero while still
- *                      holding memory, a fatal error is returned.
+ *                      If the reference count drops to zero while counting
+ *                      and holding memory, return kind \ref SC3_ERROR_LEAK.
+ *                      All other errors are fatal.
  */
 sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
 
 /** Destroy an allocator with a reference count of 1.
- * It is a leak error to destroy an allocator that is multiply refd.
+ * It is a leak error to destroy when multiply refd or with live allocations.
  * Does nothing if allocator has not been created by \ref sc3_allocator_new.
- * \param [in,out] ap   This allocator must be valid and have a refcount of 1.
+ * \param [in,out] ap   This allocator must be valid.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
- *                      When the allocator had more than one reference to it,
+ *                      When the allocator has more than one reference to it,
+ *                      or when the allocater is counting and has allocations,
  *                      return an error of kind \ref SC3_ERROR_LEAK.
- *                      If counting is true and allocations remain,
- *                      return a fatal error.
+ *                      All other errors are fatal.
  */
 sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
 

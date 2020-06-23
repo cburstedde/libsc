@@ -195,6 +195,7 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
 {
   int                 waslast;
   sc3_allocator_t    *a, *oa;
+  sc3_error_t        *leak = NULL;
 
   SC3E_INOUTP (ap, a);
   SC3A_IS (sc3_allocator_is_valid, a);
@@ -208,16 +209,15 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
     *ap = NULL;
 
     if (a->counting) {
-      SC3E_DEMAND (a->num_malloc + a->num_calloc == a->num_free,
-                   "Allocator alloc and free balance");
-      SC3E_DEMAND (a->total_size == 0, "Allocator total size");
+      SC3L_DEMAND (&leak, a->num_malloc + a->num_calloc == a->num_free);
+      SC3L_DEMAND (&leak, a->total_size == 0);
     }
 
     oa = a->oa;
     SC3E (sc3_allocator_free (oa, a));
-    SC3E (sc3_allocator_unref (&oa));
+    SC3L (&leak, sc3_allocator_unref (&oa));
   }
-  return NULL;
+  return leak;
 }
 
 sc3_error_t        *
@@ -228,7 +228,7 @@ sc3_allocator_destroy (sc3_allocator_t ** ap)
 
   SC3E_INULLP (ap, a);
   SC3L_DEMAND (&leak, sc3_refcount_is_last (&a->rc, NULL));
-  SC3E (sc3_allocator_unref (&a));
+  SC3L (&leak, sc3_allocator_unref (&a));
 
   SC3A_CHECK (a == NULL || !a->alloced || leak != NULL);
   return leak;
@@ -425,7 +425,7 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
 #if 0
     /* do this at the end since the allocator may go out of scope */
     if (a->keepalive) {
-      SC3E (sc3_allocator_unref (&a));
+      SC3L (&leak, sc3_allocator_unref (&a));
     }
 #endif
   }

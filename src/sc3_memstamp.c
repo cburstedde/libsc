@@ -213,6 +213,7 @@ sc3_mstamp_unref (sc3_mstamp_t ** mstp)
   void               *item;
   sc3_allocator_t    *aator;
   sc3_mstamp_t       *mst;
+  sc3_error_t        *leak = NULL;
 
   SC3E_INOUTP (mstp, mst);
   SC3A_IS (sc3_mstamp_is_valid, mst);
@@ -230,13 +231,13 @@ sc3_mstamp_unref (sc3_mstamp_t ** mstp)
       }
 
       /* it is impossible for these to have more than one reference */
-      SC3E (sc3_array_destroy (&mst->remember));
-      SC3E (sc3_array_destroy (&mst->freed));
+      SC3L (&leak, sc3_array_destroy (&mst->remember));
+      SC3L (&leak, sc3_array_destroy (&mst->freed));
     }
     SC3E (sc3_allocator_free (aator, mst));
-    SC3E (sc3_allocator_unref (&aator));
+    SC3L (&leak, sc3_allocator_unref (&aator));
   }
-  return NULL;
+  return leak;
 }
 
 sc3_error_t        *
@@ -247,7 +248,7 @@ sc3_mstamp_destroy (sc3_mstamp_t ** mstp)
 
   SC3E_INULLP (mstp, mst);
   SC3L_DEMAND (&leak, sc3_refcount_is_last (&mst->rc, NULL));
-  SC3E (sc3_mstamp_unref (&mst));
+  SC3L (&leak, sc3_mstamp_unref (&mst));
 
   SC3A_CHECK (mst == NULL || leak != NULL);
   return leak;

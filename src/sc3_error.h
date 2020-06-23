@@ -59,14 +59,14 @@
  * These macros are understood to return prematurely on error.
  * When used on non-fatal conditions, they create fatal errors themselves.
  * An application may use them on any condition considered fatal.
- * To handle some error gracefully, an application should *not* use them.
  *
  * The library functions return an error of kind \ref SC3_ERROR_LEAK
  * when encountering leftover memory, references, or other resources,
  * but ensure that the program may continue cleanly.
  * Thus, an application is free to treat leaks as fatal or not.
- * Library functions may return leaks on an object destroy call.
+ * Library functions may return leaks on an object destroy or unref call.
  * To catch leak errors gracefully, consider using the SC3L macros.
+ * They are designed to continue the control flow.
  *
  * Non-fatal errors are imaginable when accessing files on disk or parsing
  * input.  It is up to the application to define and implement error handling.
@@ -528,25 +528,25 @@ sc3_error_t        *sc3_error_ref (sc3_error_t * e);
  * If the count reaches zero the error object is deallocated.
  * Does nothing if error has not been created by \ref sc3_error_new.
  *
- * An indirect way to crash this function, and any other unref in the library:
- * Consider the object has been created with an \ref sc3_allocator_t that is
- * set counting and non-keepalive.
+ * This function may return a leak error, as other unref functions.
+ * Consider an object has been created with a counting \ref sc3_allocator_t.
  * Use the same allocator elsewhere to allocate memory and unref it there.
  * Now this error has the last remaining reference to the allocator.
  * Since the allocator has a live allocation, when this function internally
- * calls \ref sc3_allocator_unref, we will meet and return a fatal error.
+ * calls \ref sc3_allocator_unref, we will notice and return the leak.
  *
  * \param [in,out] ep   Pointer must not be NULL and the error valid.
  *                      The refcount is decreased.  If it reaches zero,
  *                      the error is deallocated and the value set NULL.
- * \return              A fatal error object or NULL without errors.
+ * \return              NULL on success, error object otherwise.
+ *                      We may return fatal or kind \ref SC3_ERROR_LEAK.
  */
 sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
 
 /** Takes an error object with one remaining reference and deallocates it.
  * Destroying an error that is multiply refd produces a reference leak.
  * Does nothing if error has not been created by \ref sc3_error_new,
- * i.e. if it is a static fallback.
+ * i.e. if it is a predefined static fallback.
  * \param [in,out] ep       Setup error with one reference.  NULL on output.
  * \return                  An error object or NULL without errors.
  *                          When the error has more than one reference,
@@ -630,13 +630,13 @@ sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** pstack,
                                            int line, const char *errmsg);
 
 /** Take an error, flatten its stack into one message, and unref it.
+ * This function returns fatal if any leaks occur in freeing the error.
  * \param [in,out] pe       Not NULL and pointing to an error that is setup.
  *                          NULL on output.
  * \param [in] prefix       String to prepend to flattened message.
  *                          We create "prefix: (flattened message)".
  *                          If NULL, we just use the flattened message.
  * \param [out] flatmsg     String buffer of size at least \ref SC3_BUFSIZE.
- *                          If NULL, we only call \ref sc3_error_unref on \a e.
  * \return                  NULL on success, fatal error otherwise.
  */
 sc3_error_t        *sc3_error_flatten (sc3_error_t ** pe, const char *prefix,
@@ -676,6 +676,7 @@ sc3_error_t        *sc3_error_accum_kind (sc3_allocator_t * alloc,
  * If the incoming error \a pe has a stack, all messages in the hierarchy
  * are flattened into one.  (The flattening will work recursively.)
  * We add a new error with (potentially long) message to the inout \a pcollect.
+ * We return fatal on any potential leak error freeing the input error object.
  * \param [in,out] alloc    Allocator must be setup.
  *                          Used to allocate the error returned in \a pcollect.
  *                          You may unref but not destroy the allocator while
