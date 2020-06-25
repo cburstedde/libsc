@@ -124,7 +124,7 @@ main (int argc, char **argv)
   }
 
   /* verify result always, if the numbers are not too many */
-  if (gtotal < 1000) {
+  if (gtotal < 100000) {
     SC_GLOBAL_PRODUCTION ("Verifying\n");
     gtotal = 0;
     recvc = NULL;
