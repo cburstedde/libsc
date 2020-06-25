@@ -103,10 +103,6 @@
 #include <string.h>
 #include <unistd.h>
 
-/* definitions to allow user code to query the sc library */
-/** Indicate that we do not modify the communicator in sc_init. */
-#define SC_INIT_COMM_CLEAN
-
 /* provide extern C defines */
 
 /* The hacks below enable semicolons after the SC_EXTERN_C_ macros

@@ -38,7 +38,7 @@ test_shmem (int count, sc_MPI_Comm comm, sc_shmem_type_t type)
 {
   int                 i, p, size, mpiret, check;
   long int           *myval, *recv_self, *recv_shmem, *scan_self, *scan_shmem,
-    *copy_shmem;
+                     *copy_shmem;
 
   sc_shmem_set_type (comm, type);
 
@@ -106,22 +106,18 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret, rank, size;
-  int                 intrasize;
   int                 count;
   int                 itype;
   int                 retval = 0;
-  sc_MPI_Comm         mpicomm = sc_MPI_COMM_WORLD;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
+  mpiret = sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &rank);
   SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_size (mpicomm, &size);
+  mpiret = sc_MPI_Comm_size (sc_MPI_COMM_WORLD, &size);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
-  intrasize = sc_mpi_comm_get_and_attach (mpicomm);
-  SC_GLOBAL_PRODUCTIONF ("Intra communicator size is %d\n", intrasize);
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   srandom (rank);
   for (itype = 0; itype < (int) SC_SHMEM_NUM_TYPES; itype++) {
@@ -132,7 +128,8 @@ main (int argc, char **argv)
       int                 retvalin = retval;
 
       SC_GLOBAL_PRODUCTIONF ("  count = %d\n", count);
-      retval += test_shmem (count, mpicomm, (sc_shmem_type_t) itype);
+      retval +=
+        test_shmem (count, sc_MPI_COMM_WORLD, (sc_shmem_type_t) itype);
       if (retval != retvalin) {
         SC_GLOBAL_PRODUCTION ("    unsuccessful\n");
       }
@@ -142,7 +139,6 @@ main (int argc, char **argv)
     }
   }
 
-  sc_mpi_comm_detach_node_comms (mpicomm);
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();

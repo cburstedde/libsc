@@ -1,1 +1,0 @@
-I hereby place my contributions to libsc into the public domain under FreeBSD license.  Hossein Aghakhani.
