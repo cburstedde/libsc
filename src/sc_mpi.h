@@ -84,6 +84,7 @@ sc_tag_t;
 #define sc_MPI_COMM_NULL           MPI_COMM_NULL
 #define sc_MPI_COMM_WORLD          MPI_COMM_WORLD
 #define sc_MPI_COMM_SELF           MPI_COMM_SELF
+#define sc_MPI_COMM_TYPE_SHARED    MPI_COMM_TYPE_SHARED
 
 #define sc_MPI_GROUP_NULL          MPI_GROUP_NULL
 #define sc_MPI_GROUP_EMPTY         MPI_GROUP_EMPTY
@@ -99,7 +100,7 @@ sc_tag_t;
 #define sc_MPI_STATUSES_IGNORE     MPI_STATUSES_IGNORE
 
 #define sc_MPI_REQUEST_NULL        MPI_REQUEST_NULL
-
+#define sc_MPI_INFO_NULL           MPI_INFO_NULL
 #define sc_MPI_DATATYPE_NULL       MPI_DATATYPE_NULL
 
 #define sc_MPI_CHAR                MPI_CHAR
@@ -137,6 +138,8 @@ sc_tag_t;
 
 #define sc_MPI_ERR_GROUP           MPI_ERR_GROUP
 
+#define sc_MPI_KEYVAL_INVALID      MPI_KEYVAL_INVALID
+
 /* types */
 
 #define sc_MPI_Comm                MPI_Comm
@@ -152,9 +155,16 @@ sc_tag_t;
 /*      sc_MPI_Init_thread is handled below */
 #define sc_MPI_Finalize            MPI_Finalize
 #define sc_MPI_Abort               MPI_Abort
+#define sc_MPI_Alloc_mem           MPI_Alloc_mem
+#define sc_MPI_Free_mem            MPI_Free_mem
+#define sc_MPI_Comm_set_attr       MPI_Comm_set_attr
+#define sc_MPI_Comm_get_attr       MPI_Comm_get_attr
+#define sc_MPI_Comm_delete_attr    MPI_Comm_delete_attr
+#define sc_MPI_Comm_create_keyval  MPI_Comm_create_keyval
 #define sc_MPI_Comm_dup            MPI_Comm_dup
 #define sc_MPI_Comm_create         MPI_Comm_create
 #define sc_MPI_Comm_split          MPI_Comm_split
+#define sc_MPI_Comm_split_type     MPI_Comm_split_type
 #define sc_MPI_Comm_free           MPI_Comm_free
 #define sc_MPI_Comm_size           MPI_Comm_size
 #define sc_MPI_Comm_rank           MPI_Comm_rank
@@ -254,8 +264,7 @@ sc_tag_t;
 #define sc_MPI_REPLACE             ((sc_MPI_Op) 0x5800000d)
 
 #define sc_MPI_UNDEFINED           (-32766)
-
-#define sc_MPI_ERR_GROUP           (-123456)    /* TODO change val */
+#define sc_MPI_ERR_GROUP           (-12345)
 
 /* types */
 
@@ -284,35 +293,19 @@ int                 sc_MPI_Abort (sc_MPI_Comm, int)
   __attribute__ ((noreturn));
 
 int                 sc_MPI_Comm_dup (sc_MPI_Comm, sc_MPI_Comm *);
-int                 sc_MPI_Comm_create (sc_MPI_Comm, sc_MPI_Group,
-                                        sc_MPI_Comm *);
-int                 sc_MPI_Comm_split (sc_MPI_Comm, int, int, sc_MPI_Comm *);
 int                 sc_MPI_Comm_free (sc_MPI_Comm *);
-int                 sc_MPI_Comm_size (sc_MPI_Comm, int *);
-int                 sc_MPI_Comm_rank (sc_MPI_Comm, int *);
-int                 sc_MPI_Comm_compare (sc_MPI_Comm, sc_MPI_Comm, int *);
-int                 sc_MPI_Comm_group (sc_MPI_Comm, sc_MPI_Group *);
 
-int                 sc_MPI_Group_free (sc_MPI_Group *);
+/* Always sets size to 1. */
+int                 sc_MPI_Comm_size (sc_MPI_Comm, int *);
+
+/* Always sets rank to 0. */
+int                 sc_MPI_Comm_rank (sc_MPI_Comm, int *);
+
+/* Always sets size to 1. */
 int                 sc_MPI_Group_size (sc_MPI_Group, int *);
+
+/* Always sets rank to 0. */
 int                 sc_MPI_Group_rank (sc_MPI_Group, int *);
-int                 sc_MPI_Group_translate_ranks (sc_MPI_Group, int, int *,
-                                                  sc_MPI_Group, int *);
-int                 sc_MPI_Group_compare (sc_MPI_Group, sc_MPI_Group, int *);
-int                 sc_MPI_Group_union (sc_MPI_Group, sc_MPI_Group,
-                                        sc_MPI_Group *);
-int                 sc_MPI_Group_intersection (sc_MPI_Group, sc_MPI_Group,
-                                               sc_MPI_Group *);
-int                 sc_MPI_Group_difference (sc_MPI_Group, sc_MPI_Group,
-                                             sc_MPI_Group *);
-int                 sc_MPI_Group_incl (sc_MPI_Group, int, int *,
-                                       sc_MPI_Group *);
-int                 sc_MPI_Group_excl (sc_MPI_Group, int, int *,
-                                       sc_MPI_Group *);
-int                 sc_MPI_Group_range_incl (sc_MPI_Group, int,
-                                             int ranges[][3], sc_MPI_Group *);
-int                 sc_MPI_Group_range_excl (sc_MPI_Group, int,
-                                             int ranges[][3], sc_MPI_Group *);
 
 int                 sc_MPI_Barrier (sc_MPI_Comm);
 int                 sc_MPI_Bcast (void *, int, sc_MPI_Datatype, int,
@@ -342,6 +335,33 @@ int                 sc_MPI_Exscan (void *, void *, int, sc_MPI_Datatype,
                                    sc_MPI_Op, sc_MPI_Comm);
 
 double              sc_MPI_Wtime (void);
+
+/* These functions will run but their results/actions are not defined. */
+
+int                 sc_MPI_Comm_create (sc_MPI_Comm, sc_MPI_Group,
+                                        sc_MPI_Comm *);
+int                 sc_MPI_Comm_split (sc_MPI_Comm, int, int, sc_MPI_Comm *);
+int                 sc_MPI_Comm_compare (sc_MPI_Comm, sc_MPI_Comm, int *);
+int                 sc_MPI_Comm_group (sc_MPI_Comm, sc_MPI_Group *);
+
+int                 sc_MPI_Group_free (sc_MPI_Group *);
+int                 sc_MPI_Group_translate_ranks (sc_MPI_Group, int, int *,
+                                                  sc_MPI_Group, int *);
+int                 sc_MPI_Group_compare (sc_MPI_Group, sc_MPI_Group, int *);
+int                 sc_MPI_Group_union (sc_MPI_Group, sc_MPI_Group,
+                                        sc_MPI_Group *);
+int                 sc_MPI_Group_intersection (sc_MPI_Group, sc_MPI_Group,
+                                               sc_MPI_Group *);
+int                 sc_MPI_Group_difference (sc_MPI_Group, sc_MPI_Group,
+                                             sc_MPI_Group *);
+int                 sc_MPI_Group_incl (sc_MPI_Group, int, int *,
+                                       sc_MPI_Group *);
+int                 sc_MPI_Group_excl (sc_MPI_Group, int, int *,
+                                       sc_MPI_Group *);
+int                 sc_MPI_Group_range_incl (sc_MPI_Group, int,
+                                             int ranges[][3], sc_MPI_Group *);
+int                 sc_MPI_Group_range_excl (sc_MPI_Group, int,
+                                             int ranges[][3], sc_MPI_Group *);
 
 /* These functions will abort. */
 
@@ -400,6 +420,8 @@ size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
  * takes \a processes_per_node passed by the user at face value: there is no
  * hardware checking to see if this is the true affinity.
  *
+ * This function does nothing if MPI_Comm_split_type is not found.
+ *
  * \param [in/out] comm                 MPI communicator
  * \param [in]     processes_per_node   the size of the intranode
  *                                      communicators. if < 1,
@@ -412,6 +434,8 @@ void                sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm,
 /** Destroy ``sc_intranode_comm'' and ``sc_internode_comm''
  * communicators that are stored as attributes to communicator ``comm''.
  * This routine enforces a call to the destroy callback for these attributes.
+ *
+ * This function does nothing if MPI_Comm_split_type is not found.
  *
  * \param [in/out] comm                 MPI communicator
  */
@@ -427,6 +451,14 @@ void                sc_mpi_comm_detach_node_comms (sc_MPI_Comm comm);
 void                sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
                                                 sc_MPI_Comm * intranode,
                                                 sc_MPI_Comm * internode);
+
+/** Convenience function to get a node comm and attach it as an attribute.
+ * \param [in,out] comm       As in \ref sc_mpu_comm_attach_node_comms.
+ * \return                    If the intranode communicator cannot be
+ *                            obtained, return 0.
+ *                            Otherwise return size of intranode communicator.
+ */
+int                 sc_mpi_comm_get_and_attach (sc_MPI_Comm comm);
 
 SC_EXTERN_C_END;
 
