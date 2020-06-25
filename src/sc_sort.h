@@ -28,14 +28,25 @@
 
 SC_EXTERN_C_BEGIN;
 
-/** Sort a distributed set of values in parallel.
+/** Sort a distributed set of fixed-size data items in parallel.
  * This algorithm uses bitonic sort between processors and qsort locally.
+ *
+ * This function is thread-safe if src/sc_config.h #defines SC_HAVE_QSORT_R.
+ * Otherwise, it uses a static read-only variable for the comparison function,
+ * and calling \ref sc_psort concurrently is likely to fail.
+ *
  * The partition of the data can be arbitrary and is not changed.
+ *
  * \param [in] mpicomm          Communicator to use.
- * \param [in] base             Pointer to the local subset of data.
- * \param [in] nmemb            Array of mpisize counts of local data.
- * \param [in] size             Size in bytes of each data value.
- * \param [in] compar           Comparison function to use.
+ * \param [in] base             Pointer to the process-local data items.
+ * \param [in] nmemb            Array of mpisize counts of data items.  For
+ *                              each process, the number of its local items.
+ *                              This array must be identical on all processes.
+ * \param [in] size             Size in bytes of one data item.
+ * \param [in] compar           Comparison function to use; see man (3) qsort.
+ *                              Shall return < 0 if the first argument is less
+ *                              than the second, 0 if both are equal, and > 0
+ *                              if the first is greater than the second.
  */
 void                sc_psort (sc_MPI_Comm mpicomm, void *base,
                               size_t * nmemb, size_t size,
