@@ -32,6 +32,7 @@
 void
 sc_uint128_init (sc_uint128_t * input, uint64_t high, uint64_t low)
 {
+  SC_ASSERT (input != NULL);
   input->high_bits = high;
   input->low_bits = low;
 }
@@ -39,6 +40,7 @@ sc_uint128_init (sc_uint128_t * input, uint64_t high, uint64_t low)
 void
 sc_uint128_set_bit (sc_uint128_t * input, int exponent)
 {
+  SC_ASSERT (input != NULL);
   SC_ASSERT (exponent >= 0);
 
   if (exponent < 64) {
@@ -53,6 +55,7 @@ sc_uint128_set_bit (sc_uint128_t * input, int exponent)
 void
 sc_uint128_copy (const sc_uint128_t * input, sc_uint128_t * output)
 {
+  SC_ASSERT (input != NULL && output != NULL);
   output->high_bits = input->high_bits;
   output->low_bits = input->low_bits;
 }
@@ -60,12 +63,14 @@ sc_uint128_copy (const sc_uint128_t * input, sc_uint128_t * output)
 int
 sc_uint128_is_equal (const sc_uint128_t * a, const sc_uint128_t * b)
 {
+  SC_ASSERT (a != NULL && b != NULL);
   return a->high_bits == b->high_bits && a->low_bits == b->low_bits;
 }
 
 int
 sc_uint128_compare (const void *va, const void *vb)
 {
+  SC_ASSERT (va != NULL && vb != NULL);
   const sc_uint128_t *a = (sc_uint128_t *) va;
   const sc_uint128_t *b = (sc_uint128_t *) vb;
 
@@ -88,6 +93,7 @@ void
 sc_uint128_add (const sc_uint128_t * a, const sc_uint128_t * b,
                 sc_uint128_t * result)
 {
+  SC_ASSERT (a != NULL && b != NULL && result != NULL);
   SC_ASSERT (result != a && result != b);
   result->high_bits = a->high_bits + b->high_bits;
   result->low_bits = a->low_bits + b->low_bits;
@@ -101,6 +107,7 @@ void
 sc_uint128_sub (const sc_uint128_t * a, const sc_uint128_t * b,
                 sc_uint128_t * result)
 {
+  SC_ASSERT (a != NULL && b != NULL && result != NULL);
   SC_ASSERT (result != a && result != b);
   result->high_bits = a->high_bits - b->high_bits;
   result->low_bits = a->low_bits - b->low_bits;
@@ -112,6 +119,7 @@ sc_uint128_sub (const sc_uint128_t * a, const sc_uint128_t * b,
 void
 sc_uint128_bitwise_neg (const sc_uint128_t * a, sc_uint128_t * result)
 {
+  SC_ASSERT (a != NULL && result != NULL);
   result->high_bits = ~a->high_bits;
   result->low_bits = ~a->low_bits;
 }
@@ -120,6 +128,7 @@ void
 sc_uint128_bitwise_or (const sc_uint128_t * a, const sc_uint128_t * b,
                        sc_uint128_t * result)
 {
+  SC_ASSERT (a != NULL && b != NULL && result != NULL);
   result->high_bits = a->high_bits | b->high_bits;
   result->low_bits = a->low_bits | b->low_bits;
 }
@@ -128,6 +137,7 @@ void
 sc_uint128_bitwise_and (const sc_uint128_t * a, const sc_uint128_t * b,
                         sc_uint128_t * result)
 {
+  SC_ASSERT (a != NULL && b != NULL && result != NULL);
   result->high_bits = a->high_bits & b->high_bits;
   result->low_bits = a->low_bits & b->low_bits;
 }
@@ -136,6 +146,7 @@ void
 sc_uint128_shift_right (const sc_uint128_t * input, int shift_count,
                         sc_uint128_t * result)
 {
+  SC_ASSERT (input != NULL && result != NULL);
   SC_ASSERT (shift_count >= 0);
   if (shift_count >= 128) {
     result->high_bits = 0;
@@ -165,6 +176,7 @@ void
 sc_uint128_shift_left (const sc_uint128_t * input, int shift_count,
                        sc_uint128_t * result)
 {
+  SC_ASSERT (input != NULL && result != NULL);
   SC_ASSERT (shift_count >= 0);
   if (shift_count >= 128) {
     result->high_bits = 0;
@@ -193,6 +205,7 @@ sc_uint128_shift_left (const sc_uint128_t * input, int shift_count,
 void
 sc_uint128_add_inplace (sc_uint128_t * a, const sc_uint128_t * b)
 {
+  SC_ASSERT (a != NULL && b != NULL);
   uint64_t            temp = a->low_bits;
   a->high_bits += b->high_bits;
   a->low_bits += b->low_bits;
@@ -204,6 +217,7 @@ sc_uint128_add_inplace (sc_uint128_t * a, const sc_uint128_t * b)
 void
 sc_uint128_sub_inplace (sc_uint128_t * a, const sc_uint128_t * b)
 {
+  SC_ASSERT (a != NULL && b != NULL);
   uint64_t            temp = a->low_bits;
   a->high_bits -= b->high_bits;
   a->low_bits -= b->low_bits;
@@ -215,6 +229,7 @@ sc_uint128_sub_inplace (sc_uint128_t * a, const sc_uint128_t * b)
 void
 sc_uint128_bitwise_or_inplace (sc_uint128_t * a, const sc_uint128_t * b)
 {
+  SC_ASSERT (a != NULL && b != NULL);
   a->low_bits |= b->low_bits;
   a->high_bits |= b->high_bits;
 }
@@ -222,6 +237,7 @@ sc_uint128_bitwise_or_inplace (sc_uint128_t * a, const sc_uint128_t * b)
 void
 sc_uint128_bitwise_and_inplace (sc_uint128_t * a, const sc_uint128_t * b)
 {
+  SC_ASSERT (a != NULL && b != NULL);
   a->high_bits &= b->high_bits;
   a->low_bits &= b->low_bits;
 }
