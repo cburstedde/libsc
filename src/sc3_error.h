@@ -181,12 +181,6 @@ extern              "C"
   *(r) = (v);                                                           \
   } while (0)
 
-/** Assign a value \a v to a pointer parameter only
- * if the variable pointer \a r is not NULL. */
-#define SC3E_RETOPT(r,v) do {                                           \
-  if ((r) != NULL) *(r) = (v);                                          \
-  } while (0)
-
 /** Require an input pointer \a pp to dereference to a non-NULL value.
  * The value is assigned to the pointer \a p for future use. */
 #define SC3E_INOUTP(pp,p) do {                                          \
@@ -503,7 +497,7 @@ void                sc3_error_set_sync (sc3_error_t * e,
                                         sc3_error_sync_t syn);
 sc3_error_t        *sc3_error_set_msgf (sc3_error_t * e,
                                         const char *errfmt, ...)
-  __attribute__((format (printf, 2, 3)));
+  __attribute__ ((format (printf, 2, 3)));
 #endif
 
 /** Setup an error and put it into its usable phase.
@@ -744,11 +738,12 @@ sc3_error_t        *sc3_error_leak_demand (sc3_error_t ** leak, int x,
  * This can be ensured, optionally, by refing and later unrefing the error.
  * We do not ensure this by default to simplify short-time usage.
  * \param [in] e            Setup error object.
- * \param [out] filename    Pointer may be NULL, then it is not assigned.
+ * \param [out] filename    Pointer must not be NULL.
  *                          On success, set to error's filename.
  *                          We point to an internal resource of \a e, which
  *                          must only be dereferenced while \a e is alive.
- * \param [out] line        Pointer may be NULL, then it is not assigned.
+ *                    TODO: This will not work.  Need stronger mechanism.
+ * \param [out] line        Pointer must not be NULL.
  *                          On success, set to error's line number.
  * \return                  NULL on success, error object otherwise.
  */
@@ -760,10 +755,11 @@ sc3_error_t        *sc3_error_get_location (sc3_error_t * e,
  * This can be ensured, optionally, by refing and later unrefing the error.
  * We do not ensure this by default to simplify short-time usage.
  * \param [in] e        Setup error object.
- * \param [out] errmsg  Pointer may be NULL, then it is not assigned.
+ * \param [out] errmsg  Pointer must not be NULL.
  *                      On success, set to error's message.
  *                      We point to an internal resource of \a e, which
  *                      must only be dereferenced while \a e is alive.
+ *                TODO: This will not work.  Need stronger mechanism.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_get_message (sc3_error_t * e,
@@ -771,7 +767,7 @@ sc3_error_t        *sc3_error_get_message (sc3_error_t * e,
 
 /** Access the kind of a setup error object.
  * \param [in] e        Setup error object.
- * \param [out] kind    Pointer may be NULL, then it is not assigned.
+ * \param [out] kind    Pointer must not be NULL.
  *                      On success, set to error's kind.
  * \return              NULL on success, error object otherwise.
  */
@@ -781,7 +777,7 @@ sc3_error_t        *sc3_error_get_kind (sc3_error_t * e,
 #if 0
 /** Access the severity of a setup error object.
  * \param [in] e        Setup error object.
- * \param [out] sev     Pointer may be NULL, then it is not assigned.
+ * \param [out] sev     Pointer must not be NULL.
  *                      On success, set to error's severity.
  * \return              NULL on success, error object otherwise.
  */
@@ -793,7 +789,7 @@ sc3_error_t        *sc3_error_get_severity (sc3_error_t * e,
  * The input error object must be setup.  Its stack is allowed to be NULL.
  * It is not changed by the call except for its stack to get referenced.
  * \param [in,out] e    The error object must be setup.
- * \param [out] pstack  Pointer may be NULL, then it is not assigned.
+ * \param [out] pstack  Pointer must not be NULL.
  *                      When function returns cleanly, set to input error's
  *                      stack object.  If the stack is not NULL, it is refd.
  *                      In this case it must be unrefd when no longer needed.

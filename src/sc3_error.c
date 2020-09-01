@@ -251,7 +251,7 @@ void                sc3_error_set_sync (sc3_error_t * ea,
                                         sc3_error_sync_t syn);
 void                sc3_error_set_msgf (sc3_error_t * ea,
                                         const char *errfmt, ...)
-  __attribute__((format (printf, 2, 3)));
+  __attribute__ ((format (printf, 2, 3)));
 #endif
 
 sc3_error_t        *
@@ -663,40 +663,32 @@ sc3_error_leak_demand (sc3_error_t ** leak, int x,
 sc3_error_t        *
 sc3_error_get_location (sc3_error_t * e, const char **filename, int *line)
 {
-  SC3E_RETOPT (filename, "");
-  SC3E_RETOPT (line, 0);
+  SC3E_RETVAL (filename, "");
+  SC3E_RETVAL (line, 0);
   SC3A_IS (sc3_error_is_setup, e);
 
-  if (filename != NULL) {
-    *filename = e->filename;
-  }
-  if (line != NULL) {
-    *line = e->line;
-  }
+  *filename = e->filename;
+  *line = e->line;
   return NULL;
 }
 
 sc3_error_t        *
 sc3_error_get_message (sc3_error_t * e, const char **errmsg)
 {
-  SC3E_RETOPT (errmsg, "");
+  SC3E_RETVAL (errmsg, "");
   SC3A_IS (sc3_error_is_setup, e);
 
-  if (errmsg != NULL) {
-    *errmsg = e->errmsg;
-  }
+  *errmsg = e->errmsg;
   return NULL;
 }
 
 sc3_error_t        *
 sc3_error_get_kind (sc3_error_t * e, sc3_error_kind_t * kind)
 {
-  SC3E_RETOPT (kind, SC3_ERROR_BUG);
+  SC3E_RETVAL (kind, SC3_ERROR_BUG);
   SC3A_IS (sc3_error_is_setup, e);
 
-  if (kind != NULL) {
-    *kind = e->kind;
-  }
+  *kind = e->kind;
   return NULL;
 }
 
@@ -704,12 +696,10 @@ sc3_error_get_kind (sc3_error_t * e, sc3_error_kind_t * kind)
 sc3_error_t        *
 sc3_error_get_severity (sc3_error_t * e, sc3_error_severity_t * sev)
 {
-  SC3E_RETOPT (sev, SC3_ERROR_BUG);
+  SC3E_RETVAL (sev, SC3_ERROR_BUG);
   SC3A_IS (sc3_error_is_setup, e);
 
-  if (sev != NULL) {
-    *sev = e->sev;
-  }
+  *sev = e->sev;
   return NULL;
 }
 #endif
@@ -717,10 +707,10 @@ sc3_error_get_severity (sc3_error_t * e, sc3_error_severity_t * sev)
 sc3_error_t        *
 sc3_error_get_stack (sc3_error_t * e, sc3_error_t ** pstack)
 {
-  SC3E_RETOPT (pstack, NULL);
+  SC3E_RETVAL (pstack, NULL);
   SC3A_IS (sc3_error_is_setup, e);
 
-  if (pstack != NULL && e->stack != NULL) {
+  if (e->stack != NULL) {
     SC3E (sc3_error_ref (*pstack = e->stack));
   }
   return NULL;
