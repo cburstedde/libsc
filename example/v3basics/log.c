@@ -29,29 +29,38 @@ static int          main_log_bare;
 static const char  *main_log_user = "sc3_log";
 
 static void
-main_log (void * user, const char *msg,
+main_log (void *user, const char *msg,
           sc3_log_role_t role, int rank, int tid,
-          sc3_log_level_t level, int spaces, FILE *outfile)
+          sc3_log_level_t level, int spaces, FILE * outfile)
 {
   /* example of custom log function */
   fprintf (outfile, "%s: %s\n", (const char *) user, msg);
 }
 
 static void
-main_exit_failure (sc3_error_t **e, const char *prefix)
+main_exit_failure (sc3_error_t * e, sc3_log_t * log, const char *prefix)
 {
-  char                flatmsg[SC3_BUFSIZE];
+  /* the logger may not be usable */
+  if (!sc3_log_is_setup (log, NULL)) {
+    log = sc3_log_predef ();
+  }
 
-  sc3_error_destroy_noerr (e, flatmsg);
-  fprintf (stderr, "%s: %s\n", prefix, flatmsg);
-
+  /* print intro line and error stack */
+  sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR,
+            "%s: %s", "Main failure", prefix);
+  sc3_log_error (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR, e);
   exit (EXIT_FAILURE);
 }
 
 static int
-work_error (sc3_error_t **e, sc3_log_t *log, const char *prefix)
+work_error (sc3_error_t ** e, sc3_log_t * log, const char *prefix)
 {
-  char                flatmsg[SC3_BUFSIZE];
+  sc3_error_t        *e2;
+
+  /* the logger may not be usable */
+  if (!sc3_log_is_setup (log, NULL)) {
+    log = sc3_log_predef ();
+  }
 
   /* bad call convention is reported and accepted */
   if (e == NULL || *e == NULL) {
@@ -64,16 +73,21 @@ work_error (sc3_error_t **e, sc3_log_t *log, const char *prefix)
 
   /* leak error we just report and then continue */
   if (sc3_error_is_leak (*e, NULL)) {
-    sc3_error_destroy_noerr (e, flatmsg);
     sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR,
-              "%s: %s", prefix, flatmsg);
-    return 0;
+              "%s: leak error", prefix);
+    sc3_log_error (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR, *e);
+    if ((e2 = sc3_error_destroy (e)) != NULL) {
+      *e = e2;
+    }
+    else {
+      return 0;
+    }
   }
 
   /* fatal error out of an sc3 call, unsafe to continue */
-  sc3_error_destroy_noerr (e, flatmsg);
   sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR,
-            "%s: %s", prefix, flatmsg);
+            "%s: fatal error", prefix);
+  sc3_log_error (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR, *e);
   return 1;
 }
 
@@ -159,8 +173,8 @@ work_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
   SC3L (&leak, sc3_log_destroy (log));
 
   if (provoke_fatal && provoke_which == 2) {
-    int               a = 1;
-    int              *bogus = &a;
+    int                 a = 1;
+    int                *bogus = &a;
     SC3E (sc3_allocator_free (*alloc, bogus));
   }
 
@@ -181,16 +195,16 @@ main (int argc, char **argv)
 
   /* Initialize MPI.  This is representative of any external startup code */
   if ((e = sc3_MPI_Init (&argc, &argv)) != NULL) {
-    main_exit_failure (&e, "Main init");
+    main_exit_failure (e, NULL, "Main init");
   }
 
   /* Testing predefined static logger: It has no concept of MPI */
   {
     /* No error checking for the MPI calls; valgrind will tell */
-    int rank;
+    int                 rank;
     sc3_MPI_Comm_rank (mpicomm, &rank);
     if (rank == 0) {
-      sc3_log (sc3_log_predef (), 8, SC3_LOG_PROCESS0, SC3_LOG_TOP,
+      sc3_log (sc3_log_predef (), 0, SC3_LOG_PROCESS0, SC3_LOG_TOP,
                "sc3_log example begin: calling static log");
     }
     sc3_MPI_Barrier (mpicomm);
@@ -216,11 +230,11 @@ main (int argc, char **argv)
   /* there is no logger object yet */
 
   /* Initialization of toplevel allocator and logger.
-     We initialize logging and basic allocation here, on errors we exit.
+     We initialize logging and basic allocation here.
      This is representative of entering sc3 code from any larger program */
   if (!scdead && (e = work_init (&argc, &argv, mpicomm,
                                  &alloc, &log)) != NULL) {
-    main_exit_failure (&e, "Work init");
+    scdead = work_error (&e, log, "Work init");
   }
 
   /* This is representative of calling sc3 code from any larger program */
@@ -246,7 +260,7 @@ main (int argc, char **argv)
   /* Finalize MPI.  This is representative of any external cleanup code */
   if ((e = sc3_MPI_Barrier (mpicomm)) != NULL ||
       (e = sc3_MPI_Finalize ()) != NULL) {
-    main_exit_failure (&e, "Main finalize");
+    main_exit_failure (e, NULL, "Main finalize");
   }
   return EXIT_SUCCESS;
 }

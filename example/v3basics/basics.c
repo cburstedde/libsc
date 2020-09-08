@@ -37,7 +37,7 @@ unravel_error (sc3_error_t ** ep)
   int                 j;
   int                 line;
   char               *bname;
-  const char         *filename, *errmsg;
+  const char         *filename, *fstring, *errmsg;
   sc3_error_t        *e, *stack;
   sc3_error_kind_t    kind;
 
@@ -46,15 +46,20 @@ unravel_error (sc3_error_t ** ep)
   j = 0;
   while (e != NULL) {
     /* print error information */
-    SC3E (sc3_error_get_location (e, &filename, &line));
+    SC3E (sc3_error_access_location (e, &filename, &line));
     if ((bname = strdup (filename)) != NULL) {
-      filename = sc3_basename (bname);
+      fstring = sc3_basename (bname);
     }
-    SC3E (sc3_error_get_message (e, &errmsg));
+    else {
+      fstring = filename;
+    }
+    SC3E (sc3_error_access_message (e, &errmsg));
     SC3E (sc3_error_get_kind (e, &kind));
-    printf ("Error stack %d:%s:%d:%c %s\n", j, filename, line,
+    printf ("Error stack %d:%s:%d:%c %s\n", j, fstring, line,
             sc3_error_kind_char[kind], errmsg);
     free (bname);
+    SC3E (sc3_error_restore_location (e, filename, line));
+    SC3E (sc3_error_restore_message (e, errmsg));
 
     /* go down the stack */
     SC3E (sc3_error_get_stack (e, &stack));
