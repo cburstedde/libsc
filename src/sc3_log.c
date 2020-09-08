@@ -157,18 +157,18 @@ sc3_log_set_file (sc3_log_t * log, FILE * file, int call_fclose)
 }
 
 void
-sc3_log_function_bare (void * user, const char *msg,
+sc3_log_function_bare (void *user, const char *msg,
                        sc3_log_role_t role, int rank, int tid,
-                       sc3_log_level_t level, int spaces, FILE *outfile)
+                       sc3_log_level_t level, int spaces, FILE * outfile)
 {
   /* output message as is */
   fprintf (outfile != NULL ? outfile : stderr, "%s\n", msg);
 }
 
 void
-sc3_log_function_default (void * user, const char *msg,
+sc3_log_function_default (void *user, const char *msg,
                           sc3_log_role_t role, int rank, int tid,
-                          sc3_log_level_t level, int spaces, FILE *outfile)
+                          sc3_log_level_t level, int spaces, FILE * outfile)
 {
   char                header[SC3_BUFSIZE];
 
@@ -187,7 +187,7 @@ sc3_log_function_default (void * user, const char *msg,
 }
 
 sc3_error_t        *
-sc3_log_set_function (sc3_log_t * log, sc3_log_function_t func, void * user)
+sc3_log_set_function (sc3_log_t * log, sc3_log_function_t func, void *user)
 {
   SC3A_IS (sc3_log_is_new, log);
   SC3A_CHECK (func != NULL);
@@ -352,4 +352,44 @@ sc3_logv (sc3_log_t * log, int depth,
   else {
     fprintf (stderr, "[sc3] BAD fmt in sc3_logv\n");
   }
+}
+
+static sc3_error_t *
+sc3_log_error_recursion (sc3_log_t * log, int depth,
+                         sc3_log_role_t role, sc3_log_level_t level,
+                         sc3_error_t * e, int stackdepth)
+{
+  int                 line;
+  const char         *errmsg;
+  const char         *filename;
+  sc3_error_kind_t    kind;
+  sc3_error_t        *s;
+
+  /* go down the stack recursively first */
+  SC3E (sc3_error_get_stack (e, &s));
+  if (s != NULL) {
+    SC3E (sc3_log_error_recursion (log, depth, role, level,
+                                   s, stackdepth + 1));
+    SC3E (sc3_error_unref (&s));
+  }
+
+  /* log this level of the error stack */
+  SC3E (sc3_error_get_kind (e, &kind));
+  SC3E (sc3_error_access_message (e, &errmsg));
+  SC3E (sc3_error_access_location (e, &filename, &line));
+
+  sc3_logf (log, depth, role, level, "%d %s:%d:%c %s", stackdepth,
+            filename, line, sc3_error_kind_char[kind], errmsg);
+
+  SC3E (sc3_error_restore_message (e, errmsg));
+  SC3E (sc3_error_restore_location (e, filename, line));
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_log_error (sc3_log_t * log, int depth,
+               sc3_log_role_t role, sc3_log_level_t level, sc3_error_t * e)
+{
+  SC3E (sc3_log_error_recursion (log, depth, role, level, e, 0));
+  return NULL;
 }

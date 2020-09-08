@@ -94,16 +94,16 @@ typedef void (*sc3_log_function_t) (void *user, const char *msg,
  * \param [in] spaces  Ignored.
  * \param [in,out] outfile      File printed to.
  */
-void
-sc3_log_function_bare (void * user, const char *msg,
-                       sc3_log_role_t role, int rank, int tid,
-                       sc3_log_level_t level, int spaces, FILE *outfile);
+void                sc3_log_function_bare
+  (void *user, const char *msg,
+   sc3_log_role_t role, int rank, int tid,
+   sc3_log_level_t level, int spaces, FILE * outfile);
 
 /** Log function that adds rank/thread information and indent spacing. */
-void
-sc3_log_function_default (void * user, const char *msg,
-                          sc3_log_role_t role, int rank, int tid,
-                          sc3_log_level_t level, int spaces, FILE *outfile);
+void                sc3_log_function_default
+  (void *user, const char *msg,
+   sc3_log_role_t role, int rank, int tid,
+   sc3_log_level_t level, int spaces, FILE * outfile);
 
 int                 sc3_log_is_valid (const sc3_log_t * log, char *reason);
 int                 sc3_log_is_new (const sc3_log_t * log, char *reason);
@@ -183,6 +183,10 @@ void                sc3_logf (sc3_log_t * log, int depth,
 void                sc3_logv (sc3_log_t * log, int depth,
                               sc3_log_role_t role, sc3_log_level_t level,
                               const char *fmt, va_list ap);
+
+sc3_error_t        *sc3_log_error (sc3_log_t * log, int depth,
+                                   sc3_log_role_t role,
+                                   sc3_log_level_t level, sc3_error_t * e);
 
 #ifdef __cplusplus
 #if 0
