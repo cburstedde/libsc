@@ -242,18 +242,16 @@ sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void *ptr);
 
 /** Enlarge an array by one element.
  * The output points to the beginning of the memory for the new element.
+ * Equivalent to \ref sc3_array_push_count (a, 1, ptr).
  * \param [in,out] a    The array must be resizable.
  * \param [out] ptr     Address of pointer.
  *                      On output set to array element at previously last index.
  *                      This argument may be NULL for no assignment.
  * \return              NULL on success, error object otherwise.
- *
- * \todo Think about whether passing a pointer to the element may be better.
- *       But then such functionality is available with \ref sc3_array_push_count.
  */
 sc3_error_t        *sc3_array_push (sc3_array_t * a, void *ptr);
 
-/** Reduce array size by one element, copying out the last element.
+/** Reduce array size by one element.
  * \param [in,out] a    The array must be resizable and have > 0 elements.
  * \return              NULL on success, error object otherwise.
  */
@@ -283,9 +281,9 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
  * \return              Address of array element at index \b i.
  *                      If the array element size is zero, the pointer
  *                      must not be dereferenced.
- *                      With SC_ENABLE_DEBUG, returns NULL if index
+ *                      With --enable-debug, returns NULL if index
  *                      is out of bounds or the array is not setup.
- *                      Otherwise the program may crash here or later.
+ *                      Without, the program may crash here or later.
  */
 void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
 
@@ -306,8 +304,9 @@ sc3_error_t        *sc3_array_get_elem_size (sc3_array_t * a, size_t *esize);
 sc3_error_t        *sc3_array_get_elem_count (sc3_array_t * a, int *ecount);
 
 /** Return the array's element count without creating error objects.
- * \param [in] a        The array must be setup.  Otherwise, return 0.
- * \return              The array's element count or 0 on error.
+ * \param [in] a        The array must be setup.  Otherwise, return 0
+ *                      with --enable-debug, or junk or crash without.
+ * \return              The array's element count.
  */
 int                 sc3_array_elem_count_noerr (const sc3_array_t * a);
 
