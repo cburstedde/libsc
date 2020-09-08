@@ -39,16 +39,16 @@
  * The fatal sort arises when out of memory, encountering unreachable code
  * and on assertion failures, or whenever a function decides to return fatal.
  * If a function returns any of these hard error conditions, the application
- * must consider that it returned prematurely and may have left resources open.
- * Even worse, communication and I/O may be pending and cause future blocking.
+ * must consider that it returned prematurely and future crashes are likely.
+ * In addition, communication and I/O may be pending and cause blocking.
  * It is the application's responsibility to take this into account.
  * See \ref sc3_error_is_fatal for the kinds considered fatal.
  *
- * Logically, a function returns non-fatal => it must not leak any resources.
+ * Logically, a function returns non-fatal => it must not allow for crashes.
  * This invariant is preserved if non-fatal errors are propagated upward as
  * fatal.  It is incorrect to propagate a fatal error up as non-fatal.
  *
- * In other words, a function may return not fully cleaned up only if it
+ * In other words, a function may return inconsistent/buggy only if it
  * returns an error of the fatal kind.  This only-if-condition is one-way.
  *
  * To propagate fatal errors up the call stack, the SC3A and SC3E types of
@@ -109,20 +109,11 @@ extern              "C"
 /** Assertion statement requires some condition \a x to be true. */
 #define SC3A_CHECK(x) SC3_NOOP
 
-/** Assertion statement checks an error expression \a f and returns if set.
- * The error object encountered is stacked into a new fatal error. */
-#define SC3A_STACK(f) SC3_NOOP
-
 #else
 #define SC3A_IS(f,o) SC3E_DEMIS(f,o)
 #define SC3A_CHECK(x) do {                                              \
   if (!(x)) {                                                           \
     return sc3_error_new_bug ( __FILE__, __LINE__, #x);                 \
-  }} while (0)
-#define SC3A_STACK(f) do {                                              \
-  sc3_error_t *_e = (f);                                                \
-  if (_e != NULL) {                                                     \
-    return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
   }} while (0)
 #endif
 
@@ -131,7 +122,7 @@ extern              "C"
 /** Execute an expression \a f that produces an \ref sc3_error_t object.
  * If that error is not NULL, create a fatal error and return it.
  * This macro stacks every non-NULL error returned into a fatal error.
- * For graceful handling of non-fatal errors, please use something else.
+ * For clean recovery of non-fatal errors, please use something else.
  */
 #define SC3E(f) do {                                                    \
   sc3_error_t *_e = (f);                                                \
@@ -142,7 +133,7 @@ extern              "C"
 /** If a condition \a x is not met, create a fatal error and return it.
  * The error created is of type \ref SC3_ERROR_BUG and its message is set
  * to the failed condition and argument \a s.
- * For graceful handling of non-fatal errors, please use something else.
+ * For clean recovery of non-fatal errors, please use something else.
  */
 #define SC3E_DEMAND(x,s) do {                                           \
   if (!(x)) {                                                           \
@@ -154,7 +145,7 @@ extern              "C"
 /** Execute an is_* query \a f and return a fatal error if it returns false.
  * The error created is of type \ref SC3_ERROR_BUG and its message is set
  * to the failed query function and its object \a o.
- * For graceful handling of non-fatal errors, please use something else.
+ * For clean recovery of non-fatal errors, please use something else.
  */
 #define SC3E_DEMIS(f,o) do {                                            \
   char _r[SC3_BUFSIZE];                                                 \
@@ -425,6 +416,10 @@ int                 sc3_error_is_leak (const sc3_error_t * e, char *reason);
  * The default settings are documented with the sc3_error_set_* functions.
  * Call \ref sc3_error_setup to change the error into its usage phase.
  * After that, no more parameters may be set.
+ *
+ * This function is the only error constructor recommended for applications,
+ * since it uses the full allocator logic and complete error checking.
+ *
  * \param [in,out] eator    An allocator that is setup.
  *                          The allocator is refd and remembered internally
  *                          and will be unrefd on error destruction.
@@ -527,7 +522,7 @@ sc3_error_t        *sc3_error_ref (sc3_error_t * e);
  * Use the same allocator elsewhere to allocate memory and unref it there.
  * Now this error has the last remaining reference to the allocator.
  * Since the allocator has a live allocation, when this function internally
- * calls \ref sc3_allocator_unref, we will notice and return the leak.
+ * calls \ref sc3_allocator_unref, we will take notice and return the leak.
  *
  * \param [in,out] ep   Pointer must not be NULL and the error valid.
  *                      The refcount is decreased.  If it reaches zero,
@@ -540,7 +535,7 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
 /** Takes an error object with one remaining reference and deallocates it.
  * Destroying an error that is multiply refd produces a reference leak.
  * Does nothing if error has not been created by \ref sc3_error_new,
- * i.e. if it is a predefined static fallback.
+ * i.e. if it is a static fallback predefined by the library.
  * \param [in,out] ep       Setup error with one reference.  NULL on output.
  * \return                  An error object or NULL without errors.
  *                          When the error has more than one reference,
@@ -548,7 +543,9 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
  */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 
-/** Destroy an error object and condense its messages into a string.
+#if 0
+/** Destroy an error object and condense its stack's messages into a string.
+ * Such condensation removes some structure, so this is a last-resort call.
  * \param [in,out] pe   This error will be destroyed and pointer NULLed.
  *                      If any errors occur in the process, they are ignored.
  *                      One would be that the error has multiple references.
@@ -557,6 +554,7 @@ sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
  */
 void                sc3_error_destroy_noerr (sc3_error_t ** pe,
                                              char *flatmsg);
+#endif
 
 /** Create a new error of parameterizable kind.
  * If internal allocation fails, return a working static error object.
@@ -578,6 +576,7 @@ sc3_error_t        *sc3_error_new_kind (sc3_error_kind_t kind,
  * If internal allocation fails, return a working static error object.
  * This is useful when allocating an error with \ref sc3_error_new might fail.
  * This should generally be used when the error indicates a buggy program.
+ * This function is intended for use in macros when no allocator is available.
  * \param [in] filename The filename is copied into the error object.
  *                      Pointer not NULL, string null-terminated.
  * \param [in] line     Line number set in the error.
@@ -593,6 +592,7 @@ sc3_error_t        *sc3_error_new_bug (const char *filename,
  * This is useful when allocating an error with \ref sc3_error_new might fail.
  * This function expects a setup error as stack, which may in turn have stack.
  * It should generally be used when the error indicates a buggy program.
+ * This function is intended for use in macros when no allocator is available.
  * \param [in] pstack   We take owership of the stack, pointer is NULLed.
  * \param [in] filename The filename is copied into the error object.
  *                      Pointer not NULL, string null-terminated.
@@ -610,6 +610,7 @@ sc3_error_t        *sc3_error_new_stack (sc3_error_t ** pstack,
  * This is useful when allocating an error with \ref sc3_error_new might fail.
  * This function expects a setup error as stack, which may in turn have stack.
  * Function may be used when multiple errors of the same kind accumulate.
+ * This function is intended for use in macros when no allocator is available.
  * \param [in] pstack   We take owership of the stack, pointer is NULLed.
  *                      The error kind of *pstack is used for the result.
  * \param [in] filename The filename is copied into the error object.
@@ -625,6 +626,12 @@ sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** pstack,
 
 /** Take an error, flatten its stack into one message, and unref it.
  * This function returns fatal if any leaks occur in freeing the error.
+ * It is used internally for leak handling to avoid infinite recursion.
+ * Flattening may create a very long string that is still parseable.
+ * Thus, an application may provide more sensible output by examining
+ * the message and location of each error in the stack using the
+ * sc3_error_get_ calls, unrefing each stack level individually.
+ * That alternative avoids losing information about leak errors.
  * \param [in,out] pe       Not NULL and pointing to an error that is setup.
  *                          NULL on output.
  * \param [in] prefix       String to prepend to flattened message.
@@ -735,35 +742,52 @@ sc3_error_t        *sc3_error_leak_demand (sc3_error_t ** leak, int x,
 
 /** Access location string and line number in a setup error object.
  * The filename output pointer is only valid as long as the error is alive.
- * This can be ensured, optionally, by refing and later unrefing the error.
- * We do not ensure this by default to simplify short-time usage.
- * \param [in] e            Setup error object.
+ * Before it ends, you must restore resource by \ref sc3_error_restore_location.
+ * Otherwise there will be a fatal error returned when error is deallocated.
+ * We do this since otherwise a random crash may occur downstream.
+ * \param [in,out] e        Setup error object.
  * \param [out] filename    Pointer must not be NULL.
  *                          On success, set to error's filename.
- *                          We point to an internal resource of \a e, which
- *                          must only be dereferenced while \a e is alive.
- *                    TODO: This will not work.  Need stronger mechanism.
  * \param [out] line        Pointer must not be NULL.
  *                          On success, set to error's line number.
  * \return                  NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_error_get_location (sc3_error_t * e,
-                                            const char **filename, int *line);
+sc3_error_t        *sc3_error_access_location (sc3_error_t * e,
+                                               const char **filename,
+                                               int *line);
 
-/** Access pointer to the message string in a setup error object.
+/** Restore previously accessed location string to the error object.
+ * This must be done for every \ref sc3_error_access_location call.
+ * Otherwise there will be a fatal error returned when error is deallocated.
+ * \param [in,out] e        Setup error used previously to access location.
+ * \param [in] filename     Must be the location string previously accessed.
+ * \param [in] line         Must be the line number previously accessed.
+ */
+sc3_error_t        *sc3_error_restore_location (sc3_error_t * e,
+                                                const char *filename,
+                                                int line);
+
+/** Access the message string in a setup error object.
  * The message output pointer is only valid as long as the error is alive.
- * This can be ensured, optionally, by refing and later unrefing the error.
- * We do not ensure this by default to simplify short-time usage.
+ * Before it ends, you must restore resource by \ref sc3_error_restore_message.
+ * Otherwise there will be a fatal error returned when error is deallocated.
+ * We do this since otherwise a random crash may occur downstream.
  * \param [in] e        Setup error object.
  * \param [out] errmsg  Pointer must not be NULL.
  *                      On success, set to error's message.
- *                      We point to an internal resource of \a e, which
- *                      must only be dereferenced while \a e is alive.
- *                TODO: This will not work.  Need stronger mechanism.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_error_get_message (sc3_error_t * e,
-                                           const char **errmsg);
+sc3_error_t        *sc3_error_access_message (sc3_error_t * e,
+                                              const char **errmsg);
+
+/** Restore previously accessed message string to the error object.
+ * This must be done for every \ref sc3_error_access_message call.
+ * Otherwise there will be a fatal error returned when error is deallocated.
+ * \param [in,out] e        Setup error used previously to access message.
+ * \param [in] filename     Must be the message string previously accessed.
+ */
+sc3_error_t        *sc3_error_restore_message (sc3_error_t * e,
+                                               const char *errmsg);
 
 /** Access the kind of a setup error object.
  * \param [in] e        Setup error object.

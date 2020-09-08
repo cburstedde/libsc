@@ -47,6 +47,9 @@ struct sc3_error
   int                 line;
   int                 alloced;
   sc3_error_t        *stack;
+
+  int                 accessed_locations;
+  int                 accessed_messages;
 };
 
 const char          sc3_error_kind_char[SC3_ERROR_KIND_LAST] =
@@ -101,6 +104,8 @@ sc3_error_is_valid (const sc3_error_t * e, char *reason)
   SC3E_TEST (0 <= e->sev && e->sev < SC3_ERROR_SEVERITY_LAST, reason);
   SC3E_TEST (0 <= e->syn && e->syn < SC3_ERROR_SYNC_LAST, reason);
 #endif
+  SC3E_TEST (0 <= e->accessed_locations, reason);
+  SC3E_TEST (0 <= e->accessed_messages, reason);
   SC3E_YES (reason);
 }
 
@@ -302,6 +307,8 @@ sc3_error_unref (sc3_error_t ** ep)
   if (waslast) {
     *ep = NULL;
 
+    SC3E_DEMAND (e->accessed_locations == 0, "Pending location accesses");
+    SC3E_DEMAND (e->accessed_messages == 0, "Pending message accesses");
     if (e->stack != NULL) {
       SC3L (&leak, sc3_error_unref (&e->stack));
     }
@@ -329,6 +336,7 @@ sc3_error_destroy (sc3_error_t ** ep)
 void
 sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
 {
+#if 0
   int                 remain, result;
   int                 line;
   const char         *filename, *msg;
@@ -355,7 +363,7 @@ sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
   do {
     /* append error location and message to output string */
     bname = NULL;
-    SC3E_SET (inte, sc3_error_get_location (e, &filename, &line));
+    SC3E_SET (inte, sc3_error_access_location (e, &filename, &line));
     if (inte == NULL && (bname = strdup (filename)) != NULL) {
       filename = sc3_basename (bname);
     }
@@ -388,6 +396,7 @@ sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
     e = stack;
   }
   while (e != NULL);
+#endif
 }
 
 sc3_error_t        *
@@ -505,9 +514,9 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
   do {
     if (remain > 0) {
       /* access information on current stack top */
-      SC3E (sc3_error_get_location (e, &stfilename, &stline));
+      SC3E (sc3_error_access_location (e, &stfilename, &stline));
       sc3_strcopy (stbname, SC3_BUFSIZE, stfilename);
-      SC3E (sc3_error_get_message (e, &stmsg));
+      SC3E (sc3_error_access_message (e, &stmsg));
       SC3E (sc3_error_get_kind (e, &kind));
 
       /* append error location and message to output string */
@@ -519,6 +528,8 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
 #endif
                          sc3_basename (stbname), stline,
                          sc3_error_kind_char[kind], stmsg);
+      SC3E (sc3_error_restore_location (e, stfilename, stline));
+      SC3E (sc3_error_restore_message (e, stmsg));
       if (result < 0 || result >= remain) {
         pos = NULL;
         remain = 0;
@@ -661,24 +672,49 @@ sc3_error_leak_demand (sc3_error_t ** leak, int x,
 }
 
 sc3_error_t        *
-sc3_error_get_location (sc3_error_t * e, const char **filename, int *line)
+sc3_error_access_location (sc3_error_t * e, const char **filename, int *line)
 {
-  SC3E_RETVAL (filename, "");
+  SC3E_RETVAL (filename, NULL);
   SC3E_RETVAL (line, 0);
   SC3A_IS (sc3_error_is_setup, e);
 
   *filename = e->filename;
   *line = e->line;
+  ++e->accessed_locations;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_error_get_message (sc3_error_t * e, const char **errmsg)
+sc3_error_restore_location (sc3_error_t * e, const char *filename, int line)
 {
-  SC3E_RETVAL (errmsg, "");
+  SC3A_IS (sc3_error_is_setup, e);
+  SC3A_CHECK (filename == e->filename);
+  SC3A_CHECK (line == e->line);
+  SC3A_CHECK (e->accessed_locations > 0);
+
+  --e->accessed_locations;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_error_access_message (sc3_error_t * e, const char **errmsg)
+{
+  SC3E_RETVAL (errmsg, NULL);
   SC3A_IS (sc3_error_is_setup, e);
 
   *errmsg = e->errmsg;
+  ++e->accessed_messages;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_error_restore_message (sc3_error_t * e, const char *errmsg)
+{
+  SC3A_IS (sc3_error_is_setup, e);
+  SC3A_CHECK (errmsg == e->errmsg);
+  SC3A_CHECK (e->accessed_messages > 0);
+
+  --e->accessed_messages;
   return NULL;
 }
 

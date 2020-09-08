@@ -45,11 +45,12 @@ extern              "C"
 #endif
 
 /** Allocate memory without alignment and internal referencing.
+ * This only works with allocators that are neither aligned nor counting.
  * It is legal to call \ref sc3_allocator_realloc and \ref
  * sc3_allocator_free on this memory with the allocator passed here.
  * Effectively, we call the system malloc function.
  * \param [in,out] a    Allocator \a a must be setup, have zero alignment
- *                      and not be set to keepalive.  One is obtained,
+ *                      and not be set to counting.  One such is obtained,
  *                      e.g., by \ref sc3_allocator_nocount.
  *                      Return NULL if conditions are not met.
  * \param [in] size     Amount of memory to allocate; 0 is legal.
