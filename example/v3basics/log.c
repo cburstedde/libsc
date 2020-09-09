@@ -28,6 +28,22 @@ static int          main_log_bare;
 
 static const char  *main_log_user = "sc3_log";
 
+static int
+mpi_allor (sc3_MPI_Comm_t mpicomm, int inval)
+{
+  int                 orval;
+  sc3_error_t        *empi;
+
+  if ((empi = sc3_MPI_Allreduce (&inval, &orval, 1, SC3_MPI_INT,
+                                 SC3_MPI_LOR, mpicomm)) != NULL) {
+    sc3_log_error (sc3_log_predef (), 0,
+                   SC3_LOG_THREAD0, SC3_LOG_ERROR, empi);
+    sc3_error_destroy (&empi);
+    return 1;
+  }
+  return orval;
+}
+
 static void
 main_log (void *user, const char *msg,
           sc3_log_role_t role, int rank, int tid,
@@ -38,16 +54,12 @@ main_log (void *user, const char *msg,
 }
 
 static void
-main_exit_failure (sc3_error_t * e, sc3_log_t * log, const char *prefix)
+main_exit_failure (sc3_error_t * e, const char *prefix)
 {
-  /* the logger may not be usable */
-  if (!sc3_log_is_setup (log, NULL)) {
-    log = sc3_log_predef ();
-  }
+  sc3_log_t          *log = sc3_log_predef ();
 
   /* print intro line and error stack */
-  sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR,
-            "%s: %s", "Main failure", prefix);
+  sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR, "%s", prefix);
   sc3_log_error (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR, e);
   exit (EXIT_FAILURE);
 }
@@ -142,7 +154,7 @@ work_init (int *pargc, char ***pargv, sc3_MPI_Comm_t mpicomm,
 static sc3_error_t *
 work_work (sc3_allocator_t * alloc, sc3_log_t * log)
 {
-  sc3_log (log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "In work_work");
+  sc3_log (log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "Root work_work");
   sc3_log (log, 0, SC3_LOG_THREAD0, SC3_LOG_TOP, "In work_work");
 
   if (provoke_fatal && provoke_which == 1) {
@@ -154,6 +166,20 @@ work_work (sc3_allocator_t * alloc, sc3_log_t * log)
     SC3E (sc3_allocator_malloc (alloc, sizeof (int), &bogus));
   }
 
+  return NULL;
+}
+
+static sc3_error_t *
+efunc2 (void)
+{
+  SC3A_CHECK (0);
+  return NULL;
+}
+
+static sc3_error_t *
+efunc (void)
+{
+  SC3E (efunc2 ());
   return NULL;
 }
 
@@ -178,9 +204,27 @@ work_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
     SC3E (sc3_allocator_free (*alloc, bogus));
   }
 
+  if (provoke_fatal && provoke_which == 3) {
+    SC3E (efunc ());
+  }
+
   /* the allocator is destroyed last */
   SC3L (&leak, sc3_allocator_destroy (alloc));
   return leak;
+}
+
+static void
+logger_predef (sc3_MPI_Comm_t mpicomm)
+{
+  /* No error checking for the MPI calls; valgrind will tell */
+  int                 rank;
+  sc3_MPI_Comm_rank (mpicomm, &rank);
+  if (rank == 0) {
+    /* Static logger does not know MPI, thus we only call it on rank 0 */
+    sc3_log (sc3_log_predef (), 0, SC3_LOG_PROCESS0, SC3_LOG_TOP,
+             "sc3_log example begin: calling static log");
+  }
+  sc3_MPI_Barrier (mpicomm);
 }
 
 int
@@ -195,23 +239,14 @@ main (int argc, char **argv)
 
   /* Initialize MPI.  This is representative of any external startup code */
   if ((e = sc3_MPI_Init (&argc, &argv)) != NULL) {
-    main_exit_failure (e, NULL, "Main init");
+    main_exit_failure (e, "MPI init");
   }
 
-  /* Testing predefined static logger: It has no concept of MPI */
-  {
-    /* No error checking for the MPI calls; valgrind will tell */
-    int                 rank;
-    sc3_MPI_Comm_rank (mpicomm, &rank);
-    if (rank == 0) {
-      sc3_log (sc3_log_predef (), 0, SC3_LOG_PROCESS0, SC3_LOG_TOP,
-               "sc3_log example begin: calling static log");
-    }
-    sc3_MPI_Barrier (mpicomm);
-  }
+  /* Testing predefined static logger */
+  logger_predef (mpicomm);
 
   /* Process command line options */
-  if (argc == 2) {
+  if (argc >= 2) {
     if (strchr (argv[1], 'F')) {
       provoke_fatal = 1;
     }
@@ -230,18 +265,18 @@ main (int argc, char **argv)
   /* there is no logger object yet */
 
   /* Initialization of toplevel allocator and logger.
-     We initialize logging and basic allocation here.
      This is representative of entering sc3 code from any larger program */
   if (!scdead && (e = work_init (&argc, &argv, mpicomm,
                                  &alloc, &log)) != NULL) {
-    scdead = work_error (&e, log, "Work init");
+    /* The logger may not be setup if work_init fails */
+    scdead = mpi_allor (mpicomm, work_error (&e, log, "Work init"));
   }
 
   /* This is representative of calling sc3 code from any larger program */
   for (i = 0; i < 2; ++i) {
     if (!scdead && (e = work_work (alloc, log)) != NULL) {
-      /* The logger is alive so we use it inside the following function */
-      scdead = work_error (&e, log, "Work work");
+      /* The logger is alive, use it inside the following function */
+      scdead = mpi_allor (mpicomm, work_error (&e, log, "Work work"));
     }
   }
 
@@ -249,18 +284,13 @@ main (int argc, char **argv)
      This is representative of leaving sc3 code from any larger program */
   if (!scdead && (e = work_finalize (&alloc, &log)) != NULL) {
     /* The allocator and logger are likely no longer valid */
-    scdead = work_error (&e, NULL, "Work finalize");
-  }
-
-  /* Application reporting on fatal sc3 error status */
-  if (scdead) {
-    fprintf (stderr, "%s", "Main fatal work error\n");
+    scdead = mpi_allor (mpicomm, work_error (&e, log, "Work finalize"));
   }
 
   /* Finalize MPI.  This is representative of any external cleanup code */
   if ((e = sc3_MPI_Barrier (mpicomm)) != NULL ||
       (e = sc3_MPI_Finalize ()) != NULL) {
-    main_exit_failure (e, NULL, "Main finalize");
+    main_exit_failure (e, "MPI finalize");
   }
   return EXIT_SUCCESS;
 }
