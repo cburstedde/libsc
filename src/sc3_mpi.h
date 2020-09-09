@@ -84,6 +84,10 @@ typedef enum sc3_MPI_Op
 {
   SC3_MPI_MIN,          /**< The usual minimum reduction operation. */
   SC3_MPI_MAX,          /**< The usual maximum reduction operation. */
+  SC3_MPI_LOR,          /**< Logical OR */
+  SC3_MPI_LAND,         /**< Logical AND */
+  SC3_MPI_BOR,          /**< Bitwise OR */
+  SC3_MPI_BAND,         /**< Bitwise AND */
   SC3_MPI_SUM           /**< The usual sum reduction operation. */
 }
 sc3_MPI_Op_t;
@@ -138,6 +142,10 @@ typedef MPI_Op      sc3_MPI_Op_t;
 
 #define SC3_MPI_MIN MPI_MIN
 #define SC3_MPI_MAX MPI_MAX
+#define SC3_MPI_LOR MPI_LOR
+#define SC3_MPI_LAND MPI_LAND
+#define SC3_MPI_BOR MPI_BOR
+#define SC3_MPI_BAND MPI_BAND
 #define SC3_MPI_SUM MPI_SUM
 
 #define SC3_MPI_ERRORS_RETURN MPI_ERRORS_RETURN

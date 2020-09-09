@@ -141,6 +141,8 @@ sc3_error_is_leak (const sc3_error_t * e, char *reason)
   SC3E_YES (reason);
 }
 
+#ifdef SC_ENABLE_DEBUG
+
 static int
 sc3_error_is_null_or_leak (const sc3_error_t * e, char *reason)
 {
@@ -149,6 +151,8 @@ sc3_error_is_null_or_leak (const sc3_error_t * e, char *reason)
   }
   return sc3_error_is_leak (e, reason);
 }
+
+#endif
 
 static void
 sc3_error_defaults (sc3_error_t * e, sc3_error_t * stack,

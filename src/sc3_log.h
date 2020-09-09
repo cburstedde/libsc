@@ -184,6 +184,16 @@ void                sc3_logv (sc3_log_t * log, int depth,
                               sc3_log_role_t role, sc3_log_level_t level,
                               const char *fmt, va_list ap);
 
+/** Log the location and message of an error object and its history stack.
+ * We call the log function once for each stack entry.
+ * \param [in,out] log  Logger must be setup.
+ * \param [in] depth    Number if indentation levels.
+ * \param [in[ role     Parallelism: root rank, per process, per thread.
+ * \param [in] level    Log level (priority).
+ * \param [in,out] e    This error is not modified.
+ *                      It is an in-out argument since we access and restore
+ *                      some of its resources.
+ */
 sc3_error_t        *sc3_log_error (sc3_log_t * log, int depth,
                                    sc3_log_role_t role,
                                    sc3_log_level_t level, sc3_error_t * e);
