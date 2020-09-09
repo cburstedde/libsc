@@ -27,50 +27,7 @@
 #include <sc3_omp.h>
 #include <sc3_trace.h>
 
-#if 0
-#define SC3_BASICS_DEALLOCATE
-#endif
-
-static sc3_error_t *
-unravel_error (sc3_error_t ** ep)
-{
-  int                 j;
-  int                 line;
-  char               *bname;
-  const char         *filename, *fstring, *errmsg;
-  sc3_error_t        *e, *stack;
-  sc3_error_kind_t    kind;
-
-  SC3E_INULLP (ep, e);
-
-  j = 0;
-  while (e != NULL) {
-    /* print error information */
-    SC3E (sc3_error_access_location (e, &filename, &line));
-    if ((bname = strdup (filename)) != NULL) {
-      fstring = sc3_basename (bname);
-    }
-    else {
-      fstring = filename;
-    }
-    SC3E (sc3_error_access_message (e, &errmsg));
-    SC3E (sc3_error_get_kind (e, &kind));
-    printf ("Error stack %d:%s:%d:%c %s\n", j, fstring, line,
-            sc3_error_kind_char[kind], errmsg);
-    free (bname);
-    SC3E (sc3_error_restore_location (e, filename, line));
-    SC3E (sc3_error_restore_message (e, errmsg));
-
-    /* go down the stack */
-    SC3E (sc3_error_get_stack (e, &stack));
-
-    /* we treat leaks as fatal in this application */
-    SC3E (sc3_error_destroy (&e));
-    e = stack;
-    ++j;
-  }
-  return NULL;
-}
+static int          provoke_fatal = 0;
 
 static sc3_error_t *
 child_function (int a, int *result)
@@ -94,8 +51,8 @@ parent_function (int a, int *result)
 }
 
 static sc3_error_t *
-io_error (sc3_allocator_t * a,
-          const char *filename, int line, const char *errmsg)
+make_io_error (sc3_allocator_t * a,
+               const char *filename, int line, const char *errmsg)
 {
   sc3_error_t        *e;
 
@@ -110,8 +67,9 @@ io_error (sc3_allocator_t * a,
   return e;
 }
 
-#define SC3_BASICS_IO_ERROR(a,m) (io_error (a, __FILE__, __LINE__, m))
+#define SC3_BASICS_IO_ERROR(a,m) (make_io_error (a, __FILE__, __LINE__, m))
 
+/* TODO: differentiate file names by rank */
 static sc3_error_t *
 run_io (sc3_allocator_t * a, int result)
 {
@@ -134,22 +92,54 @@ run_io (sc3_allocator_t * a, int result)
 }
 
 static sc3_error_t *
-run_prog (sc3_allocator_t * origa, sc3_trace_t * t, sc3_log_t * log,
+process_io_error (sc3_log_t * log, sc3_error_t ** ioe, int *num_io)
+{
+  sc3_error_kind_t    kind;
+
+  SC3A_IS (sc3_log_is_setup, log);
+  SC3A_CHECK (ioe != NULL && *ioe != NULL);
+  SC3A_CHECK (num_io != NULL && *num_io >= 0);
+
+  /* A fatal error would occur due to bugs or miscalling of I/O routines,
+     not due to I/O errors such as file not found, disk full, etc. */
+  if (sc3_error_is_fatal (*ioe, NULL)) {
+    return sc3_error_new_stack (ioe, __FILE__, __LINE__,
+                                "Fatal error during I/O");
+  }
+
+  /* Now we only expect an I/O error */
+  SC3E (sc3_error_get_kind (*ioe, &kind));
+  SC3A_CHECK (kind == SC3_ERROR_IO);
+  ++*num_io;
+
+  /* print I/O error stack */
+  sc3_log_error (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR, *ioe);
+  SC3E (sc3_error_destroy (ioe));
+
+  return NULL;
+}
+
+static sc3_error_t *
+run_prog (sc3_trace_t * t, sc3_allocator_t * origa, sc3_log_t * log,
           int input, int *result, int *num_io)
 {
   sc3_trace_t         stacktrace;
-  sc3_error_t        *e, *e2;
+  sc3_error_t        *e;
   sc3_allocator_t    *a;
-
-  SC3A_IS (sc3_allocator_is_setup, origa);
 
   /* Push call trace and indent log message */
   sc3_trace_push (&t, &stacktrace, 1, "run_prog", NULL);
   sc3_log (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP, "In run_prog");
 
-  /* Test assertions */
-  SC3E (parent_function (input, result));
+  SC3A_IS (sc3_allocator_is_setup, origa);
+  SC3A_IS (sc3_log_is_setup, log);
+  SC3A_CHECK (result != NULL);
   SC3A_CHECK (num_io != NULL);
+
+  /* Test assertions */
+  if (provoke_fatal) {
+    SC3E (parent_function (input, result));
+  }
 
   /* Make allocator for this context block */
   SC3E (sc3_allocator_new (origa, &a));
@@ -157,89 +147,30 @@ run_prog (sc3_allocator_t * origa, sc3_trace_t * t, sc3_log_t * log,
 
   /* Test file input/output and recoverable errors */
   if ((e = run_io (a, *result)) != NULL) {
-    ++*num_io;
-
-#ifdef SC3_BASICS_DEALLOCATE
-    /* do something with the runtime error */
-    SC3E (unravel_error (&e));
-
-    /* return a new error to the outside */
-    /* TODO: this will not be practicable.
-     * origa must not be used since it may be shared between threads. */
-    SC3E (sc3_error_new (origa, &e2));
-#else
-    /* return the original error to the outside */
-    SC3E (sc3_error_new (a, &e2));
-    SC3E (sc3_error_set_stack (e2, &e));
-#endif
-    SC3E (sc3_error_set_location (e2, __FILE__, __LINE__));
-    SC3E (sc3_error_set_message (e2, "Encountered I/O error"));
-    SC3E (sc3_error_set_kind (e2, SC3_ERROR_IO));
-    SC3E (sc3_error_setup (e2));
-    SC3A_CHECK (e == NULL);
-    e = e2;
+    SC3E (process_io_error (log, &e, num_io));
   }
 
-  /* If we return before here, we will never destroy the allocator.
-     This is ok if we only do this on fatal errors. */
-
-  /* TODO: If e is set and we return a new fatal error, we will never
-     report on e, even if e is inderectly responsible for the error. */
-
-#ifdef SC3_BASICS_DEALLOCATE
-  /* The allocator is now done.
-     Must not pass any allocated objects to the outside of this function. */
   SC3E (sc3_allocator_destroy (&a));
-#else
-  /* We allow allocated objects to be passed to the outside.
-     These carry references to this allocator beyond this scope. */
-  SC3E (sc3_allocator_unref (&a));
-#endif
-
-  /* Make sure not to mess with this error variable in between */
-  return e;
-}
-
-static int
-main_error_check (sc3_error_t ** ep, int *num_fatal, int *num_weird)
-{
-  sc3_error_t        *e;
-
-  if (num_fatal == NULL || num_weird == NULL) {
-    return -1;
-  }
-
-  if (ep != NULL && *ep != NULL) {
-    /* TODO: do this differently, for example making error lists. */
-    if (sc3_error_is_fatal (*ep, NULL)) {
-      ++*num_fatal;
-    }
-
-    /* unravel error stack and print messages */
-    if ((e = unravel_error (ep)) != NULL) {
-      ++num_weird;
-      if (sc3_error_destroy (&e) != NULL) {
-        ++num_weird;
-      }
-    }
-    return -1;
-  }
-  return 0;
+  return NULL;
 }
 
 static sc3_error_t *
-make_log (sc3_allocator_t * ator, sc3_log_t ** plog)
+make_log (sc3_trace_t * t, sc3_allocator_t * ator, sc3_log_t ** plog)
 {
+  sc3_trace_t         stacktrace;
+  sc3_trace_push (&t, &stacktrace, 1, "make_log", NULL);
+
   SC3E (sc3_log_new (ator, plog));
   SC3E (sc3_log_set_level (*plog, SC3_LOG_INFO));
   SC3E (sc3_log_set_comm (*plog, SC3_MPI_COMM_WORLD));
   SC3E (sc3_log_set_indent (*plog, 3));
   SC3E (sc3_log_setup (*plog));
+
   return NULL;
 }
 
 static sc3_error_t *
-test_alloc (sc3_allocator_t * ator)
+test_alloc (sc3_trace_t * t, sc3_allocator_t * ator)
 {
   int                 i, j, k;
   char               *abc, *def, *ghi;
@@ -247,6 +178,8 @@ test_alloc (sc3_allocator_t * ator)
   sc3_allocator_t    *aligned;
   sc3_array_t        *arr;
   const char         *arraytest = "Array test";
+  sc3_trace_t         stacktrace;
+  sc3_trace_push (&t, &stacktrace, 1, "test_alloc", NULL);
 
   SC3A_IS (sc3_allocator_is_setup, ator);
   SC3E (sc3_allocator_strdup (ator, "abc", &abc));
@@ -317,7 +250,7 @@ test_mpi (sc3_allocator_t * alloc,
   SC3A_IS (sc3_allocator_is_setup, alloc);
 
   /* Push call trace and indent log message */
-  sc3_trace_push (&t, &stacktrace, 0, "test_mpi", NULL);
+  sc3_trace_push (&t, &stacktrace, 1, "test_mpi", NULL);
   sc3_log (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP, "In test_mpi");
 
   SC3E (sc3_MPI_Comm_set_errhandler (mpicomm, SC3_MPI_ERRORS_RETURN));
@@ -399,7 +332,10 @@ static sc3_error_t *
 omp_work (sc3_allocator_t * talloc)
 {
   SC3A_IS (sc3_allocator_is_setup, talloc);
+#if 0
+  /* TODO: write some decent OpenMP snippet */
   SC3A_CHECK (sc3_omp_thread_num () % 3 == 1);
+#endif
 
   return NULL;
 }
@@ -488,100 +424,82 @@ omp_info (sc3_allocator_t * origa)
   return ompe;
 }
 
+static sc3_error_t *
+run_main (sc3_trace_t * t, int *argc, char ***argv)
+{
+  const int           inputs[3] = { 167, 84, 23 };
+  int                 mpirank;
+  int                 i;
+  int                 input;
+  int                 result;
+  int                 num_io;
+  sc3_allocator_t    *mainalloc, *a;
+  sc3_log_t          *mainlog;
+  sc3_trace_t         stacktrace;
+
+  sc3_trace_push (&t, &stacktrace, 1, "run_main", NULL);
+
+  SC3E (sc3_MPI_Init (argc, argv));
+
+  mainalloc = sc3_allocator_nothread ();
+  SC3E (sc3_allocator_new (mainalloc, &a));
+  SC3E (sc3_allocator_setup (a));
+
+  SC3E (make_log (t, a, &mainlog));
+  sc3_logf (mainlog, t->idepth, SC3_LOG_PROCESS0, SC3_LOG_TOP,
+            "Main run is %s", "here");
+
+  SC3E (test_alloc (t, a));
+  sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP, "Alloc test ok");
+
+  SC3E (test_mpi (a, t, mainlog, &mpirank));
+  sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP, "MPI code ok");
+
+  SC3E (omp_info (a));
+  sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP,
+           "OpenMP code ok");
+
+  num_io = 0;
+  for (i = 0; i < 3; ++i) {
+    result = input = inputs[i];
+    SC3E (run_prog (t, a, mainlog, input, &result, &num_io));
+    sc3_logf (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP,
+              "Clean execution with input %d result %d io %d",
+              input, result, num_io);
+  }
+
+  sc3_logf (mainlog, t->idepth, SC3_LOG_PROCESS0, SC3_LOG_TOP,
+            "Main run is %s", "done");
+  SC3E (sc3_log_destroy (&mainlog));
+
+  SC3E (sc3_allocator_destroy (&a));
+  SC3A_IS (sc3_allocator_is_free, mainalloc);
+
+  SC3E (sc3_MPI_Finalize ());
+
+  return NULL;
+}
+
 int
 main (int argc, char **argv)
 {
-  const int           inputs[3] = { 167, 84, 23 };
-  int                 mpirank = 0;
-  int                 input;
-  int                 result;
-  int                 num_fatal, num_weird, num_io;
-  int                 i;
-  char                reason[SC3_BUFSIZE];
-  sc3_error_t        *e;
-  sc3_allocator_t    *a;
-  sc3_allocator_t    *mainalloc;
-  sc3_log_t          *mainlog, *pred;
   sc3_trace_t         stacktrace, *t = &stacktrace;
+  sc3_error_t        *rune;
 
-  sc3_trace_init (t, NULL, NULL);
-  pred = sc3_log_predef ();
-  mainalloc = sc3_allocator_nothread ();
-  num_fatal = num_weird = num_io = 0;
+  sc3_trace_init (t, "main", NULL);
 
-  SC3E_SET (e, sc3_MPI_Init (&argc, &argv));
-  if (main_error_check (&e, &num_fatal, &num_weird)) {
-    printf ("MPI_Init failed\n");
-    goto main_end;
-  }
-
-  SC3E_SET (e, sc3_allocator_new (mainalloc, &a));
-  SC3E_NULL_SET (e, sc3_allocator_setup (a));
-  if (main_error_check (&e, &num_fatal, &num_weird)) {
-    printf ("Main allocator_new failed\n");
-    goto main_end;
-  }
-
-  SC3E_SET (e, make_log (a, &mainlog));
-  if (main_error_check (&e, &num_fatal, &num_weird)) {
-    sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_ERROR,
-             "Main log creation failed");
-    goto main_end;
-  }
-  sc3_logf (mainlog, t->idepth, SC3_LOG_PROCESS0, SC3_LOG_TOP,
-            "Main is %s", "here");
-
-  SC3E_SET (e, test_alloc (a));
-  if (!main_error_check (&e, &num_fatal, &num_weird)) {
-    sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP,
-             "Alloc test ok");
-  }
-
-  SC3E_SET (e, test_mpi (a, t, mainlog, &mpirank));
-  if (!main_error_check (&e, &num_fatal, &num_weird)) {
-    sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP, "MPI code ok");
-  }
-
-  SC3E_SET (e, omp_info (a));
-  if (!main_error_check (&e, &num_fatal, &num_weird)) {
-    sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP,
-             "OpenMP code ok");
-  }
-
-  for (i = 0; i < 3; ++i) {
-    input = inputs[i];
-    SC3E_SET (e, run_prog (a, t, mainlog, input, &result, &num_io));
-    if (!main_error_check (&e, &num_fatal, &num_weird)) {
-      sc3_logf (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP,
-                "Clean execution with input %d result %d", input, result);
+  if (argc >= 2) {
+    if (strchr (argv[1], 'F')) {
+      provoke_fatal = 1;
     }
   }
 
-  sc3_logf (mainlog, t->idepth, SC3_LOG_PROCESS0, SC3_LOG_TOP,
-            "Main is %s", "done");
-  SC3E_SET (e, sc3_log_destroy (&mainlog));
-
-  if (main_error_check (&e, &num_fatal, &num_weird)) {
-    printf ("Main log destroy failed\n");
+  if ((rune = run_main (t, &argc, &argv)) != NULL) {
+    sc3_log_error (sc3_log_predef (), 0,
+                   SC3_LOG_THREAD0, SC3_LOG_ERROR, rune);
+    sc3_error_destroy (&rune);
+    return EXIT_FAILURE;
   }
-  SC3E_SET (e, sc3_allocator_destroy (&a));
-  if (main_error_check (&e, &num_fatal, &num_weird)) {
-    printf ("Main allocator destroy failed\n");
-  }
-  if (!sc3_allocator_is_free (mainalloc, reason)) {
-    printf ("Static allocator not free: %s\n", reason);
-    ++num_fatal;
-  }
-
-  SC3E_SET (e, sc3_MPI_Finalize ());
-  if (main_error_check (&e, &num_fatal, &num_weird)) {
-    printf ("MPI_Finalize failed\n");
-  }
-
-main_end:
-  sc3_logf (pred, t->idepth, SC3_LOG_PROCESS0, SC3_LOG_TOP,
-            "Rank %d fatal errors %d weird %d IO %d", mpirank,
-            num_fatal, num_weird, num_io);
 
   return EXIT_SUCCESS;
 }
