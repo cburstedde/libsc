@@ -63,16 +63,16 @@ static sc3_error_t  ebug = { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_BUG,
 
 static sc3_error_t  enom =
   { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_MEMORY,
-"Out of memory", __FILE__, __LINE__, 0, NULL
+"Out of memory", __FILE__, __LINE__, 0, NULL, 0, 0
 };
 
 static sc3_error_t  enull = { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_BUG,
-"Argument must not be NULL", __FILE__, __LINE__, 0, NULL
+"Argument must not be NULL", __FILE__, __LINE__, 0, NULL, 0, 0
 };
 
 static sc3_error_t  esetup =
   { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, SC3_ERROR_BUG,
-"Error argument must be setup", __FILE__, __LINE__, 0, NULL
+"Error argument must be setup", __FILE__, __LINE__, 0, NULL, 0, 0
 };
 
 static int
