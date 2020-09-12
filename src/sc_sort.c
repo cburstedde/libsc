@@ -66,14 +66,16 @@ sc_icompare (const void *v1, const void *v2)
 static int
 sc_compare_r (const void *v1, const void *v2, void *arg)
 {
-  return ((int (*)(const void *, const void *)) arg) (v1, v2);
+  sc_psort_t         *pst = (sc_psort_t *) arg;
+  return pst->compar (v1, v2);
 }
 
 /** Pass qsort-style comparison function as third argument */
 static int
 sc_icompare_r (const void *v1, const void *v2, void *arg)
 {
-  return ((int (*)(const void *, const void *)) arg) (v2, v1);
+  sc_psort_t         *pst = (sc_psort_t *) arg;
+  return pst->compar (v2, v1);
 }
 
 #endif
@@ -419,8 +421,7 @@ sc_psort_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
              n, pst->size, dir ? sc_compare : sc_icompare);
 #else
       qsort_r (pst->my_base + (lo - pst->my_lo) * pst->size,
-               n, pst->size, dir ? sc_compare_r : sc_icompare_r,
-               (void *) pst->compar);
+               n, pst->size, dir ? sc_compare_r : sc_icompare_r, pst);
 
 #endif
     }
