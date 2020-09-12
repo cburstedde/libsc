@@ -75,6 +75,18 @@ int                 sc_uint128_is_equal (const sc_uint128_t * a,
 void                sc_uint128_init (sc_uint128_t * a,
                                      uint64_t high, uint64_t low);
 
+/** Returns the bit_number-th bit of \a input.
+ * This function checks a bit of an existing, initialized value.
+ * \param [in]     input      A pointer to a sc_uint128_t.
+ * \param[in]      bit_number The bit (counted from the right hand side)
+ *                            that is checked by logical and.
+ *                            Require 0 <= \a bit_number < 128.
+ * \return                    1, if the checked bit is set,
+ *                            0, if the checked bit is not set.
+ */
+int                 sc_uint128_chk_bit (const sc_uint128_t * input,
+                                        int exponent);
+
 /** Sets the exponent-th bit of \a a to one and keep all other bits.
  * This function modifies an existing, initialized value.
  * \param [in,out] a        A pointer to a sc_uint128_t.

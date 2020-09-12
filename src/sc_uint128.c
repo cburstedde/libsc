@@ -37,6 +37,22 @@ sc_uint128_init (sc_uint128_t * input, uint64_t high, uint64_t low)
   input->low_bits = low;
 }
 
+int
+sc_uint128_chk_bit (const sc_uint128_t * input, int exponent)
+{
+  SC_ASSERT (input != NULL);
+  SC_ASSERT (exponent >= 0);
+
+  if (exponent < 64) {
+    /* returns 0 or 1 according to the C99 standard */
+    return (input->low_bits & ((uint64_t) 1) << exponent) != 0;
+  }
+  else {
+    SC_ASSERT (exponent < 128);
+    return (input->high_bits & ((uint64_t) 1) << (exponent - 64)) != 0;
+  }
+}
+
 void
 sc_uint128_set_bit (sc_uint128_t * input, int exponent)
 {
@@ -196,8 +212,8 @@ sc_uint128_shift_left (const sc_uint128_t * input, int shift_count,
   }
   else {
     result->high_bits =
-      (result->
-       high_bits << shift_count) | (input->low_bits >> (64 - shift_count));
+      (result->high_bits << shift_count) | (input->
+                                            low_bits >> (64 - shift_count));
     result->low_bits <<= shift_count;
   }
 }
