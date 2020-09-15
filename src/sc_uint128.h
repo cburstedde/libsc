@@ -81,8 +81,7 @@ void                sc_uint128_init (sc_uint128_t * a,
  * \param[in]      bit_number The bit (counted from the right hand side)
  *                            that is checked by logical and.
  *                            Require 0 <= \a bit_number < 128.
- * \return                    1, if the checked bit is set,
- *                            0, if the checked bit is not set.
+ * \return                    True if the checked bit is set, false if not.
  */
 int                 sc_uint128_chk_bit (const sc_uint128_t * input,
                                         int exponent);
