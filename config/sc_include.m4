@@ -281,7 +281,7 @@ AC_DEFUN([SC_CHECK_LIBRARIES],
 [
 SC_REQUIRE_LIB([m], [fabs])
 SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [$1])
-SC_CHECK_LIB([lua52 lua5.2 lua51 lua5.1 lua lua5], [lua_createtable],
+SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua lua5], [lua_createtable],
 	     [LUA], [$1])
 SC_CHECK_BLAS_LAPACK([$1])
 SC_BUILTIN_ALL_PREFIX([$1])

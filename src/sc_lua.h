@@ -30,6 +30,11 @@
 
 SC_EXTERN_C_BEGIN;
 
+#ifdef SC_HAVE_LUA5_3_LUA_H
+#include <lua5.3/lua.h>
+#include <lua5.3/lualib.h>
+#include <lua5.3/lauxlib.h>
+#else
 #ifdef SC_HAVE_LUA5_2_LUA_H
 #include <lua5.2/lua.h>
 #include <lua5.2/lualib.h>
@@ -44,6 +49,7 @@ SC_EXTERN_C_BEGIN;
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#endif
 #endif
 #endif
 #endif
