@@ -133,15 +133,51 @@ test_correctness (void)
   return NULL;
 }
 
-static void
-report_errors (sc3_error_t ** pe)
+static sc3_error_t *
+output_error (sc3_error_t ** pe)
 {
-  char                eflat[SC3_BUFSIZE];
+  int                 eline;
+  int                 depth;
+  const char         *efile;
+  const char         *emsg;
+  sc3_error_kind_t    ekind;
+  sc3_error_t        *e, *s;
+
+  SC3E_DEMAND (pe != NULL && *pe != NULL, "Misuse of output_error");
+  depth = 0;
+  e = *pe;
+  *pe = NULL;
+  while (e != NULL) {
+    SC3E (sc3_error_access_location (e, &efile, &eline));
+    SC3E (sc3_error_access_message (e, &emsg));
+    SC3E (sc3_error_get_kind (e, &ekind));
+
+    fprintf (stderr, "Error %d %s:%d %c: %s\n",
+             depth, efile, eline, sc3_error_kind_char[ekind], emsg);
+
+    SC3E (sc3_error_restore_location (e, efile, eline));
+    SC3E (sc3_error_restore_message (e, emsg));
+    SC3E (sc3_error_get_stack (e, &s));
+    SC3E (sc3_error_destroy (&e));
+    e = s;
+    ++depth;
+  }
+  return NULL;
+}
+
+static void
+report_error (sc3_error_t ** pe)
+{
+  sc3_error_t        *e;
 
   if (pe != NULL && *pe != NULL) {
-    sc3_error_destroy_noerr (pe, eflat);
-    fprintf (stderr, "Error: %s\n", eflat);
-    SC_CHECK_ABORT (0, "Memory stamp's tests failed\n");
+    e = output_error (pe);
+    if (e != NULL || pe == NULL || *pe != NULL) {
+      /* This error should never occur.  Something is wrong on the inside. */
+      SC_ABORT ("Internal error inconsistency\n");
+    }
+    /* We reached some error before this function that has now been printed. */
+    SC_ABORT ("sc3 container tests failed\n");
   }
 }
 
@@ -149,8 +185,9 @@ int
 main (int argc, char **argv)
 {
   sc3_error_t        *e;
-  SC3E_SET (e, test_allocations ());
-  SC3E_NULL_SET (e, test_correctness ());
-  report_errors (&e);
+  e = test_allocations ();
+  report_error (&e);
+  e = test_correctness ();
+  report_error (&e);
   return 0;
 }
