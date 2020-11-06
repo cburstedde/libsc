@@ -80,6 +80,25 @@
  * On defined input, they return the proper query result.
  * This may lead to the situation that sc3_object_is_A and sc3_object_is_not_A
  * both return false, say when the call convention is violated.
+ *
+ * The following functions are used to construct error objects.
+ *  * \ref sc3_error_new
+ *  * \ref sc3_error_set_stack
+ *  * \ref sc3_error_set_location
+ *  * \ref sc3_error_set_message
+ *  * \ref sc3_error_set_kind
+ *  * \ref sc3_error_setup
+ *
+ * Error objects after setup can be accessed by the following functions.
+ *  * \ref sc3_error_access_location
+ *  * \ref sc3_error_restore_location must be called for every location access
+ *  * \ref sc3_error_access_message
+ *  * \ref sc3_error_restore_message must be called for every message access
+ *  * \ref sc3_error_get_kind
+ *  * \ref sc3_error_get_stack yields NULL or an error that is accessed
+ *                             and dropped in the same way.
+ *
+ * To drop responsibility for an error object, use \ref sc3_error_unref.
  */
 
 #ifndef SC3_ERROR_H
