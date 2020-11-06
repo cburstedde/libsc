@@ -26,12 +26,9 @@
 
 #ifndef SC_ENABLE_MPI
 
-/* gettimeofday is in either of these two */
+/* time.h is already included by sc.h */
 #ifdef SC_HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
-#ifdef SC_HAVE_TIME_H
-#include <time.h>
 #endif
 
 static inline void
