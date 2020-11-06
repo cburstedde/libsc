@@ -755,3 +755,104 @@ sc3_error_get_stack (sc3_error_t * e, sc3_error_t ** pstack)
   }
   return NULL;
 }
+
+sc3_error_t        *
+sc3_error_get_text_rec (sc3_error_t * e, int recursion, int rdepth,
+                        char *buffer, size_t *bufrem)
+{
+  int                 printed;
+  int                 eline;
+  size_t              bufin;
+  char                pref[8];
+  const char         *efile;
+  const char         *emsg;
+  sc3_error_kind_t    ekind;
+  sc3_error_t        *stack;
+
+  SC3A_IS (sc3_error_is_valid, e);
+  SC3A_CHECK (buffer != NULL);
+  SC3A_CHECK (*bufrem > 0);
+
+  /* see if there is reason for recursion */
+  stack = NULL;
+  if (recursion != 0) {
+    SC3E (sc3_error_get_stack (e, &stack));
+  }
+
+  if (stack != NULL && recursion < 0) {
+    /* postorder */
+
+    bufin = *bufrem;
+    SC3E (sc3_error_get_text_rec (stack, recursion, rdepth + 1,
+                                  buffer, bufrem));
+    SC3A_CHECK (*bufrem < bufin);
+    buffer += bufin - *bufrem;
+
+    if (*bufrem > 0) {
+      /* we replace the terminating NUL with a line break to continue */
+      SC3A_CHECK (buffer[-1] == '\0');
+      buffer[-1] = '\n';
+    }
+  }
+
+  /* print stuff into buffer, move buffer pointer and decrease *bufrem */
+
+  if (*bufrem > 0) {
+    SC3E (sc3_error_access_location (e, &efile, &eline));
+    SC3E (sc3_error_access_message (e, &emsg));
+    SC3E (sc3_error_get_kind (e, &ekind));
+
+    snprintf (pref, 8, "E%d ", rdepth);
+    printed = snprintf (buffer, *bufrem, "%s%s:%d %c:%s%s",
+                        recursion != 0 ? pref : "",
+                        efile, eline, sc3_error_kind_char[ekind], emsg,
+                        ((recursion <= 0 && rdepth == 0) ||
+                         (recursion >= 0 && stack == NULL)) ? "\n" : "");
+
+    SC3E (sc3_error_restore_location (e, efile, eline));
+    SC3E (sc3_error_restore_message (e, emsg));
+
+    if (printed < 0) {
+      /* something went wrong with snprintf */
+      buffer[0] = '\0';
+      printed = 1;
+    }
+    else if ((size_t) printed >= *bufrem) {
+      /* output was truncated */
+      printed = *bufrem;
+    }
+    else {
+      /* count terminating NUL */
+      ++printed;
+    }
+    buffer += printed;
+    *bufrem -= printed;
+  }
+
+  if (stack != NULL && recursion > 0) {
+    /* preorder */
+
+    if (*bufrem > 0) {
+      /* we replace the terminating NUL with a line break to continue */
+      SC3A_CHECK (buffer[-1] == '\0');
+      buffer[-1] = '\n';
+      SC3E (sc3_error_get_text_rec (stack, recursion, rdepth + 1,
+                                    buffer, bufrem));
+    }
+  }
+
+  /* clean up and return */
+  if (stack != NULL) {
+    SC3E (sc3_error_unref (&stack));
+  }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_error_get_text (sc3_error_t * e, int recursion,
+                    char *buffer, size_t buflen)
+{
+  /* we compute number remaining bytes but do not return it to the caller */
+  SC3E (sc3_error_get_text_rec (e, recursion, 0, buffer, &buflen));
+  return NULL;
+}

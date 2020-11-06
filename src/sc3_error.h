@@ -97,6 +97,7 @@
  *  * \ref sc3_error_get_kind
  *  * \ref sc3_error_get_stack yields NULL or an error that is accessed
  *                             and dropped in the same way.
+ *  * \ref sc3_error_get_text creates a text summary of all error information.
  *
  * To drop responsibility for an error object, use \ref sc3_error_unref.
  */
@@ -844,6 +845,22 @@ sc3_error_t        *sc3_error_get_severity (sc3_error_t * e,
  */
 sc3_error_t        *sc3_error_get_stack (sc3_error_t * e,
                                          sc3_error_t ** pstack);
+
+/** Access the toplevel information in an error object and turn it into text.
+ * This function goes down the error stack as an option, or not.
+ * When used recursively, each level is ended by '\n'.
+ * \param [in] e            This error object must be setup.
+ * \param [in] recursion    Negative values select postorder (i.e. deepest
+ *                          stack object first), positive values select
+ *                          preorder (toplevel object first).
+ *                          0 selects non-recursive mode.
+ * \param [out] buffer      This buffer must exist and contain at least
+ *                          the input \b buflen many bytes.
+ * \param [in] buflen       Positive number available in \b buffer.
+ * \return                  NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_error_get_text (sc3_error_t * e, int recursion,
+                                        char *buffer, size_t buflen);
 
 #ifdef __cplusplus
 #if 0
