@@ -168,6 +168,7 @@ typedef MPI_Op      sc3_MPI_Op_t;
 #endif /* SC_ENABLE_MPI */
 
 #ifndef SC_ENABLE_MPICOMMSHARED
+/* It is possible that MPI exists but the shared communicators do not. */
 
 /** We wrap MPI 3 shared memory communicators.
  * Without --enable-mpi, they have size 1 and rank 0. */
@@ -178,12 +179,14 @@ typedef enum sc3_MPI_Comm_type
 sc3_MPI_Comm_type_t;
 
 #else
+/* We know that MPI is generally available. */
 
 #define SC3_MPI_COMM_TYPE_SHARED MPI_COMM_TYPE_SHARED
 
 #endif /* SC_ENABLE_MPICOMMSHARED */
 
 #ifndef SC_ENABLE_MPIWINSHARED
+/* It is possible that MPI exists but the shared windows do not. */
 
 /** We wrap the MPI address integer type. */
 typedef long        sc3_MPI_Aint_t;
@@ -205,6 +208,7 @@ sc3_MPI_Win_mode_t;
 extern sc3_MPI_Win_t SC3_MPI_WIN_NULL;
 
 #else
+/* We know that MPI is generally available. */
 
 typedef MPI_Aint    sc3_MPI_Aint_t;
 typedef MPI_Win     sc3_MPI_Win_t;
@@ -281,6 +285,11 @@ sc3_error_t        *sc3_MPI_Init (int *argc, char ***argv);
  * \return          NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_MPI_Finalize (void);
+
+/** Wrap MPI_Wtime.
+ * \return          Time in seconds since an arbitrary time in the past.
+ */
+double              sc3_MPI_Wtime (void);
 
 /** Wrap MPI_Comm_set_errhandler.
  * \param [in] comm     Valid MPI communicator.

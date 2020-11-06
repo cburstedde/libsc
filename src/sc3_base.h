@@ -127,13 +127,32 @@
 #ifndef SC3_BASE_H
 #define SC3_BASE_H
 
+/* we set the GNU feature test macro before including anything */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <sc3_config.h>
 
 #include <limits.h>
 #include <stdarg.h>
+#include <stddef.h>
+#ifdef SC_HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #include <stdio.h>
+#ifdef SC_HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#ifdef SC_HAVE_STRING_H
 #include <string.h>
+#endif
+#ifdef SC_HAVE_TIME_H
+#include <time.h>
+#endif
+#ifdef SC_HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 /** This macro is usable as a no-operation statement. */
 #define SC3_NOOP do { ; } while (0)

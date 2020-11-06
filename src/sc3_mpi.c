@@ -169,6 +169,23 @@ sc3_MPI_Finalize (void)
   return NULL;
 }
 
+double
+sc3_MPI_Wtime (void)
+{
+#ifdef SC_ENABLE_MPI
+  return MPI_Wtime ();
+#else
+  int                 retval;
+  struct timespec     tp;
+
+  /* TODO: write configure check for this functionality */
+  if (clock_gettime (CLOCK_MONOTONIC, &tp) != 0)
+    clock_gettime (CLOCK_REALTIME, &tp);
+
+  return tp.tv_sec + 1e-9 * tp.tv_nsec;
+#endif
+}
+
 sc3_error_t        *
 sc3_MPI_Comm_set_errhandler (sc3_MPI_Comm_t comm, sc3_MPI_Errhandler_t errh)
 {
