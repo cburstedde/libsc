@@ -41,10 +41,12 @@
  * If a function returns any of these hard error conditions, the application
  * must consider that it returned prematurely and future crashes are likely.
  * In addition, communication and I/O may be pending and cause blocking.
- * It is the application's responsibility to take this into account.
+ * It is the application's responsibility to take this into account, for
+ * example by reporting the error and shutting down as cleanly as possible.
+ * The SC library does *not* abort on its own to play nice with callers.
  * See \ref sc3_error_is_fatal for the kinds considered fatal.
  *
- * Logically, a function returns non-fatal => it must not allow for crashes.
+ * Logically, a function returns non-fatal => all internal state is consistent.
  * This invariant is preserved if non-fatal errors are propagated upward as
  * fatal.  It is incorrect to propagate a fatal error up as non-fatal.
  *
@@ -53,12 +55,11 @@
  *
  * To propagate fatal errors up the call stack, the SC3A and SC3E types of
  * macros are provided for convenience.
- * The SC3A macros (Assert) are only active when configured --enable-debug.
- * The SC3E macros (Execute) are always active.
- * Both check conditions or error returns and propagate fatal errors upward.
- * These macros are understood to return prematurely on error.
- * When used on non-fatal conditions, they create fatal errors themselves.
- * An application may use them on any condition considered fatal.
+ * The SC3A macros (Assert) are only active when configured --enable-debug
+ * and intended to check conditions that are generally true in absence of bugs.
+ * The SC3E macros (Execute) are always active and intended to call subroutines.
+ * Both check conditions or error returns and return fatal errors themselves.
+ * These macros are understood to effect immediate return on error.
  *
  * The library functions return an error of kind \ref SC3_ERROR_LEAK
  * when encountering leftover memory, references, or other resources,
@@ -69,9 +70,10 @@
  * They are designed to continue the control flow.
  *
  * Non-fatal errors are imaginable when accessing files on disk or parsing
- * input.  It is up to the application to define and implement error handling.
+ * input.  It is up to the application to define and implement error handling
+ * that ideally reports the situation and either continues or shuts down cleanly.
  *
- * The object query functions sc3_object_is_* shall return cleanly on
+ * The object query functions sc3_<object>_is_* shall return cleanly on
  * any kind of input parameters, even those that do not make sense.
  * Query functions must be designed not to crash under any circumstance.
  * On incorrect or undefined input, they must return false.
@@ -762,6 +764,7 @@ sc3_error_t        *sc3_error_access_location (sc3_error_t * e,
  * \param [in,out] e        Setup error used previously to access location.
  * \param [in] filename     Must be the location string previously accessed.
  * \param [in] line         Must be the line number previously accessed.
+ * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_restore_location (sc3_error_t * e,
                                                 const char *filename,
@@ -784,7 +787,8 @@ sc3_error_t        *sc3_error_access_message (sc3_error_t * e,
  * This must be done for every \ref sc3_error_access_message call.
  * Otherwise there will be a fatal error returned when error is deallocated.
  * \param [in,out] e        Setup error used previously to access message.
- * \param [in] filename     Must be the message string previously accessed.
+ * \param [in] errmsg       Must be the message string previously accessed.
+ * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_restore_message (sc3_error_t * e,
                                                const char *errmsg);
