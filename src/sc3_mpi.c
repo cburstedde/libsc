@@ -175,7 +175,6 @@ sc3_MPI_Wtime (void)
 #ifdef SC_ENABLE_MPI
   return MPI_Wtime ();
 #else
-  int                 retval;
   struct timespec     tp;
 
   /* TODO: write configure check for this functionality */
