@@ -100,6 +100,15 @@
  *  * \ref sc3_error_get_text creates a text summary of all error information.
  *
  * To drop responsibility for an error object, use \ref sc3_error_unref.
+ *
+ * As a convenience for calling libsc from an application, we have added \ref
+ * sc3_error_check.  It examines an error passed in and returns 0 if the error
+ * is NULL.  Otherwise, it extracts its text block using \ref
+ * sc3_error_get_text, calls \ref sc3_error_unref and returns -1.  This way, an
+ * application program can react on the return value and use the message for
+ * its own reporting.  What is lost by this approach is the ability to
+ * distinguish various kinds of error.  In effect, all errors are treated the
+ * same downstream, which is fine when only using it for fatal conditions.
  */
 
 #ifndef SC3_ERROR_H
