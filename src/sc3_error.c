@@ -802,12 +802,14 @@ sc3_error_get_text_rec (sc3_error_t * e, int recursion, int rdepth,
     SC3E (sc3_error_access_message (e, &emsg));
     SC3E (sc3_error_get_kind (e, &ekind));
 
-    snprintf (pref, 8, "E%d ", rdepth);
-    printed = snprintf (buffer, *bufrem, "%s%s:%d %c:%s%s",
-                        recursion != 0 ? pref : "",
-                        efile, eline, sc3_error_kind_char[ekind], emsg,
-                        ((recursion <= 0 && rdepth == 0) ||
-                         (recursion >= 0 && stack == NULL)) ? "\n" : "");
+    if (recursion == 0) {
+      snprintf (pref, 8, "ET ");
+    }
+    else {
+      snprintf (pref, 8, "E%d ", rdepth);
+    }
+    printed = snprintf (buffer, *bufrem, "%s%s:%d %c:%s", pref,
+                        efile, eline, sc3_error_kind_char[ekind], emsg);
 
     SC3E (sc3_error_restore_location (e, efile, eline));
     SC3E (sc3_error_restore_message (e, emsg));
@@ -852,7 +854,7 @@ sc3_error_t        *
 sc3_error_get_text (sc3_error_t * e, int recursion,
                     char *buffer, size_t buflen)
 {
-  /* we compute number remaining bytes but do not return it to the caller */
+  /* compute number of remaining bytes but do not return it to the caller */
   SC3E (sc3_error_get_text_rec (e, recursion, 0, buffer, &buflen));
   return NULL;
 }

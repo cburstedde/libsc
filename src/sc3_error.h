@@ -856,7 +856,9 @@ sc3_error_t        *sc3_error_get_stack (sc3_error_t * e,
  *                          0 selects non-recursive mode.
  * \param [out] buffer      This buffer must exist and contain at least
  *                          the input \b buflen many bytes.
- * \param [in] buflen       Positive number available in \b buffer.
+ *                          NUL-terminated, often multi-line string on output.
+ *                          There is no final newline at the end of the text.
+ * \param [in] buflen       Positive number of bytes available in \b buffer.
  * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_get_text (sc3_error_t * e, int recursion,
