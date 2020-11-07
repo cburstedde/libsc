@@ -858,3 +858,50 @@ sc3_error_get_text (sc3_error_t * e, int recursion,
   SC3E (sc3_error_get_text_rec (e, recursion, 0, buffer, &buflen));
   return NULL;
 }
+
+static sc3_error_t *
+sc3_error_check_text (sc3_error_t ** e, char *buffer, size_t buflen)
+{
+  SC3A_CHECK (e != NULL);
+  SC3E (sc3_error_get_text (*e, -1, buffer, buflen));
+  SC3E (sc3_error_unref (e));
+  return NULL;
+}
+
+int
+sc3_error_check (sc3_error_t ** e, char *buffer, size_t buflen)
+{
+  sc3_error_t        *e2, *e3;
+
+  /* invalid usage */
+  if (e == NULL || buffer == NULL || buflen == 0) {
+    if (!(buffer == NULL || buflen == 0)) {
+      snprintf (buffer, buflen, "%s", "Error: Null input to sc3_error_check");
+    }
+    if (!(e == NULL)) {
+      sc3_error_unref (e);
+    }
+    return -1;
+  }
+
+  /* the only case this function returns successfully */
+  if (*e == NULL) {
+    snprintf (buffer, buflen, "%s", "");
+    return 0;
+  }
+
+  /* analyze the error passed in and try to make sense of strange cases */
+  e2 = sc3_error_check_text (e, buffer, buflen);
+  if (e2 != NULL) {
+    /* something is wrong with internal error reporting */
+    e3 = sc3_error_get_text (e2, -1, buffer, buflen);
+    if (e3 != NULL) {
+      /* something is even more badly wrong with internal error reporting */
+      snprintf (buffer, buflen, "%s",
+                "Error: inconsistency inside sc3_error_get_text");
+      sc3_error_unref (&e3);
+    }
+    sc3_error_unref (&e2);
+  }
+  return -1;
+}

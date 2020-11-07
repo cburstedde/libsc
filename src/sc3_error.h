@@ -308,6 +308,20 @@ extern              "C"
   sc3_error_t * _e = sc3_error_leak_demand (l, x, __FILE__, __LINE__, #x);  \
   if (_e != NULL) { return _e; }} while (0)
 
+/** Macro for error checking without hope for clean recovery.
+ * If an error is encountered in calling \b f, we print its message to stderr
+ * and call abort (3).  If possible, an application should react more nicely.
+ */
+#define SC3X(f) do {                                            \
+  sc3_error_t *_e = (f);                                        \
+  char _buffer[SC3_BUFSIZE];                                    \
+  if (sc3_error_check (&_e, _buffer, SC3_BUFSIZE)) {            \
+    fprintf (stderr, "%s\n", _buffer);                          \
+    fprintf (stderr, "EX %s:%d %c:%s\n", __FILE__, __LINE__,    \
+             sc3_error_kind_char[SC3_ERROR_FATAL], #f);         \
+    abort ();                                                   \
+  }} while (0)
+
 #if 0
 /** The severity of an error used to be a proper enum.
  * We have introduced \ref sc3_error_kind_t to be used instead.
@@ -863,6 +877,22 @@ sc3_error_t        *sc3_error_get_stack (sc3_error_t * e,
  */
 sc3_error_t        *sc3_error_get_text (sc3_error_t * e, int recursion,
                                         char *buffer, size_t buflen);
+
+/** Translate an error object into a return value and a text block.
+ * \param [in,out] e        On input, address of an error pointer.
+ *                          The error itself may be NULL or a valid object.
+ *                          Unrefd and NULLd on output in the latter case.
+ * \param [out] buffer      This buffer must exist and contain at least
+ *                          the input \b buflen many bytes.
+ *                          NUL-terminated, often multi-line string on output.
+ *                          There is no final newline at the end of the text.
+ *                          When input \a *e is NULL, set to the empty string.
+ * \param [in] buflen       Positive number of bytes available in \b buffer.
+ * \return                  0 if e is non-NULL and *e is NULL on input,
+ *                          a negative integer otherwise.
+ */
+int                 sc3_error_check (sc3_error_t ** e,
+                                     char *buffer, size_t buflen);
 
 #ifdef __cplusplus
 #if 0
