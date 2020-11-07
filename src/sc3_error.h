@@ -561,7 +561,7 @@ void                sc3_error_set_sync (sc3_error_t * e,
                                         sc3_error_sync_t syn);
 sc3_error_t        *sc3_error_set_msgf (sc3_error_t * e,
                                         const char *errfmt, ...)
-  __attribute__ ((format (printf, 2, 3)));
+  __attribute__((format (printf, 2, 3)));
 #endif
 
 /** Setup an error and put it into its usable phase.
@@ -900,6 +900,7 @@ sc3_error_t        *sc3_error_get_stack (sc3_error_t * e,
  * \param [in] recursion    Negative values select postorder (i.e. deepest
  *                          stack object first), positive values select
  *                          preorder (toplevel object first).
+ * \param [in] dobasename   If true, only print the basename (3) of file.
  *                          0 selects non-recursive mode.
  * \param [out] buffer      This buffer must exist and contain at least
  *                          the input \b buflen many bytes.
@@ -908,7 +909,8 @@ sc3_error_t        *sc3_error_get_stack (sc3_error_t * e,
  * \param [in] buflen       Positive number of bytes available in \b buffer.
  * \return                  NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_error_get_text (sc3_error_t * e, int recursion,
+sc3_error_t        *sc3_error_get_text (sc3_error_t * e,
+                                        int recursion, int dobasename,
                                         char *buffer, size_t buflen);
 
 /** Translate an error object into a return value and a text block.

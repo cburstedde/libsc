@@ -268,7 +268,7 @@ void                sc3_error_set_sync (sc3_error_t * ea,
                                         sc3_error_sync_t syn);
 void                sc3_error_set_msgf (sc3_error_t * ea,
                                         const char *errfmt, ...)
-  __attribute__ ((format (printf, 2, 3)));
+  __attribute__((format (printf, 2, 3)));
 #endif
 
 sc3_error_t        *
@@ -766,12 +766,13 @@ sc3_error_get_stack (sc3_error_t * e, sc3_error_t ** pstack)
 
 sc3_error_t        *
 sc3_error_get_text_rec (sc3_error_t * e, int recursion, int rdepth,
-                        char *buffer, size_t *bufrem)
+                        char *bwork, char *buffer, size_t *bufrem)
 {
   int                 printed;
   int                 eline;
   size_t              bufin;
   char                pref[8];
+  const char         *bname;
   const char         *efile;
   const char         *emsg;
   sc3_error_kind_t    ekind;
@@ -792,7 +793,7 @@ sc3_error_get_text_rec (sc3_error_t * e, int recursion, int rdepth,
 
     bufin = *bufrem;
     SC3E (sc3_error_get_text_rec (stack, recursion, rdepth + 1,
-                                  buffer, bufrem));
+                                  bwork, buffer, bufrem));
     SC3A_CHECK (*bufrem < bufin);
     buffer += bufin - *bufrem;
 
@@ -816,8 +817,15 @@ sc3_error_get_text_rec (sc3_error_t * e, int recursion, int rdepth,
     else {
       snprintf (pref, 8, "E%d ", rdepth);
     }
+    if (bwork == NULL) {
+      bname = efile;
+    }
+    else {
+      sc3_strcopy (bwork, SC3_BUFSIZE, efile);
+      bname = sc3_basename (bwork);
+    }
     printed = snprintf (buffer, *bufrem, "%s%s:%d %c:%s", pref,
-                        efile, eline, sc3_error_kind_char[ekind], emsg);
+                        bname, eline, sc3_error_kind_char[ekind], emsg);
 
     SC3E (sc3_error_restore_location (e, efile, eline));
     SC3E (sc3_error_restore_message (e, emsg));
@@ -847,7 +855,7 @@ sc3_error_get_text_rec (sc3_error_t * e, int recursion, int rdepth,
       SC3A_CHECK (buffer[-1] == '\0');
       buffer[-1] = '\n';
       SC3E (sc3_error_get_text_rec (stack, recursion, rdepth + 1,
-                                    buffer, bufrem));
+                                    bwork, buffer, bufrem));
     }
   }
 
@@ -859,11 +867,17 @@ sc3_error_get_text_rec (sc3_error_t * e, int recursion, int rdepth,
 }
 
 sc3_error_t        *
-sc3_error_get_text (sc3_error_t * e, int recursion,
+sc3_error_get_text (sc3_error_t * e, int recursion, int dobasename,
                     char *buffer, size_t buflen)
 {
   /* compute number of remaining bytes but do not return it to the caller */
-  SC3E (sc3_error_get_text_rec (e, recursion, 0, buffer, &buflen));
+  if (!dobasename) {
+    SC3E (sc3_error_get_text_rec (e, recursion, 0, NULL, buffer, &buflen));
+  }
+  else {
+    char                bwork[SC3_BUFSIZE];
+    SC3E (sc3_error_get_text_rec (e, recursion, 0, bwork, buffer, &buflen));
+  }
   return NULL;
 }
 
@@ -871,7 +885,7 @@ static sc3_error_t *
 sc3_error_check_text (sc3_error_t ** e, char *buffer, size_t buflen)
 {
   SC3A_CHECK (e != NULL);
-  SC3E (sc3_error_get_text (*e, -1, buffer, buflen));
+  SC3E (sc3_error_get_text (*e, -1, 1, buffer, buflen));
   SC3E (sc3_error_unref (e));
   return NULL;
 }
@@ -902,7 +916,7 @@ sc3_error_check (sc3_error_t ** e, char *buffer, size_t buflen)
   e2 = sc3_error_check_text (e, buffer, buflen);
   if (e2 != NULL) {
     /* something is wrong with internal error reporting */
-    e3 = sc3_error_get_text (e2, -1, buffer, buflen);
+    e3 = sc3_error_get_text (e2, -1, 1, buffer, buflen);
     if (e3 != NULL) {
       /* something is even more badly wrong with internal error reporting */
       snprintf (buffer, buflen, "%s",
