@@ -141,6 +141,14 @@ sc3_error_is_leak (const sc3_error_t * e, char *reason)
   SC3E_YES (reason);
 }
 
+int
+sc3_error_is_kind (const sc3_error_t * e, sc3_error_kind_t kind, char *reason)
+{
+  SC3E_IS (sc3_error_is_setup, e, reason);
+  SC3E_TEST (e->kind == kind, reason);
+  SC3E_YES (reason);
+}
+
 #ifdef SC_ENABLE_DEBUG
 
 static int

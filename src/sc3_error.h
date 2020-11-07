@@ -218,6 +218,20 @@ extern              "C"
   *(pp) = NULL;                                                         \
   } while (0)
 
+/** Execute an expression \a f that produces an \ref sc3_error_t object.
+ * If that error is fatal, stack it into a new fatal error and return it.
+ * If that error is NULL, this will be assigned to the output argument.
+ * Otherwise, stack the error into a new object of the same kind and
+ * place this new error in the output argument \a o.  In this case,
+ * the calling code takes ownership of the error.
+ */
+#define SC3F(f, o) do {                                                 \
+  sc3_error_t *_e = o = (f);                                            \
+  if (_e != NULL) {                                                     \
+    o = sc3_error_new_inherit (&_e, __FILE__, __LINE__, #f);            \
+    if (sc3_error_is_fatal (o, NULL)) { return o; }                     \
+  }} while (0)
+
 /*** ERROR statements for proceeding without return in case of errors. ***/
 
 /** Initialize an error object \a e using the result of an expression \a f.
@@ -454,6 +468,16 @@ int                 sc3_error_is_fatal (const sc3_error_t * e, char *reason);
  * \return              True iff error is not NULL, setup, and a leak.
  */
 int                 sc3_error_is_leak (const sc3_error_t * e, char *reason);
+
+/** Check an error object to be setup and of a specified kind.
+ * \param [in] e        Any pointer.
+ * \param [in] kind     Legal value of \ref sc3_error_kind_t.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff error is not NULL, setup, and of \b kind.
+ */
+int                 sc3_error_is_kind (const sc3_error_t * e,
+                                       sc3_error_kind_t kind, char *reason);
 
 /** Create a new error object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
