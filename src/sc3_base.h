@@ -129,7 +129,7 @@
 
 /* we set the GNU feature test macro before including anything */
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE             /**< Enable additional funcitonality. */
+#define _GNU_SOURCE             /**< Enable additional functionality. */
 #endif
 
 #include <sc3_config.h>
