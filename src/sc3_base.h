@@ -164,10 +164,12 @@
 #define SC3_INT_HPOW (1 << (SC3_INT_BITS - 2))
 
 /** Standard buffer size for string handling in the library.
- * \todo Convert \ref sc3_error_t implementation to use dynamic memory
+ * Maybe convert \ref sc3_error_t implementation to use dynamic memory
  *       for messages whenever the error's allocator is dynamic.
+ * On the other hand, such allocator code may itself throw errors.
+ * So, this method avoids chicken-and-egg problems better.
  */
-#define SC3_BUFSIZE 1024
+#define SC3_BUFSIZE 4096
 
 /** Set a buffer of standard size to all zeros. */
 #define SC3_BUFZERO(b) do { memset (b, 0, SC3_BUFSIZE); } while (0)
