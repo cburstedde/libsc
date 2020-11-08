@@ -42,6 +42,9 @@ sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t *size)
   case SC3_MPI_INT:
     *size = sizeof (int);
     break;
+  case SC3_MPI_2INT:
+    *size = 2 * sizeof (int);
+    break;
   case SC3_MPI_LONG:
     *size = sizeof (long);
     break;
@@ -50,6 +53,9 @@ sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t *size)
     break;
   case SC3_MPI_DOUBLE:
     *size = sizeof (double);
+    break;
+  case SC3_MPI_DOUBLE_INT:
+    *size = sizeof (double) + sizeof (int);
     break;
   default:
     SC3E_UNREACH ("Invalid MPI type");

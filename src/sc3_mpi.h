@@ -71,11 +71,13 @@ typedef enum sc3_MPI_Datatype
 {
   SC3_MPI_BYTE,         /**< Same as in original MPI.  1 byte.
                          * It is preferred over MPI_CHAR since the latter
-                         * may amount to multiple bytes. */
+                         * may amount to multiple bytes for wide chars. */
   SC3_MPI_INT,          /**< Same as in original MPI.  System int type. */
+  SC3_MPI_2INT,         /**< Same as in original MPI.  Two system ints. */
   SC3_MPI_LONG,         /**< Same as in original MPI.  System long type. */
   SC3_MPI_FLOAT,        /**< Same as in original MPI. */
-  SC3_MPI_DOUBLE        /**< Same as in original MPI. */
+  SC3_MPI_DOUBLE,       /**< Same as in original MPI. */
+  SC3_MPI_DOUBLE_INT    /**< Same as in original MPI.  Double and int. */
 }
 sc3_MPI_Datatype_t;
 
@@ -84,6 +86,8 @@ typedef enum sc3_MPI_Op
 {
   SC3_MPI_MIN,          /**< The usual minimum reduction operation. */
   SC3_MPI_MAX,          /**< The usual maximum reduction operation. */
+  SC3_MPI_MINLOC,       /**< Find minimum value and its rank. */
+  SC3_MPI_MAXLOC,       /**< Find maximum value and its rank. */
   SC3_MPI_LOR,          /**< Logical OR */
   SC3_MPI_LAND,         /**< Logical AND */
   SC3_MPI_BOR,          /**< Bitwise OR */
@@ -136,12 +140,16 @@ typedef MPI_Op      sc3_MPI_Op_t;
 
 #define SC3_MPI_BYTE MPI_BYTE
 #define SC3_MPI_INT MPI_INT
+#define SC3_MPI_2INT MPI_2INT
 #define SC3_MPI_LONG MPI_LONG
 #define SC3_MPI_FLOAT MPI_FLOAT
 #define SC3_MPI_DOUBLE MPI_DOUBLE
+#define SC3_MPI_DOUBLE_INT MPI_DOUBLE_INT
 
 #define SC3_MPI_MIN MPI_MIN
 #define SC3_MPI_MAX MPI_MAX
+#define SC3_MPI_MINLOC MPI_MINLOC
+#define SC3_MPI_MAXLOC MPI_MAXLOC
 #define SC3_MPI_LOR MPI_LOR
 #define SC3_MPI_LAND MPI_LAND
 #define SC3_MPI_BOR MPI_BOR
@@ -294,7 +302,7 @@ double              sc3_MPI_Wtime (void);
 /** Wrap MPI_Comm_set_errhandler.
  * \param [in] comm     Valid MPI communicator.
  * \param [in] errh     Valid MPI errror handler object.
- *                      May use it \ref SC3_MPI_ERRORS_RETURN.
+ *                      May use \ref SC3_MPI_ERRORS_RETURN.
  * \return          NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_MPI_Comm_set_errhandler (sc3_MPI_Comm_t comm,
