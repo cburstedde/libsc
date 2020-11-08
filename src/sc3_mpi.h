@@ -294,6 +294,15 @@ sc3_error_t        *sc3_MPI_Init (int *argc, char ***argv);
  */
 sc3_error_t        *sc3_MPI_Finalize (void);
 
+/** Wrap MPI_Abort.
+ * Without --enable-mpi, call abort (3).
+ * \param [in] comm         Valid MPI communicator.
+ * \param [in] errorcode    Well-defined MPI error code.
+ * \return                  NULL on success, error object otherwise.
+ *                          This function may not return though.
+ */
+sc3_error_t        *sc3_MPI_Abort (sc3_MPI_Comm_t comm, int errorcode);
+
 /** Wrap MPI_Wtime.
  * \return          Time in seconds since an arbitrary time in the past.
  */

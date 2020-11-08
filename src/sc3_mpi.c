@@ -175,6 +175,17 @@ sc3_MPI_Finalize (void)
   return NULL;
 }
 
+sc3_error_t        *
+sc3_MPI_Abort (sc3_MPI_Comm_t comm, int errorcode)
+{
+#ifdef SC_ENABLE_MPI
+  SC3E_MPI (MPI_Abort (comm, errorcode));
+#else
+  abort ();
+#endif
+  return NULL;
+}
+
 double
 sc3_MPI_Wtime (void)
 {
