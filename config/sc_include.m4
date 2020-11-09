@@ -277,9 +277,11 @@ dnl SC_CHECK_LIBRARIES(PREFIX)
 dnl This macro bundles the checks for all libraries and link tests
 dnl that are required by libsc.  It can be used by other packages that
 dnl link to libsc to add appropriate options to LIBS.
+dnl We also test for some tool executables.
 dnl
 AC_DEFUN([SC_CHECK_LIBRARIES],
 [
+AC_CHECK_PROG([$1_HAVE_DOT], [dot], [YES], [NO])
 SC_REQUIRE_LIB([m], [fabs])
 SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [$1])
 dnl SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua5 lua],
