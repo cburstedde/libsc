@@ -73,7 +73,7 @@
  * input.  It is up to the application to define and implement error handling
  * that ideally reports the situation and either continues or shuts down cleanly.
  *
- * The object query functions sc3_<object>_is_* shall return cleanly on
+ * The object query functions sc3_<object>_is?_* shall return cleanly on
  * any kind of input parameters, even those that do not make sense.
  * Query functions must be designed not to crash under any circumstance.
  * On incorrect or undefined input, they must return false.
@@ -137,11 +137,17 @@ extern              "C"
  * The argument \a f is such a function and \a o the object to query. */
 #define SC3A_IS(f,o) SC3_NOOP
 
+/** Assertion statement to require a true sc3_object_is2_* return value.
+ * The argument \a f is such a function taking \a o the object to query,
+ * a second argument \a p (and the common string buffer as all of them). */
+#define SC3A_IS2(f,o,p) SC3_NOOP
+
 /** Assertion statement requires some condition \a x to be true. */
 #define SC3A_CHECK(x) SC3_NOOP
 
 #else
 #define SC3A_IS(f,o) SC3E_DEMIS(f,o)
+#define SC3A_IS2(f,o,p) SC3E_DEMIS2(f,o,p)
 #define SC3A_CHECK(x) do {                                              \
   if (!(x)) {                                                           \
     return sc3_error_new_bug ( __FILE__, __LINE__, #x);                 \
@@ -183,6 +189,21 @@ extern              "C"
   if (!(f ((o), _r))) {                                                 \
     char _errmsg[SC3_BUFSIZE];                                          \
     sc3_snprintf (_errmsg, SC3_BUFSIZE, "%s(%s): %s", #f, #o, _r);      \
+    return sc3_error_new_bug (__FILE__, __LINE__, _errmsg);             \
+  }} while (0)
+
+/** Execute an is_* query \a f that takes an additional argument
+ * and return a fatal error if it returns false.
+ * The error created is of type \ref SC3_ERROR_BUG and its message is set
+ * to the failed query function and its object \a o.
+ * For clean recovery of non-fatal errors, please use something else.
+ */
+#define SC3E_DEMIS2(f,o,p) do {                                         \
+  char _r[SC3_BUFSIZE];                                                 \
+  if (!(f ((o), (p), _r))) {                                            \
+    char _errmsg[SC3_BUFSIZE];                                          \
+    sc3_snprintf (_errmsg, SC3_BUFSIZE,                                 \
+                  "%s(%s,%s): %s", #f, #o, #p, _r);                     \
     return sc3_error_new_bug (__FILE__, __LINE__, _errmsg);             \
   }} while (0)
 
@@ -476,8 +497,8 @@ int                 sc3_error_is_leak (const sc3_error_t * e, char *reason);
  *                      is set to "" if answer is yes or reason if no.
  * \return              True iff error is not NULL, setup, and of \b kind.
  */
-int                 sc3_error_is_kind (const sc3_error_t * e,
-                                       sc3_error_kind_t kind, char *reason);
+int                 sc3_error_is2_kind (const sc3_error_t * e,
+                                        sc3_error_kind_t kind, char *reason);
 
 /** Create a new error object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.

@@ -142,7 +142,8 @@ sc3_error_is_leak (const sc3_error_t * e, char *reason)
 }
 
 int
-sc3_error_is_kind (const sc3_error_t * e, sc3_error_kind_t kind, char *reason)
+sc3_error_is2_kind (const sc3_error_t * e, sc3_error_kind_t kind,
+                    char *reason)
 {
   SC3E_IS (sc3_error_is_setup, e, reason);
   SC3E_TEST (e->kind == kind, reason);
