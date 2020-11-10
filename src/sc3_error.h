@@ -327,6 +327,21 @@ extern              "C"
       sc3_snprintf ((r), SC3_BUFSIZE, "%s(%s): %s", #f, #o, _r);        \
       return 0; }}} while (0)
 
+/** Query an sc3_object_is2_* function.
+ * The argument \a f such a function and \a o1 an object to query
+ * with another argument \a p.
+ * If the test returns false, the function puts the reason into \a r,
+ * a pointer to a string of size \ref SC3_BUFSIZE, and returns 0.
+ * Otherwise the function does nothing.  \a r may be NULL.
+ */
+#define SC3E_IS2(f,o,p,r)                                               \
+  do { if ((r) == NULL) {                                               \
+    if (!(f ((o), (p), NULL))) { return 0; }} else {                    \
+    char _r[SC3_BUFSIZE];                                               \
+    if (!(f ((o), (p), _r))) {                                          \
+      sc3_snprintf ((r), SC3_BUFSIZE, "%s(%s,%s): %s", #f, #o, #p, _r); \
+      return 0; }}} while (0)
+
 /*** LEAK statements for working with (non-fatal) leak errors. ***/
 
 /** Execute an expression \a f that may produce a fatal error or a leak.
