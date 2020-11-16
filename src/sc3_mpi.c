@@ -48,6 +48,9 @@ sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t *size)
   case SC3_MPI_LONG:
     *size = sizeof (long);
     break;
+  case SC3_MPI_LONG_LONG:
+    *size = sizeof (long long);
+    break;
   case SC3_MPI_FLOAT:
     *size = sizeof (float);
     break;
@@ -67,10 +70,8 @@ struct sc3_MPI_Comm
 {
   int                 comm;
 };
-static struct sc3_MPI_Comm comm_null = { 0 };
 static struct sc3_MPI_Comm comm_world = { 1 };
 
-sc3_MPI_Comm_t      SC3_MPI_COMM_NULL = &comm_null;
 sc3_MPI_Comm_t      SC3_MPI_COMM_SELF = &comm_world;
 sc3_MPI_Comm_t      SC3_MPI_COMM_WORLD = &comm_world;
 
@@ -78,17 +79,15 @@ struct sc3_MPI_Info
 {
   int                 info;
 };
-static struct sc3_MPI_Info info_null = { 0 };
 static struct sc3_MPI_Info info_static = { 1 };
 
-sc3_MPI_Info_t      SC3_MPI_INFO_NULL = &info_null;
 static sc3_MPI_Info_t INFO_STATIC = &info_static;
 
 #endif /* !SC_ENABLE_MPI */
 
 #ifndef SC_ENABLE_MPIWINSHARED
 
-static struct sc3_MPI_Win
+struct sc3_MPI_Win
 {
   int                 win;
   int                 size;
@@ -97,8 +96,7 @@ static struct sc3_MPI_Win
   int                 disp_unit;
   sc3_MPI_Aint_t      memsize;
   char               *baseptr;
-} win_null;
-sc3_MPI_Win_t       SC3_MPI_WIN_NULL = &win_null;
+};
 
 #endif /* !SC_ENABLE_MPIWINSHARED */
 
@@ -371,6 +369,7 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
 #ifndef SC_ENABLE_MPIWINSHARED
   SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
   newin = SC3_MALLOC (struct sc3_MPI_Win, 1);
+  SC3E_DEMAND (newin != NULL, "Allocating MPI window");
   newin->win = 1;
   newin->locked = 0;
   SC3E (sc3_MPI_Comm_size (comm, &newin->size));
@@ -378,6 +377,7 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
   newin->disp_unit = disp_unit;
   newin->memsize = size;
   newin->baseptr = SC3_MALLOC (char, size);
+  SC3E_DEMAND (newin->baseptr != NULL, "Allocating MPI window baseptr");
   SC3A_IS (sc3_MPI_Win_is_valid, newin);
 
   /* assign output values */
