@@ -81,6 +81,8 @@ sc_tag_t;
 /* constants */
 
 #define sc_MPI_SUCCESS             MPI_SUCCESS
+#define sc_MPI_ERR_OTHER           MPI_ERR_OTHER
+
 #define sc_MPI_COMM_NULL           MPI_COMM_NULL
 #define sc_MPI_COMM_WORLD          MPI_COMM_WORLD
 #define sc_MPI_COMM_SELF           MPI_COMM_SELF
@@ -101,8 +103,8 @@ sc_tag_t;
 
 #define sc_MPI_REQUEST_NULL        MPI_REQUEST_NULL
 #define sc_MPI_INFO_NULL           MPI_INFO_NULL
-#define sc_MPI_DATATYPE_NULL       MPI_DATATYPE_NULL
 
+#define sc_MPI_DATATYPE_NULL       MPI_DATATYPE_NULL
 #define sc_MPI_CHAR                MPI_CHAR
 #define sc_MPI_SIGNED_CHAR         MPI_SIGNED_CHAR
 #define sc_MPI_UNSIGNED_CHAR       MPI_UNSIGNED_CHAR
@@ -120,6 +122,7 @@ sc_tag_t;
 #define sc_MPI_DOUBLE              MPI_DOUBLE
 #define sc_MPI_LONG_DOUBLE         MPI_LONG_DOUBLE
 
+#define sc_MPI_OP_NULL             MPI_OP_NULL
 #define sc_MPI_MAX                 MPI_MAX
 #define sc_MPI_MIN                 MPI_MIN
 #define sc_MPI_LAND                MPI_LAND
@@ -135,8 +138,6 @@ sc_tag_t;
 #define sc_MPI_PROD                MPI_PROD
 
 #define sc_MPI_UNDEFINED           MPI_UNDEFINED
-
-#define sc_MPI_ERR_GROUP           MPI_ERR_GROUP
 
 #define sc_MPI_KEYVAL_INVALID      MPI_KEYVAL_INVALID
 
@@ -211,7 +212,9 @@ sc_tag_t;
 
 /* constants */
 
-#define sc_MPI_SUCCESS             0
+#define sc_MPI_SUCCESS             SC3_MPI_SUCCESS
+#define sc_MPI_ERR_OTHER           SC3_MPI_ERR_OTHER
+
 #define sc_MPI_COMM_NULL           SC3_MPI_COMM_NULL
 #define sc_MPI_COMM_WORLD          SC3_MPI_COMM_WORLD
 #define sc_MPI_COMM_SELF           SC3_MPI_COMM_SELF
@@ -231,8 +234,7 @@ sc_tag_t;
 
 #define sc_MPI_REQUEST_NULL        ((sc_MPI_Request) 0x2c000000)
 
-#define sc_MPI_DATATYPE_NULL       ((sc_MPI_Datatype) 0x4c000000)
-
+#define sc_MPI_DATATYPE_NULL       SC3_MPI_DATATYPE_NULL
 #define sc_MPI_CHAR                ((sc_MPI_Datatype) 0x4c000101)
 #define sc_MPI_SIGNED_CHAR         ((sc_MPI_Datatype) 0x4c000118)
 #define sc_MPI_UNSIGNED_CHAR       ((sc_MPI_Datatype) 0x4c000102)
@@ -251,6 +253,7 @@ sc_tag_t;
 #define sc_MPI_DOUBLE_INT          SC3_MPI_DOUBLE_INT
 #define sc_MPI_LONG_DOUBLE         ((sc_MPI_Datatype) 0x4c000c0c)
 
+#define sc_MPI_OP_NULL             SC3_MPI_OP_NULL
 #define sc_MPI_MIN                 SC3_MPI_MIN
 #define sc_MPI_MAX                 SC3_MPI_MAX
 #define sc_MPI_MINLOC              SC3_MPI_MINLOC
@@ -266,7 +269,6 @@ sc_tag_t;
 #define sc_MPI_SUM                 SC3_MPI_SUM
 
 #define sc_MPI_UNDEFINED           SC3_MPI_UNDEFINED
-#define sc_MPI_ERR_GROUP           (-12345)
 
 /* types */
 

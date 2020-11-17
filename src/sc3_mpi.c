@@ -34,6 +34,7 @@
 static sc3_error_t *
 sc3_MPI_Datatype_size (sc3_MPI_Datatype_t datatype, size_t *size)
 {
+  SC3A_CHECK (datatype != SC3_MPI_DATATYPE_NULL);
   SC3A_CHECK (size != NULL);
   switch (datatype) {
   case SC3_MPI_BYTE:

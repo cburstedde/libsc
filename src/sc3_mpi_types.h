@@ -50,6 +50,7 @@ typedef MPI_Info    sc3_MPI_Info_t;
 typedef MPI_Datatype sc3_MPI_Datatype_t;
 typedef MPI_Op      sc3_MPI_Op_t;
 
+#define SC3_MPI_DATATYPE_NULL MPI_DATATYPE_NULL
 #define SC3_MPI_BYTE MPI_BYTE
 #define SC3_MPI_INT MPI_INT
 #define SC3_MPI_2INT MPI_2INT
@@ -59,6 +60,7 @@ typedef MPI_Op      sc3_MPI_Op_t;
 #define SC3_MPI_DOUBLE MPI_DOUBLE
 #define SC3_MPI_DOUBLE_INT MPI_DOUBLE_INT
 
+#define SC3_MPI_OP_NULL MPI_OP_NULL
 #define SC3_MPI_MIN MPI_MIN
 #define SC3_MPI_MAX MPI_MAX
 #define SC3_MPI_MINLOC MPI_MINLOC
@@ -106,6 +108,7 @@ typedef struct sc3_MPI_Info *sc3_MPI_Info_t;
 /** We wrap the MPI datatypes we use. */
 typedef enum sc3_MPI_Datatype
 {
+  SC3_MPI_DATATYPE_NULL = 0,    /**< The invalid data type. */
   SC3_MPI_BYTE,         /**< Same as in original MPI.  1 byte.
                          * It is preferred over MPI_CHAR since the latter
                          * may amount to multiple bytes for wide chars. */
@@ -122,6 +125,7 @@ sc3_MPI_Datatype_t;
 /** We wrap the MPI operation types we use. */
 typedef enum sc3_MPI_Op
 {
+  SC3_MPI_OP_NULL = 0,  /**< The invalid operation. */
   SC3_MPI_MIN,          /**< The usual minimum reduction operation. */
   SC3_MPI_MAX,          /**< The usual maximum reduction operation. */
   SC3_MPI_MINLOC,       /**< Find minimum value and its rank. */
@@ -141,7 +145,7 @@ sc3_MPI_Op_t;
 /** We wrap two MPI error codes. */
 typedef enum sc3_MPI_Errorcode
 {
-  SC3_MPI_SUCCESS,      /**< An MPI function has exited successfully. */
+  SC3_MPI_SUCCESS = 0,  /**< An MPI function has exited successfully. */
   SC3_MPI_ERR_OTHER     /**< An MPI function has produced an error. */
 }
 sc3_MPI_Errorcode_t;
