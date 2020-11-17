@@ -14,7 +14,8 @@ sc_test_programs = \
         test/sc_test_reduce \
         test/sc_test_search \
         test/sc_test_sort \
-        test/sc_test_sortb
+        test/sc_test_sortb \
+        test/sc_test_version
 ## Reenable and properly verify pqueue when it is actually used
 ##      test/sc_test_pqueue \
 
@@ -33,6 +34,7 @@ test_sc_test_reduce_SOURCES = test/test_reduce.c
 test_sc_test_search_SOURCES = test/test_search.c
 test_sc_test_sort_SOURCES = test/test_sort.c
 test_sc_test_sortb_SOURCES = test/test_sortb.c
+test_sc_test_version_SOURCES = test/test_version.c
 
 TESTS += $(sc_test_programs)
 
@@ -47,4 +49,5 @@ LINT_CSOURCES += \
         $(test_sc_test_reduce_SOURCES) \
         $(test_sc_test_search_SOURCES) \
         $(test_sc_test_sort_SOURCES) \
-        $(test_sc_test_sortb_SOURCES)
+        $(test_sc_test_sortb_SOURCES) \
+        $(test_sc_test_version_SOURCES)

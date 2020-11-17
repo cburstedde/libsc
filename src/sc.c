@@ -1508,4 +1508,22 @@ sc_snprintf (char *str, size_t size, const char *fmt, ...)
   va_end (ap);
 }
 
+const char*
+sc_version (void)
+{
+  return SC_VERSION;
+}
+
+int
+sc_version_major (void)
+{
+  return SC_VERSION_MAJOR;
+}
+
+int
+sc_version_minor (void)
+{
+  return SC_VERSION_MINOR;
+}
+
 #endif
