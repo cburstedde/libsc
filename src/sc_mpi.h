@@ -243,7 +243,7 @@ sc_tag_t;
 #define sc_MPI_UNSIGNED_SHORT      ((sc_MPI_Datatype) 0x4c000204)
 #define sc_MPI_INT                 SC3_MPI_INT
 #define sc_MPI_2INT                SC3_MPI_2INT
-#define sc_MPI_UNSIGNED            ((sc_MPI_Datatype) 0x4c000406)
+#define sc_MPI_UNSIGNED            SC3_MPI_UNSIGNED
 #define sc_MPI_LONG                SC3_MPI_LONG
 #define sc_MPI_UNSIGNED_LONG       ((sc_MPI_Datatype) 0x4c000408)
 #define sc_MPI_LONG_LONG_INT       SC3_MPI_LONG_LONG

@@ -71,10 +71,6 @@ struct sc3_MPI_Comm
 {
   int                 comm;
 };
-static struct sc3_MPI_Comm comm_world = { 1 };
-
-sc3_MPI_Comm_t      SC3_MPI_COMM_SELF = &comm_world;
-sc3_MPI_Comm_t      SC3_MPI_COMM_WORLD = &comm_world;
 
 struct sc3_MPI_Info
 {

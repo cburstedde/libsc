@@ -54,6 +54,7 @@ typedef MPI_Op      sc3_MPI_Op_t;
 #define SC3_MPI_BYTE MPI_BYTE
 #define SC3_MPI_INT MPI_INT
 #define SC3_MPI_2INT MPI_2INT
+#define SC3_MPI_UNSIGNED MPI_UNSIGNED
 #define SC3_MPI_LONG MPI_LONG
 #define SC3_MPI_LONG_LONG MPI_LONG_LONG_INT
 #define SC3_MPI_FLOAT MPI_FLOAT
@@ -114,6 +115,7 @@ typedef enum sc3_MPI_Datatype
                          * may amount to multiple bytes for wide chars. */
   SC3_MPI_INT,          /**< Same as in original MPI.  System int type. */
   SC3_MPI_2INT,         /**< Same as in original MPI.  Two system ints. */
+  SC3_MPI_UNSIGNED,     /**< Same as in original MPI.  System unsigned. */
   SC3_MPI_LONG,         /**< Same as in original MPI.  System long type. */
   SC3_MPI_LONG_LONG,    /**< Same as in original MPI.  System long long. */
   SC3_MPI_FLOAT,        /**< Same as in original MPI. */
@@ -153,7 +155,7 @@ sc3_MPI_Errorcode_t;
 /** We need several parameters to MPI functions. */
 typedef enum sc3_MPI_Enum
 {
-  SC3_MPI_UNDEFINED = -1    /**< An input parameter with undefined value. */
+  SC3_MPI_UNDEFINED = 0x11  /**< An input parameter with undefined value. */
 }
 sc3_MPI_Enum_t;
 
@@ -163,14 +165,14 @@ sc3_MPI_Enum_t;
 /** Create a wrapped version of the maximum error string length. */
 #define SC3_MPI_MAX_ERROR_STRING SC3_BUFSIZE
 
-/** Without --enable-mpi, a communicator of size 1 and rank 0. */
-extern sc3_MPI_Comm_t SC3_MPI_COMM_WORLD;
-
-/** Without --enable-mpi, a communicator of size 1 and rank 0. */
-extern sc3_MPI_Comm_t SC3_MPI_COMM_SELF;
-
 /** Wrapped invalid MPI communicator. */
 #define SC3_MPI_COMM_NULL ((sc3_MPI_Comm_t) NULL)
+
+/** Without --enable-mpi, a communicator of size 1 and rank 0. */
+#define SC3_MPI_COMM_WORLD ((sc3_MPI_Comm_t) 0x40)
+
+/** Without --enable-mpi, a communicator of size 1 and rank 0. */
+#define SC3_MPI_COMM_SELF ((sc3_MPI_Comm_t) 0x80)
 
 /** Wrapped invalid MPI info object. */
 #define SC3_MPI_INFO_NULL ((sc3_MPI_Info_t) NULL)
@@ -184,7 +186,7 @@ extern sc3_MPI_Comm_t SC3_MPI_COMM_SELF;
  * Without --enable-mpi, they have size 1 and rank 0. */
 typedef enum sc3_MPI_Comm_type
 {
-  SC3_MPI_COMM_TYPE_SHARED = -2 /**< MPI 3 shared window communicator. */
+  SC3_MPI_COMM_TYPE_SHARED = 0x12 /**< MPI 3 shared window communicator. */
 }
 sc3_MPI_Comm_type_t;
 
@@ -208,9 +210,9 @@ typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
 /** Wrap MPI 3 window lock modes. */
 typedef enum sc3_MPI_Win_mode
 {
-  SC3_MPI_LOCK_SHARED = -3,     /**< Shared (multiple readers) lock. */
-  SC3_MPI_LOCK_EXCLUSIVE = -4,  /**< Exclusive (usually reader) lock. */
-  SC3_MPI_MODE_NOCHECK = -5,    /**< Option to \ref sc3_MPI_Win_lock. */
+  SC3_MPI_LOCK_SHARED = 0x13,     /**< Shared (multiple readers) lock. */
+  SC3_MPI_LOCK_EXCLUSIVE = 0x14,  /**< Exclusive (usually reader) lock. */
+  SC3_MPI_MODE_NOCHECK = 0x15     /**< Option to \ref sc3_MPI_Win_lock. */
 }
 sc3_MPI_Win_mode_t;
 
