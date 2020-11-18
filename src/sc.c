@@ -1476,7 +1476,7 @@ int
 sc_version_point (void)
 {
   /* SC_VERSION_POINT may contain a dot and/or dash, followed by additional information */
-  return strtol(TOSTRING(SC_VERSION_POINT), NULL, 10);
+  return strtol (TOSTRING (SC_VERSION_POINT), NULL, 10);
 }
 
 #undef TOSTRING

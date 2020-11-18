@@ -65,7 +65,8 @@ main (int argc, char **argv)
 
   version_point = sc_version_point ();
   SC_GLOBAL_LDEBUGF ("Point SC version: %d\n", version_point);
-  snprintf (version_tmp, 32, "%d.%d.%d", version_major, version_minor, version_point);
+  snprintf (version_tmp, 32, "%d.%d.%d", version_major, version_minor,
+            version_point);
   if (strncmp (version, version_tmp, strlen (version_tmp))) {
     SC_VERBOSE ("Test failure for point version of SC\n");
     num_failed_tests++;
