@@ -702,7 +702,28 @@ void                sc_strcopy (char *dest, size_t size, const char *src);
  */
 void                sc_snprintf (char *str, size_t size,
                                  const char *format, ...)
-  __attribute__((format (printf, 3, 4)));
+  __attribute__ ((format (printf, 3, 4)));
+
+/** Return the full version of libsc.
+ *
+ * \return          Return the version of libsc using the format
+ *                  `VERSION_MAJOR.VERSION_MINOR.VERSION_POINT`,
+ *                  where `VERSION_POINT` can contain dots and
+ *                  characters, e.g. to indicate the git commit.
+ */
+const char         *sc_version (void);
+
+/** Return the major version of libsc.
+ *
+ * \return          Return the major version of libsc.
+ */
+int                 sc_version_major (void);
+
+/** Return the minor version of libsc.
+ *
+ * \return          Return the minor version of libsc.
+ */
+int                 sc_version_minor (void);
 
 SC_EXTERN_C_END;
 
