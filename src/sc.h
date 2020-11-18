@@ -202,10 +202,10 @@ extern int          sc_trace_prio;
  * This loses __FILE__ and __LINE__ in the C++ ..F log functions
  */
 void                SC_ABORTF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)))
-  __attribute__((noreturn));
+  __attribute__ ((format (printf, 1, 2)))
+  __attribute__ ((noreturn));
 void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
-  __attribute__((format (printf, 2, 3)));
+  __attribute__ ((format (printf, 2, 3)));
 #ifndef __cplusplus
 #define SC_ABORTF(fmt,...)                                      \
   sc_abort_verbosef (__FILE__, __LINE__, (fmt), __VA_ARGS__)
@@ -377,11 +377,11 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_LOG(p,s) SC_GEN_LOG (sc_package_id, SC_LC_NORMAL, (p), (s))
 void                SC_GEN_LOGF (int package, int category, int priority,
                                  const char *fmt, ...)
-  __attribute__((format (printf, 4, 5)));
+  __attribute__ ((format (printf, 4, 5)));
 void                SC_GLOBAL_LOGF (int priority, const char *fmt, ...)
-  __attribute__((format (printf, 2, 3)));
+  __attribute__ ((format (printf, 2, 3)));
 void                SC_LOGF (int priority, const char *fmt, ...)
-  __attribute__((format (printf, 2, 3)));
+  __attribute__ ((format (printf, 2, 3)));
 #ifndef __cplusplus
 #define SC_GEN_LOGF(package,category,priority,fmt,...)                  \
   ((priority) < SC_LP_THRESHOLD ? (void) 0 :                            \
@@ -403,21 +403,21 @@ void                SC_LOGF (int priority, const char *fmt, ...)
 #define SC_GLOBAL_ESSENTIAL(s) SC_GLOBAL_LOG (SC_LP_ESSENTIAL, (s))
 #define SC_GLOBAL_LERROR(s) SC_GLOBAL_LOG (SC_LP_ERROR, (s))
 void                SC_GLOBAL_TRACEF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_GLOBAL_LDEBUGF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_GLOBAL_VERBOSEF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_GLOBAL_INFOF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_GLOBAL_STATISTICSF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_GLOBAL_PRODUCTIONF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_GLOBAL_ESSENTIALF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_GLOBAL_LERRORF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 #ifndef __cplusplus
 #define SC_GLOBAL_TRACEF(fmt,...)                       \
   SC_GLOBAL_LOGF (SC_LP_TRACE, (fmt), __VA_ARGS__)
@@ -447,21 +447,21 @@ void                SC_GLOBAL_LERRORF (const char *fmt, ...)
 #define SC_ESSENTIAL(s) SC_LOG (SC_LP_ESSENTIAL, (s))
 #define SC_LERROR(s) SC_LOG (SC_LP_ERROR, (s))
 void                SC_TRACEF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_LDEBUGF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_VERBOSEF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_INFOF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_STATISTICSF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_PRODUCTIONF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_ESSENTIALF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 void                SC_LERRORF (const char *fmt, ...)
-  __attribute__((format (printf, 1, 2)));
+  __attribute__ ((format (printf, 1, 2)));
 #ifndef __cplusplus
 #define SC_TRACEF(fmt,...)                      \
   SC_LOGF (SC_LP_TRACE, (fmt), __VA_ARGS__)
@@ -537,7 +537,7 @@ void                sc_log (const char *filename, int lineno,
 void                sc_logf (const char *filename, int lineno,
                              int package, int category, int priority,
                              const char *fmt, ...)
-  __attribute__((format (printf, 6, 7)));
+  __attribute__ ((format (printf, 6, 7)));
 void                sc_logv (const char *filename, int lineno,
                              int package, int category, int priority,
                              const char *fmt, va_list ap);
@@ -556,27 +556,27 @@ void                sc_log_indent_pop (void);
 
 /** Print a stack trace, call the abort handler and then call abort (). */
 void                sc_abort (void)
-  __attribute__((noreturn));
+  __attribute__ ((noreturn));
 
 /** Print a message to stderr and then call sc_abort (). */
 void                sc_abort_verbose (const char *filename, int lineno,
                                       const char *msg)
-  __attribute__((noreturn));
+  __attribute__ ((noreturn));
 
 /** Print a message to stderr and then call sc_abort (). */
 void                sc_abort_verbosef (const char *filename, int lineno,
                                        const char *fmt, ...)
-  __attribute__((format (printf, 3, 4)))
-  __attribute__((noreturn));
+  __attribute__ ((format (printf, 3, 4)))
+  __attribute__ ((noreturn));
 
 /** Print a message to stderr and then call sc_abort (). */
 void                sc_abort_verbosev (const char *filename, int lineno,
                                        const char *fmt, va_list ap)
-  __attribute__((noreturn));
+  __attribute__ ((noreturn));
 
 /** Collective abort where only root prints a message */
 void                sc_abort_collective (const char *msg)
-  __attribute__((noreturn));
+  __attribute__ ((noreturn));
 
 /** Register a software package with SC.
  * This function must only be called before additional threads are created.
@@ -702,7 +702,7 @@ void                sc_strcopy (char *dest, size_t size, const char *src);
  */
 void                sc_snprintf (char *str, size_t size,
                                  const char *format, ...)
-  __attribute__((format (printf, 3, 4)));
+  __attribute__ ((format (printf, 3, 4)));
 
 /** Return the full version of libsc.
  *
