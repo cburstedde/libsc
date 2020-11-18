@@ -1449,7 +1449,7 @@ sc_snprintf (char *str, size_t size, const char *fmt, ...)
   va_end (ap);
 }
 
-const char*
+const char         *
 sc_version (void)
 {
   return SC_VERSION;
