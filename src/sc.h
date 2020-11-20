@@ -34,8 +34,12 @@
 #ifndef SC_H
 #define SC_H
 
-/* include the sc_config header first */
+/* we set the GNU feature test macro before including anything */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
+/* include the libsc config header first */
 #include <sc_config.h>
 #ifndef _sc_const
 #define _sc_const const
@@ -104,11 +108,22 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <stddef.h>
+#ifdef SC_HAVE_STDINT_H
 #include <stdint.h>
+#endif
 #include <stdio.h>
+#ifdef SC_HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#ifdef SC_HAVE_STRING_H
 #include <string.h>
+#endif
+#ifdef SC_HAVE_TIME_H
+#include <time.h>
+#endif
+#ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 /* definitions to allow user code to query the sc library */
 /** Indicate that we do not modify the communicator in sc_init. */

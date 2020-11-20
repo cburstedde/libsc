@@ -26,36 +26,10 @@
 
 #ifndef SC_ENABLE_MPI
 
-/* gettimeofday is in either of these two */
+/* time.h is already included by sc.h */
 #ifdef SC_HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
-#ifdef SC_HAVE_TIME_H
-#include <time.h>
-#endif
-
-static inline void
-mpi_dummy_assert_op (sc_MPI_Op op)
-{
-  switch (op) {
-  case sc_MPI_MAX:
-  case sc_MPI_MIN:
-  case sc_MPI_SUM:
-  case sc_MPI_PROD:
-  case sc_MPI_LAND:
-  case sc_MPI_BAND:
-  case sc_MPI_LOR:
-  case sc_MPI_BOR:
-  case sc_MPI_LXOR:
-  case sc_MPI_BXOR:
-  case sc_MPI_MINLOC:
-  case sc_MPI_MAXLOC:
-  case sc_MPI_REPLACE:
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
-  }
-}
 
 int
 sc_MPI_Init (int *argc, char ***argv)
@@ -352,8 +326,8 @@ sc_MPI_Reduce (void *p, void *q, int n, sc_MPI_Datatype t,
 {
   size_t              l;
 
+  SC_ASSERT (op != sc_MPI_OP_NULL);
   SC_ASSERT (rank == 0 && n >= 0);
-  mpi_dummy_assert_op (op);
 
 /* *INDENT-OFF* horrible indent bug */
   l = (size_t) n * sc_mpi_sizeof (t);
