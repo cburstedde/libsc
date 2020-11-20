@@ -38,19 +38,22 @@
 
 #include <sc_config.h>
 #ifndef _sc_const
+/** Portable way to work with really old compilers without const. */
 #define _sc_const const
 #endif
 #ifndef _sc_restrict
+/** Portable way to work with really old compilers without restrict. */
 #define _sc_restrict restrict
 #endif
 
-/* test for gcc version without features.h */
+/** Test for gcc version without features.h. */
 #define SC_CALC_VERSION(major,minor,patchlevel) \
                        (((major) * 1000 + (minor)) * 1000 + (patchlevel))
 #ifdef __GNUC__
 #define SC_GCC_VERSION \
         SC_CALC_VERSION(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
 #else
+/** Assemble GCC version using a 1000-per-digit scheme. */
 #define SC_GCC_VERSION \
         SC_CALC_VERSION (0, 0, 0)
 #endif
@@ -75,7 +78,12 @@
 /* use this in case mpi.h includes stdint.h */
 
 #ifndef __STDC_LIMIT_MACROS
+/** Activate C99 limit macros for older C++ compilers. */
 #define __STDC_LIMIT_MACROS
+#endif
+#ifndef __STDC_CONSTANT_MACROS
+/** Activate C99 constant macros for older C++ compilers. */
+#define __STDC_CONSTANT_MACROS
 #endif
 
 /* include MPI before stdio.h */
@@ -114,6 +122,7 @@
 #else
 #define SC_EXTERN_C_BEGIN                    void sc_extern_c_hack_3 (void)
 #define SC_EXTERN_C_END                      void sc_extern_c_hack_4 (void)
+/** For compatibility of varargs with C++ */
 #define SC_NOARGS
 #endif
 
@@ -172,20 +181,15 @@ extern int          sc_trace_prio;
 #define M_SQRT1_2 0.70710678118654752440        /* 1/sqrt(2) */
 #endif
 
+/** Define machine epsilon for the double type. */
 #define SC_EPS               2.220446049250313e-16
-#define SC_1000_EPS (1000. * 2.220446049250313e-16)
 
-#if 0
-/*@ignore@*/
-#define index   DONT_USE_NAME_CONFLICT_1 ---
-#define rindex  DONT_USE_NAME_CONFLICT_2 ---
-#define link    DONT_USE_NAME_CONFLICT_3 ---
-#define NO_DEFINE_DONT_USE_CONFLICT SPLINT_IS_STUPID_ALSO
-/*@end@*/
-#endif /* 0 */
+/** Define 1000 times the machine epsilon for the double type. */
+#define SC_1000_EPS (1000. * 2.220446049250313e-16)
 
 /* check macros, always enabled */
 
+/** A macro to do and return nothing as an expression. */
 #define SC_NOOP() ((void) (0))
 #define SC_ABORT(s)                             \
   sc_abort_verbose (__FILE__, __LINE__, (s))
