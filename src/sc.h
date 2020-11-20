@@ -709,7 +709,8 @@ void                sc_snprintf (char *str, size_t size,
  * \return          Return the version of libsc using the format
  *                  `VERSION_MAJOR.VERSION_MINOR.VERSION_POINT`,
  *                  where `VERSION_POINT` can contain dots and
- *                  characters, e.g. to indicate the git commit.
+ *                  characters, e.g. to indicate the additional
+ *                  number of commits and a git commit hash.
  */
 const char         *sc_version (void);
 
@@ -724,6 +725,14 @@ int                 sc_version_major (void);
  * \return          Return the minor version of libsc.
  */
 int                 sc_version_minor (void);
+
+/** Return the point version of libsc.
+ *
+ * \return          Return the (first part of the) point version of libsc,
+ *                  without information about the additional number of commits
+ *                  and commit hash.
+ */
+int                 sc_version_point (void);
 
 SC_EXTERN_C_END;
 

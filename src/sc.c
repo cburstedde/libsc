@@ -39,8 +39,6 @@ typedef void        (*sc_sig_t) (int);
 #endif
 #endif
 
-#include <errno.h>
-
 #ifdef SC_ENABLE_PTHREAD
 #include <pthread.h>
 #endif
@@ -1466,5 +1464,20 @@ sc_version_minor (void)
 {
   return SC_VERSION_MINOR;
 }
+
+/* Define helper macros temporally to convert the point version */
+#define _SC_TOSTRING(x) #x
+#define SC_TOSTRING(x) _SC_TOSTRING(x)
+
+int
+sc_version_point (void)
+{
+  /* SC_VERSION_POINT may contain a dot and/or dash,
+     followed by additional information */
+  return atoi (SC_TOSTRING (SC_VERSION_POINT));
+}
+
+#undef TOSTRING
+#undef _TOSTRING
 
 #endif
