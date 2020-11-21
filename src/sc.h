@@ -481,6 +481,12 @@ void                SC_LERRORF (const char *fmt, ...)
   SC_LOGF (SC_LP_ERROR, (fmt), __VA_ARGS__)
 #endif
 
+/* Macros used to convert a macro definition such as the point version
+ * to a string
+ */
+#define _SC_TOSTRING(x) #x
+#define SC_TOSTRING(x) _SC_TOSTRING(x)
+
 /* callback typedefs */
 
 typedef void        (*sc_handler_t) (void *data);
