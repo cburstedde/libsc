@@ -490,6 +490,20 @@ int                 sc_int32_compare (const void *v1, const void *v2);
 int                 sc_int64_compare (const void *v1, const void *v2);
 int                 sc_double_compare (const void *v1, const void *v2);
 
+/** Safe version of the standard library atoi (3) function.
+ * \param [in] nptr     NUL-terminated string.
+ * \return              Converted integer value.  0 if no valid number.
+ *                      INT_MAX on overflow, INT_MIN on underflow.
+ */
+int                 sc_atoi (const char *nptr);
+
+/** Safe version of the standard library atol (3) function.
+ * \param [in] nptr     NUL-terminated string.
+ * \return              Converted long value.  0 if no valid number.
+ *                      LONG_MAX on overflow, LONG_MIN on underflow.
+ */
+long                sc_atol (const char *nptr);
+
 /** Controls the default SC log behavior.
  * \param [in] log_stream    Set stream to use by sc_logf (or NULL for stdout).
  * \param [in] log_handler   Set default SC log handler (NULL selects builtin).

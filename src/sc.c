@@ -754,6 +754,19 @@ sc_double_compare (const void *v1, const void *v2)
   return d1 < d2 ? -1 : d1 > d2 ? 1 : 0;
 }
 
+int
+sc_atoi (const char *nptr)
+{
+  long                r = strtol (nptr, NULL, 10);
+  return r <= INT_MIN ? INT_MIN : r >= INT_MAX ? INT_MAX : (int) r;
+}
+
+long
+sc_atol (const char *nptr)
+{
+  return strtol (nptr, NULL, 10);
+}
+
 void
 sc_set_log_defaults (FILE * log_stream,
                      sc_log_handler_t log_handler, int log_threshold)
