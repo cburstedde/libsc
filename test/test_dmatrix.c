@@ -342,5 +342,5 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   /* return number of failed tests */
-  return num_failed_tests;
+  return num_failed_tests ? EXIT_FAILURE : EXIT_SUCCESS;
 }

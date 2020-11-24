@@ -157,5 +157,5 @@ main (int argc, char **argv)
 
   sc_finalize ();
 
-  return num_errors > 0;
+  return num_errors ? EXIT_FAILURE : EXIT_SUCCESS;
 }

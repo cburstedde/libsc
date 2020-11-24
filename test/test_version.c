@@ -28,8 +28,6 @@
 */
 
 #include <sc.h>
-#include <stdio.h>
-#include <string.h>
 
 int
 main (int argc, char **argv)
@@ -75,5 +73,5 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
-  return num_failed_tests ? 1 : 0;
+  return num_failed_tests ? EXIT_FAILURE : EXIT_SUCCESS;
 }
