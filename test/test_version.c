@@ -51,21 +51,21 @@ main (int argc, char **argv)
   /* check all functions related to version numbers of libsc */
   num_failed_tests = 0;
   version = sc_version ();
-  SC_GLOBAL_LDEBUGF ("Full SC version: %s\n", version);
+  SC_GLOBAL_LDEBUGF ("Full libsc version: %s\n", version);
 
   version_major = sc_version_major ();
-  SC_GLOBAL_LDEBUGF ("Major SC version: %d\n", version_major);
+  SC_GLOBAL_LDEBUGF ("Major libsc version: %d\n", version_major);
   snprintf (version_tmp, 32, "%d", version_major);
   if (strncmp (version, version_tmp, strlen (version_tmp))) {
-    SC_VERBOSE ("Test failure for major version of SC\n");
+    SC_GLOBAL_VERBOSE ("Test failure for major version of libsc\n");
     num_failed_tests++;
   }
 
   version_minor = sc_version_minor ();
-  SC_GLOBAL_LDEBUGF ("Minor SC version: %d\n", version_minor);
+  SC_GLOBAL_LDEBUGF ("Minor libsc version: %d\n", version_minor);
   snprintf (version_tmp, 32, "%d.%d", version_major, version_minor);
   if (strncmp (version, version_tmp, strlen (version_tmp))) {
-    SC_VERBOSE ("Test failure for minor version of SC\n");
+    SC_GLOBAL_VERBOSE ("Test failure for minor version of libsc\n");
     num_failed_tests++;
   }
 
