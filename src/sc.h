@@ -732,6 +732,9 @@ int                 sc_version_major (void);
  */
 int                 sc_version_minor (void);
 
+#if 0
+/* Sadly, the point version macro by autoconf doesn't work with vX and vX.Y.
+   The remaining option is to use sc_version and parse its return string. */
 /** Return the point version of libsc.
  *
  * \return          Return the (first part of the) point version of libsc,
@@ -739,6 +742,7 @@ int                 sc_version_minor (void);
  *                  and commit hash.
  */
 int                 sc_version_point (void);
+#endif /* 0 */
 
 SC_EXTERN_C_END;
 

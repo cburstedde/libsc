@@ -1465,6 +1465,7 @@ sc_version_minor (void)
   return SC_VERSION_MINOR;
 }
 
+#if 0
 int
 sc_version_point (void)
 {
@@ -1472,5 +1473,6 @@ sc_version_point (void)
      followed by additional information */
   return atoi (SC_TOSTRING (SC_VERSION_POINT));
 }
+#endif
 
 #endif
