@@ -133,11 +133,21 @@ SC_EXTERN_C_BEGIN;
 
 /* extern variables */
 
+/** Lookup table to provide fast base-2 logarithm of integers. */
 extern const int    sc_log2_lookup_table[256];
+
+/** libsc allows for multiple packages to use their own log priorities etc.
+ * This is the package id for core sc functions, which is meant to be read only.
+ * It starts out with a value of -1, which is fine by itself.
+ * It is set to a non-negative value by the (optional) \ref sc_init.
+ */
 extern int          sc_package_id;
 
-/* control a trace file by environment variables (see sc_init) */
+/** Optional trace file for logging (see \ref sc_init).
+ * Initialized to NULL. */
 extern FILE        *sc_trace_file;
+
+/** Optional minimum log priority for messages that go into the trace file. */
 extern int          sc_trace_prio;
 
 /* define math constants if necessary */
@@ -485,10 +495,12 @@ void                SC_LERRORF (const char *fmt, ...)
   SC_LOGF (SC_LP_ERROR, (fmt), __VA_ARGS__)
 #endif
 
-/* Macros used to convert a macro definition such as the point version
- * to a string
- */
+/** Macros used to convert a macro definition such as the point version
+ * or some other numerical literal to a string. */
 #define _SC_TOSTRING(x) #x
+
+/** Macros used to convert a macro definition such as the point version
+ * or some other numerical literal to a string. */
 #define SC_TOSTRING(x) _SC_TOSTRING(x)
 
 /* callback typedefs */
