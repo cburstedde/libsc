@@ -1465,10 +1465,7 @@ sc_version_minor (void)
   return SC_VERSION_MINOR;
 }
 
-/* Define helper macros temporally to convert the point version */
-#define _SC_TOSTRING(x) #x
-#define SC_TOSTRING(x) _SC_TOSTRING(x)
-
+#if 0
 int
 sc_version_point (void)
 {
@@ -1476,8 +1473,6 @@ sc_version_point (void)
      followed by additional information */
   return atoi (SC_TOSTRING (SC_VERSION_POINT));
 }
-
-#undef TOSTRING
-#undef _TOSTRING
+#endif
 
 #endif

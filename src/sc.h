@@ -485,6 +485,12 @@ void                SC_LERRORF (const char *fmt, ...)
   SC_LOGF (SC_LP_ERROR, (fmt), __VA_ARGS__)
 #endif
 
+/* Macros used to convert a macro definition such as the point version
+ * to a string
+ */
+#define _SC_TOSTRING(x) #x
+#define SC_TOSTRING(x) _SC_TOSTRING(x)
+
 /* callback typedefs */
 
 typedef void        (*sc_handler_t) (void *data);
@@ -730,6 +736,9 @@ int                 sc_version_major (void);
  */
 int                 sc_version_minor (void);
 
+#if 0
+/* Sadly, the point version macro by autoconf doesn't work with vX and vX.Y.
+   The remaining option is to use sc_version and parse its return string. */
 /** Return the point version of libsc.
  *
  * \return          Return the (first part of the) point version of libsc,
@@ -737,6 +746,7 @@ int                 sc_version_minor (void);
  *                  and commit hash.
  */
 int                 sc_version_point (void);
+#endif /* 0 */
 
 SC_EXTERN_C_END;
 
