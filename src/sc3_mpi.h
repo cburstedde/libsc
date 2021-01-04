@@ -75,6 +75,19 @@
                                __FILE__, __LINE__, _errmsg);            \
   }} while (0)
 
+/** Return an MPI usage error.
+ *
+ * If a wrapped MPI function is called inappropriately, use this to return.
+ * For example, if MPI shared windows are not available and the user requests
+ * a non-trivial one (with communicator size greater one), we invoke this macro.
+ */
+#define SC3E_MPI_USAGE(s) do {                                          \
+  char _errmsg[SC3_BUFSIZE];                                            \
+  sc3_snprintf (_errmsg, SC3_BUFSIZE, "MPI usage: %s", s);              \
+  return sc3_error_new_kind (SC3_ERROR_NETWORK,                         \
+                             __FILE__, __LINE__, _errmsg);              \
+} while (0)
+
 #ifdef __cplusplus
 extern              "C"
 {

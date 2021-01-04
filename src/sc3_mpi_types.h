@@ -210,7 +210,6 @@ typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
 /** We wrap the MPI address integer type. */
 typedef long        sc3_MPI_Aint_t;
 
-
 /** Wrap MPI 3 window lock modes. */
 typedef enum sc3_MPI_Win_mode
 {
@@ -224,13 +223,10 @@ sc3_MPI_Win_mode_t;
 /* We know that MPI is generally available. */
 
 typedef MPI_Aint    sc3_MPI_Aint_t;
-//typedef MPI_Win     sc3_MPI_Win_t;
 
 #define SC3_MPI_LOCK_SHARED MPI_LOCK_SHARED
 #define SC3_MPI_LOCK_EXCLUSIVE MPI_LOCK_EXCLUSIVE
 #define SC3_MPI_MODE_NOCHECK MPI_MODE_NOCHECK
-
-//#define SC3_MPI_WIN_NULL MPI_WIN_NULL
 
 #endif /* SC_ENABLE_MPIWINSHARED */
 
