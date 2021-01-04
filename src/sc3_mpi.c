@@ -338,9 +338,7 @@ sc3_MPI_Info_free (sc3_MPI_Info_t * info)
   return NULL;
 }
 
-#ifdef SC_ENABLE_DEBUG
-
-static int
+int
 sc3_MPI_Win_is_valid (sc3_MPI_Win_t win, char *reason)
 {
   SC3E_TEST (win != NULL, reason);
@@ -356,8 +354,6 @@ sc3_MPI_Win_is_valid (sc3_MPI_Win_t win, char *reason)
 #endif
   SC3E_YES (reason);
 }
-
-#endif /* SC_ENABLE_DEBUG */
 
 sc3_error_t        *
 sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,

@@ -237,9 +237,24 @@ sc3_error_t        *sc3_MPI_Info_set (sc3_MPI_Info_t info,
  */
 sc3_error_t        *sc3_MPI_Info_free (sc3_MPI_Info_t * info);
 
+/** Return whether an MPI window is valid.
+ * We wrap the MPI window into a separate sc3 wrapper structure.
+ * This wrapper object must not be mixed with the real MPI window object.
+ * We do this to make sure that we use a fast implementation for mpisize 1.
+ * \param [in] win           A pointer that is NULL or an sc3_MPI_Win_t.
+ * \param [in,out] reason    Pointer, if not NULL, filled with information.
+ * \return                    True is valid, false otherwise.
+ */
+int                 sc3_MPI_Win_is_valid (sc3_MPI_Win_t win, char *reason);
+
 /** Wrap MPI_Win_allocate_shared.
  * \param [in] size, disp_unit, info    See original function.
  * \param [in] comm     Valid MPI communicator.
+ *                      If configure does not #define SC_ENABLE_MPICOMMSHARED,
+ *                      function must only be called with a size 1 communicator.
+ *                      If, on the other hand, configure finds that MPI shared
+ *                      windows work, we use a fast replacement for size 1
+ *                      and invoke original MPI calls only for sizes > 1.
  * \param [out] baseptr Start of window memory.
  * \param [out] win     New valid MPI window.
  * \return          NULL on success, error object otherwise.
