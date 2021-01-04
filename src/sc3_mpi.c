@@ -444,7 +444,6 @@ sc3_MPI_Win_lock (int lock_type, int rank, int assert, sc3_MPI_Win_t win)
   SC3A_IS (sc3_MPI_Win_is_valid, win);
   SC3A_CHECK (lock_type == SC3_MPI_LOCK_SHARED ||
               lock_type == SC3_MPI_LOCK_EXCLUSIVE);
-  SC3A_CHECK (rank == win->rank);
   SC3A_CHECK (assert == 0 || assert == SC3_MPI_MODE_NOCHECK);
   SC3A_CHECK (!win->locked);
 
@@ -453,7 +452,12 @@ sc3_MPI_Win_lock (int lock_type, int rank, int assert, sc3_MPI_Win_t win)
   if (win->size > 1) {
     SC3E_MPI (MPI_Win_lock (lock_type, rank, assert, win->mpiwin));
   }
+#else
+  if (0);
 #endif
+  else {
+    SC3A_CHECK (rank == win->rank);
+  }
 
   /* update and return */
   win->locked = 1;
@@ -465,7 +469,6 @@ sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win)
 {
   /* verify wrapper code and call convention */
   SC3A_IS (sc3_MPI_Win_is_valid, win);
-  SC3A_CHECK (rank == win->rank);
   SC3A_CHECK (win->locked);
 
 #ifdef SC_ENABLE_MPIWINSHARED
@@ -473,7 +476,12 @@ sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win)
   if (win->size > 1) {
     SC3E_MPI (MPI_Win_unlock (rank, win->mpiwin));
   }
+#else
+  if (0);
 #endif
+  else {
+    SC3A_CHECK (rank == win->rank);
+  }
 
   /* update and return */
   win->locked = 0;
