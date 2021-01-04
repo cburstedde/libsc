@@ -422,7 +422,8 @@ sc3_MPI_Win_shared_query (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size,
   /* only call MPI window code if request is non-trivial */
   if (win->size > 1) {
 #ifdef SC_ENABLE_MPIWINSHARED
-    SC3E_MPI (MPI_Win_shared_query (win->mpiwin, rank, size, disp_unit, baseptr));
+    SC3E_MPI (MPI_Win_shared_query
+              (win->mpiwin, rank, size, disp_unit, baseptr));
 #else
     SC3E_UNREACH ("Please report: Should have caught commsize > 1");
 #endif
