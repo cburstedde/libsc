@@ -390,7 +390,8 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
 #endif
   else {
     newin->baseptr = SC3_MALLOC (char, size);
-    SC3E_DEMAND (newin->baseptr != NULL, "Allocating MPI window baseptr");
+    SC3E_DEMAND (newin->baseptr != NULL,
+                 "Win_allocate_shared replacement failed allocation");
   }
   SC3A_IS (sc3_MPI_Win_is_valid, newin);
 
@@ -447,12 +448,10 @@ sc3_MPI_Win_lock (int lock_type, int rank, int assert, sc3_MPI_Win_t win)
   if (0);
 #endif
   else {
-    SC3A_CHECK (rank == win->rank);
+    SC3E_DEMAND (rank == win->rank, "Win_lock to remote ranks not supported");
     SC3A_CHECK (!win->locked);
+    win->locked = 1;
   }
-
-  /* update and return */
-  win->locked = 1;
   return NULL;
 }
 
@@ -471,12 +470,11 @@ sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win)
   if (0);
 #endif
   else {
-    SC3A_CHECK (rank == win->rank);
+    SC3E_DEMAND (rank == win->rank,
+                 "Win_unlock to remote ranks not supported");
     SC3A_CHECK (win->locked);
+    win->locked = 0;
   }
-
-  /* update and return */
-  win->locked = 0;
   return NULL;
 }
 
@@ -501,7 +499,6 @@ sc3_MPI_Win_free (sc3_MPI_Win_t * win)
   /* verify wrapper code and call convention */
   SC3A_CHECK (win != NULL);
   SC3A_IS (sc3_MPI_Win_is_valid, *win);
-  SC3A_CHECK (!(*win)->locked);
 
 #ifdef SC_ENABLE_MPIWINSHARED
   /* only call MPI window code if request is non-trivial */
@@ -512,6 +509,7 @@ sc3_MPI_Win_free (sc3_MPI_Win_t * win)
   if (0);
 #endif
   else {
+    SC3A_CHECK (!(*win)->locked);
     SC3_FREE ((*win)->baseptr);
   }
 

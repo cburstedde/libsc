@@ -198,7 +198,15 @@ sc3_MPI_Comm_type_t;
 #endif /* SC_ENABLE_MPICOMMSHARED */
 
 /** We wrap the MPI 3 window object.
- * Without MPI 3 available, it is primitive but allows basic use. */
+ * With MPI 3 windows available, the functionality is unchanged.
+ * Without MPI 3 available, it is primitive but allows basic use.
+ *
+ * When created with a communicator size of one, or when `configure` does not
+ * define SC_ENABLE_MPIWINSHARED, we use the wrapper and do not go through MPI.
+ * When shared windows are not supported and the communicator has size > 1,
+ * the wrapper cannot query or lock and unlock the window of remote ranks.
+ * Any such attempt will result in a fatal error returned.
+ */
 typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
 
 /** Invalid MPI 3 window object. */
