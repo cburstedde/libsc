@@ -346,9 +346,7 @@ sc3_MPI_Win_is_valid (sc3_MPI_Win_t win, char *reason)
   SC3E_TEST (0 <= win->rank && win->rank < win->size, reason);
   SC3E_TEST (win->disp_unit >= 0, reason);
   SC3E_TEST (win->baseptr != NULL || win->memsize == 0, reason);
-#ifndef SC_ENABLE_MPIWINSHARED
-  SC3E_TEST (win->size == 1, reason);
-#else
+#ifdef SC_ENABLE_MPIWINSHARED
   SC3E_TEST ((win->size == 1 && win->mpiwin == MPI_WIN_NULL) ||
              (win->size > 1 && win->mpiwin != MPI_WIN_NULL), reason);
 #endif
@@ -360,7 +358,6 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
                              sc3_MPI_Info_t info, sc3_MPI_Comm_t comm,
                              void *baseptr, sc3_MPI_Win_t * win)
 {
-  int                 commsize;
   sc3_MPI_Win_t       newin;
 
   SC3A_CHECK (size >= 0);
@@ -368,36 +365,30 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
   SC3A_CHECK (comm != SC3_MPI_COMM_NULL);
   SC3A_CHECK (baseptr != NULL);
   SC3A_CHECK (win != NULL);
-  SC3E (sc3_MPI_Comm_size (comm, &commsize));
-
-#ifndef SC_ENABLE_MPIWINSHARED
-  /* we have no sane way of replicating non-trivial windows */
-  SC3E_DEMAND (commsize == 1, "Shared window with size > 1 not supported");
-#endif
 
   /* initialize wrapper structure */
   newin = SC3_MALLOC (struct sc3_MPI_Win, 1);
   SC3E_DEMAND (newin != NULL, "Allocating MPI window");
   newin->win = 1;
-  newin->size = commsize;
+  SC3E (sc3_MPI_Comm_size (comm, &newin->size));
   SC3E (sc3_MPI_Comm_rank (comm, &newin->rank));
   newin->locked = 0;
   newin->disp_unit = disp_unit;
   newin->memsize = size;
-
-  /* only call MPI window code if request is non-trivial */
-  if (commsize > 1) {
 #ifdef SC_ENABLE_MPIWINSHARED
+  newin->mpiwin = MPI_WIN_NULL;
+#endif
+
+#ifdef SC_ENABLE_MPIWINSHARED
+  /* only call MPI window code if request is non-trivial */
+  if (newin->size > 1) {
     SC3E_MPI (MPI_Win_allocate_shared (size, disp_unit, info, comm,
                                        &newin->baseptr, &newin->mpiwin));
-#else
-    SC3E_UNREACH ("Please report: Should have caught commsize > 1");
-#endif
   }
-  else {
-#ifdef SC_ENABLE_MPIWINSHARED
-    newin->mpiwin = MPI_WIN_NULL;
+#else
+  if (0);
 #endif
+  else {
     newin->baseptr = SC3_MALLOC (char, size);
     SC3E_DEMAND (newin->baseptr != NULL, "Allocating MPI window baseptr");
   }
@@ -419,17 +410,18 @@ sc3_MPI_Win_shared_query (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size,
   SC3A_CHECK (disp_unit != NULL);
   SC3A_CHECK (baseptr != NULL);
 
-  /* only call MPI window code if request is non-trivial */
-  if (win->size > 1) {
 #ifdef SC_ENABLE_MPIWINSHARED
+  /* only call MPI window code if request is non-trivial */
+  if (win->size > 1 && rank != win->rank) {
     SC3E_MPI (MPI_Win_shared_query
               (win->mpiwin, rank, size, disp_unit, baseptr));
-#else
-    SC3E_UNREACH ("Please report: Should have caught commsize > 1");
-#endif
   }
+#else
+  if (0);
+#endif
   else {
-    SC3A_CHECK (rank == 0);
+    SC3E_DEMAND (rank == win->rank,
+                 "Win_shared_query to remote ranks not supported");
     *size = win->memsize;
     *disp_unit = win->disp_unit;
     *(void **) baseptr = win->baseptr;
@@ -445,7 +437,6 @@ sc3_MPI_Win_lock (int lock_type, int rank, int assert, sc3_MPI_Win_t win)
   SC3A_CHECK (lock_type == SC3_MPI_LOCK_SHARED ||
               lock_type == SC3_MPI_LOCK_EXCLUSIVE);
   SC3A_CHECK (assert == 0 || assert == SC3_MPI_MODE_NOCHECK);
-  SC3A_CHECK (!win->locked);
 
 #ifdef SC_ENABLE_MPIWINSHARED
   /* only go through MPI if window is non-trivial */
@@ -457,6 +448,7 @@ sc3_MPI_Win_lock (int lock_type, int rank, int assert, sc3_MPI_Win_t win)
 #endif
   else {
     SC3A_CHECK (rank == win->rank);
+    SC3A_CHECK (!win->locked);
   }
 
   /* update and return */
@@ -469,7 +461,6 @@ sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win)
 {
   /* verify wrapper code and call convention */
   SC3A_IS (sc3_MPI_Win_is_valid, win);
-  SC3A_CHECK (win->locked);
 
 #ifdef SC_ENABLE_MPIWINSHARED
   /* only go through MPI if window is non-trivial */
@@ -481,6 +472,7 @@ sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win)
 #endif
   else {
     SC3A_CHECK (rank == win->rank);
+    SC3A_CHECK (win->locked);
   }
 
   /* update and return */
@@ -511,14 +503,14 @@ sc3_MPI_Win_free (sc3_MPI_Win_t * win)
   SC3A_IS (sc3_MPI_Win_is_valid, *win);
   SC3A_CHECK (!(*win)->locked);
 
+#ifdef SC_ENABLE_MPIWINSHARED
   /* only call MPI window code if request is non-trivial */
   if ((*win)->size > 1) {
-#ifdef SC_ENABLE_MPIWINSHARED
     SC3E_MPI (MPI_Win_free (&((*win)->mpiwin)));
-#else
-    SC3E_UNREACH ("Please report: Should have caught commsize > 1");
-#endif
   }
+#else
+  if (0);
+#endif
   else {
     SC3_FREE ((*win)->baseptr);
   }
