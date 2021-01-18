@@ -39,7 +39,7 @@
 #ifndef SC3_MPI_TYPES_H
 #define SC3_MPI_TYPES_H
 
-#include <sc3_config.h>
+#include <sc_config.h>
 
 #ifdef SC_ENABLE_MPI
 #include <mpi.h>

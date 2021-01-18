@@ -40,7 +40,7 @@
 #endif
 
 /* include the libsc config header first */
-#include <sc3_config.h>
+#include <sc_config.h>
 #ifndef _sc_const
 #define _sc_const const
 #endif
