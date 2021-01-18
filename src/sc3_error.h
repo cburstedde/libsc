@@ -354,7 +354,7 @@ extern              "C"
  * We only return out of the calling context on fatal error.
  */
 #define SC3L(l,f) do {                                                  \
-  sc3_error_t * _e = sc3_error_leak (l, f, __FILE__, __LINE__, #f);     \
+  sc3_error_t *_e = sc3_error_leak (l, f, __FILE__, __LINE__, #f);      \
   if (_e != NULL) { return _e; }} while (0)
 
 /** Examine a condition \a x and add to the inout leak error \a l if false.
@@ -364,7 +364,7 @@ extern              "C"
  * We only return out of the calling context on fatal error.
  */
 #define SC3L_DEMAND(l,x) do {                                               \
-  sc3_error_t * _e = sc3_error_leak_demand (l, x, __FILE__, __LINE__, #x);  \
+  sc3_error_t *_e = sc3_error_leak_demand (l, x, __FILE__, __LINE__, #x);   \
   if (_e != NULL) { return _e; }} while (0)
 
 /** Macro for error checking without hope for clean recovery.
