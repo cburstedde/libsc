@@ -32,6 +32,7 @@
 static sc3_error_t *
 test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared)
 {
+  int                 get_shared;
   sc3_mpienv_t       *m;
 
   /* create environment */
@@ -39,6 +40,12 @@ test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared)
   SC3E (sc3_mpienv_set_comm (m, mpicomm, 1));
   SC3E (sc3_mpienv_set_shared (m, shared));
   SC3E (sc3_mpienv_setup (m));
+
+  /* do something here */
+  SC3E (sc3_mpienv_get_shared (m, &get_shared));
+  if (shared != get_shared) {
+    /* output something here */
+  }
 
   /* delete environment */
   SC3E (sc3_mpienv_destroy (&m));

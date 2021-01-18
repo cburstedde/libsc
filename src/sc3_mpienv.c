@@ -36,12 +36,39 @@ struct sc3_mpienv
   sc3_allocator_t    *mator;
   int                 setup;
 
-  /* parameters fixed after setup call */
+  /* parameters fixed before setup call */
   sc3_MPI_Comm_t      mpicomm;
   int                 commdup;
   int                 shared;
+  int                 contiguous;
 
   /* member variables initialized in setup call */
+  sc3_MPI_Comm_t      nodecomm;         /**< All ranks of shared memory node. */
+  sc3_MPI_Comm_t      headcomm;         /**< Contains first rank of each node. */
+  sc3_MPI_Info_t      info_noncontig;   /**< Key "alloc_shared_noncontig" set. */
+  sc3_MPI_Win_t       nodesizewin;      /**< Shared memory segment allocated
+                                             on first rank of a node, available
+                                             to all ranks on that node.  Its
+                                             element count is (2 + 2 * \ref
+                                             num_nodes + 1) integers.
+                                             Its contents hold
+ *                                  * number of nodes for this run
+ *                                  * zero-based number of this node
+ *                                  * for each node number of ranks on it
+ *                                  * for each node and one beyond the
+ *                                    number of ranks before it
+ */
+  int                 mpisize;          /**< Size of forest communicator. */
+  int                 mpirank;          /**< Rank in forest communicator. */
+  int                 nodesize;         /**< Size of node communicator. */
+  int                 noderank;         /**< Rank in node communicator. */
+  int                 num_nodes;        /**< Number of shared memory nodes. */
+  int                 node_num;         /**< Zero-based node number. */
+  int                 node_frank;       /**< Rank within forest communicator
+                                             of first rank on this node. */
+  int                *node_sizes;       /**< For each node, number of its ranks. */
+  int                *node_offsets;     /**< For each node and one beyond, the
+                                             number of ranks before it. */
 };
 
 int
@@ -131,9 +158,132 @@ sc3_mpienv_set_shared (sc3_mpienv_t * m, int shared)
 }
 
 sc3_error_t        *
-sc3_mpienv_setup (sc3_mpienv_t * m)
+sc3_mpienv_set_contiguous (sc3_mpienv_t * m, int contiguous)
 {
   SC3A_IS (sc3_mpienv_is_new, m);
+  m->contiguous = contiguous;
+  return NULL;
+}
+
+static sc3_error_t *
+mpienv_setup_nodemem (sc3_mpienv_t * m)
+{
+  int                 headsize, headrank;
+  int                 p, next, *ofs;
+  int                 dispunit;
+  int                *nodesizemem;
+  sc3_MPI_Aint_t      nodeabytes;
+
+  /* specify allocation of node size information */
+  if (m->noderank == 0) {
+    SC3E (sc3_MPI_Comm_size (m->headcomm, &headsize));
+    SC3E (sc3_MPI_Comm_rank (m->headcomm, &headrank));
+    nodeabytes = (2 + 2 * headsize + 1) * sizeof (int);
+  }
+  else {
+    headsize = headrank = 0;
+    nodeabytes = 0;
+  }
+
+  /* create info structure to allow for per-rank allocation */
+  SC3E (sc3_MPI_Info_create (&m->info_noncontig));
+  SC3E (sc3_MPI_Info_set
+        (m->info_noncontig, "alloc_shared_noncontig",
+         m->contiguous ? "false" : "true"));
+
+  /* allocate shared memory for information on node and head communicators */
+  SC3E (sc3_MPI_Win_allocate_shared
+        (nodeabytes, sizeof (int),
+         m->info_noncontig, m->nodecomm, &nodesizemem, &m->nodesizewin));
+  if (m->noderank == 0) {
+    SC3E (sc3_MPI_Win_lock (SC3_MPI_LOCK_EXCLUSIVE, 0, SC3_MPI_MODE_NOCHECK,
+                            m->nodesizewin));
+    nodesizemem[0] = m->num_nodes = headsize;
+    nodesizemem[1] = m->node_num = headrank;
+    m->node_sizes = &nodesizemem[2];
+    m->node_frank = m->mpirank;
+
+    /* allgather information about all nodes and compute offsets */
+    SC3E (sc3_MPI_Allgather (&m->nodesize, 1, SC3_MPI_INT,
+                             m->node_sizes, 1, SC3_MPI_INT, m->headcomm));
+    *(ofs = m->node_offsets = &nodesizemem[2 + headsize]) = 0;
+    for (p = 0; p < headsize; ++p) {
+      next = *ofs + m->node_sizes[p];
+      *++ofs = next;
+    }
+    SC3A_CHECK (m->node_offsets[headrank] == m->mpirank);
+    SC3A_CHECK (m->node_offsets[headsize] == m->mpisize);
+
+    /* make sure shared memory contents are consistent */
+    SC3E (sc3_MPI_Win_unlock (0, m->nodesizewin));
+    SC3E (sc3_MPI_Barrier (m->nodecomm));
+    SC3E (sc3_MPI_Win_lock (SC3_MPI_LOCK_SHARED, 0,
+                            SC3_MPI_MODE_NOCHECK, m->nodesizewin));
+  }
+  else {
+    SC3E (sc3_MPI_Win_shared_query (m->nodesizewin, 0,
+                                    &nodeabytes, &dispunit, &nodesizemem));
+    SC3A_CHECK (nodeabytes >= (sc3_MPI_Aint_t) sizeof (int));
+    SC3A_CHECK (dispunit == (int) sizeof (int));
+    SC3A_CHECK (nodesizemem != NULL);
+
+    /* access shared memory written by other process */
+    SC3E (sc3_MPI_Barrier (m->nodecomm));
+    SC3E (sc3_MPI_Win_lock (SC3_MPI_LOCK_SHARED, m->noderank,
+                            SC3_MPI_MODE_NOCHECK, m->nodesizewin));
+    m->num_nodes = nodesizemem[0];
+    SC3A_CHECK (nodeabytes >=
+                (sc3_MPI_Aint_t) ((2 + 2 * m->num_nodes + 1) * sizeof (int)));
+    m->node_num = nodesizemem[1];
+    m->node_sizes = &nodesizemem[2];
+    m->node_offsets = &nodesizemem[2 + m->num_nodes];
+  }
+  SC3A_CHECK (m->node_frank == m->node_offsets[m->node_num]);
+
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_setup (sc3_mpienv_t * m)
+{
+  /* verify call and input */
+  SC3A_IS (sc3_mpienv_is_new, m);
+
+  /* query input communicator */
+  SC3E (sc3_MPI_Comm_size (m->mpicomm, &m->mpisize));
+  SC3E (sc3_MPI_Comm_rank (m->mpicomm, &m->mpirank));
+
+  /* create one communicator on each shared-memory node */
+  if (!m->shared) {
+    m->nodecomm = SC3_MPI_COMM_SELF;
+  }
+  else {
+    SC3E (sc3_MPI_Comm_split_type (m->mpicomm, SC3_MPI_COMM_TYPE_SHARED,
+                                   0, SC3_MPI_INFO_NULL, &m->nodecomm));
+  }
+  SC3E (sc3_MPI_Comm_size (m->nodecomm, &m->nodesize));
+  SC3E (sc3_MPI_Comm_rank (m->nodecomm, &m->noderank));
+
+  /* create communicator that contains the first rank on each node */
+  if (!m->shared) {
+    SC3A_CHECK (m->nodesize == 1);
+    SC3A_CHECK (m->noderank == 0);
+    m->headcomm = m->mpicomm;
+  }
+  else {
+    SC3E (sc3_MPI_Comm_split (m->mpicomm, m->noderank == 0 ? 0 :
+                              SC3_MPI_UNDEFINED, 0, &m->headcomm));
+  }
+  SC3A_CHECK ((m->noderank != 0) == (m->headcomm == SC3_MPI_COMM_NULL));
+
+  /* create shared information on all node sizes */
+  if (!m->shared) {
+    m->num_nodes = m->mpisize;
+    m->node_num = m->node_frank = m->mpirank;
+  }
+  else {
+    mpienv_setup_nodemem (m);
+  }
 
   /* set mpienv to setup state */
   m->setup = 1;
@@ -161,13 +311,22 @@ sc3_mpienv_unref (sc3_mpienv_t ** mp)
   SC3E (sc3_refcount_unref (&m->rc, &waslast));
   if (waslast) {
     *mp = NULL;
-
     mator = m->mator;
+
     if (m->setup) {
       /* deallocate data created on setup here */
+      if (m->shared) {
+        SC3E (sc3_MPI_Win_unlock (0, m->nodesizewin));
+        SC3E (sc3_MPI_Win_free (&m->nodesizewin));
+        if (m->noderank == 0) {
+          SC3E (sc3_MPI_Comm_free (&m->headcomm));
+        }
+        SC3E (sc3_MPI_Comm_free (&m->nodecomm));
+        SC3E (sc3_MPI_Info_free (&m->info_noncontig));
+      }
     }
 
-    /* deallocated data knonw on setup here */
+    /* deallocate data knonw on setup here */
     if (m->commdup) {
       SC3E (sc3_MPI_Comm_free (&m->mpicomm));
     }
