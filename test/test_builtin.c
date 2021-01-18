@@ -66,7 +66,7 @@ test_getopt (int argc, char **argv)
       aflag = 1;
       break;
     case 't':
-      anint = atoi (optarg);
+      anint = sc_atoi (optarg);
       break;
     default:
       fprintf (stderr, "Usage: %s [-t integer] [-n] [-c]\n", argv[0]);

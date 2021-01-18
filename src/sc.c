@@ -1469,13 +1469,15 @@ sc_version (void)
 int
 sc_version_major (void)
 {
-  return SC_VERSION_MAJOR;
+  /* In rare cases SC_VERSION_MINOR may be a non-numerical string */
+  return sc_atoi (SC_TOSTRING (SC_VERSION_MAJOR));
 }
 
 int
 sc_version_minor (void)
 {
-  return SC_VERSION_MINOR;
+  /* In rare cases SC_VERSION_MINOR may be a non-numerical string */
+  return sc_atoi (SC_TOSTRING (SC_VERSION_MINOR));
 }
 
 #if 0
@@ -1484,7 +1486,7 @@ sc_version_point (void)
 {
   /* SC_VERSION_POINT may contain a dot and/or dash,
      followed by additional information */
-  return atoi (SC_TOSTRING (SC_VERSION_POINT));
+  return sc_atoi (SC_TOSTRING (SC_VERSION_POINT));
 }
 #endif
 
