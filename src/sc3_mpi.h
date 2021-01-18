@@ -148,7 +148,7 @@ double              sc3_MPI_Wtime (void);
 
 /** Wrap MPI_Comm_set_errhandler.
  * \param [in] comm     Valid MPI communicator.
- * \param [in] errh     Valid MPI errror handler object.
+ * \param [in] errh     Valid MPI error handler object.
  *                      May use \ref SC3_MPI_ERRORS_RETURN.
  * \return          NULL on success, error object otherwise.
  */

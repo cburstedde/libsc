@@ -137,7 +137,7 @@ test_shmem_create_data_array (sc_shmem_type_t type, int mpirank, int mpisize)
 
 /* For a given shmem type, allocate a shared array
  * and fill it with data via a call to shmem_allgather.
- * We check wether all data was gathered correctly and
+ * We check whether all data was gathered correctly and
  * free the array.
  */
 void
@@ -163,7 +163,7 @@ test_shmem_allgather (sc_shmem_type_t type)
   }
   SC_SHMEM_FREE (data_array, sc_MPI_COMM_WORLD);
 
-  SC_GLOBAL_ESSENTIALF ("Testing type %s succesful.\n",
+  SC_GLOBAL_ESSENTIALF ("Testing type %s successful.\n",
                         sc_shmem_type_to_string[type]);
 }
 
@@ -200,7 +200,7 @@ test_shmem_copy (sc_shmem_type_t type)
   SC_SHMEM_FREE (data_array, sc_MPI_COMM_WORLD);
   SC_SHMEM_FREE (copy_array, sc_MPI_COMM_WORLD);
 
-  SC_GLOBAL_ESSENTIALF ("Testing type %s succesful.\n",
+  SC_GLOBAL_ESSENTIALF ("Testing type %s successful.\n",
                         sc_shmem_type_to_string[type]);
 }
 
@@ -239,7 +239,7 @@ test_shmem_write (sc_shmem_type_t type)
   }
 
   SC_SHMEM_FREE (data_array, sc_MPI_COMM_WORLD);
-  SC_GLOBAL_ESSENTIALF ("Testing type %s succesful.\n",
+  SC_GLOBAL_ESSENTIALF ("Testing type %s successful.\n",
                         sc_shmem_type_to_string[type]);
 }
 
@@ -269,7 +269,7 @@ test_shmem_prefix (sc_shmem_type_t type)
   }
 
   SC_SHMEM_FREE (data_array, sc_MPI_COMM_WORLD);
-  SC_GLOBAL_ESSENTIALF ("Testing type %s succesful.\n",
+  SC_GLOBAL_ESSENTIALF ("Testing type %s successful.\n",
                         sc_shmem_type_to_string[type]);
 }
 

@@ -698,7 +698,7 @@ sc3_error_t        *sc3_error_new_bug (const char *filename,
  * This function expects a setup error as stack, which may in turn have stack.
  * It should generally be used when the error indicates a buggy program.
  * This function is intended for use in macros when no allocator is available.
- * \param [in] pstack   We take owership of the stack, pointer is NULLed.
+ * \param [in] pstack   We take ownership of the stack, pointer is NULLed.
  * \param [in] filename The filename is copied into the error object.
  *                      Pointer not NULL, string null-terminated.
  * \param [in] line     Line number set in the error.
@@ -716,7 +716,7 @@ sc3_error_t        *sc3_error_new_stack (sc3_error_t ** pstack,
  * This function expects a setup error as stack, which may in turn have stack.
  * Function may be used when multiple errors of the same kind accumulate.
  * This function is intended for use in macros when no allocator is available.
- * \param [in] pstack   We take owership of the stack, pointer is NULLed.
+ * \param [in] pstack   We take ownership of the stack, pointer is NULLed.
  *                      The error kind of *pstack is used for the result.
  * \param [in] filename The filename is copied into the error object.
  *                      Pointer not NULL, string null-terminated.
