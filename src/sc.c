@@ -39,8 +39,6 @@ typedef void        (*sc_sig_t) (int);
 #endif
 #endif
 
-#include <errno.h>
-
 #ifdef SC_ENABLE_PTHREAD
 #include <pthread.h>
 #endif
@@ -809,6 +807,19 @@ sc_double_compare (const void *v1, const void *v2)
   return d1 < d2 ? -1 : d1 > d2 ? 1 : 0;
 }
 
+int
+sc_atoi (const char *nptr)
+{
+  long                r = strtol (nptr, NULL, 10);
+  return r <= INT_MIN ? INT_MIN : r >= INT_MAX ? INT_MAX : (int) r;
+}
+
+long
+sc_atol (const char *nptr)
+{
+  return strtol (nptr, NULL, 10);
+}
+
 void
 sc_set_log_defaults (FILE * log_stream,
                      sc_log_handler_t log_handler, int log_threshold)
@@ -1507,5 +1518,35 @@ sc_snprintf (char *str, size_t size, const char *fmt, ...)
   /* We do not handle truncation, since it is expected in our design. */
   va_end (ap);
 }
+
+const char         *
+sc_version (void)
+{
+  return SC_VERSION;
+}
+
+int
+sc_version_major (void)
+{
+  /* In rare cases SC_VERSION_MINOR may be a non-numerical string */
+  return sc_atoi (SC_TOSTRING (SC_VERSION_MAJOR));
+}
+
+int
+sc_version_minor (void)
+{
+  /* In rare cases SC_VERSION_MINOR may be a non-numerical string */
+  return sc_atoi (SC_TOSTRING (SC_VERSION_MINOR));
+}
+
+#if 0
+int
+sc_version_point (void)
+{
+  /* SC_VERSION_POINT may contain a dot and/or dash,
+     followed by additional information */
+  return sc_atoi (SC_TOSTRING (SC_VERSION_POINT));
+}
+#endif
 
 #endif
