@@ -32,6 +32,16 @@
 static sc3_error_t *
 test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared)
 {
+  sc3_mpienv_t       *m;
+
+  /* create environment */
+  SC3E (sc3_mpienv_new (alloc, &m));
+  SC3E (sc3_mpienv_set_comm (m, mpicomm, 1));
+  SC3E (sc3_mpienv_set_shared (m, shared));
+  SC3E (sc3_mpienv_setup (m));
+
+  /* delete environment */
+  SC3E (sc3_mpienv_destroy (&m));
   return NULL;
 }
 
@@ -55,7 +65,7 @@ reset_alloc (sc3_allocator_t * mainalloc, sc3_allocator_t ** alloc)
 static int
 check_error (sc3_error_t * e, const char *msg, int size, int rank)
 {
-  char buffer[SC3_BUFSIZE];
+  char                buffer[SC3_BUFSIZE];
   if (sc3_error_check (&e, buffer, SC3_BUFSIZE)) {
     fprintf (stderr, "Error on rank %d/%d by %s:\n%s\n",
              rank, size, msg, buffer);
@@ -64,7 +74,7 @@ check_error (sc3_error_t * e, const char *msg, int size, int rank)
   return 0;
 }
 
-#define CHECK_ERROR(f) (check_error (f, #f, s, r))
+#define CHECKE(f) (check_error (f, #f, s, r))
 
 int
 main (int argc, char **argv)
@@ -80,11 +90,11 @@ main (int argc, char **argv)
   SC3X (sc3_MPI_Comm_rank (SC3_MPI_COMM_WORLD, &r));
 
   /* Sophisticated error checking */
-  num_failed_tests += CHECK_ERROR (init_alloc (mainalloc, &alloc));
-  num_failed_tests += CHECK_ERROR (test_mpienv (alloc, SC3_MPI_COMM_SELF, 0));
-  num_failed_tests += CHECK_ERROR (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 0));
-  num_failed_tests += CHECK_ERROR (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1));
-  num_failed_tests += CHECK_ERROR (reset_alloc (mainalloc, &alloc));
+  num_failed_tests += CHECKE (init_alloc (mainalloc, &alloc));
+  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_SELF, 0));
+  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 0));
+  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1));
+  num_failed_tests += CHECKE (reset_alloc (mainalloc, &alloc));
 
   /* Primitive error checking */
   SC3X (sc3_MPI_Finalize ());

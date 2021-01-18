@@ -84,6 +84,7 @@ sc3_mpienv_new (sc3_allocator_t * mator, sc3_mpienv_t ** mp)
   SC3E (sc3_allocator_ref (mator));
   SC3E (sc3_allocator_calloc_one (mator, sizeof (sc3_mpienv_t), &m));
   SC3E (sc3_refcount_init (&m->rc));
+  m->mator = mator;
 
   /* set defaults here whenever not zero/null */
   m->mpicomm = SC3_MPI_COMM_WORLD;

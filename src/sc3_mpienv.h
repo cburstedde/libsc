@@ -108,7 +108,7 @@ sc3_error_t        *sc3_mpienv_set_comm (sc3_mpienv_t * m,
  * This allows the use of shared memory by the MPI window functions.
  * The default is false when MPI windows are not configured or not supported.
  * If specifying true here and it turns out MPI windows are not supported,
- * we will silently turn them off.  Check with \ref sc3_mpienv_is_shared.
+ * we will silently turn them off.  Check with \ref sc3_mpienv_get_shared.
  * \param [in,out] m        The mpi environment must not yet be setup.
  * \param [in] shared       Boolean to enable sharing.
  * \return                  NULL on success, error object otherwise.
