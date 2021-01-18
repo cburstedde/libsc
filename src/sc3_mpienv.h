@@ -104,6 +104,17 @@ sc3_error_t        *sc3_mpienv_new (sc3_allocator_t * mator,
 sc3_error_t        *sc3_mpienv_set_comm (sc3_mpienv_t * m,
                                          sc3_MPI_Comm_t comm, int dup);
 
+/** Specify whether we split the communicator by node.
+ * This allows the use of shared memory by the MPI window functions.
+ * The default is false when MPI windows are not configured or not supported.
+ * If specifying true here and it turns out MPI windows are not supported,
+ * we will silently turn them off.  Check with \ref sc3_mpienv_is_shared.
+ * \param [in,out] m        The mpi environment must not yet be setup.
+ * \param [in] shared       Boolean to enable sharing.
+ * \return                  NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_set_shared (sc3_mpienv_t * m, int shared);
+
 /** Setup an mpi environment and change it into its usable phase.
  * \param [in,out] m    This mpi environment must not yet be setup.
  *                      Internal storage is allocated, the setup phase ends,
@@ -139,6 +150,16 @@ sc3_error_t        *sc3_mpienv_unref (sc3_mpienv_t ** mp);
  *                      return an error of kind \ref SC3_ERROR_LEAK.
  */
 sc3_error_t        *sc3_mpienv_destroy (sc3_mpienv_t ** mp);
+
+/** Query whether the environment supports MPI shared windows.
+ * \param [in] m        Valid and setup mpi environment.
+ * \param [out] shared  Pointer must not be NULL.  Output shared status.
+ *                      If the node communicator has size one, and sharing has
+ *                      is enabled and supported, we output true but use
+ *                      a faster non-MPI replacement for allocating windows.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_get_shared (sc3_mpienv_t * m, int *shared);
 
 #ifdef __cplusplus
 #if 0

@@ -39,6 +39,7 @@ struct sc3_mpienv
   /* parameters fixed after setup call */
   sc3_MPI_Comm_t      mpicomm;
   int                 commdup;
+  int                 shared;
 
   /* member variables initialized in setup call */
 };
@@ -86,6 +87,9 @@ sc3_mpienv_new (sc3_allocator_t * mator, sc3_mpienv_t ** mp)
 
   /* set defaults here whenever not zero/null */
   m->mpicomm = SC3_MPI_COMM_WORLD;
+#ifdef SC3_ENABLE_MPI3
+  m->shared = 1;
+#endif
 
   SC3A_IS (sc3_mpienv_is_new, m);
   *mp = m;
@@ -112,6 +116,16 @@ sc3_mpienv_set_comm (sc3_mpienv_t * m, sc3_MPI_Comm_t comm, int dup)
     m->mpicomm = comm;
   }
   m->commdup = dup;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_set_shared (sc3_mpienv_t * m, int shared)
+{
+  SC3A_IS (sc3_mpienv_is_new, m);
+#ifdef SC3_ENABLE_MPI3
+  m->shared = shared;
+#endif
   return NULL;
 }
 
@@ -175,4 +189,14 @@ sc3_mpienv_destroy (sc3_mpienv_t ** mp)
 
   SC3A_CHECK (m == NULL || leak != NULL);
   return leak;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_shared (sc3_mpienv_t * m, int *shared)
+{
+  SC3E_RETVAL (shared, 0);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *shared = m->shared;
+  return NULL;
 }
