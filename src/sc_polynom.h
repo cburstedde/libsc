@@ -137,9 +137,9 @@ void                sc_polynom_scale (sc_polynom_t * p,
  */
 void                sc_polynom_add (sc_polynom_t * p, const sc_polynom_t * q);
 
-/** Modify a polynom by substracting another.
+/** Modify a polynom by subtracting another.
  * \param[in,out] p     The polynom p will be set to p - q.
- * \param[in] q         The polynom that is substracted from p; not changed.
+ * \param[in] q         The polynom that is subtracted from p; not changed.
  */
 void                sc_polynom_sub (sc_polynom_t * p, const sc_polynom_t * q);
 

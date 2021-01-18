@@ -169,7 +169,7 @@ sc_amr_coarsen_search (int package_id, sc_amr_control_t * amr,
       }
       coarsen_threshold_low = amr->coarsen_threshold;
     }
-    else {                      /* binary search sucessful */
+    else {                      /* binary search successful */
       break;
     }
     SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
@@ -268,7 +268,7 @@ sc_amr_refine_search (int package_id, sc_amr_control_t * amr,
     else if (num_total_estimated > num_total_high) {
       refine_threshold_low = amr->refine_threshold;
     }
-    else {                      /* binary search sucessful */
+    else {                      /* binary search successful */
       break;
     }
     SC_GEN_LOGF (package_id, SC_LC_GLOBAL, SC_LP_STATISTICS,
