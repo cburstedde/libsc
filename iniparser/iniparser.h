@@ -23,7 +23,7 @@
  * It is not needed for Windows platforms.
  * Uncomment it if needed.
  */
-#include <sc3_config.h>
+#include <sc_config.h>
 #ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
 #endif

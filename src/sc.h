@@ -40,21 +40,24 @@
 #endif
 
 /* include the libsc config header first */
-#include <sc3_config.h>
+#include <sc_config.h>
 #ifndef _sc_const
+/** Portable way to work with really old compilers without const. */
 #define _sc_const const
 #endif
 #ifndef _sc_restrict
+/** Portable way to work with really old compilers without restrict. */
 #define _sc_restrict restrict
 #endif
 
-/* test for gcc version without features.h */
+/** Test for gcc version without features.h. */
 #define SC_CALC_VERSION(major,minor,patchlevel) \
                        (((major) * 1000 + (minor)) * 1000 + (patchlevel))
 #ifdef __GNUC__
 #define SC_GCC_VERSION \
         SC_CALC_VERSION(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
 #else
+/** Assemble GCC version using a 1000-per-digit scheme. */
 #define SC_GCC_VERSION \
         SC_CALC_VERSION (0, 0, 0)
 #endif
@@ -86,7 +89,12 @@
 /* use this in case mpi.h includes stdint.h */
 
 #ifndef __STDC_LIMIT_MACROS
+/** Activate C99 limit macros for older C++ compilers. */
 #define __STDC_LIMIT_MACROS
+#endif
+#ifndef __STDC_CONSTANT_MACROS
+/** Activate C99 constant macros for older C++ compilers. */
+#define __STDC_CONSTANT_MACROS
 #endif
 
 /* include MPI before stdio.h */
@@ -140,6 +148,7 @@
 #else
 #define SC_EXTERN_C_BEGIN                    void sc_extern_c_hack_3 (void)
 #define SC_EXTERN_C_END                      void sc_extern_c_hack_4 (void)
+/** For compatibility of varargs with C++ */
 #define SC_NOARGS
 #endif
 
@@ -150,68 +159,32 @@ SC_EXTERN_C_BEGIN;
 
 /* extern variables */
 
+/** Lookup table to provide fast base-2 logarithm of integers. */
 extern const int    sc_log2_lookup_table[256];
+
+/** libsc allows for multiple packages to use their own log priorities etc.
+ * This is the package id for core sc functions, which is meant to be read only.
+ * It starts out with a value of -1, which is fine by itself.
+ * It is set to a non-negative value by the (optional) \ref sc_init.
+ */
 extern int          sc_package_id;
 
-/* control a trace file by environment variables (see sc_init) */
+/** Optional trace file for logging (see \ref sc_init).
+ * Initialized to NULL. */
 extern FILE        *sc_trace_file;
+
+/** Optional minimum log priority for messages that go into the trace file. */
 extern int          sc_trace_prio;
 
-/* define math constants if necessary */
-#ifndef M_E
-#define M_E 2.7182818284590452354       /* e */
-#endif
-#ifndef M_LOG2E
-#define M_LOG2E 1.4426950408889634074   /* log_2 e */
-#endif
-#ifndef M_LOG10E
-#define M_LOG10E 0.43429448190325182765 /* log_10 e */
-#endif
-#ifndef M_LN2
-#define M_LN2 0.69314718055994530942    /* log_e 2 */
-#endif
-#ifndef M_LN10
-#define M_LN10 2.30258509299404568402   /* log_e 10 */
-#endif
-#ifndef M_PI
-#define M_PI 3.14159265358979323846     /* pi */
-#endif
-#ifndef M_PI_2
-#define M_PI_2 1.57079632679489661923   /* pi/2 */
-#endif
-#ifndef M_PI_4
-#define M_PI_4 0.78539816339744830962   /* pi/4 */
-#endif
-#ifndef M_1_PI
-#define M_1_PI 0.31830988618379067154   /* 1/pi */
-#endif
-#ifndef M_2_PI
-#define M_2_PI 0.63661977236758134308   /* 2/pi */
-#endif
-#ifndef M_2_SQRTPI
-#define M_2_SQRTPI 1.12837916709551257390       /* 2/sqrt(pi) */
-#endif
-#ifndef M_SQRT2
-#define M_SQRT2 1.41421356237309504880  /* sqrt(2) */
-#endif
-#ifndef M_SQRT1_2
-#define M_SQRT1_2 0.70710678118654752440        /* 1/sqrt(2) */
-#endif
-
+/** Define machine epsilon for the double type. */
 #define SC_EPS               2.220446049250313e-16
-#define SC_1000_EPS (1000. * 2.220446049250313e-16)
 
-#if 0
-/*@ignore@*/
-#define index   DONT_USE_NAME_CONFLICT_1 ---
-#define rindex  DONT_USE_NAME_CONFLICT_2 ---
-#define link    DONT_USE_NAME_CONFLICT_3 ---
-#define NO_DEFINE_DONT_USE_CONFLICT SPLINT_IS_STUPID_ALSO
-/*@end@*/
-#endif /* 0 */
+/** Define 1000 times the machine epsilon for the double type. */
+#define SC_1000_EPS (1000. * 2.220446049250313e-16)
 
 /* check macros, always enabled */
 
+/** A macro to do and return nothing as an expression. */
 #define SC_NOOP() ((void) (0))
 #define SC_ABORT(s)                             \
   sc_abort_verbose (__FILE__, __LINE__, (s))
@@ -507,6 +480,14 @@ void                SC_LERRORF (const char *fmt, ...)
   SC_LOGF (SC_LP_ERROR, (fmt), __VA_ARGS__)
 #endif
 
+/** Macros used to convert a macro definition such as the point version
+ * or some other numerical literal to a string. */
+#define _SC_TOSTRING(x) #x
+
+/** Macros used to convert a macro definition such as the point version
+ * or some other numerical literal to a string. */
+#define SC_TOSTRING(x) _SC_TOSTRING(x)
+
 /* callback typedefs */
 
 typedef void        (*sc_handler_t) (void *data);
@@ -537,6 +518,20 @@ int                 sc_int16_compare (const void *v1, const void *v2);
 int                 sc_int32_compare (const void *v1, const void *v2);
 int                 sc_int64_compare (const void *v1, const void *v2);
 int                 sc_double_compare (const void *v1, const void *v2);
+
+/** Safe version of the standard library atoi (3) function.
+ * \param [in] nptr     NUL-terminated string.
+ * \return              Converted integer value.  0 if no valid number.
+ *                      INT_MAX on overflow, INT_MIN on underflow.
+ */
+int                 sc_atoi (const char *nptr);
+
+/** Safe version of the standard library atol (3) function.
+ * \param [in] nptr     NUL-terminated string.
+ * \return              Converted long value.  0 if no valid number.
+ *                      LONG_MAX on overflow, LONG_MIN on underflow.
+ */
+long                sc_atol (const char *nptr);
 
 /** Controls the default SC log behavior.
  * \param [in] log_stream    Set stream to use by sc_logf (or NULL for stdout).
@@ -742,7 +737,41 @@ void                sc_strcopy (char *dest, size_t size, const char *src);
  */
 void                sc_snprintf (char *str, size_t size,
                                  const char *format, ...)
-  __attribute__((format (printf, 3, 4)));
+  __attribute__ ((format (printf, 3, 4)));
+
+/** Return the full version of libsc.
+ *
+ * \return          Return the version of libsc using the format
+ *                  `VERSION_MAJOR.VERSION_MINOR.VERSION_POINT`,
+ *                  where `VERSION_POINT` can contain dots and
+ *                  characters, e.g. to indicate the additional
+ *                  number of commits and a git commit hash.
+ */
+const char         *sc_version (void);
+
+/** Return the major version of libsc.
+ *
+ * \return          Return the major version of libsc.
+ */
+int                 sc_version_major (void);
+
+/** Return the minor version of libsc.
+ *
+ * \return          Return the minor version of libsc.
+ */
+int                 sc_version_minor (void);
+
+#if 0
+/* Sadly, the point version macro by autoconf doesn't work with vX and vX.Y.
+   The remaining option is to use sc_version and parse its return string. */
+/** Return the point version of libsc.
+ *
+ * \return          Return the (first part of the) point version of libsc,
+ *                  without information about the additional number of commits
+ *                  and commit hash.
+ */
+int                 sc_version_point (void);
+#endif /* 0 */
 
 SC_EXTERN_C_END;
 

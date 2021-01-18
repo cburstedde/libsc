@@ -132,7 +132,7 @@
 #define _GNU_SOURCE             /**< Enable additional functionality. */
 #endif
 
-#include <sc3_config.h>
+#include <sc_config.h>
 
 #include <limits.h>
 #include <stdarg.h>

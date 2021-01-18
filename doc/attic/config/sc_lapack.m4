@@ -81,9 +81,9 @@ AC_DEFUN([SC_LAPACK_LINK], [
 [[
 #ifdef __cplusplus
 extern "C"
+#endif
 void $sc_lapack_func (char *, int *, double *, int *, double *,
                       double *, double *, int *, int *);
-#endif
 ]], [[
 int     i = 1, info = 0, iwork[1];
 double  anorm = 1., rcond;

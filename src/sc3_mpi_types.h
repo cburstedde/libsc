@@ -29,8 +29,8 @@
 
 /** \file sc3_mpi_types.h \ingroup sc3
  *
- * We provide a MPI replacement data types for configuring without MPI.
- * These are included from \ref sc3_mpi.h and also by the older \c sc3_mpi.h.
+ * We provide MPI replacement data types for configuring without MPI.
+ * These are included from both sc_mpi.h and \ref sc3_mpi.h.
  *
  * This header file provides definitions of MPI data types for the case
  * that no MPI implementation is available or MPI is not configured.
@@ -39,7 +39,7 @@
 #ifndef SC3_MPI_TYPES_H
 #define SC3_MPI_TYPES_H
 
-#include <sc3_config.h>
+#include <sc_config.h>
 
 #ifdef SC_ENABLE_MPI
 #include <mpi.h>

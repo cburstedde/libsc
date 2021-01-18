@@ -144,9 +144,9 @@ main (int argc, char **argv)
   nint = sc_notify_nary_nint_default;
   nbot = sc_notify_nary_nbot_default;
   if (argc == 4) {
-    ntop = atoi (argv[1]);
-    nint = atoi (argv[2]);
-    nbot = atoi (argv[3]);
+    ntop = sc_atoi (argv[1]);
+    nint = sc_atoi (argv[2]);
+    nbot = sc_atoi (argv[3]);
     if (ntop < 2) {
       sc_abort_collective ("First argument ntop must be at least 2");
     }
