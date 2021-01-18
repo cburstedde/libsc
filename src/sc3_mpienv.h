@@ -118,7 +118,7 @@ sc3_error_t        *sc3_mpienv_set_shared (sc3_mpienv_t * m, int shared);
 /** Specify whether the shared memory on the node shall be contigouus.
  * The default is false since this may be faster.
  * \param [in,out] m        The mpi environment must not yet be setup.
- * \param [in] shared       Boolean to enable contiguous window allocation.
+ * \param [in] contiguous   Boolean to enable contiguous window allocation.
  * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_set_contiguous (sc3_mpienv_t * m,

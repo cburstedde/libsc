@@ -32,6 +32,7 @@
 static sc3_error_t *
 test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared)
 {
+  int                 i;
   int                 get_shared;
   sc3_mpienv_t       *m;
 
@@ -41,6 +42,11 @@ test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared)
   SC3E (sc3_mpienv_set_shared (m, shared));
   SC3E (sc3_mpienv_setup (m));
 
+  /* fun tests */
+  for (i = 0; i < 5; ++i) {
+    SC3E (sc3_mpienv_ref (m));
+  }
+
   /* do something here */
   SC3E (sc3_mpienv_get_shared (m, &get_shared));
   if (shared != get_shared) {
@@ -48,6 +54,9 @@ test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared)
   }
 
   /* delete environment */
+  for (i = 0; i < 5; ++i) {
+    SC3E (sc3_mpienv_unref (&m));
+  }
   SC3E (sc3_mpienv_destroy (&m));
   return NULL;
 }
@@ -102,6 +111,9 @@ main (int argc, char **argv)
   num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 0));
   num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1));
   num_failed_tests += CHECKE (reset_alloc (mainalloc, &alloc));
+  if (num_failed_tests > 0) {
+    fprintf (stderr, "Number failed tests: %d\n", num_failed_tests);
+  }
 
   /* Primitive error checking */
   SC3X (sc3_MPI_Finalize ());
