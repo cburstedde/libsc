@@ -72,7 +72,7 @@ SC_EXTERN_C_BEGIN;
  * \param [in] u   Arbitrary user data.
  * \return Returns an unsigned integer.
  */
-typedef unsigned    (*sc_hash_function_t) (const void *v, const void *u);
+typedef unsigned int (*sc_hash_function_t) (const void *v, const void *u);
 
 /** Function to check equality of two objects.
  * \param [in] u   Arbitrary user data.
@@ -366,8 +366,8 @@ ssize_t             sc_array_bsearch (sc_array_t * array,
  * \param [in] index   The location of the object.
  * \param [in] data    Arbitrary user data.
  */
-typedef             size_t (*sc_array_type_t) (sc_array_t * array,
-                                               size_t index, void *data);
+typedef size_t      (*sc_array_type_t) (sc_array_t * array,
+                                        size_t index, void *data);
 
 /** Compute the offsets of groups of enumerable types in an array.
  * \param [in] array         Array that is sorted in ascending order by type.
@@ -415,7 +415,7 @@ void                sc_array_permute (sc_array_t * array,
 /** Computes the adler32 checksum of array data (see zlib documentation).
  * This is a faster checksum than crc32, and it works with zeros as data.
  */
-unsigned            sc_array_checksum (sc_array_t * array);
+unsigned int        sc_array_checksum (sc_array_t * array);
 
 /** Adds an element to a priority queue.
  * PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
@@ -531,7 +531,7 @@ sc_array_index_int16 (sc_array_t * array, int16_t i16)
  * \param [in] element needs to be the address of an element in array.
  */
 /*@unused@*/
-static inline       size_t
+static inline size_t
 sc_array_position (sc_array_t * array, void *element)
 {
   ptrdiff_t           position;
@@ -922,7 +922,7 @@ sc_hash_t;
  * \param [in] u        Not used.
  * \return              The computed hash value as an unsigned integer.
  */
-unsigned            sc_hash_function_string (const void *s, const void *u);
+unsigned int        sc_hash_function_string (const void *s, const void *u);
 
 /** Calculate the memory used by a hash table.
  * \param [in] hash        The hash table.
@@ -1074,7 +1074,7 @@ void                sc_hash_array_truncate (sc_hash_array_t * hash_array);
  * \return                 Returns true if object is found, false otherwise.
  */
 int                 sc_hash_array_lookup (sc_hash_array_t * hash_array,
-                                          void *v, size_t * position);
+                                          void *v, size_t *position);
 
 /** Insert an object into a hash array if it is not contained already.
  * The object is not copied into the array.  Use the return value for that.
@@ -1088,7 +1088,7 @@ int                 sc_hash_array_lookup (sc_hash_array_t * hash_array,
  *                         Otherwise returns its new address in the array.
  */
 void               *sc_hash_array_insert_unique (sc_hash_array_t * hash_array,
-                                                 void *v, size_t * position);
+                                                 void *v, size_t *position);
 
 /** Extract the array data from a hash array and destroy everything else.
  * \param [in] hash_array   The hash array is destroyed after extraction.
@@ -1137,7 +1137,7 @@ void                sc_recycle_array_reset (sc_recycle_array_t * rec_array);
  * \return                 Returns the new address of the object in the array.
  */
 void               *sc_recycle_array_insert (sc_recycle_array_t * rec_array,
-                                             size_t * position);
+                                             size_t *position);
 
 /** Remove an object from the recycle array.  It must be valid.
  *

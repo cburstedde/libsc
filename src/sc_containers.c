@@ -616,22 +616,23 @@ sc_array_permute (sc_array_t * array, sc_array_t * newindices, int keepperm)
   SC_FREE (temp);
 }
 
-unsigned
+unsigned int
 sc_array_checksum (sc_array_t * array)
 {
 #ifdef SC_HAVE_ZLIB
-  uInt                bytes;
-  uLong               crc;
+  /* these types have sufficient size for adler32 */
+  unsigned int        crc;
+  size_t              bytes;
 
-  crc = adler32 (0L, Z_NULL, 0);
+  crc = adler32 (0, Z_NULL, 0);
   if (array->elem_count == 0) {
-    return (unsigned) crc;
+    return crc;
   }
 
-  bytes = (uInt) (array->elem_count * array->elem_size);
+  bytes = array->elem_count * array->elem_size;
   crc = adler32 (crc, (const Bytef *) array->array, bytes);
 
-  return (unsigned) crc;
+  return crc;
 #else
   SC_ABORT ("Configure did not find a recent enough zlib.  Abort.\n");
 
@@ -1167,12 +1168,12 @@ sc_list_pop (sc_list_t * list)
 
 /* hash table routines */
 
-unsigned
+unsigned int
 sc_hash_function_string (const void *s, const void *u)
 {
   int                 j;
-  unsigned            h;
-  unsigned            a, b, c;
+  unsigned int        h;
+  unsigned int        a, b, c;
   const char         *sp = (const char *) s;
 
   j = 0;
@@ -1549,7 +1550,7 @@ sc_hash_array_memory_used (sc_hash_array_t * ha)
     sc_array_memory_used (&ha->a, 0) + sc_hash_memory_used (ha->h);
 }
 
-static unsigned
+static unsigned int
 sc_hash_array_hash_fn (const void *v, const void *u)
 {
   const sc_hash_array_data_t *internal_data =
@@ -1635,8 +1636,7 @@ sc_hash_array_truncate (sc_hash_array_t * hash_array)
 }
 
 int
-sc_hash_array_lookup (sc_hash_array_t * hash_array, void *v,
-                      size_t * position)
+sc_hash_array_lookup (sc_hash_array_t * hash_array, void *v, size_t *position)
 {
   int                 found;
   void              **found_void;
@@ -1658,7 +1658,7 @@ sc_hash_array_lookup (sc_hash_array_t * hash_array, void *v,
 
 void               *
 sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
-                             size_t * position)
+                             size_t *position)
 {
   int                 added;
   void              **found_void;
@@ -1715,7 +1715,7 @@ sc_recycle_array_reset (sc_recycle_array_t * rec_array)
 }
 
 void               *
-sc_recycle_array_insert (sc_recycle_array_t * rec_array, size_t * position)
+sc_recycle_array_insert (sc_recycle_array_t * rec_array, size_t *position)
 {
   size_t              newpos;
   void               *newitem;
