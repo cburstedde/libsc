@@ -84,9 +84,9 @@ AC_DEFUN([SC_BLAS_LINK], [
 [[
 #ifdef __cplusplus
 extern "C"
+#endif
 void $sc_blas_func (char *, char *, int *, int *, int *, double *, double *,
                     int *, double *, int *, double *, double *, int *);
-#endif
 ]], [[
 int     i = 1;
 double  alpha = 1., beta = 1.;

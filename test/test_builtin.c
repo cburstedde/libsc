@@ -61,7 +61,7 @@ test_getopt (int argc, char **argv)
       aflag = 1;
       break;
     case 't':
-      anint = atoi (optarg);
+      anint = sc_atoi (optarg);
       break;
     default:
       fprintf (stderr, "Usage: %s [-t integer] [-n] [-c]\n", argv[0]);
@@ -114,5 +114,5 @@ main (int argc, char **argv)
 
   sc_finalize ();
 
-  return num_errors > 0;
+  return num_errors ? EXIT_FAILURE : EXIT_SUCCESS;
 }
