@@ -213,6 +213,7 @@ mpienv_setup_nodemem (sc3_mpienv_t * m)
     }
     SC3A_CHECK (m->node_offsets[headrank] == m->mpirank);
     SC3A_CHECK (m->node_offsets[headsize] == m->mpisize);
+    SC3A_CHECK (m->node_frank == m->node_offsets[m->node_num]);
 
     /* make sure shared memory contents are consistent */
     SC3E (sc3_MPI_Win_unlock (0, m->nodesizewin));
@@ -237,9 +238,8 @@ mpienv_setup_nodemem (sc3_mpienv_t * m)
     m->node_num = nodesizemem[1];
     m->node_sizes = &nodesizemem[2];
     m->node_offsets = &nodesizemem[2 + m->num_nodes];
+    m->node_frank = m->node_offsets[m->node_num];
   }
-  SC3A_CHECK (m->node_frank == m->node_offsets[m->node_num]);
-
   return NULL;
 }
 
@@ -282,7 +282,7 @@ sc3_mpienv_setup (sc3_mpienv_t * m)
     m->node_num = m->node_frank = m->mpirank;
   }
   else {
-    mpienv_setup_nodemem (m);
+    SC3E (mpienv_setup_nodemem (m));
   }
 
   /* set mpienv to setup state */
@@ -316,7 +316,7 @@ sc3_mpienv_unref (sc3_mpienv_t ** mp)
     if (m->setup) {
       /* deallocate data created on setup here */
       if (m->shared) {
-        SC3E (sc3_MPI_Win_unlock (0, m->nodesizewin));
+        SC3E (sc3_MPI_Win_unlock (m->noderank, m->nodesizewin));
         SC3E (sc3_MPI_Win_free (&m->nodesizewin));
         if (m->noderank == 0) {
           SC3E (sc3_MPI_Comm_free (&m->headcomm));
