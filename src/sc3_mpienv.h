@@ -28,7 +28,19 @@
 */
 
 /** \file sc3_mpienv.h \ingroup sc3
- * Create communicators on shared memory nodes.
+ * Create subcommunicators on shared memory nodes.
+ *
+ * This MPI environment structure is initialized from a main communicator,
+ * usually \ref SC3_MPI_COMM_WORLD.  We derive one communicator for each shared
+ * memory node by splitting the input communicator.
+ * We share the node communicator sizes of all nodes and their offsets with
+ * respect to the main communicator in an MPI 3 shared window.
+ * In addition, we identify the first rank of each node communicator and create
+ * one communicator over all of these first ranks, called the head communicator.
+ *
+ * When MPI shared windows are not supported or not enabled, we understand each
+ * rank to be its own node, and the head communicator equals the main one.
+ * The windows we allocate then use a non-MPI replacement, which can be faster.
  */
 
 #ifndef SC3_MPI_ENV_H
@@ -106,7 +118,7 @@ sc3_error_t        *sc3_mpienv_set_comm (sc3_mpienv_t * m,
 
 /** Specify whether we split the communicator by node.
  * This allows the use of shared memory by the MPI window functions.
- * The default is false when MPI windows are not configured or not supported.
+ * The default is false iff MPI windows are not configured or not supported.
  * If specifying true here and it turns out MPI windows are not supported,
  * we will silently turn them off.  Check with \ref sc3_mpienv_get_shared.
  * \param [in,out] m        The mpi environment must not yet be setup.
@@ -115,7 +127,7 @@ sc3_error_t        *sc3_mpienv_set_comm (sc3_mpienv_t * m,
  */
 sc3_error_t        *sc3_mpienv_set_shared (sc3_mpienv_t * m, int shared);
 
-/** Specify whether the shared memory on the node shall be contigouus.
+/** Specify whether the shared memory windows allocated shall be contigouus.
  * The default is false since this may be faster.
  * \param [in,out] m        The mpi environment must not yet be setup.
  * \param [in] contiguous   Boolean to enable contiguous window allocation.
