@@ -664,9 +664,9 @@ sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
     char                flatmsg[SC3_BUFSIZE];
 
     /* This function is not supposed to be passed a fatal error \b e.
-       If this happens, we call it a bug and stack it for inspection. */
+       If this happens, we call it a bug and return it for stacking. */
     if (sc3_error_is_fatal (e, NULL)) {
-      return sc3_error_new_stack (&e, filename, line, errmsg);
+      return e;
     }
 
     /* There should be no fatal errors here, but if so, return them. */
