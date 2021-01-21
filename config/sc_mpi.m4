@@ -55,7 +55,7 @@ AC_ARG_ENABLE([mpi],
 if test "x$enableval" = xyes ; then
   HAVE_PKG_MPI=yes
 elif test "x$enableval" != xno ; then
-  AC_MSG_ERROR([Please use --enable-mpi without an argument])
+  AC_MSG_ERROR([Use --enable-mpi without an argument, or with yes or no])
 fi
 AC_MSG_CHECKING([whether we are using MPI])
 AC_MSG_RESULT([$HAVE_PKG_MPI])
@@ -71,7 +71,7 @@ if test "x$enableval" = xyes ; then
     HAVE_PKG_MPIIO=yes
   fi
 elif test "x$enableval" != xno ; then
-  AC_MSG_ERROR([Please don't use --enable-mpiio; it's the default now])
+  AC_MSG_WARN([Ignoring --enable-mpiio with unsupported argument])
 fi
 AC_MSG_CHECKING([whether we are using MPI I/O])
 AC_MSG_RESULT([$HAVE_PKG_MPIIO])
@@ -87,7 +87,7 @@ if test "x$enableval" = xyes ; then
     HAVE_PKG_MPITHREAD=yes
   fi
 elif test "x$enableval" != xno ; then
-  AC_MSG_ERROR([Please don't use --enable-mpithread; it's the default now])
+  AC_MSG_WARN([Ignoring --enable-mpithread with unsupported argument])
 fi
 AC_MSG_CHECKING([whether we are using MPI_Init_thread])
 AC_MSG_RESULT([$HAVE_PKG_MPITHREAD])
@@ -97,7 +97,7 @@ $1_MPIRUN=
 $1_MPI_TEST_FLAGS=
 if test "x$HAVE_PKG_MPI" = xyes ; then
 AC_CHECK_PROGS([$1_MPIRUN], [mpiexec mpirun])
-if test "x$MPIRUN" != x -a `which "$MPIRUN"` ; then
+if test "x$MPIRUN" != x && test -x "`which $MPIRUN`" ; then
   $1_MPIRUN="$MPIRUN"
   $1_MPI_TEST_FLAGS="-np 2"
   dnl AC_MSG_NOTICE([Test environment "$$1_MPIRUN" "$$1_MPI_TEST_FLAGS"])
