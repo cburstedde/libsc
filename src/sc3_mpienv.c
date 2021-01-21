@@ -360,3 +360,23 @@ sc3_mpienv_get_shared (sc3_mpienv_t * m, int *shared)
   *shared = m->shared;
   return NULL;
 }
+
+sc3_error_t        *
+sc3_mpienv_get_noderank (sc3_mpienv_t * m, int *noderank)
+{
+  SC3E_RETVAL (noderank, -1);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *noderank = m->noderank;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_nodesize (sc3_mpienv_t * m, int *nodesize)
+{
+  SC3E_RETVAL (nodesize, -1);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *nodesize = m->nodesize;
+  return NULL;
+}

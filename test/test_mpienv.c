@@ -34,6 +34,7 @@ test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared)
 {
   int                 i;
   int                 get_shared;
+  int                 nodesize, noderank;
   sc3_mpienv_t       *m;
 
   /* create environment */
@@ -52,6 +53,10 @@ test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared)
   if (shared != get_shared) {
     /* output something here */
   }
+  SC3E (sc3_mpienv_get_nodesize (m, &nodesize));
+  SC3E (sc3_mpienv_get_noderank (m, &noderank));
+  SC3E_DEMAND (0 <= noderank && noderank < nodesize,
+               "Invalid node size/rank");
 
   /* delete environment */
   for (i = 0; i < 5; ++i) {
