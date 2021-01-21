@@ -201,7 +201,7 @@ sc_keyvalue_unset (sc_keyvalue_t * kv, const char *key)
   value = (sc_keyvalue_entry_t *) found;
   type = value->type;
 
-  /* destroy the orignial hash entry */
+  /* destroy the original hash entry */
   sc_mempool_free (kv->value_allocator, value);
 
   return type;

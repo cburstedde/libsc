@@ -240,7 +240,7 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
                                               size_t * bytes_out);
 
 /** This function writes numeric binary data in VTK base64 encoding.
- * \param vtkfile        Stream openened for writing.
+ * \param vtkfile        Stream opened for writing.
  * \param numeric_data   A pointer to a numeric data array.
  * \param byte_length    The length of the data array in bytes.
  * \return               Returns 0 on success, -1 on file error.
@@ -249,7 +249,7 @@ int                 sc_vtk_write_binary (FILE * vtkfile, char *numeric_data,
                                          size_t byte_length);
 
 /** This function writes numeric binary data in VTK compressed format.
- * \param vtkfile        Stream openened for writing.
+ * \param vtkfile        Stream opened for writing.
  * \param numeric_data   A pointer to a numeric data array.
  * \param byte_length    The length of the data array in bytes.
  * \return               Returns 0 on success, -1 on file error.

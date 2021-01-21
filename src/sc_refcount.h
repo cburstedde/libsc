@@ -93,7 +93,7 @@ void                sc_refcount_ref (sc_refcount_t * rc);
 /** Decrease the reference counter and notify when it reaches zero.
  * The count must be greater zero on input.  If the reference count reaches
  * zero, which is indicated by the return value, the counter may not be used
- * furter with \ref sc_refcount_ref or \see sc_refcount_unref.  It is legal,
+ * further with \ref sc_refcount_ref or \see sc_refcount_unref.  It is legal,
  * however, to reactivate it later by calling \see sc_refcount_init.
  * \param [in,out] rc       This reference counter must be valid (greater zero).
  *                          Its count is decreased by one.

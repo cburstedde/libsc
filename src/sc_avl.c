@@ -451,7 +451,7 @@ avl_node_t *avl_fixup_node(avl_tree_t *avltree, avl_node_t *newnode) {
 /*
  * avl_rebalance:
  * Rebalances the tree if one side becomes too heavy.  This function
- * assumes that both subtrees are AVL-trees with consistant data.  The
+ * assumes that both subtrees are AVL-trees with consistent data.  The
  * function has the additional side effect of recalculating the count of
  * the tree at this node.  It should be noted that at the return of this
  * function, if a rebalance takes place, the top of this subtree is no

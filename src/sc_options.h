@@ -324,7 +324,7 @@ int                 sc_options_parse (int package_id, int err_priority,
                                       char **argv);
 
 /** Load a file in .ini format and updates entries found under [Arguments].
- * There needs to be a key Arguments.count specifing the number.
+ * There needs to be a key Arguments.count specifying the number.
  * Then as many integer keys starting with 0 need to be present.
  * \param [in] package_id       Registered package id or -1.
  * \param [in] err_priority     Error log priority according to sc.h.

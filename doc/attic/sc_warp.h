@@ -40,7 +40,7 @@ SC_EXTERN_C_BEGIN;
 sc_warp_interval_t *sc_warp_new (double r_low, double r_high);
 void                sc_warp_destroy (sc_warp_interval_t * root);
 
-/** Refine the warp as necessary to accomodate a set of new points.
+/** Refine the warp as necessary to accommodate a set of new points.
  * \param [in] root             The root warp interval.
  * \param [in] num_points       Number of new points to integrate.
  * \param [in] r_points         The new points need to be sorted.

@@ -92,7 +92,7 @@ sc_notify_t        *sc_notify_new (sc_MPI_Comm mpicomm);
  */
 void                sc_notify_destroy (sc_notify_t * notify);
 
-/** Get the payload size above which payloads are no longer transfered with
+/** Get the payload size above which payloads are no longer transferred with
  * notification packets in sc_notify_payload().  Default is 256k bytes.
  *
  * \param[in] notify      The notify controller.
@@ -100,7 +100,7 @@ void                sc_notify_destroy (sc_notify_t * notify);
  */
 size_t              sc_notify_get_eager_threshold (sc_notify_t * notify);
 
-/** Get the payload size above which payloads are no longer transfered with
+/** Get the payload size above which payloads are no longer transferred with
  * notification packets in sc_notify_payload().
  *
  * \param[in,out] notify      The notify controller.
