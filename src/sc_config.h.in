@@ -51,6 +51,9 @@
 /* Define to 1 if you have the `aligned_alloc' function. */
 #cmakedefine SC_HAVE_ALIGNED_ALLOC
 
+/* Define to 1 if you have the `_aligned_,alloc' function. */
+#cmakedefine SC_HAVE_ALIGNED_MALLOC
+
 /* Define to 1 if you have the `backtrace' function. */
 #cmakedefine SC_HAVE_BACKTRACE
 

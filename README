@@ -14,3 +14,38 @@ The official web page for source code and documentation is www.p4est.org.
 Please send bug reports and ideas for contribution to info@p4est.org.
 
 The build instructions for p4est also apply to standalone builds of libsc.
+
+## CMake
+
+For faster builds that work on Windows as well as MacOS and Linux,
+that build quickly and are easily usable from other CMake projects, libsc
+can be built directly, or used via FetchContent or ExternalProject from other
+CMake projects.
+With CMake, libsc works with compilers including GCC, Clang and Intel oneAPI.
+Visual Studio does not currently work.
+
+MPI is enabled by default:
+
+```sh
+cmake -B build
+cmake --build build --parallel
+```
+
+To disable MPI (delete build/ or use difference build directory if previously built with MPI):
+
+```sh
+cmake -B build -Dmpi=no
+```
+
+Optionally, run self-tests:
+
+```sh
+cd build
+ctest
+```
+
+Optionally, install under directory set like `cmake -B build -DCMAKE_INSTALL_PREFIX=~/local`
+
+```sh
+cmake --install build
+```

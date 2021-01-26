@@ -351,6 +351,14 @@ sc_malloc_aligned (size_t alignment, size_t size)
                     "Returned NULL from aligned_alloc");
     return data;
   }
+#elif defined (SC_HAVE_ANY_MEMALIGN) && defined (SC_HAVE_ALIGNED_MALLOC)
+  // MinGW, MSVC
+  {
+    void               *data = _aligned_malloc (size, alignment);
+    SC_CHECK_ABORT (data != NULL || size == 0,
+                    "Returned NULL from aligned_alloc");
+    return data;
+  }
 #else
   {
 #if 0

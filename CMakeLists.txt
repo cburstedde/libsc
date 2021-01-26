@@ -1,36 +1,61 @@
-cmake_minimum_required(VERSION 3.15)
-project(libsc
-  LANGUAGES C)
+cmake_minimum_required(VERSION 3.13)
+
+include(cmake/policy.cmake)
+
+project(sc
+  LANGUAGES C
+  VERSION 0.0.0)
 
 include(CTest)
 
 include(cmake/options.cmake)
+include(cmake/config.cmake)
 include(cmake/compilers.cmake)
 
 if(mpi)
   find_package(MPI COMPONENTS C REQUIRED)
 endif()
-
+if(openmp)
+  find_package(OpenMP COMPONENTS C REQUIRED)
+endif()
 find_package(ZLIB)
 find_package(Threads)
 
 # --- iniparser
 add_library(iniparser iniparser/dictionary.c iniparser/iniparser.c)
 target_include_directories(iniparser
-  INTERFACE iniparser
-  PRIVATE src ${PROJECT_BINARY_DIR}/include)
+  PRIVATE src ${PROJECT_BINARY_DIR}/include
+  INTERFACE
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/iniparser>
+  $<INSTALL_INTERFACE:include>)
 if(MPI_FOUND)
   target_link_libraries(iniparser PRIVATE MPI::MPI_C)
 endif()
+
+install(FILES iniparser/dictionary.h iniparser/iniparser.h
+  DESTINATION include)
+
 # --- libb64
 add_library(libb64 libb64/cencode.c libb64/cdecode.c libb64/b64dec.c libb64/b64enc.c)
-target_include_directories(libb64 PUBLIC libb64)
+target_include_directories(libb64
+  PRIVATE libb64
+  INTERFACE
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/libb64>
+  $<INSTALL_INTERFACE:include>)
+
+install(FILES libb64/libb64.h
+  DESTINATION include)
 
 # --- sc
 add_library(sc)
-target_compile_features(sc PRIVATE c_std_99)
+target_compile_features(sc PRIVATE c_std_11)
 target_include_directories(sc
-  PUBLIC src src/sc_builtin ${PROJECT_BINARY_DIR}/include)
+  PRIVATE src src/sc_builtin ${PROJECT_BINARY_DIR}/include
+  INTERFACE
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/sc_builtin>
+  $<INSTALL_INTERFACE:include>)
 target_link_libraries(sc PRIVATE iniparser libb64)
 if(MPI_FOUND)
   target_link_libraries(sc PRIVATE MPI::MPI_C)
@@ -38,9 +63,17 @@ endif()
 if(ZLIB_FOUND)
   target_link_libraries(sc PRIVATE ZLIB::ZLIB)
 endif()
-if(NOT WIN32)
+if(SC_NEED_M)
   target_link_libraries(sc PRIVATE m)
 endif()
+
+# imported target, for use from FetchContent
+add_library(SC::SC INTERFACE IMPORTED GLOBAL)
+target_link_libraries(SC::SC INTERFACE sc)
+
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/ ${PROJECT_SOURCE_DIR}/src/sc_builtin/ ${PROJECT_BINARY_DIR}/include/
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h")
 
 add_subdirectory(src)
 
@@ -48,3 +81,5 @@ if(BUILD_TESTING)
   add_subdirectory(example)
   add_subdirectory(test)
 endif(BUILD_TESTING)
+
+include(cmake/install.cmake)
