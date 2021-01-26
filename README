@@ -43,3 +43,9 @@ Optionally, run self-tests:
 cd build
 ctest
 ```
+
+Optionally, install under directory set like `cmake -B build -DCMAKE_INSTALL_PREFIX=~/local`
+
+```sh
+cmake --install build
+```
