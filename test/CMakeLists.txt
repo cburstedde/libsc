@@ -21,7 +21,7 @@ endif()
 
 foreach(t ${tests})
   add_executable(test_${t} test_${t}.c)
-  target_link_libraries(test_${t} PRIVATE sc)
+  target_link_libraries(test_${t} PRIVATE SC::SC)
   if(ZLIB_FOUND)
     target_link_libraries(test_${t} PRIVATE ZLIB::ZLIB)
   endif()

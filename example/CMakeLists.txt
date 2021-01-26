@@ -11,7 +11,7 @@ foreach(e ${exs})
 
 add_executable(sc_${e} ${e}/${e}.c)
 target_include_directories(sc_${e} PRIVATE ${PROJECT_SOURCE_DIR}/src ${PROJECT_BINARY_DIR}/include)
-target_link_libraries(sc_${e} PRIVATE sc)
+target_link_libraries(sc_${e} PRIVATE SC::SC)
 if(MPI_FOUND)
   target_link_libraries(sc_${e} PRIVATE MPI::MPI_C)
 endif()

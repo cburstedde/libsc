@@ -38,9 +38,15 @@ endif()
 if(ZLIB_FOUND)
   target_link_libraries(sc PRIVATE ZLIB::ZLIB)
 endif()
+if(ZLIB_FOUND)
+  target_link_libraries(sc PRIVATE ZLIB::ZLIB)
+endif()
 if(NOT WIN32)
   target_link_libraries(sc PRIVATE m)
 endif()
+
+add_library(SC::SC INTERFACE IMPORTED GLOBAL)
+target_link_libraries(SC::SC INTERFACE sc)
 
 add_subdirectory(src)
 
