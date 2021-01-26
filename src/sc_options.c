@@ -178,7 +178,11 @@ sc_options_new (const char *program_path)
   opt = SC_ALLOC_ZERO (sc_options_t, 1);
 
   snprintf (opt->program_path, BUFSIZ, "%s", program_path);
+#ifdef _MSC_VER
+    _splitpath (opt->program_path, NULL, NULL, NULL, NULL);
+#else
   opt->program_name = basename (opt->program_path);
+#endif
   opt->option_items = sc_array_new (sizeof (sc_option_item_t));
   opt->subopt_names = sc_array_new (sizeof (char *));
   opt->args_alloced = 0;
