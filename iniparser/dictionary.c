@@ -20,13 +20,6 @@
 #define sc3_snprintf sc_snprintf
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef SC_HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 /** Maximum value size for integers and doubles. */
 #define MAXVALSZ    1024
 
