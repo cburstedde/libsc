@@ -50,7 +50,6 @@ if(MPI_FOUND)
   check_symbol_exists(MPI_Win_allocate_shared mpi.h SC_ENABLE_MPIWINSHARED)
 endif(MPI_FOUND)
 
-
 check_symbol_exists(realloc stdlib.h SC_ENABLE_USE_REALLOC)
 check_symbol_exists(aligned_alloc stdlib.h SC_HAVE_ALIGNED_ALLOC)
 check_symbol_exists(backtrace execinfo.h SC_HAVE_BACKTRACE)
@@ -81,14 +80,11 @@ check_include_file(times.h SC_HAVE_TIME_H)
 check_include_file(unistd.h SC_HAVE_UNISTD_H)
 check_symbol_exists(adler32_combine zlib.h SC_HAVE_ZLIB)
 
-
-
 # check_type_size(int SC_SIZEOF_INT BUILTIN_TYPES_ONLY)
 check_type_size(long SC_SIZEOF_LONG BUILTIN_TYPES_ONLY)
 # check_type_size("long long" SC_SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
 # check_type_size("unsigned long" SC_SIZEOF_UNSIGNED_LONG BUILTIN_TYPES_ONLY)
 # check_type_size("unsigned long long" SC_SIZEOF_UNSIGNED_LONG_LONG BUILTIN_TYPES_ONLY)
 set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
-
 
 configure_file(sc_config.h.in ${PROJECT_BINARY_DIR}/include/sc_config.h)
