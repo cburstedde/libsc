@@ -280,7 +280,7 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
 
     snprintf (bn, BUFSIZ, "%s", filename);
 #ifdef _MSC_VER
-    _splitpath (bn, NULL, NULL, NULL, NULL);
+    bp = bn;
 #else
     bp = basename (bn);
 #endif

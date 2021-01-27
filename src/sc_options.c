@@ -179,7 +179,7 @@ sc_options_new (const char *program_path)
 
   snprintf (opt->program_path, BUFSIZ, "%s", program_path);
 #ifdef _MSC_VER
-    _splitpath (opt->program_path, NULL, NULL, NULL, NULL);
+  opt->program_name = opt->program_path;
 #else
   opt->program_name = basename (opt->program_path);
 #endif
