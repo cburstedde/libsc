@@ -12,15 +12,37 @@ Licence version 2.1 (or, at your option, any later version).
 
 The official web page for source code and documentation is www.p4est.org.
 Please send bug reports and ideas for contribution to info@p4est.org.
+We currently maintain the source code at github.com/cburstedde/libsc.git.
+
+## Building libsc
 
 The build instructions for p4est also apply to standalone builds of libsc.
 
-## CMake
+### Autotools
 
-For faster builds that work on Windows as well as MacOS and Linux,
-that build quickly and are easily usable from other CMake projects, libsc
-can be built directly, or used via FetchContent or ExternalProject from other
-CMake projects.
+The `autoconf`/`automake`/`libtool` build chain is fully supported.
+
+In a fresh checkout, you may run ./bootstrap to create the `configure` script.
+This is *not* required for unpacked tar archives, or after pulling fresh code.
+
+We recommend running `configure` with a relative path from an empty build
+directory.  Try
+
+    sh configure --help
+
+for options and switches.  For development with MPI:
+
+    cd empty/build/directory
+    sh ../relative/path/to/configure --enable-mpi --enable-debug CFLAGS="-O0 -g"
+    make -j8 V=0
+
+The `V=0` environment variable significantly unclutters console output.
+
+### CMake
+
+For faster builds that work on Windows as well as MacOS and Linux, and
+that are easily usable from other CMake projects, libsc can be built directly,
+or used via FetchContent or ExternalProject from other CMake projects.
 With CMake, libsc works with compilers including GCC, Clang and Intel oneAPI.
 Visual Studio does not currently work.
 
@@ -31,7 +53,7 @@ cmake -B build
 cmake --build build --parallel
 ```
 
-To disable MPI (delete build/ or use difference build directory if previously built with MPI):
+To disable MPI:
 
 ```sh
 cmake -B build -Dmpi=no
@@ -44,8 +66,10 @@ cd build
 ctest
 ```
 
-Optionally, install under directory set like `cmake -B build -DCMAKE_INSTALL_PREFIX=~/local`
+Optionally, install libsc like:
 
 ```sh
+cmake -B build -DCMAKE_INSTALL_PREFIX=~/local
+
 cmake --install build
 ```
