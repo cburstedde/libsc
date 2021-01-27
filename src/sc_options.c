@@ -105,7 +105,7 @@ sc_iniparser_getint (dictionary * d, const char *key, int notfound,
   return (int) l;
 }
 
-static              size_t
+static size_t
 sc_iniparser_getsizet (dictionary * d, const char *key, size_t notfound,
                        int *iserror)
 {
@@ -327,7 +327,7 @@ sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
 
 void
 sc_options_add_size_t (sc_options_t * opt, int opt_char, const char *opt_name,
-                       size_t * variable, size_t init_value,
+                       size_t *variable, size_t init_value,
                        const char *help_string)
 {
   sc_option_item_t   *item;
