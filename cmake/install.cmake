@@ -1,13 +1,16 @@
 # --- package specific
 
 install(TARGETS ${PROJECT_NAME}
-  EXPORT ${PROJECT_NAME}Targets)
+  EXPORT ${PROJECT_NAME}Targets
+  ARCHIVE DESTINATION lib)
 
 install(TARGETS iniparser
-  EXPORT ${PROJECT_NAME}Targets)
+  EXPORT ${PROJECT_NAME}Targets
+  ARCHIVE DESTINATION lib)
 
 install(TARGETS libb64
-  EXPORT ${PROJECT_NAME}Targets)
+  EXPORT ${PROJECT_NAME}Targets
+  ARCHIVE DESTINATION lib)
 
 # --- BOILERPLATE: install / packaging
 

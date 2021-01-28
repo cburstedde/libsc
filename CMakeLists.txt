@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.13)
+
+include(cmake/policy.cmake)
+
 project(sc
   LANGUAGES C
   VERSION 0.0.0)
