@@ -43,7 +43,7 @@ dist_scini_DATA =
 
 # handle toplevel directory
 EXTRA_DIST += \
-        bootstrap scindent build-aux/git-version-gen build-aux/git2cl bugs doc
+        bootstrap scindent build-aux/git-version-gen build-aux/git2cl doc
 DISTCLEANFILES += \
         _configs.sed src/sc_config.h
 .PHONY: ChangeLog
