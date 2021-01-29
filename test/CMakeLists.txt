@@ -16,6 +16,8 @@ if(SC_HAVE_GETOPT_H)
   list(APPEND tests builtin io_sink)
 endif()
 
+# ---
+
 foreach(t ${tests})
   add_executable(test_${t} test_${t}.c)
   target_link_libraries(test_${t} PRIVATE SC::SC)

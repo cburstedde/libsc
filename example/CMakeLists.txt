@@ -21,8 +21,11 @@ endfunction(test_sc_example)
 
 test_sc_example(function function/function.c)
 test_sc_example(logging logging/logging.c)
-test_sc_example(options options/options.c)
 test_sc_example(test_shmem testing/sc_test_shmem.c)
+
+if(SC_HAVE_GETOPT_H)
+  test_sc_example(options options/options.c)
+endif()
 
 if(OpenMP_FOUND)
   test_sc_example(openmp openmp/openmp.c)

@@ -6,7 +6,7 @@ message(STATUS "${PROJECT_NAME} CMake ${CMAKE_VERSION}")
 
 # --- generate sc_config.h
 
-set(CMAKE_REQUIRED_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_BINARY_DIR}/include)
+set(CMAKE_REQUIRED_INCLUDES)
 set(CMAKE_REQUIRED_LIBRARIES)
 
 if(MPI_FOUND)
@@ -84,9 +84,15 @@ endif()
 
 check_symbol_exists(strtoll stdlib.h SC_HAVE_STRTOLL)
 
-check_include_file(sys/time.h SC_HAVE_SYS_TIME_H)
 check_include_file(sys/types.h SC_HAVE_SYS_TYPES_H)
+
+check_include_file(sys/time.h SC_HAVE_SYS_TIME_H)
 check_include_file(time.h SC_HAVE_TIME_H)
+if(WIN32)
+  # even though Windows has time.h, struct timeval is in Winsock2.h
+  check_include_file(Winsock2.h SC_HAVE_WINSOCK2_H)
+  set(WINSOCK_LIBRARIES wsock32 ws2_32 Iphlpapi)
+endif()
 
 check_include_file(unistd.h SC_HAVE_UNISTD_H)
 if(SC_HAVE_UNISTD_H)
