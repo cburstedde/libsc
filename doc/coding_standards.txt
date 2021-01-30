@@ -8,11 +8,14 @@ tries to adhere to.
    the main directory.  It calls GNU indent with some extra options.
    This does not apply for included third party code.
 
+   Different versions of indent produce different results.  When in doubt,
+   please talk to us about various versions of indent.
+
  * Boolean variables
 
-   All boolean parameters will not be checked with (a==true) or (a==false).
-   We follow the standard C convention where (a) is used to test true
-   and (!a) is used to test false.  The bool type is not used.
+   All boolean parameters will not be checked with (x==true) or (x==false).
+   We follow the standard C convention where (x) is used to test true
+   and (!x) is used to test false.  The bool type is never used; use int.
    An exception is to test for pointers like (p == NULL) or (p != NULL).
 
  * Variable names that are not self-descriptive
@@ -21,12 +24,12 @@ tries to adhere to.
    Loop variables of type size_t should be named iz, jz, etc.
    Loop variables of type ssize_t should be named is, js, etc.
 
- * Printf and friends on 64bit integers, size_t, etc.
+ * printf and friends on 64bit integers, size_t, etc.
 
    We will have to wait until all compilers and some lint checkers
    understand printf ("%jd %ju", (intmax_t) i, (uintmax_t) u) since that
    is a nice way to accomodate 128bit integers without changing the printf
    code.  In the mean time, we're using printf ("%lld %lld", (long long)
-   i, (long long) u) which loses 128bit integers and the high bit of uint64_t.
+   i, (long long) u), which loses 128bit integers and the high bits of uint64_t.
    This also holds for size_t since support for the following is still
    incomplete: printf ("%zd %zu", ssize_t_var, size_t_var).
