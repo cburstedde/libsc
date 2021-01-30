@@ -42,6 +42,9 @@ the pull request branch.  We prefer such a merge over a rebase by far.
 
 Please make sure that `make check V=0` runs without errors before pushing.
 Please look through our [coding standards](doc/coding_standards.txt) as well.
+If you have a recent `codespell` installed, please run the
+[scspell](scspell) script
+and fix any spelling errors that may have crept in.
 
 When we're happy with the state of the pull request, and this may well depend
 not as much on you as on us addressing shortcomings that we identify on our

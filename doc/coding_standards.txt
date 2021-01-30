@@ -1,35 +1,47 @@
 
+# Coding standards of libsc
+
 This file describes a list of coding standards that the SC Library
 tries to adhere to.
 
- * Indentation
+## Indentation
 
-   All .c and .h files must be indented with the scindent script in
+   All `.c` and `.h` files must be indented with the `scindent` script in
    the main directory.  It calls GNU indent with some extra options.
    This does not apply for included third party code.
 
    Different versions of indent produce different results.  When in doubt,
-   please talk to us about various versions of indent.
+   please talk to us about various versions of indent.  A good rule of thumb
+   is to throw away white space changes to lines of code
+   not written by yourself.
 
- * Boolean variables
+## Boolean variables
 
-   All boolean parameters will not be checked with (x==true) or (x==false).
-   We follow the standard C convention where (x) is used to test true
-   and (!x) is used to test false.  The bool type is never used; use int.
-   An exception is to test for pointers like (p == NULL) or (p != NULL).
+   All boolean parameters will not be checked with `(x==true)` or `(x==false)`.
+   We follow the standard C convention where `(x)` is used to test true
+   and `(!x)` is used to test false.  The `bool` type is never used; use `int`.
+   An exception is to test for pointers like `(p == NULL)` or `(p != NULL)`.
 
- * Variable names that are not self-descriptive
+## Variable names that are not self-descriptive
 
-   Loop variables of type int can be named as usual: i, j, etc.
-   Loop variables of type size_t should be named iz, jz, etc.
-   Loop variables of type ssize_t should be named is, js, etc.
+   Loop variables of type `int` can be named as usual: `i`, `j`, etc.
+   Loop variables of type `size_t` should be named `iz`, `jz`, etc.
+   Loop variables of type `ssize_t` should be named `is`, `js`, etc.
 
- * printf and friends on 64bit integers, size_t, etc.
+## `printf` and friends on 64 bit integers, `size_t`, etc.
 
    We will have to wait until all compilers and some lint checkers
-   understand printf ("%jd %ju", (intmax_t) i, (uintmax_t) u) since that
-   is a nice way to accomodate 128bit integers without changing the printf
-   code.  In the mean time, we're using printf ("%lld %lld", (long long)
-   i, (long long) u), which loses 128bit integers and the high bits of uint64_t.
-   This also holds for size_t since support for the following is still
-   incomplete: printf ("%zd %zu", ssize_t_var, size_t_var).
+   understand
+
+       printf ("%jd %ju", (intmax_t) i, (uintmax_t) u)
+
+   since that would be a nice way to accomodate 128 bit integers without
+   changing the `printf` code.
+   This also holds for `size_t` since support for the following is still
+   incomplete:
+
+       printf ("%zd %zu", ssize_t_var, size_t_var)
+
+   In the mean time, we're using:
+
+       printf ("%lld %llu", (long long) i, (long long) u)
