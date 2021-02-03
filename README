@@ -43,8 +43,6 @@ The `V=0` environment variable significantly unclutters console output.
 For faster builds that work on Windows as well as MacOS and Linux, and
 that are easily usable from other CMake projects, libsc can be built directly,
 or used via FetchContent or ExternalProject from other CMake projects.
-With CMake, libsc works with compilers including GCC, Clang and Intel oneAPI.
-Visual Studio does not currently work.
 
 MPI is enabled by default:
 
@@ -52,6 +50,7 @@ MPI is enabled by default:
 cmake -B build
 cmake --build build --parallel
 ```
+
 To disable MPI:
 
 ```sh
@@ -65,9 +64,16 @@ cd build
 ctest
 ```
 
-Optionally, install under directory set like
-`cmake -B build -DCMAKE_INSTALL_PREFIX=~/local`
+Optionally, install libsc like:
 
 ```sh
+cmake -B build -DCMAKE_INSTALL_PREFIX=~/local
+
 cmake --install build
 ```
+
+Here are a few compilers known to work with libsc via CMake:
+
+* GCC or Clang (Linux, MacOS, Windows)
+* Intel `icc` (Linux, MacOS)
+* Intel NextGen LLVM `icx` (Linux, MacOS, Windows). Windows `icx` requires CMake >= 3.20

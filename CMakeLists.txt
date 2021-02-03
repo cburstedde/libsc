@@ -9,12 +9,15 @@ project(sc
 include(CTest)
 
 include(cmake/options.cmake)
+include(cmake/config.cmake)
 include(cmake/compilers.cmake)
 
 if(mpi)
   find_package(MPI COMPONENTS C REQUIRED)
 endif()
-
+if(openmp)
+  find_package(OpenMP COMPONENTS C REQUIRED)
+endif()
 find_package(ZLIB)
 find_package(Threads)
 
@@ -45,7 +48,7 @@ install(FILES libb64/libb64.h
 
 # --- sc
 add_library(sc)
-target_compile_features(sc PRIVATE c_std_99)
+target_compile_features(sc PRIVATE c_std_11)
 target_include_directories(sc
   PRIVATE src src/sc_builtin ${PROJECT_BINARY_DIR}/include
   INTERFACE
@@ -60,10 +63,7 @@ endif()
 if(ZLIB_FOUND)
   target_link_libraries(sc PRIVATE ZLIB::ZLIB)
 endif()
-if(ZLIB_FOUND)
-  target_link_libraries(sc PRIVATE ZLIB::ZLIB)
-endif()
-if(NOT WIN32)
+if(SC_NEED_M)
   target_link_libraries(sc PRIVATE m)
 endif()
 

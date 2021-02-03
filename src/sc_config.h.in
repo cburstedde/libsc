@@ -51,6 +51,9 @@
 /* Define to 1 if you have the `aligned_alloc' function. */
 #cmakedefine SC_HAVE_ALIGNED_ALLOC
 
+/* Define to 1 if you have the `_aligned_,alloc' function. */
+#cmakedefine SC_HAVE_ALIGNED_MALLOC
+
 /* Define to 1 if you have the `backtrace' function. */
 #cmakedefine SC_HAVE_BACKTRACE
 
@@ -90,15 +93,8 @@
 
 #cmakedefine SC_HAVE_STRING_H
 
-/* Define to 1 if you have the `strtol' function. */
-//#cmakedefine SC_HAVE_STRTOL
-
 /* Define to 1 if you have the `strtoll' function. */
 #cmakedefine SC_HAVE_STRTOLL
-
-
-/* Define to 1 if you have the <sys/stat.h> header file. */
-//#cmakedefine SC_HAVE_SYS_STAT_H
 
 /* Define to 1 if you have the <sys/time.h> header file. */
 #cmakedefine SC_HAVE_SYS_TIME_H
@@ -108,6 +104,8 @@
 
 /* Define to 1 if you have the <time.h> header file. */
 #cmakedefine SC_HAVE_TIME_H
+
+#cmakedefine SC_HAVE_WINSOCK2_H
 
 
 /* desired alignment of allocations in bytes */

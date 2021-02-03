@@ -30,6 +30,9 @@
 #ifdef SC_HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
+#if defined(SC_HAVE_WINSOCK2_H)
+#include <Winsock2.h>
+#endif
 
 int
 sc_MPI_Init (int *argc, char ***argv)
