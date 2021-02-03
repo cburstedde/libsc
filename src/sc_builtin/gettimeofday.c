@@ -1,10 +1,10 @@
-// public domain: https://stackoverflow.com/a/26085827
+/* public domain: https://stackoverflow.com/a/26085827 */
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <stdint.h> // portable: uint64_t   MSVC: __int64
+#include <stdint.h> /* portable: uint64_t   MSVC: __int64 */
 
-// MSVC defines this in winsock2.h!?
+/* MSVC defines this in winsock2.h!? */
 typedef struct timeval {
     long tv_sec;
     long tv_usec;
@@ -12,9 +12,10 @@ typedef struct timeval {
 
 int gettimeofday(struct timeval * tp, struct timezone * tzp)
 {
-    // Note: some broken versions only have 8 trailing zero's, the correct epoch has 9 trailing zero's
-    // This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
-    // until 00:00:00 January 1, 1970
+    /* Note: some broken versions only have 8 trailing zeros,
+       the correct epoch has 9 trailing zeros. */
+    /* This magic number is the number of 100 nanosecond intervals since
+       January 1, 1601 (UTC) until 00:00:00 January 1, 1970 */
     static const uint64_t EPOCH = ((uint64_t) 116444736000000000ULL);
 
     SYSTEMTIME  system_time;
