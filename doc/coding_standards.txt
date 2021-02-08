@@ -4,44 +4,61 @@
 This file describes a list of coding standards that the SC Library
 tries to adhere to.
 
-## Indentation
+## White space
+
+   libsc is a `C` library.  We do not use `C++`-style comments `//`.
+   Please use `/* ... */` throughout.
 
    All `.c` and `.h` files must be indented with the `scindent` script in
-   the main directory.  It calls GNU indent with some extra options.
-   This does not apply for included third party code.
+   the main directory.  It calls GNU `indent` with some extra options.
+   This does not apply to included third party code.
 
-   Different versions of indent produce different results.  When in doubt,
-   please talk to us about various versions of indent.  A good rule of thumb
-   is to throw away white space changes to lines of code
-   not written by yourself.
+   Different versions of `indent` produce different results.  When in doubt,
+   please talk to us about various versions of `indent`.
+   An essential rule of thumb is to throw away white space changes to lines of
+   code not written by yourself.
+
+   We provide the `scspell` script for spell checking of comments.
+   It calls `codespell`.
 
 ## Boolean variables
 
    All boolean parameters will not be checked with `(x==true)` or `(x==false)`.
-   We follow the standard C convention where `(x)` is used to test true
+   We follow the standard `C` convention where `(x)` is used to test true
    and `(!x)` is used to test false.  The `bool` type is never used; use `int`.
-   An exception is to test for pointers like `(p == NULL)` or `(p != NULL)`.
+   An exception is to test explicitly for pointers being `NULL` or not,
+   like `(p == NULL)` or `(p != NULL)`.
 
-## Variable names that are not self-descriptive
+## Iteration variables
 
    Loop variables of type `int` can be named as usual: `i`, `j`, etc.
    Loop variables of type `size_t` should be named `iz`, `jz`, etc.
    Loop variables of type `ssize_t` should be named `is`, `js`, etc.
+   There is usually no need to use any other type for loop counters.
 
-## `printf` and friends on 64 bit integers, `size_t`, etc.
+## `printf` long integers
 
    We will have to wait until all compilers and some lint checkers
    understand
 
-       printf ("%jd %ju", (intmax_t) i, (uintmax_t) u)
+       printf ("%jd %ju", (intmax_t) i, (uintmax_t) u);
 
    since that would be a nice way to accomodate 128 bit integers without
    changing the `printf` code.
    This also holds for `size_t` since support for the following is still
    incomplete:
 
-       printf ("%zd %zu", ssize_t_var, size_t_var)
+       printf ("%zd %zu", ssize_t_var, size_t_var);
 
-   In the mean time, we're using:
+   In the meantime, we're using:
 
-       printf ("%lld %llu", (long long) i, (long long) u)
+       printf ("%lld %llu", (long long) verylongi, (unsigned long long) verylongu);
+
+## Buffer sizes
+
+   We never use variable-length buffer output such as produced by `sprintf`.
+
+   What we do is calling safe versions like
+
+       char buf[BUFSIZ];
+       snprintf (buf, BUFSIZ, "Foo %d\n", bar);
