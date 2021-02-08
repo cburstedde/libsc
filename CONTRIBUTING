@@ -9,6 +9,9 @@ we are on the same page with potential contributors, we generally like
 discussing proposed changes before the contributor submits a pull request with
 actual code.  This builds trust and saves time and energy on both sides.
 
+We will ask new contributors to create a `doc/author_lastname.txt` file
+that states that their contributions are released under the `FREEBDSB` license.
+
 ## Posting an issue
 
 So we'd ask to post an issue as the first step of your contribution.
