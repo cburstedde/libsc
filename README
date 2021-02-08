@@ -15,4 +15,66 @@ Please send bug reports and ideas for contribution to p4est@ins.uni-bonn.de.
 You are also welcome to post issues on www.github.com/cburstedde/libsc.git.
 Please see the CONTRIBUTING and doc/coding_standards.txt files for details.
 
+## Building libsc
+
 The build instructions for p4est also apply to standalone builds of libsc.
+
+### Autotools
+
+The `autoconf`/`automake`/`libtool` build chain is fully supported.
+
+In a fresh checkout, you may run ./bootstrap to create the `configure` script.
+This is *not* required for unpacked tar archives, or after pulling fresh code.
+
+We recommend running `configure` with a relative path from an empty build
+directory.  Try
+
+    sh configure --help
+
+for options and switches.  For development with MPI:
+
+    cd empty/build/directory
+    sh ../relative/path/to/configure --enable-mpi --enable-debug CFLAGS="-O0 -g"
+    make -j8 V=0
+
+The `V=0` environment variable significantly unclutters console output.
+
+### CMake
+
+For faster builds that work on Windows as well as MacOS and Linux, and
+that are easily usable from other CMake projects, libsc can be built directly,
+or used via FetchContent or ExternalProject from other CMake projects.
+
+MPI is enabled by default:
+
+```sh
+cmake -B build
+cmake --build build --parallel
+```
+
+To disable MPI:
+
+```sh
+cmake -B build -Dmpi=no
+```
+
+Optionally, run self-tests:
+
+```sh
+cd build
+ctest
+```
+
+Optionally, install libsc like:
+
+```sh
+cmake -B build -DCMAKE_INSTALL_PREFIX=~/local
+
+cmake --install build
+```
+
+Here are a few compilers known to work with libsc via CMake:
+
+* GCC or Clang (Linux, MacOS, Windows)
+* Intel `icc` (Linux, MacOS)
+* Intel NextGen LLVM `icx` (Linux, MacOS, Windows). Windows `icx` requires CMake >= 3.20
