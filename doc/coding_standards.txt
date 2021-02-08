@@ -1,32 +1,64 @@
 
+# Coding standards of libsc
+
 This file describes a list of coding standards that the SC Library
 tries to adhere to.
 
- * Indentation
+## White space
 
-   All .c and .h files must be indented with the scindent script in
-   the main directory.  It calls GNU indent with some extra options.
-   This does not apply for included third party code.
+   libsc is a `C` library.  We do not use `C++`-style comments `//`.
+   Please use `/* ... */` throughout.
 
- * Boolean variables
+   All `.c` and `.h` files must be indented with the `scindent` script in
+   the main directory.  It calls GNU `indent` with some extra options.
+   This does not apply to included third party code.
 
-   All boolean parameters will not be checked with (a==true) or (a==false).
-   We follow the standard C convention where (a) is used to test true
-   and (!a) is used to test false.  The bool type is not used.
-   An exception is to test for pointers like (p == NULL) or (p != NULL).
+   Different versions of `indent` produce different results.  When in doubt,
+   please talk to us about various versions of `indent`.
+   An essential rule of thumb is to throw away white space changes to lines of
+   code not written by yourself.
 
- * Variable names that are not self-descriptive
+   We provide the `scspell` script for spell checking of comments.
+   It calls `codespell`.
 
-   Loop variables of type int can be named as usual: i, j, etc.
-   Loop variables of type size_t should be named iz, jz, etc.
-   Loop variables of type ssize_t should be named is, js, etc.
+## Boolean variables
 
- * Printf and friends on 64bit integers, size_t, etc.
+   All boolean parameters will not be checked with `(x==true)` or `(x==false)`.
+   We follow the standard `C` convention where `(x)` is used to test true
+   and `(!x)` is used to test false.  The `bool` type is never used; use `int`.
+   An exception is to test explicitly for pointers being `NULL` or not,
+   like `(p == NULL)` or `(p != NULL)`.
+
+## Iteration variables
+
+   Loop variables of type `int` can be named as usual: `i`, `j`, etc.
+   Loop variables of type `size_t` should be named `iz`, `jz`, etc.
+   Loop variables of type `ssize_t` should be named `is`, `js`, etc.
+   There is usually no need to use any other type for loop counters.
+
+## `printf` long integers
 
    We will have to wait until all compilers and some lint checkers
-   understand printf ("%jd %ju", (intmax_t) i, (uintmax_t) u) since that
-   is a nice way to accomodate 128bit integers without changing the printf
-   code.  In the mean time, we're using printf ("%lld %lld", (long long)
-   i, (long long) u) which loses 128bit integers and the high bit of uint64_t.
-   This also holds for size_t since support for the following is still
-   incomplete: printf ("%zd %zu", ssize_t_var, size_t_var).
+   understand
+
+       printf ("%jd %ju", (intmax_t) i, (uintmax_t) u);
+
+   since that would be a nice way to accomodate 128 bit integers without
+   changing the `printf` code.
+   This also holds for `size_t` since support for the following is still
+   incomplete:
+
+       printf ("%zd %zu", ssize_t_var, size_t_var);
+
+   In the meantime, we're using:
+
+       printf ("%lld %llu", (long long) verylongi, (unsigned long long) verylongu);
+
+## Buffer sizes
+
+   We never use variable-length buffer output such as produced by `sprintf`.
+
+   What we do is calling safe versions like
+
+       char buf[BUFSIZ];
+       snprintf (buf, BUFSIZ, "Foo %d\n", bar);
