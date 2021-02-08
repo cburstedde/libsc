@@ -1,15 +1,21 @@
 
-This document describes some policies on error handling.
-The SC library does not yet implement the SC_ASSERT distinctions.
+# Error policies
 
- * SC_ASSERT
+This document describes some policies on error handling.
+We try to verify every input argument to every function.
+We generally encourage copious use of `SC_ASSERT`.
+
+ * `SC_ASSERT`
 
    Primarily used for internal development, failure on these asserts
    indicates a likely internal bug that requires modification of the
    library code by the developers.  These checks are only performed in
-   debug mode.
+   debug mode.  It is highly recommended to `configure --enable-debug`
+   except for times-critical production runs only.
 
- * SC_ASSERT_VERBOSE (does not yet exist...)
+   There can never be too many lines of `SC_ASSERT`.
+
+ * `SC_ASSERT_VERBOSE` (does not yet exist...)
 
    Used for checks that do not depend on third party software, but are
    likely caused by improper use of the library by the user.  The verbose
@@ -17,8 +23,17 @@ The SC library does not yet implement the SC_ASSERT distinctions.
    user, without knowledge of the library internals.  These checks are
    only performed in debug mode.
 
- * SC_CHECK_ABORT
+   Currently this is substituted for by `SC_ASSERT`.
 
-   Used when we are depending on third party software, such as MPI or
-   Trilinos, and updates to their code or different builds of the same
-   code could generate errors.  These should always be checked.
+ * `SC_CHECK_ABORT`
+
+   Used when we are depending on third party software or file and network
+   functions such as MPI.  Their consistency should always be checked.
+
+   This macro is always enabled and intended to be used where the additional
+   delay does not matter (say since file or network access takes some time
+   already).
+
+   Of course it would be preferable to report the error to the caller
+   without provoking a crash.  But it is infinitely better than not
+   checking at all.
