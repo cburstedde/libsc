@@ -50,7 +50,7 @@ sc_scan_on_array (void *recvchar, int size, int count, int typesize,
   int                 p, c;
 
   if (op == sc_MPI_SUM) {
-    if (type == sc_MPI_CHAR) {
+    if (type == sc_MPI_CHAR || type == sc_MPI_BYTE) {
       char               *array = (char *) recvchar;
 
       SC_ASSERT (sizeof (*array) == typesize);
@@ -210,6 +210,9 @@ sc_shmem_get_type (sc_MPI_Comm comm)
   SC_CHECK_MPI (mpiret);
 
   if (flg) {
+    SC_ASSERT (sc_shmem_types <= type &&
+               type < &sc_shmem_types[SC_SHMEM_NUM_TYPES]);
+    SC_ASSERT (0 <= *type && *type < SC_SHMEM_NUM_TYPES);
     return *type;
   }
   else {
@@ -223,6 +226,8 @@ sc_shmem_get_type (sc_MPI_Comm comm)
 void
 sc_shmem_set_type (sc_MPI_Comm comm, sc_shmem_type_t type)
 {
+  SC_ASSERT (0 <= type && type < SC_SHMEM_NUM_TYPES);
+
 #if defined(SC_ENABLE_MPI)
   int                 mpiret;
 
@@ -663,6 +668,7 @@ sc_shmem_write_end_window (void *array, sc_MPI_Comm comm,
   mpiret = MPI_Win_lock (MPI_LOCK_SHARED, 0, MPI_MODE_NOCHECK, win);
   SC_CHECK_MPI (mpiret);
 }
+
 #endif /* SC_ENABLE_MPIWINSHARED */
 
 void               *

@@ -11,6 +11,8 @@ others.  libsc is free software released under the GNU Lesser General Public
 Licence version 2.1 (or, at your option, any later version).
 
 The official web page for source code and documentation is www.p4est.org.
-Please send bug reports and ideas for contribution to info@p4est.org.
+Please send bug reports and ideas for contribution to p4est@ins.uni-bonn.de.
+You are also welcome to post issues on www.github.com/cburstedde/libsc.git.
+Please see the CONTRIBUTING and doc/coding_standards.txt files for details.
 
 The build instructions for p4est also apply to standalone builds of libsc.
