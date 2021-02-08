@@ -44,7 +44,7 @@ dist_scini_DATA =
 # handle toplevel directory
 EXTRA_DIST += \
         bootstrap scindent build-aux/git-version-gen build-aux/git2cl doc \
-        cmake CMakeLists.txt src/CMakeLists.txt src/sc_config.h.in \
+        cmake CMakeLists.txt src/CMakeLists.txt src/sc_config_cmake.h.in \
         example/CMakeLists.txt test/CMakeLists.txt
 
 DISTCLEANFILES += \

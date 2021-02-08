@@ -112,4 +112,4 @@ check_type_size(long SC_SIZEOF_LONG BUILTIN_TYPES_ONLY)
 set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
 
-configure_file(src/sc_config.h.in ${PROJECT_BINARY_DIR}/include/sc_config.h)
+configure_file(src/sc_config_cmake.h.in ${PROJECT_BINARY_DIR}/include/sc_config.h)
