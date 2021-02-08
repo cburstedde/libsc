@@ -10,6 +10,7 @@ assignees: ''
 **Description**
 
 **To Reproduce**
+What can we do to reproduce the issue reported?
 
 **Additional information**
 Operating system, build configuration, etc.
