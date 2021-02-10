@@ -22,6 +22,7 @@
 */
 
 #include <sc_v4l2.h>
+#include <errno.h>
 
 #ifdef SC_HAVE_LINUX_VIDEODEV2_H
 #include <linux/videodev2.h>
@@ -234,9 +235,11 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
   if (vd->pix->pixelformat != V4L2_PIX_FMT_RGB565 ||
       vd->pix->colorspace != V4L2_COLORSPACE_SRGB ||
       vd->pix->field != V4L2_FIELD_NONE) {
+    errno = EINVAL;
     return -1;
   }
   if (vd->pix->sizeimage != vd->pix->bytesperline * vd->pix->height) {
+    errno = EINVAL;
     return -1;
   }
 
