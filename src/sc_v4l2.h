@@ -69,10 +69,17 @@ const char         *sc_v4l2_device_capstring (const sc_v4l2_device_t * vd);
 const char         *sc_v4l2_device_outstring (const sc_v4l2_device_t * vd);
 
 /** Set output configuration of device.
- * \param [in,out] vd   Device must support output.
+ * We demand sRGB color space with RGB 565 pixel format (2 bytes).
+ * \param [in,out] vd   Device must support the desired output format.
+ * \param [in,out] width    Desired width on input, actual width on output.
+ * \param [in,out] height   Desired height on input, actual height on output.
+ * \param [out] bytesperline    Bytes per line on output, including padding.
  * \return          0 on success, -1 otherwise.
  */
-int                 sc_v4l2_device_setout (sc_v4l2_device_t * vd);
+int                 sc_v4l2_device_format (sc_v4l2_device_t * vd,
+                                           unsigned int *width,
+                                           unsigned int *height,
+                                           unsigned int *bytesperline);
 
 SC_EXTERN_C_END;
 

@@ -52,6 +52,8 @@ struct sc_v4l2_device
   int                 supports_output;
   struct v4l2_capability capability;
   struct v4l2_output  output;
+  struct v4l2_format  format;
+  struct v4l2_pix_format *pix;
   char                devname[SC_BUFSIZE];
   char                devstring[SC_BUFSIZE];
   char                capstring[SC_BUFSIZE];
@@ -171,7 +173,9 @@ sc_v4l2_device_outstring (const sc_v4l2_device_t * vd)
 }
 
 int
-sc_v4l2_device_setout (sc_v4l2_device_t * vd)
+sc_v4l2_device_format (sc_v4l2_device_t * vd,
+                       unsigned int *width, unsigned int *height,
+                       unsigned int *bytesperline)
 {
   int                 retval;
   int                 output_index;
@@ -180,6 +184,11 @@ sc_v4l2_device_setout (sc_v4l2_device_t * vd)
   SC_ASSERT (vd->fd >= 0);
   SC_ASSERT (vd->supports_output);
 
+  SC_ASSERT (width != NULL);
+  SC_ASSERT (height != NULL);
+  SC_ASSERT (bytesperline != NULL);
+
+  /* select video output */
   if ((retval = ioctl (vd->fd, VIDIOC_G_OUTPUT, &output_index)) != 0) {
     return retval;
   }
@@ -189,6 +198,58 @@ sc_v4l2_device_setout (sc_v4l2_device_t * vd)
       return retval;
     }
   }
+
+  /* query current format */
+  vd->format.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
+  if ((retval = ioctl (vd->fd, VIDIOC_G_FMT, &vd->format)) != 0) {
+    return retval;
+  }
+  vd->pix = &vd->format.fmt.pix;
+
+#if 0
+  /* hack pre info */
+  fprintf (stderr, "Image %ux%u Pixelformat %08x Field %08x\n",
+           vd->pix->width, vd->pix->height,
+           vd->pix->pixelformat, vd->pix->field);
+  fprintf (stderr, "Bytesperline %u Size %u Colorspace %08x\n",
+           vd->pix->bytesperline, vd->pix->sizeimage, vd->pix->colorspace);
+#endif
+
+  /* set desired values */
+  vd->pix->width = *width;
+  vd->pix->height = *height;
+  vd->pix->pixelformat = V4L2_PIX_FMT_RGB565;
+  vd->pix->field = V4L2_FIELD_NONE;
+  vd->pix->bytesperline = 2 * vd->pix->width;
+  vd->pix->sizeimage = vd->pix->bytesperline * vd->pix->height;
+  vd->pix->colorspace = V4L2_COLORSPACE_SRGB;
+  vd->pix->ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
+  vd->pix->quantization = V4L2_QUANTIZATION_DEFAULT;
+  vd->pix->xfer_func = V4L2_XFER_FUNC_DEFAULT;
+
+  /* set desired format */
+  if ((retval = ioctl (vd->fd, VIDIOC_S_FMT, &vd->format)) != 0) {
+    return retval;
+  }
+  if (vd->pix->pixelformat != V4L2_PIX_FMT_RGB565 ||
+      vd->pix->colorspace != V4L2_COLORSPACE_SRGB ||
+      vd->pix->field != V4L2_FIELD_NONE) {
+    return -1;
+  }
+
+#if 0
+  /* hack post info */
+  fprintf (stderr, "Image %ux%u Pixelformat %08x Field %08x\n",
+           vd->pix->width, vd->pix->height,
+           vd->pix->pixelformat, vd->pix->field);
+  fprintf (stderr, "Bytesperline %u Size %u Colorspace %08x\n",
+           vd->pix->bytesperline, vd->pix->sizeimage, vd->pix->colorspace);
+#endif
+
+  /* report back negotiated format */
+  *width = vd->pix->width;
+  *height = vd->pix->height;
+  *bytesperline = vd->pix->bytesperline;
 
   return 0;
 }

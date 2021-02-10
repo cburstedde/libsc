@@ -24,12 +24,17 @@
 #include <sc_v4l2.h>
 
 static int
-v4l2_output (sc_v4l2_device_t * vd)
+v4l2_output (sc_v4l2_device_t * vd,
+             unsigned int *width, unsigned int *height,
+             unsigned int *bytesperline)
 {
   int retval;
 
-  retval = sc_v4l2_device_setout (vd);
-  SC_CHECK_ABORT (!retval, "Failed to configure device");
+  retval = sc_v4l2_device_format (vd, width, height, bytesperline);
+  SC_CHECK_ABORT (!retval, "Failed to configure device format");
+
+  fprintf (stderr, "Negotiated %ux%u with %u bytes per line\n",
+           *width, *height, *bytesperline);
 
   return 0;
 }
@@ -38,8 +43,12 @@ static void
 v4l2_run (const char *devname)
 {
   int                 retval;
+  unsigned int        width, height, bytesperline;
   const char         *outstring;
   sc_v4l2_device_t   *vd;
+
+  width = 640;
+  height = 480;
 
   vd = sc_v4l2_device_open (devname);
   SC_CHECK_ABORTF (vd != NULL, "Failed to open device %s", devname);
@@ -48,7 +57,7 @@ v4l2_run (const char *devname)
   fprintf (stderr, "%s\n", sc_v4l2_device_capstring (vd));
   if ((outstring = sc_v4l2_device_outstring (vd)) != NULL) {
     fprintf (stderr, "%s\n", outstring);
-    retval = v4l2_output (vd);
+    retval = v4l2_output (vd, &width, &height, &bytesperline);
     SC_CHECK_ABORTF (!retval, "Failed to output to device %s", devname);
   }
 
