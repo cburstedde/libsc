@@ -7,8 +7,10 @@ noinst_PROGRAMS += iniparser/sc_iniexample
 iniparser_sc_iniexample_SOURCES = iniparser/iniexample.c
 iniparser_sc_iniexample_CPPFLAGS = $(AM_CPPFLAGS) -I@top_srcdir@/iniparser
 
-iniparser_internal_headers = iniparser/dictionary.h iniparser/iniparser.h
-iniparser_compiled_sources = iniparser/dictionary.c iniparser/iniparser.c
+iniparser_internal_headers = \
+  iniparser/inistring.h iniparser/dictionary.h iniparser/iniparser.h
+iniparser_compiled_sources = \
+  iniparser/inistring.c iniparser/dictionary.c iniparser/iniparser.c
 
 libsc_internal_headers += $(iniparser_internal_headers)
 libsc_compiled_sources += $(iniparser_compiled_sources)

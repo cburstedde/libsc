@@ -13,8 +13,10 @@
 /*---------------------------------------------------------------------------
                                 Includes
  ---------------------------------------------------------------------------*/
-#include <sc3_base.h>
 #include "dictionary.h"
+#include "inistring.h"
+#define sc3_strcopy  ini_strcopy
+#define sc3_snprintf ini_snprintf
 
 /** Maximum value size for integers and doubles. */
 #define MAXVALSZ    1024

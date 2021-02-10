@@ -18,7 +18,7 @@ libsc_installed_headers = \
         src/sc_allgather.h src/sc_reduce.h src/sc_notify.h \
         src/sc3_base.h src/sc3_alloc.h src/sc3_alloc_internal.h \
         src/sc3_error.h src/sc3_refcount.h \
-        src/sc3_omp.h src/sc3_mpi_types.h src/sc3_mpi.h \
+        src/sc3_omp.h src/sc3_mpi.h \
         src/sc3_array.h src/sc3_log.h \
         src/sc3_trace.h src/sc3_memstamp.h \
         src/sc_uint128.h
