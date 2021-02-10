@@ -46,6 +46,18 @@ sc_v4l2_device_t   *sc_v4l2_device_open (const char *devname);
  */
 int                 sc_v4l2_device_close (sc_v4l2_device_t * vd);
 
+/** Return string that details some driver and device properties.
+ * \param [in] vd   Opened \ref sc_v4l2_device_t.
+ * \return          NUL-terminated string only valid while the device \a vd is.
+ */
+const char         *sc_v4l2_device_devstring (sc_v4l2_device_t * vd);
+
+/** Return string that details some device capabilities.
+ * \param [in] vd   Opened \ref sc_v4l2_device_t.
+ * \return          NUL-terminated string only valid while the device \a vd is.
+ */
+const char         *sc_v4l2_device_capstring (sc_v4l2_device_t * vd);
+
 SC_EXTERN_C_END;
 
 #endif /* SC_V4L2_H */

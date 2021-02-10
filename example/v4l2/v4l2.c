@@ -32,6 +32,9 @@ v4l2_run (const char *devname)
   vd = sc_v4l2_device_open (devname);
   SC_CHECK_ABORTF (vd != NULL, "Failed to open device %s", devname);
 
+  fprintf (stderr, "%s\n", sc_v4l2_device_devstring (vd));
+  fprintf (stderr, "%s\n", sc_v4l2_device_capstring (vd));
+
   retval = sc_v4l2_device_close (vd);
   SC_CHECK_ABORTF (!retval, "Failed to close device %s", devname);
 }
