@@ -1,12 +1,12 @@
 
-# Coding standards of libsc
+# Coding standards of `libsc`
 
 This file describes a list of coding standards that the SC Library
 tries to adhere to.
 
 ## White space
 
-   libsc is a `C` library.  We do not use `C++`-style comments `//`.
+   `libsc` is a `C` library.  We do not use `C++`-style comments `//`.
    Please use `/* ... */` throughout.
 
    All `.c` and `.h` files must be indented with the `scindent` script in
@@ -18,8 +18,27 @@ tries to adhere to.
    An essential rule of thumb is to throw away white space changes to lines of
    code not written by yourself.
 
+   Where `./scindent` goes bad, use `/* *INDENT-OFF* */` and `-ON` comments.
+
+   Use `doxygen` style for comments whenever possible.  We're aiming at a
+   complete in-source documentation that runs through without warnings.
+   Comments and code should not exceed the 79th column.
+
    We provide the `scspell` script for spell checking of comments.
    It calls `codespell`.
+
+## Portability
+
+   The code should be safe for C++ compilers.  This means that all .h
+   files need to protect external declarations with `extern "C" { ... }`.
+   `C++` also needs explicit casts in many places where `C` does not care.
+
+   To test this, try
+
+       relative/path/to/configure --enable-mpi --enable-debug CC=mpicxx \
+           CFLAGS="-Wall -Wextra -Wno-unused-parameter -O0 -g"
+
+   and run `make -j V=0`.  Modify accordingly for production builds.
 
 ## Boolean variables
 
