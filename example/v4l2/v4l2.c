@@ -23,10 +23,17 @@
 
 #include <sc_v4l2.h>
 
+static int
+v4l2_output (sc_v4l2_device_t * vd)
+{
+  return 0;
+}
+
 static void
 v4l2_run (const char *devname)
 {
   int                 retval;
+  const char         *outstring;
   sc_v4l2_device_t   *vd;
 
   vd = sc_v4l2_device_open (devname);
@@ -34,7 +41,11 @@ v4l2_run (const char *devname)
 
   fprintf (stderr, "%s\n", sc_v4l2_device_devstring (vd));
   fprintf (stderr, "%s\n", sc_v4l2_device_capstring (vd));
-  fprintf (stderr, "%s\n", sc_v4l2_device_outstring (vd));
+  if ((outstring = sc_v4l2_device_outstring (vd)) != NULL) {
+    fprintf (stderr, "%s\n", outstring);
+    retval = v4l2_output (vd);
+    SC_CHECK_ABORTF (!retval, "Failed to output to device %s", devname);
+  }
 
   retval = sc_v4l2_device_close (vd);
   SC_CHECK_ABORTF (!retval, "Failed to close device %s", devname);

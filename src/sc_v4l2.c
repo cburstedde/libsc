@@ -164,7 +164,7 @@ sc_v4l2_device_outstring (const sc_v4l2_device_t * vd)
 {
   SC_ASSERT (vd != NULL);
   SC_ASSERT (vd->fd >= 0);
-  return vd->outstring;
+  return vd->supports_output ? vd->outstring : NULL;
 }
 
 int

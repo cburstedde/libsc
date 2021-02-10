@@ -62,7 +62,9 @@ const char         *sc_v4l2_device_capstring (const sc_v4l2_device_t * vd);
 
 /** Return string that details some output properties.
  * \param [in] vd   Opened \ref sc_v4l2_device_t.  Not modified.
- * \return          NUL-terminated string only valid while the device \a vd is.
+ * \return          If output is supported as desired, return NUL-terminated
+ *                  tring only valid while the device \a vd is.
+ *                  Otherwise return NULL.
  */
 const char         *sc_v4l2_device_outstring (const sc_v4l2_device_t * vd);
 
