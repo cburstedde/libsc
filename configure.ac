@@ -6,7 +6,7 @@ AC_INIT([libsc],
         [m4_esyscmd([build-aux/git-version-gen .tarball-version])],
         [info@p4est.org])
 AC_PREREQ(2.61)
-AC_CONFIG_HEADERS([src/pre_config.h])
+AC_CONFIG_HEADERS([src/sc_config_autotools.h])
 AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([config])

@@ -108,11 +108,14 @@
 #endif
 
 /* include system headers */
-
+#define _USE_MATH_DEFINES
 #include <math.h>
+
 #include <ctype.h>
 #include <float.h>
+#ifndef _MSC_VER
 #include <libgen.h>
+#endif
 #include <limits.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -131,6 +134,9 @@
 #endif
 #ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
+#elif defined(_WIN32)
+#include  <BaseTsd.h>
+typedef SSIZE_T ssize_t;
 #endif
 
 /* definitions to allow user code to query the sc library */

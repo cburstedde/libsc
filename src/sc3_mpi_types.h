@@ -87,12 +87,6 @@ typedef MPI_Op      sc3_MPI_Op_t;
 #define SC3_MPI_ERR_OTHER MPI_ERR_OTHER
 #define SC3_MPI_UNDEFINED MPI_UNDEFINED
 
-#ifdef SC_ENABLE_MPICOMMSHARED
-#ifdef SC_ENABLE_MPIWINSHARED
-#define SC3_ENABLE_MPI3
-#endif /* SC_ENABLE_MPIWINSHARED */
-#endif /* SC_ENABLE_MPICOMMSHARED */
-
 #else /* !SC_ENABLE_MPI */
 
 /** Wrapped MPI error handler object. */

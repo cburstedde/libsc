@@ -69,7 +69,7 @@ int                 sc_uint128_is_equal (const sc_uint128_t * a,
 /** Initializes an unsigned 128 bit integer to a given value.
  * \param [in,out] a        A pointer to the sc_uint128_t that will be
  *                          initialized.
- * \param [in]     high     The given high bits to intialize \a a.
+ * \param [in]     high     The given high bits to initialize \a a.
  * \param [in]     low      The given low bits to initialize \a a.
  */
 void                sc_uint128_init (sc_uint128_t * a,
@@ -117,7 +117,7 @@ void                sc_uint128_add (const sc_uint128_t * a,
                                     const sc_uint128_t * b,
                                     sc_uint128_t * result);
 
-/** Substracts the uint128_t \a b from the uint128_t \a a.
+/** Subtracts the uint128_t \a b from the uint128_t \a a.
  * This function assumes that the result is >= 0.
  * \a result == \a a or \a result == \a b is not allowed.
  * \a a == \a b is allowed.
@@ -203,7 +203,7 @@ void                sc_uint128_shift_left (const sc_uint128_t * input,
 void                sc_uint128_add_inplace (sc_uint128_t * a,
                                             const sc_uint128_t * b);
 
-/** Substracts the uint128_t \a b from the uint128_t \a a.
+/** Subtracts the uint128_t \a b from the uint128_t \a a.
  * The result is saved in \a a. \a a == \a b is allowed.
  * This function assumes that the result is >= 0.
  * \param [in,out]  a   A pointer to a sc_uint128_t.

@@ -67,7 +67,7 @@ int                 sc_darray_is_range (const double *darray, size_t nelem,
  */
 size_t              sc_dmatrix_memory_used (sc_dmatrix_t * dmatrix);
 
-/** Create a new uninitalized matrix object.
+/** Create a new uninitialized matrix object.
  * This function aborts on memory allocation errors.
  * \param [in] m            Number of rows.
  * \param [in] n            Number of columns.
@@ -220,7 +220,7 @@ void                sc_dmatrix_shift (double alpha, sc_dmatrix_t * X);
 void                sc_dmatrix_scale_shift (double alpha, double beta,
                                             sc_dmatrix_t * X);
 
-/** Perform element-wise divison with a scalar, X := alpha ./ X.
+/** Perform element-wise division with a scalar, X := alpha ./ X.
  */
 void                sc_dmatrix_alphadivide (double alpha, sc_dmatrix_t * X);
 

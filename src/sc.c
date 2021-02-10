@@ -279,7 +279,11 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
     char                bn[BUFSIZ], *bp;
 
     snprintf (bn, BUFSIZ, "%s", filename);
+#ifdef _MSC_VER
+    bp = bn;
+#else
     bp = basename (bn);
+#endif
     fprintf (log_stream, "%s:%d ", bp, lineno);
   }
 
@@ -343,6 +347,14 @@ sc_malloc_aligned (size_t alignment, size_t size)
 #elif defined SC_HAVE_ANY_MEMALIGN && defined SC_HAVE_ALIGNED_ALLOC
   {
     void               *data = aligned_alloc (alignment, size);
+    SC_CHECK_ABORT (data != NULL || size == 0,
+                    "Returned NULL from aligned_alloc");
+    return data;
+  }
+#elif defined (SC_HAVE_ANY_MEMALIGN) && defined (SC_HAVE_ALIGNED_MALLOC)
+  /* MinGW, MSVC */
+  {
+    void               *data = _aligned_malloc (size, alignment);
     SC_CHECK_ABORT (data != NULL || size == 0,
                     "Returned NULL from aligned_alloc");
     return data;
@@ -1010,8 +1022,9 @@ sc_abort_handler (void)
 
   fflush (stdout);
   fflush (stderr);
+#ifndef _MSC_VER
   sleep (1);                    /* allow time for pending output */
-
+#endif
   if (sc_mpicomm != sc_MPI_COMM_NULL) {
     sc_MPI_Abort (sc_mpicomm, 1);       /* terminate all MPI processes */
   }
@@ -1060,7 +1073,9 @@ sc_abort_collective (const char *msg)
     SC_ABORT (msg);
   }
   else {
+#ifndef _MSC_VER
     sleep (3);                  /* wait for root rank's sc_MPI_Abort ()... */
+#endif
     abort ();                   /* ... otherwise this may call sc_MPI_Abort () */
   }
 }

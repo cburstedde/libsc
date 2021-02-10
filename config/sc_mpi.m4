@@ -14,10 +14,15 @@ dnl --disable-mpiio   Only effective if --enable-mpi is given.  In this case,
 dnl                   do not use MPI I/O in sc and skip the compile-and-link test.
 dnl --disable-mpithread Only effective if --enable-mpi is given.  In this case,
 dnl                   do not use MPI_Init_thread () and skip compile-and-link test.
+dnl --disable-mpishared Only effective if --enable-mpi is given.  In this case,
+dnl                   disable MPI shared windows and split node communicators.
+dnl                   If not disabled, decide support by compile-and-link test
+dnl                   of both shared windows and split node communicators.
 dnl
 dnl If MPI is enabled, set AC_DEFINE and AC_CONDITIONAL for PREFIX_ENABLE_MPI.
 dnl If MPI I/O is not disabled, set these for PREFIX_ENABLE_MPIIO.
 dnl If MPI_Init_thread is not disabled, set these for PREFIX_ENABLE_MPITHREAD.
+dnl If MPI shared nodes are supported, set these for PREFIX_ENABLE_MPISHARED.
 dnl
 dnl SC_MPI_ENGAGE(PREFIX)
 dnl
@@ -41,6 +46,7 @@ AC_DEFUN([SC_MPI_CONFIG],
 HAVE_PKG_MPI=no
 HAVE_PKG_MPIIO=no
 HAVE_PKG_MPITHREAD=no
+HAVE_PKG_MPISHARED=no
 m4_ifval([$2], [m4_define([SC_CHECK_MPI_F77], [yes])])
 m4_ifval([$2], [m4_define([SC_CHECK_MPI_FC], [yes])])
 m4_ifval([$3], [m4_define([SC_CHECK_MPI_CXX], [yes])])
@@ -55,7 +61,7 @@ AC_ARG_ENABLE([mpi],
 if test "x$enableval" = xyes ; then
   HAVE_PKG_MPI=yes
 elif test "x$enableval" != xno ; then
-  AC_MSG_ERROR([Please use --enable-mpi without an argument])
+  AC_MSG_ERROR([Use --enable-mpi without an argument, or with yes or no])
 fi
 AC_MSG_CHECKING([whether we are using MPI])
 AC_MSG_RESULT([$HAVE_PKG_MPI])
@@ -71,7 +77,7 @@ if test "x$enableval" = xyes ; then
     HAVE_PKG_MPIIO=yes
   fi
 elif test "x$enableval" != xno ; then
-  AC_MSG_ERROR([Please don't use --enable-mpiio; it's the default now])
+  AC_MSG_WARN([Ignoring --enable-mpiio with unsupported argument])
 fi
 AC_MSG_CHECKING([whether we are using MPI I/O])
 AC_MSG_RESULT([$HAVE_PKG_MPIIO])
@@ -87,17 +93,33 @@ if test "x$enableval" = xyes ; then
     HAVE_PKG_MPITHREAD=yes
   fi
 elif test "x$enableval" != xno ; then
-  AC_MSG_ERROR([Please don't use --enable-mpithread; it's the default now])
+  AC_MSG_WARN([Ignoring --enable-mpithread with unsupported argument])
 fi
 AC_MSG_CHECKING([whether we are using MPI_Init_thread])
 AC_MSG_RESULT([$HAVE_PKG_MPITHREAD])
+
+dnl The variable SC_ENABLE_MPISHARED is set if --disable-mpishared not given.
+dnl If not disabled, run the compile-and-link tests further down below for
+dnl SC_MPIWINSHARED_C_COMPILE_AND_LINK and SC_MPICOMMSHARED_C_COMPILE_AND_LINK
+dnl and enable node communicators and shared window support if both go through.
+AC_ARG_ENABLE([mpishared],
+              [AS_HELP_STRING([--disable-mpishared],
+               [do not use MPI shared nodes (even if MPI is enabled)])],,
+              [enableval=yes])
+if test "x$enableval" = xyes ; then
+  if test "x$HAVE_PKG_MPI" = xyes ; then
+    HAVE_PKG_MPISHARED=yes
+  fi
+elif test "x$enableval" != xno ; then
+  AC_MSG_WARN([Ignoring --enable-mpishared with unsupported argument])
+fi
 
 dnl Establish the MPI test environment
 $1_MPIRUN=
 $1_MPI_TEST_FLAGS=
 if test "x$HAVE_PKG_MPI" = xyes ; then
 AC_CHECK_PROGS([$1_MPIRUN], [mpiexec mpirun])
-if test "x$MPIRUN" != x -a -x "`which "$MPIRUN"`" ; then
+if test "x$MPIRUN" != x && test -x "`which $MPIRUN`" ; then
   $1_MPIRUN="$MPIRUN"
   $1_MPI_TEST_FLAGS="-np 2"
   dnl AC_MSG_NOTICE([Test environment "$$1_MPIRUN" "$$1_MPI_TEST_FLAGS"])
@@ -452,17 +474,34 @@ dnl  ])
     SC_MPITHREAD_C_COMPILE_AND_LINK(,
       [AC_MSG_ERROR([MPI_Init_thread not found; you may try --disable-mpithread])])
   fi
+
+  dnl Run test to check availability of MPI window
   $1_ENABLE_MPIWINSHARED=yes
   SC_MPIWINSHARED_C_COMPILE_AND_LINK(,[$1_ENABLE_MPIWINSHARED=no])
   if test "x$$1_ENABLE_MPIWINSHARED" = xyes ; then
-    AC_DEFINE([ENABLE_MPIWINSHARED], 1, [Define to 1 if we can use MPI_Win_allocate_shared])
+    AC_DEFINE([ENABLE_MPIWINSHARED], 1,
+              [Define to 1 if we can use MPI_Win_allocate_shared])
   fi
+  dnl Run test to check availability of MPI split node communicator
   $1_ENABLE_MPICOMMSHARED=yes
   SC_MPICOMMSHARED_C_COMPILE_AND_LINK(,[$1_ENABLE_MPICOMMSHARED=no])
   if test "x$$1_ENABLE_MPICOMMSHARED" = xyes ; then
-    AC_DEFINE([ENABLE_MPICOMMSHARED], 1, [Define to 1 if we can use MPI_COMM_TYPE_SHARED])
+    AC_DEFINE([ENABLE_MPICOMMSHARED], 1,
+              [Define to 1 if we can use MPI_COMM_TYPE_SHARED])
   fi
+  dnl Deactivate overall MPI 3 code when not available or not configured
+  AC_MSG_CHECKING([whether we are using MPI 3 node shared memory])
+  if test "x$$1_ENABLE_MPIWINSHARED" != xyes || \
+     test "x$$1_ENABLE_MPICOMMSHARED" != xyes ; then
+    HAVE_PKG_MPISHARED=no
+  fi
+  if test "x$HAVE_PKG_MPISHARED" = xyes ; then
+    AC_DEFINE([ENABLE_MPISHARED], 1,
+              [Define to 1 if we can use MPI split nodes and shared memory])
+  fi
+  AC_MSG_RESULT([$HAVE_PKG_MPISHARED])
 fi
+AM_CONDITIONAL([$1_ENABLE_MPISHARED], [test "x$HAVE_PKG_MPISHARED" = xyes])
 
 dnl dnl figure out the MPI include directories
 dnl SC_MPI_INCLUDES
