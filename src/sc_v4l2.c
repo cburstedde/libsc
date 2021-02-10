@@ -52,6 +52,7 @@ struct sc_v4l2_device
   int                 supports_output;
   struct v4l2_capability capability;
   struct v4l2_output  output;
+  char                devname[SC_BUFSIZE];
   char                devstring[SC_BUFSIZE];
   char                capstring[SC_BUFSIZE];
   char                outstring[SC_BUFSIZE];
@@ -108,8 +109,9 @@ querycap (sc_v4l2_device_t * vd)
               "Output not supported as desired");
   }
   else {
-    snprintf (vd->outstring, SC_BUFSIZE, "Output index: %d Name: %s Std: %08x",
-              vd->output.index, vd->output.name, (__u32) vd->output.std);
+    snprintf (vd->outstring, SC_BUFSIZE,
+              "Output index: %d Name: %s Std: %08x", vd->output.index,
+              vd->output.name, (__u32) vd->output.std);
   }
 
   return 0;
@@ -127,6 +129,7 @@ sc_v4l2_device_open (const char *devname)
     return NULL;
   }
   memset (vd, 0, sizeof (*vd));
+  snprintf (vd->devname, SC_BUFSIZE, "%s", devname);
 
   vd->fd = open (devname, O_RDWR);
   if (vd->fd < 0) {
@@ -165,6 +168,29 @@ sc_v4l2_device_outstring (const sc_v4l2_device_t * vd)
   SC_ASSERT (vd != NULL);
   SC_ASSERT (vd->fd >= 0);
   return vd->supports_output ? vd->outstring : NULL;
+}
+
+int
+sc_v4l2_device_setout (sc_v4l2_device_t * vd)
+{
+  int                 retval;
+  int                 output_index;
+
+  SC_ASSERT (vd != NULL);
+  SC_ASSERT (vd->fd >= 0);
+  SC_ASSERT (vd->supports_output);
+
+  if ((retval = ioctl (vd->fd, VIDIOC_G_OUTPUT, &output_index)) != 0) {
+    return retval;
+  }
+  if (output_index != (int) vd->output.index) {
+    output_index = vd->output.index;
+    if ((retval = ioctl (vd->fd, VIDIOC_S_OUTPUT, &output_index)) != 0) {
+      return retval;
+    }
+  }
+
+  return 0;
 }
 
 int

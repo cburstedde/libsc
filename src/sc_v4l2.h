@@ -68,6 +68,12 @@ const char         *sc_v4l2_device_capstring (const sc_v4l2_device_t * vd);
  */
 const char         *sc_v4l2_device_outstring (const sc_v4l2_device_t * vd);
 
+/** Set output configuration of device.
+ * \param [in,out] vd   Device must support output.
+ * \return          0 on success, -1 otherwise.
+ */
+int                 sc_v4l2_device_setout (sc_v4l2_device_t * vd);
+
 SC_EXTERN_C_END;
 
 #endif /* SC_V4L2_H */

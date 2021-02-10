@@ -26,6 +26,11 @@
 static int
 v4l2_output (sc_v4l2_device_t * vd)
 {
+  int retval;
+
+  retval = sc_v4l2_device_setout (vd);
+  SC_CHECK_ABORT (!retval, "Failed to configure device");
+
   return 0;
 }
 
