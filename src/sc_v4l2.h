@@ -36,27 +36,35 @@ SC_EXTERN_C_BEGIN;
 typedef struct sc_v4l2_device sc_v4l2_device_t;
 
 /** Open a video device by special file name.
+ * The device is queried but its state is not modified.
  * \param [in] devname      Special file name such as `/dev/video8`.
  * \return                  Valid pointer on success, NULL on error.
  */
 sc_v4l2_device_t   *sc_v4l2_device_open (const char *devname);
 
 /** Close a video device.
- * \return          0 on sucess, -1 otherwise.
+ * \param [in,out] vd   Close this device and deallocate associated resources.
+ * \return              0 on sucess, -1 otherwise.
  */
 int                 sc_v4l2_device_close (sc_v4l2_device_t * vd);
 
 /** Return string that details some driver and device properties.
- * \param [in] vd   Opened \ref sc_v4l2_device_t.
+ * \param [in] vd   Opened \ref sc_v4l2_device_t.  Not modified.
  * \return          NUL-terminated string only valid while the device \a vd is.
  */
-const char         *sc_v4l2_device_devstring (sc_v4l2_device_t * vd);
+const char         *sc_v4l2_device_devstring (const sc_v4l2_device_t * vd);
 
 /** Return string that details some device capabilities.
- * \param [in] vd   Opened \ref sc_v4l2_device_t.
+ * \param [in] vd   Opened \ref sc_v4l2_device_t.  Not modified.
  * \return          NUL-terminated string only valid while the device \a vd is.
  */
-const char         *sc_v4l2_device_capstring (sc_v4l2_device_t * vd);
+const char         *sc_v4l2_device_capstring (const sc_v4l2_device_t * vd);
+
+/** Return string that details some output properties.
+ * \param [in] vd   Opened \ref sc_v4l2_device_t.  Not modified.
+ * \return          NUL-terminated string only valid while the device \a vd is.
+ */
+const char         *sc_v4l2_device_outstring (const sc_v4l2_device_t * vd);
 
 SC_EXTERN_C_END;
 
