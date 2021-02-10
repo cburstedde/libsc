@@ -236,6 +236,9 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
       vd->pix->field != V4L2_FIELD_NONE) {
     return -1;
   }
+  if (vd->pix->sizeimage != vd->pix->bytesperline * vd->pix->height) {
+    return -1;
+  }
 
 #if 0
   /* hack post info */
