@@ -74,6 +74,65 @@ v4l2_postpare (v4l2_global_t * g)
 }
 
 static void
+paint_image (v4l2_global_t * g)
+{
+  unsigned            i, j;
+  unsigned            whmin;
+  unsigned            bi, bj;
+  uint16_t           *upix;
+  uint16_t            ubg, ufg;
+
+  SC_ASSERT (g != NULL);
+  SC_ASSERT (g->vd != NULL);
+  SC_ASSERT (g->wbuf != NULL || g->wsiz == 0);
+
+  whmin = SC_MIN (g->width, g->height);
+  if (whmin == 0) {
+    return;
+  }
+
+  /* color values */
+  ubg = 0x00;
+  ufg = 0xB7;
+
+  /* if higher than wide, fill top set of blank lines */
+  bj = (g->height - whmin) / 2;
+  for (j = 0; j < bj; ++j) {
+    upix = (uint16_t *) (g->wbuf + j * g->bytesperline);
+    for (i = 0; i < g->width; ++i) {
+      *upix++ = ubg;
+    }
+  }
+
+  /* center square of image */
+  bj += whmin;
+  for (; j < bj; ++j) {
+    upix = (uint16_t *) (g->wbuf + j * g->bytesperline);
+    bi = (g->width - whmin) / 2;
+    for (i = 0; i < bi; ++i) {
+      *upix++ = ubg;
+    }
+    bi += whmin;
+    for (; i < bi; ++i) {
+      *upix++ = ufg;
+    }
+    bi = g->width;
+    for (; i < bi; ++i) {
+      *upix++ = ubg;
+    }
+  }
+
+  /* if higher than wide, fill bottom set of blank lines */
+  bj = g->height;
+  for (; j < bj; ++j) {
+    upix = (uint16_t *) (g->wbuf + j * g->bytesperline);
+    for (i = 0; i < g->width; ++i) {
+      *upix++ = ubg;
+    }
+  }
+}
+
+static void
 v4l2_loop (v4l2_global_t * g)
 {
   int                 retval;
@@ -89,7 +148,7 @@ v4l2_loop (v4l2_global_t * g)
   g->omega = 1.;
   g->radius = .45;
   g->yfactor = sqrt (2.);
-  g->center[0] = g->center[1] = 0.;
+  g->center[0] = g->center[1] = .5;
   g->xy[0] = g->center[0] + g->radius * cos (g->omega * g->t);
   g->xy[1] = g->center[1] + g->radius * sin (g->omega * g->yfactor * g->t);
 
@@ -104,6 +163,8 @@ v4l2_loop (v4l2_global_t * g)
 
     g->xy[0] = g->center[0] + g->radius * cos (g->omega * g->t);
     g->xy[1] = g->center[1] + g->radius * sin (g->omega * g->yfactor * g->t);
+
+    paint_image (g);
 
     g->tlast = tnow;
   }
