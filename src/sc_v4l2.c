@@ -22,6 +22,7 @@
 */
 
 #include <sc_v4l2.h>
+
 #include <errno.h>
 
 #ifdef SC_HAVE_LINUX_VIDEODEV2_H
@@ -30,8 +31,14 @@
 #ifdef SC_HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
+#ifdef SC_HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 #ifdef SC_HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef SC_HAVE_SYS_TIME_H
+#include <sys/time.h>
 #endif
 #ifdef SC_HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -268,6 +275,34 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
   *sizeimage = vd->pix->sizeimage;
 
   return 0;
+}
+
+int
+sc_v4l2_device_select (sc_v4l2_device_t * vd, unsigned usec)
+{
+  fd_set              fds;
+  struct timeval      tv;
+  int                 retval;
+
+  tv.tv_sec = 0;
+  tv.tv_usec = usec;
+
+  FD_ZERO (&fds);
+  FD_SET (vd->fd, &fds);
+
+  /* wait for a specified amount of time */
+  if ((retval = select (vd->fd + 1, NULL, &fds, NULL, &tv)) == -1) {
+    if (EINTR != errno) {
+      return retval;
+    }
+  }
+  if (retval < 0 || retval > 1) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  /* successful return */
+  return retval;
 }
 
 int

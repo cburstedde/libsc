@@ -80,6 +80,15 @@ int                 sc_v4l2_device_is_readwrite (const sc_v4l2_device_t * vd);
  */
 int                 sc_v4l2_device_is_streaming (const sc_v4l2_device_t * vd);
 
+/** Call select (2) to wait for write availability of device.
+ * \param [in] vd   Opened \ref sc_v4l2_device_t capable of output.
+ * \param [in] usec Number of microseconds to wait for device.
+ *                  We return sooner if interrupted by a signal.
+ * \return          -1 on error, 0 on timeout, 1 when ready for writing.
+ */
+int                 sc_v4l2_device_select (sc_v4l2_device_t * vd,
+                                           unsigned usec);
+
 /** Set output configuration of device.
  * We demand sRGB color space with RGB 565 pixel format (2 bytes).
  * The image size values on output define the buffer size to allocate.

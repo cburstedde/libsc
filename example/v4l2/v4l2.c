@@ -29,7 +29,17 @@ typedef struct v4l2_global
   unsigned            bytesperline;
   unsigned            sizeimage;
   sc_v4l2_device_t   *vd;
+  size_t              wsiz;
   char               *wbuf;
+
+  double              t;
+  double              tlast;
+  double              tfinal;
+  double              omega;
+  double              radius;
+  double              yfactor;
+  double              center[2];
+  double              xy[2];
 }
 v4l2_global_t;
 
@@ -48,7 +58,55 @@ v4l2_prepare (v4l2_global_t * g)
   SC_CHECK_ABORT (sc_v4l2_device_is_readwrite (g->vd),
                   "Device does not support read/write I/O");
 
+  g->wsiz = g->sizeimage;
+  g->wbuf = SC_ALLOC (char, g->wsiz);
+
   return 0;
+}
+
+static void
+v4l2_postpare (v4l2_global_t * g)
+{
+  SC_ASSERT (g != NULL);
+  SC_ASSERT (g->vd != NULL);
+
+  SC_FREE (g->wbuf);
+}
+
+static void
+v4l2_loop (v4l2_global_t * g)
+{
+  int                 retval;
+  double              tnow;
+
+  SC_ASSERT (g != NULL);
+  SC_ASSERT (g->vd != NULL);
+  SC_ASSERT (g->wbuf != NULL || g->wsiz == 0);
+
+  /* simulation parameters */
+  g->t = 0;
+  g->tfinal = 10.;
+  g->omega = 1.;
+  g->radius = .45;
+  g->yfactor = sqrt (2.);
+  g->center[0] = g->center[1] = 0.;
+  g->xy[0] = g->center[0] + g->radius * cos (g->omega * g->t);
+  g->xy[1] = g->center[1] + g->radius * sin (g->omega * g->yfactor * g->t);
+
+  /* simulation loop */
+  g->tlast = sc_MPI_Wtime ();
+  while (g->t < g->tfinal) {
+    retval = sc_v4l2_device_select (g->vd, 10 * 1000);
+    SC_CHECK_ABORT (retval >= 0, "Failed to select on device");
+
+    tnow = sc_MPI_Wtime ();
+    g->t += tnow - g->tlast;
+
+    g->xy[0] = g->center[0] + g->radius * cos (g->omega * g->t);
+    g->xy[1] = g->center[1] + g->radius * sin (g->omega * g->yfactor * g->t);
+
+    g->tlast = tnow;
+  }
 }
 
 static void
@@ -74,6 +132,10 @@ v4l2_run (v4l2_global_t * g, const char *devname)
     SC_CHECK_ABORTF (!retval, "Failed to output to device %s", devname);
   }
 
+  v4l2_loop (g);
+
+  v4l2_postpare (g);
+
   retval = sc_v4l2_device_close (g->vd);
   SC_CHECK_ABORTF (!retval, "Failed to close device %s", devname);
 }
@@ -82,7 +144,7 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
-  v4l2_global         sg, *g = &sg;
+  v4l2_global_t       sg, *g = &sg;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
