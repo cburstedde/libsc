@@ -40,6 +40,8 @@ typedef struct v4l2_global
   double              yfactor;
   double              center[2];
   double              xy[2];
+
+  unsigned long       num_frames;
 }
 v4l2_global_t;
 
@@ -73,14 +75,24 @@ v4l2_postpare (v4l2_global_t * g)
   SC_FREE (g->wbuf);
 }
 
+static              uint16_t
+rgbpack (unsigned char r, unsigned char g, unsigned char b)
+{
+  return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+}
+
 static void
 paint_image (v4l2_global_t * g)
 {
   unsigned            i, j;
   unsigned            whmin;
+  unsigned            di, dj;
   unsigned            bi, bj;
   uint16_t           *upix;
   uint16_t            ubg, ufg;
+  double              pxy[2];
+  double              invm;
+  double              dx, dy, r2, weight;
 
   SC_ASSERT (g != NULL);
   SC_ASSERT (g->vd != NULL);
@@ -90,13 +102,13 @@ paint_image (v4l2_global_t * g)
   if (whmin == 0) {
     return;
   }
+  invm = 1. / whmin;
 
   /* color values */
-  ubg = 0x00;
-  ufg = 0xB7;
+  ubg = rgbpack (0, 0, 0xFF);
 
   /* if higher than wide, fill top set of blank lines */
-  bj = (g->height - whmin) / 2;
+  bj = dj = (g->height - whmin) / 2;
   for (j = 0; j < bj; ++j) {
     upix = (uint16_t *) (g->wbuf + j * g->bytesperline);
     for (i = 0; i < g->width; ++i) {
@@ -108,12 +120,24 @@ paint_image (v4l2_global_t * g)
   bj += whmin;
   for (; j < bj; ++j) {
     upix = (uint16_t *) (g->wbuf + j * g->bytesperline);
-    bi = (g->width - whmin) / 2;
+    bi = di = (g->width - whmin) / 2;
     for (i = 0; i < bi; ++i) {
       *upix++ = ubg;
     }
     bi += whmin;
+    pxy[1] = (whmin - 1 - (j - dj) + .5) * invm;
+    dy = pxy[1] - g->xy[1];
+    dy *= dy;
     for (; i < bi; ++i) {
+      pxy[0] = ((i - di) + .5) * invm;
+      dx = pxy[0] - g->xy[0];
+      dx *= dx;
+      r2 = dy + dx;
+      weight = 1. - r2 / SC_SQR (.08);
+      weight = SC_MAX (weight, 0.);
+      ufg = rgbpack (0, (unsigned char) (0xFF * weight),
+                     (unsigned char) (0xFF * (1. - weight)));
+
       *upix++ = ufg;
     }
     bi = g->width;
@@ -141,18 +165,19 @@ v4l2_loop (v4l2_global_t * g)
   SC_ASSERT (g != NULL);
   SC_ASSERT (g->vd != NULL);
   SC_ASSERT (g->wbuf != NULL || g->wsiz == 0);
+  SC_ASSERT (g->tfinal >= 0.);
 
   /* simulation parameters */
   g->t = 0;
-  g->tfinal = 10.;
   g->omega = 1.;
-  g->radius = .45;
+  g->radius = .4;
   g->yfactor = sqrt (2.);
   g->center[0] = g->center[1] = .5;
   g->xy[0] = g->center[0] + g->radius * cos (g->omega * g->t);
   g->xy[1] = g->center[1] + g->radius * sin (g->omega * g->yfactor * g->t);
 
   /* simulation loop */
+  g->num_frames = 0;
   g->tlast = sc_MPI_Wtime ();
   while (g->t < g->tfinal) {
     retval = sc_v4l2_device_select (g->vd, 10 * 1000);
@@ -165,13 +190,18 @@ v4l2_loop (v4l2_global_t * g)
     g->xy[1] = g->center[1] + g->radius * sin (g->omega * g->yfactor * g->t);
 
     paint_image (g);
+    retval = sc_v4l2_device_write (g->vd, g->wbuf);
+    SC_CHECK_ABORT (retval == 0, "Failed to write to device");
 
+    ++g->num_frames;
     g->tlast = tnow;
   }
+
+  fprintf (stderr, "Written %lu frames to time %g\n", g->num_frames, g->t);
 }
 
 static void
-v4l2_run (v4l2_global_t * g, const char *devname)
+v4l2_run (v4l2_global_t * g, const char *devname, double finaltime)
 {
   int                 retval;
   const char         *outstring;
@@ -179,6 +209,7 @@ v4l2_run (v4l2_global_t * g, const char *devname)
   SC_ASSERT (g != NULL);
   memset (g, 0, sizeof (*g));
 
+  g->tfinal = finaltime <= 0. ? 1e100 : finaltime;
   g->width = 640;
   g->height = 480;
 
@@ -205,6 +236,7 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
+  double              finaltime;
   v4l2_global_t       sg, *g = &sg;
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -212,8 +244,12 @@ main (int argc, char **argv)
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
+  finaltime = 10.;
+  if (argc >= 3) {
+    finaltime = strtod (argv[2], NULL);
+  }
   if (argc >= 2) {
-    v4l2_run (g, argv[1]);
+    v4l2_run (g, argv[1], finaltime);
   }
 
   sc_finalize ();
