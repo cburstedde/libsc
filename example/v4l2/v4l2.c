@@ -23,6 +23,10 @@
 
 #include <sc_v4l2.h>
 
+#ifdef SC_HAVE_SIGNAL_H
+#include <signal.h>
+#endif
+
 typedef struct v4l2_global
 {
   unsigned            width, height;
@@ -44,6 +48,16 @@ typedef struct v4l2_global
   unsigned long       num_frames;
 }
 v4l2_global_t;
+
+typedef void        (*v4l2_sig_t) (int);
+
+static volatile int caught_sigint = 0;
+
+static void
+v4l2_sigint_handler (int sig)
+{
+  caught_sigint = 1;
+}
 
 static int
 v4l2_prepare (v4l2_global_t * g)
@@ -161,6 +175,7 @@ v4l2_loop (v4l2_global_t * g)
 {
   int                 retval;
   double              tnow;
+  v4l2_sig_t          system_sigint_handler;
 
   SC_ASSERT (g != NULL);
   SC_ASSERT (g->vd != NULL);
@@ -176,10 +191,14 @@ v4l2_loop (v4l2_global_t * g)
   g->xy[0] = g->center[0] + g->radius * cos (g->omega * g->t);
   g->xy[1] = g->center[1] + g->radius * sin (g->omega * g->yfactor * g->t);
 
+  /* catch signals */
+  system_sigint_handler = signal (SIGINT, v4l2_sigint_handler);
+  SC_CHECK_ABORT (system_sigint_handler != SIG_ERR, "Catching SIGINT");
+
   /* simulation loop */
   g->num_frames = 0;
   g->tlast = sc_MPI_Wtime ();
-  while (g->t < g->tfinal) {
+  while (!caught_sigint && g->t < g->tfinal) {
     retval = sc_v4l2_device_select (g->vd, 10 * 1000);
     SC_CHECK_ABORT (retval >= 0, "Failed to select on device");
 
@@ -196,6 +215,11 @@ v4l2_loop (v4l2_global_t * g)
     ++g->num_frames;
     g->tlast = tnow;
   }
+
+  /* restore signals */
+  system_sigint_handler = signal (SIGINT, system_sigint_handler);
+  SC_CHECK_ABORT (system_sigint_handler != SIG_ERR, "Restoring SIGINT");
+  caught_sigint = 0;
 
   fprintf (stderr, "Written %lu frames to time %g\n", g->num_frames, g->t);
 }
@@ -242,7 +266,7 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
 
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (sc_MPI_COMM_WORLD, 0, 1, NULL, SC_LP_DEFAULT);
 
   finaltime = 10.;
   if (argc >= 3) {
