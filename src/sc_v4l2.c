@@ -60,15 +60,19 @@ struct sc_v4l2_device
   int                 support_output;
   int                 support_readwrite;
   int                 support_streaming;
+#ifdef SC_ENABLE_V4L2
   struct v4l2_capability capability;
   struct v4l2_output  output;
   struct v4l2_format  format;
   struct v4l2_pix_format *pix;
+#endif
   char                devname[SC_BUFSIZE];
   char                devstring[SC_BUFSIZE];
   char                capstring[SC_BUFSIZE];
   char                outstring[SC_BUFSIZE];
 };
+
+#ifdef SC_ENABLE_V4L2
 
 static int
 querycap (sc_v4l2_device_t * vd)
@@ -131,14 +135,19 @@ querycap (sc_v4l2_device_t * vd)
   return 0;
 }
 
+#endif /* !SC_ENABLE_V4L2 */
+
 sc_v4l2_device_t   *
 sc_v4l2_device_open (const char *devname)
 {
+  sc_v4l2_device_t   *vd = NULL;
+#ifdef SC_ENABLE_V4L2
   int                 retval;
-  sc_v4l2_device_t   *vd;
+#endif
 
   SC_ASSERT (devname != NULL);
 
+#ifdef SC_ENABLE_V4L2
   if ((vd = SC_ALLOC (struct sc_v4l2_device, 1)) == NULL) {
     return NULL;
   }
@@ -156,6 +165,7 @@ sc_v4l2_device_open (const char *devname)
     SC_FREE (vd);
     return NULL;
   }
+#endif
 
   return vd;
 }
@@ -201,9 +211,11 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
                        unsigned int *width, unsigned int *height,
                        unsigned int *bytesperline, unsigned int *sizeimage)
 {
+#ifdef SC_ENABLE_V4L2
   int                 retval;
   int                 output_index;
   __u32               pixelformat;
+#endif
 
   SC_ASSERT (vd != NULL);
   SC_ASSERT (vd->fd >= 0);
@@ -214,6 +226,7 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
   SC_ASSERT (bytesperline != NULL);
   SC_ASSERT (sizeimage != NULL);
 
+#ifdef SC_ENABLE_V4L2
   /* select video output */
   if ((retval = ioctl (vd->fd, VIDIOC_G_OUTPUT, &output_index)) != 0) {
     return retval;
@@ -281,20 +294,23 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
   *height = vd->pix->height;
   *bytesperline = vd->pix->bytesperline;
   *sizeimage = vd->pix->sizeimage;
-
+#endif
   return 0;
 }
 
 int
 sc_v4l2_device_select (sc_v4l2_device_t * vd, unsigned usec)
 {
+  int                 retval = 0;
+#ifdef SC_ENABLE_V4L2
   fd_set              fds;
   struct timeval      tv;
-  int                 retval;
+#endif
 
   SC_ASSERT (vd != NULL);
   SC_ASSERT (vd->fd >= 0);
 
+#ifdef SC_ENABLE_V4L2
   tv.tv_sec = 0;
   tv.tv_usec = usec;
 
@@ -314,6 +330,7 @@ sc_v4l2_device_select (sc_v4l2_device_t * vd, unsigned usec)
     errno = EINVAL;
     return -1;
   }
+#endif
 
   /* successful return */
   return retval;
@@ -322,13 +339,16 @@ sc_v4l2_device_select (sc_v4l2_device_t * vd, unsigned usec)
 int
 sc_v4l2_device_write (sc_v4l2_device_t * vd, const char *wbuf)
 {
+#ifdef SC_ENABLE_V4L2
   size_t              remain;
   ssize_t             sret;
+#endif
 
   SC_ASSERT (vd != NULL);
   SC_ASSERT (vd->fd >= 0);
   SC_ASSERT (wbuf != NULL);
 
+#ifdef SC_ENABLE_V4L2
   remain = vd->pix->sizeimage;
   while (remain > 0) {
     if ((sret = write (vd->fd, wbuf, remain)) < 0) {
@@ -338,21 +358,26 @@ sc_v4l2_device_write (sc_v4l2_device_t * vd, const char *wbuf)
     wbuf += sret;
     remain -= sret;
   }
+#endif
   return 0;
 }
 
 int
 sc_v4l2_device_close (sc_v4l2_device_t * vd)
 {
+#ifdef SC_ENABLE_V4L2
   int                 retval;
+#endif
 
   SC_ASSERT (vd != NULL);
   SC_ASSERT (vd->fd >= 0);
 
+#ifdef SC_ENABLE_V4L2
   if ((retval = close (vd->fd)) != 0) {
     SC_FREE (vd);
     return retval;
   }
+#endif
 
   SC_FREE (vd);
   return 0;
