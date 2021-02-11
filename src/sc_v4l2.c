@@ -284,6 +284,9 @@ sc_v4l2_device_select (sc_v4l2_device_t * vd, unsigned usec)
   struct timeval      tv;
   int                 retval;
 
+  SC_ASSERT (vd != NULL);
+  SC_ASSERT (vd->fd >= 0);
+
   tv.tv_sec = 0;
   tv.tv_usec = usec;
 
@@ -291,10 +294,13 @@ sc_v4l2_device_select (sc_v4l2_device_t * vd, unsigned usec)
   FD_SET (vd->fd, &fds);
 
   /* wait for a specified amount of time */
-  if ((retval = select (vd->fd + 1, NULL, &fds, NULL, &tv)) == -1) {
-    if (EINTR != errno) {
-      return retval;
+  retval = select (vd->fd + 1, NULL, &fds, NULL, &tv);
+  if (retval == -1) {
+    if (EINTR == errno) {
+      /* interrupted by signal is successful */
+      return 0;
     }
+    return retval;
   }
   if (retval < 0 || retval > 1) {
     errno = EINVAL;
@@ -303,6 +309,28 @@ sc_v4l2_device_select (sc_v4l2_device_t * vd, unsigned usec)
 
   /* successful return */
   return retval;
+}
+
+int
+sc_v4l2_device_write (sc_v4l2_device_t * vd, const char *wbuf)
+{
+  size_t              remain;
+  ssize_t             sret;
+
+  SC_ASSERT (vd != NULL);
+  SC_ASSERT (vd->fd >= 0);
+  SC_ASSERT (wbuf != NULL);
+
+  remain = vd->pix->sizeimage;
+  while (remain > 0) {
+    if ((sret = write (vd->fd, wbuf, remain)) < 0) {
+      return sret;
+    }
+    SC_ASSERT (sret <= (ssize_t) remain);
+    wbuf += sret;
+    remain -= sret;
+  }
+  return 0;
 }
 
 int

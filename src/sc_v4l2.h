@@ -89,6 +89,14 @@ int                 sc_v4l2_device_is_streaming (const sc_v4l2_device_t * vd);
 int                 sc_v4l2_device_select (sc_v4l2_device_t * vd,
                                            unsigned usec);
 
+/** Call write (2) to copy an image buffer to device.
+ * \param [in] vd   Opened \ref sc_v4l2_device_t capable of output.
+ * \param [in] wbuf Buffer holding at least \a sizeimage many bytes.
+ * \return          0 on success, -1 otherwise and setting errno.
+ */
+int                 sc_v4l2_device_write (sc_v4l2_device_t * vd,
+                                          const char *wbuf);
+
 /** Set output configuration of device.
  * We demand sRGB color space with RGB 565 pixel format (2 bytes).
  * The image size values on output define the buffer size to allocate.
