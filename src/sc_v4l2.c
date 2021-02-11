@@ -203,6 +203,7 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
 {
   int                 retval;
   int                 output_index;
+  __u32               pixelformat;
 
   SC_ASSERT (vd != NULL);
   SC_ASSERT (vd->fd >= 0);
@@ -243,7 +244,14 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
   /* set desired values */
   vd->pix->width = *width;
   vd->pix->height = *height;
-  vd->pix->pixelformat = V4L2_PIX_FMT_RGB565;
+#if 0
+  pixelformat = V4L2_PIX_FMT_ARGB555;
+  pixelformat = V4L2_PIX_FMT_ABGR555;
+  pixelformat = V4L2_PIX_FMT_RGBA555;
+#else
+  pixelformat = V4L2_PIX_FMT_RGB565;
+#endif
+  vd->pix->pixelformat = pixelformat;
   vd->pix->field = V4L2_FIELD_NONE;
   vd->pix->bytesperline = 2 * vd->pix->width;
   vd->pix->sizeimage = vd->pix->bytesperline * vd->pix->height;
@@ -256,7 +264,7 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
   if ((retval = ioctl (vd->fd, VIDIOC_S_FMT, &vd->format)) != 0) {
     return retval;
   }
-  if (vd->pix->pixelformat != V4L2_PIX_FMT_RGB565 ||
+  if (vd->pix->pixelformat != pixelformat ||
       vd->pix->colorspace != V4L2_COLORSPACE_SRGB ||
       vd->pix->field != V4L2_FIELD_NONE) {
     errno = EINVAL;

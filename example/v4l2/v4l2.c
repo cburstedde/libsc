@@ -89,11 +89,25 @@ v4l2_postpare (v4l2_global_t * g)
   SC_FREE (g->wbuf);
 }
 
+#if 1
+
 static              uint16_t
-rgbpack (unsigned char r, unsigned char g, unsigned char b)
+pack_rgb565 (unsigned char r, unsigned char g, unsigned char b)
 {
   return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
 }
+
+#else
+
+static              uint16_t
+pack_rgba555 (unsigned char r, unsigned char g, unsigned char b,
+              unsigned char a)
+{
+  return ((g & 0x18) << 11) | ((b >> 3) << 9) | (a ? 0x100 : 0x00) |
+    (r & ((1 << 8) - (1 << 3))) | (g >> 5);
+}
+
+#endif
 
 static void
 paint_image (v4l2_global_t * g)
@@ -119,7 +133,11 @@ paint_image (v4l2_global_t * g)
   invm = 1. / whmin;
 
   /* color values */
-  ubg = rgbpack (0, 0, 0xFF);
+#if 0
+  ubg = pack_rgba555 (0xE0, 0xF0, 0xE8, 0);
+#else
+  ubg = pack_rgb565 (0xE0, 0xF0, 0xE8);
+#endif
 
   /* if higher than wide, fill top set of blank lines */
   bj = dj = (g->height - whmin) / 2;
@@ -149,9 +167,8 @@ paint_image (v4l2_global_t * g)
       r2 = dy + dx;
       weight = 1. - r2 / SC_SQR (.08);
       weight = SC_MAX (weight, 0.);
-      ufg = rgbpack (0, (unsigned char) (0xFF * weight),
-                     (unsigned char) (0xFF * (1. - weight)));
-
+      ufg = pack_rgb565 (0xE0, 0xF0 - (unsigned char) (0x70 * weight),
+                         0xE8 + (unsigned char) (0x17 * weight));
       *upix++ = ufg;
     }
     bi = g->width;
