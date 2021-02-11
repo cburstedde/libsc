@@ -176,7 +176,7 @@ sc_v4l2_device_outstring (const sc_v4l2_device_t * vd)
 int
 sc_v4l2_device_format (sc_v4l2_device_t * vd,
                        unsigned int *width, unsigned int *height,
-                       unsigned int *bytesperline)
+                       unsigned int *bytesperline, unsigned int *sizeimage)
 {
   int                 retval;
   int                 output_index;
@@ -188,6 +188,7 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
   SC_ASSERT (width != NULL);
   SC_ASSERT (height != NULL);
   SC_ASSERT (bytesperline != NULL);
+  SC_ASSERT (sizeimage != NULL);
 
   /* select video output */
   if ((retval = ioctl (vd->fd, VIDIOC_G_OUTPUT, &output_index)) != 0) {
@@ -238,24 +239,17 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
     errno = EINVAL;
     return -1;
   }
-  if (vd->pix->sizeimage != vd->pix->bytesperline * vd->pix->height) {
+  if (vd->pix->bytesperline < 2 * vd->pix->width ||
+      vd->pix->sizeimage < vd->pix->bytesperline * vd->pix->height) {
     errno = EINVAL;
     return -1;
   }
-
-#if 0
-  /* hack post info */
-  fprintf (stderr, "Image %ux%u Pixelformat %08x Field %08x\n",
-           vd->pix->width, vd->pix->height,
-           vd->pix->pixelformat, vd->pix->field);
-  fprintf (stderr, "Bytesperline %u Size %u Colorspace %08x\n",
-           vd->pix->bytesperline, vd->pix->sizeimage, vd->pix->colorspace);
-#endif
 
   /* report back negotiated format */
   *width = vd->pix->width;
   *height = vd->pix->height;
   *bytesperline = vd->pix->bytesperline;
+  *sizeimage = vd->pix->sizeimage;
 
   return 0;
 }
@@ -269,6 +263,7 @@ sc_v4l2_device_close (sc_v4l2_device_t * vd)
   SC_ASSERT (vd->fd >= 0);
 
   if ((retval = close (vd->fd)) != 0) {
+    SC_FREE (vd);
     return retval;
   }
 

@@ -23,45 +23,55 @@
 
 #include <sc_v4l2.h>
 
-static int
-v4l2_output (sc_v4l2_device_t * vd,
-             unsigned int *width, unsigned int *height,
-             unsigned int *bytesperline)
+typedef struct v4l2_global
 {
-  int retval;
+  unsigned            width, height;
+  unsigned            bytesperline;
+  unsigned            sizeimage;
+  sc_v4l2_device_t   *vd;
+  char               *wbuf;
+}
+v4l2_global_t;
 
-  retval = sc_v4l2_device_format (vd, width, height, bytesperline);
+static int
+v4l2_prepare (v4l2_global_t * g)
+{
+  int                 retval;
+
+  retval = sc_v4l2_device_format (g->vd, &g->width, &g->height,
+                                  &g->bytesperline, &g->sizeimage);
   SC_CHECK_ABORT (!retval, "Failed to configure device format");
 
-  fprintf (stderr, "Negotiated %ux%u with %u bytes per line\n",
-           *width, *height, *bytesperline);
+  fprintf (stderr, "Negotiated %ux%u with %u bytes per line %u size\n",
+           g->width, g->height, g->bytesperline, g->sizeimage);
 
   return 0;
 }
 
 static void
-v4l2_run (const char *devname)
+v4l2_run (v4l2_global_t * g, const char *devname)
 {
   int                 retval;
-  unsigned int        width, height, bytesperline;
   const char         *outstring;
-  sc_v4l2_device_t   *vd;
 
-  width = 640;
-  height = 480;
+  SC_ASSERT (g != NULL);
+  memset (g, 0, sizeof (*g));
 
-  vd = sc_v4l2_device_open (devname);
-  SC_CHECK_ABORTF (vd != NULL, "Failed to open device %s", devname);
+  g->width = 640;
+  g->height = 480;
 
-  fprintf (stderr, "%s\n", sc_v4l2_device_devstring (vd));
-  fprintf (stderr, "%s\n", sc_v4l2_device_capstring (vd));
-  if ((outstring = sc_v4l2_device_outstring (vd)) != NULL) {
+  g->vd = sc_v4l2_device_open (devname);
+  SC_CHECK_ABORTF (g->vd != NULL, "Failed to open device %s", devname);
+
+  fprintf (stderr, "%s\n", sc_v4l2_device_devstring (g->vd));
+  fprintf (stderr, "%s\n", sc_v4l2_device_capstring (g->vd));
+  if ((outstring = sc_v4l2_device_outstring (g->vd)) != NULL) {
     fprintf (stderr, "%s\n", outstring);
-    retval = v4l2_output (vd, &width, &height, &bytesperline);
+    retval = v4l2_prepare (g);
     SC_CHECK_ABORTF (!retval, "Failed to output to device %s", devname);
   }
 
-  retval = sc_v4l2_device_close (vd);
+  retval = sc_v4l2_device_close (g->vd);
   SC_CHECK_ABORTF (!retval, "Failed to close device %s", devname);
 }
 
@@ -69,6 +79,7 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
+  v4l2_global         sg, *g = &sg;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -76,7 +87,7 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
 
   if (argc >= 2) {
-    v4l2_run (argv[1]);
+    v4l2_run (g, argv[1]);
   }
 
   sc_finalize ();
