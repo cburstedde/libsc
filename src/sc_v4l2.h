@@ -68,6 +68,18 @@ const char         *sc_v4l2_device_capstring (const sc_v4l2_device_t * vd);
  */
 const char         *sc_v4l2_device_outstring (const sc_v4l2_device_t * vd);
 
+/** Query whether a device supports read/write I/O.
+ * \param [in] vd   Any pointer.
+ * \return          True iff \a vd is valid and read/write is supported.
+ */
+int                 sc_v4l2_device_is_readwrite (const sc_v4l2_device_t * vd);
+
+/** Query whether a device supports streaming I/O.
+ * \param [in] vd   Any pointer.
+ * \return          True iff \a vd is valid and streaming is supported.
+ */
+int                 sc_v4l2_device_is_streaming (const sc_v4l2_device_t * vd);
+
 /** Set output configuration of device.
  * We demand sRGB color space with RGB 565 pixel format (2 bytes).
  * The image size values on output define the buffer size to allocate.

@@ -50,7 +50,9 @@
 struct sc_v4l2_device
 {
   int                 fd;
-  int                 supports_output;
+  int                 support_output;
+  int                 support_readwrite;
+  int                 support_streaming;
   struct v4l2_capability capability;
   struct v4l2_output  output;
   struct v4l2_format  format;
@@ -87,14 +89,16 @@ querycap (sc_v4l2_device_t * vd)
   else {
     caps = vd->capability.device_caps;
   }
-  vd->supports_output = caps & V4L2_CAP_VIDEO_OUTPUT;
+  vd->support_output = caps & V4L2_CAP_VIDEO_OUTPUT ? 1 : 0;
+  vd->support_readwrite = caps & V4L2_CAP_READWRITE ? 1 : 0;
+  vd->support_streaming = caps & V4L2_CAP_STREAMING ? 1 : 0;
   snprintf (vd->capstring, SC_BUFSIZE, "Output: %d RW: %d Stream: %d MC: %d",
-            vd->supports_output ? 1 : 0, caps & V4L2_CAP_READWRITE ? 1 : 0,
-            caps & V4L2_CAP_STREAMING ? 1 : 0, caps & V4L2_CAP_IO_MC ? 1 : 0);
+            vd->support_output, vd->support_readwrite, vd->support_streaming,
+            caps & V4L2_CAP_IO_MC ? 1 : 0);
 
   /* go through outputs and identify the one to use */
-  if (vd->supports_output) {
-    vd->supports_output = 0;
+  if (vd->support_output) {
+    vd->support_output = 0;
     for (vd->output.index = 0;; ++vd->output.index) {
       if ((retval = ioctl (vd->fd, VIDIOC_ENUMOUTPUT, &vd->output)) != 0) {
         /* the loop is over on ioctl error */
@@ -102,12 +106,12 @@ querycap (sc_v4l2_device_t * vd)
       }
       if (vd->output.type == V4L2_OUTPUT_TYPE_ANALOG) {
         /* successfully found a fitting output */
-        vd->supports_output = 1;
+        vd->support_output = 1;
         break;
       }
     }
   }
-  if (!vd->supports_output) {
+  if (!vd->support_output) {
     snprintf (vd->outstring, SC_BUFSIZE, "%s",
               "Output not supported as desired");
   }
@@ -170,7 +174,19 @@ sc_v4l2_device_outstring (const sc_v4l2_device_t * vd)
 {
   SC_ASSERT (vd != NULL);
   SC_ASSERT (vd->fd >= 0);
-  return vd->supports_output ? vd->outstring : NULL;
+  return vd->support_output ? vd->outstring : NULL;
+}
+
+int
+sc_v4l2_device_is_readwrite (const sc_v4l2_device_t * vd)
+{
+  return vd != NULL && vd->fd >= 0 && vd->support_readwrite;
+}
+
+int
+sc_v4l2_device_is_streaming (const sc_v4l2_device_t * vd)
+{
+  return vd != NULL && vd->fd >= 0 && vd->support_streaming;
 }
 
 int
@@ -183,7 +199,7 @@ sc_v4l2_device_format (sc_v4l2_device_t * vd,
 
   SC_ASSERT (vd != NULL);
   SC_ASSERT (vd->fd >= 0);
-  SC_ASSERT (vd->supports_output);
+  SC_ASSERT (vd->support_output);
 
   SC_ASSERT (width != NULL);
   SC_ASSERT (height != NULL);

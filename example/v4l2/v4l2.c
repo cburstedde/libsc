@@ -45,6 +45,9 @@ v4l2_prepare (v4l2_global_t * g)
   fprintf (stderr, "Negotiated %ux%u with %u bytes per line %u size\n",
            g->width, g->height, g->bytesperline, g->sizeimage);
 
+  SC_CHECK_ABORT (sc_v4l2_device_is_readwrite (g->vd),
+                  "Device does not support read/write I/O");
+
   return 0;
 }
 
