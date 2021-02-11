@@ -285,7 +285,7 @@ main (int argc, char **argv)
 
   sc_init (sc_MPI_COMM_WORLD, 0, 1, NULL, SC_LP_DEFAULT);
 
-  finaltime = 10.;
+  finaltime = 0.;
   if (argc >= 3) {
     finaltime = strtod (argv[2], NULL);
   }
