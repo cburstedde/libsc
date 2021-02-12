@@ -4,7 +4,7 @@ This is the `README` file for `libsc`.
 
 The SC Library provides support for parallel scientific applications.
 
-Copyright (C) 2010 The University of Texas System
+Copyright (C) 2010 The University of Texas System  
 Additional copyright (C) 2011 individual authors
 
 `libsc` is written by Carsten Burstedde, Lucas C. Wilcox, Tobin Isaac, and
@@ -82,13 +82,15 @@ Here are a few compilers known to work with `libsc` via CMake:
 
 #### Distribution packages
 
-For libsc developers, source and binary distribution packages are generated after building libsc by:
+For `libsc` developers, source and binary distribution packages are generated
+after building `libsc` by:
 
     cpack --config build/CPackSourceConfig.cmake
     cpack --config build/CPackConfig.cmake
 
 which creates files:
 
-build/package/SC-<version>-Source.zip containing source code
-
-build/package/SC-<version>-<platform>.zip containing binary libraries and exectuables suitable for computers of same operating system and compatible CPU arch
+ * `build/package/SC-<version>-Source.zip` containing source code
+ * `build/package/SC-<version>-<platform>.zip` containing binary libraries and
+    exectuables suitable for computers of same operating system and compatible
+    CPU arch
