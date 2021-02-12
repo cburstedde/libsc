@@ -53,34 +53,26 @@ or used via FetchContent or ExternalProject from other CMake projects.
 
 MPI is enabled by default:
 
-```sh
-cmake -B build
-cmake --build build --parallel
-```
+    cmake -B build
+    cmake --build build --parallel
 
 To disable MPI:
 
-```sh
-cmake -B build -Dmpi=no
-```
+    cmake -B build -Dmpi=no
 
 Optionally, run self-tests:
 
-```sh
-cd build
-ctest
-```
+    cd build
+    ctest
 
-Optionally, install libsc like:
+Optionally, install `libsc` like:
 
-```sh
-cmake -B build -DCMAKE_INSTALL_PREFIX=~/local
+    cmake -B build -DCMAKE_INSTALL_PREFIX=~/local
+    cmake --install build
 
-cmake --install build
-```
-
-Here are a few compilers known to work with libsc via CMake:
+Here are a few compilers known to work with `libsc` via CMake:
 
 * GCC or Clang (Linux, MacOS, Windows)
 * Intel `icc` (Linux, MacOS)
-* Intel NextGen LLVM `icx` (Linux, MacOS, Windows). Windows `icx` requires CMake >= 3.20
+* Intel NextGen LLVM `icx` (Linux, MacOS, Windows).
+  Windows `icx` requires CMake >= 3.20

@@ -16,20 +16,12 @@ jobs:
       uses: actions/checkout@v2
     - name: Run bootstrap script
       run: ./bootstrap
-    - name: Make check with debug, without BLAS and shared
+    - name: Make check with MPI and debug, without shared
       shell: bash
       run: |
-        DIR="checkdebug_sharedBLAS" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --disable-shared --without-blas --enable-debug \
-            CFLAGS="-O0 -g -Wall"
-        make -j V=0
-        make -j check V=0
-        cd ..
-    - name: Make check with MPI and debug
-      shell: bash
-      run: |
-        DIR="checkMPIdebug" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-mpi --enable-debug CFLAGS="-O0 -g -Wall"
+        DIR="checkMPIdebug_shared" && mkdir -p "$DIR" && cd "$DIR"
+        ../configure --enable-mpi --enable-debug --disable-shared \
+            CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
         make -j V=0
         make -j check V=0
         cd ..
@@ -45,7 +37,7 @@ jobs:
       shell: bash
       run: |
         DIR="checkdebug" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-debug CFLAGS="-O0 -g -Wall"
+        ../configure --enable-debug CFLAGS="-O0 -g -Wall -Wno-uninitialized"
         make -j V=0
         make -j check V=0
         cd ..
@@ -54,6 +46,15 @@ jobs:
       run: |
         DIR="checkMPIdebugCXX" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug CFLAGS="-O0" CC=mpicxx
+        make -j V=0
+        make -j check V=0
+        cd ..
+    - name: Make check with OpenMP, MPI, debug
+      shell: bash
+      run: |
+        DIR="checkOpenMPMPIdebug" && mkdir -p "$DIR" && cd "$DIR"
+        ../configure --enable-openmp="-fopenmp" --enable-mpi \
+            --enable-debug CFLAGS="-O0"
         make -j V=0
         make -j check V=0
         cd ..
