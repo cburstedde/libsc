@@ -60,6 +60,7 @@ struct sc_v4l2_device
   int                 support_output;
   int                 support_readwrite;
   int                 support_streaming;
+  int                 support_io_mc;
 #ifdef SC_ENABLE_V4L2
   struct v4l2_capability capability;
   struct v4l2_output  output;
@@ -103,9 +104,12 @@ querycap (sc_v4l2_device_t * vd)
   vd->support_output = caps & V4L2_CAP_VIDEO_OUTPUT ? 1 : 0;
   vd->support_readwrite = caps & V4L2_CAP_READWRITE ? 1 : 0;
   vd->support_streaming = caps & V4L2_CAP_STREAMING ? 1 : 0;
+#ifdef V4L2_CAP_IO_MC
+  vd->support_io_mc = caps & V4L2_CAP_IO_MC ? 1 : 0;
+#endif
   snprintf (vd->capstring, SC_BUFSIZE, "Output: %d RW: %d Stream: %d MC: %d",
             vd->support_output, vd->support_readwrite, vd->support_streaming,
-            caps & V4L2_CAP_IO_MC ? 1 : 0);
+            vd->support_io_mc);
 
   /* go through outputs and identify the one to use */
   if (vd->support_output) {
