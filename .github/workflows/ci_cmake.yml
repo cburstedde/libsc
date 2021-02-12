@@ -1,0 +1,104 @@
+name: ci_cmake
+env:
+  CMAKE_GENERATOR: Ninja
+
+on:
+  push:
+    paths:
+      - "**/CMakeLists.txt"
+      - "**.cmake"
+      - "**.cmake.in"
+      - "**.c"
+      - "**.h"
+      - "**.h.in"
+      - ".github/workflows/ci_make.yml"
+  pull_request:
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: install prereqs
+      run: |
+        sudo apt update -yq
+        sudo apt install -yq --no-install-recommends ninja-build libopenmpi-dev openmpi-bin
+
+    - name: CMake configure
+      run: cmake -B build -DCMAKE_INSTALL_PREFIX=~/libsc
+
+    - name: CMake build
+      run: cmake --build build
+
+    - name: CMake install (for examples)
+      run: cmake --install build
+
+    - name: CMake self-tests
+      run: ctest --parallel 2 --output-on-failure
+      working-directory: build
+
+    - name: CMake configure examples
+      run: cmake -B example/build -S example -DSC_ROOT=~/libsc
+
+    - name: CMake build examples
+      run: cmake --build example/build
+
+    - name: CMake test examples
+      run: ctest --parallel 2 --output-on-failure
+      working-directory: example/build
+
+  mac:
+    runs-on: macos-latest
+    env:
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: install prereqs
+      run: brew install open-mpi ninja
+
+    - name: CMake configure
+      run: cmake -B build -Dopenmp=off -DCMAKE_INSTALL_PREFIX=~/libsc
+
+    - name: CMake build
+      run: cmake --build build
+
+    - name: CMake install (for examples)
+      run: cmake --install build
+
+    - name: CMake self-tests
+      run: ctest -E sort --parallel 2 --output-on-failure
+      working-directory: build
+
+    - name: CMake configure examples
+      run: cmake -B example/build -S example -DSC_ROOT=~/libsc
+
+    - name: CMake build examples
+      run: cmake --build example/build
+
+    - name: CMake test examples
+      run: ctest --parallel 2 --output-on-failure
+      working-directory: example/build
+
+
+  windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - run: cinst -y ninja
+
+    - name: CMake configure
+      run: cmake -B build -Dmpi=no
+
+    - name: CMake build
+      run: cmake --build build
+
+    - name: CMake self-tests
+      run: ctest --parallel 2 --output-on-failure
+      working-directory: build
