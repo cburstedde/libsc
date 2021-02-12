@@ -60,6 +60,10 @@ To disable MPI:
 
     cmake -B build -Dmpi=no
 
+To compile with debug options:
+
+    cmake -B build -DCMAKE_BUILD_TYPE=Debug
+
 Optionally, run self-tests:
 
     cd build
@@ -75,4 +79,18 @@ Here are a few compilers known to work with `libsc` via CMake:
 * GCC or Clang (Linux, MacOS, Windows)
 * Intel `icc` (Linux, MacOS)
 * Intel NextGen LLVM `icx` (Linux, MacOS, Windows).
-  Windows `icx` requires CMake >= 3.20
+
+#### Distribution packages
+
+For `libsc` developers, source and binary distribution packages are generated
+after building `libsc` by:
+
+    cpack --config build/CPackSourceConfig.cmake
+    cpack --config build/CPackConfig.cmake
+
+which creates files:
+
+ * `build/package/SC-<version>-Source.zip` containing source code
+ * `build/package/SC-<version>-<platform>.zip` containing binary libraries and
+    exectuables suitable for computers of same operating system and compatible
+    CPU arch
