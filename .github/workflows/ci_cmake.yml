@@ -1,4 +1,4 @@
-name: ci_cmake
+name: CI for CMake
 env:
   CMAKE_GENERATOR: Ninja
 
@@ -18,14 +18,17 @@ jobs:
 
   linux:
     runs-on: ubuntu-20.04
+    name: CMake build on Linux
 
     steps:
     - uses: actions/checkout@v2
+      name: Checkout source code
 
-    - name: install prereqs
+    - name: Install system dependencies
       run: |
-        sudo apt update -yq
-        sudo apt install -yq --no-install-recommends ninja-build libopenmpi-dev openmpi-bin
+        sudo apt-get update -yq
+        sudo apt-get install -yq --no-install-recommends \
+            ninja-build libopenmpi-dev openmpi-bin
 
     - name: CMake configure
       run: cmake -B build -DCMAKE_INSTALL_PREFIX=~/libsc
@@ -52,13 +55,15 @@ jobs:
 
   mac:
     runs-on: macos-latest
+    name: CMake build on MacOS
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
 
     steps:
     - uses: actions/checkout@v2
+      name: Checkout source code
 
-    - name: install prereqs
+    - name: Install system dependencies
       run: brew install open-mpi ninja
 
     - name: CMake configure
@@ -84,14 +89,16 @@ jobs:
       run: ctest --parallel 2 --output-on-failure
       working-directory: example/build
 
-
   windows:
     runs-on: windows-latest
+    name: CMake build on Windows
 
     steps:
     - uses: actions/checkout@v2
+      name: Checkout source code
 
     - uses: seanmiddleditch/gha-setup-ninja@v3
+      name: Setup ninja
 
     - name: CMake configure
       run: cmake -B build -Dmpi=no
