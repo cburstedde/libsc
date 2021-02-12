@@ -75,6 +75,8 @@ echo "o---------------------------------------"
 echo "| Checking headers"
 echo "o---------------------------------------"
 
+AC_CHECK_HEADERS([fcntl.h sys/ioctl.h sys/select.h sys/stat.h])
+AC_CHECK_HEADERS([linux/videodev2.h])
 AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h sys/types.h time.h])
 
 echo "o---------------------------------------"
