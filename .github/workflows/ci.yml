@@ -64,3 +64,9 @@ jobs:
         ../configure
         make -j distcheck V=0
         cd ..
+    - name: Save test suite log
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: test_suite_log
+        path: ./**/test-suite.log
