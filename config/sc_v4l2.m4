@@ -50,7 +50,7 @@ AC_DEFUN([SC_CHECK_V4L2], [
       [AC_DEFINE([ENABLE_V4L2], 1, [Development with V4L2 devices works])
        AC_MSG_RESULT([yes])],
       [AC_MSG_RESULT([no])])
-  AM_CONDITIONAL([$1_ENABLE_V4L2], 
+  AM_CONDITIONAL([$1_ENABLE_V4L2],
                  [AS_VAR_TEST_SET([myresult])])
   AS_VAR_POPDEF([myresult])
 ])
