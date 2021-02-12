@@ -1,0 +1,44 @@
+name: CI 
+
+on: [push, pull_request]
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-latest
+    name: Test build on linux
+    steps:
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -yq
+        sudo apt-get install -yq --no-install-recommends zlib1g-dev libmpich-dev mpich
+    - name: Checkout source code
+      uses: actions/checkout@v2
+    - name: Run bootstrap script
+      run: ./bootstrap
+    - name: Make check with MPI and debug
+      shell: bash
+      run: |
+        ls -la
+        DIR="checkMPIdebug" && mkdir -p "$DIR" && cd "$DIR"
+        ../configure --enable-mpi --enable-debug CFLAGS="-O0 -g -Wall"
+        make -j V=0
+        make -j check V=0
+        cd ..
+    - name: Make check with MPI, without debug
+      shell: bash
+      run: |
+        ls -la
+        DIR="checkMPI" && mkdir -p "$DIR" && cd "$DIR"
+        ../configure --enable-mpi CFLAGS="-O2"
+        make -j V=0
+        make -j check V=0
+        cd ..
+    - name: Make distcheck
+      shell: bash
+      run: |
+        ls -la
+        DIR="distcheck" && mkdir -p "$DIR" && cd "$DIR"
+        ../configure
+        make -j distcheck V=0
+        cd ..
