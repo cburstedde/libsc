@@ -27,8 +27,9 @@ The build instructions for `p4est` also apply to standalone builds of `libsc`.
 
 The `autoconf`/`automake`/`libtool` build chain is fully supported.
 
-In a fresh checkout, you may run ./bootstrap to create the `configure` script.
-This is *not* required for unpacked tar archives, or after pulling fresh code.
+In a fresh checkout, you may run `./bootstrap` to create the `configure`
+script.  This is *not* required for unpacked `tar` archives, or after pulling
+fresh code.
 
 We recommend running `configure` with a relative path from an empty build
 directory.  Try
@@ -38,7 +39,8 @@ directory.  Try
 for options and switches.  For development with MPI:
 
     cd empty/build/directory
-    ../relative/path/to/configure --enable-mpi --enable-debug CFLAGS="-O0 -g"
+    ../relative/path/to/configure --enable-mpi --enable-debug \
+        CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
     make -j8 V=0
 
 The `V=0` environment variable significantly unclutters console output.
