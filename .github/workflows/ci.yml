@@ -1,4 +1,4 @@
-name: CI 
+name: Continuous integration
 
 on: [push, pull_request]
 
@@ -16,10 +16,18 @@ jobs:
       uses: actions/checkout@v2
     - name: Run bootstrap script
       run: ./bootstrap
+    - name: Make check with debug, without BLAS and shared
+      shell: bash
+      run: |
+        DIR="checkdebug_sharedBLAS" && mkdir -p "$DIR" && cd "$DIR"
+        ../configure --disable-shared --without-blas --enable-debug \
+            CFLAGS="-O0 -g -Wall"
+        make -j V=0
+        make -j check V=0
+        cd ..
     - name: Make check with MPI and debug
       shell: bash
       run: |
-        ls -la
         DIR="checkMPIdebug" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug CFLAGS="-O0 -g -Wall"
         make -j V=0
@@ -28,16 +36,30 @@ jobs:
     - name: Make check with MPI, without debug
       shell: bash
       run: |
-        ls -la
         DIR="checkMPI" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi CFLAGS="-O2"
+        make -j V=0
+        make -j check V=0
+        cd ..
+    - name: Make check without MPI, with debug
+      shell: bash
+      run: |
+        DIR="checkdebug" && mkdir -p "$DIR" && cd "$DIR"
+        ../configure --enable-debug CFLAGS="-O0 -g -Wall"
+        make -j V=0
+        make -j check V=0
+        cd ..
+    - name: Make check with MPI, debug and C++ compiler
+      shell: bash
+      run: |
+        DIR="checkMPIdebugCXX" && mkdir -p "$DIR" && cd "$DIR"
+        ../configure --enable-mpi --enable-debug CFLAGS="-O0" CC=mpicxx
         make -j V=0
         make -j check V=0
         cd ..
     - name: Make distcheck
       shell: bash
       run: |
-        ls -la
         DIR="distcheck" && mkdir -p "$DIR" && cd "$DIR"
         ../configure
         make -j distcheck V=0
