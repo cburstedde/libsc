@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 include(cmake/policy.cmake)
 
-project(sc
+project(SC
   LANGUAGES C
   VERSION 0.0.0)
 
@@ -78,7 +78,6 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/ ${PROJECT_SOURCE_DIR}/src/sc_builti
 add_subdirectory(src)
 
 if(BUILD_TESTING)
-  add_subdirectory(example)
   add_subdirectory(test)
 endif(BUILD_TESTING)
 

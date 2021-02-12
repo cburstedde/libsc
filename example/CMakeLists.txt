@@ -1,3 +1,37 @@
+cmake_minimum_required(VERSION 3.13)
+project(libscExamples LANGUAGES C)
+
+include(CTest)
+include(CheckSymbolExists)
+include(CheckIncludeFile)
+
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/Modules)
+
+# --- configure external libraries
+find_package(SC CONFIG)
+
+if(SC_FOUND)
+  include(${SC_DIR}/SCTargets.cmake)
+  add_library(SC::SC ALIAS SC::sc)
+else()
+  find_package(SC REQUIRED)
+endif()
+
+find_package(MPI COMPONENTS C REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(Threads)
+
+check_symbol_exists(sqrt math.h SC_NONEED_M)
+if(NOT SC_NONEED_M)
+  check_symbol_exists(sqrt math.h SC_NEED_M)
+endif()
+
+check_include_file(unistd.h SC_HAVE_UNISTD_H)
+if(SC_HAVE_UNISTD_H)
+  check_include_file(getopt.h SC_HAVE_GETOPT_H)
+endif()
+
+# --- build examples
 
 function(test_sc_example name files)
 

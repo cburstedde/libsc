@@ -91,7 +91,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - run: cinst -y ninja
+    - uses: seanmiddleditch/gha-setup-ninja@v3
 
     - name: CMake configure
       run: cmake -B build -Dmpi=no
