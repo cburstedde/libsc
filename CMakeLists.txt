@@ -30,6 +30,11 @@ endif()
 install(FILES iniparser/dictionary.h iniparser/iniparser.h
   DESTINATION include)
 
+install(TARGETS iniparser
+  EXPORT ${PROJECT_NAME}Targets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib)
+
 # --- libb64
 add_library(libb64 libb64/cencode.c libb64/cdecode.c libb64/b64dec.c libb64/b64enc.c)
 target_include_directories(libb64
@@ -40,6 +45,11 @@ target_include_directories(libb64
 
 install(FILES libb64/libb64.h
   DESTINATION include)
+
+install(TARGETS libb64
+  EXPORT ${PROJECT_NAME}Targets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib)
 
 # --- sc
 add_library(sc)
@@ -70,6 +80,11 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/ ${PROJECT_SOURCE_DIR}/src/sc_builti
   DESTINATION include
   FILES_MATCHING PATTERN "*.h")
 
+install(TARGETS sc
+  EXPORT ${PROJECT_NAME}Targets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib)
+
 add_subdirectory(src)
 
 if(BUILD_TESTING)
@@ -77,3 +92,10 @@ if(BUILD_TESTING)
 endif(BUILD_TESTING)
 
 include(cmake/install.cmake)
+
+include(FeatureSummary)
+
+add_feature_info(MPI mpi "MPI features of libsc")
+add_feature_info(OpenMP openmp "OpenMP features of libsc")
+
+feature_summary(WHAT ENABLED_FEATURES DISABLED_FEATURES)
