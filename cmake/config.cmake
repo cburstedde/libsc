@@ -4,6 +4,17 @@ include(CheckTypeSize)
 
 message(STATUS "${PROJECT_NAME} CMake ${CMAKE_VERSION}")
 
+# --- keep library finds in here so we don't forget to do them first
+
+if(mpi)
+  find_package(MPI COMPONENTS C REQUIRED)
+endif()
+if(openmp)
+  find_package(OpenMP COMPONENTS C REQUIRED)
+endif()
+find_package(ZLIB)
+find_package(Threads)
+
 # --- generate sc_config.h
 
 set(CMAKE_REQUIRED_INCLUDES)
@@ -113,3 +124,26 @@ set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
 
 configure_file(src/sc_config_cmake.h.in ${PROJECT_BINARY_DIR}/include/sc_config.h)
+
+# --- sanity check of MPI sc_config.h
+
+# check if libsc was configured properly
+include(CheckSymbolExists)
+set(CMAKE_REQUIRED_FLAGS)
+set(CMAKE_REQUIRED_INCLUDES)
+set(CMAKE_REQUIRED_LIBRARIES)
+
+# libsc and current project must both be compiled with/without MPI
+check_symbol_exists(SC_ENABLE_MPI ${PROJECT_BINARY_DIR}/include/sc_config.h SC_has_mpi)
+check_symbol_exists(SC_ENABLE_MPIIO ${PROJECT_BINARY_DIR}/include/sc_config.h SC_has_mpi_io)
+
+if(MPI_C_FOUND)
+  # a sign the current project is using MPI
+  if(NOT (SC_has_mpi AND SC_has_mpi_io))
+    message(FATAL_ERROR "MPI used, but sc_config.h is not configured for MPI")
+  endif()
+else()
+  if(SC_has_mpi OR SC_has_mpi_io)
+    message(FATAL_ERROR "MPI not used, but sc_config.h is configured for MPI")
+  endif()
+endif()

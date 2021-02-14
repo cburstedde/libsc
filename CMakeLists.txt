@@ -9,17 +9,12 @@ project(SC
 include(CTest)
 
 include(cmake/options.cmake)
-include(cmake/config.cmake)
-include(cmake/compilers.cmake)
 
-if(mpi)
-  find_package(MPI COMPONENTS C REQUIRED)
-endif()
-if(openmp)
-  find_package(OpenMP COMPONENTS C REQUIRED)
-endif()
-find_package(ZLIB)
-find_package(Threads)
+# options.cmake before config.cmake to determine user intent
+include(cmake/config.cmake)
+
+# compilers.cmake must be AFTER find_package() calls in config.cmake in general
+include(cmake/compilers.cmake)
 
 # --- iniparser
 add_library(iniparser iniparser/dictionary.c iniparser/iniparser.c)
