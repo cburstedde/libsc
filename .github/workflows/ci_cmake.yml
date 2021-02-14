@@ -1,6 +1,4 @@
 name: CI for CMake
-env:
-  CMAKE_GENERATOR: Ninja
 
 on:
   push:
@@ -11,7 +9,7 @@ on:
       - "**.c"
       - "**.h"
       - "**.h.in"
-      - ".github/workflows/ci_make.yml"
+      - ".github/workflows/ci_cmake.yml"
   pull_request:
 
 jobs:
@@ -19,6 +17,7 @@ jobs:
   linux:
     runs-on: ubuntu-20.04
     name: CMake build on Linux
+    timeout-minutes: 10
 
     steps:
     - uses: actions/checkout@v2
@@ -29,6 +28,123 @@ jobs:
         sudo apt-get update -yq
         sudo apt-get install -yq --no-install-recommends \
             ninja-build libopenmpi-dev openmpi-bin
+
+    - name: CMake configure
+      run: cmake --preset=default -DCMAKE_INSTALL_PREFIX=~/libsc
+
+    - name: CMake build
+      run: cmake --build build
+
+    - name: CMake install (for examples)
+      run: cmake --install build
+
+    - name: CMake self-tests
+      run: ctest --parallel 2 --output-on-failure
+      working-directory: build
+
+    - name: CMake configure examples
+      run: cmake -B example/build -S example -DSC_ROOT=~/libsc
+
+    - name: CMake build examples
+      run: cmake --build example/build
+
+    - name: CMake test examples
+      run: ctest --parallel 2 --output-on-failure
+      working-directory: example/build
+
+    - name: create package
+      run: cpack --config build/CPackConfig.cmake
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: binary-archive
+        path: build/package
+
+
+  mac:
+    runs-on: macos-latest
+    name: CMake build on MacOS
+    timeout-minutes: 10
+    env:
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout source code
+
+    - name: Install system dependencies
+      run: brew install open-mpi ninja
+
+    - name: CMake configure
+      run: cmake --preset=mac -DCMAKE_INSTALL_PREFIX=~/libsc
+
+    - name: CMake build
+      run: cmake --build build
+
+    - name: CMake install (for examples)
+      run: cmake --install build
+
+    - name: CMake self-tests
+      run: ctest -E sort --parallel 2 --output-on-failure
+      working-directory: build
+
+    - name: CMake configure examples
+      run: cmake -B example/build -S example -DSC_ROOT=~/libsc
+
+    - name: CMake build examples
+      run: cmake --build example/build
+
+    - name: CMake test examples
+      run: ctest --parallel 2 --output-on-failure
+      working-directory: example/build
+
+    - name: create package
+      run: cpack --config build/CPackConfig.cmake
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: binary-archive
+        path: build/package
+
+
+  windows:
+    runs-on: windows-latest
+    name: CMake build on Windows
+    timeout-minutes: 10
+    env:
+      CMAKE_GENERATOR: Ninja
+
+    steps:
+    - uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          git
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-ninja
+          mingw-w64-x86_64-msmpi
+
+    - name: Put MSYS2_MinGW64 on PATH
+      # there is not yet an environment variable for this path from msys2/setup-msys2
+      run: echo "D:/a/_temp/msys/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: download MS-MPI setup (SDK is from MSYS2)
+      run: curl -L -O https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe
+
+    - name: Install mpiexec.exe (-force needed to bypass GUI on headless)
+      run: .\msmpisetup.exe -unattend -force
+
+    - name: test that mpiexec.exe exists
+      # can't use MSMPI_BIN as Actions doesn't update PATH fro mmsmpisetup.exe
+      run: Test-Path "C:\Program Files\Microsoft MPI\Bin\mpiexec.exe" -PathType leaf
+
+    - name: put MSMPI_BIN on PATH (where mpiexec is)
+      run: echo "C:\Program Files\Microsoft MPI\Bin\" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - uses: actions/checkout@v2
+      name: Checkout source code
 
     - name: CMake configure
       run: cmake -B build -DCMAKE_INSTALL_PREFIX=~/libsc
@@ -53,59 +169,11 @@ jobs:
       run: ctest --parallel 2 --output-on-failure
       working-directory: example/build
 
-  mac:
-    runs-on: macos-latest
-    name: CMake build on MacOS
-    env:
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
+    - name: create package
+      run: cpack --config build/CPackConfig.cmake
 
-    steps:
-    - uses: actions/checkout@v2
-      name: Checkout source code
-
-    - name: Install system dependencies
-      run: brew install open-mpi ninja
-
-    - name: CMake configure
-      run: cmake -B build -Dopenmp=off -DCMAKE_INSTALL_PREFIX=~/libsc
-
-    - name: CMake build
-      run: cmake --build build
-
-    - name: CMake install (for examples)
-      run: cmake --install build
-
-    - name: CMake self-tests
-      run: ctest -E sort --parallel 2 --output-on-failure
-      working-directory: build
-
-    - name: CMake configure examples
-      run: cmake -B example/build -S example -DSC_ROOT=~/libsc
-
-    - name: CMake build examples
-      run: cmake --build example/build
-
-    - name: CMake test examples
-      run: ctest --parallel 2 --output-on-failure
-      working-directory: example/build
-
-  windows:
-    runs-on: windows-latest
-    name: CMake build on Windows
-
-    steps:
-    - uses: actions/checkout@v2
-      name: Checkout source code
-
-    - uses: seanmiddleditch/gha-setup-ninja@v3
-      name: Setup ninja
-
-    - name: CMake configure
-      run: cmake -B build -Dmpi=no
-
-    - name: CMake build
-      run: cmake --build build
-
-    - name: CMake self-tests
-      run: ctest --parallel 2 --output-on-failure
-      working-directory: build
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: binary-archive
+        path: build/package

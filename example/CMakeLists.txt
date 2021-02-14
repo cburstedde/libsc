@@ -48,7 +48,11 @@ if(SC_NEED_M)
   target_link_libraries(sc_${name} PRIVATE m)
 endif()
 
-add_test(NAME sc:example:${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_${name}>)
+if(MPIEXEC_EXECUTABLE)
+  add_test(NAME sc:example:${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_${name}>)
+else()
+  add_test(NAME sc:example:${name} COMMAND $<TARGET_FILE:sc_${name}>)
+endif()
 
 endfunction(test_sc_example)
 
