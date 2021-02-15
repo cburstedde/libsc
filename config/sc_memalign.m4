@@ -64,7 +64,7 @@ dnl verify that posix_memalign can be linked against
 ]],
 [[
 int *a;
-int err = posix_memalign((void **) &a, $$1_MEMALIGN_BYTES_LINK, 3 * sizeof(*a));
+posix_memalign((void **) &a, $$1_MEMALIGN_BYTES_LINK, 3 * sizeof(*a));
 free(a);
 ]])],
                    [], [AC_MSG_ERROR([Linking posix_memalign failed])])
