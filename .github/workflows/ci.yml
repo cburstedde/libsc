@@ -75,7 +75,7 @@ jobs:
 
   tarball:
     runs-on: ubuntu-latest
-    name: Pack tarball on linux
+    name: Pack tarball on Linux
     steps:
     - name: Install system dependencies
       run: |
