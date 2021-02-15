@@ -78,15 +78,23 @@ Optionally, install `libsc` like:
     cmake -B build -DCMAKE_INSTALL_PREFIX=~/local
     cmake --install build
 
+The optional examples can be built and tested like:
+
+    cd example
+    cmake -B build
+    cmake --build build
+    cd build
+    ctest
+
 Here are a few compilers known to work with `libsc` via CMake:
 
 * GCC or Clang (Linux, MacOS, Windows)
-* Intel `icc` (Linux, MacOS)
+* Intel Classic `icc` (Linux, MacOS)
 * Intel NextGen LLVM `icx` (Linux, MacOS, Windows).
 
 #### Distribution packages
 
-For `libsc` developers, source and binary distribution packages are generated
+For developers, source and binary distribution packages are generated
 after building `libsc` by:
 
     cpack --config build/CPackSourceConfig.cmake
@@ -96,5 +104,5 @@ which creates files:
 
  * `build/package/SC-<version>-Source.zip` containing source code
  * `build/package/SC-<version>-<platform>.zip` containing binary libraries and
-    exectuables suitable for computers of same operating system and compatible
+    executables suitable for computers of same operating system and compatible
     CPU arch
