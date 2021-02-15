@@ -17,7 +17,8 @@ include(cmake/config.cmake)
 include(cmake/compilers.cmake)
 
 # --- iniparser
-add_library(iniparser iniparser/dictionary.c iniparser/iniparser.c)
+add_library(iniparser
+            iniparser/inistring.c iniparser/dictionary.c iniparser/iniparser.c)
 target_include_directories(iniparser
   PRIVATE src ${PROJECT_BINARY_DIR}/include
   INTERFACE
@@ -27,7 +28,7 @@ if(MPI_FOUND)
   target_link_libraries(iniparser PRIVATE MPI::MPI_C)
 endif()
 
-install(FILES iniparser/dictionary.h iniparser/iniparser.h
+install(FILES iniparser/inistring.h iniparser/dictionary.h iniparser/iniparser.h
   DESTINATION include)
 
 install(TARGETS iniparser
