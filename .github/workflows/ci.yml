@@ -87,7 +87,7 @@ jobs:
       shell: bash
       run: |
         git tag
-        git describe
+        git describe --dirty --tags
     - name: Run bootstrap script
       run: ./bootstrap
     - name: Configure and make
