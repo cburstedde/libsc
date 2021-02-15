@@ -14,20 +14,7 @@
                                 Includes
  ---------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-/*
- * The following #include is necessary on many Unixes but not Linux.
- * It is not needed for Windows platforms.
- * Uncomment it if needed.
- */
-#include <sc_config.h>
-#ifdef SC_HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
+/* Required header files included indirectly */
 #include "dictionary.h"
 
 /*---------------------------------------------------------------------------
