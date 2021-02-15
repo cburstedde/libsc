@@ -47,6 +47,9 @@ base64_encode_block (const char *plaintext_in, size_t length_in,
   result = state_in->result;
 
   switch (state_in->step) {
+
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+
     while (1) {
   case step_A:
       if (plainchar == plaintextend) {
