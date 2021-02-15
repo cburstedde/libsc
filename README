@@ -45,13 +45,24 @@ for options and switches.  For development with MPI:
 
 The `V=0` environment variable significantly unclutters console output.
 
+To run tests in parallel, run
+
+    make -j check V=0
+
+and to make a distribution tar archive
+
+    git describe --dirty --tags
+    make -j8 distcheck V=0
+
+So far, we have not made `V=0` the default.
+
 ### CMake
 
 For faster builds that work on Windows as well as MacOS and Linux, and
 that are easily usable from other CMake projects, libsc can be built directly,
 or used via FetchContent or ExternalProject from other CMake projects.
 
-MPI is enabled by default:
+MPI and OpenMP are enabled by default, and the default build configuration is Release:
 
     cmake -B build
     cmake --build build --parallel
@@ -59,6 +70,10 @@ MPI is enabled by default:
 To disable MPI:
 
     cmake -B build -Dmpi=no
+
+To disable OpenMP:
+
+    cmake -B build -Dopenmp=no
 
 To compile with debug options:
 
@@ -74,15 +89,23 @@ Optionally, install `libsc` like:
     cmake -B build -DCMAKE_INSTALL_PREFIX=~/local
     cmake --install build
 
+The optional examples can be built and tested like:
+
+    cd example
+    cmake -B build
+    cmake --build build
+    cd build
+    ctest
+
 Here are a few compilers known to work with `libsc` via CMake:
 
 * GCC or Clang (Linux, MacOS, Windows)
-* Intel `icc` (Linux, MacOS)
+* Intel Classic `icc` (Linux, MacOS)
 * Intel NextGen LLVM `icx` (Linux, MacOS, Windows).
 
 #### Distribution packages
 
-For `libsc` developers, source and binary distribution packages are generated
+For developers, source and binary distribution packages are generated
 after building `libsc` by:
 
     cpack --config build/CPackSourceConfig.cmake
@@ -92,5 +115,5 @@ which creates files:
 
  * `build/package/SC-<version>-Source.zip` containing source code
  * `build/package/SC-<version>-<platform>.zip` containing binary libraries and
-    exectuables suitable for computers of same operating system and compatible
+    executables suitable for computers of same operating system and compatible
     CPU arch

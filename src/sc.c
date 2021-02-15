@@ -1191,9 +1191,6 @@ static int
 sc_package_unregister_noabort (int package_id)
 {
   int                 num_errors = 0;
-#ifdef SC_ENABLE_PTHREAD
-  int                 i;
-#endif
   sc_package_t       *p;
 
   if (!sc_package_is_registered (package_id)) {

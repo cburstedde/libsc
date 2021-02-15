@@ -19,6 +19,7 @@ endif()
 # ---
 
 foreach(t ${tests})
+
   add_executable(test_${t} test_${t}.c)
   target_link_libraries(test_${t} PRIVATE SC::SC)
   if(ZLIB_FOUND)
@@ -31,6 +32,13 @@ foreach(t ${tests})
     target_link_libraries(test_${t} PRIVATE m)
   endif()
 
-  add_test(NAME sc:test:${t} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:test_${t}>)
-  set_tests_properties(sc:test:${t} PROPERTIES TIMEOUT 300)
+  if(MPIEXEC_EXECUTABLE)
+    add_test(NAME sc:${t} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:test_${t}>)
+  else()
+    add_test(NAME sc:${t} COMMAND $<TARGET_FILE:test_${t}>)
+  endif()
+  set_tests_properties(sc:${t} PROPERTIES
+    TIMEOUT 300
+    RESOURCE_LOCK cpu_mpi)
+
 endforeach()

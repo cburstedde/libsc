@@ -1,20 +1,3 @@
-# --- package specific
-
-install(TARGETS sc
-  EXPORT ${PROJECT_NAME}Targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
-
-install(TARGETS iniparser
-  EXPORT ${PROJECT_NAME}Targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
-
-install(TARGETS libb64
-  EXPORT ${PROJECT_NAME}Targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
-
 # --- BOILERPLATE: install / packaging
 
 include(CMakePackageConfigHelpers)
