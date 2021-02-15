@@ -321,11 +321,9 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM(
 #undef MPI
 #include <mpi.h>
 ]], [[
-int mpiret;
 int mpithr;
-mpiret = MPI_Init_thread ((int *) 0, (char ***) 0,
-                          MPI_THREAD_MULTIPLE, &mpithr);
-mpiret = MPI_Finalize ();
+MPI_Init_thread ((int *) 0, (char ***) 0, MPI_THREAD_MULTIPLE, &mpithr);
+MPI_Finalize ();
 ]])],
 [AC_MSG_RESULT([successful])
  $1],
@@ -344,18 +342,17 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM(
 #undef MPI
 #include <mpi.h>
 ]], [[
-int mpiret;
-int mpithr;
 int disp_unit=0;
 char *baseptr;
 MPI_Win win;
 MPI_Init ((int *) 0, (char ***) 0);
-mpiret = MPI_Win_allocate_shared(0,disp_unit,MPI_INFO_NULL,MPI_COMM_WORLD,(void *) &baseptr,&win);
-mpiret = MPI_Win_shared_query(win,0,0,&disp_unit,(void *) &baseptr);
-mpiret = MPI_Win_lock(MPI_LOCK_EXCLUSIVE,0,MPI_MODE_NOCHECK,win);
-mpiret = MPI_Win_unlock(0,win);
-mpiret = MPI_Win_free(&win);
-mpiret = MPI_Finalize ();
+MPI_Win_allocate_shared(0,disp_unit,MPI_INFO_NULL,MPI_COMM_WORLD,
+                        (void *) &baseptr,&win);
+MPI_Win_shared_query(win,0,0,&disp_unit,(void *) &baseptr);
+MPI_Win_lock(MPI_LOCK_EXCLUSIVE,0,MPI_MODE_NOCHECK,win);
+MPI_Win_unlock(0,win);
+MPI_Win_free(&win);
+MPI_Finalize ();
 ]])],
 [AC_MSG_RESULT([successful])
  $1],
@@ -374,11 +371,10 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM(
 #undef MPI
 #include <mpi.h>
 ]], [[
-int mpiret;
 MPI_Comm subcomm;
 MPI_Init ((int *) 0, (char ***) 0);
-mpiret = MPI_Comm_split_type(MPI_COMM_WORLD,MPI_COMM_TYPE_SHARED,0,MPI_INFO_NULL,&subcomm);
-mpiret = MPI_Finalize ();
+MPI_Comm_split_type(MPI_COMM_WORLD,MPI_COMM_TYPE_SHARED,0,MPI_INFO_NULL,&subcomm);
+MPI_Finalize ();
 ]])],
 [AC_MSG_RESULT([successful])
  $1],
