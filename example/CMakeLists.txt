@@ -7,6 +7,8 @@ include(CheckIncludeFile)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/Modules)
 
+option(mpi "use MPI" on)
+
 # --- configure external libraries
 find_package(SC CONFIG)
 
@@ -17,7 +19,13 @@ else()
   find_package(SC REQUIRED)
 endif()
 
+if(mpi)
 find_package(MPI COMPONENTS C REQUIRED)
+if(NOT MPIEXEC_EXECUTABLE)
+  message(FATAL_ERROR "MPIEXEC not found")
+endif()
+endif(mpi)
+
 find_package(ZLIB REQUIRED)
 find_package(Threads)
 
@@ -48,7 +56,7 @@ if(SC_NEED_M)
   target_link_libraries(sc_${name} PRIVATE m)
 endif()
 
-if(MPIEXEC_EXECUTABLE)
+if(MPI_FOUND)
   add_test(NAME sc:example:${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_${name}>)
 else()
   add_test(NAME sc:example:${name} COMMAND $<TARGET_FILE:sc_${name}>)
