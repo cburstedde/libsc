@@ -2,8 +2,6 @@ include(CheckIncludeFile)
 include(CheckSymbolExists)
 include(CheckTypeSize)
 
-message(STATUS "${PROJECT_NAME} CMake ${CMAKE_VERSION}")
-
 # --- keep library finds in here so we don't forget to do them first
 
 if(mpi)
@@ -14,6 +12,15 @@ if(openmp)
 endif()
 find_package(ZLIB)
 find_package(Threads)
+
+# --- generate pkg-config .pc
+set(pc_libs_private "-liniparser -llibb64")
+set(pc_req_private "ompi ompi-c orte zlib")
+set(pc_req_public "sc")
+
+configure_file(${CMAKE_CURRENT_LIST_DIR}/sc.pc.in sc.pc @ONLY)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/sc.pc DESTINATION lib/pkgconfig)
 
 # --- generate sc_config.h
 
