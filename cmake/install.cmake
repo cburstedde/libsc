@@ -25,14 +25,21 @@ install(FILES
 
 # --- CPack
 
-set(CPACK_GENERATOR "ZIP")
-set(CPACK_SOURCE_GENERATOR "ZIP")
+set(_fmt TGZ)
+if(WIN32)
+  set(_fmt ZIP)
+endif()
+set(CPACK_GENERATOR ${_fmt})
+set(CPACK_SOURCE_GENERATOR ${_fmt})
 set(CPACK_PACKAGE_VENDOR "Carsten Burstedde")
 set(CPACK_PACKAGE_CONTACT "Carsten Burstedde")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README")
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/package")
 set(CPACK_PACKAGE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+string(TOLOWER ${CMAKE_SYSTEM_NAME} _sys)
+set(CPACK_PACKAGE_FILE_NAME "libsc-${git_version}-${_sys}")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "libsc-${git_version}")
 
 # not .gitignore as its regex syntax is more advanced than CMake
 file(READ ${CMAKE_CURRENT_LIST_DIR}/.cpack_ignore _cpack_ignore)

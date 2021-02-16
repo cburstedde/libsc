@@ -1,10 +1,15 @@
 cmake_minimum_required(VERSION 3.13)
 
 include(cmake/policy.cmake)
+include(cmake/git.cmake)
 
 project(SC
-  LANGUAGES C
-  VERSION 0.0.0)
+LANGUAGES C
+HOMEPAGE_URL https://github.com/cburstedde/libsc
+DESCRIPTION "The 'sc' auxiliary library"
+VERSION ${PROJECT_VERSION})
+
+message(STATUS "${PROJECT_NAME} ${PROJECT_VERSION}")
 
 include(CTest)
 
@@ -91,6 +96,8 @@ add_subdirectory(src)
 if(BUILD_TESTING)
   add_subdirectory(test)
 endif(BUILD_TESTING)
+
+# --- packaging
 
 include(cmake/install.cmake)
 
