@@ -22,7 +22,6 @@ noinst_PROGRAMS =
 sysconf_DATA =
 
 # pkg-config configuration file
-pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = config/sc_autotools.pc
 
 # use this if you want to link in libsc without autotools

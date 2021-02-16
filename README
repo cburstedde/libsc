@@ -25,11 +25,15 @@ The build instructions for `p4est` also apply to standalone builds of `libsc`.
 
 ### Autotools
 
-The `autoconf`/`automake`/`libtool` build chain is fully supported.
+The autotools build chain is fully supported.
 
 In a fresh checkout, you may run `./bootstrap` to create the `configure`
-script.  This is *not* required for unpacked `tar` archives, or after pulling
-fresh code.
+script.  Calling `make` will regenerate the tools configuration as needed.
+Only in rare cases `./bootstrap` will have to be run again.  The script depends
+on existing `autoconf`, `automake`, `libtool` and `pkg-config` tools.
+
+Calling `bootstrap` is *not* required for unpacked `tar` archives, or after
+pulling fresh code.
 
 We recommend running `configure` with a relative path from an empty build
 directory.  Try

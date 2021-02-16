@@ -14,6 +14,7 @@ AC_PREFIX_DEFAULT([$PWD/local])
 AX_PREFIX_CONFIG_H([src/sc_config.h], [SC])
 AM_INIT_AUTOMAKE([parallel-tests subdir-objects])
 AM_SILENT_RULES
+PKG_INSTALLDIR
 SC_VERSION([SC])
 
 echo "o---------------------------------------"
