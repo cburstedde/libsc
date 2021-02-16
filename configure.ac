@@ -136,6 +136,7 @@ echo "o----------------------------------"
 
 # Create output files.
 AC_CONFIG_FILES([Makefile Makefile.sc.pre Doxyfile])
+AC_CONFIG_FILES([config/sc_autotools.pc])
 AC_OUTPUT
 
 # Final notifications.
