@@ -21,6 +21,9 @@ noinst_HEADERS =
 noinst_PROGRAMS =
 sysconf_DATA =
 
+# pkg-config configuration file
+pkgconfig_DATA = config/sc_autotools.pc
+
 # use this if you want to link in libsc without autotools
 sysconf_DATA += Makefile.sc.mk
 CLEANFILES += Makefile.sc.mk
@@ -47,7 +50,7 @@ dist_scini_DATA =
 EXTRA_DIST += \
         bootstrap scindent build-aux/git-version-gen build-aux/git2cl bugs doc
 DISTCLEANFILES += \
-        _configs.sed src/sc_config.h
+        _configs.sed src/sc_config.h config/sc_autotools.pc
 .PHONY: lint ChangeLog
 
 # setup test environment
@@ -102,6 +105,13 @@ dist-hook:
               $(distdir)/.tarball-version`; echo "Please run:" ; \
           echo "     cd @top_srcdir@ && ./bootstrap" ; \
           echo "before make dist") 1>&2 ; rm -r $(distdir) ; exit 1)
+
+install-data-hook:
+	cd $(DESTDIR)$(pkgconfigdir) && \
+              mv -f sc_autotools.pc "libsc-$(VERSION).pc"
+
+uninstall-hook:
+	cd $(DESTDIR)$(pkgconfigdir) && rm -f "libsc-$(VERSION).pc"
 
 clean-local:
 	rm -f ChangeLog

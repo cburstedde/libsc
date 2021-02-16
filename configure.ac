@@ -14,6 +14,7 @@ AC_PREFIX_DEFAULT([$PWD/local])
 AX_PREFIX_CONFIG_H([src/sc_config.h], [SC])
 AM_INIT_AUTOMAKE([parallel-tests subdir-objects])
 AM_SILENT_RULES
+PKG_INSTALLDIR
 SC_VERSION([SC])
 
 echo "o---------------------------------------"
@@ -136,6 +137,7 @@ echo "o----------------------------------"
 
 # Create output files.
 AC_CONFIG_FILES([Makefile Makefile.sc.pre Doxyfile])
+AC_CONFIG_FILES([config/sc_autotools.pc])
 AC_OUTPUT
 
 # Final notifications.
