@@ -18,3 +18,4 @@ config/lt~obsolete.m4
 configure
 src/pre_config.h.in
 src/sc_config_autotools.h.in
+.version

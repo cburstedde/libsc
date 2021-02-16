@@ -53,7 +53,7 @@ To run tests in parallel, run
 
 and to pack a distribution tarball, call `bootstrap` and
 
-    git describe --dirty --tags
+    git describe --abbrev=4 --dirty --tags
     mkdir -p build && cd build && ../configure
     make -j distcheck V=0
 
