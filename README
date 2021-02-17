@@ -45,17 +45,17 @@ for options and switches.  For development with MPI:
     cd empty/build/directory
     ../relative/path/to/configure --enable-mpi --enable-debug \
         CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
-    make -j V=0
+    make -j8 V=0
 
 To run tests in parallel, run
 
-    make -j check V=0
+    make -j2 check V=0
 
 and to pack a distribution tarball, call `bootstrap` and
 
     git describe --abbrev=4 --dirty --tags
     mkdir -p build && cd build && ../configure
-    make -j distcheck V=0
+    make -j3 distcheck V=0
 
 The `V=0` environment variable significantly unclutters console output.
 So far, we have not made `V=0` the default.
