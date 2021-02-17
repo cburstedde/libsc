@@ -48,10 +48,7 @@ scinidir = $(datadir)/ini
 dist_scini_DATA =
 
 # handle toplevel directory
-$(top_srcdir)/.version:
-	echo $(VERSION) > $@-t && mv $@-t $@
-BUILT_SOURCES += $(top_srcdir)/.version
-EXTRA_DIST += $(top_srcdir)/.version \
+EXTRA_DIST += \
         bootstrap scindent build-aux/git-version-gen build-aux/git2cl bugs doc
 DISTCLEANFILES += \
         _configs.sed src/sc_config.h config/sc_autotools.pc
