@@ -6,6 +6,7 @@ ACLOCAL_AMFLAGS = -I config
 
 # initialize empty variables
 AM_CPPFLAGS =
+BUILT_SOURCES =
 CLEANFILES =
 DISTCLEANFILES =
 EXTRA_DIST =
@@ -20,6 +21,9 @@ nodist_include_HEADERS =
 noinst_HEADERS =
 noinst_PROGRAMS =
 sysconf_DATA =
+
+# pkg-config configuration file
+pkgconfig_DATA = config/sc_autotools.pc
 
 # use this if you want to link in libsc without autotools
 sysconf_DATA += Makefile.sc.mk
@@ -48,7 +52,7 @@ EXTRA_DIST += \
         example/CMakeLists.txt test/CMakeLists.txt
 
 DISTCLEANFILES += \
-        _configs.sed src/sc_config.h
+        _configs.sed src/sc_config.h config/sc_autotools.pc
 .PHONY: ChangeLog
 
 # setup test environment
@@ -106,6 +110,13 @@ dist-hook:
               $(distdir)/.tarball-version`; echo "Please run:" ; \
           echo "     cd @top_srcdir@ && ./bootstrap" ; \
           echo "before make dist") 1>&2 ; rm -r $(distdir) ; exit 1)
+
+install-data-hook:
+	cd $(DESTDIR)$(pkgconfigdir) && \
+              mv -f sc_autotools.pc "libsc-$(VERSION).pc"
+
+uninstall-hook:
+	cd $(DESTDIR)$(pkgconfigdir) && rm -f "libsc-$(VERSION).pc"
 
 clean-local:
 	rm -f ChangeLog

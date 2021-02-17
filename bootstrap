@@ -2,13 +2,13 @@
 
 echo "--- This is the bootstrap script for libsc ---"
 echo "It is NOT required to run bootstrap to build from a tar.gz archive"
-echo "Development requires a libtool recent enough to contain LT_INIT" \
-    "(2.2 works)"
+echo "Development requires a libtool recent enough to contain LT_INIT"
 echo "Current directory is $PWD"
 
 LIBTOOLIZE=`which glibtoolize 2>/dev/null`
 if test ! -x "$LIBTOOLIZE" ; then LIBTOOLIZE=`which libtoolize` ; fi
-if test ! -x "$LIBTOOLIZE" ; then echo "bootstrap requires libtoolize" ; exit 1 ; fi
+if test ! -x "$LIBTOOLIZE" ; then echo "bootstrap requires libtoolize" ; \
+   exit 1 ; fi
 
 aclocal -Wall -I config
 autoconf -Wall --force

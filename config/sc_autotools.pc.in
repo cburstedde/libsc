@@ -1,0 +1,12 @@
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libsc
+Description: The SC library supports parallel scientific applications.
+Version: @VERSION@
+
+Cflags: @CPPFLAGS@ @CFLAGS@
+Libs: @LDFLAGS@ @LIBS@

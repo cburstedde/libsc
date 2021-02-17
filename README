@@ -25,11 +25,15 @@ The build instructions for `p4est` also apply to standalone builds of `libsc`.
 
 ### Autotools
 
-The `autoconf`/`automake`/`libtool` build chain is fully supported.
+The autotools build chain is fully supported.
 
 In a fresh checkout, you may run `./bootstrap` to create the `configure`
-script.  This is *not* required for unpacked `tar` archives, or after pulling
-fresh code.
+script.  Calling `make` will regenerate the tools configuration as needed.
+Only in rare cases `./bootstrap` will have to be run again.  The script depends
+on existing `autoconf`, `automake`, `libtool` and `pkg-config` tools.
+
+Calling `bootstrap` is *not* required for unpacked `tar` archives, or after
+pulling fresh code.
 
 We recommend running `configure` with a relative path from an empty build
 directory.  Try
@@ -43,17 +47,16 @@ for options and switches.  For development with MPI:
         CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
     make -j8 V=0
 
-The `V=0` environment variable significantly unclutters console output.
-
 To run tests in parallel, run
 
-    make -j check V=0
+    make -j2 check V=0
 
-and to make a distribution tar archive
+and to pack a distribution tarball, call `bootstrap` and
 
-    git describe --dirty --tags
-    make -j8 distcheck V=0
+    mkdir -p build && cd build && ../configure
+    make -j3 distcheck V=0
 
+The `V=0` environment variable significantly unclutters console output.
 So far, we have not made `V=0` the default.
 
 ### CMake
