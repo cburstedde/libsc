@@ -26,9 +26,9 @@ sysconf_DATA =
 pkgconfig_DATA = config/sc_autotools.pc
 
 # use this if you want to link in libsc without autotools
-sysconf_DATA += Makefile.sc.mk
-CLEANFILES += Makefile.sc.mk
-Makefile.sc.mk : Makefile.sc.pre
+sysconf_DATA += config/Makefile.sc.mk
+CLEANFILES += config/Makefile.sc.mk
+config/Makefile.sc.mk : config/Makefile.sc.pre
 	cat $< | \
         sed -e 's,{\(.*prefix\)},{sc_\1},g' \
             -e 's,^\(.*prefix *=\),sc_\1,g' > $@

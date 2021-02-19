@@ -136,8 +136,8 @@ echo "| TESTS:       $SC_MPIRUN $SC_MPI_TEST_FLAGS"
 echo "o----------------------------------"
 
 # Create output files.
-AC_CONFIG_FILES([Makefile Makefile.sc.pre Doxyfile])
-AC_CONFIG_FILES([config/sc_autotools.pc])
+AC_CONFIG_FILES([Makefile Doxyfile])
+AC_CONFIG_FILES([config/Makefile.sc.pre config/sc_autotools.pc])
 AC_OUTPUT
 
 # Final notifications.
