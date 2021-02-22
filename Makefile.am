@@ -26,9 +26,9 @@ sysconf_DATA =
 pkgconfig_DATA = config/sc_autotools.pc
 
 # use this if you want to link in libsc without autotools
-sysconf_DATA += Makefile.sc.mk
-CLEANFILES += Makefile.sc.mk
-Makefile.sc.mk : Makefile.sc.pre
+sysconf_DATA += config/Makefile.sc.mk
+CLEANFILES += config/Makefile.sc.mk
+config/Makefile.sc.mk : config/Makefile.sc.pre
 	cat $< | \
         sed -e 's,{\(.*prefix\)},{sc_\1},g' \
             -e 's,^\(.*prefix *=\),sc_\1,g' > $@
@@ -103,13 +103,13 @@ ChangeLog:
 
 dist-hook:
 	echo $(VERSION) > $(distdir)/.tarball-version
-	test "x$(VERSION)" = "x`@top_srcdir@/build-aux/git-version-gen\
-              $(distdir)/.tarball-version`" || \
-        ((echo "Stale version;" ; echo $(VERSION); \
-          echo `@top_srcdir@/build-aux/git-version-gen\
-              $(distdir)/.tarball-version`; echo "Please run:" ; \
-          echo "     cd @top_srcdir@ && ./bootstrap" ; \
-          echo "before make dist") 1>&2 ; rm -r $(distdir) ; exit 1)
+	(GITGEN_VERSION=`(cd @top_srcdir@ && ./build-aux/git-version-gen\
+                .tarball-version)` ; \
+	 test "x$(VERSION)" = "x$${GITGEN_VERSION}" || \
+         ((echo "Stale version;"; echo $(VERSION); echo "$${GITGEN_VERSION}"; \
+           echo "Please run:" ; \
+           echo "     (cd @top_srcdir@ && ./bootstrap)" ; \
+           echo "before make dist") 1>&2 ; rm -r $(distdir) ; exit 1))
 
 install-data-hook:
 	cd $(DESTDIR)$(pkgconfigdir) && \
