@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.13...3.20)
 
-include(cmake/policy.cmake)
 include(cmake/git.cmake)
 
 project(SC
