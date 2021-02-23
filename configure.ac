@@ -63,6 +63,7 @@ AC_C_CONST
 AC_C_INLINE
 AC_C_RESTRICT
 AC_CHECK_SIZEOF([int])
+AC_CHECK_SIZEOF([unsigned int])
 AC_CHECK_SIZEOF([long])
 AC_CHECK_SIZEOF([long long])
 AC_CHECK_SIZEOF([unsigned long])

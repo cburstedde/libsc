@@ -154,6 +154,19 @@
 #include <unistd.h>
 #endif
 
+#if SC_SIZEOF_UNSIGNED_INT == 8
+#define SC_UINT64_0 (0U)
+#define SC_UINT64_1 (1U)
+#elif SC_SIZEOF_UNSIGNED_LONG == 8
+#define SC_UINT64_0 (0UL)
+#define SC_UINT64_1 (1UL)
+#elif SC_SIZEOF_UNSIGNED_LONG_LONG == 8
+#define SC_UINT64_0 (0ULL)
+#define SC_UINT64_1 (1ULL)
+#else
+#error "Neither unsigned long nor unsigned long long are 8 bytes long"
+#endif
+
 /** This macro is usable as a no-operation statement. */
 #define SC3_NOOP do { ; } while (0)
 
