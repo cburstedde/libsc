@@ -2,27 +2,23 @@ cmake_minimum_required(VERSION 3.13)
 
 include(cmake/policy.cmake)
 
-project(sc
+project(SC
   LANGUAGES C
   VERSION 0.0.0)
 
 include(CTest)
 
 include(cmake/options.cmake)
+
+# options.cmake before config.cmake to determine user intent
 include(cmake/config.cmake)
+
+# compilers.cmake must be AFTER find_package() calls in config.cmake in general
 include(cmake/compilers.cmake)
 
-if(mpi)
-  find_package(MPI COMPONENTS C REQUIRED)
-endif()
-if(openmp)
-  find_package(OpenMP COMPONENTS C REQUIRED)
-endif()
-find_package(ZLIB)
-find_package(Threads)
-
 # --- iniparser
-add_library(iniparser iniparser/inistring.c iniparser/dictionary.c iniparser/iniparser.c)
+add_library(iniparser
+            iniparser/inistring.c iniparser/dictionary.c iniparser/iniparser.c)
 target_include_directories(iniparser
   PRIVATE src ${PROJECT_BINARY_DIR}/include
   INTERFACE
@@ -32,8 +28,13 @@ if(MPI_FOUND)
   target_link_libraries(iniparser PRIVATE MPI::MPI_C)
 endif()
 
-install(FILES inparser/inistring.h iniparser/dictionary.h iniparser/iniparser.h
+install(FILES iniparser/inistring.h iniparser/dictionary.h iniparser/iniparser.h
   DESTINATION include)
+
+install(TARGETS iniparser
+  EXPORT ${PROJECT_NAME}Targets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib)
 
 # --- libb64
 add_library(libb64 libb64/cencode.c libb64/cdecode.c libb64/b64dec.c libb64/b64enc.c)
@@ -45,6 +46,11 @@ target_include_directories(libb64
 
 install(FILES libb64/libb64.h
   DESTINATION include)
+
+install(TARGETS libb64
+  EXPORT ${PROJECT_NAME}Targets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib)
 
 # --- sc
 add_library(sc)
@@ -75,11 +81,22 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/ ${PROJECT_SOURCE_DIR}/src/sc_builti
   DESTINATION include
   FILES_MATCHING PATTERN "*.h")
 
+install(TARGETS sc
+  EXPORT ${PROJECT_NAME}Targets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib)
+
 add_subdirectory(src)
 
 if(BUILD_TESTING)
-  add_subdirectory(example)
   add_subdirectory(test)
 endif(BUILD_TESTING)
 
 include(cmake/install.cmake)
+
+include(FeatureSummary)
+
+add_feature_info(MPI mpi "MPI features of libsc")
+add_feature_info(OpenMP openmp "OpenMP features of libsc")
+
+feature_summary(WHAT ENABLED_FEATURES DISABLED_FEATURES)

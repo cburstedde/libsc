@@ -21,7 +21,7 @@ libsc_installed_headers = \
         src/sc3_omp.h src/sc3_mpi.h \
         src/sc3_array.h src/sc3_log.h \
         src/sc3_trace.h src/sc3_memstamp.h \
-        src/sc_uint128.h
+        src/sc_uint128.h src/sc_v4l2.h
 libsc_internal_headers =
 libsc_compiled_sources = \
         src/sc.c src/sc_mpi.c src/sc_containers.c src/sc_avl.c \
@@ -37,7 +37,7 @@ libsc_compiled_sources = \
         src/sc3_omp.c src/sc3_mpi.c \
         src/sc3_array.c src/sc3_log.c \
         src/sc3_trace.c src/sc3_memstamp.c \
-        src/sc_uint128.c
+        src/sc_uint128.c src/sc_v4l2.c
 libsc_original_headers = \
         src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h
 

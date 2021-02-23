@@ -6,6 +6,7 @@ ACLOCAL_AMFLAGS = -I config
 
 # initialize empty variables
 AM_CPPFLAGS =
+BUILT_SOURCES =
 CLEANFILES =
 DISTCLEANFILES =
 EXTRA_DIST =
@@ -21,10 +22,13 @@ noinst_HEADERS =
 noinst_PROGRAMS =
 sysconf_DATA =
 
+# pkg-config configuration file
+pkgconfig_DATA = config/sc_autotools.pc
+
 # use this if you want to link in libsc without autotools
-sysconf_DATA += Makefile.sc.mk
-CLEANFILES += Makefile.sc.mk
-Makefile.sc.mk : Makefile.sc.pre
+sysconf_DATA += config/Makefile.sc.mk
+CLEANFILES += config/Makefile.sc.mk
+config/Makefile.sc.mk : config/Makefile.sc.pre
 	cat $< | \
         sed -e 's,{\(.*prefix\)},{sc_\1},g' \
             -e 's,^\(.*prefix *=\),sc_\1,g' > $@
@@ -48,7 +52,7 @@ EXTRA_DIST += \
         example/CMakeLists.txt test/CMakeLists.txt
 
 DISTCLEANFILES += \
-        _configs.sed src/sc_config.h
+        _configs.sed src/sc_config.h config/sc_autotools.pc
 .PHONY: ChangeLog
 
 # setup test environment
@@ -71,6 +75,7 @@ include example/options/Makefile.am
 include example/pthread/Makefile.am
 include example/openmp/Makefile.am
 include example/v3basics/Makefile.am
+include example/v4l2/Makefile.am
 ## include example/warp/Makefile.am
 include example/testing/Makefile.am
 
@@ -99,13 +104,20 @@ ChangeLog:
 
 dist-hook:
 	echo $(VERSION) > $(distdir)/.tarball-version
-	test "x$(VERSION)" = "x`@top_srcdir@/build-aux/git-version-gen\
-              $(distdir)/.tarball-version`" || \
-        ((echo "Stale version;" ; echo $(VERSION); \
-          echo `@top_srcdir@/build-aux/git-version-gen\
-              $(distdir)/.tarball-version`; echo "Please run:" ; \
-          echo "     cd @top_srcdir@ && ./bootstrap" ; \
-          echo "before make dist") 1>&2 ; rm -r $(distdir) ; exit 1)
+	(GITGEN_VERSION=`(cd @top_srcdir@ && ./build-aux/git-version-gen\
+                .tarball-version)` ; \
+	 test "x$(VERSION)" = "x$${GITGEN_VERSION}" || \
+         ((echo "Stale version;"; echo $(VERSION); echo "$${GITGEN_VERSION}"; \
+           echo "Please run:" ; \
+           echo "     (cd @top_srcdir@ && ./bootstrap)" ; \
+           echo "before make dist") 1>&2 ; rm -r $(distdir) ; exit 1))
+
+install-data-hook:
+	cd $(DESTDIR)$(pkgconfigdir) && \
+              mv -f sc_autotools.pc "libsc-$(VERSION).pc"
+
+uninstall-hook:
+	cd $(DESTDIR)$(pkgconfigdir) && rm -f "libsc-$(VERSION).pc"
 
 ## From the GNU automake documentation "What gets Cleaned"
 ## -------------------------------------------------------

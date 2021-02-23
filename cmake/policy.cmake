@@ -3,7 +3,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 list(APPEND CMAKE_CTEST_ARGUMENTS --output-on-failure)
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Debug or Release")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Debug or Release")
 endif()
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
