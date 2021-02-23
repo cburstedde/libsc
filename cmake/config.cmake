@@ -115,13 +115,13 @@ if(ZLIB_FOUND)
   check_symbol_exists(adler32_combine zlib.h SC_HAVE_ZLIB)
 endif()
 
-# check_type_size(int SC_SIZEOF_INT BUILTIN_TYPES_ONLY)
+check_type_size(int SC_SIZEOF_INT BUILTIN_TYPES_ONLY)
+check_type_size("unsigned int" SC_SIZEOF_UNSIGNED_INT BUILTIN_TYPES_ONLY)
 check_type_size(long SC_SIZEOF_LONG BUILTIN_TYPES_ONLY)
-# check_type_size("long long" SC_SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
-# check_type_size("unsigned long" SC_SIZEOF_UNSIGNED_LONG BUILTIN_TYPES_ONLY)
-# check_type_size("unsigned long long" SC_SIZEOF_UNSIGNED_LONG_LONG BUILTIN_TYPES_ONLY)
+check_type_size("long long" SC_SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
+check_type_size("unsigned long" SC_SIZEOF_UNSIGNED_LONG BUILTIN_TYPES_ONLY)
+check_type_size("unsigned long long" SC_SIZEOF_UNSIGNED_LONG_LONG BUILTIN_TYPES_ONLY)
 set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
-
 
 configure_file(src/sc_config_cmake.h.in ${PROJECT_BINARY_DIR}/include/sc_config.h)
 
