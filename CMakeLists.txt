@@ -86,6 +86,7 @@ endif(BUILD_TESTING)
 
 # --- packaging
 
+include(cmake/pkgconf.cmake)
 include(cmake/install.cmake)
 
 include(FeatureSummary)

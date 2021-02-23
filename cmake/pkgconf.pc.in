@@ -6,8 +6,7 @@ includedir="${prefix}/include"
 Name: libsc
 Description: @CMAKE_PROJECT_DESCRIPTION@
 URL: @CMAKE_PROJECT_HOMEPAGE_URL@
-Version: @PROJECT_VERSION@
-Requires: @pc_req_public@
+Version: @git_version@
 Requires.private: @pc_req_private@
 Cflags: -I"${includedir}"
 Libs: -L"${libdir}" -lsc
