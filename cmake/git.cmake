@@ -1,6 +1,6 @@
 # --- extract version from Git
 
-set(PROJECT_VERSION)
+set(PROJECT_VERSION 0.0.0)
 find_program(GIT_EXE NAMES git)
 if(GIT_EXE)
   execute_process(COMMAND ${GIT_EXE} describe --abbrev=4 --match v*

@@ -11,6 +11,9 @@ on:
       - "**.h.in"
       - ".github/workflows/ci_cmake.yml"
   pull_request:
+  release:
+    types: [published]
+
 
 jobs:
 
@@ -53,9 +56,11 @@ jobs:
       working-directory: example/build
 
     - name: Create package
+      if: github.event.action == 'published'
       run: cpack --config build/CPackConfig.cmake
 
     - name: Upload package
+      if: github.event.action == 'published'
       uses: actions/upload-artifact@v1
       with:
         name: binary-archive
@@ -100,9 +105,11 @@ jobs:
       working-directory: example/build
 
     - name: Create package
+      if: github.event.action == 'published'
       run: cpack --config build/CPackConfig.cmake
 
     - name: Upload package
+      if: github.event.action == 'published'
       uses: actions/upload-artifact@v1
       with:
         name: binary-archive
@@ -182,9 +189,11 @@ jobs:
       working-directory: example/build
 
     - name: Create package
+      if: github.event.action == 'published'
       run: cpack --config build/CPackConfig.cmake
 
     - name: Upload package
+      if: github.event.action == 'published'
       uses: actions/upload-artifact@v1
       with:
         name: binary-archive
