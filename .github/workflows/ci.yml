@@ -98,7 +98,8 @@ jobs:
         DIR="tarball" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug --without-blas \
             CFLAGS="-O0 -g -pedantic -Wall -Wextra -Werror -Wno-unused-parameter \
-                    -Wno-builtin-declaration-mismatch -Wno-implicit-fallthrough"
+                    -Wno-builtin-declaration-mismatch -Wno-implicit-fallthrough \
+                    -Wno-unknown-pragmas"
         make -j V=0
         make -j check V=0
         make -j distcheck V=0
