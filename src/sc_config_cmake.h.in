@@ -163,6 +163,25 @@
 #define SC_PACKAGE_VERSION "2.8.1.57-a813"
 #endif
 
+/* Byte sizes of standard types */
+#ifndef SC_SIZEOF_INT
+#define SC_SIZEOF_INT @SC_SIZEOF_INT@
+#endif
+#ifndef SC_SIZEOF_UNSIGNED_INT
+#define SC_SIZEOF_UNSIGNED_INT @SC_SIZEOF_UNSIGNED_INT@
+#endif
+#ifndef SC_SIZEOF_LONG
+#define SC_SIZEOF_LONG @SC_SIZEOF_LONG@
+#endif
+#ifndef SC_SIZEOF_LONG_LONG
+#define SC_SIZEOF_LONG_LONG @SC_SIZEOF_LONG_LONG@
+#endif
+#ifndef SC_SIZEOF_UNSIGNED_LONG
+#define SC_SIZEOF_UNSIGNED_LONG @SC_SIZEOF_UNSIGNED_LONG@
+#endif
+#ifndef SC_SIZEOF_UNSIGNED_LONG_LONG
+#define SC_SIZEOF_UNSIGNED_LONG_LONG @SC_SIZEOF_UNSIGNED_LONG_LONG@
+#endif
 
 /* The size of `void *', as computed by sizeof. */
 #ifndef SC_SIZEOF_VOID_P
