@@ -21,24 +21,12 @@ include(cmake/config.cmake)
 include(cmake/compilers.cmake)
 
 # --- iniparser
-add_library(iniparser
+add_library(iniparser OBJECT
             iniparser/inistring.c iniparser/dictionary.c iniparser/iniparser.c)
-target_include_directories(iniparser
-  PRIVATE src ${PROJECT_BINARY_DIR}/include
-  INTERFACE
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/iniparser>
-  $<INSTALL_INTERFACE:include>)
+target_include_directories(iniparser PRIVATE iniparser src ${PROJECT_BINARY_DIR}/include)
 if(MPI_FOUND)
   target_link_libraries(iniparser PRIVATE MPI::MPI_C)
 endif()
-
-install(FILES iniparser/inistring.h iniparser/dictionary.h iniparser/iniparser.h
-  DESTINATION include)
-
-install(TARGETS iniparser
-  EXPORT ${PROJECT_NAME}Targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
 
 # --- libb64
 add_library(libb64 libb64/cencode.c libb64/cdecode.c libb64/b64dec.c libb64/b64enc.c)
@@ -57,16 +45,16 @@ install(TARGETS libb64
   LIBRARY DESTINATION lib)
 
 # --- sc
-add_library(sc)
-target_compile_features(sc PRIVATE c_std_11)
+add_library(sc $<TARGET_OBJECTS:iniparser>)
+target_compile_features(sc PRIVATE c_std_99)
 target_include_directories(sc
-  PRIVATE src src/sc_builtin ${PROJECT_BINARY_DIR}/include
+  PRIVATE src src/sc_builtin iniparser ${PROJECT_BINARY_DIR}/include
   INTERFACE
   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/sc_builtin>
   $<INSTALL_INTERFACE:include>)
-target_link_libraries(sc PRIVATE iniparser libb64)
+target_link_libraries(sc PRIVATE libb64)
 if(MPI_FOUND)
   target_link_libraries(sc PRIVATE MPI::MPI_C)
 endif()
