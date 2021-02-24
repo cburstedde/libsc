@@ -16,4 +16,9 @@ if(_err EQUAL 0)
     set(_patch "${CMAKE_MATCH_3}")
     set(PROJECT_VERSION ${_major}.${_minor}.${_patch})
   endif()
+  # TODO: remove the letter 'g' before the hash identifier
+  #       change - to . between patch number and rest of version
+  if(git_version MATCHES "^v(.*)")
+    set(VERSION_PKGCONFIG "${CMAKE_MATCH_1}")
+  endif()
 endif()
