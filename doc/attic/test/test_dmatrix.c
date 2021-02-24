@@ -73,7 +73,7 @@ test_dmatrix_check_error_identical (const sc_dmatrix_t * mat_chk,
   SC_ASSERT (totalsize == mat_ref->m * mat_ref->n);
 
   for (i = 0; i < totalsize; ++i) {
-    if (DBL_MIN < fabs (mat_chk_data[i] - mat_ref_data[i])) {
+    if (1.e4 * DBL_EPSILON < fabs (mat_chk_data[i] - mat_ref_data[i])) {
       error_count++;
     }
   }
