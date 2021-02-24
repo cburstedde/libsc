@@ -2,8 +2,6 @@ include(CheckIncludeFile)
 include(CheckSymbolExists)
 include(CheckTypeSize)
 
-message(STATUS "${PROJECT_NAME} CMake ${CMAKE_VERSION}")
-
 # --- keep library finds in here so we don't forget to do them first
 
 if(mpi)

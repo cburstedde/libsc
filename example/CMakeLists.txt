@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.13...3.20)
 project(libscExamples LANGUAGES C)
 
 include(CTest)
@@ -7,19 +7,25 @@ include(CheckIncludeFile)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/Modules)
 
-# --- configure external libraries
-find_package(SC CONFIG)
+option(mpi "use MPI" on)
 
-if(SC_FOUND)
-  include(${SC_DIR}/SCTargets.cmake)
-  add_library(SC::SC ALIAS SC::sc)
-else()
-  find_package(SC REQUIRED)
-endif()
+# --- find external libraries
+if(mpi)
+  find_package(MPI COMPONENTS C REQUIRED)
+  if(NOT MPIEXEC_EXECUTABLE)
+    message(FATAL_ERROR "MPIEXEC not found")
+  endif()
+endif(mpi)
 
-find_package(MPI COMPONENTS C REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Threads)
+
+# --- find our library
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG true)
+
+find_package(SC REQUIRED PATHS ${PROJECT_SOURCE_DIR}/../build)
+
+# --- get system capabilities
 
 check_symbol_exists(sqrt math.h SC_NONEED_M)
 if(NOT SC_NONEED_M)
@@ -48,7 +54,7 @@ if(SC_NEED_M)
   target_link_libraries(sc_${name} PRIVATE m)
 endif()
 
-if(MPIEXEC_EXECUTABLE)
+if(MPI_FOUND)
   add_test(NAME sc:example:${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_${name}>)
 else()
   add_test(NAME sc:example:${name} COMMAND $<TARGET_FILE:sc_${name}>)
