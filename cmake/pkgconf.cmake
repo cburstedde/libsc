@@ -1,5 +1,4 @@
 # --- generate pkg-config .pc
-set(pc_libs_private "-llibb64")
 set(pc_req_private "ompi ompi-c orte zlib")
 
 set(pc_filename libsc-${git_version}.pc)

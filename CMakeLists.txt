@@ -4,8 +4,8 @@ include(cmake/git.cmake)
 
 project(SC
 LANGUAGES C
-HOMEPAGE_URL https://github.com/cburstedde/libsc
-DESCRIPTION "The 'sc' auxiliary library"
+HOMEPAGE_URL https://www.p4est.org/
+DESCRIPTION "The SC library supports parallel scientific applications."
 VERSION ${PROJECT_VERSION})
 
 message(STATUS "${PROJECT_NAME} ${PROJECT_VERSION}")
