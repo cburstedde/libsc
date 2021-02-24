@@ -49,7 +49,7 @@ dist_scini_DATA =
 EXTRA_DIST += \
         bootstrap scindent build-aux/git-version-gen build-aux/git2cl doc \
         cmake CMakeLists.txt src/CMakeLists.txt src/sc_config_cmake.h.in \
-        example/CMakeLists.txt test/CMakeLists.txt
+        example/CMakeLists.txt test/CMakeLists.txt CMakePresets.json
 
 DISTCLEANFILES += \
         _configs.sed src/sc_config.h config/sc_autotools.pc
