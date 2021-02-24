@@ -18,7 +18,7 @@ libsc_installed_headers = \
         src/sc_allgather.h src/sc_reduce.h src/sc_notify.h \
         src/sc3_base.h src/sc3_alloc.h src/sc3_alloc_internal.h \
         src/sc3_error.h src/sc3_refcount.h \
-        src/sc3_omp.h src/sc3_mpi.h \
+        src/sc3_omp.h src/sc3_mpi.h src/sc3_mpienv.h \
         src/sc3_array.h src/sc3_log.h \
         src/sc3_trace.h src/sc3_memstamp.h \
         src/sc_uint128.h src/sc_v4l2.h
@@ -34,7 +34,7 @@ libsc_compiled_sources = \
         src/sc_keyvalue.c src/sc_refcount.c src/sc_shmem.c \
         src/sc_allgather.c src/sc_reduce.c src/sc_notify.c \
         src/sc3_base.c src/sc3_alloc.c src/sc3_error.c src/sc3_refcount.c \
-        src/sc3_omp.c src/sc3_mpi.c \
+        src/sc3_omp.c src/sc3_mpi.c src/sc3_mpienv.c \
         src/sc3_array.c src/sc3_log.c \
         src/sc3_trace.c src/sc3_memstamp.c \
         src/sc_uint128.c src/sc_v4l2.c

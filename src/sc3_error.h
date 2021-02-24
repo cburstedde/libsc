@@ -354,8 +354,10 @@ extern              "C"
  * We only return out of the calling context on fatal error.
  */
 #define SC3L(l,f) do {                                                  \
-  sc3_error_t * _e = sc3_error_leak (l, f, __FILE__, __LINE__, #f);     \
-  if (_e != NULL) { return _e; }} while (0)
+  sc3_error_t *_e = sc3_error_leak (l, f, __FILE__, __LINE__, #f);      \
+  if (_e != NULL) {                                                     \
+    return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
+  }} while (0)
 
 /** Examine a condition \a x and add to the inout leak error \a l if false.
  * The inout pointer \a l must be of type \ref sc3_error_t ** and not NULL.
@@ -364,8 +366,10 @@ extern              "C"
  * We only return out of the calling context on fatal error.
  */
 #define SC3L_DEMAND(l,x) do {                                               \
-  sc3_error_t * _e = sc3_error_leak_demand (l, x, __FILE__, __LINE__, #x);  \
-  if (_e != NULL) { return _e; }} while (0)
+  sc3_error_t *_e = sc3_error_leak_demand (l, x, __FILE__, __LINE__, #x);   \
+  if (_e != NULL) {                                                         \
+    return sc3_error_new_stack (&_e, __FILE__, __LINE__, #x);               \
+  }} while (0)
 
 /** Macro for error checking without hope for clean recovery.
  * If an error is encountered in calling \b f, we print its message to stderr
@@ -698,7 +702,7 @@ sc3_error_t        *sc3_error_new_bug (const char *filename,
  * This function expects a setup error as stack, which may in turn have stack.
  * It should generally be used when the error indicates a buggy program.
  * This function is intended for use in macros when no allocator is available.
- * \param [in] pstack   We take owership of the stack, pointer is NULLed.
+ * \param [in] pstack   We take ownership of the stack, pointer is NULLed.
  * \param [in] filename The filename is copied into the error object.
  *                      Pointer not NULL, string null-terminated.
  * \param [in] line     Line number set in the error.
@@ -716,7 +720,7 @@ sc3_error_t        *sc3_error_new_stack (sc3_error_t ** pstack,
  * This function expects a setup error as stack, which may in turn have stack.
  * Function may be used when multiple errors of the same kind accumulate.
  * This function is intended for use in macros when no allocator is available.
- * \param [in] pstack   We take owership of the stack, pointer is NULLed.
+ * \param [in] pstack   We take ownership of the stack, pointer is NULLed.
  *                      The error kind of *pstack is used for the result.
  * \param [in] filename The filename is copied into the error object.
  *                      Pointer not NULL, string null-terminated.

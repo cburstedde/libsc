@@ -40,7 +40,7 @@
  * size of each element.
  *
  * In the setup phase, we set the size of the array and optionally
- * an inital count, an initzero property, and some more.
+ * an initial count, an initzero property, and some more.
  * The caller may also decide during setup if the array is resizable.
  * After setup, the array may be resized while it is resizable.
  * Resizability can be terminated by calling \ref sc3_array_freeze

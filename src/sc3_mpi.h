@@ -75,6 +75,19 @@
                                __FILE__, __LINE__, _errmsg);            \
   }} while (0)
 
+/** Return an MPI usage error.
+ *
+ * If a wrapped MPI function is called inappropriately, use this to return.
+ * For example, if MPI shared windows are not available and the user requests
+ * a non-trivial one (with communicator size greater one), we invoke this macro.
+ */
+#define SC3E_MPI_USAGE(s) do {                                          \
+  char _errmsg[SC3_BUFSIZE];                                            \
+  sc3_snprintf (_errmsg, SC3_BUFSIZE, "MPI usage: %s", s);              \
+  return sc3_error_new_kind (SC3_ERROR_NETWORK,                         \
+                             __FILE__, __LINE__, _errmsg);              \
+} while (0)
+
 #ifdef __cplusplus
 extern              "C"
 {
@@ -135,7 +148,7 @@ double              sc3_MPI_Wtime (void);
 
 /** Wrap MPI_Comm_set_errhandler.
  * \param [in] comm     Valid MPI communicator.
- * \param [in] errh     Valid MPI errror handler object.
+ * \param [in] errh     Valid MPI error handler object.
  *                      May use \ref SC3_MPI_ERRORS_RETURN.
  * \return          NULL on success, error object otherwise.
  */
@@ -224,11 +237,24 @@ sc3_error_t        *sc3_MPI_Info_set (sc3_MPI_Info_t info,
  */
 sc3_error_t        *sc3_MPI_Info_free (sc3_MPI_Info_t * info);
 
+/** Return whether an MPI window is valid.
+ * We wrap the MPI window into a dedicated sc3 wrapper structure.
+ * This wrapper object must not be mixed with the MPI library's window.
+ * We do this to make sure that we use a fast implementation for comm size 1.
+ * \param [in] win          A pointer that is NULL or an \ref sc3_MPI_Win_t.
+ * \param [in,out] reason   Pointer, if not NULL, filled with information.
+ * \return                  True is valid, false otherwise.
+ */
+int                 sc3_MPI_Win_is_valid (sc3_MPI_Win_t win, char *reason);
+
 /** Wrap MPI_Win_allocate_shared.
  * \param [in] size, disp_unit, info    See original function.
  * \param [in] comm     Valid MPI communicator.
+ *                      If `configure` does not define `SC_ENABLE_MPICOMMSHARED`,
+ *                      or if `configure` finds that MPI shared windows work but
+ *                      the size of \a comm is 1, we use a fast replacement.
  * \param [out] baseptr Start of window memory.
- * \param [out] win     New valid MPI window.
+ * \param [out] win     New valid MPI window wrapper structure.
  * \return          NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_MPI_Win_allocate_shared
@@ -236,8 +262,9 @@ sc3_error_t        *sc3_MPI_Win_allocate_shared
    sc3_MPI_Comm_t comm, void *baseptr, sc3_MPI_Win_t * win);
 
 /** Wrap MPI_Win_shared_query.
- * \param [in] win      New valid MPI window.
- * \param [in] rank     Without --enable-mpi, must match the rank of
+ * \param [in] win      Valid MPI window wrapper.
+ * \param [in] rank     Without --enable-mpi, or if `configure` does not define
+ *                      `SC_ENABLE_MPICOMMSHARED`, must match the rank of
  *                      the communicator used for creating the window.
  * \param [out] size    Size of this rank's window allocation.
  * \param [out] disp_unit   The unit provided on window creation.
@@ -249,33 +276,40 @@ sc3_error_t        *sc3_MPI_Win_shared_query
    void *baseptr);
 
 /** Wrap MPI_Win_lock.
- * Without --enable-mpi, we verify that lock and unlock have correct sequence.
+ * When using the fast replacement of the MPI window functions, we verify
+ * that lock and unlock alternate and only unlocked windows are freed.
  * \param [in] lock_type, assert    Without --enable-mpi, must be one of
  *                                  the enumeration values defined above.
- * \param [in] rank     Rank in window to lock.
- * \param [in] win      MPI window to unlock.
+ * \param [in] rank     Without --enable-mpi, or if `configure` does not
+ *                      define `SC_ENABLE_MPICOMMSHARED`, must match the rank of
+ *                      the communicator used for creating the window.
+ * \param [in,out] win  Valid unlocked MPI window wrapper to lock.
  * \return          NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_MPI_Win_lock (int lock_type, int rank,
                                       int assert, sc3_MPI_Win_t win);
 
 /** Wrap MPI_Win_unlock.
- * Without --enable-mpi, we verify that lock and unlock have correct sequence.
- * \param [in] rank     Rank in window to lock.
- * \param [in] win      MPI window to unlock.
+ * When using the fast replacement of the MPI window functions, we verify
+ * that lock and unlock alternate and only unlocked windows are freed.
+ * \param [in] rank     Without --enable-mpi, or if `configure` does not
+ *                      define SC_ENABLE_MPICOMMSHARED, must match the rank of
+ *                      the communicator used for creating the window.
+ * \param [in,out] win  Valid locked MPI window wrapper to unlock.
  * \return          NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win);
 
 /** Wrap MPI_Win_sync.
- * \param [in] win      Valid MPI window.
+ * \param [in] win      Valid MPI window wrapper.
  * \return          NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_MPI_Win_sync (sc3_MPI_Win_t win);
 
 /** Wrap MPI_Win_free.
- * \param [in] win      Without --enable-mpi, we verify that this MPI window
- *                      is valid and unlocked.
+ * When using the fast replacement of the MPI window functions, we verify
+ * that lock and unlock alternate and only unlocked windows are freed.
+ * \param [in] win      Valid and unlocked MPI window wrapper.
  * \return          NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_MPI_Win_free (sc3_MPI_Win_t * win);

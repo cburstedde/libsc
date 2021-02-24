@@ -22,5 +22,6 @@ fi
 
 exec "$CSP" $CSO    \
   src/sc*{c,h}      \
+  src/sc3*{c,h}     \
   test/*.c          \
   example/**/*.c

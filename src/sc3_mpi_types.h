@@ -191,15 +191,26 @@ sc3_MPI_Comm_type_t;
 
 #endif /* SC_ENABLE_MPICOMMSHARED */
 
+/** We wrap the MPI 3 window object.
+ * With MPI 3 windows available, the functionality is unchanged.
+ * Without MPI 3 available, it is primitive but allows basic use.
+ *
+ * When created with a communicator size of one, or when `configure` does not
+ * define SC_ENABLE_MPIWINSHARED, we use the wrapper and do not go through MPI.
+ * When shared windows are not supported and the communicator has size > 1,
+ * the wrapper cannot query or lock and unlock the window of remote ranks.
+ * Any such attempt will result in a fatal error returned.
+ */
+typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
+
+/** Invalid MPI 3 window object. */
+#define SC3_MPI_WIN_NULL ((sc3_MPI_Win_t) NULL)
+
 #ifndef SC_ENABLE_MPIWINSHARED
 /* It is possible that MPI exists but the shared windows do not. */
 
 /** We wrap the MPI address integer type. */
 typedef long        sc3_MPI_Aint_t;
-
-/** We wrap the MPI 3 window object.
- * Without MPI 3 available, it is primitive but allows basic use. */
-typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
 
 /** Wrap MPI 3 window lock modes. */
 typedef enum sc3_MPI_Win_mode
@@ -210,20 +221,14 @@ typedef enum sc3_MPI_Win_mode
 }
 sc3_MPI_Win_mode_t;
 
-/** Invalid MPI 3 window object. */
-#define SC3_MPI_WIN_NULL ((sc3_MPI_Win_t) NULL)
-
 #else
 /* We know that MPI is generally available. */
 
 typedef MPI_Aint    sc3_MPI_Aint_t;
-typedef MPI_Win     sc3_MPI_Win_t;
 
 #define SC3_MPI_LOCK_SHARED MPI_LOCK_SHARED
 #define SC3_MPI_LOCK_EXCLUSIVE MPI_LOCK_EXCLUSIVE
 #define SC3_MPI_MODE_NOCHECK MPI_MODE_NOCHECK
-
-#define SC3_MPI_WIN_NULL MPI_WIN_NULL
 
 #endif /* SC_ENABLE_MPIWINSHARED */
 

@@ -657,14 +657,19 @@ sc3_error_t        *
 sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
                 const char *filename, int line, const char *errmsg)
 {
-
   SC3A_CHECK (leak != NULL);
   SC3A_IS (sc3_error_is_null_or_leak, *leak);
 
   if (e != NULL) {
     char                flatmsg[SC3_BUFSIZE];
 
-    SC3E_DEMIS (!sc3_error_is_fatal, e);
+    /* This function is not supposed to be passed a fatal error \b e.
+       If this happens, we call it a bug and return it for stacking. */
+    if (sc3_error_is_fatal (e, NULL)) {
+      return e;
+    }
+
+    /* There should be no fatal errors here, but if so, return them. */
     SC3E (sc3_error_flatten (&e, errmsg, flatmsg));
     SC3E (sc3_error_accum_leak (leak, filename, line, flatmsg));
   }
@@ -679,6 +684,7 @@ sc3_error_leak_demand (sc3_error_t ** leak, int x,
   SC3A_IS (sc3_error_is_null_or_leak, *leak);
 
   if (!x) {
+    /* There should be no fatal errors here, but if so, return them. */
     SC3E (sc3_error_accum_leak (leak, filename, line, errmsg));
   }
   return NULL;
