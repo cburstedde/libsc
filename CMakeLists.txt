@@ -47,6 +47,7 @@ install(TARGETS libb64
 # --- sc
 add_library(sc $<TARGET_OBJECTS:iniparser>)
 target_compile_features(sc PRIVATE c_std_99)
+set_target_properties(sc PROPERTIES EXPORT_NAME SC)
 target_include_directories(sc
   PRIVATE src src/sc_builtin iniparser ${PROJECT_BINARY_DIR}/include
   INTERFACE

@@ -9,25 +9,23 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/Modules)
 
 option(mpi "use MPI" on)
 
-# --- configure external libraries
-find_package(SC CONFIG)
-
-if(SC_FOUND)
-  include(${SC_DIR}/SCTargets.cmake)
-  add_library(SC::SC ALIAS SC::sc)
-else()
-  find_package(SC REQUIRED)
-endif()
-
+# --- find external libraries
 if(mpi)
-find_package(MPI COMPONENTS C REQUIRED)
-if(NOT MPIEXEC_EXECUTABLE)
-  message(FATAL_ERROR "MPIEXEC not found")
-endif()
+  find_package(MPI COMPONENTS C REQUIRED)
+  if(NOT MPIEXEC_EXECUTABLE)
+    message(FATAL_ERROR "MPIEXEC not found")
+  endif()
 endif(mpi)
 
 find_package(ZLIB REQUIRED)
 find_package(Threads)
+
+# --- find our library
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG true)
+
+find_package(SC REQUIRED PATHS ${PROJECT_SOURCE_DIR}/../build)
+
+# --- get system capabilities
 
 check_symbol_exists(sqrt math.h SC_NONEED_M)
 if(NOT SC_NONEED_M)
