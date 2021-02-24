@@ -15,5 +15,5 @@ config/ltoptions.m4
 config/ltsugar.m4
 config/ltversion.m4
 config/lt~obsolete.m4
+config/sc_config_autotools.h.in
 configure
-src/sc_config_autotools.h.in
