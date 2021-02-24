@@ -29,33 +29,20 @@ if(MPI_FOUND)
 endif()
 
 # --- libb64
-add_library(libb64 libb64/cencode.c libb64/cdecode.c libb64/b64dec.c libb64/b64enc.c)
-target_include_directories(libb64
-  PRIVATE libb64
-  INTERFACE
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/libb64>
-  $<INSTALL_INTERFACE:include>)
-
-install(FILES libb64/libb64.h
-  DESTINATION include)
-
-install(TARGETS libb64
-  EXPORT ${PROJECT_NAME}Targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
+add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c libb64/b64dec.c libb64/b64enc.c)
+target_include_directories(libb64 PRIVATE libb64)
 
 # --- sc
-add_library(sc $<TARGET_OBJECTS:iniparser>)
+add_library(sc $<TARGET_OBJECTS:iniparser> $<TARGET_OBJECTS:libb64>)
 target_compile_features(sc PRIVATE c_std_99)
 set_target_properties(sc PROPERTIES EXPORT_NAME SC)
 target_include_directories(sc
-  PRIVATE src src/sc_builtin iniparser ${PROJECT_BINARY_DIR}/include
+  PRIVATE src src/sc_builtin ${PROJECT_BINARY_DIR}/include iniparser libb64
   INTERFACE
   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/sc_builtin>
   $<INSTALL_INTERFACE:include>)
-target_link_libraries(sc PRIVATE libb64)
 if(MPI_FOUND)
   target_link_libraries(sc PRIVATE MPI::MPI_C)
 endif()
