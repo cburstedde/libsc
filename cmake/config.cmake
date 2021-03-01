@@ -121,7 +121,7 @@ check_type_size("unsigned long" SC_SIZEOF_UNSIGNED_LONG BUILTIN_TYPES_ONLY)
 check_type_size("unsigned long long" SC_SIZEOF_UNSIGNED_LONG_LONG BUILTIN_TYPES_ONLY)
 set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
-configure_file(src/sc_config_cmake.h.in ${PROJECT_BINARY_DIR}/include/sc_config.h)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/sc_config.h.in ${PROJECT_BINARY_DIR}/include/sc_config.h)
 
 # --- sanity check of MPI sc_config.h
 

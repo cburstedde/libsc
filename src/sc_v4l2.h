@@ -44,7 +44,7 @@ sc_v4l2_device_t   *sc_v4l2_device_open (const char *devname);
 
 /** Close a video device.
  * \param [in,out] vd   Close this device and deallocate associated resources.
- * \return              0 on sucess, -1 otherwise.
+ * \return              0 on success, -1 otherwise.
  */
 int                 sc_v4l2_device_close (sc_v4l2_device_t * vd);
 
