@@ -131,7 +131,8 @@ else
   fi
   $1_$3_AMFLAGS="-I \$(top_srcdir)/$$1_$3_SOURCE/config"
   $1_$3_MK_INCLUDE="include \${$2_sysconfdir}/Makefile.$4.mk"
-  $1_$3_CPPFLAGS="-I$$1_$3_SOURCE/src -I\$(top_srcdir)/$$1_$3_SOURCE/src"
+  $1_$3_CPPFLAGS="-I$$1_$3_SOURCE/config -I$$1_$3_SOURCE/src \
+                  -I\$(top_srcdir)/$$1_$3_SOURCE/src"
   $1_$3_LDADD="$$1_$3_SOURCE/src/lib$4.la"
 fi
 

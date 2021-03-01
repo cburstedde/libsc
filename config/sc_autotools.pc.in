@@ -14,4 +14,4 @@ Version: @VERSION@
 
 Cflags: -I@includedir@
 Libs: -L@libdir@ -lsc
-Libs.private: @LIBS@
+Libs.private: @LDFLAGS@ @LIBS@

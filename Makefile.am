@@ -52,7 +52,7 @@ EXTRA_DIST += \
         example/CMakeLists.txt test/CMakeLists.txt CMakePresets.json
 
 DISTCLEANFILES += \
-        _configs.sed src/sc_config.h config/sc_autotools.pc
+        _configs.sed config/sc_config.h config/sc_autotools.pc
 .PHONY: ChangeLog
 
 # setup test environment
