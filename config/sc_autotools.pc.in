@@ -5,11 +5,13 @@ libdir=@libdir@
 includedir=@includedir@
 
 libsc_CC=@CC@
+libsc_CFLAGS=@CPPFLAGS@ @CFLAGS@
 
 Name: libsc
 Description: The SC library supports parallel scientific applications.
-Version: @VERSION@
 URL: https://www.p4est.org/
+Version: @VERSION@
 
-Cflags: @CPPFLAGS@ @CFLAGS@
-Libs: @LDFLAGS@ @LIBS@
+Cflags: -I@includedir@
+Libs: -L@libdir@ -lsc
+Libs.private: @LDFLAGS@ @LIBS@
