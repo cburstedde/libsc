@@ -343,6 +343,8 @@ omp_work (sc3_allocator_t * talloc)
 static sc3_error_t *
 omp_info (sc3_allocator_t * origa)
 {
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+
   int                 tmax = sc3_omp_max_threads ();
   int                 minid, maxid, tcount;
   sc3_omp_esync_t     esync, *s = &esync;
