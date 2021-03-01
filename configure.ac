@@ -6,12 +6,12 @@ AC_INIT([libsc],
         [m4_esyscmd([build-aux/git-version-gen .tarball-version])],
         [p4est@ins.uni-bonn.de])
 AC_PREREQ(2.61)
-AC_CONFIG_HEADERS([src/sc_config_autotools.h])
+AC_CONFIG_HEADERS([config/sc_config_autotools.h])
 AC_CONFIG_SRCDIR([src/sc.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([config])
 AC_PREFIX_DEFAULT([$PWD/local])
-AX_PREFIX_CONFIG_H([src/sc_config.h], [SC])
+AX_PREFIX_CONFIG_H([config/sc_config.h], [SC])
 AM_INIT_AUTOMAKE([parallel-tests subdir-objects])
 AM_SILENT_RULES
 PKG_INSTALLDIR
