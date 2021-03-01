@@ -99,13 +99,8 @@ pack_rgb565 (unsigned char r, unsigned char g, unsigned char b,
     return 0x3F << 5;
   }
   else {
-    r >>= 3;
-    b >>= 3;
-    g >>= 2;
-    if (g == 0x3F && r != 0 && b != 0) {
-      g = 0x3E;
-    }
-    return (r << 11) | (g << 5) | b;
+    uint16_t p = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+    return p == 0x3F << 5 ? 0x3E << 5 : p;
   }
 }
 
