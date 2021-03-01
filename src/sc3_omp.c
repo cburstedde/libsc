@@ -138,7 +138,9 @@ sc3_omp_esync_in_critical (sc3_omp_esync_t * s, sc3_error_t ** e)
 void
 sc3_omp_esync (sc3_omp_esync_t * s, sc3_error_t ** e)
 {
+#ifndef SC_ENABLE_OPENMP
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#endif
 #pragma omp critical (sc3_omp_esync)
   sc3_omp_esync_in_critical (s, e);
 }
