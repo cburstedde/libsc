@@ -10,7 +10,7 @@ This is part of the libb64 project, and has been placed in the public domain.
 For details, see http://sourceforge.net/projects/libb64
 */
 
-#include <libb64.h>
+#include "libb64.h"
 
 static inline char
 base64_decode_value (char value_in)
@@ -49,6 +49,9 @@ base64_decode_block (const char *code_in, size_t length_in,
   *plainchar = state_in->plainchar;
 
   switch (state_in->step) {
+
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+
     while (1) {
   case step_a:
       do {

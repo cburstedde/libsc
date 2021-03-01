@@ -40,6 +40,8 @@ if test "x$$1_ENABLE_OPENMP" != xno ; then
 [[
 #include <omp.h>
 ]],[[
+  omp_lock_t     wlock;
+  omp_set_lock (&wlock);
   omp_set_num_threads (2);
   #pragma omp parallel
   {

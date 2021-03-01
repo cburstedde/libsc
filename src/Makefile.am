@@ -4,7 +4,7 @@
 # included non-recursively from toplevel directory
 
 # append to these variables in subdirectories as necessary
-libsc_generated_headers = src/sc_config.h
+libsc_generated_headers = config/sc_config.h
 libsc_installed_headers = \
         src/sc.h src/sc_mpi.h src/sc_containers.h src/sc_avl.h \
         src/sc_string.h src/sc_unique_counter.h src/sc_private.h \
@@ -42,7 +42,7 @@ src_libsc_la_SOURCES = \
         $(libsc_internal_headers) \
         $(libsc_compiled_sources)
 src_libsc_la_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
-src_libsc_la_LDFLAGS = -release $(VERSION)
+## src_libsc_la_LDFLAGS = -release $(VERSION)
 LDADD += @top_builddir@/src/libsc.la
 
 nodist_include_HEADERS += $(libsc_generated_headers)
