@@ -11,7 +11,8 @@ VERSION ${PROJECT_VERSION})
 include(CTest)
 
 include(cmake/options.cmake)
-message(STATUS "${PROJECT_NAME} ${PROJECT_VERSION}  install prefix: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "${PROJECT_NAME} ${PROJECT_VERSION} "
+               "install prefix: ${CMAKE_INSTALL_PREFIX}")
 # options.cmake before config.cmake to determine user intent
 include(cmake/config.cmake)
 

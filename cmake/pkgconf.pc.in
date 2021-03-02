@@ -9,8 +9,8 @@ libsc_CFLAGS=@SC_CPPFLAGS@ @SC_CFLAGS@
 
 Name: libsc
 Description: @CMAKE_PROJECT_DESCRIPTION@
+Version: @git_version@
 URL: @CMAKE_PROJECT_HOMEPAGE_URL@
-Version: @VERSION_PKGCONFIG@
 
 Requires.private: @pc_req_private@
 Cflags: -I${includedir}
