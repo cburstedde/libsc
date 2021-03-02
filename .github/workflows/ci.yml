@@ -1,17 +1,18 @@
-name: Continuous integration
+name: CI for Autotools
 
 on: [push, pull_request]
 
 jobs:
 
-  linux:
+  linux-multi:
     runs-on: ubuntu-latest
-    name: Test build on Linux
+    name: Autotools build on Linux
     steps:
     - name: Install system dependencies
       run: |
         sudo apt-get update -yq
-        sudo apt-get install -yq --no-install-recommends zlib1g-dev libmpich-dev mpich
+        sudo apt-get install -yq --no-install-recommends \
+            zlib1g-dev libmpich-dev mpich
     - name: Checkout source code
       uses: actions/checkout@v2
     - name: Run bootstrap script
@@ -71,14 +72,15 @@ jobs:
         name: test_suite_log
         path: ./**/test-suite.log
 
-  tarball:
+  linux-tarball:
     runs-on: ubuntu-latest
     name: Pack tarball on Linux
     steps:
     - name: Install system dependencies
       run: |
         sudo apt-get update -yq
-        sudo apt-get install -yq --no-install-recommends zlib1g-dev libmpich-dev mpich
+        sudo apt-get install -yq --no-install-recommends \
+            zlib1g-dev libmpich-dev mpich
     - name: Checkout source code
       uses: actions/checkout@v2
       with:
@@ -95,8 +97,9 @@ jobs:
       run: |
         DIR="tarball" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug --without-blas \
-            CFLAGS="-O0 -g -pedantic -Wall -Wextra -Werror -Wno-unused-parameter \
-                    -Wno-builtin-declaration-mismatch -Wno-implicit-fallthrough"
+            CFLAGS="-O0 -g -pedantic -Wall -Wextra -Werror \
+                -Wno-unused-parameter -Wno-builtin-declaration-mismatch \
+                -Wno-implicit-fallthrough"
         make -j V=0
         make -j check V=0
         make -j distcheck V=0
