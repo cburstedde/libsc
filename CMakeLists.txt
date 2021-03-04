@@ -28,7 +28,8 @@ if(MPI_FOUND)
 endif()
 
 # --- libb64
-add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c libb64/b64dec.c libb64/b64enc.c)
+add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c
+                          libb64/b64dec.c libb64/b64enc.c)
 target_include_directories(libb64 PRIVATE libb64)
 
 # --- sc
