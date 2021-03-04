@@ -37,6 +37,7 @@ libsc_original_headers = \
 # this variable is used for headers that are not publicly installed
 LIBSC_CPPFLAGS =
 
+justlibs-local: src/libsc.la
 lib_LTLIBRARIES += src/libsc.la
 src_libsc_la_SOURCES = \
         $(libsc_internal_headers) \
