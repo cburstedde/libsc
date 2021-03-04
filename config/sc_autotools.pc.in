@@ -9,8 +9,8 @@ libsc_CFLAGS=@CPPFLAGS@ @CFLAGS@
 
 Name: libsc
 Description: The SC library supports parallel scientific applications.
-URL: https://www.p4est.org/
 Version: @VERSION@
+URL: https://www.p4est.org/
 
 Cflags: -I@includedir@
 Libs: -L@libdir@ -lsc
