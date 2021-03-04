@@ -209,6 +209,5 @@
 #define SC_VERSION_POINT 1.57-a813
 #endif
 
-
 /* once: _SRC_SC_CONFIG_H */
 #endif

@@ -11,7 +11,8 @@ VERSION ${PROJECT_VERSION})
 include(CTest)
 
 include(cmake/options.cmake)
-message(STATUS "${PROJECT_NAME} ${PROJECT_VERSION}  install prefix: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "libsc ${PROJECT_VERSION} "
+               "install prefix: ${CMAKE_INSTALL_PREFIX}")
 # options.cmake before config.cmake to determine user intent
 include(cmake/config.cmake)
 
@@ -27,7 +28,8 @@ if(MPI_FOUND)
 endif()
 
 # --- libb64
-add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c libb64/b64dec.c libb64/b64enc.c)
+add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c
+                          libb64/b64dec.c libb64/b64enc.c)
 target_include_directories(libb64 PRIVATE libb64)
 
 # --- sc
