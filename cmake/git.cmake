@@ -12,6 +12,12 @@ if(GIT_VERSION_GEN)
 endif()
 if(_err EQUAL 0)
   if(git_version MATCHES
+                 "^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.].*")
+    set(_major "${CMAKE_MATCH_1}")
+    set(_minor "${CMAKE_MATCH_2}")
+    set(_patch "${CMAKE_MATCH_3}")
+    set(PROJECT_VERSION ${_major}.${_minor}.${_patch}.999)
+  elseif(git_version MATCHES
                  "^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)")
     set(_major "${CMAKE_MATCH_1}")
     set(_minor "${CMAKE_MATCH_2}")
