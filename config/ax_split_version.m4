@@ -31,8 +31,13 @@ AC_DEFUN([AX_SPLIT_VERSION],[
     AC_REQUIRE([AC_PROG_SED])
     AX_MAJOR_VERSION=`echo "$VERSION" | $SED 's/\([[^.]][[^.]]*\).*/\1/'`
     AX_MINOR_VERSION=`echo "$VERSION" | $SED 's/[[^.]][[^.]]*.\([[^.]][[^.]]*\).*/\1/'`
+    if test "x$AX_MINOR_VERSION" = "x$VERSION" || \
+       test "x$AX_MINOR_VERSION" = "x" ; then
+        AX_MINOR_VERSION=0
+    fi
     AX_POINT_VERSION=`echo "$VERSION" | $SED 's/[[^.]][[^.]]*.[[^.]][[^.]]*.\(.*\)/\1/'`
-    if test "x$AX_POINT_VERSION" = "x$VERSION" ; then
+    if test "x$AX_POINT_VERSION" = "x$VERSION" || \
+       test "x$AX_POINT_VERSION" = "x" ; then
         AX_POINT_VERSION=0
     fi
     AC_MSG_CHECKING([Major version])
