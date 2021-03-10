@@ -84,15 +84,11 @@ echo "o---------------------------------------"
 echo "| Checking functions"
 echo "o---------------------------------------"
 
-AC_CHECK_FUNCS([backtrace backtrace_symbols])
-AC_CHECK_FUNCS([strtol strtoll])
-AC_CHECK_FUNCS([fsync])
-AC_CHECK_FUNCS([qsort_r])
-
 echo "o---------------------------------------"
 echo "| Checking libraries"
 echo "o---------------------------------------"
 
+SC_CHECK_LIBRARIES_PRIVATE
 SC_CHECK_LIBRARIES([SC])
 
 # Print summary.

@@ -272,6 +272,19 @@ AM_CONDITIONAL([$1_WITH_LAPACK], [test "x$sc_lapack_ok" = xyes])
 LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $LAPACK_FLIBS $BLAS_FLIBS"
 ])
 
+dnl SC_CHECK_LIBRARIES_PRIVATE
+dnl This macro bundles the checks for headers, libraries and link tests
+dnl that are required internally to libsc.  It should not be called
+dnl from other packages.  Adds appropriate options to LIBS.
+dnl
+AC_DEFUN([SC_CHECK_LIBRARIES_PRIVATE],
+[
+AC_CHECK_FUNCS([strtol strtoll])
+AC_CHECK_FUNCS([backtrace backtrace_symbols])
+AC_CHECK_FUNCS([qsort_r])
+AC_CHECK_FUNCS([fsync])
+])
+
 dnl SC_CHECK_LIBRARIES(PREFIX)
 dnl This macro bundles the checks for all libraries and link tests
 dnl that are required by libsc.  It can be used by other packages that
