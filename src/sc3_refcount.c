@@ -33,7 +33,7 @@ int
 sc3_refcount_is_valid (const sc3_refcount_t * r, char *reason)
 {
   SC3E_TEST (r != NULL, reason);
-  SC3E_TEST (r->magic == SC3_REFCOUNT_MAGIC, reason);
+  SC3E_TEST (r->magic == (long) SC3_REFCOUNT_MAGIC, reason);
   SC3E_TEST (r->rc >= 1, reason);
   SC3E_YES (reason);
 }
