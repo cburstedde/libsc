@@ -55,7 +55,7 @@
 #include <sc3_error.h>
 
 /** Arbitrarily chosen number to catch uninitialized objects. */
-#define SC3_REFCOUNT_MAGIC 0x6CA9EFC0
+#define SC3_REFCOUNT_MAGIC 0x6CA9EFC0L
 
 #ifdef __cplusplus
 extern              "C"
