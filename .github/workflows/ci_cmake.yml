@@ -46,7 +46,7 @@ jobs:
       working-directory: build
 
     - name: CMake configure examples
-      run: cmake -B example/build -S example -DSC_ROOT=~/libsc
+      run: cmake -B example/build -S example -Dmpi=yes -Dopenmp=yes -DSC_ROOT=~/libsc
 
     - name: CMake build examples
       run: cmake --build example/build
@@ -95,7 +95,7 @@ jobs:
       working-directory: build
 
     - name: CMake configure examples
-      run: cmake -B example/build -S example -DSC_ROOT=~/libsc
+      run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=~/libsc
 
     - name: CMake build examples
       run: cmake --build example/build
@@ -175,11 +175,11 @@ jobs:
 
     - name: CMake configure examples with MPI
       if: steps.check_files.outputs.files_exists == 'true'
-      run: cmake -B example/build -S example -DSC_ROOT=~/libsc
+      run: cmake -B example/build -S example -Dmpi=yes -Dopenmp=yes -DSC_ROOT=~/libsc
 
     - name: CMake configure examples without MPI
       if: steps.check_files.outputs.files_exists == 'false'
-      run: cmake -B example/build -S example -Dmpi=no -DSC_ROOT=~/libsc
+      run: cmake -B example/build -S example -Dopenmp=yes -DSC_ROOT=~/libsc
 
     - name: CMake build examples
       run: cmake --build example/build
