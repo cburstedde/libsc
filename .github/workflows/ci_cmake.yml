@@ -157,11 +157,11 @@ jobs:
 
     - name: CMake configure with MPI
       if: steps.check_files.outputs.files_exists == 'true'
-      run: cmake --preset=ninja -DCMAKE_INSTALL_PREFIX=~/libsc
+      run: cmake --preset=ninja -Dmpi=yes -DCMAKE_INSTALL_PREFIX=~/libsc
 
     - name: CMake configure without MPI
       if: steps.check_files.outputs.files_exists == 'false'
-      run: cmake --preset=ninja -Dmpi=no -DCMAKE_INSTALL_PREFIX=~/libsc
+      run: cmake --preset=ninja -DCMAKE_INSTALL_PREFIX=~/libsc
 
     - name: CMake build
       run: cmake --build build
@@ -175,11 +175,11 @@ jobs:
 
     - name: CMake configure examples with MPI
       if: steps.check_files.outputs.files_exists == 'true'
-      run: cmake -B example/build -S example -DSC_ROOT=~/libsc
+      run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=~/libsc
 
     - name: CMake configure examples without MPI
       if: steps.check_files.outputs.files_exists == 'false'
-      run: cmake -B example/build -S example -Dmpi=no -DSC_ROOT=~/libsc
+      run: cmake -B example/build -S example -DSC_ROOT=~/libsc
 
     - name: CMake build examples
       run: cmake --build example/build
