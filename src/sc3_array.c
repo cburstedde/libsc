@@ -290,6 +290,104 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
 }
 
 sc3_error_t        *
+sc_array_split (sc3_array_t * a, sc3_array_t * offsets,
+                size_t num_types, sc3_array_type_t type_fn,
+                void *data)
+{
+  size_t              count, elem_size;
+  size_t              zi, *zp;
+  size_t              guess, low, high, type, step;
+
+  SC3E (sc3_array_get_elem_size (a, &elem_size));
+  SC3A_CHECK (elem_size == sizeof (size_t));
+
+  SC3E (sc3_array_get_elem_count (a, &count));
+  SC3E (sc3_array_resize (a, num_types + 1));
+
+  /** The point of this algorithm is to put offsets[i] into its final position
+   * for i = 0,...,num_types, where the final position of offsets[i] is the
+   * unique index k such that type_fn (array, j, data) < i for all j < k
+   * and type_fn (array, j, data) >= i for all j >= k.
+   *
+   * The invariants of the loop are:
+   *  1) if i < step, then offsets[i] <= low, and offsets[i] is final.
+   *  2) if i >= step, then low is less than or equal to the final value of
+   *     offsets[i].
+   *  3) for 0 <= i <= num_types, offsets[i] is greater than or equal to its
+   *     final value.
+   *  4) for every index k in the array with k < low,
+   *     type_fn (array, k, data) < step,
+   *  5) for 0 <= i < num_types,
+   *     for every index k in the array with k >= offsets[i],
+   *     type_fn (array, k, data) >= i.
+   *  6) if i < j, offsets[i] <= offsets[j].
+   *
+   * Initializing offsets[0] = 0, offsets[i] = count for i > 0,
+   * low = 0, and step = 1, the invariants are trivially satisfied.
+   */
+  SC3E (sc3_array_index (offsets, 0, &zp));
+  *zp = 0;
+  for (zi = 1; zi <= num_types; zi++) {
+    SC3E (sc3_array_index (offsets, zi, &zp));
+    *zp = count;
+  }
+
+  if (count == 0 || num_types <= 1) {
+    return;
+  }
+
+  /** Because count > 0 we can add another invariant:
+   *   7) if step < num_types, low < high = offsets[step].
+   */
+
+  low = 0;
+  high = count;                 /* high = offsets[step] */
+  step = 1;
+  for (;;) {
+    guess = low + (high - low) / 2;     /* By (7) low <= guess < high. */
+    SC3E (type_fn (a, guess, data, &type));
+    SC3A_CHECK (type < num_types);
+    /** If type < step, then we can set low = guess + 1 and still satisfy
+     * invariant (4).  Also, because guess < high, we are assured low <= high.
+     */
+    if (type < step) {
+      low = guess + 1;
+    }
+    /** If type >= step, then setting offsets[i] = guess for i = step,..., type
+     * still satisfies invariant (5).  Because guess >= low, we are assured
+     * low <= high, and we maintain invariant (6).
+     */
+    else {
+      for (zi = step; zi <= type; zi++) {
+        SC3E (sc3_array_index (offsets, zi, &zp));
+        *zp = guess;
+      }
+      high = guess;             /* high = offsets[step] */
+    }
+    /** If low = (high = offsets[step]), then by invariants (2) and (3)
+     * offsets[step] is in its final position, so we can increment step and
+     * still satisfy invariant (1).
+     */
+    while (low == high) {
+      /* By invariant (6), high cannot decrease here */
+      ++step;                   /* sc_array_index might be a macro */
+      SC3E (sc3_array_index (offsets, step, &zp));
+      high = *zp;
+      /** If step = num_types, then by invariant (1) we have found the final
+       * positions for offsets[i] for i < num_types, and offsets[num_types] =
+       * count in all situations, so we are done.
+       */
+      if (step == num_types) {
+        return;
+      }
+    }
+    /** To reach this point it must be true that low < high, so we preserve
+     * invariant (7).
+     */
+  }
+}
+
+sc3_error_t        *
 sc3_array_push_count (sc3_array_t * a, int n, void *ptr)
 {
   SC3A_IS (sc3_array_is_resizable, a);

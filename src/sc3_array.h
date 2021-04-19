@@ -228,6 +228,38 @@ sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
  */
 sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
 
+/** Function to determine the enumerable type of an object in an array.
+ * \param [in] array   Array containing the object.
+ * \param [in] index   The location of the object.
+ * \param [in] data    Arbitrary user data.
+ * \param [out] type   Returned enumerable type of an object.
+ */
+typedef sc3_error_t*      (*sc3_array_type_t) (sc3_array_t * a,
+                                               size_t index, void *data,
+                                               size_t *type);
+
+/** Compute the offsets of groups of enumerable types in an array.
+ * \param [in] a             Array that is sorted in ascending order by type.
+ *                           If k indexes \a array, then
+ *                           0 <= \a type_fn (\a array, k, \a data) <
+ *                           \a num_types.
+ * \param [in,out] offsets   An initialized array of type size_t that is
+ *                           resized to \a num_types + 1 entries.  The indices
+ *                           j of \a array that contain objects of type k are
+ *                           \a offsets[k] <= j < \a offsets[k + 1].
+ *                           If there are no objects of type k, then
+ *                           \a offsets[k] = \a offset[k + 1].
+ * \param [in] num_types     The number of possible types of objects in
+ *                           \a array.
+ * \param [in] type_fn       Returns the type of an object in the array.
+ * \param [in] data          Arbitrary user data passed to \a type_fn.
+ * \return                   NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
+                                    size_t num_types,
+                                    sc3_array_type_t type_fn,
+                                    void *data);
+
 /** Enlarge an array by a number of elements.
  * The output points to the beginning of the memory for the new elements.
  * \param [in,out] a    The array must be resizable.
