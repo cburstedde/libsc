@@ -294,12 +294,13 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
                 size_t num_types, sc3_array_type_t type_fn,
                 void *data)
 {
-  size_t              count, elem_size;
-  size_t              zi, *zp;
-  size_t              guess, low, high, type, step;
+  int              count, elem_size;
+  int              zi, *zp;
+  int              guess, low, high, type, step;
+  void            *guess_elem;
 
   SC3E (sc3_array_get_elem_size (offsets, &elem_size));
-  SC3A_CHECK (elem_size == sizeof (size_t));
+  SC3A_CHECK (elem_size == sizeof (int));
   SC3E (sc3_array_resize (offsets, num_types + 1));
 
   SC3E (sc3_array_get_elem_count (a, &count));
@@ -345,7 +346,8 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
   step = 1;
   for (;;) {
     guess = low + (high - low) / 2;     /* By (7) low <= guess < high. */
-    SC3E (type_fn (a, guess, data, &type));
+    SC3E (sc3_array_index (a, guess, &guess_elem));
+    SC3E (type_fn (guess_elem, data, &type));
     SC3A_CHECK (type < num_types);
     /** If type < step, then we can set low = guess + 1 and still satisfy
      * invariant (4).  Also, because guess < high, we are assured low <= high.
