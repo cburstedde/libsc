@@ -289,6 +289,32 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
   return NULL;
 }
 
+int
+sc3_array_is_sorted (sc_array_t * a,
+                     int (*compar) (const void *, const void *, int *),
+                     char *reason)
+{
+  int                 count;
+  int                 zz, j;
+  void               *vold, *vnew;
+
+  count = sc3_array_elem_count_noerr (a);
+
+  if (count <= 1) {
+    SC3E_YES (reason);
+  }
+
+  sc3_array_index_noerr (a, 0, &vold);
+  for (zz = 1; zz < count; ++zz) {
+    sc3_array_index_noerr (a, zz, &vnew);
+    compar (vold, vnew, &j);
+    SC3E_TEST (j <= 0, reason);
+    vold = vnew;
+  }
+
+  SC3E_YES (reason);
+}
+
 sc3_error_t        *
 sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
                 size_t num_types, sc3_array_type_t type_fn,

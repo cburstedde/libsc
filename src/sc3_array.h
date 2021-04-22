@@ -228,6 +228,19 @@ sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
  */
 sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
 
+/** Check whether the array is sorted wrt. the comparison function.
+ * \param [in] a        The array to check.
+ * \param [in] compar   The comparison function to be used.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True if array is sorted, false otherwise.
+ */
+int                 sc3_array_is_sorted (sc_array_t * a,
+                                         int (*compar) (const void *,
+                                                        const void *,
+                                                        int *),
+                                         char *reason);
+
 /** Function to determine the enumerable type of an object in an array.
  * \param [in] elem    The object which is needed to be determined.
  * \param [in] data    Arbitrary user data.
