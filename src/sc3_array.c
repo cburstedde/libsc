@@ -290,7 +290,7 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
 }
 
 sc3_error_t        *
-sc_array_split (sc3_array_t * a, sc3_array_t * offsets,
+sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
                 size_t num_types, sc3_array_type_t type_fn,
                 void *data)
 {
@@ -298,11 +298,11 @@ sc_array_split (sc3_array_t * a, sc3_array_t * offsets,
   size_t              zi, *zp;
   size_t              guess, low, high, type, step;
 
-  SC3E (sc3_array_get_elem_size (a, &elem_size));
+  SC3E (sc3_array_get_elem_size (offsets, &elem_size));
   SC3A_CHECK (elem_size == sizeof (size_t));
+  SC3E (sc3_array_resize (offsets, num_types + 1));
 
   SC3E (sc3_array_get_elem_count (a, &count));
-  SC3E (sc3_array_resize (a, num_types + 1));
 
   /** The point of this algorithm is to put offsets[i] into its final position
    * for i = 0,...,num_types, where the final position of offsets[i] is the
@@ -333,7 +333,7 @@ sc_array_split (sc3_array_t * a, sc3_array_t * offsets,
   }
 
   if (count == 0 || num_types <= 1) {
-    return;
+    return NULL;
   }
 
   /** Because count > 0 we can add another invariant:
@@ -378,13 +378,14 @@ sc_array_split (sc3_array_t * a, sc3_array_t * offsets,
        * count in all situations, so we are done.
        */
       if (step == num_types) {
-        return;
+        return NULL;
       }
     }
     /** To reach this point it must be true that low < high, so we preserve
      * invariant (7).
      */
   }
+  return NULL;
 }
 
 sc3_error_t        *

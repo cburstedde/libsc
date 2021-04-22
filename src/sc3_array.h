@@ -240,18 +240,18 @@ typedef sc3_error_t*      (*sc3_array_type_t) (sc3_array_t * a,
 
 /** Compute the offsets of groups of enumerable types in an array.
  * \param [in] a             Array that is sorted in ascending order by type.
- *                           If k indexes \a array, then
- *                           0 <= \a type_fn (\a array, k, \a data) <
+ *                           If k indexes \a a, then
+ *                           0 <= \a type_fn (\a a, k, \a data) <
  *                           \a num_types.
- * \param [in,out] offsets   An initialized array of type size_t that is
+ * \param [in,out] offsets   An initialized a of type size_t that is
  *                           resized to \a num_types + 1 entries.  The indices
- *                           j of \a array that contain objects of type k are
+ *                           j of \a a that contain objects of type k are
  *                           \a offsets[k] <= j < \a offsets[k + 1].
  *                           If there are no objects of type k, then
  *                           \a offsets[k] = \a offset[k + 1].
  * \param [in] num_types     The number of possible types of objects in
- *                           \a array.
- * \param [in] type_fn       Returns the type of an object in the array.
+ *                           \a a.
+ * \param [in] type_fn       Returns the type of an object in the a.
  * \param [in] data          Arbitrary user data passed to \a type_fn.
  * \return                   NULL on success, error object otherwise.
  */
