@@ -290,8 +290,9 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
 }
 
 int
-sc3_array_is_sorted (sc_array_t * a,
-                     int (*compar) (const void *, const void *, int *),
+sc3_array_is_sorted (sc3_array_t * a,
+                     sc3_error_t * (*compar) (const void *, const void *,
+                                              int *),
                      char *reason)
 {
   int                 count;
@@ -304,9 +305,9 @@ sc3_array_is_sorted (sc_array_t * a,
     SC3E_YES (reason);
   }
 
-  sc3_array_index_noerr (a, 0, &vold);
+  vold = sc3_array_index_noerr (a, 0);
   for (zz = 1; zz < count; ++zz) {
-    sc3_array_index_noerr (a, zz, &vnew);
+    vnew = sc3_array_index_noerr (a, zz);
     compar (vold, vnew, &j);
     SC3E_TEST (j <= 0, reason);
     vold = vnew;
@@ -317,13 +318,13 @@ sc3_array_is_sorted (sc_array_t * a,
 
 sc3_error_t        *
 sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
-                size_t num_types, sc3_array_type_t type_fn,
-                void *data)
+                 int num_types, sc3_array_type_t type_fn,
+                 void *data)
 {
-  int              count, elem_size;
+  int              count;
   int              zi, *zp;
   int              guess, low, high, type, step;
-  void            *guess_elem;
+  size_t           elem_size;
 
   SC3E (sc3_array_get_elem_size (offsets, &elem_size));
   SC3A_CHECK (elem_size == sizeof (int));
@@ -372,8 +373,7 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
   step = 1;
   for (;;) {
     guess = low + (high - low) / 2;     /* By (7) low <= guess < high. */
-    SC3E (sc3_array_index (a, guess, &guess_elem));
-    SC3E (type_fn (guess_elem, data, &type));
+    SC3E (type_fn (a, guess, data, &type));
     SC3A_CHECK (type < num_types);
     /** If type < step, then we can set low = guess + 1 and still satisfy
      * invariant (4).  Also, because guess < high, we are assured low <= high.

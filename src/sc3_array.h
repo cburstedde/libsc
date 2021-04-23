@@ -235,10 +235,11 @@ sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
  *                      is set to "" if answer is yes or reason if no.
  * \return              True if array is sorted, false otherwise.
  */
-int                 sc3_array_is_sorted (sc_array_t * a,
-                                         int (*compar) (const void *,
-                                                        const void *,
-                                                        int *),
+int                 sc3_array_is_sorted (sc3_array_t * a,
+                                         sc3_error_t * (*compar) (
+                                                         const void *,
+                                                         const void *,
+                                                         int *),
                                          char *reason);
 
 /** Function to determine the enumerable type of an object in an array.
@@ -246,7 +247,8 @@ int                 sc3_array_is_sorted (sc_array_t * a,
  * \param [in] data    Arbitrary user data.
  * \param [out] type   Returned enumerable type of an object.
  */
-typedef sc3_error_t*      (*sc3_array_type_t) (void *elem, void *data,
+typedef sc3_error_t*      (*sc3_array_type_t) (sc3_array_t * array,
+                                               int index, void *data,
                                                int *type);
 
 /** Compute the offsets of groups of enumerable types in an array.
@@ -267,8 +269,7 @@ typedef sc3_error_t*      (*sc3_array_type_t) (void *elem, void *data,
  * \return                   NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
-                                    size_t num_types,
-                                    sc3_array_type_t type_fn,
+                                    int num_types, sc3_array_type_t type_fn,
                                     void *data);
 
 /** Enlarge an array by a number of elements.
