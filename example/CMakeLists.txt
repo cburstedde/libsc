@@ -5,8 +5,6 @@ include(CTest)
 include(CheckSymbolExists)
 include(CheckIncludeFile)
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/Modules)
-
 option(mpi "use MPI" off)
 
 # --- find external libraries
@@ -22,7 +20,11 @@ find_package(Threads)
 
 # --- find our library
 
-find_package(SC REQUIRED PATHS ${PROJECT_SOURCE_DIR}/../build)
+if(NOT SC_ROOT AND NOT DEFINED ENV{SC_ROOT})
+  set(SC_ROOT ${PROJECT_SOURCE_DIR}/../build)
+endif()
+
+find_package(SC REQUIRED)
 
 # --- get system capabilities
 
