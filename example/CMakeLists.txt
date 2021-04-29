@@ -21,7 +21,6 @@ find_package(ZLIB REQUIRED)
 find_package(Threads)
 
 # --- find our library
-set(CMAKE_FIND_PACKAGE_PREFER_CONFIG true)
 
 find_package(SC REQUIRED PATHS ${PROJECT_SOURCE_DIR}/../build)
 
@@ -29,6 +28,7 @@ find_package(SC REQUIRED PATHS ${PROJECT_SOURCE_DIR}/../build)
 
 check_symbol_exists(sqrt math.h SC_NONEED_M)
 if(NOT SC_NONEED_M)
+  set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} m)
   check_symbol_exists(sqrt math.h SC_NEED_M)
 endif()
 
