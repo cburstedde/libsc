@@ -324,10 +324,12 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
   int              count;
   int              zi, *zp;
   int              guess, low, high, type, step;
+#ifdef P4EST_ENABLE_DEBUG
   size_t           elem_size;
 
   SC3E (sc3_array_get_elem_size (offsets, &elem_size));
   SC3A_CHECK (elem_size == sizeof (int));
+#endif /* P4EST_ENABLE_DEBUG */
   SC3E (sc3_array_resize (offsets, num_types + 1));
 
   SC3E (sc3_array_get_elem_count (a, &count));
