@@ -287,37 +287,40 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
  */
 void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
 
-/** Create a subarray sa pointing to the same memory as an array a.
- * \param [in] a        The array must be setup.
- * \param [in] idx      Index of the array a that points to a beginning of
- *                      the subarray sa.
- * \param [in, out] sa  The array must not be setup. Size of elements must
- *                      be equal to elements in a. The number of elements
- *                      must be less of equal than (a->ecount - idx).
- *                      This subarray will contain all the memory of
- *                      the array a corresponding indices
- *                      [idx, sa->ecount + idx).
- * \return              NULL on success, error object otherwise.
+/** Create a new view pointing to the same memory as an array a.
+ * \param [in] a        The array must be setup and must not be resized
+ *                      while view is alive.
+ * \param [in] offset   The offset of the viewed section in element units.
+ *                      This offset cannot be changed until the view is reset.
+ * \param [in] length   The length of the viewed section in element units.
+ *                      The view cannot be resized to exceed this length.
+ * \param [in, out] view Pointer to the array, that must not be setup.
+ *                       This subarray will contain all the memory of
+ *                       the array a corresponding indices
+ *                       [offset, offset + length).
+ * \return               NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_subarray (sc3_array_t * a, int idx,
-                                        sc3_array_t * sa);
+sc3_error_t        *sc3_array_new_view (sc3_array_t * a, int offset,
+                                        int length, sc3_array_t ** view);
 
 /** Create an array view sa pointing to the allocated memory fragment a.
  * Warning! Potentially dangerous function. Make sure, that array's length
  * adjusted for idx shift is covered by the length of the allocated fragment.
- * \param [in] a        The allocated memory fragment.
- * \param [in] idx      Index pointing to allocated memory and is considered
- *                      to be the beginning of the subarray sa.
- * \param [in] n        The number of allocated bits.
- * \param [in, out] sa  The array must not be setup. The number of elements
- *                      as->ecount must be such that
- *                      (as->ecount + idx) * as->esize <= |alloc memory of a|.
- *                      (Sub)array sa will contain all the memory of
- *                      a corresponding indices [idx, sa->ecount + idx).
- * \return              NULL on success, error object otherwise.
+ * \param [in] data     The data must not be moved while view is alive.
+ * \param [in] elem_size Size of one array element in bytes.
+ * \param [in] offset   The offset of the viewed section in element units.
+ *                      This offset cannot be changed until the view is reset.
+ * \param [in] length   The length of the viewed section in element units.
+ *                      The view cannot be resized to exceed this length.
+ * \param [in, out] view The array must not be setup. The number of elements
+ *                       as->ecount must be such that
+ *                       (as->ecount + idx) * as->esize <= |alloc memory of a|.
+ *                       (Sub)array sa will contain all the memory of
+ *                       a corresponding indices [idx, sa->ecount + idx).
+ * \return               NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_view (char * a, int idx, int n,
-                                    sc3_array_t * sa);
+sc3_error_t        *sc3_array_new_data (void *data, size_t esize, int offset,
+                                        int length, sc3_array_t ** view);
 
 /** Return element size of an array that is setup.
  * \param [in] a        Array must be setup.

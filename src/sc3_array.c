@@ -367,37 +367,46 @@ sc3_array_index_noerr (const sc3_array_t * a, int i)
 }
 
 sc3_error_t        *
-sc3_array_subarray (sc3_array_t * a, int idx, sc3_array_t * sa)
+sc3_array_new_view (sc3_array_t * a, int offset, int length,
+                    sc3_array_t ** view)
 {
   SC3A_IS (sc3_array_is_setup, a);
-  SC3A_IS (sc3_array_is_new, sa);
-  SC3A_CHECK (sa->ecount + idx <= a->ecount);
-  SC3A_CHECK (sa->esize == a->esize);
-  SC3A_IS (sc3_array_is_unresizable, sa);
+  SC3A_IS (sc3_array_is_new, *view);
+  SC3A_CHECK (length + offset <= a->ecount);
+  SC3A_IS (sc3_array_is_unresizable, *view);
 
-  sa->view = 1;
-  sa->setup = 1;
-  sa->initzero = a->initzero;
-  sa->tighten = 0;
+  (*view)->view = 1;
+  (*view)->setup = 1;
+  (*view)->initzero = a->initzero;
+  (*view)->tighten = 0;
 
-  sa->ealloc = a->ealloc - idx;
-  sa->mem = a->mem + idx * sa->esize;
+  (*view)->esize = a->esize;
+  (*view)->ealloc = a->ealloc - offset;
+  (*view)->ecount = length;
+  (*view)->mem = a->mem + (*view)->esize * offset;
+
+  SC3A_IS (sc3_array_is_setup, *view);
 
   return NULL;
 }
 
 sc3_error_t        *
-sc3_array_view (char * a, int idx, int n, sc3_array_t * sa)
+sc3_array_new_data (void * data, size_t esize, int offset, int length,
+                    sc3_array_t ** view)
 {
-  SC3A_IS (sc3_array_is_new, sa);
-  SC3A_IS (sc3_array_is_unresizable, sa);
+  SC3A_IS (sc3_array_is_new, *view);
+  SC3A_IS (sc3_array_is_unresizable, *view);
 
-  sa->view = 1;
-  sa->setup = 1;
-  sa->tighten = 0;
+  (*view)->view = 1;
+  (*view)->setup = 1;
+  (*view)->tighten = 0;
 
-  sa->ealloc = n;
-  sa->mem = a + idx * sa->esize;
+  (*view)->esize = esize;
+  (*view)->ealloc = length;
+  (*view)->ecount = length;
+  (*view)->mem = (char *) data + (*view)->esize * offset;
+
+  SC3A_IS (sc3_array_is_setup, *view);
 
   return NULL;
 }
