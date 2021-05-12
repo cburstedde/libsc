@@ -38,6 +38,7 @@ struct sc3_array
 
   /* parameters fixed after setup call */
   int                 initzero, resizable, tighten;
+  int                 view;
   int                 ecount, ealloc;
   size_t              esize;
 
@@ -220,7 +221,7 @@ sc3_array_unref (sc3_array_t ** ap)
     *ap = NULL;
 
     aator = a->aator;
-    if (a->setup) {
+    if (a->setup && !a->view) {
       /* deallocate element storage */
       SC3E (sc3_allocator_free (aator, a->mem));
     }
@@ -363,6 +364,42 @@ sc3_array_index_noerr (const sc3_array_t * a, int i)
   }
 #endif
   return a->mem + i * a->esize;
+}
+
+sc3_error_t        *
+sc3_array_subarray (sc3_array_t * a, int idx, sc3_array_t * sa)
+{
+  SC3A_IS (sc3_array_is_setup, a);
+  SC3A_IS (sc3_array_is_new, sa);
+  SC3A_CHECK (sa->ecount + idx <= a->ecount);
+  SC3A_CHECK (sa->esize == a->esize);
+  SC3A_IS (sc3_array_is_unresizable, sa);
+
+  sa->view = 1;
+  sa->setup = 1;
+  sa->initzero = a->initzero;
+  sa->tighten = 0;
+
+  sa->ealloc = a->ealloc - idx;
+  sa->mem = a->mem + idx * sa->esize;
+
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_array_view (char * a, int idx, int n, sc3_array_t * sa)
+{
+  SC3A_IS (sc3_array_is_new, sa);
+  SC3A_IS (sc3_array_is_unresizable, sa);
+
+  sa->view = 1;
+  sa->setup = 1;
+  sa->tighten = 0;
+
+  sa->ealloc = n;
+  sa->mem = a + idx * sa->esize;
+
+  return NULL;
 }
 
 sc3_error_t        *

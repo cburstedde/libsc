@@ -287,6 +287,38 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
  */
 void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
 
+/** Create a subarray sa pointing to the same memory as an array a.
+ * \param [in] a        The array must be setup.
+ * \param [in] idx      Index of the array a that points to a beginning of
+ *                      the subarray sa.
+ * \param [in, out] sa  The array must not be setup. Size of elements must
+ *                      be equal to elements in a. The number of elements
+ *                      must be less of equal than (a->ecount - idx).
+ *                      This subarray will contain all the memory of
+ *                      the array a corresponding indices
+ *                      [idx, sa->ecount + idx).
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_subarray (sc3_array_t * a, int idx,
+                                        sc3_array_t * sa);
+
+/** Create an array view sa pointing to the allocated memory fragment a.
+ * Warning! Potentially dangerous function. Make sure, that array's length
+ * adjusted for idx shift is covered by the length of the allocated fragment.
+ * \param [in] a        The allocated memory fragment.
+ * \param [in] idx      Index pointing to allocated memory and is considered
+ *                      to be the beginning of the subarray sa.
+ * \param [in] n        The number of allocated bits.
+ * \param [in, out] sa  The array must not be setup. The number of elements
+ *                      as->ecount must be such that
+ *                      (as->ecount + idx) * as->esize <= |alloc memory of a|.
+ *                      (Sub)array sa will contain all the memory of
+ *                      a corresponding indices [idx, sa->ecount + idx).
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_view (char * a, int idx, int n,
+                                    sc3_array_t * sa);
+
 /** Return element size of an array that is setup.
  * \param [in] a        Array must be setup.
  * \param [out] esize   Element size of the array in bytes, or 0 on error.
