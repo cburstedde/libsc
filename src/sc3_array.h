@@ -113,6 +113,14 @@ int                 sc3_array_is_resizable (const sc3_array_t * a,
 int                 sc3_array_is_unresizable (const sc3_array_t * a,
                                               char *reason);
 
+/** Query whether an array is a view.
+ * \param [in] a        Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff array not NULL, setup, and not resizable.
+ */
+int                 sc3_array_is_view (const sc3_array_t * a, char *reason);
+
 /** Create a new array object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
  * Setting and modifying parameters is only allowed in the setup phase.
