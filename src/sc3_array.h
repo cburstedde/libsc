@@ -292,21 +292,25 @@ void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
 
 /** Create a view array pointing to the same memory as a given array.
  * Inherit the data element size from the given array.
- * The view is setup and never resisable.
- * \param [in] a        The array must be setup and must not be resized
- *                      while view is alive.
+ * \param [in,out] aator    An allocator that is setup.
+ *                          The allocator is refd and remembered internally
+ *                          and will be unrefd on view destruction.
+ * \param [out] view    Pointer to the view array created.
+ *                      This array will refer to the memory of
+ *                      the referenced array \a a corresponding to
+ *                      indices [offset, offset + length).
+ *                      The view is setup and not resisable.
+ * \param [in] a        The array must be setup and not resizable.
  * \param [in] offset   The offset of the viewed section in element units.
- *                      This offset cannot be changed until the view is reset.
+ *                      The offset + length must be within length of \a a.
  * \param [in] length   The length of the viewed section in element units.
- *                      The view cannot be resized to exceed this length.
- * \param [out] view     Pointer to the view array, that must not be setup.
- *                       This subarray will refer to the memory of
- *                       the referenced array \a a, corresponding to
- *                       indices [offset, offset + length).
- * \return               NULL on success, error object otherwise.
+ *                      The offset + length must be within length of \a a.
+ * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_new_view (sc3_array_t * a, int offset,
-                                        int length, sc3_array_t ** view);
+sc3_error_t        *sc3_array_new_view (sc3_allocator_t * alloc,
+                                        sc3_array_t ** view,
+                                        sc3_array_t * a,
+                                        int offset, int length);
 
 /** Create a view array pointing to some given memory fragment.
  * Warning!  Potentially dangerous function.  Make sure that array's length

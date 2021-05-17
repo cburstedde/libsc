@@ -38,12 +38,17 @@ struct sc3_array
 
   /* parameters fixed after setup call */
   int                 initzero, resizable, tighten;
-  int                 view;
   int                 ecount, ealloc;
   size_t              esize;
 
   /* member variables initialized in setup call */
   char               *mem;
+
+  /** The viewed pointer is NULL when the array is not a view.
+   *  If this array is a view on another array, that array is stored.
+   *  If this array is a view on data, set viewed to the view array.
+   */
+  sc3_array_t        *viewed;
 };
 
 int
@@ -221,9 +226,15 @@ sc3_array_unref (sc3_array_t ** ap)
     *ap = NULL;
 
     aator = a->aator;
-    if (a->setup && !a->view) {
-      /* deallocate element storage */
-      SC3E (sc3_allocator_free (aator, a->mem));
+    if (a->setup) {
+      if (a->viewed == NULL) {
+        /* deallocate element storage */
+        SC3E (sc3_allocator_free (aator, a->mem));
+      }
+      else if (a->viewed != a) {
+        /* release reference on viewed array */
+        SC3E (sc3_array_unref (&a->viewed));
+      }
     }
     SC3E (sc3_allocator_free (aator, a));
     SC3L (&leak, sc3_allocator_unref (&aator));
@@ -367,25 +378,30 @@ sc3_array_index_noerr (const sc3_array_t * a, int i)
 }
 
 sc3_error_t        *
-sc3_array_new_view (sc3_array_t * a, int offset, int length,
-                    sc3_array_t ** view)
+sc3_array_new_view (sc3_allocator_t * alloc, sc3_array_t ** view,
+                    sc3_array_t * a, int offset, int length)
 {
-  SC3A_IS (sc3_array_is_setup, a);
-  SC3A_IS (sc3_array_is_new, *view);
-  SC3A_CHECK (length + offset <= a->ecount);
-  SC3A_IS (sc3_array_is_unresizable, *view);
+  /* default error output */
+  SC3E_RETVAL (view, NULL);
 
-  (*view)->view = 1;
-  (*view)->setup = 1;
-  (*view)->initzero = a->initzero;
-  (*view)->tighten = 0;
+  /* verify input parametrs */
+  SC3A_IS (sc3_allocator_is_setup, alloc);
+  SC3A_IS (sc3_array_is_unresizable, a);
+  SC3A_CHECK (offset >= 0 && length >= 0);
+  SC3A_CHECK (offset + length <= a->ecount);
 
+  /* create array and adjust for being a view */
+  SC3E (sc3_array_new (alloc, view));
   (*view)->esize = a->esize;
   (*view)->ealloc = a->ealloc - offset;
   (*view)->ecount = length;
   (*view)->mem = a->mem + (*view)->esize * offset;
 
-  SC3A_IS (sc3_array_is_setup, *view);
+  (*view)->viewed = a;
+  SC3E (sc3_array_ref (a));
+
+  (*view)->setup = 1;
+  SC3A_IS (sc3_array_is_unresizable, *view);
 
   return NULL;
 }
@@ -397,7 +413,6 @@ sc3_array_new_data (void * data, size_t esize, int offset, int length,
   SC3A_IS (sc3_array_is_new, *view);
   SC3A_IS (sc3_array_is_unresizable, *view);
 
-  (*view)->view = 1;
   (*view)->setup = 1;
   (*view)->tighten = 0;
 
@@ -405,6 +420,7 @@ sc3_array_new_data (void * data, size_t esize, int offset, int length,
   (*view)->ealloc = length;
   (*view)->ecount = length;
   (*view)->mem = (char *) data + (*view)->esize * offset;
+  (*view)->viewed = *view;
 
   SC3A_IS (sc3_array_is_setup, *view);
 
