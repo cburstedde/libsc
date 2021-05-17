@@ -36,8 +36,8 @@
  * The array can serve as a push-and-pop stack.
  *
  * We use standard `int` types for indexing.
- * The total array memory size may be greater than 2GB depending on the
- * size of each element.
+ * The total array memory size may be greater than 2 GB depending
+ * on the size of each element.
  *
  * In the setup phase, we set the size of the array and optionally
  * an initial count, an initzero property, and some more.
@@ -46,8 +46,8 @@
  * Resizability can be terminated by calling \ref sc3_array_freeze
  * (only after \ref sc3_array_setup).  The freeze is not reversible.
  *
- * An array can only be refd if it is setup and non-resizable.
- * Otherwise, the usual ref-, unref- and destroy semantics hold.
+ * The usual ref-, unref- and destroy semantics hold, except
+ * an array can only be refd if it is setup and non-resizable.
  */
 
 #ifndef SC3_ARRAY_H
@@ -211,7 +211,7 @@ sc3_error_t        *sc3_array_unref (sc3_array_t ** ap);
 /** Destroy an array with a reference count of one.
  * It is a leak error to destroy an array that is multiply referenced.
  * We unref its internal allocator, which may cause a leak error if that
- * allocator has been used against specification elsewhere in the code.
+ * allocator has one reference and live allocations elsewhere in the code.
  * \param [in,out] ap   This array must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
@@ -230,7 +230,7 @@ sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
 
 /** Enlarge an array by a number of elements.
  * The output points to the beginning of the memory for the new elements.
- * \param [in,out] a    The array must be resizable.
+ * \param [in,out] a    The array must be setup and resizable.
  * \param [in] n        Non-negative number.  If n == 0, do nothing.
  * \param [out] ptr     Address of pointer.
  *                      On output set to array element at previously last index,
@@ -243,7 +243,7 @@ sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void *ptr);
 /** Enlarge an array by one element.
  * The output points to the beginning of the memory for the new element.
  * Equivalent to \ref sc3_array_push_count (a, 1, ptr).
- * \param [in,out] a    The array must be resizable.
+ * \param [in,out] a    The array must be setup and resizable.
  * \param [out] ptr     Address of pointer.
  *                      On output set to array element at previously last index.
  *                      This argument may be NULL for no assignment.
@@ -276,38 +276,45 @@ sc3_error_t        *sc3_array_freeze (sc3_array_t * a);
 sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
 
 /** Index an array element without returning an error object.
+ * This function is optimized for speed, not safety.
  * \param [in] a        The array must be setup.
  * \param [in] i        Index must be in [0, element count).
  * \return              Address of array element at index \b i.
  *                      If the array element size is zero, the pointer
  *                      must not be dereferenced.
- *                      With --enable-debug, returns NULL if index
- *                      is out of bounds or the array is not setup.
- *                      Without, the program may crash here or later.
+ *                      When configured with --enable-debug, returns NULL
+ *                      if index is out of bounds, element size is zero,
+ *                      or the array is not setup.
+ *                      Without, the behavior is undefined
+ *                      and the program may crash here or later.
  */
 void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
 
-/** Create a new view pointing to the same memory as an array a.
+/** Create a view array pointing to the same memory as a given array.
+ * Inherit the data element size from the given array.
+ * The view is setup and never resisable.
  * \param [in] a        The array must be setup and must not be resized
  *                      while view is alive.
  * \param [in] offset   The offset of the viewed section in element units.
  *                      This offset cannot be changed until the view is reset.
  * \param [in] length   The length of the viewed section in element units.
  *                      The view cannot be resized to exceed this length.
- * \param [in, out] view Pointer to the array, that must not be setup.
- *                       This subarray will contain all the memory of
- *                       the array a corresponding indices
- *                       [offset, offset + length).
+ * \param [out] view     Pointer to the view array, that must not be setup.
+ *                       This subarray will refer to the memory of
+ *                       the referenced array \a a, corresponding to
+ *                       indices [offset, offset + length).
  * \return               NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_new_view (sc3_array_t * a, int offset,
                                         int length, sc3_array_t ** view);
 
-/** Create an array view sa pointing to the allocated memory fragment a.
- * Warning! Potentially dangerous function. Make sure, that array's length
- * adjusted for idx shift is covered by the length of the allocated fragment.
+/** Create a view array pointing to some given memory fragment.
+ * Warning!  Potentially dangerous function.  Make sure that array's length
+ * from start offset is supported by the length of the given fragment.
+ * Otherwise the behavior is undefined.
+ * The view is setup and never resisable.
  * \param [in] data     The data must not be moved while view is alive.
- * \param [in] elem_size Size of one array element in bytes.
+ * \param [in] esize    Size of one array element in bytes.
  * \param [in] offset   The offset of the viewed section in element units.
  *                      This offset cannot be changed until the view is reset.
  * \param [in] length   The length of the viewed section in element units.
@@ -341,6 +348,7 @@ sc3_error_t        *sc3_array_get_elem_count (sc3_array_t * a, int *ecount);
 /** Return the array's element count without creating error objects.
  * \param [in] a        The array must be setup.  Otherwise, return 0
  *                      with --enable-debug, or junk or crash without.
+ *                      Repeat, the behavior is then undefined.
  * \return              The array's element count.
  */
 int                 sc3_array_elem_count_noerr (const sc3_array_t * a);

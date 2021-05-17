@@ -23,10 +23,10 @@
 /** \mainpage The sc auxiliary library
  *
  * \author Carsten Burstedde, Lucas C. Wilcox, Tobin Isaac et.al.
- * \copyright Versions up to 2: GNU Lesser General Public License version 2.1
- *            (or, at your option, any later version)
- * \copyright \ref sc3 "Version 3": FreeBSD License.  The compile currently
- *            includes the version 2 code as well,
+ * \copyright Versions up to 2: GNU Lesser General Public License version 2.1.
+ * \copyright \ref sc3 "Version 3": FreeBSD License.
+              The compile currently
+ *            includes the version 2 code under its old license as well,
  *            which we continue to maintain for backwards compatibility.
  *
  * The sc library provides functions and data types that can be useful
