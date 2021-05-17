@@ -292,7 +292,7 @@ void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
 
 /** Create a view array pointing to the same memory as a given array.
  * Inherit the data element size from the given array.
- * \param [in,out] aator    An allocator that is setup.
+ * \param [in,out] alloc    An allocator that is setup.
  *                          The allocator is refd and remembered internally
  *                          and will be unrefd on view destruction.
  * \param [out] view    Pointer to the view array created.
@@ -317,21 +317,26 @@ sc3_error_t        *sc3_array_new_view (sc3_allocator_t * alloc,
  * from start offset is supported by the length of the given fragment.
  * Otherwise the behavior is undefined.
  * The view is setup and never resisable.
+ * \param [in,out] alloc    An allocator that is setup.
+ *                          The allocator is refd and remembered internally
+ *                          and will be unrefd on view destruction.
+ * \param [out] view    The array must not be setup. The number of elements
+ *                      as->ecount must be such that
+ *                      (as->ecount + idx) * as->esize <= |alloc memory of a|.
+ *                      (Sub)array sa will contain all the memory of
+ *                      a corresponding indices [idx, sa->ecount + idx).
  * \param [in] data     The data must not be moved while view is alive.
  * \param [in] esize    Size of one array element in bytes.
  * \param [in] offset   The offset of the viewed section in element units.
  *                      This offset cannot be changed until the view is reset.
  * \param [in] length   The length of the viewed section in element units.
  *                      The view cannot be resized to exceed this length.
- * \param [in, out] view The array must not be setup. The number of elements
- *                       as->ecount must be such that
- *                       (as->ecount + idx) * as->esize <= |alloc memory of a|.
- *                       (Sub)array sa will contain all the memory of
- *                       a corresponding indices [idx, sa->ecount + idx).
- * \return               NULL on success, error object otherwise.
+ * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_new_data (void *data, size_t esize, int offset,
-                                        int length, sc3_array_t ** view);
+sc3_error_t        *sc3_array_new_data (sc3_allocator_t * alloc,
+                                        sc3_array_t ** view,
+                                        void *data, size_t esize,
+                                        int offset, int length);
 
 /** Return element size of an array that is setup.
  * \param [in] a        Array must be setup.
