@@ -299,7 +299,8 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
 void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
 
 /** Create a view array pointing to the same memory as a given array.
- * Inherit the data element size from the given array.
+ * Inherit the data element size from the given array is. The view must be
+ * destroyed BEFORE the target array. An exception will be thrown otherwise.
  * \param [in,out] alloc    An allocator that is setup.
  *                          The allocator is refd and remembered internally
  *                          and will be unrefd on view destruction.
@@ -329,10 +330,10 @@ sc3_error_t        *sc3_array_new_view (sc3_allocator_t * alloc,
  *                          The allocator is refd and remembered internally
  *                          and will be unrefd on view destruction.
  * \param [out] view    The array must not be setup. The number of elements
- *                      as->ecount must be such that
- *                      (as->ecount + idx) * as->esize <= |alloc memory of a|.
- *                      (Sub)array sa will contain all the memory of
- *                      a corresponding indices [idx, sa->ecount + idx).
+ *                      view->ecount must be such that
+ *                      (view->ecount + idx) * view->esize <= |alloc memory of a|.
+ *                      (Sub)array view will contain all the memory of
+ *                      a corresponding indices [idx, view->ecount + idx).
  * \param [in] data     The data must not be moved while view is alive.
  * \param [in] esize    Size of one array element in bytes.
  * \param [in] offset   The offset of the viewed section in element units.
