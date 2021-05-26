@@ -65,7 +65,9 @@ sc3_array_is_valid (const sc3_array_t * a, char *reason)
   }
   else {
     SC3E_TEST (a->mem != NULL || a->ecount * a->esize == 0, reason);
-    SC3E_TEST (a->ealloc == 0 || SC3_ISPOWOF2 (a->ealloc), reason);
+    SC3E_TEST (a->ealloc == 0
+               || SC3_ISPOWOF2 (a->ealloc)
+               || a->viewed != NULL , reason);
     SC3E_TEST (a->ecount <= a->ealloc, reason);
 
     /* further check array view */
@@ -394,7 +396,6 @@ sc3_error_t        *
 sc3_array_new_view (sc3_allocator_t * alloc, sc3_array_t ** view,
                     sc3_array_t * a, int offset, int length)
 {
-  int                 lg;
   /* default error output */
   SC3E_RETVAL (view, NULL);
 
@@ -408,15 +409,12 @@ sc3_array_new_view (sc3_allocator_t * alloc, sc3_array_t ** view,
   SC3E (sc3_array_new (alloc, view));
   (*view)->esize = a->esize;
   (*view)->ecount = length;
+  (*view)->ealloc = length;
   (*view)->mem = a->mem + (*view)->esize * offset;
 
   (*view)->viewed = a;
   SC3E (sc3_array_ref (a));
 
-  lg = sc3_log2_ceil (length, SC3_INT_BITS - 1);
-  SC3A_CHECK (0 <= lg && lg < SC3_INT_BITS - 1);
-  SC3A_CHECK (length <= (1 << lg));
-  (*view)->ealloc = 1 << lg;
   (*view)->setup = 1;
   SC3A_IS (sc3_array_is_view, *view);
 
@@ -427,7 +425,6 @@ sc3_error_t        *
 sc3_array_new_data (sc3_allocator_t * alloc, sc3_array_t ** view,
                     void *data, size_t esize, int offset, int length)
 {
-  int                 lg;
   /* default error output */
   SC3E_RETVAL (view, NULL);
 
@@ -440,15 +437,11 @@ sc3_array_new_data (sc3_allocator_t * alloc, sc3_array_t ** view,
   SC3E (sc3_array_new (alloc, view));
   (*view)->esize = esize;
   (*view)->ecount = length;
+  (*view)->ealloc = length;
   (*view)->mem = (char *) data + (*view)->esize * offset;
 
   /* special setting to indicate view on data */
   (*view)->viewed = *view;
-
-  lg = sc3_log2_ceil (length, SC3_INT_BITS - 1);
-  SC3A_CHECK (0 <= lg && lg < SC3_INT_BITS - 1);
-  SC3A_CHECK (length <= (1 << lg));
-  (*view)->ealloc = 1 << lg;
   (*view)->setup = 1;
   SC3A_IS (sc3_array_is_view, *view);
 
