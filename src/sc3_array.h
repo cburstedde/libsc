@@ -347,6 +347,47 @@ sc3_error_t        *sc3_array_new_data (sc3_allocator_t * alloc,
                                         void *data, size_t esize,
                                         int offset, int length);
 
+/** Adjust an existed view array for tracking memory of a new array.
+ * Inherit the data element size from the given array is. The view must be
+ * destroyed BEFORE the target array. An exception will be thrown otherwise.
+ * \param [out] view    Pointer to the created view array to be adjusted.
+ *                      This array will refer to the memory of
+ *                      the referenced array \a a corresponding to
+ *                      indices [offset, offset + length).
+ *                      The view is setup and not resisable.
+ * \param [in] a        The array must be setup and not resizable.
+ * \param [in] offset   The offset of the viewed section in element units.
+ *                      The offset + length must be within length of \a a.
+ * \param [in] length   The length of the viewed section in element units.
+ *                      The offset + length must be within length of \a a.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_renew_view (sc3_array_t ** view,
+                                          sc3_array_t * a, int offset,
+                                          int length);
+
+/** Adjust an existed view array for tracking some given memory fragment.
+ * Warning!  Potentially dangerous function.  Make sure that array's length
+ * from start offset is supported by the length of the given fragment.
+ * Otherwise the behavior is undefined.
+ * The view is setup and never resisable.
+ * \param [out] view    Pointer to the created view array to be adjusted.
+ *                      The number of elements view->ecount must be such that
+ *                      (view->ecount + idx) * view->esize <= |alloc memory of a|.
+ *                      (Sub)array view will contain all the memory of
+ *                      a corresponding indices [idx, view->ecount + idx).
+ * \param [in] data     The data must not be moved while view is alive.
+ * \param [in] esize    Size of one array element in bytes.
+ * \param [in] offset   The offset of the viewed section in element units.
+ *                      This offset cannot be changed until the view is reset.
+ * \param [in] length   The length of the viewed section in element units.
+ *                      The view cannot be resized to exceed this length.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_renew_data (sc3_array_t ** view, void *data,
+                                          size_t esize, int offset,
+                                          int length);
+
 /** Return element size of an array that is setup.
  * \param [in] a        Array must be setup.
  * \param [out] esize   Element size of the array in bytes, or 0 on error.
