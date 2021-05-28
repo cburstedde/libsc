@@ -174,18 +174,33 @@ test_view (void)
     SC3E_DEMAND (*(int *) ptr == *(int *) ptr_view && ptr == ptr_view,
                  "the view points to the wrong memory");
   }
+  SC3E (sc3_array_renew_view (&view, a, offset / 2, length / 2));
+  for (i = 0; i < length / 2; ++i) {
+    SC3E (sc3_array_index (a, i + offset / 2, &ptr));
+    SC3E (sc3_array_index (view, i, &ptr_view));
+    SC3E_DEMAND (*(int *) ptr == *(int *) ptr_view && ptr == ptr_view,
+                 "the view points to the wrong memory");
+  }
+
+  SC3E (sc3_array_destroy (&view));
+  SC3E (sc3_array_destroy (&a));
 
   /*make a new view of data */
-  SC3E (sc3_array_renew_data (&view, data, isize, offset, length));
+  SC3E (sc3_array_new_data (alloc, &view, data, isize, offset, length));
   for (i = 0; i < length; ++i) {
     SC3E (sc3_array_index (view, i, &ptr_view));
     SC3E_DEMAND (data[i + offset] == *(int *) ptr_view,
                  "the view points to the wrong memory");
   }
+  SC3E (sc3_array_renew_data (&view, data, isize, offset / 2, length / 2));
+  for (i = 0; i < length / 2; ++i) {
+    SC3E (sc3_array_index (view, i, &ptr_view));
+    SC3E_DEMAND (data[i + offset / 2] == *(int *) ptr_view,
+                 "the view points to the wrong memory");
+  }
 
   /*destroy the view and free the data */
   SC3E (sc3_allocator_free (alloc, data));
-  SC3E (sc3_array_destroy (&a));
   SC3E (sc3_array_destroy (&view));
   SC3E (sc3_allocator_destroy (&alloc));
   return NULL;
