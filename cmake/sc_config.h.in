@@ -23,6 +23,9 @@
 
 #cmakedefine SC_ENABLE_PTHREAD
 
+/* Define to 1 if we are using debug build type (assertions and extra checks) */
+#cmakedefine SC_ENABLE_DEBUG @SC_ENABLE_DEBUG@
+
 /* Undefine if: use aligned malloc (optionally use --enable-memalign=<bytes>) */
 #cmakedefine SC_ENABLE_MEMALIGN
 

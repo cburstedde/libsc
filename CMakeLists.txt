@@ -74,6 +74,10 @@ endif(BUILD_TESTING)
 
 # --- packaging
 
+install(FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/FindSC.cmake
+  DESTINATION lib/cmake/Modules)
+
 include(cmake/pkgconf.cmake)
 include(cmake/install.cmake)
 
