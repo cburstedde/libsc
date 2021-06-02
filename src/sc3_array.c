@@ -65,9 +65,8 @@ sc3_array_is_valid (const sc3_array_t * a, char *reason)
   }
   else {
     SC3E_TEST (a->mem != NULL || a->ecount * a->esize == 0, reason);
-    SC3E_TEST (a->ealloc == 0
-               || SC3_ISPOWOF2 (a->ealloc)
-               || a->viewed != NULL , reason);
+    SC3E_TEST (a->ealloc == 0 || SC3_ISPOWOF2 (a->ealloc) ||
+               a->viewed != NULL, reason);
     SC3E_TEST (a->ecount <= a->ealloc, reason);
 
     /* further check array view */
@@ -420,12 +419,12 @@ sc3_array_new_view (sc3_allocator_t * alloc, sc3_array_t ** view,
   (*view)->ealloc = length;
   (*view)->mem = a->mem + (*view)->esize * offset;
 
+  /* remember and reference the viewed array */
   (*view)->viewed = a;
   SC3E (sc3_array_ref (a));
 
   (*view)->setup = 1;
   SC3A_IS (sc3_array_is_view, *view);
-
   return NULL;
 }
 
@@ -439,7 +438,7 @@ sc3_array_new_data (sc3_allocator_t * alloc, sc3_array_t ** view,
   /* verify input parametrs */
   SC3A_IS (sc3_allocator_is_setup, alloc);
   SC3A_CHECK (offset >= 0 && length >= 0);
-  SC3A_CHECK (data != NULL || esize * length != 0);
+  SC3A_CHECK (data != NULL || esize * length == 0);
 
   /* create array and adjust for being a view on data */
   SC3E (sc3_array_new (alloc, view));
@@ -450,9 +449,9 @@ sc3_array_new_data (sc3_allocator_t * alloc, sc3_array_t ** view,
 
   /* special setting to indicate view on data */
   (*view)->viewed = *view;
+
   (*view)->setup = 1;
   SC3A_IS (sc3_array_is_data, *view);
-
   return NULL;
 }
 
@@ -460,7 +459,7 @@ sc3_error_t        *
 sc3_array_renew_view (sc3_array_t ** view, sc3_array_t * a, int offset,
                       int length)
 {
-  sc3_array_t * old_a = (*view)->viewed;
+  sc3_array_t        *old_a = (*view)->viewed;
 
   /* verify input parametrs */
   SC3A_IS (sc3_array_is_view, *view);
