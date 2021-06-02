@@ -385,6 +385,7 @@ sc3_error_t        *sc3_array_renew_view (sc3_array_t ** view,
  * \param [out] view    Pointer to existing view on data to be adjusted.
  *                      The element size of the view remains the same.
  * \param [in] data     The data must not be moved while view is alive.
+ * \param [in] esize    Size of one viewed element in bytes, same as view's!
  * \param [in] offset   The offset of the viewed section in element units.
  *                      This offset cannot be changed unless the view is renewed.
  * \param [in] length   The length of the viewed section in element units.
