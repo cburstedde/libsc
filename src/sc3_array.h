@@ -310,7 +310,7 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
  */
 void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
 
-/** Create a view array pointing to the same memory as a given array.
+/** Create a view array pointing into the same memory as a given array.
  * Inherit the data element size from the given array.  The view refs the
  * viewed array, which must thus not be destroyed before this view.
  * \param [in,out] alloc    An allocator that is setup.
@@ -357,15 +357,16 @@ sc3_error_t        *sc3_array_new_data (sc3_allocator_t * alloc,
                                         void *data, size_t esize,
                                         int offset, int length);
 
-/** Adjust an existed view array for tracking memory of a new array.
- * Inherit the data element size from the given array is. The view must be
- * destroyed BEFORE the target array. An exception will be thrown otherwise.
- * \param [out] view    Pointer to the created view array to be adjusted.
+/** Adjust an existed view array for a different window and/or viewed array.
+ * Inherit the data element size from the given array.  The view refs the
+ * viewed array, which must thus not be destroyed before this view.
+ * \param [out] view    Pointer to existing view array to be adjusted.
  *                      This array will refer to the memory of
  *                      the referenced array \a a corresponding to
  *                      indices [offset, offset + length).
  *                      The view is setup and not resizable.
  * \param [in] a        The array must be setup and not resizable.
+ *                      Its element size must be identical to the view's.
  * \param [in] offset   The offset of the viewed section in element units.
  *                      The offset + length must be within length of \a a.
  * \param [in] length   The length of the viewed section in element units.
@@ -373,25 +374,21 @@ sc3_error_t        *sc3_array_new_data (sc3_allocator_t * alloc,
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_renew_view (sc3_array_t ** view,
-                                          sc3_array_t * a, int offset,
-                                          int length);
+                                          sc3_array_t * a,
+                                          int offset, int length);
 
-/** Adjust an existed view array for tracking some given memory fragment.
- * Warning!  Potentially dangerous function.  Make sure that array's length
+/** Adjust an existing view on data for tracking some given memory fragment.
+ * We have no means to verify that the fragment exists and stays alive.
+ * \note Potentially dangerous function!  Make sure that array's length
  * from start offset is supported by the length of the given fragment.
  * Otherwise the behavior is undefined.
- * The view is setup and never resizable.
- * \param [out] view    Pointer to the created view array to be adjusted.
- *                      The number of elements view->ecount must be such that
- *                      (view->ecount + idx) * view->esize <= |alloc memory of a|.
- *                      (Sub)array view will contain all the memory of
- *                      a corresponding indices [idx, view->ecount + idx).
+ * \param [out] view    Pointer to existing view on data to be adjusted.
+ *                      The element size of the view remains the same.
  * \param [in] data     The data must not be moved while view is alive.
- * \param [in] esize    Size of one array element in bytes.
  * \param [in] offset   The offset of the viewed section in element units.
- *                      This offset cannot be changed until the view is reset.
+ *                      This offset cannot be changed unless the view is renewed.
  * \param [in] length   The length of the viewed section in element units.
- *                      The view cannot be resized to exceed this length.
+ *                      The view cannot be resized resized unless it is renewed.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_renew_data (sc3_array_t ** view, void *data,
