@@ -68,11 +68,6 @@ sc3_array_is_valid (const sc3_array_t * a, char *reason)
     SC3E_TEST (a->ealloc == 0 || SC3_ISPOWOF2 (a->ealloc) ||
                a->viewed != NULL, reason);
     SC3E_TEST (a->ecount <= a->ealloc, reason);
-
-    /* further check array view */
-    if (a->viewed != NULL && a->viewed != a) {
-      SC3E_IS (sc3_array_is_unresizable, a->viewed, reason);
-    }
   }
   SC3E_YES (reason);
 }
@@ -110,9 +105,17 @@ sc3_array_is_unresizable (const sc3_array_t * a, char *reason)
 }
 
 int
+sc3_array_is_alloced (const sc3_array_t * a, char *reason)
+{
+  SC3E_IS (sc3_array_is_setup, a, reason);
+  SC3E_TEST (a->viewed == NULL, reason);
+  SC3E_YES (reason);
+}
+
+int
 sc3_array_is_view (const sc3_array_t * a, char *reason)
 {
-  SC3E_IS (sc3_array_is_unresizable, a, reason);
+  SC3E_IS (sc3_array_is_setup, a, reason);
   SC3E_TEST (a->viewed != NULL && a->viewed != a, reason);
   SC3E_YES (reason);
 }
@@ -120,7 +123,7 @@ sc3_array_is_view (const sc3_array_t * a, char *reason)
 int
 sc3_array_is_data (const sc3_array_t * a, char *reason)
 {
-  SC3E_IS (sc3_array_is_unresizable, a, reason);
+  SC3E_IS (sc3_array_is_setup, a, reason);
   SC3E_TEST (a->viewed == a, reason);
   SC3E_YES (reason);
 }
@@ -138,6 +141,7 @@ sc3_array_new (sc3_allocator_t * aator, sc3_array_t ** ap)
   SC3E (sc3_refcount_init (&a->rc));
   a->esize = 1;
   a->ealloc = 8;
+  a->resizable = 1;
   a->aator = aator;
   SC3A_IS (sc3_array_is_new, a);
 
@@ -221,7 +225,7 @@ sc3_array_setup (sc3_array_t * a)
 
   /* set array to setup state */
   a->setup = 1;
-  SC3A_IS (sc3_array_is_setup, a);
+  SC3A_IS (sc3_array_is_alloced, a);
   return NULL;
 }
 
@@ -281,6 +285,7 @@ sc3_array_destroy (sc3_array_t ** ap)
 sc3_error_t        *
 sc3_array_resize (sc3_array_t * a, int new_ecount)
 {
+  SC3A_IS (sc3_array_is_alloced, a);
   SC3A_IS (sc3_array_is_resizable, a);
   SC3A_CHECK (0 <= new_ecount && new_ecount <= SC3_INT_HPOW);
 
@@ -368,7 +373,7 @@ sc3_array_freeze (sc3_array_t * a)
 {
   SC3A_IS (sc3_array_is_setup, a);
   if (a->resizable) {
-    if (a->tighten && a->ecount < a->ealloc) {
+    if (a->viewed == NULL && a->tighten && a->ecount < a->ealloc) {
       a->ealloc = a->ecount;
       SC3E (sc3_allocator_realloc (a->aator, a->ealloc * a->esize, &a->mem));
     }
@@ -462,6 +467,7 @@ sc3_array_renew_view (sc3_array_t ** view, sc3_array_t * a, int offset,
   /* verify input parametrs */
   SC3A_CHECK (view != NULL);
   SC3A_IS (sc3_array_is_view, *view);
+  SC3A_IS (sc3_array_is_resizable, *view);
   SC3A_IS (sc3_array_is_unresizable, a);
   SC3A_CHECK ((*view)->esize == a->esize);
   SC3A_CHECK (offset >= 0 && length >= 0);
@@ -489,6 +495,7 @@ sc3_array_renew_data (sc3_array_t ** view, void *data, size_t esize,
   /* verify input parametrs */
   SC3A_CHECK (view != NULL);
   SC3A_IS (sc3_array_is_data, *view);
+  SC3A_IS (sc3_array_is_resizable, *view);
   SC3A_CHECK ((*view)->esize == esize);
   SC3A_CHECK (offset >= 0 && length >= 0);
   SC3A_CHECK (data != NULL || esize * length == 0);
