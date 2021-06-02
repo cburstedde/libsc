@@ -198,6 +198,8 @@ test_view (void)
     SC3E_DEMAND (data[i + offset / 2] == *(int *) ptr_view,
                  "the view points to the wrong memory");
   }
+  /* renew view with a NULL data */
+  SC3E (sc3_array_renew_data (&view, NULL, isize, offset, 0));
 
   /*destroy the view and free the data */
   SC3E (sc3_allocator_free (alloc, data));
