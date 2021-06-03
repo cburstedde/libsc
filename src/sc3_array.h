@@ -422,7 +422,8 @@ sc3_error_t        *sc3_array_renew_data (sc3_array_t ** view, void *data,
  *                      Pointer must not be NULL.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_get_elem_size (sc3_array_t * a, size_t *esize);
+sc3_error_t        *sc3_array_get_elem_size (const sc3_array_t * a,
+                                             size_t *esize);
 
 /** Return element count of an array that is setup.
  * \param [in] a        Array must be setup.
@@ -430,7 +431,8 @@ sc3_error_t        *sc3_array_get_elem_size (sc3_array_t * a, size_t *esize);
  *                      Pointer must not be NULL.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_get_elem_count (sc3_array_t * a, int *ecount);
+sc3_error_t        *sc3_array_get_elem_count (const sc3_array_t * a,
+                                              int *ecount);
 
 /** Return the array's element count without creating error objects.
  * \param [in] a        The array must be setup.  Otherwise, return 0

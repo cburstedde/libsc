@@ -516,7 +516,7 @@ sc3_array_renew_data (sc3_array_t ** view, void *data, size_t esize,
 }
 
 sc3_error_t        *
-sc3_array_get_elem_size (sc3_array_t * a, size_t *esize)
+sc3_array_get_elem_size (const sc3_array_t * a, size_t *esize)
 {
   SC3E_RETVAL (esize, 0);
   SC3A_IS (sc3_array_is_setup, a);
@@ -526,7 +526,7 @@ sc3_array_get_elem_size (sc3_array_t * a, size_t *esize)
 }
 
 sc3_error_t        *
-sc3_array_get_elem_count (sc3_array_t * a, int *ecount)
+sc3_array_get_elem_count (const sc3_array_t * a, int *ecount)
 {
   SC3E_RETVAL (ecount, 0);
   SC3A_IS (sc3_array_is_setup, a);

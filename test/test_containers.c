@@ -232,7 +232,7 @@ output_error (sc3_error_t ** pe)
 
     SC3E (sc3_error_restore_location (e, efile, eline));
     SC3E (sc3_error_restore_message (e, emsg));
-    SC3E (sc3_error_get_stack (e, &s));
+    SC3E (sc3_error_ref_stack (e, &s));
     SC3E (sc3_error_destroy (&e));
     e = s;
     ++depth;

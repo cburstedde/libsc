@@ -95,17 +95,17 @@
  *  * \ref sc3_error_access_message
  *  * \ref sc3_error_restore_message must be called for every message access
  *  * \ref sc3_error_get_kind
- *  * \ref sc3_error_get_stack yields NULL or an error that is accessed
+ *  * \ref sc3_error_ref_stack yields NULL or an error that is accessed
  *                             and dropped in the same way.
- *  * \ref sc3_error_get_text creates a text summary of all error information.
+ *  * \ref sc3_error_copy_text creates a text summary of all error information.
  *
  * To drop responsibility for an error object, use \ref sc3_error_unref.
  *
  * As a convenience for calling libsc from an application, we have added \ref
  * sc3_error_check.  It examines an error passed in and returns 0 if the error
  * is NULL.  Otherwise, it extracts its text block using \ref
- * sc3_error_get_text, calls \ref sc3_error_unref and returns -1.  This way, an
- * application program can react on the return value and use the message for
+ * sc3_error_copy_text, calls \ref sc3_error_unref and returns -1.  This way,
+ * an application program can react on the return value and use the message for
  * its own reporting.  What is lost by this approach is the ability to
  * distinguish various kinds of error.  In effect, all errors are treated the
  * same downstream, which is fine when only using it for fatal conditions.
@@ -906,7 +906,7 @@ sc3_error_t        *sc3_error_restore_message (sc3_error_t * e,
  *                      On success, set to error's kind.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_error_get_kind (sc3_error_t * e,
+sc3_error_t        *sc3_error_get_kind (const sc3_error_t * e,
                                         sc3_error_kind_t * kind);
 
 #if 0
@@ -916,22 +916,9 @@ sc3_error_t        *sc3_error_get_kind (sc3_error_t * e,
  *                      On success, set to error's severity.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_error_get_severity (sc3_error_t * e,
+sc3_error_t        *sc3_error_get_severity (const sc3_error_t * e,
                                             sc3_error_severity_t * sev);
 #endif
-
-/** Return the next deepest error stack with an added reference.
- * The input error object must be setup.  Its stack is allowed to be NULL.
- * It is not changed by the call except for its stack to get referenced.
- * \param [in,out] e    The error object must be setup.
- * \param [out] pstack  Pointer must not be NULL.
- *                      When function returns cleanly, set to input error's
- *                      stack object.  If the stack is not NULL, it is refd.
- *                      In this case it must be unrefd when no longer needed.
- * \return              NULL on success, error object otherwise.
- */
-sc3_error_t        *sc3_error_get_stack (sc3_error_t * e,
-                                         sc3_error_t ** pstack);
 
 /** Access the toplevel information in an error object and turn it into text.
  * This function goes down the error stack as an option, or not.
@@ -949,9 +936,24 @@ sc3_error_t        *sc3_error_get_stack (sc3_error_t * e,
  * \param [in] buflen       Positive number of bytes available in \b buffer.
  * \return                  NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_error_get_text (sc3_error_t * e,
-                                        int recursion, int dobasename,
-                                        char *buffer, size_t buflen);
+sc3_error_t        *sc3_error_copy_text (sc3_error_t * e,
+                                         int recursion, int dobasename,
+                                         char *buffer, size_t buflen);
+
+/** Return the next deepest error stack with an added reference.
+ * The input error object must be setup.  Its stack is allowed to be NULL.
+ * It is not changed by the call except for its stack to get referenced.
+ * \param [in,out] e    The error object must be setup.
+ *                      It is possible to unref the error while the refd stack
+ *                      is still alive.  Don't \ref sc3_error_destroy it then.
+ * \param [out] pstack  Pointer must not be NULL.
+ *                      When function returns cleanly, set to input error's
+ *                      stack object.  If the stack is not NULL, it is refd.
+ *                      In this case it must be unrefd when no longer needed.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_error_ref_stack (sc3_error_t * e,
+                                         sc3_error_t ** pstack);
 
 /** Translate an error object into a return value and a text block.
  * \param [in,out] e        On input, address of an error pointer.
