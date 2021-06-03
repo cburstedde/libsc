@@ -180,7 +180,8 @@ sc3_error_t        *sc3_mpienv_destroy (sc3_mpienv_t ** mp);
  *                      a faster non-MPI replacement for allocating windows.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_mpienv_get_shared (sc3_mpienv_t * m, int *shared);
+sc3_error_t        *sc3_mpienv_get_shared (const sc3_mpienv_t * m,
+                                           int *shared);
 
 /** Query whether the rank of a process within a node.
  * \param [in] m        Valid and setup mpi environment.
@@ -188,7 +189,8 @@ sc3_error_t        *sc3_mpienv_get_shared (sc3_mpienv_t * m, int *shared);
  *                      Written to -1 on error return.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_mpienv_get_noderank (sc3_mpienv_t * m, int *noderank);
+sc3_error_t        *sc3_mpienv_get_noderank (const sc3_mpienv_t * m,
+                                             int *noderank);
 
 /** Query whether the size of the node communicator.
  * \param [in] m        Valid and setup mpi environment.
@@ -196,7 +198,8 @@ sc3_error_t        *sc3_mpienv_get_noderank (sc3_mpienv_t * m, int *noderank);
  *                      Written to -1 on error return.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_mpienv_get_nodesize (sc3_mpienv_t * m, int *nodesize);
+sc3_error_t        *sc3_mpienv_get_nodesize (const sc3_mpienv_t * m,
+                                             int *nodesize);
 
 #ifdef __cplusplus
 #if 0

@@ -320,8 +320,8 @@ sc3_error_unref (sc3_error_t ** ep)
   if (waslast) {
     *ep = NULL;
 
-    SC3E_DEMAND (e->accessed_locations == 0, "Pending location accesses");
-    SC3E_DEMAND (e->accessed_messages == 0, "Pending message accesses");
+    SC3E_DEMAND (e->accessed_locations == 0, "Pending location access");
+    SC3E_DEMAND (e->accessed_messages == 0, "Pending message access");
     if (e->stack != NULL) {
       SC3L (&leak, sc3_error_unref (&e->stack));
     }
@@ -399,7 +399,7 @@ sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
 
     /* do down the error stack */
     stack = NULL;
-    SC3E_NULL_SET (inte, sc3_error_get_stack (e, &stack));
+    SC3E_NULL_SET (inte, sc3_error_ref_stack (e, &stack));
     SC3E_NULL_SET (inte, sc3_error_destroy (&e));
     if (inte != NULL) {
       sc3_error_destroy (&inte);
@@ -554,7 +554,7 @@ sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
     }
 
     /* do down the error stack, we get a stack with a bumped reference */
-    SC3E (sc3_error_get_stack (e, &stack));
+    SC3E (sc3_error_ref_stack (e, &stack));
 
     /* leak errors in this function are fatal to avoid infinite recursion */
     SC3E (sc3_error_unref (&e));
@@ -738,7 +738,7 @@ sc3_error_restore_message (sc3_error_t * e, const char *errmsg)
 }
 
 sc3_error_t        *
-sc3_error_get_kind (sc3_error_t * e, sc3_error_kind_t * kind)
+sc3_error_get_kind (const sc3_error_t * e, sc3_error_kind_t * kind)
 {
   SC3E_RETVAL (kind, SC3_ERROR_BUG);
   SC3A_IS (sc3_error_is_setup, e);
@@ -749,7 +749,7 @@ sc3_error_get_kind (sc3_error_t * e, sc3_error_kind_t * kind)
 
 #if 0
 sc3_error_t        *
-sc3_error_get_severity (sc3_error_t * e, sc3_error_severity_t * sev)
+sc3_error_get_severity (const sc3_error_t * e, sc3_error_severity_t * sev)
 {
   SC3E_RETVAL (sev, SC3_ERROR_BUG);
   SC3A_IS (sc3_error_is_setup, e);
@@ -760,7 +760,7 @@ sc3_error_get_severity (sc3_error_t * e, sc3_error_severity_t * sev)
 #endif
 
 sc3_error_t        *
-sc3_error_get_stack (sc3_error_t * e, sc3_error_t ** pstack)
+sc3_error_ref_stack (sc3_error_t * e, sc3_error_t ** pstack)
 {
   SC3E_RETVAL (pstack, NULL);
   SC3A_IS (sc3_error_is_setup, e);
@@ -772,8 +772,8 @@ sc3_error_get_stack (sc3_error_t * e, sc3_error_t ** pstack)
 }
 
 sc3_error_t        *
-sc3_error_get_text_rec (sc3_error_t * e, int recursion, int rdepth,
-                        char *bwork, char *buffer, size_t *bufrem)
+sc3_error_copy_text_rec (sc3_error_t * e, int recursion, int rdepth,
+                         char *bwork, char *buffer, size_t *bufrem)
 {
   int                 printed;
   int                 eline;
@@ -792,15 +792,15 @@ sc3_error_get_text_rec (sc3_error_t * e, int recursion, int rdepth,
   /* see if there is reason for recursion */
   stack = NULL;
   if (recursion != 0) {
-    SC3E (sc3_error_get_stack (e, &stack));
+    SC3E (sc3_error_ref_stack (e, &stack));
   }
 
   if (stack != NULL && recursion < 0) {
     /* postorder */
 
     bufin = *bufrem;
-    SC3E (sc3_error_get_text_rec (stack, recursion, rdepth + 1,
-                                  bwork, buffer, bufrem));
+    SC3E (sc3_error_copy_text_rec (stack, recursion, rdepth + 1,
+                                   bwork, buffer, bufrem));
     SC3A_CHECK (*bufrem < bufin);
     buffer += bufin - *bufrem;
 
@@ -861,29 +861,30 @@ sc3_error_get_text_rec (sc3_error_t * e, int recursion, int rdepth,
       /* we replace the terminating NUL with a line break to continue */
       SC3A_CHECK (buffer[-1] == '\0');
       buffer[-1] = '\n';
-      SC3E (sc3_error_get_text_rec (stack, recursion, rdepth + 1,
-                                    bwork, buffer, bufrem));
+      SC3E (sc3_error_copy_text_rec (stack, recursion, rdepth + 1,
+                                     bwork, buffer, bufrem));
     }
   }
 
   /* clean up and return */
   if (stack != NULL) {
+    /* leak error here is fatal to simplify calling code */
     SC3E (sc3_error_unref (&stack));
   }
   return NULL;
 }
 
 sc3_error_t        *
-sc3_error_get_text (sc3_error_t * e, int recursion, int dobasename,
-                    char *buffer, size_t buflen)
+sc3_error_copy_text (sc3_error_t * e, int recursion, int dobasename,
+                     char *buffer, size_t buflen)
 {
   /* compute number of remaining bytes but do not return it to the caller */
   if (!dobasename) {
-    SC3E (sc3_error_get_text_rec (e, recursion, 0, NULL, buffer, &buflen));
+    SC3E (sc3_error_copy_text_rec (e, recursion, 0, NULL, buffer, &buflen));
   }
   else {
     char                bwork[SC3_BUFSIZE];
-    SC3E (sc3_error_get_text_rec (e, recursion, 0, bwork, buffer, &buflen));
+    SC3E (sc3_error_copy_text_rec (e, recursion, 0, bwork, buffer, &buflen));
   }
   return NULL;
 }
@@ -892,7 +893,9 @@ static sc3_error_t *
 sc3_error_check_text (sc3_error_t ** e, char *buffer, size_t buflen)
 {
   SC3A_CHECK (e != NULL);
-  SC3E (sc3_error_get_text (*e, -1, 1, buffer, buflen));
+  SC3E (sc3_error_copy_text (*e, -1, 1, buffer, buflen));
+
+  /* leak error here is fatal to simplify calling code */
   SC3E (sc3_error_unref (e));
   return NULL;
 }
@@ -908,6 +911,7 @@ sc3_error_check (sc3_error_t ** e, char *buffer, size_t buflen)
       snprintf (buffer, buflen, "%s", "Error: Null input to sc3_error_check");
     }
     if (!(e == NULL)) {
+      /* leak error here is fatal to simplify calling code */
       sc3_error_unref (e);
     }
     return -1;
@@ -923,11 +927,11 @@ sc3_error_check (sc3_error_t ** e, char *buffer, size_t buflen)
   e2 = sc3_error_check_text (e, buffer, buflen);
   if (e2 != NULL) {
     /* something is wrong with internal error reporting */
-    e3 = sc3_error_get_text (e2, -1, 1, buffer, buflen);
+    e3 = sc3_error_copy_text (e2, -1, 1, buffer, buflen);
     if (e3 != NULL) {
       /* something is even more badly wrong with internal error reporting */
       snprintf (buffer, buflen, "%s",
-                "Error: inconsistency inside sc3_error_get_text");
+                "Error: inconsistency inside sc3_error_copy_text");
       sc3_error_unref (&e3);
     }
     sc3_error_unref (&e2);

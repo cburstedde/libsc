@@ -330,7 +330,7 @@ sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
 }
 
 sc3_error_t        *
-sc3_mstamp_get_elem_size (sc3_mstamp_t * mst, size_t * esize)
+sc3_mstamp_get_elem_size (const sc3_mstamp_t * mst, size_t *esize)
 {
   SC3E_RETVAL (esize, 0);
   SC3A_IS (sc3_mstamp_is_setup, mst);
@@ -340,7 +340,7 @@ sc3_mstamp_get_elem_size (sc3_mstamp_t * mst, size_t * esize)
 }
 
 sc3_error_t        *
-sc3_mstamp_get_elem_count (sc3_mstamp_t * mst, int *ecount)
+sc3_mstamp_get_elem_count (const sc3_mstamp_t * mst, int *ecount)
 {
   SC3E_RETVAL (ecount, 0);
   SC3A_IS (sc3_mstamp_is_setup, mst);

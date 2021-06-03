@@ -24,7 +24,7 @@ AC_CHECK_FUNCS([aligned_alloc posix_memalign])
 dnl custom memory alignment option
 AC_MSG_CHECKING([for memory alignment option])
 SC_ARG_DISABLE_PREFIX([memalign],
-  [While the default alignment is sizeof (void *),
+  [while the default alignment is sizeof (void *),
    this switch will choose the standard system malloc.
    For custom alignment use --enable-memalign=<bytes>],
   [MEMALIGN], [$1])

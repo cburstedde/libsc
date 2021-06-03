@@ -217,8 +217,8 @@ sc3_error_t        *sc3_mstamp_free (sc3_mstamp_t * mst, void *elem);
  *                      Pointer must not be NULL.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_mstamp_get_elem_size (sc3_mstamp_t * mst,
-                                              size_t * esize);
+sc3_error_t        *sc3_mstamp_get_elem_size (const sc3_mstamp_t * mst,
+                                              size_t *esize);
 
 /** Return number of live elements returned by a memory stamp container.
  * \param [in] mst      Memory stamp container must be setup.
@@ -226,7 +226,7 @@ sc3_error_t        *sc3_mstamp_get_elem_size (sc3_mstamp_t * mst,
  *                      Pointer must not be NULL.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_mstamp_get_elem_count (sc3_mstamp_t * mst,
+sc3_error_t        *sc3_mstamp_get_elem_count (const sc3_mstamp_t * mst,
                                                int *scount);
 
 #ifdef __cplusplus
