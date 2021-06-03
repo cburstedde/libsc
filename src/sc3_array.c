@@ -134,6 +134,7 @@ sc3_array_is_sorted (sc3_array_t * a,
   SC3E_YES (reason);
 }
 
+int
 sc3_array_is_alloced (const sc3_array_t * a, char *reason)
 {
   SC3E_IS (sc3_array_is_setup, a, reason);
