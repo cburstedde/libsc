@@ -97,6 +97,33 @@ sc3_array_is_unresizable (const sc3_array_t * a, char *reason)
   SC3E_YES (reason);
 }
 
+int
+sc3_array_is_sorted (sc3_array_t * a,
+                     sc3_error_t * (*compar) (const void *, const void *,
+                                              int *),
+                     char *reason)
+{
+  SC3E_TEST (compar != NULL, reason);
+  SC3E_IS (sc3_array_is_setup, a, reason);
+
+  int                 zz, j;
+  void               *vold, *vnew;
+
+  if (a->ecount <= 1) {
+    SC3E_YES (reason);
+  }
+
+  vold = sc3_array_index_noerr (a, 0);
+  for (zz = 1; zz < a->ecount; ++zz) {
+    vnew = sc3_array_index_noerr (a, zz);
+    compar (vold, vnew, &j);
+    SC3E_TEST (j <= 0, reason);
+    vold = vnew;
+  }
+
+  SC3E_YES (reason);
+}
+
 sc3_error_t        *
 sc3_array_new (sc3_allocator_t * aator, sc3_array_t ** ap)
 {
@@ -289,33 +316,6 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
   return NULL;
 }
 
-int
-sc3_array_is_sorted (sc3_array_t * a,
-                     sc3_error_t * (*compar) (const void *, const void *,
-                                              int *),
-                     char *reason)
-{
-  int                 count;
-  int                 zz, j;
-  void               *vold, *vnew;
-
-  count = sc3_array_elem_count_noerr (a);
-
-  if (count <= 1) {
-    SC3E_YES (reason);
-  }
-
-  vold = sc3_array_index_noerr (a, 0);
-  for (zz = 1; zz < count; ++zz) {
-    vnew = sc3_array_index_noerr (a, zz);
-    compar (vold, vnew, &j);
-    SC3E_TEST (j <= 0, reason);
-    vold = vnew;
-  }
-
-  SC3E_YES (reason);
-}
-
 sc3_error_t        *
 sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
                  int num_types, sc3_array_type_t type_fn,
@@ -324,6 +324,9 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
   int              count;
   int              zi, *zp;
   int              guess, low, high, type, step;
+
+  SC3A_IS (sc3_array_is_setup, a);
+  SC3A_IS (sc3_array_is_setup, offsets);
 #ifdef P4EST_ENABLE_DEBUG
   size_t           elem_size;
 
