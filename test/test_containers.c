@@ -29,6 +29,8 @@
 
 #include <sc.h>
 #include <sc3_memstamp.h>
+#include <sc3_array.h>
+#include <sc_random.h>
 
 static sc3_error_t *
 test_allocations (void)
@@ -134,6 +136,79 @@ test_correctness (void)
 }
 
 static sc3_error_t *
+test_view (void)
+{
+  const int           nelems = 7829;
+  const size_t        isize = sizeof (int);
+  const int           offset = nelems / 3 - 1;
+  const int           length = 2 * offset;
+  int                 i;
+  sc3_array_t        *a, *view;
+  int                *iptr, *data;
+  void               *ptr, *ptr_view;
+  sc_rand_state_t     rs = 203, *prs = &rs;
+  sc3_allocator_t    *alloc;
+
+  /* create a toplevel allocator */
+  SC3E (sc3_allocator_new (sc3_allocator_nocount (), &alloc));
+  SC3E (sc3_allocator_setup (alloc));
+
+  /*create and fill a simple sc3_array and c-array */
+  SC3E (sc3_array_new (alloc, &a));
+  SC3E (sc3_array_set_elem_size (a, isize));
+  SC3E (sc3_array_set_elem_count (a, nelems));
+  SC3E (sc3_array_set_resizable (a, 0));
+  SC3E (sc3_array_setup (a));
+  SC3E (sc3_allocator_malloc (alloc, isize * nelems, &data));
+
+  for (i = 0; i < nelems; ++i) {
+    SC3E (sc3_array_index (a, i, &iptr));
+    *iptr = sc_rand_poisson (prs, INT_MAX * 0.5);
+    data[i] = *iptr;
+  }
+  SC3E (sc3_array_new_view (alloc, &view, a, offset, length));
+
+  for (i = 0; i < length; ++i) {
+    SC3E (sc3_array_index (a, i + offset, &ptr));
+    SC3E (sc3_array_index (view, i, &ptr_view));
+    SC3E_DEMAND (*(int *) ptr == *(int *) ptr_view && ptr == ptr_view,
+                 "the view points to the wrong memory");
+  }
+  SC3E (sc3_array_renew_view (&view, a, offset / 2, length / 2));
+  for (i = 0; i < length / 2; ++i) {
+    SC3E (sc3_array_index (a, i + offset / 2, &ptr));
+    SC3E (sc3_array_index (view, i, &ptr_view));
+    SC3E_DEMAND (*(int *) ptr == *(int *) ptr_view && ptr == ptr_view,
+                 "the view points to the wrong memory");
+  }
+
+  SC3E (sc3_array_destroy (&view));
+  SC3E (sc3_array_destroy (&a));
+
+  /*make a new view of data */
+  SC3E (sc3_array_new_data (alloc, &view, data, isize, offset, length));
+  for (i = 0; i < length; ++i) {
+    SC3E (sc3_array_index (view, i, &ptr_view));
+    SC3E_DEMAND (data[i + offset] == *(int *) ptr_view,
+                 "the view points to the wrong memory");
+  }
+  SC3E (sc3_array_renew_data (&view, data, isize, offset / 2, length / 2));
+  for (i = 0; i < length / 2; ++i) {
+    SC3E (sc3_array_index (view, i, &ptr_view));
+    SC3E_DEMAND (data[i + offset / 2] == *(int *) ptr_view,
+                 "the view points to the wrong memory");
+  }
+  /* renew view with a NULL data */
+  SC3E (sc3_array_renew_data (&view, NULL, isize, offset, 0));
+
+  /*destroy the view and free the data */
+  SC3E (sc3_allocator_free (alloc, data));
+  SC3E (sc3_array_destroy (&view));
+  SC3E (sc3_allocator_destroy (&alloc));
+  return NULL;
+}
+
+static sc3_error_t *
 output_error (sc3_error_t ** pe)
 {
   int                 eline;
@@ -188,6 +263,8 @@ main (int argc, char **argv)
   e = test_allocations ();
   report_error (&e);
   e = test_correctness ();
+  report_error (&e);
+  e = test_view ();
   report_error (&e);
   return 0;
 }

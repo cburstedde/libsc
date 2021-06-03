@@ -36,8 +36,8 @@
  * The array can serve as a push-and-pop stack.
  *
  * We use standard `int` types for indexing.
- * The total array memory size may be greater than 2GB depending on the
- * size of each element.
+ * The total array memory size may be greater than 2 GB depending
+ * on the size of each element.
  *
  * In the setup phase, we set the size of the array and optionally
  * an initial count, an initzero property, and some more.
@@ -46,8 +46,12 @@
  * Resizability can be terminated by calling \ref sc3_array_freeze
  * (only after \ref sc3_array_setup).  The freeze is not reversible.
  *
- * An array can only be refd if it is setup and non-resizable.
- * Otherwise, the usual ref-, unref- and destroy semantics hold.
+ * We allow for arrays to be views on other arrays or plain data.
+ * This provides for one unified way of indexing into any memory.
+ * Views can be renewed quickly to optimize for this common case.
+ *
+ * The usual ref-, unref- and destroy semantics hold, except
+ * an array can only be refd if it is setup and non-resizable.
  */
 
 #ifndef SC3_ARRAY_H
@@ -94,7 +98,11 @@ int                 sc3_array_is_new (const sc3_array_t * a, char *reason);
 int                 sc3_array_is_setup (const sc3_array_t * a, char *reason);
 
 /** Query whether an array is setup and resizable.
- * A resizable array becomes non-resizable by \ref sc3_array_freeze.
+ * This applies to both arrays and views right after being setup.
+ * Resizable arrays can be passed to \ref sc3_array_resize, while
+ * resizable array views can be passed to \ref sc3_array_renew_view
+ * and resizable data views can be passed to \ref sc3_array_renew_data.
+ * Any resizable array becomes non-resizable by \ref sc3_array_freeze.
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
@@ -112,6 +120,31 @@ int                 sc3_array_is_resizable (const sc3_array_t * a,
  */
 int                 sc3_array_is_unresizable (const sc3_array_t * a,
                                               char *reason);
+
+/** Query whether an array is allocated, thus not a view.
+ * \param [in] a        Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff array not NULL and a view onto an array.
+ */
+int                 sc3_array_is_alloced (const sc3_array_t * a,
+                                          char *reason);
+
+/** Query whether an array is a view on another array.
+ * \param [in] a        Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff array not NULL and a view onto an array.
+ */
+int                 sc3_array_is_view (const sc3_array_t * a, char *reason);
+
+/** Query whether an array is a view on plain data.
+ * \param [in] a        Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True iff array not NULL and a view onto plain data.
+ */
+int                 sc3_array_is_data (const sc3_array_t * a, char *reason);
 
 /** Create a new array object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
@@ -167,7 +200,7 @@ sc3_error_t        *sc3_array_set_initzero (sc3_array_t * a, int initzero);
 /** Set the resizable property of an array.
  * It determines whether the array may be resized after setup.
  * \param [in,out] a        The array must not be setup.
- * \param [in] resizable    Boolean; default is false.
+ * \param [in] resizable    Boolean; default is true.
  * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_set_resizable (sc3_array_t * a, int resizable);
@@ -211,7 +244,7 @@ sc3_error_t        *sc3_array_unref (sc3_array_t ** ap);
 /** Destroy an array with a reference count of one.
  * It is a leak error to destroy an array that is multiply referenced.
  * We unref its internal allocator, which may cause a leak error if that
- * allocator has been used against specification elsewhere in the code.
+ * allocator has one reference and live allocations elsewhere in the code.
  * \param [in,out] ap   This array must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
@@ -221,6 +254,7 @@ sc3_error_t        *sc3_array_unref (sc3_array_t ** ap);
 sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
 
 /** Resize an array, reallocating internally as needed.
+ * Only allocated arrays may be resized, views may never be.
  * The array elements are preserved to the minimum of old and new counts.
  * \param [in,out] a        The array must be resizable.
  * \param [in] new_ecount   The new element count.  0 is legal.
@@ -230,7 +264,7 @@ sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
 
 /** Enlarge an array by a number of elements.
  * The output points to the beginning of the memory for the new elements.
- * \param [in,out] a    The array must be resizable.
+ * \param [in,out] a    The array must be setup and resizable.
  * \param [in] n        Non-negative number.  If n == 0, do nothing.
  * \param [out] ptr     Address of pointer.
  *                      On output set to array element at previously last index,
@@ -243,7 +277,7 @@ sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void *ptr);
 /** Enlarge an array by one element.
  * The output points to the beginning of the memory for the new element.
  * Equivalent to \ref sc3_array_push_count (a, 1, ptr).
- * \param [in,out] a    The array must be resizable.
+ * \param [in,out] a    The array must be setup and resizable.
  * \param [out] ptr     Address of pointer.
  *                      On output set to array element at previously last index.
  *                      This argument may be NULL for no assignment.
@@ -276,16 +310,111 @@ sc3_error_t        *sc3_array_freeze (sc3_array_t * a);
 sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
 
 /** Index an array element without returning an error object.
+ * This function is optimized for speed, not safety.
  * \param [in] a        The array must be setup.
  * \param [in] i        Index must be in [0, element count).
  * \return              Address of array element at index \b i.
  *                      If the array element size is zero, the pointer
  *                      must not be dereferenced.
- *                      With --enable-debug, returns NULL if index
- *                      is out of bounds or the array is not setup.
- *                      Without, the program may crash here or later.
+ *                      When configured with --enable-debug, returns NULL
+ *                      if index is out of bounds, element size is zero,
+ *                      or the array is not setup.
+ *                      Without, the behavior is undefined
+ *                      and the program may crash here or later.
  */
 void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
+
+/** Create a view array pointing into the same memory as a given array.
+ * Inherit the data element size from the given array.  The view refs the
+ * viewed array, which must thus not be destroyed before this view.
+ * The view starts out as resizable, permitting future calls to \ref
+ * sc3_array_renew_view as long as \ref sc3_array_freeze is not called.
+ * \param [in,out] alloc    An allocator that is setup.
+ *                          The allocator is refd and remembered internally
+ *                          and will be unrefd on view destruction.
+ * \param [out] view    Pointer to the view array to be created.
+ *                      This array will refer to the memory of
+ *                      the referenced array \a a corresponding to
+ *                      indices [offset, offset + length).
+ *                      The view is setup and not resizable.
+ * \param [in] a        The viewed array must be setup and not resizable.
+ * \param [in] offset   The offset of the viewed section in element units.
+ *                      The offset + length must be within length of \a a.
+ * \param [in] length   The length of the viewed section in element units.
+ *                      The offset + length must be within length of \a a.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_new_view (sc3_allocator_t * alloc,
+                                        sc3_array_t ** view,
+                                        sc3_array_t * a,
+                                        int offset, int length);
+
+/** Create a view array pointing to some given memory fragment.
+ * We have no means to verify that the fragment exists and stays alive.
+ * The view starts out as resizable, permitting future calls to \ref
+ * sc3_array_renew_data as long as \ref sc3_array_freeze is not called.
+ * \note Potentially dangerous function!  Make sure that array's length
+ * from start offset is supported by the length of the given fragment.
+ * Otherwise the behavior is undefined.
+ * \param [in,out] alloc    An allocator that is setup.
+ *                          The allocator is refd and remembered internally
+ *                          and will be unrefd on view destruction.
+ * \param [out] view    Pointer to the view array to be created.
+ *                      It will be returned as a view on the fragment \a data.
+ *                      The view is setup and not resizable.
+ * \param [in] data     The data must not be moved while view is alive.
+ * \param [in] esize    Size of one viewed element in bytes.
+ * \param [in] offset   The offset of the viewed data section in element units.
+ *                      This offset cannot be changed unless the view is renewed.
+ * \param [in] length   The length of the viewed section in element units.
+ *                      The view cannot be resized resized unless it is renewed.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_new_data (sc3_allocator_t * alloc,
+                                        sc3_array_t ** view,
+                                        void *data, size_t esize,
+                                        int offset, int length);
+
+/** Adjust an existing view array for a different window and/or viewed array.
+ * Inherit the data element size from the given array.  The view unrefs the
+ * previously viewed array and refs the new viewed array, which must thus not
+ * be destroyed before this view.
+ * \param [out] view    Pointer to existing view array to be adjusted.
+ *                      This array will refer to the memory of
+ *                      the referenced array \a a corresponding to
+ *                      indices [offset, offset + length).
+ *                      View must not yet have been frozen.
+ * \param [in] a        The array must be setup and not resizable.
+ *                      Its element size must be identical to the view's.
+ * \param [in] offset   The offset of the viewed section in element units.
+ *                      The offset + length must be within length of \a a.
+ * \param [in] length   The length of the viewed section in element units.
+ *                      The offset + length must be within length of \a a.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_renew_view (sc3_array_t ** view,
+                                          sc3_array_t * a,
+                                          int offset, int length);
+
+/** Adjust an existing view on data for tracking some given memory fragment.
+ * We have no means to verify that the fragment exists and stays alive.
+ * \note Potentially dangerous function!  Make sure that array's length
+ * from start offset is supported by the length of the given fragment.
+ * Otherwise the behavior is undefined.
+ * \param [out] view    Pointer to existing view on data to be adjusted.
+ *                      The element size of the view remains the same.
+ *                      View must not yet have been frozen.
+ * \param [in] data     The data must not be moved while view is alive.
+ * \param [in] esize    Size of one viewed element in bytes, same as view's!
+ * \param [in] offset   The offset of the viewed section in element units.
+ *                      This offset cannot be changed unless the view is renewed.
+ * \param [in] length   The length of the viewed section in element units.
+ *                      The view cannot be resized resized unless it is renewed.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_renew_data (sc3_array_t ** view, void *data,
+                                          size_t esize, int offset,
+                                          int length);
 
 /** Return element size of an array that is setup.
  * \param [in] a        Array must be setup.
@@ -306,6 +435,7 @@ sc3_error_t        *sc3_array_get_elem_count (sc3_array_t * a, int *ecount);
 /** Return the array's element count without creating error objects.
  * \param [in] a        The array must be setup.  Otherwise, return 0
  *                      with --enable-debug, or junk or crash without.
+ *                      Repeat, the behavior is then undefined.
  * \return              The array's element count.
  */
 int                 sc3_array_elem_count_noerr (const sc3_array_t * a);
