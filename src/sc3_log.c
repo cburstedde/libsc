@@ -370,6 +370,8 @@ sc3_log_error_recursion (sc3_log_t * log, int depth,
   if (s != NULL) {
     SC3E (sc3_log_error_recursion (log, depth, role, level,
                                    s, stackdepth + 1));
+
+    /* potential leak error is considered fatal to simplify calling code */
     SC3E (sc3_error_unref (&s));
   }
 

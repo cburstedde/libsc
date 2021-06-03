@@ -868,6 +868,7 @@ sc3_error_copy_text_rec (sc3_error_t * e, int recursion, int rdepth,
 
   /* clean up and return */
   if (stack != NULL) {
+    /* leak error here is fatal to simplify calling code */
     SC3E (sc3_error_unref (&stack));
   }
   return NULL;
@@ -893,6 +894,8 @@ sc3_error_check_text (sc3_error_t ** e, char *buffer, size_t buflen)
 {
   SC3A_CHECK (e != NULL);
   SC3E (sc3_error_copy_text (*e, -1, 1, buffer, buflen));
+
+  /* leak error here is fatal to simplify calling code */
   SC3E (sc3_error_unref (e));
   return NULL;
 }
@@ -908,6 +911,7 @@ sc3_error_check (sc3_error_t ** e, char *buffer, size_t buflen)
       snprintf (buffer, buflen, "%s", "Error: Null input to sc3_error_check");
     }
     if (!(e == NULL)) {
+      /* leak error here is fatal to simplify calling code */
       sc3_error_unref (e);
     }
     return -1;

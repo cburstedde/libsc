@@ -269,7 +269,7 @@ sc3_array_unref (sc3_array_t ** ap)
       }
       else if (a->viewed != a) {
         /* release reference on viewed array */
-        SC3E (sc3_array_unref (&a->viewed));
+        SC3L (&leak, sc3_array_unref (&a->viewed));
       }
     }
     SC3E (sc3_allocator_free (aator, a));
@@ -486,6 +486,7 @@ sc3_array_renew_view (sc3_array_t ** view, sc3_array_t * a, int offset,
   (*view)->mem = a->mem + (*view)->esize * offset;
 
   if ((*view)->viewed != a) {
+    /* a leak at this point is considered fatal for simplicity */
     SC3E (sc3_array_unref (&((*view)->viewed)));
     (*view)->viewed = a;
     SC3E (sc3_array_ref (a));
