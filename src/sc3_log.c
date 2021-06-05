@@ -357,19 +357,24 @@ sc3_logv (sc3_log_t * log, int depth,
 static sc3_error_t *
 sc3_log_error_recursion (sc3_log_t * log, int depth,
                          sc3_log_role_t role, sc3_log_level_t level,
-                         sc3_error_t * e, int stackdepth)
+                         sc3_error_t * e, int stackdepth, char *bwork)
 {
   int                 line;
   const char         *errmsg;
-  const char         *filename;
+  const char         *filename, *bname;
   sc3_error_kind_t    kind;
   sc3_error_t        *s;
+
+  /* couple debug checks */
+  SC3A_CHECK (depth >= 0);
+  SC3A_CHECK (stackdepth >= 0);
+  SC3A_CHECK (bwork != NULL);
 
   /* go down the stack recursively first */
   SC3E (sc3_error_ref_stack (e, &s));
   if (s != NULL) {
     SC3E (sc3_log_error_recursion (log, depth, role, level,
-                                   s, stackdepth + 1));
+                                   s, stackdepth + 1, bwork));
 
     /* potential leak error is considered fatal to simplify calling code */
     SC3E (sc3_error_unref (&s));
@@ -379,9 +384,11 @@ sc3_log_error_recursion (sc3_log_t * log, int depth,
   SC3E (sc3_error_get_kind (e, &kind));
   SC3E (sc3_error_access_message (e, &errmsg));
   SC3E (sc3_error_access_location (e, &filename, &line));
+  SC3_BUFCOPY (bwork, filename);
+  bname = sc3_basename (bwork);
 
   sc3_logf (log, depth, role, level, "%d %s:%d:%c %s", stackdepth,
-            filename, line, sc3_error_kind_char[kind], errmsg);
+            bname, line, sc3_error_kind_char[kind], errmsg);
 
   SC3E (sc3_error_restore_message (e, errmsg));
   SC3E (sc3_error_restore_location (e, filename, line));
@@ -392,6 +399,7 @@ sc3_error_t        *
 sc3_log_error (sc3_log_t * log, int depth,
                sc3_log_role_t role, sc3_log_level_t level, sc3_error_t * e)
 {
-  SC3E (sc3_log_error_recursion (log, depth, role, level, e, 0));
+  char                bwork[SC3_BUFSIZE];
+  SC3E (sc3_log_error_recursion (log, depth, role, level, e, 0, bwork));
   return NULL;
 }

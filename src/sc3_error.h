@@ -313,6 +313,14 @@ extern              "C"
     if ((r) != NULL) { SC3_BUFCOPY ((r), #x); }                         \
     return 0; }} while (0)
 
+/** Run a function that may return an error for use in tests.
+ * Since the caller will not return an error, we convert it to integer.
+ * Make sure, as with the other macros here, that \a r is of SC3_BUFSIZE.
+ */
+#define SC3E_DO(f,r) do {                                               \
+  sc3_error_t *_e = (f);                                                \
+  if (sc3_error_check (&_e, r, SC3_BUFSIZE)) { return 0; }} while (0)
+
 /** Query an sc3_object_is_* function.
  * The argument \a f shall be such a function and \a o an object to query.
  * If the test returns false, the function puts the reason into \a r,
@@ -652,7 +660,7 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
  */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 
-#if 0
+#if 0                           /* Not used currently.  Needed? */
 /** Destroy an error object and condense its stack's messages into a string.
  * Such condensation removes some structure, so this is a last-resort call.
  * \param [in,out] pe   This error will be destroyed and pointer NULLed.
@@ -732,6 +740,21 @@ sc3_error_t        *sc3_error_new_stack (sc3_error_t ** pstack,
 sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** pstack,
                                            const char *filename,
                                            int line, const char *errmsg);
+
+/** Return the next deepest error stack with an added reference.
+ * The input error object must be setup.  Its stack is allowed to be NULL.
+ * It is not changed by the call except for its stack to get referenced.
+ * \param [in,out] e    The error object must be setup.
+ *                      It is possible to unref the error while the refd stack
+ *                      is still alive.  Don't \ref sc3_error_destroy it then.
+ * \param [out] pstack  Pointer must not be NULL.
+ *                      When function returns cleanly, set to input error's
+ *                      stack object.  If the stack is not NULL, it is refd.
+ *                      In this case it must be unrefd when no longer needed.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_error_ref_stack (sc3_error_t * e,
+                                         sc3_error_t ** pstack);
 
 /** Take an error, flatten its stack into one message, and unref it.
  * This function returns fatal if any leaks occur in freeing the error.
@@ -940,31 +963,16 @@ sc3_error_t        *sc3_error_copy_text (sc3_error_t * e,
                                          int recursion, int dobasename,
                                          char *buffer, size_t buflen);
 
-/** Return the next deepest error stack with an added reference.
- * The input error object must be setup.  Its stack is allowed to be NULL.
- * It is not changed by the call except for its stack to get referenced.
- * \param [in,out] e    The error object must be setup.
- *                      It is possible to unref the error while the refd stack
- *                      is still alive.  Don't \ref sc3_error_destroy it then.
- * \param [out] pstack  Pointer must not be NULL.
- *                      When function returns cleanly, set to input error's
- *                      stack object.  If the stack is not NULL, it is refd.
- *                      In this case it must be unrefd when no longer needed.
- * \return              NULL on success, error object otherwise.
- */
-sc3_error_t        *sc3_error_ref_stack (sc3_error_t * e,
-                                         sc3_error_t ** pstack);
-
 /** Translate an error object into a return value and a text block.
  * \param [in,out] e        On input, address of an error pointer.
  *                          The error itself may be NULL or a valid object.
  *                          Unrefd and NULLd on output in the latter case.
- * \param [out] buffer      This buffer must exist and contain at least
- *                          the input \b buflen many bytes.
+ * \param [out] buffer      If this buffer is not NULL, it must provide at
+ *                          least \b buflen many bytes.
  *                          NUL-terminated, often multi-line string on output.
  *                          There is no final newline at the end of the text.
  *                          When input \a *e is NULL, set to the empty string.
- * \param [in] buflen       Positive number of bytes available in \b buffer.
+ * \param [in] buflen       Non-negative number of bytes available in \b buffer.
  * \return                  0 if e is non-NULL and *e is NULL on input,
  *                          a negative integer otherwise.
  */
