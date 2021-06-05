@@ -346,10 +346,10 @@ sc3_error_destroy (sc3_error_t ** ep)
   return leak;
 }
 
+#if 0
 void
 sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
 {
-#if 0
   int                 remain, result;
   int                 line;
   const char         *filename, *msg;
@@ -409,8 +409,8 @@ sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
     e = stack;
   }
   while (e != NULL);
-#endif
 }
+#endif
 
 sc3_error_t        *
 sc3_error_new_kind (sc3_error_kind_t kind,

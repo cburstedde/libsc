@@ -652,7 +652,7 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
  */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 
-#if 0
+#if 0   /* Not used currently.  Needed? */
 /** Destroy an error object and condense its stack's messages into a string.
  * Such condensation removes some structure, so this is a last-resort call.
  * \param [in,out] pe   This error will be destroyed and pointer NULLed.
