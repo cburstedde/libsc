@@ -652,7 +652,7 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
  */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 
-#if 0   /* Not used currently.  Needed? */
+#if 0                           /* Not used currently.  Needed? */
 /** Destroy an error object and condense its stack's messages into a string.
  * Such condensation removes some structure, so this is a last-resort call.
  * \param [in,out] pe   This error will be destroyed and pointer NULLed.
@@ -732,6 +732,21 @@ sc3_error_t        *sc3_error_new_stack (sc3_error_t ** pstack,
 sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** pstack,
                                            const char *filename,
                                            int line, const char *errmsg);
+
+/** Return the next deepest error stack with an added reference.
+ * The input error object must be setup.  Its stack is allowed to be NULL.
+ * It is not changed by the call except for its stack to get referenced.
+ * \param [in,out] e    The error object must be setup.
+ *                      It is possible to unref the error while the refd stack
+ *                      is still alive.  Don't \ref sc3_error_destroy it then.
+ * \param [out] pstack  Pointer must not be NULL.
+ *                      When function returns cleanly, set to input error's
+ *                      stack object.  If the stack is not NULL, it is refd.
+ *                      In this case it must be unrefd when no longer needed.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_error_ref_stack (sc3_error_t * e,
+                                         sc3_error_t ** pstack);
 
 /** Take an error, flatten its stack into one message, and unref it.
  * This function returns fatal if any leaks occur in freeing the error.
@@ -939,21 +954,6 @@ sc3_error_t        *sc3_error_get_severity (const sc3_error_t * e,
 sc3_error_t        *sc3_error_copy_text (sc3_error_t * e,
                                          int recursion, int dobasename,
                                          char *buffer, size_t buflen);
-
-/** Return the next deepest error stack with an added reference.
- * The input error object must be setup.  Its stack is allowed to be NULL.
- * It is not changed by the call except for its stack to get referenced.
- * \param [in,out] e    The error object must be setup.
- *                      It is possible to unref the error while the refd stack
- *                      is still alive.  Don't \ref sc3_error_destroy it then.
- * \param [out] pstack  Pointer must not be NULL.
- *                      When function returns cleanly, set to input error's
- *                      stack object.  If the stack is not NULL, it is refd.
- *                      In this case it must be unrefd when no longer needed.
- * \return              NULL on success, error object otherwise.
- */
-sc3_error_t        *sc3_error_ref_stack (sc3_error_t * e,
-                                         sc3_error_t ** pstack);
 
 /** Translate an error object into a return value and a text block.
  * \param [in,out] e        On input, address of an error pointer.
