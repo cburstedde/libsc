@@ -97,17 +97,13 @@ process_io_error (sc3_log_t * log, sc3_error_t ** ioe, int *num_io)
   sc3_error_kind_t    kind;
 
   SC3A_IS (sc3_log_is_setup, log);
-  SC3A_CHECK (ioe != NULL && *ioe != NULL);
+  SC3A_CHECK (ioe != NULL);
   SC3A_CHECK (num_io != NULL && *num_io >= 0);
 
-  /* A fatal error would occur due to bugs or miscalling of I/O routines,
-     not due to I/O errors such as file not found, disk full, etc. */
-  if (sc3_error_is_fatal (*ioe, NULL)) {
-    return sc3_error_new_stack (ioe, __FILE__, __LINE__,
-                                "Fatal error during I/O");
-  }
+  /* maybe there was no error */
+  if (*ioe == NULL) return NULL;
 
-  /* Now we only expect an I/O error */
+  /* now we only expect an I/O error */
   SC3E (sc3_error_get_kind (*ioe, &kind));
   SC3A_CHECK (kind == SC3_ERROR_IO);
   ++*num_io;
@@ -146,9 +142,8 @@ run_prog (sc3_trace_t * t, sc3_allocator_t * origa, sc3_log_t * log,
   SC3E (sc3_allocator_setup (a));
 
   /* Test file input/output and recoverable errors */
-  if ((e = run_io (a, *result)) != NULL) {
-    SC3E (process_io_error (log, &e, num_io));
-  }
+  SC3F (run_io (a, *result), e);
+  SC3E (process_io_error (log, &e, num_io));
 
   SC3E (sc3_allocator_destroy (&a));
   return NULL;
