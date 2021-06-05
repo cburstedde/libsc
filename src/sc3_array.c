@@ -108,25 +108,23 @@ sc3_array_is_unresizable (const sc3_array_t * a, char *reason)
 }
 
 int
-sc3_array_is_sorted (sc3_array_t * a,
-                     sc3_error_t * (*compar) (const void *, const void *,
-                                              int *),
-                     char *reason)
+sc3_array_is_sorted (const sc3_array_t * a,
+                     int (*compar) (const void *, const void *), char *reason)
 {
+  int                 i, j;
+  const void         *vold, *vnew;
+
   SC3E_TEST (compar != NULL, reason);
   SC3E_IS (sc3_array_is_setup, a, reason);
-
-  int                 zz, j;
-  void               *vold, *vnew;
 
   if (a->ecount <= 1) {
     SC3E_YES (reason);
   }
 
   vold = sc3_array_index_noerr (a, 0);
-  for (zz = 1; zz < a->ecount; ++zz) {
-    vnew = sc3_array_index_noerr (a, zz);
-    compar (vold, vnew, &j);
+  for (i = 1; i < a->ecount; ++i) {
+    vnew = sc3_array_index_noerr (a, i);
+    j = compar (vold, vnew);
     SC3E_TEST (j <= 0, reason);
     vold = vnew;
   }
@@ -367,21 +365,20 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
 
 sc3_error_t        *
 sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
-                 int num_types, sc3_array_type_t type_fn,
-                 void *data)
+                 int num_types, sc3_array_type_t type_fn, void *data)
 {
-  int              count;
-  int              zi, *zp;
-  int              guess, low, high, type, step;
+  int                 count;
+  int                 zi, *zp;
+  int                 guess, low, high, type, step;
 
   SC3A_IS (sc3_array_is_setup, a);
   SC3A_IS (sc3_array_is_setup, offsets);
-#ifdef P4EST_ENABLE_DEBUG
-  size_t           elem_size;
+#ifdef SC_ENABLE_DEBUG
+  size_t              elem_size;
 
   SC3E (sc3_array_get_elem_size (offsets, &elem_size));
   SC3A_CHECK (elem_size == sizeof (int));
-#endif /* P4EST_ENABLE_DEBUG */
+#endif /* SC_ENABLE_DEBUG */
   SC3E (sc3_array_resize (offsets, num_types + 1));
 
   SC3E (sc3_array_get_elem_count (a, &count));
@@ -535,11 +532,12 @@ sc3_array_index (sc3_array_t * a, int i, void *ptr)
   return NULL;
 }
 
-void               *
+const void         *
 sc3_array_index_noerr (const sc3_array_t * a, int i)
 {
 #ifdef SC_ENABLE_DEBUG
-  if (!sc3_array_is_setup (a, NULL) || i < 0 || i >= a->ecount) {
+  if (!sc3_array_is_setup (a, NULL) || a->esize == 0 ||
+      i < 0 || i >= a->ecount) {
     return NULL;
   }
 #endif
