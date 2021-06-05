@@ -370,17 +370,17 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
   int                 count;
   int                 zi, *zp;
   int                 guess, low, high, type, step;
-
-  SC3A_IS (sc3_array_is_setup, a);
-  SC3A_IS (sc3_array_is_setup, offsets);
 #ifdef SC_ENABLE_DEBUG
   size_t              elem_size;
+
+  SC3A_IS (sc3_array_is_setup, a);
+  SC3A_IS (sc3_array_is_resizable, offsets);
 
   SC3E (sc3_array_get_elem_size (offsets, &elem_size));
   SC3A_CHECK (elem_size == sizeof (int));
 #endif /* SC_ENABLE_DEBUG */
-  SC3E (sc3_array_resize (offsets, num_types + 1));
 
+  SC3E (sc3_array_resize (offsets, num_types + 1));
   SC3E (sc3_array_get_elem_count (a, &count));
 
   /** The point of this algorithm is to put offsets[i] into its final position
