@@ -313,6 +313,14 @@ extern              "C"
     if ((r) != NULL) { SC3_BUFCOPY ((r), #x); }                         \
     return 0; }} while (0)
 
+/** Run a function that may return an error for use in tests.
+ * Since the caller will not return an error, we convert it to integer.
+ * Make sure, as with the other macros here, that \a r is of SC3_BUFSIZE.
+ */
+#define SC3E_DO(f,r) do {                                               \
+  sc3_error_t *_e = (f);                                                \
+  if (sc3_error_check (&_e, r, SC3_BUFSIZE)) { return 0; }} while (0)
+
 /** Query an sc3_object_is_* function.
  * The argument \a f shall be such a function and \a o an object to query.
  * If the test returns false, the function puts the reason into \a r,
@@ -959,12 +967,12 @@ sc3_error_t        *sc3_error_copy_text (sc3_error_t * e,
  * \param [in,out] e        On input, address of an error pointer.
  *                          The error itself may be NULL or a valid object.
  *                          Unrefd and NULLd on output in the latter case.
- * \param [out] buffer      This buffer must exist and contain at least
- *                          the input \b buflen many bytes.
+ * \param [out] buffer      If this buffer is not NULL, it must provide at
+ *                          least \b buflen many bytes.
  *                          NUL-terminated, often multi-line string on output.
  *                          There is no final newline at the end of the text.
  *                          When input \a *e is NULL, set to the empty string.
- * \param [in] buflen       Positive number of bytes available in \b buffer.
+ * \param [in] buflen       Non-negative number of bytes available in \b buffer.
  * \return                  0 if e is non-NULL and *e is NULL on input,
  *                          a negative integer otherwise.
  */
