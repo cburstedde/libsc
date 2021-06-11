@@ -32,10 +32,14 @@ AC_DEFUN([SC_CHECK_V4L2], [
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#ifdef HAVE_LINUX_VIDEODEV2_H
+#if defined HAVE_LINUX_VIDEODEV2_H && defined HAVE_LINUX_VERSION_H
 #include <linux/videodev2.h>
+#include <linux/version.h>
 #else
 #error "Linux v4l2 header not installed; disabling"
+#endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
+#error "Disabling v4l2 code for linux version < 4"
 #endif
 ]],[[
   /* test whether some more recent members exist */
