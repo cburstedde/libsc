@@ -45,7 +45,7 @@ void                sc_rand_test_poisson (sc_rand_state_t * state,
                                           int mean_steps, int n);
 
 double
-sc_rand (sc_rand_state_t * state)
+sc_rand_uniform (sc_rand_state_t * state)
 {
   int                 i;
   uint32_t            a, b, c;
@@ -77,8 +77,8 @@ sc_rand_normal (sc_rand_state_t * state, double *second_result)
   double              u, v, s;
 
   do {
-    u = 2. * (sc_rand (state) - .5);
-    v = 2. * (sc_rand (state) - .5);
+    u = 2. * (sc_rand_uniform (state) - .5);
+    v = 2. * (sc_rand_uniform (state) - .5);
     s = u * u + v * v;
   }
   while (s <= 0. || s >= 1.);
@@ -106,12 +106,12 @@ sc_rand_small (sc_rand_state_t * state, double d)
   }
 
   while (d < frac) {
-    if (sc_rand (state) >= frac) {
+    if (sc_rand_uniform (state) >= frac) {
       return 0;
     }
     d *= rfac;
   }
-  return sc_rand (state) < d;
+  return sc_rand_uniform (state) < d;
 }
 
 static int
@@ -126,7 +126,7 @@ sc_rand_poisson_knuth (sc_rand_state_t * state, double mean)
   p = 1.;
   do {
     ++n;
-    p *= sc_rand (state);
+    p *= sc_rand_uniform (state);
   }
   while (p > expmm);
   return n;
@@ -150,7 +150,7 @@ sc_rand_poisson (sc_rand_state_t * state, double mean)
   do {
     /* draw from the majorant distribution */
     do {
-      t = tan (M_PI * sc_rand (state));
+      t = tan (M_PI * sc_rand_uniform (state));
       x = sq * t + mean;
     }
     while (x < 0.);
@@ -158,7 +158,7 @@ sc_rand_poisson (sc_rand_state_t * state, double mean)
     p = .9 * (1. + t * t) * exp (x * lnmean - lgamma (x + 1.) - correct);
     SC_ASSERT (p < 1.);
   }
-  while (sc_rand (state) > p);
+  while (sc_rand_uniform (state) > p);
   return (int) x;
 }
 
@@ -166,7 +166,7 @@ static int
 draw_poisson_cumulative (sc_rand_state_t * state, double *cumud, int ncumu)
 {
   int                 lo, hi, guess;
-  double              p = sc_rand (state);
+  double              p = sc_rand_uniform (state);
 
   /* find guess such that cumud[guess] <= p < cumud[guess + 1] */
 

@@ -36,13 +36,14 @@
 typedef uint64_t    sc_rand_state_t;
 
 /** Draw a (pseudo-)random variable uniformly distributed in [0, 1).
+ * Crafted according to the DES3-based generator in Numerical Recipes.
  * \param [in,out] state        Internal state of random number generator.
  * \return                      Number in [0, 1).
  */
-double              sc_rand (sc_rand_state_t * state);
+double              sc_rand_uniform (sc_rand_state_t * state);
 
 /** Sample the Gauss standard normal distribution.
- * Implements polar form of the Box Muller transform based on \ref sc_rand.
+ * Polar form of the Box Muller transform based on \ref sc_rand_uniform.
  * \param [in,out] state        Internal state of random number generator.
  * \param [in,out] second_result        We compute two independent samples.
  *                                      The first is the return value.
