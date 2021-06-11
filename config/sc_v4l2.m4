@@ -7,7 +7,7 @@ dnl If a working v4l2 development environment is found, define
 dnl PREFIX_ENABLE_V4L2.  Set the automake conditional accordingly.
 dnl
 AC_DEFUN([SC_CHECK_V4L2], [
-  AC_MSG_CHECKING([for V4L2])
+  AC_MSG_CHECKING([for sufficiently recent V4L2])
 
   dnl Run link test for V4L2 device interaction
   AS_VAR_PUSHDEF([myresult], [ac_cv_link_v4l2])dnl
@@ -34,8 +34,16 @@ AC_DEFUN([SC_CHECK_V4L2], [
 #endif
 #ifdef HAVE_LINUX_VIDEODEV2_H
 #include <linux/videodev2.h>
+#else
+#error "Linux v4l2 header not installed; disabling"
 #endif
 ]],[[
+  /* test whether some more recent members exist */
+  struct v4l2_pix_format pf;
+  pf.ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
+  pf.quantization = V4L2_QUANTIZATION_DEFAULT;
+  pf.xfer_func = V4L2_XFER_FUNC_DEFAULT;
+
   open (NULL, O_NONBLOCK | O_RDWR);
   ioctl (0, VIDIOC_QUERYCAP, NULL);
   ioctl (0, VIDIOC_ENUMOUTPUT, NULL);
