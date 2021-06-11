@@ -148,16 +148,23 @@ int                 sc3_array_is_data (const sc3_array_t * a, char *reason);
 
 /** Check whether an array is sorted non-descending wrt. a comparison function.
  * \param [in] a        Any pointer.  For a true result must be setup.
- * \param [in] compar   The comparison function to be used; semantics
- *                      as for example used by qsort (3).
+ * \param [in] compar   The comparison function to be used; Input arguments:
+ *                      two valid quadrants, ouput argument: non-NULL
+ *                      reference assigned comparison on output:
+ *                      negative if \a q1 is less than \a q2,
+ *                      positive if \a q1 is greater than \a q2,
+ *                      zero otherwise (on equality). Return value: NULL on
+ *                      success, error object otherwise.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return              True if array is sorted and no errors occur,
  *                      false otherwise.
  */
-int                 sc3_array_is_sorted
-  (const sc3_array_t * a, int (*compar) (const void *, const void *),
-   char *reason);
+int                 sc3_array_is_sorted (const sc3_array_t * a,
+                                         sc3_error_t *
+                                         (*compar) (const void *,
+                                                    const void *, int *),
+                                         char *reason);
 
 /** Create a new array object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
