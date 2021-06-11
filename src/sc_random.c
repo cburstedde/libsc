@@ -44,8 +44,8 @@ void                sc_rand_test_poisson (sc_rand_state_t * state,
                                           double mean_max,
                                           int mean_steps, int n);
 
-double
-sc_rand_uniform (sc_rand_state_t * state)
+uint32_t
+sc_rand_uint32 (sc_rand_state_t * state)
 {
   int                 i;
   uint32_t            a, b, c;
@@ -68,7 +68,13 @@ sc_rand_uniform (sc_rand_state_t * state)
   }
   ++(*state);
 
-  return rword * iump;
+  return rword;
+}
+
+double
+sc_rand_uniform (sc_rand_state_t * state)
+{
+  return sc_rand_uint32 (state) * iump;
 }
 
 double

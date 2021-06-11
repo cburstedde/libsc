@@ -35,6 +35,13 @@
  */
 typedef uint64_t    sc_rand_state_t;
 
+/** Draw a (pseudo-)random variable uniformly distributed in [0, 2**32).
+ * Crafted according to the DES3-based generator in Numerical Recipes.
+ * \param [in,out] state        Internal state of random number generator.
+ * \return                      32-bit unsigned integer.
+ */
+uint32_t            sc_rand_uint32 (sc_rand_state_t * state);
+
 /** Draw a (pseudo-)random variable uniformly distributed in [0, 1).
  * Crafted according to the DES3-based generator in Numerical Recipes.
  * \param [in,out] state        Internal state of random number generator.
