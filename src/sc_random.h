@@ -30,7 +30,30 @@
 
 #include <sc.h>
 
-/** The internal state of sc_rand and derived functions.
+#if !defined SC_HAVE_RAND && !defined SC_HAVE_RANDOM
+/** Maximum value of random number returned by \ref sc_rand. */
+#define SC_RAND_MAX INT_MAX
+#else
+/** The maximum value of system's integer random numbers */
+#define SC_RAND_MAX RAND_MAX
+#endif
+
+/** Evaluate the system random number generator with fallback.
+ * We call rand(3) if it exists, otherwise random(3), and otherwise
+ * \ref sc_rand_uint32 using an internal static state variable.
+ * \note This function is not thread safe!
+ * \return          Signed integer uniformly distributed in [0, SC_RAND_MAX].
+ */
+int                 sc_rand (void);
+
+/** Initialize system random number generators with fallback.
+ * We call srand(3) if it exists, otherwise srandom(3), and otherwise
+ * set an internal static state variable for use with \ref sc_rand_uint32.
+ * \note This function is not thread safe!
+ */
+void                sc_srand (unsigned int seed);
+
+/** The internal state of \ref sc_rand_uint32 and derived functions.
  * Can be set arbitrarily to obtain reproducible pseudo random numbers.
  */
 typedef uint64_t    sc_rand_state_t;

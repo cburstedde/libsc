@@ -30,6 +30,38 @@ static const uint32_t sc_rand_rc2[SC_RANDOM_ITER] =
   { 0x4b0f3b58U, 0xe874f0c3U, 0x6955c5a6U, 0x55a7ca46U };
 static const double iump = 1. / (UINT32_MAX + 1.);
 
+#if !defined SC_HAVE_RAND && !defined SC_HAVE_RANDOM
+static sc_rand_state_t fallback_state = 0;
+#endif
+
+int
+sc_rand (void)
+{
+#if   defined SC_HAVE_RAND
+  return rand ();
+#elif defined SC_HAVE_RANDOM
+  return (int) random ();
+#else
+  return (int) (sc_rand_uniform (&fallback_state) * (SC_RAND_MAX + 1.));
+#endif
+}
+
+void
+sc_srand (unsigned int seed)
+{
+#if   defined SC_HAVE_RAND
+#if   defined SC_HAVE_SRAND
+  srand (seed);
+#endif
+#elif defined SC_HAVE_RANDOM
+#if   defined SC_HAVE_SRANDOM
+  srandom (seed);
+#endif
+#else
+  fallback_state = seed;
+#endif
+}
+
 /** Run different versions of Poisson PRNG and compare them.
  * Going through several different mean values as specified.
  * This function returns nothing, just outputs by sc_infof.
