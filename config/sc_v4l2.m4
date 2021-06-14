@@ -7,7 +7,7 @@ dnl If a working v4l2 development environment is found, define
 dnl PREFIX_ENABLE_V4L2.  Set the automake conditional accordingly.
 dnl
 AC_DEFUN([SC_CHECK_V4L2], [
-  AC_MSG_CHECKING([for V4L2])
+  AC_MSG_CHECKING([for sufficiently recent V4L2])
 
   dnl Run link test for V4L2 device interaction
   AS_VAR_PUSHDEF([myresult], [ac_cv_link_v4l2])dnl
@@ -32,11 +32,23 @@ AC_DEFUN([SC_CHECK_V4L2], [
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#ifdef HAVE_LINUX_VIDEODEV2_H
+#if defined HAVE_LINUX_VIDEODEV2_H && defined HAVE_LINUX_VERSION_H
 #include <linux/videodev2.h>
+#include <linux/version.h>
+#else
+#error "Linux v4l2 header not installed; disabling"
+#endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)
+#error "Disabling v4l2 code for linux version < 4"
 #endif
 ]],[[
-  open (NULL, O_NONBLOCK | O_RDWR);
+  /* test whether some more recent members exist */
+  struct v4l2_pix_format pf;
+  pf.ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
+  pf.quantization = V4L2_QUANTIZATION_DEFAULT;
+  pf.xfer_func = V4L2_XFER_FUNC_DEFAULT;
+
+  open ("/", O_NONBLOCK | O_RDWR);
   ioctl (0, VIDIOC_QUERYCAP, NULL);
   ioctl (0, VIDIOC_ENUMOUTPUT, NULL);
   ioctl (0, VIDIOC_S_OUTPUT, NULL);
