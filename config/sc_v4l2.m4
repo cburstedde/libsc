@@ -48,7 +48,7 @@ AC_DEFUN([SC_CHECK_V4L2], [
   pf.quantization = V4L2_QUANTIZATION_DEFAULT;
   pf.xfer_func = V4L2_XFER_FUNC_DEFAULT;
 
-  open (NULL, O_NONBLOCK | O_RDWR);
+  open ("/", O_NONBLOCK | O_RDWR);
   ioctl (0, VIDIOC_QUERYCAP, NULL);
   ioctl (0, VIDIOC_ENUMOUTPUT, NULL);
   ioctl (0, VIDIOC_S_OUTPUT, NULL);
