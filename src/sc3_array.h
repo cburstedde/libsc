@@ -148,8 +148,10 @@ int                 sc3_array_is_data (const sc3_array_t * a, char *reason);
 
 /** Check whether an array is sorted non-descending wrt. a comparison function.
  * \param [in] a        Any pointer.  For a true result must be setup.
+ * \param [in] user_data A pointer to arbitrary user data, that is passed to
+ *                       \a compar.
  * \param [in] compar   The comparison function to be used; Input arguments:
- *                      two valid quadrants, ouput argument: non-NULL
+ *                      two comparable objects, ouput argument: non-NULL
  *                      reference assigned comparison on output:
  *                      negative if \a q1 is less than \a q2,
  *                      positive if \a q1 is greater than \a q2,
@@ -285,9 +287,11 @@ sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
 sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
 
 /** Function to determine the enumerable type of an object in an array.
- * \param [in] elem    The object which is needed to be determined.
+ * \param [in] array   Array containing the object.
+ * \param [in] index   The location of the object.
  * \param [in] data    Arbitrary user data.
  * \param [out] type   Returned enumerable type of an object.
+ * \return             NULL on success, error object otherwise.
  */
 typedef sc3_error_t *(*sc3_array_type_t) (sc3_array_t * array,
                                           int index, void *data, int *type);
