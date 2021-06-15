@@ -108,9 +108,9 @@ sc3_array_is_unresizable (const sc3_array_t * a, char *reason)
 }
 
 int
-sc3_array_is_sorted (const sc3_array_t * a,
+sc3_array_is_sorted (const sc3_array_t * a, void *user_data,
                      sc3_error_t * (*compar) (const void *, const void *,
-                                              int *), char *reason)
+                                              void *, int *), char *reason)
 {
   int                 i, j;
   const void         *vold, *vnew;
@@ -125,7 +125,7 @@ sc3_array_is_sorted (const sc3_array_t * a,
   vold = sc3_array_index_noerr (a, 0);
   for (i = 1; i < a->ecount; ++i) {
     vnew = sc3_array_index_noerr (a, i);
-    SC3E_TEST (compar (vold, vnew, &j) == NULL, reason);
+    SC3E_DO (compar (vold, vnew, user_data, &j), reason);
     SC3E_TEST (j <= 0, reason);
     vold = vnew;
   }

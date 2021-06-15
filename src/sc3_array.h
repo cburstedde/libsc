@@ -161,9 +161,11 @@ int                 sc3_array_is_data (const sc3_array_t * a, char *reason);
  *                      false otherwise.
  */
 int                 sc3_array_is_sorted (const sc3_array_t * a,
+                                         void *user_data,
                                          sc3_error_t *
                                          (*compar) (const void *,
-                                                    const void *, int *),
+                                                    const void *,
+                                                    void *, int *),
                                          char *reason);
 
 /** Create a new array object in its setup phase.
