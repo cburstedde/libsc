@@ -7,8 +7,12 @@
 
 assert mpiSupport -> mpich != null;
 
+let
+  dbg = if debugEnable then "-dbg" else "";
+in
 stdenv.mkDerivation {
-  name = "p4est-sc-prev3-develop-1ae814e3";
+  name = "p4est-sc-prev3-develop-1ae814e3${dbg}";
+
   builder = ./builder.sh;
   src = fetchgit {
     name = "p4est-sc.git";
