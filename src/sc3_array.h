@@ -146,6 +146,28 @@ int                 sc3_array_is_view (const sc3_array_t * a, char *reason);
  */
 int                 sc3_array_is_data (const sc3_array_t * a, char *reason);
 
+/** Check whether an array is sorted non-descending wrt. a comparison function.
+ * \param [in] a        Any pointer.  For a true result must exist and be setup.
+ * \param [in] compar   The comparison function to be used.  Input arguments:
+ *                      two comparable objects, output argument: non-NULL
+ *                      int reference assigned comparison result:
+ *                      negative if \a q1 is less than \a q2,
+ *                      positive if \a q1 is greater than \a q2,
+ *                      zero otherwise (on equality).  Return value: NULL on
+ *                      success, error object otherwise.
+ * \param [in] user     A pointer to arbitrary user data that is passed to
+ *                      the comparison function \a compar for context.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True if array is sorted and no errors occur,
+ *                      false otherwise.
+ */
+int                 sc3_array_is_sorted (const sc3_array_t * a, sc3_error_t *
+                                         (*compar) (const void *,
+                                                    const void *,
+                                                    void *, int *),
+                                         void *user, char *reason);
+
 /** Create a new array object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
  * Setting and modifying parameters is only allowed in the setup phase.
@@ -262,6 +284,37 @@ sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
  */
 sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
 
+/** Function to determine the enumerable type of an object in an array.
+ * \param [in] array   Array containing the object.
+ * \param [in] index   The location of the object.
+ * \param [in] data    Arbitrary user data.
+ * \param [out] type   Returned enumerable type of an object.
+ * \return             NULL on success, error object otherwise.
+ */
+typedef sc3_error_t *(*sc3_array_type_t) (sc3_array_t * array,
+                                          int index, void *data, int *type);
+
+/** Compute the offsets of groups of enumerable types in an array.
+ * \param [in] a             Array that is sorted in ascending order by type.
+ *                           If k indexes \a a, then
+ *                           0 <= \a type_fn (\a a, k, \a data) <
+ *                           \a num_types.
+ * \param [in,out] offsets   An initialized a of type size_t that is
+ *                           resized to \a num_types + 1 entries.  The indices
+ *                           j of \a a that contain objects of type k are
+ *                           \a offsets[k] <= j < \a offsets[k + 1].
+ *                           If there are no objects of type k, then
+ *                           \a offsets[k] = \a offset[k + 1].
+ * \param [in] num_types     The number of possible types of objects in
+ *                           \a a.
+ * \param [in] type_fn       Returns the type of an object in the a.
+ * \param [in] data          Arbitrary user data passed to \a type_fn.
+ * \return                   NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
+                                     int num_types, sc3_array_type_t type_fn,
+                                     void *data);
+
 /** Enlarge an array by a number of elements.
  * The output points to the beginning of the memory for the new elements.
  * \param [in,out] a    The array must be setup and resizable.
@@ -310,19 +363,20 @@ sc3_error_t        *sc3_array_freeze (sc3_array_t * a);
 sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
 
 /** Index an array element without returning an error object.
- * This function is optimized for speed, not safety.
- * \param [in] a        The array must be setup.
+ * This function is optimized for speed, not safety, thus risky.
+ * Using it with a non-setup array or wrong indexing is undefined.
+ * The idea is not to verify its return pointer at all.
+ * If you feel any such need, use \ref sc3_array_index.
+ * \param [in] a        Const pointer to the array, must be setup.
  * \param [in] i        Index must be in [0, element count).
  * \return              Address of array element at index \b i.
- *                      If the array element size is zero, the pointer
- *                      must not be dereferenced.
  *                      When configured with --enable-debug, returns NULL
  *                      if index is out of bounds, element size is zero,
- *                      or the array is not setup.
- *                      Without, the behavior is undefined
- *                      and the program may crash here or later.
+ *                      or the array is not setup.  Without --enable-debug,
+ *                      passing a non-setup array or invalid indices is
+ *                      undefined.
  */
-void               *sc3_array_index_noerr (const sc3_array_t * a, int i);
+const void         *sc3_array_index_noerr (const sc3_array_t * a, int i);
 
 /** Create a view array pointing into the same memory as a given array.
  * Inherit the data element size from the given array.  The view refs the

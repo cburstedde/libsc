@@ -177,7 +177,7 @@ void                sc3_log (sc3_log_t * log, int depth,
 void                sc3_logf (sc3_log_t * log, int depth,
                               sc3_log_role_t role, sc3_log_level_t level,
                               const char *fmt, ...)
-  __attribute__ ((format (printf, 5, 6)));
+  __attribute__((format (printf, 5, 6)));
 
 /** See \ref sc3_log. */
 void                sc3_logv (sc3_log_t * log, int depth,
@@ -188,7 +188,7 @@ void                sc3_logv (sc3_log_t * log, int depth,
  * We call the log function once for each stack entry.
  * \param [in,out] log  Logger must be setup.
  * \param [in] depth    Number if indentation levels.
- * \param [in[ role     Parallelism: root rank, per process, per thread.
+ * \param [in] role     Parallelism: root rank, per process, per thread.
  * \param [in] level    Log level (priority).
  * \param [in,out] e    This error is not modified.
  *                      It is an in-out argument since we access and restore

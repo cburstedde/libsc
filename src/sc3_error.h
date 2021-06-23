@@ -142,12 +142,19 @@ extern              "C"
  * a second argument \a p (and the common string buffer as all of them). */
 #define SC3A_IS2(f,o,p) SC3_NOOP
 
+/** Assertion statement to require a true sc3_object_is3_* return value.
+ * The argument \a f is such a function taking \a o the object to query,
+ * the next arguments are \a p1 and \a p2 (and the common string buffer
+ * as all of them). */
+#define SC3A_IS3(f,o,p1,p2) SC3_NOOP
+
 /** Assertion statement requires some condition \a x to be true. */
 #define SC3A_CHECK(x) SC3_NOOP
 
 #else
 #define SC3A_IS(f,o) SC3E_DEMIS(f,o)
 #define SC3A_IS2(f,o,p) SC3E_DEMIS2(f,o,p)
+#define SC3A_IS3(f,o,p1,p2) SC3E_DEMIS3(f,o,p1,p2)
 #define SC3A_CHECK(x) do {                                              \
   if (!(x)) {                                                           \
     return sc3_error_new_bug ( __FILE__, __LINE__, #x);                 \
@@ -204,6 +211,21 @@ extern              "C"
     char _errmsg[SC3_BUFSIZE];                                          \
     sc3_snprintf (_errmsg, SC3_BUFSIZE,                                 \
                   "%s(%s,%s): %s", #f, #o, #p, _r);                     \
+    return sc3_error_new_bug (__FILE__, __LINE__, _errmsg);             \
+  }} while (0)
+
+/** Execute an is_* query \a f that takes two additional arguments
+ * and return a fatal error if it returns false.
+ * The error created is of type \ref SC3_ERROR_BUG and its message is set
+ * to the failed query function and its object \a o.
+ * For clean recovery of non-fatal errors, please use something else.
+ */
+#define SC3E_DEMIS3(f,o,p1,p2) do {                                     \
+  char _r[SC3_BUFSIZE];                                                 \
+  if (!(f ((o), (p1), (p2), _r))) {                                     \
+    char _errmsg[SC3_BUFSIZE];                                          \
+    sc3_snprintf (_errmsg, SC3_BUFSIZE,                                 \
+                  "%s(%s,%s,%s): %s", #f, #o, #p1, #p2, _r);            \
     return sc3_error_new_bug (__FILE__, __LINE__, _errmsg);             \
   }} while (0)
 
@@ -348,6 +370,22 @@ extern              "C"
     char _r[SC3_BUFSIZE];                                               \
     if (!(f ((o), (p), _r))) {                                          \
       sc3_snprintf ((r), SC3_BUFSIZE, "%s(%s,%s): %s", #f, #o, #p, _r); \
+      return 0; }}} while (0)
+
+/** Query an sc3_object_is3_* function.
+ * The argument \a f such a function and \a o is an object to query
+ * with another arguments \a p1 and \a p2.
+ * If the test returns false, the function puts the reason into \a r,
+ * a pointer to a string of size \ref SC3_BUFSIZE, and returns 0.
+ * Otherwise the function does nothing.  \a r may be NULL.
+ */
+#define SC3E_IS3(f,o,p1,p2,r)                                           \
+  do { if ((r) == NULL) {                                               \
+    if (!(f ((o), (p1), (p2), NULL))) { return 0; }} else {             \
+    char _r[SC3_BUFSIZE];                                               \
+    if (!(f ((o), (p1), (p2), _r))) {                                   \
+      sc3_snprintf ((r), SC3_BUFSIZE, "%s(%s,%s,%s): %s",               \
+                                      #f, #o, #p1, #p2, _r);            \
       return 0; }}} while (0)
 
 /*** LEAK statements for working with (non-fatal) leak errors. ***/
