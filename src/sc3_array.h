@@ -147,28 +147,26 @@ int                 sc3_array_is_view (const sc3_array_t * a, char *reason);
 int                 sc3_array_is_data (const sc3_array_t * a, char *reason);
 
 /** Check whether an array is sorted non-descending wrt. a comparison function.
- * \param [in] a        Any pointer.  For a true result must be setup.
- * \param [in] user_data A pointer to arbitrary user data, that is passed to
- *                       \a compar.
- * \param [in] compar   The comparison function to be used; Input arguments:
- *                      two comparable objects, ouput argument: non-NULL
- *                      reference assigned comparison on output:
+ * \param [in] a        Any pointer.  For a true result must exist and be setup.
+ * \param [in] compar   The comparison function to be used.  Input arguments:
+ *                      two comparable objects, output argument: non-NULL
+ *                      int reference assigned comparison result:
  *                      negative if \a q1 is less than \a q2,
  *                      positive if \a q1 is greater than \a q2,
- *                      zero otherwise (on equality). Return value: NULL on
+ *                      zero otherwise (on equality).  Return value: NULL on
  *                      success, error object otherwise.
+ * \param [in] user     A pointer to arbitrary user data that is passed to
+ *                      the comparison function \a compar for context.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return              True if array is sorted and no errors occur,
  *                      false otherwise.
  */
-int                 sc3_array_is_sorted (const sc3_array_t * a,
-                                         void *user_data,
-                                         sc3_error_t *
+int                 sc3_array_is_sorted (const sc3_array_t * a, sc3_error_t *
                                          (*compar) (const void *,
                                                     const void *,
                                                     void *, int *),
-                                         char *reason);
+                                         void *user, char *reason);
 
 /** Create a new array object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
