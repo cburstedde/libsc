@@ -1555,11 +1555,11 @@ sc_hash_array_hash_fn (const void *v, const void *u)
 {
   const sc_hash_array_data_t *internal_data =
     (const sc_hash_array_data_t *) u;
-  long                l = (long) v;
+  ssize_t             l = (ssize_t) v;
   void               *p;
 
   p = (l == -1L) ? internal_data->current_item :
-    sc_array_index_long (internal_data->pa, l);
+    sc_array_index_ssize_t (internal_data->pa, l);
 
   return internal_data->hash_fn (p, internal_data->user_data);
 }
@@ -1569,14 +1569,14 @@ sc_hash_array_equal_fn (const void *v1, const void *v2, const void *u)
 {
   const sc_hash_array_data_t *internal_data =
     (const sc_hash_array_data_t *) u;
-  long                l1 = (long) v1;
-  long                l2 = (long) v2;
+  ssize_t             l1 = (ssize_t) v1;
+  ssize_t             l2 = (ssize_t) v2;
   void               *p1, *p2;
 
   p1 = (l1 == -1L) ? internal_data->current_item :
-    sc_array_index_long (internal_data->pa, l1);
+    sc_array_index_ssize_t (internal_data->pa, l1);
   p2 = (l2 == -1L) ? internal_data->current_item :
-    sc_array_index_long (internal_data->pa, l2);
+    sc_array_index_ssize_t (internal_data->pa, l2);
 
   return internal_data->equal_fn (p1, p2, internal_data->user_data);
 }
