@@ -10,8 +10,14 @@ typedef struct timeval {
     long tv_usec;
 } timeval;
 
+struct timezone {
+    int tz_minuteswest;
+    int tz_dsttime;
+};
+
 int gettimeofday(struct timeval * tp, struct timezone * tzp)
 {
+    if(tp){
     /* Note: some broken versions only have 8 trailing zeros,
        the correct epoch has 9 trailing zeros. */
     /* This magic number is the number of 100 nanosecond intervals since
@@ -29,5 +35,12 @@ int gettimeofday(struct timeval * tp, struct timezone * tzp)
 
     tp->tv_sec  = (long) ((time - EPOCH) / 10000000L);
     tp->tv_usec = (long) (system_time.wMilliseconds * 1000);
+    }
+    if (tzp) {
+        TIME_ZONE_INFORMATION timezone;
+        GetTimeZoneInformation(&timezone);
+        tzp->tz_minuteswest = timezone.Bias;
+        tzp->tz_dsttime = 0;
+    }
     return 0;
 }
