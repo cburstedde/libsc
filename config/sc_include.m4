@@ -198,7 +198,7 @@ int                 p[] = { 0, 5 };
 qsort_r (arr, 4, sizeof (int), comparator, p);
    ]])],
    [AC_MSG_RESULT([yes])
-    SC_REQUIRE_LIB([m], [fabs])
+    SC_FABS_LINKTEST
    ],
    [AC_MSG_RESULT([We are not on a GNU system or BSD system which only leaves win32 as a possibility, support for that will be added when the situation arises])])
    ])
