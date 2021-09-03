@@ -56,7 +56,7 @@ if(MPI_FOUND)
   check_symbol_exists(MPI_Win_allocate_shared mpi.h SC_ENABLE_MPIWINSHARED)
 endif(MPI_FOUND)
 
-
+check_symbol_exists(qsort_r stdlib.h SC_HAVE_GNU_QSORT_R)
 check_symbol_exists(realloc stdlib.h SC_ENABLE_USE_REALLOC)
 
 check_symbol_exists(aligned_alloc stdlib.h SC_HAVE_ALIGNED_ALLOC)
