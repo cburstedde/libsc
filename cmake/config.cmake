@@ -56,8 +56,7 @@ if(MPI_FOUND)
   check_symbol_exists(MPI_Win_allocate_shared mpi.h SC_ENABLE_MPIWINSHARED)
 endif(MPI_FOUND)
 
-set(CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
-check_symbol_exists(qsort_r stdlib.h SC_HAVE_GNU_QSORT_R)
+
 check_symbol_exists(realloc stdlib.h SC_ENABLE_USE_REALLOC)
 
 check_symbol_exists(aligned_alloc stdlib.h SC_HAVE_ALIGNED_ALLOC)
@@ -80,6 +79,10 @@ check_symbol_exists(posix_memalign stdlib.h SC_HAVE_POSIX_MEMALIGN)
 # https://www.gnu.org/software/gnulib/manual/html_node/qsort_005fr.html
 set(CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 check_symbol_exists(qsort_r stdlib.h SC_HAVE_QSORT_R)
+check_symbol_exists(SC_HAVE_QSORT_R ${PROJECT_BINARY_DIR}/include/sc_config.h SC_have_qsort_r)
+if(SC_have_qsort_r)
+    message(DEBUG "qsort_r macro not defined")
+endif()
 set(CMAKE_REQUIRED_DEFINITIONS)
 
 check_include_file(signal.h SC_HAVE_SIGNAL_H)

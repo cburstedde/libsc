@@ -62,7 +62,7 @@ sc_icompare (const void *v1, const void *v2)
 
 #else
 
-#if SC_HAVE_GNU_QSORT_R
+#if SC_HAVE_GNU_QSORT_R || SC_HAVE_QSORT_R
 /** Pass qsort-style comparison function as third argument */
 static int
 sc_compare_r (const void *v1, const void *v2, void *arg)
@@ -439,7 +439,7 @@ sc_psort_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
       qsort (pst->my_base + (lo - pst->my_lo) * pst->size,
              n, pst->size, dir ? sc_compare : sc_icompare);
 #else
-#if SC_HAVE_GNU_QSORT_R
+#if SC_HAVE_GNU_QSORT_R || SC_HAVE_QSORT_R
       qsort_r (pst->my_base + (lo - pst->my_lo) * pst->size,
                n, pst->size, dir ? sc_compare_r : sc_icompare_r, pst);
 #elif SC_HAVE_BSD_QSORT_R
