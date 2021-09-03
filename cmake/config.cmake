@@ -58,7 +58,6 @@ endif(MPI_FOUND)
 
 set(CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 check_symbol_exists(qsort_r stdlib.h SC_HAVE_GNU_QSORT_R)
-unset(CMAKE_REQUIRED_DEFINITIONS)
 check_symbol_exists(realloc stdlib.h SC_ENABLE_USE_REALLOC)
 
 check_symbol_exists(aligned_alloc stdlib.h SC_HAVE_ALIGNED_ALLOC)
