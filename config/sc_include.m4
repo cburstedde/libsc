@@ -117,93 +117,7 @@ dnl Apparantly linking the 'fabs' function requires different scripts for linux,
 dnl
 AC_DEFUN([SC_FABS_LINKTEST],
 [
-   AC_LINK_IFELSE([AC_LANG_PROGRAM(
-   [[
-#include <stdio.h>
-#include <math.h>
-   ]],
-   [[
-float arg = -4.12;
-printf("%f",arg);
-   ]])],
-   [AC_DEFINE([HAVE_FABS],[1],[Define to 1 if fabs links successfully])
-    AC_MSG_RESULT([fabs link successfull])],
-   [AC_DEFINE([HAVE_FABS],[0],[Define to 1 if fabs links successfully])
-    AC_MSG_RESULT([fabs link unsuccessfull])])
-
-   AC_CHECK_LIB([m],[fabs])
-]
-)
-
-AC_DEFUN([SC_FABS],
-[
-   AC_MSG_CHECKING([if we are on a BSD system])
-   AC_LINK_IFELSE([AC_LANG_PROGRAM(
-   [[
-#include<stdlib.h>
-
-#ifndef __cplusplus
-#pragma GCC diagnostic error "-Wimplicit-function-declaration"
-#endif
-
-int
-comparator (void *arg, const void *aa, const void *bb)
-{
-  const int          *a = (int *) aa, *b = (int *) bb, *p = (int *) arg;
-  int                 cmp = *a - *b;
-  int                 inv_start = p[0], inv_end = p[1];
-  char                norm = (*a < inv_start || *a > inv_end || *b < inv_start
-                              || *b > inv_end);
-  return norm ? -cmp : cmp;
-}
-   ]],
-   [[
-int                 arr[4] = { 4, 3, 2, 1 };
-int                 p[] = { 0, 5 };
-
-qsort_r (arr, 4, sizeof (int), p, comparator);
-   ]])],
-   [AC_MSG_RESULT([yes])
-    AC_CHECK_LIB([m],[fabs])
-   ],
-   [
-     AC_MSG_RESULT([no])
-     AC_MSG_CHECKING([if we are on a GNU system])
-       AC_LINK_IFELSE([AC_LANG_PROGRAM(
-   [[
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-#include<stdlib.h>
-
-#ifdef __cplusplus
-#pragma GCC diagnostic ignored "-Wpragmas"
-#endif
-#pragma GCC diagnostic error "-Wimplicit-function-declaration"
-#pragma GCC diagnostic error "-Wincompatible-pointer-types"
-
-int
-comparator (const void *aa, const void *bb, void *arg)
-{
-  const int          *a = (int *) aa, *b = (int *) bb, *p = (int *) arg;
-  int                 cmp = *a - *b;
-  int                 inv_start = p[0], inv_end = p[1];
-  char                norm = (*a < inv_start || *a > inv_end || *b < inv_start
-                              || *b > inv_end);
-  return norm ? -cmp : cmp;
-}
-   ]],
-   [[
-int                 arr[4] = { 4, 3, 2, 1 };
-int                 p[] = { 0, 5 };
-
-qsort_r (arr, 4, sizeof (int), comparator, p);
-   ]])],
-   [AC_MSG_RESULT([yes])
-    AC_CHECK_LIB([m],[fabs])
-   ],
-   [AC_MSG_RESULT([We are not on a GNU system or BSD system which only leaves win32 as a possibility, support for that will be added when the situation arises])])
-   ])
+  AC_CHECK_LIB([m],[fabs],[],[AC_MSG_ERROR([Could not find function fabs in libm])])
 ]
 )
 
@@ -375,8 +289,7 @@ dnl link to libsc to add appropriate options to LIBS.
 dnl
 AC_DEFUN([SC_CHECK_LIBRARIES],
 [
-SC_FABS
-dnl SC_REQUIRE_LIB([m], [fabs])
+SC_FABS_LINKTEST
 SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [$1])
 dnl SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua5 lua],
 dnl              [lua_createtable], [LUA], [$1])
