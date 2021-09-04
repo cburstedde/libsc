@@ -81,17 +81,19 @@ check_symbol_exists(posix_memalign stdlib.h SC_HAVE_POSIX_MEMALIGN)
 set(CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 check_symbol_exists(qsort_r stdlib.h SC_HAVE_QSORT_R)
 if(SC_HAVE_QSORT_R)
-#  if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-#    add_compile_definitions(SC_HAVE_GNU_QSORT_R=${SC_HAVE_QSORT_R})
-#  endif()
+  # check for GNU version of qsort_r
   check_prototype_definition(qsort_r
 	"void qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *, void *), void *arg)"
 	"" "stdlib.h" SC_have_gnu_qsort_r)
   if(SC_have_gnu_qsort_r)
 	  add_compile_definitions(SC_HAVE_GNU_QSORT_R=${SC_have_gnu_qsort_r})
   endif()
-  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    add_compile_definitions(SC_HAVE_BSD_QSORT_R=${SC_HAVE_QSORT_R})
+  # check for BSD version of qsort_r
+  check_prototype_definition(qsort_r
+	"void qsort_r(void *base, size_t nmemb, size_t size, void *thunk, int (*compar)(void *, const void *, const void *))"
+	"" "stdlib.h" SC_have_bsd_qsort_r)
+  if(SC_have_bsd_qsort_r)
+	  add_compile_definitions(SC_HAVE_BSD_QSORT_R=${SC_have_bsd_qsort_r})
   endif()
 endif()
 set(CMAKE_REQUIRED_DEFINITIONS)
