@@ -112,13 +112,14 @@ AC_DEFUN([SC_REQUIRE_LIB],
     [AC_SEARCH_LIBS([$2], [$1],,
       [AC_MSG_ERROR([Could not find function $2 in $1])])])
 
-dnl Script for linking 'fabs' in GNU(linux) and BSD(mac) systems
-dnl Apparantly linking the 'fabs' function requires different scripts for linux, mac and possibly win32
+dnl SC_FABS_LINKTEST
+dnl check if fabs is found in libm, do a link test if not found
 dnl
 AC_DEFUN([SC_FABS_LINKTEST],
 [
   AC_CHECK_LIB([m],[fabs],[],
   [
+   AC_MSG_CHECKING([if fabs link test works])
    AC_LINK_IFELSE([AC_LANG_PROGRAM(
    [[
 #include <stdio.h>
@@ -129,9 +130,9 @@ float arg = -4.12;
 printf("%f",arg);
    ]])],
    [AC_DEFINE([HAVE_FABS],[1],[Define to 1 if fabs links successfully])
-    AC_MSG_RESULT([fabs link successfull])],
+    AC_MSG_RESULT([yes])],
    [AC_DEFINE([HAVE_FABS],[0],[Define to 1 if fabs links successfully])
-    AC_MSG_RESULT([fabs link unsuccessfull])])
+    AC_MSG_RESULT([no])])
    ])
 ])
 
