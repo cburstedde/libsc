@@ -1,6 +1,7 @@
 include(CheckIncludeFile)
 include(CheckSymbolExists)
 include(CheckTypeSize)
+include(CheckPrototypeDefinition)
 
 # --- keep library finds in here so we don't forget to do them first
 
@@ -83,11 +84,11 @@ if(SC_HAVE_QSORT_R)
 #  if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 #    add_compile_definitions(SC_HAVE_GNU_QSORT_R=${SC_HAVE_QSORT_R})
 #  endif()
-  CHECK_PROTOTYPE_DEFINITION(qsort_r
-	"void qsort_r(void *base, size_t nmemb, size_t size, void *thunk, int (*compar)(void *, const void *, const void *))"
-	"" "stdlib.h" SC_have_bsd_qsort_r)
-  if(SC_have_bsd_qsort_r)
-	  add_compile_definitions(SC_HAVE_GNU_QSORT_R=${SC_have_bsd_qsort_r})
+  check_prototype_definition(qsort_r
+	"void qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *, void *), void *arg)"
+	"" "stdlib.h" SC_have_gnu_qsort_r)
+  if(SC_have_gnu_qsort_r)
+	  add_compile_definitions(SC_HAVE_GNU_QSORT_R=${SC_have_gnu_qsort_r})
   endif()
   if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     add_compile_definitions(SC_HAVE_BSD_QSORT_R=${SC_HAVE_QSORT_R})
