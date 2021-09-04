@@ -117,9 +117,23 @@ dnl Apparantly linking the 'fabs' function requires different scripts for linux,
 dnl
 AC_DEFUN([SC_FABS_LINKTEST],
 [
-  AC_CHECK_LIB([m],[fabs],[],[AC_MSG_ERROR([Could not find function fabs in libm])])
-]
-)
+  AC_CHECK_LIB([m],[fabs],[],
+  [
+   AC_LINK_IFELSE([AC_LANG_PROGRAM(
+   [[
+#include <stdio.h>
+#include <math.h>
+   ]],
+   [[
+float arg = -4.12;
+printf("%f",arg);
+   ]])],
+   [AC_DEFINE([HAVE_FABS],[1],[Define to 1 if fabs links successfully])
+    AC_MSG_RESULT([fabs link successfull])],
+   [AC_DEFINE([HAVE_FABS],[0],[Define to 1 if fabs links successfully])
+    AC_MSG_RESULT([fabs link unsuccessfull])])
+   ])
+])
 
 dnl SC_CHECK_LIB(LIBRARY LIST, FUNCTION, TOKEN, PREFIX)
 dnl Check for FUNCTION first as is, then in each of the libraries.
