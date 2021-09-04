@@ -117,7 +117,7 @@ dnl check if fabs is found in libm, do a link test if not found
 dnl
 AC_DEFUN([SC_FABS_LINKTEST],
 [
-  AC_CHECK_LIB([m],[fabs],[],
+  AC_SEARCH_LIBS([fabs],[m],[],
   [
    AC_MSG_CHECKING([if fabs link test works])
    AC_LINK_IFELSE([AC_LANG_PROGRAM(
