@@ -126,10 +126,10 @@ AC_DEFUN([SC_FABS_LINKTEST],
 float arg = -4.12;
 printf("%f",arg);
    ]])],
-   [AC_DEFINE([HAVE_FABS],[1],[Define to 1 if fabs links successfully on the macOS])
-    AC_MSG_RESULT([fabs links successfully on the macOS])],
-   [AC_DEFINE([HAVE_FABS],[0],[Define to 1 if fabs links successfully on the macOS])
-    AC_MSG_RESULT([fabs does not links successfully on the macOS])])
+   [AC_DEFINE([HAVE_FABS],[1],[Define to 1 if fabs links successfully])
+    AC_MSG_RESULT([fabs link successfull])],
+   [AC_DEFINE([HAVE_FABS],[0],[Define to 1 if fabs links successfully])
+    AC_MSG_RESULT([fabs link unsuccessfull])])
 ]
 )
 
@@ -198,7 +198,7 @@ int                 p[] = { 0, 5 };
 qsort_r (arr, 4, sizeof (int), comparator, p);
    ]])],
    [AC_MSG_RESULT([yes])
-    SC_FABS_LINKTEST
+    SC_REQUIRE_LIB([m], [fabs])
    ],
    [AC_MSG_RESULT([We are not on a GNU system or BSD system which only leaves win32 as a possibility, support for that will be added when the situation arises])])
    ])
