@@ -26,10 +26,6 @@
 
 #include <sc.h>
 
-#ifdef SC_HAVE_FABS
-#include <math.h>
-#endif
-
 SC_EXTERN_C_BEGIN;
 
 /** Integer power routine.
