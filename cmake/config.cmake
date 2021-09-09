@@ -98,6 +98,11 @@ if(SC_HAVE_QSORT_R)
 endif()
 set(CMAKE_REQUIRED_DEFINITIONS)
 
+check_symbol_exists(fabs math.h SC_have_fabs)
+if(SC_have_fabs)
+	  add_compile_definitions(SC_HAVE_FABS=${SC_have_fabs})
+endif()
+
 check_include_file(signal.h SC_HAVE_SIGNAL_H)
 check_include_file(stdint.h SC_HAVE_STDINT_H)
 check_include_file(stdlib.h SC_HAVE_STDLIB_H)
