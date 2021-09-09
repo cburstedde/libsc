@@ -62,8 +62,10 @@ sc_icompare (const void *v1, const void *v2)
 
 #else
 
-#if SC_HAVE_GNU_QSORT_R || __linux__
-/** Pass qsort-style comparison function as third argument */
+#ifndef SC_HAVE_BSD_QSORT_R
+
+/* qsort_r comparator functions conforming to GNU standard */
+
 static int
 sc_compare_r (const void *v1, const void *v2, void *arg)
 {
@@ -71,7 +73,6 @@ sc_compare_r (const void *v1, const void *v2, void *arg)
   return pst->compar (v1, v2);
 }
 
-/** Pass qsort-style comparison function as third argument */
 static int
 sc_icompare_r (const void *v1, const void *v2, void *arg)
 {
@@ -79,9 +80,10 @@ sc_icompare_r (const void *v1, const void *v2, void *arg)
   return pst->compar (v2, v1);
 }
 
-#elif SC_HAVE_BSD_QSORT_R
+#else /* SC_HAVE_BSD_QSORT_R */
 
-/* qsort_r comparator functions conforming to BSD standard*/
+/* qsort_r comparator functions conforming to BSD standard */
+
 static int
 sc_compare_r (void *arg, const void *v1, const void *v2)
 {
@@ -96,8 +98,8 @@ sc_icompare_r (void *arg, const void *v1, const void *v2)
   return pst->compar (v2, v1);
 }
 
-#endif
-#endif
+#endif /* SC_HAVE_BSD_QSORT_R */
+#endif /* SC_HAVE_QSORT_R */
 
 static              size_t
 sc_bsearch_cumulative (const size_t * cumulative, size_t nmemb,
@@ -439,11 +441,11 @@ sc_psort_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
       qsort (pst->my_base + (lo - pst->my_lo) * pst->size,
              n, pst->size, dir ? sc_compare : sc_icompare);
 #else
-#if SC_HAVE_GNU_QSORT_R || __linux__
+#ifndef SC_HAVE_BSD_QSORT_R
       qsort_r (pst->my_base + (lo - pst->my_lo) * pst->size,
                n, pst->size, dir ? sc_compare_r : sc_icompare_r, pst);
 
-#elif SC_HAVE_BSD_QSORT_R
+#else
       qsort_r (pst->my_base + (lo - pst->my_lo) * pst->size,
                n, pst->size, pst, dir ? sc_compare_r : sc_icompare_r);
 #endif
@@ -460,7 +462,7 @@ sc_psort_bitonic (sc_psort_t * pst, size_t lo, size_t hi, int dir)
 }
 
 void
-sc_psort (sc_MPI_Comm mpicomm, void *base, size_t * nmemb, size_t size,
+sc_psort (sc_MPI_Comm mpicomm, void *base, size_t *nmemb, size_t size,
           int (*compar) (const void *, const void *))
 {
   int                 mpiret;
