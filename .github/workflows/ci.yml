@@ -1,4 +1,4 @@
-name: CI for Autotools
+name: CI for Autotools/Linux
 
 on: [push, pull_request]
 

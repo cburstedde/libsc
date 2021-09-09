@@ -1,11 +1,11 @@
-name: CI for darwin based OS
+name: CI for Autotools/Darwin
 
 on: [push, pull_request]
 
 jobs:
   darwin:
     runs-on: macos-latest
-    name: Darwin build
+    name: Autotools build on Darwin
     timeout-minutes: 20
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
