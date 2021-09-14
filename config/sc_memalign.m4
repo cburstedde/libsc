@@ -49,7 +49,13 @@ if test "x$$1_ENABLE_MEMALIGN" != xno ; then
 
 dnl verify that aligned_alloc can be linked against
   if test "x$ac_cv_func_aligned_alloc" = xyes ; then
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]],
+    AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#include <stdlib.h>
+#ifdef __cplusplus
+extern "C" void* aligned_alloc(size_t, size_t);
+#endif
+]],
 [[
 int *a = (int *) aligned_alloc ($$1_MEMALIGN_BYTES_LINK, 3 * sizeof(*a));
 free(a);

@@ -112,6 +112,31 @@ AC_DEFUN([SC_REQUIRE_LIB],
     [AC_SEARCH_LIBS([$2], [$1],,
       [AC_MSG_ERROR([Could not find function $2 in $1])])])
 
+dnl SC_CHECK_FABS(PREFIX)
+dnl Check whether fabs is found in libm, do a link test if not found.
+dnl The PREFIX argument is currently unused but should be supplied.
+dnl
+AC_DEFUN([SC_CHECK_FABS],
+[
+  AC_SEARCH_LIBS([fabs], [m],,
+  [
+   AC_MSG_CHECKING([whether a fabs link test works])
+   AC_LINK_IFELSE([AC_LANG_PROGRAM(
+   [[
+#include <stdio.h>
+#include <math.h>
+   ]],
+   [[
+const float farg = -4.12;
+const float fres = fabs (farg);
+printf("%f\n", fres);
+   ]])],
+   [AC_DEFINE([HAVE_FABS], [1], [Define to 1 if fabs links successfully])
+    AC_MSG_RESULT([yes])],
+   [AC_MSG_RESULT([no])])
+   ])
+])
+
 dnl SC_CHECK_LIB(LIBRARY LIST, FUNCTION, TOKEN, PREFIX)
 dnl Check for FUNCTION first as is, then in each of the libraries.
 dnl Set shell variable PREFIX_HAVE_TOKEN to nonempty if found.
@@ -280,7 +305,7 @@ dnl link to libsc to add appropriate options to LIBS.
 dnl
 AC_DEFUN([SC_CHECK_LIBRARIES],
 [
-SC_REQUIRE_LIB([m], [fabs])
+SC_CHECK_FABS([$1])
 SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [$1])
 dnl SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua5 lua],
 dnl              [lua_createtable], [LUA], [$1])
