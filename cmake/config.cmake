@@ -1,6 +1,7 @@
 include(CheckIncludeFile)
 include(CheckSymbolExists)
 include(CheckTypeSize)
+include(CheckPrototypeDefinition)
 
 # --- keep library finds in here so we don't forget to do them first
 
@@ -79,7 +80,19 @@ check_symbol_exists(posix_memalign stdlib.h SC_HAVE_POSIX_MEMALIGN)
 # https://www.gnu.org/software/gnulib/manual/html_node/qsort_005fr.html
 set(CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 check_symbol_exists(qsort_r stdlib.h SC_HAVE_QSORT_R)
+if(SC_HAVE_QSORT_R)
+  # check for GNU version of qsort_r
+  check_prototype_definition(qsort_r
+	"void qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *, void *), void *arg)"
+	"" "stdlib.h" SC_HAVE_GNU_QSORT_R)
+  # check for BSD version of qsort_r
+  check_prototype_definition(qsort_r
+	"void qsort_r(void *base, size_t nmemb, size_t size, void *thunk, int (*compar)(void *, const void *, const void *))"
+	"" "stdlib.h" SC_HAVE_BSD_QSORT_R)
+endif()
 set(CMAKE_REQUIRED_DEFINITIONS)
+
+check_symbol_exists(fabs math.h SC_HAVE_FABS)
 
 check_include_file(signal.h SC_HAVE_SIGNAL_H)
 check_include_file(stdint.h SC_HAVE_STDINT_H)

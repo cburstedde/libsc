@@ -1,4 +1,4 @@
-name: CI for Autotools
+name: CI for Autotools/Linux
 
 on: [push, pull_request]
 
@@ -97,7 +97,7 @@ jobs:
       shell: bash
       run: |
         DIR="tarball" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-mpi --enable-debug --without-blas \
+        ../configure --enable-mpi --enable-debug \
             CFLAGS="-O0 -g -pedantic -Wall -Wextra -Werror \
                 -Wno-unused-parameter -Wno-builtin-declaration-mismatch \
                 -Wno-implicit-fallthrough"

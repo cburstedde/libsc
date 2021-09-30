@@ -47,7 +47,6 @@
 /* Undefine if: disable non-thread-safe internal debug counters */
 #define SC_ENABLE_USE_COUNTERS 1
 
-
 /* Undefine if: replace array/dmatrix resize with malloc/copy/free */
 #cmakedefine SC_ENABLE_USE_REALLOC
 
@@ -75,17 +74,23 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 // cmakedefine SC_HAVE_INTTYPES_H
 
-
 /* Define to 1 if you have the <memory.h> header file. */
 //#cmakedefine SC_HAVE_MEMORY_H
-
-
 
 /* Define to 1 if you have the `posix_memalign' function. */
 #cmakedefine SC_HAVE_POSIX_MEMALIGN
 
+/* Define to 1 if you have the `fabs' function. */
+#cmakedefine SC_HAVE_FABS
+
 /* Define to 1 if you have the `qsort_r' function. */
 #cmakedefine SC_HAVE_QSORT_R
+
+/* Define to 1 if `qsort_r' conforms to the GNU/Linux definition. */
+#cmakedefine SC_HAVE_GNU_QSORT_R
+
+/* Define to 1 if `qsort_r' conforms to the BSD definition. */
+#cmakedefine SC_HAVE_BSD_QSORT_R
 
 /* Define to 1 if you have the <signal.h> header file. */
 #cmakedefine SC_HAVE_SIGNAL_H
@@ -110,7 +115,6 @@
 
 #cmakedefine SC_HAVE_WINSOCK2_H
 
-
 /* desired alignment of allocations in bytes */
 #define SC_MEMALIGN_BYTES (SC_SIZEOF_VOID_P)
 
@@ -129,7 +133,6 @@
 #ifndef SC_LIBS
 #define SC_LIBS @SC_LIBS@
 #endif
-
 
 /* Name of package */
 #ifndef SC_PACKAGE
@@ -190,7 +193,6 @@
 #ifndef SC_SIZEOF_VOID_P
 #define SC_SIZEOF_VOID_P @SC_SIZEOF_VOID_P@
 #endif
-
 
 /* Version number of package */
 #ifndef SC_VERSION
