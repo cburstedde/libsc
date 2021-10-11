@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.20)
+cmake_minimum_required(VERSION 3.13...3.21)
 
 include(cmake/git.cmake)
 
@@ -23,9 +23,7 @@ include(cmake/compilers.cmake)
 add_library(iniparser OBJECT
             iniparser/inistring.c iniparser/dictionary.c iniparser/iniparser.c)
 target_include_directories(iniparser PRIVATE iniparser src ${PROJECT_BINARY_DIR}/include)
-if(MPI_FOUND)
-  target_link_libraries(iniparser PRIVATE MPI::MPI_C)
-endif()
+target_link_libraries(iniparser PRIVATE $<$<BOOL:${MPI_C_FOUND}>:MPI::MPI_C>)
 
 # --- libb64
 add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c
@@ -42,16 +40,13 @@ target_include_directories(sc
   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/sc_builtin>
-  $<INSTALL_INTERFACE:include>)
-if(MPI_FOUND)
-  target_link_libraries(sc PRIVATE MPI::MPI_C)
-endif()
-if(ZLIB_FOUND)
-  target_link_libraries(sc PRIVATE ZLIB::ZLIB)
-endif()
-if(SC_NEED_M)
-  target_link_libraries(sc PRIVATE m)
-endif()
+  $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(sc PUBLIC
+$<$<BOOL:${MPI_FOUND}>:MPI::MPI_C>
+$<$<BOOL:${ZLIB_FOUND}>:ZLIB::ZLIB>
+$<$<BOOL:${SC_NEED_M}>:m>
+)
 
 # imported target, for use from FetchContent
 add_library(SC::SC INTERFACE IMPORTED GLOBAL)
