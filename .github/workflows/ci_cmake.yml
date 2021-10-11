@@ -94,7 +94,7 @@ jobs:
       run: cmake --install build
 
     - name: CMake self-tests
-      run: ctest --test-dir build -E sort --preset default
+      run: ctest --test-dir build --preset default
 
     - name: CMake configure examples
       run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=$HOME
