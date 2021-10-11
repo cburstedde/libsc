@@ -156,11 +156,11 @@ jobs:
 
     - name: CMake configure with MPI
       if: steps.check_files.outputs.files_exists == 'true'
-      run: cmake -B build -Dmpi=yes --install-prefix=${USERPROFILE}
+      run: cmake -B build -Dmpi=yes
 
     - name: CMake configure without MPI
       if: steps.check_files.outputs.files_exists == 'false'
-      run: cmake -B build -Dmpi=no --install-prefix=${USERPROFILE}
+      run: cmake -B build -Dmpi=no
 
     - name: CMake build
       run: cmake --build build
@@ -173,11 +173,11 @@ jobs:
 
     - name: CMake configure examples with MPI
       if: steps.check_files.outputs.files_exists == 'true'
-      run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=${USERPROFILE}
+      run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=build/local
 
     - name: CMake configure examples without MPI
       if: steps.check_files.outputs.files_exists == 'false'
-      run: cmake -B example/build -S example -DSC_ROOT=${USERPROFILE}
+      run: cmake -B example/build -S example -DSC_ROOT=build/local
 
     - name: CMake build examples
       run: cmake --build example/build
