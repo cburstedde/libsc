@@ -392,3 +392,34 @@ sc3_mpienv_get_nodesize (const sc3_mpienv_t * m, int *nodesize)
   *nodesize = m->nodesize;
   return NULL;
 }
+
+sc3_error_t        *
+sc3_mpienv_get_nodecomm (const sc3_mpienv_t * m, sc3_MPI_Comm_t * nodecomm)
+{
+  SC3E_RETVAL (nodecomm, SC3_MPI_COMM_NULL);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *nodecomm = m->nodecomm;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_info_noncont (const sc3_mpienv_t * m,
+                             sc3_MPI_Info_t * info_noncontig)
+{
+  SC3E_RETVAL (info_noncontig, SC3_MPI_INFO_NULL);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *info_noncontig = m->info_noncontig;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_node_frank (const sc3_mpienv_t * m, int *node_frank)
+{
+  SC3E_RETVAL (node_frank, -1);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *node_frank = m->node_frank;
+  return NULL;
+}

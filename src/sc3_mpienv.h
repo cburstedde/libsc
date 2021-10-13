@@ -201,6 +201,35 @@ sc3_error_t        *sc3_mpienv_get_noderank (const sc3_mpienv_t * m,
 sc3_error_t        *sc3_mpienv_get_nodesize (const sc3_mpienv_t * m,
                                              int *nodesize);
 
+/** Query the node communicator.
+ * \param [in] m        Valid and setup mpi environment.
+ * \param [out] nodecomm Pointer must not be NULL.  Output node communicator.
+ *                       Written to SC3_MPI_COMM_NULL on error return.
+ * \return               NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_get_nodecomm (const sc3_mpienv_t * m,
+                                             sc3_MPI_Comm_t * nodecomm);
+
+/** Query whether the key "alloc_shared_noncontig" is set.
+ * \param [in] m        Valid and setup mpi environment.
+ * \param [out] info_noncontig Pointer must not be NULL.
+ *                             Output "alloc_shared_noncontig" key.
+ *                             Written to SC3_MPI_INFO_NULL on error return.
+ * \return                     NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_get_info_noncont (const sc3_mpienv_t * m,
+                                                 sc3_MPI_Info_t *
+                                                 info_noncontig);
+
+/** Query a rank of first rank on this node within a forest communicator.
+ * \param [in] m        Valid and setup mpi environment.
+ * \param [out] node_frank Pointer must not be NULL.
+ *                         Output first node rank's rank.
+ *                         Written to -1 on error return.
+ * \return                 NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_get_node_frank (const sc3_mpienv_t * m,
+                                               int *node_frank);
 #ifdef __cplusplus
 #if 0
 {
