@@ -626,4 +626,34 @@ sc_mpi_write (MPI_File mpifile, const void *ptr, size_t zcount,
 #endif
 }
 
+void
+sc_mpi_write_all (MPI_File mpifile, const void *ptr, size_t zcount,
+              sc_MPI_Datatype t, const char *errmsg)
+{
+#ifdef SC_ENABLE_DEBUG
+  int                 icount;
+#endif
+  int                 mpiret;
+  sc_MPI_Status       mpistatus;
+
+  mpiret = MPI_File_write_all (mpifile, (void *) ptr,
+                           (int) zcount, t, &mpistatus);
+  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
+
+#ifdef SC_ENABLE_DEBUG
+  sc_MPI_Get_count (&mpistatus, t, &icount);
+  SC_CHECK_ABORT (icount == (int) zcount, errmsg);
+#endif
+}
+
+void
+sc_mpi_get_file_size (MPI_File mpifile, MPI_Offset *size, const char *errmsg)
+{
+  int mpiret;
+
+  mpiret = MPI_File_get_size (mpifile, size);
+  
+  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
+}
+
 #endif

@@ -145,6 +145,19 @@ sc_tag_t;
 #define sc_MPI_Op                  MPI_Op
 #define sc_MPI_Request             MPI_Request
 #define sc_MPI_Status              MPI_Status
+#define sc_MPI_File                MPI_File
+
+/* file access modes */
+
+#define sc_MPI_MODE_RDONLY         MPI_MODE_RDONLY
+#define sc_MPI_MODE_RDWR           MPI_MODE_RDWR
+#define sc_MPI_MODE_WRONLY         MPI_MODE_WRONLY
+#define sc_MPI_MODE_CREATE         MPI_MODE_CREATE
+#define sc_MPI_MODE_EXCL           MPI_MODE_EXCL
+#define sc_MPI_MODE_DELETE_ON_CLOSE MPI_MODE_DELETE_ON_CLOSE
+#define sc_MPI_MODE_UNIQUE_OPEN    MPI_MODE_UNIQUE_OPEN
+#define sc_MPI_MODE_SEQUENTIAL     MPI_MODE_SEQUENTIAL
+#define sc_MPI_MODE_APPEND         MPI_MODE_APPEND
 
 /* functions */
 
@@ -195,6 +208,9 @@ sc_tag_t;
 #define sc_MPI_Wait                MPI_Wait
 #define sc_MPI_Waitsome            MPI_Waitsome
 #define sc_MPI_Waitall             MPI_Waitall
+#define sc_MPI_File_open           MPI_File_open
+#define sc_MPI_File_write          MPI_File_write
+#define sc_MPI_File_close          MPI_File_close
 
 #else /* !SC_ENABLE_MPI */
 
@@ -342,6 +358,8 @@ int                 sc_MPI_Exscan (void *, void *, int, sc_MPI_Datatype,
                                    sc_MPI_Op, sc_MPI_Comm);
 
 double              sc_MPI_Wtime (void);
+
+/* TODO: Add open and write or in sc_io? */
 
 /* These functions will abort. */
 
