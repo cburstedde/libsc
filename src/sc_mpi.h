@@ -118,6 +118,7 @@ sc_tag_t;
 #define sc_MPI_FLOAT               MPI_FLOAT
 #define sc_MPI_DOUBLE              MPI_DOUBLE
 #define sc_MPI_LONG_DOUBLE         MPI_LONG_DOUBLE
+#define sc_MPI_Offset              MPI_Offset
 
 #define sc_MPI_MAX                 MPI_MAX
 #define sc_MPI_MIN                 MPI_MIN
@@ -158,6 +159,11 @@ sc_tag_t;
 #define sc_MPI_MODE_UNIQUE_OPEN    MPI_MODE_UNIQUE_OPEN
 #define sc_MPI_MODE_SEQUENTIAL     MPI_MODE_SEQUENTIAL
 #define sc_MPI_MODE_APPEND         MPI_MODE_APPEND
+
+/* MPI seek parameters */
+#define sc_MPI_SEEK_SET            MPI_SEEK_SET
+#define sc_MPI_SEEK_CUR            MPI_SEEK_CUR
+#define sc_MPI_SEEK_END            MPI_SEEK_END
 
 /* functions */
 

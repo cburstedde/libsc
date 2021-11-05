@@ -628,7 +628,7 @@ sc_mpi_write (MPI_File mpifile, const void *ptr, size_t zcount,
 
 void
 sc_mpi_write_all (MPI_File mpifile, const void *ptr, size_t zcount,
-              sc_MPI_Datatype t, const char *errmsg)
+                  sc_MPI_Datatype t, const char *errmsg)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -637,7 +637,7 @@ sc_mpi_write_all (MPI_File mpifile, const void *ptr, size_t zcount,
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_write_all (mpifile, (void *) ptr,
-                           (int) zcount, t, &mpistatus);
+                               (int) zcount, t, &mpistatus);
   SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
 
 #ifdef SC_ENABLE_DEBUG
@@ -647,12 +647,53 @@ sc_mpi_write_all (MPI_File mpifile, const void *ptr, size_t zcount,
 }
 
 void
-sc_mpi_get_file_size (MPI_File mpifile, MPI_Offset *size, const char *errmsg)
+sc_mpi_read_all (MPI_File mpifile, const void *ptr, size_t zcount,
+                 sc_MPI_Datatype t, const char *errmsg)
 {
-  int mpiret;
+#ifdef SC_ENABLE_DEBUG
+  int                 icount;
+#endif
+  int                 mpiret;
+  sc_MPI_Status       mpistatus;
+
+  mpiret = MPI_File_read_all (mpifile, (void *) ptr,
+                              (int) zcount, t, &mpistatus);
+  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
+
+#ifdef SC_ENABLE_DEBUG
+  sc_MPI_Get_count (&mpistatus, t, &icount);
+  SC_CHECK_ABORT (icount == (int) zcount, errmsg);
+#endif
+}
+
+void
+sc_mpi_get_file_size (MPI_File mpifile, MPI_Offset * size, const char *errmsg)
+{
+  int                 mpiret;
 
   mpiret = MPI_File_get_size (mpifile, size);
-  
+
+  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
+}
+
+void
+sc_mpi_set_file_size (MPI_File mpifile, MPI_Offset size, const char *errmsg)
+{
+  int                 mpiret;
+
+  mpiret = MPI_File_set_size (mpifile, size);
+
+  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
+}
+
+void
+sc_mpi_file_seek (MPI_File mpifile, MPI_Offset offset, int whence,
+                  const char *errmsg)
+{
+  int                 mpiret;
+
+  mpiret = MPI_File_seek (mpifile, offset, whence);
+
   SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
 }
 

@@ -299,7 +299,7 @@ void                sc_mpi_read (MPI_File mpifile, const void *ptr,
                                  size_t zcount, sc_MPI_Datatype t,
                                  const char *errmsg);
 
-/** Write memory content to an MPI file.
+/** Write memory content to a MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
@@ -311,7 +311,7 @@ void                sc_mpi_write (MPI_File mpifile, const void *ptr,
                                   size_t zcount, sc_MPI_Datatype t,
                                   const char *errmsg);
 
-/** Write memory content collectively to an MPI file.
+/** Write memory content collectively to a MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
@@ -320,10 +320,29 @@ void                sc_mpi_write (MPI_File mpifile, const void *ptr,
  * \note                This function aborts on MPI file and count errors.
  */
 void                sc_mpi_write_all (MPI_File mpifile, const void *ptr,
-                                  size_t zcount, sc_MPI_Datatype t,
-                                  const char *errmsg);
+                                      size_t zcount, sc_MPI_Datatype t,
+                                      const char *errmsg);
 
-void sc_mpi_get_file_size (MPI_File mpifile, MPI_Offset *size, const char *errmsg);
+/** Read memory content collectively from a MPI file.
+ * \param [in,out] mpifile      MPI file object opened for writing.
+ * \param [in] ptr      Data array to write to disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                This function aborts on MPI file and count errors.
+ */
+void                sc_mpi_read_all (MPI_File mpifile, const void *ptr,
+                                     size_t zcount, sc_MPI_Datatype t,
+                                     const char *errmsg);
+
+void                sc_mpi_get_file_size (MPI_File mpifile, MPI_Offset * size,
+                                          const char *errmsg);
+
+void                sc_mpi_set_file_size (MPI_File mpifile, MPI_Offset size,
+                                          const char *errmsg);
+
+void                sc_mpi_file_seek (MPI_File mpifile, MPI_Offset size,
+                                      int whence, const char *errmsg);
 
 #endif
 
