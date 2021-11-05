@@ -588,6 +588,27 @@ sc_fflush_fsync_fclose (FILE * file)
 #ifdef SC_ENABLE_MPIIO
 
 void
+sc_mpi_open (sc_MPI_Comm comm, const char *filename, int amode,
+             sc_MPI_INFO info, MPI_File * file, const char *errmsg)
+{
+  int                 mpiret;
+
+  mpiret = MPI_File_open (comm, filename, amode, info, file);
+
+  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
+}
+
+void
+sc_mpi_close (MPI_File * mpifile, const char *errmsg)
+{
+  int                 mpiret;
+
+  mpiret = MPI_File_close (mpifile);
+
+  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
+}
+
+void
 sc_mpi_read (MPI_File mpifile, const void *ptr, size_t zcount,
              sc_MPI_Datatype t, const char *errmsg)
 {

@@ -287,6 +287,12 @@ void                sc_fflush_fsync_fclose (FILE * file);
 
 #ifdef SC_ENABLE_MPIIO
 
+void                sc_mpi_open (sc_MPI_Comm comm, const char *filename,
+                                 int amode, sc_MPI_INFO info, MPI_File * file,
+                                 const char *errmsg);
+
+void                sc_mpi_close (MPI_File * mpifile, const char *errmsg);
+
 /** Read MPI file content into memory.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] ptr      Data array to read from disk.

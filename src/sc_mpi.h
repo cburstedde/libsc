@@ -147,6 +147,7 @@ sc_tag_t;
 #define sc_MPI_Request             MPI_Request
 #define sc_MPI_Status              MPI_Status
 #define sc_MPI_File                MPI_File
+#define sc_MPI_INFO                MPI_Info
 
 /* file access modes */
 
@@ -164,6 +165,9 @@ sc_tag_t;
 #define sc_MPI_SEEK_SET            MPI_SEEK_SET
 #define sc_MPI_SEEK_CUR            MPI_SEEK_CUR
 #define sc_MPI_SEEK_END            MPI_SEEK_END
+
+/* MPI info arguments */
+#define sc_MPI_INFO_NULL           MPI_INFO_NULL
 
 /* functions */
 
@@ -214,9 +218,6 @@ sc_tag_t;
 #define sc_MPI_Wait                MPI_Wait
 #define sc_MPI_Waitsome            MPI_Waitsome
 #define sc_MPI_Waitall             MPI_Waitall
-#define sc_MPI_File_open           MPI_File_open
-#define sc_MPI_File_write          MPI_File_write
-#define sc_MPI_File_close          MPI_File_close
 
 #else /* !SC_ENABLE_MPI */
 
