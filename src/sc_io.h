@@ -287,10 +287,23 @@ void                sc_fflush_fsync_fclose (FILE * file);
 
 #ifdef SC_ENABLE_MPIIO
 
+/** Open MPI file. This is collective.
+ * \param [in]  comm      MPI communicator
+ * \param [in]  filename  Filename of the MPI file that the function should
+ *                        open.
+ * \param [in]  info      MPI file info
+ * \param [out] file      MPI file object created by this function.
+ * \param [in] errmsg     Error message passed to SC_CHECK_ABORT.
+ * \note                  This function aborts on MPI file errors.
+ */
 void                sc_mpi_open (sc_MPI_Comm comm, const char *filename,
                                  int amode, sc_MPI_INFO info, MPI_File * file,
                                  const char *errmsg);
-
+/** Close MPI file.         This is collective.
+ * \param [in,out] mpifile  MPI file object that is closed.
+ * \param [in]     errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                    This function aborts on MPI file errors.
+ */
 void                sc_mpi_close (MPI_File * mpifile, const char *errmsg);
 
 /** Read MPI file content into memory.
@@ -306,6 +319,7 @@ void                sc_mpi_read (MPI_File mpifile, const void *ptr,
                                  const char *errmsg);
 
 /** Read MPI file content into memory for an explicit offset.
+ * This funtion does not update the file pointer that is part of mpifile.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in etype, where the etype is given by 
  *                      the type t. 
@@ -320,6 +334,7 @@ void                sc_mpi_read_at (MPI_File mpifile, MPI_Offset offset,
                                     sc_MPI_Datatype t, const char *errmsg);
 
 /** Read MPI file content collectively into memory for an explicit offset.
+ * This funtion does not update the file pointer that is part of mpifile.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in etype, where the etype is given by 
  *                      the type t. 
@@ -347,6 +362,7 @@ void                sc_mpi_write (MPI_File mpifile, const void *ptr,
                                   const char *errmsg);
 
 /** Write MPI file content into memory for an explicit offset.
+ * This funtion does not update the file pointer that is part of mpifile.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in etype, where the etype is given by 
  *                      the type t. 
@@ -361,6 +377,7 @@ void                sc_mpi_write_at (MPI_File mpifile, MPI_Offset offset,
                                      sc_MPI_Datatype t, const char *errmsg);
 
 /** Write MPI file content collectively into memory for an explicit offset.
+ * This funtion does not update the file pointer that is part of mpifile.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in etype, where the etype is given by 
  *                      the type t. 
