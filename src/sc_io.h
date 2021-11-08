@@ -305,6 +305,10 @@ void                sc_mpi_read (MPI_File mpifile, const void *ptr,
                                  size_t zcount, sc_MPI_Datatype t,
                                  const char *errmsg);
 
+void                sc_mpi_read_at (MPI_File mpifile, MPI_Offset offset,
+                                    const void *ptr, size_t zcount,
+                                    sc_MPI_Datatype t, const char *errmsg);
+
 /** Write memory content to a MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
