@@ -305,9 +305,34 @@ void                sc_mpi_read (MPI_File mpifile, const void *ptr,
                                  size_t zcount, sc_MPI_Datatype t,
                                  const char *errmsg);
 
+/** Read MPI file content into memory for an explicit offset.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in etype, where the etype is given by 
+ *                      the type t. 
+ * \param [in] ptr      Data array to read from disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                This function aborts on MPI file and count errors.
+ */
 void                sc_mpi_read_at (MPI_File mpifile, MPI_Offset offset,
                                     const void *ptr, size_t zcount,
                                     sc_MPI_Datatype t, const char *errmsg);
+
+/** Read MPI file content collectively into memory for an explicit offset.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in etype, where the etype is given by 
+ *                      the type t. 
+ * \param [in] ptr      Data array to read from disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                This function aborts on MPI file and count errors.
+ */
+void                sc_mpi_read_at_all (MPI_File mpifile, MPI_Offset offset,
+                                        const void *ptr, size_t zcount,
+                                        sc_MPI_Datatype t,
+                                        const char *errmsg);
 
 /** Write memory content to a MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
@@ -320,6 +345,35 @@ void                sc_mpi_read_at (MPI_File mpifile, MPI_Offset offset,
 void                sc_mpi_write (MPI_File mpifile, const void *ptr,
                                   size_t zcount, sc_MPI_Datatype t,
                                   const char *errmsg);
+
+/** Write MPI file content into memory for an explicit offset.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in etype, where the etype is given by 
+ *                      the type t. 
+ * \param [in] ptr      Data array to write to disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                This function aborts on MPI file and count errors.
+ */
+void                sc_mpi_write_at (MPI_File mpifile, MPI_Offset offset,
+                                     const void *ptr, size_t zcount,
+                                     sc_MPI_Datatype t, const char *errmsg);
+
+/** Write MPI file content collectively into memory for an explicit offset.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in etype, where the etype is given by 
+ *                      the type t. 
+ * \param [in] ptr      Data array to write to disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                This function aborts on MPI file and count errors.
+ */
+void                sc_mpi_write_at_all (MPI_File mpifile, MPI_Offset offset,
+                                         const void *ptr, size_t zcount,
+                                         sc_MPI_Datatype t,
+                                         const char *errmsg);
 
 /** Write memory content collectively to a MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
