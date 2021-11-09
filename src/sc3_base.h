@@ -246,7 +246,7 @@ void                sc3_strcopy (char *dest, size_t size, const char *src);
  */
 void                sc3_snprintf (char *str, size_t size,
                                   const char *format, ...)
-  __attribute__((format (printf, 3, 4)));
+  __attribute__ ((format (printf, 3, 4)));
 
 /** Determine the highest bit position of a positive integer.
  * \param [in] a, bits  The lowest *bits* bits of \a a are examined.
@@ -283,6 +283,14 @@ int                 sc3_intpow (int base, int exp);
  */
 long                sc3_longpow (long base, int exp);
 
+/** Fast algorithm to compute integer exponentials.
+ * Compute \a base to the power of \a exp.
+ * \param [in] base     This number can be arbitrary.
+ * \param [in] exp      If negative, the function returns 0.
+ * \return \a base ** \a exp except 0 when the exponent is -1.
+ */
+unsigned long       sc3_ulongpow (unsigned long base, int exp);
+
 /** Compute a cumulative partition cut by floor (Np / P).
  * The product NP must fit into a long integer.
  * For p <= 0 we return 0 and for p >= P we return N.
@@ -304,6 +312,17 @@ int                 sc3_intcut (int N, int P, int p);
  *                     0 if any argument is invalid.
  */
 long                sc3_longcut (long N, int P, int p);
+
+/** Compute a cumulative partition cut by floor (Np / P).
+ * The product NP must fit into a long integer.
+ * For p <= 0 we return 0 and for p >= P we return N.
+ * \param [in] N       Non-negative integer to divide between P slots.
+ * \param [in] P       The total number of slots, a positive integer.
+ * \param [in] p       Slot number is trimmed to satisfy 0 <= p <= P.
+ * \return             floor (Np / P) in long integer arithmetic or
+ *                     0 if any argument is invalid.
+ */
+unsigned long       sc3_ulongcut (unsigned long N, int P, int p);
 
 /** Extract the basename of a path.
  * This function uses the system's `basename` function if available
