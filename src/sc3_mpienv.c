@@ -79,8 +79,17 @@ sc3_mpienv_is_valid (const sc3_mpienv_t * m, char *reason)
   SC3E_IS (sc3_allocator_is_setup, m->mator, reason);
 
   /* specific checks here */
-  SC3E_TEST (!m->setup || m->mpicomm != SC3_MPI_COMM_NULL, reason);
-
+  SC3E_TEST (m->mpicomm != SC3_MPI_COMM_NULL, reason);
+  if (!m->setup) {
+    SC3E_TEST (m->mpisize == 0 && m->mpirank == 0, reason);
+  }
+  else {
+    if (m->shared) {
+      SC3E_TEST (m->nodesizewin != SC3_MPI_WIN_NULL, reason);
+    }
+    SC3E_TEST (m->headcomm != SC3_MPI_COMM_NULL || m->noderank > 0, reason);
+    SC3E_TEST (m->nodecomm != SC3_MPI_COMM_NULL, reason);
+  }
   SC3E_YES (reason);
 }
 
@@ -115,6 +124,9 @@ sc3_mpienv_new (sc3_allocator_t * mator, sc3_mpienv_t ** mp)
 
   /* set defaults here whenever not zero/null */
   m->mpicomm = SC3_MPI_COMM_WORLD;
+  m->nodesizewin = SC3_MPI_WIN_NULL;
+  m->headcomm = SC3_MPI_COMM_NULL;
+  m->nodecomm = SC3_MPI_COMM_NULL;
 #ifdef SC3_ENABLE_MPI3
   m->shared = 1;
 #endif
@@ -378,5 +390,36 @@ sc3_mpienv_get_nodesize (const sc3_mpienv_t * m, int *nodesize)
   SC3A_IS (sc3_mpienv_is_setup, m);
 
   *nodesize = m->nodesize;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_nodecomm (const sc3_mpienv_t * m, sc3_MPI_Comm_t * nodecomm)
+{
+  SC3E_RETVAL (nodecomm, SC3_MPI_COMM_NULL);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *nodecomm = m->nodecomm;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_info_noncont (const sc3_mpienv_t * m,
+                             sc3_MPI_Info_t * info_noncontig)
+{
+  SC3E_RETVAL (info_noncontig, SC3_MPI_INFO_NULL);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *info_noncontig = m->info_noncontig;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_node_frank (const sc3_mpienv_t * m, int *node_frank)
+{
+  SC3E_RETVAL (node_frank, -1);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *node_frank = m->node_frank;
   return NULL;
 }
