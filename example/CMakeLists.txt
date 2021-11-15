@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.20)
+cmake_minimum_required(VERSION 3.13...3.21)
 project(libscExamples LANGUAGES C)
 
 include(CTest)
@@ -8,6 +8,8 @@ include(CheckIncludeFile)
 option(mpi "use MPI" off)
 
 # --- find external libraries
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/Modules)
+
 if(mpi)
   find_package(MPI COMPONENTS C REQUIRED)
   if(NOT MPIEXEC_EXECUTABLE)
@@ -20,17 +22,13 @@ find_package(Threads)
 
 # --- find our library
 
-if(NOT SC_ROOT AND NOT DEFINED ENV{SC_ROOT})
-  set(SC_ROOT ${PROJECT_SOURCE_DIR}/../build)
-endif()
-
 find_package(SC REQUIRED)
 
 # --- get system capabilities
 
 check_symbol_exists(sqrt math.h SC_NONEED_M)
 if(NOT SC_NONEED_M)
-  set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} m)
+  set(CMAKE_REQUIRED_LIBRARIES m)
   check_symbol_exists(sqrt math.h SC_NEED_M)
 endif()
 
@@ -39,24 +37,22 @@ if(SC_HAVE_UNISTD_H)
   check_include_file(getopt.h SC_HAVE_GETOPT_H)
 endif()
 
+target_link_libraries(SC::SC INTERFACE
+$<$<BOOL:${MPI_C_FOUND}>:MPI::MPI_C>
+$<$<BOOL:${ZLIB_FOUND}>:ZLIB::ZLIB>
+$<$<BOOL:${SC_NEED_M}>:m>
+)
+
 # --- build examples
 
 function(test_sc_example name files)
 
 add_executable(sc_${name} ${files})
-target_include_directories(sc_${name} PRIVATE ${PROJECT_SOURCE_DIR}/src ${PROJECT_BINARY_DIR}/include)
-target_link_libraries(sc_${name} PRIVATE SC::SC)
-if(MPI_FOUND)
-  target_link_libraries(sc_${name} PRIVATE MPI::MPI_C)
-endif()
-if(ZLIB_FOUND)
-  target_link_libraries(sc_${name} PRIVATE ZLIB::ZLIB)
-endif()
-if(SC_NEED_M)
-  target_link_libraries(sc_${name} PRIVATE m)
-endif()
 
-if(MPI_FOUND)
+target_link_libraries(sc_${name} PRIVATE SC::SC)
+
+
+if(MPI_C_FOUND)
   add_test(NAME sc:example:${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_${name}>)
 else()
   add_test(NAME sc:example:${name} COMMAND $<TARGET_FILE:sc_${name}>)
