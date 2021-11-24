@@ -27,6 +27,9 @@
 #include <sc.h>
 #include <sc_containers.h>
 
+#if !defined (P4EST_ENABLE_MPII0) && !defined (P4EST_ENABLE_MPI)
+/* We report errors without MPI I/O and MPI but without MPI we abort */
+
 /** This macro checks the return value of fopen, prints an error report
  * and return NULL for the function within in the macro is called. This
  * means we assume that all I/O functions return a pointer.
@@ -39,6 +42,7 @@
 #define SC_CHECK_FOPEN_INT(retval,fn) { retval = (fn);\
      if (retval == NULL) { SC_LERRORF ("Error by calling %s at %s:%d: %s.\n",\
                           #fn, __FILE__, __LINE__, strerror (errno)); return -1; }}
+#endif
 
 /** This macro checks the MPI return value and print an error if the return
  * value is not equal to \ref sc_MPI_SUCCESS.
@@ -281,6 +285,9 @@ int                 sc_vtk_write_compressed (FILE * vtkfile,
                                              char *numeric_data,
                                              size_t byte_length);
 
+FILE               *sc_fopen (const char *filename, const char *mode,
+                              const char *msg);
+
 /** Write memory content to a file.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] size     Size of one array member.
@@ -351,9 +358,10 @@ void                sc_mpi_read (MPI_File mpifile, const void *ptr,
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
- * \note                This function aborts on MPI file and count errors.
+ * \note                This function does not abort on MPI file errors.
+ * \return              The function returns the MPI error code.
  */
-void                sc_mpi_read_at (MPI_File mpifile, MPI_Offset offset,
+int                 sc_mpi_read_at (MPI_File mpifile, MPI_Offset offset,
                                     const void *ptr, size_t zcount,
                                     sc_MPI_Datatype t, const char *errmsg);
 
@@ -366,9 +374,10 @@ void                sc_mpi_read_at (MPI_File mpifile, MPI_Offset offset,
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
- * \note                This function aborts on MPI file and count errors.
+ * \note                This function does not abort on MPI file errors.
+ * \return              The function returns the MPI error code.
  */
-void                sc_mpi_read_at_all (MPI_File mpifile, MPI_Offset offset,
+int                 sc_mpi_read_at_all (MPI_File mpifile, MPI_Offset offset,
                                         const void *ptr, size_t zcount,
                                         sc_MPI_Datatype t,
                                         const char *errmsg);
@@ -379,9 +388,10 @@ void                sc_mpi_read_at_all (MPI_File mpifile, MPI_Offset offset,
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
- * \note                This function aborts on MPI file and count errors.
+ * \note                This function does not abort on MPI file errors.
+ * \return              The function returns the MPI error code.
  */
-void                sc_mpi_write (MPI_File mpifile, const void *ptr,
+int                 sc_mpi_write (MPI_File mpifile, const void *ptr,
                                   size_t zcount, sc_MPI_Datatype t,
                                   const char *errmsg);
 
@@ -394,9 +404,10 @@ void                sc_mpi_write (MPI_File mpifile, const void *ptr,
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
- * \note                This function aborts on MPI file and count errors.
+ * \note                This function does not abort on MPI file errors.
+ * \return              The function returns the MPI error code.
  */
-void                sc_mpi_write_at (MPI_File mpifile, MPI_Offset offset,
+int                 sc_mpi_write_at (MPI_File mpifile, MPI_Offset offset,
                                      const void *ptr, size_t zcount,
                                      sc_MPI_Datatype t, const char *errmsg);
 
@@ -409,9 +420,10 @@ void                sc_mpi_write_at (MPI_File mpifile, MPI_Offset offset,
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
- * \note                This function aborts on MPI file and count errors.
+ * \note                This function does not abort on MPI file errors.
+ * \return              The function returns the MPI error code.
  */
-void                sc_mpi_write_at_all (MPI_File mpifile, MPI_Offset offset,
+int                 sc_mpi_write_at_all (MPI_File mpifile, MPI_Offset offset,
                                          const void *ptr, size_t zcount,
                                          sc_MPI_Datatype t,
                                          const char *errmsg);

@@ -549,6 +549,18 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
   return 0;
 }
 
+FILE               *
+sc_fopen (const char *filename, const char *mode, const char *msg)
+{
+  FILE               *fp;
+
+  fp = fopen (filename, mode);
+
+  SC_CHECK_ABORT (fp != NULL, msg);
+
+  return fp;
+}
+
 void
 sc_fwrite (const void *ptr, size_t size, size_t nmemb, FILE * file,
            const char *errmsg)
@@ -623,7 +635,7 @@ sc_mpi_read (MPI_File mpifile, const void *ptr, size_t zcount,
 #endif
 }
 
-void
+int
 sc_mpi_read_at (MPI_File mpifile, MPI_Offset offset, const void *ptr,
                 size_t zcount, sc_MPI_Datatype t, const char *errmsg)
 {
@@ -636,15 +648,15 @@ sc_mpi_read_at (MPI_File mpifile, MPI_Offset offset, const void *ptr,
   mpiret =
     MPI_File_read_at (mpifile, offset, (void *) ptr, (int) zcount, t,
                       &mpistatus);
-  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
-
 #ifdef SC_ENABLE_DEBUG
   sc_MPI_Get_count (&mpistatus, t, &icount);
   SC_CHECK_ABORT (icount == (int) zcount, errmsg);
 #endif
+
+  return mpiret;
 }
 
-void
+int
 sc_mpi_read_at_all (MPI_File mpifile, MPI_Offset offset, const void *ptr,
                     size_t zcount, sc_MPI_Datatype t, const char *errmsg)
 {
@@ -657,15 +669,15 @@ sc_mpi_read_at_all (MPI_File mpifile, MPI_Offset offset, const void *ptr,
   mpiret =
     MPI_File_read_at_all (mpifile, offset, (void *) ptr, (int) zcount, t,
                           &mpistatus);
-  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
-
 #ifdef SC_ENABLE_DEBUG
   sc_MPI_Get_count (&mpistatus, t, &icount);
   SC_CHECK_ABORT (icount == (int) zcount, errmsg);
 #endif
+
+  return mpiret;
 }
 
-void
+int
 sc_mpi_write (MPI_File mpifile, const void *ptr, size_t zcount,
               sc_MPI_Datatype t, const char *errmsg)
 {
@@ -677,15 +689,14 @@ sc_mpi_write (MPI_File mpifile, const void *ptr, size_t zcount,
 
   mpiret = MPI_File_write (mpifile, (void *) ptr,
                            (int) zcount, t, &mpistatus);
-  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
-
 #ifdef SC_ENABLE_DEBUG
   sc_MPI_Get_count (&mpistatus, t, &icount);
   SC_CHECK_ABORT (icount == (int) zcount, errmsg);
 #endif
+  return mpiret;
 }
 
-void
+int
 sc_mpi_write_at (MPI_File mpifile, MPI_Offset offset, const void *ptr,
                  size_t zcount, sc_MPI_Datatype t, const char *errmsg)
 {
@@ -697,15 +708,15 @@ sc_mpi_write_at (MPI_File mpifile, MPI_Offset offset, const void *ptr,
 
   mpiret = MPI_File_write_at (mpifile, offset, (void *) ptr,
                               (int) zcount, t, &mpistatus);
-  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
-
 #ifdef SC_ENABLE_DEBUG
   sc_MPI_Get_count (&mpistatus, t, &icount);
   SC_CHECK_ABORT (icount == (int) zcount, errmsg);
 #endif
+
+  return mpiret;
 }
 
-void
+int
 sc_mpi_write_at_all (MPI_File mpifile, MPI_Offset offset, const void *ptr,
                      size_t zcount, sc_MPI_Datatype t, const char *errmsg)
 {
@@ -717,12 +728,12 @@ sc_mpi_write_at_all (MPI_File mpifile, MPI_Offset offset, const void *ptr,
 
   mpiret = MPI_File_write_at_all (mpifile, offset, (void *) ptr,
                                   (int) zcount, t, &mpistatus);
-  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
-
 #ifdef SC_ENABLE_DEBUG
   sc_MPI_Get_count (&mpistatus, t, &icount);
   SC_CHECK_ABORT (icount == (int) zcount, errmsg);
 #endif
+
+  return mpiret;
 }
 
 void
