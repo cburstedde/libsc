@@ -587,15 +587,11 @@ sc_fflush_fsync_fclose (FILE * file)
 
 #ifdef SC_ENABLE_MPIIO
 
-void
+int
 sc_mpi_open (sc_MPI_Comm comm, const char *filename, int amode,
              sc_MPI_INFO info, MPI_File * file, const char *errmsg)
 {
-  int                 mpiret;
-
-  mpiret = MPI_File_open (comm, filename, amode, info, file);
-
-  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
+  return MPI_File_open (comm, filename, amode, info, file);
 }
 
 void

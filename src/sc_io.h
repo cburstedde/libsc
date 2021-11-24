@@ -27,6 +27,29 @@
 #include <sc.h>
 #include <sc_containers.h>
 
+/** This macro checks the return value of fopen, prints an error report
+ * and return NULL for the function within in the macro is called. This
+ * means we assume that all I/O functions return a pointer.
+ */
+#define SC_CHECK_FOPEN_NULL(retval,fn) { retval = (fn);\
+                          if (retval == NULL) {\
+                          SC_LERRORF ("Error by calling %s at %s:%d: %s.\n",\
+                          #fn, __FILE__, __LINE__, strerror (errno)); return NULL; }}
+
+#define SC_CHECK_FOPEN_INT(retval,fn) { retval = (fn);\
+     if (retval == NULL) { SC_LERRORF ("Error by calling %s at %s:%d: %s.\n",\
+                          #fn, __FILE__, __LINE__, strerror (errno)); return -1; }}
+
+/** This macro checks the MPI return value and print an error if the return
+ * value is not equal to \ref sc_MPI_SUCCESS.
+ */
+#define SC_CHECK_MPI_VERBOSE(errcode,user_msg) {char msg[MPI_MAX_ERROR_STRING];\
+                        int msglen;\
+                        if (errcode != sc_MPI_SUCCESS) {\
+                          MPI_Error_string (errcode, msg, &msglen);\
+                          SC_LERRORF ("%s: Error at %s:%d: %.*s.\n",\
+                          user_msg, __FILE__, __LINE__, msglen, msg);}}
+
 SC_EXTERN_C_BEGIN;
 
 /** Error values for io.
@@ -294,9 +317,10 @@ void                sc_fflush_fsync_fclose (FILE * file);
  * \param [in]  info      MPI file info
  * \param [out] file      MPI file object created by this function.
  * \param [in] errmsg     Error message passed to SC_CHECK_ABORT.
- * \note                  This function aborts on MPI file errors.
+ * \note                  This function does not abort on MPI file errors.
+ * \return                The function returns the MPI error code.
  */
-void                sc_mpi_open (sc_MPI_Comm comm, const char *filename,
+int                 sc_mpi_open (sc_MPI_Comm comm, const char *filename,
                                  int amode, sc_MPI_INFO info, MPI_File * file,
                                  const char *errmsg);
 /** Close MPI file.         This is collective.
