@@ -776,24 +776,24 @@ sc_mpi_read_all (MPI_File mpifile, const void *ptr, size_t zcount,
 #endif
 }
 
-void
+int
 sc_mpi_get_file_size (MPI_File mpifile, MPI_Offset * size, const char *errmsg)
 {
   int                 mpiret;
 
   mpiret = MPI_File_get_size (mpifile, size);
 
-  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
+  return mpiret;
 }
 
-void
+int
 sc_mpi_set_file_size (MPI_File mpifile, MPI_Offset size, const char *errmsg)
 {
   int                 mpiret;
 
   mpiret = MPI_File_set_size (mpifile, size);
 
-  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
+  return mpiret;
 }
 
 void
