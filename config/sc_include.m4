@@ -112,6 +112,31 @@ AC_DEFUN([SC_REQUIRE_LIB],
     [AC_SEARCH_LIBS([$2], [$1],,
       [AC_MSG_ERROR([Could not find function $2 in $1])])])
 
+dnl SC_CHECK_FABS(PREFIX)
+dnl Check whether fabs is found in libm, do a link test if not found.
+dnl The PREFIX argument is currently unused but should be supplied.
+dnl
+AC_DEFUN([SC_CHECK_FABS],
+[
+  AC_SEARCH_LIBS([fabs], [m],,
+  [
+   AC_MSG_CHECKING([whether a fabs link test works])
+   AC_LINK_IFELSE([AC_LANG_PROGRAM(
+   [[
+#include <stdio.h>
+#include <math.h>
+   ]],
+   [[
+const float farg = -4.12;
+const float fres = fabs (farg);
+printf("%f\n", fres);
+   ]])],
+   [AC_DEFINE([HAVE_FABS], [1], [Define to 1 if fabs links successfully])
+    AC_MSG_RESULT([yes])],
+   [AC_MSG_RESULT([no])])
+   ])
+])
+
 dnl SC_CHECK_LIB(LIBRARY LIST, FUNCTION, TOKEN, PREFIX)
 dnl Check for FUNCTION first as is, then in each of the libraries.
 dnl Set shell variable PREFIX_HAVE_TOKEN to nonempty if found.
@@ -226,51 +251,52 @@ fi
 $1_AMFLAGS="-I $$1_CONFIG"
 ])
 
-dnl SC_CHECK_BLAS_LAPACK(PREFIX)
-dnl This function uses the macros SC_BLAS and SC_LAPACK.
-dnl It requires previous configure macros for F77 support,
-dnl which are called by SC_MPI_CONFIG/SC_MPI_ENGAGE.
+dnl dnl SC_CHECK_BLAS_LAPACK(PREFIX)
+dnl dnl This function uses the macros SC_BLAS and SC_LAPACK.
+dnl dnl It requires previous configure macros for F77 support,
+dnl dnl which are called by SC_MPI_CONFIG/SC_MPI_ENGAGE.
+dnl dnl
+dnl AC_DEFUN([SC_CHECK_BLAS_LAPACK],
+dnl [
+dnl m4_ifset([SC_CHECK_MPI_F77],[
+dnl dgemm=;AC_F77_FUNC(dgemm)
+dnl if test "x$dgemm" = xunknown ; then dgemm=dgemm_ ; fi
 dnl
-AC_DEFUN([SC_CHECK_BLAS_LAPACK],
-[
-
-dgemm=;AC_F77_FUNC(dgemm)
-if test "x$dgemm" = xunknown ; then dgemm=dgemm_ ; fi
-
-AC_MSG_NOTICE([Checking BLAS])
-SC_BLAS([$1], [$dgemm],
-        [AC_DEFINE([WITH_BLAS], 1, [Define to 1 if BLAS is used])],
-        [AC_MSG_ERROR([[\
-Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
- LIBS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB\
- (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
-
-# at this point $sc_blas_ok is either of: yes disable
-if test "x$sc_blas_ok" = xdisable ; then
-        AC_MSG_NOTICE([Not using BLAS])
-fi
-AM_CONDITIONAL([$1_WITH_BLAS], [test "x$sc_blas_ok" = xyes])
-
-dgecon=;AC_F77_FUNC(dgecon)
-if test "x$dgecon" = xunknown ; then dgecon=dgecon_ ; fi
-
-AC_MSG_NOTICE([Checking LAPACK])
-SC_LAPACK([$1], [$dgecon],
-          [AC_DEFINE([WITH_LAPACK], 1, [Define to 1 if LAPACK is used])],
-          [AC_MSG_ERROR([[\
-Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
- LIBS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB\
- (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
-
-# at this point $sc_lapack_ok is either of: yes disable
-if test "x$sc_lapack_ok" = xdisable ; then
-        AC_MSG_NOTICE([Not using LAPACK])
-fi
-AM_CONDITIONAL([$1_WITH_LAPACK], [test "x$sc_lapack_ok" = xyes])
-
-# Append the necessary blas/lapack and fortran libraries to LIBS
-LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $LAPACK_FLIBS $BLAS_FLIBS"
-])
+dnl AC_MSG_NOTICE([Checking BLAS])
+dnl SC_BLAS([$1], [$dgemm],
+dnl         [AC_DEFINE([WITH_BLAS], 1, [Define to 1 if BLAS is used])],
+dnl         [AC_MSG_ERROR([[\
+dnl Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
+dnl  LIBS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB\
+dnl  (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
+dnl
+dnl # at this point $sc_blas_ok is either of: yes disable
+dnl if test "x$sc_blas_ok" = xdisable ; then
+dnl         AC_MSG_NOTICE([Not using BLAS])
+dnl fi
+dnl AM_CONDITIONAL([$1_WITH_BLAS], [test "x$sc_blas_ok" = xyes])
+dnl
+dnl dgecon=;AC_F77_FUNC(dgecon)
+dnl if test "x$dgecon" = xunknown ; then dgecon=dgecon_ ; fi
+dnl
+dnl AC_MSG_NOTICE([Checking LAPACK])
+dnl SC_LAPACK([$1], [$dgecon],
+dnl           [AC_DEFINE([WITH_LAPACK], 1, [Define to 1 if LAPACK is used])],
+dnl           [AC_MSG_ERROR([[\
+dnl Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
+dnl  LIBS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB\
+dnl  (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
+dnl
+dnl # at this point $sc_lapack_ok is either of: yes disable
+dnl if test "x$sc_lapack_ok" = xdisable ; then
+dnl         AC_MSG_NOTICE([Not using LAPACK])
+dnl fi
+dnl AM_CONDITIONAL([$1_WITH_LAPACK], [test "x$sc_lapack_ok" = xyes])
+dnl
+dnl # Append the necessary blas/lapack and fortran libraries to LIBS
+dnl LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $LAPACK_FLIBS $BLAS_FLIBS"
+dnl ])
+dnl ])
 
 dnl SC_CHECK_LIBRARIES(PREFIX)
 dnl This macro bundles the checks for all libraries and link tests
@@ -279,15 +305,16 @@ dnl link to libsc to add appropriate options to LIBS.
 dnl
 AC_DEFUN([SC_CHECK_LIBRARIES],
 [
-SC_REQUIRE_LIB([m], [fabs])
+SC_CHECK_FABS([$1])
 SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [$1])
-SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua lua5], [lua_createtable],
-	     [LUA], [$1])
-SC_CHECK_BLAS_LAPACK([$1])
+dnl SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua5 lua],
+dnl              [lua_createtable], [LUA], [$1])
+dnl SC_CHECK_BLAS_LAPACK([$1])
 SC_BUILTIN_ALL_PREFIX([$1])
 SC_CHECK_PTHREAD([$1])
 SC_CHECK_OPENMP([$1])
 SC_CHECK_MEMALIGN([$1])
+SC_CHECK_QSORT_R([$1])
 SC_CHECK_V4L2([$1])
 dnl SC_CUDA([$1])
 ])
@@ -310,15 +337,7 @@ We did not find a recent zlib containing the function adler32_combine.
 This is OK if the following does not matter to you:
 Calling any sc functions that rely on zlib will abort your program.
 These functions include sc_array_checksum and sc_vtk_write_compressed.
-You can fix this by compiling a working zlib and pointing LIBS to it.
-])
-fi
-if test "x$$1_HAVE_LUA" = x ; then
-AC_MSG_NOTICE([- $1 -------------------------------------------------
-We did not find a recent lua containing the function lua_createtable.
-This is OK if the following does not matter to you:
-Including sc_lua.h in your code will abort the compilation.
-You can fix this by compiling a working lua and pointing LIBS to it.
+You can fix this by compiling a recent zlib and pointing LIBS to it.
 ])
 fi
 ])

@@ -34,8 +34,12 @@
 #ifndef SC_H
 #define SC_H
 
-/* include the sc_config header first */
+/* we set the GNU feature test macro before including anything */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
+/* include the libsc config header first */
 #include <sc_config.h>
 #ifndef _sc_const
 /** Portable way to work with really old compilers without const. */
@@ -75,6 +79,13 @@
 /* done with memalign macros */
 #endif
 
+/* disable global counters that are not thread-safe (say when using TBB) */
+#ifndef SC_ENABLE_USE_COUNTERS
+#define SC_NOCOUNT_MALLOC
+#define SC_NOCOUNT_REFCOUNT
+#define SC_NOCOUNT_LOGINDENT
+#endif
+
 /* use this in case mpi.h includes stdint.h */
 
 #ifndef __STDC_LIMIT_MACROS
@@ -97,19 +108,40 @@
 #endif
 
 /* include system headers */
-
+#define _USE_MATH_DEFINES
 #include <math.h>
+
 #include <ctype.h>
 #include <float.h>
+#ifndef _MSC_VER
 #include <libgen.h>
+#endif
 #include <limits.h>
 #include <stdarg.h>
 #include <stddef.h>
+#ifdef SC_HAVE_STDINT_H
 #include <stdint.h>
+#endif
 #include <stdio.h>
+#ifdef SC_HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#ifdef SC_HAVE_STRING_H
 #include <string.h>
+#endif
+#ifdef SC_HAVE_TIME_H
+#include <time.h>
+#endif
+#ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
+#elif defined(_WIN32)
+#include  <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
+/* definitions to allow user code to query the sc library */
+/** Indicate that we do not modify the communicator in sc_init. */
+#define SC_INIT_COMM_CLEAN
 
 /* provide extern C defines */
 
@@ -481,6 +513,9 @@ void                sc_free (int package, void *ptr);
 int                 sc_memory_status (int package);
 void                sc_memory_check (int package);
 
+/** Return error count or zero if all is ok. */
+int                 sc_memory_check_noerr (int package);
+
 /* comparison functions for various integer sizes */
 
 int                 sc_int_compare (const void *v1, const void *v2);
@@ -662,10 +697,21 @@ void                sc_init (sc_MPI_Comm mpicomm,
 
 /** Unregisters all packages, runs the memory check, removes the
  * signal handlers and resets sc_identifier and sc_root_*.
+ * This function aborts on any inconsistency found unless
+ * the global variable default_abort_mismatch is false.
  * This function is optional.
  * This function does not require sc_init to be called first.
  */
 void                sc_finalize (void);
+
+/** Unregisters all packages, runs the memory check, removes the
+ * signal handlers and resets sc_identifier and sc_root_*.
+ * This function never aborts but returns the number of errors encountered.
+ * This function is optional.
+ * This function does not require sc_init to be called first.
+ * \return          0 when everything is consistent, nonzero otherwise.
+ */
+int                 sc_finalize_noabort (void);
 
 /** Identify the root process.
  * Only meaningful between sc_init and sc_finalize and

@@ -58,3 +58,65 @@ and to pack a distribution tarball, call `bootstrap` and
 
 The `V=0` environment variable significantly unclutters console output.
 So far, we have not made `V=0` the default.
+
+### CMake
+
+For faster builds that work on Windows as well as MacOS and Linux, and
+that are easily usable from other CMake projects, libsc can be built directly,
+or used via FetchContent or ExternalProject from other CMake projects.
+
+MPI and OpenMP are enabled by default, and the default build configuration is Release:
+
+    cmake -B build
+    cmake --build build --parallel
+
+To disable MPI:
+
+    cmake -B build -Dmpi=no
+
+To disable OpenMP:
+
+    cmake -B build -Dopenmp=no
+
+To compile with debug options:
+
+    cmake -B build -DCMAKE_BUILD_TYPE=Debug
+
+Optionally, run self-tests:
+
+    cd build
+    ctest
+
+Optionally, install `libsc` like:
+
+    cmake -B build -DCMAKE_INSTALL_PREFIX=~/local
+    cmake --install build
+
+The optional examples can be built and tested like:
+
+    cd example
+    cmake -B build
+    cmake --build build
+    cd build
+    ctest
+
+Here are a few compilers known to work with `libsc` via CMake:
+
+* GCC or Clang (Linux, MacOS, Windows)
+* Intel Classic `icc` (Linux, MacOS)
+* Intel NextGen LLVM `icx` (Linux, MacOS, Windows).
+
+#### Distribution packages
+
+For developers, source and binary distribution packages are generated
+after building `libsc` by:
+
+    cpack --config build/CPackSourceConfig.cmake
+    cpack --config build/CPackConfig.cmake
+
+which creates files:
+
+ * `build/package/SC-<version>-Source.zip` containing source code
+ * `build/package/SC-<version>-<platform>.zip` containing binary libraries and
+    executables suitable for computers of same operating system and compatible
+    CPU arch

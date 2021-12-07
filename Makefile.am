@@ -36,12 +36,11 @@ config/Makefile.sc.mk : config/Makefile.sc.pre
 # install libsc m4 macros in a dedicated directory
 scaclocaldir = $(datadir)/aclocal
 dist_scaclocal_DATA = \
-        config/sc_blas.m4 config/sc_builtin.m4 config/sc_c_check_flag.m4 \
-        config/sc_c_version.m4 config/sc_cuda.m4 config/sc_include.m4 \
-        config/sc_lapack.m4 config/sc_lint.m4 config/sc_mpi.m4 \
+        config/sc_builtin.m4 config/sc_memalign.m4 config/sc_include.m4 \
         config/ax_prefix_config_h.m4 config/ax_split_version.m4 \
-        config/sc_package.m4 config/sc_trilinos.m4 config/sc_v4l2.m4 \
-        config/sc_pthread.m4 config/sc_openmp.m4 config/sc_memalign.m4
+        config/sc_package.m4 config/sc_mpi.m4 \
+        config/sc_pthread.m4 config/sc_openmp.m4 config/sc_v4l2.m4 \
+        config/sc_qsort.m4
 
 # install example .ini files in a dedicated directory
 scinidir = $(datadir)/ini
@@ -49,10 +48,13 @@ dist_scini_DATA =
 
 # handle toplevel directory
 EXTRA_DIST += \
-        bootstrap scindent build-aux/git-version-gen build-aux/git2cl bugs doc
+        bootstrap scindent build-aux/git-version-gen build-aux/git2cl doc \
+        cmake CMakeLists.txt src/CMakeLists.txt \
+        example/CMakeLists.txt test/CMakeLists.txt CMakePresets.json
+
 DISTCLEANFILES += \
         _configs.sed config/sc_config.h config/sc_autotools.pc
-.PHONY: lint ChangeLog
+.PHONY: ChangeLog
 
 # setup test environment
 if SC_MPIRUN
@@ -65,31 +67,34 @@ include src/Makefile.am
 include iniparser/Makefile.am
 include libb64/Makefile.am
 include test/Makefile.am
-include example/bspline/Makefile.am
+## include example/bspline/Makefile.am
 ## include example/cuda/Makefile.am
-include example/dmatrix/Makefile.am
+## include example/dmatrix/Makefile.am
 include example/function/Makefile.am
 include example/logging/Makefile.am
 include example/options/Makefile.am
 include example/pthread/Makefile.am
 include example/openmp/Makefile.am
 include example/v4l2/Makefile.am
-include example/warp/Makefile.am
+## include example/warp/Makefile.am
 include example/testing/Makefile.am
 
-# lint static syntax checker
-ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-                 $(MPI_INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) \
-                 $(src_libsc_a_CPPFLAGS)
-lint:
-if LINT
-	for f in $(LINT_CSOURCES) ; do \
-		$(LINT) $(ALL_LINT_FLAGS) $(top_srcdir)/$$f || \
-		echo "Lint check failed for $$f" ; \
-	done
-else
-	@echo "Static source code check disabled by configure"
-endif
+## This was only used for our lint code, which needs to be replaced.
+##
+## # lint static syntax checker
+## ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+##                  $(MPI_INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) \
+##                  $(src_libsc_a_CPPFLAGS)
+## lint:
+## if LINT
+## 	for f in $(LINT_CSOURCES) ; do \
+## 		$(LINT) $(ALL_LINT_FLAGS) $(top_srcdir)/$$f || \
+## 		echo "Lint check failed for $$f" ; \
+## 	done
+## else
+## 	@echo "Static source code check disabled by configure"
+## endif
+## .PHONY: lint
 
 # revision control and ChangeLog
 ChangeLog:

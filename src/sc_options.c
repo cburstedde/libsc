@@ -105,7 +105,7 @@ sc_iniparser_getint (dictionary * d, const char *key, int notfound,
   return (int) l;
 }
 
-static              size_t
+static size_t
 sc_iniparser_getsizet (dictionary * d, const char *key, size_t notfound,
                        int *iserror)
 {
@@ -178,7 +178,11 @@ sc_options_new (const char *program_path)
   opt = SC_ALLOC_ZERO (sc_options_t, 1);
 
   snprintf (opt->program_path, BUFSIZ, "%s", program_path);
+#ifdef _MSC_VER
+  opt->program_name = opt->program_path;
+#else
   opt->program_name = basename (opt->program_path);
+#endif
   opt->option_items = sc_array_new (sizeof (sc_option_item_t));
   opt->subopt_names = sc_array_new (sizeof (char *));
   opt->args_alloced = 0;
@@ -323,7 +327,7 @@ sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
 
 void
 sc_options_add_size_t (sc_options_t * opt, int opt_char, const char *opt_name,
-                       size_t * variable, size_t init_value,
+                       size_t *variable, size_t init_value,
                        const char *help_string)
 {
   sc_option_item_t   *item;

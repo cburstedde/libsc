@@ -140,7 +140,7 @@ void                sc_options_add_int (sc_options_t * opt,
 void                sc_options_add_size_t (sc_options_t * opt,
                                            int opt_char,
                                            const char *opt_name,
-                                           size_t * variable,
+                                           size_t *variable,
                                            size_t init_value,
                                            const char *help_string);
 

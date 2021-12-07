@@ -24,15 +24,11 @@
 /* this test checks the possibly builtin third-party libraries */
 
 #include <sc_getopt.h>
-#include <sc_obstack.h>
 
 /* truthfully, the libraries below are not builtin anymore */
 #include <sc_config.h>
 #ifdef SC_HAVE_ZLIB
 #include <zlib.h>
-#endif
-#ifdef SC_HAVE_LUA
-#include <sc_lua.h>
 #endif
 
 static int
@@ -80,26 +76,6 @@ test_getopt (int argc, char **argv)
   return 0;
 }
 
-static int
-test_obstack (void)
-{
-  void               *mem;
-  struct obstack      obst;
-  /*@ignore@ */
-  static void        *(*obstack_chunk_alloc) (size_t) = malloc;
-  static void         (*obstack_chunk_free) (void *) = free;
-  /*@end@ */
-
-  obstack_init (&obst);
-  mem = obstack_alloc (&obst, 47);
-  mem = obstack_alloc (&obst, 47135);
-  mem = obstack_alloc (&obst, 473);
-  *(char *) mem = '\0';
-  obstack_free (&obst, NULL);
-
-  return 0;
-}
-
 #ifdef SC_HAVE_ZLIB
 
 static int
@@ -125,20 +101,6 @@ test_zlib (void)
 
 #endif /* SC_HAVE_ZLIB */
 
-#ifdef SC_HAVE_LUA
-
-static int
-test_lua (void)
-{
-  lua_State          *L = luaL_newstate ();
-
-  lua_close (L);
-
-  return 0;
-}
-
-#endif /* SC_HAVE_LUA */
-
 int
 main (int argc, char **argv)
 {
@@ -147,12 +109,8 @@ main (int argc, char **argv)
   sc_init (sc_MPI_COMM_NULL, 1, 1, NULL, SC_LP_DEFAULT);
 
   num_errors += test_getopt (argc, argv);
-  num_errors += test_obstack ();
 #ifdef SC_HAVE_ZLIB
   num_errors += test_zlib ();
-#endif
-#ifdef SC_HAVE_LUA
-  num_errors += test_lua ();
 #endif
 
   sc_finalize ();
