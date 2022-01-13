@@ -28,21 +28,28 @@
 #include <sc_containers.h>
 
 #if !defined (P4EST_ENABLE_MPII0) && !defined (P4EST_ENABLE_MPI)
-/* We report errors without MPI I/O and MPI but without MPI we abort */
 
-/** This macro checks the return value of fopen, prints an error report
- * and return NULL for the function within in the macro is called. This
- * means we assume that all I/O functions return a pointer.
+/* We report errors without MPI I/O and MPI, but without MPI we abort. */
+
+/** Check the return value of fopen.
+ * If it fails, print an error report and return NULL from the calling
+ * function.  This works with all I/O functions that usually return a valid
+ * pointer and set errno.
  */
-#define SC_CHECK_FOPEN_NULL(retval,fn) { retval = (fn);\
-                          if (retval == NULL) {\
-                          SC_LERRORF ("Error by calling %s at %s:%d: %s.\n",\
-                          #fn, __FILE__, __LINE__, strerror (errno)); return NULL; }}
+#define SC_CHECK_FOPEN_NULL(retval,fn) do { retval = (fn);     \
+  if (retval == NULL) {                                        \
+    SC_LERRORF ("Error by calling %s at %s:%d: %s.\n",         \
+                #fn, __FILE__, __LINE__, strerror (errno));    \
+    return NULL; }} while (0)
 
-#define SC_CHECK_FOPEN_INT(retval,fn) { retval = (fn);\
-     if (retval == NULL) { SC_LERRORF ("Error by calling %s at %s:%d: %s.\n",\
-                          #fn, __FILE__, __LINE__, strerror (errno)); return -1; }}
-#endif
+/** Check the return value of a function that usually returns 0. */
+#define SC_CHECK_FOPEN_INT(retval,fn) do { retval = (fn);      \
+  if (retval == NULL) {                                        \
+    SC_LERRORF ("Error by calling %s at %s:%d: %s.\n",         \
+                #fn, __FILE__, __LINE__, strerror (errno));    \
+    return -1; }} while (0)
+
+#endif /* !MPIIO and !MPI */
 
 /** This macro checks the MPI return value and print an error if the return
  * value is not equal to \ref sc_MPI_SUCCESS.
@@ -172,8 +179,7 @@ int                 sc_io_sink_write (sc_io_sink_t * sink,
  * \return                      0 if completed, nonzero on error.
  */
 int                 sc_io_sink_complete (sc_io_sink_t * sink,
-                                         size_t * bytes_in,
-                                         size_t * bytes_out);
+                                         size_t *bytes_in, size_t *bytes_out);
 
 /** Align sink to a byte boundary by writing zeros.
  * \param [in,out] sink         The sink object to align.
@@ -221,7 +227,7 @@ int                 sc_io_source_destroy (sc_io_source_t * source);
  */
 int                 sc_io_source_read (sc_io_source_t * source,
                                        void *data, size_t bytes_avail,
-                                       size_t * bytes_out);
+                                       size_t *bytes_out);
 
 /** Determine whether all data buffered from source has been returned by read.
  * If it returns SC_IO_ERROR_AGAIN, another sc_io_source_read is required.
@@ -239,8 +245,8 @@ int                 sc_io_source_read (sc_io_source_t * source,
  *                              Otherwise return ERROR_NONE and reset counters.
  */
 int                 sc_io_source_complete (sc_io_source_t * source,
-                                           size_t * bytes_in,
-                                           size_t * bytes_out);
+                                           size_t *bytes_in,
+                                           size_t *bytes_out);
 
 /** Align source to a byte boundary by skipping.
  * \param [in,out] source       The source object to align.
@@ -264,7 +270,7 @@ int                 sc_io_source_activate_mirror (sc_io_source_t * source);
 int                 sc_io_source_read_mirror (sc_io_source_t * source,
                                               void *data,
                                               size_t bytes_avail,
-                                              size_t * bytes_out);
+                                              size_t *bytes_out);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream opened for writing.
@@ -285,8 +291,11 @@ int                 sc_vtk_write_compressed (FILE * vtkfile,
                                              char *numeric_data,
                                              size_t byte_length);
 
+/** Wrapper for fopen(3).
+ * We provide an additional argument that contains the error message.
+ */
 FILE               *sc_fopen (const char *filename, const char *mode,
-                              const char *msg);
+                              const char *errmsg);
 
 /** Write memory content to a file.
  * \param [in] ptr      Data array to write to disk.

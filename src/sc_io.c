@@ -550,13 +550,12 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
 }
 
 FILE               *
-sc_fopen (const char *filename, const char *mode, const char *msg)
+sc_fopen (const char *filename, const char *mode, const char *errmsg)
 {
   FILE               *fp;
 
   fp = fopen (filename, mode);
-
-  SC_CHECK_ABORT (fp != NULL, msg);
+  SC_CHECK_ABORT (fp != NULL, errmsg);
 
   return fp;
 }
