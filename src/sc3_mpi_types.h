@@ -157,7 +157,7 @@ sc3_MPI_Enum_t;
 #define SC3_MPI_ERRORS_RETURN NULL
 
 /** Create a wrapped version of the maximum error string length. */
-#define SC3_MPI_MAX_ERROR_STRING SC3_BUFSIZE
+#define SC3_MPI_MAX_ERROR_STRING BUFSIZ
 
 /** Wrapped invalid MPI communicator. */
 #define SC3_MPI_COMM_NULL ((sc3_MPI_Comm_t) NULL)

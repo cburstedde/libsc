@@ -62,6 +62,38 @@ sc_MPI_Abort (sc_MPI_Comm comm, int exitcode)
 }
 
 int
+sc_MPI_Error_string (int errorcode, char *string, int *resultlen)
+{
+  int                 retval;
+
+  /* on invalid call we return an error */
+  if (string == NULL || resultlen == NULL) {
+    return sc_MPI_ERR_OTHER;
+  }
+
+  /* print into the output string */
+  if (errorcode == sc_MPI_SUCCESS) {
+    retval = snprintf (string, sc_MPI_MAX_ERROR_STRING, "Success");
+  }
+  else {
+    retval = snprintf (string, sc_MPI_MAX_ERROR_STRING, "MPI Error");
+  }
+
+  /* return length of string printed */
+  if (retval < 0) {
+    /* unless something goes against the current standard of snprintf */
+    return sc_MPI_ERR_OTHER;
+  }
+  if (retval >= sc_MPI_MAX_ERROR_STRING) {
+    retval = sc_MPI_MAX_ERROR_STRING - 1;
+  }
+  *resultlen = retval;
+
+  /* we have successfully placed a string in the output variables */
+  return sc_MPI_SUCCESS;
+}
+
+int
 sc_MPI_Comm_dup (sc_MPI_Comm comm, sc_MPI_Comm * newcomm)
 {
   *newcomm = comm;

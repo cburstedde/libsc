@@ -51,15 +51,17 @@
 
 #endif /* !MPIIO and !MPI */
 
-/** This macro checks the MPI return value and print an error if the return
- * value is not equal to \ref sc_MPI_SUCCESS.
+/** Examine the MPI return value and print an error if there is one.
+ * The message passed is appended to MPI, file and line information.
  */
-#define SC_CHECK_MPI_VERBOSE(errcode,user_msg) {char msg[MPI_MAX_ERROR_STRING];\
-                        int msglen;\
-                        if (errcode != sc_MPI_SUCCESS) {\
-                          MPI_Error_string (errcode, msg, &msglen);\
-                          SC_LERRORF ("%s: Error at %s:%d: %.*s.\n",\
-                          user_msg, __FILE__, __LINE__, msglen, msg);}}
+#define SC_CHECK_MPI_VERBOSE(errcode,user_msg) do {            \
+  char msg[sc_MPI_MAX_ERROR_STRING];                           \
+  int msglen;                                                  \
+  if ((errcode) != sc_MPI_SUCCESS) {                           \
+    MPI_Error_string ((errcode), msg, &msglen);                \
+    SC_LERRORF ("%s at %s:%d: %s\n",                           \
+                (user_msg), __FILE__, __LINE__, msg);          \
+  }} while (0)
 
 SC_EXTERN_C_BEGIN;
 
@@ -326,26 +328,6 @@ void                sc_fflush_fsync_fclose (FILE * file);
 
 #ifdef SC_ENABLE_MPIIO
 
-/** Open MPI file. This is collective.
- * \param [in]  comm      MPI communicator
- * \param [in]  filename  Filename of the MPI file that the function should
- *                        open.
- * \param [in]  info      MPI file info
- * \param [out] file      MPI file object created by this function.
- * \param [in] errmsg     Error message passed to SC_CHECK_ABORT.
- * \note                  This function does not abort on MPI file errors.
- * \return                The function returns the MPI error code.
- */
-int                 sc_mpi_open (sc_MPI_Comm comm, const char *filename,
-                                 int amode, sc_MPI_INFO info, MPI_File * file,
-                                 const char *errmsg);
-/** Close MPI file.         This is collective.
- * \param [in,out] mpifile  MPI file object that is closed.
- * \param [in]     errmsg   Error message passed to SC_CHECK_ABORT.
- * \note                    This function aborts on MPI file errors.
- */
-void                sc_mpi_close (MPI_File * mpifile, const char *errmsg);
-
 /** Read MPI file content into memory.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] ptr      Data array to read from disk.
@@ -370,7 +352,7 @@ void                sc_mpi_read (MPI_File mpifile, const void *ptr,
  * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_read_at (MPI_File mpifile, MPI_Offset offset,
+int                 sc_mpi_read_at (MPI_File mpifile, sc_MPI_Offset offset,
                                     const void *ptr, size_t zcount,
                                     sc_MPI_Datatype t, const char *errmsg);
 
@@ -386,7 +368,7 @@ int                 sc_mpi_read_at (MPI_File mpifile, MPI_Offset offset,
  * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_read_at_all (MPI_File mpifile, MPI_Offset offset,
+int                 sc_mpi_read_at_all (MPI_File mpifile, sc_MPI_Offset offset,
                                         const void *ptr, size_t zcount,
                                         sc_MPI_Datatype t,
                                         const char *errmsg);
@@ -416,7 +398,7 @@ int                 sc_mpi_write (MPI_File mpifile, const void *ptr,
  * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_write_at (MPI_File mpifile, MPI_Offset offset,
+int                 sc_mpi_write_at (MPI_File mpifile, sc_MPI_Offset offset,
                                      const void *ptr, size_t zcount,
                                      sc_MPI_Datatype t, const char *errmsg);
 
@@ -432,7 +414,7 @@ int                 sc_mpi_write_at (MPI_File mpifile, MPI_Offset offset,
  * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_write_at_all (MPI_File mpifile, MPI_Offset offset,
+int                 sc_mpi_write_at_all (MPI_File mpifile, sc_MPI_Offset offset,
                                          const void *ptr, size_t zcount,
                                          sc_MPI_Datatype t,
                                          const char *errmsg);
@@ -461,16 +443,16 @@ void                sc_mpi_read_all (MPI_File mpifile, const void *ptr,
                                      size_t zcount, sc_MPI_Datatype t,
                                      const char *errmsg);
 
-int                 sc_mpi_get_file_size (MPI_File mpifile, MPI_Offset * size,
+int                 sc_mpi_get_file_size (MPI_File mpifile, sc_MPI_Offset * size,
                                           const char *errmsg);
 
-int                 sc_mpi_set_file_size (MPI_File mpifile, MPI_Offset size,
+int                 sc_mpi_set_file_size (MPI_File mpifile, sc_MPI_Offset size,
                                           const char *errmsg);
 
-void                sc_mpi_file_seek (MPI_File mpifile, MPI_Offset size,
+void                sc_mpi_file_seek (MPI_File mpifile, sc_MPI_Offset size,
                                       int whence, const char *errmsg);
 
-#endif
+#endif /* SC_ENABLE_MPIIO */
 
 SC_EXTERN_C_END;
 

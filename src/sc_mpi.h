@@ -82,6 +82,7 @@ sc_tag_t;
 
 #define sc_MPI_SUCCESS             MPI_SUCCESS
 #define sc_MPI_ERR_OTHER           MPI_ERR_OTHER
+#define sc_MPI_MAX_ERROR_STRING    MPI_MAX_ERROR_STRING
 
 #define sc_MPI_COMM_NULL           MPI_COMM_NULL
 #define sc_MPI_COMM_WORLD          MPI_COMM_WORLD
@@ -150,8 +151,7 @@ sc_tag_t;
 #define sc_MPI_Op                  MPI_Op
 #define sc_MPI_Request             MPI_Request
 #define sc_MPI_Status              MPI_Status
-#define sc_MPI_File                MPI_File
-#define sc_MPI_INFO                MPI_Info
+#define sc_MPI_Info                MPI_Info
 
 /* file access modes */
 
@@ -166,14 +166,16 @@ sc_tag_t;
 #define sc_MPI_MODE_APPEND         MPI_MODE_APPEND
 
 /* MPI seek parameters */
+
 #define sc_MPI_SEEK_SET            MPI_SEEK_SET
 #define sc_MPI_SEEK_CUR            MPI_SEEK_CUR
 #define sc_MPI_SEEK_END            MPI_SEEK_END
 
 /* MPI info arguments */
+
 #define sc_MPI_INFO_NULL           MPI_INFO_NULL
 
-/* functions */
+/* MPI functions */
 
 #define sc_MPI_Init                MPI_Init
 /*      sc_MPI_Init_thread is handled below */
@@ -194,6 +196,7 @@ sc_tag_t;
 #define sc_MPI_Comm_rank           MPI_Comm_rank
 #define sc_MPI_Comm_compare        MPI_Comm_compare
 #define sc_MPI_Comm_group          MPI_Comm_group
+#define sc_MPI_Error_string        MPI_Error_string
 #define sc_MPI_Group_free          MPI_Group_free
 #define sc_MPI_Group_size          MPI_Group_size
 #define sc_MPI_Group_rank          MPI_Group_rank
@@ -230,6 +233,17 @@ sc_tag_t;
 #define sc_MPI_Waitsome            MPI_Waitsome
 #define sc_MPI_Waitall             MPI_Waitall
 
+/* MPI I/O types, functions */
+
+#ifdef SC_ENABLE_MPIIO
+
+#define sc_MPI_File                MPI_File
+#define sc_MPI_File_open           MPI_File_open
+#define sc_MPI_File_close          MPI_File_close
+#define sc_MPI_Offset              MPI_Offset
+
+#endif /* SC_ENABLE_MPIIO */
+
 #else /* !SC_ENABLE_MPI */
 #include <sc3_mpi_types.h>
 
@@ -237,6 +251,7 @@ sc_tag_t;
 
 #define sc_MPI_SUCCESS             SC3_MPI_SUCCESS
 #define sc_MPI_ERR_OTHER           SC3_MPI_ERR_OTHER
+#define sc_MPI_MAX_ERROR_STRING    SC3_MPI_MAX_ERROR_STRING
 
 #define sc_MPI_COMM_NULL           SC3_MPI_COMM_NULL
 #define sc_MPI_COMM_WORLD          SC3_MPI_COMM_WORLD
@@ -318,6 +333,15 @@ int                 sc_MPI_Init (int *, char ***);
 int                 sc_MPI_Finalize (void);
 int                 sc_MPI_Abort (sc_MPI_Comm, int)
   __attribute__ ((noreturn));
+
+/** Turn error code into a string.
+ * \param [in] errorcode        This MPI error code is converted.
+ * \param [in,out] string       At least sc_MPI_MAX_ERROR_STRING bytes.
+ * \param [out] resultlen       Length of string on return.
+ * \return                      sc_MPI_SUCCESS on success or
+ *                              something else on invalid arguments. */
+int                 sc_MPI_Error_string (int errorcode, char *string,
+                                         int *resultlen);
 
 int                 sc_MPI_Comm_dup (sc_MPI_Comm, sc_MPI_Comm *);
 int                 sc_MPI_Comm_free (sc_MPI_Comm *);
