@@ -366,7 +366,7 @@ int                 sc_mpi_read_at_all (MPI_File mpifile, sc_MPI_Offset offset,
                                         void *ptr, int zcount,
                                         sc_MPI_Datatype t);
 
-/** Read memory content collectively from a MPI file.
+/** Read memory content collectively from an MPI file.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
@@ -376,7 +376,7 @@ int                 sc_mpi_read_at_all (MPI_File mpifile, sc_MPI_Offset offset,
 int                 sc_mpi_read_all (MPI_File mpifile, void *ptr,
                                      int zcount, sc_MPI_Datatype t);
 
-/** Write memory content to a MPI file.
+/** Write memory content to an MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
@@ -422,7 +422,7 @@ int                 sc_mpi_write_at_all (MPI_File mpifile, sc_MPI_Offset offset,
                                          sc_MPI_Datatype t,
                                          const char *errmsg);
 
-/** Write memory content collectively to a MPI file.
+/** Write memory content collectively to an MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
