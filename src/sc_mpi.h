@@ -122,7 +122,6 @@ sc_tag_t;
 #define sc_MPI_FLOAT               MPI_FLOAT
 #define sc_MPI_DOUBLE              MPI_DOUBLE
 #define sc_MPI_LONG_DOUBLE         MPI_LONG_DOUBLE
-#define sc_MPI_Offset              MPI_Offset
 
 #define sc_MPI_OP_NULL             MPI_OP_NULL
 #define sc_MPI_MAX                 MPI_MAX
@@ -232,17 +231,6 @@ sc_tag_t;
 #define sc_MPI_Wait                MPI_Wait
 #define sc_MPI_Waitsome            MPI_Waitsome
 #define sc_MPI_Waitall             MPI_Waitall
-
-/* MPI I/O types, functions */
-
-#ifdef SC_ENABLE_MPIIO
-
-#define sc_MPI_File                MPI_File
-#define sc_MPI_File_open           MPI_File_open
-#define sc_MPI_File_close          MPI_File_close
-#define sc_MPI_Offset              MPI_Offset
-
-#endif /* SC_ENABLE_MPIIO */
 
 #else /* !SC_ENABLE_MPI */
 #include <sc3_mpi_types.h>
@@ -459,6 +447,26 @@ int                 sc_MPI_Init_thread (int *argc, char ***argv,
                                         int required, int *provided);
 
 #endif /* !(SC_ENABLE_MPI && SC_ENABLE_MPITHREAD) */
+
+/* MPI I/O types, functions */
+
+#ifdef SC_ENABLE_MPIIO
+
+#define sc_MPI_Offset              MPI_Offset
+
+#define sc_MPI_File                MPI_File
+#define sc_MPI_FILE_NULL           MPI_FILE_NULL
+
+#define sc_MPI_File_open           MPI_File_open
+#define sc_MPI_File_close          MPI_File_close
+
+#else
+
+typedef long sc_MPI_Offset;
+typedef FILE * sc_MPI_File;
+#define sc_MPI_FILE_NULL           NULL
+
+#endif /* !SC_ENABLE_MPIIO */
 
 /** Return the size of MPI data types.
  * \param [in] t    MPI data type.
