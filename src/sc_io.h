@@ -440,15 +440,6 @@ void                sc_mpi_read_all (MPI_File mpifile, const void *ptr,
                                      size_t zcount, sc_MPI_Datatype t,
                                      const char *errmsg);
 
-int                 sc_mpi_get_file_size (MPI_File mpifile, sc_MPI_Offset * size,
-                                          const char *errmsg);
-
-int                 sc_mpi_set_file_size (MPI_File mpifile, sc_MPI_Offset size,
-                                          const char *errmsg);
-
-void                sc_mpi_file_seek (MPI_File mpifile, sc_MPI_Offset size,
-                                      int whence, const char *errmsg);
-
 #endif /* SC_ENABLE_MPIIO */
 
 SC_EXTERN_C_END;
