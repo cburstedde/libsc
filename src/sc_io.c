@@ -599,7 +599,7 @@ sc_fflush_fsync_fclose (FILE * file)
 #ifdef SC_ENABLE_MPIIO
 
 void
-sc_mpi_read (MPI_File mpifile, const void *ptr, size_t zcount,
+sc_mpi_read (MPI_File mpifile, void *ptr, int zcount,
              sc_MPI_Datatype t, const char *errmsg)
 {
 #ifdef SC_ENABLE_DEBUG
@@ -608,19 +608,19 @@ sc_mpi_read (MPI_File mpifile, const void *ptr, size_t zcount,
   int                 mpiret;
   sc_MPI_Status       mpistatus;
 
-  mpiret = MPI_File_read (mpifile, (void *) ptr, (int) zcount, t, &mpistatus);
+  mpiret = MPI_File_read (mpifile, ptr, zcount, t, &mpistatus);
   SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
 
 #ifdef SC_ENABLE_DEBUG
   mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
   SC_CHECK_MPI (mpiret);
-  SC_CHECK_ABORT (icount == (int) zcount, errmsg);
+  SC_CHECK_ABORT (icount == zcount, errmsg);
 #endif
 }
 
 int
-sc_mpi_read_at (MPI_File mpifile, sc_MPI_Offset offset, const void *ptr,
-                size_t zcount, sc_MPI_Datatype t, const char *errmsg)
+sc_mpi_read_at (MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
+                int zcount, sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -628,13 +628,12 @@ sc_mpi_read_at (MPI_File mpifile, sc_MPI_Offset offset, const void *ptr,
   int                 mpiret;
   sc_MPI_Status       mpistatus;
 
-  mpiret = MPI_File_read_at (mpifile, offset, (void *) ptr, (int) zcount,
-                             t, &mpistatus);
+  mpiret = MPI_File_read_at (mpifile, offset, ptr, zcount, t, &mpistatus);
 #ifdef SC_ENABLE_DEBUG
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
-    SC_CHECK_ABORT (icount == (int) zcount, errmsg);
+    SC_CHECK_ABORT (icount == zcount, "MPI_File_read_at count mismatch");
   }
 #endif
   return mpiret;

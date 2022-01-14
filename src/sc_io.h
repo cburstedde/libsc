@@ -330,37 +330,34 @@ void                sc_fflush_fsync_fclose (FILE * file);
 
 /** Read MPI file content into memory.
  * \param [in,out] mpifile      MPI file object opened for reading.
- * \param [in] ptr      Data array to read from disk.
+ * \param [out] ptr     Data array to read in from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
  * \note                This function aborts on MPI file and count errors.
  */
-void                sc_mpi_read (MPI_File mpifile, const void *ptr,
-                                 size_t zcount, sc_MPI_Datatype t,
+void                sc_mpi_read (MPI_File mpifile, void *ptr,
+                                 int zcount, sc_MPI_Datatype t,
                                  const char *errmsg);
 
 /** Read MPI file content into memory for an explicit offset.
- * This funtion does not update the file pointer that is part of mpifile.
+ * This funtion does not update the file pointer of the MPI file.
+ * Contrary to \ref sc_mpi_read, it does not abort on read errors.
  * \param [in,out] mpifile      MPI file object opened for reading.
- * \param [in] offset   Starting offset in etype, where the etype is given by 
- *                      the type t. 
+ * \param [in] offset   Starting offset in counst of the type \b t.
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
- * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
  */
 int                 sc_mpi_read_at (MPI_File mpifile, sc_MPI_Offset offset,
-                                    const void *ptr, size_t zcount,
-                                    sc_MPI_Datatype t, const char *errmsg);
+                                    void *ptr, int zcount, sc_MPI_Datatype t);
 
 /** Read MPI file content collectively into memory for an explicit offset.
  * This funtion does not update the file pointer that is part of mpifile.
  * \param [in,out] mpifile      MPI file object opened for reading.
- * \param [in] offset   Starting offset in etype, where the etype is given by 
- *                      the type t. 
+ * \param [in] offset   Starting offset in etype, where the etype is given by
+ *                      the type t.
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
@@ -389,8 +386,8 @@ int                 sc_mpi_write (MPI_File mpifile, const void *ptr,
 /** Write MPI file content into memory for an explicit offset.
  * This funtion does not update the file pointer that is part of mpifile.
  * \param [in,out] mpifile      MPI file object opened for reading.
- * \param [in] offset   Starting offset in etype, where the etype is given by 
- *                      the type t. 
+ * \param [in] offset   Starting offset in etype, where the etype is given by
+ *                      the type t.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
@@ -405,8 +402,8 @@ int                 sc_mpi_write_at (MPI_File mpifile, sc_MPI_Offset offset,
 /** Write MPI file content collectively into memory for an explicit offset.
  * This funtion does not update the file pointer that is part of mpifile.
  * \param [in,out] mpifile      MPI file object opened for reading.
- * \param [in] offset   Starting offset in etype, where the etype is given by 
- *                      the type t. 
+ * \param [in] offset   Starting offset in etype, where the etype is given by
+ *                      the type t.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
