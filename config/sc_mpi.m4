@@ -254,7 +254,16 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM(
 #undef MPI
 #include <mpi.h>
 ]], [[
+int mpiret =
 MPI_Init ((int *) 0, (char ***) 0);
+switch (mpiret) {
+  case MPI_ERR_ARG:
+  case MPI_ERR_UNKNOWN:
+  case MPI_ERR_OTHER:
+  case MPI_ERR_NO_MEM:
+    mpiret = MPI_SUCCESS;
+    break;
+}
 MPI_Finalize ();
 ]])],
 [AC_MSG_RESULT([successful])
@@ -296,11 +305,33 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM(
 #undef MPI
 #include <mpi.h>
 ]], [[
+int mpiret;
 MPI_File fh;
 MPI_Init ((int *) 0, (char ***) 0);
+mpiret =
 MPI_File_open (MPI_COMM_WORLD, "filename",
                MPI_MODE_WRONLY | MPI_MODE_APPEND,
                MPI_INFO_NULL, &fh);
+switch (mpiret) {
+  case MPI_ERR_FILE:
+  case MPI_ERR_NOT_SAME:
+  case MPI_ERR_AMODE:
+  case MPI_ERR_UNSUPPORTED_DATAREP:
+  case MPI_ERR_UNSUPPORTED_OPERATION:
+  case MPI_ERR_NO_SUCH_FILE:
+  case MPI_ERR_FILE_EXISTS:
+  case MPI_ERR_BAD_FILE:
+  case MPI_ERR_ACCESS:
+  case MPI_ERR_NO_SPACE:
+  case MPI_ERR_QUOTA:
+  case MPI_ERR_READ_ONLY:
+  case MPI_ERR_FILE_IN_USE:
+  case MPI_ERR_DUP_DATAREP:
+  case MPI_ERR_CONVERSION:
+  case MPI_ERR_IO:
+    mpiret = MPI_SUCCESS;
+    break;
+}
 MPI_File_close (&fh);
 MPI_Finalize ();
 ]])],
