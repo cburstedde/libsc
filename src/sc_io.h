@@ -336,7 +336,7 @@ void                sc_fflush_fsync_fclose (FILE * file);
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
  * \note                This function aborts on MPI file and count errors.
  */
-void                sc_mpi_read (MPI_File mpifile, void *ptr,
+void                sc_mpi_read (sc_MPI_File mpifile, void *ptr,
                                  int zcount, sc_MPI_Datatype t,
                                  const char *errmsg);
 
@@ -350,7 +350,7 @@ void                sc_mpi_read (MPI_File mpifile, void *ptr,
  * \param [in] t        The MPI type for each array member.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_read_at (MPI_File mpifile, sc_MPI_Offset offset,
+int                 sc_mpi_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
                                     void *ptr, int zcount, sc_MPI_Datatype t);
 
 /** Read MPI file content collectively into memory for an explicit offset.
@@ -362,7 +362,7 @@ int                 sc_mpi_read_at (MPI_File mpifile, sc_MPI_Offset offset,
  * \param [in] t        The MPI type for each array member.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_read_at_all (MPI_File mpifile, sc_MPI_Offset offset,
+int                 sc_mpi_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
                                         void *ptr, int zcount,
                                         sc_MPI_Datatype t);
 
@@ -373,7 +373,7 @@ int                 sc_mpi_read_at_all (MPI_File mpifile, sc_MPI_Offset offset,
  * \param [in] t        The MPI type for each array member.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_read_all (MPI_File mpifile, void *ptr,
+int                 sc_mpi_read_all (sc_MPI_File mpifile, void *ptr,
                                      int zcount, sc_MPI_Datatype t);
 
 /** Write memory content to an MPI file.
@@ -385,7 +385,7 @@ int                 sc_mpi_read_all (MPI_File mpifile, void *ptr,
  * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_write (MPI_File mpifile, const void *ptr,
+int                 sc_mpi_write (sc_MPI_File mpifile, const void *ptr,
                                   size_t zcount, sc_MPI_Datatype t,
                                   const char *errmsg);
 
@@ -401,7 +401,7 @@ int                 sc_mpi_write (MPI_File mpifile, const void *ptr,
  * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_write_at (MPI_File mpifile, sc_MPI_Offset offset,
+int                 sc_mpi_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
                                      const void *ptr, size_t zcount,
                                      sc_MPI_Datatype t, const char *errmsg);
 
@@ -417,7 +417,7 @@ int                 sc_mpi_write_at (MPI_File mpifile, sc_MPI_Offset offset,
  * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_write_at_all (MPI_File mpifile, sc_MPI_Offset offset,
+int                 sc_mpi_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
                                          const void *ptr, size_t zcount,
                                          sc_MPI_Datatype t,
                                          const char *errmsg);
@@ -430,7 +430,7 @@ int                 sc_mpi_write_at_all (MPI_File mpifile, sc_MPI_Offset offset,
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
  * \note                This function aborts on MPI file and count errors.
  */
-void                sc_mpi_write_all (MPI_File mpifile, const void *ptr,
+void                sc_mpi_write_all (sc_MPI_File mpifile, const void *ptr,
                                       size_t zcount, sc_MPI_Datatype t,
                                       const char *errmsg);
 
