@@ -228,6 +228,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_Comm_rank           MPI_Comm_rank
 #define sc_MPI_Comm_compare        MPI_Comm_compare
 #define sc_MPI_Comm_group          MPI_Comm_group
+#define sc_MPI_Error_class         MPI_Error_class
 #define sc_MPI_Error_string        MPI_Error_string
 #define sc_MPI_Group_free          MPI_Group_free
 #define sc_MPI_Group_size          MPI_Group_size
@@ -375,6 +376,9 @@ int                 sc_MPI_Init (int *, char ***);
 int                 sc_MPI_Finalize (void);
 int                 sc_MPI_Abort (sc_MPI_Comm, int)
   __attribute__ ((noreturn));
+
+/** Turn an MPI error code into its error class. */
+int                 sc_MPI_Error_class (int errorcode, int *errorclass);
 
 /** Turn error code into a string.
  * \param [in] errorcode        This MPI error code is converted.
@@ -545,6 +549,17 @@ typedef FILE * sc_MPI_File;
  * \return          Returns the size in bytes.
  */
 size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
+
+/** Translate an I/O error into an appropriate MPI error class.
+ * If MPI I/O is not present, translate an errno set by stdio.
+ * \param [in] mpiret      Without MPI I/O: Translate errors from
+ *                         fopen, fclose, fread, fwrite, fseek, ftell
+ *                         into an appropriate MPI error class.
+ *                         With MPI I/O: Turn error code into its class.
+ * \return                 0 (== sc_MPI_SUCCESS) maps to sc_MPI_SUCCESS,
+ *                         nonzero maps to something sensible nonzero.
+ */
+int                 sc_mpi_file_error_class (int errorcode, int *errorclass);
 
 /** Compute ``sc_intranode_comm'' and ``sc_internode_comm''
  * communicators and attach them to the current communicator.  This split
