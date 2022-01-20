@@ -50,6 +50,8 @@ typedef MPI_Info    sc3_MPI_Info_t;
 typedef MPI_Datatype sc3_MPI_Datatype_t;
 typedef MPI_Op      sc3_MPI_Op_t;
 
+#define SC3_MPI_UNDEFINED MPI_UNDEFINED
+
 #define SC3_MPI_DATATYPE_NULL MPI_DATATYPE_NULL
 #define SC3_MPI_BYTE MPI_BYTE
 #define SC3_MPI_INT MPI_INT
@@ -84,8 +86,58 @@ typedef MPI_Op      sc3_MPI_Op_t;
 
 #define SC3_MPI_MAX_ERROR_STRING MPI_MAX_ERROR_STRING
 #define SC3_MPI_SUCCESS MPI_SUCCESS
+#define SC3_MPI_ERR_ARG MPI_ERR_ARG
+#define SC3_MPI_ERR_UNKNOWN MPI_ERR_UNKNOWN
 #define SC3_MPI_ERR_OTHER MPI_ERR_OTHER
-#define SC3_MPI_UNDEFINED MPI_UNDEFINED
+#define SC3_MPI_ERR_NO_MEM MPI_ERR_NO_MEM
+
+#ifdef SC_ENABLE_MPIIO
+
+#define SC_MPI_ERR_FILE                   MPI_ERR_FILE
+#define SC_MPI_ERR_NOT_SAME               MPI_ERR_NOT_SAME
+#define SC_MPI_ERR_AMODE                  MPI_ERR_AMODE
+#define SC_MPI_ERR_UNSUPPORTED_DATAREP    MPI_ERR_UNSUPPORTED_DATAREP
+#define SC_MPI_ERR_UNSUPPORTED_OPERATION  MPI_ERR_UNSUPPORTED_OPERATION
+#define SC_MPI_ERR_NO_SUCH_FILE           MPI_ERR_NO_SUCH_FILE
+#define SC_MPI_ERR_FILE_EXISTS            MPI_ERR_FILE_EXISTS
+#define SC_MPI_ERR_BAD_FILE               MPI_ERR_BAD_FILE
+#define SC_MPI_ERR_ACCESS                 MPI_ERR_ACCESS
+#define SC_MPI_ERR_NO_SPACE               MPI_ERR_NO_SPACE
+#define SC_MPI_ERR_QUOTA                  MPI_ERR_QUOTA
+#define SC_MPI_ERR_READ_ONLY              MPI_ERR_READ_ONLY
+#define SC_MPI_ERR_FILE_IN_USE            MPI_ERR_FILE_IN_USE
+#define SC_MPI_ERR_DUP_DATAREP            MPI_ERR_DUP_DATAREP
+#define SC_MPI_ERR_CONVERSION             MPI_ERR_CONVERSION
+#define SC_MPI_ERR_IO                     MPI_ERR_IO
+
+#define SC3_MPI_ERR_LASTCODE              MPI_ERR_LASTCODE
+
+#else
+
+typedef enum sc3_MPI_IO_Errorcode
+{
+  /* only MPI I/O error classes */
+  SC3_MPI_ERR_FILE = MPI_ERR_LASTCODE,
+  SC3_MPI_ERR_NOT_SAME,
+  SC3_MPI_ERR_AMODE,
+  SC3_MPI_ERR_UNSUPPORTED_DATAREP,
+  SC3_MPI_ERR_UNSUPPORTED_OPERATION,
+  SC3_MPI_ERR_NO_SUCH_FILE,
+  SC3_MPI_ERR_FILE_EXISTS,
+  SC3_MPI_ERR_BAD_FILE,
+  SC3_MPI_ERR_ACCESS,
+  SC3_MPI_ERR_NO_SPACE,
+  SC3_MPI_ERR_QUOTA,
+  SC3_MPI_ERR_READ_ONLY,
+  SC3_MPI_ERR_FILE_IN_USE,
+  SC3_MPI_ERR_DUP_DATAREP,
+  SC3_MPI_ERR_CONVERSION,
+  SC3_MPI_ERR_IO,
+  SC3_MPI_ERR_LASTCODE
+}
+sc3_MPI_IO_Errorcode_t;
+
+#endif /* !SC_ENABLE_MPIIO */
 
 #else /* !SC_ENABLE_MPI */
 
@@ -138,11 +190,33 @@ typedef enum sc3_MPI_Op
 }
 sc3_MPI_Op_t;
 
-/** We wrap two MPI error codes. */
+/** We wrap some MPI error codes and the I/O error classes. */
 typedef enum sc3_MPI_Errorcode
 {
   SC3_MPI_SUCCESS = 0,  /**< An MPI function has exited successfully. */
-  SC3_MPI_ERR_OTHER     /**< An MPI function has produced an error. */
+  SC3_MPI_ERR_ARG,      /**< An MPI function encountered invalid arguments. */
+  SC3_MPI_ERR_UNKNOWN,  /**< An MPI function has produced an unknown error. */
+  SC3_MPI_ERR_OTHER,    /**< An MPI function has produced some known error. */
+  SC3_MPI_ERR_NO_MEM,   /**< An MPI function ran out of memory. */
+
+  /* add MPI I/O error classes */
+  SC3_MPI_ERR_FILE,
+  SC3_MPI_ERR_NOT_SAME,
+  SC3_MPI_ERR_AMODE,
+  SC3_MPI_ERR_UNSUPPORTED_DATAREP,
+  SC3_MPI_ERR_UNSUPPORTED_OPERATION,
+  SC3_MPI_ERR_NO_SUCH_FILE,
+  SC3_MPI_ERR_FILE_EXISTS,
+  SC3_MPI_ERR_BAD_FILE,
+  SC3_MPI_ERR_ACCESS,
+  SC3_MPI_ERR_NO_SPACE,
+  SC3_MPI_ERR_QUOTA,
+  SC3_MPI_ERR_READ_ONLY,
+  SC3_MPI_ERR_FILE_IN_USE,
+  SC3_MPI_ERR_DUP_DATAREP,
+  SC3_MPI_ERR_CONVERSION,
+  SC3_MPI_ERR_IO,
+  SC3_MPI_ERR_LASTCODE
 }
 sc3_MPI_Errorcode_t;
 

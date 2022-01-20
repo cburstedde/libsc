@@ -81,8 +81,59 @@ sc_tag_t;
 /* constants */
 
 #define sc_MPI_SUCCESS             MPI_SUCCESS
+#define sc_MPI_ERR_ARG             MPI_ERR_ARG
+#define sc_MPI_ERR_UNKNOWN         MPI_ERR_UNKNOWN
 #define sc_MPI_ERR_OTHER           MPI_ERR_OTHER
+#define sc_MPI_ERR_NO_MEM          MPI_ERR_NO_MEM
 #define sc_MPI_MAX_ERROR_STRING    MPI_MAX_ERROR_STRING
+
+#ifdef SC_ENABLE_MPIIO
+
+#define sc_MPI_ERR_FILE                   MPI_ERR_FILE
+#define sc_MPI_ERR_NOT_SAME               MPI_ERR_NOT_SAME
+#define sc_MPI_ERR_AMODE                  MPI_ERR_AMODE
+#define sc_MPI_ERR_UNSUPPORTED_DATAREP    MPI_ERR_UNSUPPORTED_DATAREP
+#define sc_MPI_ERR_UNSUPPORTED_OPERATION  MPI_ERR_UNSUPPORTED_OPERATION
+#define sc_MPI_ERR_NO_SUCH_FILE           MPI_ERR_NO_SUCH_FILE
+#define sc_MPI_ERR_FILE_EXISTS            MPI_ERR_FILE_EXISTS
+#define sc_MPI_ERR_BAD_FILE               MPI_ERR_BAD_FILE
+#define sc_MPI_ERR_ACCESS                 MPI_ERR_ACCESS
+#define sc_MPI_ERR_NO_SPACE               MPI_ERR_NO_SPACE
+#define sc_MPI_ERR_QUOTA                  MPI_ERR_QUOTA
+#define sc_MPI_ERR_READ_ONLY              MPI_ERR_READ_ONLY
+#define sc_MPI_ERR_FILE_IN_USE            MPI_ERR_FILE_IN_USE
+#define sc_MPI_ERR_DUP_DATAREP            MPI_ERR_DUP_DATAREP
+#define sc_MPI_ERR_CONVERSION             MPI_ERR_CONVERSION
+#define sc_MPI_ERR_IO                     MPI_ERR_IO
+
+#define sc_MPI_ERR_LASTCODE               MPI_ERR_LASTCODE
+
+#else
+
+typedef enum sc_MPI_IO_Errorcode
+{
+  /* only MPI I/O error classes */
+  sc_MPI_ERR_FILE = MPI_ERR_LASTCODE,
+  sc_MPI_ERR_NOT_SAME,
+  sc_MPI_ERR_AMODE,
+  sc_MPI_ERR_UNSUPPORTED_DATAREP,
+  sc_MPI_ERR_UNSUPPORTED_OPERATION,
+  sc_MPI_ERR_NO_SUCH_FILE,
+  sc_MPI_ERR_FILE_EXISTS,
+  sc_MPI_ERR_BAD_FILE,
+  sc_MPI_ERR_ACCESS,
+  sc_MPI_ERR_NO_SPACE,
+  sc_MPI_ERR_QUOTA,
+  sc_MPI_ERR_READ_ONLY,
+  sc_MPI_ERR_FILE_IN_USE,
+  sc_MPI_ERR_DUP_DATAREP,
+  sc_MPI_ERR_CONVERSION,
+  sc_MPI_ERR_IO,
+  sc_MPI_ERR_LASTCODE
+}
+sc_MPI_IO_Errorcode_t;
+
+#endif /* !SC_ENABLE_MPIIO */
 
 #define sc_MPI_COMM_NULL           MPI_COMM_NULL
 #define sc_MPI_COMM_WORLD          MPI_COMM_WORLD
@@ -152,24 +203,6 @@ sc_tag_t;
 #define sc_MPI_Status              MPI_Status
 #define sc_MPI_Info                MPI_Info
 
-/* file access modes */
-
-#define sc_MPI_MODE_RDONLY         MPI_MODE_RDONLY
-#define sc_MPI_MODE_RDWR           MPI_MODE_RDWR
-#define sc_MPI_MODE_WRONLY         MPI_MODE_WRONLY
-#define sc_MPI_MODE_CREATE         MPI_MODE_CREATE
-#define sc_MPI_MODE_EXCL           MPI_MODE_EXCL
-#define sc_MPI_MODE_DELETE_ON_CLOSE MPI_MODE_DELETE_ON_CLOSE
-#define sc_MPI_MODE_UNIQUE_OPEN    MPI_MODE_UNIQUE_OPEN
-#define sc_MPI_MODE_SEQUENTIAL     MPI_MODE_SEQUENTIAL
-#define sc_MPI_MODE_APPEND         MPI_MODE_APPEND
-
-/* MPI seek parameters */
-
-#define sc_MPI_SEEK_SET            MPI_SEEK_SET
-#define sc_MPI_SEEK_CUR            MPI_SEEK_CUR
-#define sc_MPI_SEEK_END            MPI_SEEK_END
-
 /* MPI info arguments */
 
 #define sc_MPI_INFO_NULL           MPI_INFO_NULL
@@ -237,8 +270,29 @@ sc_tag_t;
 
 /* constants */
 
-#define sc_MPI_SUCCESS             SC3_MPI_SUCCESS
-#define sc_MPI_ERR_OTHER           SC3_MPI_ERR_OTHER
+#define sc_MPI_SUCCESS                    SC3_MPI_SUCCESS
+#define sc_MPI_ERR_ARG                    SC3_MPI_ERR_ARG
+#define sc_MPI_ERR_UNKNOWN                SC3_MPI_ERR_UNKNOWN
+#define sc_MPI_ERR_OTHER                  SC3_MPI_ERR_OTHER
+#define sc_MPI_ERR_NO_MEM                 SC3_MPI_ERR_NO_MEM
+#define sc_MPI_ERR_FILE                   SC3_MPI_ERR_FILE
+#define sc_MPI_ERR_NOT_SAME               SC3_MPI_ERR_NOT_SAME
+#define sc_MPI_ERR_AMODE                  SC3_MPI_ERR_AMODE
+#define sc_MPI_ERR_UNSUPPORTED_DATAREP    SC3_MPI_ERR_UNSUPPORTED_DATAREP
+#define sc_MPI_ERR_UNSUPPORTED_OPERATION  SC3_MPI_ERR_UNSUPPORTED_OPERATION
+#define sc_MPI_ERR_NO_SUCH_FILE           SC3_MPI_ERR_NO_SUCH_FILE
+#define sc_MPI_ERR_FILE_EXISTS            SC3_MPI_ERR_FILE_EXISTS
+#define sc_MPI_ERR_BAD_FILE               SC3_MPI_ERR_BAD_FILE
+#define sc_MPI_ERR_ACCESS                 SC3_MPI_ERR_ACCESS
+#define sc_MPI_ERR_NO_SPACE               SC3_MPI_ERR_NO_SPACE
+#define sc_MPI_ERR_QUOTA                  SC3_MPI_ERR_QUOTA
+#define sc_MPI_ERR_READ_ONLY              SC3_MPI_ERR_READ_ONLY
+#define sc_MPI_ERR_FILE_IN_USE            SC3_MPI_ERR_FILE_IN_USE
+#define sc_MPI_ERR_DUP_DATAREP            SC3_MPI_ERR_DUP_DATAREP
+#define sc_MPI_ERR_CONVERSION             SC3_MPI_ERR_CONVERSION
+#define sc_MPI_ERR_IO                     SC3_MPI_ERR_IO
+#define sc_MPI_ERR_LASTCODE               SC3_MPI_ERR_LASTCODE
+
 #define sc_MPI_MAX_ERROR_STRING    SC3_MPI_MAX_ERROR_STRING
 
 #define sc_MPI_COMM_NULL           SC3_MPI_COMM_NULL
@@ -448,9 +502,27 @@ int                 sc_MPI_Init_thread (int *argc, char ***argv,
 
 #endif /* !(SC_ENABLE_MPI && SC_ENABLE_MPITHREAD) */
 
-/* MPI I/O types, functions */
-
 #ifdef SC_ENABLE_MPIIO
+
+/* file access modes */
+
+#define sc_MPI_MODE_RDONLY         MPI_MODE_RDONLY
+#define sc_MPI_MODE_RDWR           MPI_MODE_RDWR
+#define sc_MPI_MODE_WRONLY         MPI_MODE_WRONLY
+#define sc_MPI_MODE_CREATE         MPI_MODE_CREATE
+#define sc_MPI_MODE_EXCL           MPI_MODE_EXCL
+#define sc_MPI_MODE_DELETE_ON_CLOSE MPI_MODE_DELETE_ON_CLOSE
+#define sc_MPI_MODE_UNIQUE_OPEN    MPI_MODE_UNIQUE_OPEN
+#define sc_MPI_MODE_SEQUENTIAL     MPI_MODE_SEQUENTIAL
+#define sc_MPI_MODE_APPEND         MPI_MODE_APPEND
+
+/* file seek parameters */
+
+#define sc_MPI_SEEK_SET            MPI_SEEK_SET
+#define sc_MPI_SEEK_CUR            MPI_SEEK_CUR
+#define sc_MPI_SEEK_END            MPI_SEEK_END
+
+/* MPI I/O related types and functions */
 
 #define sc_MPI_Offset              MPI_Offset
 
