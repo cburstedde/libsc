@@ -27,6 +27,10 @@
 #include <zlib.h>
 #endif
 
+#ifndef SC_ENABLE_MPIIO
+#include <errno.h>
+#endif
+
 sc_io_sink_t       *
 sc_io_sink_new (sc_io_type_t iotype, sc_io_mode_t mode,
                 sc_io_encode_t encode, ...)
@@ -594,6 +598,87 @@ sc_fflush_fsync_fclose (FILE * file)
 #endif
   retval = fclose (file);
   SC_CHECK_ABORT (!retval, "file close");
+}
+
+int
+sc_mpi_file_error_class (int errorcode, int *errorclass)
+{
+#ifdef SC_ENABLE_MPIIO
+  return MPI_Error_class (errorcode, errorclass);
+#else
+  if (errorclass == NULL) {
+    return sc_MPI_ERR_ARG;
+  }
+
+  switch (errorcode) {
+    case sc_MPI_SUCCESS:
+      *errorclass = sc_MPI_SUCCESS;
+      break;
+
+    case EBADF:
+    case ESPIPE:
+      *errorclass = sc_MPI_ERR_FILE;
+      break;
+
+    case EINVAL:
+    case EOPNOTSUPP:
+      *errorclass = sc_MPI_ERR_AMODE;
+      break;
+
+    case ENOENT:
+      *errorclass = sc_MPI_ERR_NO_SUCH_FILE;
+      break;
+
+    case EEXIST:
+      *errorclass = sc_MPI_ERR_FILE_EXISTS;
+      break;
+
+    case EFAULT:
+    case EISDIR:
+    case ELOOP:
+    case ENAMETOOLONG:
+    case ENODEV:
+    case ENOTDIR:
+      *errorclass = sc_MPI_ERR_BAD_FILE;
+      break;
+
+    case EACCES:
+    case EPERM:
+    case EROFS:
+    case ETXTBSY:
+      *errorclass = sc_MPI_ERR_ACCESS;
+      break;
+
+    case EFBIG:
+    case ENOSPC:
+    case EOVERFLOW:
+      *errorclass = sc_MPI_ERR_NO_SPACE;
+      break;
+
+    case EDQUOT:
+      *errorclass = sc_MPI_ERR_QUOTA;
+      break;
+
+    case EMFILE:
+    case ENFILE:
+    case ENOMEM:
+      *errorclass = sc_MPI_ERR_NO_MEM;
+      break;
+
+    case EAGAIN:
+    case EDESTADDRREQ:
+    case EINTR:
+    case EIO:
+    case ENXIO:
+    case EPIPE:
+      *errorclass = sc_MPI_ERR_IO;
+      break;
+
+    default:
+      *errorclass = sc_MPI_ERR_UNKNOWN;
+  }
+  return sc_MPI_SUCCESS;
+#endif
 }
 
 #ifdef SC_ENABLE_MPIIO

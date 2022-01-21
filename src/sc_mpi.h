@@ -561,18 +561,6 @@ int                 sc_MPI_Error_string (int errorcode, char *string,
  */
 size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
 
-/** Translate an I/O error into an appropriate MPI error class.
- * If MPI I/O is not present, translate an errno set by stdio.
- * This function is strictly meant for MPI file access functions.
- * \param [in] mpiret      Without MPI I/O: Translate errors from
- *                         fopen, fclose, fread, fwrite, fseek, ftell
- *                         into an appropriate MPI error class.
- *                         With MPI I/O: Turn error code into its class.
- * \return                 0 (== sc_MPI_SUCCESS) maps to sc_MPI_SUCCESS,
- *                         nonzero maps to something sensible nonzero.
- */
-int                 sc_mpi_file_error_class (int errorcode, int *errorclass);
-
 /** Compute ``sc_intranode_comm'' and ``sc_internode_comm''
  * communicators and attach them to the current communicator.  This split
  * takes \a processes_per_node passed by the user at face value: there is no

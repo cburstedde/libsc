@@ -328,6 +328,22 @@ void                sc_fread (void *ptr, size_t size,
  */
 void                sc_fflush_fsync_fclose (FILE * file);
 
+/** Translate an I/O error into an appropriate MPI error class.
+ * This function is strictly meant for file access functions.
+ * If MPI I/O is not present, translate an errno set by stdio.
+ * It is thus possible to substitute MPI I/O by fopen, fread, etc.
+ * and to process the errors with this one function regardless.
+ * \param [in] errorcode   Without MPI I/O: Translate errors from
+ *                         fopen, fclose, fread, fwrite, fseek, ftell
+ *                         into an appropriate MPI error class.
+ *                         With MPI I/O: Turn error code into its class.
+ * \param [out] errorclass Regardless of whether MPI I/O is enabled,
+ *                         an MPI file related error from \ref sc_mpi.h.
+ *                         It may be passed to \ref sc_MPI_Error_string.
+ * \return                 sc_MPI_SUCCESS) only on successful conversion.
+ */
+int                 sc_mpi_file_error_class (int errorcode, int *errorclass);
+
 #ifdef SC_ENABLE_MPIIO
 
 /** Read MPI file content into memory.

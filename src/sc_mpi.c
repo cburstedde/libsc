@@ -24,10 +24,6 @@
 /* including sc_mpi.h does not work here since sc_mpi.h is included by sc.h */
 #include <sc.h>
 
-#ifndef SC_ENABLE_MPIIO
-#include <errno.h>
-#endif
-
 #ifndef SC_ENABLE_MPI
 
 /* time.h is already included by sc.h */
@@ -673,88 +669,6 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
     return 2 * sizeof (int);
 
   SC_ABORT_NOT_REACHED ();
-}
-
-int
-sc_mpi_file_error_class (int errorcode, int *errorclass)
-{
-#ifdef SC_ENABLE_MPIIO
-  return MPI_Error_class (errorcode, errorclass);
-#else
-  if (errorclass == NULL) {
-    return sc_MPI_ERR_ARG;
-  }
-
-  switch (errorcode) {
-    case sc_MPI_SUCCESS:
-      *errorclass = sc_MPI_SUCCESS;
-      break;
-
-    case EBADF:
-    case ESPIPE:
-      *errorclass = sc_MPI_ERR_FILE;
-      break;
-
-    case EINVAL:
-    case EOPNOTSUPP:
-      *errorclass = sc_MPI_ERR_AMODE;
-      break;
-
-    case ENOENT:
-      *errorclass = sc_MPI_ERR_NO_SUCH_FILE;
-      break;
-
-    case EEXIST:
-      *errorclass = sc_MPI_ERR_FILE_EXISTS;
-      break;
-
-    case EFAULT:
-    case EISDIR:
-    case ELOOP:
-    case ENAMETOOLONG:
-    case ENODEV:
-    case ENOTDIR:
-      *errorclass = sc_MPI_ERR_BAD_FILE;
-      break;
-
-    case EACCES:
-    case EPERM:
-    case EROFS:
-    case ETXTBSY:
-      *errorclass = sc_MPI_ERR_ACCESS;
-      break;
-
-    case EFBIG:
-    case ENOSPC:
-    case EOVERFLOW:
-      *errorclass = sc_MPI_ERR_NO_SPACE;
-      break;
-
-    case EDQUOT:
-      *errorclass = sc_MPI_ERR_QUOTA;
-      break;
-
-    case EMFILE:
-    case ENFILE:
-    case ENOMEM:
-      *errorclass = sc_MPI_ERR_NO_MEM;
-      break;
-
-    case EAGAIN:
-    case EDESTADDRREQ:
-    case EINTR:
-    case EIO:
-    case ENXIO:
-    case EPIPE:
-    case EWOULDBLOCK:
-      *errorclass = sc_MPI_ERR_IO;
-      break;
-
-    default:
-      *errorclass = sc_MPI_ERR_UNKNOWN;
-  }
-  return sc_MPI_SUCCESS;
-#endif
 }
 
 #if defined(SC_ENABLE_MPI) && defined (SC_ENABLE_MPICOMMSHARED)
