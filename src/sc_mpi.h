@@ -228,7 +228,6 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_Comm_rank           MPI_Comm_rank
 #define sc_MPI_Comm_compare        MPI_Comm_compare
 #define sc_MPI_Comm_group          MPI_Comm_group
-#define sc_MPI_Error_string        MPI_Error_string
 #define sc_MPI_Group_free          MPI_Group_free
 #define sc_MPI_Group_size          MPI_Group_size
 #define sc_MPI_Group_rank          MPI_Group_rank
@@ -375,15 +374,6 @@ int                 sc_MPI_Init (int *, char ***);
 int                 sc_MPI_Finalize (void);
 int                 sc_MPI_Abort (sc_MPI_Comm, int)
   __attribute__ ((noreturn));
-
-/** Turn error code into a string.
- * \param [in] errorcode        This MPI error code is converted.
- * \param [in,out] string       At least sc_MPI_MAX_ERROR_STRING bytes.
- * \param [out] resultlen       Length of string on return.
- * \return                      sc_MPI_SUCCESS on success or
- *                              something else on invalid arguments. */
-int                 sc_MPI_Error_string (int errorcode, char *string,
-                                         int *resultlen);
 
 int                 sc_MPI_Comm_dup (sc_MPI_Comm, sc_MPI_Comm *);
 int                 sc_MPI_Comm_free (sc_MPI_Comm *);
@@ -553,6 +543,17 @@ typedef FILE * sc_MPI_File;
  *                              Other MPI errer code otherwise.
  */
 int                 sc_MPI_Error_class (int errorcode, int *errorclass);
+
+/** Turn MPI error code into a string.
+ * When processing MPI I/O return values, the input code to this function
+ * must be a class that is output by \ref sc_mpi_file_error_class.
+ * \param [in] errorcode        This MPI error code is converted.
+ * \param [in,out] string       At least sc_MPI_MAX_ERROR_STRING bytes.
+ * \param [out] resultlen       Length of string on return.
+ * \return                      sc_MPI_SUCCESS on success or
+ *                              something else on invalid arguments. */
+int                 sc_MPI_Error_string (int errorcode, char *string,
+                                         int *resultlen);
 
 /** Return the size of MPI data types.
  * \param [in] t    MPI data type.

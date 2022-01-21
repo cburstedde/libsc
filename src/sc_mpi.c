@@ -66,38 +66,6 @@ sc_MPI_Abort (sc_MPI_Comm comm, int exitcode)
 }
 
 int
-sc_MPI_Error_string (int errorcode, char *string, int *resultlen)
-{
-  int                 retval;
-
-  /* on invalid call we return an error */
-  if (string == NULL || resultlen == NULL) {
-    return sc_MPI_ERR_ARG;
-  }
-
-  /* print into the output string */
-  if (errorcode == sc_MPI_SUCCESS) {
-    retval = snprintf (string, sc_MPI_MAX_ERROR_STRING, "Success");
-  }
-  else {
-    retval = snprintf (string, sc_MPI_MAX_ERROR_STRING, "MPI Error");
-  }
-
-  /* return length of string printed */
-  if (retval < 0) {
-    /* unless something goes against the current standard of snprintf */
-    return sc_MPI_ERR_NO_MEM;
-  }
-  if (retval >= sc_MPI_MAX_ERROR_STRING) {
-    retval = sc_MPI_MAX_ERROR_STRING - 1;
-  }
-  *resultlen = retval;
-
-  /* we have successfully placed a string in the output variables */
-  return sc_MPI_SUCCESS;
-}
-
-int
 sc_MPI_Comm_dup (sc_MPI_Comm comm, sc_MPI_Comm * newcomm)
 {
   *newcomm = comm;
@@ -571,6 +539,110 @@ sc_MPI_Error_class (int errorcode, int *errorclass)
   /* there is no way to produce any other value without MPI */
   return *errorclass = sc_MPI_ERR_UNKNOWN;
 #endif
+#endif
+}
+
+int
+sc_MPI_Error_string (int errorcode, char *string, int *resultlen)
+{
+#ifdef SC_ENABLE_MPIIO
+  /* process error codes unchanged by MPI implementation */
+  return MPI_Error_string (errorcode, string, resultlen);
+#else
+  int retval;
+  const char *tstr = NULL;
+  if (string == NULL || resultlen == NULL) {
+    return sc_MPI_ERR_ARG;
+  }
+
+  /* these error classes are understood directly by libsc */
+  switch (errorcode) {
+    case sc_MPI_SUCCESS:
+      tstr = "Success";
+      break;
+    case sc_MPI_ERR_ARG:
+      tstr = "Error in function argument";
+      break;
+    case sc_MPI_ERR_UNKNOWN:
+      tstr = "Unknown MPI error";
+      break;
+    case sc_MPI_ERR_OTHER:
+      tstr = "Other MPI error";
+      break;
+    case sc_MPI_ERR_NO_MEM:
+      tstr = "Out of memory";
+      break;
+    case sc_MPI_ERR_FILE:
+      tstr = "Invalid file object";
+      break;
+    case sc_MPI_ERR_NOT_SAME:
+      tstr = "Arguments do not match in parallel";
+      break;
+    case sc_MPI_ERR_AMODE:
+      tstr = "Invalid access mode";
+      break;
+    case sc_MPI_ERR_UNSUPPORTED_DATAREP:
+      tstr = "Unsupported data representation";
+      break;
+    case sc_MPI_ERR_UNSUPPORTED_OPERATION:
+      tstr = "Unsupported operation";
+      break;
+    case sc_MPI_ERR_NO_SUCH_FILE:
+      tstr = "No such file";
+      break;
+    case sc_MPI_ERR_FILE_EXISTS:
+      tstr = "File exists";
+      break;
+    case sc_MPI_ERR_BAD_FILE:
+      tstr = "Bad file name or path";
+      break;
+    case sc_MPI_ERR_ACCESS:
+      tstr = "Permission denied";
+      break;
+    case sc_MPI_ERR_NO_SPACE:
+      tstr = "Out of disk space";
+      break;
+    case sc_MPI_ERR_QUOTA:
+      tstr = "Out of quota";
+      break;
+    case sc_MPI_ERR_READ_ONLY:
+      tstr = "File is read-only";
+      break;
+    case sc_MPI_ERR_FILE_IN_USE:
+      tstr = "File is in use";
+      break;
+    case sc_MPI_ERR_DUP_DATAREP:
+      tstr = "Duplicate data representation";
+      break;
+    case sc_MPI_ERR_CONVERSION:
+      tstr = "File conversion error";
+      break;
+    case sc_MPI_ERR_IO:
+      tstr = "I/O or format error";
+      break;
+  }
+  if (tstr == NULL) {
+#ifdef SC_ENABLE_MPI
+    /* there may by version 1.1 error codes we do not catch */
+    return MPI_Error_string (errorcode, string, resultlen);
+#else
+    /* there is no way to produce any other value without MPI */
+    return sc_MPI_ERR_UNKNOWN;
+#endif
+  }
+
+  /* print into the output string */
+  if ((retval = snprintf (string, sc_MPI_MAX_ERROR_STRING, tstr)) < 0) {
+    /* unless something goes against the current standard of snprintf */
+    return sc_MPI_ERR_NO_MEM;
+  }
+  if (retval >= sc_MPI_MAX_ERROR_STRING) {
+    retval = sc_MPI_MAX_ERROR_STRING - 1;
+  }
+  *resultlen = retval;
+
+  /* we have successfully placed a string in the output variables */
+  return sc_MPI_SUCCESS;
 #endif
 }
 
