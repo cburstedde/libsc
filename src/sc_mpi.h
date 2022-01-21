@@ -228,7 +228,6 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_Comm_rank           MPI_Comm_rank
 #define sc_MPI_Comm_compare        MPI_Comm_compare
 #define sc_MPI_Comm_group          MPI_Comm_group
-#define sc_MPI_Error_class         MPI_Error_class
 #define sc_MPI_Error_string        MPI_Error_string
 #define sc_MPI_Group_free          MPI_Group_free
 #define sc_MPI_Group_size          MPI_Group_size
@@ -376,9 +375,6 @@ int                 sc_MPI_Init (int *, char ***);
 int                 sc_MPI_Finalize (void);
 int                 sc_MPI_Abort (sc_MPI_Comm, int)
   __attribute__ ((noreturn));
-
-/** Turn an MPI error code into its error class. */
-int                 sc_MPI_Error_class (int errorcode, int *errorclass);
 
 /** Turn error code into a string.
  * \param [in] errorcode        This MPI error code is converted.
@@ -544,6 +540,20 @@ typedef FILE * sc_MPI_File;
 
 #endif /* !SC_ENABLE_MPIIO */
 
+/** Turn an MPI error code into its error class.
+ * When MPI is enabled, we pass version 1.1 errors to MPI_Error_class.
+ * When MPI I/O is not enabled, we process file errors outside of MPI.
+ * Thus, within libsc, it is always legal to call this function with
+ * any errorcode defined above in this header file.
+ *
+ * \param [in] errorcode        Returned from a direct MPI call or libsc.
+ * \param [out] errorclass      Non-NULL pointer.  Filled with matching
+ *                              error class on success.
+ * \param                       sc_MPI_SUCCESS on successful conversion,
+ *                              Other MPI errer code otherwise.
+ */
+int                 sc_MPI_Error_class (int errorcode, int *errorclass);
+
 /** Return the size of MPI data types.
  * \param [in] t    MPI data type.
  * \return          Returns the size in bytes.
@@ -552,6 +562,7 @@ size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
 
 /** Translate an I/O error into an appropriate MPI error class.
  * If MPI I/O is not present, translate an errno set by stdio.
+ * This function is strictly meant for MPI file access functions.
  * \param [in] mpiret      Without MPI I/O: Translate errors from
  *                         fopen, fclose, fread, fwrite, fseek, ftell
  *                         into an appropriate MPI error class.
