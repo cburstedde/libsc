@@ -370,8 +370,9 @@ void                sc_mpi_file_read (sc_MPI_File mpifile, void *ptr,
  * \param [in] t        The MPI type for each array member.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
-                                         void *ptr, int zcount, sc_MPI_Datatype t);
+int                 sc_mpi_file_read_at (sc_MPI_File mpifile,
+                                         sc_MPI_Offset offset, void *ptr,
+                                         int zcount, sc_MPI_Datatype t);
 
 /** Read MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer that is part of the file.
@@ -382,9 +383,9 @@ int                 sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offs
  * \param [in] t        The MPI type for each array member.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_file_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
-                                        void *ptr, int zcount,
-                                        sc_MPI_Datatype t);
+int                 sc_mpi_file_read_at_all (sc_MPI_File mpifile,
+                                             sc_MPI_Offset offset, void *ptr,
+                                             int zcount, sc_MPI_Datatype t);
 
 /** Read memory content collectively from an MPI file.
  * \param [in,out] mpifile      MPI file object opened for reading.
@@ -421,9 +422,10 @@ int                 sc_mpi_write (sc_MPI_File mpifile, const void *ptr,
  * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
-                                     const void *ptr, size_t zcount,
-                                     sc_MPI_Datatype t, const char *errmsg);
+int                 sc_mpi_write_at (sc_MPI_File mpifile,
+                                     sc_MPI_Offset offset, const void *ptr,
+                                     size_t zcount, sc_MPI_Datatype t,
+                                     const char *errmsg);
 
 /** Write MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
@@ -437,7 +439,8 @@ int                 sc_mpi_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
  * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
+int                 sc_mpi_write_at_all (sc_MPI_File mpifile,
+                                         sc_MPI_Offset offset,
                                          const void *ptr, size_t zcount,
                                          sc_MPI_Datatype t,
                                          const char *errmsg);

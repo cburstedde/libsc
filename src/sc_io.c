@@ -137,8 +137,7 @@ sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_avail)
 }
 
 int
-sc_io_sink_complete (sc_io_sink_t * sink,
-                     size_t * bytes_in, size_t * bytes_out)
+sc_io_sink_complete (sc_io_sink_t * sink, size_t *bytes_in, size_t *bytes_out)
 {
   int                 retval;
 
@@ -253,7 +252,7 @@ sc_io_source_destroy (sc_io_source_t * source)
 
 int
 sc_io_source_read (sc_io_source_t * source, void *data,
-                   size_t bytes_avail, size_t * bytes_out)
+                   size_t bytes_avail, size_t *bytes_out)
 {
   int                 retval;
   size_t              bbytes_out;
@@ -308,7 +307,7 @@ sc_io_source_read (sc_io_source_t * source, void *data,
 
 int
 sc_io_source_complete (sc_io_source_t * source,
-                       size_t * bytes_in, size_t * bytes_out)
+                       size_t *bytes_in, size_t *bytes_out)
 {
   int                 retval = SC_IO_ERROR_NONE;
 
@@ -365,7 +364,7 @@ sc_io_source_activate_mirror (sc_io_source_t * source)
 
 int
 sc_io_source_read_mirror (sc_io_source_t * source, void *data,
-                          size_t bytes_avail, size_t * bytes_out)
+                          size_t bytes_avail, size_t *bytes_out)
 {
   sc_io_source_t     *mirror_src;
   int                 retval;
@@ -611,71 +610,71 @@ sc_mpi_file_error_class (int errorcode, int *errorclass)
   }
 
   switch (errorcode) {
-    case sc_MPI_SUCCESS:
-      *errorclass = sc_MPI_SUCCESS;
-      break;
+  case sc_MPI_SUCCESS:
+    *errorclass = sc_MPI_SUCCESS;
+    break;
 
-    case EBADF:
-    case ESPIPE:
-      *errorclass = sc_MPI_ERR_FILE;
-      break;
+  case EBADF:
+  case ESPIPE:
+    *errorclass = sc_MPI_ERR_FILE;
+    break;
 
-    case EINVAL:
-    case EOPNOTSUPP:
-      *errorclass = sc_MPI_ERR_AMODE;
-      break;
+  case EINVAL:
+  case EOPNOTSUPP:
+    *errorclass = sc_MPI_ERR_AMODE;
+    break;
 
-    case ENOENT:
-      *errorclass = sc_MPI_ERR_NO_SUCH_FILE;
-      break;
+  case ENOENT:
+    *errorclass = sc_MPI_ERR_NO_SUCH_FILE;
+    break;
 
-    case EEXIST:
-      *errorclass = sc_MPI_ERR_FILE_EXISTS;
-      break;
+  case EEXIST:
+    *errorclass = sc_MPI_ERR_FILE_EXISTS;
+    break;
 
-    case EFAULT:
-    case EISDIR:
-    case ELOOP:
-    case ENAMETOOLONG:
-    case ENODEV:
-    case ENOTDIR:
-      *errorclass = sc_MPI_ERR_BAD_FILE;
-      break;
+  case EFAULT:
+  case EISDIR:
+  case ELOOP:
+  case ENAMETOOLONG:
+  case ENODEV:
+  case ENOTDIR:
+    *errorclass = sc_MPI_ERR_BAD_FILE;
+    break;
 
-    case EACCES:
-    case EPERM:
-    case EROFS:
-    case ETXTBSY:
-      *errorclass = sc_MPI_ERR_ACCESS;
-      break;
+  case EACCES:
+  case EPERM:
+  case EROFS:
+  case ETXTBSY:
+    *errorclass = sc_MPI_ERR_ACCESS;
+    break;
 
-    case EFBIG:
-    case ENOSPC:
-    case EOVERFLOW:
-      *errorclass = sc_MPI_ERR_NO_SPACE;
-      break;
+  case EFBIG:
+  case ENOSPC:
+  case EOVERFLOW:
+    *errorclass = sc_MPI_ERR_NO_SPACE;
+    break;
 
-    case EDQUOT:
-      *errorclass = sc_MPI_ERR_QUOTA;
-      break;
+  case EDQUOT:
+    *errorclass = sc_MPI_ERR_QUOTA;
+    break;
 
-    case EMFILE:
-    case ENFILE:
-    case ENOMEM:
-      *errorclass = sc_MPI_ERR_NO_MEM;
-      break;
+  case EMFILE:
+  case ENFILE:
+  case ENOMEM:
+    *errorclass = sc_MPI_ERR_NO_MEM;
+    break;
 
-    case EAGAIN:
-    case EDESTADDRREQ:
-    case EINTR:
-    case EIO:
-    case ENXIO:
-    case EPIPE:
-      *errorclass = sc_MPI_ERR_IO;
-      break;
+  case EAGAIN:
+  case EDESTADDRREQ:
+  case EINTR:
+  case EIO:
+  case ENXIO:
+  case EPIPE:
+    *errorclass = sc_MPI_ERR_IO;
+    break;
 
-    default:
-      *errorclass = sc_MPI_ERR_UNKNOWN;
+  default:
+    *errorclass = sc_MPI_ERR_UNKNOWN;
   }
   return sc_MPI_SUCCESS;
 #endif
@@ -734,8 +733,7 @@ sc_mpi_file_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   int                 mpiret;
   sc_MPI_Status       mpistatus;
 
-  mpiret = MPI_File_read_at_all (mpifile, offset, ptr, zcount, t,
-                                 &mpistatus);
+  mpiret = MPI_File_read_at_all (mpifile, offset, ptr, zcount, t, &mpistatus);
 #ifdef SC_ENABLE_DEBUG
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
@@ -807,8 +805,9 @@ sc_mpi_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset, const void *ptr,
 }
 
 int
-sc_mpi_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, const void *ptr,
-                     size_t zcount, sc_MPI_Datatype t, const char *errmsg)
+sc_mpi_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
+                     const void *ptr, size_t zcount, sc_MPI_Datatype t,
+                     const char *errmsg)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -846,10 +845,13 @@ sc_mpi_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
 #endif
 }
 
-#if 0 /* these crash on error, which we do not want to do from hereon */
+#if 0
+
+/* these crash on error, which we do not want to do from hereon */
 
 int
-sc_mpi_get_file_size (sc_MPI_File mpifile, sc_MPI_Offset * size, const char *errmsg)
+sc_mpi_get_file_size (sc_MPI_File mpifile, sc_MPI_Offset * size,
+                      const char *errmsg)
 {
   int                 mpiret;
 
@@ -858,7 +860,8 @@ sc_mpi_get_file_size (sc_MPI_File mpifile, sc_MPI_Offset * size, const char *err
 }
 
 int
-sc_mpi_set_file_size (sc_MPI_File mpifile, sc_MPI_Offset size, const char *errmsg)
+sc_mpi_set_file_size (sc_MPI_File mpifile, sc_MPI_Offset size,
+                      const char *errmsg)
 {
   int                 mpiret;
 
