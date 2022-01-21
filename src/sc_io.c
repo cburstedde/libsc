@@ -684,8 +684,8 @@ sc_mpi_file_error_class (int errorcode, int *errorclass)
 #ifdef SC_ENABLE_MPIIO
 
 void
-sc_mpi_read (sc_MPI_File mpifile, void *ptr, int zcount,
-             sc_MPI_Datatype t, const char *errmsg)
+sc_mpi_file_read (sc_MPI_File mpifile, void *ptr, int zcount,
+                  sc_MPI_Datatype t, const char *errmsg)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -704,8 +704,8 @@ sc_mpi_read (sc_MPI_File mpifile, void *ptr, int zcount,
 }
 
 int
-sc_mpi_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
-                int zcount, sc_MPI_Datatype t)
+sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
+                     int zcount, sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -725,8 +725,8 @@ sc_mpi_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 }
 
 int
-sc_mpi_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
-                    int zcount, sc_MPI_Datatype t)
+sc_mpi_file_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
+                         int zcount, sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -747,8 +747,8 @@ sc_mpi_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 }
 
 int
-sc_mpi_read_all (sc_MPI_File mpifile, void *ptr, int zcount,
-                 sc_MPI_Datatype t)
+sc_mpi_file_read_all (sc_MPI_File mpifile, void *ptr, int zcount,
+                      sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;

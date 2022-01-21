@@ -346,6 +346,8 @@ int                 sc_mpi_file_error_class (int errorcode, int *errorclass);
 
 #ifdef SC_ENABLE_MPIIO
 
+#define sc_mpi_read         sc_mpi_file_read   /**< For backwards compatibility. */
+
 /** Read MPI file content into memory.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [out] ptr     Data array to read in from disk.
@@ -354,9 +356,9 @@ int                 sc_mpi_file_error_class (int errorcode, int *errorclass);
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
  * \note                This function aborts on MPI file and count errors.
  */
-void                sc_mpi_read (sc_MPI_File mpifile, void *ptr,
-                                 int zcount, sc_MPI_Datatype t,
-                                 const char *errmsg);
+void                sc_mpi_file_read (sc_MPI_File mpifile, void *ptr,
+                                      int zcount, sc_MPI_Datatype t,
+                                      const char *errmsg);
 
 /** Read MPI file content into memory for an explicit offset.
  * This function does not update the file pointer of the MPI file.
@@ -368,8 +370,8 @@ void                sc_mpi_read (sc_MPI_File mpifile, void *ptr,
  * \param [in] t        The MPI type for each array member.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
-                                    void *ptr, int zcount, sc_MPI_Datatype t);
+int                 sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
+                                         void *ptr, int zcount, sc_MPI_Datatype t);
 
 /** Read MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer that is part of the file.
@@ -380,7 +382,7 @@ int                 sc_mpi_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
  * \param [in] t        The MPI type for each array member.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
+int                 sc_mpi_file_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
                                         void *ptr, int zcount,
                                         sc_MPI_Datatype t);
 
@@ -391,8 +393,8 @@ int                 sc_mpi_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offse
  * \param [in] t        The MPI type for each array member.
  * \return              The function returns the MPI error code.
  */
-int                 sc_mpi_read_all (sc_MPI_File mpifile, void *ptr,
-                                     int zcount, sc_MPI_Datatype t);
+int                 sc_mpi_file_read_all (sc_MPI_File mpifile, void *ptr,
+                                          int zcount, sc_MPI_Datatype t);
 
 /** Write memory content to an MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
