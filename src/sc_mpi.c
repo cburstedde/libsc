@@ -607,12 +607,12 @@ int
 sc_mpi_file_error_class (int errorcode, int *errorclass)
 {
 #ifdef SC_ENABLE_MPIIO
-  {
-    int mpiret;
-    mpiret = sc_MPI_Error_class (errorcode, errorclass);
-    SC_CHECK_MPI (mpiret);
-  }
+  return MPI_Error_class (errorcode, errorclass);
 #else
+  if (errorclass == NULL) {
+    return sc_MPI_ERR_ARG;
+  }
+
   switch (errorcode) {
     case sc_MPI_SUCCESS:
       *errorclass = sc_MPI_SUCCESS;
@@ -668,7 +668,6 @@ sc_mpi_file_error_class (int errorcode, int *errorclass)
       *errorclass = sc_MPI_ERR_NO_MEM;
       break;
 
-#if 0
     case EAGAIN:
     case EDESTADDRREQ:
     case EINTR:
@@ -678,13 +677,12 @@ sc_mpi_file_error_class (int errorcode, int *errorclass)
     case EWOULDBLOCK:
       *errorclass = sc_MPI_ERR_IO;
       break;
-#endif
 
     default:
       *errorclass = sc_MPI_ERR_UNKNOWN;
   }
-#endif
   return sc_MPI_SUCCESS;
+#endif
 }
 
 #if defined(SC_ENABLE_MPI) && defined (SC_ENABLE_MPICOMMSHARED)

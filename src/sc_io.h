@@ -51,6 +51,7 @@
 
 #endif /* !MPIIO and !MPI */
 
+#if 0
 /** Examine the MPI return value and print an error if there is one.
  * The message passed is appended to MPI, file and line information.
  */
@@ -62,6 +63,7 @@
     SC_LERRORF ("%s at %s:%d: %s\n",                           \
                 (user_msg), __FILE__, __LINE__, msg);          \
   }} while (0)
+#endif
 
 SC_EXTERN_C_BEGIN;
 
