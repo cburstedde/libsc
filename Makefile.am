@@ -40,7 +40,7 @@ dist_scaclocal_DATA = \
         config/ax_prefix_config_h.m4 config/ax_split_version.m4 \
         config/sc_package.m4 config/sc_mpi.m4 \
         config/sc_pthread.m4 config/sc_openmp.m4 config/sc_v4l2.m4 \
-        config/sc_qsort.m4
+        config/sc_qsort.m4 config/sc_jansson.m4
 
 # install example .ini files in a dedicated directory
 scinidir = $(datadir)/ini
@@ -76,6 +76,7 @@ include example/options/Makefile.am
 include example/pthread/Makefile.am
 include example/openmp/Makefile.am
 include example/v3basics/Makefile.am
+include example/json/Makefile.am
 include example/v4l2/Makefile.am
 ## include example/warp/Makefile.am
 include example/testing/Makefile.am
