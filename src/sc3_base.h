@@ -195,7 +195,7 @@
 #define SC3_MALLOC(typ,nmemb) ((typ *) malloc ((nmemb) * sizeof (typ)))
 
 /** Type-safe wrapper of the stdlib calloc function. */
-#define SC3_CALLOC(typ,nmemb) ((typ *) calloc (nmemb, sizeof (typ)))
+#define SC3_MALLOC_ZERO(typ,nmemb) ((typ *) calloc (nmemb, sizeof (typ)))
 
 /** Wrap the stdlib free function for consistency. */
 #define SC3_FREE(p) (free (p))

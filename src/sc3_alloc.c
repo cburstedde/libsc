@@ -291,7 +291,7 @@ sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
   actual = a->align + hsize + size;
 
   /* allocate memory big enough for shift and meta information */
-  p = initzero ? SC3_CALLOC (char, actual) : SC3_MALLOC (char, actual);
+  p = initzero ? SC3_MALLOC_ZERO (char, actual) : SC3_MALLOC (char, actual);
   SC3E_DEMAND (p != NULL, "Allocation");
 
   /* record allocator's address, original pointer, and allocated size */
@@ -366,7 +366,7 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
   size *= nmemb;
   if (a->align == 0 && !a->keepalive) {
     /* use system allocation */
-    char               *p = SC3_CALLOC (char, size);
+    char               *p = SC3_MALLOC_ZERO (char, size);
     SC3E_DEMAND (size == 0 || p != NULL, "Allocation by calloc");
 
     /* when allocating zero bytes we may obtain a NULL pointer */
