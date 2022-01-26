@@ -64,8 +64,8 @@ typedef enum sc3_log_level
                              Too much to be acceptable for production runs */
   SC3_LOG_INFO,         /**< Detailed, but still acceptable for production */
   SC3_LOG_TOP,          /**< Sparse flow logging, for toplevel functions */
-  SC3_LOG_ESSENTIAL,    /**< Couple lines per program: options, stats */
   SC3_LOG_ERROR,        /**< Errors by misusage, internal bugs, I/O */
+  SC3_LOG_ESSENTIAL,    /**< Couple lines per program: options, stats */
   SC3_LOG_SILENT,       /**< This log level will not print anything */
   SC3_LOG_LEVEL_LAST
 }
