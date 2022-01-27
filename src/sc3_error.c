@@ -261,7 +261,7 @@ sc3_error_unref (sc3_error_t ** ep)
   int                 waslast;
   sc3_error_t        *e;
 
-  SC3E_INULLP (ep, e);
+  SC3E_INOUTP (ep, e);
   SC3A_IS (sc3_error_is_valid, e);
 
   if (!e->alloced) {
@@ -272,9 +272,10 @@ sc3_error_unref (sc3_error_t ** ep)
 
   SC3E (sc3_refcount_unref (&e->rc, &waslast));
   if (waslast) {
-    /* TODO: create a leak error on these two conditions */
-    SC3E_DEMAND (e->accessed_locations == 0, "Pending location access");
-    SC3E_DEMAND (e->accessed_messages == 0, "Pending message access");
+    *ep = NULL;
+
+    SC3E_DEMAND (e->accessed_locations == 0, SC3_ERROR_REF);
+    SC3E_DEMAND (e->accessed_messages == 0, SC3_ERROR_REF);
     if (e->stack != NULL) {
       SC3E (sc3_error_unref (&e->stack));
     }
@@ -290,11 +291,9 @@ sc3_error_destroy (sc3_error_t ** ep)
 
   SC3E_INULLP (ep, e);
 
-  /* TODO: make sure a leak is returned when appropriate */
-  SC3E_DEMIS(sc3_refcount_is_last, &e->rc);
+  SC3E_DEMIS (sc3_refcount_is_last, &e->rc, SC3_ERROR_REF);
   SC3E (sc3_error_unref (&e));
 
-  /* TODO: go back to here */
   SC3A_CHECK (e == NULL || !e->alloced);
   return NULL;
 }

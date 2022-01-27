@@ -16,8 +16,8 @@ libsc_installed_headers = \
         src/sc_getopt.h src/sc_polynom.h \
         src/sc_keyvalue.h src/sc_refcount.h src/sc_shmem.h \
         src/sc_allgather.h src/sc_reduce.h src/sc_notify.h \
-        src/sc3_base.h src/sc3_alloc.h src/sc3_alloc_internal.h \
-        src/sc3_error.h src/sc3_refcount.h \
+        src/sc3_base.h src/sc3_error.h src/sc3_refcount.h \
+        src/sc3_alloc.h src/sc3_alloc_internal.h \
         src/sc3_omp.h src/sc3_mpi.h src/sc3_mpienv.h \
         src/sc3_array.h src/sc3_log.h \
         src/sc3_trace.h src/sc3_memstamp.h \
@@ -33,7 +33,8 @@ libsc_compiled_sources = \
         src/sc_getopt.c src/sc_getopt1.c src/sc_polynom.c \
         src/sc_keyvalue.c src/sc_refcount.c src/sc_shmem.c \
         src/sc_allgather.c src/sc_reduce.c src/sc_notify.c \
-        src/sc3_base.c src/sc3_alloc.c src/sc3_error.c src/sc3_refcount.c \
+        src/sc3_base.c src/sc3_error.c src/sc3_refcount.c \
+        src/sc3_alloc.c \
         src/sc3_omp.c src/sc3_mpi.c src/sc3_mpienv.c \
         src/sc3_array.c src/sc3_log.c \
         src/sc3_trace.c src/sc3_memstamp.c \

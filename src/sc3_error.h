@@ -160,12 +160,13 @@ extern              "C"
 #define SC3A_CHECK(x) SC3_NOOP
 
 #else
-#define SC3A_IS(f,o) SC3E_DEMIS(f,o)
-#define SC3A_IS2(f,o,p) SC3E_DEMIS2(f,o,p)
-#define SC3A_IS3(f,o,p1,p2) SC3E_DEMIS3(f,o,p1,p2)
+#define SC3A_IS(f,o) SC3E_DEMIS (f, o, SC3_ERROR_ASSERT)
+#define SC3A_IS2(f,o,p) SC3E_DEMIS2 (f, o, p, SC3_ERROR_ASSERT)
+#define SC3A_IS3(f,o,p1,p2) SC3E_DEMIS3 (f, o, p1, p2, SC3_ERROR_ASSERT)
 #define SC3A_CHECK(x) do {                                              \
   if (!(x)) {                                                           \
-    return sc3_error_new_assert (__FILE__, __LINE__, #x);               \
+    return sc3_error_new_kind (SC3_ERROR_ASSERT,                        \
+                               __FILE__, __LINE__, #x);                 \
   }} while (0)
 #endif
 
@@ -174,7 +175,6 @@ extern              "C"
 /** Execute an expression \a f that produces an \ref sc3_error_t object.
  * If that error is not NULL, create a fatal error and return it.
  * This macro stacks every non-NULL error returned into a fatal error.
- * Not intended for clean recovery of non-fatal errors.
  */
 #define SC3E(f) do {                                                    \
   sc3_error_t *_e = (f);                                                \
@@ -183,74 +183,68 @@ extern              "C"
   }} while (0)
 
 /** If a condition \a x is not met, create a fatal error and return it.
- * TODO: keep an eye on removing this macro.
- * The error creatid is of type \ref SC3_ERROR_FATAL and its message
- * is set to the failed condition and argument \a s.
- * Not intended for clean recovery of non-fatal errors.
+ * The kind of the fatal error to create is passed in as an argument.
+ * Its message is set to the failed condition and argument \a s.
  */
-#define SC3E_DEMAND(x,s) do {                                           \
+#define SC3E_DEMAND(x,k) do {                                           \
   if (!(x)) {                                                           \
     char _errmsg[SC3_BUFSIZE];                                          \
-    sc3_snprintf (_errmsg, SC3_BUFSIZE, "%s: %s", #x, (s));             \
-    return sc3_error_new_kind (SC3_ERROR_FATAL,                         \
-                               __FILE__, __LINE__, _errmsg);            \
+    sc3_snprintf (_errmsg, SC3_BUFSIZE, "%s", #x);                      \
+    return sc3_error_new_kind ((k), __FILE__, __LINE__, _errmsg);       \
   }} while (0)
 
-/** Execute an is_* query \a f and return a fatal error if it returns false.
- * TODO: keep an eye on removing this macro.
- * The error created is of type \ref SC3_ERROR_ASSERT and its message is set
- * to the failed query function and its object \a o.
+/** Execute an is_* query \a f and return a fatal error if false.
+ * The kind of the fatal error to create is passed in as an argument.
+ * Its message is set to the failed query function and its object \a o.
  */
-#define SC3E_DEMIS(f,o) do {                                            \
+#define SC3E_DEMIS(f,o,k) do {                                          \
   char _r[SC3_BUFSIZE];                                                 \
   if (!(f ((o), _r))) {                                                 \
     char _errmsg[SC3_BUFSIZE];                                          \
     sc3_snprintf (_errmsg, SC3_BUFSIZE, "%s(%s): %s", #f, #o, _r);      \
-    return sc3_error_new_assert (__FILE__, __LINE__, _errmsg);          \
+    return sc3_error_new_kind ((k), __FILE__, __LINE__, _errmsg);       \
   }} while (0)
 
-/** Execute an is_* query \a f that takes an additional argument
- * TODO: keep an eye on removing this macro.
- * and return a fatal error if it returns false.
- * The error created is of type \ref SC3_ERROR_ASSERT and its message is set
- * to the failed query function and its object \a o.
+/** Execute an is_* query \a f that takes an additional argument.
+ * Return a fatal error if the query returns false.
+ * The kind of the fatal error to create is passed in as an argument.
+ * Its message is set to the failed query function and its object \a o.
  */
-#define SC3E_DEMIS2(f,o,p) do {                                         \
+#define SC3E_DEMIS2(f,o,p,k) do {                                       \
   char _r[SC3_BUFSIZE];                                                 \
   if (!(f ((o), (p), _r))) {                                            \
     char _errmsg[SC3_BUFSIZE];                                          \
     sc3_snprintf (_errmsg, SC3_BUFSIZE,                                 \
                   "%s(%s,%s): %s", #f, #o, #p, _r);                     \
-    return sc3_error_new_assert (__FILE__, __LINE__, _errmsg);          \
+    return sc3_error_new_kind ((k), __FILE__, __LINE__, _errmsg);       \
   }} while (0)
 
-/** Execute an is_* query \a f that takes two additional arguments
- * TODO: keep an eye on removing this macro.
- * and return a fatal error if it returns false.
- * The error created is of type \ref SC3_ERROR_ASSERT and its message is set
- * to the failed query function and its object \a o.
+/** Execute an is_* query \a f that takes two additional arguments.
+ * Return a fatal error if the query returns false.
+ * The kind of the fatal error to create is passed in as an argument.
+ * Its message is set to the failed query function and its object \a o.
  */
-#define SC3E_DEMIS3(f,o,p1,p2) do {                                     \
+#define SC3E_DEMIS3(f,o,p1,p2,k) do {                                   \
   char _r[SC3_BUFSIZE];                                                 \
   if (!(f ((o), (p1), (p2), _r))) {                                     \
     char _errmsg[SC3_BUFSIZE];                                          \
     sc3_snprintf (_errmsg, SC3_BUFSIZE,                                 \
                   "%s(%s,%s,%s): %s", #f, #o, #p1, #p2, _r);            \
-    return sc3_error_new_assert (__FILE__, __LINE__, _errmsg);          \
+    return sc3_error_new_kind ((k), __FILE__, __LINE__, _errmsg);       \
   }} while (0)
 
 /** When encountering unreachable code, return a fatal error.
- * The error created is of type \ref SC3_ERROR_ASSERT
+ * The error created is of type \ref SC3_ERROR_FATAL
  * and its message is provided as parameter \a s.
  */
 #define SC3E_UNREACH(s) do {                                            \
   char _errmsg[SC3_BUFSIZE];                                            \
   sc3_snprintf (_errmsg, SC3_BUFSIZE, "Unreachable: %s", (s));          \
-  return sc3_error_new_assert (__FILE__, __LINE__, _errmsg);            \
+  return sc3_error_new_kind (SC3_ERROR_FATAL,                           \
+                             __FILE__, __LINE__, _errmsg);              \
   } while (0)
 
-/** Assert a pointer parameter \a r not to be NULL
- * and initialize its value to \a v.
+/** Assert a pointer \a r not to be NULL and initialize its value to \a v.
  */
 #define SC3E_RETVAL(r,v) do {                                           \
   SC3A_CHECK ((r) != NULL);                                             \
@@ -265,8 +259,8 @@ extern              "C"
   (p) = *(pp);                                                          \
   } while (0)
 
-/** Require an input pointer \a pp to dereference to a non-NULL value,
- * assign its value to \a p for future use, then set input value to NULL.
+/** Require an input pointer \a pp to dereference to a non-NULL value.
+ * Assign its value to \a p for future use, then set input value to NULL.
  */
 #define SC3E_INULLP(pp,p) do {                                          \
   SC3A_CHECK ((pp) != NULL && *(pp) != NULL);                           \
@@ -274,26 +268,14 @@ extern              "C"
   *(pp) = NULL;                                                         \
   } while (0)
 
-/** Execute an expression \a f that produces an \ref sc3_error_t object.
- * TODO: check whether the inherit feature needs to come back.
- * If that error is fatal, stack it into a new fatal error and return it.
- * If that error is NULL, this will be assigned to the output argument.
- * Otherwise, stack the error into a new object of the same kind and
- * place this new error in the output argument \a o.  In this case,
- * the calling code takes ownership of the error.
- */
-#define SC3F(f, o) do {                                                 \
-  sc3_error_t *_e = o = (f);                                            \
-  if (_e != NULL) {                                                     \
-    return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
-  }} while (0)
-
 /*** ERROR statements for proceeding without return in case of errors. ***/
+/*** These are all DEPRECATED. */
 
 /** Initialize an error object \a e using the result of an expression \a f.
  * If the result is NULL, that becomes the value of the error object.
  * If the result is not NULL, it is stacked into a fatal error,
  * which is then assigned to the error object.
+ * \deprecated This macro should no longer be used.
  */
 #define SC3E_SET(e,f) do {                                              \
   sc3_error_t *_e = (f);                                                \
@@ -302,10 +284,10 @@ extern              "C"
   } else { (e) = NULL; }                                                \
   } while (0)
 
-/* TODO think about propagating leak errors correctly */
 /** Set an error object \a e that is NULL using the result of an expression.
  * The update is perforrmed as in \ref SC3E_SET with expression \a f.
  * If the error object is not NULL, the macro does not evaluate \a f.
+ * \deprecated This macro should no longer be used.
  */
 #define SC3E_NULL_SET(e,f) do {                                         \
   if ((e) == NULL) SC3E_SET(e,f);                                       \
@@ -313,35 +295,40 @@ extern              "C"
 
 /** If an error object \a e is NULL, set it if condition \a x fails.
  * In this case, we set the object to a new \ref SC3_ERROR_ASSERT.
+ * \deprecated This macro should no longer be used.
  */
 #define SC3E_NULL_REQ(e,x) do {                                         \
   if ((e) == NULL && !(x)) {                                            \
     (e) = sc3_error_new_bug (__FILE__, __LINE__, #x);                   \
   }} while (0)
 
-/** If an error object \a e is not NULL, break a loop. */
+/** If an error object \a e is not NULL, break a loop.
+ * \deprecated This macro should no longer be used.
+ */
 #define SC3E_NULL_BREAK(e) do {                                         \
   if ((e) != NULL) { break; }} while (0)
 
-/*** QUERY statements.  Always executed. ***/
+/*** QUERY statements.  Executed irrespective of debug setting. ***/
 
-/** Set the reason output parameter \a r inside an sc3_object_is_* function
+/** Set the reason output parameter \a r of a query and return false.
+ * Set the reason parameter inside an sc3_object_is_* function
  * to a given value \a reason before unconditionally returning false.
- * \a r may be NULL in which case it is not updated.
+ * \a r may be NULL in which case it is not updated, but we still return.
  */
 #define SC3E_NO(r,reason) do {                                          \
   if ((r) != NULL) { SC3_BUFCOPY ((r), (reason)); } return 0; } while (0)
 
-/** Set the reason output parameter \a r inside an sc3_object_is_* function
+/** Set the reason output parameter \a r of a query and return true.
+ * Set the reason parameter inside an sc3_object_is_* function
  * to "" before returning true unconditionally.
- * \a r may be NULL in which case it is not updated.
+ * \a r may be NULL in which case it is not updated, but we still return.
  */
 #define SC3E_YES(r) do {                                                \
   if ((r) != NULL) { (r)[0] = '\0'; } return 1; } while (0)
 
 /** Query condition \a x to be true, in which case the macro does nothing.
  * If the condition is false, the put the reason into \a r, a pointer
- * to a string of size \ref SC3_BUFSIZE, and return 0.
+ * to a string of size \ref SC3_BUFSIZE, and return false.
  */
 #define SC3E_TEST(x,r)                                                  \
   do { if (!(x)) {                                                      \
@@ -350,7 +337,8 @@ extern              "C"
 
 /** Run a function that may return an error for use in tests.
  * Since the caller will not return an error, we convert it to integer.
- * Make sure, as with the other macros here, that \a r is of SC3_BUFSIZE.
+ * As with the other macros here, \a r must be of \ref SC3_BUFSIZE.
+ * \deprecated This macro will be removed in the future.
  */
 #define SC3E_DO(f,r) do {                                               \
   sc3_error_t *_e = (f);                                                \
@@ -359,7 +347,7 @@ extern              "C"
 /** Query an sc3_object_is_* function.
  * The argument \a f shall be such a function and \a o an object to query.
  * If the test returns false, the function puts the reason into \a r,
- * a pointer to a string of size \ref SC3_BUFSIZE, and returns 0.
+ * a pointer to a string of size \ref SC3_BUFSIZE, and returns false.
  * Otherwise the function does nothing.  \a r may be NULL.
  */
 #define SC3E_IS(f,o,r)                                                  \
@@ -371,10 +359,10 @@ extern              "C"
       return 0; }}} while (0)
 
 /** Query an sc3_object_is2_* function.
- * The argument \a f such a function and \a o1 an object to query
+ * The argument \a f shall be such a function and \a o an object to query
  * with another argument \a p.
  * If the test returns false, the function puts the reason into \a r,
- * a pointer to a string of size \ref SC3_BUFSIZE, and returns 0.
+ * a pointer to a string of size \ref SC3_BUFSIZE, and returns false.
  * Otherwise the function does nothing.  \a r may be NULL.
  */
 #define SC3E_IS2(f,o,p,r)                                               \
@@ -386,10 +374,10 @@ extern              "C"
       return 0; }}} while (0)
 
 /** Query an sc3_object_is3_* function.
- * The argument \a f such a function and \a o is an object to query
+ * The argument \a f shall be such a function and \a o an object to query
  * with another arguments \a p1 and \a p2.
  * If the test returns false, the function puts the reason into \a r,
- * a pointer to a string of size \ref SC3_BUFSIZE, and returns 0.
+ * a pointer to a string of size \ref SC3_BUFSIZE, and returns false.
  * Otherwise the function does nothing.  \a r may be NULL.
  */
 #define SC3E_IS3(f,o,p1,p2,r)                                           \
@@ -400,35 +388,6 @@ extern              "C"
       sc3_snprintf ((r), SC3_BUFSIZE, "%s(%s,%s,%s): %s",               \
                                       #f, #o, #p1, #p2, _r);            \
       return 0; }}} while (0)
-
-/*** LEAK statements for working with (non-fatal) leak errors. ***/
-
-/** Execute an expression \a f that may produce a fatal error or a leak.
- * If the expression is not a leak error, we behave as \ref SC3E, that is,
- * stack the error into a new fatal error object and return it.
- * If the expression is a leak, we stack it into the inout argument \a l
- * after flattening its stack into one message.  Noop if \a f is NULL.
- * The inout pointer \a l must be of type \ref sc3_error_t ** and not NULL.
- * Value may contain an error of kind \ref SC3_ERROR_LEAK or NULL.
- * We only return out of the calling context on fatal error.
- */
-#define SC3L(l,f) do {                                                  \
-  sc3_error_t *_e = sc3_error_leak (l, f, __FILE__, __LINE__, #f);      \
-  if (_e != NULL) {                                                     \
-    return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
-  }} while (0)
-
-/** Examine a condition \a x and add to the inout leak error \a l if false.
- * The inout pointer \a l must be of type \ref sc3_error_t ** and not NULL.
- * Value may contain an error of kind \ref SC3_ERROR_LEAK or NULL.
- * We stack the inout error with a newly generated leak error.
- * We only return out of the calling context on fatal error.
- */
-#define SC3L_DEMAND(l,x) do {                                               \
-  sc3_error_t *_e = sc3_error_leak_demand (l, x, __FILE__, __LINE__, #x);   \
-  if (_e != NULL) {                                                         \
-    return sc3_error_new_stack (&_e, __FILE__, __LINE__, #x);               \
-  }} while (0)
 
 /** Macro for error checking without hope for clean recovery.
  * If an error is encountered in calling \b f, we print its message to stderr
@@ -450,7 +409,7 @@ typedef enum sc3_error_kind
   SC3_ERROR_FATAL,      /**< Generic error indicating a failed program. */
   SC3_ERROR_ASSERT,     /**< Failed pre-/post-condition or assertion. */
   SC3_ERROR_LEAK,       /**< Hanging memory allocation. */
-  SC3_ERROR_REF,        /**< Reference counting error. */
+  SC3_ERROR_REF,        /**< Reference counting misuse. */
   SC3_ERROR_MEMORY,     /**< Out of memory. */
   SC3_ERROR_NETWORK,    /**< Network error. */
   SC3_ERROR_UNKNOWN,    /**< Unknown fatal error. */
@@ -637,14 +596,19 @@ sc3_error_t        *sc3_error_ref (sc3_error_t * e);
  * If the count reaches zero the error object is deallocated.
  * \param [in,out] ep   Pointer must not be NULL and the error valid.
  *                      The refcount is decreased.  If it reaches zero,
- *                      the error is deallocated and stops existing.
- *                      The value on output is NULL no matter the count.
+ *                      the error is deallocated and stops existing,
+ *                      and the value is set to NULL most of the time.
+ *                      It is legal, however, for the output to stay
+ *                      non-NULL (say by refing occurring elsewhere,
+ *                      or the error being a static internal object).
+ *                      This safety feature should not be relied upon.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
 
 /** Take an error object with one remaining reference and deallocate it.
  * Destroying an error that is multiply refd returns a reference error.
+ * Previous refing and unrefing in the program must thus be predictable.
  * \param [in,out] ep       Setup error with one reference.  NULL on output.
  * \return                  An error object or NULL without errors.
  */
@@ -653,7 +617,7 @@ sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 #if 0                           /* Not used currently.  Needed? */
 /** Destroy an error object and condense its stack's messages into a string.
  * Such condensation removes some structure, so this is a last-resort call.
- * \param [in,out] pe   This error will be destroyed and pointer NULLed.
+ * \param [in,out] pe   This error will be destroyed and pointer NULLd.
  *                      If any errors occur in the process, they are ignored.
  *                      One would be that the error has multiple references.
  * \param [out] flatmsg If not NULL, existing string of length SC3_BUFSIZE
@@ -663,6 +627,7 @@ void                sc3_error_destroy_noerr (sc3_error_t ** pe,
                                              char *flatmsg);
 #endif
 
+#if 0
 /** Make assertion error and return either it or any error creating it.
  *
  * Contrary to most other libsc functions, its return value is its output.
@@ -680,6 +645,7 @@ void                sc3_error_destroy_noerr (sc3_error_t ** pe,
  */
 sc3_error_t        *sc3_error_new_assert (const char *filename,
                                           int line, const char *errmsg);
+#endif
 
 /** Make error of given kind and return either it or any error creating it.
  *
@@ -709,7 +675,7 @@ sc3_error_t        *sc3_error_new_kind (sc3_error_kind_t kind,
  *
  * This function is intended to be used by macros building an error stack.
  *
- * \param [in] pstack   We take ownership of the stack, pointer is NULLed.
+ * \param [in] pstack   We take ownership of the stack, pointer is NULLd.
  * \param [in] filename The filename is copied into the error object.
  *                      Pointer not NULL, string Nul-terminated.
  * \param [in] line     Line number set in the error.
@@ -729,7 +695,7 @@ sc3_error_t        *sc3_error_new_stack (sc3_error_t ** pstack,
  * This function expects a setup error as stack, which may in turn have stack.
  * Function may be used when multiple errors of the same kind accumulate.
  * This function is intended for use in macros when no allocator is available.
- * \param [in] pstack   We take ownership of the stack, pointer is NULLed.
+ * \param [in] pstack   We take ownership of the stack, pointer is NULLd.
  *                      The error kind of *pstack is used for the result.
  * \param [in] filename The filename is copied into the error object.
  *                      Pointer not NULL, string Nul-terminated.
