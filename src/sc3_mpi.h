@@ -33,14 +33,12 @@
  * If we configure --enable-mpi, the wrappers call the original MPI
  * functions and translate their return values into \ref sc3_error_t
  * pointers.
- * If the error is due to an MPI function, we create a return error of
- * kind \ref SC3_ERROR_NETWORK.
- * This kind is considered fatal in our standard error macros.
- * The application is free to catch such errors and handle und unref them.
- * On failed assertions and pre/post-conditions, we return some fatal kind.
+ * If the error is due to an MPI function, we create a fatal return error
+ * of kind \ref SC3_ERROR_NETWORK.
+ * On failed assertions and pre/post-conditions, we return some other kind.
  * Without --enable-mpi, the wrappers present communicators of size one that
  * are suitable for size and rank queries and most collective communication.
- * The advantage is that the code needs only few #`ifdef SC_ENABLE_MPI`.
+ * The advantage is that the code needs only a few #`ifdef SC_ENABLE_MPI`.
  *
  * MPI 3 shared window creation is thinly wrapped if it exists.
  * Otherwise the wrappers present a shared communicator of size one.
@@ -55,18 +53,19 @@
 #include <sc3_mpi_types.h>
 
 /** Execute an MPI call and translate its return into an \ref sc3_error_t.
+ * This must be an unwrapped, native MPI function, not one from this file.
  *
  * This macro is primarily intended for use inside our wrappers.
- * The MPI function \a f must exist, thus we call this inside
- * an #`ifdef SC_ENABLE_MPI` macro.
+ * The MPI function \a f must exist, thus we advise to call the macro
+ * inside an #`ifdef SC_ENABLE_MPI`.
  *
  * If the MPI function returns MPI_SUCCESS, this macro does nothing.
- * Otherwise, we query the MPI error string and return a proper sc3 error.
+ * Otherwise, query the MPI error string and return out of the function.
  */
 #define SC3E_MPI(f) do {                                                \
   int _mpiret = (f);                                                    \
   if (_mpiret != SC3_MPI_SUCCESS) {                                     \
-    int _errlen;                                                        \
+    int _errlen = 0;    /**< output parameter by the standard */        \
     char _errstr[SC3_MPI_MAX_ERROR_STRING];                             \
     char _errmsg[SC3_BUFSIZE];                                          \
     sc3_MPI_Error_string (_mpiret, _errstr, &_errlen);                  \
@@ -74,6 +73,8 @@
     return sc3_error_new_kind (SC3_ERROR_NETWORK,                       \
                                __FILE__, __LINE__, _errmsg);            \
   }} while (0)
+
+#if 0
 
 /** Return an MPI usage error.
  *
@@ -88,6 +89,21 @@
                              __FILE__, __LINE__, _errmsg);              \
 } while (0)
 
+#endif
+
+/** Macro for error checking without hope for clean recovery.
+ * If an error is encountered in calling \b f, we print its message to stderr
+ * and abort.  If possible, an application should react more nicely.
+ */
+#define SC3X(f) do {                                            \
+  sc3_error_t *_e = (f);                                        \
+  char _buffer[SC3_BUFSIZE];                                    \
+  if (sc3_error_check (&_e, _buffer, SC3_BUFSIZE)) {            \
+    fprintf (stderr, "%s\n", _buffer);                          \
+    fprintf (stderr, "EX %s:%d: %s\n", __FILE__, __LINE__, #f); \
+    sc3_MPI_Abort (SC3_MPI_COMM_WORLD, SC3_MPI_ERR_OTHER);      \
+  }} while (0)
+
 #ifdef __cplusplus
 extern              "C"
 {
@@ -98,6 +114,7 @@ extern              "C"
 
 /** Wrap MPI_Error_class.
  * This function is always successful.
+ * It is safe to call it from within MPI error checks (no recursion).
  * \param [in] errorcode    An error code returned by an MPI function.
  * \param [out] errorclass  The error class of the code.
  *                          The class is out of a smaller set of error codes.
@@ -106,11 +123,12 @@ void                sc3_MPI_Error_class (int errorcode, int *errorclass);
 
 /** Wrap MPI_Error_string.
  * This function is always successful.
+ * It is safe to call it from within MPI error checks (no recursion).
  * \param [in] errorcode    An error code returned by an MPI function.
  * \param [out] errstr      Buffer size at least SC3_MPI_MAX_ERROR_STRING.
  *                          If NULL, we do nothing.
- *                          Otherwise, we prepend "MPI" and remove
- *                          newlines from the original MPI error string.
+ *                          Otherwise, we replace  newlines from the
+ *                          original MPI error string with spaces.
  * \param [out] errlen      If NULL, we set \a errstr to "".
  *                          Otherwise, the length of \a errstr without
  *                          the trailing null byte.
@@ -134,12 +152,11 @@ sc3_error_t        *sc3_MPI_Finalize (void);
 
 /** Wrap MPI_Abort.
  * Without --enable-mpi, call abort (3).
+ * This function does not return.
  * \param [in] comm         Valid MPI communicator.
  * \param [in] errorcode    Well-defined MPI error code.
- * \return                  NULL on success, error object otherwise.
- *                          This function may not return though.
  */
-sc3_error_t        *sc3_MPI_Abort (sc3_MPI_Comm_t comm, int errorcode);
+void                sc3_MPI_Abort (sc3_MPI_Comm_t comm, int errorcode);
 
 /** Wrap MPI_Wtime.
  * \return          Time in seconds since an arbitrary time in the past.

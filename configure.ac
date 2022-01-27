@@ -92,6 +92,7 @@ AC_CHECK_FUNCS([basename dirname])
 AC_CHECK_FUNCS([strtol strtoll])
 AC_CHECK_FUNCS([fsync])
 AC_CHECK_FUNCS([qsort_r])
+AC_CHECK_FUNCS([clock_gettime])
 
 echo "o---------------------------------------"
 echo "| Checking libraries"

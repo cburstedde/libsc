@@ -387,21 +387,6 @@ extern              "C"
                                       #f, #o, #p1, #p2, _r);            \
       return 0; }}} while (0)
 
-/** Macro for error checking without hope for clean recovery.
- * If an error is encountered in calling \b f, we print its message to stderr
- * and call abort (3).  If possible, an application should react more nicely.
- * TODO: do we need to print the error character.
- */
-#define SC3X(f) do {                                            \
-  sc3_error_t *_e = (f);                                        \
-  char _buffer[SC3_BUFSIZE];                                    \
-  if (sc3_error_check (&_e, _buffer, SC3_BUFSIZE)) {            \
-    fprintf (stderr, "%s\n", _buffer);                          \
-    fprintf (stderr, "EX %s:%d %c:%s\n", __FILE__, __LINE__,    \
-             sc3_error_kind_char[SC3_ERROR_FATAL], #f);         \
-    abort ();                                                   \
-  }} while (0)
-
 /** We indicate the kind of a fatal error condition. */
 typedef enum sc3_error_kind
 {

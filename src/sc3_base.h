@@ -153,6 +153,9 @@
 #ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef SC_HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
 
 #if SC_SIZEOF_UNSIGNED_INT == 8
 #define SC_UINT64_0 (0U)

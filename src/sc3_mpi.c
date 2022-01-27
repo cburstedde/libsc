@@ -169,15 +169,18 @@ sc3_MPI_Finalize (void)
   return NULL;
 }
 
-sc3_error_t        *
+void
 sc3_MPI_Abort (sc3_MPI_Comm_t comm, int errorcode)
 {
 #ifdef SC_ENABLE_MPI
-  SC3E_MPI (MPI_Abort (comm, errorcode));
+  if (comm == SC3_MPI_COMM_NULL) {
+    /* an undocumented safeguard to make sure to abort */
+    comm = SC3_MPI_COMM_WORLD;
+  }
+  MPI_Abort (comm, errorcode);
 #else
   abort ();
 #endif
-  return NULL;
 }
 
 double
@@ -186,13 +189,17 @@ sc3_MPI_Wtime (void)
 #ifdef SC_ENABLE_MPI
   return MPI_Wtime ();
 #else
+#ifdef SC_HAVE_CLOCK_GETTIME
   struct timespec     tp;
-
-  /* TODO: write configure check for this functionality */
-  if (clock_gettime (CLOCK_MONOTONIC, &tp) != 0)
+  if (clock_gettime (CLOCK_MONOTONIC, &tp) != 0) {
     clock_gettime (CLOCK_REALTIME, &tp);
-
+  }
   return tp.tv_sec + 1e-9 * tp.tv_nsec;
+#else
+  struct timeval tv;
+  gettimeofday (&tv, NULL);
+  return tv.tv_sec + 1e-6 * tv.tv_usec;
+#endif
 #endif
 }
 
@@ -368,7 +375,7 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
 
   /* initialize wrapper structure */
   newin = SC3_MALLOC (struct sc3_MPI_Win, 1);
-  SC3E_DEMAND (newin != NULL, "Allocating MPI window");
+  SC3E_DEMAND (newin != NULL, SC3_ERROR_MEMORY);
   newin->win = 1;
   SC3E (sc3_MPI_Comm_size (comm, &newin->size));
   SC3E (sc3_MPI_Comm_rank (comm, &newin->rank));
@@ -390,8 +397,7 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
 #endif
   else {
     newin->baseptr = SC3_MALLOC (char, size);
-    SC3E_DEMAND (newin->baseptr != NULL,
-                 "Win_allocate_shared replacement failed allocation");
+    SC3E_DEMAND (newin->baseptr != NULL, SC3_ERROR_MEMORY);
   }
   SC3A_IS (sc3_MPI_Win_is_valid, newin);
 
@@ -421,8 +427,7 @@ sc3_MPI_Win_shared_query (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size,
   if (0);
 #endif
   else {
-    SC3E_DEMAND (rank == win->rank,
-                 "Win_shared_query to remote ranks not supported");
+    SC3E_DEMAND (rank == win->rank, SC3_ERROR_FATAL);
     *size = win->memsize;
     *disp_unit = win->disp_unit;
     *(void **) baseptr = win->baseptr;
@@ -448,7 +453,7 @@ sc3_MPI_Win_lock (int lock_type, int rank, int assert, sc3_MPI_Win_t win)
   if (0);
 #endif
   else {
-    SC3E_DEMAND (rank == win->rank, "Win_lock to remote ranks not supported");
+    SC3E_DEMAND (rank == win->rank, SC3_ERROR_FATAL);
     SC3A_CHECK (!win->locked);
     win->locked = 1;
   }
@@ -470,8 +475,7 @@ sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win)
   if (0);
 #endif
   else {
-    SC3E_DEMAND (rank == win->rank,
-                 "Win_unlock to remote ranks not supported");
+    SC3E_DEMAND (rank == win->rank, SC3_ERROR_FATAL);
     SC3A_CHECK (win->locked);
     win->locked = 0;
   }
