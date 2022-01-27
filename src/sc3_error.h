@@ -921,12 +921,12 @@ typedef enum sc3_error_recursion
 }
 sc3_error_recursion_t;
 
-/** Access the toplevel information in an error object and turn it into text.
- * This function goes down the error stack as an option, or not.
- * When used recursively, each level is ended by '\n'.
+/** Access the information in an error object and turn it into text.
+ * This function goes down the error stack as an option, pre or post.
+ * When used recursively, each level is ended by '\n' in the output.
  * \param [in] e            This error object must be setup.
  * \param [in] recursion    Enumeration \ref sc3_error_recursion_t.
- * \param [in] dobasename   If true, only print the basename (3) of file.
+ * \param [in] dobasename   If true, only copy the basename (3) of file.
  * \param [out] buffer      If NULL, this function does nothing.
  *                          Otherwise must contain at least \b buflen bytes.
  *                          Nul-terminated, often multi-line string on output.
@@ -940,8 +940,11 @@ sc3_error_t        *sc3_error_copy_text (sc3_error_t * e,
                                          int dobasename,
                                          char *buffer, size_t buflen);
 
-/** Translate an error object into a return value and a text block.
- * \param [in,out] e        On input, address of an error pointer.
+/** Translate an error valu into a return value and a text block.
+ * Acknowledge errors from the libary without much coding effort.
+ * If the memory system still works, error is cleanly deallocated.
+ * This is usually the case, since we survive out-of-memory situations.
+ * \param [in,out] e        Non-NULL address of an error pointer.
  *                          The error itself may be NULL or a valid object.
  *                          Unrefd and NULLd on output in the latter case.
  * \param [out] buffer      If this buffer is not NULL, it must provide at
@@ -949,7 +952,8 @@ sc3_error_t        *sc3_error_copy_text (sc3_error_t * e,
  *                          Nul-terminated, often multi-line string on output.
  *                          There is no final newline at the end of the text.
  *                          When input \a *e is NULL, set to the empty string.
- * \param [in] buflen       Non-negative number of bytes available in \b buffer.
+ * \param [in] buflen       Number of bytes available in \b buffer.
+ *                          If zero, this function copies nothing.
  * \return                  0 if e is non-NULL and *e is NULL on input,
  *                          a negative integer otherwise.
  */

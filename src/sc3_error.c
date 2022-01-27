@@ -840,6 +840,8 @@ static sc3_error_t *
 sc3_error_check_text (sc3_error_t ** e, char *buffer, size_t buflen)
 {
   SC3A_CHECK (e != NULL);
+  SC3A_IS (sc3_error_is_valid, *e);
+
   if (!(buffer == NULL || buflen == 0)) {
     SC3E (sc3_error_copy_text (*e, SC3_ERROR_RECURSION_POSTORDER,
                                1, buffer, buflen));
@@ -853,12 +855,13 @@ int
 sc3_error_check (sc3_error_t ** e, char *buffer, size_t buflen)
 {
   const int           bok = !(buffer == NULL || buflen == 0);
+  char                r[SC3_BUFSIZE];
   sc3_error_t        *e2, *e3;
 
   /* invalid usage */
   if (e == NULL) {
     if (bok) {
-      snprintf (buffer, buflen, "%s", "Error: Null input to sc3_error_check");
+      snprintf (buffer, buflen, "%s", "NULL error input to sc3_error_check");
     }
     return -1;
   }
@@ -869,6 +872,14 @@ sc3_error_check (sc3_error_t ** e, char *buffer, size_t buflen)
       snprintf (buffer, buflen, "%s", "");
     }
     return 0;
+  }
+
+  /* invalid error object */
+  if (!sc3_error_is_valid (*e, r)) {
+    if (bok) {
+      snprintf (buffer, buflen, "Invalid error input: %s", r);
+    }
+    return -1;
   }
 
   /* deconstruct the error and try to make sense of strange cases */
@@ -882,7 +893,7 @@ sc3_error_check (sc3_error_t ** e, char *buffer, size_t buflen)
       if (e3 != NULL) {
         /* something is even more badly wrong with internal error reporting */
         snprintf (buffer, buflen, "%s",
-                  "Error: inconsistency inside sc3_error_copy_text");
+                  "Inconsistency inside sc3_error_copy_text");
         sc3_error_unref (&e3);
       }
     }
