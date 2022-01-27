@@ -911,24 +911,33 @@ sc3_error_t        *sc3_error_get_severity (const sc3_error_t * e,
                                             sc3_error_severity_t * sev);
 #endif
 
+/** Enumeration to determine recursion and if yes, which order. */
+typedef enum sc3_error_recursion
+{
+  SC3_ERROR_RECURSION_NONE,         /**< No recursion. */
+  SC3_ERROR_RECURSION_PREORDER,     /**< Preorder: top object first. */
+  SC3_ERROR_RECURSION_POSTORDER,    /**< Postorder: deepest object first. */
+  SC3_ERROR_RECURSION_LAST          /**< Unused guard value. */
+}
+sc3_error_recursion_t;
+
 /** Access the toplevel information in an error object and turn it into text.
  * This function goes down the error stack as an option, or not.
  * When used recursively, each level is ended by '\n'.
  * \param [in] e            This error object must be setup.
- * \param [in] recursion    Negative values select postorder (i.e. deepest
- *                          stack object first), positive values select
- *                          preorder (toplevel object first).
+ * \param [in] recursion    Enumeration \ref sc3_error_recursion_t.
  * \param [in] dobasename   If true, only print the basename (3) of file.
- *                          0 selects non-recursive mode.
- * \param [out] buffer      This buffer must exist and contain at least
- *                          the input \b buflen many bytes.
+ * \param [out] buffer      If NULL, this function does nothing.
+ *                          Otherwise must contain at least \b buflen bytes.
  *                          Nul-terminated, often multi-line string on output.
  *                          There is no final newline at the end of the text.
- * \param [in] buflen       Positive number of bytes available in \b buffer.
+ * \param [in] buflen       Number of bytes available in \b buffer.
+ *                          If zero, this function does nothing.
  * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_error_copy_text (sc3_error_t * e,
-                                         int recursion, int dobasename,
+                                         sc3_error_recursion_t recursion,
+                                         int dobasename,
                                          char *buffer, size_t buflen);
 
 /** Translate an error object into a return value and a text block.

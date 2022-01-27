@@ -624,20 +624,6 @@ sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
 }
 
 sc3_error_t        *
-sc3_error_leak_demand (sc3_error_t ** leak, int x,
-                       const char *filename, int line, const char *errmsg)
-{
-  SC3A_CHECK (leak != NULL);
-  SC3A_IS (sc3_error_is_null_or_leak, *leak);
-
-  if (!x) {
-    /* There should be no fatal errors here, but if so, return them. */
-    SC3E (sc3_error_accum_leak (leak, filename, line, errmsg));
-  }
-  return NULL;
-}
-
-sc3_error_t        *
 sc3_error_access_location (sc3_error_t * e, const char **filename, int *line)
 {
   SC3E_RETVAL (filename, NULL);
@@ -706,9 +692,16 @@ sc3_error_ref_stack (sc3_error_t * e, sc3_error_t ** pstack)
   return NULL;
 }
 
-sc3_error_t        *
-sc3_error_copy_text_rec (sc3_error_t * e, int recursion, int rdepth,
-                         char *bwork, char *buffer, size_t *bufrem)
+/** Turn an error stack into a (multiline) error message.
+ * \param [in] bwork        Either NULL or must hold SC3_BUFSIZE many bytes.
+ * \param [in,out] buffer   Must not be NULL and hold at least \b bufrem bytes.
+ * \param [in,out] bufrem   Value holds number of available bytes on input,
+ *                          TODO what exactly on output?
+ */
+static sc3_error_t        *
+sc3_error_copy_text_rec (sc3_error_t * e, sc3_error_recursion_t recursion,
+                         int rdepth, char *bwork,
+                         char *buffer, size_t *bufrem)
 {
   int                 printed;
   int                 eline;
@@ -721,18 +714,25 @@ sc3_error_copy_text_rec (sc3_error_t * e, int recursion, int rdepth,
   sc3_error_t        *stack;
 
   SC3A_IS (sc3_error_is_valid, e);
+  SC3A_CHECK (0 <= recursion && recursion < SC3_ERROR_RECURSION_LAST);
   SC3A_CHECK (buffer != NULL);
+  SC3A_CHECK (bufrem != NULL);
+
+  /* The function relies on this precondition. */
   SC3A_CHECK (*bufrem > 0);
 
   /* see if there is reason for recursion */
   stack = NULL;
-  if (recursion != 0) {
+  if (recursion != SC3_ERROR_RECURSION_NONE) {
     SC3E (sc3_error_ref_stack (e, &stack));
   }
 
-  if (stack != NULL && recursion < 0) {
-    /* postorder */
-
+  if (stack != NULL && recursion == SC3_ERROR_RECURSION_POSTORDER) {
+    /*
+     * By the precondition of this function, at least one byte may be written.
+     * The recursion will definitely write at least one byte.
+     * Thus, we are allowed to rewind the buffer by one byte.
+     */
     bufin = *bufrem;
     SC3E (sc3_error_copy_text_rec (stack, recursion, rdepth + 1,
                                    bwork, buffer, bufrem));
@@ -752,8 +752,9 @@ sc3_error_copy_text_rec (sc3_error_t * e, int recursion, int rdepth,
     SC3E (sc3_error_access_location (e, &efile, &eline));
     SC3E (sc3_error_access_message (e, &emsg));
     SC3E (sc3_error_get_kind (e, &ekind));
+    SC3A_CHECK (0 <= ekind && ekind < SC3_ERROR_KIND_LAST);
 
-    if (recursion == 0) {
+    if (recursion == SC3_ERROR_RECURSION_NONE) {
       snprintf (pref, 8, "ET ");
     }
     else {
@@ -772,26 +773,32 @@ sc3_error_copy_text_rec (sc3_error_t * e, int recursion, int rdepth,
     SC3E (sc3_error_restore_location (e, efile, eline));
     SC3E (sc3_error_restore_message (e, emsg));
 
+    /* determine the number of bytes printed including the terminating Nul */
     if (printed < 0) {
       /* something went wrong with snprintf */
       buffer[0] = '\0';
       printed = 1;
     }
     else if ((size_t) printed >= *bufrem) {
-      /* output was truncated */
+      /* output was truncated, count the terminating Nul */
       printed = *bufrem;
     }
     else {
-      /* count terminating NUL */
+      /* count terminating NUL, which snprintf does not */
       ++printed;
     }
     buffer += printed;
     *bufrem -= printed;
   }
 
-  if (stack != NULL && recursion > 0) {
-    /* preorder */
-
+  if (stack != NULL && recursion == SC3_ERROR_RECURSION_PREORDER) {
+    /*
+     * We did not enter the preorder recursion call.
+     * By precondition of this function, *bufrem was positive, so
+     * we definitely entered the print block above.  Thus, we
+     * printed at least one byte and advanced the buffer pointer.
+     * This means that we are allowed to rewind by one byte.
+     */
     if (*bufrem > 0) {
       /* we replace the terminating NUL with a line break to continue */
       SC3A_CHECK (buffer[-1] == '\0');
@@ -803,16 +810,21 @@ sc3_error_copy_text_rec (sc3_error_t * e, int recursion, int rdepth,
 
   /* clean up and return */
   if (stack != NULL) {
-    /* leak error here is fatal to simplify calling code */
     SC3E (sc3_error_unref (&stack));
   }
   return NULL;
 }
 
 sc3_error_t        *
-sc3_error_copy_text (sc3_error_t * e, int recursion, int dobasename,
-                     char *buffer, size_t buflen)
+sc3_error_copy_text (sc3_error_t * e, sc3_error_recursion_t recursion,
+                     int dobasename, char *buffer, size_t buflen)
 {
+  /* preconditions and early return */
+  SC3A_IS (sc3_error_is_valid, e);
+  if (buffer == NULL || buflen == 0) {
+    return NULL;
+  }
+
   /* compute number of remaining bytes but do not return it to the caller */
   if (!dobasename) {
     SC3E (sc3_error_copy_text_rec (e, recursion, 0, NULL, buffer, &buflen));
@@ -829,10 +841,10 @@ sc3_error_check_text (sc3_error_t ** e, char *buffer, size_t buflen)
 {
   SC3A_CHECK (e != NULL);
   if (!(buffer == NULL || buflen == 0)) {
-    SC3E (sc3_error_copy_text (*e, -1, 1, buffer, buflen));
+    SC3E (sc3_error_copy_text (*e, SC3_ERROR_RECURSION_POSTORDER,
+                               1, buffer, buflen));
   }
 
-  /* leak error here is fatal to simplify calling code */
   SC3E (sc3_error_unref (e));
   return NULL;
 }
@@ -865,7 +877,8 @@ sc3_error_check (sc3_error_t ** e, char *buffer, size_t buflen)
     /* something is wrong with internal error reporting */
     if (bok) {
       /* we will only learn anything if the buffer exists */
-      e3 = sc3_error_copy_text (e2, -1, 1, buffer, buflen);
+      e3 = sc3_error_copy_text (e2, SC3_ERROR_RECURSION_POSTORDER,
+                                1, buffer, buflen);
       if (e3 != NULL) {
         /* something is even more badly wrong with internal error reporting */
         snprintf (buffer, buflen, "%s",
