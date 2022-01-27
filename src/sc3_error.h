@@ -127,8 +127,6 @@
 /** The sc3 error object is an opaque structure. */
 typedef struct sc3_error sc3_error_t;
 
-#include <sc3_alloc.h>
-
 #ifdef __cplusplus
 extern              "C"
 {
@@ -392,6 +390,7 @@ extern              "C"
 /** Macro for error checking without hope for clean recovery.
  * If an error is encountered in calling \b f, we print its message to stderr
  * and call abort (3).  If possible, an application should react more nicely.
+ * TODO: do we need to print the error character.
  */
 #define SC3X(f) do {                                            \
   sc3_error_t *_e = (f);                                        \
@@ -478,6 +477,8 @@ int                 sc3_error_is_new (const sc3_error_t * e, char *reason);
  */
 int                 sc3_error_is_setup (const sc3_error_t * e, char *reason);
 
+#if 0
+
 /** Check an error object to be setup and fatal.
  * All errors are fatal, this function is deprecated.
  * \param [in] e        Any pointer.
@@ -495,6 +496,8 @@ int                 sc3_error_is_fatal (const sc3_error_t * e, char *reason);
  * \return              True iff error is not NULL, setup, and a leak.
  */
 int                 sc3_error_is_leak (const sc3_error_t * e, char *reason);
+
+#endif
 
 /** Check an error object to be setup and of a specified kind.
  * \param [in] e        Any pointer.
@@ -689,6 +692,7 @@ sc3_error_t        *sc3_error_new_stack (sc3_error_t ** pstack,
                                          int line, const char *errmsg);
 
 #if 0
+
 /** Stack a given error into a new one of the same kind.
  * If internal allocation fails, return a working static error object.
  * This is useful when allocating an error with \ref sc3_error_new might fail.
@@ -723,6 +727,8 @@ sc3_error_t        *sc3_error_new_inherit (sc3_error_t ** pstack,
  */
 sc3_error_t        *sc3_error_ref_stack (sc3_error_t * e,
                                          sc3_error_t ** pstack);
+
+#if 0
 
 /** Take an error, flatten its stack into one message, and unref it.
  * This function returns fatal if any leaks occur in freeing the error.
@@ -839,6 +845,8 @@ sc3_error_t        *sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
 sc3_error_t        *sc3_error_leak_demand (sc3_error_t ** leak, int x,
                                            const char *filename, int line,
                                            const char *errmsg);
+
+#endif
 
 /** Access location string and line number in a setup error object.
  * The filename output pointer is only valid as long as the error is alive.

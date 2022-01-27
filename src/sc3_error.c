@@ -27,7 +27,6 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <sc3_alloc_internal.h>
 #include <sc3_error.h>
 #include <sc3_refcount.h>
 
@@ -63,13 +62,6 @@ static sc3_error_t  einternal =
 "Please report as bug", __FILE__, __LINE__, 0, NULL, 0, 0
 };
 
-static int
-sc3_error_kind_is_fatal (sc3_error_kind_t kind)
-{
-  /* As of our recent simplification, sc3_error_t is fatal. */
-  return 1;
-}
-
 int
 sc3_error_is_valid (const sc3_error_t * e, char *reason)
 {
@@ -104,22 +96,6 @@ sc3_error_is_setup (const sc3_error_t * e, char *reason)
 }
 
 int
-sc3_error_is_fatal (const sc3_error_t * e, char *reason)
-{
-  SC3E_IS (sc3_error_is_setup, e, reason);
-  SC3E_TEST (sc3_error_kind_is_fatal (e->kind), reason);
-  SC3E_YES (reason);
-}
-
-int
-sc3_error_is_leak (const sc3_error_t * e, char *reason)
-{
-  SC3E_IS (sc3_error_is_setup, e, reason);
-  SC3E_TEST (e->kind == SC3_ERROR_LEAK, reason);
-  SC3E_YES (reason);
-}
-
-int
 sc3_error_is2_kind (const sc3_error_t * e, sc3_error_kind_t kind,
                     char *reason)
 {
@@ -127,19 +103,6 @@ sc3_error_is2_kind (const sc3_error_t * e, sc3_error_kind_t kind,
   SC3E_TEST (e->kind == kind, reason);
   SC3E_YES (reason);
 }
-
-#ifdef SC_ENABLE_DEBUG
-
-static int
-sc3_error_is_null_or_leak (const sc3_error_t * e, char *reason)
-{
-  if (e == NULL) {
-    SC3E_YES (reason);
-  }
-  return sc3_error_is_leak (e, reason);
-}
-
-#endif
 
 static void
 sc3_error_defaults (sc3_error_t * e, sc3_error_t * stack,
@@ -299,6 +262,7 @@ sc3_error_destroy (sc3_error_t ** ep)
 }
 
 #if 0
+
 void
 sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
 {
@@ -362,6 +326,7 @@ sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
   }
   while (e != NULL);
 }
+
 #endif
 
 /* this function is not supposed to have any side effects */
@@ -447,6 +412,8 @@ sc3_error_new_stack (sc3_error_t ** pstack,
 
   return sc3_error_validate (eret, eout);
 }
+
+#if 0
 
 sc3_error_t        *
 sc3_error_flatten (sc3_error_t ** pe, const char *prefix, char *flatmsg)
@@ -622,6 +589,8 @@ sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
   }
   return NULL;
 }
+
+#endif
 
 sc3_error_t        *
 sc3_error_access_location (sc3_error_t * e, const char **filename, int *line)
