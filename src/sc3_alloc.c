@@ -27,7 +27,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <sc3_alloc_internal.h>
+#include <sc3_alloc.h>
 #include <sc3_refcount.h>
 
 struct sc3_allocator
@@ -249,30 +249,6 @@ sc3_allocator_strdup (sc3_allocator_t * a, const char *src, char **dest)
 
   *dest = (char *) p;
   return NULL;
-}
-
-void               *
-sc3_allocator_malloc_noerr (sc3_allocator_t * a, size_t size)
-{
-  char               *p;
-
-  if (!sc3_allocator_is_setup (a, NULL)) {
-    return NULL;
-  }
-  if (!(a->align == 0 && !a->keepalive)) {
-    return NULL;
-  }
-
-  p = SC3_MALLOC (char, size);
-  if (size > 0 && p == NULL) {
-    return NULL;
-  }
-
-  if (a->counting) {
-    ++a->num_malloc;
-  }
-
-  return p;
 }
 
 static sc3_error_t *
