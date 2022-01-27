@@ -355,7 +355,7 @@ sc3_error_t        *sc3_array_freeze (sc3_array_t * a);
  * \param [in] a        The array must be setup.
  * \param [in] i        Index must be in [0, element count).
  * \param [out] ptr     Address of a pointer.
- *                      Assigned address of array element at index \b i.
+ *                      Assigned address of array element at index \a i.
  *                      If the array element size is zero, the pointer
  *                      must not be dereferenced.
  * \return              NULL on success, error object otherwise.
@@ -369,7 +369,7 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
  * If you feel any such need, use \ref sc3_array_index.
  * \param [in] a        Const pointer to the array, must be setup.
  * \param [in] i        Index must be in [0, element count).
- * \return              Address of array element at index \b i.
+ * \return              Address of array element at index \a i.
  *                      When configured with --enable-debug, returns NULL
  *                      if index is out of bounds, element size is zero,
  *                      or the array is not setup.  Without --enable-debug,

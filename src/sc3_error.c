@@ -577,7 +577,7 @@ sc3_error_leak (sc3_error_t ** leak, sc3_error_t * e,
   if (e != NULL) {
     char                flatmsg[SC3_BUFSIZE];
 
-    /* This function is not supposed to be passed a fatal error \b e.
+    /* This function is not supposed to be passed a fatal error e.
        If this happens, we call it a bug and return it for stacking. */
     if (sc3_error_is_fatal (e, NULL)) {
       return e;
@@ -663,9 +663,9 @@ sc3_error_ref_stack (sc3_error_t * e, sc3_error_t ** pstack)
 
 /** Turn an error stack into a (multiline) error message.
  * \param [in] bwork        Either NULL or must hold SC3_BUFSIZE many bytes.
- * \param [in,out] buffer   Must not be NULL and hold at least \b bufrem bytes.
+ * \param [in,out] buffer   Must not be NULL and hold at least \a bufrem bytes.
  * \param [in,out] bufrem   Value holds number of available bytes on input,
- *                          TODO what exactly on output?
+ *                          the number of bytes remaining on output.
  */
 static sc3_error_t        *
 sc3_error_copy_text_rec (sc3_error_t * e, sc3_error_recursion_t recursion,

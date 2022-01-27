@@ -57,7 +57,7 @@
  *
  * This macro is primarily intended for use inside our wrappers.
  * The MPI function \a f must exist, thus we advise to call the macro
- * inside an #`ifdef SC_ENABLE_MPI`.
+ * inside #`ifdef SC_ENABLE_MPI`.
  *
  * If the MPI function returns MPI_SUCCESS, this macro does nothing.
  * Otherwise, query the MPI error string and return out of the function.
@@ -92,7 +92,7 @@
 #endif
 
 /** Macro for error checking without hope for clean recovery.
- * If an error is encountered in calling \b f, we print its message to stderr
+ * If an error is encountered in calling \a f, we print its message to stderr
  * and abort.  If possible, an application should react more nicely.
  */
 #define SC3X(f) do {                                            \

@@ -489,7 +489,7 @@ int                 sc3_error_is_leak (const sc3_error_t * e, char *reason);
  * \param [in] kind     Legal value of \ref sc3_error_kind_t.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff error is not NULL, setup, and of \b kind.
+ * \return              True iff error is not NULL, setup, and of \a kind.
  */
 int                 sc3_error_is2_kind (const sc3_error_t * e,
                                         sc3_error_kind_t kind, char *reason);
@@ -504,7 +504,7 @@ int                 sc3_error_is2_kind (const sc3_error_t * e,
  * \param [in,out] ep   Pointer must not be NULL.  Input value ignored.
  *                      Value set to an error with default values.
  * \return              NULL on successful error creation.
- *                      Otherwise, output argument \b ep is undefined
+ *                      Otherwise, output argument \a ep is undefined
  *                      and any internal error encountered is returned.
  */
 sc3_error_t         *sc3_error_new (sc3_error_t **ep);
@@ -921,10 +921,10 @@ sc3_error_recursion_t;
  * \param [in] recursion    Enumeration \ref sc3_error_recursion_t.
  * \param [in] dobasename   If true, only copy the basename (3) of file.
  * \param [out] buffer      If NULL, this function does nothing.
- *                          Otherwise must contain at least \b buflen bytes.
+ *                          Otherwise must contain at least \a buflen bytes.
  *                          Nul-terminated, often multi-line string on output.
  *                          There is no final newline at the end of the text.
- * \param [in] buflen       Number of bytes available in \b buffer.
+ * \param [in] buflen       Number of bytes available in \a buffer.
  *                          If zero, this function does nothing.
  * \return                  NULL on success, error object otherwise.
  */
@@ -941,11 +941,11 @@ sc3_error_t        *sc3_error_copy_text (sc3_error_t * e,
  *                          The error itself may be NULL or a valid object.
  *                          Unrefd and NULLd on output in the latter case.
  * \param [out] buffer      If this buffer is not NULL, it must provide at
- *                          least \b buflen many bytes.
+ *                          least \a buflen many bytes.
  *                          Nul-terminated, often multi-line string on output.
  *                          There is no final newline at the end of the text.
  *                          When input \a *e is NULL, set to the empty string.
- * \param [in] buflen       Number of bytes available in \b buffer.
+ * \param [in] buflen       Number of bytes available in \a buffer.
  *                          If zero, this function copies nothing.
  * \return                  0 if e is non-NULL and *e is NULL on input,
  *                          a negative integer otherwise.
