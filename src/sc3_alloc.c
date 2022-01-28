@@ -130,7 +130,7 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   SC3A_IS (sc3_allocator_is_setup, oa);
 
   SC3E (sc3_allocator_ref (oa));
-  SC3E (sc3_allocator_calloc_one (oa, sizeof (sc3_allocator_t), &a));
+  SC3E (sc3_allocator_calloc (oa, 1, sizeof (sc3_allocator_t), &a));
   SC3E (sc3_refcount_init (&a->rc));
   a->align = SC3_MAX (sizeof (void *), sizeof (sc3_alloc_item_t));
   a->alloced = 1;
@@ -214,7 +214,7 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
     }
 
     oa = a->oa;
-    SC3E (sc3_allocator_free (oa, a));
+    SC3E (sc3_allocator_free (oa, &a));
     SC3E (sc3_allocator_unref (&oa));
   }
   return NULL;
@@ -261,7 +261,7 @@ sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
   sc3_alloc_item_t   *aitem;
 
   SC3A_IS (sc3_allocator_is_setup, a);
-  SC3A_CHECK (ptr != NULL && *(void **) ptr == NULL);
+  SC3A_CHECK (ptr != NULL);
 
   /* allocate bigger block and write debug and size info into header */
   actual = a->align + hsize + size;
@@ -316,7 +316,6 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void *ptr)
 {
   SC3A_IS (sc3_allocator_is_setup, a);
   SC3A_CHECK (ptr != NULL);
-  *(void **) ptr = NULL;
 
   if (a->align == 0 && !a->keepalive) {
     char               *p;
@@ -340,7 +339,6 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
 {
   SC3A_IS (sc3_allocator_is_setup, a);
   SC3A_CHECK (ptr != NULL);
-  *(void **) ptr = NULL;
 
   size *= nmemb;
   if (a->align == 0 && !a->keepalive) {
@@ -360,33 +358,32 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
 }
 
 sc3_error_t        *
-sc3_allocator_calloc_one (sc3_allocator_t * a, size_t size, void *ptr)
-{
-  SC3E (sc3_allocator_calloc (a, 1, size, ptr));
-  return NULL;
-}
-
-sc3_error_t        *
-sc3_allocator_free (sc3_allocator_t * a, void *p)
+sc3_allocator_free (sc3_allocator_t * a, void *ptr)
 {
   SC3A_IS (sc3_allocator_is_setup, a);
+  SC3A_CHECK (ptr != NULL);
 
   /* It is legal to pass NULL values to free.  This is not counted. */
-  if (p == NULL) {
+  if (*(void **) ptr == NULL) {
     return NULL;
   }
   if (a->counting) {
     ++a->num_free;
-    SC3A_CHECK (a->num_free <= a->num_malloc + a->num_calloc);
+    SC3E_DEMAND (a->num_free <= a->num_malloc + a->num_calloc,
+                 SC3_ERROR_LEAK);
   }
 
   if (a->align == 0 && !a->keepalive) {
     /* use system allocation */
-    SC3_FREE (p);
+    SC3E (sc3_free (ptr));
   }
   else {
+    void               *p = *(void **) ptr;
     size_t              size;
     sc3_alloc_item_t   *aitem;
+
+    /* null in-out argument */
+    *(void **) ptr = NULL;
 
     /* verify that memory had been allocated by this allocator */
     aitem = ((sc3_alloc_item_t *) p) - 3;
@@ -398,7 +395,7 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
       SC3A_CHECK (size <= a->total_size);
       a->total_size -= size;
     }
-    SC3_FREE (aitem[1].ptr);
+    SC3E (sc3_free (&aitem[1].ptr));
 
 #if 0
     /* do this at the end since the allocator may go out of scope */
@@ -411,7 +408,7 @@ sc3_allocator_free (sc3_allocator_t * a, void *p)
 }
 
 sc3_error_t        *
-sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void *ptr)
+sc3_allocator_realloc (sc3_allocator_t * a, void *ptr, size_t new_size)
 {
   SC3A_IS (sc3_allocator_is_setup, a);
   SC3A_CHECK (ptr != NULL);
@@ -420,8 +417,7 @@ sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void *ptr)
     SC3E (sc3_allocator_malloc (a, new_size, ptr));
   }
   else if (new_size == 0) {
-    SC3E (sc3_allocator_free (a, *(void **) ptr));
-    *(void **) ptr = NULL;
+    SC3E (sc3_allocator_free (a, ptr));
   }
   else {
     if (a->align == 0 && !a->keepalive) {
@@ -442,7 +438,7 @@ sc3_allocator_realloc (sc3_allocator_t * a, size_t new_size, void *ptr)
         /* we have to manually allocate, copy, and free due to alignment */
         SC3E (sc3_allocator_malloc (a, new_size, ptr));
         memcpy (*(void **) ptr, p, SC3_MIN (size, new_size));
-        SC3E (sc3_allocator_free (a, p));
+        SC3E (sc3_allocator_free (a, &p));
       }
     }
   }

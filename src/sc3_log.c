@@ -105,7 +105,7 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
   SC3A_IS (sc3_allocator_is_setup, lator);
 
   SC3E (sc3_allocator_ref (lator));
-  SC3E (sc3_allocator_calloc_one (lator, sizeof (sc3_log_t), &log));
+  SC3E (sc3_allocator_calloc (lator, 1, sizeof (sc3_log_t), &log));
   SC3E (sc3_refcount_init (&log->rc));
   log->alloced = 1;
 #ifdef SC_ENABLE_DEBUG
@@ -253,7 +253,7 @@ sc3_log_unref (sc3_log_t ** logp)
     if (log->call_fclose && fclose (log->file)) {
       /* TODO create runtime error when close fails */
     }
-    SC3E (sc3_allocator_free (lator, log));
+    SC3E (sc3_allocator_free (lator, &log));
     SC3L (&leak, sc3_allocator_unref (&lator));
   }
   return leak;

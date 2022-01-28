@@ -98,7 +98,7 @@ sc3_mstamp_new (sc3_allocator_t * aator, sc3_mstamp_t ** mstp)
   SC3A_IS (sc3_allocator_is_setup, aator);
 
   SC3E (sc3_allocator_ref (aator));
-  SC3E (sc3_allocator_calloc_one (aator, sizeof (sc3_mstamp_t), &mst));
+  SC3E (sc3_allocator_calloc (aator, 1, sizeof (sc3_mstamp_t), &mst));
   SC3E (sc3_refcount_init (&mst->rc));
   mst->aator = aator;
 
@@ -157,7 +157,7 @@ sc3_mstamp_stamp (sc3_mstamp_t * mst)
     SC3E (sc3_allocator_malloc (mst->aator, mst->ssize, &mst->cur));
   }
   else {
-    SC3E (sc3_allocator_calloc_one (mst->aator, mst->ssize, &mst->cur));
+    SC3E (sc3_allocator_calloc (mst->aator, 1, mst->ssize, &mst->cur));
   }
 
   /* remember this allocation */
@@ -227,14 +227,14 @@ sc3_mstamp_unref (sc3_mstamp_t ** mstp)
       SC3E (sc3_array_get_elem_count (mst->remember, &ecount));
       for (i = 0; i < ecount; ++i) {
         SC3E (sc3_array_index (mst->remember, i, &item));
-        SC3E (sc3_allocator_free (aator, *(void **) item));
+        SC3E (sc3_allocator_free (aator, &item));
       }
 
       /* it is impossible for these to have more than one reference */
       SC3L (&leak, sc3_array_destroy (&mst->remember));
       SC3L (&leak, sc3_array_destroy (&mst->freed));
     }
-    SC3E (sc3_allocator_free (aator, mst));
+    SC3E (sc3_allocator_free (aator, &mst));
     SC3L (&leak, sc3_allocator_unref (&aator));
   }
   return leak;

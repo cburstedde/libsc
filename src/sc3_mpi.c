@@ -512,11 +512,11 @@ sc3_MPI_Win_free (sc3_MPI_Win_t * win)
 #endif
   else {
     SC3A_CHECK (!(*win)->locked);
-    SC3_FREE ((*win)->baseptr);
+    SC3E (sc3_free (&(*win)->baseptr));
   }
 
   /* free wrapper structure */
-  SC3_FREE (*win);
+  SC3E (sc3_free (win));
   *win = SC3_MPI_WIN_NULL;
   return NULL;
 }

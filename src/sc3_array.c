@@ -167,7 +167,7 @@ sc3_array_new_internal (sc3_allocator_t * aator, sc3_array_t ** ap)
   SC3A_IS (sc3_allocator_is_setup, aator);
 
   SC3E (sc3_allocator_ref (aator));
-  SC3E (sc3_allocator_calloc_one (aator, sizeof (sc3_array_t), &a));
+  SC3E (sc3_allocator_calloc (aator, 1, sizeof (sc3_array_t), &a));
   SC3E (sc3_refcount_init (&a->rc));
   a->resizable = 1;
   a->aator = aator;
@@ -257,7 +257,7 @@ sc3_array_setup (sc3_array_t * a)
     SC3E (sc3_allocator_malloc (a->aator, abytes, &a->mem));
   }
   else {
-    SC3E (sc3_allocator_calloc_one (a->aator, abytes, &a->mem));
+    SC3E (sc3_allocator_calloc (a->aator, 1, abytes, &a->mem));
   }
 
   /* set array to setup state */
@@ -292,14 +292,14 @@ sc3_array_unref (sc3_array_t ** ap)
     if (a->setup) {
       if (a->viewed == NULL) {
         /* deallocate element storage */
-        SC3E (sc3_allocator_free (aator, a->mem));
+        SC3E (sc3_allocator_free (aator, &a->mem));
       }
       else if (a->viewed != a) {
         /* release reference on viewed array */
         SC3L (&leak, sc3_array_unref (&a->viewed));
       }
     }
-    SC3E (sc3_allocator_free (aator, a));
+    SC3E (sc3_allocator_free (aator, &a));
     SC3L (&leak, sc3_allocator_unref (&aator));
   }
   return leak;
@@ -337,7 +337,7 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
       a->ealloc *= 2;
     }
     SC3A_CHECK (new_ecount <= a->ealloc);
-    SC3E (sc3_allocator_realloc (a->aator, a->ealloc * a->esize, &a->mem));
+    SC3E (sc3_allocator_realloc (a->aator, &a->mem, a->ealloc * a->esize));
   }
   else if (a->tighten && new_ecount < a->ealloc) {
     int                 newalloc;
@@ -356,7 +356,7 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
     if (newalloc < a->ealloc) {
       a->ealloc = newalloc;
       SC3A_CHECK (new_ecount <= a->ealloc);
-      SC3E (sc3_allocator_realloc (a->aator, a->ealloc * a->esize, &a->mem));
+      SC3E (sc3_allocator_realloc (a->aator, &a->mem, a->ealloc * a->esize));
     }
   }
 
@@ -516,7 +516,7 @@ sc3_array_freeze (sc3_array_t * a)
   if (a->resizable) {
     if (a->viewed == NULL && a->tighten && a->ecount < a->ealloc) {
       a->ealloc = a->ecount;
-      SC3E (sc3_allocator_realloc (a->aator, a->ealloc * a->esize, &a->mem));
+      SC3E (sc3_allocator_realloc (a->aator, &a->mem, a->ealloc * a->esize));
     }
     a->resizable = 0;
   }

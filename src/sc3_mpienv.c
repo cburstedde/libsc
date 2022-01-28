@@ -118,7 +118,7 @@ sc3_mpienv_new (sc3_allocator_t * mator, sc3_mpienv_t ** mp)
   SC3A_IS (sc3_allocator_is_setup, mator);
 
   SC3E (sc3_allocator_ref (mator));
-  SC3E (sc3_allocator_calloc_one (mator, sizeof (sc3_mpienv_t), &m));
+  SC3E (sc3_allocator_calloc (mator, 1, sizeof (sc3_mpienv_t), &m));
   SC3E (sc3_refcount_init (&m->rc));
   m->mator = mator;
 
@@ -343,7 +343,7 @@ sc3_mpienv_unref (sc3_mpienv_t ** mp)
       SC3E (sc3_MPI_Comm_free (&m->mpicomm));
     }
 
-    SC3E (sc3_allocator_free (mator, m));
+    SC3E (sc3_allocator_free (mator, &m));
     SC3L (&leak, sc3_allocator_unref (&mator));
   }
   return leak;

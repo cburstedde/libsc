@@ -190,24 +190,9 @@
 /** Set a buffer of standard size to all zeros. */
 #define SC3_BUFZERO(b) do { memset (b, 0, SC3_BUFSIZE); } while (0)
 
-/** Cope a null-terminated string into a buffer of standard size.*/
+/** Copy a Nul-terminated string into a buffer of standard size.*/
 #define SC3_BUFCOPY(b,s) \
           do { snprintf (b, SC3_BUFSIZE, "%s", s); } while (0)
-
-#if 0
-/** Type-safe wrapper of the stdlib malloc function. */
-#define SC3_MALLOC(typ,nmemb) ((typ *) malloc ((nmemb) * sizeof (typ)))
-
-/** Type-safe wrapper of the stdlib calloc function. */
-#define SC3_MALLOC_ZERO(typ,nmemb) ((typ *) calloc (nmemb, sizeof (typ)))
-
-/** Type-safe wrapper of the stdlib realloc function. */
-#define SC3_REALLOC(p,typ,nmemb) ((typ *) realloc (p, (nmemb) * sizeof (typ)))
-#endif
-
-/** Wrap the stdlib free function for consistency.
- * \deprecated Use \ref sc3_free instead. */
-#define SC3_FREE(p) (free (p))
 
 /** Return whether a non-negative integer is a power of two. */
 #define SC3_ISPOWOF2(a) ((a) > 0 && ((a) & ((a) - 1)) == 0)
@@ -234,7 +219,7 @@ extern              "C"
  * \param [out] dest    Buffer of length at least \a size.
  *                      On output, not touched if NULL or \a size == 0.
  * \param [in] size     Allocation length of \a dest.
- * \param [in] src      Null-terminated string.
+ * \param [in] src      Nul-terminated string.
  * \return              Equivalent to \ref
  *                      sc3_snprintf (dest, size, "%s", src).
  */
@@ -317,7 +302,7 @@ long                sc3_longcut (long N, int P, int p);
  * If the input string is NULL or empty, return ".".
  * This function is thread safe if the system baseline is.
  * \param [in,out] path   If this is NULL, the function returns ".".
- *                        Otherwise, it must be a null-terminated string
+ *                        Otherwise, it must be a Nul-terminated string
  *                        that may be modified by this function.
  * \return                Pointer to statically allocated memory,
  *                        overwritten by subsequent calls.
