@@ -400,7 +400,7 @@ sc3_allocator_free (sc3_allocator_t * a, void *ptr)
 #if 0
     /* do this at the end since the allocator may go out of scope */
     if (a->keepalive) {
-      SC3L (&leak, sc3_allocator_unref (&a));
+      SC3E (sc3_allocator_unref (&a));
     }
 #endif
   }

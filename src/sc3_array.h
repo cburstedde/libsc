@@ -57,7 +57,7 @@
 #ifndef SC3_ARRAY_H
 #define SC3_ARRAY_H
 
-#include <sc3_error.h>
+#include <sc3_alloc.h>
 
 /** The array container is an opaque struct. */
 typedef struct sc3_array sc3_array_t;

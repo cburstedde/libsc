@@ -48,7 +48,7 @@
 #ifndef SC3_MEMSTAMP_H
 #define SC3_MEMSTAMP_H
 
-#include <sc3_error.h>
+#include <sc3_alloc.h>
 
 /** The memstamp container is an opaque struct. */
 typedef struct sc3_mstamp sc3_mstamp_t;

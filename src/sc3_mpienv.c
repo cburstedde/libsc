@@ -316,7 +316,6 @@ sc3_mpienv_unref (sc3_mpienv_t ** mp)
   int                 waslast;
   sc3_allocator_t    *mator;
   sc3_mpienv_t       *m;
-  sc3_error_t        *leak = NULL;
 
   SC3E_INOUTP (mp, m);
   SC3A_IS (sc3_mpienv_is_valid, m);
@@ -344,23 +343,21 @@ sc3_mpienv_unref (sc3_mpienv_t ** mp)
     }
 
     SC3E (sc3_allocator_free (mator, &m));
-    SC3L (&leak, sc3_allocator_unref (&mator));
+    SC3E (sc3_allocator_unref (&mator));
   }
-  return leak;
+  return NULL;
 }
 
 sc3_error_t        *
 sc3_mpienv_destroy (sc3_mpienv_t ** mp)
 {
-  sc3_error_t        *leak = NULL;
   sc3_mpienv_t       *m;
 
   SC3E_INULLP (mp, m);
-  SC3L_DEMAND (&leak, sc3_refcount_is_last (&m->rc, NULL));
-  SC3L (&leak, sc3_mpienv_unref (&m));
-
-  SC3A_CHECK (m == NULL || leak != NULL);
-  return leak;
+  SC3E_DEMIS (sc3_refcount_is_last, &m->rc, SC3_ERROR_REF);
+  SC3E (sc3_mpienv_unref (&m));
+  SC3A_CHECK (m == NULL);
+  return NULL;
 }
 
 sc3_error_t        *

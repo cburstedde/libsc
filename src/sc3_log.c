@@ -29,7 +29,6 @@
 
 #include <sc3_array.h>
 #include <sc3_log.h>
-#include <sc3_omp.h>
 #include <sc3_refcount.h>
 
 struct sc3_log
@@ -231,7 +230,6 @@ sc3_log_unref (sc3_log_t ** logp)
 {
   int                 waslast;
   sc3_log_t          *log;
-  sc3_error_t        *leak = NULL;
 
   SC3E_INOUTP (logp, log);
   SC3A_IS (sc3_log_is_valid, log);
@@ -254,23 +252,22 @@ sc3_log_unref (sc3_log_t ** logp)
       /* TODO create runtime error when close fails */
     }
     SC3E (sc3_allocator_free (lator, &log));
-    SC3L (&leak, sc3_allocator_unref (&lator));
+    SC3E (sc3_allocator_unref (&lator));
   }
-  return leak;
+  return NULL;
 }
 
 sc3_error_t        *
 sc3_log_destroy (sc3_log_t ** logp)
 {
   sc3_log_t          *log;
-  sc3_error_t        *leak = NULL;
 
   SC3E_INULLP (logp, log);
-  SC3L_DEMAND (&leak, sc3_refcount_is_last (&log->rc, NULL));
-  SC3L (&leak, sc3_log_unref (&log));
+  SC3E_DEMIS (sc3_refcount_is_last, &log->rc, SC3_ERROR_REF);
+  SC3E (sc3_log_unref (&log));
 
-  SC3A_CHECK (log == NULL || !log->alloced || leak != NULL);
-  return leak;
+  SC3A_CHECK (log == NULL || !log->alloced);
+  return NULL;
 }
 
 void
@@ -297,7 +294,10 @@ sc3_log (sc3_log_t * log, int depth,
     return;
   }
 
+#if 0
   tid = sc3_omp_thread_num ();
+#endif
+  tid = 0;
   if (role == SC3_LOG_PROCESS0 && (log->rank != 0 || tid != 0)) {
     /* only log for the master thread in master process */
     return;
@@ -375,8 +375,6 @@ sc3_log_error_recursion (sc3_log_t * log, int depth,
   if (s != NULL) {
     SC3E (sc3_log_error_recursion (log, depth, role, level,
                                    s, stackdepth + 1, bwork));
-
-    /* potential leak error is considered fatal to simplify calling code */
     SC3E (sc3_error_unref (&s));
   }
 

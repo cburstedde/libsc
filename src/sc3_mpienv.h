@@ -46,6 +46,7 @@
 #ifndef SC3_MPI_ENV_H
 #define SC3_MPI_ENV_H
 
+#include <sc3_alloc.h>
 #include <sc3_mpi.h>
 
 /** The mpi environment is an opaque struct. */
