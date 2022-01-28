@@ -135,6 +135,16 @@ extern              "C"
 #endif
 #endif
 
+/** Allocate memory and copy a Nul-terminated string into it.
+ * Unlike strdup (3), memory is passed by a reference argument.
+ * \param [in] src      Nul-terminated string.
+ * \param [out] dest    Non-NULL pointer to the address of output,
+ *                      memory with the input string copied into it.
+ *                      Release eventually with \ref sc3_free.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_strdup (const char *src, char **dest);
+
 /** Allocate memory with error checking.
  * Unlike malloc (3), memory is passed by a reference argument.
  * \param [in] size     Bytes to allocate as in malloc (3).

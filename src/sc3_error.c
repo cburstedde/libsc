@@ -63,6 +63,22 @@ static sc3_error_t  einternal = {
 };
 
 sc3_error_t        *
+sc3_strdup (const char *src, char **dest)
+{
+  char               *s;
+
+  SC3A_CHECK (src != NULL);
+  SC3A_CHECK (dest != NULL);
+
+  if ((s = strdup (src)) == NULL) {
+    return &enomem;
+  }
+
+  *dest = s;
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_malloc (size_t size, void *pmem)
 {
   void               *p;

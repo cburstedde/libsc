@@ -199,9 +199,9 @@ sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
 /** Allocate memory and copy a Nul-terminated string into it.
  * Unlike strdup (3), memory is passed by a reference argument.
  * \param [in,out] a    The allocator must be setup.
- * \param [in] src      Non-NULL pointer to Nul-terminated string.
- * \param [out] dest    NULL pointer.  On output, freshly allocated memory
- *                      with the input string copied into it.
+ * \param [in] src      Nul-terminated string.
+ * \param [out] dest    Non-NULL pointer to the address of output,
+ *                      memory with the input string copied into it.
  *                      May be passed to \ref sc3_allocator_realloc
  *                      any number of times and must eventually be
  *                      released with \ref sc3_allocator_free.

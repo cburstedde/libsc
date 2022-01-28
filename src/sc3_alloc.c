@@ -228,16 +228,18 @@ sc3_error_t        *
 sc3_allocator_strdup (sc3_allocator_t * a, const char *src, char **dest)
 {
   size_t              len;
-  void               *p;
+  char               *s;
 
   SC3E_RETVAL (dest, NULL);
+
+  SC3A_IS (sc3_allocator_is_setup, a);
   SC3A_CHECK (src != NULL);
 
   len = strlen (src) + 1;
-  SC3E (sc3_allocator_malloc (a, len, &p));
-  memcpy (p, src, len);
+  SC3E (sc3_allocator_malloc (a, len, &s));
+  memcpy (s, src, len);
 
-  *dest = (char *) p;
+  *dest = s;
   return NULL;
 }
 
