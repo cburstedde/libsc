@@ -208,7 +208,8 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
     *ap = NULL;
 
     if (a->counting) {
-      SC3E_DEMAND (a->num_malloc + a->num_calloc == a->num_free, SC3_ERROR_LEAK);
+      SC3E_DEMAND (a->num_malloc + a->num_calloc == a->num_free,
+                   SC3_ERROR_LEAK);
       SC3E_DEMAND (a->total_size == 0, SC3_ERROR_LEAK);
     }
 
@@ -318,7 +319,7 @@ sc3_allocator_malloc (sc3_allocator_t * a, size_t size, void *ptr)
   *(void **) ptr = NULL;
 
   if (a->align == 0 && !a->keepalive) {
-    char                   *p;
+    char               *p;
     SC3E (sc3_malloc (size, &p));
 
     /* when allocating zero bytes we may obtain a NULL pointer */
@@ -343,7 +344,7 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
 
   size *= nmemb;
   if (a->align == 0 && !a->keepalive) {
-    char                   *p;
+    char               *p;
     SC3E (sc3_calloc (size, 1, &p));
 
     /* when allocating zero bytes we may obtain a NULL pointer */

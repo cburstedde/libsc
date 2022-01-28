@@ -62,7 +62,7 @@ static sc3_error_t  einternal =
 "Please report as bug", __FILE__, __LINE__, 0, NULL, 0, 0
 };
 
-sc3_error_t     *
+sc3_error_t        *
 sc3_malloc (size_t size, void *pmem)
 {
   void               *p;
@@ -78,7 +78,7 @@ sc3_malloc (size_t size, void *pmem)
   return NULL;
 }
 
-sc3_error_t     *
+sc3_error_t        *
 sc3_calloc (size_t nmemb, size_t size, void *pmem)
 {
   void               *p;
@@ -94,7 +94,7 @@ sc3_calloc (size_t nmemb, size_t size, void *pmem)
   return NULL;
 }
 
-sc3_error_t     *
+sc3_error_t        *
 sc3_realloc (void *pmem, size_t size)
 {
   void               *p;
@@ -110,7 +110,7 @@ sc3_realloc (void *pmem, size_t size)
   return NULL;
 }
 
-sc3_error_t   *
+sc3_error_t        *
 sc3_free (void *pmem)
 {
   SC3A_CHECK (pmem != NULL);
@@ -390,7 +390,7 @@ sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
 static sc3_error_t *
 sc3_error_validate (sc3_error_t *eret, sc3_error_t *eout)
 {
-  sc3_error_t         *e;
+  sc3_error_t        *e;
 
   if ((eret == NULL) == (eout == NULL)) {
     return &einternal;
@@ -443,29 +443,28 @@ sc3_error_new_build (sc3_error_t ** pstack, sc3_error_kind_t kind,
   return NULL;
 }
 
-sc3_error_t *
+sc3_error_t        *
 sc3_error_new_assert (const char *filename, int line, const char *errmsg)
 {
   return sc3_error_new_kind (SC3_ERROR_ASSERT, filename, line, errmsg);
 }
 
-sc3_error_t *
+sc3_error_t        *
 sc3_error_new_kind (sc3_error_kind_t kind,
                     const char *filename, int line, const char *errmsg)
 {
-  sc3_error_t *eret, *eout;
+  sc3_error_t        *eret, *eout;
 
-  eret = sc3_error_new_build
-    (NULL, kind, filename, line, errmsg, &eout);
+  eret = sc3_error_new_build (NULL, kind, filename, line, errmsg, &eout);
 
   return sc3_error_validate (eret, eout);
 }
 
-sc3_error_t *
+sc3_error_t        *
 sc3_error_new_stack (sc3_error_t ** pstack,
                      const char *filename, int line, const char *errmsg)
 {
-  sc3_error_t *eret, *eout;
+  sc3_error_t        *eret, *eout;
 
   eret = sc3_error_new_build
     (pstack, SC3_ERROR_FATAL, filename, line, errmsg, &eout);
@@ -735,7 +734,7 @@ sc3_error_ref_stack (sc3_error_t * e, sc3_error_t ** pstack)
  * \param [in,out] bufrem   Value holds number of available bytes on input,
  *                          the number of bytes remaining on output.
  */
-static sc3_error_t        *
+static sc3_error_t *
 sc3_error_copy_text_rec (sc3_error_t * e, sc3_error_recursion_t recursion,
                          int rdepth, char *bwork,
                          char *buffer, size_t *bufrem)

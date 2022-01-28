@@ -196,7 +196,7 @@ sc3_MPI_Wtime (void)
   }
   return tp.tv_sec + 1e-9 * tp.tv_nsec;
 #else
-  struct timeval tv;
+  struct timeval      tv;
   gettimeofday (&tv, NULL);
   return tv.tv_sec + 1e-6 * tv.tv_usec;
 #endif

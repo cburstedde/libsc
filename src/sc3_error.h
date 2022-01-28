@@ -143,7 +143,7 @@ extern              "C"
  *                      On error return, output is undefined.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t     *sc3_malloc (size_t size, void *pmem);
+sc3_error_t        *sc3_malloc (size_t size, void *pmem);
 
 /** Allocate zeroed-out memory with error checking.
  * Unlike calloc (3), memory is passed by a reference argument.
@@ -154,7 +154,7 @@ sc3_error_t     *sc3_malloc (size_t size, void *pmem);
  *                      On error return, output is undefined.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t     *sc3_calloc (size_t nmemb, size_t size, void *pmem);
+sc3_error_t        *sc3_calloc (size_t nmemb, size_t size, void *pmem);
 
 /** Reallocate memory with error checking.
  * Unlike realloc (3), memory is passed by a reference argument.
@@ -164,7 +164,7 @@ sc3_error_t     *sc3_calloc (size_t nmemb, size_t size, void *pmem);
  * \param [in] size         Bytes to allocate as in realloc (3).
  * \return                  NULL on success, error object otherwise.
  */
-sc3_error_t     *sc3_realloc (void *pmem, size_t size);
+sc3_error_t        *sc3_realloc (void *pmem, size_t size);
 
 /** Free memory previously allocated.
  * Unlike free (3), this function accepts a reference argument.
@@ -173,7 +173,7 @@ sc3_error_t     *sc3_realloc (void *pmem, size_t size);
  *                          On error return, output is undefined.
  * \return                  NULL on success, error object otherwise.
  */
-sc3_error_t      *sc3_free (void *pmem);
+sc3_error_t        *sc3_free (void *pmem);
 
 /*** DEBUG statements do nothing unless configured with --enable-debug. ***/
 
@@ -547,7 +547,7 @@ int                 sc3_error_is2_kind (const sc3_error_t * e,
  *                      Otherwise, output argument \a ep is undefined
  *                      and any internal error encountered is returned.
  */
-sc3_error_t         *sc3_error_new (sc3_error_t **ep);
+sc3_error_t        *sc3_error_new (sc3_error_t ** ep);
 
 /** Set the error to be the top of a stack of existing errors.
  * The default stack is NULL.
