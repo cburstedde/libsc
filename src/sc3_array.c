@@ -312,6 +312,7 @@ sc3_array_destroy (sc3_array_t ** ap)
   SC3E_INULLP (ap, a);
   SC3E_DEMIS (sc3_refcount_is_last, &a->rc, SC3_ERROR_REF);
   SC3E (sc3_array_unref (&a));
+
   SC3A_CHECK (a == NULL);
   return NULL;
 }

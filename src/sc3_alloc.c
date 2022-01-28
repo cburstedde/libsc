@@ -216,7 +216,6 @@ sc3_allocator_destroy (sc3_allocator_t ** ap)
   sc3_allocator_t    *a;
 
   SC3E_INULLP (ap, a);
-
   SC3E_DEMIS (sc3_refcount_is_last, &a->rc, SC3_ERROR_REF);
   SC3E (sc3_allocator_unref (&a));
 

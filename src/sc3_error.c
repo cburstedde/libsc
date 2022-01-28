@@ -325,7 +325,6 @@ sc3_error_destroy (sc3_error_t ** ep)
   sc3_error_t        *e;
 
   SC3E_INULLP (ep, e);
-
   SC3E_DEMIS (sc3_refcount_is_last, &e->rc, SC3_ERROR_REF);
   SC3E (sc3_error_unref (&e));
 
