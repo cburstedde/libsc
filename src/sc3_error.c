@@ -601,7 +601,9 @@ sc3_error_access_location (sc3_error_t * e, const char **filename, int *line)
 
   *filename = e->filename;
   *line = e->line;
-  ++e->accessed_locations;
+  if (e->alloced) {
+    ++e->accessed_locations;
+  }
   return NULL;
 }
 
@@ -611,9 +613,11 @@ sc3_error_restore_location (sc3_error_t * e, const char *filename, int line)
   SC3A_IS (sc3_error_is_setup, e);
   SC3A_CHECK (filename == e->filename);
   SC3A_CHECK (line == e->line);
-  SC3A_CHECK (e->accessed_locations > 0);
 
-  --e->accessed_locations;
+  if (e->alloced) {
+    SC3A_CHECK (e->accessed_locations > 0);
+    --e->accessed_locations;
+  }
   return NULL;
 }
 
@@ -624,7 +628,9 @@ sc3_error_access_message (sc3_error_t * e, const char **errmsg)
   SC3A_IS (sc3_error_is_setup, e);
 
   *errmsg = e->errmsg;
-  ++e->accessed_messages;
+  if (e->alloced) {
+    ++e->accessed_messages;
+  }
   return NULL;
 }
 
@@ -633,9 +639,11 @@ sc3_error_restore_message (sc3_error_t * e, const char *errmsg)
 {
   SC3A_IS (sc3_error_is_setup, e);
   SC3A_CHECK (errmsg == e->errmsg);
-  SC3A_CHECK (e->accessed_messages > 0);
 
-  --e->accessed_messages;
+  if (e->alloced) {
+    SC3A_CHECK (e->accessed_messages > 0);
+    --e->accessed_messages;
+  }
   return NULL;
 }
 
