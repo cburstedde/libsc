@@ -422,21 +422,26 @@ sc3_error_new_build (sc3_error_t ** pstack, sc3_error_kind_t kind,
 {
   sc3_error_t        *e;
 
-  /* check and initialize output value an any case */
-  SC3E_RETVAL (ep, NULL);
-
   /* special behavior to return early when memory allocation failed earlier */
   if (pstack != NULL && sc3_error_is_setup (*pstack, NULL) &&
       !(*pstack)->alloced) {
     /* The stack passed in is a static predefined error.
        Likely the allocation of errors is no longer working.
        Output the stack without further ado to prevent more errors. */
-    *ep = *pstack;
-    *pstack = NULL;
-    return NULL;
+    if (ep != NULL) {
+      *ep = *pstack;
+      *pstack = NULL;
+      return NULL;
+    }
+    else {
+      e = *pstack;
+      *pstack = NULL;
+      return e;
+    }
   }
 
   /* delayed check of preconditions */
+  SC3E_RETVAL (ep, NULL);
   SC3A_CHECK (0 <= kind && kind < SC3_ERROR_KIND_LAST);
   SC3A_CHECK (filename != NULL);
   SC3A_CHECK (line >= 0);
