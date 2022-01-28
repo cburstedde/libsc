@@ -52,14 +52,14 @@ struct sc3_error
 const char          sc3_error_kind_char[SC3_ERROR_KIND_LAST] =
   { 'F', 'A', 'L', 'R', 'M', 'N', 'U' };
 
-static sc3_error_t  enomem =
-  { {SC3_REFCOUNT_MAGIC, 1}, 1, SC3_ERROR_MEMORY,
-"Out of memory", __FILE__, __LINE__, 0, NULL, 0, 0
+static sc3_error_t  enomem = {
+  {SC3_REFCOUNT_MAGIC, 1}, 1, SC3_ERROR_MEMORY,
+  "Out of memory", __FILE__, __LINE__, 0, NULL, 0, 0
 };
 
-static sc3_error_t  einternal =
-  { {SC3_REFCOUNT_MAGIC, 1}, 1, SC3_ERROR_UNKNOWN,
-"Please report as bug", __FILE__, __LINE__, 0, NULL, 0, 0
+static sc3_error_t  einternal = {
+  {SC3_REFCOUNT_MAGIC, 1}, 1, SC3_ERROR_UNKNOWN,
+  "Please report as bug", __FILE__, __LINE__, 0, NULL, 0, 0
 };
 
 sc3_error_t        *
@@ -117,7 +117,6 @@ sc3_free (void *pmem)
 
   free (*(void **) pmem);
   *(void **) pmem = NULL;
-
   return NULL;
 }
 

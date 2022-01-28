@@ -168,6 +168,7 @@ sc3_error_t        *sc3_realloc (void *pmem, size_t size);
 
 /** Free memory previously allocated.
  * Unlike free (3), this function accepts a reference argument.
+ * The argument value (freed address) is set to NULL on output.
  * \param [in,out] pmem     Non-NULL pointer to pointer to be freed.
  *                          Output value is set to NULL on success.
  *                          On error return, output is undefined.
