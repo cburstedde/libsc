@@ -374,8 +374,7 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
   SC3A_CHECK (win != NULL);
 
   /* initialize wrapper structure */
-  newin = SC3_MALLOC (struct sc3_MPI_Win, 1);
-  SC3E_DEMAND (newin != NULL, SC3_ERROR_MEMORY);
+  SC3E (sc3_malloc (sizeof (struct sc3_MPI_Win), &newin));
   newin->win = 1;
   SC3E (sc3_MPI_Comm_size (comm, &newin->size));
   SC3E (sc3_MPI_Comm_rank (comm, &newin->rank));
@@ -396,8 +395,7 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
   if (0);
 #endif
   else {
-    newin->baseptr = SC3_MALLOC (char, size);
-    SC3E_DEMAND (newin->baseptr != NULL, SC3_ERROR_MEMORY);
+    SC3E (sc3_malloc (size, &newin->baseptr));
   }
   SC3A_IS (sc3_MPI_Win_is_valid, newin);
 

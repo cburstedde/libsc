@@ -194,17 +194,20 @@
 #define SC3_BUFCOPY(b,s) \
           do { snprintf (b, SC3_BUFSIZE, "%s", s); } while (0)
 
+#if 0
 /** Type-safe wrapper of the stdlib malloc function. */
 #define SC3_MALLOC(typ,nmemb) ((typ *) malloc ((nmemb) * sizeof (typ)))
 
 /** Type-safe wrapper of the stdlib calloc function. */
 #define SC3_MALLOC_ZERO(typ,nmemb) ((typ *) calloc (nmemb, sizeof (typ)))
 
-/** Wrap the stdlib free function for consistency. */
-#define SC3_FREE(p) (free (p))
-
 /** Type-safe wrapper of the stdlib realloc function. */
 #define SC3_REALLOC(p,typ,nmemb) ((typ *) realloc (p, (nmemb) * sizeof (typ)))
+#endif
+
+/** Wrap the stdlib free function for consistency.
+ * \deprecated Use \ref sc3_free instead. */
+#define SC3_FREE(p) (free (p))
 
 /** Return whether a non-negative integer is a power of two. */
 #define SC3_ISPOWOF2(a) ((a) > 0 && ((a) & ((a) - 1)) == 0)

@@ -62,6 +62,65 @@ static sc3_error_t  einternal =
 "Please report as bug", __FILE__, __LINE__, 0, NULL, 0, 0
 };
 
+sc3_error_t     *
+sc3_malloc (size_t size, void *pmem)
+{
+  void               *p;
+
+  SC3A_CHECK (pmem != NULL);
+
+  p = malloc (size);
+  if (size != 0 && p == NULL) {
+    return &enomem;
+  }
+
+  *(void **) pmem = p;
+  return NULL;
+}
+
+sc3_error_t     *
+sc3_calloc (size_t nmemb, size_t size, void *pmem)
+{
+  void               *p;
+
+  SC3A_CHECK (pmem != NULL);
+
+  p = calloc (nmemb, size);
+  if (nmemb != 0 && size != 0 && p == NULL) {
+    return &enomem;
+  }
+
+  *(void **) pmem = p;
+  return NULL;
+}
+
+sc3_error_t     *
+sc3_realloc (void *pmem, size_t size)
+{
+  void               *p;
+
+  SC3A_CHECK (pmem != NULL);
+
+  p = realloc (*(void **) pmem, size);
+  if (size != 0 && p == NULL) {
+    return &enomem;
+  }
+
+  *(void **) pmem = p;
+  return NULL;
+}
+
+sc3_error_t   *
+sc3_free (void *pmem)
+{
+  SC3A_CHECK (pmem != NULL);
+
+  free (*(void **) pmem);
+  *(void **) pmem = NULL;
+
+  return NULL;
+}
+
 int
 sc3_error_is_valid (const sc3_error_t * e, char *reason)
 {
@@ -130,9 +189,7 @@ sc3_error_new (sc3_error_t ** ep)
 
   SC3E_RETVAL (ep, NULL);
 
-  if ((e = SC3_MALLOC (sc3_error_t, 1)) == NULL) {
-    return &enomem;
-  }
+  SC3E (sc3_malloc (sizeof (sc3_error_t), &e));
   sc3_error_defaults (e, NULL, 0, 0);
   SC3A_IS (sc3_error_is_new, e);
 
@@ -242,7 +299,7 @@ sc3_error_unref (sc3_error_t ** ep)
     if (e->stack != NULL) {
       SC3E (sc3_error_unref (&e->stack));
     }
-    SC3_FREE (e);
+    SC3E (sc3_free (&e));
   }
   return NULL;
 }
@@ -351,11 +408,8 @@ sc3_error_new_build (sc3_error_t ** pstack, sc3_error_kind_t kind,
 {
   sc3_error_t        *e;
 
+  /* check and initialize output value an any case */
   SC3E_RETVAL (ep, NULL);
-  SC3A_CHECK (0 <= kind && kind < SC3_ERROR_KIND_LAST);
-  SC3A_CHECK (filename != NULL);
-  SC3A_CHECK (line >= 0);
-  SC3A_CHECK (errmsg != NULL);
 
   /* special behavior to return early when memory allocation failed earlier */
   if (pstack != NULL && sc3_error_is_setup (*pstack, NULL) &&
@@ -367,6 +421,12 @@ sc3_error_new_build (sc3_error_t ** pstack, sc3_error_kind_t kind,
     *pstack = NULL;
     return NULL;
   }
+
+  /* delayed check of preconditions */
+  SC3A_CHECK (0 <= kind && kind < SC3_ERROR_KIND_LAST);
+  SC3A_CHECK (filename != NULL);
+  SC3A_CHECK (line >= 0);
+  SC3A_CHECK (errmsg != NULL);
 
   /* normal construction procedure */
   SC3E (sc3_error_new (&e));

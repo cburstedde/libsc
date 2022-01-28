@@ -135,6 +135,46 @@ extern              "C"
 #endif
 #endif
 
+/** Allocate memory with error checking.
+ * Unlike malloc (3), memory is passed by a reference argument.
+ * \param [in] size     Bytes to allocate as in malloc (3).
+ * \param [out] pmem    Non-NULL pointer to the address of memory.
+ *                      Output value according to malloc (3).
+ *                      On error return, output is undefined.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t     *sc3_malloc (size_t size, void *pmem);
+
+/** Allocate zeroed-out memory with error checking.
+ * Unlike calloc (3), memory is passed by a reference argument.
+ * \param [in] nmemb    Number of items to allocate as in calloc (3).
+ * \param [in] size     Bytes per item to allocate as in calloc (3).
+ * \param [out] pmem    Non-NULL pointer to the address of memory.
+ *                      Output value according to calloc (3).
+ *                      On error return, output is undefined.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t     *sc3_calloc (size_t nmemb, size_t size, void *pmem);
+
+/** Reallocate memory with error checking.
+ * Unlike realloc (3), memory is passed by a reference argument.
+ * \param [in,out] pmem     Non-NULL pointer to the address of memory.
+ *                          In/out value according to realloc (3).
+ *                          On error return, output is undefined.
+ * \param [in] size         Bytes to allocate as in realloc (3).
+ * \return                  NULL on success, error object otherwise.
+ */
+sc3_error_t     *sc3_realloc (void *pmem, size_t size);
+
+/** Free memory previously allocated.
+ * Unlike free (3), this function accepts a reference argument.
+ * \param [in,out] pmem     Non-NULL pointer to pointer to be freed.
+ *                          Output value is set to NULL on success.
+ *                          On error return, output is undefined.
+ * \return                  NULL on success, error object otherwise.
+ */
+sc3_error_t      *sc3_free (void *pmem);
+
 /*** DEBUG statements do nothing unless configured with --enable-debug. ***/
 
 #ifndef SC_ENABLE_DEBUG
