@@ -218,6 +218,7 @@ extern              "C"
 /** Provide a string copy function.
  * \param [out] dest    Buffer of length at least \a size.
  *                      On output, not touched if NULL or \a size == 0.
+ *                      The string written is always Nul-terminated.
  * \param [in] size     Allocation length of \a dest.
  * \param [in] src      Nul-terminated string.
  * \return              Equivalent to \ref
@@ -226,14 +227,16 @@ extern              "C"
 void                sc3_strcopy (char *dest, size_t size, const char *src);
 
 /** Wrap the system snprintf function, allowing for truncation.
- * The snprintf function may truncate the string written to the specified length.
- * In some cases, compilers warn when this may occur.
- * For the usage in sc3, this is permitted behavior and we avoid the warning.
+ * The snprintf function may truncate the string written to the specified
+ * length.  In some cases, compilers warn when this may occur.  For our
+ * purposes, this is permitted behavior and we circumvent the warning.
+ * This function does not return the number of characters printed.
  * \param [out] str     Buffer of length at least \a size.
  *                      On output, not touched if NULL or \a size == 0.
  *                      Otherwise, "" on snprintf error or the proper result.
+ *                      The string written is always Nul-terminated.
  * \param [in] size     Allocation length of \a str.
- * \param [in] format   Format string as in man (3) snprintf.
+ * \param [in] format   Format string as in snprintf (3).
  */
 void                sc3_snprintf (char *str, size_t size,
                                   const char *format, ...)
