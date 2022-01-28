@@ -118,6 +118,8 @@ int                 sc3_log_is_setup (const sc3_log_t * log, char *reason);
  */
 sc3_log_t          *sc3_log_predef (void);
 
+/** Create new logging object.
+ */
 sc3_error_t        *sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp);
 
 /** Default with --enable-debug SC3_LOG_DEBUG, otherwise SC3_LOG_TOP */

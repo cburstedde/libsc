@@ -36,13 +36,14 @@ struct sc3_allocator
   sc3_allocator_t    *oa;
   int                 setup;
 
-  size_t              align;
+  size_t              align;        /**< Byte count used for alignment. */
   int                 alloced;
-  int                 counting;
-  int                 keepalive;    /**< Repurposed to be same as counting */
+  int                 counting;     /**< Do we keep track of allocations. */
+  int                 keepalive;    /**< Repurposed to be same as counting. */
 
   long                num_malloc, num_calloc, num_free;
-  size_t              total_size;
+  size_t              total_size;   /**< Total bytes of live allocations.
+                                         Only used on align and/or keepalive. */
 };
 
 typedef union sc3_alloc_item
@@ -53,12 +54,9 @@ typedef union sc3_alloc_item
 sc3_alloc_item_t;
 
 /** This allocator is thread-safe since it is not counting anything. */
-static sc3_allocator_t nca =
-  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-/** This allocator is not thread-safe since it is counting and not locked. */
-static sc3_allocator_t nta =
-  { {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, 0, 0, 0, 0, 0 };
+static sc3_allocator_t nocount = {
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, 0, 0, 0, 0, 0
+};
 
 int
 sc3_allocator_is_valid (const sc3_allocator_t * a, char *reason)
@@ -109,24 +107,16 @@ sc3_allocator_is_free (const sc3_allocator_t * a, char *reason)
   SC3E_YES (reason);
 }
 
-sc3_allocator_t    *
-sc3_allocator_nocount (void)
-{
-  return &nca;
-}
-
-sc3_allocator_t    *
-sc3_allocator_nothread (void)
-{
-  return &nta;
-}
-
 sc3_error_t        *
 sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
 {
   sc3_allocator_t    *a;
 
   SC3E_RETVAL (ap, NULL);
+
+  if (oa == NULL) {
+    oa = &nocount;
+  }
   SC3A_IS (sc3_allocator_is_setup, oa);
 
   SC3E (sc3_allocator_ref (oa));
@@ -261,6 +251,7 @@ sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
   sc3_alloc_item_t   *aitem;
 
   SC3A_IS (sc3_allocator_is_setup, a);
+  SC3A_CHECK (!(a->align == 0 && !a->keepalive));
   SC3A_CHECK (ptr != NULL);
 
   /* allocate bigger block and write debug and size info into header */
@@ -439,6 +430,11 @@ sc3_allocator_realloc (sc3_allocator_t * a, void *ptr, size_t new_size)
         SC3E (sc3_allocator_malloc (a, new_size, ptr));
         memcpy (*(void **) ptr, p, SC3_MIN (size, new_size));
         SC3E (sc3_allocator_free (a, &p));
+        if (a->counting) {
+          SC3A_CHECK (a->total_size <= size);
+          a->total_size -= size;
+          a->total_size += new_size;
+        }
       }
     }
   }

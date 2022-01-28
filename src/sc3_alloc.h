@@ -44,8 +44,8 @@
  *
  * Most sc3_object_new functions take an allocator as argument.
  * It will be used for allocations throughout the lifetime of the object.
- * \ref sc3_allocator_new is no exception:
- * Allocators can be arranged in a forest-type dependency graph.
+ * \ref sc3_allocator_new is one that would accept a NULL allocator,
+ * for example to bootstrap a forest-type graph of inherited allocators.
  * Having different allocators for different functionalities or algorithms
  * can improve modularity of allocation and the associated debugging.
  * Each allocator can be configured with its own alignment requirements.
@@ -54,20 +54,17 @@
  * Dropping the last reference deallocates the allocator.
  * The function \ref sc3_allocator_destroy must only be called when it
  * is known that the allocator has only one reference to it.
- * Otherwise the function returns an error of kind \ref SC3_ERROR_LEAK.
- * With counting enabled, \ref sc3_allocator_destroy will fail fatally
- * When calling it on an allocator with live allocations.
+ * With counting enabled, dropping the last reference of an allocator
+ * will fail fatally when it still has live allocations.
  */
 
 #ifndef SC3_ALLOC_H
 #define SC3_ALLOC_H
 
-#include <sc3_base.h>
+#include <sc3_error.h>
 
 /** The allocator object is an opaque struct. */
 typedef struct sc3_allocator sc3_allocator_t;
-
-#include <sc3_error.h>
 
 #ifdef __cplusplus
 extern              "C"
@@ -122,34 +119,17 @@ int                 sc3_allocator_is_setup (const sc3_allocator_t * a,
 int                 sc3_allocator_is_free (const sc3_allocator_t * a,
                                            char *reason);
 
-/** Return a non-counting allocator setup and safe to use in threads.
- * This allocator thus does not check for matched alloc/free calls.
- * It can be arbitrarily refd and unrefd but must not be destroyed.
- * Use only if there is no other option, such as to create errors.
- * \return              Allocator that does not count its allocations.
- *                      It is not allowed to destroy this allocator.
- */
-sc3_allocator_t    *sc3_allocator_nocount (void);
-
-/** Return a counting allocator setup and not protected from threads.
- * This allocator is not safe to use concurrently from multiple threads.
- * It can be arbitrarily refd and unrefd but must not be destroyed.
- * Can use this function to create the first allocator in main ().
- * Use only if there is no other option.
- * \return              Allocator unprotected from concurrent access.
- *                      It is not allowed to destroy this allocator.
- */
-sc3_allocator_t    *sc3_allocator_nothread (void);
-
 /** Create a new allocator object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
  * Default alignment is sizeof (void *); see \ref sc3_allocator_set_align.
  * Setting and modifying parameters is only allowed in the setup phase.
  * Call \ref sc3_allocator_setup to change it into its usage phase.
  * After that, no more parameters may be set.
- * \param [in,out] oa   An allocator that is setup.
- *                      The allocator is refd and remembered internally
- *                      and will be unrefd on destruction.
+ * \param [in,out] oa   Either NULL or an allocator that is setup.
+ *                      In the latter case, the allocator is refd and
+ *                      remembered and will be unrefd on destruction.
+ *                      This argument (or a static internal one when
+ *                      NULL) is used to allocate the output object.
  * \param [out] ap      Pointer must not be NULL.
  *                      If the function returns an error, value set to NULL.
  *                      Otherwise, value set to allocator with default values.
@@ -189,7 +169,6 @@ sc3_error_t        *sc3_allocator_setup (sc3_allocator_t * a);
 
 /** Increase the reference count on an allocator by 1.
  * This is only allowed after the allocator has been setup.
- * Does nothing if allocator has not been created by \ref sc3_allocator_new.
  * \param [in,out] a    Allocator must be setup.  Its refcount is increased.
  * \return              NULL on success, error object otherwise.
  */
@@ -197,27 +176,23 @@ sc3_error_t        *sc3_allocator_ref (sc3_allocator_t * a);
 
 /** Decrease the reference count on an allocator by 1.
  * If the reference count drops to zero, the allocator is deallocated.
- * Does nothing if allocator has not been created by \ref sc3_allocator_new.
  * \param [in,out] ap   The pointer must not be NULL and the allocator valid.
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the allocator is destroyed and the value set to NULL.
- * \return              NULL on success, error object otherwise.
+ * \return              NULL on success, fatal error object otherwise.
  *                      If the reference count drops to zero while counting
  *                      and holding memory, return kind \ref SC3_ERROR_LEAK.
- *                      All other errors are fatal.
  */
 sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
 
 /** Destroy an allocator with a reference count of 1.
  * It is a leak error to destroy when multiply refd or with live allocations.
- * Does nothing if allocator has not been created by \ref sc3_allocator_new.
  * \param [in,out] ap   This allocator must be valid.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
  *                      When the allocator has more than one reference to it,
  *                      or when the allocater is counting and has allocations,
- *                      return an error of kind \ref SC3_ERROR_LEAK.
- *                      All other errors are fatal.
+ *                      return a fatal error of kind \ref SC3_ERROR_LEAK.
  */
 sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
 
