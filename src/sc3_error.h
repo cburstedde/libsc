@@ -491,7 +491,7 @@ typedef sc3_error_t *(*sc3_error_handler_t)
  * \param [in] e        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer is not NULL and error consistent.
+ * \return              True if pointer is not NULL and error consistent.
  */
 int                 sc3_error_is_valid (const sc3_error_t * e, char *reason);
 
@@ -500,7 +500,7 @@ int                 sc3_error_is_valid (const sc3_error_t * e, char *reason);
  * \param [in] e        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer not NULL, error consistent, not setup.
+ * \return              True if pointer not NULL, error consistent, not setup.
  */
 int                 sc3_error_is_new (const sc3_error_t * e, char *reason);
 
@@ -509,7 +509,7 @@ int                 sc3_error_is_new (const sc3_error_t * e, char *reason);
  * \param [in] e        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer not NULL, error consistent and setup.
+ * \return              True if pointer not NULL, error consistent and setup.
  */
 int                 sc3_error_is_setup (const sc3_error_t * e, char *reason);
 
@@ -529,7 +529,7 @@ int                 sc3_error_is_fatal (const sc3_error_t * e, char *reason);
  * \param [in] e        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff error is not NULL, setup, and a leak.
+ * \return              True if error is not NULL, setup, and a leak.
  */
 int                 sc3_error_is_leak (const sc3_error_t * e, char *reason);
 
@@ -540,7 +540,7 @@ int                 sc3_error_is_leak (const sc3_error_t * e, char *reason);
  * \param [in] kind     Legal value of \ref sc3_error_kind_t.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff error is not NULL, setup, and of \a kind.
+ * \return              True if error is not NULL, setup, and of \a kind.
  */
 int                 sc3_error_is2_kind (const sc3_error_t * e,
                                         sc3_error_kind_t kind, char *reason);

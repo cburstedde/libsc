@@ -102,7 +102,7 @@ void                sc3_omp_thread_intrange (int *beginr, int *endr);
 
 /** Query a synchronization struct to hold no error.
  * \param [in] s    Pointer to initialized \ref sc3_omp_esync_t struct.
- * \return          True iff \a s is not NULL and its shared error is NULL.
+ * \return          True if \a s is not NULL and its shared error is NULL.
  */
 int                 sc3_omp_esync_is_clean (sc3_omp_esync_t * s);
 

@@ -67,7 +67,7 @@ extern              "C"
  * \param [in] mst      Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer is not NULL and container consistent.
+ * \return              True if pointer is not NULL and container consistent.
  */
 int                 sc3_mstamp_is_valid (const sc3_mstamp_t * mst,
                                          char *reason);
@@ -77,7 +77,7 @@ int                 sc3_mstamp_is_valid (const sc3_mstamp_t * mst,
  * \param [in] mst      Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer not NULL, memory stamp consistent,
+ * \return              True if pointer not NULL, memory stamp consistent,
  *                      not setup.
  */
 int                 sc3_mstamp_is_new (const sc3_mstamp_t * mst,
@@ -93,7 +93,7 @@ int                 sc3_mstamp_is_new (const sc3_mstamp_t * mst,
  * \param [in] mst      Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer not NULL, memory stamp consistent and
+ * \return              True if pointer not NULL, memory stamp consistent and
  *                      setup.
  */
 int                 sc3_mstamp_is_setup (const sc3_mstamp_t * mst,

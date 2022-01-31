@@ -84,7 +84,7 @@ extern              "C"
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer is not NULL and allocator consistent.
+ * \return              True if pointer is not NULL and allocator consistent.
  */
 int                 sc3_allocator_is_valid (const sc3_allocator_t * a,
                                             char *reason);
@@ -94,7 +94,7 @@ int                 sc3_allocator_is_valid (const sc3_allocator_t * a,
  * \param [in] a    Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return          True iff pointer not NULL, allocator consistent, not setup.
+ * \return          True if pointer not NULL, allocator consistent, not setup.
  */
 int                 sc3_allocator_is_new (const sc3_allocator_t * a,
                                           char *reason);
@@ -104,7 +104,7 @@ int                 sc3_allocator_is_new (const sc3_allocator_t * a,
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return          True iff pointer not NULL, allocator consistent and setup.
+ * \return          True if pointer not NULL, allocator consistent and setup.
  */
 int                 sc3_allocator_is_setup (const sc3_allocator_t * a,
                                             char *reason);
@@ -113,7 +113,7 @@ int                 sc3_allocator_is_setup (const sc3_allocator_t * a,
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return          True iff pointer not NULL, allocator setup
+ * \return          True if pointer not NULL, allocator setup
  *                  and not holding any allocations.
  */
 int                 sc3_allocator_is_free (const sc3_allocator_t * a,

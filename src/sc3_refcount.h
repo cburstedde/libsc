@@ -83,7 +83,7 @@ sc3_refcount_t;
  * \param [in] r        NULL or existing reference counter.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer not NULL and refcounter valid.
+ * \return              True if pointer not NULL and refcounter valid.
  */
 int                 sc3_refcount_is_valid (const sc3_refcount_t * r,
                                            char *reason);
@@ -92,7 +92,7 @@ int                 sc3_refcount_is_valid (const sc3_refcount_t * r,
  * \param [in] r        NULL or existing reference counter.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer not NULL and refcounter valid
+ * \return              True if pointer not NULL and refcounter valid
  *                      with exactly one reference.
  */
 int                 sc3_refcount_is_last (const sc3_refcount_t * r,
@@ -121,7 +121,7 @@ sc3_error_t        *sc3_refcount_ref (sc3_refcount_t * r);
  * which is also considered a success of the function.
  * \param [in,out] r    Valid reference counter.
  * \param [out] waslast Must not be NULL.  Becomes 0 on error.
- *                      Otherwise true iff the count drops to zero.
+ *                      Otherwise true if the count drops to zero.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_refcount_unref (sc3_refcount_t * r, int *waslast);
