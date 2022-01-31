@@ -261,10 +261,11 @@ sc3_mstamp_destroy (sc3_mstamp_t ** mstp)
 }
 
 sc3_error_t        *
-sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
+tc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
 {
   sc3_array_t        *freed = mst->freed;
   int                 fcount;
+  void              **oldp, *p;
 
   SC3A_IS (sc3_mstamp_is_setup, mst);
 
@@ -279,16 +280,17 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
   sc3_array_get_elem_count (freed, &fcount);
   if (fcount > 0) {
     /* access previously returned item */
-    SC3E (sc3_array_index (freed, fcount - 1, ptr));
+    SC3E (sc3_array_index (freed, fcount - 1, &oldp));
+    p = *(void **) ptr = *oldp;
     SC3E (sc3_array_pop (freed));
 
     /* prepare item before reuse */
     if (mst->initzero) {
-      memset (*(void **) ptr, 0, mst->esize);
+      memset (p, 0, mst->esize);
     }
 #ifdef SC_ENABLE_DEBUG
     else {
-      memset (*(void **) ptr, -1, mst->esize);
+      memset (p, -1, mst->esize);
     }
 #endif
   }
@@ -296,12 +298,12 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
     /* we know that at least one item will fit */
     SC3A_CHECK (mst->cur != NULL);
     SC3A_CHECK (mst->cur_snext < mst->per_stamp);
-    *(void **) ptr = mst->cur + mst->cur_snext * mst->esize;
+    p = *(void **) ptr = mst->cur + mst->cur_snext * mst->esize;
 
     /* we have returned a non-trivial element */
 #ifdef SC_ENABLE_DEBUG
     if (!mst->initzero) {
-      memset (*(void **) ptr, -1, mst->esize);
+      memset (p, -1, mst->esize);
     }
 #endif
 
@@ -315,20 +317,22 @@ sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
 }
 
 sc3_error_t        *
-sc3_mstamp_free (sc3_mstamp_t * mst, void *elem)
+sc3_mstap_free (sc3_mstamp_t * mst, void *ptr)
 {
   sc3_array_t        *freed = mst->freed;
   void              **newp;
 
   SC3A_IS (sc3_mstamp_is_setup, mst);
+  SC3A_CHECK (ptr != NULL);
   SC3A_CHECK (mst->ecount > 0);
 
   if (mst->esize == 0) {
-    SC3A_CHECK (elem == NULL);
+    SC3A_CHECK (*(void **) ptr == NULL);
   }
   else {
     SC3E (sc3_array_push (freed, &newp));
-    *newp = elem;
+    *newp = *(void **) ptr;
+    *(void **) ptr = NULL;
   }
   --mst->ecount;
 

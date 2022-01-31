@@ -192,29 +192,34 @@ sc3_error_t        *sc3_mstamp_unref (sc3_mstamp_t ** mstp);
  */
 sc3_error_t        *sc3_mstamp_destroy (sc3_mstamp_t ** mstp);
 
-/** Return a new item.
+/** Output a new item allocated in the container.
+ * Unlike malloc (3), memory is passed by a reference argument.
  * The memory returned will stay legal until container is destroyed,
  * or equivalently, its reference count drops to zero.
  * It can be returned to the container by \ref sc3_mstamp_free.
+ * We do not require to return all memory before container's destruction.
  * \param [in,out] mst  Memory stamp container must be setup.
- * \param [out] ptr     Address of pointer.
+ * \param [out] ptr     Non-NULL pointer to memory address.
  *                      On output set to item ready to use.
- *                      Legal until \ref sc3_mstamp_destroy or
- *                      \ref sc3_mstamp_unref (with one ref)
- *                      is called on \a mst.
+ *                      Valid until released with \ref sc3_memstamp_free
+ *                      or until \ref sc3_mstamp_destroy or \ref
+ *                      sc3_mstamp_unref (with one ref) called on \a mst.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr);
 
 /** Return a previously allocated element to the container.
+ * Unlike free (3), memory is passed by a reference argument.
  * It is an error to try to free more items than have been allocated.
- * We have no means of checking that the memory passed to be free
+ * We have no means of checking that the memory passed to be freed
  * has actually been allocated by the present container.  Use caution.
+ * We do not require to return all memory before container's destruction.
  * \param [in] mst      Memory stamp container must be setup.
- * \param [in] elem     Pointer to an element to be returned to the pool.
+ * \param [in,out] elem Pointer to an address to be returned to the pool.
+ *                      Pointer must be NULL.  Value NULL on output.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_mstamp_free (sc3_mstamp_t * mst, void *elem);
+sc3_error_t        *sc3_mstamp_free (sc3_mstamp_t * mst, void *ptr);
 
 /** Return element size of a memory stamp container that is setup.
  * \param [in] mst      Memory stamp container must be setup.
