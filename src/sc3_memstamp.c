@@ -93,9 +93,15 @@ sc3_error_t        *
 sc3_mstamp_new (sc3_allocator_t * aator, sc3_mstamp_t ** mstp)
 {
   sc3_mstamp_t       *mst;
+  size_t              oh;
 
   SC3E_RETVAL (mstp, NULL);
+
+  if (aator == NULL) {
+    aator = sc3_allocator_new_static ();
+  }
   SC3A_IS (sc3_allocator_is_setup, aator);
+  SC3E (sc3_allocator_get_overhead (aator, &oh));
 
   SC3E (sc3_allocator_ref (aator));
   SC3E (sc3_allocator_calloc (aator, 1, sizeof (sc3_mstamp_t), &mst));
@@ -104,6 +110,8 @@ sc3_mstamp_new (sc3_allocator_t * aator, sc3_mstamp_t ** mstp)
 
   mst->esize = 1;
   mst->ssize = 4096;
+  SC3A_CHECK (mst->ssize > oh);
+  mst->ssize -= oh;
 
   SC3E (sc3_array_new (aator, &mst->remember));
   SC3E (sc3_array_set_elem_size (mst->remember, sizeof (void *)));
@@ -209,7 +217,7 @@ sc3_error_t        *
 sc3_mstamp_unref (sc3_mstamp_t ** mstp)
 {
   int                 waslast, i;
-  int                 ecount;
+  int                 fcount;
   void               *item;
   sc3_allocator_t    *aator;
   sc3_mstamp_t       *mst;
@@ -223,8 +231,8 @@ sc3_mstamp_unref (sc3_mstamp_t ** mstp)
     aator = mst->aator;
     if (mst->setup) {
       /* deallocate element storage */
-      SC3E (sc3_array_get_elem_count (mst->remember, &ecount));
-      for (i = 0; i < ecount; ++i) {
+      SC3E (sc3_array_get_elem_count (mst->remember, &fcount));
+      for (i = 0; i < fcount; ++i) {
         SC3E (sc3_array_index (mst->remember, i, &item));
         SC3E (sc3_allocator_free (aator, &item));
       }

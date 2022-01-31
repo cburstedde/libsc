@@ -28,15 +28,18 @@
 */
 
 /** \file sc3_memstamp.h \ingroup sc3
- * A data container to create memory items of the same size.
+ *
+ * Provide a data container to create memory items of the same size.
  * Allocations are bundled so it's fast for small memory sizes.
  * The items created will remain valid until the container is destroyed.
  * It is possible to return allocated items to the container for reuse.
- * 
+ *
  * The memstamp container stores any number of fixed-size items within a new
  * allocation, or stamp. If needed, memory is reallocated internally.
  *
- * We use standard `int` types for indexing.
+ * It is legal to destroy a memstamp container with live allocations.
+ * In this case, we do nothing special and simply deallocate all memory.
+ * Using such allocations afterwards results in undefined behavior.
  *
  * In the setup phase, we set the size of the element and stamp,
  * a number of items in stamp, an initzero property, and some more.
@@ -61,8 +64,7 @@ extern              "C"
 #endif
 #endif
 
-/** Query whether a memory stamp container is not NULL and internally
- * consistent.
+/** Query whether a memory stamp container is not NULL and consistent.
  * The container may be valid in both its setup and usage phases.
  * \param [in] mst      Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
@@ -86,10 +88,10 @@ int                 sc3_mstamp_is_new (const sc3_mstamp_t * mst,
 /** Query whether a memory stamp is not NULL, internally consistent and setup.
  * This means that the memory stamp is in its usage phase.
  * We provide allocation of fixed-size memory items
- * without allocating new memory in every request.
+ * ideally without allocating new memory in every request.
  * Instead we block the allocations in what we call a stamp of multiple items.
- * Even if no allocations are done, the container's internal memory
- * must be freed eventually by \ref sc3_mstamp_destroy.
+ * Even if no allocations are made, the container's memory
+ * must be released eventually by \ref sc3_mstamp_destroy.
  * \param [in] mst      Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
@@ -104,7 +106,8 @@ int                 sc3_mstamp_is_setup (const sc3_mstamp_t * mst,
  * Setting and modifying parameters is only allowed in the setup phase.
  * Call \ref sc3_mstamp_setup to change the memory stamp into its usage phase.
  * After that, no more parameters may be set.
- * \param [in,out] aator    An allocator that is setup.
+ * \param [in,out] aator    NULL, or an allocator that is setup.
+ *                          When NULL, we use a static non-counting allocator.
  *                          The allocator is refd and remembered internally
  *                          and will be unrefd on memory stamp container
  *                          destruction.
@@ -169,24 +172,23 @@ sc3_error_t        *sc3_mstamp_ref (sc3_mstamp_t * mst);
 
 /** Decrease the reference count on a memory stamp container by 1.
  * If the reference count drops to zero, the container is deallocated.
+ * It is legal to free a memory stamp with live allocations, which we free.
  * \param [in,out] mstp The pointer must not be NULL and the container valid.
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the memory stamp container is destroyed and
  *                      the value set to NULL.
  * \return              NULL on success, error object otherwise.
- *                      We return a leak if we find one.
  */
 sc3_error_t        *sc3_mstamp_unref (sc3_mstamp_t ** mstp);
 
 /** Destroy a memory stamp container by freeing all memory in the structure.
- * It is a leak error to destroy a memory stamp container that is
+ * It is legal to destroy a memory stamp with live allocations, which we free.
+ * It is a leak fatal error to destroy a memory stamp container that is
  * multiply referenced.  We unref its internal allocator, which may cause a
  * leak error if that allocator has been overly unrefd elsewhere in the code.
  * \param [in,out] mstp This container must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
- *                      When the memory stamp container had more than one
- *                      reference, return an error of kind \ref SC3_ERROR_LEAK.
  */
 sc3_error_t        *sc3_mstamp_destroy (sc3_mstamp_t ** mstp);
 
@@ -205,6 +207,9 @@ sc3_error_t        *sc3_mstamp_destroy (sc3_mstamp_t ** mstp);
 sc3_error_t        *sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr);
 
 /** Return a previously allocated element to the container.
+ * It is an error to try to free more items than have been allocated.
+ * We have no means of checking that the memory passed to be free
+ * has actually been allocated by the present container.  Use caution.
  * \param [in] mst      Memory stamp container must be setup.
  * \param [in] elem     Pointer to an element to be returned to the pool.
  * \return              NULL on success, error object otherwise.
