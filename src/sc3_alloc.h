@@ -39,23 +39,27 @@
  *
  * Different allocators are independent objects with independent counters.
  * This feature is useful for example to isolate memory between threads:
- * Each thread may create a new allocator, derived from a global allocator
- * with proper locking, and then use the new allocator without locking.
+ * Each thread may create its own allocator, derived from the result of \ref
+ * sc3_allocator_new_static, and then use the new allocator without locking.
+ * Generally, sc3 objects are safe to use in threads as long as no object
+ * is accessed simultaneously by different threads.
  *
  * Most sc3_object_new functions take an allocator as argument.
  * It will be used for allocations throughout the lifetime of the object.
- * \ref sc3_allocator_new is one that would accept a NULL allocator,
- * for example to bootstrap a forest-type graph of inherited allocators.
+ * They would also accept a NULL allocator, which defaults to using \ref
+ * sc3_allocator_new_static internally, which does not count or align,
+ * for example to bootstrap a forest-type graph of derived allocators.
  * Having different allocators for different functionalities or algorithms
  * can improve modularity of allocation and the associated debugging.
  * Each allocator can be configured with its own alignment requirements.
+ * Each allocator is counting its allocations by default for leak checking.
  *
- * Allocators can be refd and unrefd.
- * Dropping the last reference deallocates the allocator.
+ * Allocators can be refd and unrefd (even the static one, which noops).
+ * Dropping the last reference deallocates the allocator (if not static).
  * The function \ref sc3_allocator_destroy must only be called when it
- * is known that the allocator has only one reference to it.
- * With counting enabled, dropping the last reference of an allocator
- * will fail fatally when it still has live allocations.
+ * is known that the allocator has only one reference to it (ok for static).
+ * With counting enabled (only when non-static), dropping the last reference
+ * of an allocator will fail fatally when it still has live allocations.
  */
 
 #ifndef SC3_ALLOC_H
@@ -195,6 +199,28 @@ sc3_error_t        *sc3_allocator_unref (sc3_allocator_t ** ap);
  *                      return a fatal error of kind \ref SC3_ERROR_LEAK.
  */
 sc3_error_t        *sc3_allocator_destroy (sc3_allocator_t ** ap);
+
+/** Return a static allocator that is safe to use from multiple threads.
+ * The allocator does not align and does not count its allocations.
+ * It can be refd, unrefd and destroyed as usual (even though this noops).
+ * The result it is less valuable for debugging, but carefree to use.
+ * Contrary to most libsc functions, function's return value is its output.
+ * \return              A static allocator without alignment or counting.
+ */
+sc3_allocator_t    *sc3_allocator_new_static (void);
+
+/** Query internal allocation overhead in bytes.
+ * When the allocator is counting or aligning, we allocate a slightly
+ * larger amount of bytes than specified for internal bookkeeping.
+ * This function queries this value such that calling code can optimize
+ * the actual number of bytes it allocates to fit the page size, etc.
+ * \param [in] a        Allocator must be setup.
+ * \param [out] oh      Pointer must not be NULL.  On output
+ *                      the overhead of each allocation in bytes.
+ * \return              NULL on success, fatal error object otherwise.
+ */
+sc3_error_t        *sc3_allocator_get_overhead (sc3_allocator_t * a,
+                                                size_t *oh);
 
 /** Allocate memory and copy a Nul-terminated string into it.
  * Unlike strdup (3), memory is passed by a reference argument.

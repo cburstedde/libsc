@@ -53,6 +53,8 @@ typedef union sc3_alloc_item
 }
 sc3_alloc_item_t;
 
+static const size_t        hsize = 3 * sizeof (sc3_alloc_item_t);
+
 /** This allocator is thread-safe since it is not counting anything. */
 static sc3_allocator_t nocount = {
   {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, 0, 0, 0, 0, 0
@@ -115,7 +117,7 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   SC3E_RETVAL (ap, NULL);
 
   if (oa == NULL) {
-    oa = &nocount;
+    oa = sc3_allocator_new_static ();
   }
   SC3A_IS (sc3_allocator_is_setup, oa);
 
@@ -223,6 +225,24 @@ sc3_allocator_destroy (sc3_allocator_t ** ap)
   return NULL;
 }
 
+sc3_allocator_t    *
+sc3_allocator_new_static (void)
+{
+  return &nocount;
+}
+
+sc3_error_t        *
+sc3_allocator_get_overhead (sc3_allocator_t * a, size_t *oh)
+{
+  SC3E_RETVAL (oh, 0);
+  SC3A_IS (sc3_allocator_is_setup, a);
+
+  if (!(a->align == 0 && !a->keepalive)) {
+    *oh = a->align + hsize;
+  }
+  return NULL;
+}
+
 sc3_error_t        *
 sc3_allocator_strdup (sc3_allocator_t * a, const char *src, char **dest)
 {
@@ -246,7 +266,6 @@ static sc3_error_t *
 sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
                              void *ptr)
 {
-  const size_t        hsize = 3 * sizeof (sc3_alloc_item_t);
   size_t              actual, shift;
   char               *p;
   sc3_alloc_item_t   *aitem;
