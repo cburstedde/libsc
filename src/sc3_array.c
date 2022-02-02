@@ -109,9 +109,8 @@ sc3_array_is_unresizable (const sc3_array_t * a, char *reason)
 
 int
 sc3_array_is_sorted (const sc3_array_t * a,
-                     sc3_error_t * (*compar) (const void *, const void *,
-                                              void *, int *),
-                     void *user, char *reason)
+                     int (*compar) (const void *, const void *),
+                     char *reason)
 {
   int                 i, j;
   const void         *vold, *vnew;
@@ -126,13 +125,78 @@ sc3_array_is_sorted (const sc3_array_t * a,
   vold = sc3_array_index_noerr (a, 0);
   for (i = 1; i < a->ecount; ++i) {
     vnew = sc3_array_index_noerr (a, i);
-    SC3E_DO (compar (vold, vnew, user, &j), reason);
+    j = compar (vold, vnew);
     SC3E_TEST (j <= 0, reason);
     vold = vnew;
   }
 
   SC3E_YES (reason);
 }
+
+#ifndef SC_HAVE_BSD_QSORT_R
+
+int
+sc3_array_is_sorted_r (const sc3_array_t * a,
+                       int (*compar) (const void *, const void *, void *),
+                       void *user, char *reason)
+{
+  int                 i, j;
+  const void         *vold, *vnew;
+
+  SC3E_TEST (compar != NULL, reason);
+  SC3E_IS (sc3_array_is_setup, a, reason);
+#ifndef SC_HAVE_QSORT_R
+  SC3E_NO (reason, "qsort_r not available");
+#else
+  if (a->ecount <= 1) {
+    SC3E_YES (reason);
+  }
+
+  vold = sc3_array_index_noerr (a, 0);
+  for (i = 1; i < a->ecount; ++i) {
+    vnew = sc3_array_index_noerr (a, i);
+    j = compar (vold, vnew, user);
+    SC3E_TEST (j <= 0, reason);
+    vold = vnew;
+  }
+
+  SC3E_YES (reason);
+#endif
+}
+
+#else
+
+int
+sc3_array_is_sorted_r (const sc3_array_t * a,
+                       int (*compar) (void *, const void *, const void *),
+                       void *user, char *reason)
+{
+  int                 i, j;
+  const void         *vold, *vnew;
+
+  SC3E_TEST (compar != NULL, reason);
+  SC3E_IS (sc3_array_is_setup, a, reason);
+#ifndef SC_HAVE_QSORT_R
+  /* this branch is unreachable when configured properly */
+  SC3E_NO (reason, "configure error concerning qsort_r");
+#else
+  if (a->ecount <= 1) {
+    SC3E_YES (reason);
+  }
+
+  vold = sc3_array_index_noerr (a, 0);
+  for (i = 1; i < a->ecount; ++i) {
+    vnew = sc3_array_index_noerr (a, i);
+    j = compar (user, vold, vnew);
+    SC3E_TEST (j <= 0, reason);
+    vold = vnew;
+  }
+
+  SC3E_YES (reason);
+#endif
+}
+
+#endif /* SC_HAVE_BSD_QSORT_R */
 
 int
 sc3_array_is_alloced (const sc3_array_t * a, char *reason)
@@ -383,13 +447,13 @@ sc3_array_sort_r (sc3_array_t * a,
   SC3A_IS (sc3_array_is_setup, a);
   SC3A_CHECK (compar != NULL);
 
-  #ifndef SC_HAVE_QSORT_R
+#ifndef SC_HAVE_QSORT_R
   return sc3_error_new_kind (SC3_ERROR_FEATURE, __FILE__, __LINE__,
                              "qsort_r not available");
-  #else
+#else
   qsort_r (a->mem, a->ecount, a->esize, compar, data);
   return NULL;
-  #endif
+#endif
 }
 
 #else
@@ -402,14 +466,14 @@ sc3_array_sort_r (sc3_array_t * a,
   SC3A_IS (sc3_array_is_setup, a);
   SC3A_CHECK (compar != NULL);
 
-  #ifndef SC_HAVE_QSORT_R
+#ifndef SC_HAVE_QSORT_R
   /* this branch is unreachable when configured properly */
   return sc3_error_new_kind (SC3_ERROR_FATAL, __FILE__, __LINE__,
                              "configure error concerning qsort_r");
-  #else
+#else
   qsort_r (a->mem, a->ecount, a->size, data, compar);
   return NULL;
-  #endif
+#endif
 }
 
 #endif /* SC_HAVE_BSD_QSORT_R */
