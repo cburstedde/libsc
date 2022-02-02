@@ -28,10 +28,9 @@
 */
 
 /** \file sc3_array.h \ingroup sc3
- * We provide an array of a variable count of same-size items.
  *
- * The array container stores any number of fixed-size items.
- * The length of the array (allocated number of items) can be changed.
+ * The array container stores any number of fixed-size elements.
+ * The length of the array (accessible number of elements) can be changed.
  * If needed, memory is reallocated internally.
  * The array can serve as a push-and-pop stack.
  *
@@ -45,6 +44,9 @@
  * After setup, the array may be resized while it is resizable.
  * Resizability can be terminated by calling \ref sc3_array_freeze
  * (only after \ref sc3_array_setup).  The freeze is not reversible.
+ * Freeze only applies to the length of the array, not its contents.
+ * Indexing into the current length of the array is always possible.
+ * Indexing allows for both read and write access.
  *
  * We allow for arrays to be views on other arrays or plain data.
  * This provides for one unified way of indexing into any memory.
@@ -121,7 +123,7 @@ int                 sc3_array_is_resizable (const sc3_array_t * a,
 int                 sc3_array_is_unresizable (const sc3_array_t * a,
                                               char *reason);
 
-/** Query whether an array is allocated, thus not a view.
+/** Query whether an array holds allocated memory, thus is not a view.
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
@@ -174,7 +176,8 @@ int                 sc3_array_is_sorted (const sc3_array_t * a, sc3_error_t *
  * Call \ref sc3_array_setup to change the array into its usage phase.
  * After that, no more parameters may be set.
  * The defaults are documented in the sc3_array_set_* calls.
- * \param [in,out] aator    An allocator that is setup.
+ * \param [in,out] alloc    An allocator that is setup, or NULL.
+ *                          If NULL, we use \ref sc3_allocator_new_static.
  *                          The allocator is refd and remembered internally
  *                          and will be unrefd on array destruction.
  * \param [out] ap      Pointer must not be NULL.
@@ -182,10 +185,11 @@ int                 sc3_array_is_sorted (const sc3_array_t * a, sc3_error_t *
  *                      Otherwise, value set to an array with default values.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_new (sc3_allocator_t * aator,
+sc3_error_t        *sc3_array_new (sc3_allocator_t * alloc,
                                    sc3_array_t ** ap);
 
 /** Set the size of each array element in bytes.
+ * Default is 1.
  * \param [in,out] a    The array must not be setup.
  * \param [in] esize    Element size in bytes.  Zero is legal, one the default.
  * \return              NULL on success, error object otherwise.
@@ -193,14 +197,16 @@ sc3_error_t        *sc3_array_new (sc3_allocator_t * aator,
 sc3_error_t        *sc3_array_set_elem_size (sc3_array_t * a, size_t esize);
 
 /** Set the initial number of array elements.
+ * Default is 0.
  * \param [in,out] a    The array must not be setup.
  * \param [in] ecount   Element count on setup.  Zero is legal and default.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_set_elem_count (sc3_array_t * a, int ecount);
 
-/** Set the minimum required number of array elements to allocate on setup.
+/** Set the minimum number of array elements to pre-allocate on setup.
  * This may be useful to grow an array avoiding frequent reallocation.
+ * Default is a small reasonable number.
  * \param [in,out] a    The array must not be setup.
  * \param [in] ealloc   Minimum number of elements initially allocated.
  *                      Legal if this is smaller than the initial count,
@@ -213,6 +219,7 @@ sc3_error_t        *sc3_array_set_elem_alloc (sc3_array_t * a, int ealloc);
 /** Set the initzero property of an array.
  * If set to true, array memory for initial count is zeroed during setup.
  * This does *not* mean that new space after resize will be initialized.
+ * Default is false.
  * \param [in,out] a        The array must not be setup.
  * \param [in] initzero     Boolean; default is false.
  * \return                  NULL on success, error object otherwise.
@@ -221,15 +228,17 @@ sc3_error_t        *sc3_array_set_initzero (sc3_array_t * a, int initzero);
 
 /** Set the resizable property of an array.
  * It determines whether the array may be resized after setup.
+ * Default is true.
  * \param [in,out] a        The array must not be setup.
  * \param [in] resizable    Boolean; default is true.
  * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_set_resizable (sc3_array_t * a, int resizable);
 
-/** Set the tighten property of an array.
- * If set to true, the array memory is shrunk occasionally on
- * \ref sc3_array_resize and \ref sc3_array_freeze.
+/** Set the tightening property of an array.
+ * Default is false.
+ * If set to true, the internal array memory is shrunk, occasionally on
+ * \ref sc3_array_resize, and on \ref sc3_array_freeze.
  * \param [in,out] a        The array must not be setup.
  * \param [in] tighten      Boolean; default is false.
  * \return                  NULL on success, error object otherwise.
@@ -248,6 +257,7 @@ sc3_error_t        *sc3_array_setup (sc3_array_t * a);
 /** Increase the reference count on an array by 1.
  * This is only allowed after the array has been setup.  The array must not
  * be resizable, by initialization or by calling \ref sc3_array_freeze.
+ * This means that views can only be refd after freezing them.
  * \param [in,out] a    Must not be resizable.  Its refcount is increased.
  * \return              NULL on success, error object otherwise.
  */
@@ -259,25 +269,24 @@ sc3_error_t        *sc3_array_ref (sc3_array_t * a);
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the array is destroyed and the value set to NULL.
  * \return              NULL on success, error object otherwise.
- *                      We return a leak if we find one.
  */
 sc3_error_t        *sc3_array_unref (sc3_array_t ** ap);
 
 /** Destroy an array with a reference count of one.
- * It is a leak error to destroy an array that is multiply referenced.
+ * It is a fatal error to destroy an array that is multiply referenced.
  * We unref its internal allocator, which may cause a leak error if that
- * allocator has one reference and live allocations elsewhere in the code.
+ * allocator has one reference and live allocations elsewhere in the code,
+ * which can only occur when mismanaging the allocator in unrelated code.
  * \param [in,out] ap   This array must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
- *                      When the array had more than one reference,
- *                      return an error of kind \ref SC3_ERROR_LEAK.
  */
 sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
 
 /** Resize an array, reallocating internally as needed.
- * Only allocated arrays may be resized, views may never be.
+ * Only allocated arrays may be resized, views may not.
  * The array elements are preserved to the minimum of old and new counts.
+ * Their addresses may change, however, as with standard realloc (3).
  * \param [in,out] a        The array must be resizable.
  * \param [in] new_ecount   The new element count.  0 is legal.
  * \return                  NULL on success, error object otherwise.
@@ -316,23 +325,27 @@ sc3_error_t        *sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
                                      void *data);
 
 /** Enlarge an array by a number of elements.
+ * The array must be resizable.
  * The output points to the beginning of the memory for the new elements.
+ * The pointer to the array element is passed by a reference argument.
  * \param [in,out] a    The array must be setup and resizable.
- * \param [in] n        Non-negative number.  If n == 0, do nothing.
- * \param [out] ptr     Address of pointer.
- *                      On output set to array element at previously last index,
- *                      or NULL if n == 0, which is explicitly allowed.
+ * \param [in] n        Non-negative number.  If 0, do nothing.
+ * \param [out] ptr     Optional address of pointer.
+ *                      On output the array element at previously last index,
+ *                      or NULL if n is zero.
  *                      This argument may be NULL for no assignment.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void *ptr);
 
 /** Enlarge an array by one element.
+ * The array must be resizable.
  * The output points to the beginning of the memory for the new element.
  * Equivalent to \ref sc3_array_push_count (a, 1, ptr).
- * \param [in,out] a    The array must be setup and resizable.
- * \param [out] ptr     Address of pointer.
- *                      On output set to array element at previously last index.
+ * The pointer to the array element is passed by a reference argument.
+ * \param [in,out] a    The array must be setup and resizable.  Enlarged by 1.
+ * \param [out] ptr     Optional address of pointer.
+ *                      On output the array element at previously last index.
  *                      This argument may be NULL for no assignment.
  * \return              NULL on success, error object otherwise.
  */
@@ -345,28 +358,39 @@ sc3_error_t        *sc3_array_push (sc3_array_t * a, void *ptr);
 sc3_error_t        *sc3_array_pop (sc3_array_t * a);
 
 /** Set array to non-resizable after it has been setup.
+ * If the array is not resizable already, do nothing.
  * If the array is initially resizable, this call is required to allow refing.
+ * This call is not reversible.
  * \param [in,out] a    The array must be setup.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_freeze (sc3_array_t * a);
 
 /** Index an array element.
+ * The pointer to the array element is passed by a reference argument.
  * \param [in] a        The array must be setup.
  * \param [in] i        Index must be in [0, element count).
  * \param [out] ptr     Address of a pointer.
  *                      Assigned address of array element at index \a i.
- *                      If the array element size is zero, the pointer
- *                      must not be dereferenced.
+ *                      The pointer may be used for reading and writing.
+ *                      Not to be dereferenced when element size is 0.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
 
-/** Index an array element without returning an error object.
+/** Index an array element for reading without returning an error object.
+ *
+ * With --enable-debug, \ref sc3_array_index checks for sanity and bounds.
+ * Without --enable-debug, \ref sc3_array_index is a fast function and it
+ * always returns NULL.  In this case, checking its return value is redundant.
+ * Only if this check, usually effected by the \ref SC3E macro, would make a
+ * measurable difference in performance, it might be advised to consider
+ * using this replacement function.
+ *
  * This function is optimized for speed, not safety, thus risky.
  * Using it with a non-setup array or wrong indexing is undefined.
  * The idea is not to verify its return pointer at all.
- * If you feel any such need, use \ref sc3_array_index.
+ *
  * \param [in] a        Const pointer to the array, must be setup.
  * \param [in] i        Index must be in [0, element count).
  * \return              Address of array element at index \a i.
@@ -374,7 +398,7 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
  *                      if index is out of bounds, element size is zero,
  *                      or the array is not setup.  Without --enable-debug,
  *                      passing a non-setup array or invalid indices is
- *                      undefined.
+ *                      undefined, and a segmentation fault is likely.
  */
 const void         *sc3_array_index_noerr (const sc3_array_t * a, int i);
 
@@ -383,7 +407,9 @@ const void         *sc3_array_index_noerr (const sc3_array_t * a, int i);
  * viewed array, which must thus not be destroyed before this view.
  * The view starts out as resizable, permitting future calls to \ref
  * sc3_array_renew_view as long as \ref sc3_array_freeze is not called.
- * \param [in,out] alloc    An allocator that is setup.
+ * This does not mean that \ref sc3_array_resize would be legal on a view.
+ * \param [in,out] alloc    An allocator that is setup, or NULL.
+ *                          If NULL, we use \ref sc3_allocator_new_static.
  *                          The allocator is refd and remembered internally
  *                          and will be unrefd on view destruction.
  * \param [out] view    Pointer to the view array to be created.
@@ -407,10 +433,11 @@ sc3_error_t        *sc3_array_new_view (sc3_allocator_t * alloc,
  * We have no means to verify that the fragment exists and stays alive.
  * The view starts out as resizable, permitting future calls to \ref
  * sc3_array_renew_data as long as \ref sc3_array_freeze is not called.
- * \note Potentially dangerous function!  Make sure that array's length
+ * \note Potentially dangerous function.  Ensure that the array's length
  * from start offset is supported by the length of the given fragment.
  * Otherwise the behavior is undefined.
- * \param [in,out] alloc    An allocator that is setup.
+ * \param [in,out] alloc    An allocator that is setup, or NULL.
+ *                          If NULL, we use \ref sc3_allocator_new_static.
  *                          The allocator is refd and remembered internally
  *                          and will be unrefd on view destruction.
  * \param [out] view    Pointer to the view array to be created.
@@ -421,7 +448,7 @@ sc3_error_t        *sc3_array_new_view (sc3_allocator_t * alloc,
  * \param [in] offset   The offset of the viewed data section in element units.
  *                      This offset cannot be changed unless the view is renewed.
  * \param [in] length   The length of the viewed section in element units.
- *                      The view cannot be resized resized unless it is renewed.
+ *                      The view cannot be resized unless it is renewed.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_new_data (sc3_allocator_t * alloc,
@@ -430,14 +457,15 @@ sc3_error_t        *sc3_array_new_data (sc3_allocator_t * alloc,
                                         int offset, int length);
 
 /** Adjust an existing view array for a different window and/or viewed array.
+ * It is not possible to renew an array view to view data, or vice versa.
  * Inherit the data element size from the given array.  The view unrefs the
  * previously viewed array and refs the new viewed array, which must thus not
- * be destroyed before this view.
- * \param [out] view    Pointer to existing view array to be adjusted.
+ * be destroyed before this view.  The view must be resizable (the default).
+ * \param [in,out] view     Existing view array to be adjusted.
  *                      This array will refer to the memory of
  *                      the referenced array \a a corresponding to
  *                      indices [offset, offset + length).
- *                      View must not yet have been frozen.
+ *                      Input view must not have been frozen.
  * \param [in] a        The array must be setup and not resizable.
  *                      Its element size must be identical to the view's.
  * \param [in] offset   The offset of the viewed section in element units.
@@ -446,27 +474,31 @@ sc3_error_t        *sc3_array_new_data (sc3_allocator_t * alloc,
  *                      The offset + length must be within length of \a a.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_renew_view (sc3_array_t ** view,
+sc3_error_t        *sc3_array_renew_view (sc3_array_t * view,
                                           sc3_array_t * a,
                                           int offset, int length);
 
 /** Adjust an existing view on data for tracking some given memory fragment.
+ * It is not possible to renew a data view to view an array, or vice versa.
+ * The viewed memory may change, but not the size of one data element.
  * We have no means to verify that the fragment exists and stays alive.
- * \note Potentially dangerous function!  Make sure that array's length
+ * The view must be resizable (which is the default).
+ * \note Potentially dangerous function.  Ensure that the array's length
  * from start offset is supported by the length of the given fragment.
  * Otherwise the behavior is undefined.
- * \param [out] view    Pointer to existing view on data to be adjusted.
+ * \param [in,out] view     Existing view on data to be adjusted.
  *                      The element size of the view remains the same.
- *                      View must not yet have been frozen.
+ *                      Input view must not have been frozen.
  * \param [in] data     The data must not be moved while view is alive.
  * \param [in] esize    Size of one viewed element in bytes, same as view's!
+ *                      This parameter is added for redundancy and safety.
  * \param [in] offset   The offset of the viewed section in element units.
  *                      This offset cannot be changed unless the view is renewed.
  * \param [in] length   The length of the viewed section in element units.
  *                      The view cannot be resized resized unless it is renewed.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_renew_data (sc3_array_t ** view, void *data,
+sc3_error_t        *sc3_array_renew_data (sc3_array_t * view, void *data,
                                           size_t esize, int offset,
                                           int length);
 
@@ -487,14 +519,6 @@ sc3_error_t        *sc3_array_get_elem_size (const sc3_array_t * a,
  */
 sc3_error_t        *sc3_array_get_elem_count (const sc3_array_t * a,
                                               int *ecount);
-
-/** Return the array's element count without creating error objects.
- * \param [in] a        The array must be setup.  Otherwise, return 0
- *                      with --enable-debug, or junk or crash without.
- *                      Repeat, the behavior is then undefined.
- * \return              The array's element count.
- */
-int                 sc3_array_elem_count_noerr (const sc3_array_t * a);
 
 #ifdef __cplusplus
 #if 0
