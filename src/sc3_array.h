@@ -294,13 +294,63 @@ sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
 sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
 
 /** Sort the elements of an array with qsort (3).
- * \param [in,out] a    Allay must be setup.
+ * The comparison callback does not allow for error return.
+ * A possible solution is longjmp (3) with one jump buffer per thread.
+ * \param [in,out] a    Array must be setup.
  * \param [in] compar   Comparison function as with qsort (3).
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_sort (sc3_array_t * a,
                                     int (*compar) (const void *,
                                                    const void *));
+
+#ifndef SC_HAVE_BSD_QSORT_R
+
+/** Sort the elements of an array with qsort_r (3).
+ * The comparison callback does not allow for error return.
+ * However, it is passed context data that may be used directly for
+ * this purpose or combined with a thread-local longjmp (3) buffer.
+ * \param [in,out] a    Array must be setup.
+ * \param [in] compar   Comparison function as with qsort (3).
+ *                      There are two differing conventions regarding
+ *                      its parameters.  We document the GNU version.
+ * \param [in] data     Passed on to the \a compar function.
+ * \return              NULL on success, error object otherwise.
+ *                      Returns fatal error if neither
+ *                      SC_HAVE_BSD_QSORT_R nor S_HAVE_GNU_QSORT_R
+ *                      is defined.
+ */
+sc3_error_t        *sc3_array_sort_r (sc3_array_t * a,
+                                      int (*compar) (const void *,
+                                                     const void *,
+                                                     void * data),
+                                      void *data);
+
+#else
+
+sc3_error_t        *sc3_array_sort_r (sc3_array_t * a,
+                                      int (*compar) (void * data,
+                                                     const void *,
+                                                     const void *),
+                                      void *data);
+
+#endif /* SC_HAVE_BSD_QSORT_R */
+
+/** Binary search in a sorted array with bsearch (3).
+ * The comparison callback does not allow for error return.
+ * A possible solution is longjmp (3) with one jump buffer per thread.
+ * \param [in] a        Array must be setup.
+ * \param [in] key      Pointer to array contents searched.  Not NULL.
+ * \param [in] compar   Comparison function as wiith bsearch (3);
+ * \param [out] ptr     Pointer to address must not be NULL.
+ *                      Value set to address of found object inside
+ *                      the array, or NULL if no match found.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_bsearch (sc3_array_t * a, const void *key,
+                                       int (*compar) (const void *,
+                                                      const void *),
+                                       void *ptr);
 
 /** Function to determine the enumerable type of an object in an array.
  * \param [in] array   Array containing the object.

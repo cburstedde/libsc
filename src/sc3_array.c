@@ -373,6 +373,60 @@ sc3_array_sort (sc3_array_t * a, int (*compar) (const void *, const void *))
   return NULL;
 }
 
+#ifndef SC_HAVE_BSD_QSORT_R
+
+sc3_error_t        *
+sc3_array_sort_r (sc3_array_t * a,
+                  int (*compar) (const void *, const void *, void * data),
+                  void *data)
+{
+  SC3A_IS (sc3_array_is_setup, a);
+  SC3A_CHECK (compar != NULL);
+
+  #ifndef SC_HAVE_QSORT_R
+  return sc3_error_new_kind (SC3_ERROR_FEATURE, __FILE__, __LINE__,
+                             "qsort_r not available");
+  #else
+  qsort_r (a->mem, a->ecount, a->esize, compar, data);
+  return NULL;
+  #endif
+}
+
+#else
+
+sc3_error_t        *
+sc3_array_sort_r (sc3_array_t * a,
+                  int (*compar) (void * data, const void *, const void *),
+                  void *data)
+{
+  SC3A_IS (sc3_array_is_setup, a);
+  SC3A_CHECK (compar != NULL);
+
+  #ifndef SC_HAVE_QSORT_R
+  /* this branch is unreachable when configured properly */
+  return sc3_error_new_kind (SC3_ERROR_FATAL, __FILE__, __LINE__,
+                             "configure error concerning qsort_r");
+  #else
+  qsort_r (a->mem, a->ecount, a->size, data, compar);
+  return NULL;
+  #endif
+}
+
+#endif /* SC_HAVE_BSD_QSORT_R */
+
+sc3_error_t        *
+sc3_array_bsearch (sc3_array_t * a, const void *key,
+                   int (*compar) (const void *, const void *), void *ptr)
+{
+  SC3A_IS (sc3_array_is_setup, a);
+  SC3A_CHECK (key != NULL);
+  SC3A_CHECK (compar != NULL);
+  SC3A_CHECK (ptr != NULL);
+
+  *(void **) ptr = bsearch (key, a->mem, a->ecount, a->esize, compar);
+  return NULL;
+}
+
 sc3_error_t        *
 sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
                  int num_types, sc3_array_type_t type_fn, void *data)

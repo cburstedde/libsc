@@ -447,6 +447,7 @@ typedef enum sc3_error_kind
   SC3_ERROR_REF,        /**< Reference counting misuse. */
   SC3_ERROR_MEMORY,     /**< Out of memory. */
   SC3_ERROR_NETWORK,    /**< Network error. */
+  SC3_ERROR_FEATURE,    /**< Required feature not available. */
   SC3_ERROR_UNKNOWN,    /**< Unknown fatal error. */
   SC3_ERROR_KIND_LAST   /**< Guard range of possible enumeration values. */
 }
