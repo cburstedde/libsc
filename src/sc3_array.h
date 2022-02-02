@@ -373,13 +373,13 @@ sc3_error_t        *sc3_array_bsearch (sc3_array_t * a, const void *key,
 
 /** Function to determine the enumerable type of an object in an array.
  * \param [in] array   Array containing the object.
- * \param [in] index   The location of the object.
+ * \param [in] index   The location (array index) of the object.
  * \param [in] data    Arbitrary user data.
- * \param [out] type   Returned enumerable type of an object.
- * \return             NULL on success, error object otherwise.
+ * \return             Enumerable type of an object, non-negative.
+ *                     A negative value may be returned to indicate
+ *                     a fatal error or inconsistency to the caller.
  */
-typedef sc3_error_t *(*sc3_array_type_t) (sc3_array_t * array,
-                                          int index, void *data, int *type);
+typedef int (*sc3_array_type_t) (sc3_array_t *array, int index, void *data);
 
 /** Compute the offsets of groups of enumerable types in an array.
  * \param [in] a             Array that is sorted in ascending order by type.

@@ -503,6 +503,7 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
 
   SC3A_IS (sc3_array_is_setup, a);
   SC3A_IS (sc3_array_is_resizable, offsets);
+  SC3A_CHECK (0 <= num_types);
 
   SC3E (sc3_array_get_elem_size (offsets, &elem_size));
   SC3A_CHECK (elem_size == sizeof (int));
@@ -552,8 +553,8 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
   step = 1;
   for (;;) {
     guess = low + (high - low) / 2;     /* By (7) low <= guess < high. */
-    SC3E (type_fn (a, guess, data, &type));
-    SC3A_CHECK (type < num_types);
+    type = type_fn (a, guess, data);
+    SC3E_DEMAND (0 <= type && type < num_types, SC3_ERROR_INVALID);
     /** If type < step, then we can set low = guess + 1 and still satisfy
      * invariant (4).  Also, because guess < high, we are assured low <= high.
      */

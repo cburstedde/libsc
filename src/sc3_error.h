@@ -283,13 +283,13 @@ sc3_error_t        *sc3_free (void *pmem);
   }} while (0)
 
 /** When encountering unreachable code, return a fatal error.
- * The error created is of type \ref SC3_ERROR_FATAL
+ * The error created is of type \ref SC3_ERROR_INVALID
  * and its message is provided as parameter \a s.
  */
 #define SC3E_UNREACH(s) do {                                            \
   char _errmsg[SC3_BUFSIZE];                                            \
   sc3_snprintf (_errmsg, SC3_BUFSIZE, "Unreachable: %s", (s));          \
-  return sc3_error_new_kind (SC3_ERROR_FATAL,                           \
+  return sc3_error_new_kind (SC3_ERROR_INVALID,                         \
                              __FILE__, __LINE__, _errmsg);              \
   } while (0)
 
@@ -448,6 +448,7 @@ typedef enum sc3_error_kind
   SC3_ERROR_MEMORY,     /**< Out of memory. */
   SC3_ERROR_NETWORK,    /**< Network error. */
   SC3_ERROR_FEATURE,    /**< Required feature not available. */
+  SC3_ERROR_INVALID,    /**< Invalid condition or situation. */
   SC3_ERROR_UNKNOWN,    /**< Unknown fatal error. */
   SC3_ERROR_KIND_LAST   /**< Guard range of possible enumeration values. */
 }
@@ -615,7 +616,7 @@ void                sc3_error_set_sync (sc3_error_t * e,
                                         sc3_error_sync_t syn);
 sc3_error_t        *sc3_error_set_msgf (sc3_error_t * e,
                                         const char *errfmt, ...)
-  __attribute__((format (printf, 2, 3)));
+  __attribute__ ((format (printf, 2, 3)));
 #endif
 
 /** Setup an error and put it into its usable phase.

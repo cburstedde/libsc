@@ -266,7 +266,7 @@ void                sc3_error_set_sync (sc3_error_t * ea,
                                         sc3_error_sync_t syn);
 void                sc3_error_set_msgf (sc3_error_t * ea,
                                         const char *errfmt, ...)
-  __attribute__((format (printf, 2, 3)));
+  __attribute__ ((format (printf, 2, 3)));
 #endif
 
 sc3_error_t        *
