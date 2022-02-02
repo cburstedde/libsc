@@ -49,7 +49,7 @@ struct sc3_log
 };
 
 static sc3_log_t    statlog = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, SC3_LOG_TOP, 0, NULL,
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, SC3_LOG_PRODUCTION, 0, NULL,
   sc3_log_function_default, NULL
 };
 
@@ -110,7 +110,7 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
 #ifdef SC_ENABLE_DEBUG
   log->level = SC3_LOG_DEBUG;
 #else
-  log->level = SC3_LOG_TOP;
+  log->level = SC3_LOG_INFO;
 #endif
   log->lator = lator;
   log->rank = 0;
