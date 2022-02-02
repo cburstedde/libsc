@@ -364,6 +364,16 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
 }
 
 sc3_error_t        *
+sc3_array_sort (sc3_array_t * a, int (*compar) (const void *, const void *))
+{
+  SC3A_IS (sc3_array_is_setup, a);
+  SC3A_CHECK (compar != NULL);
+
+  qsort (a->mem, a->ecount, a->esize, compar);
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
                  int num_types, sc3_array_type_t type_fn, void *data)
 {
@@ -599,7 +609,7 @@ sc3_array_new_data (sc3_allocator_t * alloc, sc3_array_t ** view,
 }
 
 sc3_error_t        *
-sc3_array_renew_view (sc3_array_t *view, sc3_array_t * a, int offset,
+sc3_array_renew_view (sc3_array_t * view, sc3_array_t * a, int offset,
                       int length)
 {
   /* verify input parameters */
@@ -625,7 +635,7 @@ sc3_array_renew_view (sc3_array_t *view, sc3_array_t * a, int offset,
 }
 
 sc3_error_t        *
-sc3_array_renew_data (sc3_array_t *view, void *data, size_t esize,
+sc3_array_renew_data (sc3_array_t * view, void *data, size_t esize,
                       int offset, int length)
 {
   /* verify input parameters */

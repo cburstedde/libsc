@@ -293,6 +293,15 @@ sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
  */
 sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
 
+/** Sort the elements of an array with qsort (3).
+ * \param [in,out] a    Allay must be setup.
+ * \param [in] compar   Comparison function as with qsort (3).
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_sort (sc3_array_t * a,
+                                    int (*compar) (const void *,
+                                                   const void *));
+
 /** Function to determine the enumerable type of an object in an array.
  * \param [in] array   Array containing the object.
  * \param [in] index   The location of the object.
