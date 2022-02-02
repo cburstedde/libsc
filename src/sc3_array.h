@@ -372,29 +372,30 @@ sc3_error_t        *sc3_array_bsearch (sc3_array_t * a, const void *key,
                                        void *ptr);
 
 /** Function to determine the enumerable type of an object in an array.
- * \param [in] array   Array containing the object.
- * \param [in] index   The location (array index) of the object.
+ * \param [in] element Pointer to an array element.
+ *                     Its size in bytes stems from the calling context.
  * \param [in] data    Arbitrary user data.
  * \return             Enumerable type of an object, non-negative.
  *                     A negative value may be returned to indicate
  *                     a fatal error or inconsistency to the caller.
  */
-typedef int (*sc3_array_type_t) (sc3_array_t *array, int index, void *data);
+typedef int (*sc3_array_type_t) (const void *element, void *data);
 
 /** Compute the offsets of groups of enumerable types in an array.
  * \param [in] a             Array that is sorted in ascending order by type.
  *                           If k indexes \a a, then
  *                           0 <= \a type_fn (\a a, k, \a data) <
  *                           \a num_types.
- * \param [in,out] offsets   An initialized a of type size_t that is
+ * \param [in,out] offsets   This array setup on input, holding type int, is
  *                           resized to \a num_types + 1 entries.  The indices
  *                           j of \a a that contain objects of type k are
  *                           \a offsets[k] <= j < \a offsets[k + 1].
  *                           If there are no objects of type k, then
  *                           \a offsets[k] = \a offset[k + 1].
- * \param [in] num_types     The number of possible types of objects in
- *                           \a a.
- * \param [in] type_fn       Returns the type of an object in the a.
+ * \param [in] num_types     Number of possible types of objects in \a a.
+ * \param [in] type_fn       Returns the type of an object in the array.
+ *                           This function must not access beyond the
+ *                           byte size of one element of the array \a a.
  * \param [in] data          Arbitrary user data passed to \a type_fn.
  * \return                   NULL on success, error object otherwise.
  */
