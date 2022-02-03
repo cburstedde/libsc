@@ -180,7 +180,13 @@ int                 sc3_log_is_setup (const sc3_log_t * log, char *reason);
  */
 sc3_error_t        *sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp);
 
-/** Default: \ref SC3_LOG_LEVEL. */
+/** Set the minimum log level that this log object may print.
+ * Note that levels below \ref SC3_LOG_LEVEL are never printed.
+ * Default: \ref SC3_LOG_LEVEL.
+ * \param [in,out] log  Logger must be valid and not setup.
+ * \param [in] level    Valid log level of \ref sc3_log_level_t.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_log_set_level (sc3_log_t * log,
                                        sc3_log_level_t level);
 
@@ -193,11 +199,14 @@ sc3_error_t        *sc3_log_set_level (sc3_log_t * log,
  *                      means that it must not cease to exist while this
  *                      logger is in use.  Otherwise the log calls may crash
  *                      or output messages about an invalid communicator.
+ * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
                                       sc3_MPI_Comm_t mpicomm);
 
-/** Defaults: stderr, 0 */
+/** Defaults: stderr, 0
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
                                       FILE * file, int call_fclose);
 
@@ -206,7 +215,7 @@ sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
  * \param [in,out] log  Logger must not yet be setup.
  * \param [in] func     Non-NULL pointer of type \ref sc3_log_function_t.
  * \param [in] user     Pointer is passed through to log function \a func.
- * \return              NULL on success, fatal error otherwise.
+ * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_log_set_function (sc3_log_t * log,
                                           sc3_log_function_t func,
