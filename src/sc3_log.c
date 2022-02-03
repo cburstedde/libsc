@@ -54,7 +54,7 @@ static sc3_log_t    statlog = {
 };
 
 sc3_log_t          *
-sc3_log_predef (void)
+sc3_log_new_static (void)
 {
   return &statlog;
 }
@@ -157,8 +157,8 @@ sc3_log_set_file (sc3_log_t * log, FILE * file, int call_fclose)
 
 void
 sc3_log_function_bare (void *user, const char *msg,
-                       sc3_log_role_t role, int rank, int tid,
-                       sc3_log_level_t level, int spaces, FILE * outfile)
+                       sc3_log_role_t role, int rank,
+                       sc3_log_level_t level, FILE * outfile)
 {
   /* output message as is */
   fprintf (outfile != NULL ? outfile : stderr, "%s\n", msg);
@@ -166,23 +166,24 @@ sc3_log_function_bare (void *user, const char *msg,
 
 void
 sc3_log_function_default (void *user, const char *msg,
-                          sc3_log_role_t role, int rank, int tid,
-                          sc3_log_level_t level, int spaces, FILE * outfile)
+                          sc3_log_role_t role, int rank,
+                          sc3_log_level_t level, FILE * outfile)
 {
   char                header[SC3_BUFSIZE];
 
   /* construct elaborate message and write it */
-  if (role == SC3_LOG_PROCESS0) {
-    snprintf (header, SC3_BUFSIZE, "%s", "sc3");
-  }
-  else if (role == SC3_LOG_THREAD0) {
+  if (role == SC3_LOG_LOCAL) {
     snprintf (header, SC3_BUFSIZE, "%s %d", "sc3", rank);
   }
+  else if (role == SC3_LOG_GLOBAL) {
+    snprintf (header, SC3_BUFSIZE, "%s", "sc3");
+  }
   else {
-    snprintf (header, SC3_BUFSIZE, "%s %d:%d", "sc3", rank, tid);
+    /* TODO: this is an invalid role */
+    snprintf (header, SC3_BUFSIZE, "%s %d:%d", "sc3", rank, 0);
   }
   fprintf (outfile != NULL ? outfile : stderr,
-           "[%s] %*s%s\n", header, spaces, "", msg);
+           "[%s] %*s%s\n", header, 0, "", msg);
 }
 
 sc3_error_t        *
@@ -271,11 +272,9 @@ sc3_log_destroy (sc3_log_t ** logp)
 }
 
 void
-sc3_log (sc3_log_t * log, int depth,
+sc3_log (sc3_log_t * log,
          sc3_log_role_t role, sc3_log_level_t level, const char *msg)
 {
-  int                 tid;
-
   /* survive NULL message */
   if (msg == NULL) {
     msg = "NULL message";
@@ -294,23 +293,14 @@ sc3_log (sc3_log_t * log, int depth,
     return;
   }
 
-#if 0
-  tid = sc3_omp_thread_num ();
-#endif
-  tid = 0;
-  if (role == SC3_LOG_PROCESS0 && (log->rank != 0 || tid != 0)) {
+  if (role == SC3_LOG_GLOBAL && log->rank != 0) {
     /* only log for the master thread in master process */
-    return;
-  }
-  if (role == SC3_LOG_THREAD0 && tid != 0) {
-    /* only log for the master thread */
     return;
   }
 
   /* output message */
   if (log->func != NULL) {
-    log->func (log->user, msg, role, log->rank, tid, level,
-               depth >= 0 ? depth * log->indent : 0,
+    log->func (log->user, msg, role, log->rank, level,
                log->file != NULL ? log->file : stderr);
   }
   else {
@@ -319,14 +309,14 @@ sc3_log (sc3_log_t * log, int depth,
 }
 
 void
-sc3_logf (sc3_log_t * log, int depth,
+sc3_logf (sc3_log_t * log,
           sc3_log_role_t role, sc3_log_level_t level, const char *fmt, ...)
 {
   if (fmt != NULL) {
     va_list             ap;
 
     va_start (ap, fmt);
-    sc3_logv (log, depth, role, level, fmt, ap);
+    sc3_logv (log, role, level, fmt, ap);
     va_end (ap);
   }
   else {
@@ -335,7 +325,7 @@ sc3_logf (sc3_log_t * log, int depth,
 }
 
 void
-sc3_logv (sc3_log_t * log, int depth,
+sc3_logv (sc3_log_t * log,
           sc3_log_role_t role, sc3_log_level_t level,
           const char *fmt, va_list ap)
 {
@@ -343,7 +333,7 @@ sc3_logv (sc3_log_t * log, int depth,
     char                msg[SC3_BUFSIZE];
 
     if (0 <= vsnprintf (msg, SC3_BUFSIZE, fmt, ap)) {
-      sc3_log (log, depth, role, level, msg);
+      sc3_log (log, role, level, msg);
     }
     else {
       fprintf (stderr, "[sc3] BAD vsnprintf in sc3_logv\n");
@@ -365,6 +355,8 @@ sc3_log_error_recursion (sc3_log_t * log, int depth,
   sc3_error_kind_t    kind;
   sc3_error_t        *s;
 
+  /* TODO what to do with depth */
+
   /* couple debug checks */
   SC3A_CHECK (depth >= 0);
   SC3A_CHECK (stackdepth >= 0);
@@ -385,7 +377,7 @@ sc3_log_error_recursion (sc3_log_t * log, int depth,
   SC3_BUFCOPY (bwork, filename);
   bname = sc3_basename (bwork);
 
-  sc3_logf (log, depth, role, level, "%d %s:%d:%c %s", stackdepth,
+  sc3_logf (log, role, level, "%d %s:%d:%c %s", stackdepth,
             bname, line, sc3_error_kind_char[kind], errmsg);
 
   SC3E (sc3_error_restore_message (e, errmsg));
@@ -394,10 +386,10 @@ sc3_log_error_recursion (sc3_log_t * log, int depth,
 }
 
 sc3_error_t        *
-sc3_log_error (sc3_log_t * log, int depth,
+sc3_log_error (sc3_log_t * log,
                sc3_log_role_t role, sc3_log_level_t level, sc3_error_t * e)
 {
   char                bwork[SC3_BUFSIZE];
-  SC3E (sc3_log_error_recursion (log, depth, role, level, e, 0, bwork));
+  SC3E (sc3_log_error_recursion (log, 0, role, level, e, 0, bwork));
   return NULL;
 }
