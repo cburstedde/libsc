@@ -28,11 +28,30 @@
 */
 
 /** \file sc3_log.h
+ * Provide a general mechanism for logging messages.
+ *
+ * We define the logger object, which remembers options such as the
+ * minimum log level to print, which file to print to, and communicator.
+ * The communicator is used to determine the rank of a process, such
+ * that we can either print a message on all ranks or on the root only.
+ * There is always a static logger object available printing to stderr
+ * and using \ref SC3_MPI_COMM_WORLD as communicator.
+ *
+ * There is a compile-time minimum log level, \ref SC3_LOG_LEVEL,
+ * below which all messages are ignored (at compile time when the
+ * compiler optimizes for constant comparisons).  This level is
+ * preset to \ref SC3_LOG_DEBUG with --enable-debug and \ref
+ * SC3_LOG_INFO otherwise.  You may redefine this on configure,
+ * however, it is safer to rely on the log level of the logger object.
+ *
+ * When a logger is set to a given log level, it will only log message
+ * greater equal than the maximum of that level and \ref SC3_LOG_LEVEL.
  */
 
 #ifndef SC3_LOG_H
 #define SC3_LOG_H
 
+#include <sc3_alloc.h>
 #include <sc3_mpi.h>
 
 #ifdef __cplusplus
@@ -58,15 +77,15 @@ sc3_log_role_t;
 /** Log level or priority.  Used to ignore messages of low priority. */
 typedef enum sc3_log_level
 {
-  SC3_LOG_NOISE,        /**< Anything at all and all sorts of nonsense */
-  SC3_LOG_DEBUG,        /**< Information only useful for debugging.
-                             Too much to be acceptable for production runs */
-  SC3_LOG_INFO,         /**< Detailed, but still acceptable for production */
-  SC3_LOG_STATISTICS,   /**< Major diagnostics and statistical summaries */
-  SC3_LOG_PRODUCTION,   /**< Sparse flow logging for toplevel functions */
-  SC3_LOG_ESSENTIAL,    /**< A few lines per program: version, options */
-  SC3_LOG_ERROR,        /**< Errors by misusage, internal bugs, I/O */
-  SC3_LOG_SILENT,       /**< This log level will not print anything */
+  SC3_LOG_NOISE,        /**< Anything at all and all sorts of nonsense. */
+  SC3_LOG_DEBUG,        /**< Information mainly useful for debugging.
+                             Too much to be acceptable for production. */
+  SC3_LOG_INFO,         /**< Detailed, but still acceptable for production. */
+  SC3_LOG_STATISTICS,   /**< Major diagnostics and statistical summaries. */
+  SC3_LOG_PRODUCTION,   /**< Sparse flow logging for toplevel functions. */
+  SC3_LOG_ESSENTIAL,    /**< A few lines per program: version, options. */
+  SC3_LOG_ERROR,        /**< Errors by misusage, internal bugs, I/O. */
+  SC3_LOG_SILENT,       /**< This log level prints nothing at all. */
   SC3_LOG_LEVEL_LAST
 }
 sc3_log_level_t;
@@ -79,13 +98,17 @@ sc3_log_level_t;
  */
 typedef void (*sc3_log_function_t) (void *user, const char *msg,
                                     sc3_log_role_t role, int rank,
-                                    sc3_log_level_t level, FILE *outfile);
+                                    sc3_log_level_t level,
+                                    int indent, FILE *outfile);
 /* *INDENT-ON* */
 
 #ifndef SC3_LOG_LEVEL
 #ifdef SC_ENABLE_DEBUG
 #define SC3_LOG_LEVEL SC3_LOG_DEBUG
 #else
+/** The minimum log level set at compile time is \ref SC3_LOG_INFO.
+ * This becomes \ref SC3_LOG_DEBUG with --enable-debug.
+ */
 #define SC3_LOG_LEVEL SC3_LOG_INFO
 #endif
 #endif
@@ -103,14 +126,27 @@ typedef void (*sc3_log_function_t) (void *user, const char *msg,
  */
 void                sc3_log_function_bare
   (void *user, const char *msg,
-   sc3_log_role_t role, int rank,
-   sc3_log_level_t level, FILE * outfile);
+   sc3_log_role_t role, int rank, sc3_log_level_t level,
+   int indent, FILE * outfile);
+
+/** Type suitable as user data for \ref sc3_log_function_prefix. */
+typedef struct sc3_log_puser
+{
+  const char           *prefix;
+}
+sc3_log_puser_t;
+
+/** Log function that adds rank/thread information and indent spacing. */
+void                sc3_log_function_prefix
+  (void *user, const char *msg,
+   sc3_log_role_t role, int rank, sc3_log_level_t level,
+   int indent, FILE * outfile);
 
 /** Log function that adds rank/thread information and indent spacing. */
 void                sc3_log_function_default
   (void *user, const char *msg,
-   sc3_log_role_t role, int rank,
-   sc3_log_level_t level, FILE * outfile);
+   sc3_log_role_t role, int rank, sc3_log_level_t level,
+   int indent, FILE * outfile);
 
 int                 sc3_log_is_valid (const sc3_log_t * log, char *reason);
 int                 sc3_log_is_new (const sc3_log_t * log, char *reason);
@@ -124,7 +160,7 @@ sc3_error_t        *sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp);
 sc3_error_t        *sc3_log_set_level (sc3_log_t * log,
                                        sc3_log_level_t level);
 
-/** Default SC3_COMM_NULL */
+/** Default SC3_MPI_COMM_NULL */
 sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
                                       sc3_MPI_Comm_t mpicomm);
 
@@ -133,22 +169,16 @@ sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
                                       FILE * file, int call_fclose);
 
 /** Set function that effectively formats and outputs the log message.
- * It default to \ref sc3_log_function_default.
+ * It defaults to \ref sc3_log_function_default.
  * \param [in,out] log  Logger must not yet be setup.
- * \param [in] func     Non-NULL function; see \ref sc3_log_function_t.
+ * \param [in] func     Function pointer of type \ref sc3_log_function_t.
+ *                      If set to NULL, print unformatted messages to stderr.
  * \param [in] user     Pointer is passed through to log function \a func.
  * \return              NULL on success, fatal error otherwise.
  */
 sc3_error_t        *sc3_log_set_function (sc3_log_t * log,
                                           sc3_log_function_t func,
                                           void *user);
-
-/** Set number of spaces to indent each depth level.
- * \param [in,out] log  Logger must not yet be setup.
- * \param [in] indent   Non-negative number, default 0.
- * \return              NULL on success, fatal error otherwise.
- */
-sc3_error_t        *sc3_log_set_indent (sc3_log_t * log, int indent);
 
 sc3_error_t        *sc3_log_setup (sc3_log_t * log);
 sc3_error_t        *sc3_log_ref (sc3_log_t * log);
@@ -175,32 +205,18 @@ sc3_log_t          *sc3_log_new_static (void);
  */
 void                sc3_log (sc3_log_t * log,
                              sc3_log_role_t role, sc3_log_level_t level,
-                             const char *msg);
+                             int indent, const char *msg);
 
 /** See \ref sc3_log. */
 void                sc3_logf (sc3_log_t * log,
                               sc3_log_role_t role, sc3_log_level_t level,
-                              const char *fmt, ...)
-  __attribute__((format (printf, 4, 5)));
+                              int indent, const char *fmt, ...)
+  __attribute__((format (printf, 5, 6)));
 
 /** See \ref sc3_log. */
 void                sc3_logv (sc3_log_t * log,
                               sc3_log_role_t role, sc3_log_level_t level,
-                              const char *fmt, va_list ap);
-
-/** Log the location and message of an error object and its history stack.
- * We call the log function once for each stack entry.
- * \param [in,out] log  Logger must be setup.
- * \param [in] depth    Number if indentation levels.
- * \param [in] role     Parallelism: root rank, per process, per thread.
- * \param [in] level    Log level (priority).
- * \param [in,out] e    This error is not modified.
- *                      It is an in-out argument since we access and restore
- *                      some of its resources.
- */
-sc3_error_t        *sc3_log_error (sc3_log_t * log,
-                                   sc3_log_role_t role, sc3_log_level_t level,
-                                   sc3_error_t * e);
+                              int indent, const char *fmt, va_list ap);
 
 #define _SC3_LOG_LEVEL(barelevel) SC3_LOG_ ## barelevel
 
@@ -211,9 +227,12 @@ sc3_error_t        *sc3_log_error (sc3_log_t * log,
   if (SC3_LOG_LEVEL <= loglevel) {                                      \
     va_list            ap;                                              \
     va_start (ap, fmt);                                                 \
-    sc3_logv (sc3_log_new_static (), localglobal, loglevel, fmt, ap);   \
+    sc3_logv (sc3_log_new_static (), localglobal, loglevel,             \
+              0, fmt, ap);                                              \
     va_end (ap);                                                        \
   }}
+
+/* TODO spell out prototypes for doxygen */
 
 #define _SC3_LOG_FUNCTIONS(barelevel)                                   \
 static inline void SC3_ ## barelevel ## F _SC3_LOG_PROT                 \
