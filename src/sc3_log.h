@@ -106,7 +106,7 @@ typedef void (*sc3_log_function_t) (void *user, const char *msg,
 #ifdef SC_ENABLE_DEBUG
 #define SC3_LOG_LEVEL SC3_LOG_DEBUG
 #else
-/** The minimum log level set at compile time is \ref SC3_LOG_INFO.
+/** Minimum log level set at compile time without --enable-debug.
  * This becomes \ref SC3_LOG_DEBUG with --enable-debug.
  */
 #define SC3_LOG_LEVEL SC3_LOG_INFO
@@ -132,7 +132,7 @@ void                sc3_log_function_bare
 /** Type suitable as user data for \ref sc3_log_function_prefix. */
 typedef struct sc3_log_puser
 {
-  const char           *prefix;
+  const char           *prefix;     /**< Short string used as log prefix. */
 }
 sc3_log_puser_t;
 
@@ -218,44 +218,61 @@ void                sc3_logv (sc3_log_t * log,
                               sc3_log_role_t role, sc3_log_level_t level,
                               int indent, const char *fmt, va_list ap);
 
-#define _SC3_LOG_LEVEL(barelevel) SC3_LOG_ ## barelevel
+/** Log a message to stderr with level \ref SC3_LOG_NOISE. */
+#define SC3_NOISES(s) SC3_NOISEF("%s", s)
 
-#define _SC3_LOG_PROT                                                   \
-  (const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
+/** Log a message to stderr with level \ref SC3_LOG_NOISE.
+ * \param [in] fmt    Format string as with printf (3). */
+void SC3_NOISEF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
 
-#define _SC3_LOG_BODY(localglobal,loglevel) (const char *fmt, ...) {    \
-  if (SC3_LOG_LEVEL <= loglevel) {                                      \
-    va_list            ap;                                              \
-    va_start (ap, fmt);                                                 \
-    sc3_logv (sc3_log_new_static (), localglobal, loglevel,             \
-              0, fmt, ap);                                              \
-    va_end (ap);                                                        \
-  }}
+/** Log a message to stderr with level \ref SC3_LOG_DEBUG. */
+#define SC3_DEBUGS(s) SC3_DEBUGF("%s", s)
 
-/* TODO spell out prototypes for doxygen */
+/** Log a message to stderr with level \ref SC3_LOG_DEBUG.
+ * \param [in] fmt    Format string as with printf (3). */
+void SC3_DEBUGF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
 
-#define _SC3_LOG_FUNCTIONS(barelevel)                                   \
-static inline void SC3_ ## barelevel ## F _SC3_LOG_PROT                 \
-static inline void SC3_ ## barelevel ## F                               \
-  _SC3_LOG_BODY (SC3_LOG_LOCAL, _SC3_LOG_LEVEL(barelevel))              \
-static inline void SC3_GLOBAL_ ## barelevel ## F _SC3_LOG_PROT          \
-static inline void SC3_GLOBAL_ ## barelevel ## F                        \
-  _SC3_LOG_BODY (SC3_LOG_GLOBAL, _SC3_LOG_LEVEL(barelevel))
+/** Log a message to stderr with level \ref SC3_LOG_INFO. */
+#define SC3_INFOS(s) SC3_INFOF("%s", s)
 
-_SC3_LOG_FUNCTIONS (NOISE)
-#define SC3_NOISES(s) SC3_NOISEF("%s", s);
-_SC3_LOG_FUNCTIONS (DEBUG)
-#define SC3_DEBUGS(s) SC3_DEBUGF("%s", s);
-_SC3_LOG_FUNCTIONS (INFO)
-#define SC3_INFOS(s) SC3_INFOF("%s", s);
-_SC3_LOG_FUNCTIONS (STATISTICS)
-#define SC3_STATISTICS(s) SC3_STATISTICSF("%s", s);
-_SC3_LOG_FUNCTIONS (PRODUCTION)
-#define SC3_PRODUCTIONS(s) SC3_PRODUCTIONF("%s", s);
-_SC3_LOG_FUNCTIONS (ESSENTIAL)
-#define SC3_ESSENTIALS(s) SC3_ESSENTIALF("%s", s);
-_SC3_LOG_FUNCTIONS (ERROR)
-#define SC3_ERRORS(s) SC3_ERRORF("%s", s);
+/** Log a message to stderr with level \ref SC3_LOG_INFO.
+ * \param [in] fmt    Format string as with printf (3). */
+void SC3_INFOF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+/** Log a message to stderr with level \ref SC3_LOG_STATISTICS. */
+#define SC3_STATISTICSS(s) SC3_STATISTICSF("%s", s)
+
+/** Log a message to stderr with level \ref SC3_LOG_STATISTICS.
+ * \param [in] fmt    Format string as with printf (3). */
+void SC3_STATISTICSF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+/** Log a message to stderr with level \ref SC3_LOG_PRODUCTION. */
+#define SC3_PRODUCTIONS(s) SC3_PRODUCTIONF("%s", s)
+
+/** Log a message to stderr with level \ref SC3_LOG_PRODUCTION.
+ * \param [in] fmt    Format string as with printf (3). */
+void SC3_PRODUCTIONF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+/** Log a message to stderr with level \ref SC3_LOG_ESSENTIAL. */
+#define SC3_ESSENTIALS(s) SC3_ESSENTIALF("%s", s)
+
+/** Log a message to stderr with level \ref SC3_LOG_ESSENTIAL.
+ * \param [in] fmt    Format string as with printf (3). */
+void SC3_ESSENTIALF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+/** Log a message to stderr with level \ref SC3_LOG_ERROR. */
+#define SC3_ERRORS(s) SC3_ERRORF("%s", s)
+
+/** Log a message to stderr with level \ref SC3_LOG_ERROR.
+ * \param [in] fmt    Format string as with printf (3). */
+void SC3_ERRORF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
 
 #ifdef __cplusplus
 #if 0

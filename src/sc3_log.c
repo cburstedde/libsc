@@ -427,3 +427,26 @@ sc3_log_error (sc3_log_t * log,
 }
 
 #endif  /* 0 */
+
+#define _SC3_LOG_BODY(localglobal,loglevel)                             \
+  if (SC3_LOG_LEVEL <= loglevel) {                                      \
+    va_list            ap;                                              \
+    va_start (ap, fmt);                                                 \
+    sc3_logv (sc3_log_new_static (), localglobal, loglevel,             \
+              0, fmt, ap);                                              \
+    va_end (ap);                                                        \
+  }
+
+#define _SC3_LOG_FUNCTIONS(barelevel)                                   \
+void SC3_ ## barelevel ## F (const char *fmt, ...)                      \
+{ _SC3_LOG_BODY (SC3_LOG_LOCAL, SC3_LOG_ ## barelevel) }                \
+void SC3_GLOBAL_ ## barelevel ## F (const char *fmt, ...)               \
+{ _SC3_LOG_BODY (SC3_LOG_GLOBAL, SC3_LOG_ ## barelevel) }
+
+_SC3_LOG_FUNCTIONS (NOISE)
+_SC3_LOG_FUNCTIONS (DEBUG)
+_SC3_LOG_FUNCTIONS (INFO)
+_SC3_LOG_FUNCTIONS (STATISTICS)
+_SC3_LOG_FUNCTIONS (PRODUCTION)
+_SC3_LOG_FUNCTIONS (ESSENTIAL)
+_SC3_LOG_FUNCTIONS (ERROR)
