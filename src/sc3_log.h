@@ -114,15 +114,13 @@ typedef void (*sc3_log_function_t) (void *user, const char *msg,
 #endif
 
 /** Log function that prints the incoming message without formatting.
- * \param [in,out] user    This function ignores the user-defined context
- *                         which may be passed to \ref sc3_log_set_function.
+ * \param [in,out] user    This function ignores any user-defined context.
  * \param [in] msg     This function adds a newline to the end of the message.
  * \param [in] role    Used for deciding whether to log, not used in formatting.
  * \param [in] rank    Used for deciding whether to log, not used in formatting.
- * \param [in] tid     Used for deciding whether to log, not used in formatting.
  * \param [in] level   Used for deciding whether to log, not used in formatting.
- * \param [in] spaces  Ignored.
- * \param [in,out] outfile      File printed to.
+ * \param [in] indent  Number of spaces to prepend to log message.
+ * \param [in,out] outfile      File printed to.  If NULL use stderr.
  */
 void                sc3_log_function_bare
   (void *user, const char *msg,
@@ -148,11 +146,37 @@ void                sc3_log_function_default
    sc3_log_role_t role, int rank, sc3_log_level_t level,
    int indent, FILE * outfile);
 
+/** Check whether a logger is not NULL and internally consistent.
+ * The logger may be valid in both its setup and usage phases.
+ * \param [in] log      Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True if pointer is not NULL and logger consistent.
+ */
 int                 sc3_log_is_valid (const sc3_log_t * log, char *reason);
+
+/** Check whether a logger is not NULL and not (yet) setup for usage.
+ * \param [in] log      Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True if logger is valid but not setup.
+ */
 int                 sc3_log_is_new (const sc3_log_t * log, char *reason);
+
+/** Check whether a logger is not NULL and setup for usage.
+ * \param [in] log      Any pointer.
+ * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
+ *                      is set to "" if answer is yes or reason if no.
+ * \return              True if logger is both valid and setup.
+ */
 int                 sc3_log_is_setup (const sc3_log_t * log, char *reason);
 
-/** Create new logging object.
+/** Create new logging object in its setup phase with default settings.
+ * \param [in] lator    Either NULL or an allocator that is setup.
+ *                      If NULL, use \ref sc3_allocator_new_static.
+ * \param [in,out] logp Pointer not NULL.  Its value is the new logger
+ *                      object on output, or NULL if an error occurred.
+ * \return              NULL on success and error object otherwise.
  */
 sc3_error_t        *sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp);
 
@@ -190,36 +214,64 @@ sc3_error_t        *sc3_log_destroy (sc3_log_t ** logp);
  */
 sc3_log_t          *sc3_log_new_static (void);
 
-/* Right now, they try to do the right thing always.
-   If log == NULL, fprintf to stderr */
-
 /** Log a message depending on selection criteria.
- * This function does not return any error status.
- * If parameters passed in are illegal or the logger NULL, output to stderr.
+ * Format by the settings of the logger and the log function registered.
+ * If parameters passed in are illegal output appropriate error message.
+ * If the logger is NULL, output appropriate error message to stderr.
  * \param [in] log       If NULL, write a message to stderr.
  *                       Otherwise, logger must be setup and will be queried
  *                       for log level and format options, etc.
  * \param [in] role      See \ref sc3_log_role_t for legal values.
  * \param [in] level     See \ref sc3_log_level_t for legal values.
+ *                       Log if this log level is greater equal both the
+ *                       minimum level of the logger and \ref SC3_LOG_LEVEL.
+ * \param [in] indent    Number of spaces to prepend to message.
  * \param [in] msg       If NULL, print "NULL message," otherwise \a msg.
  */
 void                sc3_log (sc3_log_t * log,
                              sc3_log_role_t role, sc3_log_level_t level,
                              int indent, const char *msg);
 
-/** See \ref sc3_log. */
+/** Log a message depending on selection criteria.
+ * Format by the settings of the logger and the log function registered.
+ * If parameters passed in are illegal output appropriate error message.
+ * If the logger is NULL, output appropriate error message to stderr.
+ * \param [in] log       If NULL, write a message to stderr.
+ *                       Otherwise, logger must be setup and will be queried
+ *                       for log level and format options, etc.
+ * \param [in] role      See \ref sc3_log_role_t for legal values.
+ * \param [in] level     See \ref sc3_log_level_t for legal values.
+ *                       Log if this log level is greater equal both the
+ *                       minimum level of the logger and \ref SC3_LOG_LEVEL.
+ * \param [in] indent    Number of spaces to prepend to message.
+ * \param [in] fmt       If NULL, print "NULL message," otherwise see printf (3).
+ */
 void                sc3_logf (sc3_log_t * log,
                               sc3_log_role_t role, sc3_log_level_t level,
                               int indent, const char *fmt, ...)
   __attribute__((format (printf, 5, 6)));
 
-/** See \ref sc3_log. */
+/** Log a message depending on selection criteria.
+ * Format by the settings of the logger and the log function registered.
+ * If parameters passed in are illegal output appropriate error message.
+ * If the logger is NULL, output appropriate error message to stderr.
+ * \param [in] log       If NULL, write a message to stderr.
+ *                       Otherwise, logger must be setup and will be queried
+ *                       for log level and format options, etc.
+ * \param [in] role      See \ref sc3_log_role_t for legal values.
+ * \param [in] level     See \ref sc3_log_level_t for legal values.
+ *                       Log if this log level is greater equal both the
+ *                       minimum level of the logger and \ref SC3_LOG_LEVEL.
+ * \param [in] indent    Number of spaces to prepend to message.
+ * \param [in] fmt       If NULL, print "NULL message," otherwise see printf (3).
+ * \param [in] ap        Parameter list macro as with stdarg (3).
+ */
 void                sc3_logv (sc3_log_t * log,
                               sc3_log_role_t role, sc3_log_level_t level,
                               int indent, const char *fmt, va_list ap);
 
 /** Log a message to stderr with level \ref SC3_LOG_NOISE. */
-#define SC3_NOISES(s) SC3_NOISEF("%s", s)
+#define SC3_NOISEC(s) SC3_NOISEF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_NOISE.
  * \param [in] fmt    Format string as with printf (3). */
@@ -227,7 +279,7 @@ void SC3_NOISEF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_DEBUG. */
-#define SC3_DEBUGS(s) SC3_DEBUGF("%s", s)
+#define SC3_DEBUGC(s) SC3_DEBUGF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_DEBUG.
  * \param [in] fmt    Format string as with printf (3). */
@@ -235,7 +287,7 @@ void SC3_DEBUGF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_INFO. */
-#define SC3_INFOS(s) SC3_INFOF("%s", s)
+#define SC3_INFOC(s) SC3_INFOF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_INFO.
  * \param [in] fmt    Format string as with printf (3). */
@@ -243,7 +295,7 @@ void SC3_INFOF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_STATISTICS. */
-#define SC3_STATISTICSS(s) SC3_STATISTICSF("%s", s)
+#define SC3_STATISTICSC(s) SC3_STATISTICSF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_STATISTICS.
  * \param [in] fmt    Format string as with printf (3). */
@@ -251,7 +303,7 @@ void SC3_STATISTICSF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_PRODUCTION. */
-#define SC3_PRODUCTIONS(s) SC3_PRODUCTIONF("%s", s)
+#define SC3_PRODUCTIONC(s) SC3_PRODUCTIONF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_PRODUCTION.
  * \param [in] fmt    Format string as with printf (3). */
@@ -259,7 +311,7 @@ void SC3_PRODUCTIONF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_ESSENTIAL. */
-#define SC3_ESSENTIALS(s) SC3_ESSENTIALF("%s", s)
+#define SC3_ESSENTIALC(s) SC3_ESSENTIALF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_ESSENTIAL.
  * \param [in] fmt    Format string as with printf (3). */
@@ -267,7 +319,7 @@ void SC3_ESSENTIALF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_ERROR. */
-#define SC3_ERRORS(s) SC3_ERRORF("%s", s)
+#define SC3_ERRORC(s) SC3_ERRORF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_ERROR.
  * \param [in] fmt    Format string as with printf (3). */

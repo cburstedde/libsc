@@ -38,7 +38,6 @@ struct sc3_log
 
   int                 alloced;
   int                 rank;
-  int                 indent;
   sc3_log_level_t     level;
 
   int                 call_fclose;
@@ -48,7 +47,7 @@ struct sc3_log
 };
 
 static sc3_log_t    statlog = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 1, SC3_LOG_PRODUCTION, 0, NULL,
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, SC3_LOG_PRODUCTION, 0, NULL,
   sc3_log_function_default, NULL
 };
 
@@ -70,7 +69,6 @@ sc3_log_is_valid (const sc3_log_t * log, char *reason)
 
   SC3E_TEST (0 <= log->level && log->level < SC3_LOG_LEVEL_LAST, reason);
   SC3E_TEST (0 <= log->rank, reason);
-  SC3E_TEST (0 <= log->indent, reason);
 
   SC3E_TEST (log->file != NULL || !log->call_fclose, reason);
   SC3E_TEST (log->func != NULL, reason);
@@ -100,6 +98,10 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
   sc3_log_t          *log;
 
   SC3E_RETVAL (logp, NULL);
+
+  if (lator == NULL) {
+    lator = sc3_allocator_new_static ();
+  }
   SC3A_IS (sc3_allocator_is_setup, lator);
 
   SC3E (sc3_allocator_ref (lator));
