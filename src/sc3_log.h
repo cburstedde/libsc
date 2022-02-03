@@ -268,7 +268,7 @@ void                sc3_log (sc3_log_t * log,
 void                sc3_logf (sc3_log_t * log,
                               sc3_log_role_t role, sc3_log_level_t level,
                               int indent, const char *fmt, ...)
-  __attribute__((format (printf, 5, 6)));
+  __attribute__ ((format (printf, 5, 6)));
 
 /** Log a message depending on selection criteria.
  * Format by the settings of the logger and the log function registered.

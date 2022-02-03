@@ -240,7 +240,7 @@ void                sc3_strcopy (char *dest, size_t size, const char *src);
  */
 void                sc3_snprintf (char *str, size_t size,
                                   const char *format, ...)
-  __attribute__((format (printf, 3, 4)));
+  __attribute__ ((format (printf, 3, 4)));
 
 /** Determine the highest bit position of a positive integer.
  * \param [in] a, bits  The lowest *bits* bits of \a a are examined.
