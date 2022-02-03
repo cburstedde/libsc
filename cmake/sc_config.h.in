@@ -115,6 +115,8 @@
 
 #cmakedefine SC_HAVE_WINSOCK2_H
 
+#cmakedefine SC_HAVE_WINERROR_H
+
 /* desired alignment of allocations in bytes */
 #define SC_MEMALIGN_BYTES (SC_SIZEOF_VOID_P)
 

@@ -31,6 +31,11 @@
 #include <errno.h>
 #endif
 
+#ifdef SC_HAVE_WINERROR_H
+#include <WinError.h>
+#define EDQUOT WSAEDQUOT
+#endif
+
 sc_io_sink_t       *
 sc_io_sink_new (sc_io_type_t iotype, sc_io_mode_t mode,
                 sc_io_encode_t encode, ...)
