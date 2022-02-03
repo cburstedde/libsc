@@ -184,7 +184,16 @@ sc3_error_t        *sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp);
 sc3_error_t        *sc3_log_set_level (sc3_log_t * log,
                                        sc3_log_level_t level);
 
-/** Default: SC3_MPI_COMM_WORLD */
+/** Set the MPI communicator to use for querying the rank.
+ * Default: SC3_MPI_COMM_WORLD
+ * \param [in,out] log  Logger must be valid and not setup.
+ * \param [in] mpicomm  Valid MPI communicator on this process.
+ *                      The calling process must be a rank in this
+ *                      communicator.  We do not MPI_Comm_dup it, which
+ *                      means that it must not cease to exist while this
+ *                      logger is in use.  Otherwise the log calls may crash
+ *                      or output messages about an invalid communicator.
+ */
 sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
                                       sc3_MPI_Comm_t mpicomm);
 

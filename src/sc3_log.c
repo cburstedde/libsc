@@ -136,8 +136,13 @@ sc3_log_set_level (sc3_log_t * log, sc3_log_level_t level)
 sc3_error_t        *
 sc3_log_set_comm (sc3_log_t * log, sc3_MPI_Comm_t mpicomm)
 {
+  int                 rank;
+
   SC3A_IS (sc3_log_is_new, log);
   SC3A_CHECK (mpicomm != SC3_MPI_COMM_NULL);
+
+  /* just checking that this process is in the communicator */
+  SC3E (sc3_MPI_Comm_rank (mpicomm, &rank));
 
   log->mpicomm = mpicomm;
   return NULL;
@@ -345,7 +350,7 @@ sc3_log (sc3_log_t * log,
   if (mpiret != SC3_MPI_SUCCESS) {
     rank = 0;
     level = SC3_LOG_ERROR;
-    msg = "Invalid MPI rank";
+    msg = "Invalid MPI communicator";
   }
 
   /* only print on root process when specified */
