@@ -210,6 +210,8 @@ sc3_error_t        *sc3_log_unref (sc3_log_t ** logp);
 sc3_error_t        *sc3_log_destroy (sc3_log_t ** logp);
 
 /** Return a predefined static logger that uses MPI_COMM_WORLD.
+ * It prints to stderr and uses formatting with the prefix "sc3."
+ * It can be treated as a dynamic logger regarding refing and destroy.
  * \return          Valid and setup logger object prints to stderr.
  */
 sc3_log_t          *sc3_log_new_static (void);

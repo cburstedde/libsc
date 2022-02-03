@@ -37,8 +37,8 @@ struct sc3_log
   int                 setup;
 
   int                 alloced;
-  int                 rank;
   sc3_log_level_t     level;
+  sc3_MPI_Comm_t      mpicomm;
 
   int                 call_fclose;
   FILE               *file;
@@ -47,8 +47,8 @@ struct sc3_log
 };
 
 static sc3_log_t    statlog = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, SC3_LOG_PRODUCTION, 0, NULL,
-  sc3_log_function_default, NULL
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, SC3_LOG_LEVEL,
+   SC3_MPI_COMM_WORLD, 0, NULL, sc3_log_function_default, NULL
 };
 
 sc3_log_t          *
@@ -68,7 +68,7 @@ sc3_log_is_valid (const sc3_log_t * log, char *reason)
   }
 
   SC3E_TEST (0 <= log->level && log->level < SC3_LOG_LEVEL_LAST, reason);
-  SC3E_TEST (0 <= log->rank, reason);
+  SC3E_TEST (SC3_MPI_COMM_NULL != log->mpicomm, reason);
 
   SC3E_TEST (log->file != NULL || !log->call_fclose, reason);
   SC3E_TEST (log->func != NULL, reason);
@@ -113,8 +113,8 @@ sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp)
 #else
   log->level = SC3_LOG_INFO;
 #endif
+  log->mpicomm = SC3_MPI_COMM_WORLD;
   log->lator = lator;
-  log->rank = 0;
   log->file = stderr;
   log->func = sc3_log_function_default;
   SC3A_IS (sc3_log_is_new, log);
@@ -128,6 +128,7 @@ sc3_log_set_level (sc3_log_t * log, sc3_log_level_t level)
 {
   SC3A_IS (sc3_log_is_new, log);
   SC3A_CHECK (0 <= log->level && log->level < SC3_LOG_LEVEL_LAST);
+
   log->level = level;
   return NULL;
 }
@@ -136,12 +137,9 @@ sc3_error_t        *
 sc3_log_set_comm (sc3_log_t * log, sc3_MPI_Comm_t mpicomm)
 {
   SC3A_IS (sc3_log_is_new, log);
-  if (mpicomm == SC3_MPI_COMM_NULL) {
-    log->rank = 0;
-  }
-  else {
-    SC3E (sc3_MPI_Comm_rank (mpicomm, &log->rank));
-  }
+  SC3A_CHECK (mpicomm != SC3_MPI_COMM_NULL);
+
+  log->mpicomm = mpicomm;
   return NULL;
 }
 
@@ -314,6 +312,11 @@ sc3_log (sc3_log_t * log,
          sc3_log_role_t role, sc3_log_level_t level,
          int indent, const char *msg)
 {
+  int                 rank;
+#ifdef SC_ENABLE_MPI
+  int                 mpiret;
+#endif
+
   /* catch invalid arguments */
   if (!sc3_log_is_setup (log, NULL)) {
     log = sc3_log_new_static ();
@@ -330,19 +333,31 @@ sc3_log (sc3_log_t * log,
     msg = "Invalid log level";
   }
 
-  /* do not print on conditions */
+  /* do not print when the level is too low */
   if (level < log->level || level == SC3_LOG_SILENT) {
     /* the log level is not sufficiently large */
     return;
   }
-  if (role == SC3_LOG_GLOBAL && log->rank != 0) {
+
+  rank = 0;
+#ifdef SC_ENABLE_MPI
+  mpiret = MPI_Comm_rank (log->mpicomm, &rank);
+  if (mpiret != SC3_MPI_SUCCESS) {
+    rank = 0;
+    level = SC3_LOG_ERROR;
+    msg = "Invalid MPI rank";
+  }
+
+  /* only print on root process when specified */
+  if (role == SC3_LOG_GLOBAL && rank != 0) {
     /* only log for the master thread in master process */
     return;
   }
+#endif /* SC_ENABLE_MPI */
 
   /* finally print message */
   (log->func == NULL ? sc3_log_function_bare : log->func)
-    (log->user, msg, role, log->rank, level, indent, log->file);
+    (log->user, msg, role, rank, level, indent, log->file);
 }
 
 void
