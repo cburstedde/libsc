@@ -180,23 +180,22 @@ int                 sc3_log_is_setup (const sc3_log_t * log, char *reason);
  */
 sc3_error_t        *sc3_log_new (sc3_allocator_t * lator, sc3_log_t ** logp);
 
-/** Default with --enable-debug SC3_LOG_DEBUG, otherwise SC3_LOG_TOP */
+/** Default: \ref SC3_LOG_LEVEL. */
 sc3_error_t        *sc3_log_set_level (sc3_log_t * log,
                                        sc3_log_level_t level);
 
-/** Default SC3_MPI_COMM_NULL */
+/** Default: SC3_MPI_COMM_WORLD */
 sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
                                       sc3_MPI_Comm_t mpicomm);
 
-/** Default stderr */
+/** Defaults: stderr, 0 */
 sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
                                       FILE * file, int call_fclose);
 
 /** Set function that effectively formats and outputs the log message.
- * It defaults to \ref sc3_log_function_default.
+ * Default: \ref sc3_log_function_default.
  * \param [in,out] log  Logger must not yet be setup.
- * \param [in] func     Function pointer of type \ref sc3_log_function_t.
- *                      If set to NULL, print unformatted messages to stderr.
+ * \param [in] func     Non-NULL pointer of type \ref sc3_log_function_t.
  * \param [in] user     Pointer is passed through to log function \a func.
  * \return              NULL on success, fatal error otherwise.
  */

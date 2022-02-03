@@ -356,8 +356,7 @@ sc3_log (sc3_log_t * log,
 #endif /* SC_ENABLE_MPI */
 
   /* finally print message */
-  (log->func == NULL ? sc3_log_function_bare : log->func)
-    (log->user, msg, role, rank, level, indent, log->file);
+  log->func (log->user, msg, role, rank, level, indent, log->file);
 }
 
 void
