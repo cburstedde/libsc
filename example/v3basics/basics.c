@@ -491,7 +491,9 @@ run_main (sc3_trace_t * t, int argc, char **argv)
     }
   }
 
-  mainalloc = sc3_allocator_new_static ();
+  SC3E (sc3_allocator_new (NULL, &mainalloc));
+  SC3E (sc3_allocator_setup (mainalloc));
+
   SC3E (sc3_allocator_new (mainalloc, &a));
   SC3E (sc3_allocator_setup (a));
 
@@ -530,7 +532,9 @@ run_main (sc3_trace_t * t, int argc, char **argv)
   SC3E (sc3_log_destroy (&mainlog));
 
   SC3E (sc3_allocator_destroy (&a));
+
   SC3A_IS (sc3_allocator_is_free, mainalloc);
+  SC3E (sc3_allocator_destroy (&mainalloc));
 
   return NULL;
 }
