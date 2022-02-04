@@ -34,18 +34,19 @@
  *
  * The main goals compared to previous versions are to improve the error
  * handling and to remove any global/static variables.
- * In particular, functions do no longer call `MPI_Abort()` on failed
- * assertions but return error objects.
+ * In particular, functions do not call `MPI_Abort()` on failed assertions
+ * or other errors but return fatal error objects.
  * These error objects can be returned all the way up to the toplevel code.
+ *
  * We have also introduced RAII objects and reference counting.
  * Memory allocation is wrapped into allocators that keep internal counts.
  * We do not provide any locking, thus it is recommended to create one
  * allocator per thread, and generally to work with a hierarchy of allocators.
  * We provide various data containers, for example variable-length arrays.
  *
- * There is no `sc3.h` file to include everything.
- * To just pull in the configuration and system headers, include \ref
- * sc3_base.h.
+ * There is no `sc3.h` file to include everything.  To just pull in the
+ * configuration and system headers, include \ref sc3_base.h.
+ *
  * We removed the global initialization and finalize functions.
  * There is no more global state to the library.
  *
@@ -54,9 +55,6 @@
  * objects in \ref sc3 are opaque and manipulated by API functions only.
  *
  * Allocators are declared in \ref sc3_alloc.h, and errors in \ref sc3_error.h.
- * These two files depend on each other and, combined with the reference
- * counters, constitute the basis of the code.
- *
  * Containers are declared in \ref sc3_array.h and \ref sc3_memstamp.h.
  *
  * We use the C convention for boolean variables:

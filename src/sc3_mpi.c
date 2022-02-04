@@ -177,7 +177,7 @@ sc3_MPI_Abort (sc3_MPI_Comm_t comm, int errorcode)
     /* an undocumented safeguard to make sure to abort */
     comm = SC3_MPI_COMM_WORLD;
   }
-  MPI_Abort (comm, errorcode);
+  MPI_Abort (comm, EXIT_FAILURE);
 #else
   abort ();
 #endif

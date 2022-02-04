@@ -155,6 +155,8 @@ sc3_error_t        *sc3_MPI_Finalize (void);
  * This function does not return.
  * \param [in] comm         Valid MPI communicator.
  * \param [in] errorcode    Well-defined MPI error code.
+ *                          Ignored here.  We abort to the calling
+ *                          environment returning the value EXIT_FAILURE.
  */
 void                sc3_MPI_Abort (sc3_MPI_Comm_t comm, int errorcode);
 
