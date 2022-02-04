@@ -64,79 +64,51 @@ parent_function (sc3_trace_t * t, sc3_log_t * log, int a, int *result)
   return NULL;
 }
 
-#if 0
-
 static sc3_error_t *
-make_io_error (sc3_allocator_t * a,
-               const char *filename, int line, const char *errmsg)
+run_io (sc3_trace_t * t, sc3_allocator_t * a, sc3_log_t * log,
+        int rank, int *result, int *num_io)
 {
-  sc3_error_t        *e;
-
-  SC3A_IS (sc3_allocator_is_setup, a);
-
-  SC3E (sc3_error_new (a, &e));
-  SC3E (sc3_error_set_location (e, filename, line));
-  SC3E (sc3_error_set_message (e, errmsg));
-  SC3E (sc3_error_set_kind (e, SC3_ERROR_IO));
-  SC3E (sc3_error_setup (e));
-
-  return e;
-}
-
-#define SC3_BASICS_IO_ERROR(a,m) (make_io_error (a, __FILE__, __LINE__, m))
-
-/* TODO: differentiate file names by rank */
-static sc3_error_t *
-run_io (sc3_allocator_t * a, int result)
-{
+  sc3_trace_t         stacktrace;
+  char                filename[SC3_BUFSIZE];
   FILE               *file;
 
-  SC3A_IS (sc3_allocator_is_setup, a);
+  SC3E (sc3_trace_push (&t, &stacktrace, "run io", NULL));
 
-  if ((file = fopen ("sc3_basics_run_io.txt", "wb")) == NULL) {
-    return SC3_BASICS_IO_ERROR (a, "File open failed");
+  SC3A_IS (sc3_allocator_is_setup, a);
+  SC3A_IS (sc3_log_is_setup, log);
+  SC3A_CHECK (rank >= 0);
+  SC3A_CHECK (result != NULL);
+  SC3A_CHECK (num_io != NULL);
+
+  BASIC_LOG_ENTER (t, log);
+
+  sc3_snprintf (filename, SC3_BUFSIZE, "sc3_basics_%03d.txt", rank);
+  if ((file = fopen (filename, "ab")) == NULL) {
+    sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_ERROR, t->depth,
+              "File open failed: %s", filename);
+    ++*num_io;
+    return NULL;
   }
-  if (fprintf (file, "Hello world from sc3_basics %d\n", result) < 0) {
-    (void) fclose (file);
-    return SC3_BASICS_IO_ERROR (a, "File fprintf failed");
+  if (fprintf (file, "Hello world %d %d\n", rank, *result) < 0) {
+    sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_ERROR, t->depth,
+              "File write failed: %s", filename);
+    fclose (file);
+    ++*num_io;
+    return NULL;
   }
   if (fclose (file)) {
-    return SC3_BASICS_IO_ERROR (a, "File close failed");
+    sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_ERROR, t->depth,
+              "File close failed: %s", filename);
+    ++*num_io;
+    return NULL;
   }
 
   return NULL;
 }
-
-static sc3_error_t *
-process_io_error (sc3_log_t * log, sc3_error_t ** ioe, int *num_io)
-{
-  sc3_error_kind_t    kind;
-
-  SC3A_IS (sc3_log_is_setup, log);
-  SC3A_CHECK (ioe != NULL);
-  SC3A_CHECK (num_io != NULL && *num_io >= 0);
-
-  /* maybe there was no error */
-  if (*ioe == NULL)
-    return NULL;
-
-  /* now we only expect an I/O error */
-  SC3E (sc3_error_get_kind (*ioe, &kind));
-  SC3A_CHECK (kind == SC3_ERROR_IO);
-  ++*num_io;
-
-  /* print I/O error stack */
-  sc3_log_error (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR, *ioe);
-  SC3E (sc3_error_destroy (ioe));
-
-  return NULL;
-}
-
-#endif
 
 static sc3_error_t *
 run_prog (sc3_trace_t * t, sc3_allocator_t * origa, sc3_log_t * log,
-          int input, int *result, int *num_io)
+          int rank, int input, int *result, int *num_io)
 {
   sc3_trace_t         stacktrace;
   sc3_allocator_t    *a;
@@ -152,7 +124,7 @@ run_prog (sc3_trace_t * t, sc3_allocator_t * origa, sc3_log_t * log,
   BASIC_LOG_ENTER (t, log);
 
   /* Test assertions clean */
-  okvalue = 6;
+  okvalue = *result / 7;
   SC3E (parent_function (t, log, okvalue, &okvalue));
   sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_INFO, t->depth,
             "Ok value %d", okvalue);
@@ -164,15 +136,15 @@ run_prog (sc3_trace_t * t, sc3_allocator_t * origa, sc3_log_t * log,
 
   /* Make allocator for this context block */
   SC3E (sc3_allocator_new (origa, &a));
+  SC3E (sc3_allocator_set_counting (a, 0));
   SC3E (sc3_allocator_setup (a));
 
-#if 0
   /* Test file input/output and recoverable errors */
-  SC3E (run_io (t, a, log, &result));
-  SC3E (process_io_error (t, a, log, &num_io));
-#endif
+  SC3E (run_io (t, a, log, rank, result, num_io));
 
+  /* Destroy derived allocator */
   SC3E (sc3_allocator_destroy (&a));
+
   return NULL;
 }
 
@@ -215,7 +187,8 @@ test_alloc (sc3_trace_t * t, sc3_allocator_t * ator, sc3_log_t * log)
 
   for (i = 0; i < 3; ++i) {
 
-    sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_INFO, t->depth, "Iteration %d", i);
+    sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_INFO, t->depth,
+              "Outer Iteration %d", i);
 
     SC3E (sc3_allocator_new (ator, &aligned));
     SC3E (sc3_allocator_set_align (aligned, i * 8));
@@ -239,6 +212,9 @@ test_alloc (sc3_trace_t * t, sc3_allocator_t * ator, sc3_log_t * log)
     SC3E (sc3_allocator_free (aligned, &ghi));
 
     for (j = 0; j < 3; ++j) {
+      sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_INFO, t->depth,
+                "Inner Iteration %d %d", i, j);
+
       SC3E (sc3_array_new (aligned, &arr));
       SC3E (sc3_array_set_elem_size (arr, j * 173));
       SC3E (sc3_array_set_resizable (arr, 1));
@@ -478,7 +454,7 @@ run_main (sc3_trace_t * t, int argc, char **argv)
   int                 result;
   int                 num_io;
   sc3_allocator_t    *mainalloc, *a;
-  sc3_log_t          *mainlog;
+  sc3_log_t          *log;
   sc3_trace_t         stacktrace;
 
   /* static tracking of call stack */
@@ -497,39 +473,40 @@ run_main (sc3_trace_t * t, int argc, char **argv)
   SC3E (sc3_allocator_new (mainalloc, &a));
   SC3E (sc3_allocator_setup (a));
 
-  SC3E (make_log (t, a, &mainlog));
+  SC3E (make_log (t, a, &log));
 
-  sc3_logf (mainlog, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
+  sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
             "Main run is %s", "here");
 
-  SC3E (test_alloc (t, a, mainlog));
-  sc3_log (mainlog, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
-           "Alloc test ok");
+  SC3E (test_alloc (t, a, log));
+  sc3_log (log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth, "Alloc test ok");
 
-  SC3E (test_mpi (t, a, mainlog, &mpirank));
-  sc3_log (mainlog, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
-           "MPI code ok");
+  SC3E (test_mpi (t, a, log, &mpirank));
+  sc3_log (log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth, "MPI code ok");
 
 #if 0
   SC3E (omp_info (a));
-  sc3_log (mainlog, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
+  sc3_log (log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
            "OpenMP code ok");
 #endif
 
   num_io = 0;
   for (i = 0; i < 3; ++i) {
-    result = input = inputs[i];
-    SC3E (run_prog (t, a, mainlog, input, &result, &num_io));
+    sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_INFO, t->depth,
+              "Program Iteration %d", i);
 
-    sc3_logf (mainlog, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
+    result = input = inputs[i];
+    SC3E (run_prog (t, a, log, mpirank, input, &result, &num_io));
+
+    sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
               "Clean execution with input %d result %d io %d",
               input, result, num_io);
   }
 
-  sc3_logf (mainlog, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
+  sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
             "Main run is %s", "done");
 
-  SC3E (sc3_log_destroy (&mainlog));
+  SC3E (sc3_log_destroy (&log));
 
   SC3E (sc3_allocator_destroy (&a));
 
