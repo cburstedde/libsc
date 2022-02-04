@@ -124,7 +124,7 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   SC3E (sc3_allocator_ref (oa));
   SC3E (sc3_allocator_calloc (oa, 1, sizeof (sc3_allocator_t), &a));
   SC3E (sc3_refcount_init (&a->rc));
-  a->align = SC3_MAX (sizeof (void *), sizeof (sc3_alloc_item_t));
+  a->align = 0;
   a->alloced = 1;
   a->counting = a->keepalive = 1;
   a->oa = oa;
@@ -140,7 +140,7 @@ sc3_allocator_set_align (sc3_allocator_t * a, size_t align)
   SC3A_IS (sc3_allocator_is_new, a);
   SC3A_CHECK (align == 0 || SC3_ISPOWOF2 (align));
 
-  a->align = align == 0 ? 0 : SC3_MAX (align, sizeof (sc3_alloc_item_t));
+  a->align = align;
   return NULL;
 }
 
@@ -238,7 +238,7 @@ sc3_allocator_get_overhead (sc3_allocator_t * a, size_t *oh)
   SC3A_IS (sc3_allocator_is_setup, a);
 
   if (!(a->align == 0 && !a->keepalive)) {
-    *oh = a->align + hsize;
+    *oh = (a->align == 0 ? 0 : a->align - 1) + hsize;
   }
   return NULL;
 }
@@ -275,7 +275,7 @@ sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
   SC3A_CHECK (ptr != NULL);
 
   /* allocate bigger block and write debug and size info into header */
-  actual = a->align + hsize + size;
+  actual = (a->align == 0 ? 0 : a->align - 1) + hsize + size;
 
   /* allocate memory big enough for shift and meta information */
   if (initzero) {
@@ -286,14 +286,18 @@ sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
   }
 
   /* record allocator's address, original pointer, and allocated size */
-  if (a->align == 0) {
+  if (a->align == 0 || (shift = ((size_t) p + hsize) % a->align) == 0) {
     shift = 0;
   }
   else {
-    shift = a->align - ((size_t) p + hsize) % a->align;
-    SC3A_CHECK (0 < shift && shift <= a->align);
-    memset (p, -1, shift);
+    SC3A_CHECK (0 < shift && shift < a->align);
+    shift = a->align - shift;
+    SC3A_CHECK (0 < shift && shift < a->align);
+    SC3A_CHECK (((size_t) p + shift + hsize) % a->align == 0);
   }
+#ifdef SC_ENABLE_DEBUG
+  memset (p, -1, shift + hsize);
+#endif
   aitem = (sc3_alloc_item_t *) (p + shift);
   aitem[0].ptr = a;
   aitem[1].ptr = p;
@@ -351,10 +355,9 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
   SC3A_IS (sc3_allocator_is_setup, a);
   SC3A_CHECK (ptr != NULL);
 
-  size *= nmemb;
   if (a->align == 0 && !a->keepalive) {
     char               *p;
-    SC3E (sc3_calloc (size, 1, &p));
+    SC3E (sc3_calloc (nmemb, size, &p));
 
     /* when allocating zero bytes we may obtain a NULL pointer */
     if (a->counting && p != NULL) {
@@ -363,7 +366,7 @@ sc3_allocator_calloc (sc3_allocator_t * a, size_t nmemb, size_t size,
     *(void **) ptr = p;
   }
   else {
-    SC3E (sc3_allocator_alloc_aligned (a, size, 1, ptr));
+    SC3E (sc3_allocator_alloc_aligned (a, nmemb * size, 1, ptr));
   }
   return NULL;
 }
@@ -390,7 +393,6 @@ sc3_allocator_free (sc3_allocator_t * a, void *ptr)
   }
   else {
     void               *p = *(void **) ptr;
-    size_t              size;
     sc3_alloc_item_t   *aitem;
 
     /* null in-out argument */
@@ -402,11 +404,14 @@ sc3_allocator_free (sc3_allocator_t * a, void *ptr)
 
     /* keep track of total allocated size */
     if (a->counting) {
-      size = aitem[2].siz;
+      size_t              size = aitem[2].siz;
       SC3A_CHECK (size <= a->total_size);
       a->total_size -= size;
     }
-    SC3E (sc3_free (&aitem[1].ptr));
+
+    /* free original allocation */
+    p = aitem[1].ptr;
+    SC3E (sc3_free (&p));
 
 #if 0
     /* do this at the end since the allocator may go out of scope */
@@ -450,11 +455,6 @@ sc3_allocator_realloc (sc3_allocator_t * a, void *ptr, size_t new_size)
         SC3E (sc3_allocator_malloc (a, new_size, ptr));
         memcpy (*(void **) ptr, p, SC3_MIN (size, new_size));
         SC3E (sc3_allocator_free (a, &p));
-        if (a->counting) {
-          SC3A_CHECK (a->total_size <= size);
-          a->total_size -= size;
-          a->total_size += new_size;
-        }
       }
     }
   }

@@ -143,7 +143,7 @@ sc3_error_t        *sc3_allocator_new (sc3_allocator_t * oa,
                                        sc3_allocator_t ** ap);
 
 /** Set byte alignment followed by the allocator.
- * Default is at least sizeof (void *).
+ * Default is 0, meaning we use the standard alignment of malloc (3).
  * \param [in,out] a    Valid allocator not setup.
  * \param [in] align    Power of two designating byte alignment of memory,
  *                      or zero for system default alignment.
