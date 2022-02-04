@@ -70,7 +70,7 @@ sc3_log_is_valid (const sc3_log_t * log, char *reason)
   SC3E_TEST (0 <= log->level && log->level < SC3_LOG_LEVEL_LAST, reason);
   SC3E_TEST (SC3_MPI_COMM_NULL != log->mpicomm, reason);
 
-  SC3E_TEST (log->file != NULL || !log->call_fclose, reason);
+  SC3E_TEST (log->file != NULL, reason);
   SC3E_TEST (log->func != NULL, reason);
 
   SC3E_YES (reason);
@@ -289,10 +289,10 @@ sc3_log_unref (sc3_log_t ** logp)
 
     lator = log->lator;
     if (!log->call_fclose && fflush (log->file)) {
-      /* TODO create runtime error when flush fails */
+      /* ignoring runtime error when flush fails */
     }
     if (log->call_fclose && fclose (log->file)) {
-      /* TODO create runtime error when close fails */
+      /* ignoring runtime error when close fails */
     }
     SC3E (sc3_allocator_free (lator, &log));
     SC3E (sc3_allocator_unref (&lator));

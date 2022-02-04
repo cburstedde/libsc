@@ -212,7 +212,7 @@ sc3_error_t        *sc3_log_set_level (sc3_log_t * log,
                                        sc3_log_level_t level);
 
 /** Set the MPI communicator to use for querying the rank.
- * Default: SC3_MPI_COMM_WORLD
+ * Default: SC3_MPI_COMM_WORLD.
  * \param [in,out] log  Logger must be valid and not setup.
  * \param [in] mpicomm  Valid MPI communicator on this process.
  *                      The calling process must be a rank in this
@@ -225,8 +225,14 @@ sc3_error_t        *sc3_log_set_level (sc3_log_t * log,
 sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
                                       sc3_MPI_Comm_t mpicomm);
 
-/**
- * Defaults: stderr, 0
+/** Set file to write logging output to.
+ * Function may be called multiple times to override previous setting.
+ * Defaults: stderr, 0.
+ * \param [in,out] log  Logger object must not yet be setup.
+ * \param [in] file     File to use for logging.  Open for writing.
+ *                      Must not be closed while logger is alive.
+ * \param [in] call_fclose  If true, we call fclose on \a file
+ *                      when the logger object ist destroyed.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
@@ -243,9 +249,34 @@ sc3_error_t        *sc3_log_set_function (sc3_log_t * log,
                                           sc3_log_function_t func,
                                           void *user);
 
+/** Setup a logger object after setting its parameters.
+ * \param [in,out] log  Valid log object.  Not yet setup.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_log_setup (sc3_log_t * log);
+
+/** Add one reference to a logger object.
+ * \param [in,out] log  Log object must be setup.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_log_ref (sc3_log_t * log);
+
+/** Remove one reference to a logger object.
+ * If the reference count reaches zero, logger is destroyed.
+ * \param [in,out] logp Log object must be setup.
+ *                      Value becomes NULL if destroyed.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_log_unref (sc3_log_t ** logp);
+
+/** Destroy a logger object known to have one reference.
+ * It is not forseen to query the amount of references of an object.
+ * Use of this function is only possible if the logger object passed in
+ * has one reference, provably.
+ * \param [in,out] logp Log object must be setup and have one reference.
+ *                      Value becomes NULL on output.
+ * \return              NULL on success, error object otherwise.
+ */
 sc3_error_t        *sc3_log_destroy (sc3_log_t ** logp);
 
 /** Return a predefined static logger that uses MPI_COMM_WORLD.
