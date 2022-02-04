@@ -342,6 +342,8 @@ void                sc3_logv (sc3_log_t * log,
                               sc3_log_role_t role, sc3_log_level_t level,
                               int indent, const char *fmt, va_list ap);
 
+/*** convenience functions to log on any process ***/
+
 /** Log a message to stderr with level \ref SC3_LOG_NOISE. */
 #define SC3_NOISEC(s) SC3_NOISEF("%s", s)
 
@@ -396,6 +398,64 @@ void                SC3_ESSENTIALF (const char *fmt, ...)
 /** Log a message to stderr with level \ref SC3_LOG_ERROR.
 * \param [in] fmt    Format string as with printf (3). */
 void                SC3_ERRORF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+/*** convenience functions to log on the root process ***/
+
+/** Log a message on root with level \ref SC3_LOG_NOISE. */
+#define SC3_GLOBAL_NOISEC(s) SC3_GLOBAL_NOISEF("%s", s)
+
+/** Log a message on root with level \ref SC3_LOG_NOISE.
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_GLOBAL_NOISEF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+/** Log a message on root with level \ref SC3_LOG_DEBUG. */
+#define SC3_GLOBAL_DEBUGC(s) SC3_GLOBAL_DEBUGF("%s", s)
+
+/** Log a message on root with level \ref SC3_LOG_DEBUG.
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_GLOBAL_DEBUGF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+/** Log a message on root with level \ref SC3_LOG_INFO. */
+#define SC3_GLOBAL_INFOC(s) SC3_GLOBAL_INFOF("%s", s)
+
+/** Log a message on root with level \ref SC3_LOG_INFO.
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_GLOBAL_INFOF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+/** Log a message on root with level \ref SC3_LOG_STATISTICS. */
+#define SC3_GLOBAL_STATISTICSC(s) SC3_GLOBAL_STATISTICSF("%s", s)
+
+/** Log a message on root with level \ref SC3_LOG_STATISTICS.
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_GLOBAL_STATISTICSF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+/** Log a message on root with level \ref SC3_LOG_PRODUCTION. */
+#define SC3_GLOBAL_PRODUCTIONC(s) SC3_GLOBAL_PRODUCTIONF("%s", s)
+
+/** Log a message on root with level \ref SC3_LOG_PRODUCTION.
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_GLOBAL_PRODUCTIONF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+/** Log a message on root with level \ref SC3_LOG_ESSENTIAL. */
+#define SC3_GLOBAL_ESSENTIALC(s) SC3_GLOBAL_ESSENTIALF("%s", s)
+
+/** Log a message on root with level \ref SC3_LOG_ESSENTIAL.
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_GLOBAL_ESSENTIALF (const char *fmt, ...)
+  __attribute__ ((format (printf, 1, 2)));
+
+/** Log a message on root with level \ref SC3_LOG_ERROR. */
+#define SC3_GLOBAL_ERRORC(s) SC3_GLOBAL_ERRORF("%s", s)
+
+/** Log a message on root with level \ref SC3_LOG_ERROR.
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_GLOBAL_ERRORF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 #ifdef __cplusplus
