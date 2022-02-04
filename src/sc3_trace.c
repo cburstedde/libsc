@@ -33,33 +33,32 @@ void
 sc3_trace_init (sc3_trace_t * t, const char *func, void *user)
 {
   if (t != NULL) {
-    t->sdepth = 0;
-    t->idepth = 0;
-    t->caller = NULL;
-    SC3_BUFCOPY (t->func, func != NULL ? func : "main");
+    t->parent = NULL;
+    t->func = func;
+    t->depth = 0;
     t->user = user;
   }
 }
 
-void
+sc3_error_t        *
 sc3_trace_push (sc3_trace_t ** t, sc3_trace_t * stackvar,
-                int idepth, const char *func, void *user)
+                const char *func, void *user)
 {
   /* catch invalid calls */
-  if (t == NULL || stackvar == NULL) {
-    return;
-  }
+  SC3A_CHECK (t != NULL);
+  SC3A_CHECK (*t == NULL || (*t)->depth >= 0);
+  SC3A_CHECK (stackvar != NULL);
+
+  /* initialize new top object */
   sc3_trace_init (stackvar, func, user);
 
-  /* if there is no or an invalid input argument, start from scratch */
-  if (*t == NULL || (*t)->sdepth < 0 || (*t)->idepth < 0) {
-    *t = stackvar;
-    return;
+  /* link new top object to previous stack */
+  if ((*t) != NULL) {
+    stackvar->parent = *t;
+    stackvar->depth = (*t)->depth + 1;
   }
-
-  /* this is the intended use */
-  stackvar->sdepth = (*t)->sdepth + 1;
-  stackvar->idepth = (*t)->idepth + SC3_MAX (idepth, 0);
-  stackvar->caller = *t;
   *t = stackvar;
+
+  /* successful return */
+  return NULL;
 }

@@ -28,22 +28,20 @@
 */
 
 /** \file sc3_trace.h
+ * Simple mechanism to access the current call stack.
+ * In fact, what the stack is is up to the user.
+ * We do not use any system or hardware access.
+ * We do not use dynamic memory allocation.
+ * The stack is a singly linked list made up from local variables
+ * of nested scope.  There is usually no need to pop explicitly
+ * since the top of the stack goes out of scope when the function
+ * returns that it is associated to / lives on the actual stack of.
  */
 
 #ifndef SC3_TRACE_H
 #define SC3_TRACE_H
 
-#include <sc3_base.h>
-
-typedef struct sc3_trace
-{
-  char                func[SC3_BUFSIZE];
-  int                 sdepth;
-  int                 idepth;
-  struct sc3_trace   *caller;
-  void               *user;
-}
-sc3_trace_t;
+#include <sc3_error.h>
 
 #ifdef __cplusplus
 extern              "C"
@@ -53,10 +51,41 @@ extern              "C"
 #endif
 #endif
 
+/** The trace is a public struct for simplicitc. */
+typedef struct sc3_trace
+{
+  struct sc3_trace   *parent;   /**< Parent object or NULL
+                                     for the root of the stack. */
+  const char         *func;     /**< Identifier of function or
+                                     more general interpretation. */
+  int                 depth;    /**< Depth of stack from the root. */
+  void               *user;     /**< Convenience context pointer. */
+}
+sc3_trace_t;
+
+/** Initialize the root of a tracing stack.
+ * \param [out] t       Trace object is initialized.
+ * \param [in] func     Pointer is shallow copied (not its contents).
+ * \param [in] user     Assigned to \a user member of trace \a t.
+ */
 void                sc3_trace_init (sc3_trace_t * t, const char *func,
                                     void *user);
-void                sc3_trace_push (sc3_trace_t ** t, sc3_trace_t * stackvar,
-                                    int idepth, const char *func, void *user);
+
+/** Push a new level onto tracing stack.
+ * \param [in,out] t    Non-NULL pointer.  Value is NULL or a valid trace.
+ *                      This object serves as parent in the growing stack.
+ *                      On output, value is set to the new top of the stack.
+ * \param [out] stackvar    Trace on the memory stack of the calling function
+ *                          such that it goes out of scope when caller returns.
+ *                          Initialized with \a func and \a user and taking
+ *                          the input value of \a t as parent object.
+ *                          Its depth is increased by one over the parent.
+ * \param [in] func     Pointer is shallow copied (not its contents).
+ * \param [in] user     Assigned to \a user member of new trace.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_trace_push (sc3_trace_t ** t, sc3_trace_t * stackvar,
+                                    const char *func, void *user);
 
 #ifdef __cplusplus
 #if 0
