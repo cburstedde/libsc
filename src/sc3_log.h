@@ -68,39 +68,37 @@ typedef struct sc3_log sc3_log_t;
 /** We may log per root MPI rank or for each MPI process. */
 typedef enum sc3_log_role
 {
-  SC3_LOG_LOCAL,       /**< Log on all processes */
-  SC3_LOG_GLOBAL,      /**< Log only on root process */
-  SC3_LOG_ROLE_LAST
+  SC3_LOG_LOCAL,      /**< Log on all processes. */
+  SC3_LOG_GLOBAL,     /**< Log only on root process. */
+  SC3_LOG_ROLE_LAST   /**< Guard value is invalid. */
 }
 sc3_log_role_t;
 
 /** Log level or priority.  Used to ignore messages of low priority. */
 typedef enum sc3_log_level
 {
-  SC3_LOG_NOISE,        /**< Anything at all and all sorts of nonsense. */
-  SC3_LOG_DEBUG,        /**< Information mainly useful for debugging.
-                             Too much to be acceptable for production. */
-  SC3_LOG_INFO,         /**< Detailed, but still acceptable for production. */
-  SC3_LOG_STATISTICS,   /**< Major diagnostics and statistical summaries. */
-  SC3_LOG_PRODUCTION,   /**< Sparse flow logging for toplevel functions. */
-  SC3_LOG_ESSENTIAL,    /**< A few lines per program: version, options. */
-  SC3_LOG_ERROR,        /**< Errors by misusage, internal bugs, I/O. */
-  SC3_LOG_SILENT,       /**< This log level prints nothing at all. */
-  SC3_LOG_LEVEL_LAST
+  SC3_LOG_NOISE,      /**< Anything at all and all sorts of nonsense. */
+  SC3_LOG_DEBUG,      /**< Information mainly useful for debugging.
+                           Too much to be acceptable for production. */
+  SC3_LOG_INFO,       /**< Detailed, but still acceptable for production. */
+  SC3_LOG_STATISTICS, /**< Major diagnostics and statistical summaries. */
+  SC3_LOG_PRODUCTION, /**< Sparse flow logging for toplevel functions. */
+  SC3_LOG_ESSENTIAL,  /**< A few lines per program: version, options. */
+  SC3_LOG_ERROR,      /**< Errors by misusage, internal bugs, I/O. */
+  SC3_LOG_SILENT,     /**< This log level prints nothing at all. */
+  SC3_LOG_LEVEL_LAST  /**< Guard value is invalid. */
 }
 sc3_log_level_t;
 
-/* *INDENT-OFF* */
 /** Prototype for the user-selectable log output function.
  * This function does not need to decide whether to log based on role or level.
  * This is done before calling this function, or not calling it depending.
  * This function is just responsible for formatting and writing the message.
  */
-typedef void (*sc3_log_function_t) (void *user, const char *msg,
-                                    sc3_log_role_t role, int rank,
-                                    sc3_log_level_t level,
-                                    int indent, FILE *outfile);
-/* *INDENT-ON* */
+typedef void        (*sc3_log_function_t) (void *user, const char *msg,
+                                           sc3_log_role_t role, int rank,
+                                           sc3_log_level_t level,
+                                           int indent, FILE * outfile);
 
 #ifndef SC3_LOG_LEVEL
 #ifdef SC_ENABLE_DEBUG
@@ -116,10 +114,10 @@ typedef void (*sc3_log_function_t) (void *user, const char *msg,
 /** Log function that prints the incoming message without formatting.
  * \param [in,out] user    This function ignores any user-defined context.
  * \param [in] msg     This function adds a newline to the end of the message.
- * \param [in] role    Used for deciding whether to log, not used in formatting.
- * \param [in] rank    Used for deciding whether to log, not used in formatting.
- * \param [in] level   Used for deciding whether to log, not used in formatting.
- * \param [in] indent  Number of spaces to prepend to log message.
+ * \param [in] role    Ignored.
+ * \param [in] rank    Ignored.
+ * \param [in] level   Ignored.
+ * \param [in] indent  Ignored.
  * \param [in,out] outfile      File printed to.  If NULL use stderr.
  */
 void                sc3_log_function_bare
@@ -130,17 +128,40 @@ void                sc3_log_function_bare
 /** Type suitable as user data for \ref sc3_log_function_prefix. */
 typedef struct sc3_log_puser
 {
-  const char           *prefix;     /**< Short string used as log prefix. */
+  const char         *prefix;     /**< Short string used as log prefix. */
 }
 sc3_log_puser_t;
 
-/** Log function that adds rank/thread information and indent spacing. */
+/** Log function that adds rank/thread information and indent spacing.
+ * It does not check whether to log or not, that happens beforehand.
+ * The parameters passed in are for formatting, not selection.
+ *
+ * \param [in] user     Pointer to \ref sc3_log_puser_t for prefix.
+ * \param [in] msg      Nul-terminated string, or NULL, to be logged.
+ * \param [in] role     Indicate local process or global (root) logging.
+ * \param [in] rank     Number to report as MPI rank.
+ * \param [in] level    Indicate log level.  Ignored by this function.
+ * \param [in] indent   Non-negative number of spaces to prepend.
+ * \param [in,out] outfile  File open for writing, or NULL for stderr.
+ */
 void                sc3_log_function_prefix
   (void *user, const char *msg,
    sc3_log_role_t role, int rank, sc3_log_level_t level,
    int indent, FILE * outfile);
 
-/** Log function that adds rank/thread information and indent spacing. */
+/** Log function that adds rank/thread information and indent spacing.
+ * It does not check whether to log or not, that happens beforehand.
+ * The parameters passed in are for formatting, not selection.
+ * It uses the prefix "sc3."
+ *
+ * \param [in] user     Ignored.
+ * \param [in] msg      Nul-terminated string, or NULL, to be logged.
+ * \param [in] role     Indicate local process or global (root) logging.
+ * \param [in] rank     Number to report as MPI rank.
+ * \param [in] level    Indicate log level.  Ignored by this function.
+ * \param [in] indent   Non-negative number of spaces to prepend.
+ * \param [in,out] outfile  File open for writing, or NULL for stderr.
+ */
 void                sc3_log_function_default
   (void *user, const char *msg,
    sc3_log_role_t role, int rank, sc3_log_level_t level,
@@ -204,7 +225,8 @@ sc3_error_t        *sc3_log_set_level (sc3_log_t * log,
 sc3_error_t        *sc3_log_set_comm (sc3_log_t * log,
                                       sc3_MPI_Comm_t mpicomm);
 
-/** Defaults: stderr, 0
+/**
+ * Defaults: stderr, 0
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_log_set_file (sc3_log_t * log,
@@ -293,56 +315,56 @@ void                sc3_logv (sc3_log_t * log,
 #define SC3_NOISEC(s) SC3_NOISEF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_NOISE.
- * \param [in] fmt    Format string as with printf (3). */
-void SC3_NOISEF (const char *fmt, ...)
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_NOISEF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_DEBUG. */
 #define SC3_DEBUGC(s) SC3_DEBUGF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_DEBUG.
- * \param [in] fmt    Format string as with printf (3). */
-void SC3_DEBUGF (const char *fmt, ...)
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_DEBUGF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_INFO. */
 #define SC3_INFOC(s) SC3_INFOF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_INFO.
- * \param [in] fmt    Format string as with printf (3). */
-void SC3_INFOF (const char *fmt, ...)
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_INFOF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_STATISTICS. */
 #define SC3_STATISTICSC(s) SC3_STATISTICSF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_STATISTICS.
- * \param [in] fmt    Format string as with printf (3). */
-void SC3_STATISTICSF (const char *fmt, ...)
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_STATISTICSF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_PRODUCTION. */
 #define SC3_PRODUCTIONC(s) SC3_PRODUCTIONF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_PRODUCTION.
- * \param [in] fmt    Format string as with printf (3). */
-void SC3_PRODUCTIONF (const char *fmt, ...)
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_PRODUCTIONF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_ESSENTIAL. */
 #define SC3_ESSENTIALC(s) SC3_ESSENTIALF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_ESSENTIAL.
- * \param [in] fmt    Format string as with printf (3). */
-void SC3_ESSENTIALF (const char *fmt, ...)
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_ESSENTIALF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 /** Log a message to stderr with level \ref SC3_LOG_ERROR. */
 #define SC3_ERRORC(s) SC3_ERRORF("%s", s)
 
 /** Log a message to stderr with level \ref SC3_LOG_ERROR.
- * \param [in] fmt    Format string as with printf (3). */
-void SC3_ERRORF (const char *fmt, ...)
+* \param [in] fmt    Format string as with printf (3). */
+void                SC3_ERRORF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
 #ifdef __cplusplus

@@ -48,7 +48,7 @@ struct sc3_log
 
 static sc3_log_t    statlog = {
   {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, SC3_LOG_LEVEL,
-   SC3_MPI_COMM_WORLD, 0, NULL, sc3_log_function_default, NULL
+  SC3_MPI_COMM_WORLD, 0, NULL, sc3_log_function_default, NULL
 };
 
 sc3_log_t          *
@@ -230,10 +230,11 @@ static sc3_log_puser_t sc3_log_puser = { "sc3" };
 
 void
 sc3_log_function_default (void *user, const char *msg,
-                          sc3_log_role_t role, int rank, sc3_log_level_t level,
-                          int indent, FILE * outfile)
+                          sc3_log_role_t role, int rank,
+                          sc3_log_level_t level, int indent, FILE * outfile)
 {
-  sc3_log_function_prefix (&sc3_log_puser, msg, role, rank, level, indent, outfile);
+  sc3_log_function_prefix (&sc3_log_puser, msg, role, rank, level, indent,
+                           outfile);
 }
 
 sc3_error_t        *
@@ -447,7 +448,7 @@ sc3_log_error (sc3_log_t * log,
   return NULL;
 }
 
-#endif  /* 0 */
+#endif /* 0 */
 
 #define _SC3_LOG_BODY(localglobal,loglevel)                             \
   if (SC3_LOG_LEVEL <= loglevel) {                                      \
@@ -464,6 +465,7 @@ void SC3_ ## barelevel ## F (const char *fmt, ...)                      \
 void SC3_GLOBAL_ ## barelevel ## F (const char *fmt, ...)               \
 { _SC3_LOG_BODY (SC3_LOG_GLOBAL, SC3_LOG_ ## barelevel) }
 
+/* *INDENT-OFF* */
 _SC3_LOG_FUNCTIONS (NOISE)
 _SC3_LOG_FUNCTIONS (DEBUG)
 _SC3_LOG_FUNCTIONS (INFO)
@@ -471,3 +473,4 @@ _SC3_LOG_FUNCTIONS (STATISTICS)
 _SC3_LOG_FUNCTIONS (PRODUCTION)
 _SC3_LOG_FUNCTIONS (ESSENTIAL)
 _SC3_LOG_FUNCTIONS (ERROR)
+/* *INDENT-ON* */
