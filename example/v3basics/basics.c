@@ -50,6 +50,8 @@ parent_function (int a, int *result)
   return NULL;
 }
 
+#if 0
+
 static sc3_error_t *
 make_io_error (sc3_allocator_t * a,
                const char *filename, int line, const char *errmsg)
@@ -101,7 +103,8 @@ process_io_error (sc3_log_t * log, sc3_error_t ** ioe, int *num_io)
   SC3A_CHECK (num_io != NULL && *num_io >= 0);
 
   /* maybe there was no error */
-  if (*ioe == NULL) return NULL;
+  if (*ioe == NULL)
+    return NULL;
 
   /* now we only expect an I/O error */
   SC3E (sc3_error_get_kind (*ioe, &kind));
@@ -115,22 +118,27 @@ process_io_error (sc3_log_t * log, sc3_error_t ** ioe, int *num_io)
   return NULL;
 }
 
+#endif
+
+#define BASIC_LOG_ENTER(l,t) do {                                       \
+  sc3_logf (l, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION,                       \
+            (t)->depth, "In %s", (t)->func); } while (0)
+
 static sc3_error_t *
 run_prog (sc3_trace_t * t, sc3_allocator_t * origa, sc3_log_t * log,
           int input, int *result, int *num_io)
 {
   sc3_trace_t         stacktrace;
-  sc3_error_t        *e;
   sc3_allocator_t    *a;
 
-  /* Push call trace and indent log message */
-  sc3_trace_push (&t, &stacktrace, 1, "run_prog", NULL);
-  sc3_log (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP, "In run_prog");
+  SC3E (sc3_trace_push (&t, &stacktrace, "run_prog", NULL));
 
   SC3A_IS (sc3_allocator_is_setup, origa);
   SC3A_IS (sc3_log_is_setup, log);
   SC3A_CHECK (result != NULL);
   SC3A_CHECK (num_io != NULL);
+
+  BASIC_LOG_ENTER (log, t);
 
   /* Test assertions */
   if (provoke_fatal) {
@@ -141,9 +149,11 @@ run_prog (sc3_trace_t * t, sc3_allocator_t * origa, sc3_log_t * log,
   SC3E (sc3_allocator_new (origa, &a));
   SC3E (sc3_allocator_setup (a));
 
+#if 0
   /* Test file input/output and recoverable errors */
-  SC3F (run_io (a, *result), e);
-  SC3E (process_io_error (log, &e, num_io));
+  SC3E (run_io (t, a, log, &result));
+  SC3E (process_io_error (t, a, log, &num_io));
+#endif
 
   SC3E (sc3_allocator_destroy (&a));
   return NULL;
@@ -153,13 +163,15 @@ static sc3_error_t *
 make_log (sc3_trace_t * t, sc3_allocator_t * ator, sc3_log_t ** plog)
 {
   sc3_trace_t         stacktrace;
-  sc3_trace_push (&t, &stacktrace, 1, "make_log", NULL);
+
+  SC3E (sc3_trace_push (&t, &stacktrace, "make_log", NULL));
 
   SC3E (sc3_log_new (ator, plog));
   SC3E (sc3_log_set_level (*plog, SC3_LOG_INFO));
   SC3E (sc3_log_set_comm (*plog, SC3_MPI_COMM_WORLD));
-  SC3E (sc3_log_set_indent (*plog, 3));
   SC3E (sc3_log_setup (*plog));
+
+  BASIC_LOG_ENTER (*plog, t);
 
   return NULL;
 }
@@ -174,7 +186,8 @@ test_alloc (sc3_trace_t * t, sc3_allocator_t * ator)
   sc3_array_t        *arr;
   const char         *arraytest = "Array test";
   sc3_trace_t         stacktrace;
-  sc3_trace_push (&t, &stacktrace, 1, "test_alloc", NULL);
+
+  SC3E (sc3_trace_push (&t, &stacktrace, "test_alloc", NULL));
 
   SC3A_IS (sc3_allocator_is_setup, ator);
   SC3E (sc3_allocator_strdup (ator, "abc", &abc));
@@ -182,33 +195,33 @@ test_alloc (sc3_trace_t * t, sc3_allocator_t * ator)
   for (i = 0; i < 3; ++i) {
     SC3E (sc3_allocator_new (ator, &aligned));
     SC3E (sc3_allocator_set_align (aligned, i * 8));
-    SC3E_DEMIS (sc3_allocator_is_new, aligned);
+    SC3A_IS (sc3_allocator_is_new, aligned);
     SC3E (sc3_allocator_setup (aligned));
-    SC3E_DEMIS (!sc3_allocator_is_new, aligned);
-    SC3E_DEMIS (sc3_allocator_is_setup, aligned);
+    SC3A_IS (!sc3_allocator_is_new, aligned);
+    SC3A_IS (sc3_allocator_is_setup, aligned);
 
-    SC3E (sc3_allocator_calloc_one (aligned, SC3_BUFSIZE, &def));
+    SC3E (sc3_allocator_calloc (aligned, 1, SC3_BUFSIZE, &def));
     SC3_BUFCOPY (def, "def");
-    SC3E (sc3_allocator_realloc (aligned, strlen (def) + 1, &def));
-    SC3E_DEMAND (!memcmp (def, "def", strlen (def)), "String comparison 1");
+    SC3E (sc3_allocator_realloc (aligned, &def, strlen (def) + 1));
+    SC3A_DEMAND (!memcmp (def, "def", strlen (def)), "String comparison 1");
 
     SC3E (sc3_allocator_malloc (aligned, 0, &ghi));
-    SC3E (sc3_allocator_realloc (aligned, strlen (def) + 1, &ghi));
+    SC3E (sc3_allocator_realloc (aligned, &ghi, strlen (def) + 1));
     snprintf (ghi, 4, "%s", def);
     SC3E_DEMAND (!memcmp (ghi, def, strlen (ghi)), "String comparison 2");
 
-    SC3E (sc3_allocator_free (aligned, def));
-    SC3E (sc3_allocator_free (aligned, ghi));
+    SC3E (sc3_allocator_free (aligned, &def));
+    SC3E (sc3_allocator_free (aligned, &ghi));
 
     for (j = 0; j < 3; ++j) {
       SC3E (sc3_array_new (aligned, &arr));
       SC3E (sc3_array_set_elem_size (arr, j * 173));
       SC3E (sc3_array_set_resizable (arr, 1));
       SC3E (sc3_array_set_tighten (arr, 1));
-      SC3E_DEMIS (sc3_array_is_new, arr);
+      SC3A_IS (sc3_array_is_new, arr);
       SC3E (sc3_array_setup (arr));
-      SC3E_DEMIS (!sc3_array_is_new, arr);
-      SC3E_DEMIS (sc3_array_is_setup, arr);
+      SC3A_IS (!sc3_array_is_new, arr);
+      SC3A_IS (sc3_array_is_setup, arr);
 
       SC3E (sc3_array_resize (arr, 5329));
       for (k = 0; k < 148; ++k) {
@@ -224,7 +237,7 @@ test_alloc (sc3_trace_t * t, sc3_allocator_t * ator)
     SC3E (sc3_allocator_destroy (&aligned));
   }
 
-  SC3E (sc3_allocator_free (ator, abc));
+  SC3E (sc3_allocator_free (ator, &abc));
   return NULL;
 }
 
@@ -245,8 +258,9 @@ test_mpi (sc3_allocator_t * alloc,
   SC3A_IS (sc3_allocator_is_setup, alloc);
 
   /* Push call trace and indent log message */
-  sc3_trace_push (&t, &stacktrace, 1, "test_mpi", NULL);
-  sc3_log (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP, "In test_mpi");
+  SC3E (sc3_trace_push (&t, &stacktrace, "test_mpi", NULL));
+
+  BASIC_LOG_ENTER (log, t);
 
   SC3E (sc3_MPI_Comm_set_errhandler (mpicomm, SC3_MPI_ERRORS_RETURN));
 
@@ -254,7 +268,7 @@ test_mpi (sc3_allocator_t * alloc,
   SC3E (sc3_MPI_Comm_rank (mpicomm, rank));
 
   SC3E_DEMAND (0 <= *rank && *rank < size, "Rank out of range");
-  sc3_logf (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_INFO,
+  sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_INFO, t->depth,
             "MPI size %d rank %d", size, *rank);
 
   /* create intra-node communicator */
@@ -262,7 +276,7 @@ test_mpi (sc3_allocator_t * alloc,
                                  0, SC3_MPI_INFO_NULL, &sharedcomm));
   SC3E (sc3_MPI_Comm_size (sharedcomm, &sharedsize));
   SC3E (sc3_MPI_Comm_rank (sharedcomm, &sharedrank));
-  sc3_logf (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_INFO,
+  sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_INFO, t->depth,
             "MPI size %d rank %d shared size %d rank %d",
             size, *rank, sharedsize, sharedrank);
 
@@ -296,7 +310,8 @@ test_mpi (sc3_allocator_t * alloc,
   if (headcomm != SC3_MPI_COMM_NULL) {
     SC3E (sc3_MPI_Comm_size (headcomm, &headsize));
     SC3E (sc3_MPI_Comm_rank (headcomm, &headrank));
-    sc3_logf (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_INFO,
+
+    sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_INFO, t->depth,
               "MPI size %d rank %d "
               "shared size %d rank %d head size %d rank %d",
               size, *rank, sharedsize, sharedrank, headsize, headrank);
@@ -308,10 +323,12 @@ test_mpi (sc3_allocator_t * alloc,
     for (p = 0; p < headsize; ++p) {
       SC3E_DEMAND (headptr[p] == p, "Head rank mismatch");
     }
-    SC3E (sc3_allocator_free (alloc, headptr));
+    SC3E (sc3_allocator_free (alloc, &headptr));
     SC3E (sc3_MPI_Comm_free (&headcomm));
-    sc3_logf (log, t->idepth, SC3_LOG_THREAD0, SC3_LOG_INFO,
+
+    sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_INFO, t->depth,
               "Head comm rank %d ok", headrank);
+
     SC3E (sc3_MPI_Win_unlock (0, sharedwin));
   }
 
@@ -322,6 +339,8 @@ test_mpi (sc3_allocator_t * alloc,
 
   return NULL;
 }
+
+#if 0
 
 static sc3_error_t *
 omp_work (sc3_allocator_t * talloc)
@@ -423,8 +442,10 @@ omp_info (sc3_allocator_t * origa)
   return ompe;
 }
 
+#endif
+
 static sc3_error_t *
-run_main (sc3_trace_t * t, int *argc, char ***argv)
+run_main (sc3_trace_t * t, int argc, char **argv)
 {
   const int           inputs[3] = { 167, 84, 23 };
   int                 mpirank;
@@ -436,45 +457,56 @@ run_main (sc3_trace_t * t, int *argc, char ***argv)
   sc3_log_t          *mainlog;
   sc3_trace_t         stacktrace;
 
-  sc3_trace_push (&t, &stacktrace, 1, "run_main", NULL);
+  /* static tracking of call stack */
+  SC3E (sc3_trace_push (&t, &stacktrace, "run_main", NULL));
 
-  SC3E (sc3_MPI_Init (argc, argv));
+  if (argc >= 2) {
+    /* provoke error return on invalid argument */
+    if (strchr (argv[1], 'F')) {
+      provoke_fatal = 1;
+    }
+  }
 
-  mainalloc = sc3_allocator_nothread ();
+  mainalloc = sc3_allocator_new_static ();
   SC3E (sc3_allocator_new (mainalloc, &a));
   SC3E (sc3_allocator_setup (a));
 
   SC3E (make_log (t, a, &mainlog));
-  sc3_logf (mainlog, t->idepth, SC3_LOG_PROCESS0, SC3_LOG_TOP,
+
+  sc3_logf (mainlog, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
             "Main run is %s", "here");
 
   SC3E (test_alloc (t, a));
-  sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP, "Alloc test ok");
+  sc3_log (mainlog, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
+           "Alloc test ok");
 
   SC3E (test_mpi (a, t, mainlog, &mpirank));
-  sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP, "MPI code ok");
+  sc3_log (mainlog, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
+           "MPI code ok");
 
+#if 0
   SC3E (omp_info (a));
-  sc3_log (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP,
+  sc3_log (mainlog, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
            "OpenMP code ok");
+#endif
 
   num_io = 0;
   for (i = 0; i < 3; ++i) {
     result = input = inputs[i];
     SC3E (run_prog (t, a, mainlog, input, &result, &num_io));
-    sc3_logf (mainlog, t->idepth, SC3_LOG_THREAD0, SC3_LOG_TOP,
+
+    sc3_logf (mainlog, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
               "Clean execution with input %d result %d io %d",
               input, result, num_io);
   }
 
-  sc3_logf (mainlog, t->idepth, SC3_LOG_PROCESS0, SC3_LOG_TOP,
+  sc3_logf (mainlog, SC3_LOG_GLOBAL, SC3_LOG_PRODUCTION, t->depth,
             "Main run is %s", "done");
+
   SC3E (sc3_log_destroy (&mainlog));
 
   SC3E (sc3_allocator_destroy (&a));
   SC3A_IS (sc3_allocator_is_free, mainalloc);
-
-  SC3E (sc3_MPI_Finalize ());
 
   return NULL;
 }
@@ -483,22 +515,11 @@ int
 main (int argc, char **argv)
 {
   sc3_trace_t         stacktrace, *t = &stacktrace;
-  sc3_error_t        *rune;
-
   sc3_trace_init (t, "main", NULL);
 
-  if (argc >= 2) {
-    if (strchr (argv[1], 'F')) {
-      provoke_fatal = 1;
-    }
-  }
-
-  if ((rune = run_main (t, &argc, &argv)) != NULL) {
-    sc3_log_error (sc3_log_predef (), 0,
-                   SC3_LOG_THREAD0, SC3_LOG_ERROR, rune);
-    sc3_error_destroy (&rune);
-    return EXIT_FAILURE;
-  }
+  SC3X (sc3_MPI_Init (&argc, &argv));
+  SC3X (run_main (t, argc, argv));
+  SC3X (sc3_MPI_Finalize ());
 
   return EXIT_SUCCESS;
 }
