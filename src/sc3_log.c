@@ -46,9 +46,11 @@ struct sc3_log
   void               *user;
 };
 
+static sc3_log_puser_t sc3_log_puser = { "sc3", 1 };
+
 static sc3_log_t    statlog = {
   {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, SC3_LOG_LEVEL,
-  SC3_MPI_COMM_WORLD, 0, NULL, sc3_log_function_default, NULL
+  SC3_MPI_COMM_WORLD, 0, NULL, sc3_log_function_prefix, &sc3_log_puser
 };
 
 sc3_log_t          *
@@ -70,7 +72,6 @@ sc3_log_is_valid (const sc3_log_t * log, char *reason)
   SC3E_TEST (0 <= log->level && log->level < SC3_LOG_LEVEL_LAST, reason);
   SC3E_TEST (SC3_MPI_COMM_NULL != log->mpicomm, reason);
 
-  SC3E_TEST (log->file != NULL, reason);
   SC3E_TEST (log->func != NULL, reason);
 
   SC3E_YES (reason);
@@ -226,8 +227,6 @@ sc3_log_function_prefix (void *user, const char *msg,
            "[%s] %*s%s\n", header, indent, "", msg);
 }
 
-static sc3_log_puser_t sc3_log_puser = { "sc3" };
-
 void
 sc3_log_function_default (void *user, const char *msg,
                           sc3_log_role_t role, int rank,
@@ -288,11 +287,13 @@ sc3_log_unref (sc3_log_t ** logp)
     *logp = NULL;
 
     lator = log->lator;
-    if (!log->call_fclose && fflush (log->file)) {
-      /* ignoring runtime error when flush fails */
-    }
-    if (log->call_fclose && fclose (log->file)) {
-      /* ignoring runtime error when close fails */
+    if (log->file != NULL) {
+      if (!log->call_fclose && fflush (log->file)) {
+        /* ignoring runtime error when flush fails */
+      }
+      if (log->call_fclose && fclose (log->file)) {
+        /* ignoring runtime error when close fails */
+      }
     }
     SC3E (sc3_allocator_free (lator, &log));
     SC3E (sc3_allocator_unref (&lator));
@@ -474,3 +475,25 @@ _SC3_LOG_FUNCTIONS (PRODUCTION)
 _SC3_LOG_FUNCTIONS (ESSENTIAL)
 _SC3_LOG_FUNCTIONS (ERROR)
 /* *INDENT-ON* */
+
+int
+sc3_log_error_check (sc3_log_t * log, sc3_log_role_t role,
+                     int indent, sc3_error_t * e)
+{
+  if (log == NULL) {
+    log = sc3_log_new_static ();
+  }
+  if (!(0 <= role && role < SC3_LOG_ROLE_LAST)) {
+    sc3_log (log, role, SC3_LOG_ERROR, indent, "Invalid log role");
+    return -1;
+  }
+  if (e != NULL) {
+    char             buf[SC3_BUFSIZE];
+
+    SC3X (sc3_error_copy_text (e, SC3_ERROR_RECURSION_POSTORDER,
+                               1, buf, SC3_BUFSIZE));
+    sc3_log (log, role, SC3_LOG_ERROR, indent, buf);
+    return -1;
+  }
+  return 0;
+}

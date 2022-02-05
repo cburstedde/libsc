@@ -129,6 +129,7 @@ void                sc3_log_function_bare
 typedef struct sc3_log_puser
 {
   const char         *prefix;     /**< Short string used as log prefix. */
+  int                 break_lines;        /**< Split multi-line strings. */
 }
 sc3_log_puser_t;
 
@@ -457,6 +458,24 @@ void                SC3_GLOBAL_ESSENTIALF (const char *fmt, ...)
 * \param [in] fmt    Format string as with printf (3). */
 void                SC3_GLOBAL_ERRORF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
+
+/** Examine an error and print its message stack if it exists.
+ * \param [in] log      Logger must be setup, or NULL for
+ *                      using \ref sc3_log_new_static ().
+ *                      Use level \ref SC3_LOG_ERROR.
+ * \param [in] role     Valid \ref sc3_log_role_t.
+ *                      When invalid, use defaults instead
+ *                      and return negative even with no error.
+ * \param [in] indent   Indentation passed to the log function.
+ * \param [in] e        If NULL, do nothing and return 0.
+ *                      Otherwise, log error's multiline message.
+ *                      The error object is \a not unrefd.
+ * \return              0 on success, negative value otherwise.
+ */
+int                 sc3_log_error_check (sc3_log_t * log,
+                                         sc3_log_role_t role,
+                                         int indent,
+                                         sc3_error_t * e);
 
 #ifdef __cplusplus
 #if 0

@@ -521,7 +521,11 @@ main (int argc, char **argv)
 {
   SC3X (sc3_MPI_Init (&argc, &argv));
 
-  SC3X (run_main (NULL, argc, argv));
+  if (sc3_log_error_check (NULL, SC3_LOG_LOCAL, 0,
+                           run_main (NULL, argc, argv))) {
+    /* we leave memory behind but that happens on fatal error */
+    return EXIT_FAILURE;
+  }
 
   SC3X (sc3_MPI_Finalize ());
   return EXIT_SUCCESS;
