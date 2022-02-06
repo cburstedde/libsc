@@ -129,7 +129,8 @@ void                sc3_log_function_bare
 typedef struct sc3_log_puser
 {
   const char         *prefix;     /**< Short string used as log prefix. */
-  int                 break_lines;        /**< Split multi-line strings. */
+  int                 prefix_newline;     /**< Boolean: prefix each line of
+                                               multi-line strings anew. */
 }
 sc3_log_puser_t;
 
@@ -152,8 +153,8 @@ void                sc3_log_function_prefix
 
 /** Log function that adds rank/thread information and indent spacing.
  * It does not check whether to log or not, that happens beforehand.
- * The parameters passed in are for formatting, not selection.
- * It uses the prefix "sc3."
+ * The parameters passed in are for formatting, not for decision.
+ * Using prefix "sc3" and prefixing multi-line messages per line.
  *
  * \param [in] user     Ignored.
  * \param [in] msg      Nul-terminated string, or NULL, to be logged.

@@ -46,7 +46,11 @@ struct sc3_log
   void               *user;
 };
 
-static sc3_log_puser_t sc3_log_puser = { "sc3", 1 };
+#define             PUSER_PNULL "Log prefix error"
+static const char  *puser_pnull = PUSER_PNULL;
+static const int    puser_newline = 1;
+static sc3_log_puser_t sc3_log_puser = { "sc3", puser_newline };
+static sc3_log_puser_t sc3_log_pnull = { PUSER_PNULL, puser_newline };
 
 static sc3_log_t    statlog = {
   {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, SC3_LOG_LEVEL,
@@ -181,11 +185,16 @@ sc3_log_function_prefix (void *user, const char *msg,
 {
   char                header[SC3_BUFSIZE];
   const char         *prefix;
-  const char         *pnull = "Log prefix error";
   sc3_log_puser_t    *puser = (sc3_log_puser_t *) user;
 
   /* survive NULL prefix */
-  prefix = puser == NULL ? pnull : puser->prefix;
+  if (puser == NULL) {
+    puser = &sc3_log_pnull;
+  }
+  prefix = puser->prefix;
+  if (prefix == NULL) {
+    prefix = puser_pnull;
+  }
 
   /* survive NULL message */
   if (msg == NULL) {
@@ -212,19 +221,38 @@ sc3_log_function_prefix (void *user, const char *msg,
     indent = 32;
   }
 
-  /* construct elaborate message and write it */
+  /* construct message prefix */
   if (role == SC3_LOG_LOCAL) {
     if (snprintf (header, SC3_BUFSIZE, "%s %d", prefix, rank) < 0) {
-      snprintf (header, SC3_BUFSIZE, pnull);
+      snprintf (header, SC3_BUFSIZE, puser_pnull);
     }
   }
   else {
     if (snprintf (header, SC3_BUFSIZE, "%s", prefix) < 0) {
-      snprintf (header, SC3_BUFSIZE, pnull);
+      snprintf (header, SC3_BUFSIZE, puser_pnull);
     }
   }
-  fprintf (outfile != NULL ? outfile : stderr,
-           "[%s] %*s%s\n", header, indent, "", msg);
+
+  /* construct elaborate message and write it */
+#ifdef SC_HAVE_STRTOK_R
+  if (puser->prefix_newline) {
+    char         str[SC3_BUFSIZE], *tok, *sav;
+
+    sc3_strcopy (str, SC3_BUFSIZE, msg);
+    tok = strtok_r (str, "\n\r", &sav);
+    while (tok != NULL) {
+      fprintf (outfile != NULL ? outfile : stderr,
+               "[%s] %*s%s\n", header, indent, "", tok);
+      tok = strtok_r (NULL, "\n\r", &sav);
+    }
+  }
+#else
+  if (0) { ; }
+#endif
+  else {
+    fprintf (outfile != NULL ? outfile : stderr,
+             "[%s] %*s%s\n", header, indent, "", msg);
+  }
 }
 
 void
