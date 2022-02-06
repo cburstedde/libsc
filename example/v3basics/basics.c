@@ -25,9 +25,13 @@
 #include <sc3_mpi.h>
 #include <sc3_trace.h>
 
-#define BASIC_LOG_ENTER(t,l) do {                                       \
-  sc3_logf (l, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION,                       \
-            (t)->depth, "In %s", (t)->func); } while (0)
+#define BASIC_LOG_STATE(t,l,msg) do {                                   \
+  sc3_log_t *_log = (l) == NULL ? sc3_log_new_static () : (l);          \
+  sc3_logf (_log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION,                    \
+            (t)->depth, "%s %s", msg, (t)->func); } while (0)
+
+#define BASIC_LOG_ENTER(t,l) BASIC_LOG_STATE (t, l, "Enter");
+#define BASIC_LOG_LEAVE(t,l) BASIC_LOG_STATE (t, l, "Leave");
 
 static int          provoke_fatal = 0;
 
@@ -44,6 +48,8 @@ child_function (sc3_trace_t * t, sc3_log_t * log, int a, int *result)
   BASIC_LOG_ENTER (t, log);
 
   *result = a + 1;
+
+  BASIC_LOG_LEAVE (t, log);
   return NULL;
 }
 
@@ -61,6 +67,8 @@ parent_function (sc3_trace_t * t, sc3_log_t * log, int a, int *result)
 
   SC3E (child_function (t, log, a, result));
   *result *= 3;
+
+  BASIC_LOG_LEAVE (t, log);
   return NULL;
 }
 
@@ -103,6 +111,7 @@ run_io (sc3_trace_t * t, sc3_allocator_t * a, sc3_log_t * log,
     return NULL;
   }
 
+  BASIC_LOG_LEAVE (t, log);
   return NULL;
 }
 
@@ -145,6 +154,7 @@ run_prog (sc3_trace_t * t, sc3_allocator_t * origa, sc3_log_t * log,
   /* Destroy derived allocator */
   SC3E (sc3_allocator_destroy (&a));
 
+  BASIC_LOG_LEAVE (t, log);
   return NULL;
 }
 
@@ -160,8 +170,7 @@ make_log (sc3_trace_t * t, sc3_allocator_t * ator, sc3_log_t ** plog)
   SC3E (sc3_log_set_comm (*plog, SC3_MPI_COMM_WORLD));
   SC3E (sc3_log_setup (*plog));
 
-  BASIC_LOG_ENTER (t, *plog);
-
+  BASIC_LOG_STATE (t, *plog, "Complete");
   return NULL;
 }
 
@@ -239,6 +248,8 @@ test_alloc (sc3_trace_t * t, sc3_allocator_t * ator, sc3_log_t * log)
   }
 
   SC3E (sc3_allocator_free (ator, &abc));
+
+  BASIC_LOG_LEAVE (t, log);
   return NULL;
 }
 
@@ -338,6 +349,7 @@ test_mpi (sc3_trace_t * t, sc3_allocator_t * alloc, sc3_log_t * log,
   SC3E (sc3_MPI_Comm_free (&sharedcomm));
   SC3E (sc3_MPI_Barrier (mpicomm));
 
+  BASIC_LOG_LEAVE (t, log);
   return NULL;
 }
 
@@ -495,6 +507,14 @@ run_main (sc3_trace_t * t, int argc, char **argv)
     sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_INFO, t->depth,
               "Program Iteration %d", i);
 
+    if (1) {
+      sc3_trace_t         stacktrace, *tt = t;
+      SC3E (sc3_trace_push (&tt, &stacktrace, "block", NULL));
+      BASIC_LOG_STATE (t, log, "Reality");
+      BASIC_LOG_STATE (tt, log, "Nesting");
+      BASIC_LOG_STATE (t, log, "Survive");
+    }
+
     result = input = inputs[i];
     SC3E (run_prog (t, a, log, mpirank, input, &result, &num_io));
 
@@ -519,13 +539,23 @@ run_main (sc3_trace_t * t, int argc, char **argv)
 int
 main (int argc, char **argv)
 {
+  sc3_trace_t         stacktrace, *t = &stacktrace;
+
+  /* static tracking of call stack */
+  sc3_trace_init (t, "main", NULL);
+
   SC3X (sc3_MPI_Init (&argc, &argv));
 
-  if (sc3_log_error_check (NULL, SC3_LOG_LOCAL, 0,
-                           run_main (NULL, argc, argv))) {
+  /* querying MPI_COMM_WORLD internally.  Use only after MPI_Init */
+  BASIC_LOG_ENTER (t, NULL);
+
+  if (sc3_log_error_check (NULL, SC3_LOG_LOCAL, 0, run_main (t, argc, argv))) {
     /* we leave memory behind but that happens on fatal error */
     return EXIT_FAILURE;
   }
+
+  /* again, as on entering, using a dummy logger to stderr */
+  BASIC_LOG_LEAVE (t, NULL);
 
   SC3X (sc3_MPI_Finalize ());
   return EXIT_SUCCESS;
