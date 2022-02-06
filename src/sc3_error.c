@@ -252,6 +252,36 @@ sc3_error_set_message (sc3_error_t * e, const char *errmsg)
 }
 
 sc3_error_t        *
+sc3_error_set_messagef (sc3_error_t * e, const char *fmt, ...)
+{
+  va_list             ap;
+
+  va_start (ap, fmt);
+  SC3E (sc3_error_set_messagev (e, fmt, ap));
+  va_end (ap);
+
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_error_set_messagev (sc3_error_t * e, const char *fmt, va_list ap)
+{
+  char                buf[SC3_BUFSIZE];
+  const char         *msg = NULL;
+
+  SC3A_CHECK (fmt != NULL);
+  if (0 <= vsnprintf (buf, SC3_BUFSIZE, fmt, ap)) {
+    msg = buf;
+  }
+  else {
+    msg = "Message format error";
+  }
+
+  SC3E (sc3_error_set_message (e, msg));
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_error_set_kind (sc3_error_t * e, sc3_error_kind_t kind)
 {
   SC3A_IS (sc3_error_is_new, e);
@@ -260,14 +290,6 @@ sc3_error_set_kind (sc3_error_t * e, sc3_error_kind_t kind)
   e->kind = kind;
   return NULL;
 }
-
-#if 0
-void                sc3_error_set_sync (sc3_error_t * ea,
-                                        sc3_error_sync_t syn);
-void                sc3_error_set_msgf (sc3_error_t * ea,
-                                        const char *errfmt, ...)
-  __attribute__ ((format (printf, 2, 3)));
-#endif
 
 sc3_error_t        *
 sc3_error_setup (sc3_error_t * e)

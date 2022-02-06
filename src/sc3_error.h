@@ -515,28 +515,6 @@ int                 sc3_error_is_new (const sc3_error_t * e, char *reason);
  */
 int                 sc3_error_is_setup (const sc3_error_t * e, char *reason);
 
-#if 0
-
-/** Check an error object to be setup and fatal.
- * All errors are fatal, this function is deprecated.
- * \param [in] e        Any pointer.
- * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
- *                      is set to "" if answer is yes or reason if no.
- * \return              True if error is not NULL, setup, and is of a
- *                      fatal kind, false otherwise.
- */
-int                 sc3_error_is_fatal (const sc3_error_t * e, char *reason);
-
-/** Check an error object to be setup and of kind \ref SC3_ERROR_LEAK.
- * \param [in] e        Any pointer.
- * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
- *                      is set to "" if answer is yes or reason if no.
- * \return              True if error is not NULL, setup, and a leak.
- */
-int                 sc3_error_is_leak (const sc3_error_t * e, char *reason);
-
-#endif
-
 /** Check an error object to be setup and of a specified kind.
  * \param [in] e        Any pointer.
  * \param [in] kind     Legal value of \ref sc3_error_kind_t.
@@ -611,13 +589,25 @@ sc3_error_t        *sc3_error_set_location (sc3_error_t * e,
 sc3_error_t        *sc3_error_set_message (sc3_error_t * e,
                                            const char *errmsg);
 
-#if 0
-void                sc3_error_set_sync (sc3_error_t * e,
-                                        sc3_error_sync_t syn);
-sc3_error_t        *sc3_error_set_msgf (sc3_error_t * e,
-                                        const char *errfmt, ...)
+/** Set the message of an error in the style of printf (3)
+ * The default message is "".
+ * \param [in,out] e    Error object before \ref sc3_error_setup.
+ * \param [in] fmt      Nul-terminated string.  Pointer must not be NULL.
+ * \return              An error object or NULL without errors.
+ */
+sc3_error_t        *sc3_error_set_messagef (sc3_error_t * e,
+                                            const char *fmt, ...)
   __attribute__ ((format (printf, 2, 3)));
-#endif
+
+/** Set the message of an error in the style of printf (3)
+ * The default message is "".
+ * \param [in,out] e    Error object before \ref sc3_error_setup.
+ * \param [in] fmt      Nul-terminated string.  Pointer must not be NULL.
+ * \param [in] ap       Parameter list macro as with stdarg (3).
+ * \return              An error object or NULL without errors.
+ */
+sc3_error_t        *sc3_error_set_messagev (sc3_error_t * e,
+                                            const char *fmt, va_list ap);
 
 /** Setup an error and put it into its usable phase.
  * \param [in,out] e    This error must not yet be setup.
@@ -654,26 +644,6 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
  * \return                  An error object or NULL without errors.
  */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
-
-#if 0
-/** Make assertion error and return either it or any error creating it.
- *
- * Contrary to most other libsc functions, its return value is its output.
- * The return value is never NULL, but the newly made error on success.
- *
- * This function is intended to be used by macros seeding an error stack.
- *
- * \param [in] filename The filename is copied into the error object.
- *                      Pointer not NULL, string Nul-terminated.
- * \param [in] line     Non-negative line number set in the error.
- * \param [in] errmsg   The error message is copied into the error.
- *                      Pointer not NULL, string Nul-terminated.
- * \return              Never NULL, but rather the newly made error,
- *                      or any error encountered in constructing it.
- */
-sc3_error_t        *sc3_error_new_assert (const char *filename,
-                                          int line, const char *errmsg);
-#endif
 
 /** Make error of given kind and return either it or any error creating it.
  *
