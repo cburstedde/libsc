@@ -549,7 +549,9 @@ main (int argc, char **argv)
   /* querying MPI_COMM_WORLD internally.  Use only after MPI_Init */
   BASIC_LOG_ENTER (t, NULL);
 
-  if (sc3_log_error_check (NULL, SC3_LOG_LOCAL, 0, run_main (t, argc, argv))) {
+  /* this function works with a dummy logger */
+  if (sc3_log_error_check (NULL, SC3_LOG_LOCAL, t->depth,
+                           run_main (t, argc, argv))) {
     /* we leave memory behind but that happens on fatal error */
     return EXIT_FAILURE;
   }
