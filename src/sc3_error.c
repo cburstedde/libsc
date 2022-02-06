@@ -57,11 +57,6 @@ static sc3_error_t  enomem = {
   "Out of memory", __FILE__, __LINE__, 0, NULL, 0, 0
 };
 
-static sc3_error_t  einternal = {
-  {SC3_REFCOUNT_MAGIC, 1}, 1, SC3_ERROR_UNKNOWN,
-  "Please report as bug", __FILE__, __LINE__, 0, NULL, 0, 0
-};
-
 sc3_error_t        *
 sc3_strdup (const char *src, char **dest)
 {
@@ -354,93 +349,11 @@ sc3_error_destroy (sc3_error_t ** ep)
   return NULL;
 }
 
-#if 0
-
-void
-sc3_error_destroy_noerr (sc3_error_t ** pe, char *flatmsg)
-{
-  int                 remain, result;
-  int                 line;
-  const char         *filename, *msg;
-  char               *pos, *bname;
-  sc3_error_t        *e, *inte, *stack;
-  sc3_error_kind_t    kind;
-
-  /* catch invalid calls */
-  if (flatmsg == NULL) {
-    return;
-  }
-  if (pe == NULL || *pe == NULL) {
-    SC3_BUFCOPY (flatmsg, "No error supplied");
-    return;
-  }
-
-  /* now the incoming error object must be analyzed and cleaned up */
-  e = *pe;
-  *pe = NULL;
-
-  /* go through error stack's messages */
-  remain = SC3_BUFSIZE;
-  *(pos = flatmsg) = '\0';
-  do {
-    /* append error location and message to output string */
-    bname = NULL;
-    SC3E_SET (inte, sc3_error_access_location (e, &filename, &line));
-    if (inte == NULL && (bname = strdup (filename)) != NULL) {
-      filename = sc3_basename (bname);
-    }
-    SC3E_NULL_SET (inte, sc3_error_get_message (e, &msg));
-    SC3E_NULL_SET (inte, sc3_error_get_kind (e, &kind));
-    if (inte == NULL && remain > 0) {
-      result = snprintf (pos, remain, "%s%s:%d:%c %s",
-                         pos == flatmsg ? "" : ": ", filename, line,
-                         sc3_error_kind_char[kind], msg);
-      if (result < 0 || result >= remain) {
-        pos = NULL;
-        remain = 0;
-      }
-      else {
-        pos += result;
-        remain -= result;
-      }
-    }
-    free (bname);
-
-    /* do down the error stack */
-    stack = NULL;
-    SC3E_NULL_SET (inte, sc3_error_ref_stack (e, &stack));
-    SC3E_NULL_SET (inte, sc3_error_destroy (&e));
-    if (inte != NULL) {
-      sc3_error_destroy (&inte);
-    }
-
-    /* continue if there is a stack left */
-    e = stack;
-  }
-  while (e != NULL);
-}
-
-#endif
-
-/* this function is not supposed to have any side effects */
-static sc3_error_t *
-sc3_error_validate (sc3_error_t *eret, sc3_error_t *eout)
-{
-  sc3_error_t        *e;
-
-  if ((eret == NULL) == (eout == NULL)) {
-    return &einternal;
-  }
-  e = eret != NULL ? eret : eout;
-
-  return sc3_error_is_setup (e, NULL) ? e : &einternal;
-}
-
 /* Take over one reference to the stack, but NULL argument is ok, too. */
 static sc3_error_t *
 sc3_error_new_build (sc3_error_t ** pstack, sc3_error_kind_t kind,
                      const char *filename, int line, const char *errmsg,
-                     sc3_error_t **ep)
+                     sc3_error_t ** ep)
 {
   sc3_error_t        *e;
 
@@ -448,14 +361,17 @@ sc3_error_new_build (sc3_error_t ** pstack, sc3_error_kind_t kind,
   if (pstack != NULL && sc3_error_is_setup (*pstack, NULL) &&
       !(*pstack)->alloced) {
     /* The stack passed in is a static predefined error.
-       Likely the allocation of errors is no longer working.
-       Output the stack without further ado to prevent more errors. */
+     * Likely the allocation of errors is no longer working.
+     * Output the stack without further ado to prevent more errors.
+     */
     if (ep != NULL) {
+      /* intended use of this function is passing through the stack */
       *ep = *pstack;
       *pstack = NULL;
       return NULL;
     }
     else {
+      /* this is wrapping the input stack into an error return */
       e = *pstack;
       *pstack = NULL;
       return e;
@@ -480,6 +396,8 @@ sc3_error_new_build (sc3_error_t ** pstack, sc3_error_kind_t kind,
   SC3E (sc3_error_setup (e));
 
   SC3A_IS (sc3_error_is_setup, e);
+
+  /* *ep is not NULL if and only this function returns NULL */
   *ep = e;
   return NULL;
 }
@@ -487,30 +405,32 @@ sc3_error_new_build (sc3_error_t ** pstack, sc3_error_kind_t kind,
 sc3_error_t        *
 sc3_error_new_assert (const char *filename, int line, const char *errmsg)
 {
-  return sc3_error_new_kind (SC3_ERROR_ASSERT, filename, line, errmsg);
+  sc3_error_t        *eout;
+
+  SC3E (sc3_error_new_build
+        (NULL, SC3_ERROR_ASSERT, filename, line, errmsg, &eout));
+  return eout;
 }
 
 sc3_error_t        *
 sc3_error_new_kind (sc3_error_kind_t kind,
                     const char *filename, int line, const char *errmsg)
 {
-  sc3_error_t        *eret, *eout;
+  sc3_error_t        *eout;
 
-  eret = sc3_error_new_build (NULL, kind, filename, line, errmsg, &eout);
-
-  return sc3_error_validate (eret, eout);
+  SC3E (sc3_error_new_build (NULL, kind, filename, line, errmsg, &eout));
+  return eout;
 }
 
 sc3_error_t        *
 sc3_error_new_stack (sc3_error_t ** pstack,
                      const char *filename, int line, const char *errmsg)
 {
-  sc3_error_t        *eret, *eout;
+  sc3_error_t        *eout;
 
-  eret = sc3_error_new_build
-    (pstack, SC3_ERROR_FATAL, filename, line, errmsg, &eout);
-
-  return sc3_error_validate (eret, eout);
+  SC3E (sc3_error_new_build
+        (pstack, SC3_ERROR_FATAL, filename, line, errmsg, &eout));
+  return eout;
 }
 
 #if 0
@@ -934,7 +854,7 @@ sc3_error_check (char *buffer, size_t buflen, sc3_error_t * e)
 {
   /* address the error object passed in */
   if (e != NULL) {
-    sc3_error_t     *e2;
+    sc3_error_t        *e2;
 
     /* access message of error and unref without checking */
     e2 = sc3_error_copy_text (e, SC3_ERROR_RECURSION_POSTORDER,
