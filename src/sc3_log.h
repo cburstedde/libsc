@@ -460,17 +460,19 @@ void                SC3_GLOBAL_ESSENTIALF (const char *fmt, ...)
 void                SC3_GLOBAL_ERRORF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
-/** Examine an error and print its message stack if it exists.
+/** Examine an error and print its message and unref if not NULL.
+ * This function can be called directly with the return value of an
+ * error-checking function.  It assumes ownership of the error.
  * \param [in] log      Logger must be setup, or NULL for
  *                      using \ref sc3_log_new_static ().
- *                      Use level \ref SC3_LOG_ERROR.
+ *                      Using log level \ref SC3_LOG_ERROR.
  * \param [in] role     Valid \ref sc3_log_role_t.
  *                      When invalid, use defaults instead
  *                      and return negative even with no error.
  * \param [in] indent   Indentation passed to the log function.
  * \param [in] e        If NULL, do nothing and return 0.
  *                      Otherwise, log error's multiline message.
- *                      The error object is \a not unrefd.
+ *                      The error object is unrefd without checking.
  * \return              0 on success, negative value otherwise.
  */
 int                 sc3_log_error_check (sc3_log_t * log,

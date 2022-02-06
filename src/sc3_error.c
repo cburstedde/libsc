@@ -956,3 +956,19 @@ sc3_error_check (sc3_error_t ** e, char *buffer, size_t buflen)
   }
   return -1;
 }
+
+void
+sc3_error_unref_noerr (sc3_error_t * e)
+{
+  if (e == NULL) {
+    return;
+  }
+
+  /* unref recursively (survives NULL stack) */
+  sc3_error_unref_noerr (e->stack);
+
+  /* if allocated, drop a reference and possibly free */
+  if (e->alloced && --e->rc.rc == 0) {
+    sc3_free (&e);
+  }
+}

@@ -508,20 +508,40 @@ int
 sc3_log_error_check (sc3_log_t * log, sc3_log_role_t role,
                      int indent, sc3_error_t * e)
 {
+  /* survive NULL logger */
   if (log == NULL) {
     log = sc3_log_new_static ();
   }
+
+  /* check for invalid usage */
   if (!(0 <= role && role < SC3_LOG_ROLE_LAST)) {
     sc3_log (log, role, SC3_LOG_ERROR, indent, "Invalid log role");
     return -1;
   }
+
+  /* address the error object passed in */
   if (e != NULL) {
     char             buf[SC3_BUFSIZE];
+    sc3_error_t     *e2;
 
-    SC3X (sc3_error_copy_text (e, SC3_ERROR_RECURSION_POSTORDER,
-                               1, buf, SC3_BUFSIZE));
-    sc3_log (log, role, SC3_LOG_ERROR, indent, buf);
+    /* access message of error and unref without checking */
+    e2 = sc3_error_copy_text (e, SC3_ERROR_RECURSION_POSTORDER,
+                              1, buf, SC3_BUFSIZE);
+    sc3_error_unref_noerr (e);
+
+    /* print error message */
+    if (e2 == NULL) {
+      sc3_log (log, role, SC3_LOG_ERROR, indent, buf);
+    }
+    else {
+      sc3_error_unref_noerr (e2);
+      sc3_log (log, role, SC3_LOG_ERROR, indent, "Invalid error text");
+    }
+
+    /* error condition returns true */
     return -1;
   }
+
+  /* There was no error in the first place.  Return false */
   return 0;
 }

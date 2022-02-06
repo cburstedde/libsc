@@ -655,19 +655,6 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
  */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 
-#if 0                           /* Not used currently.  Needed? */
-/** Destroy an error object and condense its stack's messages into a string.
- * Such condensation removes some structure, so this is a last-resort call.
- * \param [in,out] pe   This error will be destroyed and pointer NULLd.
- *                      If any errors occur in the process, they are ignored.
- *                      One would be that the error has multiple references.
- * \param [out] flatmsg If not NULL, existing string of length SC3_BUFSIZE
- *                      is filled with the error stack messages flattened.
- */
-void                sc3_error_destroy_noerr (sc3_error_t ** pe,
-                                             char *flatmsg);
-#endif
-
 #if 0
 /** Make assertion error and return either it or any error creating it.
  *
@@ -985,6 +972,12 @@ sc3_error_t        *sc3_error_copy_text (sc3_error_t * e,
                                          sc3_error_recursion_t recursion,
                                          int dobasename,
                                          char *buffer, size_t buflen);
+
+/** Unref an error object with maximal tolerance and minimal checking.
+ * Useful to clean up as much memory as possible after some fatal mishap.
+ * \param [in] e        If not NULL, this error will be unrefd.
+ */
+void                sc3_error_unref_noerr (sc3_error_t * e);
 
 /** Translate an error valu into a return value and a text block.
  * Acknowledge errors from the libary without much coding effort.
