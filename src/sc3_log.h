@@ -462,7 +462,7 @@ void                SC3_GLOBAL_ERRORF (const char *fmt, ...)
 
 /** Examine an error and print its message and unref if not NULL.
  * This function can be called directly with the return value of an
- * error-checking function.  It assumes ownership of the error.
+ * error-object returning function.  Assumes ownership of the error.
  * \param [in] log      Logger must be setup, or NULL for
  *                      using \ref sc3_log_new_static ().
  *                      Using log level \ref SC3_LOG_ERROR.

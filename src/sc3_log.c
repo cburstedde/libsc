@@ -516,6 +516,9 @@ sc3_log_error_check (sc3_log_t * log, sc3_log_role_t role,
   /* check for invalid usage */
   if (!(0 <= role && role < SC3_LOG_ROLE_LAST)) {
     sc3_log (log, role, SC3_LOG_ERROR, indent, "Invalid log role");
+
+    /* make sure to unref the error on early return */
+    sc3_error_unref_noerr (e);
     return -1;
   }
 

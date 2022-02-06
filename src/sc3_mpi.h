@@ -98,7 +98,7 @@
 #define SC3X(f) do {                                            \
   sc3_error_t *_e = (f);                                        \
   char _buffer[SC3_BUFSIZE];                                    \
-  if (sc3_error_check (&_e, _buffer, SC3_BUFSIZE)) {            \
+  if (sc3_error_check (_buffer, SC3_BUFSIZE, _e)) {             \
     fprintf (stderr, "%s\n", _buffer);                          \
     fprintf (stderr, "EX %s:%d: %s\n", __FILE__, __LINE__, #f); \
     sc3_MPI_Abort (SC3_MPI_COMM_WORLD, SC3_MPI_ERR_OTHER);      \

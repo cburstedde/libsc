@@ -930,7 +930,7 @@ sc3_error_recursion_t;
  * \param [in] e            This error object must be setup.
  * \param [in] recursion    Enumeration \ref sc3_error_recursion_t.
  * \param [in] dobasename   If true, only copy the basename (3) of file.
- * \param [out] buffer      If NULL, this function does nothing.
+ * \param [out] buffer      If NULL, this function only checks consistency.
  *                          Otherwise must contain at least \a buflen bytes.
  *                          Nul-terminated, often multi-line string on output.
  *                          There is no final newline at the end of the text.
@@ -945,29 +945,35 @@ sc3_error_t        *sc3_error_copy_text (sc3_error_t * e,
 
 /** Unref an error object with maximal tolerance and minimal checking.
  * Useful to clean up as much memory as possible after some fatal mishap.
- * \param [in] e        If not NULL, this error will be unrefd.
+ * \param [in] e        If not NULL, this error is unrefd.
  */
 void                sc3_error_unref_noerr (sc3_error_t * e);
 
-/** Translate an error valu into a return value and a text block.
- * Acknowledge errors from the libary without much coding effort.
- * If the memory system still works, error is cleanly deallocated.
- * This is usually the case, since we survive out-of-memory situations.
- * \param [in,out] e        Non-NULL address of an error pointer.
- *                          The error itself may be NULL or a valid object.
- *                          Unrefd and NULLd on output in the latter case.
+/** Translate an error value into a return value and a text block.
+ * Useful to acknowledge errors from the libary without much effort.
+ * This function can be called directly with the return value of an
+ * error-object returning function.  Assumes ownership of the error.
+ *
+ * When the error is NULL, wo do not touch the output buffer and
+ * its contents are undefined.  The buffer is written to if and only
+ * if this function returns negative.  Otherwise buffer is untouched.
+ *
+ * Error is cleanly dereferenced using \ref sc3_error_unref_noerr.
+ * This usually works, since we survive out-of-memory situations.
+ *
  * \param [out] buffer      If this buffer is not NULL, it must provide at
- *                          least \a buflen many bytes.
- *                          Nul-terminated, often multi-line string on output.
+ *                          least \a buflen many bytes.  On an error return,
+ *                          nul-terminated, often multi-line string on output.
  *                          There is no final newline at the end of the text.
- *                          When input \a *e is NULL, set to the empty string.
  * \param [in] buflen       Number of bytes available in \a buffer.
- *                          If zero, this function copies nothing.
- * \return                  0 if e is non-NULL and *e is NULL on input,
- *                          a negative integer otherwise.
+ *                          If zero, this function does not touch the buffer.
+ * \param [in] e            If NULL, do nothing and return 0.
+ *                          Otherwise, put multiline error message
+ *                          into \a buffer and return negative value.
+ * \return                  0 without error, a negative integer otherwise.
  */
-int                 sc3_error_check (sc3_error_t ** e,
-                                     char *buffer, size_t buflen);
+int                 sc3_error_check (char *buffer, size_t buflen,
+                                     sc3_error_t * e);
 
 #ifdef __cplusplus
 #if 0

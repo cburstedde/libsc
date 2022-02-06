@@ -913,72 +913,6 @@ sc3_error_copy_text (sc3_error_t * e, sc3_error_recursion_t recursion,
   return NULL;
 }
 
-static sc3_error_t *
-sc3_error_check_text (sc3_error_t ** e, char *buffer, size_t buflen)
-{
-  SC3A_CHECK (e != NULL);
-  SC3A_IS (sc3_error_is_valid, *e);
-
-  if (!(buffer == NULL || buflen == 0)) {
-    SC3E (sc3_error_copy_text (*e, SC3_ERROR_RECURSION_POSTORDER,
-                               1, buffer, buflen));
-  }
-
-  SC3E (sc3_error_unref (e));
-  return NULL;
-}
-
-int
-sc3_error_check (sc3_error_t ** e, char *buffer, size_t buflen)
-{
-  const int           bok = !(buffer == NULL || buflen == 0);
-  char                r[SC3_BUFSIZE];
-  sc3_error_t        *e2, *e3;
-
-  /* invalid usage */
-  if (e == NULL) {
-    if (bok) {
-      snprintf (buffer, buflen, "%s", "NULL error input to sc3_error_check");
-    }
-    return -1;
-  }
-
-  /* the only case this function returns successfully */
-  if (*e == NULL) {
-    if (bok) {
-      snprintf (buffer, buflen, "%s", "");
-    }
-    return 0;
-  }
-
-  /* invalid error object */
-  if (!sc3_error_is_valid (*e, r)) {
-    if (bok) {
-      snprintf (buffer, buflen, "Invalid error input: %s", r);
-    }
-    return -1;
-  }
-
-  /* deconstruct the error and try to make sense of strange cases */
-  e2 = sc3_error_check_text (e, buffer, buflen);
-  if (e2 != NULL) {
-    /* something is wrong with internal error reporting */
-    if (bok) {
-      /* we will only learn anything if the buffer exists */
-      e3 = sc3_error_copy_text (e2, SC3_ERROR_RECURSION_POSTORDER,
-                                1, buffer, buflen);
-      if (e3 != NULL) {
-        /* something is even more badly wrong with internal error reporting */
-        snprintf (buffer, buflen, "%s",
-                  "Inconsistency inside sc3_error_copy_text");
-        sc3_error_unref (&e3);
-      }
-    }
-    sc3_error_unref (&e2);
-  }
-  return -1;
-}
-
 void
 sc3_error_unref_noerr (sc3_error_t * e)
 {
@@ -993,4 +927,32 @@ sc3_error_unref_noerr (sc3_error_t * e)
   if (e->alloced && --e->rc.rc == 0) {
     sc3_free (&e);
   }
+}
+
+int
+sc3_error_check (char *buffer, size_t buflen, sc3_error_t * e)
+{
+  /* address the error object passed in */
+  if (e != NULL) {
+    sc3_error_t     *e2;
+
+    /* access message of error and unref without checking */
+    e2 = sc3_error_copy_text (e, SC3_ERROR_RECURSION_POSTORDER,
+                              1, buffer, buflen);
+    sc3_error_unref_noerr (e);
+
+    /* error message appears is in the output buffer, or worse */
+    if (e2 != NULL) {
+      sc3_error_unref_noerr (e2);
+      if (buffer != NULL && buflen > 0) {
+        snprintf (buffer, buflen, "%s", "Invalid error text");
+      }
+    }
+
+    /* error condition returns true */
+    return -1;
+  }
+
+  /* do nothing: buffer contents are left undefined */
+  return 0;
 }
