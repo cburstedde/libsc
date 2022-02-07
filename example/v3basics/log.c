@@ -22,7 +22,7 @@
 
 #include <sc3_log.h>
 
-static int          provoke_fatal, provoke_leaks, provoke_which;
+static int          provoke_fatal, provoke_leak, provoke_which;
 static int          main_log_bare;
 
 static const char  *main_log_user = "sc3_log";
@@ -87,7 +87,7 @@ work_init_allocator (sc3_allocator_t ** alloc, int align)
   SC3E (sc3_allocator_set_align (*alloc, align));
   SC3E (sc3_allocator_setup (*alloc));
 
-  if (provoke_leaks && provoke_which == 1) {
+  if (provoke_leak && provoke_which == 1) {
     /* provoke leak at a later time */
     SC3E (sc3_allocator_ref (*alloc));
   }
@@ -120,7 +120,7 @@ work_init (int *pargc, char ***pargv, sc3_MPI_Comm_t mpicomm,
   SC3E (work_init_log (mpicomm, log, *alloc, 3));
   sc3_logf (*log, SC3_LOG_GLOBAL, SC3_LOG_ESSENTIAL, 0,
             "Command line flags %s%s%s%s",
-            provoke_fatal ? "F" : "", provoke_leaks ? "L" : "",
+            provoke_fatal ? "F" : "", provoke_leak ? "L" : "",
             provoke_which > 0 ?
             (snprintf (tmp, SC3_BUFSIZE, "%d", provoke_which), tmp) : "",
             main_log_bare ? "B" : "");
@@ -136,9 +136,11 @@ work_work (sc3_allocator_t * alloc, sc3_log_t * log)
 
   if (provoke_fatal && provoke_which == 1) {
     int                 bogus = 1;
+
+    /* this option likely segfaults */
     SC3E (sc3_allocator_free (alloc, &bogus));
   }
-  if (provoke_leaks && provoke_which == 2) {
+  if (provoke_leak && provoke_which == 2) {
     int                *bogus;
     SC3E (sc3_allocator_malloc (alloc, sizeof (int), &bogus));
   }
@@ -166,18 +168,21 @@ work_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
   sc3_log (*log, SC3_LOG_GLOBAL, SC3_LOG_PRODUCTION, 0,
            "Enter work_finalize");
 
-  if (provoke_leaks && provoke_which == 3) {
-    /* Provoke leak */
+  if (provoke_leak && provoke_which == 3) {
+    /* provoke leak */
     SC3E (sc3_log_ref (*log));
   }
 
   if (provoke_fatal && provoke_which == 2) {
     int                 a = 1;
     int                *bogus = &a;
+
+    /* this option likely segfaults */
     SC3E (sc3_allocator_free (*alloc, bogus));
   }
 
   if (provoke_fatal && provoke_which == 3) {
+    /* provoke assertion failure in debug mode */
     SC3E (efunc ());
   }
 
@@ -218,7 +223,7 @@ main (int argc, char **argv)
       provoke_fatal = 1;
     }
     if (strchr (argv[1], 'L')) {
-      provoke_leaks = 1;
+      provoke_leak = 1;
     }
     for (i = 1; i <= 3; ++i) {
       if (strchr (argv[1], '0' + i)) {
@@ -251,7 +256,7 @@ main (int argc, char **argv)
      This is representative of leaving sc3 code from any larger program */
   if (!scdead && (e = work_finalize (&alloc, &log)) != NULL) {
     /* The allocator and logger are likely no longer valid */
-    scdead = mpi_allor (mpicomm, work_error (&e, log, "Work finalize"));
+    scdead = mpi_allor (mpicomm, work_error (&e, NULL, "Work finalize"));
   }
 
   /* Finalize MPI.  This is representative of any external cleanup code */
