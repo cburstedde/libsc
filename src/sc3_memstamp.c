@@ -261,7 +261,7 @@ sc3_mstamp_destroy (sc3_mstamp_t ** mstp)
 }
 
 sc3_error_t        *
-tc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
+sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
 {
   sc3_array_t        *freed = mst->freed;
   int                 fcount;
@@ -317,7 +317,7 @@ tc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
 }
 
 sc3_error_t        *
-sc3_mstap_free (sc3_mstamp_t * mst, void *ptr)
+sc3_mstamp_free (sc3_mstamp_t * mst, void *ptr)
 {
   sc3_array_t        *freed = mst->freed;
   void              **newp;

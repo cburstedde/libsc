@@ -201,7 +201,7 @@ sc3_error_t        *sc3_mstamp_destroy (sc3_mstamp_t ** mstp);
  * \param [in,out] mst  Memory stamp container must be setup.
  * \param [out] ptr     Non-NULL pointer to memory address.
  *                      On output set to item ready to use.
- *                      Valid until released with \ref sc3_memstamp_free
+ *                      Valid until released with \ref sc3_mstamp_free
  *                      or until \ref sc3_mstamp_destroy or \ref
  *                      sc3_mstamp_unref (with one ref) called on \a mst.
  * \return              NULL on success, error object otherwise.
@@ -215,7 +215,7 @@ sc3_error_t        *sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr);
  * has actually been allocated by the present container.  Use caution.
  * We do not require to return all memory before container's destruction.
  * \param [in] mst      Memory stamp container must be setup.
- * \param [in,out] elem Pointer to an address to be returned to the pool.
+ * \param [in,out] ptr  Pointer to an address to be returned to the pool.
  *                      Pointer must be NULL.  Value NULL on output.
  * \return              NULL on success, error object otherwise.
  */
