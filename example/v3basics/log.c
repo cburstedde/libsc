@@ -21,7 +21,6 @@
 */
 
 #include <sc3_log.h>
-#include <stdarg.h>
 
 static int          provoke_fatal, provoke_leaks, provoke_which;
 static int          main_log_bare;
@@ -32,13 +31,12 @@ static int
 mpi_allor (sc3_MPI_Comm_t mpicomm, int inval)
 {
   int                 orval;
-  sc3_error_t        *empi;
 
-  if ((empi = sc3_MPI_Allreduce (&inval, &orval, 1, SC3_MPI_INT,
-                                 SC3_MPI_LOR, mpicomm)) != NULL) {
-    sc3_log_error (sc3_log_predef (), 0,
-                   SC3_LOG_THREAD0, SC3_LOG_ERROR, empi);
-    sc3_error_destroy (&empi);
+  /* normalize boolean interpretation */
+  inval = !!inval;
+  if (sc3_log_error_check
+      (NULL, SC3_LOG_LOCAL, 0, sc3_MPI_Allreduce
+       (&inval, &orval, 1, SC3_MPI_INT, SC3_MPI_LOR, mpicomm))) {
     return 1;
   }
   return orval;
@@ -46,7 +44,7 @@ mpi_allor (sc3_MPI_Comm_t mpicomm, int inval)
 
 static void
 main_log (void *user, const char *msg,
-          sc3_log_role_t role, int rank, int tid,
+          sc3_log_role_t role, int rank,
           sc3_log_level_t level, int spaces, FILE * outfile)
 {
   /* example of custom log function */
@@ -56,62 +54,41 @@ main_log (void *user, const char *msg,
 static void
 main_exit_failure (sc3_error_t * e, const char *prefix)
 {
-  sc3_log_t          *log = sc3_log_predef ();
+  sc3_log_t          *log = sc3_log_new_static ();
 
   /* print intro line and error stack */
-  sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR, "%s", prefix);
-  sc3_log_error (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR, e);
-  exit (EXIT_FAILURE);
+  sc3_log (log, SC3_LOG_LOCAL, SC3_LOG_ERROR, 0, prefix);
+  sc3_log_error_abort (log, SC3_LOG_LOCAL, 0, e);
 }
 
 static int
 work_error (sc3_error_t ** e, sc3_log_t * log, const char *prefix)
 {
-  sc3_error_t        *e2;
-
   /* the logger may not be usable */
   if (!sc3_log_is_setup (log, NULL)) {
-    log = sc3_log_predef ();
+    log = sc3_log_new_static ();
   }
 
   /* bad call convention is reported and accepted */
   if (e == NULL || *e == NULL) {
-    sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR,
-              "%s: NULL error", prefix);
+    sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_ERROR, 0, "%s: NULL error", prefix);
     return 0;
   }
 
-  /* if needed, treat user/recoverable errors here */
-
-  /* leak error we just report and then continue */
-  if (sc3_error_is_leak (*e, NULL)) {
-    sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR,
-              "%s: leak error", prefix);
-    sc3_log_error (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR, *e);
-    if ((e2 = sc3_error_destroy (e)) != NULL) {
-      *e = e2;
-    }
-    else {
-      return 0;
-    }
-  }
-
-  /* fatal error out of an sc3 call, unsafe to continue */
-  sc3_logf (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR,
-            "%s: fatal error", prefix);
-  sc3_log_error (log, 0, SC3_LOG_THREAD0, SC3_LOG_ERROR, *e);
-  return 1;
+  /* fatal error; possibly unsafe to continue */
+  sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_ERROR, 0, "%s: fatal error", prefix);
+  return sc3_log_error_check (log, SC3_LOG_LOCAL, 0, *e);
 }
 
 static sc3_error_t *
 work_init_allocator (sc3_allocator_t ** alloc, int align)
 {
-  SC3E (sc3_allocator_new (sc3_allocator_nothread (), alloc));
+  SC3E (sc3_allocator_new (NULL, alloc));
   SC3E (sc3_allocator_set_align (*alloc, align));
   SC3E (sc3_allocator_setup (*alloc));
 
   if (provoke_leaks && provoke_which == 1) {
-    /* Provoke leak */
+    /* provoke leak at a later time */
     SC3E (sc3_allocator_ref (*alloc));
   }
 
@@ -125,7 +102,7 @@ work_init_log (sc3_MPI_Comm_t mpicomm,
   SC3E (sc3_log_new (alloc, log));
   SC3E (sc3_log_set_level (*log, SC3_LOG_INFO));
   SC3E (sc3_log_set_comm (*log, mpicomm));
-  SC3E (sc3_log_set_indent (*log, indent));
+  //SC3E (sc3_log_set_indent (*log, indent));
   if (main_log_bare) {
     SC3E (sc3_log_set_function (*log, main_log, (void *) main_log_user));
   }
@@ -141,21 +118,21 @@ work_init (int *pargc, char ***pargv, sc3_MPI_Comm_t mpicomm,
 
   SC3E (work_init_allocator (alloc, 16));
   SC3E (work_init_log (mpicomm, log, *alloc, 3));
-  sc3_logf (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_ESSENTIAL,
+  sc3_logf (*log, SC3_LOG_GLOBAL, SC3_LOG_ESSENTIAL, 0,
             "Command line flags %s%s%s%s",
             provoke_fatal ? "F" : "", provoke_leaks ? "L" : "",
             provoke_which > 0 ?
             (snprintf (tmp, SC3_BUFSIZE, "%d", provoke_which), tmp) : "",
             main_log_bare ? "B" : "");
-  sc3_log (*log, 0, SC3_LOG_THREAD0, SC3_LOG_TOP, "Leave work_init");
+  sc3_log (*log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, 0, "Leave work_init");
   return NULL;
 }
 
 static sc3_error_t *
 work_work (sc3_allocator_t * alloc, sc3_log_t * log)
 {
-  sc3_log (log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "Root work_work");
-  sc3_log (log, 0, SC3_LOG_THREAD0, SC3_LOG_TOP, "In work_work");
+  sc3_log (log, SC3_LOG_GLOBAL, SC3_LOG_PRODUCTION, 0, "Root work_work");
+  sc3_log (log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, 0, "In work_work");
 
   if (provoke_fatal && provoke_which == 1) {
     int                 bogus = 1;
@@ -186,17 +163,13 @@ efunc (void)
 static sc3_error_t *
 work_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
 {
-  sc3_error_t        *leak = NULL;
-
-  sc3_log (*log, 0, SC3_LOG_PROCESS0, SC3_LOG_TOP, "Enter work_finalize");
+  sc3_log (*log, SC3_LOG_GLOBAL, SC3_LOG_PRODUCTION, 0,
+           "Enter work_finalize");
 
   if (provoke_leaks && provoke_which == 3) {
     /* Provoke leak */
     SC3E (sc3_log_ref (*log));
   }
-
-  /* if we find any leaks, propagate them to the outside */
-  SC3L (&leak, sc3_log_destroy (log));
 
   if (provoke_fatal && provoke_which == 2) {
     int                 a = 1;
@@ -209,22 +182,16 @@ work_finalize (sc3_allocator_t ** alloc, sc3_log_t ** log)
   }
 
   /* the allocator is destroyed last */
-  SC3L (&leak, sc3_allocator_destroy (alloc));
-  return leak;
+  SC3E (sc3_log_destroy (log));
+  SC3E (sc3_allocator_destroy (alloc));
+  return NULL;
 }
 
 static void
-logger_predef (sc3_MPI_Comm_t mpicomm)
+logger_predef (void)
 {
-  /* No error checking for the MPI calls; valgrind will tell */
-  int                 rank;
-  sc3_MPI_Comm_rank (mpicomm, &rank);
-  if (rank == 0) {
-    /* Static logger does not know MPI, thus we only call it on rank 0 */
-    sc3_log (sc3_log_predef (), 0, SC3_LOG_PROCESS0, SC3_LOG_TOP,
-             "sc3_log example begin: calling static log");
-  }
-  sc3_MPI_Barrier (mpicomm);
+  sc3_log (sc3_log_new_static (), SC3_LOG_GLOBAL, SC3_LOG_PRODUCTION, 0,
+           "sc3_log example begin: calling static log");
 }
 
 int
@@ -243,7 +210,7 @@ main (int argc, char **argv)
   }
 
   /* Testing predefined static logger */
-  logger_predef (mpicomm);
+  logger_predef ();
 
   /* Process command line options */
   if (argc >= 2) {
