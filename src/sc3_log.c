@@ -548,3 +548,13 @@ sc3_log_error_check (sc3_log_t * log, sc3_log_role_t role,
   /* There was no error in the first place.  Return false */
   return 0;
 }
+
+void
+sc3_log_error_abort (sc3_log_t * log, sc3_log_role_t role,
+                     int indent, sc3_error_t * e)
+{
+  /* argument checking deferred to function called */
+  if (sc3_log_error_check (log, role, indent, e)) {
+    sc3_MPI_Abort (SC3_MPI_COMM_WORLD, SC3_MPI_ERR_OTHER);
+  }
+}

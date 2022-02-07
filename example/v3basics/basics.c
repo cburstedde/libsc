@@ -539,26 +539,8 @@ run_main (sc3_trace_t * t, int argc, char **argv)
 int
 main (int argc, char **argv)
 {
-  sc3_trace_t         stacktrace, *t = &stacktrace;
-
-  /* static tracking of call stack */
-  sc3_trace_init (t, "main", NULL);
-
   SC3X (sc3_MPI_Init (&argc, &argv));
-
-  /* querying MPI_COMM_WORLD internally.  Use only after MPI_Init */
-  BASIC_LOG_ENTER (t, NULL);
-
-  /* this function works with a dummy logger */
-  if (sc3_log_error_check (NULL, SC3_LOG_LOCAL, t->depth,
-                           run_main (t, argc, argv))) {
-    /* we leave memory behind but that happens on fatal error */
-    return EXIT_FAILURE;
-  }
-
-  /* again, as on entering, using a dummy logger to stderr */
-  BASIC_LOG_LEAVE (t, NULL);
-
+  SC3X (run_main (NULL, argc, argv));
   SC3X (sc3_MPI_Finalize ());
   return EXIT_SUCCESS;
 }

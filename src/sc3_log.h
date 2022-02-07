@@ -62,6 +62,18 @@ extern              "C"
 #endif
 #endif
 
+/** Macro for error checking without hope for clean recovery.
+ * If an error is encountered in calling \a f, we output its message
+ * using \ref sc3_log_new_static () and then call MPI_Abort.
+ */
+#define SC3X(f) do {                                                    \
+  sc3_error_t *_e = (f);                                                \
+  if (_e != NULL) {                                                     \
+    sc3_error_t *_e2 = sc3_error_new_stack                              \
+      (&_e, __FILE__, __LINE__, #f);                                    \
+    sc3_log_error_abort (NULL, SC3_LOG_LOCAL, 0, _e2);                  \
+  }} while (0)
+
 /** Opaque object to encapsulate options to the logging mechanism. */
 typedef struct sc3_log sc3_log_t;
 
@@ -460,22 +472,38 @@ void                SC3_GLOBAL_ESSENTIALF (const char *fmt, ...)
 void                SC3_GLOBAL_ERRORF (const char *fmt, ...)
   __attribute__ ((format (printf, 1, 2)));
 
-/** Examine an error and print its message and unref if not NULL.
+/** Examine an error: print its message and unref if not NULL.
  * This function can be called directly with the return value of an
  * error-object returning function.  Assumes ownership of the error.
  * \param [in] log      Logger must be setup, or NULL for
  *                      using \ref sc3_log_new_static ().
  *                      Using log level \ref SC3_LOG_ERROR.
- * \param [in] role     Valid \ref sc3_log_role_t.
- *                      When invalid, use defaults instead
- *                      and return negative even with no error.
+ * \param [in] role     Valid \ref sc3_log_role_t.  When invalid,
+ *                      return negative even with a NULL error.
  * \param [in] indent   Indentation passed to the log function.
- * \param [in] e        If NULL, do nothing and return 0.
- *                      Otherwise, log error's multiline message.
+ * \param [in] e        If NULL, do nothing and return 0.  Otherwise,
+ *                      log error's message and return negative.
  *                      The error object is unrefd without checking.
- * \return              0 on success, negative value otherwise.
+ * \return              0 on success, negative value on error.
  */
 int                 sc3_log_error_check (sc3_log_t * log,
+                                         sc3_log_role_t role,
+                                         int indent,
+                                         sc3_error_t * e);
+
+/** Examine an error: print its message, unref and abort if not NULL.
+ * This function can be called directly with the return value of an
+ * error-object returning function.  Assumes ownership of the error.
+ * \param [in] log      Logger must be setup, or NULL for
+ *                      using \ref sc3_log_new_static ().
+ *                      Using log level \ref SC3_LOG_ERROR.
+ * \param [in] role     Valid \ref sc3_log_role_t.  When invalid,
+ *                      abort even with a NULL error.
+ * \param [in] indent   Indentation passed to the log function.
+ * \param [in] e        If NULL, do nothing.  Otherwise, log error's
+ *                      message, unref error and abort program.
+ */
+void                sc3_log_error_abort (sc3_log_t * log,
                                          sc3_log_role_t role,
                                          int indent,
                                          sc3_error_t * e);

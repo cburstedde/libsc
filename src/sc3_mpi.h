@@ -89,8 +89,6 @@
                              __FILE__, __LINE__, _errmsg);              \
 } while (0)
 
-#endif
-
 /** Macro for error checking without hope for clean recovery.
  * If an error is encountered in calling \a f, we print its message to stderr
  * and abort.  If possible, an application should react more nicely.
@@ -103,6 +101,8 @@
     fprintf (stderr, "EX %s:%d: %s\n", __FILE__, __LINE__, #f); \
     sc3_MPI_Abort (SC3_MPI_COMM_WORLD, SC3_MPI_ERR_OTHER);      \
   }} while (0)
+
+#endif
 
 #ifdef __cplusplus
 extern              "C"
