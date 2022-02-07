@@ -28,8 +28,8 @@
 */
 
 /** \file sc3_trace.h
- * Simple mechanism to access the current call stack.
- * In fact, what the stack is is up to the user.
+ * Simple mechanism to keep track of the current call stack.
+ * In fact, what the stack represents is up to the user.
  * We do not use any system or hardware access.
  * We do not use dynamic memory allocation.
  * The stack is a singly linked list made up from local variables
@@ -51,15 +51,19 @@ extern              "C"
 #endif
 #endif
 
+/** Arbitrarily chosen number to catch uninitialized objects. */
+#define SC3_TRACE_MAGIC 0xECA38F2BL
+
 /** The trace is a public struct for simplicitc. */
 typedef struct sc3_trace
 {
+  long                magic;    /**< Must equal \ref SC3_TRACE_MAGIC. */
+  void               *user;     /**< Convenience context pointer. */
   struct sc3_trace   *parent;   /**< Parent object or NULL
                                      for the root of the stack. */
   const char         *func;     /**< Identifier of function or
                                      more general interpretation. */
   int                 depth;    /**< Depth of stack from the root. */
-  void               *user;     /**< Convenience context pointer. */
 }
 sc3_trace_t;
 

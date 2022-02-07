@@ -33,10 +33,11 @@ void
 sc3_trace_init (sc3_trace_t * t, const char *func, void *user)
 {
   if (t != NULL) {
+    t->magic = SC3_TRACE_MAGIC;
+    t->user = user;
     t->parent = NULL;
     t->func = func;
     t->depth = 0;
-    t->user = user;
   }
 }
 
@@ -46,7 +47,10 @@ sc3_trace_push (sc3_trace_t ** t, sc3_trace_t * stackvar,
 {
   /* catch invalid calls */
   SC3A_CHECK (t != NULL);
-  SC3A_CHECK (*t == NULL || (*t)->depth >= 0);
+  if (*t != NULL) {
+    SC3A_CHECK ((*t)->magic == SC3_TRACE_MAGIC);
+    SC3A_CHECK ((*t)->depth >= 0);
+  }
   SC3A_CHECK (stackvar != NULL);
 
   /* initialize new top object */
