@@ -645,6 +645,24 @@ sc3_error_t        *sc3_error_unref (sc3_error_t ** ep);
  */
 sc3_error_t        *sc3_error_destroy (sc3_error_t ** ep);
 
+/** Make an assertion error and return either it or any error creating it.
+ *
+ * Contrary to most other libsc functions, its return value is its output.
+ * The return value is never NULL, but the newly made error on success.
+ *
+ * This function is intended to be used by macros seeding an error stack.
+ *
+ * \param [in] filename The filename is copied into the error object.
+ *                      Pointer not NULL, string Nul-terminated.
+ * \param [in] line     Non-negative line number set in the error.
+ * \param [in] errmsg   The error message is copied into the error.
+ *                      Pointer not NULL, string Nul-terminated.
+ * \return              Never NULL, but rather the newly made error,
+ *                      or any error encountered in constructing it.
+ */
+sc3_error_t        *sc3_error_new_assert (const char *filename,
+                                          int line, const char *errmsg);
+
 /** Make error of given kind and return either it or any error creating it.
  *
  * Contrary to most other libsc functions, its return value is its output.

@@ -198,7 +198,7 @@ extern              "C"
 
 /** Copy a Nul-terminated string into a buffer of standard size.*/
 #define SC3_BUFCOPY(b,s) \
-          do { snprintf (b, SC3_BUFSIZE, "%s", s); } while (0)
+          do { sc3_strcopy (b, SC3_BUFSIZE, s); } while (0)
 
 /** Return whether a non-negative integer is a power of two. */
 #define SC3_ISPOWOF2(a) ((a) > 0 && ((a) & ((a) - 1)) == 0)
@@ -213,7 +213,8 @@ extern              "C"
     unless it is too large and we return -1. */
 #define SC3_SIZET_INT(s) ((s) <= INT_MAX ? (int) s : -1)
 
-/** Provide a string copy function.
+/** Provide a string copy function with maximum length.
+ * It is legal to pass a NULL buffer or zero length.
  * \param [out] dest    Buffer of length at least \a size.
  *                      On output, not touched if NULL or \a size == 0.
  *                      The string written is always Nul-terminated.
@@ -229,6 +230,7 @@ void                sc3_strcopy (char *dest, size_t size, const char *src);
  * length.  In some cases, compilers warn when this may occur.  For our
  * purposes, this is permitted behavior and we circumvent the warning.
  * This function does not return the number of characters printed.
+ * It is legal to pass a NULL buffer or zero length.
  * \param [out] str     Buffer of length at least \a size.
  *                      On output, not touched if NULL or \a size == 0.
  *                      Otherwise, "" on snprintf error or the proper result.

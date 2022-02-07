@@ -224,12 +224,12 @@ sc3_log_function_prefix (void *user, const char *msg,
   /* construct message prefix */
   if (role == SC3_LOG_LOCAL) {
     if (snprintf (header, SC3_BUFSIZE, "%s %d", prefix, rank) < 0) {
-      snprintf (header, SC3_BUFSIZE, puser_pnull);
+      sc3_strcopy (header, SC3_BUFSIZE, puser_pnull);
     }
   }
   else {
     if (snprintf (header, SC3_BUFSIZE, "%s", prefix) < 0) {
-      snprintf (header, SC3_BUFSIZE, puser_pnull);
+      sc3_strcopy (header, SC3_BUFSIZE, puser_pnull);
     }
   }
 

@@ -752,10 +752,10 @@ sc3_error_copy_text_rec (sc3_error_t * e, sc3_error_recursion_t recursion,
     SC3A_CHECK (0 <= ekind && ekind < SC3_ERROR_KIND_LAST);
 
     if (recursion == SC3_ERROR_RECURSION_NONE) {
-      snprintf (pref, 8, "ET ");
+      sc3_strcopy (pref, 8, "ET ");
     }
     else {
-      snprintf (pref, 8, "E%d ", rdepth);
+      sc3_snprintf (pref, 8, "E%d ", rdepth);
     }
     if (bwork == NULL) {
       bname = efile;
@@ -865,7 +865,7 @@ sc3_error_check (char *buffer, size_t buflen, sc3_error_t * e)
     if (e2 != NULL) {
       sc3_error_unref_noerr (e2);
       if (buffer != NULL && buflen > 0) {
-        snprintf (buffer, buflen, "%s", "Invalid error text");
+        sc3_strcopy (buffer, buflen, "Invalid error text");
       }
     }
 
