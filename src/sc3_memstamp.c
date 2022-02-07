@@ -218,7 +218,7 @@ sc3_mstamp_unref (sc3_mstamp_t ** mstp)
 {
   int                 waslast, i;
   int                 fcount;
-  void               *item;
+  void              **item, *memp;
   sc3_allocator_t    *aator;
   sc3_mstamp_t       *mst;
 
@@ -234,7 +234,8 @@ sc3_mstamp_unref (sc3_mstamp_t ** mstp)
       SC3E (sc3_array_get_elem_count (mst->remember, &fcount));
       for (i = 0; i < fcount; ++i) {
         SC3E (sc3_array_index (mst->remember, i, &item));
-        SC3E (sc3_allocator_free (aator, &item));
+        memp = *item;
+        SC3E (sc3_allocator_free (aator, &memp));
       }
 
       /* it is impossible for these to have more than one reference */
