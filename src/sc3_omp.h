@@ -40,6 +40,14 @@
 
 #include <sc3_error.h>
 
+#ifdef __cplusplus
+extern              "C"
+{
+#if 0
+}
+#endif
+#endif
+
 /** Collect error synchronization information in the master thread.
  * Typically, it is initialized by \ref sc3_omp_esync_init *before*
  * a #`pragma omp parallel`.
@@ -61,14 +69,6 @@ typedef struct sc3_omp_esync
   sc3_error_t        *shared_error;     /**< Remaining error object. */
 }
 sc3_omp_esync_t;
-
-#ifdef __cplusplus
-extern              "C"
-{
-#if 0
-}
-#endif
-#endif
 
 /** Wrap the omp_get_max_threads function.
  * \return          The maximum number of threads that may be spawned.

@@ -52,6 +52,14 @@
 #include <sc3_error.h>
 #include <sc3_mpi_types.h>
 
+#ifdef __cplusplus
+extern              "C"
+{
+#if 0
+}
+#endif
+#endif
+
 /** Execute an MPI call and translate its return into an \ref sc3_error_t.
  * This must be an unwrapped, native MPI function, not one from this file.
  *
@@ -102,14 +110,6 @@
     sc3_MPI_Abort (SC3_MPI_COMM_WORLD, SC3_MPI_ERR_OTHER);      \
   }} while (0)
 
-#endif
-
-#ifdef __cplusplus
-extern              "C"
-{
-#if 0
-}
-#endif
 #endif
 
 /** Wrap MPI_Error_class.

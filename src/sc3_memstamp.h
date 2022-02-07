@@ -53,9 +53,6 @@
 
 #include <sc3_alloc.h>
 
-/** The memstamp container is an opaque struct. */
-typedef struct sc3_mstamp sc3_mstamp_t;
-
 #ifdef __cplusplus
 extern              "C"
 {
@@ -63,6 +60,9 @@ extern              "C"
 }
 #endif
 #endif
+
+/** The memstamp container is an opaque struct. */
+typedef struct sc3_mstamp sc3_mstamp_t;
 
 /** Query whether a memory stamp container is not NULL and consistent.
  * The container may be valid in both its setup and usage phases.

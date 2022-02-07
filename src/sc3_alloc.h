@@ -67,9 +67,6 @@
 
 #include <sc3_error.h>
 
-/** The allocator object is an opaque struct. */
-typedef struct sc3_allocator sc3_allocator_t;
-
 #ifdef __cplusplus
 extern              "C"
 {
@@ -77,6 +74,9 @@ extern              "C"
 }
 #endif
 #endif
+
+/** The allocator object is an opaque struct. */
+typedef struct sc3_allocator sc3_allocator_t;
 
 /** Check whether an allocator is not NULL and internally consistent.
  * The allocator may be valid in both its setup and usage phases.

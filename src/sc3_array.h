@@ -61,9 +61,6 @@
 
 #include <sc3_alloc.h>
 
-/** The array container is an opaque struct. */
-typedef struct sc3_array sc3_array_t;
-
 #ifdef __cplusplus
 extern              "C"
 {
@@ -71,6 +68,9 @@ extern              "C"
 }
 #endif
 #endif
+
+/** The array container is an opaque struct. */
+typedef struct sc3_array sc3_array_t;
 
 /** Query whether an array is not NULL and internally consistent.
  * The array may be valid in both its setup and usage phases.

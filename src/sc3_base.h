@@ -155,6 +155,14 @@
 #include <sys/time.h>
 #endif
 
+#ifdef __cplusplus
+extern              "C"
+{
+#if 0
+}
+#endif
+#endif
+
 #if SC_SIZEOF_UNSIGNED_INT == 8
 #define SC_UINT64_0 (0U)
 #define SC_UINT64_1 (1U)
@@ -204,14 +212,6 @@
 /** Turn a size_t variable into an integer,
     unless it is too large and we return -1. */
 #define SC3_SIZET_INT(s) ((s) <= INT_MAX ? (int) s : -1)
-
-#ifdef __cplusplus
-extern              "C"
-{
-#if 0
-}
-#endif
-#endif
 
 /** Provide a string copy function.
  * \param [out] dest    Buffer of length at least \a size.

@@ -49,9 +49,6 @@
 #include <sc3_alloc.h>
 #include <sc3_mpi.h>
 
-/** The mpi environment is an opaque struct. */
-typedef struct sc3_mpienv sc3_mpienv_t;
-
 #ifdef __cplusplus
 extern              "C"
 {
@@ -59,6 +56,9 @@ extern              "C"
 }
 #endif
 #endif
+
+/** The mpi environment is an opaque struct. */
+typedef struct sc3_mpienv sc3_mpienv_t;
 
 /** Query whether an mpi environment is not NULL and internally consistent.
  * The mpi environment may be valid in both its setup and usage phases.

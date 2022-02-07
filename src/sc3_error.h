@@ -124,9 +124,6 @@
 
 #include <sc3_base.h>
 
-/** The sc3 error object is an opaque structure. */
-typedef struct sc3_error sc3_error_t;
-
 #ifdef __cplusplus
 extern              "C"
 {
@@ -134,6 +131,9 @@ extern              "C"
 }
 #endif
 #endif
+
+/** The sc3 error object is an opaque structure. */
+typedef struct sc3_error sc3_error_t;
 
 /** Allocate memory and copy a Nul-terminated string into it.
  * Unlike strdup (3), memory is passed by a reference argument.
