@@ -27,6 +27,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <sc3_log.h>
 #include <sc3_mpienv.h>
 
 static sc3_error_t *
@@ -50,15 +51,15 @@ test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared)
 
   /* do something here */
   SC3E (sc3_mpienv_get_shared (m, &get_shared));
-  SC3E_DEMAND (shared || !get_shared, "Invalid shared status");
+  SC3E_DEM_INVALID (shared || !get_shared, "Invalid shared status");
   if (shared != get_shared) {
     /* output something here */
   }
   SC3E (sc3_mpienv_get_nodesize (m, &nodesize));
   SC3E (sc3_mpienv_get_noderank (m, &noderank));
-  SC3E_DEMAND (0 <= noderank && noderank < nodesize,
-               "Invalid node size/rank");
-  SC3E_DEMAND (get_shared || nodesize == 1, "Invalid shared node size");
+  SC3E_DEM_INVALID (0 <= noderank && noderank < nodesize,
+                    "Invalid node size/rank");
+  SC3E_DEM_INVALID (get_shared || nodesize == 1, "Invalid shared node size");
 
   /* delete environment */
   for (i = 0; i < 5; ++i) {
@@ -81,7 +82,7 @@ static sc3_error_t *
 reset_alloc (sc3_allocator_t * mainalloc, sc3_allocator_t ** alloc)
 {
   SC3E (sc3_allocator_destroy (alloc));
-  SC3E_DEMIS (sc3_allocator_is_free, mainalloc);
+  SC3E_DEMIS (sc3_allocator_is_free, mainalloc, SC3_ERROR_LEAK);
   return NULL;
 }
 
@@ -89,7 +90,7 @@ static int
 check_error (sc3_error_t * e, const char *msg, int size, int rank)
 {
   char                buffer[SC3_BUFSIZE];
-  if (sc3_error_check (&e, buffer, SC3_BUFSIZE)) {
+  if (sc3_error_check (buffer, SC3_BUFSIZE, e)) {
     fprintf (stderr, "Error on rank %d/%d by %s:\n%s\n",
              rank, size, msg, buffer);
     return 1;
@@ -104,7 +105,7 @@ main (int argc, char **argv)
 {
   int                 num_failed_tests = 0;
   int                 s = -1, r = -1;
-  sc3_allocator_t    *mainalloc = sc3_allocator_nothread ();
+  sc3_allocator_t    *mainalloc = sc3_allocator_new_static ();
   sc3_allocator_t    *alloc;
 
   /* Primitive error checking */
@@ -119,7 +120,8 @@ main (int argc, char **argv)
   num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1));
   num_failed_tests += CHECKE (reset_alloc (mainalloc, &alloc));
   if (num_failed_tests > 0) {
-    fprintf (stderr, "Number failed tests: %d\n", num_failed_tests);
+    fprintf (stderr, "Number failed tests on rank %d/%d: %d\n",
+             r, s, num_failed_tests);
   }
 
   /* Primitive error checking */
