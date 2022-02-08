@@ -200,9 +200,9 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
     *ap = NULL;
 
     if (a->counting) {
-      SC3E_LEAK (a->num_malloc + a->num_calloc == a->num_free,
-                 "Hanging allocation");
-      SC3E_LEAK (a->total_size == 0, "Invalid total size");
+      SC3E_DEM_LEAK (a->num_malloc + a->num_calloc == a->num_free,
+                     "Hanging allocation");
+      SC3E_DEM_INVALID (a->total_size == 0, "Invalid total size");
     }
 
     oa = a->oa;
@@ -383,8 +383,8 @@ sc3_allocator_free (sc3_allocator_t * a, void *ptr)
   }
   if (a->counting) {
     ++a->num_free;
-    SC3E_LEAK (a->num_free <= a->num_malloc + a->num_calloc,
-               "Hanging allocation");
+    SC3E_DEM_LEAK (a->num_free <= a->num_malloc + a->num_calloc,
+                   "Hanging allocation");
   }
 
   if (a->align == 0 && !a->keepalive) {

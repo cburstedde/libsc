@@ -246,7 +246,8 @@ sc3_log_function_prefix (void *user, const char *msg,
     }
   }
 #else
-  if (0) { ; }
+  if (0) {
+  }
 #endif
   else {
     fprintf (outfile != NULL ? outfile : stderr,

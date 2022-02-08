@@ -326,8 +326,8 @@ sc3_error_unref (sc3_error_t ** ep)
   if (waslast) {
     *ep = NULL;
 
-    SC3E_LEAK (e->accessed_locations == 0, "Hanging location access");
-    SC3E_LEAK (e->accessed_messages == 0, "Hanging message access");
+    SC3E_DEM_LEAK (e->accessed_locations == 0, "Hanging location access");
+    SC3E_DEM_LEAK (e->accessed_messages == 0, "Hanging message access");
     if (e->stack != NULL) {
       SC3E (sc3_error_unref (&e->stack));
     }
@@ -402,6 +402,8 @@ sc3_error_new_build (sc3_error_t ** pstack, sc3_error_kind_t kind,
   return NULL;
 }
 
+#if 0
+
 sc3_error_t        *
 sc3_error_new_assert (const char *filename, int line, const char *errmsg)
 {
@@ -411,6 +413,8 @@ sc3_error_new_assert (const char *filename, int line, const char *errmsg)
         (NULL, SC3_ERROR_ASSERT, filename, line, errmsg, &eout));
   return eout;
 }
+
+#endif
 
 sc3_error_t        *
 sc3_error_new_kind (sc3_error_kind_t kind,

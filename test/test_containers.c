@@ -32,18 +32,6 @@
 #include <sc3_log.h>
 #include <sc3_memstamp.h>
 
-/** If a condition \a x is not met, return an assertion error.
- * Its message is set to the failed condition and argument \a s.
- *
- * Do we like this macro?  Shall we include it in sc3_error.h?
- */
-#define SC3E_CONDITION(x,s) do {                                        \
-  if (!(x)) {                                                           \
-    char _errmsg[SC3_BUFSIZE];                                          \
-    sc3_snprintf (_errmsg, SC3_BUFSIZE, "%s: %s", s, #x);               \
-    return sc3_error_new_assert (__FILE__, __LINE__, _errmsg);          \
-  }} while (0)
-
 static sc3_error_t *
 test_allocations (void)
 {
@@ -73,7 +61,7 @@ test_allocations (void)
     SC3E (sc3_mstamp_setup (mst));
     for (i = 0; i < 8 + 3 * j; ++i) {
       SC3E (sc3_mstamp_alloc (mst, &pc));
-      SC3E_CONDITION (pc == NULL, "Mstamp alloc NULL");
+      SC3E_DEM_INVALID (pc == NULL, "Mstamp alloc NULL");
     }
     SC3E (sc3_mstamp_destroy (&mst));
 
@@ -96,6 +84,8 @@ test_allocations (void)
     SC3E (sc3_mstamp_setup (mst));
     for (i = 0; i < 3124; ++i) {
       SC3E (sc3_mstamp_alloc (mst, &pc));
+
+      /* TODO: write something depending on i and verify below */
       memset (pc, -1, isize);
       SC3E (sc3_array_push (items, &backup));
       *backup = pc;
@@ -140,31 +130,35 @@ test_correctness (void)
   for (i = 0; i < nelems; ++i) {
     SC3E (sc3_mstamp_alloc (mst, &pc));
     tv = (long *) pc;
-    SC3E_CONDITION (*tv == 0L, "initzero doesn't work");
+    SC3E_DEM_INVALID (*tv == 0L, "initzero doesn't work");
     *tv = 42L;
-    SC3E_CONDITION (*(long *) pc == 42L, "wrong stamp access");
+    SC3E_DEM_INVALID (*(long *) pc == 42L, "wrong stamp access");
   }
   SC3E (sc3_mstamp_get_elem_count (mst, &ecount));
-  SC3E_CONDITION (ecount == nelems, "wrong number of elements");
+  SC3E_DEM_INVALID (ecount == nelems, "wrong number of elements");
 
 #if 0
+  /* TODO: use a backup array to assign and double check values */
+
   /* pc needs to be a separate valid item in each iteration */
   for (i = 0; i < nelems - shift; ++i) {
     SC3E (sc3_mstamp_free (mst, &pc));
   }
   SC3E (sc3_mstamp_get_elem_count (mst, &ecount));
-  SC3E_CONDITION (ecount == shift, "wrong number of elements after freeing");
+  SC3E_DEM_INVALID (ecount == shift,
+                    "wrong number of elements after freeing");
 #endif
 
   for (i = 0; i < nelems; ++i) {
     SC3E (sc3_mstamp_alloc (mst, &pc));
     tv = (long *) pc;
-    SC3E_CONDITION (*tv == 0L, "initzero doesn't work after freeing");
+    SC3E_DEM_INVALID (*tv == 0L, "initzero doesn't work after freeing");
     *tv = 42L;
-    SC3E_CONDITION (*(long *) pc == 42L, "wrong stamp access after freeing");
+    SC3E_DEM_INVALID (*(long *) pc == 42L,
+                      "wrong stamp access after freeing");
   }
   SC3E (sc3_mstamp_get_elem_count (mst, &ecount));
-  SC3E_CONDITION (ecount == 2 * nelems, "wrong number of elements");
+  SC3E_DEM_INVALID (ecount == 2 * nelems, "wrong number of elements");
   SC3E (sc3_mstamp_destroy (&mst));
 
   return NULL;
@@ -206,15 +200,15 @@ test_view (void)
   for (i = 0; i < length; ++i) {
     SC3E (sc3_array_index (a, i + offset, &ptr));
     SC3E (sc3_array_index (view, i, &ptr_view));
-    SC3E_CONDITION (*(int *) ptr == *(int *) ptr_view && ptr == ptr_view,
-                    "the view points to the wrong memory");
+    SC3E_DEM_INVALID (*(int *) ptr == *(int *) ptr_view && ptr == ptr_view,
+                      "the view points to the wrong memory");
   }
   SC3E (sc3_array_renew_view (view, a, offset / 2, length / 2));
   for (i = 0; i < length / 2; ++i) {
     SC3E (sc3_array_index (a, i + offset / 2, &ptr));
     SC3E (sc3_array_index (view, i, &ptr_view));
-    SC3E_CONDITION (*(int *) ptr == *(int *) ptr_view && ptr == ptr_view,
-                    "the view points to the wrong memory");
+    SC3E_DEM_INVALID (*(int *) ptr == *(int *) ptr_view && ptr == ptr_view,
+                      "the view points to the wrong memory");
   }
 
   SC3E (sc3_array_destroy (&view));
@@ -224,14 +218,14 @@ test_view (void)
   SC3E (sc3_array_new_data (alloc, &view, data, isize, offset, length));
   for (i = 0; i < length; ++i) {
     SC3E (sc3_array_index (view, i, &ptr_view));
-    SC3E_CONDITION (data[i + offset] == *(int *) ptr_view,
-                    "the view points to the wrong memory");
+    SC3E_DEM_INVALID (data[i + offset] == *(int *) ptr_view,
+                      "the view points to the wrong memory");
   }
   SC3E (sc3_array_renew_data (view, data, isize, offset / 2, length / 2));
   for (i = 0; i < length / 2; ++i) {
     SC3E (sc3_array_index (view, i, &ptr_view));
-    SC3E_CONDITION (data[i + offset / 2] == *(int *) ptr_view,
-                    "the view points to the wrong memory");
+    SC3E_DEM_INVALID (data[i + offset / 2] == *(int *) ptr_view,
+                      "the view points to the wrong memory");
   }
   /* renew view with a NULL data */
   SC3E (sc3_array_renew_data (view, NULL, isize, offset, 0));

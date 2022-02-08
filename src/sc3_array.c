@@ -554,8 +554,8 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
     guess = low + (high - low) / 2;     /* By (7) low <= guess < high. */
     SC3E (sc3_array_index (a, guess, &element));
     type = type_fn (element, data);
-    SC3E_INVALID (0 <= type && type < num_types,
-                  "Invalid type in sc3_array_split");
+    SC3E_DEM_INVALID (0 <= type && type < num_types,
+                      "Invalid type in sc3_array_split");
     /** If type < step, then we can set low = guess + 1 and still satisfy
      * invariant (4).  Also, because guess < high, we are assured low <= high.
      */

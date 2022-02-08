@@ -393,7 +393,8 @@ sc3_MPI_Win_allocate_shared (sc3_MPI_Aint_t size, int disp_unit,
                                        &newin->baseptr, &newin->mpiwin));
   }
 #else
-  if (0);
+  if (0) {
+  }
 #endif
   else {
     SC3E (sc3_malloc (size, &newin->baseptr));
@@ -423,11 +424,12 @@ sc3_MPI_Win_shared_query (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size,
               (win->mpiwin, rank, size, disp_unit, baseptr));
   }
 #else
-  if (0);
+  if (0) {
+  }
 #endif
   else {
-    SC3E_INVALID (rank == win->rank,
-                  "Invalid rank in sc3_MPI_Win_shared_query");
+    SC3E_DEM_INVALID (rank == win->rank,
+                      "Invalid rank in sc3_MPI_Win_shared_query");
     *size = win->memsize;
     *disp_unit = win->disp_unit;
     *(void **) baseptr = win->baseptr;
@@ -450,10 +452,11 @@ sc3_MPI_Win_lock (int lock_type, int rank, int assert, sc3_MPI_Win_t win)
     SC3E_MPI (MPI_Win_lock (lock_type, rank, assert, win->mpiwin));
   }
 #else
-  if (0);
+  if (0) {
+  }
 #endif
   else {
-    SC3E_INVALID (rank == win->rank, "Invalid rank in sc3_MPI_Win_lock");
+    SC3E_DEM_INVALID (rank == win->rank, "Invalid rank in sc3_MPI_Win_lock");
     SC3A_CHECK (!win->locked);
     win->locked = 1;
   }
@@ -472,10 +475,12 @@ sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win)
     SC3E_MPI (MPI_Win_unlock (rank, win->mpiwin));
   }
 #else
-  if (0);
+  if (0) {
+  }
 #endif
   else {
-    SC3E_INVALID (rank == win->rank, "Invalid rank in sc3_MPI_Win_unlock");
+    SC3E_DEM_INVALID (rank == win->rank,
+                      "Invalid rank in sc3_MPI_Win_unlock");
     SC3A_CHECK (win->locked);
     win->locked = 0;
   }
@@ -510,7 +515,8 @@ sc3_MPI_Win_free (sc3_MPI_Win_t * win)
     SC3E_MPI (MPI_Win_free (&((*win)->mpiwin)));
   }
 #else
-  if (0);
+  if (0) {
+  }
 #endif
   else {
     SC3A_CHECK (!(*win)->locked);

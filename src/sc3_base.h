@@ -180,7 +180,7 @@ extern              "C"
 #endif
 
 /** This macro is usable as a no-operation statement. */
-#define SC3_NOOP do { ; } while (0)
+#define SC3_NOOP do {} while (0)
 
 /** The number of bits in an int variable on this architecture. */
 #define SC3_INT_BITS (8 * SC_SIZEOF_INT)
