@@ -47,10 +47,9 @@ struct sc3_log
 };
 
 #define             PUSER_PNULL "Log prefix error"
-static const char  *puser_pnull = PUSER_PNULL;
-static const int    puser_newline = 1;
-static sc3_log_puser_t sc3_log_puser = { "sc3", puser_newline };
-static sc3_log_puser_t sc3_log_pnull = { PUSER_PNULL, puser_newline };
+#define             PUSER_NEWLINE 1
+static sc3_log_puser_t sc3_log_puser = { "sc3", PUSER_NEWLINE };
+static sc3_log_puser_t sc3_log_pnull = { PUSER_PNULL, PUSER_NEWLINE };
 
 static sc3_log_t    statlog = {
   {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, SC3_LOG_LEVEL,
@@ -193,7 +192,7 @@ sc3_log_function_prefix (void *user, const char *msg,
   }
   prefix = puser->prefix;
   if (prefix == NULL) {
-    prefix = puser_pnull;
+    prefix = PUSER_PNULL;
   }
 
   /* survive NULL message */
@@ -224,19 +223,19 @@ sc3_log_function_prefix (void *user, const char *msg,
   /* construct message prefix */
   if (role == SC3_LOG_LOCAL) {
     if (snprintf (header, SC3_BUFSIZE, "%s %d", prefix, rank) < 0) {
-      sc3_strcopy (header, SC3_BUFSIZE, puser_pnull);
+      sc3_strcopy (header, SC3_BUFSIZE, PUSER_PNULL);
     }
   }
   else {
     if (snprintf (header, SC3_BUFSIZE, "%s", prefix) < 0) {
-      sc3_strcopy (header, SC3_BUFSIZE, puser_pnull);
+      sc3_strcopy (header, SC3_BUFSIZE, PUSER_PNULL);
     }
   }
 
   /* construct elaborate message and write it */
 #ifdef SC_HAVE_STRTOK_R
   if (puser->prefix_newline) {
-    char         str[SC3_BUFSIZE], *tok, *sav;
+    char                str[SC3_BUFSIZE], *tok, *sav;
 
     sc3_strcopy (str, SC3_BUFSIZE, msg);
     tok = strtok_r (str, "\n\r", &sav);
@@ -524,8 +523,8 @@ sc3_log_error_check (sc3_log_t * log, sc3_log_role_t role,
 
   /* address the error object passed in */
   if (e != NULL) {
-    char             buf[SC3_BUFSIZE];
-    sc3_error_t     *e2;
+    char                buf[SC3_BUFSIZE];
+    sc3_error_t        *e2;
 
     /* access message of error and unref without checking */
     e2 = sc3_error_copy_text (e, SC3_ERROR_RECURSION_POSTORDER,

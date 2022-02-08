@@ -109,8 +109,7 @@ sc3_array_is_unresizable (const sc3_array_t * a, char *reason)
 
 int
 sc3_array_is_sorted (const sc3_array_t * a,
-                     int (*compar) (const void *, const void *),
-                     char *reason)
+                     int (*compar) (const void *, const void *), char *reason)
 {
   int                 i, j;
   const void         *vold, *vnew;
@@ -448,8 +447,7 @@ sc3_array_sort_r (sc3_array_t * a,
   SC3A_CHECK (compar != NULL);
 
 #ifndef SC_HAVE_QSORT_R
-  return sc3_error_new_kind (SC3_ERROR_REQUIRED, __FILE__, __LINE__,
-                             "qsort_r not available");
+  SC3E_RETURN (SC3_ERROR_REQUIRED, "qsort_r not available");
 #else
   qsort_r (a->mem, a->ecount, a->esize, compar, data);
   return NULL;
@@ -556,7 +554,8 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
     guess = low + (high - low) / 2;     /* By (7) low <= guess < high. */
     SC3E (sc3_array_index (a, guess, &element));
     type = type_fn (element, data);
-    SC3E_DEMAND (0 <= type && type < num_types, SC3_ERROR_INVALID);
+    SC3E_INVALID (0 <= type && type < num_types,
+                  "Invalid type in sc3_array_split");
     /** If type < step, then we can set low = guess + 1 and still satisfy
      * invariant (4).  Also, because guess < high, we are assured low <= high.
      */

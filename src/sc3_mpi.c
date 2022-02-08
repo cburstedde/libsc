@@ -172,7 +172,7 @@ sc3_MPI_Finalize (void)
 void
 sc3_MPI_Abort (sc3_MPI_Comm_t comm, int errorcode)
 {
-  fprintf (stderr, "sc3_MPI_Abort: Exit program with EXIT_FAILURE\n");
+  fprintf (stderr, "sc3_MPI_Abort program with EXIT_FAILURE\n");
 #ifdef SC_ENABLE_MPI
   if (1 || comm == SC3_MPI_COMM_NULL) {
     /* an undocumented safeguard to make sure to abort */
@@ -426,7 +426,8 @@ sc3_MPI_Win_shared_query (sc3_MPI_Win_t win, int rank, sc3_MPI_Aint_t * size,
   if (0);
 #endif
   else {
-    SC3E_DEMAND (rank == win->rank, SC3_ERROR_FATAL);
+    SC3E_INVALID (rank == win->rank,
+                  "Invalid rank in sc3_MPI_Win_shared_query");
     *size = win->memsize;
     *disp_unit = win->disp_unit;
     *(void **) baseptr = win->baseptr;
@@ -452,7 +453,7 @@ sc3_MPI_Win_lock (int lock_type, int rank, int assert, sc3_MPI_Win_t win)
   if (0);
 #endif
   else {
-    SC3E_DEMAND (rank == win->rank, SC3_ERROR_FATAL);
+    SC3E_INVALID (rank == win->rank, "Invalid rank in sc3_MPI_Win_lock");
     SC3A_CHECK (!win->locked);
     win->locked = 1;
   }
@@ -474,7 +475,7 @@ sc3_MPI_Win_unlock (int rank, sc3_MPI_Win_t win)
   if (0);
 #endif
   else {
-    SC3E_DEMAND (rank == win->rank, SC3_ERROR_FATAL);
+    SC3E_INVALID (rank == win->rank, "Invalid rank in sc3_MPI_Win_unlock");
     SC3A_CHECK (win->locked);
     win->locked = 0;
   }

@@ -326,8 +326,8 @@ sc3_error_unref (sc3_error_t ** ep)
   if (waslast) {
     *ep = NULL;
 
-    SC3E_DEMAND (e->accessed_locations == 0, SC3_ERROR_REF);
-    SC3E_DEMAND (e->accessed_messages == 0, SC3_ERROR_REF);
+    SC3E_LEAK (e->accessed_locations == 0, "Hanging location access");
+    SC3E_LEAK (e->accessed_messages == 0, "Hanging message access");
     if (e->stack != NULL) {
       SC3E (sc3_error_unref (&e->stack));
     }

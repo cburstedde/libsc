@@ -231,16 +231,28 @@ sc3_error_t        *sc3_free (void *pmem);
     return sc3_error_new_stack (&_e, __FILE__, __LINE__, #f);           \
   }} while (0)
 
-/** If a condition \a x is not met, create a fatal error and return it.
- * The kind of the fatal error to create is passed in as an argument.
- * Its message is set to the failed condition and argument \a s.
+/** Return \ref sc3_error_t object with custom kind \a k and message \a s.
  */
-#define SC3E_DEMAND(x,k) do {                                           \
+#define SC3E_RETURN(k,s) do {                                           \
+  return sc3_error_new_kind ((k), __FILE__, __LINE__, (s));             \
+  } while (0)
+
+/** If a condition \a x is not met, create a fatal error and return it.
+ * The kind of the fatal error to create is passed in as argument \a k.
+ * The error message is set to the provided string \a s.
+ */
+#define SC3E_DEMAND(x,k,s) do {                                         \
   if (!(x)) {                                                           \
     char _errmsg[SC3_BUFSIZE];                                          \
-    sc3_snprintf (_errmsg, SC3_BUFSIZE, "%s", #x);                      \
+    sc3_snprintf (_errmsg, SC3_BUFSIZE, "%s", s);                       \
     return sc3_error_new_kind ((k), __FILE__, __LINE__, _errmsg);       \
   }} while (0)
+
+/** Depending on a failed condition, create an \ref SC3_ERROR_LEAK. */
+#define SC3E_LEAK(x,s) SC3E_DEMAND(x, SC3_ERROR_LEAK, s)
+
+/** Depending on a failed condition, create an \ref SC3_ERROR_INVALID. */
+#define SC3E_INVALID(x,s) SC3E_DEMAND(x, SC3_ERROR_INVALID, s)
 
 /** Execute an is_* query \a f and return a fatal error if false.
  * The kind of the fatal error to create is passed in as an argument.
