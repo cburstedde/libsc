@@ -5,8 +5,8 @@
 
 bin_PROGRAMS += \
   example/v3basics/sc3_basics \
-  example/v3basics/sc3_log
+  example/v3basics/sc3_logger
 example_v3basics_sc3_basics_SOURCES = example/v3basics/basics.c
-example_v3basics_sc3_log_SOURCES = example/v3basics/log.c
+example_v3basics_sc3_logger_SOURCES = example/v3basics/logger.c
 
 LINT_CSOURCES += $(example_v3basics_sc3_basics_SOURCES)
