@@ -12,6 +12,7 @@ AC_DEFUN([SC_CHECK_JANSSON], [
   AC_CHECK_HEADERS([jansson.h])
   dnl Available from version 2.13 on, may be too young
   dnl AC_CHECK_LIB([jansson], [jansson_version_str])
+  $1_JANSSON_SAVE_LIBS="$LIBS"
   AC_SEARCH_LIBS([json_string_set], [jansson])
 
   dnl Status output part 1
@@ -48,7 +49,8 @@ AC_DEFUN([SC_CHECK_JANSSON], [
   AS_VAR_IF([myresult], [yes],
       [AC_DEFINE([ENABLE_JANSSON], 1, [Found working jansson library])
        AC_MSG_RESULT([yes])],
-      [AC_MSG_RESULT([no])])
+      [AC_MSG_RESULT([no])
+       LIBS="${$1_JANSSON_SAVE_LIBS}"])
   AM_CONDITIONAL([$1_ENABLE_JANSSON],
                  [AS_VAR_TEST_SET([myresult])])
   AS_VAR_POPDEF([myresult])
