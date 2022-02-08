@@ -172,14 +172,15 @@ sc3_MPI_Finalize (void)
 void
 sc3_MPI_Abort (sc3_MPI_Comm_t comm, int errorcode)
 {
+  fprintf (stderr, "sc3_MPI_Abort: Exit program with EXIT_FAILURE\n");
 #ifdef SC_ENABLE_MPI
-  if (comm == SC3_MPI_COMM_NULL) {
+  if (1 || comm == SC3_MPI_COMM_NULL) {
     /* an undocumented safeguard to make sure to abort */
     comm = SC3_MPI_COMM_WORLD;
   }
   MPI_Abort (comm, EXIT_FAILURE);
 #else
-  abort ();
+  exit (EXIT_FAILURE);
 #endif
 }
 

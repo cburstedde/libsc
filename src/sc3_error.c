@@ -50,7 +50,7 @@ struct sc3_error
 };
 
 const char          sc3_error_kind_char[SC3_ERROR_KIND_LAST] =
-  { 'F', 'A', 'L', 'R', 'M', 'N', 'U' };
+  { 'F', 'A', 'L', 'R', 'M', 'N', 'Q', 'I', 'U' };
 
 static sc3_error_t  enomem = {
   {SC3_REFCOUNT_MAGIC, 1}, 1, SC3_ERROR_MEMORY,

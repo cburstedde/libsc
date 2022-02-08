@@ -151,7 +151,8 @@ sc3_error_t        *sc3_MPI_Init (int *argc, char ***argv);
 sc3_error_t        *sc3_MPI_Finalize (void);
 
 /** Wrap MPI_Abort.
- * Without --enable-mpi, call abort (3).
+ * Without --enable-mpi, call exit (EXIT_FAILURE).
+ * Otherwise, call MPI_Abort (MPI_COMM_WORLD, EXIT_FAILURE).
  * This function does not return.
  * \param [in] comm         Valid MPI communicator.
  * \param [in] errorcode    Well-defined MPI error code.

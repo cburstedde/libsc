@@ -448,7 +448,7 @@ sc3_array_sort_r (sc3_array_t * a,
   SC3A_CHECK (compar != NULL);
 
 #ifndef SC_HAVE_QSORT_R
-  return sc3_error_new_kind (SC3_ERROR_FEATURE, __FILE__, __LINE__,
+  return sc3_error_new_kind (SC3_ERROR_REQUIRED, __FILE__, __LINE__,
                              "qsort_r not available");
 #else
   qsort_r (a->mem, a->ecount, a->esize, compar, data);

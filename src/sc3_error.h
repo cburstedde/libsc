@@ -447,14 +447,16 @@ typedef enum sc3_error_kind
   SC3_ERROR_REF,        /**< Reference counting misuse. */
   SC3_ERROR_MEMORY,     /**< Out of memory. */
   SC3_ERROR_NETWORK,    /**< Network error. */
-  SC3_ERROR_FEATURE,    /**< Required feature not available. */
+  SC3_ERROR_REQUIRED,   /**< Required feature not available. */
   SC3_ERROR_INVALID,    /**< Invalid condition or situation. */
   SC3_ERROR_UNKNOWN,    /**< Unknown fatal error. */
   SC3_ERROR_KIND_LAST   /**< Guard range of possible enumeration values. */
 }
 sc3_error_kind_t;
 
-/** One capital letter abbreviating the error kind. */
+/** One capital letter abbreviating the error kind.
+ * It is its first letter except for SC3_ERROR_REQUIRED, where it is 'Q'.
+ */
 extern const char   sc3_error_kind_char[SC3_ERROR_KIND_LAST];
 
 #if 0
