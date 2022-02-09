@@ -114,7 +114,6 @@ if(WIN32)
   # even though Windows has time.h, struct timeval is in Winsock2.h
   check_include_file(Winsock2.h SC_HAVE_WINSOCK2_H)
   set(WINSOCK_LIBRARIES wsock32 ws2_32 Iphlpapi)
-  check_include_file(WinError.h SC_HAVE_WINERROR_H)
 endif()
 
 check_include_file(unistd.h SC_HAVE_UNISTD_H)
