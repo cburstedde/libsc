@@ -654,10 +654,6 @@ sc_mpi_file_error_class (int errorcode, int *errorclass)
     *errorclass = sc_MPI_ERR_NO_SPACE;
     break;
 
-  case EDQUOT:
-    *errorclass = sc_MPI_ERR_QUOTA;
-    break;
-
   case EMFILE:
   case ENFILE:
   case ENOMEM:
