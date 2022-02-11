@@ -60,6 +60,13 @@
  * is known that the allocator has only one reference to it (ok for static).
  * With counting enabled (only when non-static), dropping the last reference
  * of an allocator will fail fatally when it still has live allocations.
+ *
+ * Allocators are passed into the constructors of many sc3 objects to
+ * handle their internal allocation.  It is fine to use the same allocator
+ * in multiple objects and/or standalone in outside code.  However, care
+ * must be taken to destroy an allocator only when all allocations out of
+ * all its using contexts have been released.  When such dependencies
+ * are intended to be automatic, unref is usable instead of destroy.
  */
 
 #ifndef SC3_ALLOC_H

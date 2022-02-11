@@ -77,7 +77,7 @@ typedef struct sc3_array sc3_array_t;
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer is not NULL and array consistent.
+ * \return              True if pointer is not NULL and array consistent.
  */
 int                 sc3_array_is_valid (const sc3_array_t * a, char *reason);
 
@@ -86,7 +86,7 @@ int                 sc3_array_is_valid (const sc3_array_t * a, char *reason);
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer not NULL, array consistent, not setup.
+ * \return              True if pointer not NULL, array consistent, not setup.
  */
 int                 sc3_array_is_new (const sc3_array_t * a, char *reason);
 
@@ -95,7 +95,7 @@ int                 sc3_array_is_new (const sc3_array_t * a, char *reason);
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer not NULL, array consistent and setup.
+ * \return              True if pointer not NULL, array consistent and setup.
  */
 int                 sc3_array_is_setup (const sc3_array_t * a, char *reason);
 
@@ -108,7 +108,7 @@ int                 sc3_array_is_setup (const sc3_array_t * a, char *reason);
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff pointer not NULL, array setup and resizable.
+ * \return              True if pointer not NULL, array setup and resizable.
  */
 int                 sc3_array_is_resizable (const sc3_array_t * a,
                                             char *reason);
@@ -118,7 +118,7 @@ int                 sc3_array_is_resizable (const sc3_array_t * a,
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff array not NULL, setup, and not resizable.
+ * \return              True if array not NULL, setup, and not resizable.
  */
 int                 sc3_array_is_unresizable (const sc3_array_t * a,
                                               char *reason);
@@ -127,7 +127,7 @@ int                 sc3_array_is_unresizable (const sc3_array_t * a,
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff array not NULL and a view onto an array.
+ * \return              True if array not NULL and a view onto an array.
  */
 int                 sc3_array_is_alloced (const sc3_array_t * a,
                                           char *reason);
@@ -136,7 +136,7 @@ int                 sc3_array_is_alloced (const sc3_array_t * a,
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff array not NULL and a view onto an array.
+ * \return              True if array not NULL and a view onto an array.
  */
 int                 sc3_array_is_view (const sc3_array_t * a, char *reason);
 
@@ -144,7 +144,7 @@ int                 sc3_array_is_view (const sc3_array_t * a, char *reason);
  * \param [in] a        Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
- * \return              True iff array not NULL and a view onto plain data.
+ * \return              True if array not NULL and a view onto plain data.
  */
 int                 sc3_array_is_data (const sc3_array_t * a, char *reason);
 

@@ -306,7 +306,7 @@ long                sc3_longcut (long N, int P, int p);
  * This function uses the system's `basename` function if available
  * and falls back to returning the input string otherwise.
  * If the input string is NULL or empty, return ".".
- * This function is thread safe if the system baseline is.
+ * This function is thread safe if the system basename is (it usually is).
  * \param [in,out] path   If this is NULL, the function returns ".".
  *                        Otherwise, it must be a Nul-terminated string
  *                        that may be modified by this function.

@@ -146,7 +146,7 @@ typedef struct sc3_log_puser
 }
 sc3_log_puser_t;
 
-/** Log function that adds rank/thread information and indent spacing.
+/** Log function that adds rank information and indent spacing.
  * It does not check whether to log or not, that happens beforehand.
  * The parameters passed in are for formatting, not selection.
  *
@@ -163,7 +163,7 @@ void                sc3_log_function_prefix
    sc3_log_role_t role, int rank, sc3_log_level_t level,
    int indent, FILE * outfile);
 
-/** Log function that adds rank/thread information and indent spacing.
+/** Log function that adds rank information and indent spacing.
  * It does not check whether to log or not, that happens beforehand.
  * The parameters passed in are for formatting, not for decision.
  * Using prefix "sc3" and prefixing multi-line messages per line.
