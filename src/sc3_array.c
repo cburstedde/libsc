@@ -227,6 +227,10 @@ sc3_array_new_internal (sc3_allocator_t * aator, sc3_array_t ** ap)
   sc3_array_t        *a;
 
   SC3E_RETVAL (ap, NULL);
+
+  if (aator == NULL) {
+    aator = sc3_allocator_new_static ();
+  }
   SC3A_IS (sc3_allocator_is_setup, aator);
 
   SC3E (sc3_allocator_ref (aator));

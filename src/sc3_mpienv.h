@@ -100,18 +100,19 @@ int                 sc3_mpienv_is_setup (const sc3_mpienv_t * m,
  * Call \ref sc3_mpienv_setup to change the environment into its usage phase.
  * After that, no more parameters may be set.
  * The defaults are documented in the sc3_mpienv_set_* calls.
- * \param [in,out] mator    An allocator that is setup.
+ * \param [in,out] alloc    Either NULL or an allocator that is setup.
+ *                          If NULL, use \ref sc3_allocator_new_static.
  *                          The allocator is refd and remembered internally
  *                          and will be unrefd on environment destruction.
  * \param [out] mp      Pointer must not be NULL.
  *                      If the function returns an error, value set to NULL.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_mpienv_new (sc3_allocator_t * mator,
+sc3_error_t        *sc3_mpienv_new (sc3_allocator_t * alloc,
                                     sc3_mpienv_t ** mp);
 
 /** Provide an MPI communicator to use.
- * The default after \ref sc3_mpienv_new is \c SC3_MPI_COMM_WORLD.
+ * The default after \ref sc3_mpienv_new is \c SC3_MPI_COMM_WORLD, not dupd.
  * \param [in,out] m        The mpi environment must not have been setup.
  * \param [in] comm         This communicator replaces any previous one.
  *                          If it is dupd, we also set it to return errors.
@@ -124,16 +125,19 @@ sc3_error_t        *sc3_mpienv_set_comm (sc3_mpienv_t * m,
 
 /** Specify whether we split the communicator by node.
  * This allows the use of shared memory by the MPI window functions.
- * The default is false if MPI windows are not configured or not supported.
+ * The default is false if MPI windows are not configured or not supported,
+ * otherwise the default is true.  Basically this provides an off-switch
+ * when using MPI 3 windows is to be circumvented even though available.
  * If specifying true here and it turns out MPI windows are not supported,
  * we will silently turn them off.  Check with \ref sc3_mpienv_get_shared.
  * \param [in,out] m        The mpi environment must not yet be setup.
- * \param [in] shared       Boolean to enable sharing.
+ * \param [in] shared       Boolean to enable/disable MPI 3 sharing.
  * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_set_shared (sc3_mpienv_t * m, int shared);
 
 /** Specify whether the shared memory windows allocated shall be contigouus.
+ * This refers to the functionality documented in the MPI 3 standard.
  * The default is false since this may be faster.
  * \param [in,out] m        The mpi environment must not yet be setup.
  * \param [in] contiguous   Boolean to enable contiguous window allocation.
@@ -168,7 +172,7 @@ sc3_error_t        *sc3_mpienv_unref (sc3_mpienv_t ** mp);
 
 /** Destroy an mpi environment with a reference count of one.
  * It is a leak error to destroy an mpi environment that is multiply referenced.
- * \param [in,out] mp   Mpi environment must be valid and have a refcount of one.
+ * \param [in,out] mp   The environment must be valid and have a refcount of one.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
  */
@@ -178,60 +182,61 @@ sc3_error_t        *sc3_mpienv_destroy (sc3_mpienv_t ** mp);
  * \param [in] m        Valid and setup mpi environment.
  * \param [out] shared  Pointer must not be NULL.  Output shared status.
  *                      If the node communicator has size one, and sharing has
- *                      is enabled and supported, we output true but use
+ *                      been enabled and is supported, we output true but use
  *                      a faster non-MPI replacement for allocating windows.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_get_shared (const sc3_mpienv_t * m,
                                            int *shared);
 
-/** Query the rank of a process within a shared-memory node.
- * \param [in] m        Valid and setup mpi environment.
- * \param [out] noderank    Pointer must not be NULL.  Output node rank.
- *                      Written to -1 on error return.
- * \return              NULL on success, error object otherwise.
- */
-sc3_error_t        *sc3_mpienv_get_noderank (const sc3_mpienv_t * m,
-                                             int *noderank);
-
 /** Query the size of the node communicator.
  * \param [in] m        Valid and setup mpi environment.
  * \param [out] nodesize    Pointer must not be NULL.  Output node size.
- *                      Written to -1 on error return.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_get_nodesize (const sc3_mpienv_t * m,
                                              int *nodesize);
 
+/** Query the rank of a process within a shared-memory node.
+ * \param [in] m        Valid and setup mpi environment.
+ * \param [out] noderank    Pointer must not be NULL.  Output node rank.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_get_noderank (const sc3_mpienv_t * m,
+                                             int *noderank);
+
 /** Query the node communicator.
  * \param [in] m        Valid and setup mpi environment.
- * \param [out] nodecomm Pointer must not be NULL.  Output node communicator.
- *                       Written to SC3_MPI_COMM_NULL on error return.
- * \return               NULL on success, error object otherwise.
+ * \param [out] nodecomm    Pointer must not be NULL.
+ *                          Output handle of node communicator.
+ *                          We do not dup it and it will get freed
+ *                          when the environment object \a m is destroyed.
+ * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_get_nodecomm (const sc3_mpienv_t * m,
                                              sc3_MPI_Comm_t * nodecomm);
 
-/** Query whether the key "alloc_shared_noncontig" is set.
+/** Query rank of first rank on this node within overall communicator.
  * \param [in] m        Valid and setup mpi environment.
- * \param [out] info_noncontig Pointer must not be NULL.
- *                             Output "alloc_shared_noncontig" key.
- *                             Written to SC3_MPI_INFO_NULL on error return.
- * \return                     NULL on success, error object otherwise.
+ * \param [out] node_frank  Pointer must not be NULL.
+ *                          Output first node rank's global rank.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_get_node_frank (const sc3_mpienv_t * m,
+                                               int *node_frank);
+
+/** Query whether the key "alloc_shared_noncontig" is set.
+ * \deprecated          This information is not need to know.
+ * \param [in] m        Valid and setup mpi environment.
+ * \param [out] info_noncontig  Pointer must not be NULL.
+ *                          Output "alloc_shared_noncontig" key.
+ *                          Written to SC3_MPI_INFO_NULL on error return.
+ * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_get_info_noncont (const sc3_mpienv_t * m,
                                                  sc3_MPI_Info_t *
                                                  info_noncontig);
 
-/** Query a rank of first rank on this node within a forest communicator.
- * \param [in] m        Valid and setup mpi environment.
- * \param [out] node_frank Pointer must not be NULL.
- *                         Output first node rank's rank.
- *                         Written to -1 on error return.
- * \return                 NULL on success, error object otherwise.
- */
-sc3_error_t        *sc3_mpienv_get_node_frank (const sc3_mpienv_t * m,
-                                               int *node_frank);
 #ifdef __cplusplus
 #if 0
 {

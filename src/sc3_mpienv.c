@@ -115,6 +115,10 @@ sc3_mpienv_new (sc3_allocator_t * mator, sc3_mpienv_t ** mp)
   sc3_mpienv_t       *m;
 
   SC3E_RETVAL (mp, NULL);
+
+  if (mator == NULL) {
+    mator = sc3_allocator_new_static ();
+  }
   SC3A_IS (sc3_allocator_is_setup, mator);
 
   SC3E (sc3_allocator_ref (mator));
@@ -372,22 +376,22 @@ sc3_mpienv_get_shared (const sc3_mpienv_t * m, int *shared)
 }
 
 sc3_error_t        *
-sc3_mpienv_get_noderank (const sc3_mpienv_t * m, int *noderank)
+sc3_mpienv_get_nodesize (const sc3_mpienv_t * m, int *nodesize)
 {
-  SC3E_RETVAL (noderank, -1);
+  SC3E_RETVAL (nodesize, 0);
   SC3A_IS (sc3_mpienv_is_setup, m);
 
-  *noderank = m->noderank;
+  *nodesize = m->nodesize;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_mpienv_get_nodesize (const sc3_mpienv_t * m, int *nodesize)
+sc3_mpienv_get_noderank (const sc3_mpienv_t * m, int *noderank)
 {
-  SC3E_RETVAL (nodesize, -1);
+  SC3E_RETVAL (noderank, 0);
   SC3A_IS (sc3_mpienv_is_setup, m);
 
-  *nodesize = m->nodesize;
+  *noderank = m->noderank;
   return NULL;
 }
 
@@ -402,6 +406,16 @@ sc3_mpienv_get_nodecomm (const sc3_mpienv_t * m, sc3_MPI_Comm_t * nodecomm)
 }
 
 sc3_error_t        *
+sc3_mpienv_get_node_frank (const sc3_mpienv_t * m, int *node_frank)
+{
+  SC3E_RETVAL (node_frank, 0);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *node_frank = m->node_frank;
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_mpienv_get_info_noncont (const sc3_mpienv_t * m,
                              sc3_MPI_Info_t * info_noncontig)
 {
@@ -409,15 +423,5 @@ sc3_mpienv_get_info_noncont (const sc3_mpienv_t * m,
   SC3A_IS (sc3_mpienv_is_setup, m);
 
   *info_noncontig = m->info_noncontig;
-  return NULL;
-}
-
-sc3_error_t        *
-sc3_mpienv_get_node_frank (const sc3_mpienv_t * m, int *node_frank)
-{
-  SC3E_RETVAL (node_frank, -1);
-  SC3A_IS (sc3_mpienv_is_setup, m);
-
-  *node_frank = m->node_frank;
   return NULL;
 }
