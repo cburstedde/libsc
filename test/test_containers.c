@@ -39,10 +39,16 @@ test_allocations (void)
   const size_t        msize[3] = { 20, 37, 537 };
   int                 i, j;
   size_t              isize;
+  size_t              total, tmax;
   char               *pc, **backup;
   sc3_mstamp_t       *mst;
   sc3_allocator_t    *alloc;
   sc3_array_t        *items;
+
+  SC3E (sc3_allocator_get_sizes (sc3_allocator_new_static (),
+                                 1, &total, &tmax));
+  SC3E_DEM_INVALID (total == 0, "static allocator size not zero");
+  SC3E_DEM_INVALID (tmax == 0, "static allocator max not zero");
 
   SC3E (sc3_allocator_new (NULL, &alloc));
   SC3E (sc3_allocator_set_align (alloc, 32));
@@ -104,6 +110,10 @@ test_allocations (void)
   }
 
   SC3E (sc3_array_destroy (&items));
+
+  SC3E (sc3_allocator_get_sizes (alloc, 1, &total, &tmax));
+  SC3E_DEM_INVALID (total == 0, "allocator size not back to zero");
+
   SC3E (sc3_allocator_destroy (&alloc));
 
   return NULL;

@@ -465,6 +465,7 @@ run_main (sc3_trace_t * t, int argc, char **argv)
   int                 input;
   int                 result;
   int                 num_io;
+  size_t              total_size, total_max, main_size, main_max;
   sc3_allocator_t    *mainalloc, *a;
   sc3_log_t          *log;
   sc3_trace_t         stacktrace;
@@ -485,7 +486,7 @@ run_main (sc3_trace_t * t, int argc, char **argv)
   SC3E (sc3_allocator_new (mainalloc, &a));
   SC3E (sc3_allocator_setup (a));
 
-  SC3E (make_log (t, a, &log));
+  SC3E (make_log (t, mainalloc, &log));
 
   sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
             "Main run is %s", "here");
@@ -523,12 +524,21 @@ run_main (sc3_trace_t * t, int argc, char **argv)
               input, result, num_io);
   }
 
+  SC3E (sc3_allocator_get_sizes (a, 1, &total_size, &total_max));
+  SC3E (sc3_allocator_get_sizes (mainalloc, 1, &main_size, &main_max));
   sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
-            "Main run is %s", "done");
-
-  SC3E (sc3_log_destroy (&log));
+            "Main run is %s with sizes %lld, %lld and %lld, %lld", "done",
+            (long long) total_size, (long long) total_max,
+            (long long) main_size, (long long) main_max);
 
   SC3E (sc3_allocator_destroy (&a));
+
+  SC3E (sc3_allocator_get_sizes (mainalloc, 1, &main_size, &main_max));
+  sc3_logf (log, SC3_LOG_LOCAL, SC3_LOG_PRODUCTION, t->depth,
+            "Main allocator down to sizes %lld, %lld",
+            (long long) main_size, (long long) main_max);
+
+  SC3E (sc3_log_destroy (&log));
 
   SC3A_IS (sc3_allocator_is_free, mainalloc);
   SC3E (sc3_allocator_destroy (&mainalloc));
