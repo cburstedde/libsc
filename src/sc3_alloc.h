@@ -31,11 +31,9 @@
  * The allocator is a fundamental object to allocate memory on the heap.
  *
  * An allocator provides malloc and free equivalents with counters.
- * It keeps track of the number of allocs and frees to aid in dedugging.
- * Furthermore, it is refd by every allocation and unrefd by deallocation.
- * The latter feature avoids error returns on dropping the last reference
- * to an allocator, and in turn any other object, with live allocations.
- * These counting mechanisms can be disabled.
+ * It keeps track of the number of allocs and frees to aid in debugging.
+ * It is an error to drop the last reference to an allocator that has
+ * live allocations.  The counting mechanism can be disabled.
  *
  * Different allocators are independent objects with independent counters.
  * This feature is useful for example to isolate memory between threads:
@@ -57,7 +55,7 @@
  * Allocators can be refd and unrefd (even the static one, which noops).
  * Dropping the last reference deallocates the allocator (if not static).
  * The function \ref sc3_allocator_destroy must only be called when it
- * is known that the allocator has only one reference to it (ok for static).
+ * is known that the allocator has only one reference to it (fine if static).
  * With counting enabled (only when non-static), dropping the last reference
  * of an allocator will fail fatally when it still has live allocations.
  *
@@ -65,8 +63,12 @@
  * handle their internal allocation.  It is fine to use the same allocator
  * in multiple objects and/or standalone in outside code.  However, care
  * must be taken to destroy an allocator only when all allocations out of
- * all its using contexts have been released.  When such dependencies
- * are intended to be automatic, unref is usable instead of destroy.
+ * all its using contexts have been released.  When such dependencies are
+ * intended to be automatic, \ref sc3_allocator_unref may be more suitable.
+ *
+ * Effectively, existing allocators are used to allocate new allocators.
+ * This grows a forest structure of allocators.  We provide a function
+ * to query the memory in use by an allocator, optionally recursing.
  */
 
 #ifndef SC3_ALLOC_H
@@ -306,14 +308,14 @@ sc3_error_t        *sc3_allocator_realloc (sc3_allocator_t * a,
  */
 sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *ptr);
 
-/** Query current and historic maximum allocated size.
+/** Query current and historic maximum allocated size for an allocator.
  * With the recursive option, add the sizes of all derived allocators.
  * Outputs 0 for allocators from \ref sc3_allocator_new_static.
  * \param [in] a            Allocator must be setup.
- * \param [in] recursive    Boolean: if true add the size of all derived
- *                          allocators, that is, those that have used \a a
- *                          as first argument to \ref sc3_allocator_new,
- *                          directly or recursively.
+ * \param [in] recursive    If true add the size of all derived allocators,
+ *                          that is, those that have used \a a as first
+ *                          argument to \ref sc3_allocator_new, directly or
+ *                          recursively.  Does nothing when \a a is static.
  * \param [out] total_size  Must not be NULL.  Current total allocated size.
  * \param [out] total_max   Must not be NULL.  Historic maximum of size.
  * \return              NULL on success, error object otherwise.
