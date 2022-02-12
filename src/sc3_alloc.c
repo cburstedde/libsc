@@ -44,8 +44,12 @@ struct sc3_allocator
   long                num_malloc, num_calloc, num_free;
   size_t              total_size;   /**< Total bytes of live allocations.
                                          Only used on align and/or keepalive. */
+
+  sc3_allocator_t    *children;   /**< Linked list of all child allocators. */
+  sc3_allocator_t    *prev, *next;
 };
 
+/** Atom to keep track of metadata for each allocation */
 typedef union sc3_alloc_item
 {
   void               *ptr;
@@ -57,7 +61,7 @@ static const size_t hsize = 3 * sizeof (sc3_alloc_item_t);
 
 /** This allocator is thread-safe since it is not counting anything. */
 static sc3_allocator_t nocount = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, 0, 0, 0, 0, 0
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL
 };
 
 int
@@ -65,10 +69,27 @@ sc3_allocator_is_valid (const sc3_allocator_t * a, char *reason)
 {
   SC3E_TEST (a != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &a->rc, reason);
+  SC3E_TEST (a->alloced || a->children == NULL, reason);
   SC3E_TEST (!a->alloced == (a->oa == NULL), reason);
   if (a->oa != NULL) {
     /* this goes into a recursion up the allocator tree */
     SC3E_IS (sc3_allocator_is_setup, a->oa, reason);
+    if (!a->oa->alloced) {
+      SC3E_TEST (a->next == NULL, reason);
+      SC3E_TEST (a->prev == NULL, reason);
+    }
+    else {
+      int                 found = 0;
+      sc3_allocator_t    *sib;
+      for (sib = a->oa->children; sib != NULL; sib = sib->next) {
+        /* don't do validity check for duplicate recursion */
+        SC3E_IS (sc3_refcount_is_valid, &sib->rc, reason);
+        if (sib == a) {
+          ++found;
+        }
+      }
+      SC3E_TEST (found == 1, reason);
+    }
   }
   if (!a->setup) {
     SC3E_IS (sc3_refcount_is_last, &a->rc, reason);
@@ -121,6 +142,7 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   }
   SC3A_IS (sc3_allocator_is_setup, oa);
 
+  /* basic initialization */
   SC3E (sc3_allocator_ref (oa));
   SC3E (sc3_allocator_calloc (oa, 1, sizeof (sc3_allocator_t), &a));
   SC3E (sc3_refcount_init (&a->rc));
@@ -128,8 +150,18 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   a->alloced = 1;
   a->counting = a->keepalive = 1;
   a->oa = oa;
-  SC3A_IS (sc3_allocator_is_new, a);
 
+  /* add this new allocator to the children list of its parent */
+  if (oa->alloced) {
+    if (oa->children != NULL) {
+      SC3A_CHECK (oa->children->prev == NULL);
+      (a->next = oa->children)->prev = a;
+    }
+    oa->children = a;
+  }
+
+  /* initial construction finished */
+  SC3A_IS (sc3_allocator_is_new, a);
   *ap = a;
   return NULL;
 }
@@ -186,7 +218,7 @@ sc3_error_t        *
 sc3_allocator_unref (sc3_allocator_t ** ap)
 {
   int                 waslast;
-  sc3_allocator_t    *a, *oa;
+  sc3_allocator_t    *a;
 
   SC3E_INOUTP (ap, a);
   SC3A_IS (sc3_allocator_is_valid, a);
@@ -197,15 +229,34 @@ sc3_allocator_unref (sc3_allocator_t ** ap)
 
   SC3E (sc3_refcount_unref (&a->rc, &waslast));
   if (waslast) {
+    sc3_allocator_t    *oa;
     *ap = NULL;
 
+    /* check consistency of allocations */
     if (a->counting) {
       SC3E_DEM_LEAK (a->num_malloc + a->num_calloc == a->num_free,
                      "Hanging allocation");
       SC3E_DEM_INVALID (a->total_size == 0, "Invalid total size");
     }
 
-    oa = a->oa;
+    /* unlink this allocator from its parent's child list */
+    if ((oa = a->oa)->alloced) {
+      SC3A_CHECK (oa->children != NULL);
+      if (a->next != NULL) {
+        SC3A_CHECK (oa->children != a->next);
+        a->next->prev = a->prev;
+      }
+      if (a->prev != NULL) {
+        SC3A_CHECK (oa->children != a);
+        a->prev->next = a->next;
+      }
+      else {
+        SC3A_CHECK (oa->children == a);
+        oa->children = a->next;
+      }
+    }
+
+    /* release allocator's memory */
     SC3E (sc3_allocator_free (oa, &a));
     SC3E (sc3_allocator_unref (&oa));
   }
