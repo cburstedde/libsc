@@ -296,8 +296,8 @@ sc3_error_t        *sc3_allocator_realloc (sc3_allocator_t * a,
 
 /** Free previously allocated memory.
  * Unlike free (3), memory is passed by a reference argument.
- * \param [in,out] a    Allocator must be setup.  If input is non-NULL, must
- *                      be the same as used on (re-)allocation.
+ * \param [in,out] a    Allocator must be setup.  If value of \a ptr is
+ *                      non-NULL, must be the same as used on (re-)allocation.
  * \param [in,out] ptr  Non-NULL address of pointer previously allocated by
  *                      this allocator by \ref sc3_allocator_malloc, \ref
  *                      sc3_allocator_calloc or \ref sc3_allocator_realloc.
@@ -305,6 +305,23 @@ sc3_error_t        *sc3_allocator_realloc (sc3_allocator_t * a,
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *ptr);
+
+/** Query current and historic maximum allocated size.
+ * With the recursive option, add the sizes of all derived allocators.
+ * Outputs 0 for allocators from \ref sc3_allocator_new_static.
+ * \param [in] a            Allocator must be setup.
+ * \param [in] recursive    Boolean: if true add the size of all derived
+ *                          allocators, that is, those that have used \a a
+ *                          as first argument to \ref sc3_allocator_new,
+ *                          directly or recursively.
+ * \param [out] total_size  Must not be NULL.  Current total allocated size.
+ * \param [out] total_max   Must not be NULL.  Historic maximum of size.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_allocator_get_sizes (sc3_allocator_t * a,
+                                             int recursive,
+                                             size_t *total_size,
+                                             size_t *total_max);
 
 #ifdef __cplusplus
 #if 0

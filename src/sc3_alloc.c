@@ -44,6 +44,7 @@ struct sc3_allocator
   long                num_malloc, num_calloc, num_free;
   size_t              total_size;   /**< Total bytes of live allocations.
                                          Only used on align and/or keepalive. */
+  size_t              total_max;    /**< Historic maximum of \a total_size. */
 
   sc3_allocator_t    *children;   /**< Linked list of all child allocators. */
   sc3_allocator_t    *prev, *next;
@@ -61,7 +62,8 @@ static const size_t hsize = 3 * sizeof (sc3_alloc_item_t);
 
 /** This allocator is thread-safe since it is not counting anything. */
 static sc3_allocator_t nocount = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL
+  {SC3_REFCOUNT_MAGIC, 1}, NULL,
+  1, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL
 };
 
 int
@@ -96,11 +98,13 @@ sc3_allocator_is_valid (const sc3_allocator_t * a, char *reason)
     SC3E_TEST (a->num_malloc == 0 && a->num_calloc == 0 && a->num_free == 0,
                reason);
     SC3E_TEST (a->total_size == 0, reason);
+    SC3E_TEST (a->total_max == 0, reason);
   }
   else {
     SC3E_TEST (a->num_malloc >= 0 && a->num_calloc >= 0 && a->num_free >= 0,
                reason);
     SC3E_TEST (a->num_malloc + a->num_calloc >= a->num_free, reason);
+    SC3E_TEST (a->total_size <= a->total_max, reason);
   }
   SC3E_YES (reason);
 }
@@ -365,6 +369,7 @@ sc3_allocator_alloc_aligned (sc3_allocator_t * a, size_t size, int initzero,
       ++a->num_malloc;
     }
     a->total_size += size;
+    a->total_max = SC3_MAX (a->total_max, a->total_size);
   }
 #if 0
   if (a->keepalive) {
@@ -507,6 +512,29 @@ sc3_allocator_realloc (sc3_allocator_t * a, void *ptr, size_t new_size)
         memcpy (*(void **) ptr, p, SC3_MIN (size, new_size));
         SC3E (sc3_allocator_free (a, &p));
       }
+    }
+  }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_allocator_get_sizes (sc3_allocator_t * a, int recursive,
+                         size_t *total_size, size_t *total_max)
+{
+  SC3A_IS (sc3_allocator_is_setup, a);
+  SC3A_CHECK (total_size != NULL);
+  SC3A_CHECK (total_max != NULL);
+
+  *total_size = a->total_size;
+  *total_max = a->total_max;
+  if (recursive) {
+    size_t              t, m;
+    sc3_allocator_t    *sib;
+
+    for (sib = a->children; sib != NULL; sib = sib->next) {
+      SC3E (sc3_allocator_get_sizes (sib, recursive, &t, &m));
+      *total_size += t;
+      *total_max += m;
     }
   }
   return NULL;
