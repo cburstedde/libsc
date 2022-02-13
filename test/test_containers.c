@@ -29,8 +29,34 @@
 
 #include <sc_random.h>
 #include <sc3_array.h>
+#include <sc3_empty.h>
 #include <sc3_log.h>
 #include <sc3_memstamp.h>
+
+static sc3_error_t *
+test_empty (sc3_allocator_t * alloc)
+{
+  int                 j;
+  int                 d;
+  sc3_empty_t        *y;
+
+  for (d = 0; d < 2; ++d) {
+    SC3E (sc3_empty_new (alloc, &y));
+    SC3E (sc3_empty_set_dummy (y, d));
+    SC3E (sc3_empty_setup (y));
+
+    for (j = 0; j < 4; ++j) {
+      SC3E (sc3_empty_ref (y));
+    }
+    if (d) {
+      SC3E_DEMIS (sc3_empty_is_dummy, y, SC3_ERROR_INVALID);
+    }
+    for (j = 0; j < 5; ++j) {
+      SC3E (sc3_empty_unref (&y));
+    }
+  }
+  return NULL;
+}
 
 static sc3_error_t *
 test_allocations (void)
@@ -107,6 +133,8 @@ test_allocations (void)
     }
     SC3E (sc3_array_resize (items, 0));
     SC3E (sc3_mstamp_destroy (&mst));
+
+    SC3E (test_empty (alloc));
   }
 
   SC3E (sc3_array_destroy (&items));
