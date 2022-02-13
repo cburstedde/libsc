@@ -26,8 +26,7 @@ target_include_directories(iniparser PRIVATE iniparser src ${PROJECT_BINARY_DIR}
 target_link_libraries(iniparser PRIVATE $<$<BOOL:${MPI_C_FOUND}>:MPI::MPI_C>)
 
 # --- libb64
-add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c
-                          libb64/b64dec.c libb64/b64enc.c)
+add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c)
 target_include_directories(libb64 PRIVATE libb64)
 
 # --- sc
