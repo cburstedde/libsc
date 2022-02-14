@@ -14,6 +14,12 @@ endif()
 find_package(ZLIB)
 find_package(Threads)
 
+# --- set global compile environment
+
+# Build all targets with -fPIC so that libsc itself can be linked as a
+# shared library, or linked into a shared library.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # --- generate sc_config.h
 
 set(CMAKE_REQUIRED_INCLUDES)
