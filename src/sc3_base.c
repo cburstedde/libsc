@@ -131,7 +131,7 @@ sc3_longpow (long base, int exp)
 unsigned long
 sc3_ulongpow (unsigned long base, int exp)
 {
-  long                result = 1;
+  unsigned long       result = 1;
 
   if (exp < 0) {
     return 0;
