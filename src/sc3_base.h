@@ -136,15 +136,18 @@
 #define _GNU_SOURCE             /**< Enable GNU functionality. */
 #endif
 
+/* include mpi.h before stdio.h */
 #include <sc_config.h>
+#include <sc3_mpi_types.h>
 
+/* system include files */
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #ifdef SC_HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
-#ifdef SC_HAVE_LIBGEN_H
+#if defined SC_HAVE_LIBGEN_H && !defined _MSC_VER
 #include <libgen.h>
 #endif
 #ifdef SC_HAVE_LIMITS_H
@@ -171,7 +174,12 @@
 #endif
 #ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
+#elif defined _WIN32
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
 #endif
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #ifdef __cplusplus
 extern              "C"

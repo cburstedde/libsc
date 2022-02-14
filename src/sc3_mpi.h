@@ -50,7 +50,6 @@
 #define SC3_MPI_H
 
 #include <sc3_error.h>
-#include <sc3_mpi_types.h>
 
 #ifdef __cplusplus
 extern              "C"
