@@ -30,7 +30,18 @@
 /** \file sc3_options.h \ingroup sc3
  *
  * We provide an object to collect command line options.
- * Multiple of instances may be used flexibly to parse command lines.
+ * Multiple instances may be used flexibly to parse command lines.
+ *
+ * Specific options can be added to an options object during setup.
+ * They accept pointers to outside memory for name strings and the
+ * options variable that will be assigned a new value on parsing.
+ * This maximizes convenience but requires these outside variables
+ * to stay in scope while the options object is in use.
+ *
+ * One way of being relatively safe is to point to static constant
+ * strings for long option names and help messages and to long-lived
+ * option variables of global duration, and to destroy the options
+ * object after parsing and before the main program goes to work.
  */
 
 #ifndef SC3_OPTIONS_H
@@ -109,17 +120,27 @@ int                 sc3_options_is_dummy (const sc3_options_t * yy,
 sc3_error_t        *sc3_options_new (sc3_allocator_t * alloc,
                                      sc3_options_t ** yyp);
 
-#if 0
-
-/** Set the dummy parameter (boolean) of options object.
- * Default is false.
+/** Add an integer argument to options object.
  * \param [in,out] yy   The object must not be setup.
- * \param [in] dummy    New value for dummy variable.
- * \return              NULL on success, error object otherwise.
+ * \param [in] opt_short    Short option character.
+ *                          May be Nul for no short option.
+ * \param [in] opt_long     Long option string, or NULL for none.
+ *                          Should not include leading '--' and
+ *                          must not contain white space.
+ *                          We make a shallow (pointer) copy.
+ * \param [in] opt_help     Help string to display, or NULL for none.
+ *                          We make a shallow (pointer) copy.
+ * \param [in] opt_variable Pointer to existing integer variable.
+ *                          The variable must stay in scope/memory
+ *                          while the options object is alive.
+ * \param [in] opt_value    Default value assigned to \a opt_variable.
+ * \return                  NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_options_set_dummy (sc3_options_t * yy, int dummy);
-
-#endif
+sc3_error_t        *sc3_options_add_int (sc3_options_t * yy,
+                                         int opt_short,
+                                         const char *opt_long,
+                                         const char *opt_help,
+                                         int *opt_variable, int opt_value);
 
 /** Setup an object and change it into its usable phase.
  * \param [in,out] yy   This object must not yet be setup.  Setup on output.
@@ -151,6 +172,31 @@ sc3_error_t        *sc3_options_unref (sc3_options_t ** yyp);
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_options_destroy (sc3_options_t ** yyp);
+
+/** Parse the next entry of a C command-line style variable.
+ * This function parses at most one option that is matched.
+ * If the function does not find a matching options, return
+ * cleanly.  A result variable is set after matching.
+ * \param [in] yy           Options object must be setup.
+ * \param [in] argc         Number of entries in the \a argv array.
+ * \param [in] argv         Array of strings of length \a argc.
+ * \param [in,out] arg_pos  On input, valid index in [0, \a argc).
+ *                          On output, index advanced to the next
+ *                          unparsed position.  This may be the same
+ *                          as its input value if no option has matched.
+ *                          This may also be equal to \a argc, indicating
+ *                          that no arguments are left to process.
+ * \param [out] result      Number of arguments matched.  This is 0 for
+ *                          no match, 1 for an option without argument,
+ *                          and 2 or more for options with argument(s).
+ *                          Set to -1 if and only if an error is returned.
+ * \return              NULL on valid parameters and consistent operation,
+ *                      options matched or not.  An error object is returned
+ *                      when the function is called with invalid parameters.
+ */
+sc3_error_t        *sc3_options_parse (sc3_options_t * yy,
+                                       int argc, const char **argv,
+                                       int *arg_pos, int *result);
 
 #if 0
 
