@@ -5,9 +5,12 @@
 
 bin_PROGRAMS += \
   example/sc3basic/sc3_basics \
-  example/sc3basic/sc3_logger
+  example/sc3basic/sc3_logger \
+  example/sc3basic/sc3_options
 example_sc3basic_sc3_basics_SOURCES = example/sc3basic/basics.c
 example_sc3basic_sc3_logger_SOURCES = example/sc3basic/logger.c
+example_sc3basic_sc3_options_SOURCES = example/sc3basic/options.c
 
 LINT_CSOURCES += $(example_sc3basic_sc3_basics_SOURCES) \
-                 $(example_sc3basic_sc3_logger_SOURCES)
+                 $(example_sc3basic_sc3_logger_SOURCES) \
+                 $(example_sc3basic_sc3_options_SOURCES)
