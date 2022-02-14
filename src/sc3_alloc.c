@@ -62,8 +62,8 @@ static const size_t hsize = 3 * sizeof (sc3_alloc_item_t);
 
 /** This allocator is thread-safe since it is not counting anything. */
 static sc3_allocator_t nocount = {
-  {SC3_REFCOUNT_MAGIC, 1}, NULL,
-  1, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL
+  {SC3_REFCOUNT_MAGIC, 1}, NULL, 1,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL
 };
 
 int
@@ -86,6 +86,8 @@ sc3_allocator_is_valid (const sc3_allocator_t * a, char *reason)
       for (sib = a->oa->children; sib != NULL; sib = sib->next) {
         /* don't do validity check for duplicate recursion */
         SC3E_IS (sc3_refcount_is_valid, &sib->rc, reason);
+        SC3E_TEST (sib->prev == NULL || sib->prev->next == sib, reason);
+        SC3E_TEST (sib->next == NULL || sib->next->prev == sib, reason);
         if (sib == a) {
           ++found;
         }
