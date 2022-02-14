@@ -129,33 +129,48 @@
 #ifndef _POSIX_SOURCE
 #define _POSIX_SOURCE           /**< Enable POSIX functionality. */
 #endif
+#ifndef _ISOC99_SOURCE
+#define _ISOC99_SOURCE          /**< Enable C99 functionality. */
+#endif
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE             /**< Enable GNU functionality. */
 #endif
 
 #include <sc_config.h>
 
-#include <limits.h>
 #include <stdarg.h>
 #include <stddef.h>
-#ifdef SC_HAVE_STDINT_H
-#include <stdint.h>
-#endif
 #include <stdio.h>
+#ifdef SC_HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+#ifdef SC_HAVE_LIBGEN_H
+#include <libgen.h>
+#endif
+#ifdef SC_HAVE_LIMITS_H
+#include <limits.h>
+#endif
 #ifdef SC_HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #ifdef SC_HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef SC_HAVE_TIME_H
+#ifdef SC_HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#ifdef TIME_WITH_SYS_TIME
+#include <sys/time.h>
 #include <time.h>
+#else
+#ifdef SC_HAVE_SYS_TIME_H
+#include <sys/time.h>
+#else
+#include <time.h>
+#endif
 #endif
 #ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#ifdef SC_HAVE_SYS_TIME_H
-#include <sys/time.h>
 #endif
 
 #ifdef __cplusplus
