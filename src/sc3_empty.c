@@ -34,7 +34,7 @@ struct sc3_empty
 {
   /* internal metadata */
   sc3_refcount_t      rc;
-  sc3_allocator_t    *yator;
+  sc3_allocator_t    *alloc;
   int                 setup;
 
   /* parameters set before and fixed after setup */
@@ -45,141 +45,141 @@ struct sc3_empty
 };
 
 int
-sc3_empty_is_valid (const sc3_empty_t * y, char *reason)
+sc3_empty_is_valid (const sc3_empty_t * yy, char *reason)
 {
-  SC3E_TEST (y != NULL, reason);
-  SC3E_IS (sc3_refcount_is_valid, &y->rc, reason);
-  SC3E_IS (sc3_allocator_is_setup, y->yator, reason);
+  SC3E_TEST (yy != NULL, reason);
+  SC3E_IS (sc3_refcount_is_valid, &yy->rc, reason);
+  SC3E_IS (sc3_allocator_is_setup, yy->alloc, reason);
 
-  if (!y->setup) {
-    SC3E_TEST (y->member == NULL, reason);
+  if (!yy->setup) {
+    SC3E_TEST (yy->member == NULL, reason);
   }
   else {
-    SC3E_TEST (y->member != NULL && *y->member == y->dummy, reason);
+    SC3E_TEST (yy->member != NULL && *yy->member == yy->dummy, reason);
   }
   SC3E_YES (reason);
 }
 
 int
-sc3_empty_is_new (const sc3_empty_t * y, char *reason)
+sc3_empty_is_new (const sc3_empty_t * yy, char *reason)
 {
-  SC3E_IS (sc3_empty_is_valid, y, reason);
-  SC3E_TEST (!y->setup, reason);
+  SC3E_IS (sc3_empty_is_valid, yy, reason);
+  SC3E_TEST (!yy->setup, reason);
   SC3E_YES (reason);
 }
 
 int
-sc3_empty_is_setup (const sc3_empty_t * y, char *reason)
+sc3_empty_is_setup (const sc3_empty_t * yy, char *reason)
 {
-  SC3E_IS (sc3_empty_is_valid, y, reason);
-  SC3E_TEST (y->setup, reason);
+  SC3E_IS (sc3_empty_is_valid, yy, reason);
+  SC3E_TEST (yy->setup, reason);
   SC3E_YES (reason);
 }
 
 int
-sc3_empty_is_dummy (const sc3_empty_t * y, char *reason)
+sc3_empty_is_dummy (const sc3_empty_t * yy, char *reason)
 {
-  SC3E_IS (sc3_empty_is_setup, y, reason);
-  SC3E_TEST (y->dummy, reason);
+  SC3E_IS (sc3_empty_is_setup, yy, reason);
+  SC3E_TEST (yy->dummy, reason);
   SC3E_YES (reason);
 }
 
 sc3_error_t        *
-sc3_empty_new (sc3_allocator_t * yator, sc3_empty_t ** yp)
+sc3_empty_new (sc3_allocator_t * alloc, sc3_empty_t ** yyp)
 {
-  sc3_empty_t        *y;
+  sc3_empty_t        *yy;
 
-  SC3E_RETVAL (yp, NULL);
+  SC3E_RETVAL (yyp, NULL);
 
-  if (yator == NULL) {
-    yator = sc3_allocator_new_static ();
+  if (alloc == NULL) {
+    alloc = sc3_allocator_new_static ();
   }
-  SC3A_IS (sc3_allocator_is_setup, yator);
+  SC3A_IS (sc3_allocator_is_setup, alloc);
 
-  SC3E (sc3_allocator_ref (yator));
-  SC3E (sc3_allocator_calloc (yator, 1, sizeof (sc3_empty_t), &y));
-  SC3E (sc3_refcount_init (&y->rc));
-  y->yator = yator;
-  SC3A_IS (sc3_empty_is_new, y);
+  SC3E (sc3_allocator_ref (alloc));
+  SC3E (sc3_allocator_calloc (alloc, 1, sizeof (sc3_empty_t), &yy));
+  SC3E (sc3_refcount_init (&yy->rc));
+  yy->alloc = alloc;
+  SC3A_IS (sc3_empty_is_new, yy);
 
-  *yp = y;
+  *yyp = yy;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_empty_set_dummy (sc3_empty_t * y, int dummy)
+sc3_empty_set_dummy (sc3_empty_t * yy, int dummy)
 {
-  SC3A_IS (sc3_empty_is_new, y);
-  y->dummy = dummy;
+  SC3A_IS (sc3_empty_is_new, yy);
+  yy->dummy = dummy;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_empty_setup (sc3_empty_t * y)
+sc3_empty_setup (sc3_empty_t * yy)
 {
-  SC3A_IS (sc3_empty_is_new, y);
+  SC3A_IS (sc3_empty_is_new, yy);
 
   /* allocate internal state */
-  SC3E (sc3_allocator_malloc (y->yator, sizeof (int), &y->member));
-  *y->member = y->dummy;
+  SC3E (sc3_allocator_malloc (yy->alloc, sizeof (int), &yy->member));
+  *yy->member = yy->dummy;
 
   /* done with setup */
-  y->setup = 1;
-  SC3A_IS (sc3_empty_is_setup, y);
+  yy->setup = 1;
+  SC3A_IS (sc3_empty_is_setup, yy);
   return NULL;
 }
 
 sc3_error_t        *
-sc3_empty_ref (sc3_empty_t * y)
+sc3_empty_ref (sc3_empty_t * yy)
 {
-  SC3A_IS (sc3_empty_is_setup, y);
-  SC3E (sc3_refcount_ref (&y->rc));
+  SC3A_IS (sc3_empty_is_setup, yy);
+  SC3E (sc3_refcount_ref (&yy->rc));
   return NULL;
 }
 
 sc3_error_t        *
-sc3_empty_unref (sc3_empty_t ** yp)
+sc3_empty_unref (sc3_empty_t ** yyp)
 {
   int                 waslast;
-  sc3_allocator_t    *yator;
-  sc3_empty_t        *y;
+  sc3_allocator_t    *alloc;
+  sc3_empty_t        *yy;
 
-  SC3E_INOUTP (yp, y);
-  SC3A_IS (sc3_empty_is_valid, y);
-  SC3E (sc3_refcount_unref (&y->rc, &waslast));
+  SC3E_INOUTP (yyp, yy);
+  SC3A_IS (sc3_empty_is_valid, yy);
+  SC3E (sc3_refcount_unref (&yy->rc, &waslast));
   if (waslast) {
-    *yp = NULL;
+    *yyp = NULL;
 
-    yator = y->yator;
-    if (y->setup) {
+    alloc = yy->alloc;
+    if (yy->setup) {
       /* deallocate internal state */
-      SC3E (sc3_allocator_free (yator, &y->member));
+      SC3E (sc3_allocator_free (alloc, &yy->member));
     }
-    SC3E (sc3_allocator_free (yator, &y));
-    SC3E (sc3_allocator_unref (&yator));
+    SC3E (sc3_allocator_free (alloc, &yy));
+    SC3E (sc3_allocator_unref (&alloc));
   }
   return NULL;
 }
 
 sc3_error_t        *
-sc3_empty_destroy (sc3_empty_t ** yp)
+sc3_empty_destroy (sc3_empty_t ** yyp)
 {
-  sc3_empty_t        *y;
+  sc3_empty_t        *yy;
 
-  SC3E_INULLP (yp, y);
-  SC3E_DEMIS (sc3_refcount_is_last, &y->rc, SC3_ERROR_REF);
-  SC3E (sc3_empty_unref (&y));
+  SC3E_INULLP (yyp, yy);
+  SC3E_DEMIS (sc3_refcount_is_last, &yy->rc, SC3_ERROR_REF);
+  SC3E (sc3_empty_unref (&yy));
 
-  SC3A_CHECK (y == NULL);
+  SC3A_CHECK (yy == NULL);
   return NULL;
 }
 
 sc3_error_t        *
-sc3_empty_get_dummy (const sc3_empty_t * y, int *dummy)
+sc3_empty_get_dummy (const sc3_empty_t * yy, int *dummy)
 {
   SC3E_RETVAL (dummy, 0);
-  SC3A_IS (sc3_empty_is_setup, y);
+  SC3A_IS (sc3_empty_is_setup, yy);
 
-  *dummy = y->dummy;
+  *dummy = yy->dummy;
   return NULL;
 }

@@ -55,38 +55,38 @@ typedef struct sc3_empty sc3_empty_t;
 
 /** Query whether an object is not NULL and internally consistent.
  * The object may be valid in both its setup and usage phases.
- * \param [in] y        Any pointer.
+ * \param [in] yy       Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return              True if pointer is not NULL and object consistent.
  */
-int                 sc3_empty_is_valid (const sc3_empty_t * y, char *reason);
+int                 sc3_empty_is_valid (const sc3_empty_t * yy, char *reason);
 
 /** Query whether an object is not NULL, consistent and not setup.
  * This means that the object is not (yet) in its usage phase.
- * \param [in] y        Any pointer.
+ * \param [in] yy       Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return              True if pointer not NULL, object consistent, not setup.
  */
-int                 sc3_empty_is_new (const sc3_empty_t * y, char *reason);
+int                 sc3_empty_is_new (const sc3_empty_t * yy, char *reason);
 
 /** Query whether an object is not NULL, internally consistent and setup.
  * This means that the object's parameterization is final and it is usable.
- * \param [in] y        Any pointer.
+ * \param [in] yy       Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return              True if pointer not NULL, object consistent and setup.
  */
-int                 sc3_empty_is_setup (const sc3_empty_t * y, char *reason);
+int                 sc3_empty_is_setup (const sc3_empty_t * yy, char *reason);
 
 /** Query whether an object is setup and has the dummy parameter set.
- * \param [in] y        Any pointer.
+ * \param [in] yy       Any pointer.
  * \param [out] reason  If not NULL, existing string of length SC3_BUFSIZE
  *                      is set to "" if answer is yes or reason if no.
  * \return              True if pointer not NULL, object setup and resizable.
  */
-int                 sc3_empty_is_dummy (const sc3_empty_t * y, char *reason);
+int                 sc3_empty_is_dummy (const sc3_empty_t * yy, char *reason);
 
 /** Create a new empty object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
@@ -97,59 +97,59 @@ int                 sc3_empty_is_dummy (const sc3_empty_t * y, char *reason);
  *                          If NULL, we call \ref sc3_allocator_new_static.
  *                          The allocator is refd and remembered internally
  *                          and will be unrefd on object destruction.
- * \param [out] yp      Pointer must not be NULL.
+ * \param [out] yyp     Pointer must not be NULL.
  *                      If the function returns an error, value set to NULL.
  *                      Otherwise, value set to an object with default values.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_empty_new (sc3_allocator_t * alloc,
-                                   sc3_empty_t ** yp);
+                                   sc3_empty_t ** yyp);
 
 /** Set the dummy parameter (boolean) of an object.
  * Default is false.
- * \param [in,out] y    The object must not be setup.
+ * \param [in,out] yy   The object must not be setup.
  * \param [in] dummy    New value for dummy variable.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_empty_set_dummy (sc3_empty_t * y, int dummy);
+sc3_error_t        *sc3_empty_set_dummy (sc3_empty_t * yy, int dummy);
 
 /** Setup an object and change it into its usable phase.
- * \param [in,out] y    This object must not yet be setup.  Setup on output.
+ * \param [in,out] yy   This object must not yet be setup.  Setup on output.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_empty_setup (sc3_empty_t * y);
+sc3_error_t        *sc3_empty_setup (sc3_empty_t * yy);
 
 /** Increase the reference count on an object by 1.
  * This is only allowed after the object has been setup.
- * \param [in,out] y    Object must be setup.  Its refcount is increased.
+ * \param [in,out] yy   Object must be setup.  Its refcount is increased.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_empty_ref (sc3_empty_t * y);
+sc3_error_t        *sc3_empty_ref (sc3_empty_t * yy);
 
 /** Decrease the reference count on an object by one.
  * If the reference count drops to zero, the object is deallocated.
- * \param [in,out] yp   The pointer must not be NULL and the object valid.
+ * \param [in,out] yyp  The pointer must not be NULL and the object valid.
  *                      Its refcount is decreased.  If it reaches zero,
  *                      the object is destroyed and the value set to NULL.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_empty_unref (sc3_empty_t ** yp);
+sc3_error_t        *sc3_empty_unref (sc3_empty_t ** yyp);
 
 /** Destroy an object with a reference count of one.
  * It is a fatal error to destroy an object that is multiply referenced. We
  * unref the allocator that has been passed and refd in \ref sc3_empty_new.
- * \param [in,out] yp   This object must be valid and have a refcount of 1.
+ * \param [in,out] yyp  This object must be valid and have a refcount of 1.
  *                      On output, value is set to NULL.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_empty_destroy (sc3_empty_t ** yp);
+sc3_error_t        *sc3_empty_destroy (sc3_empty_t ** yyp);
 
 /** Return dummy parameter of an object that is setup.
- * \param [in] y        Object must be setup.
+ * \param [in] yy       Object must be setup.
  * \param [out] dummy   Dummy parameter.  Pointer must not be NULL.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_empty_get_dummy (const sc3_empty_t * y, int *dummy);
+sc3_error_t        *sc3_empty_get_dummy (const sc3_empty_t * yy, int *dummy);
 
 #ifdef __cplusplus
 #if 0
