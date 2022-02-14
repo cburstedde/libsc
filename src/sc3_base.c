@@ -28,9 +28,6 @@
 */
 
 #include <sc3_base.h>
-#ifdef SC_HAVE_LIBGEN_H
-#include <libgen.h>
-#endif
 
 void
 sc3_strcopy (char *dest, size_t size, const char *src)

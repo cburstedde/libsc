@@ -136,8 +136,7 @@
 #define _GNU_SOURCE             /**< Enable GNU functionality. */
 #endif
 
-/* include mpi.h before stdio.h */
-#include <sc_config.h>
+/* include libsc configuration and mpi.h before stdio.h */
 #include <sc3_mpi_types.h>
 
 /* system include files */
@@ -162,7 +161,7 @@
 #ifdef SC_HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#ifdef TIME_WITH_SYS_TIME
+#ifdef SC_TIME_WITH_SYS_TIME
 #include <sys/time.h>
 #include <time.h>
 #else

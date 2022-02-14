@@ -75,6 +75,7 @@ check_symbol_exists(fsync unistd.h SC_HAVE_FSYNC)
 # check_include_file(memory.h SC_HAVE_MEMORY_H)
 
 check_symbol_exists(posix_memalign stdlib.h SC_HAVE_POSIX_MEMALIGN)
+check_symbol_exists(basename libgen.h SC_HAVE_BASENAME)
 
 # requires -D_GNU_SOURCE, missing on MinGW
 # https://www.gnu.org/software/gnulib/manual/html_node/qsort_005fr.html
@@ -105,17 +106,20 @@ if(SC_HAVE_STDLIB_H)
 endif()
 
 check_symbol_exists(strtoll stdlib.h SC_HAVE_STRTOLL)
+check_symbol_exists(strtok_r string.h SC_HAVE_STRTOK_R)
 
 check_include_file(sys/types.h SC_HAVE_SYS_TYPES_H)
 
 check_include_file(sys/time.h SC_HAVE_SYS_TIME_H)
 check_include_file(time.h SC_HAVE_TIME_H)
+
 if(WIN32)
   # even though Windows has time.h, struct timeval is in Winsock2.h
   check_include_file(Winsock2.h SC_HAVE_WINSOCK2_H)
   set(WINSOCK_LIBRARIES wsock32 ws2_32 Iphlpapi)
 endif()
 
+check_include_file(libgen.h SC_HAVE_LIBGEN_H)
 check_include_file(unistd.h SC_HAVE_UNISTD_H)
 if(SC_HAVE_UNISTD_H)
   check_include_file(getopt.h SC_HAVE_GETOPT_H)

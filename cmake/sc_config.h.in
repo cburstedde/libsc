@@ -113,6 +113,12 @@
 /* Define to 1 if you have the <time.h> header file. */
 #cmakedefine SC_HAVE_TIME_H
 
+/* Replace autoconf feature for simultaneous inclusion. */
+#if defined SC_HAVE_SYS_TIME_H && defined SC_HAVE_TIME_H
+#define SC_TIME_WITH_SYS_TIME
+#endif
+
+/* windows-specific include file */
 #cmakedefine SC_HAVE_WINSOCK2_H
 
 /* desired alignment of allocations in bytes */
