@@ -128,6 +128,24 @@ sc3_longpow (long base, int exp)
   return result;
 }
 
+unsigned long
+sc3_ulongpow (unsigned long base, int exp)
+{
+  long                result = 1;
+
+  if (exp < 0) {
+    return 0;
+  }
+  while (exp) {
+    if (exp & 1) {
+      result *= base;
+    }
+    exp >>= 1;
+    base *= base;
+  }
+  return result;
+}
+
 int
 sc3_intcut (int N, int P, int p)
 {
@@ -139,6 +157,15 @@ sc3_intcut (int N, int P, int p)
 
 long
 sc3_longcut (long N, int P, int p)
+{
+  if (N <= 0 || P <= 0 || p <= 0) {
+    return 0;
+  }
+  return p < P ? (N * p) / P : N;
+}
+
+unsigned long
+sc3_ulongcut (unsigned long N, int P, int p)
 {
   if (N <= 0 || P <= 0 || p <= 0) {
     return 0;
