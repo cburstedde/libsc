@@ -175,10 +175,12 @@
 #include <unistd.h>
 #elif defined _WIN32
 #include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
+typedef SSIZE_T     ssize_t;
 #endif
-#define _USE_MATH_DEFINES
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES       /**< Might be needed somewhere */
 #include <math.h>
+#endif
 
 #ifdef __cplusplus
 extern              "C"
