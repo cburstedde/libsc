@@ -97,7 +97,7 @@
 
 #cmakedefine SC_HAVE_STDINT_H
 
-#cmakedefine SC_HAVE_STDLIB_H
+#cmakedefine SC_HAVE_STDLIB_H 1
 
 #cmakedefine SC_HAVE_STRING_H
 
