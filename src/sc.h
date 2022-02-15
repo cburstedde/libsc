@@ -138,7 +138,6 @@
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #endif
-#include <libgen.h>
 
 /* definitions to allow user code to query the sc library */
 /** Indicate that we do not modify the communicator in sc_init. */

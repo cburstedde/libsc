@@ -179,7 +179,6 @@ typedef SSIZE_T ssize_t;
 #endif
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <libgen.h>
 #ifdef __cplusplus
 extern              "C"
 {
