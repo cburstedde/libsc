@@ -120,6 +120,11 @@ if(WIN32)
 endif()
 
 check_include_file(libgen.h SC_HAVE_LIBGEN_H)
+# we need an additional macro to include libgen.h
+if(COMMAND _MSC_VER)
+  message(STATUS "Microsoft Visual C++ compiler detected")
+endif()
+
 check_include_file(unistd.h SC_HAVE_UNISTD_H)
 if(SC_HAVE_UNISTD_H)
   check_include_file(getopt.h SC_HAVE_GETOPT_H)
