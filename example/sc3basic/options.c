@@ -44,14 +44,18 @@ parse_options (options_global_t * g, int argc, char **argv)
   SC3E (sc3_options_set_stop (opt, &g->stop));
   SC3E (sc3_options_add_int (opt, 'i', "--i-one", "First integer",
                              &g->i1, 6));
-  SC3E (sc3_options_add_int (opt, 'j', NULL, "Second integer",
-                             &g->i2, 7));
+  SC3E (sc3_options_add_int (opt, 'j', NULL, "Second integer", &g->i2, 7));
   SC3E (sc3_options_setup (opt));
 
   /* parse command line options */
+  res = 0;
   for (pos = 1; pos < argc; ++pos) {
     SC3E (sc3_options_parse (opt, argc, argv, &pos, &res));
+    if (res <= 0 || g->stop) {
+      break;
+    }
   }
+  SC3_GLOBAL_PRODUCTIONF ("Parsed with last result %d", res);
 
   SC3E (sc3_options_destroy (&opt));
   return NULL;
