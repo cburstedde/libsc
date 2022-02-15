@@ -194,6 +194,7 @@ sc3_error_t        *sc3_options_destroy (sc3_options_t ** yyp);
  * \param [in] yy           Options object must be setup.
  * \param [in] argc         Number of entries in the \a argv array.
  * \param [in] argv         Array of strings of length \a argc.
+ *                          We do not modify this array at all.
  * \param [in,out] arg_pos  On input, valid index in [0, \a argc).
  *                          On output, index advanced to the next
  *                          unparsed position.  This may be the same
@@ -209,7 +210,7 @@ sc3_error_t        *sc3_options_destroy (sc3_options_t ** yyp);
  *                      when the function is called with invalid parameters.
  */
 sc3_error_t        *sc3_options_parse (sc3_options_t * yy,
-                                       int argc, const char **argv,
+                                       int argc, char **argv,
                                        int *arg_pos, int *result);
 
 #if 0

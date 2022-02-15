@@ -35,8 +35,11 @@ options_global_t;
 static sc3_error_t *
 parse_options (options_global_t * g, int argc, char **argv)
 {
+  int                 pos;
+  int                 res;
   sc3_options_t      *opt;
 
+  /* construct options object */
   SC3E (sc3_options_new (g->alloc, &opt));
   SC3E (sc3_options_set_stop (opt, &g->stop));
   SC3E (sc3_options_add_int (opt, 'i', "--i-one", "First integer",
@@ -45,7 +48,10 @@ parse_options (options_global_t * g, int argc, char **argv)
                              &g->i2, 7));
   SC3E (sc3_options_setup (opt));
 
-  /* parse options */
+  /* parse command line options */
+  for (pos = 1; pos < argc; ++pos) {
+    SC3E (sc3_options_parse (opt, argc, argv, &pos, &res));
+  }
 
   SC3E (sc3_options_destroy (&opt));
   return NULL;

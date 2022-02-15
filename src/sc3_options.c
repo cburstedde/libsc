@@ -176,7 +176,7 @@ sc3_options_add_int (sc3_options_t * yy,
   o->opt_type = SC3_OPTION_INT;
   o->opt_short = opt_short;
   o->opt_long = opt_long;
-  o->opt_long_len = strlen (opt_long);
+  o->opt_long_len = opt_long != NULL ? strlen (opt_long) : 0;
   o->opt_help = opt_help;
   *(o->v.var_int = opt_variable) = opt_value;
 
@@ -259,7 +259,7 @@ sc3_options_get_dummy (const sc3_options_t * yy, int *dummy)
 #endif
 
 sc3_error_t        *
-sc3_options_parse (sc3_options_t * yy, int argc, const char **argv,
+sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
                    int *arg_pos, int *result)
 {
   SC3E_RETVAL (result, -1);
@@ -269,7 +269,8 @@ sc3_options_parse (sc3_options_t * yy, int argc, const char **argv,
   SC3A_CHECK (arg_pos != NULL);
   SC3A_CHECK (0 <= *arg_pos && *arg_pos < argc);
 
-  *result = 0;
+  ++*arg_pos;
+  *result = 1;
 
   return NULL;
 }
