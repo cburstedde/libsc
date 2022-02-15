@@ -113,7 +113,7 @@
 
 #include <ctype.h>
 #include <float.h>
-#if defined SC_HAVE_LIBGEN_H /*&& !defined _MSC_VER*/
+#if defined SC_HAVE_LIBGEN_H && !defined _MSC_VER
 #include <libgen.h>
 #endif
 #include <limits.h>
@@ -138,6 +138,7 @@
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #endif
+#include <libgen.h>
 
 /* definitions to allow user code to query the sc library */
 /** Indicate that we do not modify the communicator in sc_init. */

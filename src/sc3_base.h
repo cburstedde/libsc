@@ -146,7 +146,7 @@
 #ifdef SC_HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
-#if defined SC_HAVE_LIBGEN_H /*&& !defined _MSC_VER*/
+#if defined SC_HAVE_LIBGEN_H && !defined _MSC_VER
 #include <libgen.h>
 #endif
 #ifdef SC_HAVE_LIMITS_H
@@ -179,7 +179,7 @@ typedef SSIZE_T ssize_t;
 #endif
 #define _USE_MATH_DEFINES
 #include <math.h>
-
+#include <libgen.h>
 #ifdef __cplusplus
 extern              "C"
 {
