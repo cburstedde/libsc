@@ -473,7 +473,7 @@ sc3_array_sort_r (sc3_array_t * a,
   return sc3_error_new_kind (SC3_ERROR_FATAL, __FILE__, __LINE__,
                              "configure error concerning qsort_r");
 #else
-  qsort_r (a->mem, a->ecount, a->size, data, compar);
+  qsort_r (a->mem, a->ecount, a->esize, data, compar);
   return NULL;
 #endif
 }
