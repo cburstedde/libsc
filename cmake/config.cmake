@@ -120,10 +120,6 @@ if(WIN32)
 endif()
 
 check_include_file(libgen.h SC_HAVE_LIBGEN_H)
-# we need an additional macro to include libgen.h
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  message(STATUS "Clang compiler detected")
-endif()
 
 check_include_file(unistd.h SC_HAVE_UNISTD_H)
 if(SC_HAVE_UNISTD_H)
