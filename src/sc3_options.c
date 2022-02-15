@@ -60,6 +60,8 @@ struct sc3_options
   int                 setup;
 
   /* internal configuration */
+  int                 allow_pack;       /**< Accept short options '-abc'. */
+  int                *var_stop;         /**< Output variable for '--'. */
   sc3_array_t        *opts;
 
 #if 0
@@ -150,17 +152,15 @@ sc3_options_new (sc3_allocator_t * alloc, sc3_options_t ** yyp)
   return NULL;
 }
 
-#if 0
-
 sc3_error_t        *
-sc3_options_set_dummy (sc3_options_t * yy, int dummy)
+sc3_options_set_stop (sc3_options_t * yy, int *var_stop)
 {
   SC3A_IS (sc3_options_is_new, yy);
-  yy->dummy = dummy;
+  if ((yy->var_stop = var_stop) != NULL) {
+    *var_stop = 0;
+  }
   return NULL;
 }
-
-#endif
 
 sc3_error_t        *
 sc3_options_add_int (sc3_options_t * yy,

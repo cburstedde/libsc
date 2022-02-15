@@ -26,6 +26,7 @@
 typedef struct options_global
 {
   sc3_allocator_t    *alloc;
+  int                 stop;
   int                 i1;
   int                 i2;
 }
@@ -37,9 +38,10 @@ parse_options (options_global_t * g, int argc, char **argv)
   sc3_options_t      *opt;
 
   SC3E (sc3_options_new (g->alloc, &opt));
-  SC3E (sc3_options_add_int (opt, 'i', "--int-one", "First integer",
+  SC3E (sc3_options_set_stop (opt, &g->stop));
+  SC3E (sc3_options_add_int (opt, 'i', "--i-one", "First integer",
                              &g->i1, 6));
-  SC3E (sc3_options_add_int (opt, 'j', "--int-two", "Second integer",
+  SC3E (sc3_options_add_int (opt, 'j', NULL, "Second integer",
                              &g->i2, 7));
   SC3E (sc3_options_setup (opt));
 

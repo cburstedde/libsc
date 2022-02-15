@@ -120,6 +120,20 @@ int                 sc3_options_is_dummy (const sc3_options_t * yy,
 sc3_error_t        *sc3_options_new (sc3_allocator_t * alloc,
                                      sc3_options_t ** yyp);
 
+/** Enable or disable recognition of '--' argument to stop processing.
+ * \param [in,out] yy       The object must not be setup.
+ * \param [in] var_stop     Pointer to existing integer variable or NULL.
+ *                          When NULL, the stop feature is disabled.
+ *                          Otherwise, its value is initialized to 0 and
+ *                          set to 1 on parsing when '--' is encountered.
+ *                          We leave it to the user to stop processing
+ *                          based on the value assigned to this variable.
+ *                          The variable must stay in scope/memory
+ *                          while the options object is alive.
+ * \return                  NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_options_set_stop (sc3_options_t * yy, int *var_stop);
+
 /** Add an integer argument to options object.
  * \param [in,out] yy   The object must not be setup.
  * \param [in] opt_short    Short option character.
