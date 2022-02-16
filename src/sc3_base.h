@@ -136,7 +136,8 @@
 #ifndef _ISOC99_SOURCE
 #define _ISOC99_SOURCE          /**< Enable C99 functionality. */
 #endif
-#elif
+#endif
+#if SC_HAVE_GNU_QSORT_R
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE             /**< Enable GNU functionality. */
 #endif
