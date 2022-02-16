@@ -136,7 +136,7 @@
 #define _ISOC99_SOURCE          /**< Enable C99 functionality. */
 #endif
 #endif
-#if 0
+#if 1
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE             /**< Enable GNU functionality. */
 #endif
