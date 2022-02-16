@@ -129,8 +129,10 @@
 #ifndef _POSIX_SOURCE
 #define _POSIX_SOURCE           /**< Enable POSIX functionality. */
 #endif
+#if 0
 #ifndef _ISOC99_SOURCE
 #define _ISOC99_SOURCE          /**< Enable C99 functionality. */
+#endif
 #endif
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE             /**< Enable GNU functionality. */
