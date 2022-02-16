@@ -140,12 +140,9 @@
 #ifdef SC_HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
-/*
-#if defined SC_HAVE_LIBGEN_H && !defined _MSC_VER
+#if defined(SC_HAVE_LIBGEN_H) && !defined (_MSC_VER)
 #include <libgen.h>
 #endif
-*/
-#include <libgen.h>
 #ifdef SC_HAVE_LIMITS_H
 #include <limits.h>
 #endif
