@@ -131,13 +131,10 @@
 #define _POSIX_C_SOURCE           /**< Enable POSIX functionality. */
 #endif
 #endif
-
-#if SC_HAVE_BSD_QSORT_R
 #ifndef _ISOC99_SOURCE
 #define _ISOC99_SOURCE          /**< Enable C99 functionality. */
 #endif
-#endif
-#if SC_HAVE_GNU_QSORT_R
+#if 0
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE             /**< Enable GNU functionality. */
 #endif
