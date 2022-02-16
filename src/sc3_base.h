@@ -159,12 +159,9 @@
 #ifdef SC_HAVE_LIMITS_H
 #include <limits.h>
 #endif
-/*
 #ifdef SC_HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-*/
-#include <stdlib.h>
 #ifdef SC_HAVE_STRING_H
 #include <string.h>
 #endif
