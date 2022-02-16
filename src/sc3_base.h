@@ -126,20 +126,8 @@
 #define SC3_BASE_H
 
 /* we set the GNU feature test macro before including anything */
-#if 0
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE           /**< Enable POSIX functionality. */
-#endif
-#endif
-#if 0
-#ifndef _ISOC99_SOURCE
-#define _ISOC99_SOURCE          /**< Enable C99 functionality. */
-#endif
-#endif
-#if 1
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE             /**< Enable GNU functionality. */
-#endif
 #endif
 
 /* include libsc configuration and mpi.h before stdio.h */
