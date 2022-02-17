@@ -393,6 +393,7 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
 
   /* query whether the allocation is sufficient */
   if (new_ecount > a->ealloc) {
+    size_t              old_ealloc = a->ealloc;
 
     /* we need to enlarge allocation */
     if (a->ealloc == 0) {
@@ -403,6 +404,11 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
     }
     SC3A_CHECK (new_ecount <= a->ealloc);
     SC3E (sc3_allocator_realloc (a->aator, &a->mem, a->ealloc * a->esize));
+    if (a->initzero) {
+      /* set newly allocated memory to all zeros */
+      memset (a->mem + a->esize * old_ealloc, 0,
+              a->esize * (a->ealloc - old_ealloc));
+    }
   }
   else if (a->tighten && new_ecount < a->ealloc) {
     int                 newalloc;

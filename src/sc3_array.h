@@ -237,8 +237,8 @@ sc3_error_t        *sc3_array_set_elem_count (sc3_array_t * a, int ecount);
 sc3_error_t        *sc3_array_set_elem_alloc (sc3_array_t * a, int ealloc);
 
 /** Set the initzero property of an array.
- * If set to true, array memory for initial count is zeroed during setup.
- * This does *not* mean that new space after resize will be initialized.
+ * If set to true, array memory for initial allocation is zeroed during
+ * setup, and memory added by resize and push will be zeroed as well.
  * Default is false.
  * \param [in,out] a        The array must not be setup.
  * \param [in] initzero     Boolean; default is false.
@@ -306,6 +306,7 @@ sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
 /** Resize an array, reallocating internally as needed.
  * Only allocated arrays may be resized, views may not.
  * The array elements are preserved to the minimum of old and new counts.
+ * If the array grows and the initzero property is set, zero new memory.
  * Their addresses may change, however, as with standard realloc (3).
  * \param [in,out] a        The array must be resizable.
  * \param [in] new_ecount   The new element count.  0 is legal.
@@ -405,6 +406,7 @@ sc3_error_t        *sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
 
 /** Enlarge an array by a number of elements.
  * The array must be resizable.
+ * If the initzero property is set, the new memory is zeroed.
  * The output points to the beginning of the memory for the new elements.
  * The pointer to the array element is passed by a reference argument.
  * \param [in,out] a    The array must be setup and resizable.
@@ -419,9 +421,10 @@ sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void *ptr);
 
 /** Enlarge an array by one element.
  * The array must be resizable.
+ * If the initzero property is set, the new memory is zeroed.
  * The output points to the beginning of the memory for the new element.
- * Equivalent to \ref sc3_array_push_count (a, 1, ptr).
  * The pointer to the array element is passed by a reference argument.
+ * Equivalent to \ref sc3_array_push_count (a, 1, ptr).
  * \param [in,out] a    The array must be setup and resizable.  Enlarged by 1.
  * \param [out] ptr     Optional address of pointer.
  *                      On output the array element at previously last index.

@@ -335,11 +335,11 @@ sc3_error_t        *sc3_free (void *pmem);
 
 /** Set the reason output parameter \a r of a query and return false.
  * Set the reason parameter inside an sc3_object_is_* function
- * to a given value \a reason before unconditionally returning false.
+ * to a given value \a s before unconditionally returning false.
  * \a r may be NULL in which case it is not updated, but we still return.
  */
-#define SC3E_NO(r,reason) do {                                          \
-  if ((r) != NULL) { SC3_BUFCOPY ((r), (reason)); } return 0; } while (0)
+#define SC3E_NO(r,s) do {                                               \
+  if ((r) != NULL) { SC3_BUFCOPY ((r), (s)); } return 0; } while (0)
 
 /** Set the reason output parameter \a r of a query and return true.
  * Set the reason parameter inside an sc3_object_is_* function

@@ -47,10 +47,12 @@ typedef struct sc3_option
   size_t              opt_long_len;
   int                 opt_has_arg;
   const char         *opt_help;
+  char               *opt_string_value;     /**< allocated string variable */
   union
   {
+    /* address of current option value in caller memory */
     int                *var_int;
-    char               *var_string;
+    const char        **var_string;
   } v;
 }
 sc3_option_t;
@@ -71,8 +73,8 @@ struct sc3_options
 int
 sc3_options_is_valid (const sc3_options_t * yy, char *reason)
 {
-  int                    i, len;
-  sc3_option_t          *o;
+  int                 i, len;
+  sc3_option_t       *o;
 
   SC3E_TEST (yy != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &yy->rc, reason);
@@ -92,6 +94,18 @@ sc3_options_is_valid (const sc3_options_t * yy, char *reason)
     SC3E_DO (sc3_array_index (yy->opts, i, &o), reason);
     SC3E_TEST (0 <= o->opt_type && o->opt_type < SC3_OPTION_TYPE_LAST,
                reason);
+    switch (o->opt_type) {
+    case SC3_OPTION_INT:
+      SC3E_TEST (o->v.var_int != NULL, reason);
+      SC3E_TEST (o->opt_string_value == NULL, reason);
+      break;
+    case SC3_OPTION_STRING:
+      SC3E_TEST (o->v.var_string != NULL, reason);
+      SC3E_TEST (o->opt_string_value == *o->v.var_string, reason);
+      break;
+    default:
+      SC3E_NO (reason, "Invalid option type");
+    }
   }
 
   /* everything checked out */
@@ -136,7 +150,7 @@ sc3_options_new (sc3_allocator_t * alloc, sc3_options_t ** yyp)
   /* internal array of options */
   SC3E (sc3_array_new (alloc, &yy->opts));
   SC3E (sc3_array_set_elem_size (yy->opts, sizeof (sc3_option_t)));
-  SC3E (sc3_array_set_tighten (yy->opts, 1));
+  SC3E (sc3_array_set_initzero (yy->opts, 1));
   SC3E (sc3_array_setup (yy->opts));
 
   /* done with allocation */
@@ -174,6 +188,8 @@ sc3_options_add_int (sc3_options_t * yy,
   o->opt_help = opt_help;
   *(o->v.var_int = opt_variable) = opt_value;
 
+  /* this variable not used */
+  SC3A_CHECK (o->opt_string_value == NULL);
   return NULL;
 }
 
@@ -197,8 +213,8 @@ sc3_options_add_string (sc3_options_t * yy,
   o->opt_help = opt_help;
 
   /* deep copy default value */
-  SC3E (sc3_allocator_strdup (yy->alloc, opt_value, &o->v.var_string));
-  *opt_variable = o->v.var_string;
+  SC3E (sc3_allocator_strdup (yy->alloc, opt_value, &o->opt_string_value));
+  *(o->v.var_string = opt_variable) = o->opt_string_value;
 
   return NULL;
 }
@@ -236,8 +252,8 @@ sc3_options_unref (sc3_options_t ** yyp)
   SC3A_IS (sc3_options_is_valid, yy);
   SC3E (sc3_refcount_unref (&yy->rc, &waslast));
   if (waslast) {
-    int              i, len;
-    sc3_option_t    *o;
+    int                 i, len;
+    sc3_option_t       *o;
 
     *yyp = NULL;
     alloc = yy->alloc;
@@ -246,8 +262,8 @@ sc3_options_unref (sc3_options_t ** yyp)
     SC3E (sc3_array_get_elem_count (yy->opts, &len));
     for (i = 0; i < len; ++i) {
       SC3E (sc3_array_index (yy->opts, i, &o));
-      if (o->opt_type == SC3_OPTION_TYPE_LAST) {
-        SC3E (sc3_allocator_free (yy->alloc, &o->v.var_string));
+      if (o->opt_type == SC3_OPTION_STRING) {
+        SC3E (sc3_allocator_free (yy->alloc, &o->opt_string_value));
       }
     }
     SC3E (sc3_array_destroy (&yy->opts));
