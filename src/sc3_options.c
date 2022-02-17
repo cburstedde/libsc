@@ -34,6 +34,7 @@
 typedef enum sc3_option_type
 {
   SC3_OPTION_INT,
+  SC3_OPTION_STRING,
   SC3_OPTION_TYPE_LAST
 }
 sc3_option_type_t;
@@ -41,13 +42,15 @@ sc3_option_type_t;
 typedef struct sc3_option
 {
   sc3_option_type_t   opt_type;
-  int                 opt_short;
+  char                opt_short;
   const char         *opt_long;
   size_t              opt_long_len;
+  int                 opt_has_arg;
   const char         *opt_help;
   union
   {
     int                *var_int;
+    char               *var_string;
   } v;
 }
 sc3_option_t;
@@ -63,19 +66,14 @@ struct sc3_options
   int                 allow_pack;       /**< Accept short options '-abc'. */
   int                *var_stop;         /**< Output variable for '--'. */
   sc3_array_t        *opts;
-
-#if 0
-  /* parameters set before and fixed after setup */
-  int                 dummy;
-
-  /* member variables initialized during setup */
-  int                *member;
-#endif
 };
 
 int
 sc3_options_is_valid (const sc3_options_t * yy, char *reason)
 {
+  int                    i, len;
+  sc3_option_t          *o;
+
   SC3E_TEST (yy != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &yy->rc, reason);
   SC3E_IS (sc3_allocator_is_setup, yy->alloc, reason);
@@ -89,7 +87,14 @@ sc3_options_is_valid (const sc3_options_t * yy, char *reason)
   }
 
   /* go through individial options */
+  SC3E_DO (sc3_array_get_elem_count (yy->opts, &len), reason);
+  for (i = 0; i < len; ++i) {
+    SC3E_DO (sc3_array_index (yy->opts, i, &o), reason);
+    SC3E_TEST (0 <= o->opt_type && o->opt_type < SC3_OPTION_TYPE_LAST,
+               reason);
+  }
 
+  /* everything checked out */
   SC3E_YES (reason);
 }
 
@@ -108,18 +113,6 @@ sc3_options_is_setup (const sc3_options_t * yy, char *reason)
   SC3E_TEST (yy->setup, reason);
   SC3E_YES (reason);
 }
-
-#if 0
-
-int
-sc3_options_is_dummy (const sc3_options_t * yy, char *reason)
-{
-  SC3E_IS (sc3_options_is_setup, yy, reason);
-  SC3E_TEST (yy->dummy, reason);
-  SC3E_YES (reason);
-}
-
-#endif
 
 sc3_error_t        *
 sc3_options_new (sc3_allocator_t * alloc, sc3_options_t ** yyp)
@@ -164,7 +157,7 @@ sc3_options_set_stop (sc3_options_t * yy, int *var_stop)
 
 sc3_error_t        *
 sc3_options_add_int (sc3_options_t * yy,
-                     int opt_short, const char *opt_long,
+                     char opt_short, const char *opt_long,
                      const char *opt_help, int *opt_variable, int opt_value)
 {
   sc3_option_t       *o;
@@ -177,8 +170,35 @@ sc3_options_add_int (sc3_options_t * yy,
   o->opt_short = opt_short;
   o->opt_long = opt_long;
   o->opt_long_len = opt_long != NULL ? strlen (opt_long) : 0;
+  o->opt_has_arg = 1;
   o->opt_help = opt_help;
   *(o->v.var_int = opt_variable) = opt_value;
+
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_options_add_string (sc3_options_t * yy,
+                        char opt_short, const char *opt_long,
+                        const char *opt_help, const char **opt_variable,
+                        const char *opt_value)
+{
+  sc3_option_t       *o;
+
+  SC3A_IS (sc3_options_is_new, yy);
+  SC3A_CHECK (opt_variable != NULL);
+
+  SC3E (sc3_array_push (yy->opts, &o));
+  o->opt_type = SC3_OPTION_STRING;
+  o->opt_short = opt_short;
+  o->opt_long = opt_long;
+  o->opt_long_len = opt_long != NULL ? strlen (opt_long) : 0;
+  o->opt_has_arg = 1;
+  o->opt_help = opt_help;
+
+  /* deep copy default value */
+  SC3E (sc3_allocator_strdup (yy->alloc, opt_value, &o->v.var_string));
+  *opt_variable = o->v.var_string;
 
   return NULL;
 }
@@ -216,11 +236,19 @@ sc3_options_unref (sc3_options_t ** yyp)
   SC3A_IS (sc3_options_is_valid, yy);
   SC3E (sc3_refcount_unref (&yy->rc, &waslast));
   if (waslast) {
+    int              i, len;
+    sc3_option_t    *o;
+
     *yyp = NULL;
     alloc = yy->alloc;
 
     /* deallocate internal state */
-    if (yy->setup) {
+    SC3E (sc3_array_get_elem_count (yy->opts, &len));
+    for (i = 0; i < len; ++i) {
+      SC3E (sc3_array_index (yy->opts, i, &o));
+      if (o->opt_type == SC3_OPTION_TYPE_LAST) {
+        SC3E (sc3_allocator_free (yy->alloc, &o->v.var_string));
+      }
     }
     SC3E (sc3_array_destroy (&yy->opts));
 
