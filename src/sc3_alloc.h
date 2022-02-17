@@ -234,12 +234,13 @@ sc3_error_t        *sc3_allocator_get_overhead (sc3_allocator_t * a,
 /** Allocate memory and copy a Nul-terminated string into it.
  * Unlike strdup (3), memory is passed by a reference argument.
  * \param [in,out] a    The allocator must be setup.
- * \param [in] src      Nul-terminated string.
+ * \param [in] src      Nul-terminated string, or NULL.
  * \param [out] dest    Non-NULL pointer to the address of output,
  *                      memory with the input string copied into it.
  *                      May be passed to \ref sc3_allocator_realloc
  *                      any number of times and must eventually be
  *                      released with \ref sc3_allocator_free.
+ *                      On NULL input the output is NULL as well.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_strdup (sc3_allocator_t * a,
@@ -303,7 +304,8 @@ sc3_error_t        *sc3_allocator_realloc (sc3_allocator_t * a,
  * \param [in,out] ptr  Non-NULL address of pointer previously allocated by
  *                      this allocator by \ref sc3_allocator_malloc, \ref
  *                      sc3_allocator_calloc or \ref sc3_allocator_realloc.
- *                      Output value is set to NULL on success.
+ *                      NULL is a legal value, and the function noops.
+ *                      The output value is set to NULL on success.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_free (sc3_allocator_t * a, void *ptr);

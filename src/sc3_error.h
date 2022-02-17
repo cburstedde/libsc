@@ -358,14 +358,13 @@ sc3_error_t        *sc3_free (void *pmem);
     if ((r) != NULL) { SC3_BUFCOPY ((r), #x); }                         \
     return 0; }} while (0)
 
-/** Run a function that may return an error for use in tests.
+/** Run a function that may return an error for use in yes/no tests.
  * Since the caller will not return an error, we convert it to integer.
  * As with the other macros here, \a r must be of \ref SC3_BUFSIZE.
- * \deprecated This macro will be removed in the future.
  */
 #define SC3E_DO(f,r) do {                                               \
   sc3_error_t *_e = (f);                                                \
-  if (sc3_error_check (&_e, r, SC3_BUFSIZE)) { return 0; }} while (0)
+  if (sc3_error_check (r, SC3_BUFSIZE, _e)) { return 0; }} while (0)
 
 /** Query an sc3_object_is_* function.
  * The argument \a f shall be such a function and \a o an object to query.

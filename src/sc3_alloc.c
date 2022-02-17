@@ -307,9 +307,12 @@ sc3_allocator_strdup (sc3_allocator_t * a, const char *src, char **dest)
   char               *s;
 
   SC3E_RETVAL (dest, NULL);
-
   SC3A_IS (sc3_allocator_is_setup, a);
-  SC3A_CHECK (src != NULL);
+
+  /* It is legal to pass NULL values to free.  Output is NULL already. */
+  if (src == NULL) {
+    return NULL;
+  }
 
   len = strlen (src) + 1;
   SC3E (sc3_allocator_malloc (a, len, &s));
