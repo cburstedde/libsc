@@ -23,6 +23,7 @@ find_package(Threads)
 # --- find our library
 
 find_package(SC REQUIRED)
+set(cfg_h ${SC_INCLUDE_DIRS}/sc_config.h)
 
 # --- get system capabilities
 
@@ -32,10 +33,9 @@ if(NOT SC_NONEED_M)
   check_symbol_exists(sqrt math.h SC_NEED_M)
 endif()
 
-check_include_file(unistd.h SC_HAVE_UNISTD_H)
-if(SC_HAVE_UNISTD_H)
-  check_include_file(getopt.h SC_HAVE_GETOPT_H)
-endif()
+check_symbol_exists(SC_HAVE_UNISTD_H ${cfg_h} SC_HAVE_UNISTD_H)
+check_symbol_exists(SC_HAVE_GETOPT_H ${cfg_h} SC_HAVE_GETOPT_H)
+check_symbol_exists(SC_ENABLE_V4L2 ${cfg_h} SC_ENABLE_V4L2)
 
 target_link_libraries(SC::SC INTERFACE
 $<$<BOOL:${MPI_C_FOUND}>:MPI::MPI_C>
@@ -51,11 +51,10 @@ add_executable(sc_${name} ${files})
 
 target_link_libraries(sc_${name} PRIVATE SC::SC)
 
-
 if(MPI_C_FOUND)
   add_test(NAME sc:example:${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_${name}>)
 else()
-  add_test(NAME sc:example:${name} COMMAND $<TARGET_FILE:sc_${name}>)
+  add_test(NAME sc:example:${name} COMMAND sc_${name})
 endif()
 
 set_tests_properties(sc:example:${name} PROPERTIES TIMEOUT 10)
@@ -85,4 +84,8 @@ if(Threads_FOUND)
     test_sc_example(pthread pthread/pthread.c)
     target_link_libraries(sc_pthread PRIVATE Threads::Threads)
   endif()
+endif()
+
+if(SC_ENABLE_V4L2)
+  test_sc_example(v4l2 v4l2/v4l2.c)
 endif()
