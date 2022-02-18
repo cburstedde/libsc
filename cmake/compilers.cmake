@@ -11,3 +11,8 @@ else()
     add_compile_options(/Wall)
   endif()
 endif()
+
+if(MSVC)
+  # disable nuisance warnings from Visual Studio
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+endif()

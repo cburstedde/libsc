@@ -35,3 +35,10 @@ foreach(t IN LISTS sc_tests)
   )
 
 endforeach()
+
+if(WIN32 AND BUILD_SHARED_LIBS AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
+  add_custom_command(TARGET test_allgather POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:test_allgather> $<TARGET_FILE_DIR:test_allgather>
+  COMMAND_EXPAND_LISTS
+  )
+endif()
