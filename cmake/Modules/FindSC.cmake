@@ -18,13 +18,14 @@
 
 
 find_path (SC_INCLUDE_DIR
-  NAMES sc.h
-  DOC "libsc header")
+NAMES sc.h
+DOC "libsc header"
+)
 
 find_library (SC_LIBRARY
-  NAMES sc
-  DOC "libsc library")
-
+NAMES sc
+DOC "libsc library"
+)
 
 if(SC_INCLUDE_DIR AND SC_LIBRARY)
   set(SC_mpi_ok true)
@@ -66,8 +67,9 @@ if(NOT TARGET SC::SC)
   add_library(SC::SC INTERFACE IMPORTED)
 
   set_target_properties(SC::SC PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${SC_INCLUDE_DIR}"
-    INTERFACE_LINK_LIBRARIES "${SC_LIBRARY}")
+  INTERFACE_INCLUDE_DIRECTORIES "${SC_INCLUDE_DIR}"
+  INTERFACE_LINK_LIBRARIES "${SC_LIBRARY}"
+  )
 endif()
 
 endif(SC_FOUND)
