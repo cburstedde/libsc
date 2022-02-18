@@ -154,31 +154,11 @@ jobs:
       # there is not yet an environment variable for this path from msys2/setup-msys2
       run: echo "D:/a/_temp/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-    - name: Download MS-MPI setup (SDK is from MSYS2)
-      run: curl -L -O https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe
-
-    - name: Install mpiexec.exe (-force needed to bypass GUI on headless)
-      run: .\msmpisetup.exe -unattend -force
-
-    - name: Put MSMPI_BIN on PATH (where mpiexec is)
-      run: echo "C:\Program Files\Microsoft MPI\Bin\" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-    - name: Check file existence
-      id: check_files
-      uses: andstor/file-existence-action@v1
-      with:
-        files: "C:/Program Files/Microsoft MPI/Bin/mpiexec.exe"
-
     - uses: actions/checkout@v2
       name: Checkout source code
 
-    - name: CMake configure with MPI
-      if: steps.check_files.outputs.files_exists == 'true'
-      run: cmake -B build -Dmpi=yes -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
-
     - name: CMake configure without MPI
-      if: steps.check_files.outputs.files_exists == 'false'
-      run: cmake -B build -Dmpi=no -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake -B build -Dmpi:BOOL=no -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
       run: cmake --build build
@@ -189,13 +169,8 @@ jobs:
     - name: CMake self-tests
       run: ctest --test-dir build --preset default
 
-    - name: CMake configure examples with MPI
-      if: steps.check_files.outputs.files_exists == 'true'
-      run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=build/local -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
-
     - name: CMake configure examples without MPI
-      if: steps.check_files.outputs.files_exists == 'false'
-      run: cmake -B example/build -S example -DSC_ROOT=build/local -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake -B example/build -S example -Dmpi:BOOL=no -DSC_ROOT=build/local -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build examples
       run: cmake --build example/build
