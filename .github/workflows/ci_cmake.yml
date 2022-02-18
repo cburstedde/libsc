@@ -30,6 +30,7 @@ jobs:
     strategy:
       matrix:
         cc: [clang-7, clang-8, clang-9, clang-10, gcc-7, gcc-8, gcc-9, gcc-10, gcc-11]
+        shared: [true, false]
 
     env:
       CC: ${{ matrix.cc }}
@@ -46,7 +47,7 @@ jobs:
             ${{ matrix.cc }}
 
     - name: CMake configure
-      run: cmake -B build --preset default --install-prefix=$HOME
+      run: cmake -B build --preset default --install-prefix=${HOME} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
       run: cmake --build build
@@ -58,7 +59,7 @@ jobs:
       run: ctest --test-dir build --preset default
 
     - name: CMake configure examples
-      run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=$HOME
+      run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=${HOME} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build examples
       run: cmake --build example/build
@@ -82,6 +83,11 @@ jobs:
     runs-on: macos-latest
     name: CMake build on MacOS
     timeout-minutes: 20
+
+    strategy:
+      matrix:
+        shared: [true, false]
+
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
 
@@ -93,7 +99,7 @@ jobs:
       run: brew install open-mpi ninja
 
     - name: CMake configure
-      run: cmake -B build -Dmpi=yes --install-prefix=$HOME
+      run: cmake -B build -Dmpi=yes --install-prefix=${HOME} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
       run: cmake --build build
@@ -105,7 +111,7 @@ jobs:
       run: ctest --test-dir build --preset default
 
     - name: CMake configure examples
-      run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=$HOME
+      run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=${HOME} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build examples
       run: cmake --build example/build
@@ -129,6 +135,10 @@ jobs:
     runs-on: windows-latest
     name: CMake build on Windows
     timeout-minutes: 20
+
+    strategy:
+      matrix:
+        shared: [true, false]
 
     steps:
     - uses: msys2/setup-msys2@v2
@@ -164,11 +174,11 @@ jobs:
 
     - name: CMake configure with MPI
       if: steps.check_files.outputs.files_exists == 'true'
-      run: cmake -B build -Dmpi=yes
+      run: cmake -B build -Dmpi=yes -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake configure without MPI
       if: steps.check_files.outputs.files_exists == 'false'
-      run: cmake -B build -Dmpi=no
+      run: cmake -B build -Dmpi=no -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
       run: cmake --build build
@@ -181,11 +191,11 @@ jobs:
 
     - name: CMake configure examples with MPI
       if: steps.check_files.outputs.files_exists == 'true'
-      run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=build/local
+      run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=build/local -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake configure examples without MPI
       if: steps.check_files.outputs.files_exists == 'false'
-      run: cmake -B example/build -S example -DSC_ROOT=build/local
+      run: cmake -B example/build -S example -DSC_ROOT=build/local -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build examples
       run: cmake --build example/build
