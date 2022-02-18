@@ -288,63 +288,105 @@ sc3_options_destroy (sc3_options_t ** yyp)
   return NULL;
 }
 
-#if 0
-
-sc3_error_t        *
-sc3_options_get_dummy (const sc3_options_t * yy, int *dummy)
+static sc3_error_t *
+process_without_arg (sc3_option_t * o)
 {
-  SC3E_RETVAL (dummy, 0);
-  SC3A_IS (sc3_options_is_setup, yy);
-
-  *dummy = yy->dummy;
+  switch (o->opt_type) {
+  default:
+    SC3E_UNREACH ("Invalid non-argument option");
+  }
   return NULL;
 }
 
-#endif
-
 sc3_error_t        *
 sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
-                   int *arg_pos, int *result)
+                   int *argp, int *result)
 {
-  int                 pos;
+  int                 len, i;
   size_t              lz;
   const char         *at;
+  sc3_option_t       *o;
 
-  SC3E_RETVAL (result, -1);
+  SC3E_RETVAL (result, 0);
   SC3A_IS (sc3_options_is_setup, yy);
   SC3A_CHECK (0 <= argc);
   SC3A_CHECK (argv != NULL);
-  SC3A_CHECK (arg_pos != NULL);
-  SC3A_CHECK (0 <= *arg_pos && *arg_pos < argc);
+  SC3A_CHECK (argp != NULL);
+  SC3A_CHECK (0 <= *argp && *argp < argc);
 
-  /* preliminary checks */
-  pos = *arg_pos;
-  at = argv[pos];
-  if (at == NULL) {
-    /* erroneous argv parameter */
-    /* result remains at -1 */
-    return NULL;
+  /* access all options in this container */
+  SC3E (sc3_array_get_elem_count (yy->opts, &len));
+
+  /* loop over command line arguments */
+  for (; *argp < argc; ++*argp) {
+    if ((at = argv[*argp]) == NULL) {
+      /* impossible parameter string is ignored */
+      continue;
+    }
+    lz = strlen (at);
+    if (lz < 2 || at[0] != '-') {
+      /* this is no kind of option, we have no match and return */
+      return NULL;
+    }
+
+    /* long options start with a double dash */
+    SC3A_CHECK (lz >= 2);
+    if (!strncmp (at, "--", 2)) {
+      if (lz == 2) {
+        if (yy->var_stop != NULL) {
+          /* honor stop option */
+          *yy->var_stop = 1;
+          ++*argp;
+        }
+        /* return due to stop or due to no match */
+        return NULL;
+      }
+
+      /* parse long option */
+      for (i = 0; i < len; ++i) {
+        SC3E (sc3_array_index (yy->opts, i, &o));
+        if (o->opt_long == NULL || o->opt_long_len == 0) {
+          continue;
+        }
+        if (strncmp (at + 2, o->opt_long, o->opt_long_len)) {
+          continue;
+        }
+        SC3A_CHECK (lz - 2 >= o->opt_long_len);
+
+        /* first possibility: long option has no argument */
+        if (!o->opt_has_arg) {
+          if (lz - 2 > o->opt_long_len) {
+            /* spurious extra characters */
+            *result = -1;
+            return NULL;
+          }
+          SC3E (process_without_arg (o));
+
+          /* done processing this option */
+          ++*result;
+          ++*argp;
+          continue;
+        }
+
+        /* alternative: move at forward, subtract from lz! */
+
+#if 0
+        /* second possibility: long option has argument with '=' */
+        if (at[2 + o->opt_long_lon] == '=') {
+          SC3E (process_with_arg (o, at + 2 + o->opt_long_len));
+
+        }
+#endif
+
+        /* third possibility: long option has argument in next argument */
+      }
+
+    }
+    else {
+      /* parse short options */
+
+    }
   }
-  lz = strlen (at);
-  if (lz < 2 || at[0] != '-') {
-    /* this is no kind of option */
-    *result = 0;
-    return NULL;
-  }
-
-  /* honor stop option */
-  if (yy->var_stop != NULL && !strcmp (at, "--")) {
-    *yy->var_stop = 1;
-    *arg_pos += (*result = 1);
-    return NULL;
-  }
-
-  /* parse short options */
-
-  /* parse long options */
-
-  ++*arg_pos;
-  *result = 1;
 
   return NULL;
 }

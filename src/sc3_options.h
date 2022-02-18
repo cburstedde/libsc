@@ -223,6 +223,7 @@ sc3_error_t        *sc3_options_destroy (sc3_options_t ** yyp);
  * \param [in] argc         Number of entries in the \a argv array.
  * \param [in] argv         Array of strings of length \a argc.
  *                          We do not modify this array at all.
+ *                          Neither do we expect it to stay around.
  * \param [in,out] arg_pos  On input, valid index in [0, \a argc).
  *                          On output, index advanced to the next
  *                          unparsed position.  This may be the same

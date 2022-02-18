@@ -29,6 +29,8 @@ typedef struct options_global
   int                 stop;
   int                 i1;
   int                 i2;
+  const char         *s1;
+  const char         *s2;
 }
 options_global_t;
 
@@ -45,13 +47,19 @@ parse_options (options_global_t * g, int argc, char **argv)
   SC3E (sc3_options_add_int (opt, 'i', "--i-one", "First integer",
                              &g->i1, 6));
   SC3E (sc3_options_add_int (opt, 'j', NULL, "Second integer", &g->i2, 7));
+  SC3E (sc3_options_add_string (opt, 's', "string1", "A string option",
+                                &g->s1, NULL));
+  SC3E (sc3_options_add_string (opt, 't', "string2", "Another string",
+                                &g->s2, "String 2 default value"));
   SC3E (sc3_options_setup (opt));
 
   /* parse command line options */
-  res = 0;
-  for (pos = 1; pos < argc; ++pos) {
+  for (res = 0, pos = 1; pos < argc;) {
     SC3E (sc3_options_parse (opt, argc, argv, &pos, &res));
     if (res <= 0 || g->stop) {
+
+      /* proceed to analyze next non-option argument */
+
       break;
     }
   }
