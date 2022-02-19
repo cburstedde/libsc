@@ -134,6 +134,31 @@ sc3_error_t        *sc3_options_new (sc3_allocator_t * alloc,
  */
 sc3_error_t        *sc3_options_set_stop (sc3_options_t * yy, int *var_stop);
 
+/** Add a flag option.
+ * It is initialized to 0 (false) and incremented on each occurrence.
+ * \param [in,out] yy   The object must not be setup.
+ * \param [in] opt_short    Short option character.
+ *                          May be Nul for no short option.
+ * \param [in] opt_long     Long option string, or NULL for none.
+ *                          Should not include leading '--' and
+ *                          must not contain white space.
+ *                          We make a shallow (pointer) copy.
+ *                          It is legal for both short and long option
+ *                          to be Nul/NULL.  We still assign the default.
+ * \param [in] opt_help     Help string to display, or NULL for none.
+ *                          We make a shallow (pointer) copy.
+ * \param [in] opt_variable Pointer to existing integer variable.
+ *                          The variable must stay in scope/memory
+ *                          while the options object is alive.
+ *                          Value is initialized to 0.
+ * \return                  NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_options_add_flag (sc3_options_t * yy,
+                                          char opt_short,
+                                          const char *opt_long,
+                                          const char *opt_help,
+                                          int *opt_variable);
+
 /** Add an integer argument to options object.
  * \param [in,out] yy   The object must not be setup.
  * \param [in] opt_short    Short option character.
