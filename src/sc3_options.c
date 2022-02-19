@@ -185,6 +185,7 @@ sc3_options_add_common (sc3_options_t * yy, sc3_option_type_t tt,
   SC3E_RETVAL (oo, NULL);
   SC3A_IS (sc3_options_is_new, yy);
   SC3A_CHECK (0 <= tt && tt < SC3_OPTION_TYPE_LAST);
+  SC3A_CHECK (opt_short != '-');
 
   /* array initializes to all zeros */
   SC3E (sc3_array_push (yy->opts, &o));
@@ -498,7 +499,8 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
         continue;
       }
 
-      /* no match found */
+      /* invalid long option */
+      *result = -1;
       return NULL;
     }
     else {
@@ -510,32 +512,35 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
         SC3A_CHECK (lz > 0);
         for (i = 0; i < len; ++i) {
           SC3E (sc3_array_index (yy->opts, i, &o));
-          if (at[0] == o->opt_short) {
-            --lz;
-            ++at;
-            if (!o->opt_has_arg) {
-              /* first possibility: short option has no argument */
-              SC3E (process_without_arg (o));
-              break;
-            }
-            if (lz == 0) {
-              /* second possibility: short option with argument following */
-              ++*argp;
-              SC3A_CHECK (*argp <= argc);
-              if (*argp == argc || (at = argv[*argp]) == NULL) {
-                /* argument expected but no valid arguments left */
-                *result = -1;
-                return NULL;
-              }
-            }
-            SC3E (process_arg (yy, o, at, &success));
-            if (!success) {
+          if (at[0] != o->opt_short) {
+            continue;
+          }
+          --lz;
+          ++at;
+
+          /* first possibility: short option has no argument */
+          if (!o->opt_has_arg) {
+            SC3E (process_without_arg (o));
+            break;
+          }
+
+          /* second possibility: short option with argument */
+          if (lz == 0) {
+            ++*argp;
+            SC3A_CHECK (*argp <= argc);
+            if (*argp == argc || (at = argv[*argp]) == NULL) {
+              /* argument expected but no valid arguments left */
               *result = -1;
               return NULL;
             }
-            lz = 0;
-            break;
           }
+          SC3E (process_arg (yy, o, at, &success));
+          if (!success) {
+            *result = -1;
+            return NULL;
+          }
+          lz = 0;
+          break;
         }
         if (i < len) {
           /* matched (another) short option */
@@ -549,7 +554,7 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
       }
       while (lz > 0);
     }
-    /* found a valid (set of) short options and proceed with next argument */
+    /* found a valid set of short options and proceed with next argument */
   }
   return NULL;
 }
