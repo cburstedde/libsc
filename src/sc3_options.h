@@ -120,10 +120,10 @@ int                 sc3_options_is_dummy (const sc3_options_t * yy,
 sc3_error_t        *sc3_options_new (sc3_allocator_t * alloc,
                                      sc3_options_t ** yyp);
 
-/** Enable or disable recognition of '--' argument to stop processing.
+/** Provide a variable to set on the '--' stop argument.
  * \param [in,out] yy       The object must not be setup.
  * \param [in] var_stop     Pointer to existing integer variable or NULL.
- *                          When NULL, the stop feature is disabled.
+ *                          When NULL, we still stop but do not assign.
  *                          Otherwise, its value is initialized to 0 and
  *                          set to 1 on parsing when '--' is encountered.
  *                          We leave it to the user to stop processing
@@ -249,14 +249,17 @@ sc3_error_t        *sc3_options_destroy (sc3_options_t ** yyp);
  * \param [in] argv         Array of strings of length \a argc.
  *                          We do not modify this array at all.
  *                          Neither do we expect it to stay around.
- * \param [in,out] arg_pos  On input, valid index in [0, \a argc).
+ * \param [in,out] argp     On input, valid index in [0, \a argc).
  *                          On output, index advanced to the next
  *                          unparsed position.  This may be the same
  *                          as its input value if no option has matched.
  *                          This may also be equal to \a argc, indicating
  *                          that no arguments are left to process.
+ *                          On an invalid argument has its position.
  * \param [out] result      This is -1 for an invalid argument and otherwise
- *                          the number of matches identified.
+ *                          the number of matches identified.  Each short
+ *                          option counts as an individual match,
+ *                          even if grouped as in "-abc."
  * \return              NULL on valid parameters and consistent operation,
  *                      options matched/invalid or not.  Return error object
  *                      when this function is called with invalid parameters.
