@@ -33,7 +33,7 @@
 
 typedef enum sc3_option_type
 {
-  SC3_OPTION_FLAG,
+  SC3_OPTION_SWITCH,
   SC3_OPTION_INT,
   SC3_OPTION_STRING,
   SC3_OPTION_TYPE_LAST
@@ -41,8 +41,8 @@ typedef enum sc3_option_type
 sc3_option_type_t;
 
 #if 0
-static const char *opt_disp[SC3_OPTION_TYPE_LAST] =
-{ "FLAG", "INT", "STRING" };
+static const char  *opt_disp[SC3_OPTION_TYPE_LAST] =
+  { "SWITCH", "INT", "STRING" };
 #endif
 
 typedef struct sc3_option
@@ -101,7 +101,7 @@ sc3_options_is_valid (const sc3_options_t * yy, char *reason)
     SC3E_TEST (0 <= o->opt_type && o->opt_type < SC3_OPTION_TYPE_LAST,
                reason);
     switch (o->opt_type) {
-    case SC3_OPTION_FLAG:
+    case SC3_OPTION_SWITCH:
       SC3E_TEST (o->v.var_int != NULL, reason);
       SC3E_TEST (o->opt_string_value == NULL, reason);
       break;
@@ -210,14 +210,14 @@ sc3_options_add_common (sc3_options_t * yy, sc3_option_type_t tt,
 }
 
 sc3_error_t        *
-sc3_options_add_flag (sc3_options_t * yy,
-                      char opt_short, const char *opt_long,
-                      const char *opt_help, int *opt_variable)
+sc3_options_add_switch (sc3_options_t * yy,
+                        char opt_short, const char *opt_long,
+                        const char *opt_help, int *opt_variable)
 {
   sc3_option_t       *o;
 
   SC3A_CHECK (opt_variable != NULL);
-  SC3E (sc3_options_add_common (yy, SC3_OPTION_FLAG,
+  SC3E (sc3_options_add_common (yy, SC3_OPTION_SWITCH,
                                 opt_short, opt_long, opt_help, &o));
 
   *(o->v.var_int = opt_variable) = 0;
@@ -335,7 +335,7 @@ process_without_arg (sc3_option_t * o)
   SC3A_CHECK (o != NULL && !o->opt_has_arg);
 
   switch (o->opt_type) {
-  case SC3_OPTION_FLAG:
+  case SC3_OPTION_SWITCH:
     ++*o->v.var_int;
     break;
   default:
@@ -565,16 +565,16 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
 }
 
 static sc3_error_t *
-print_value (char *buf, int len, sc3_option_t *o)
+print_value (char *buf, int len, sc3_option_t * o)
 {
-  const char       *s;
+  const char         *s;
 
   SC3A_CHECK (buf != NULL);
   SC3A_CHECK (o != NULL);
 
   /* process the argument */
   switch (o->opt_type) {
-  case SC3_OPTION_FLAG:
+  case SC3_OPTION_SWITCH:
   case SC3_OPTION_INT:
     sc3_snprintf (buf, len, "%d", *o->v.var_int);
     break;

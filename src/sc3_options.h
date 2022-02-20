@@ -134,8 +134,8 @@ sc3_error_t        *sc3_options_new (sc3_allocator_t * alloc,
  */
 sc3_error_t        *sc3_options_set_stop (sc3_options_t * yy, int *var_stop);
 
-/** Add a flag option.
- * It is initialized to 0 (false) and incremented on each occurrence.
+/** Add a switch option.
+ * It is initialized to 0 and incremented on each occurrence.
  * \param [in,out] yy   The object must not be setup.
  * \param [in] opt_short    Short option character.
  *                          May be Nul for no short option.
@@ -153,11 +153,11 @@ sc3_error_t        *sc3_options_set_stop (sc3_options_t * yy, int *var_stop);
  *                          Value is initialized to 0.
  * \return                  NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_options_add_flag (sc3_options_t * yy,
-                                          char opt_short,
-                                          const char *opt_long,
-                                          const char *opt_help,
-                                          int *opt_variable);
+sc3_error_t        *sc3_options_add_switch (sc3_options_t * yy,
+                                            char opt_short,
+                                            const char *opt_long,
+                                            const char *opt_help,
+                                            int *opt_variable);
 
 /** Add an integer argument to options object.
  * \param [in,out] yy   The object must not be setup.

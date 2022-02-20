@@ -27,6 +27,8 @@ typedef struct options_global
 {
   sc3_allocator_t    *alloc;
   int                 stop;
+  int                 help;
+  int                 f1;
   int                 i1;
   int                 i2;
   const char         *s1;
@@ -44,26 +46,38 @@ parse_options (options_global_t * g, int argc, char **argv)
   /* construct options object */
   SC3E (sc3_options_new (g->alloc, &opt));
   SC3E (sc3_options_set_stop (opt, &g->stop));
-  SC3E (sc3_options_add_int (opt, 'i', "--i-one", "First integer",
+  SC3E (sc3_options_add_switch (opt, '?', "help", "Please help",
+                                &g->help));
+  SC3E (sc3_options_add_switch (opt, 'f', "flag", "Some flag",
+                                &g->f1));
+  SC3E (sc3_options_add_int (opt, 'i', "i-one", "First integer",
                              &g->i1, 6));
   SC3E (sc3_options_add_int (opt, 'j', NULL, "Second integer", &g->i2, 7));
-  SC3E (sc3_options_add_string (opt, 's', "string1", "A string option",
+  SC3E (sc3_options_add_string (opt, 's', "string", "A string option",
                                 &g->s1, NULL));
-  SC3E (sc3_options_add_string (opt, 't', "string2", "Another string",
+  SC3E (sc3_options_add_string (opt, '\0', "string2", "Another string",
                                 &g->s2, "String 2 default value"));
   SC3E (sc3_options_setup (opt));
 
   /* parse command line options */
-  for (res = 0, pos = 1; pos < argc;) {
-    SC3E (sc3_options_parse (opt, argc, argv, &pos, &res));
-    if (res <= 0 || g->stop) {
-
-      /* proceed to analyze next non-option argument */
-
-      break;
+  res = 0;
+  for (pos = 1; pos < argc; ) {
+    if (res >= 0 && !g->stop) {
+      SC3E (sc3_options_parse (opt, argc, argv, &pos, &res));
+      if (res < 0) {
+        SC3_GLOBAL_ERRORF ("Option error at argument position %d", pos);
+      }
+      /* all matching options have been parsed */
+      g->stop = 1;
+    }
+    else {
+      SC3_GLOBAL_PRODUCTIONF ("Argument at position %d: %s", pos, argv[pos]);
+      ++pos;
     }
   }
   SC3_GLOBAL_PRODUCTIONF ("Parsed with last result %d", res);
+
+  SC3E (sc3_options_log_summary (opt, NULL, SC3_LOG_ESSENTIAL));
 
   SC3E (sc3_options_destroy (&opt));
   return NULL;
