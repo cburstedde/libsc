@@ -40,6 +40,11 @@ typedef enum sc3_option_type
 }
 sc3_option_type_t;
 
+#if 0
+static const char *opt_disp[SC3_OPTION_TYPE_LAST] =
+{ "FLAG", "INT", "STRING" };
+#endif
+
 typedef struct sc3_option
 {
   sc3_option_type_t   opt_type;
@@ -400,7 +405,7 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
 {
   int                 len, i;
   int                 success;
-  size_t              lz;
+  size_t              lz, oll;
   const char         *at;
   sc3_option_t       *o;
 
@@ -445,21 +450,21 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
       /* parse long option */
       for (i = 0; i < len; ++i) {
         SC3E (sc3_array_index (yy->opts, i, &o));
-        if (o->opt_long == NULL || o->opt_long_len == 0) {
+        oll = o->opt_long_len;
+        if (o->opt_long == NULL || oll == 0) {
           continue;
         }
-        if (strncmp (at, o->opt_long, o->opt_long_len)) {
+        if (strncmp (at, o->opt_long, oll)) {
           continue;
         }
-        SC3A_CHECK (lz >= o->opt_long_len);
-        lz -= o->opt_long_len;
-        at += o->opt_long_len;
+        SC3A_CHECK (lz >= oll);
 
-        /* long option name has matched.  Spurious rest? */
-        if (lz > 0 && (!o->opt_has_arg || at[0] != '=')) {
-          *result = -1;
-          return NULL;
+        /* long option name too short.  Maybe another name matches */
+        if (lz > oll && (!o->opt_has_arg || at[oll] != '=')) {
+          continue;
         }
+        lz -= oll;
+        at += oll;
 
         /* long option is either invalid or successfully matched */
         if (!o->opt_has_arg) {
@@ -555,6 +560,79 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
       while (lz > 0);
     }
     /* found a valid set of short options and proceed with next argument */
+  }
+  return NULL;
+}
+
+static sc3_error_t *
+print_value (char *buf, int len, sc3_option_t *o)
+{
+  const char       *s;
+
+  SC3A_CHECK (buf != NULL);
+  SC3A_CHECK (o != NULL);
+
+  /* process the argument */
+  switch (o->opt_type) {
+  case SC3_OPTION_FLAG:
+  case SC3_OPTION_INT:
+    sc3_snprintf (buf, len, "%d", *o->v.var_int);
+    break;
+  case SC3_OPTION_STRING:
+    s = *o->v.var_string;
+    sc3_snprintf (buf, len, "%s", s == NULL ? "<unspecified>" : s);
+    break;
+  default:
+    SC3E_UNREACH ("Invalid option type");
+  }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_options_log_summary (sc3_options_t * yy,
+                         sc3_log_t * logger, sc3_log_level_t lev)
+{
+  const int           long_width = 16;
+  int                 len, i;
+  char                lshort[3], llong[80], lvalue[160];
+  sc3_option_t       *o;
+
+  SC3A_IS (sc3_options_is_setup, yy);
+  if (logger == NULL) {
+    logger = sc3_log_new_static ();
+  }
+  SC3A_IS (sc3_log_is_setup, logger);
+  SC3A_CHECK (0 <= lev && lev < SC3_LOG_LEVEL_LAST);
+
+  /* access all options in this container */
+  SC3E (sc3_array_get_elem_count (yy->opts, &len));
+  for (i = 0; i < len; ++i) {
+    SC3E (sc3_array_index (yy->opts, i, &o));
+    if (o->opt_short == '\0' && o->opt_long_len == 0) {
+      continue;
+    }
+
+    /* prepare short option */
+    if (o->opt_short == '\0') {
+      sc3_snprintf (lshort, 3, "%3s", "");
+    }
+    else {
+      sc3_snprintf (lshort, 3, "-%c", o->opt_short);
+    }
+
+    /* prepare long option */
+    if (o->opt_long_len == 0) {
+      sc3_snprintf (llong, 80, "%*s", long_width + 2, "");
+    }
+    else {
+      sc3_snprintf (llong, 80, "--%-*s", long_width, o->opt_long);
+    }
+
+    /* prepare type display */
+    print_value (lvalue, 160, o);
+    sc3_logf (logger, SC3_LOG_GLOBAL, lev, 0, "%s %s %s",
+              lshort, llong, lvalue);
+
   }
   return NULL;
 }

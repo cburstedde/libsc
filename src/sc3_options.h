@@ -47,7 +47,7 @@
 #ifndef SC3_OPTIONS_H
 #define SC3_OPTIONS_H
 
-#include <sc3_alloc.h>
+#include <sc3_log.h>
 
 #ifdef __cplusplus
 extern              "C"
@@ -267,6 +267,17 @@ sc3_error_t        *sc3_options_destroy (sc3_options_t ** yyp);
 sc3_error_t        *sc3_options_parse (sc3_options_t * yy,
                                        int argc, char **argv,
                                        int *argp, int *result);
+
+/** Print a summary of all options with their names and values.
+ * \param [in] yy           Options object must be setup.
+ * \param [in] logger       Logger object must be setup, or NULL
+ *                          to use \ref sc3_log_new_static ().
+ * \param [in] lev          Log priority to use.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_options_log_summary (sc3_options_t * yy,
+                                             sc3_log_t * logger,
+                                             sc3_log_level_t lev);
 
 #if 0
 
