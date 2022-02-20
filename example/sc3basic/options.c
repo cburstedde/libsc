@@ -62,31 +62,24 @@ parse_options (options_global_t * g, int argc, char **argv)
                                 &g->s2, "String 2 default value"));
   SC3E (sc3_options_setup (opt));
 
-  /* parse command line options */
-  res = 0;
-  for (pos = 1; pos < argc; ) {
+  /* in this example we allow arguments and options to mix */
+  for (res = 0, pos = 1; pos < argc; ) {
     SC3E (sc3_options_parse (opt, argc, argv, &pos, &res));
-    if (res < 0 || g->stop) {
-      break;
+    if (res < 0) {
+      SC3_GLOBAL_ERRORF ("Option error at position %d", pos);
+      ++pos;
     }
-    if (res == 0) {
-      /* in this example we allow arguments and options to mix */
+    else if (pos < argc) {
       SC3_GLOBAL_PRODUCTIONF ("Argument at position %d: %s", pos, argv[pos]);
       ++pos;
     }
   }
 
-  /* display summary and/or help */
-  if (res < 0) {
-    SC3_GLOBAL_ERRORF ("Option error at position %d", pos);
-  }
+  /* display options summary and/or help */
   if (res < 0 || g->help) {
     SC3E (sc3_options_log_help (opt, NULL, SC3_LOG_ESSENTIAL));
   }
   else {
-    for (; pos < argc; ++pos) {
-      SC3_GLOBAL_PRODUCTIONF ("Argument at position %d: %s", pos, argv[pos]);
-    }
     SC3E (sc3_options_log_summary (opt, NULL, SC3_LOG_ESSENTIAL));
   }
 

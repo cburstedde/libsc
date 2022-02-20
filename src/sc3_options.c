@@ -467,9 +467,13 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
       /* impossible parameter string is ignored */
       continue;
     }
+    if (yy->var_stop != NULL && *yy->var_stop) {
+      /* we're not looking for options currently */
+      return NULL;
+    }
     lz = strlen (at);
     if (lz < 2 || at[0] != '-') {
-      /* this is no kind of option, we have no match and return */
+      /* this is no kind of option, we have no match */
       return NULL;
     }
 
@@ -522,9 +526,8 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
         else {
           /* third possibility: long option has argument in next argument */
           SC3A_CHECK (lz == 0);
-          ++*argp;
-          SC3A_CHECK (*argp <= argc);
-          if (*argp == argc || (at = argv[*argp]) == NULL) {
+          SC3A_CHECK (*argp < argc);
+          if (*argp + 1 == argc || (at = argv[++*argp]) == NULL) {
             /* argument expected but no valid arguments left */
             *result = -1;
             return NULL;

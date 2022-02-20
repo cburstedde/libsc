@@ -127,14 +127,19 @@ sc3_error_t        *sc3_options_new (sc3_allocator_t * alloc,
  */
 sc3_error_t        *sc3_options_set_spacing (sc3_options_t * yy, int spacing);
 
-/** Provide a variable to set on the '--' stop argument.
- * \param [in,out] yy       The object must not be setup.
+/** Activate the '--' stop argument and provide a variable to set.
+ * \param [in,out] yy       The options object must not be setup.
  * \param [in] var_stop     Pointer to existing integer variable or NULL.
- *                          When NULL, we still stop but do not assign.
- *                          Otherwise, its value is initialized to 0 and
- *                          set to 1 on parsing when '--' is encountered.
- *                          We leave it to the user to stop processing
- *                          based on the value assigned to this variable.
+ *                          When NULL, '--' is considered an argument.
+ *                          Otherwise, variable value is initialized to
+ *                          0 and set to 1 when '--' is encountered.
+ *                          Subsequent '--' arguments will be treated as
+ *                          arguments in any case.  We leave it to the user
+ *                          to stop/alter processing based on the value.
+ *                          When multiple options objects process the
+ *                          same command line, they may use the same
+ *                          stop variable.  For a new command line,
+ *                          user should re-initialize it to zero.
  *                          The variable must stay in scope/memory
  *                          while the options object is alive.
  * \return                  NULL on success, error object otherwise.
@@ -272,6 +277,7 @@ sc3_error_t        *sc3_options_destroy (sc3_options_t ** yyp);
 /** Parse the next matching entries of a C command-line style variable.
  * The function stops at the first argument it cannot match and returns.
  * Set result variable to differentiate non-matches from invalid arguments.
+ * The idea is to call this function repeatedly on the same command line.
  * \param [in] yy           Options object must be setup.
  * \param [in] argc         Number of entries in the \a argv array.
  * \param [in] argv         Array of strings of length \a argc.
@@ -283,7 +289,7 @@ sc3_error_t        *sc3_options_destroy (sc3_options_t ** yyp);
  *                          as its input value if no option has matched.
  *                          This may also be equal to \a argc, indicating
  *                          that no arguments are left to process.
- *                          On an invalid argument has its position.
+ *                          On an invalid argument holds that position.
  * \param [out] result      This is -1 for an invalid argument and otherwise
  *                          the number of matches identified.  Each short
  *                          option counts as an individual match,
