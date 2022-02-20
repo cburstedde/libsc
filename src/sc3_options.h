@@ -147,8 +147,7 @@ sc3_error_t        *sc3_options_set_stop (sc3_options_t * yy, int *var_stop);
  * \param [in] opt_short    Short option character.
  *                          May be Nul for no short option.
  * \param [in] opt_long     Long option string, or NULL for none.
- *                          Should not include leading '--' and
- *                          must not contain white space.
+ *                          Must not include leading '--' or spaces.
  *                          We make a shallow (pointer) copy.
  *                          It is legal for both short and long option
  *                          to be Nul/NULL.  We still assign the default.
@@ -171,8 +170,7 @@ sc3_error_t        *sc3_options_add_switch (sc3_options_t * yy,
  * \param [in] opt_short    Short option character.
  *                          May be Nul for no short option.
  * \param [in] opt_long     Long option string, or NULL for none.
- *                          Should not include leading '--' and
- *                          must not contain white space.
+ *                          Must not include leading '--' or spaces.
  *                          We make a shallow (pointer) copy.
  *                          It is legal for both short and long option
  *                          to be Nul/NULL.  We still assign \a opt_value.
@@ -190,13 +188,36 @@ sc3_error_t        *sc3_options_add_int (sc3_options_t * yy,
                                          const char *opt_help,
                                          int *opt_variable, int opt_value);
 
+/** Add a real number argument to options object.
+ * \param [in,out] yy   The object must not be setup.
+ * \param [in] opt_short    Short option character.
+ *                          May be Nul for no short option.
+ * \param [in] opt_long     Long option string, or NULL for none.
+ *                          Must not include leading '--' or spaces.
+ *                          We make a shallow (pointer) copy.
+ *                          It is legal for both short and long option
+ *                          to be Nul/NULL.  We still assign \a opt_value.
+ * \param [in] opt_help     Help string to display, or NULL for none.
+ *                          We make a shallow (pointer) copy.
+ * \param [in] opt_variable Pointer to existing double variable.
+ *                          The variable must stay in scope/memory
+ *                          while the options object is alive.
+ * \param [in] opt_value    Assigned to \a opt_variable in this function.
+ * \return                  NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_options_add_double (sc3_options_t * yy,
+                                            char opt_short,
+                                            const char *opt_long,
+                                            const char *opt_help,
+                                            double *opt_variable,
+                                            double opt_value);
+
 /** Add a string argument to options object.
  * \param [in,out] yy   The object must not be setup.
  * \param [in] opt_short    Short option character.
  *                          May be Nul for no short option.
  * \param [in] opt_long     Long option string, or NULL for none.
- *                          Should not include leading '--' or
- *                          white space (the latter will fail to match).
+ *                          Must not include leading '--' or spaces.
  *                          We make a shallow (pointer) copy.
  *                          It is legal for both short and long option
  *                          to be Nul/NULL.  We still assign \a opt_value.

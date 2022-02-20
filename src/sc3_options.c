@@ -35,13 +35,14 @@ typedef enum sc3_option_type
 {
   SC3_OPTION_SWITCH,
   SC3_OPTION_INT,
+  SC3_OPTION_DOUBLE,
   SC3_OPTION_STRING,
   SC3_OPTION_TYPE_LAST
 }
 sc3_option_type_t;
 
 static const char  *opt_disp[SC3_OPTION_TYPE_LAST] =
-  { "SWITCH", "INT", "STRING" };
+  { "SWITCH", "INT", "DOUBLE", "STRING" };
 
 typedef struct sc3_option
 {
@@ -56,6 +57,7 @@ typedef struct sc3_option
   {
     /* address of current option value in caller memory */
     int                *var_int;
+    double             *var_double;
     const char        **var_string;
   } v;
 }
@@ -106,6 +108,10 @@ sc3_options_is_valid (const sc3_options_t * yy, char *reason)
       break;
     case SC3_OPTION_INT:
       SC3E_TEST (o->v.var_int != NULL, reason);
+      SC3E_TEST (o->opt_string_value == NULL, reason);
+      break;
+    case SC3_OPTION_DOUBLE:
+      SC3E_TEST (o->v.var_double != NULL, reason);
       SC3E_TEST (o->opt_string_value == NULL, reason);
       break;
     case SC3_OPTION_STRING:
@@ -200,6 +206,7 @@ sc3_options_add_common (sc3_options_t * yy, sc3_option_type_t tt,
   SC3A_IS (sc3_options_is_new, yy);
   SC3A_CHECK (0 <= tt && tt < SC3_OPTION_TYPE_LAST);
   SC3A_CHECK (opt_short != '-');
+  SC3A_CHECK (opt_long == NULL || opt_long[0] != '-');
 
   /* array initializes to all zeros */
   SC3E (sc3_array_push (yy->opts, &o));
@@ -246,6 +253,24 @@ sc3_options_add_int (sc3_options_t * yy,
 
   /* assign default value */
   *(o->v.var_int = opt_variable) = opt_value;
+  o->opt_has_arg = 1;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_options_add_double (sc3_options_t * yy,
+                        char opt_short, const char *opt_long,
+                        const char *opt_help,
+                        double *opt_variable, double opt_value)
+{
+  sc3_option_t       *o;
+
+  SC3A_CHECK (opt_variable != NULL);
+  SC3E (sc3_options_add_common (yy, SC3_OPTION_DOUBLE,
+                                opt_short, opt_long, opt_help, &o));
+
+  /* assign default value */
+  *(o->v.var_double = opt_variable) = opt_value;
   o->opt_has_arg = 1;
   return NULL;
 }
@@ -358,6 +383,7 @@ process_with_arg (sc3_options_t * yy,
                   sc3_option_t * o, const char *at, int *success)
 {
   long                lo;
+  double              dr;
   char               *endptr;
 
   SC3A_CHECK (o != NULL && o->opt_has_arg && at != NULL);
@@ -374,6 +400,13 @@ process_with_arg (sc3_options_t * yy,
       }
 #endif
       *o->v.var_int = (int) lo;
+      *success = 1;
+    }
+    break;
+  case SC3_OPTION_DOUBLE:
+    dr = strtod (at, &endptr);
+    if (at[0] != '\0' && endptr[0] == '\0') {
+      *o->v.var_double = dr;
       *success = 1;
     }
     break;
@@ -585,6 +618,9 @@ print_value (char *buf, int len, sc3_option_t * o)
   case SC3_OPTION_SWITCH:
   case SC3_OPTION_INT:
     sc3_snprintf (buf, len, "%d", *o->v.var_int);
+    break;
+  case SC3_OPTION_DOUBLE:
+    sc3_snprintf (buf, len, "%g", *o->v.var_double);
     break;
   case SC3_OPTION_STRING:
     s = *o->v.var_string;

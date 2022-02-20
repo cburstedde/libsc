@@ -31,6 +31,7 @@ typedef struct options_global
   int                 f1;
   int                 i1;
   int                 i2;
+  double              dd;
   const char         *s1;
   const char         *s2;
 }
@@ -54,6 +55,7 @@ parse_options (options_global_t * g, int argc, char **argv)
   SC3E (sc3_options_add_int (opt, 'i', "i-one", "First integer",
                              &g->i1, 6));
   SC3E (sc3_options_add_int (opt, 'j', NULL, "Second integer", &g->i2, 7));
+  SC3E (sc3_options_add_double (opt, 'd', "number", "Real value", &g->dd, 9.18));
   SC3E (sc3_options_add_string (opt, 's', "string", "A string option",
                                 &g->s1, NULL));
   SC3E (sc3_options_add_string (opt, '\0', "string2", NULL,
