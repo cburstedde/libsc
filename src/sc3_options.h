@@ -120,6 +120,13 @@ int                 sc3_options_is_dummy (const sc3_options_t * yy,
 sc3_error_t        *sc3_options_new (sc3_allocator_t * alloc,
                                      sc3_options_t ** yyp);
 
+/** Set the width in spaces for options value or type.  Default 16.
+ * \param [in,out] yy       The object must not be setup.
+ * \param [in] spacing      Non-negative integer value.  Default is 16.
+ * \return                  NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_options_set_spacing (sc3_options_t * yy, int spacing);
+
 /** Provide a variable to set on the '--' stop argument.
  * \param [in,out] yy       The object must not be setup.
  * \param [in] var_stop     Pointer to existing integer variable or NULL.
@@ -278,6 +285,17 @@ sc3_error_t        *sc3_options_parse (sc3_options_t * yy,
 sc3_error_t        *sc3_options_log_summary (sc3_options_t * yy,
                                              sc3_log_t * logger,
                                              sc3_log_level_t lev);
+
+/** Print all options with their help messages.
+ * \param [in] yy           Options object must be setup.
+ * \param [in] logger       Logger object must be setup, or NULL
+ *                          to use \ref sc3_log_new_static ().
+ * \param [in] lev          Log priority to use.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_options_log_help (sc3_options_t * yy,
+                                          sc3_log_t * logger,
+                                          sc3_log_level_t lev);
 
 #if 0
 

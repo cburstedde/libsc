@@ -40,10 +40,8 @@ typedef enum sc3_option_type
 }
 sc3_option_type_t;
 
-#if 0
 static const char  *opt_disp[SC3_OPTION_TYPE_LAST] =
   { "SWITCH", "INT", "STRING" };
-#endif
 
 typedef struct sc3_option
 {
@@ -71,6 +69,7 @@ struct sc3_options
   int                 setup;
 
   /* internal configuration */
+  int                 spacing;          /**< Space for value and type. */
   int                 allow_pack;       /**< Accept short options '-abc'. */
   int                *var_stop;         /**< Output variable for '--'. */
   sc3_array_t        *opts;
@@ -156,6 +155,7 @@ sc3_options_new (sc3_allocator_t * alloc, sc3_options_t ** yyp)
   SC3E (sc3_allocator_calloc (alloc, 1, sizeof (sc3_options_t), &yy));
   SC3E (sc3_refcount_init (&yy->rc));
   yy->alloc = alloc;
+  yy->spacing = 16;
 
   /* internal array of options */
   SC3E (sc3_array_new (alloc, &yy->opts));
@@ -166,6 +166,15 @@ sc3_options_new (sc3_allocator_t * alloc, sc3_options_t ** yyp)
   /* done with allocation */
   SC3A_IS (sc3_options_is_new, yy);
   *yyp = yy;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_options_set_spacing (sc3_options_t * yy, int spacing)
+{
+  SC3A_IS (sc3_options_is_new, yy);
+  SC3A_CHECK (spacing >= 0);
+  yy->spacing = spacing;
   return NULL;
 }
 
@@ -450,8 +459,7 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
       /* parse long option */
       for (i = 0; i < len; ++i) {
         SC3E (sc3_array_index (yy->opts, i, &o));
-        oll = o->opt_long_len;
-        if (o->opt_long == NULL || oll == 0) {
+        if ((oll = o->opt_long_len) == 0) {
           continue;
         }
         if (strncmp (at, o->opt_long, oll)) {
@@ -580,7 +588,7 @@ print_value (char *buf, int len, sc3_option_t * o)
     break;
   case SC3_OPTION_STRING:
     s = *o->v.var_string;
-    sc3_snprintf (buf, len, "%s", s == NULL ? "<unspecified>" : s);
+    sc3_snprintf (buf, len, "%s", s == NULL ? "" : s);
     break;
   default:
     SC3E_UNREACH ("Invalid option type");
@@ -588,11 +596,23 @@ print_value (char *buf, int len, sc3_option_t * o)
   return NULL;
 }
 
-sc3_error_t        *
-sc3_options_log_summary (sc3_options_t * yy,
-                         sc3_log_t * logger, sc3_log_level_t lev)
+static sc3_error_t *
+print_help (char *buf, int len, sc3_option_t * o)
 {
-  const int           long_width = 16;
+  SC3A_CHECK (buf != NULL);
+  SC3A_CHECK (o != NULL);
+  SC3A_CHECK (0 <= o->opt_type && o->opt_type < SC3_OPTION_TYPE_LAST);
+
+  sc3_snprintf (buf, len, "%-7s %s", opt_disp[o->opt_type],
+                o->opt_help == NULL ? "" : o->opt_help);
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_options_log_summary_help (sc3_options_t * yy,
+                              sc3_log_t * logger, sc3_log_level_t lev,
+                              int which)
+{
   int                 len, i;
   char                lshort[3], llong[80], lvalue[160];
   sc3_option_t       *o;
@@ -603,6 +623,7 @@ sc3_options_log_summary (sc3_options_t * yy,
   }
   SC3A_IS (sc3_log_is_setup, logger);
   SC3A_CHECK (0 <= lev && lev < SC3_LOG_LEVEL_LAST);
+  SC3A_CHECK (which == 0 || which == 1);
 
   /* access all options in this container */
   SC3E (sc3_array_get_elem_count (yy->opts, &len));
@@ -622,17 +643,37 @@ sc3_options_log_summary (sc3_options_t * yy,
 
     /* prepare long option */
     if (o->opt_long_len == 0) {
-      sc3_snprintf (llong, 80, "%*s", long_width + 2, "");
+      sc3_snprintf (llong, 80, "%*s", yy->spacing + 2, "");
     }
     else {
-      sc3_snprintf (llong, 80, "--%-*s", long_width, o->opt_long);
+      sc3_snprintf (llong, 80, "--%-*s", yy->spacing, o->opt_long);
     }
 
-    /* prepare type display */
-    print_value (lvalue, 160, o);
+    /* print the whole line */
+    if (!which) {
+      print_value (lvalue, 160, o);
+    }
+    else {
+      print_help (lvalue, 160, o);
+    }
     sc3_logf (logger, SC3_LOG_GLOBAL, lev, 0, "%s %s %s",
               lshort, llong, lvalue);
-
   }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_options_log_summary (sc3_options_t * yy,
+                         sc3_log_t * logger, sc3_log_level_t lev)
+{
+  SC3E (sc3_options_log_summary_help (yy, logger, lev, 0));
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_options_log_help (sc3_options_t * yy,
+                      sc3_log_t * logger, sc3_log_level_t lev)
+{
+  SC3E (sc3_options_log_summary_help (yy, logger, lev, 1));
   return NULL;
 }

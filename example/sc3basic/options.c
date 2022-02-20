@@ -45,6 +45,7 @@ parse_options (options_global_t * g, int argc, char **argv)
 
   /* construct options object */
   SC3E (sc3_options_new (g->alloc, &opt));
+  SC3E (sc3_options_set_spacing (opt, 20));
   SC3E (sc3_options_set_stop (opt, &g->stop));
   SC3E (sc3_options_add_switch (opt, '?', "help", "Please help",
                                 &g->help));
@@ -55,29 +56,37 @@ parse_options (options_global_t * g, int argc, char **argv)
   SC3E (sc3_options_add_int (opt, 'j', NULL, "Second integer", &g->i2, 7));
   SC3E (sc3_options_add_string (opt, 's', "string", "A string option",
                                 &g->s1, NULL));
-  SC3E (sc3_options_add_string (opt, '\0', "string2", "Another string",
+  SC3E (sc3_options_add_string (opt, '\0', "string2", NULL,
                                 &g->s2, "String 2 default value"));
   SC3E (sc3_options_setup (opt));
 
   /* parse command line options */
   res = 0;
   for (pos = 1; pos < argc; ) {
-    if (res >= 0 && !g->stop) {
-      SC3E (sc3_options_parse (opt, argc, argv, &pos, &res));
-      if (res < 0) {
-        SC3_GLOBAL_ERRORF ("Option error at argument position %d", pos);
-      }
-      /* all matching options have been parsed */
-      g->stop = 1;
+    SC3E (sc3_options_parse (opt, argc, argv, &pos, &res));
+    if (res < 0 || g->stop) {
+      break;
     }
-    else {
+    if (res == 0) {
+      /* in this example we allow arguments and options to mix */
       SC3_GLOBAL_PRODUCTIONF ("Argument at position %d: %s", pos, argv[pos]);
       ++pos;
     }
   }
-  SC3_GLOBAL_PRODUCTIONF ("Parsed with last result %d", res);
 
-  SC3E (sc3_options_log_summary (opt, NULL, SC3_LOG_ESSENTIAL));
+  /* display summary and/or help */
+  if (res < 0) {
+    SC3_GLOBAL_ERRORF ("Option error at position %d", pos);
+  }
+  if (res < 0 || g->help) {
+    SC3E (sc3_options_log_help (opt, NULL, SC3_LOG_ESSENTIAL));
+  }
+  else {
+    for (; pos < argc; ++pos) {
+      SC3_GLOBAL_PRODUCTIONF ("Argument at position %d: %s", pos, argv[pos]);
+    }
+    SC3E (sc3_options_log_summary (opt, NULL, SC3_LOG_ESSENTIAL));
+  }
 
   SC3E (sc3_options_destroy (&opt));
   return NULL;
