@@ -119,6 +119,11 @@ if(WIN32)
   set(WINSOCK_LIBRARIES wsock32 ws2_32 Iphlpapi)
 endif()
 
+check_source_compiles(C "#include<stdio.h> int main(int argc, char** argv){ printf("%d\n",_MSC_VER); }" msvc)
+if(msvc)
+  message(STATUS "Visual C++ compiler detected")
+endif()
+
 check_include_file(libgen.h SC_HAVE_LIBGEN_H)
 
 check_include_file(unistd.h SC_HAVE_UNISTD_H)
