@@ -92,9 +92,11 @@
 /** Activate C99 limit macros for older C++ compilers. */
 #define __STDC_LIMIT_MACROS
 #endif
+#if 0
 #ifndef __STDC_CONSTANT_MACROS
 /** Activate C99 constant macros for older C++ compilers. */
 #define __STDC_CONSTANT_MACROS
+#endif
 #endif
 
 /* include MPI before stdio.h */
