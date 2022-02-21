@@ -125,7 +125,7 @@ check_source_compiles(C "
                           int main(int argc, char** argv)
                           { 
                             #if defined(_MSC_VER) 
-                              printf("Visual Studio compiler detected"); 
+                              int ver = _MSC_VER;
                             #endif
                             return 0;
                           }
