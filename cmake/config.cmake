@@ -123,13 +123,11 @@ endif()
 check_source_compiles(C "
                           #include<stdio.h> 
                           int main(int argc, char** argv)
-                          { 
-                            #if defined(_MSC_VER) 
-                              int ver = _MSC_VER;
-                            #endif
+                          {  
+                            int ver = _MSC_VER;
                             return 0;
                           }
-                        " 
+                        "
                         msvc)
 if(msvc)
   message("Visual Studio compiler detected")
