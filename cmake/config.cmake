@@ -2,6 +2,7 @@ include(CheckIncludeFile)
 include(CheckSymbolExists)
 include(CheckTypeSize)
 include(CheckPrototypeDefinition)
+include(CheckSourceCompiles)
 
 # --- keep library finds in here so we don't forget to do them first
 
