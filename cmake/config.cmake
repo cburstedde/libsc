@@ -120,7 +120,17 @@ if(WIN32)
   set(WINSOCK_LIBRARIES wsock32 ws2_32 Iphlpapi)
 endif()
 
-check_source_compiles(C "#include<stdio.h> int main(int argc, char** argv){ #if defined(_MSC_VER) printf("Visual C++ compiler detected") #endif }" msvc)
+check_source_compiles(C "
+                          #include<stdio.h> 
+                          int main(int argc, char** argv)
+                          { 
+                            #if defined(_MSC_VER) 
+                              printf("Visual Studio compiler detected"); 
+                            #endif
+                            return 0;
+                          }
+                        " 
+                        msvc)
 if(msvc)
   message("Visual Studio compiler detected")
 endif()
