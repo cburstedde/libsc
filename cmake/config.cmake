@@ -121,17 +121,13 @@ if(WIN32)
 endif()
 
 check_source_compiles(C "
-                          #include<stdio.h> 
                           int main(int argc, char** argv)
                           {  
                             int ver = _MSC_VER;
                             return 0;
                           }
                         "
-                        msvc)
-if(msvc)
-  message("Visual Studio compiler detected")
-endif()
+                        SC_HAVE_MSC_VER)
 
 check_include_file(libgen.h SC_HAVE_LIBGEN_H)
 

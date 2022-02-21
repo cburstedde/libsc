@@ -113,12 +113,9 @@
 
 #include <ctype.h>
 #include <float.h>
-/*
-#if defined SC_HAVE_LIBGEN_H && !defined _MSC_VER
+#if defined(SC_HAVE_LIBGEN_H) && !(SC_HAVE_MSC_VER)
 #include <libgen.h>
 #endif
-*/
-#include <libgen.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stddef.h>
