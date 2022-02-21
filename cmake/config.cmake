@@ -122,7 +122,7 @@ endif()
 
 check_source_compiles(C "#include<stdio.h> int main(int argc, char** argv){ #if defined(_MSC_VER) printf("Visual C++ compiler detected" #endif) }" msvc)
 if(msvc)
-  message(STATUS "Visual C++ compiler detected")
+  message("Visual Studio compiler detected")
 endif()
 
 check_include_file(libgen.h SC_HAVE_LIBGEN_H)
