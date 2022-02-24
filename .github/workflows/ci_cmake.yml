@@ -85,10 +85,12 @@ jobs:
 
     strategy:
       matrix:
+        cc: [clang, gcc]
         shared: [true, false]
 
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
+      CC: ${{ matrix.cc }}
 
     steps:
     - uses: actions/checkout@v2
@@ -133,7 +135,7 @@ jobs:
   windows:
     runs-on: windows-latest
     name: CMake build on Windows
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     strategy:
       matrix:
