@@ -3,7 +3,6 @@ name: CI for CMake
 env:
   CMAKE_BUILD_TYPE: Release
   CTEST_PARALLEL_LEVEL: 3
-  CMAKE_GENERATOR: Ninja
 
 on:
   push:
@@ -43,14 +42,14 @@ jobs:
       run: |
         sudo apt-get update -yq
         sudo apt-get install -yq --no-install-recommends \
-            libopenmpi-dev openmpi-bin ninja-build \
+            libopenmpi-dev openmpi-bin \
             ${{ matrix.cc }}
 
     - name: CMake configure
       run: cmake -B build --preset default --install-prefix=${HOME} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
-      run: cmake --build build
+      run: cmake --build build --parallel
 
     - name: CMake install (for examples)
       run: cmake --install build
@@ -62,7 +61,7 @@ jobs:
       run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=${HOME} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build examples
-      run: cmake --build example/build
+      run: cmake --build example/build --parallel
 
     - name: CMake test examples
       run: ctest --test-dir example/build --output-on-failure
@@ -86,23 +85,25 @@ jobs:
 
     strategy:
       matrix:
+        cc: [clang, gcc]
         shared: [true, false]
 
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
+      CC: ${{ matrix.cc }}
 
     steps:
     - uses: actions/checkout@v2
       name: Checkout source code
 
     - name: Install system dependencies
-      run: brew install open-mpi ninja
+      run: brew install open-mpi
 
     - name: CMake configure
       run: cmake -B build -Dmpi=yes --install-prefix=${HOME} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
-      run: cmake --build build
+      run: cmake --build build --parallel
 
     - name: CMake install (for examples)
       run: cmake --install build
@@ -114,7 +115,7 @@ jobs:
       run: cmake -B example/build -S example -Dmpi=yes -DSC_ROOT=${HOME} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build examples
-      run: cmake --build example/build
+      run: cmake --build example/build --parallel
 
     - name: CMake test examples
       run: ctest --test-dir example/build --output-on-failure
@@ -134,26 +135,16 @@ jobs:
   windows:
     runs-on: windows-latest
     name: CMake build on Windows
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     strategy:
       matrix:
         shared: [true, false]
 
+    env:
+      CMAKE_GENERATOR: MinGW Makefiles
+
     steps:
-    - uses: msys2/setup-msys2@v2
-      with:
-        update: true
-        install: >-
-          git
-          mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-ninja
-          mingw-w64-x86_64-msmpi
-
-    - name: Put MSYS2_MinGW64 on PATH
-      # there is not yet an environment variable for this path from msys2/setup-msys2
-      run: echo "D:/a/_temp/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
     - uses: actions/checkout@v2
       name: Checkout source code
 
@@ -161,7 +152,7 @@ jobs:
       run: cmake -B build -Dmpi:BOOL=no -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
-      run: cmake --build build
+      run: cmake --build build --parallel
 
     - name: CMake install (for examples)
       run: cmake --install build
@@ -173,7 +164,7 @@ jobs:
       run: cmake -B example/build -S example -Dmpi:BOOL=no -DSC_ROOT=build/local -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build examples
-      run: cmake --build example/build
+      run: cmake --build example/build --parallel
 
     - name: CMake test examples
       run: ctest --test-dir example/build --output-on-failure
