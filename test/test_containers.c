@@ -67,8 +67,9 @@ test_allocations (void)
   size_t              isize;
   size_t              total, tmax;
   char               *pc, **backup;
+  char               *tbuf[3][4];
   sc3_mstamp_t       *mst;
-  sc3_allocator_t    *alloc;
+  sc3_allocator_t    *alloc, *allocs[3];
   sc3_array_t        *items;
 
   SC3E (sc3_allocator_get_sizes (sc3_allocator_new_static (),
@@ -79,6 +80,15 @@ test_allocations (void)
   SC3E (sc3_allocator_new (NULL, &alloc));
   SC3E (sc3_allocator_set_align (alloc, 32));
   SC3E (sc3_allocator_setup (alloc));
+
+  for (i = 0; i < 3; ++i) {
+    SC3E (sc3_allocator_new (alloc, &allocs[i]));
+    SC3E (sc3_allocator_set_align (allocs[i], i * 64));
+    SC3E (sc3_allocator_setup (allocs[i]));
+    for (j = 0; j < 4; ++j) {
+      SC3E (sc3_allocator_malloc (allocs[i], i * j, &tbuf[i][j]));
+    }
+  }
 
   SC3E (sc3_array_new (alloc, &items));
   SC3E (sc3_array_set_elem_size (items, sizeof (char *)));
@@ -138,6 +148,17 @@ test_allocations (void)
   }
 
   SC3E (sc3_array_destroy (&items));
+
+  for (i = 0; i < 3; ++i) {
+    for (j = 0; j < 4; ++j) {
+      SC3E (sc3_allocator_realloc
+            (allocs[i], &tbuf[i][j], (2 - i) * (3 - j)));
+    }
+    for (j = 0; j < 4; ++j) {
+      SC3E (sc3_allocator_free (allocs[i], &tbuf[i][3 - j]));
+    }
+    SC3E (sc3_allocator_destroy (&allocs[i]));
+  }
 
   SC3E (sc3_allocator_get_sizes (alloc, 1, &total, &tmax));
   SC3E_DEM_INVALID (total == 0, "allocator size not back to zero");
