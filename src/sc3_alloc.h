@@ -153,6 +153,7 @@ sc3_error_t        *sc3_allocator_new (sc3_allocator_t * oa,
 
 /** Set byte alignment followed by the allocator.
  * Default is 0, meaning we use the standard alignment of malloc (3).
+ * Keeping this value at 0 and disabling counting is the fastest mode.
  * \param [in,out] a    Valid allocator not setup.
  * \param [in] align    Power of two designating byte alignment of memory,
  *                      or zero for system default alignment.
@@ -166,7 +167,9 @@ sc3_error_t        *sc3_allocator_set_align (sc3_allocator_t * a,
  * otherwise exiting with a fatal error out of that \ref sc3_allocator_unref.
  * The count status can be queried by \ref sc3_allocator_is_free either way.
  * \param [in,out] a    Valid allocator not setup.
- * \param [in] counting Boolean to enable counting.  Default is true.
+ * \param [in] counting Boolean to enable counting allocations and leak
+ *                      checking.  Default is true if configured
+ *                      --enable-debug and false otherwise.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_allocator_set_counting (sc3_allocator_t * a,

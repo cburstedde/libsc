@@ -154,7 +154,9 @@ sc3_allocator_new (sc3_allocator_t * oa, sc3_allocator_t ** ap)
   SC3E (sc3_refcount_init (&a->rc));
   a->align = 0;
   a->alloced = 1;
+#ifdef SC_ENABLE_DEBUG
   a->counting = a->keepalive = 1;
+#endif
   a->oa = oa;
 
   /* add this new allocator to the children list of its parent */
