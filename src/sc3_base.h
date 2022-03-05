@@ -126,12 +126,6 @@
 #define SC3_BASE_H
 
 /* we set the GNU feature test macro before including anything */
-#ifndef _POSIX_SOURCE
-#define _POSIX_SOURCE           /**< Enable POSIX functionality. */
-#endif
-#ifndef _ISOC99_SOURCE
-#define _ISOC99_SOURCE          /**< Enable C99 functionality. */
-#endif
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE             /**< Enable GNU functionality. */
 #endif
