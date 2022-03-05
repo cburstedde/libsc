@@ -692,7 +692,6 @@ sc3_array_new_view (sc3_allocator_t * alloc, sc3_array_t ** view,
   SC3E_RETVAL (view, NULL);
 
   /* verify input parameters */
-  SC3A_IS (sc3_allocator_is_setup, alloc);
   SC3A_IS (sc3_array_is_unresizable, a);
   SC3A_CHECK (offset >= 0 && length >= 0);
   SC3A_CHECK (offset + length <= a->ecount);
@@ -720,7 +719,6 @@ sc3_array_new_data (sc3_allocator_t * alloc, sc3_array_t ** view,
   SC3E_RETVAL (view, NULL);
 
   /* verify input parameters */
-  SC3A_IS (sc3_allocator_is_setup, alloc);
   SC3A_CHECK (offset >= 0 && length >= 0);
   SC3A_CHECK (data != NULL || esize * length == 0);
 
