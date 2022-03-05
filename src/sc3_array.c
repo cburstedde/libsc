@@ -334,6 +334,16 @@ sc3_array_setup (sc3_array_t * a)
 }
 
 sc3_error_t        *
+sc3_array_new_size (sc3_allocator_t * alloc,
+                    sc3_array_t ** ap, size_t size)
+{
+  SC3E (sc3_array_new (alloc, ap));
+  SC3E (sc3_array_set_elem_size (*ap, size));
+  SC3E (sc3_array_setup (*ap));
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_array_ref (sc3_array_t * a)
 {
   SC3A_IS (sc3_array_is_unresizable, a);

@@ -274,6 +274,20 @@ sc3_error_t        *sc3_array_set_tighten (sc3_array_t * a, int tighten);
  */
 sc3_error_t        *sc3_array_setup (sc3_array_t * a);
 
+/** Create and setup an array given the element size.
+ * All other settings are left at their default.
+ * \param [in,out] alloc    An allocator that is setup, or NULL.
+ *                          If NULL, we use \ref sc3_allocator_new_static.
+ *                          The allocator is refd and remembered internally
+ *                          and will be unrefd on array destruction.
+ * \param [out] ap      Pointer must not be NULL.  New array on output.
+ * \param [in] size     Allocation size of one element in bytes.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_array_new_size (sc3_allocator_t * alloc,
+                                        sc3_array_t ** ap,
+                                        size_t size);
+
 /** Increase the reference count on an array by 1.
  * This is only allowed after the array has been setup.  The array must not
  * be resizable, by initialization or by calling \ref sc3_array_freeze.
