@@ -240,6 +240,14 @@ extern              "C"
     unless it is too large and we return -1. */
 #define SC3_SIZET_INT(s) ((s) <= INT_MAX ? (int) s : -1)
 
+/** Return the input string or NULL when empty.
+ * \param [in] str      Used as return value unless "",
+ *                      then NULL is returned.
+ * \return              NULL when \a str is NULL or "",
+ *                      \a str otherwise.
+ */
+const char         *sc3_strpass (const char *str);
+
 /** Provide a string copy function with maximum length.
  * It is legal to pass a NULL buffer or zero length.
  * \param [out] dest    Buffer of length at least \a size.

@@ -29,6 +29,12 @@
 
 #include <sc3_base.h>
 
+const char         *
+sc3_strpass (const char *str)
+{
+  return (str != NULL && str[0] == '\0') ? NULL : str;
+}
+
 void
 sc3_strcopy (char *dest, size_t size, const char *src)
 {
