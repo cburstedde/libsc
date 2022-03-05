@@ -243,6 +243,22 @@ sc3_error_t        *sc3_options_add_string (sc3_options_t * yy,
                                             const char **opt_variable,
                                             const char *opt_value);
 
+/** Add a set of sub-options to on options object.
+ * \param [in,out] yy       The object must not be setup.
+ * \param [in,out] sub      This options object must be setup.
+ *                          It is remembered internally and referenced.
+ *                          It is unreferenced when \a yy is destroyed.
+ *                          Options object may act as multiple sub options.
+ * \param [in] prefix       String is prefixed to the names of sub-options
+ *                          on parsing \a yy, without changing \a sub.
+ *                          As with option names shallow (pointer) copied.
+ *                          May be NULL or "" for no prefix.
+ * \return                  NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_options_add_sub (sc3_options_t * yy,
+                                         sc3_options_t * sub,
+                                         const char * prefix);
+
 /** Setup an object and change it into its usable phase.
  * \param [in,out] yy   This object must not yet be setup.  Setup on output.
  * \return              NULL on success, error object otherwise.

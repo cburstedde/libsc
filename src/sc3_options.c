@@ -63,6 +63,13 @@ typedef struct sc3_option
 }
 sc3_option_t;
 
+typedef struct sc3_options_subopt
+{
+  sc3_options_t      *sub;
+  const char         *prefix;
+}
+sc3_options_subopt_t;
+
 struct sc3_options
 {
   /* internal metadata */
@@ -75,6 +82,9 @@ struct sc3_options
   int                 allow_pack;       /**< Accept short options '-abc'. */
   int                *var_stop;         /**< Output variable for '--'. */
   sc3_array_t        *opts;
+
+  /* list of sub-options to this one */
+  sc3_array_t        *subs;             /**< FIFO-storage of sub-options. */
 };
 
 int
@@ -163,11 +173,9 @@ sc3_options_new (sc3_allocator_t * alloc, sc3_options_t ** yyp)
   yy->alloc = alloc;
   yy->spacing = 16;
 
-  /* internal array of options */
-  SC3E (sc3_array_new (alloc, &yy->opts));
-  SC3E (sc3_array_set_elem_size (yy->opts, sizeof (sc3_option_t)));
-  SC3E (sc3_array_set_initzero (yy->opts, 1));
-  SC3E (sc3_array_setup (yy->opts));
+  /* internal arrays of options and sub-options */
+  SC3E (sc3_array_new_size (alloc, &yy->opts, sizeof (sc3_option_t)));
+  SC3E (sc3_array_new_size (alloc, &yy->subs, sizeof (sc3_options_subopt_t)));
 
   /* done with allocation */
   SC3A_IS (sc3_options_is_new, yy);
@@ -208,17 +216,16 @@ sc3_options_add_common (sc3_options_t * yy, sc3_option_type_t tt,
   SC3A_CHECK (opt_short != '-');
   SC3A_CHECK (opt_long == NULL || opt_long[0] != '-');
 
-  /* array initializes to all zeros */
   SC3E (sc3_array_push (yy->opts, &o));
-  SC3A_CHECK (!o->opt_has_arg);
-  SC3A_CHECK (o->opt_string_value == NULL);
 
   /* set couple parameters of this option */
   o->opt_type = tt;
   o->opt_short = opt_short;
   o->opt_long = opt_long;
   o->opt_long_len = opt_long != NULL ? strlen (opt_long) : 0;
+  o->opt_has_arg = 0;
   o->opt_help = opt_help;
+  o->opt_string_value = NULL;
 
   /* return partially initialized option */
   *oo = o;
@@ -295,12 +302,32 @@ sc3_options_add_string (sc3_options_t * yy,
 }
 
 sc3_error_t        *
+sc3_options_add_sub (sc3_options_t * yy,
+                     sc3_options_t * sub, const char *prefix)
+{
+  sc3_options_subopt_t *so;
+
+  SC3A_IS (sc3_options_is_new, yy);
+  SC3A_IS (sc3_options_is_setup, sub);
+
+  /* append new sub options to doubly linked list */
+  SC3E (sc3_array_push (yy->subs, &so));
+  so->sub = sub;
+  so->prefix = sc3_strpass (prefix);
+
+  /* reference sub-options since we are storing them */
+  SC3E (sc3_options_ref (sub));
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_options_setup (sc3_options_t * yy)
 {
   SC3A_IS (sc3_options_is_new, yy);
 
   /* finalize internal state */
   SC3E (sc3_array_freeze (yy->opts));
+  SC3E (sc3_array_freeze (yy->subs));
 
   /* done with setup */
   yy->setup = 1;
@@ -329,11 +356,12 @@ sc3_options_unref (sc3_options_t ** yyp)
   if (waslast) {
     int                 i, len;
     sc3_option_t       *o;
+    sc3_options_subopt_t *so;
 
     *yyp = NULL;
     alloc = yy->alloc;
 
-    /* deallocate internal state */
+    /* deallocate internal state: free option entries */
     SC3E (sc3_array_get_elem_count (yy->opts, &len));
     for (i = 0; i < len; ++i) {
       SC3E (sc3_array_index (yy->opts, i, &o));
@@ -342,6 +370,14 @@ sc3_options_unref (sc3_options_t ** yyp)
       }
     }
     SC3E (sc3_array_destroy (&yy->opts));
+
+    /* deallocate internal state: free sub-options */
+    SC3E (sc3_array_get_elem_count (yy->subs, &len));
+    for (i = 0; i < len; ++i) {
+      SC3E (sc3_array_index (yy->subs, i, &so));
+      SC3E (sc3_options_unref (&so->sub));
+    }
+    SC3E (sc3_array_destroy (&yy->subs));
 
     /* deallocate array itself */
     SC3E (sc3_allocator_free (alloc, &yy));

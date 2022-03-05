@@ -31,6 +31,7 @@ typedef struct options_global
   int                 f1;
   int                 i1;
   int                 i2;
+  int                 subi;
   double              dd;
   const char         *s1;
   const char         *s2;
@@ -42,7 +43,15 @@ parse_options (options_global_t * g, int argc, char **argv)
 {
   int                 pos;
   int                 res;
-  sc3_options_t      *opt;
+  sc3_options_t      *opt, *sub;
+
+  /* construct sub-options object */
+  SC3E (sc3_options_new (g->alloc, &sub));
+  SC3E (sc3_options_set_spacing (sub, 24));
+  SC3E (sc3_options_set_stop (sub, &g->stop));
+  SC3E (sc3_options_add_int (sub, 'u', "subi", "Sub-options integer",
+                             &g->subi, 5));
+  SC3E (sc3_options_setup (sub));
 
   /* construct options object */
   SC3E (sc3_options_new (g->alloc, &opt));
@@ -60,6 +69,8 @@ parse_options (options_global_t * g, int argc, char **argv)
                                 &g->s1, NULL));
   SC3E (sc3_options_add_string (opt, '\0', "string2", NULL,
                                 &g->s2, "String 2 default value"));
+  SC3E (sc3_options_add_sub (opt, sub, "sub"));
+  SC3E (sc3_options_unref (&sub));
   SC3E (sc3_options_setup (opt));
 
   /* in this example we allow arguments and options to mix */
