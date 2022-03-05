@@ -56,8 +56,8 @@ sc3_mstamp_is_valid (const sc3_mstamp_t * mst, char *reason)
   SC3E_TEST (mst != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &mst->rc, reason);
   SC3E_IS (sc3_allocator_is_setup, mst->aator, reason);
-  SC3E_IS (sc3_array_is_valid, mst->remember, reason);
-  SC3E_IS (sc3_array_is_valid, mst->freed, reason);
+  SC3E_IS (sc3_array_is_setup, mst->remember, reason);
+  SC3E_IS (sc3_array_is_setup, mst->freed, reason);
   SC3E_TEST (mst->per_stamp >= 0, reason);
   SC3E_TEST (mst->cur_snext >= 0, reason);
 
@@ -83,8 +83,6 @@ int
 sc3_mstamp_is_setup (const sc3_mstamp_t * mst, char *reason)
 {
   SC3E_IS (sc3_mstamp_is_valid, mst, reason);
-  SC3E_IS (sc3_array_is_setup, mst->remember, reason);
-  SC3E_IS (sc3_array_is_setup, mst->freed, reason);
   SC3E_TEST (mst->setup, reason);
   SC3E_YES (reason);
 }
@@ -113,12 +111,8 @@ sc3_mstamp_new (sc3_allocator_t * aator, sc3_mstamp_t ** mstp)
   SC3A_CHECK (mst->ssize > oh);
   mst->ssize -= oh;
 
-  SC3E (sc3_array_new (aator, &mst->remember));
-  SC3E (sc3_array_set_elem_size (mst->remember, sizeof (void *)));
-  SC3E (sc3_array_set_resizable (mst->remember, 1));
-  SC3E (sc3_array_new (aator, &mst->freed));
-  SC3E (sc3_array_set_elem_size (mst->freed, sizeof (void *)));
-  SC3E (sc3_array_set_resizable (mst->freed, 1));
+  SC3E (sc3_array_new_size (aator, &mst->remember, sizeof (void *)));
+  SC3E (sc3_array_new_size (aator, &mst->freed, sizeof (void *)));
 
   SC3A_IS (sc3_mstamp_is_new, mst);
   *mstp = mst;
@@ -179,10 +173,6 @@ sc3_error_t        *
 sc3_mstamp_setup (sc3_mstamp_t * mst)
 {
   SC3A_IS (sc3_mstamp_is_new, mst);
-
-  /* begin using internal arrays */
-  SC3E (sc3_array_setup (mst->remember));
-  SC3E (sc3_array_setup (mst->freed));
 
   /* how many items per stamp we use */
   if (mst->esize > 0) {
