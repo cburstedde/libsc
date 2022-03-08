@@ -50,6 +50,9 @@
 /* Undefine if: replace array/dmatrix resize with malloc/copy/free */
 #cmakedefine SC_ENABLE_USE_REALLOC
 
+/* Development with V4L2 devices works */
+#cmakedefine SC_ENABLE_V4L2
+
 /* Define to 1 if you have the `aligned_alloc' function. */
 #cmakedefine SC_HAVE_ALIGNED_ALLOC
 
@@ -68,14 +71,23 @@
 /* Define to 1 if you have the <execinfo.h> header file. */
 #cmakedefine SC_HAVE_EXECINFO_H
 
+/* Define to 1 if you have the <fcntl.h> header file. */
+#cmakedefine SC_HAVE_FCNTL_H
+
 /* Define to 1 if you have the `fsync' function. */
 #cmakedefine SC_HAVE_FSYNC
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-// cmakedefine SC_HAVE_INTTYPES_H
+#cmakedefine SC_HAVE_INTTYPES_H
+
+/* Define to 1 if you have the <linux/version.h> header file. */
+#cmakedefine SC_HAVE_LINUX_VERSION_H
+
+/* Define to 1 if you have the <linux/videodev2.h> header file. */
+#cmakedefine SC_HAVE_LINUX_VIDEODEV2_H
 
 /* Define to 1 if you have the <memory.h> header file. */
-//#cmakedefine SC_HAVE_MEMORY_H
+#cmakedefine SC_HAVE_MEMORY_H
 
 /* Define to 1 if you have the `posix_memalign' function. */
 #cmakedefine SC_HAVE_POSIX_MEMALIGN
@@ -109,6 +121,15 @@
 
 /* Define to 1 if you have the `strtoll' function. */
 #cmakedefine SC_HAVE_STRTOLL
+
+/* Define to 1 if you have the <sys/ioctl.h> header file. */
+#cmakedefine SC_HAVE_SYS_IOCTL_H
+
+/* Define to 1 if you have the <sys/select.h> header file. */
+#cmakedefine SC_HAVE_SYS_SELECT_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#cmakedefine SC_HAVE_SYS_STAT_H
 
 /* Define to 1 if you have the <sys/time.h> header file. */
 #cmakedefine SC_HAVE_SYS_TIME_H

@@ -2,6 +2,7 @@ include(CheckIncludeFile)
 include(CheckSymbolExists)
 include(CheckTypeSize)
 include(CheckPrototypeDefinition)
+include(CheckCSourceCompiles)
 
 # --- keep library finds in here so we don't forget to do them first
 
@@ -13,6 +14,12 @@ if(openmp)
 endif()
 find_package(ZLIB)
 find_package(Threads)
+
+# --- set global compile environment
+
+# Build all targets with -fPIC so that libsc itself can be linked as a
+# shared library, or linked into a shared library.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # --- generate sc_config.h
 
@@ -71,8 +78,8 @@ check_symbol_exists(backtrace_symbols execinfo.h SC_HAVE_BACKTRACE_SYMBOLS)
 # check_include_file(dlfcn.h SC_HAVE_DLFCN_H)
 check_include_file(execinfo.h SC_HAVE_EXECINFO_H)
 check_symbol_exists(fsync unistd.h SC_HAVE_FSYNC)
-# check_include_file(inttypes.h SC_HAVE_INTTYPES_H)
-# check_include_file(memory.h SC_HAVE_MEMORY_H)
+check_include_file(inttypes.h SC_HAVE_INTTYPES_H)
+check_include_file(memory.h SC_HAVE_MEMORY_H)
 
 check_symbol_exists(posix_memalign stdlib.h SC_HAVE_POSIX_MEMALIGN)
 check_symbol_exists(basename libgen.h SC_HAVE_BASENAME)
@@ -125,6 +132,21 @@ if(SC_HAVE_UNISTD_H)
   check_include_file(getopt.h SC_HAVE_GETOPT_H)
 endif()
 
+check_include_file(sys/ioctl.h SC_HAVE_SYS_IOCTL_H)
+check_include_file(sys/select.h SC_HAVE_SYS_SELECT_H)
+check_include_file(sys/stat.h SC_HAVE_SYS_STAT_H)
+check_include_file(fcntl.h SC_HAVE_FCNTL_H)
+
+if(CMAKE_SYSTEM_NAME STREQUAL Linux)
+  check_include_file(linux/videodev2.h SC_HAVE_LINUX_VIDEODEV2_H)
+  check_include_file(linux/version.h SC_HAVE_LINUX_VERSION_H)
+
+  if(SC_HAVE_LINUX_VIDEODEV2_H AND SC_HAVE_LINUX_VERSION_H)
+    file(READ ${CMAKE_CURRENT_LIST_DIR}/check_v4l2.c check_v4l2_src)
+    check_c_source_compiles([=[${check_v4l2_src}]=] SC_ENABLE_V4L2)
+  endif()
+endif()
+
 if(ZLIB_FOUND)
   set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
   check_symbol_exists(adler32_combine zlib.h SC_HAVE_ZLIB)
@@ -138,7 +160,7 @@ check_type_size("unsigned long" SC_SIZEOF_UNSIGNED_LONG BUILTIN_TYPES_ONLY)
 check_type_size("unsigned long long" SC_SIZEOF_UNSIGNED_LONG_LONG BUILTIN_TYPES_ONLY)
 set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
+if(CMAKE_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
   set(SC_ENABLE_DEBUG 1)
 endif()
 
@@ -147,10 +169,10 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/sc_config.h.in ${PROJECT_BINARY_DIR}/in
 # --- sanity check of MPI sc_config.h
 
 # check if libsc was configured properly
-include(CheckSymbolExists)
 set(CMAKE_REQUIRED_FLAGS)
 set(CMAKE_REQUIRED_INCLUDES)
 set(CMAKE_REQUIRED_LIBRARIES)
+set(CMAKE_REQUIRED_DEFINITIONS)
 
 # libsc and current project must both be compiled with/without MPI
 check_symbol_exists(SC_ENABLE_MPI ${PROJECT_BINARY_DIR}/include/sc_config.h SC_has_mpi)
