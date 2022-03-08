@@ -95,11 +95,17 @@
 /* Define to 1 if you have the <signal.h> header file. */
 #cmakedefine SC_HAVE_SIGNAL_H
 
+/* Define to 1 if you have the <stdint.h> header file. */
 #cmakedefine SC_HAVE_STDINT_H
 
+/* Define to 1 if you have the <stdlib.h> header file. */
 #cmakedefine SC_HAVE_STDLIB_H
 
+/* Define to 1 if you have the <string.h> header file. */
 #cmakedefine SC_HAVE_STRING_H
+
+/* Define to 1 if you have the <libgen.h> header file. */
+#cmakedefine SC_HAVE_LIBGEN_H
 
 /* Define to 1 if you have the `strtoll' function. */
 #cmakedefine SC_HAVE_STRTOLL
