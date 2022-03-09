@@ -99,6 +99,12 @@
 /* include system headers */
 
 #include <math.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+#ifndef M_PI_4
+#define M_PI_4 0.785398163397448309616
+#endif
 #include <ctype.h>
 #include <float.h>
 #include <libgen.h>
