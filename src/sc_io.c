@@ -137,7 +137,8 @@ sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_avail)
 }
 
 int
-sc_io_sink_complete (sc_io_sink_t * sink, size_t *bytes_in, size_t *bytes_out)
+sc_io_sink_complete (sc_io_sink_t * sink, size_t * bytes_in,
+                     size_t * bytes_out)
 {
   int                 retval;
 
@@ -252,7 +253,7 @@ sc_io_source_destroy (sc_io_source_t * source)
 
 int
 sc_io_source_read (sc_io_source_t * source, void *data,
-                   size_t bytes_avail, size_t *bytes_out)
+                   size_t bytes_avail, size_t * bytes_out)
 {
   int                 retval;
   size_t              bbytes_out;
@@ -307,7 +308,7 @@ sc_io_source_read (sc_io_source_t * source, void *data,
 
 int
 sc_io_source_complete (sc_io_source_t * source,
-                       size_t *bytes_in, size_t *bytes_out)
+                       size_t * bytes_in, size_t * bytes_out)
 {
   int                 retval = SC_IO_ERROR_NONE;
 
@@ -364,7 +365,7 @@ sc_io_source_activate_mirror (sc_io_source_t * source)
 
 int
 sc_io_source_read_mirror (sc_io_source_t * source, void *data,
-                          size_t bytes_avail, size_t *bytes_out)
+                          size_t bytes_avail, size_t * bytes_out)
 {
   sc_io_source_t     *mirror_src;
   int                 retval;

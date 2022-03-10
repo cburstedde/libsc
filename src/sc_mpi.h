@@ -373,7 +373,7 @@ int                 sc_MPI_Init (int *, char ***);
 
 int                 sc_MPI_Finalize (void);
 int                 sc_MPI_Abort (sc_MPI_Comm, int)
-  __attribute__((noreturn));
+  __attribute__ ((noreturn));
 
 int                 sc_MPI_Comm_dup (sc_MPI_Comm, sc_MPI_Comm *);
 int                 sc_MPI_Comm_free (sc_MPI_Comm *);
@@ -547,7 +547,7 @@ int                 sc_MPI_Error_class (int errorcode, int *errorclass);
 /** Turn MPI error code into a string.
  * When processing MPI I/O return values, the input code to this function
  * must be a class that is output by \ref sc_mpi_file_error_class.
- * \param [in] errorcode        This MPI error code is converted.
+ * \param [in] errorcode        This (MPI) error code is converted.
  * \param [in,out] string       At least sc_MPI_MAX_ERROR_STRING bytes.
  * \param [out] resultlen       Length of string on return.
  * \return                      sc_MPI_SUCCESS on success or
