@@ -27,7 +27,7 @@
 #include <sc.h>
 #include <sc_containers.h>
 
-#if !defined (P4EST_ENABLE_MPII0) && !defined (P4EST_ENABLE_MPI)
+#if 0
 
 /* We report errors without MPI I/O and MPI, but without MPI we abort. */
 
@@ -51,19 +51,18 @@
 
 #endif /* !MPIIO and !MPI */
 
-#if 0
 /** Examine the MPI return value and print an error if there is one.
  * The message passed is appended to MPI, file and line information.
  */
 #define SC_CHECK_MPI_VERBOSE(errcode,user_msg) do {            \
   char msg[sc_MPI_MAX_ERROR_STRING];                           \
-  int msglen;                                                  \
+  int msglen, errclass;                                        \
   if ((errcode) != sc_MPI_SUCCESS) {                           \
-    MPI_Error_string ((errcode), msg, &msglen);                \
+    sc_mpi_file_error_class ((errcode), &errclass);            \
+    sc_MPI_Error_string (errclass, msg, &msglen);              \
     SC_LERRORF ("%s at %s:%d: %s\n",                           \
                 (user_msg), __FILE__, __LINE__, msg);          \
   }} while (0)
-#endif
 
 SC_EXTERN_C_BEGIN;
 
