@@ -840,41 +840,4 @@ sc_mpi_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
   SC_CHECK_ABORT (icount == (int) zcount, errmsg);
 #endif
 }
-
-#if 0
-
-/* these crash on error, which we do not want to do from hereon */
-
-int
-sc_mpi_get_file_size (sc_MPI_File mpifile, sc_MPI_Offset * size,
-                      const char *errmsg)
-{
-  int                 mpiret;
-
-  mpiret = MPI_File_get_size (mpifile, size);
-  return mpiret;
-}
-
-int
-sc_mpi_set_file_size (sc_MPI_File mpifile, sc_MPI_Offset size,
-                      const char *errmsg)
-{
-  int                 mpiret;
-
-  mpiret = MPI_File_set_size (mpifile, size);
-  return mpiret;
-}
-
-void
-sc_mpi_file_seek (sc_MPI_File mpifile, sc_MPI_Offset offset, int whence,
-                  const char *errmsg)
-{
-  int                 mpiret;
-
-  mpiret = MPI_File_seek (mpifile, offset, whence);
-  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
-}
-
-#endif /* 0 */
-
-#endif
+#endif /* !SC_ENABLE_MPIIO */
