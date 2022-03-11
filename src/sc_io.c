@@ -763,8 +763,8 @@ sc_mpi_file_read_all (sc_MPI_File mpifile, void *ptr, int zcount,
 }
 
 int
-sc_mpi_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
-              sc_MPI_Datatype t, const char *errmsg)
+sc_mpi_file_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
+                   sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -776,14 +776,14 @@ sc_mpi_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
                            (int) zcount, t, &mpistatus);
 #ifdef SC_ENABLE_DEBUG
   sc_MPI_Get_count (&mpistatus, t, &icount);
-  SC_CHECK_ABORT (icount == (int) zcount, errmsg);
+  SC_CHECK_ABORT (icount == (int) zcount, "MPI_File_write count missmatch");
 #endif
   return mpiret;
 }
 
 int
-sc_mpi_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset, const void *ptr,
-                 size_t zcount, sc_MPI_Datatype t, const char *errmsg)
+sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
+                      const void *ptr, size_t zcount, sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -795,16 +795,16 @@ sc_mpi_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset, const void *ptr,
                               (int) zcount, t, &mpistatus);
 #ifdef SC_ENABLE_DEBUG
   sc_MPI_Get_count (&mpistatus, t, &icount);
-  SC_CHECK_ABORT (icount == (int) zcount, errmsg);
+  SC_CHECK_ABORT (icount == (int) zcount,
+                  "MPI_File_write_at count missmatch");
 #endif
 
   return mpiret;
 }
 
 int
-sc_mpi_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
-                     const void *ptr, size_t zcount, sc_MPI_Datatype t,
-                     const char *errmsg)
+sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
+                          const void *ptr, size_t zcount, sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -816,15 +816,16 @@ sc_mpi_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
                                   (int) zcount, t, &mpistatus);
 #ifdef SC_ENABLE_DEBUG
   sc_MPI_Get_count (&mpistatus, t, &icount);
-  SC_CHECK_ABORT (icount == (int) zcount, errmsg);
+  SC_CHECK_ABORT (icount == (int) zcount,
+                  "MPI_File write_at_all count missmatch");
 #endif
 
   return mpiret;
 }
 
-void
-sc_mpi_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
-                  sc_MPI_Datatype t, const char *errmsg)
+int
+sc_mpi_file_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
+                       sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -834,11 +835,13 @@ sc_mpi_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
 
   mpiret = MPI_File_write_all (mpifile, (void *) ptr,
                                (int) zcount, t, &mpistatus);
-  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
 
 #ifdef SC_ENABLE_DEBUG
   sc_MPI_Get_count (&mpistatus, t, &icount);
-  SC_CHECK_ABORT (icount == (int) zcount, errmsg);
+  SC_CHECK_ABORT (icount == (int) zcount,
+                  "MPI_File write_all count missmatch");
 #endif
+
+  return mpiret;
 }
 #endif /* !SC_ENABLE_MPIIO */
