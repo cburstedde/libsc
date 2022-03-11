@@ -17,8 +17,14 @@ AC_DEFUN([SC_CHECK_QSORT_R], [
    dnl the `#pragma GCC diagnostic error` statements in the source, but we also
    dnl uses this compiler's version of "-Werror" that autoconf already knows
    dnl about for this test
-   sc_check_qsort_r_save_werror_flag=$ac_c_werror_flag
-   ac_c_werror_flag=yes
+   dnl
+   dnl However, if a compiler does not support #pragma GCC, it must not error
+   dnl out.  Thus we cannot really use this method safely.
+   dnl
+   dnl Third option might be to use the method but remove the pragmas below.
+   dnl
+   dnl sc_check_qsort_r_save_werror_flag="$ac_c_werror_flag"
+   dnl ac_c_werror_flag=yes
 
    AC_MSG_CHECKING([whether qsort_r conforms to GNU standard])
    AC_LINK_IFELSE([AC_LANG_PROGRAM(
@@ -27,11 +33,10 @@ AC_DEFUN([SC_CHECK_QSORT_R], [
 #define _GNU_SOURCE
 #endif
 #include <stdlib.h>
-#ifdef __cplusplus
-#pragma GCC diagnostic ignored "-Wpragmas"
-#endif
+#ifndef __cplusplus
 #pragma GCC diagnostic error "-Wimplicit-function-declaration"
 #pragma GCC diagnostic error "-Wincompatible-pointer-types"
+#endif
 static int
 comparator (const void *aa, const void *bb, void *arg)
 {
@@ -80,7 +85,7 @@ qsort_r (arr, 4, sizeof (int), p, comparator);
     AC_MSG_RESULT([yes])],
    [AC_MSG_RESULT([no])])
 
-   ac_c_werror_flag=$sc_check_qsort_r_save_werror_flag
+   dnl ac_c_werror_flag="$sc_check_qsort_r_save_werror_flag"
 
    AC_LANG_POP([C])
 ])
