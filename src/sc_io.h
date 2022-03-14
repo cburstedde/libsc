@@ -27,7 +27,7 @@
 #include <sc.h>
 #include <sc_containers.h>
 
-#if 0
+#if !defined (SC_ENABLE_MPIIO) && !defined (SC_ENABLE_MPI)
 
 /* We report errors without MPI I/O and MPI, but without MPI we abort. */
 
