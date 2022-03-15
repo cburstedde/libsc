@@ -119,7 +119,7 @@ $1_MPIRUN=
 $1_MPI_TEST_FLAGS=
 if test "x$HAVE_PKG_MPI" = xyes ; then
 AC_CHECK_PROGS([$1_MPIRUN], [mpiexec mpirun])
-if test "x$MPIRUN" != x && test -x "`which $MPIRUN`" ; then
+if test "x$MPIRUN" != x && test -x `which "$MPIRUN" 2> /dev/null` ; then
   $1_MPIRUN="$MPIRUN"
   $1_MPI_TEST_FLAGS="-np 2"
   dnl AC_MSG_NOTICE([Test environment "$$1_MPIRUN" "$$1_MPI_TEST_FLAGS"])
