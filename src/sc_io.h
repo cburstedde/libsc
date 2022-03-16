@@ -347,6 +347,7 @@ int                 sc_mpi_file_error_class (int errorcode, int *errorclass);
 #ifdef SC_ENABLE_MPIIO
 
 #define sc_mpi_read         sc_mpi_file_read   /**< For backwards compatibility. */
+#define sc_mpi_write        sc_mpi_file_write  /**< For backwards compatibility. */
 
 /** Read MPI file content into memory.
  * \param [in,out] mpifile      MPI file object opened for reading.
@@ -355,6 +356,9 @@ int                 sc_mpi_file_error_class (int errorcode, int *errorclass);
  * \param [in] t        The MPI type for each array member.
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
  * \note                This function aborts on MPI file and count errors.
+ *                      This function does not use the calling convention
+ *                      and error handling as the other sc_mpi_file
+ *                      functions to ensure backward compatibility.
  */
 void                sc_mpi_file_read (sc_MPI_File mpifile, void *ptr,
                                       int zcount, sc_MPI_Datatype t,
@@ -402,11 +406,15 @@ int                 sc_mpi_file_read_all (sc_MPI_File mpifile, void *ptr,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \note                This function does not abort on MPI file errors.
- * \return              The function returns the MPI error code.
+ * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
+ * \note                This function aborts on MPI file and count errors.
+ *                      This function does not use the calling convention
+ *                      and error handling as the other sc_mpi_file
+ *                      functions to ensure backward compatibility.
  */
-int                 sc_mpi_file_write (sc_MPI_File mpifile, const void *ptr,
-                                       size_t zcount, sc_MPI_Datatype t);
+void                sc_mpi_file_write (sc_MPI_File mpifile, const void *ptr,
+                                       size_t zcount, sc_MPI_Datatype t,
+                                       const char *errmsg);
 
 /** Write MPI file content into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
