@@ -628,7 +628,7 @@ sc_MPI_Error_string (int errorcode, char *string, int *resultlen)
   }
 
   /* print into the output string */
-  if ((retval = snprintf (string, sc_MPI_MAX_ERROR_STRING, tstr)) < 0) {
+  if ((retval = snprintf (string, sc_MPI_MAX_ERROR_STRING, "%s", tstr)) < 0) {
     /* unless something goes against the current standard of snprintf */
     return sc_MPI_ERR_NO_MEM;
   }
