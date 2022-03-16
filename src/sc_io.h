@@ -36,15 +36,15 @@
  * function.  This works with all I/O functions that usually return a valid
  * pointer and set errno.
  */
-#define SC_CHECK_FOPEN_NULL(retval,fn) do { retval = (fn);     \
-  if (retval == NULL) {                                        \
+#define SC_CHECK_FOPEN_NULL(fp,fn) do { fp = (fn);             \
+  if (fp == NULL) {                                            \
     SC_LERRORF ("Error by calling %s at %s:%d: %s.\n",         \
                 #fn, __FILE__, __LINE__, strerror (errno));    \
     return NULL; }} while (0)
 
 /** Check the return value of a function that usually returns 0. */
-#define SC_CHECK_FOPEN_INT(retval,fn) do { retval = (fn);      \
-  if (retval == NULL) {                                        \
+#define SC_CHECK_FOPEN_INT(fp,fn) do { fp = (fn);              \
+  if (fp == NULL) {                                            \
     SC_LERRORF ("Error by calling %s at %s:%d: %s.\n",         \
                 #fn, __FILE__, __LINE__, strerror (errno));    \
     return -1; }} while (0)
