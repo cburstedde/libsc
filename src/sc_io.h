@@ -358,7 +358,7 @@ int                 sc_mpi_file_error_class (int errorcode, int *errorclass);
  * \note                This function aborts on MPI file and count errors.
  *                      This function does not use the calling convention
  *                      and error handling as the other sc_mpi_file
- *                      functions to ensure backward compatibility.
+ *                      functions to ensure backwards compatibility.
  */
 void                sc_mpi_file_read (sc_MPI_File mpifile, void *ptr,
                                       int zcount, sc_MPI_Datatype t,
@@ -410,7 +410,7 @@ int                 sc_mpi_file_read_all (sc_MPI_File mpifile, void *ptr,
  * \note                This function aborts on MPI file and count errors.
  *                      This function does not use the calling convention
  *                      and error handling as the other sc_mpi_file
- *                      functions to ensure backward compatibility.
+ *                      functions to ensure backwards compatibility.
  */
 void                sc_mpi_file_write (sc_MPI_File mpifile, const void *ptr,
                                        size_t zcount, sc_MPI_Datatype t,
