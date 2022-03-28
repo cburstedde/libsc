@@ -127,25 +127,6 @@ sc3_error_t        *sc3_options_new (sc3_allocator_t * alloc,
  */
 sc3_error_t        *sc3_options_set_spacing (sc3_options_t * yy, int spacing);
 
-/** Activate the '--' stop argument and provide a variable to set.
- * \param [in,out] yy       The options object must not be setup.
- * \param [in] var_stop     Pointer to existing integer variable or NULL.
- *                          When NULL, '--' is considered an argument.
- *                          Otherwise, variable value is initialized to
- *                          0 and set to 1 when '--' is encountered.
- *                          Subsequent '--' arguments will be treated as
- *                          arguments in any case.  We leave it to the user
- *                          to stop/alter processing based on the value.
- *                          When multiple options objects process the
- *                          same command line, they may use the same
- *                          stop variable.  For a new command line,
- *                          user should re-initialize it to zero.
- *                          The variable must stay in scope/memory
- *                          while the options object is alive.
- * \return                  NULL on success, error object otherwise.
- */
-sc3_error_t        *sc3_options_set_stop (sc3_options_t * yy, int *var_stop);
-
 /** Add a switch option.
  * It is initialized to 0 and incremented on each occurrence.
  * \param [in,out] yy   The object must not be setup.
@@ -251,13 +232,14 @@ sc3_error_t        *sc3_options_add_string (sc3_options_t * yy,
  *                          Options object may act as multiple sub options.
  * \param [in] prefix       String is prefixed to the names of sub-options
  *                          on parsing \a yy, without changing \a sub.
+ *                          Sub-options appear as prefixed long options.
  *                          As with option names shallow (pointer) copied.
  *                          May be NULL or "" for no prefix.
  * \return                  NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_options_add_sub (sc3_options_t * yy,
                                          sc3_options_t * sub,
-                                         const char * prefix);
+                                         const char *prefix);
 
 /** Setup an object and change it into its usable phase.
  * \param [in,out] yy   This object must not yet be setup.  Setup on output.
@@ -290,33 +272,38 @@ sc3_error_t        *sc3_options_unref (sc3_options_t ** yyp);
  */
 sc3_error_t        *sc3_options_destroy (sc3_options_t ** yyp);
 
-/** Parse the next matching entries of a C command-line style variable.
- * The function stops at the first argument it cannot match and returns.
- * Set result variable to differentiate non-matches from invalid arguments.
- * The idea is to call this function repeatedly on the same command line.
+/** Callback to process non-option argument or argument error.
+ * This callback may cleanly process arguments and option errors.
+ * \param [in,out] contin   True on input.  Set on output to true
+ *                          to continue processing, to false to break.
+ * \return              NULL on success, error object otherwise.
+ *                      Return NULL when processing any option error
+ *                      and the program's internal state is correct.
+ */
+typedef sc3_error_t *(*sc3_options_arg_t)
+                    (int *contin, int argp, char **argv, void *user);
+
+/** Parse a C style command-line from argument 1 to the last.
+ * Each option encountered is processed.  Options are no longer
+ * recognized as options after an "--" argument.  Arguments and
+ * erroneous options are processed by the respective callbacks.
  * \param [in] yy           Options object must be setup.
  * \param [in] argc         Number of entries in the \a argv array.
  * \param [in] argv         Array of strings of length \a argc.
  *                          We do not modify this array at all.
  *                          Neither do we expect it to stay around.
- * \param [in,out] argp     On input, valid index in [0, \a argc).
- *                          On output, index advanced to the next
- *                          unparsed position.  This may be the same
- *                          as its input value if no option has matched.
- *                          This may also be equal to \a argc, indicating
- *                          that no arguments are left to process.
- *                          On an invalid argument holds that position.
- * \param [out] result      This is -1 for an invalid argument and otherwise
- *                          the number of matches identified.  Each short
- *                          option counts as an individual match,
- *                          even if grouped as in "-abc."
+ * \param [in] arg_cb       Function to call for each non-option argument.
+ * \param [in] err_cb       Function to call for each option error.
+ * \param [in] cb_user      Context passed to both argument callbacks.
  * \return              NULL on valid parameters and consistent operation,
  *                      options matched/invalid or not.  Return error object
  *                      when this function is called with invalid parameters.
  */
 sc3_error_t        *sc3_options_parse (sc3_options_t * yy,
                                        int argc, char **argv,
-                                       int *argp, int *result);
+                                       sc3_options_arg_t arg_cb,
+                                       sc3_options_arg_t err_cb,
+                                       void *cb_user);
 
 /** Print a summary of all options with their names and values.
  * \param [in] yy           Options object must be setup.

@@ -80,7 +80,6 @@ struct sc3_options
   /* internal configuration */
   int                 spacing;          /**< Space for value and type. */
   int                 allow_pack;       /**< Accept short options '-abc'. */
-  int                *var_stop;         /**< Output variable for '--'. */
   sc3_array_t        *opts;
 
   /* list of sub-options to this one */
@@ -189,16 +188,6 @@ sc3_options_set_spacing (sc3_options_t * yy, int spacing)
   SC3A_IS (sc3_options_is_new, yy);
   SC3A_CHECK (spacing >= 0);
   yy->spacing = spacing;
-  return NULL;
-}
-
-sc3_error_t        *
-sc3_options_set_stop (sc3_options_t * yy, int *var_stop)
-{
-  SC3A_IS (sc3_options_is_new, yy);
-  if ((yy->var_stop = var_stop) != NULL) {
-    *var_stop = 0;
-  }
   return NULL;
 }
 
@@ -477,9 +466,9 @@ process_arg (sc3_options_t * yy,
   return NULL;
 }
 
-sc3_error_t        *
-sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
-                   int *argp, int *result)
+static sc3_error_t *
+sc3_options_parse_single (sc3_options_t * yy, int argc, char **argv,
+                          int *argp, int *stop, int *result)
 {
   int                 len, i;
   int                 success;
@@ -487,12 +476,13 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
   const char         *at;
   sc3_option_t       *o;
 
-  SC3E_RETVAL (result, 0);
   SC3A_IS (sc3_options_is_setup, yy);
   SC3A_CHECK (0 <= argc);
   SC3A_CHECK (argv != NULL);
   SC3A_CHECK (argp != NULL);
   SC3A_CHECK (0 <= *argp && *argp < argc);
+  SC3A_CHECK (result != NULL);
+  SC3A_CHECK (*result == 0);
 
   /* access all options in this container */
   SC3E (sc3_array_get_elem_count (yy->opts, &len));
@@ -503,7 +493,7 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
       /* impossible parameter string is ignored */
       continue;
     }
-    if (yy->var_stop != NULL && *yy->var_stop) {
+    if (stop != NULL && *stop) {
       /* we're not looking for options currently */
       return NULL;
     }
@@ -517,9 +507,9 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
     SC3A_CHECK (lz >= 2);
     if (!strncmp (at, "--", 2)) {
       if (lz == 2) {
-        if (yy->var_stop != NULL) {
+        if (stop != NULL) {
           /* honor stop option */
-          *yy->var_stop = 1;
+          *stop = 1;
           ++*argp;
         }
         /* return due to stop or due to no match */
@@ -564,7 +554,7 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
           SC3A_CHECK (lz == 0);
           SC3A_CHECK (*argp < argc);
           if (*argp + 1 == argc || (at = argv[++*argp]) == NULL) {
-            /* argument expected but no valid arguments left */
+            /* argument expected but no valid argument coming */
             *result = -1;
             return NULL;
           }
@@ -581,7 +571,13 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
       if (i < len) {
         /* options loop above has found a match */
         ++*result;
+#if 0
         continue;
+#else
+        /* we stop the loop after one successful match */
+        ++*argp;
+        return NULL;
+#endif
       }
 
       /* invalid long option */
@@ -611,10 +607,9 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
 
           /* second possibility: short option with argument */
           if (lz == 0) {
-            ++*argp;
-            SC3A_CHECK (*argp <= argc);
-            if (*argp == argc || (at = argv[*argp]) == NULL) {
-              /* argument expected but no valid arguments left */
+            SC3A_CHECK (*argp < argc);
+            if (*argp + 1 == argc || (at = argv[++*argp]) == NULL) {
+              /* argument expected but no valid argument coming */
               *result = -1;
               return NULL;
             }
@@ -640,6 +635,91 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
       while (lz > 0);
     }
     /* found a valid set of short options and proceed with next argument */
+    SC3A_CHECK (*result > 0);
+
+#if 1
+    /* we stop the loop after one successful match */
+    ++*argp;
+    return NULL;
+#endif
+  }
+  return NULL;
+}
+
+static sc3_error_t *
+sc3_options_parse_recurse (sc3_options_t * yy, int argc, char **argv,
+                           int *argp, int *stop, int *result)
+{
+  SC3A_IS (sc3_options_is_setup, yy);
+  SC3A_CHECK (0 <= argc);
+  SC3A_CHECK (argv != NULL);
+  SC3A_CHECK (argp != NULL);
+  SC3A_CHECK (0 <= *argp && *argp < argc);
+  SC3A_CHECK (result != NULL);
+  SC3A_CHECK (*result == 0);
+
+  /* try to process a single argument */
+  SC3E (sc3_options_parse_single (yy, argc, argv, argp, stop, result));
+  if (*result == 0) {
+    int                 i, len;
+    sc3_options_subopt_t *so;
+
+    /* we did not match anything.  Go down the sub-options tree */
+    SC3E (sc3_array_get_elem_count (yy->subs, &len));
+    for (i = 0; i < len; ++i) {
+      SC3E (sc3_array_index (yy->subs, i, &so));
+      SC3E (sc3_options_parse_recurse
+            (so->sub, argc, argv, argp, stop, result));
+      if (*result != 0) {
+        break;
+      }
+    }
+  }
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
+                   sc3_options_arg_t arg_cb, sc3_options_arg_t err_cb,
+                   void *cb_user)
+{
+  int                 ccontin;
+  int                 argp, argp_in;
+  int                 stop = 0;
+  int                 result = 0;
+
+  /* we move the argument index forward inside the loop */
+  argp = 1;
+  while (argp < argc) {
+    argp_in = argp;
+
+    SC3E (sc3_options_parse_recurse (yy, argc, argv, &argp, &stop, &result));
+    if (result <= 0) {
+      SC3A_CHECK (argp < argc);
+
+      ccontin = 1;
+      if (result == 0) {
+        /* process one argument */
+        if (arg_cb != NULL) {
+          SC3E (arg_cb (&ccontin, argp, argv, cb_user));
+        }
+      }
+      else {
+        /* process one error */
+        if (err_cb != NULL) {
+          SC3E (err_cb (&ccontin, argp, argv, cb_user));
+        }
+      }
+      ++argp;
+      if (!ccontin) {
+        /* stop processing if indicated so by callback */
+        break;
+      }
+    }
+    result = 0;
+
+    /* make sure we do not loop infinitely */
+    SC3A_CHECK (argp > argp_in);
   }
   return NULL;
 }

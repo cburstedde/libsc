@@ -39,16 +39,40 @@ typedef struct options_global
 options_global_t;
 
 static sc3_error_t *
+parse_argument_cb (int *contin, int argp, char **argv, void *user)
+{
+  int                *errp = (int *) user;
+
+  SC3E_RETVAL (contin, 1);
+  SC3A_CHECK (errp != NULL);
+
+  SC3_GLOBAL_PRODUCTIONF ("Argument at position %d: %s", argp, argv[argp]);
+  return NULL;
+}
+
+static sc3_error_t *
+parse_error_cb (int *contin, int argp, char **argv, void *user)
+{
+  int                *errp = (int *) user;
+
+  SC3E_RETVAL (contin, 1);
+  SC3A_CHECK (errp != NULL);
+
+  SC3_GLOBAL_ERRORF ("Option error at position %d", argp);
+  *errp = 1;
+
+  return NULL;
+}
+
+static sc3_error_t *
 parse_options (options_global_t * g, int argc, char **argv)
 {
-  int                 pos;
-  int                 res;
+  int                 perr;
   sc3_options_t      *opt, *sub;
 
   /* construct sub-options object */
   SC3E (sc3_options_new (g->alloc, &sub));
   SC3E (sc3_options_set_spacing (sub, 24));
-  SC3E (sc3_options_set_stop (sub, &g->stop));
   SC3E (sc3_options_add_int (sub, 'u', "subi", "Sub-options integer",
                              &g->subi, 5));
   SC3E (sc3_options_setup (sub));
@@ -56,38 +80,27 @@ parse_options (options_global_t * g, int argc, char **argv)
   /* construct options object */
   SC3E (sc3_options_new (g->alloc, &opt));
   SC3E (sc3_options_set_spacing (opt, 20));
-  SC3E (sc3_options_set_stop (opt, &g->stop));
-  SC3E (sc3_options_add_switch (opt, '?', "help", "Please help",
-                                &g->help));
-  SC3E (sc3_options_add_switch (opt, 'f', "flag", "Some flag",
-                                &g->f1));
-  SC3E (sc3_options_add_int (opt, 'i', "i-one", "First integer",
-                             &g->i1, 6));
+  SC3E (sc3_options_add_switch (opt, '?', "help", "Please help", &g->help));
+  SC3E (sc3_options_add_switch (opt, 'f', "flag", "Some flag", &g->f1));
+  SC3E (sc3_options_add_int (opt, 'i', "i-one", "First integer", &g->i1, 6));
   SC3E (sc3_options_add_int (opt, 'j', NULL, "Second integer", &g->i2, 7));
-  SC3E (sc3_options_add_double (opt, 'd', "number", "Real value", &g->dd, 9.18));
-  SC3E (sc3_options_add_string (opt, 's', "string", "A string option",
-                                &g->s1, NULL));
-  SC3E (sc3_options_add_string (opt, '\0', "string2", NULL,
-                                &g->s2, "String 2 default value"));
+  SC3E (sc3_options_add_double
+        (opt, 'd', "number", "Real value", &g->dd, 9.18));
+  SC3E (sc3_options_add_string
+        (opt, 's', "string", "A string option", &g->s1, NULL));
+  SC3E (sc3_options_add_string
+        (opt, '\0', "string2", NULL, &g->s2, "String 2 default value"));
   SC3E (sc3_options_add_sub (opt, sub, "sub"));
   SC3E (sc3_options_unref (&sub));
   SC3E (sc3_options_setup (opt));
 
-  /* in this example we allow arguments and options to mix */
-  for (res = 0, pos = 1; pos < argc; ) {
-    SC3E (sc3_options_parse (opt, argc, argv, &pos, &res));
-    if (res < 0) {
-      SC3_GLOBAL_ERRORF ("Option error at position %d", pos);
-      ++pos;
-    }
-    else if (pos < argc) {
-      SC3_GLOBAL_PRODUCTIONF ("Argument at position %d: %s", pos, argv[pos]);
-      ++pos;
-    }
-  }
+  /* parse command line all in one */
+  perr = 0;
+  SC3E (sc3_options_parse (opt, argc, argv,
+                           parse_argument_cb, parse_error_cb, &perr));
 
   /* display options summary and/or help */
-  if (res < 0 || g->help) {
+  if (perr || g->help) {
     SC3E (sc3_options_log_help (opt, NULL, SC3_LOG_ESSENTIAL));
   }
   else {
