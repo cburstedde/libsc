@@ -677,6 +677,44 @@ sc_mpi_file_error_class (int errorcode, int *errorclass)
 #endif
 }
 
+int
+sc_mpi_file_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
+                  sc3_MPI_Info_t mpiinfo, sc_MPI_File * mpifile)
+{
+  /* TODO: Translate amode */
+#ifdef SC_ENABLE_MPIIO
+  return MPI_File_open (mpicomm, filename, amode, mpiinfo, mpifile);
+#elif defined (SC_ENABLE_MPI)
+  {
+    int                 rank, mpiret;
+    /* serialize the I/O operations */
+    /* active flag is set later in  */
+    mpifile->filename = filename;
+
+    /* get my rank */
+    mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
+    SC_CHECK_MPI (mpiret);
+    if (rank == 0) {
+      mpifile->file = fopen (filename, "wb");
+    }
+    else {
+      mpifile->file = NULL;
+    }
+    /* broadcast errno */
+    mpiret = errno;
+    sc_MPI_Bcast (&mpiret, 1, sc_MPI_INT, 0, mpicomm);
+
+    return mpiret;
+  }
+#else
+/* no MPI */
+  mpifile->filename = filename;
+  mpifile->file = fopen (filename, "wb");
+
+  return errno;
+#endif
+}
+
 #ifdef SC_ENABLE_MPIIO
 
 void
@@ -698,6 +736,8 @@ sc_mpi_file_read (sc_MPI_File mpifile, void *ptr, int zcount,
   SC_CHECK_ABORT (icount == zcount, errmsg);
 #endif
 }
+
+#endif
 
 int
 sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
@@ -762,6 +802,8 @@ sc_mpi_file_read_all (sc_MPI_File mpifile, void *ptr, int zcount,
   return mpiret;
 }
 
+#ifdef SC_ENABLE_MPIIO
+
 void
 sc_mpi_file_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
                    sc_MPI_Datatype t, const char *errmsg)
@@ -783,14 +825,18 @@ sc_mpi_file_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
 #endif
 }
 
+#endif
+
 int
 sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
                       const void *ptr, size_t zcount, sc_MPI_Datatype t)
 {
+  /* TODO: Translate MPI_Datatype -> cf. sc3 header */
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
 #endif
   int                 mpiret;
+#ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_write_at (mpifile, offset, (void *) ptr,
@@ -805,6 +851,19 @@ sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 #endif
 
   return mpiret;
+#else
+  /* this works with and without MPI */
+  mpiret = fseek (mpifile->file, offset, SEEK_SET);
+  SC_ASSERT (mpiret == 0);
+  icount = (int) fwrite (ptr, zcount, t, mpifile->file);
+  fflush (mpifile->file);
+  if (icount != (int) zcount) {
+    return SC_COUNT_ERR;
+  }
+  else {
+    return errno;
+  }
+#endif
 }
 
 int
@@ -855,4 +914,3 @@ sc_mpi_file_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
 
   return mpiret;
 }
-#endif /* !SC_ENABLE_MPIIO */

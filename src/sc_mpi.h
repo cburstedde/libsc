@@ -525,7 +525,12 @@ int                 sc_MPI_Init_thread (int *argc, char ***argv,
 #else
 
 typedef long        sc_MPI_Offset;
-typedef FILE       *sc_MPI_File;
+typedef struct no_mpiio_file
+{
+  const char         *filename;
+  FILE               *file;
+} sc_MPI_File;
+
 #define sc_MPI_FILE_NULL           NULL
 
 #endif /* !SC_ENABLE_MPIIO */

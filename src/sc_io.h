@@ -26,6 +26,7 @@
 
 #include <sc.h>
 #include <sc_containers.h>
+#include <sc3_mpi_types.h>
 
 #if !defined (SC_ENABLE_MPIIO) && !defined (SC_ENABLE_MPI)
 
@@ -343,6 +344,11 @@ void                sc_fflush_fsync_fclose (FILE * file);
  * \return                 sc_MPI_SUCCESS) only on successful conversion.
  */
 int                 sc_mpi_file_error_class (int errorcode, int *errorclass);
+
+int                 sc_mpi_file_open (sc_MPI_Comm mpicomm,
+                                      const char *filename, int amode,
+                                      sc3_MPI_Info_t mpiinfo,
+                                      sc_MPI_File * mpifile);
 
 #ifdef SC_ENABLE_MPIIO
 
