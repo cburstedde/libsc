@@ -48,6 +48,7 @@ typedef struct sc3_option
 {
   sc3_option_type_t   opt_type;
   char                opt_short;
+  char               *opt_long_alloc;
   const char         *opt_long;
   size_t              opt_long_len;
   int                 opt_has_arg;
@@ -79,8 +80,7 @@ struct sc3_options
 
   /* internal configuration */
   int                 spacing;          /**< Space for value and type. */
-  int                 allow_pack;       /**< Accept short options '-abc'. */
-  sc3_array_t        *opts;
+  sc3_array_t        *opts;             /**< Array of options. */
 
   /* list of sub-options to this one */
   sc3_array_t        *subs;             /**< FIFO-storage of sub-options. */
@@ -125,7 +125,6 @@ sc3_options_is_valid (const sc3_options_t * yy, char *reason)
       break;
     case SC3_OPTION_STRING:
       SC3E_TEST (o->v.var_string != NULL, reason);
-      SC3E_TEST (o->opt_string_value == *o->v.var_string, reason);
       break;
     default:
       SC3E_NO (reason, "Invalid option type");
@@ -210,6 +209,7 @@ sc3_options_add_common (sc3_options_t * yy, sc3_option_type_t tt,
   /* set couple parameters of this option */
   o->opt_type = tt;
   o->opt_short = opt_short;
+  o->opt_long_alloc = NULL;
   o->opt_long = opt_long;
   o->opt_long_len = opt_long != NULL ? strlen (opt_long) : 0;
   o->opt_has_arg = 0;
@@ -294,17 +294,49 @@ sc3_error_t        *
 sc3_options_add_sub (sc3_options_t * yy,
                      sc3_options_t * sub, const char *prefix)
 {
+  int                 i, len;
+  char                combine[SC3_BUFSIZE];
+  sc3_option_t       *src, *dest;
   sc3_options_subopt_t *so;
 
   SC3A_IS (sc3_options_is_new, yy);
   SC3A_IS (sc3_options_is_setup, sub);
 
-  /* append new sub options to doubly linked list */
+  /* loop through entries of sub options object */
+  SC3E (sc3_array_get_elem_count (sub->opts, &len));
+  for (i = 0; i < len; ++i) {
+    SC3E (sc3_array_index (sub->opts, i, &src));
+    if (src->opt_short == '\0' && src->opt_long_len == 0) {
+      continue;
+    }
+
+    /* copy each of the sub options into current options object */
+    SC3E (sc3_array_push (yy->opts, &dest));
+    *dest = *src;
+    dest->opt_long_alloc = NULL;
+    dest->opt_string_value = NULL;
+
+    /* allocate combined long option name */
+    if (prefix != NULL && prefix[0] != '\0') {
+      if (src->opt_long_len > 0) {
+        sc3_snprintf (combine, SC3_BUFSIZE, "%s:%s", prefix, src->opt_long);
+      }
+      else {
+        SC3A_CHECK (src->opt_short != '\0');
+        sc3_snprintf (combine, SC3_BUFSIZE, "%s:-%c", prefix, src->opt_short);
+      }
+      SC3E (sc3_allocator_strdup (yy->alloc, combine, &dest->opt_long_alloc));
+      dest->opt_long_len = strlen (dest->opt_long = dest->opt_long_alloc);
+      dest->opt_short = '\0';
+    }
+  }
+
+  /* remember new sub options in array */
   SC3E (sc3_array_push (yy->subs, &so));
   so->sub = sub;
   so->prefix = sc3_strpass (prefix);
 
-  /* reference sub-options since we are storing them */
+  /* reference sub-options since we rely on their const char * parameters */
   SC3E (sc3_options_ref (sub));
   return NULL;
 }
@@ -354,9 +386,8 @@ sc3_options_unref (sc3_options_t ** yyp)
     SC3E (sc3_array_get_elem_count (yy->opts, &len));
     for (i = 0; i < len; ++i) {
       SC3E (sc3_array_index (yy->opts, i, &o));
-      if (o->opt_type == SC3_OPTION_STRING) {
-        SC3E (sc3_allocator_free (yy->alloc, &o->opt_string_value));
-      }
+      SC3E (sc3_allocator_free (yy->alloc, &o->opt_long_alloc));
+      SC3E (sc3_allocator_free (yy->alloc, &o->opt_string_value));
     }
     SC3E (sc3_array_destroy (&yy->opts));
 
@@ -490,11 +521,12 @@ sc3_options_parse_single (sc3_options_t * yy, int argc, char **argv,
   /* loop over command line arguments */
   for (; *argp < argc; ++*argp) {
     if ((at = argv[*argp]) == NULL) {
-      /* impossible parameter string is ignored */
-      continue;
+      /* treat NULL arguments as errors */
+      *result = -1;
+      return NULL;
     }
     if (stop != NULL && *stop) {
-      /* we're not looking for options currently */
+      /* we are not looking for options currently */
       return NULL;
     }
     lz = strlen (at);
@@ -646,38 +678,6 @@ sc3_options_parse_single (sc3_options_t * yy, int argc, char **argv,
   return NULL;
 }
 
-static sc3_error_t *
-sc3_options_parse_recurse (sc3_options_t * yy, int argc, char **argv,
-                           int *argp, int *stop, int *result)
-{
-  SC3A_IS (sc3_options_is_setup, yy);
-  SC3A_CHECK (0 <= argc);
-  SC3A_CHECK (argv != NULL);
-  SC3A_CHECK (argp != NULL);
-  SC3A_CHECK (0 <= *argp && *argp < argc);
-  SC3A_CHECK (result != NULL);
-  SC3A_CHECK (*result == 0);
-
-  /* try to process a single argument */
-  SC3E (sc3_options_parse_single (yy, argc, argv, argp, stop, result));
-  if (*result == 0) {
-    int                 i, len;
-    sc3_options_subopt_t *so;
-
-    /* we did not match anything.  Go down the sub-options tree */
-    SC3E (sc3_array_get_elem_count (yy->subs, &len));
-    for (i = 0; i < len; ++i) {
-      SC3E (sc3_array_index (yy->subs, i, &so));
-      SC3E (sc3_options_parse_recurse
-            (so->sub, argc, argv, argp, stop, result));
-      if (*result != 0) {
-        break;
-      }
-    }
-  }
-  return NULL;
-}
-
 sc3_error_t        *
 sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
                    sc3_options_arg_t arg_cb, sc3_options_arg_t err_cb,
@@ -693,9 +693,9 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
   while (argp < argc) {
     argp_in = argp;
 
-    SC3E (sc3_options_parse_recurse (yy, argc, argv, &argp, &stop, &result));
-    if (result <= 0) {
-      SC3A_CHECK (argp < argc);
+    SC3E (sc3_options_parse_single (yy, argc, argv, &argp, &stop, &result));
+    SC3A_CHECK (argp <= argc);
+    if (result <= 0 && argp < argc) {
 
       ccontin = 1;
       if (result == 0) {
@@ -706,7 +706,7 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
       }
       else {
         /* process one error */
-        if (err_cb != NULL) {
+        if (argv[argp] != NULL && err_cb != NULL) {
           SC3E (err_cb (&ccontin, argp, argv, cb_user));
         }
       }
@@ -790,7 +790,7 @@ sc3_options_log_summary_help (sc3_options_t * yy,
 
     /* prepare short option */
     if (o->opt_short == '\0') {
-      sc3_snprintf (lshort, 3, "%3s", "");
+      sc3_snprintf (lshort, 3, "%2s", "");
     }
     else {
       sc3_snprintf (lshort, 3, "-%c", o->opt_short);
@@ -814,6 +814,7 @@ sc3_options_log_summary_help (sc3_options_t * yy,
     sc3_logf (logger, SC3_LOG_GLOBAL, lev, 0, "%s %s %s",
               lshort, llong, lvalue);
   }
+
   return NULL;
 }
 

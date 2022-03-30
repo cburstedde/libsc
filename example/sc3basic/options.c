@@ -32,6 +32,7 @@ typedef struct options_global
   int                 i1;
   int                 i2;
   int                 subi;
+  int                 prima;
   double              dd;
   const char         *s1;
   const char         *s2;
@@ -58,7 +59,7 @@ parse_error_cb (int *contin, int argp, char **argv, void *user)
   SC3E_RETVAL (contin, 1);
   SC3A_CHECK (errp != NULL);
 
-  SC3_GLOBAL_ERRORF ("Option error at position %d", argp);
+  SC3_GLOBAL_ERRORF ("Option error at/before position %d", argp);
   *errp = 1;
 
   return NULL;
@@ -68,18 +69,30 @@ static sc3_error_t *
 parse_options (options_global_t * g, int argc, char **argv)
 {
   int                 perr;
-  sc3_options_t      *opt, *sub;
+  sc3_options_t      *opt, *sub, *subsub;
+
+  /* construct sub-sub-options object */
+  SC3E (sc3_options_new (g->alloc, &subsub));
+  SC3E (sc3_options_add_int (subsub, 'p', "prima", "Sub-sub-options integer",
+                             &g->prima, 9));
+  SC3E (sc3_options_setup (subsub));
 
   /* construct sub-options object */
   SC3E (sc3_options_new (g->alloc, &sub));
+#if 0
   SC3E (sc3_options_set_spacing (sub, 24));
+#endif
   SC3E (sc3_options_add_int (sub, 'u', "subi", "Sub-options integer",
                              &g->subi, 5));
+  SC3E (sc3_options_add_sub (sub, subsub, "sub"));
+  SC3E (sc3_options_unref (&subsub));
   SC3E (sc3_options_setup (sub));
 
   /* construct options object */
   SC3E (sc3_options_new (g->alloc, &opt));
+#if 0
   SC3E (sc3_options_set_spacing (opt, 20));
+#endif
   SC3E (sc3_options_add_switch (opt, '?', "help", "Please help", &g->help));
   SC3E (sc3_options_add_switch (opt, 'f', "flag", "Some flag", &g->f1));
   SC3E (sc3_options_add_int (opt, 'i', "i-one", "First integer", &g->i1, 6));
