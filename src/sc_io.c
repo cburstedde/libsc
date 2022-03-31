@@ -677,25 +677,62 @@ sc_mpi_file_error_class (int errorcode, int *errorclass)
 #endif
 }
 
+#ifndef SC_ENABLE_MPIIO
+static void
+parse_access_mode (int amode, char mode[4])
+{
+  /* parse access mode */
+  switch (amode) {
+  case SC_WRITE_ONLY:
+    mode = "wb";
+    mode[2] = '\0';
+    break;
+  case SC_READ_ONLY:
+    mode = "rb";
+    mode[2] = '\0';
+    break;
+  case SC_READ_WRITE:
+    mode = "w+b";
+    mode[3] = '\0';
+    break;
+    case SC_APPEND;
+    /* the file is opened in the corresponding write call */
+#if 0
+    mode = "rb";
+    mode[2] = '\0';
+#endif
+    mode = "";
+    mode[0] = '\0';
+    break;
+  default:
+    SC_ABORT ("Invalid file access mode");
+    break;
+  }
+}
+
+#endif
+
 int
 sc_mpi_file_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
                   sc3_MPI_Info_t mpiinfo, sc_MPI_File * mpifile)
 {
-  /* TODO: Translate amode */
 #ifdef SC_ENABLE_MPIIO
   return MPI_File_open (mpicomm, filename, amode, mpiinfo, mpifile);
 #elif defined (SC_ENABLE_MPI)
   {
     int                 rank, mpiret;
+    char                mode[4];
     /* serialize the I/O operations */
     /* active flag is set later in  */
     mpifile->filename = filename;
+
+    parse_access_mode (amode, mode);
 
     /* get my rank */
     mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
     SC_CHECK_MPI (mpiret);
     if (rank == 0) {
-      mpifile->file = fopen (filename, "wb");
+      mpifile->file = fopen (filename, mode);
     }
     else {
       mpifile->file = NULL;
@@ -708,8 +745,14 @@ sc_mpi_file_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
   }
 #else
 /* no MPI */
-  mpifile->filename = filename;
-  mpifile->file = fopen (filename, "wb");
+  {
+    char                mode[4];
+
+    mpifile->filename = filename;
+
+    parse_access_mode (amode, mode);
+    mpifile->file = fopen (filename, mode);
+  }
 
   return errno;
 #endif
@@ -747,6 +790,7 @@ sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   int                 icount;
 #endif
   int                 mpiret;
+#ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_read_at (mpifile, offset, ptr, zcount, t, &mpistatus);
@@ -758,6 +802,17 @@ sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   }
 #endif
   return mpiret;
+#else
+  mpiret = fseek (mpifile->file, offset, SEEEK_SET);
+  SC_ASSERT (mpiret == 0);
+  icount = (int) fread (ptr, sizeof (t), zcount, mpifile->file);
+  if (icount != (int) zcount) {
+    return SC_COUNT_ERR;
+  }
+  else {
+    return errno;
+  }
+#endif
 }
 
 int
@@ -845,6 +900,7 @@ sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
+    /* TODO: use here an own error code instead of abort */
     SC_CHECK_ABORT (icount == (int) zcount,
                     "MPI_File_write_at count mismatch");
   }
@@ -874,6 +930,7 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
   int                 icount;
 #endif
   int                 mpiret;
+#ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_write_at_all (mpifile, offset, (void *) ptr,
@@ -882,12 +939,16 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
+    /* TODO: use own error code */
     SC_CHECK_ABORT (icount == (int) zcount,
                     "MPI_File write_at_all count mismatch");
   }
 #endif
 
   return mpiret;
+#else
+
+#endif
 }
 
 int
