@@ -684,14 +684,19 @@ sc3_options_parse (sc3_options_t * yy, int argc, char **argv,
                    void *cb_user)
 {
   int                 ccontin;
-  int                 argp, argp_in;
+  int                 argp;
+#ifdef SC_ENABLE_DEBUG
+  int                 argp_in;
+#endif
   int                 stop = 0;
   int                 result = 0;
 
   /* we move the argument index forward inside the loop */
   argp = 1;
   while (argp < argc) {
+#ifdef SC_ENABLE_DEBUG
     argp_in = argp;
+#endif
 
     SC3E (sc3_options_parse_single (yy, argc, argv, &argp, &stop, &result));
     SC3A_CHECK (argp <= argc);
