@@ -531,6 +531,9 @@ typedef struct no_mpiio_file
 {
   const char         *filename;
   FILE               *file;
+  #ifdef SC_ENABLE_MPI
+  sc_MPI_Comm mpicomm;
+  #endif
 } sc_MPI_File;
 
 #define sc_MPI_FILE_NULL           NULL
