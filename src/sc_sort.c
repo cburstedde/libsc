@@ -21,9 +21,6 @@
   02110-1301, USA.
 */
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
 #include <sc_containers.h>
 #include <sc_sort.h>
 
