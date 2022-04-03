@@ -803,10 +803,10 @@ sc3_options_log_summary_help (sc3_options_t * yy,
 
     /* prepare long option */
     if (o->opt_long_len == 0) {
-      sc3_snprintf (llong, 80, "%*s", yy->spacing + 2, "");
+      sc3_snprintf (llong, 80, "%*s", yy->spacing + 3, "");
     }
     else {
-      sc3_snprintf (llong, 80, "--%-*s", yy->spacing, o->opt_long);
+      sc3_snprintf (llong, 80, "--%-*s", yy->spacing + 1, o->opt_long);
     }
 
     /* print the whole line */

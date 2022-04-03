@@ -79,9 +79,6 @@ parse_options (options_global_t * g, int argc, char **argv)
 
   /* construct sub-options object */
   SC3E (sc3_options_new (g->alloc, &sub));
-#if 0
-  SC3E (sc3_options_set_spacing (sub, 24));
-#endif
   SC3E (sc3_options_add_int (sub, 'u', "subi", "Sub-options integer",
                              &g->subi, 5));
   SC3E (sc3_options_add_sub (sub, subsub, "sub"));
@@ -90,12 +87,10 @@ parse_options (options_global_t * g, int argc, char **argv)
 
   /* construct options object */
   SC3E (sc3_options_new (g->alloc, &opt));
-#if 0
-  SC3E (sc3_options_set_spacing (opt, 20));
-#endif
+  SC3E (sc3_options_set_spacing (opt, 10));
   SC3E (sc3_options_add_switch (opt, '?', "help", "Please help", &g->help));
   SC3E (sc3_options_add_switch (opt, 'f', "flag", "Some flag", &g->f1));
-  SC3E (sc3_options_add_int (opt, 'i', "i-one", "First integer", &g->i1, 6));
+  SC3E (sc3_options_add_int (opt, 'i', "i", "First integer", &g->i1, 6));
   SC3E (sc3_options_add_int (opt, 'j', NULL, "Second integer", &g->i2, 7));
   SC3E (sc3_options_add_double
         (opt, 'd', "number", "Real value", &g->dd, 9.18));
