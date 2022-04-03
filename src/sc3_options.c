@@ -61,6 +61,7 @@ typedef struct sc3_option
     double             *var_double;
     const char        **var_string;
   } v;
+  sc3_options_t      *sub;
 }
 sc3_option_t;
 
@@ -128,6 +129,9 @@ sc3_options_is_valid (const sc3_options_t * yy, char *reason)
       break;
     default:
       SC3E_NO (reason, "Invalid option type");
+    }
+    if (o->sub != NULL) {
+      SC3E_IS (sc3_options_is_setup, o->sub, reason);
     }
   }
 
@@ -215,6 +219,7 @@ sc3_options_add_common (sc3_options_t * yy, sc3_option_type_t tt,
   o->opt_has_arg = 0;
   o->opt_help = opt_help;
   o->opt_string_value = NULL;
+  o->sub = NULL;
 
   /* return partially initialized option */
   *oo = o;
@@ -315,6 +320,7 @@ sc3_options_add_sub (sc3_options_t * yy,
     *dest = *src;
     dest->opt_long_alloc = NULL;
     dest->opt_string_value = NULL;
+    dest->sub = src->sub != NULL ? src->sub : sub;
 
     /* allocate combined long option name */
     if (prefix != NULL && prefix[0] != '\0') {
@@ -368,7 +374,7 @@ sc3_error_t        *
 sc3_options_unref (sc3_options_t ** yyp)
 {
   int                 waslast;
-  sc3_allocator_t    *alloc;
+  sc3_allocator_t    *alloc, *subal;
   sc3_options_t      *yy;
 
   SC3E_INOUTP (yyp, yy);
@@ -386,8 +392,11 @@ sc3_options_unref (sc3_options_t ** yyp)
     SC3E (sc3_array_get_elem_count (yy->opts, &len));
     for (i = 0; i < len; ++i) {
       SC3E (sc3_array_index (yy->opts, i, &o));
-      SC3E (sc3_allocator_free (yy->alloc, &o->opt_long_alloc));
-      SC3E (sc3_allocator_free (yy->alloc, &o->opt_string_value));
+      SC3E (sc3_allocator_free (alloc, &o->opt_long_alloc));
+
+      /* use the original allocator for the string's value */
+      subal = o->sub != NULL ? o->sub->alloc : alloc;
+      SC3E (sc3_allocator_free (subal, &o->opt_string_value));
     }
     SC3E (sc3_array_destroy (&yy->opts));
 
@@ -441,6 +450,7 @@ process_with_arg (sc3_options_t * yy,
   long                lo;
   double              dr;
   char               *endptr;
+  sc3_allocator_t    *subal;
 
   SC3A_CHECK (o != NULL && o->opt_has_arg && at != NULL);
 
@@ -467,8 +477,10 @@ process_with_arg (sc3_options_t * yy,
     }
     break;
   case SC3_OPTION_STRING:
-    SC3E (sc3_allocator_free (yy->alloc, &o->opt_string_value));
-    SC3E (sc3_allocator_strdup (yy->alloc, at, &o->opt_string_value));
+    /* use the original allocator for the string's value */
+    subal = o->sub != NULL ? o->sub->alloc : yy->alloc;
+    SC3E (sc3_allocator_free (subal, &o->opt_string_value));
+    SC3E (sc3_allocator_strdup (subal, at, &o->opt_string_value));
     *o->v.var_string = o->opt_string_value;
     *success = 1;
     break;

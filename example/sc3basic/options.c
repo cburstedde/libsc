@@ -32,10 +32,10 @@ typedef struct options_global
   int                 i1;
   int                 i2;
   int                 subi;
-  int                 prima;
   double              dd;
   const char         *s1;
   const char         *s2;
+  const char         *prima;
 }
 options_global_t;
 
@@ -73,8 +73,8 @@ parse_options (options_global_t * g, int argc, char **argv)
 
   /* construct sub-sub-options object */
   SC3E (sc3_options_new (g->alloc, &subsub));
-  SC3E (sc3_options_add_int (subsub, 'p', "prima", "Sub-sub-options integer",
-                             &g->prima, 9));
+  SC3E (sc3_options_add_string (subsub, 'p', "prima", "Sub-sub-option string",
+                                &g->prima, "Prima String"));
   SC3E (sc3_options_setup (subsub));
 
   /* construct sub-options object */
