@@ -107,11 +107,17 @@
 /* Define to 1 if you have the <signal.h> header file. */
 #cmakedefine SC_HAVE_SIGNAL_H
 
+/* Define to 1 if you have the <stdint.h> header file. */
 #cmakedefine SC_HAVE_STDINT_H
 
+/* Define to 1 if you have the <stdlib.h> header file. */
 #cmakedefine SC_HAVE_STDLIB_H
 
+/* Define to 1 if you have the <string.h> header file. */
 #cmakedefine SC_HAVE_STRING_H
+
+/* Define to 1 if you have the <libgen.h> header file. */
+#cmakedefine SC_HAVE_LIBGEN_H
 
 /* Define to 1 if you have the `strtoll' function. */
 #cmakedefine SC_HAVE_STRTOLL
@@ -134,6 +140,12 @@
 /* Define to 1 if you have the <time.h> header file. */
 #cmakedefine SC_HAVE_TIME_H
 
+/* Replace autoconf feature for simultaneous inclusion. */
+#if defined SC_HAVE_SYS_TIME_H && defined SC_HAVE_TIME_H
+#define SC_TIME_WITH_SYS_TIME
+#endif
+
+/* windows-specific include file */
 #cmakedefine SC_HAVE_WINSOCK2_H
 
 /* desired alignment of allocations in bytes */
