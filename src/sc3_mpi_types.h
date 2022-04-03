@@ -27,10 +27,10 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-/** \file sc3_mpi_types.h \ingroup sc
+/** \file sc3_mpi_types.h \ingroup sc3
  *
- * We provide a MPI replacement data types for configuring without MPI.
- * These are included from the upcoming sc3_mpi.h and by current sc_mpi.h.
+ * We provide MPI replacement data types for configuring without MPI.
+ * These are included from both sc_mpi.h and \ref sc3_mpi.h.
  *
  * This header file provides definitions of MPI data types for the case
  * that no MPI implementation is available or MPI is not configured.
@@ -191,39 +191,44 @@ sc3_MPI_Comm_type_t;
 
 #endif /* SC_ENABLE_MPICOMMSHARED */
 
+/** We wrap the MPI 3 window object.
+ * With MPI 3 windows available, the functionality is unchanged.
+ * Without MPI 3 available, it is primitive but allows basic use.
+ *
+ * When created with a communicator size of one, or when `configure` does not
+ * define SC_ENABLE_MPIWINSHARED, we use the wrapper and do not go through MPI.
+ * When shared windows are not supported and the communicator has size > 1,
+ * the wrapper cannot query or lock and unlock the window of remote ranks.
+ * Any such attempt will result in a fatal error returned.
+ */
+typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
+
+/** Invalid MPI 3 window object. */
+#define SC3_MPI_WIN_NULL ((sc3_MPI_Win_t) NULL)
+
 #ifndef SC_ENABLE_MPIWINSHARED
 /* It is possible that MPI exists but the shared windows do not. */
 
 /** We wrap the MPI address integer type. */
 typedef long        sc3_MPI_Aint_t;
 
-/** We wrap the MPI 3 window object.
- * Without MPI 3 available, it is primitive but allows basic use. */
-typedef struct sc3_MPI_Win *sc3_MPI_Win_t;
-
 /** Wrap MPI 3 window lock modes. */
 typedef enum sc3_MPI_Win_mode
 {
   SC3_MPI_LOCK_SHARED = 0x13,     /**< Shared (multiple readers) lock. */
   SC3_MPI_LOCK_EXCLUSIVE = 0x14,  /**< Exclusive (usually reader) lock. */
-  SC3_MPI_MODE_NOCHECK = 0x15     /**< Option to \c sc3_MPI_Win_lock. */
+  SC3_MPI_MODE_NOCHECK = 0x15     /**< Option to \ref sc3_MPI_Win_lock. */
 }
 sc3_MPI_Win_mode_t;
-
-/** Invalid MPI 3 window object. */
-#define SC3_MPI_WIN_NULL ((sc3_MPI_Win_t) NULL)
 
 #else
 /* We know that MPI is generally available. */
 
 typedef MPI_Aint    sc3_MPI_Aint_t;
-typedef MPI_Win     sc3_MPI_Win_t;
 
 #define SC3_MPI_LOCK_SHARED MPI_LOCK_SHARED
 #define SC3_MPI_LOCK_EXCLUSIVE MPI_LOCK_EXCLUSIVE
 #define SC3_MPI_MODE_NOCHECK MPI_MODE_NOCHECK
-
-#define SC3_MPI_WIN_NULL MPI_WIN_NULL
 
 #endif /* SC_ENABLE_MPIWINSHARED */
 
