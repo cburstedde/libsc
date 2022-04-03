@@ -302,6 +302,7 @@ dnl SC_CHECK_LIBRARIES(PREFIX)
 dnl This macro bundles the checks for all libraries and link tests
 dnl that are required by libsc.  It can be used by other packages that
 dnl link to libsc to add appropriate options to LIBS.
+dnl We also test for some tool executables.
 dnl
 AC_DEFUN([SC_CHECK_LIBRARIES],
 [

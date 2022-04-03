@@ -152,7 +152,7 @@
 #endif
 #include <ctype.h>
 #include <float.h>
-#ifndef _MSC_VER
+#if defined SC_HAVE_LIBGEN_H && !defined _MSC_VER
 #include <libgen.h>
 #endif
 #include <limits.h>
@@ -168,13 +168,13 @@
 #ifdef SC_HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef SC_HAVE_TIME_H
-#include <time.h>
+#ifdef SC_HAVE_SYS_TIME_H
+#include <sys/time.h>
 #endif
 #ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
-#elif defined(_WIN32)
-#include  <BaseTsd.h>
+#elif defined _WIN32
+#include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #endif
 
