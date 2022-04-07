@@ -370,6 +370,8 @@ void                sc_mpi_file_read (sc_MPI_File mpifile, void *ptr,
                                       int zcount, sc_MPI_Datatype t,
                                       const char *errmsg);
 
+#endif
+
 /** Read MPI file content into memory for an explicit offset.
  * This function does not update the file pointer of the MPI file.
  * Contrary to \ref sc_mpi_read, it does not abort on read errors.
@@ -407,6 +409,8 @@ int                 sc_mpi_file_read_at_all (sc_MPI_File mpifile,
 int                 sc_mpi_file_read_all (sc_MPI_File mpifile, void *ptr,
                                           int zcount, sc_MPI_Datatype t);
 
+#ifdef SC_ENABLE_MPIIO
+
 /** Write memory content to an MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
@@ -421,6 +425,8 @@ int                 sc_mpi_file_read_all (sc_MPI_File mpifile, void *ptr,
 void                sc_mpi_file_write (sc_MPI_File mpifile, const void *ptr,
                                        size_t zcount, sc_MPI_Datatype t,
                                        const char *errmsg);
+
+#endif
 
 /** Write MPI file content into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
@@ -465,8 +471,6 @@ int                 sc_mpi_file_write_at_all (sc_MPI_File mpifile,
 int                 sc_mpi_file_write_all (sc_MPI_File mpifile,
                                            const void *ptr, size_t zcount,
                                            sc_MPI_Datatype t);
-
-#endif /* SC_ENABLE_MPIIO */
 
 SC_EXTERN_C_END;
 

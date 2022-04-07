@@ -695,7 +695,7 @@ parse_access_mode (int amode, char mode[4])
     mode = "w+b";
     mode[3] = '\0';
     break;
-    case SC_APPEND:
+  case SC_APPEND:
     /* the file is opened in the corresponding write call */
 #if 0
     mode = "rb";
@@ -964,7 +964,7 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
   /* offset is ignored and we use here the append mode */
   {
     int                 mpisize, rank, count;
-    int                 active, errval;
+    int                 active, errval, count_error;
     sc_MPI_Status       status;
 
     mpiret = sc_MPI_Comm_rank (mpifile->mpicomm, &rank);
@@ -974,6 +974,10 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
 
     /* initally only rank 0 writes to the disk */
     active = (rank == 0) ? -1 : 0;
+
+    /* intialize potential return values */
+    errval = sc_MPI_SUCCESS;
+    count_error = 0;
 
     if (rank != 0) {
       /* wait until the preceding process finished the I/O operation */
@@ -1000,10 +1004,10 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
           if (rank < mpisize - 1) {
             active = errval;
             mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
-                              rank + 1, 1, mpifile->mpicomm);
+                                  rank + 1, 1, mpifile->mpicomm);
             SC_CHECK_MPI (mpiret);
           }
-          return errval;                  
+          goto failure;
         }
       }
 
@@ -1019,26 +1023,26 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
           active = errval;
           /* inform next rank about write error */
           mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
-                              rank + 1, 1, mpifile->mpicomm);
-            SC_CHECK_MPI (mpiret);
+                                rank + 1, 1, mpifile->mpicomm);
+          SC_CHECK_MPI (mpiret);
         }
-        return errno;
+        goto faliure;
       }
       else {
         /* no error but number of written bytes may be lower than expected */
         SC_ASSERT (count <= (int) zcount);
         if (count != (int) zcount) {
           /* report but no abort, i. e. possible other processes continue */
-          return SC_COUNT_ERR;
+          count_error = 1;
         }
 
         /* only update active process if there are processes left */
         if (rank < mpisize - 1) {
           SC_ASSERT (active == -1);
           /* send active flag to the next processor */
-           mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
-                            rank + 1, 1, mpifile->mpicomm);
-           SC_CHECK_MPI (mpiret);
+          mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
+                                rank + 1, 1, mpifile->mpicomm);
+          SC_CHECK_MPI (mpiret);
         }
       }
     }
@@ -1051,12 +1055,32 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
                               rank + 1, 1, mpifile->mpicomm);
         SC_CHECK_MPI (mpiret);
       }
-
-      return active;
     }
     else {
       SC_ABORT_NOT_REACHED ();
     }
+
+  faliure:
+    /* The processes have to wait here because they are not allowed to start
+     * other I/O operations.
+     */
+    sc_MPI_Barrier (mpifile->mpicomm);
+
+    if (rank == 0) {
+      /* open the file on rank 0 to be ready for the next file_write call */
+      mpifile->file = fopen (mpifile->filename, "ab");
+      errval = errno;
+      if (errval != 0) {
+        /* it occurred an error */
+        SC_ASSERT (errval > 0);
+        SC_LERROR ("sc_mpi_write_at_all: rank 0 open failed");
+      }
+    }
+    else {
+      mpifile->file = sc_MPI_FILE_NULL;
+    }
+
+    return (!count_error) ? errval : SC_COUNT_ERR;
   }
 
 #else
