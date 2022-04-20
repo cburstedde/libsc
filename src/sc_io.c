@@ -684,25 +684,20 @@ parse_access_mode (int amode, char mode[4])
   /* parse access mode */
   switch (amode) {
   case SC_WRITE_ONLY:
-    mode = "wb";
-    mode[2] = '\0';
+    snprintf (mode, 3, "%s", "wb");
     break;
   case SC_READ_ONLY:
-    mode = "rb";
-    mode[2] = '\0';
+    snprintf (mode, 3, "%s", "rb");
     break;
   case SC_READ_WRITE:
-    mode = "w+b";
-    mode[3] = '\0';
+    snprintf (mode, 4, "%s", "w+b");
     break;
   case SC_APPEND:
     /* the file is opened in the corresponding write call */
 #if 0
-    mode = "rb";
-    mode[2] = '\0';
+    snprintf (mode, 3, "%s", "rb");
 #endif
-    mode = "";
-    mode[0] = '\0';
+    snprintf (mode, 1, "%s", "");
     break;
   default:
     SC_ABORT ("Invalid file access mode");
@@ -724,6 +719,7 @@ sc_mpi_file_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
   {
     int                 rank, mpiret;
     char                mode[4];
+
     /* serialize the I/O operations */
     /* active flag is set later in  */
     mpifile->filename = filename;
@@ -741,7 +737,7 @@ sc_mpi_file_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
       mpiret = errno;
     }
     else {
-      mpifile->file = NULL;
+      mpifile->file = sc_MPI_FILE_NULL;
       mpiret = sc_MPI_SUCCESS;
     }
     /* broadcast errno */
@@ -900,7 +896,7 @@ sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
 #endif
-  int                 mpiret;
+  int                 mpiret, size;
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
@@ -918,11 +914,14 @@ sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 
   return mpiret;
 #else
-  /* this works with and without MPI */
-  /* TODO: freopen */
+  /* This code is only legal on one process. */
+  /* This works with and without MPI */
   mpiret = fseek (mpifile.file, offset, SEEK_SET);
-  SC_ASSERT (mpiret == 0);
-  icount = (int) fwrite (ptr, zcount, sizeof (t), mpifile.file);
+  SC_CHECK_ABORT (mpiret == 0, "write_at: fseek failed");
+  /* get the data size of the data type */
+  mpiret = MPI_Type_size (t, &size);
+  SC_CHECK_ABORT (mpiret == 0, "write_at: get type size failed");
+  icount = (int) fwrite (ptr, (size_t) size, zcount, mpifile.file);
   fflush (mpifile.file);
   /* TODO: Distingush between the close and flush error? */
   if (icount != (int) zcount) {
@@ -936,7 +935,7 @@ sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 }
 
 int
-sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
+sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
                           const void *ptr, size_t zcount, sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
@@ -946,7 +945,7 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
-  mpiret = MPI_File_write_at_all (mpifile, offset, (void *) ptr,
+  mpiret = MPI_File_write_at_all (*mpifile, offset, (void *) ptr,
                                   (int) zcount, t, &mpistatus);
 #ifdef SC_ENABLE_DEBUG
   if (mpiret == sc_MPI_SUCCESS) {
@@ -959,12 +958,12 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
 #endif
 
   return mpiret;
-#elif defined (P4EST_ENABLE_MPI)
+#elif defined (SC_ENABLE_MPI)
   /* MPI but no MPI IO */
   /* offset is ignored and we use here the append mode */
   {
-    int                 mpisize, rank, count;
-    int                 active, errval, count_error;
+    int                 mpisize, rank, count, size;
+    int                 active, errval;
     sc_MPI_Status       status;
 
     mpiret = sc_MPI_Comm_rank (mpifile->mpicomm, &rank);
@@ -975,9 +974,8 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
     /* initally only rank 0 writes to the disk */
     active = (rank == 0) ? -1 : 0;
 
-    /* intialize potential return values */
+    /* intialize potential return value */
     errval = sc_MPI_SUCCESS;
-    count_error = 0;
 
     if (rank != 0) {
       /* wait until the preceding process finished the I/O operation */
@@ -1012,11 +1010,15 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
       }
 
       /* file was opened successfully */
+      /* get the data size */
+      mpiret = MPI_Type_size (t, &size);
+      SC_CHECK_ABORT (mpiret == 0, "write_at_all: get type size failed");
       /* write data */
-      count = (int) fwrite (ptr, sizeof (t), zcount, mpifile->file);
+      count = (int) fwrite (ptr, (size_t) size, zcount, mpifile->file);
       errval = errno;
       fflush (mpifile->file);
       fclose (mpifile->file);
+      /* TODO: error checking */
       if (errval != 0) {
         /* error during write call */
         if (rank < mpisize - 1) {
@@ -1026,14 +1028,20 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
                                 rank + 1, 1, mpifile->mpicomm);
           SC_CHECK_MPI (mpiret);
         }
-        goto faliure;
+        goto failure;
       }
       else {
         /* no error but number of written bytes may be lower than expected */
         SC_ASSERT (count <= (int) zcount);
         if (count != (int) zcount) {
-          /* report but no abort, i. e. possible other processes continue */
-          count_error = 1;
+          if (rank < mpisize - 1) {
+            active = errval = SC_COUNT_ERR;
+            /* inform next rank about count error */
+            mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
+                                  rank + 1, 1, mpifile->mpicomm);
+            SC_CHECK_MPI (mpiret);
+          }
+          goto failure;
         }
 
         /* only update active process if there are processes left */
@@ -1060,12 +1068,21 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
       SC_ABORT_NOT_REACHED ();
     }
 
-  faliure:
+  failure:
     /* The processes have to wait here because they are not allowed to start
      * other I/O operations.
      */
     sc_MPI_Barrier (mpifile->mpicomm);
 
+    /** The following code restores the open status of the file and
+     * we assume that the user checked the return value of \ref sc_mpi_file_open.
+     * Therefore, we assume that is possible that we can open the file on
+     * process 0 again. However, the opening operation below could fail due
+     * to changed exterior conditions given by the file system.
+     * We abort in this case since we expect the user to check the return
+     * values and having constant file system conditions during the
+     * program execution.
+     */
     if (rank == 0) {
       /* open the file on rank 0 to be ready for the next file_write call */
       mpifile->file = fopen (mpifile->filename, "ab");
@@ -1073,14 +1090,17 @@ sc_mpi_file_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
       if (errval != 0) {
         /* it occurred an error */
         SC_ASSERT (errval > 0);
-        SC_LERROR ("sc_mpi_write_at_all: rank 0 open failed");
+        SC_ABORT ("sc_mpi_write_at_all: rank 0 open failed");
       }
     }
     else {
       mpifile->file = sc_MPI_FILE_NULL;
     }
 
-    return (!count_error) ? errval : SC_COUNT_ERR;
+    /* last rank broadcasts the first error that appeared */
+    sc_MPI_Bcast (&errval, 1, sc_MPI_INT, mpisize - 1, mpifile->mpicomm);
+
+    return errval;
   }
 
 #else

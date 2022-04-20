@@ -394,6 +394,11 @@ int                 sc_mpi_file_read_at (sc_MPI_File mpifile,
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \return              The function returns the MPI error code.
+ * \note                The user needs to pass the pointer to the
+ *                      the \b mpifile. This differs from the MPI
+ *                      standard. This is required to handle the
+ *                      opening operations with MPI but without
+ *                      MPI IO.
  */
 int                 sc_mpi_file_read_at_all (sc_MPI_File mpifile,
                                              sc_MPI_Offset offset, void *ptr,
@@ -454,8 +459,13 @@ int                 sc_mpi_file_write_at (sc_MPI_File mpifile,
  * \param [in] t        The MPI type for each array member.
  * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
+ * \note                The user needs to pass the pointer to the
+ *                      the \b mpifile. This differs from the MPI
+ *                      standard. This is required to handle the
+ *                      opening operations with MPI but without
+ *                      MPI IO.
  */
-int                 sc_mpi_file_write_at_all (sc_MPI_File mpifile,
+int                 sc_mpi_file_write_at_all (sc_MPI_File * mpifile,
                                               sc_MPI_Offset offset,
                                               const void *ptr, size_t zcount,
                                               sc_MPI_Datatype t);
