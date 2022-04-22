@@ -818,8 +818,8 @@ sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 }
 
 int
-sc_mpi_file_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
-                         int zcount, sc_MPI_Datatype t)
+sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
+                         void *ptr, int zcount, sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -828,15 +828,167 @@ sc_mpi_file_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
-  mpiret = MPI_File_read_at_all (mpifile, offset, ptr, zcount, t, &mpistatus);
+  mpiret = MPI_File_read_at_all (*mpifile, offset, (void *) ptr,
+                                 (int) zcount, t, &mpistatus);
 #ifdef SC_ENABLE_DEBUG
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
-    SC_CHECK_ABORT (icount == zcount, "MPI_File_read_at_all count mismatch");
+    /* TODO: use own error code */
+    SC_CHECK_ABORT (icount == (int) zcount,
+                    "MPI_File read_at_all count mismatch");
   }
 #endif
+
   return mpiret;
+#elif defined (SC_ENABLE_MPI)
+  /* MPI but no MPI IO */
+  {
+    int                 mpisize, rank, count, size;
+    int                 active, errval;
+    sc_MPI_Status       status;
+
+    mpiret = sc_MPI_Comm_rank (mpifile->mpicomm, &rank);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Comm_size (mpifile->mpicomm, &mpisize);
+    SC_CHECK_MPI (mpiret);
+
+    /* initally only rank 0 writes to the disk */
+    active = (rank == 0) ? -1 : 0;
+
+    /* intialize potential return value */
+    errval = sc_MPI_SUCCESS;
+
+    if (rank != 0) {
+      /* wait until the preceding process finished the I/O operation */
+      /* receive */
+      mpiret = sc_MPI_Recv (&active, 1, sc_MPI_INT,
+                            rank - 1, sc_MPI_ANY_TAG,
+                            mpifile->mpicomm, &status);
+      SC_CHECK_MPI (mpiret);
+      mpiret = MPI_Get_count (&status, sc_MPI_INT, &count);
+      SC_CHECK_MPI (mpiret);
+      SC_CHECK_ABORT (count == 1, "MPI receive");
+    }
+
+    /* active == -1 means process is active */
+    if (active == -1) {
+      /* process 0 must not wait for other processes */
+      if (rank != 0) {
+        /* open the file */
+        mpifile->file = fopen (mpifile->filename, "rb");
+        errval = errno;
+        if (errval != 0) {
+          /* it occurred an error */
+          SC_ASSERT (errval > 0);
+          if (rank < mpisize - 1) {
+            active = errval;
+            mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
+                                  rank + 1, 1, mpifile->mpicomm);
+            SC_CHECK_MPI (mpiret);
+          }
+          goto failure;
+        }
+      }
+
+      /* file was opened successfully */
+      /* get the data size */
+      mpiret = MPI_Type_size (t, &size);
+      SC_CHECK_ABORT (mpiret == 0, "read_at_all: get type size failed");
+      mpiret = fseek (mpifile->file, offset, SEEK_SET);
+      SC_CHECK_ABORT (mpiret == 0, "read_at_all: seek failed");
+      /* read data */
+      count = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
+      errval = errno;
+      fflush (mpifile->file);
+      fclose (mpifile->file);
+      /* TODO: error checking */
+      if (errval != 0) {
+        /* error during write call */
+        if (rank < mpisize - 1) {
+          active = errval;
+          /* inform next rank about write error */
+          mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
+                                rank + 1, 1, mpifile->mpicomm);
+          SC_CHECK_MPI (mpiret);
+        }
+        goto failure;
+      }
+      else {
+        /* no error but number of written bytes may be lower than expected */
+        SC_ASSERT (count <= (int) zcount);
+        if (count != (int) zcount) {
+          if (rank < mpisize - 1) {
+            active = errval = SC_COUNT_ERR;
+            /* inform next rank about count error */
+            mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
+                                  rank + 1, 1, mpifile->mpicomm);
+            SC_CHECK_MPI (mpiret);
+          }
+          goto failure;
+        }
+
+        /* only update active process if there are processes left */
+        if (rank < mpisize - 1) {
+          SC_ASSERT (active == -1);
+          /* send active flag to the next processor */
+          mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
+                                rank + 1, 1, mpifile->mpicomm);
+          SC_CHECK_MPI (mpiret);
+        }
+      }
+    }
+    else if (active > 0) {
+      /** fopen failed for the last process and active is the errno.
+       * We propage the errno to all subsequent processes.
+       */
+      if (rank < mpisize - 1) {
+        mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
+                              rank + 1, 1, mpifile->mpicomm);
+        SC_CHECK_MPI (mpiret);
+      }
+    }
+    else {
+      SC_ABORT_NOT_REACHED ();
+    }
+
+  failure:
+    /* The processes have to wait here because they are not allowed to start
+     * other I/O operations.
+     */
+    sc_MPI_Barrier (mpifile->mpicomm);
+
+    /** The following code restores the open status of the file and
+     * we assume that the user checked the return value of \ref sc_mpi_file_open.
+     * Therefore, we assume that is possible that we can open the file on
+     * process 0 again. However, the opening operation below could fail due
+     * to changed exterior conditions given by the file system.
+     * We abort in this case since we expect the user to check the return
+     * values and having constant file system conditions during the
+     * program execution.
+     */
+    if (rank == 0) {
+      /* open the file on rank 0 to be ready for the next file_read call */
+      mpifile->file = fopen (mpifile->filename, "rb");
+      errval = errno;
+      if (errval != 0) {
+        /* it occurred an error */
+        SC_ASSERT (errval > 0);
+        SC_ABORT ("sc_mpi_read_at_all: rank 0 open failed");
+      }
+    }
+    else {
+      mpifile->file = sc_MPI_FILE_NULL;
+    }
+
+    /* last rank broadcasts the first error that appeared */
+    sc_MPI_Bcast (&errval, 1, sc_MPI_INT, mpisize - 1, mpifile->mpicomm);
+
+    return errval;
+  }
+
+#else
+
 #endif
 }
 

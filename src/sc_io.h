@@ -400,7 +400,7 @@ int                 sc_mpi_file_read_at (sc_MPI_File mpifile,
  *                      opening operations with MPI but without
  *                      MPI IO.
  */
-int                 sc_mpi_file_read_at_all (sc_MPI_File mpifile,
+int                 sc_mpi_file_read_at_all (sc_MPI_File * mpifile,
                                              sc_MPI_Offset offset, void *ptr,
                                              int zcount, sc_MPI_Datatype t);
 
