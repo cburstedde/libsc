@@ -791,7 +791,7 @@ sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
 #endif
-  int                 mpiret;
+  int                 mpiret, size;
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
@@ -806,8 +806,11 @@ sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   return mpiret;
 #else
   mpiret = fseek (mpifile.file, offset, SEEK_SET);
-  SC_ASSERT (mpiret == 0);
-  icount = (int) fread (ptr, sizeof (t), zcount, mpifile.file);
+  SC_CHECK_ABORT (mpiret == 0, "read_at: fseek failed");
+  /* get the data size of the data type */
+  mpiret = MPI_Type_size (t, &size);
+  SC_CHECK_ABORT (mpiret == 0, "read_at: get type size failed");
+  icount = (int) fread (ptr, (size_t) size, zcount, mpifile.file);
   if (icount != (int) zcount) {
     return SC_COUNT_ERR;
   }
@@ -828,7 +831,7 @@ sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
-  mpiret = MPI_File_read_at_all (*mpifile, offset, (void *) ptr,
+  mpiret = MPI_File_read_at_all (*mpifile, offset, ptr,
                                  (int) zcount, t, &mpistatus);
 #ifdef SC_ENABLE_DEBUG
   if (mpiret == sc_MPI_SUCCESS) {
@@ -940,7 +943,7 @@ sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
     }
     else if (active > 0) {
       /** fopen failed for the last process and active is the errno.
-       * We propage the errno to all subsequent processes.
+       * We propagate the errno to all subsequent processes.
        */
       if (rank < mpisize - 1) {
         mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
@@ -1208,7 +1211,7 @@ sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
     }
     else if (active > 0) {
       /** fopen failed for the last process and active is the errno.
-       * We propage the errno to all subsequent processes.
+       * We propagate the errno to all subsequent processes.
        */
       if (rank < mpisize - 1) {
         mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
