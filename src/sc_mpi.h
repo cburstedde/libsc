@@ -86,6 +86,7 @@ sc_tag_t;
 #define sc_MPI_ERR_OTHER           MPI_ERR_OTHER
 #define sc_MPI_ERR_NO_MEM          MPI_ERR_NO_MEM
 #define sc_MPI_MAX_ERROR_STRING    MPI_MAX_ERROR_STRING
+#define sc_MPI_ERR_COUNT           -1 /**< Error code for MPI count error */
 
 #ifdef SC_ENABLE_MPIIO
 
@@ -531,9 +532,9 @@ typedef struct no_mpiio_file
 {
   const char         *filename;
   FILE               *file;
-  #ifdef SC_ENABLE_MPI
-  sc_MPI_Comm mpicomm;
-  #endif
+#ifdef SC_ENABLE_MPI
+  sc_MPI_Comm         mpicomm;
+#endif
 } sc_MPI_File;
 
 #define sc_MPI_FILE_NULL           NULL

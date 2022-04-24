@@ -604,6 +604,11 @@ int
 sc_mpi_file_error_class (int errorcode, int *errorclass)
 {
 #ifdef SC_ENABLE_MPIIO
+  if (errorcode == sc_MPI_ERR_COUNT) {
+    *errorclass = sc_MPI_ERR_COUNT;
+    return sc_MPI_SUCCESS;
+  }
+
   return MPI_Error_class (errorcode, errorclass);
 #else
   if (errorclass == NULL) {
@@ -669,6 +674,8 @@ sc_mpi_file_error_class (int errorcode, int *errorclass)
   case EPIPE:
     *errorclass = sc_MPI_ERR_IO;
     break;
+  case sc_MPI_ERR_COUNT:
+    *errorclass = sc_MPI_ERR_COUNT;
 
   default:
     *errorclass = sc_MPI_ERR_UNKNOWN;
@@ -706,8 +713,6 @@ parse_access_mode (int amode, char mode[4])
 }
 
 #endif
-
-#define SC_COUNT_ERR -42
 
 int
 sc_mpi_file_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
@@ -800,7 +805,7 @@ sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
-    SC_CHECK_ABORT (icount == zcount, "MPI_File_read_at count mismatch");
+    return (icount == zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
   }
 #endif
   return mpiret;
@@ -811,8 +816,8 @@ sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   mpiret = MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == 0, "read_at: get type size failed");
   icount = (int) fread (ptr, (size_t) size, zcount, mpifile.file);
-  if (icount != (int) zcount) {
-    return SC_COUNT_ERR;
+  if (icount != zcount) {
+    return sc_MPI_ERR_COUNT;
   }
   else {
     return errno;
@@ -837,9 +842,7 @@ sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   if (mpiret == sc_MPI_SUCCESS && zcount != 0) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
-    /* TODO: use own error code */
-    SC_CHECK_ABORT (icount == (int) zcount,
-                    "MPI_File read_at_all count mismatch");
+    return (icount == zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
   }
 #endif
 
@@ -922,7 +925,7 @@ sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
         SC_ASSERT (count <= (int) zcount);
         if (count != (int) zcount) {
           if (rank < mpisize - 1) {
-            active = errval = SC_COUNT_ERR;
+            active = errval = sc_MPI_ERR_COUNT;
             /* inform next rank about count error */
             mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
                                   rank + 1, 1, mpifile->mpicomm);
@@ -1011,7 +1014,7 @@ sc_mpi_file_read_all (sc_MPI_File mpifile, void *ptr, int zcount,
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
-    SC_CHECK_ABORT (icount == zcount, "MPI_File_read_all count mismatch");
+    return (icount == zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
   }
 #endif
   return mpiret;
@@ -1047,7 +1050,6 @@ int
 sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
                       const void *ptr, size_t zcount, sc_MPI_Datatype t)
 {
-  /* TODO: Translate MPI_Datatype -> cf. sc3 header */
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
 #endif
@@ -1061,9 +1063,7 @@ sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
-    /* TODO: use here an own error code instead of abort */
-    SC_CHECK_ABORT (icount == (int) zcount,
-                    "MPI_File_write_at count mismatch");
+    return (icount == (int) zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
   }
 #endif
 
@@ -1080,8 +1080,7 @@ sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   fflush (mpifile.file);
   /* TODO: Distingush between the close and flush error? */
   if (icount != (int) zcount) {
-    /* TODO: implement new error code */
-    return SC_COUNT_ERR;
+    return sc_MPI_ERR_COUNT;
   }
   else {
     return errno;
@@ -1106,9 +1105,7 @@ sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   if (mpiret == sc_MPI_SUCCESS && zcount != 0) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
-    /* TODO: use own error code */
-    SC_CHECK_ABORT (icount == (int) zcount,
-                    "MPI_File write_at_all count mismatch");
+    return (icount == (int) zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
   }
 #endif
 
@@ -1190,7 +1187,7 @@ sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
         SC_ASSERT (count <= (int) zcount);
         if (count != (int) zcount) {
           if (rank < mpisize - 1) {
-            active = errval = SC_COUNT_ERR;
+            active = errval = sc_MPI_ERR_COUNT;
             /* inform next rank about count error */
             mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
                                   rank + 1, 1, mpifile->mpicomm);
@@ -1281,8 +1278,7 @@ sc_mpi_file_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
-    SC_CHECK_ABORT (icount == (int) zcount,
-                    "MPI_File write_all count mismatch");
+    return (icount == (int) zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
   }
 #endif
 
