@@ -834,7 +834,7 @@ sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   mpiret = MPI_File_read_at_all (*mpifile, offset, ptr,
                                  (int) zcount, t, &mpistatus);
 #ifdef SC_ENABLE_DEBUG
-  if (mpiret == sc_MPI_SUCCESS) {
+  if (mpiret == sc_MPI_SUCCESS && zcount != 0) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
     /* TODO: use own error code */
@@ -1103,7 +1103,7 @@ sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   mpiret = MPI_File_write_at_all (*mpifile, offset, (void *) ptr,
                                   (int) zcount, t, &mpistatus);
 #ifdef SC_ENABLE_DEBUG
-  if (mpiret == sc_MPI_SUCCESS) {
+  if (mpiret == sc_MPI_SUCCESS && zcount != 0) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
     /* TODO: use own error code */
