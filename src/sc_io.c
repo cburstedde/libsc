@@ -1285,3 +1285,36 @@ sc_mpi_file_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
   return mpiret;
 #endif
 }
+
+int
+sc_mpi_file_close (sc_MPI_File * file)
+{
+  SC_ASSERT (file != NULL);
+
+  int                 mpiret;
+#ifndef SC_ENABLE_MPIIO
+  int                 rank;
+#endif
+
+#ifdef SC_ENABLE_MPIIO
+  mpiret = MPI_File_close (file);
+#else
+  if (file->file != NULL) {
+#ifdef SC_ENABLE_DEBUG
+    /* by convention this can only happen on proc 0 */
+    mpiret = sc_MPI_Comm_rank (file->mpicomm, &rank);
+    SC_CHECK_MPI (mpiret);
+    SC_ASSERT (rank == 0);
+#endif
+    mpiret = fclose (file->file);
+    if (mpiret != 0) {
+      mpiret = EIO;
+    }
+    else {
+      mpiret = sc_MPI_SUCCESS;
+    }
+  }
+#endif
+
+  return mpiret;
+}

@@ -482,6 +482,14 @@ int                 sc_mpi_file_write_all (sc_MPI_File mpifile,
                                            const void *ptr, size_t zcount,
                                            sc_MPI_Datatype t);
 
+/** Close collectively a sc_MPI_File.
+ * \param[in] file  MPI file object that is closed.
+ * \return          MPI error code that is returned by internally called I/O
+ *                  functions.   
+ *
+ */
+int                 sc_mpi_file_close (sc_MPI_File * file);
+
 SC_EXTERN_C_END;
 
 #endif /* SC_IO_H */
