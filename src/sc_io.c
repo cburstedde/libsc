@@ -676,7 +676,7 @@ sc_mpi_file_error_class (int errorcode, int *errorclass)
     break;
   case sc_MPI_ERR_COUNT:
     *errorclass = sc_MPI_ERR_COUNT;
-
+    break;
   default:
     *errorclass = sc_MPI_ERR_UNKNOWN;
   }
