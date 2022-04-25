@@ -1001,9 +1001,9 @@ sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
 
     return errval;
   }
-
 #else
-
+  /* There is no collective read without MPI. */
+  sc_mpi_file_read_at (*mpifile, offset, ptr, zcount, t);
 #endif
 }
 
@@ -1254,9 +1254,9 @@ sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
 
     return errval;
   }
-
 #else
-
+  /* There is no collective write without MPI. */
+  sc_mpi_file_write_at (*mpifile, offset, ptr, zcount, t);
 #endif
 }
 
@@ -1285,10 +1285,12 @@ sc_mpi_file_close (sc_MPI_File * file)
 #else
   if (file->file != NULL) {
 #ifdef SC_ENABLE_DEBUG
+#ifdef SC_ENABLE_MPI
     /* by convention this can only happen on proc 0 */
     mpiret = sc_MPI_Comm_rank (file->mpicomm, &rank);
     SC_CHECK_MPI (mpiret);
     SC_ASSERT (rank == 0);
+#endif
 #endif
     eclass = sc_MPI_SUCCESS;
     errno = 0;
