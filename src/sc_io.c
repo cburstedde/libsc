@@ -759,6 +759,7 @@ sc_mpi_file_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
     mpifile->filename = filename;
 
     parse_access_mode (amode, mode);
+    errno = 0;
     mpifile->file = fopen (filename, mode);
   }
 
