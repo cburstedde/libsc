@@ -738,6 +738,7 @@ sc_mpi_file_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
     mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
     SC_CHECK_MPI (mpiret);
     if (rank == 0) {
+      errno = 0;
       mpifile->file = fopen (filename, mode);
       mpiret = errno;
     }
@@ -819,6 +820,7 @@ sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   /* get the data size of the data type */
   mpiret = MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == 0, "read_at: get type size failed");
+  errno = 0;
   icount = (int) fread (ptr, (size_t) size, zcount, mpifile.file);
   if (icount != zcount) {
     return sc_MPI_ERR_COUNT;
@@ -886,6 +888,7 @@ sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
       /* process 0 must not wait for other processes */
       if (rank != 0) {
         /* open the file */
+        errno = 0;
         mpifile->file = fopen (mpifile->filename, "rb");
         errval = errno;
         if (errval != 0) {
@@ -908,6 +911,7 @@ sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
       mpiret = fseek (mpifile->file, offset, SEEK_SET);
       SC_CHECK_ABORT (mpiret == 0, "read_at_all: seek failed");
       /* read data */
+      errno = 0;
       count = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
       errval = errno;
       fflush (mpifile->file);
@@ -1083,6 +1087,7 @@ sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   /* get the data size of the data type */
   mpiret = MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == 0, "write_at: get type size failed");
+  errno = 0;
   icount = (int) fwrite (ptr, (size_t) size, zcount, mpifile.file);
   fflush (mpifile.file);
   /* TODO: Distingush between the close and flush error? */
@@ -1153,6 +1158,7 @@ sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
       /* process 0 must not wait for other processes */
       if (rank != 0) {
         /* open the file */
+        errno = 0;
         mpifile->file = fopen (mpifile->filename, "ab");
         errval = errno;
         if (errval != 0) {
@@ -1173,6 +1179,7 @@ sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
       mpiret = MPI_Type_size (t, &size);
       SC_CHECK_ABORT (mpiret == 0, "write_at_all: get type size failed");
       /* write data */
+      errno = 0;
       count = (int) fwrite (ptr, (size_t) size, zcount, mpifile->file);
       errval = errno;
       fflush (mpifile->file);
@@ -1244,6 +1251,7 @@ sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
      */
     if (rank == 0) {
       /* open the file on rank 0 to be ready for the next file_write call */
+      errno = 0;
       mpifile->file = fopen (mpifile->filename, "ab");
       errval = errno;
       if (errval != 0) {
