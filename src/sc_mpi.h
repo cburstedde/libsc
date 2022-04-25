@@ -86,7 +86,6 @@ sc_tag_t;
 #define sc_MPI_ERR_OTHER           MPI_ERR_OTHER
 #define sc_MPI_ERR_NO_MEM          MPI_ERR_NO_MEM
 #define sc_MPI_MAX_ERROR_STRING    MPI_MAX_ERROR_STRING
-#define sc_MPI_ERR_COUNT           -1 /**< Error code for MPI count error */
 
 #ifdef SC_ENABLE_MPIIO
 
@@ -106,6 +105,7 @@ sc_tag_t;
 #define sc_MPI_ERR_DUP_DATAREP            MPI_ERR_DUP_DATAREP
 #define sc_MPI_ERR_CONVERSION             MPI_ERR_CONVERSION
 #define sc_MPI_ERR_IO                     MPI_ERR_IO
+#define sc_MPI_ERR_COUNT                  ((MPI_ERR_LASTCODE) + 1) /**< Error code for MPI count error */
 
 #define sc_MPI_ERR_LASTCODE               MPI_ERR_LASTCODE
 
@@ -129,6 +129,7 @@ typedef enum sc_MPI_IO_Errorcode
   sc_MPI_ERR_FILE_IN_USE,
   sc_MPI_ERR_DUP_DATAREP,
   sc_MPI_ERR_CONVERSION,
+  sc_MPI_ERR_COUNT,
   sc_MPI_ERR_IO,
   sc_MPI_ERR_LASTCODE
 }
@@ -293,6 +294,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_ERR_CONVERSION             SC3_MPI_ERR_CONVERSION
 #define sc_MPI_ERR_IO                     SC3_MPI_ERR_IO
 #define sc_MPI_ERR_LASTCODE               SC3_MPI_ERR_LASTCODE
+#define sc_MPI_ERR_COUNT                  -1 /**< Error code for MPI count error */
 
 #define sc_MPI_MAX_ERROR_STRING    SC3_MPI_MAX_ERROR_STRING
 
@@ -367,6 +369,10 @@ typedef struct sc_MPI_Status
   int                 MPI_ERROR;
 }
 sc_MPI_Status;
+
+/* MPI info arguments */
+
+#define sc_MPI_INFO_NULL           NULL
 
 /* These functions are valid and functional for a single process. */
 
