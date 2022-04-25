@@ -1295,6 +1295,9 @@ sc_mpi_file_close (sc_MPI_File * file)
     mpiret = sc_mpi_file_error_class (errno, &eclass);
     SC_CHECK_MPI (mpiret);
   }
+  else {
+    eclass = sc_MPI_SUCCESS;
+  }
 #endif
 
   return eclass;
