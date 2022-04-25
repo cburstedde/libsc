@@ -1299,12 +1299,15 @@ sc_mpi_file_close (sc_MPI_File * file)
   SC_ASSERT (file != NULL);
 
   int                 mpiret;
+  int                 eclass;
 #ifndef SC_ENABLE_MPIIO
   int                 rank;
 #endif
 
 #ifdef SC_ENABLE_MPIIO
   mpiret = MPI_File_close (file);
+  mpiret = sc_mpi_file_error_class (mpiret, &eclass);
+  SC_CHECK_MPI (mpiret);
 #else
   if (file->file != NULL) {
 #ifdef SC_ENABLE_DEBUG
@@ -1313,15 +1316,13 @@ sc_mpi_file_close (sc_MPI_File * file)
     SC_CHECK_MPI (mpiret);
     SC_ASSERT (rank == 0);
 #endif
-    mpiret = fclose (file->file);
-    if (mpiret != 0) {
-      mpiret = EIO;
-    }
-    else {
-      mpiret = sc_MPI_SUCCESS;
-    }
+    eclass = sc_MPI_SUCCESS;
+    errno = 0;
+    fclose (file->file);
+    mpiret = sc_mpi_file_error_class (errno, &eclass);
+    SC_CHECK_MPI (mpiret);
   }
 #endif
 
-  return mpiret;
+  return eclass;
 }
