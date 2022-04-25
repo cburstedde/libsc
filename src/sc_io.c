@@ -796,8 +796,12 @@ sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
 #endif
-  int                 mpiret, size;
+#ifndef SC_ENABLE_MPIIO
+  int                 size;
+#endif
+  int                 mpiret;
 #ifdef SC_ENABLE_MPIIO
+
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_read_at (mpifile, offset, ptr, zcount, t, &mpistatus);
@@ -829,11 +833,11 @@ int
 sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
                          void *ptr, int zcount, sc_MPI_Datatype t)
 {
+  int                 mpiret;
+#ifdef SC_ENABLE_MPIIO
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
 #endif
-  int                 mpiret;
-#ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_read_at_all (*mpifile, offset, ptr,
@@ -1053,7 +1057,10 @@ sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
 #endif
-  int                 mpiret, size;
+#ifndef SC_ENABLE_MPIIO
+  int                 size;
+#endif
+  int                 mpiret;
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
@@ -1092,11 +1099,11 @@ int
 sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
                           const void *ptr, size_t zcount, sc_MPI_Datatype t)
 {
+  int                 mpiret;
+#ifdef SC_ENABLE_MPIIO
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
 #endif
-  int                 mpiret;
-#ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_write_at_all (*mpifile, offset, (void *) ptr,
