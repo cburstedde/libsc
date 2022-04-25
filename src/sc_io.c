@@ -836,7 +836,9 @@ int
 sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
                          void *ptr, int zcount, sc_MPI_Datatype t)
 {
+#ifdef SC_ENABLE_MPI
   int                 mpiret;
+#endif
 #ifdef SC_ENABLE_MPIIO
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -1003,7 +1005,7 @@ sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   }
 #else
   /* There is no collective read without MPI. */
-  sc_mpi_file_read_at (*mpifile, offset, ptr, zcount, t);
+  return sc_mpi_file_read_at (*mpifile, offset, ptr, zcount, t);
 #endif
 }
 
@@ -1089,7 +1091,9 @@ int
 sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
                           const void *ptr, size_t zcount, sc_MPI_Datatype t)
 {
+#ifdef SC_ENABLE_MPI
   int                 mpiret;
+#endif
 #ifdef SC_ENABLE_MPIIO
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -1256,7 +1260,7 @@ sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   }
 #else
   /* There is no collective write without MPI. */
-  sc_mpi_file_write_at (*mpifile, offset, ptr, zcount, t);
+  return sc_mpi_file_write_at (*mpifile, offset, ptr, zcount, t);
 #endif
 }
 
@@ -1274,7 +1278,7 @@ sc_mpi_file_close (sc_MPI_File * file)
 
   int                 mpiret;
   int                 eclass;
-#ifndef SC_ENABLE_MPIIO
+#if defined (SC_ENABLE_MPI) && !defined (SC_ENABLE_MPIIO)
   int                 rank;
 #endif
 
