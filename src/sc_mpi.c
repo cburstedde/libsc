@@ -96,6 +96,14 @@ sc_MPI_Comm_free (sc_MPI_Comm * comm)
 }
 
 int
+sc_MPI_Type_size (sc_MPI_Datatype datatype, int *size)
+{
+  *size = sc_mpi_sizeof (datatype);
+
+  return sc_MPI_SUCCESS;
+}
+
+int
 sc_MPI_Comm_size (sc_MPI_Comm comm, int *size)
 {
   *size = 1;

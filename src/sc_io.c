@@ -819,7 +819,7 @@ sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   mpiret = fseek (mpifile.file, offset, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "read_at: fseek failed");
   /* get the data size of the data type */
-  mpiret = MPI_Type_size (t, &size);
+  mpiret = sc_MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == 0, "read_at: get type size failed");
   errno = 0;
   icount = (int) fread (ptr, (size_t) size, zcount, mpifile.file);
@@ -1070,7 +1070,7 @@ sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   mpiret = fseek (mpifile.file, offset, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "write_at: fseek failed");
   /* get the data size of the data type */
-  mpiret = MPI_Type_size (t, &size);
+  mpiret = sc_MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == 0, "write_at: get type size failed");
   errno = 0;
   icount = (int) fwrite (ptr, (size_t) size, zcount, mpifile.file);

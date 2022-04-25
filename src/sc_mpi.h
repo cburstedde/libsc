@@ -264,6 +264,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_Wait                MPI_Wait
 #define sc_MPI_Waitsome            MPI_Waitsome
 #define sc_MPI_Waitall             MPI_Waitall
+#define sc_MPI_Type_size           MPI_Type_size
 
 #else /* !SC_ENABLE_MPI */
 #include <sc3_mpi_types.h>
@@ -378,6 +379,8 @@ int                 sc_MPI_Abort (sc_MPI_Comm, int)
 
 int                 sc_MPI_Comm_dup (sc_MPI_Comm, sc_MPI_Comm *);
 int                 sc_MPI_Comm_free (sc_MPI_Comm *);
+
+int                 sc_MPI_Type_size (sc_MPI_Datatype datatype, int *size);
 
 /* Always sets size to 1. */
 int                 sc_MPI_Comm_size (sc_MPI_Comm, int *);
