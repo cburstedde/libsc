@@ -601,7 +601,7 @@ sc_fflush_fsync_fclose (FILE * file)
 }
 
 int
-sc_mpi_file_error_class (int errorcode, int *errorclass)
+sc_io_error_class (int errorcode, int *errorclass)
 {
 #ifdef SC_ENABLE_MPIIO
   if (errorcode == sc_MPI_ERR_COUNT) {
@@ -715,8 +715,8 @@ parse_access_mode (int amode, char mode[4])
 #endif
 
 int
-sc_mpi_file_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
-                  sc3_MPI_Info_t mpiinfo, sc_MPI_File * mpifile)
+sc_io_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
+            sc3_MPI_Info_t mpiinfo, sc_MPI_File * mpifile)
 {
 #ifdef SC_ENABLE_MPIIO
   return MPI_File_open (mpicomm, filename, amode, mpiinfo, mpifile);
@@ -770,8 +770,8 @@ sc_mpi_file_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
 #ifdef SC_ENABLE_MPIIO
 
 void
-sc_mpi_file_read (sc_MPI_File mpifile, void *ptr, int zcount,
-                  sc_MPI_Datatype t, const char *errmsg)
+sc_io_read (sc_MPI_File mpifile, void *ptr, int zcount,
+            sc_MPI_Datatype t, const char *errmsg)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -792,8 +792,8 @@ sc_mpi_file_read (sc_MPI_File mpifile, void *ptr, int zcount,
 #endif
 
 int
-sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
-                     int zcount, sc_MPI_Datatype t)
+sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
+               int zcount, sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -833,8 +833,8 @@ sc_mpi_file_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 }
 
 int
-sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
-                         void *ptr, int zcount, sc_MPI_Datatype t)
+sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
+                   void *ptr, int zcount, sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_MPI
   int                 mpiret;
@@ -976,7 +976,7 @@ sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
     sc_MPI_Barrier (mpifile->mpicomm);
 
     /** The following code restores the open status of the file and
-     * we assume that the user checked the return value of \ref sc_mpi_file_open.
+     * we assume that the user checked the return value of \ref sc_io_open.
      * Therefore, we assume that is possible that we can open the file on
      * process 0 again. However, the opening operation below could fail due
      * to changed exterior conditions given by the file system.
@@ -1005,22 +1005,21 @@ sc_mpi_file_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   }
 #else
   /* There is no collective read without MPI. */
-  return sc_mpi_file_read_at (*mpifile, offset, ptr, zcount, t);
+  return sc_io_read_at (*mpifile, offset, ptr, zcount, t);
 #endif
 }
 
 int
-sc_mpi_file_read_all (sc_MPI_File mpifile, void *ptr, int zcount,
-                      sc_MPI_Datatype t)
+sc_io_read_all (sc_MPI_File mpifile, void *ptr, int zcount, sc_MPI_Datatype t)
 {
-  return sc_mpi_file_read_at_all (&mpifile, 0, ptr, zcount, t);
+  return sc_io_read_at_all (&mpifile, 0, ptr, zcount, t);
 }
 
 #ifdef SC_ENABLE_MPIIO
 
 void
-sc_mpi_file_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
-                   sc_MPI_Datatype t, const char *errmsg)
+sc_io_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
+             sc_MPI_Datatype t, const char *errmsg)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -1042,8 +1041,8 @@ sc_mpi_file_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
 #endif
 
 int
-sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
-                      const void *ptr, size_t zcount, sc_MPI_Datatype t)
+sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
+                const void *ptr, size_t zcount, sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
@@ -1088,8 +1087,8 @@ sc_mpi_file_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 }
 
 int
-sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
-                          const void *ptr, size_t zcount, sc_MPI_Datatype t)
+sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
+                    const void *ptr, size_t zcount, sc_MPI_Datatype t)
 {
 #ifdef SC_ENABLE_MPI
   int                 mpiret;
@@ -1230,7 +1229,7 @@ sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
     sc_MPI_Barrier (mpifile->mpicomm);
 
     /** The following code restores the open status of the file and
-     * we assume that the user checked the return value of \ref sc_mpi_file_open.
+     * we assume that the user checked the return value of \ref sc_io_open.
      * Therefore, we assume that is possible that we can open the file on
      * process 0 again. However, the opening operation below could fail due
      * to changed exterior conditions given by the file system.
@@ -1260,19 +1259,19 @@ sc_mpi_file_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   }
 #else
   /* There is no collective write without MPI. */
-  return sc_mpi_file_write_at (*mpifile, offset, ptr, zcount, t);
+  return sc_io_write_at (*mpifile, offset, ptr, zcount, t);
 #endif
 }
 
 int
-sc_mpi_file_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
-                       sc_MPI_Datatype t)
+sc_io_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
+                 sc_MPI_Datatype t)
 {
-  return sc_mpi_file_write_at_all (&mpifile, 0, ptr, zcount, t);
+  return sc_io_write_at_all (&mpifile, 0, ptr, zcount, t);
 }
 
 int
-sc_mpi_file_close (sc_MPI_File * file)
+sc_io_close (sc_MPI_File * file)
 {
   SC_ASSERT (file != NULL);
 
@@ -1284,7 +1283,7 @@ sc_mpi_file_close (sc_MPI_File * file)
 
 #ifdef SC_ENABLE_MPIIO
   mpiret = MPI_File_close (file);
-  mpiret = sc_mpi_file_error_class (mpiret, &eclass);
+  mpiret = sc_io_error_class (mpiret, &eclass);
   SC_CHECK_MPI (mpiret);
 #else
   if (file->file != NULL) {
@@ -1299,7 +1298,7 @@ sc_mpi_file_close (sc_MPI_File * file)
     eclass = sc_MPI_SUCCESS;
     errno = 0;
     fclose (file->file);
-    mpiret = sc_mpi_file_error_class (errno, &eclass);
+    mpiret = sc_io_error_class (errno, &eclass);
     SC_CHECK_MPI (mpiret);
   }
   else {
