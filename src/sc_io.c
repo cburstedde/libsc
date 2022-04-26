@@ -917,9 +917,11 @@ sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
       errno = 0;
       count = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
       errval = errno;
-      fflush (mpifile->file);
-      fclose (mpifile->file);
-      /* TODO: error checking */
+      /* the consective error codes fflush and fclose are not reported */
+      SC_CHECK_ABORT (fflush (mpifile->file) == 0,
+                      "read_at_all: fflush failed");
+      SC_CHECK_ABORT (fclose (mpifile->file) == 0,
+                      "read_at_all: fclose failed");
       if (errval != 0) {
         /* error during write call */
         if (rank < mpisize - 1) {
@@ -1075,7 +1077,7 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   SC_CHECK_ABORT (mpiret == 0, "write_at: get type size failed");
   errno = 0;
   icount = (int) fwrite (ptr, (size_t) size, zcount, mpifile.file);
-  fflush (mpifile.file);
+  SC_CHECK_ABORT (fflush (mpifile.file) == 0, "write_at: fflush failed");
   /* TODO: Distingush between the close and flush error? */
   if (icount != (int) zcount) {
     return sc_MPI_ERR_COUNT;
@@ -1170,9 +1172,11 @@ sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
       errno = 0;
       count = (int) fwrite (ptr, (size_t) size, zcount, mpifile->file);
       errval = errno;
-      fflush (mpifile->file);
-      fclose (mpifile->file);
-      /* TODO: error checking */
+      /* the consective error codes fflush and fclose are not reported */
+      SC_CHECK_ABORT (fflush (mpifile->file) == 0,
+                      "write_at_all: fflush failed");
+      SC_CHECK_ABORT (fclose (mpifile->file) == 0,
+                      "write_at_all: fclose failed");
       if (errval != 0) {
         /* error during write call */
         if (rank < mpisize - 1) {
