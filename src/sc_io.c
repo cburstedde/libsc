@@ -868,7 +868,7 @@ sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
     mpiret = sc_MPI_Comm_size (mpifile->mpicomm, &mpisize);
     SC_CHECK_MPI (mpiret);
 
-    /* initally only rank 0 writes to the disk */
+    /* initially only rank 0 writes to the disk */
     active = (rank == 0) ? -1 : 0;
 
     /* intialize potential return value */
@@ -1125,7 +1125,7 @@ sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
     mpiret = sc_MPI_Comm_size (mpifile->mpicomm, &mpisize);
     SC_CHECK_MPI (mpiret);
 
-    /* initally only rank 0 writes to the disk */
+    /* initially only rank 0 writes to the disk */
     active = (rank == 0) ? -1 : 0;
 
     /* intialize potential return value */
