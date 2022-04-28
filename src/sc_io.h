@@ -345,6 +345,18 @@ void                sc_fflush_fsync_fclose (FILE * file);
  */
 int                 sc_io_error_class (int errorcode, int *errorclass);
 
+/** Opens a MPI file or without MPI I/O or even without MPI a file context.
+ * \param[in] mpicomm   MPI communicator
+ * \param[in] filename  The path to the file that we want to open.
+ * \param[in] amode     An access mode. See sc_file_mode_t and the
+ *                      the defines below in sc_mpi.h
+ * \param[in] mpiinfo   The MPI info
+ * \param[out] mpifile  The MPI file that is opened. This can be a
+ *                      an actual MPI IO file or an internal file
+ *                      conntext to preserve some MPI IO functionalities
+ *                      without MPI IO and to have working code without
+ *                      MPI at all.
+ */
 int                 sc_io_open (sc_MPI_Comm mpicomm,
                                 const char *filename, int amode,
                                 sc3_MPI_Info_t mpiinfo,
@@ -381,6 +393,11 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \return              The function returns the MPI error code.
+ * \note                This function is only valid to call on rank 0.
+ *                      This function returns the errorcode sc_MPI_ERR_COUNT
+ *                      if the number of read bytes is unequal the intended
+ *                      number of read bytes. This differ from the MPI_File
+ *                      function.
  */
 int                 sc_io_read_at (sc_MPI_File mpifile,
                                    sc_MPI_Offset offset, void *ptr,
@@ -399,6 +416,10 @@ int                 sc_io_read_at (sc_MPI_File mpifile,
  *                      standard. This is required to handle the
  *                      opening operations with MPI but without
  *                      MPI IO.
+ *                      This function returns the errorcode sc_MPI_ERR_COUNT
+ *                      if the number of read bytes is unequal the intended
+ *                      number of read bytes. This differ from the MPI_File
+ *                      function.
  */
 int                 sc_io_read_at_all (sc_MPI_File * mpifile,
                                        sc_MPI_Offset offset, void *ptr,
@@ -410,6 +431,10 @@ int                 sc_io_read_at_all (sc_MPI_File * mpifile,
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \return              The function returns the MPI error code.
+ * \note                This function returns the errorcode sc_MPI_ERR_COUNT
+ *                      if the number of read bytes is unequal the intended
+ *                      number of read bytes. This differ from the MPI_File
+ *                      function.
  */
 int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
                                     int zcount, sc_MPI_Datatype t);
@@ -441,8 +466,13 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
+ * \note                This function is only valid to call on rank 0.
+ *                      This function returns the errorcode sc_MPI_ERR_COUNT
+ *                      if the number of written bytes is unequal the intended
+ *                      number of written bytes. This differ from the MPI_File
+ *                      function.
+ *                      This function does not abort on MPI file errors.
  */
 int                 sc_io_write_at (sc_MPI_File mpifile,
                                     sc_MPI_Offset offset,
@@ -457,13 +487,18 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \note                This function does not abort on MPI file errors.
  * \return              The function returns the MPI error code.
- * \note                The user needs to pass the pointer to the
+ * \note                This function does not abort on MPI file errors.
+ *                      The user needs to pass the pointer to the
  *                      the \b mpifile. This differs from the MPI
  *                      standard. This is required to handle the
  *                      opening operations with MPI but without
  *                      MPI IO.
+ *                      This function is only valid to call on rank 0.
+ *                      This function returns the errorcode sc_MPI_ERR_COUNT
+ *                      if the number of written bytes is unequal the intended
+ *                      number of written bytes. This differ from the MPI_File
+ *                      function.
  */
 int                 sc_io_write_at_all (sc_MPI_File * mpifile,
                                         sc_MPI_Offset offset,
@@ -475,8 +510,14 @@ int                 sc_io_write_at_all (sc_MPI_File * mpifile,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \note                This function aborts on MPI file and count errors.
+ * \note                This function does not abort on MPI file and count errors.
  * \return              The function returns the MPI error code.
+ * \note                This function does not abort on MPI file errors.
+ *                      This function is only valid to call on rank 0.
+ *                      This function returns the errorcode sc_MPI_ERR_COUNT
+ *                      if the number of written bytes is unequal the intended
+ *                      number of written bytes. This differ from the MPI_File
+ *                      function.
  */
 int                 sc_io_write_all (sc_MPI_File mpifile,
                                      const void *ptr, size_t zcount,
