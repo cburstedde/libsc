@@ -26,7 +26,6 @@
 #include <sc_getopt.h>
 
 /* truthfully, the libraries below are not builtin anymore */
-#include <sc_config.h>
 #ifdef SC_HAVE_ZLIB
 #include <zlib.h>
 #endif

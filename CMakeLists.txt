@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.21)
+cmake_minimum_required(VERSION 3.13...3.23)
 
 include(cmake/git.cmake)
 
@@ -26,8 +26,7 @@ target_include_directories(iniparser PRIVATE iniparser src ${PROJECT_BINARY_DIR}
 target_link_libraries(iniparser PRIVATE $<$<BOOL:${MPI_C_FOUND}>:MPI::MPI_C>)
 
 # --- libb64
-add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c
-                          libb64/b64dec.c libb64/b64enc.c)
+add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c)
 target_include_directories(libb64 PRIVATE libb64)
 
 # --- sc
@@ -35,12 +34,12 @@ add_library(sc $<TARGET_OBJECTS:iniparser> $<TARGET_OBJECTS:libb64>)
 target_compile_features(sc PRIVATE c_std_99)
 set_target_properties(sc PROPERTIES EXPORT_NAME SC)
 target_include_directories(sc
-  PRIVATE src src/sc_builtin ${PROJECT_BINARY_DIR}/include iniparser libb64
-  INTERFACE
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/sc_builtin>
-  $<INSTALL_INTERFACE:include>
+PRIVATE src src/sc_builtin ${PROJECT_BINARY_DIR}/include iniparser libb64
+INTERFACE
+$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/sc_builtin>
+$<INSTALL_INTERFACE:include>
 )
 target_link_libraries(sc PUBLIC
 $<$<BOOL:${MPI_FOUND}>:MPI::MPI_C>
@@ -53,13 +52,16 @@ add_library(SC::SC INTERFACE IMPORTED GLOBAL)
 target_link_libraries(SC::SC INTERFACE sc)
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/ ${PROJECT_SOURCE_DIR}/src/sc_builtin/ ${PROJECT_BINARY_DIR}/include/
-  DESTINATION include
-  FILES_MATCHING PATTERN "*.h")
+DESTINATION include
+FILES_MATCHING PATTERN "*.h"
+)
 
 install(TARGETS sc
-  EXPORT ${PROJECT_NAME}Targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
+EXPORT ${PROJECT_NAME}Targets
+ARCHIVE DESTINATION lib
+LIBRARY DESTINATION lib
+RUNTIME DESTINATION bin
+)
 
 add_subdirectory(src)
 

@@ -660,16 +660,16 @@ dictionary * iniparser_load(const char * ininame)
         return NULL ;
     }
 
-    memset(line,    0, ASCIILINESZ);
-    memset(section, 0, ASCIILINESZ);
-    memset(key,     0, ASCIILINESZ);
-    memset(val,     0, ASCIILINESZ);
+    memset(line,    0, ASCIILINESZ+1);
+    memset(section, 0, ASCIILINESZ+1);
+    memset(key,     0, ASCIILINESZ+1);
+    memset(val,     0, ASCIILINESZ+1);
     last=0 ;
 
     while (fgets(line+last, ASCIILINESZ-last, in)!=NULL) {
         lineno++ ;
         len = (int)strlen(line)-1;
-        if (len==0)
+        if (len<=0)
             continue;
         /* Safety check against buffer overflows */
         if (line[len]!='\n') {
@@ -688,7 +688,7 @@ dictionary * iniparser_load(const char * ininame)
             len-- ;
         }
         /* Detect multi-line */
-        if (line[len]=='\\') {
+        if (len >= 0 && line[len]=='\\') {
             /* Multi-line value */
             last=len ;
             continue ;
@@ -720,7 +720,7 @@ dictionary * iniparser_load(const char * ininame)
             default:
             break ;
         }
-        memset(line, 0, ASCIILINESZ);
+        memset(line, 0, ASCIILINESZ+1);
         last=0;
         if (errs<0) {
             fprintf(stderr, "iniparser: memory allocation failure\n");
