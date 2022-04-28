@@ -810,7 +810,7 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_read_at (mpifile, offset, ptr, zcount, t, &mpistatus);
-  if (mpiret == sc_MPI_SUCCESS) {
+  if (mpiret == sc_MPI_SUCCESS && zcount != 0) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
     return (icount == zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
@@ -1053,7 +1053,7 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 
   mpiret = MPI_File_write_at (mpifile, offset, (void *) ptr,
                               (int) zcount, t, &mpistatus);
-  if (mpiret == sc_MPI_SUCCESS) {
+  if (mpiret == sc_MPI_SUCCESS && zcount != 0) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
     return (icount == (int) zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
