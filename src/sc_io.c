@@ -795,9 +795,7 @@ int
 sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
                int zcount, sc_MPI_Datatype t)
 {
-#ifdef SC_ENABLE_DEBUG
   int                 icount;
-#endif
 #ifndef SC_ENABLE_MPIIO
   int                 size;
 #endif
@@ -807,13 +805,11 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_read_at (mpifile, offset, ptr, zcount, t, &mpistatus);
-#ifdef SC_ENABLE_DEBUG
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
     return (icount == zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
   }
-#endif
   return mpiret;
 #else
   mpiret = fseek (mpifile.file, offset, SEEK_SET);
@@ -840,20 +836,16 @@ sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   int                 mpiret;
 #endif
 #ifdef SC_ENABLE_MPIIO
-#ifdef SC_ENABLE_DEBUG
   int                 icount;
-#endif
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_read_at_all (*mpifile, offset, ptr,
                                  (int) zcount, t, &mpistatus);
-#ifdef SC_ENABLE_DEBUG
   if (mpiret == sc_MPI_SUCCESS && zcount != 0) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
     return (icount == zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
   }
-#endif
 
   return mpiret;
 #elif defined (SC_ENABLE_MPI)
@@ -1046,9 +1038,7 @@ int
 sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
                 const void *ptr, size_t zcount, sc_MPI_Datatype t)
 {
-#ifdef SC_ENABLE_DEBUG
   int                 icount;
-#endif
 #ifndef SC_ENABLE_MPIIO
   int                 size;
 #endif
@@ -1058,13 +1048,11 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 
   mpiret = MPI_File_write_at (mpifile, offset, (void *) ptr,
                               (int) zcount, t, &mpistatus);
-#ifdef SC_ENABLE_DEBUG
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
     return (icount == (int) zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
   }
-#endif
 
   return mpiret;
 #else
@@ -1078,7 +1066,6 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   errno = 0;
   icount = (int) fwrite (ptr, (size_t) size, zcount, mpifile.file);
   SC_CHECK_ABORT (fflush (mpifile.file) == 0, "write_at: fflush failed");
-  /* TODO: Distingush between the close and flush error? */
   if (icount != (int) zcount) {
     return sc_MPI_ERR_COUNT;
   }
@@ -1096,20 +1083,16 @@ sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   int                 mpiret;
 #endif
 #ifdef SC_ENABLE_MPIIO
-#ifdef SC_ENABLE_DEBUG
   int                 icount;
-#endif
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_write_at_all (*mpifile, offset, (void *) ptr,
                                   (int) zcount, t, &mpistatus);
-#ifdef SC_ENABLE_DEBUG
   if (mpiret == sc_MPI_SUCCESS && zcount != 0) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
     SC_CHECK_MPI (mpiret);
     return (icount == (int) zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
   }
-#endif
 
   return mpiret;
 #elif defined (SC_ENABLE_MPI)
