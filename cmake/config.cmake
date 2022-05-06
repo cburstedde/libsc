@@ -75,7 +75,6 @@ endif()
 check_symbol_exists(backtrace execinfo.h SC_HAVE_BACKTRACE)
 check_symbol_exists(backtrace_symbols execinfo.h SC_HAVE_BACKTRACE_SYMBOLS)
 
-# check_include_file(dlfcn.h SC_HAVE_DLFCN_H)
 check_include_file(execinfo.h SC_HAVE_EXECINFO_H)
 check_symbol_exists(fsync unistd.h SC_HAVE_FSYNC)
 check_include_file(inttypes.h SC_HAVE_INTTYPES_H)

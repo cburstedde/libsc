@@ -21,141 +21,139 @@
 #define SC_CPPFLAGS @SC_CPPFLAGS@
 #endif
 
-#cmakedefine SC_ENABLE_PTHREAD
+/* Defined if we are using threads */
+#cmakedefine SC_ENABLE_PTHREAD 1
 
-/* Define to 1 if we are using debug build type (assertions and extra checks) */
+/* Defined if we are using debug build type (assertions and extra checks) */
 #cmakedefine SC_ENABLE_DEBUG @SC_ENABLE_DEBUG@
 
-/* Undefine if: use aligned malloc (optionally use --enable-memalign=<bytes>) */
-#cmakedefine SC_ENABLE_MEMALIGN
+/* Defined if we use aligned malloc (optionally use --enable-memalign=<bytes>) */
+#cmakedefine SC_ENABLE_MEMALIGN 1
 
-/* Define to 1 if we are using MPI */
-#cmakedefine SC_ENABLE_MPI
+/* Defined if we are using MPI */
+#cmakedefine SC_ENABLE_MPI 1
 
-/* Define to 1 if we can use MPI_COMM_TYPE_SHARED */
-#cmakedefine SC_ENABLE_MPICOMMSHARED
+/* Defined if we can use MPI_COMM_TYPE_SHARED */
+#cmakedefine SC_ENABLE_MPICOMMSHARED 1
 
-/* Define to 1 if we are using MPI I/O */
-#cmakedefine SC_ENABLE_MPIIO
+/* Defined if we are using MPI I/O */
+#cmakedefine SC_ENABLE_MPIIO 1
 
-/* Define to 1 if we are using MPI_Init_thread */
-#cmakedefine SC_ENABLE_MPITHREAD
+/* Defined if we are using MPI_Init_thread */
+#cmakedefine SC_ENABLE_MPITHREAD 1
 
-/* Define to 1 if we can use MPI_Win_allocate_shared */
-#cmakedefine SC_ENABLE_MPIWINSHARED
+/* Defined if we can use MPI_Win_allocate_shared */
+#cmakedefine SC_ENABLE_MPIWINSHARED 1
 
-/* Undefine if: disable non-thread-safe internal debug counters */
+/* Defined if non-thread-safe internal debug counters is disabled */
 #define SC_ENABLE_USE_COUNTERS 1
 
-/* Undefine if: replace array/dmatrix resize with malloc/copy/free */
-#cmakedefine SC_ENABLE_USE_REALLOC
+/* Defined if we use REALLOC */
+#cmakedefine SC_ENABLE_USE_REALLOC 1
 
-/* Development with V4L2 devices works */
-#cmakedefine SC_ENABLE_V4L2
+/* Defined if we use v4l2 */
+#cmakedefine SC_ENABLE_V4L2 1
 
-/* Define to 1 if you have the `aligned_alloc' function. */
-#cmakedefine SC_HAVE_ALIGNED_ALLOC
+/* Defined if `aligned_alloc' is available. */
+#cmakedefine SC_HAVE_ALIGNED_ALLOC 1
 
-/* Define to 1 if you have the `_aligned_,alloc' function. */
-#cmakedefine SC_HAVE_ALIGNED_MALLOC
+/* Defined if `aligned_malloc' is available. */
+#cmakedefine SC_HAVE_ALIGNED_MALLOC 1
 
-/* Define to 1 if you have the `backtrace' function. */
-#cmakedefine SC_HAVE_BACKTRACE
+/* Defined if `backtrace' is available. */
+#cmakedefine SC_HAVE_BACKTRACE 1
 
-/* Define to 1 if you have the `backtrace_symbols' function. */
-#cmakedefine SC_HAVE_BACKTRACE_SYMBOLS
+/* Defined if `backtrace symbols' is available. */
+#cmakedefine SC_HAVE_BACKTRACE_SYMBOLS 1
 
-/* Define to 1 if you have the <dlfcn.h> header file. */
-// #cmakedefine SC_HAVE_DLFCN_H
+/* Defined if you have the <execinfo.h> header file. */
+#cmakedefine SC_HAVE_EXECINFO_H 1
 
-/* Define to 1 if you have the <execinfo.h> header file. */
-#cmakedefine SC_HAVE_EXECINFO_H
+/* Defined if you have the <fcntl.h> header file. */
+#cmakedefine SC_HAVE_FCNTL_H 1
 
-/* Define to 1 if you have the <fcntl.h> header file. */
-#cmakedefine SC_HAVE_FCNTL_H
+/* Defined if `fsync' is available. */
+#cmakedefine SC_HAVE_FSYNC 1
 
-/* Define to 1 if you have the `fsync' function. */
-#cmakedefine SC_HAVE_FSYNC
+/* Defined if you have the <inttypes.h> header file. */
+#cmakedefine SC_HAVE_INTTYPES_H 1
 
-/* Define to 1 if you have the <inttypes.h> header file. */
-#cmakedefine SC_HAVE_INTTYPES_H
+/* Defined if you have the <linux/version.h> header file. */
+#cmakedefine SC_HAVE_LINUX_VERSION_H 1
 
-/* Define to 1 if you have the <linux/version.h> header file. */
-#cmakedefine SC_HAVE_LINUX_VERSION_H
+/* Defined if you have the <linux/videodev2.h> header file. */
+#cmakedefine SC_HAVE_LINUX_VIDEODEV2_H 1
 
-/* Define to 1 if you have the <linux/videodev2.h> header file. */
-#cmakedefine SC_HAVE_LINUX_VIDEODEV2_H
+/* Defined if you have the <memory.h> header file. */
+#cmakedefine SC_HAVE_MEMORY_H 1
 
-/* Define to 1 if you have the <memory.h> header file. */
-#cmakedefine SC_HAVE_MEMORY_H
+/* Defined if you have the `posix_memalign' function. */
+#cmakedefine SC_HAVE_POSIX_MEMALIGN 1
 
-/* Define to 1 if you have the `posix_memalign' function. */
-#cmakedefine SC_HAVE_POSIX_MEMALIGN
+/* Defined if you have the `fabs' function. */
+#cmakedefine SC_HAVE_FABS 1
 
-/* Define to 1 if you have the `fabs' function. */
-#cmakedefine SC_HAVE_FABS
+/* Defined if you have the `qsort_r' function. */
+#cmakedefine SC_HAVE_QSORT_R 1
 
-/* Define to 1 if you have the `qsort_r' function. */
-#cmakedefine SC_HAVE_QSORT_R
+/* Defined if `qsort_r' conforms to the GNU/Linux definition. */
+#cmakedefine SC_HAVE_GNU_QSORT_R 1
 
-/* Define to 1 if `qsort_r' conforms to the GNU/Linux definition. */
-#cmakedefine SC_HAVE_GNU_QSORT_R
+/* Defined if `qsort_r' conforms to the BSD definition. */
+#cmakedefine SC_HAVE_BSD_QSORT_R 1
 
-/* Define to 1 if `qsort_r' conforms to the BSD definition. */
-#cmakedefine SC_HAVE_BSD_QSORT_R
+/* Defined if you have the <signal.h> header file. */
+#cmakedefine SC_HAVE_SIGNAL_H 1
 
-/* Define to 1 if you have the <signal.h> header file. */
-#cmakedefine SC_HAVE_SIGNAL_H
+/* Defined if you have the <stdint.h> header file. */
+#cmakedefine SC_HAVE_STDINT_H 1
 
-/* Define to 1 if you have the <stdint.h> header file. */
-#cmakedefine SC_HAVE_STDINT_H
+/* Defined if you have the <stdlib.h> header file. */
+#cmakedefine SC_HAVE_STDLIB_H 1
 
-/* Define to 1 if you have the <stdlib.h> header file. */
-#cmakedefine SC_HAVE_STDLIB_H
+/* Defined if you have the <string.h> header file. */
+#cmakedefine SC_HAVE_STRING_H 1
 
-/* Define to 1 if you have the <string.h> header file. */
-#cmakedefine SC_HAVE_STRING_H
+/* Defined if you have the <libgen.h> header file. */
+#cmakedefine SC_HAVE_LIBGEN_H 1
 
-/* Define to 1 if you have the <libgen.h> header file. */
-#cmakedefine SC_HAVE_LIBGEN_H
+/* Defined if you have the `strtoll' function. */
+#cmakedefine SC_HAVE_STRTOLL 1
 
-/* Define to 1 if you have the `strtoll' function. */
-#cmakedefine SC_HAVE_STRTOLL
+/* Defined if you have the <sys/ioctl.h> header file. */
+#cmakedefine SC_HAVE_SYS_IOCTL_H 1
 
-/* Define to 1 if you have the <sys/ioctl.h> header file. */
-#cmakedefine SC_HAVE_SYS_IOCTL_H
+/* Defined if you have the <sys/select.h> header file. */
+#cmakedefine SC_HAVE_SYS_SELECT_H 1
 
-/* Define to 1 if you have the <sys/select.h> header file. */
-#cmakedefine SC_HAVE_SYS_SELECT_H
+/* Defined if you have the <sys/stat.h> header file. */
+#cmakedefine SC_HAVE_SYS_STAT_H 1
 
-/* Define to 1 if you have the <sys/stat.h> header file. */
-#cmakedefine SC_HAVE_SYS_STAT_H
+/* Defined if you have the <sys/time.h> header file. */
+#cmakedefine SC_HAVE_SYS_TIME_H 1
 
-/* Define to 1 if you have the <sys/time.h> header file. */
-#cmakedefine SC_HAVE_SYS_TIME_H
+/* Defined if you have the <sys/types.h> header file. */
+#cmakedefine SC_HAVE_SYS_TYPES_H 1
 
-/* Define to 1 if you have the <sys/types.h> header file. */
-#cmakedefine SC_HAVE_SYS_TYPES_H
-
-/* Define to 1 if you have the <time.h> header file. */
-#cmakedefine SC_HAVE_TIME_H
+/* Defined if you have the <time.h> header file. */
+#cmakedefine SC_HAVE_TIME_H 1
 
 /* Replace autoconf feature for simultaneous inclusion. */
 #if defined SC_HAVE_SYS_TIME_H && defined SC_HAVE_TIME_H
 #define SC_TIME_WITH_SYS_TIME
 #endif
 
-/* windows-specific include file */
-#cmakedefine SC_HAVE_WINSOCK2_H
+/* Defined if you have the <winsock2.h> header file. */
+#cmakedefine SC_HAVE_WINSOCK2_H 1
 
 /* desired alignment of allocations in bytes */
 #define SC_MEMALIGN_BYTES (SC_SIZEOF_VOID_P)
 
-/* Define to 1 if you have the <unistd.h> header file. */
-#cmakedefine SC_HAVE_UNISTD_H
+/* Defined if you have the <unistd.h> header file. */
+#cmakedefine SC_HAVE_UNISTD_H 1
 
-/* Have we found function adler32_combine. */
-#cmakedefine SC_HAVE_ZLIB
+/* Defined if you have <zlib.h> header file. */
+#cmakedefine SC_HAVE_ZLIB 1
 
 /* Linker flags */
 #ifndef SC_LDFLAGS
@@ -174,7 +172,7 @@
 
 /* Define to the address where bug reports for this package should be sent. */
 #ifndef SC_PACKAGE_BUGREPORT
-#define SC_PACKAGE_BUGREPORT "info@SC.org"
+#define SC_PACKAGE_BUGREPORT "p4est@ins.uni-bonn.de"
 #endif
 
 /* Define to the full name of this package. */
