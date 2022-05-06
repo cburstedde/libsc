@@ -1269,7 +1269,7 @@ sc_io_close (sc_MPI_File * file)
 
   int                 mpiret;
   int                 eclass;
-#if defined (SC_ENABLE_MPI) && !defined (SC_ENABLE_MPIIO)
+#if defined (SC_ENABLE_MPI) && defined (SC_ENABLE_DEBUG) && !defined (SC_ENABLE_MPIIO)
   int                 rank;
 #endif
 
