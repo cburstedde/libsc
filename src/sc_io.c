@@ -766,9 +766,9 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
     parse_access_mode (amode, mode);
     errno = 0;
     mpifile->file = fopen (filename, mode);
-  }
 
-  return errno;
+    return errno;
+  }
 #endif
 }
 
@@ -805,8 +805,8 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   int                 size;
 #endif
   int                 mpiret;
-#ifdef SC_ENABLE_MPIIO
 
+#ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_read_at (mpifile, offset, ptr, zcount, t, &mpistatus);

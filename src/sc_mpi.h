@@ -544,7 +544,8 @@ typedef struct no_mpiio_file
 #ifdef SC_ENABLE_MPI
   sc_MPI_Comm         mpicomm;
 #endif
-} sc_MPI_File;
+}
+sc_MPI_File;
 
 #define sc_MPI_FILE_NULL           NULL
 
@@ -559,7 +560,8 @@ typedef enum
   SC_APPEND,
   SC_WRITE,
   SC_READ_WRITE
-} sc_file_mode_t;
+}
+sc_file_mode_t;
 
 /* file access modes */
 /** The following macro is not MPI standard conforming
