@@ -574,12 +574,17 @@ sc_fflush_fsync_fclose (FILE * file)
 {
   int                 retval;
 
+  /* fflush is called anyway from fclose.
+     fsync is fine, but fileno is not portable.
+     Better to remove altogether. */
+#if 0
   /* best attempt to flush file to disk */
   retval = fflush (file);
   SC_CHECK_ABORT (!retval, "file flush");
 #ifdef SC_HAVE_FSYNC
   retval = fsync (fileno (file));
   SC_CHECK_ABORT (!retval, "file fsync");
+#endif
 #endif
   retval = fclose (file);
   SC_CHECK_ABORT (!retval, "file close");

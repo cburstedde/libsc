@@ -78,10 +78,10 @@ echo "o---------------------------------------"
 echo "| Checking headers"
 echo "o---------------------------------------"
 
-AC_CHECK_HEADERS([libgen.h limits.h])
+AC_HEADER_TIME
 AC_CHECK_HEADERS([fcntl.h sys/ioctl.h sys/select.h sys/stat.h])
+AC_CHECK_HEADERS([execinfo.h signal.h libgen.h time.h sys/time.h])
 AC_CHECK_HEADERS([linux/version.h linux/videodev2.h])
-AC_CHECK_HEADERS([execinfo.h signal.h sys/time.h sys/types.h time.h])
 
 echo "o---------------------------------------"
 echo "| Checking functions"
@@ -89,7 +89,7 @@ echo "o---------------------------------------"
 
 AC_CHECK_FUNCS([backtrace backtrace_symbols])
 AC_CHECK_FUNCS([basename dirname])
-AC_CHECK_FUNCS([strtol strtoll])
+AC_CHECK_FUNCS([strtol strtoll strtok_r])
 AC_CHECK_FUNCS([fsync])
 AC_CHECK_FUNCS([qsort_r])
 
