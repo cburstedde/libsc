@@ -110,8 +110,8 @@ sc3_array_is_unresizable (const sc3_array_t * a, char *reason)
 int
 sc3_array_is_sorted (const sc3_array_t * a,
                      sc3_error_t * (*compar) (const void *, const void *,
-                                              void *, int *),
-                     void *user, char *reason)
+                                              const void *, int *),
+                     const void *user, char *reason)
 {
   int                 i, j;
   const void         *vold, *vnew;

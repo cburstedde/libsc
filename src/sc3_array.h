@@ -165,8 +165,8 @@ int                 sc3_array_is_data (const sc3_array_t * a, char *reason);
 int                 sc3_array_is_sorted (const sc3_array_t * a, sc3_error_t *
                                          (*compar) (const void *,
                                                     const void *,
-                                                    void *, int *),
-                                         void *user, char *reason);
+                                                    const void *, int *),
+                                         const void *user, char *reason);
 
 /** Create a new array object in its setup phase.
  * It begins with default parameters that can be overridden explicitly.
