@@ -25,7 +25,7 @@
 #cmakedefine SC_ENABLE_PTHREAD 1
 
 /* Defined if we are using debug build type (assertions and extra checks) */
-#cmakedefine SC_ENABLE_DEBUG 1/*@SC_ENABLE_DEBUG@*/
+#cmakedefine SC_ENABLE_DEBUG 1
 
 /* Defined if we use aligned malloc (optionally use --enable-memalign=<bytes>) */
 #cmakedefine SC_ENABLE_MEMALIGN 1
@@ -232,17 +232,17 @@
 
 /* Package major version */
 #ifndef SC_VERSION_MAJOR
-#define SC_VERSION_MAJOR "@PROJECT_MAJOR@"
+#define SC_VERSION_MAJOR @PROJECT_MAJOR@
 #endif
 
 /* Package minor version */
 #ifndef SC_VERSION_MINOR
-#define SC_VERSION_MINOR "@PROJECT_MINOR@"
+#define SC_VERSION_MINOR @PROJECT_MINOR@
 #endif
 
 /* Package point version */
 #ifndef SC_VERSION_POINT
-#define SC_VERSION_POINT "@PROJECT_PATCH@"
+#define SC_VERSION_POINT @PROJECT_PATCH@
 #endif
 
 /* once: _SRC_SC_CONFIG_H */
