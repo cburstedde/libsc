@@ -242,7 +242,7 @@
 
 /* Package point version */
 #ifndef SC_VERSION_POINT
-#define SC_VERSION_POINT @PROJECT_PATCH@
+#define SC_VERSION_POINT "@PROJECT_PATCH@"
 #endif
 
 /* once: _SRC_SC_CONFIG_H */
