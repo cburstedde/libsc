@@ -44,7 +44,7 @@ jobs:
           CMAKE_DIR="check_cmake" && mkdir -p "$CMAKE_DIR" && cd "$CMAKE_DIR"
           tar -xvzf ../$TARBALL
           EXTRACT=${TARBALL/%.tar.gz}
-          PATH_TO_SOURCE="$PWD/$EXTRACT"
           CMAKE_BUILD_DIR="cmake_build" && mkdir -p "$CMAKE_BUILD_DIR" && cd "$CMAKE_BUILD_DIR"
-          cmake PATH_TO_SOURCE
+          cmake ../$EXTRACT
           cmake --build .
+          ctest .
