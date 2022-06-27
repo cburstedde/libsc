@@ -52,8 +52,12 @@ jobs:
         cpack --config CPackSourceConfig.cmake
         cd ./package
         TARBALL=$(find . -maxdepth 1 -name "*.tar.gz")
-        echo $TARBALL
-        echo $HOME
-        echo $PWD
         tar -xzf $TARBALL
-        ls
+        EXTRACT=${TARBALL/%.tar.gz}
+        cd $EXTRACT
+        ./bootstrap
+        CFLAGS="CFLAGS='-O2 -Wall -Wno-unused-parameter'"
+        eval "../$NAME/configure $CFLAGS" --enable-mpi --without-blas --enable-memalign --disable-shared
+        make check -j10 V=0
+
+        
