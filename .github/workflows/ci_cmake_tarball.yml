@@ -59,5 +59,6 @@ jobs:
         CFLAGS="CFLAGS='-O2 -Wall -Wno-unused-parameter'"
         eval "../$NAME/configure $CFLAGS" --enable-mpi --without-blas --enable-memalign --disable-shared
         make check -j10 V=0
+        ls
 
         
