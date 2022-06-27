@@ -54,5 +54,6 @@ jobs:
         TARBALL=$(find . -maxdepth 1 -name "*.tar.gz")
         echo $TARBALL
         echo $HOME
+        echo $PWD
         tar -xzf $TARBALL
         ls
