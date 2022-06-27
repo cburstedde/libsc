@@ -14,8 +14,6 @@ on:
       - "**.h.in"
       - ".github/workflows/ci_autotools_tarball.yml"
   pull_request:
-  release:
-    types: [published]
 
 jobs:
 
@@ -24,35 +22,20 @@ jobs:
     name: autotools build on Linux
     timeout-minutes: 15
 
-    strategy:
-      matrix:
-        cc: [clang-7, clang-8, clang-9, clang-10, gcc-7, gcc-8, gcc-9, gcc-10, gcc-11]
-        shared: [true, false]
-
-    env:
-      CC: ${{ matrix.cc }}
-
     steps:
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -yq
+        sudo apt-get install -yq --no-install-recommends \
+            zlib1g-dev libmpich-dev mpich
+
     - uses: actions/checkout@v2
       name: Checkout source code
 
-    - name: Install system dependencies
+    - name: Autotools build
       run: |
-          sudo apt-get update -yq
-          sudo apt-get install -yq --no-install-recommends \
-              zlib1g-dev libmpich-dev mpich \
-              ${{ matrix.cc }}
-
-    - name: Run bootstrap script
-      run: ./bootstrap
-
-    - name: Run configure
-      shell: bash
-      run: |
-        DIR="checkMPI" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-mpi CFLAGS="-O2"
-
-    - name: Run make check
-      shell: bash
-      run: |
-        make check -j10 V=0
+          ./bootstrap
+          DIR="checkMPIdebug_shared" && mkdir -p "$DIR" && cd "$DIR"
+          ../configure --enable-mpi --enable-debug --disable-shared \
+              CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
+          make -j check V=0
