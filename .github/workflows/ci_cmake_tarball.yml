@@ -49,4 +49,9 @@ jobs:
         DIR="cmake_build" && mkdir -p "$DIR" && cd "$DIR"
         cmake ..
         cmake --build .
-        ctest .
+        cpack --config CPackSourceConfig.cmake
+        cd ./package
+        TARBALL=$(find . -maxdepth 1 -name "*.tar.gz")
+        echo $TARBALL
+        echo $HOME
+        tar -xvzf $TARBALL
