@@ -1,4 +1,4 @@
-name: CI for testing autotools build on CMake tarball
+name: CI for testing cmake build on autotools tarball
 
 env:
   CMAKE_BUILD_TYPE: Release
@@ -12,7 +12,7 @@ on:
       - "**.c"
       - "**.h"
       - "**.h.in"
-      - ".github/workflows/ci_cmake_tarball.yml"
+      - ".github/workflows/ci_autotools_tarball.yml"
   pull_request:
   release:
     types: [published]
@@ -21,7 +21,7 @@ jobs:
 
   linux:
     runs-on: ubuntu-latest
-    name: CMake build on Linux
+    name: autotools build on Linux
     timeout-minutes: 15
 
     strategy:
@@ -43,22 +43,16 @@ jobs:
               zlib1g-dev libmpich-dev mpich \
               ${{ matrix.cc }}
 
-    - name: CMake configure and build
+    - name: Run bootstrap script
+      run: ./bootstrap
+
+    - name: Run configure
       shell: bash
       run: |
-        DIR="cmake_build" && mkdir -p "$DIR" && cd "$DIR"
-        cmake ..
-        cmake --build .
-        cpack --config CPackSourceConfig.cmake
-        cd ./package
-        TARBALL=$(find . -maxdepth 1 -name "*.tar.gz")
-        tar -xzf $TARBALL
-        EXTRACT=${TARBALL/%.tar.gz}
-#        cd $EXTRACT
-#        ./bootstrap
-#        CFLAGS="CFLAGS='-O2 -Wall -Wno-unused-parameter'"
-#        eval "../$NAME/configure $CFLAGS" --enable-mpi --without-blas --enable-memalign --disable-shared
-#        make check -j10 V=0
-#        ls
+        DIR="checkMPI" && mkdir -p "$DIR" && cd "$DIR"
+        ../configure --enable-mpi CFLAGS="-O2"
 
-        
+    - name: Run make check
+      shell: bash
+      run: |
+        make check -j10 V=0
