@@ -12,7 +12,7 @@ on:
       - "**.c"
       - "**.h"
       - "**.h.in"
-      - ".github/workflows/ci_cmake.yml"
+      - ".github/workflows/ci_cmake_tarball.yml"
   pull_request:
   release:
     types: [published]
