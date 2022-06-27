@@ -32,21 +32,21 @@ jobs:
     env:
       CC: ${{ matrix.cc }}
 
-#    steps:
-#      - name: Checkout source code
-#        uses: actions/checkout@v2
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout source code
 
-#      -name: Install system dependencies
-#       run: |     
-#             sudo apt-get update -yq
-#             sudo apt-get install -yq --no-install-recommends \
-#             zlib1g-dev libmpich-dev mpich \
-#             ${{ matrix.cc }}
+    - name: Install system dependencies
+      run: |
+          sudo apt-get update -yq
+          sudo apt-get install -yq --no-install-recommends \
+              zlib1g-dev libmpich-dev mpich \
+              ${{ matrix.cc }}
 
-#      -name: CMake configure and build
-#       shell: bash
-#       run: |
-#            DIR="cmake_build" && mkdir -p "$DIR" && cd "$DIR"
-#            cmake ..
-#            cmake --build .
-#            ctest .
+    - name: CMake configure and build
+      shell: bash
+      run: |
+        DIR="cmake_build" && mkdir -p "$DIR" && cd "$DIR"
+        cmake ..
+        cmake --build .
+        ctest .
