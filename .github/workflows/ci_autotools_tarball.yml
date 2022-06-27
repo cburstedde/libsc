@@ -33,9 +33,27 @@ jobs:
       name: Checkout source code
 
     - name: Autotools build
+      shell: bash
       run: |
           ./bootstrap
-          DIR="checkMPIdebug_shared" && mkdir -p "$DIR" && cd "$DIR"
+          DIR="autotools_build" && mkdir -p "$DIR" && cd "$DIR"
           ../configure --enable-mpi --enable-debug --disable-shared \
               CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
           make -j check V=0
+
+    - name: Pack autotools tarball
+      shell: bash
+      run: |
+          make -j V=0 distcheck
+
+    - name: CMake build
+      shell: bash
+      run: |
+          TARBALL=$(find . -maxdepth 1 -name "*.tar.gz")
+          CMAKE_DIR="check_cmake" && mkdir -p "$CMAKE_DIR" && cd "$CMAKE_DIR"
+          tar -xvzf ../$TARBALL
+          EXTRACT=${TARBALL/%.tar.gz}
+          PATH_TO_SOURCE="$PWD/$EXTRACT"
+          CMAKE_BUILD_DIR="cmake_build" && mkdir -p "$CMAKE_BUILD_DIR" && cd "$CMAKE_BUILD_DIR"
+          cmake PATH_TO_SOURCE
+          cmake --build .
