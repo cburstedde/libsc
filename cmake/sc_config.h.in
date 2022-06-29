@@ -21,34 +21,34 @@
 #define SC_CPPFLAGS @SC_CPPFLAGS@
 #endif
 
-/* Defined if we are using threads */
+/* Define to 1 if we are using threads */
 #cmakedefine SC_ENABLE_PTHREAD 1
 
-/* Defined if we are using debug build type (assertions and extra checks) */
+/* Define to 1 if we are using debug build type (assertions and extra checks) */
 #cmakedefine SC_ENABLE_DEBUG 1
 
-/* Defined if we use aligned malloc (optionally use --enable-memalign=<bytes>) */
+/* Undefine if: use aligned malloc (optionally use --enable-memalign=<bytes>) */
 #cmakedefine SC_ENABLE_MEMALIGN 1
 
-/* Defined if we are using MPI */
+/* Define to 1 if we are using MPI */
 #cmakedefine SC_ENABLE_MPI 1
 
-/* Defined if we can use MPI_COMM_TYPE_SHARED */
+/* Define to 1 if we can use MPI_COMM_TYPE_SHARED */
 #cmakedefine SC_ENABLE_MPICOMMSHARED 1
 
-/* Defined if we are using MPI I/O */
+/* Define to 1 if we are using MPI I/O */
 #cmakedefine SC_ENABLE_MPIIO 1
 
-/* Defined if we are using MPI_Init_thread */
+/* Define to 1 if we are using MPI_Init_thread */
 #cmakedefine SC_ENABLE_MPITHREAD 1
 
-/* Defined if we can use MPI_Win_allocate_shared */
+/* Define to 1 if we can use MPI_Win_allocate_shared */
 #cmakedefine SC_ENABLE_MPIWINSHARED 1
 
-/* Defined if non-thread-safe internal debug counters is disabled */
+/* Undefine if: disable non-thread-safe internal debug counters */
 #define SC_ENABLE_USE_COUNTERS 1
 
-/* Defined if we use REALLOC */
+/* Undefine if: replace array/dmatrix resize with malloc/copy/free */
 #cmakedefine SC_ENABLE_USE_REALLOC 1
 
 /* Defined if we use v4l2 */
@@ -242,7 +242,7 @@
 
 /* Package point version */
 #ifndef SC_VERSION_POINT
-#define SC_VERSION_POINT "@PROJECT_PATCH@"
+#define SC_VERSION_POINT @PROJECT_PATCH@
 #endif
 
 /* once: _SRC_SC_CONFIG_H */
