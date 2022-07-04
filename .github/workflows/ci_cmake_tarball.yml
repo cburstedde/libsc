@@ -57,8 +57,6 @@ jobs:
         cd $EXTRACT
         ./bootstrap
         ./configure --enable-mpi --enable-debug --disable-shared CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
-#        CFLAGS="CFLAGS='-O0 -g -Wall -Wextra -Wno-unused-parameter'"
-#        eval "./configure $CFLAGS" --enable-mpi --without-blas --enable-memalign --disable-shared
         make check -j10 V=0
         make distcheck -j10 V=0
 
