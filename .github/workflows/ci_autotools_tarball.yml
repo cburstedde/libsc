@@ -48,3 +48,4 @@ jobs:
           cmake ../$EXTRACT
           cmake --build .
           ctest .
+          cpack --config CPackSourceConfig.cmake
