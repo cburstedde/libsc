@@ -57,7 +57,7 @@ jobs:
         cd $EXTRACT
         ./bootstrap
         CFLAGS="CFLAGS='-O2 -Wall -Wno-unused-parameter'"
-        eval "../$NAME/configure $CFLAGS" --enable-mpi --without-blas --enable-memalign --disable-shared
+        eval "./configure $CFLAGS" --enable-mpi --without-blas --enable-memalign --disable-shared
         make check -j10 V=0
         make distcheck -j10 V=0
 
