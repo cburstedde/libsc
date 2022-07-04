@@ -24,14 +24,6 @@ jobs:
     name: CMake build on Linux
     timeout-minutes: 15
 
-    strategy:
-      matrix:
-        cc: [clang-7, clang-8, clang-9, clang-10, gcc-7, gcc-8, gcc-9, gcc-10, gcc-11]
-        shared: [true, false]
-
-    env:
-      CC: ${{ matrix.cc }}
-
     steps:
     - uses: actions/checkout@v2
       name: Checkout source code
@@ -40,8 +32,7 @@ jobs:
       run: |
         sudo apt-get update -yq
         sudo apt-get install -yq --no-install-recommends \
-            libopenmpi-dev openmpi-bin \
-            ${{ matrix.cc }}
+            libopenmpi-dev openmpi-bin
 
     - name: CMake configure and build
       shell: bash
