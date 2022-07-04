@@ -47,7 +47,7 @@ jobs:
         EXTRACT=${TARBALL/%.tar.gz}
         cd $EXTRACT
         ./bootstrap
-        ./configure --enable-mpi --enable-debug --disable-shared CC=mpicxx CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
+        ./configure --enable-mpi --enable-debug --disable-shared CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
         make check -j10 V=0
         make distcheck -j10 V=0
 
