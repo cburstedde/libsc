@@ -137,7 +137,7 @@ check_include_file(sys/select.h SC_HAVE_SYS_SELECT_H)
 check_include_file(sys/stat.h SC_HAVE_SYS_STAT_H)
 check_include_file(fcntl.h SC_HAVE_FCNTL_H)
 
-if(CMAKE_SYSTEM_NAME STREQUAL Linux)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   check_include_file(linux/videodev2.h SC_HAVE_LINUX_VIDEODEV2_H)
   check_include_file(linux/version.h SC_HAVE_LINUX_VERSION_H)
 

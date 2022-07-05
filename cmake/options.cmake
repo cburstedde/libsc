@@ -1,8 +1,6 @@
 option(mpi "use MPI library" off)
 option(openmp "use OpenMP" off)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS on)
-
 # --- default install directory under build/local
 # users can specify like "cmake -B build --install-prefix=$HOME/mydir"
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
