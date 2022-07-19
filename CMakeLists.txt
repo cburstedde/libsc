@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.23)
+cmake_minimum_required(VERSION 3.13...3.24)
 
 include(cmake/git.cmake)
 
@@ -34,8 +34,8 @@ add_library(sc $<TARGET_OBJECTS:iniparser> $<TARGET_OBJECTS:libb64>)
 target_compile_features(sc PRIVATE c_std_99)
 set_target_properties(sc PROPERTIES EXPORT_NAME SC)
 target_include_directories(sc
-PRIVATE src src/sc_builtin ${PROJECT_BINARY_DIR}/include iniparser libb64
-INTERFACE
+PRIVATE iniparser libb64
+PUBLIC
 $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/sc_builtin>
