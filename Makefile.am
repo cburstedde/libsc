@@ -141,9 +141,3 @@ doxygen: Doxyfile
 	doxygen
 
 .PHONY: doxygen
-
-## # CUDA support
-## if SC_WITH_CUDA
-## .cu.o:
-## 	$(SC_NVCC) -o $@ -c $< @NVCCFLAGS@
-## endif
