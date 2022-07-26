@@ -17,7 +17,7 @@ if(SC_HAVE_GETOPT_H)
 endif()
 
 # ---
-
+set(MPIEXEC_MAX_NUMPROCS 2)
 foreach(t IN LISTS sc_tests)
 
   add_executable(test_${t} test_${t}.c)
