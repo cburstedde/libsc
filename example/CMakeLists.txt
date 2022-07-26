@@ -22,7 +22,7 @@ find_package(Threads)
 
 # --- find our library
 
-#find_package(SC REQUIRED)
+find_package(SC QUIET)
 set(cfg_h ${SC_INCLUDE_DIRS}/sc_config.h)
 
 # --- get system capabilities
