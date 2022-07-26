@@ -67,6 +67,7 @@ add_subdirectory(src)
 
 if(BUILD_TESTING)
   add_subdirectory(test)
+  add_subdirectory(example)
 endif(BUILD_TESTING)
 
 # --- packaging

@@ -22,7 +22,7 @@ find_package(Threads)
 
 # --- find our library
 
-find_package(SC REQUIRED)
+#find_package(SC REQUIRED)
 set(cfg_h ${SC_INCLUDE_DIRS}/sc_config.h)
 
 # --- get system capabilities
@@ -50,17 +50,6 @@ function(test_sc_example name files)
 add_executable(sc_${name} ${files})
 
 target_link_libraries(sc_${name} PRIVATE SC::SC)
-
-if(MPI_C_FOUND)
-  add_test(NAME sc:example:${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_${name}>)
-else()
-  add_test(NAME sc:example:${name} COMMAND sc_${name})
-endif()
-
-set_tests_properties(sc:example:${name} PROPERTIES TIMEOUT 10)
-if(WIN32 AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
-  set_tests_properties(sc:example:${name} PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_append:${SC_INCLUDE_DIR}/../bin")
-endif()
 
 endfunction(test_sc_example)
 
