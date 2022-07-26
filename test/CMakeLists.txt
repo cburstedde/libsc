@@ -20,13 +20,13 @@ endif()
 
 foreach(t IN LISTS sc_tests)
 
-  add_executable(test_${t} test_${t}.c)
-  target_link_libraries(test_${t} PRIVATE SC::SC)
+  add_executable(sc_test_${t} test_${t}.c)
+  target_link_libraries(sc_test_${t} PRIVATE SC::SC)
 
   if(MPIEXEC_EXECUTABLE)
-    add_test(NAME ${t} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:test_${t}>)
+    add_test(NAME ${t} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_test_${t}>)
   else()
-    add_test(NAME ${t} COMMAND test_${t})
+    add_test(NAME ${t} COMMAND sc_test_${t})
   endif()
 
 endforeach()
