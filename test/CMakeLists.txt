@@ -31,15 +31,13 @@ foreach(t IN LISTS sc_tests)
 
 endforeach()
 
-set_tests_properties(${sc_tests} PROPERTIES
-TIMEOUT 300
-LABELS "unit;libsc"
-)
+set_property(TEST ${sc_tests} PROPERTY TIMEOUT 300)
+set_property(TEST ${sc_tests} PROPERTY LABELS "unit;libsc")
 
 if(MPIEXEC_EXECUTABLE)
-  set_tests_properties(${sc_tests} PROPERTIES RESOURCE_LOCK cpu_mpi)
+  set_property(TEST ${sc_tests} PROPERTY RESOURCE_LOCK cpu_mpi)
 endif()
 
 if(WIN32 AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
-  set_tests_properties(${sc_tests} PROPERTIES ENVIRONMENT_MODIFICATION PATH=path_list_append:$<TARGET_FILE_DIR:sc>)
+  set_property(TEST ${sc_tests} PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:$<TARGET_FILE_DIR:sc>)
 endif()
