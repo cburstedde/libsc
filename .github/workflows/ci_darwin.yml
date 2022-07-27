@@ -34,7 +34,6 @@ jobs:
        run: |
           DIR="checkDebug" && mkdir -p "$DIR" && cd "$DIR"
           ../configure --enable-debug CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
-          cat ./config.log
           make -j V=0
           make -j check V=0
           cd ..
@@ -44,7 +43,6 @@ jobs:
        run: |
           DIR="checkDebug" && mkdir -p "$DIR" && cd "$DIR"
           ../configure --enable-debug --enable-mpi CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
-          cat ./config.log
           make -j V=0
           make -j check V=0
           cd ..
@@ -54,7 +52,13 @@ jobs:
        run: |
           DIR="checkDebug" && mkdir -p "$DIR" && cd "$DIR"
           ../configure --enable-debug --enable-mpi CC=mpicxx CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
-          cat ./config.log
           make -j V=0
           make -j check V=0
           cd ..
+
+     - name: Upload configure log on failure
+       if: ${{ failure() }}
+       uses: actions/upload-artifact@v1
+       with:
+         name: configure log
+         path: .
