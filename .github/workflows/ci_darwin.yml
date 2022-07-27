@@ -63,14 +63,8 @@ jobs:
          name: configure log
          path: ./checkDebug/config.log
 
-     - name: Check if test-suite.log exists
-       id: check_test_log
-       uses: andstor/file-existence-action@v1
-       with:
-         files: "./checkDebug/test-suite.log"   
-
      - name: Upload test-suite.log on test failure
-       if: ${{ failure() && (steps.check_test_log.outputs.files_exists == 'true') }}
+       if: ${{ failure() }}
        uses: actions/upload-artifact@v1
        with:
          name: test-suite log
