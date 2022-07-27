@@ -76,6 +76,19 @@ jobs:
         name: binary-archive
         path: build/package
 
+    - name: Upload CMakeError.log on configure script failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v1
+      with:
+        name: CMakeError log
+        path: build/CMakeFiles/CMakeError.log
+
+    - name: Upload LastTest.log on test failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v1
+      with:
+        name: test log
+        path: build/Testing/Temporary/LastTest.log
 
   mac:
     runs-on: macos-latest
@@ -130,6 +143,19 @@ jobs:
         name: binary-archive
         path: build/package
 
+    - name: Upload CMakeError.log on configure script failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v1
+      with:
+        name: CMakeError log
+        path: build/CMakeFiles/CMakeError.log
+
+    - name: Upload LastTest.log on test failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v1
+      with:
+        name: test log
+        path: build/Testing/Temporary/LastTest.log
 
   windows:
     runs-on: windows-latest
@@ -178,3 +204,17 @@ jobs:
       with:
         name: binary-archive
         path: build/package
+
+    - name: Upload CMakeError.log on configure script failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v1
+      with:
+        name: CMakeError log
+        path: build/CMakeFiles/CMakeError.log
+
+    - name: Upload LastTest.log on test failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v1
+      with:
+        name: test log
+        path: build/Testing/Temporary/LastTest.log
