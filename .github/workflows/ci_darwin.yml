@@ -2,10 +2,13 @@ name: CI for Autotools/Darwin
 
 on:
   push:
-    paths-ignore:
+    paths:
       - "**/CMakeLists.txt"
       - "**.cmake"
       - "**.cmake.in"
+      - "**.c"
+      - "**.h"
+      - "**.h.in"
       - ".github/workflows/ci_darwin.yml"
   pull_request:
 
