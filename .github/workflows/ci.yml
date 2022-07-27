@@ -82,17 +82,17 @@ jobs:
 
     - name: Upload config.log on configure script failure
       if: ${{ failure() }}
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: configure log
-        path: ./checkDebug/config.log
+        path: ./**/config.log
 
     - name: Upload test-suite.log on test failure
       if: ${{ failure() }}
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: test-suite log
-        path: ./checkDebug/test-suite.log
+        path: ./**/test-suite.log
 
   linux-tarball:
     runs-on: ubuntu-latest
@@ -135,14 +135,14 @@ jobs:
 
     - name: Upload config.log on configure script failure
       if: ${{ failure() }}
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: configure log
-        path: ./checkDebug/config.log
+        path: ./tarball/config.log
 
     - name: Upload test-suite.log on test failure
       if: ${{ failure() }}
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: test-suite log
-        path: ./checkDebug/test-suite.log
+        path: ./tarball/test-suite.log
