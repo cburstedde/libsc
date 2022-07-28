@@ -47,16 +47,6 @@ jobs:
     - name: CMake configure
       run: cmake -B build --preset default --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
-    - name: Print Path
-      shell: bash
-      run: |
-          cd build
-          pwd
-          ls -l
-          cd Testing/Temporary
-          pwd
-          ls -l
-
     - name: CMake build
       run: cmake --build build --parallel
 

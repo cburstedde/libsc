@@ -39,7 +39,7 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
-  SC_CHECK_MPI (mpiret)
+  SC_CHECK_MPI (mpiret);
 
   if (mpirank == 0) {
     maxlevel = 3;
