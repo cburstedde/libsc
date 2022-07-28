@@ -40,7 +40,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
-
+  SC_ASSERT(mpirank == -1);
   if (mpirank == 0) {
     maxlevel = 3;
     target = 3;

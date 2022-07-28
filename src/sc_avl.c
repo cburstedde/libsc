@@ -114,7 +114,7 @@ avl_node_t *avl_at(const avl_tree_t *avltree, unsigned int u) {
 			return avlnode;
 		}
 	}
-	return NULL
+	return NULL;
 }
 
 unsigned int avl_index(const avl_node_t *avlnode) {
