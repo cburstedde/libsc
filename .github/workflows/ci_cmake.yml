@@ -52,6 +52,7 @@ jobs:
       run: |
           cd build
           pwd
+          ls -l
 
     - name: CMake build
       run: cmake --build build --parallel
