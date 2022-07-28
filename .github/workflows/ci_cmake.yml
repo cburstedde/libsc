@@ -98,7 +98,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: test log
-        path: build/Testing/Temporary/LastTest.log
+        path: build/Testing/Temporary
 
   mac:
     runs-on: macos-latest
@@ -165,7 +165,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: test log
-        path: build/Testing/Temporary/LastTest.log
+        path: build/Testing/Temporary
 
   windows:
     runs-on: windows-latest
@@ -227,4 +227,4 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: test log
-        path: build/Testing/Temporary/LastTest.log
+        path: build/Testing/Temporary
