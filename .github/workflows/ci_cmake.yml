@@ -83,6 +83,12 @@ jobs:
         name: CMakeError log
         path: build/CMakeFiles/CMakeError.log
 
+    - name: Print Path
+      shell: bash
+      run: |
+          cd build
+          pwd
+
     - name: Upload LastTest.log on test failure
       if: ${{ failure() }}
       uses: actions/upload-artifact@v1
