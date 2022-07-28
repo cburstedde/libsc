@@ -53,6 +53,7 @@ jobs:
           cd build
           pwd
           ls -l
+          ls -l Testing/Temporary
 
     - name: CMake build
       run: cmake --build build --parallel
