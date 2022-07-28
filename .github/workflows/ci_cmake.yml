@@ -47,6 +47,12 @@ jobs:
     - name: CMake configure
       run: cmake -B build --preset default --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
+    - name: Print Path
+      shell: bash
+      run: |
+          cd build
+          pwd
+
     - name: CMake build
       run: cmake --build build --parallel
 
@@ -82,12 +88,6 @@ jobs:
       with:
         name: CMakeError log
         path: build/CMakeFiles/CMakeError.log
-
-    - name: Print Path
-      shell: bash
-      run: |
-          cd build
-          pwd
 
     - name: Upload LastTest.log on test failure
       if: ${{ failure() }}
