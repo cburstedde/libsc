@@ -88,7 +88,8 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: test log
-        path: build/Testing/Temporary/LastTest.log
+        run: cd build
+             ls -l
 
   mac:
     runs-on: macos-latest
