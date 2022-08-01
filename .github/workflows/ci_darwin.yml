@@ -6,7 +6,7 @@ on:
       - "**/CMakeLists.txt"
       - "**.cmake"
       - "**.cmake.in"
-      - ".github/workflows/ci_darwin.yml"
+      - "cmake/**"
   pull_request:
 
 jobs:

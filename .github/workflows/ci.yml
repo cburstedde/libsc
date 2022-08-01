@@ -6,7 +6,7 @@ on:
       - "**/CMakeLists.txt"
       - "**.cmake"
       - "**.cmake.in"
-      - ".github/workflows/ci.yml"
+      - "cmake/**"
   pull_request:
 
 jobs:
@@ -22,6 +22,8 @@ jobs:
             zlib1g-dev libmpich-dev mpich
     - name: Checkout source code
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: Run bootstrap script
       run: ./bootstrap
     - name: Make check with MPI and debug, without shared
