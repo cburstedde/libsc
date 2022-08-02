@@ -81,18 +81,13 @@ jobs:
         path: ./**/test-suite.log
 
     - name: Upload config.log on configure script failure
-      if: ${{ failure() }}
+      if: failure()
       uses: actions/upload-artifact@v2
       with:
         name: configure log
-        path: ./**/config.log
-
-    - name: Upload test-suite.log on test failure
-      if: ${{ failure() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: test-suite log
-        path: ./**/test-suite.log
+        path: |
+          ./**/config.log
+          ./**/test-suite.log
 
   linux-tarball:
     runs-on: ubuntu-latest
