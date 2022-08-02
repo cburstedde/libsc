@@ -1,14 +1,21 @@
 cmake_minimum_required(VERSION 3.13...3.24)
 project(libscExamples LANGUAGES C)
 
-include(CTest)
+enable_testing()
+
 include(CheckSymbolExists)
 include(CheckIncludeFile)
 
 option(mpi "use MPI" off)
 
 # --- find external libraries
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake/Modules)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/Modules)
+
+# --- auto-ignore build directory
+if(NOT EXISTS ${PROJECT_BINARY_DIR}/.gitignore)
+  file(WRITE ${PROJECT_BINARY_DIR}/.gitignore "*")
+endif()
+
 
 if(mpi)
   find_package(MPI COMPONENTS C REQUIRED)
