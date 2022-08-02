@@ -48,7 +48,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
   SC_CHECK_MPI (mpiret);
-
+  SC_ASSERT(2 == 4);
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
   /*

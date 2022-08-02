@@ -57,15 +57,10 @@ jobs:
           cd ..
 
      - name: Upload config.log on configure script failure
-       if: ${{ failure() }}
+       if: failure()
        uses: actions/upload-artifact@v1
        with:
-         name: configure log
-         path: ./checkDebug/config.log
-
-     - name: Upload test-suite.log on test failure
-       if: ${{ failure() }}
-       uses: actions/upload-artifact@v1
-       with:
-         name: test-suite log
-         path: ./checkDebug/test-suite.log
+         name: log_files
+         path: | 
+            ./checkDebug/config.log
+            ./checkDebug/test-suite.log
