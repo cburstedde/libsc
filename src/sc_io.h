@@ -392,6 +392,7 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of read bytes.
  * \return              The function returns the MPI error code.
  * \note                This function is only valid to call on rank 0.
  *                      This function returns the errorcode sc_MPI_ERR_COUNT
@@ -401,7 +402,8 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
  */
 int                 sc_io_read_at (sc_MPI_File mpifile,
                                    sc_MPI_Offset offset, void *ptr,
-                                   int zcount, sc_MPI_Datatype t);
+                                   int zcount, sc_MPI_Datatype t,
+                                   int *ocount);
 
 /** Read MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer that is part of the file.
@@ -410,6 +412,7 @@ int                 sc_io_read_at (sc_MPI_File mpifile,
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of read bytes.
  * \return              The function returns the MPI error code.
  * \note                The user needs to pass the pointer to the
  *                      the \b mpifile. This differs from the MPI
@@ -423,13 +426,15 @@ int                 sc_io_read_at (sc_MPI_File mpifile,
  */
 int                 sc_io_read_at_all (sc_MPI_File * mpifile,
                                        sc_MPI_Offset offset, void *ptr,
-                                       int zcount, sc_MPI_Datatype t);
+                                       int zcount, sc_MPI_Datatype t,
+                                       int *ocount);
 
 /** Read memory content collectively from an MPI file.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of read bytes.
  * \return              The function returns the MPI error code.
  * \note                This function returns the errorcode sc_MPI_ERR_COUNT
  *                      if the number of read bytes is unequal the intended
@@ -437,7 +442,8 @@ int                 sc_io_read_at_all (sc_MPI_File * mpifile,
  *                      function.
  */
 int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
-                                    int zcount, sc_MPI_Datatype t);
+                                    int zcount, sc_MPI_Datatype t,
+                                    int *ocount);
 
 #ifdef SC_ENABLE_MPIIO
 
@@ -466,6 +472,7 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of written bytes.
  * \return              The function returns the MPI error code.
  * \note                This function is only valid to call on rank 0.
  *                      This function returns the errorcode sc_MPI_ERR_COUNT
@@ -477,7 +484,7 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
 int                 sc_io_write_at (sc_MPI_File mpifile,
                                     sc_MPI_Offset offset,
                                     const void *ptr, size_t zcount,
-                                    sc_MPI_Datatype t);
+                                    sc_MPI_Datatype t, int *ocount);
 
 /** Write MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
@@ -487,6 +494,7 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of written bytes.
  * \return              The function returns the MPI error code.
  * \note                This function does not abort on MPI file errors.
  *                      The user needs to pass the pointer to the
@@ -503,13 +511,14 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
 int                 sc_io_write_at_all (sc_MPI_File * mpifile,
                                         sc_MPI_Offset offset,
                                         const void *ptr, size_t zcount,
-                                        sc_MPI_Datatype t);
+                                        sc_MPI_Datatype t, int *ocount);
 
 /** Write memory content collectively to an MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of written bytes.
  * \note                This function does not abort on MPI file and count errors.
  * \return              The function returns the MPI error code.
  * \note                This function does not abort on MPI file errors.
@@ -521,7 +530,7 @@ int                 sc_io_write_at_all (sc_MPI_File * mpifile,
  */
 int                 sc_io_write_all (sc_MPI_File mpifile,
                                      const void *ptr, size_t zcount,
-                                     sc_MPI_Datatype t);
+                                     sc_MPI_Datatype t, int *ocount);
 
 /** Close collectively a sc_MPI_File.
  * \param[in] file  MPI file object that is closed.

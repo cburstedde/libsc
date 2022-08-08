@@ -798,22 +798,23 @@ sc_io_read (sc_MPI_File mpifile, void *ptr, int zcount,
 
 int
 sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
-               int zcount, sc_MPI_Datatype t)
+               int zcount, sc_MPI_Datatype t, int *ocount)
 {
-  int                 icount;
 #ifndef SC_ENABLE_MPIIO
   int                 size;
 #endif
   int                 mpiret;
+
+  *ocount = 0;
 
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_read_at (mpifile, offset, ptr, zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS) {
-    mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
+    mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
     SC_CHECK_MPI (mpiret);
-    return (icount == zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
+    return sc_MPI_SUCCESS;
   }
   return mpiret;
 #else
@@ -823,33 +824,30 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   mpiret = sc_MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == 0, "read_at: get type size failed");
   errno = 0;
-  icount = (int) fread (ptr, (size_t) size, zcount, mpifile.file);
-  if (icount != zcount) {
-    return sc_MPI_ERR_COUNT;
-  }
-  else {
-    return errno;
-  }
+  *ocount = (int) fread (ptr, (size_t) size, zcount, mpifile.file);
+  return errno;
 #endif
 }
 
 int
-sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
-                   void *ptr, int zcount, sc_MPI_Datatype t)
+sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset, void *ptr,
+                   int zcount, sc_MPI_Datatype t, int *ocount)
 {
 #ifdef SC_ENABLE_MPI
   int                 mpiret;
 #endif
 #ifdef SC_ENABLE_MPIIO
-  int                 icount;
   sc_MPI_Status       mpistatus;
+
+  *ocount = 0;
 
   mpiret = MPI_File_read_at_all (*mpifile, offset, ptr,
                                  (int) zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS) {
-    mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
+    mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
     SC_CHECK_MPI (mpiret);
-    return (icount == zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
+
+    return sc_MPI_SUCCESS;
   }
 
   return mpiret;
@@ -859,6 +857,8 @@ sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
     int                 mpisize, rank, count, size;
     int                 active, errval;
     sc_MPI_Status       status;
+
+    *ocount = 0;
 
     mpiret = sc_MPI_Comm_rank (mpifile->mpicomm, &rank);
     SC_CHECK_MPI (mpiret);
@@ -912,7 +912,7 @@ sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
       SC_CHECK_ABORT (mpiret == 0, "read_at_all: seek failed");
       /* read data */
       errno = 0;
-      count = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
+      *ocount = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
       errval = errno;
       /* the consective error codes fflush and fclose are not reported */
       SC_CHECK_ABORT (fflush (mpifile->file) == 0,
@@ -931,19 +931,6 @@ sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
         goto failure;
       }
       else {
-        /* no error but number of written bytes may be lower than expected */
-        SC_ASSERT (count <= (int) zcount);
-        if (count != (int) zcount) {
-          if (rank < mpisize - 1) {
-            active = errval = sc_MPI_ERR_COUNT;
-            /* inform next rank about count error */
-            mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
-                                  rank + 1, 1, mpifile->mpicomm);
-            SC_CHECK_MPI (mpiret);
-          }
-          goto failure;
-        }
-
         /* only update active process if there are processes left */
         if (rank < mpisize - 1) {
           SC_ASSERT (active == -1);
@@ -1004,14 +991,15 @@ sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   }
 #else
   /* There is no collective read without MPI. */
-  return sc_io_read_at (*mpifile, offset, ptr, zcount, t);
+  return sc_io_read_at (*mpifile, offset, ptr, zcount, t, ocount);
 #endif
 }
 
 int
-sc_io_read_all (sc_MPI_File mpifile, void *ptr, int zcount, sc_MPI_Datatype t)
+sc_io_read_all (sc_MPI_File mpifile, void *ptr, int zcount, sc_MPI_Datatype t,
+                int *ocount)
 {
-  return sc_io_read_at_all (&mpifile, 0, ptr, zcount, t);
+  return sc_io_read_at_all (&mpifile, 0, ptr, zcount, t, ocount);
 }
 
 #ifdef SC_ENABLE_MPIIO
@@ -1041,9 +1029,9 @@ sc_io_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
 
 int
 sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
-                const void *ptr, size_t zcount, sc_MPI_Datatype t)
+                const void *ptr, size_t zcount, sc_MPI_Datatype t,
+                int *ocount)
 {
-  int                 icount;
 #ifndef SC_ENABLE_MPIIO
   int                 size;
 #endif
@@ -1051,16 +1039,20 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
+  *ocount = 0;
+
   mpiret = MPI_File_write_at (mpifile, offset, (void *) ptr,
                               (int) zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS) {
-    mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
+    mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
     SC_CHECK_MPI (mpiret);
-    return (icount == (int) zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
+    return sc_MPI_SUCCESS;
   }
 
   return mpiret;
 #else
+  *ocount = 0;
+
   /* This code is only legal on one process. */
   /* This works with and without MPI */
   mpiret = fseek (mpifile.file, offset, SEEK_SET);
@@ -1069,7 +1061,7 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   mpiret = sc_MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == 0, "write_at: get type size failed");
   errno = 0;
-  icount = (int) fwrite (ptr, (size_t) size, zcount, mpifile.file);
+  *ocount = (int) fwrite (ptr, (size_t) size, zcount, mpifile.file);
   SC_CHECK_ABORT (fflush (mpifile.file) == 0, "write_at: fflush failed");
   if (icount != (int) zcount) {
     return sc_MPI_ERR_COUNT;
@@ -1082,21 +1074,23 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 
 int
 sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
-                    const void *ptr, size_t zcount, sc_MPI_Datatype t)
+                    const void *ptr, size_t zcount, sc_MPI_Datatype t,
+                    int *ocount)
 {
 #ifdef SC_ENABLE_MPI
   int                 mpiret;
 #endif
 #ifdef SC_ENABLE_MPIIO
-  int                 icount;
   sc_MPI_Status       mpistatus;
+
+  *ocount = 0;
 
   mpiret = MPI_File_write_at_all (*mpifile, offset, (void *) ptr,
                                   (int) zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS) {
-    mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
+    mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
     SC_CHECK_MPI (mpiret);
-    return (icount == (int) zcount) ? sc_MPI_SUCCESS : sc_MPI_ERR_COUNT;
+    return sc_MPI_SUCCESS;
   }
 
   return mpiret;
@@ -1107,6 +1101,8 @@ sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
     int                 mpisize, rank, count, size;
     int                 active, errval;
     sc_MPI_Status       status;
+
+    *ocount = 0;
 
     mpiret = sc_MPI_Comm_rank (mpifile->mpicomm, &rank);
     SC_CHECK_MPI (mpiret);
@@ -1158,7 +1154,7 @@ sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
       SC_CHECK_ABORT (mpiret == 0, "write_at_all: get type size failed");
       /* write data */
       errno = 0;
-      count = (int) fwrite (ptr, (size_t) size, zcount, mpifile->file);
+      *ocount = (int) fwrite (ptr, (size_t) size, zcount, mpifile->file);
       errval = errno;
       /* the consective error codes fflush and fclose are not reported */
       SC_CHECK_ABORT (fflush (mpifile->file) == 0,
@@ -1177,19 +1173,6 @@ sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
         goto failure;
       }
       else {
-        /* no error but number of written bytes may be lower than expected */
-        SC_ASSERT (count <= (int) zcount);
-        if (count != (int) zcount) {
-          if (rank < mpisize - 1) {
-            active = errval = sc_MPI_ERR_COUNT;
-            /* inform next rank about count error */
-            mpiret = sc_MPI_Send (&active, 1, sc_MPI_INT,
-                                  rank + 1, 1, mpifile->mpicomm);
-            SC_CHECK_MPI (mpiret);
-          }
-          goto failure;
-        }
-
         /* only update active process if there are processes left */
         if (rank < mpisize - 1) {
           SC_ASSERT (active == -1);
@@ -1251,15 +1234,15 @@ sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   }
 #else
   /* There is no collective write without MPI. */
-  return sc_io_write_at (*mpifile, offset, ptr, zcount, t);
+  return sc_io_write_at (*mpifile, offset, ptr, zcount, t, ocount);
 #endif
 }
 
 int
 sc_io_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
-                 sc_MPI_Datatype t)
+                 sc_MPI_Datatype t, int *ocount)
 {
-  return sc_io_write_at_all (&mpifile, 0, ptr, zcount, t);
+  return sc_io_write_at_all (&mpifile, 0, ptr, zcount, t, ocount);
 }
 
 int
