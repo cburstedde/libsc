@@ -105,7 +105,6 @@ sc_tag_t;
 #define sc_MPI_ERR_DUP_DATAREP            MPI_ERR_DUP_DATAREP
 #define sc_MPI_ERR_CONVERSION             MPI_ERR_CONVERSION
 #define sc_MPI_ERR_IO                     MPI_ERR_IO
-#define sc_MPI_ERR_COUNT                  ((MPI_ERR_LASTCODE) + 1) /**< Error code for MPI count error */
 
 #define sc_MPI_ERR_LASTCODE               MPI_ERR_LASTCODE
 

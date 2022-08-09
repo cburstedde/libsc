@@ -609,11 +609,6 @@ int
 sc_io_error_class (int errorcode, int *errorclass)
 {
 #ifdef SC_ENABLE_MPIIO
-  if (errorcode == sc_MPI_ERR_COUNT) {
-    *errorclass = sc_MPI_ERR_COUNT;
-    return sc_MPI_SUCCESS;
-  }
-
   return MPI_Error_class (errorcode, errorclass);
 #else
   if (errorclass == NULL) {
@@ -678,9 +673,6 @@ sc_io_error_class (int errorcode, int *errorclass)
   case ENXIO:
   case EPIPE:
     *errorclass = sc_MPI_ERR_IO;
-    break;
-  case sc_MPI_ERR_COUNT:
-    *errorclass = sc_MPI_ERR_COUNT;
     break;
   default:
     *errorclass = sc_MPI_ERR_UNKNOWN;

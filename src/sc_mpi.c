@@ -550,26 +550,7 @@ sc_MPI_Error_class (int errorcode, int *errorclass)
 int
 sc_MPI_Error_string (int errorcode, char *string, int *resultlen)
 {
-  int                 retval;
-
 #ifdef SC_ENABLE_MPIIO
-  /* we define our own MPI count error code */
-  if (errorcode == sc_MPI_ERR_COUNT) {
-    /* print into the output string */
-    if ((retval =
-         snprintf (string, sc_MPI_MAX_ERROR_STRING, "%s",
-                   "Read or write count error")) < 0) {
-      /* unless something goes against the current standard of snprintf */
-      return sc_MPI_ERR_NO_MEM;
-    }
-    if (retval >= sc_MPI_MAX_ERROR_STRING) {
-      retval = sc_MPI_MAX_ERROR_STRING - 1;
-    }
-    *resultlen = retval;
-
-    return sc_MPI_SUCCESS;
-  }
-
   /* process error codes unchanged by MPI implementation */
   return MPI_Error_string (errorcode, string, resultlen);
 #else
@@ -642,9 +623,6 @@ sc_MPI_Error_string (int errorcode, char *string, int *resultlen)
     break;
   case sc_MPI_ERR_IO:
     tstr = "I/O or format error";
-    break;
-  case sc_MPI_ERR_COUNT:
-    tstr = "Read or write count error";
     break;
   }
   if (tstr == NULL) {
