@@ -1054,13 +1054,9 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   SC_CHECK_ABORT (mpiret == 0, "write_at: get type size failed");
   errno = 0;
   *ocount = (int) fwrite (ptr, (size_t) size, zcount, mpifile.file);
+  mpiret = errno;
   SC_CHECK_ABORT (fflush (mpifile.file) == 0, "write_at: fflush failed");
-  if (icount != (int) zcount) {
-    return sc_MPI_ERR_COUNT;
-  }
-  else {
-    return errno;
-  }
+  return mpiret;
 #endif
 }
 
