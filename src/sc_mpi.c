@@ -554,7 +554,9 @@ sc_MPI_Error_string (int errorcode, char *string, int *resultlen)
   /* process error codes unchanged by MPI implementation */
   return MPI_Error_string (errorcode, string, resultlen);
 #else
+  int                 retval;
   const char         *tstr = NULL;
+
   if (string == NULL || resultlen == NULL) {
     return sc_MPI_ERR_ARG;
   }
