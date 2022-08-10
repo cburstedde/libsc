@@ -583,8 +583,8 @@ sc_file_mode_t;
  * \param [in] errorcode        Returned from a direct MPI call or libsc.
  * \param [out] errorclass      Non-NULL pointer.  Filled with matching
  *                              error class on success.
- * \param                       sc_MPI_SUCCESS on successful conversion,
- *                              Other MPI errer code otherwise.
+ * \return                      sc_MPI_SUCCESS on successful conversion,
+ *                              Other MPI error code otherwise.
  */
 int                 sc_MPI_Error_class (int errorcode, int *errorclass);
 
@@ -595,7 +595,8 @@ int                 sc_MPI_Error_class (int errorcode, int *errorclass);
  * \param [in,out] string       At least sc_MPI_MAX_ERROR_STRING bytes.
  * \param [out] resultlen       Length of string on return.
  * \return                      sc_MPI_SUCCESS on success or
- *                              something else on invalid arguments. */
+ *                              something else on invalid arguments.
+ */
 int                 sc_MPI_Error_string (int errorcode, char *string,
                                          int *resultlen);
 

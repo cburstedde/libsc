@@ -341,7 +341,7 @@ void                sc_fflush_fsync_fclose (FILE * file);
  * \param [out] errorclass Regardless of whether MPI I/O is enabled,
  *                         an MPI file related error from \ref sc_mpi.h.
  *                         It may be passed to \ref sc_MPI_Error_string.
- * \return                 sc_MPI_SUCCESS) only on successful conversion.
+ * \return                 sc_MPI_SUCCESS only on successful conversion.
  */
 int                 sc_io_error_class (int errorcode, int *errorclass);
 
