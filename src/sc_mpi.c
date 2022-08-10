@@ -533,7 +533,6 @@ sc_MPI_Error_class (int errorcode, int *errorclass)
   case sc_MPI_ERR_DUP_DATAREP:
   case sc_MPI_ERR_CONVERSION:
   case sc_MPI_ERR_IO:
-  case sc_MPI_ERR_COUNT:
     *errorclass = errorcode;
     return sc_MPI_SUCCESS;
   }
