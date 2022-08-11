@@ -488,6 +488,9 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
 
 /** Write MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
+ * If there is no MPI IO but MPI avaiable, the offset parameter is ignored
+ * and the ranks just write at the current end of the file according to
+ * their rank-induced order.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in etype, where the etype is given by
  *                      the type t.

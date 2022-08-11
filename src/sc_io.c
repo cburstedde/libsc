@@ -1084,7 +1084,13 @@ sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   return mpiret;
 #elif defined (SC_ENABLE_MPI)
   /* MPI but no MPI IO */
-  /* offset is ignored and we use here the append mode */
+  /* offset is ignored and we use here the append mode.
+   * This is the case since the C-standard open mode
+   * "wb" would earse the existing file and create a
+   * new empty one. Therefore, we need to open the
+   * file in the mode "ab" but according to the
+   * C-standard then fseek does not work.
+   */
   {
     int                 mpisize, rank, count, size;
     int                 active, errval;
