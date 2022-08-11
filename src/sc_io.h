@@ -129,6 +129,14 @@ typedef struct sc_io_source
 }
 sc_io_source_t;
 
+typedef enum
+{
+  SC_READ,
+  SC_WRITE_CREATE,
+  SC_WRITE_APPEND
+}
+sc_io_open_mode_t;
+
 /** Create a generic data sink.
  * \param [in] iotype           Type of the sink.
  *                              Depending on iotype, varargs must follow:
@@ -358,7 +366,7 @@ int                 sc_io_error_class (int errorcode, int *errorclass);
  *                      MPI at all.
  */
 int                 sc_io_open (sc_MPI_Comm mpicomm,
-                                const char *filename, int amode,
+                                const char *filename, sc_io_open_mode_t amode,
                                 sc3_MPI_Info_t mpiinfo,
                                 sc_MPI_File * mpifile);
 

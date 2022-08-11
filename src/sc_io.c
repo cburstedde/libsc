@@ -683,20 +683,17 @@ sc_io_error_class (int errorcode, int *errorclass)
 
 #ifndef SC_ENABLE_MPIIO
 static void
-parse_access_mode (int amode, char mode[4])
+parse_nompiio_access_mode (sc_io_open_mode_t amode, char mode[4])
 {
   /* parse access mode */
   switch (amode) {
-  case SC_WRITE_ONLY:
-    snprintf (mode, 3, "%s", "wb");
-    break;
-  case SC_READ_ONLY:
+  case SC_READ:
     snprintf (mode, 3, "%s", "rb");
     break;
-  case SC_READ_WRITE:
-    snprintf (mode, 4, "%s", "w+b");
+  case SC_WRITE_CREATE:
+    snprintf (mode, 3, "%s", "wb");
     break;
-  case SC_APPEND:
+  case SC_WRITE_APPEND:
     /* the file is opened in the corresponding write call */
 #if 0
     snprintf (mode, 3, "%s", "rb");
@@ -704,19 +701,42 @@ parse_access_mode (int amode, char mode[4])
     snprintf (mode, 1, "%s", "");
     break;
   default:
-    SC_ABORT ("Invalid file access mode");
+    SC_ABORT ("Invalid non MPI IO file access mode");
     break;
   }
 }
-
+#else
+static void
+parse_mpiio_access_mode (sc_io_open_mode_t amode, int *mode)
+{
+  /* parse access mode */
+  switch (amode) {
+  case SC_READ:
+    *mode = sc_MPI_MODE_RDONLY;
+    break;
+  case SC_WRITE_CREATE:
+    *mode = sc_MPI_MODE_WRONLY | sc_MPI_MODE_CREATE;
+    break;
+  case SC_WRITE_APPEND:
+    *mode = sc_MPI_MODE_WRONLY | sc_MPI_MODE_APPEND;
+  default:
+    SC_ABORT ("Invalid MPI IO file access mode");
+    break;
+  }
+}
 #endif
 
 int
-sc_io_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
-            sc3_MPI_Info_t mpiinfo, sc_MPI_File * mpifile)
+sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
+            sc_io_open_mode_t amode, sc3_MPI_Info_t mpiinfo,
+            sc_MPI_File * mpifile)
 {
 #ifdef SC_ENABLE_MPIIO
-  return MPI_File_open (mpicomm, filename, amode, mpiinfo, mpifile);
+  int                 mode;
+
+  parse_mpiio_access_mode (amode, &mode);
+
+  return MPI_File_open (mpicomm, filename, mode, mpiinfo, mpifile);
 #elif defined (SC_ENABLE_MPI)
   {
     int                 rank, mpiret;
@@ -729,7 +749,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
     /* store the communicator */
     mpifile->mpicomm = mpicomm;
 
-    parse_access_mode (amode, mode);
+    parse_nompiio_access_mode (amode, mode);
 
     /* get my rank */
     mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
@@ -755,7 +775,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename, int amode,
 
     mpifile->filename = filename;
 
-    parse_access_mode (amode, mode);
+    parse_nompiio_access_mode (amode, mode);
     errno = 0;
     mpifile->file = fopen (filename, mode);
 

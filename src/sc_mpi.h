@@ -514,8 +514,6 @@ int                 sc_MPI_Init_thread (int *argc, char ***argv,
 #define sc_MPI_MODE_UNIQUE_OPEN    MPI_MODE_UNIQUE_OPEN
 #define sc_MPI_MODE_SEQUENTIAL     MPI_MODE_SEQUENTIAL
 #define sc_MPI_MODE_APPEND         MPI_MODE_APPEND
-#define sc_MPI_MODE_WRONLY_CREATE  (sc_MPI_MODE_WRONLY | sc_MPI_MODE_CREATE )
-#define sc_MPI_MODE_WRONLY_APPEND (sc_MPI_MODE_WRONLY | sc_MPI_MODE_APPEND)
 
 /* file seek parameters */
 
@@ -547,30 +545,6 @@ typedef struct no_mpiio_file
 sc_MPI_File;
 
 #define sc_MPI_FILE_NULL           NULL
-
-/** This enum differs from \ref sc_io_mode_t since we
- * consider here the byte mode for fopen.
- * TODO: Maybe merge these two types.
- */
-typedef enum
-{
-  SC_WRITE_ONLY,
-  SC_READ_ONLY,
-  SC_APPEND,
-  SC_WRITE,
-  SC_READ_WRITE
-}
-sc_file_mode_t;
-
-/* file access modes */
-/** The following macro is not MPI standard conforming
- * Its purpose is to handle file access modes without MPI IO. */
-#define sc_MPI_MODE_WRONLY_CREATE  SC_WRITE_ONLY        /* "wb" */
-#define sc_MPI_MODE_RDONLY         SC_READ_ONLY /* "rb" */
-#define sc_MPI_MODE_RDWR           SC_READ_WRITE        /* w+b" */
-#define sc_MPI_MODE_WRONLY         SC_WRITE_ONLY        /* "wb" */
-#define sc_MPI_MODE_APPEND         SC_APPEND    /* "ab" */
-#define sc_MPI_MODE_WRONLY_APPEND  SC_APPEND    /* "ab" */
 
 #endif /* !SC_ENABLE_MPIIO */
 
