@@ -542,7 +542,7 @@ typedef struct no_mpiio_file
   sc_MPI_Comm         mpicomm;
 #endif
 }
-sc_MPI_File;
+                   *sc_MPI_File, sc_MPI_File_struct;
 
 #define sc_MPI_FILE_NULL           NULL
 

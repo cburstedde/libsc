@@ -432,7 +432,7 @@ int                 sc_io_read_at (sc_MPI_File mpifile,
  *                      number of read bytes. This differ from the MPI_File
  *                      function.
  */
-int                 sc_io_read_at_all (sc_MPI_File * mpifile,
+int                 sc_io_read_at_all (sc_MPI_File mpifile,
                                        sc_MPI_Offset offset, void *ptr,
                                        int zcount, sc_MPI_Datatype t,
                                        int *ocount);
@@ -519,7 +519,7 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
  *                      number of written bytes. This differ from the MPI_File
  *                      function.
  */
-int                 sc_io_write_at_all (sc_MPI_File * mpifile,
+int                 sc_io_write_at_all (sc_MPI_File mpifile,
                                         sc_MPI_Offset offset,
                                         const void *ptr, size_t zcount,
                                         sc_MPI_Datatype t, int *ocount);

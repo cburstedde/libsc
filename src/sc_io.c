@@ -742,12 +742,15 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     int                 rank, mpiret;
     char                mode[4];
 
+    /* allocate file struct */
+    *mpifile = (sc_MPI_File) SC_ALLOC (sc_MPI_File_struct, 1);
+
     /* serialize the I/O operations */
     /* active flag is set later in  */
-    mpifile->filename = filename;
+    (*mpifile)->filename = filename;
 
     /* store the communicator */
-    mpifile->mpicomm = mpicomm;
+    (*mpifile)->mpicomm = mpicomm;
 
     parse_nompiio_access_mode (amode, mode);
 
@@ -756,11 +759,11 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     SC_CHECK_MPI (mpiret);
     if (rank == 0) {
       errno = 0;
-      mpifile->file = fopen (filename, mode);
+      (*mpifile)->file = fopen (filename, mode);
       mpiret = errno;
     }
     else {
-      mpifile->file = sc_MPI_FILE_NULL;
+      (*mpifile)->file = sc_MPI_FILE_NULL;
       mpiret = sc_MPI_SUCCESS;
     }
     /* broadcast errno */
@@ -773,11 +776,14 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
   {
     char                mode[4];
 
-    mpifile->filename = filename;
+    /* allocate file struct */
+    *mpifile = (sc_MPI_File) SC_ALLOC (sc_MPI_File_struct, 1);
+
+    (*mpifile)->filename = filename;
 
     parse_nompiio_access_mode (amode, mode);
     errno = 0;
-    mpifile->file = fopen (filename, mode);
+    (*mpifile)->file = fopen (filename, mode);
 
     return errno;
   }
@@ -830,19 +836,19 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   }
   return mpiret;
 #else
-  mpiret = fseek (mpifile.file, offset, SEEK_SET);
+  mpiret = fseek (mpifile->file, offset, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "read_at: fseek failed");
   /* get the data size of the data type */
   mpiret = sc_MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == 0, "read_at: get type size failed");
   errno = 0;
-  *ocount = (int) fread (ptr, (size_t) size, zcount, mpifile.file);
+  *ocount = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
   return errno;
 #endif
 }
 
 int
-sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset, void *ptr,
+sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
                    int zcount, sc_MPI_Datatype t, int *ocount)
 {
 #ifdef SC_ENABLE_MPI
@@ -853,7 +859,7 @@ sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset, void *ptr,
 
   *ocount = 0;
 
-  mpiret = MPI_File_read_at_all (*mpifile, offset, ptr,
+  mpiret = MPI_File_read_at_all (mpifile, offset, ptr,
                                  (int) zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
@@ -1003,7 +1009,7 @@ sc_io_read_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset, void *ptr,
   }
 #else
   /* There is no collective read without MPI. */
-  return sc_io_read_at (*mpifile, offset, ptr, zcount, t, ocount);
+  return sc_io_read_at (mpifile, offset, ptr, zcount, t, ocount);
 #endif
 }
 
@@ -1011,7 +1017,7 @@ int
 sc_io_read_all (sc_MPI_File mpifile, void *ptr, int zcount, sc_MPI_Datatype t,
                 int *ocount)
 {
-  return sc_io_read_at_all (&mpifile, 0, ptr, zcount, t, ocount);
+  return sc_io_read_at_all (mpifile, 0, ptr, zcount, t, ocount);
 }
 
 #ifdef SC_ENABLE_MPIIO
@@ -1067,21 +1073,21 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 
   /* This code is only legal on one process. */
   /* This works with and without MPI */
-  mpiret = fseek (mpifile.file, offset, SEEK_SET);
+  mpiret = fseek (mpifile->file, offset, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "write_at: fseek failed");
   /* get the data size of the data type */
   mpiret = sc_MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == 0, "write_at: get type size failed");
   errno = 0;
-  *ocount = (int) fwrite (ptr, (size_t) size, zcount, mpifile.file);
+  *ocount = (int) fwrite (ptr, (size_t) size, zcount, mpifile->file);
   mpiret = errno;
-  SC_CHECK_ABORT (fflush (mpifile.file) == 0, "write_at: fflush failed");
+  SC_CHECK_ABORT (fflush (mpifile->file) == 0, "write_at: fflush failed");
   return mpiret;
 #endif
 }
 
 int
-sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
+sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
                     const void *ptr, size_t zcount, sc_MPI_Datatype t,
                     int *ocount)
 {
@@ -1093,7 +1099,7 @@ sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
 
   *ocount = 0;
 
-  mpiret = MPI_File_write_at_all (*mpifile, offset, (void *) ptr,
+  mpiret = MPI_File_write_at_all (mpifile, offset, (void *) ptr,
                                   (int) zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS) {
     mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
@@ -1248,7 +1254,7 @@ sc_io_write_at_all (sc_MPI_File * mpifile, sc_MPI_Offset offset,
   }
 #else
   /* There is no collective write without MPI. */
-  return sc_io_write_at (*mpifile, offset, ptr, zcount, t, ocount);
+  return sc_io_write_at (mpifile, offset, ptr, zcount, t, ocount);
 #endif
 }
 
@@ -1256,7 +1262,7 @@ int
 sc_io_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
                  sc_MPI_Datatype t, int *ocount)
 {
-  return sc_io_write_at_all (&mpifile, 0, ptr, zcount, t, ocount);
+  return sc_io_write_at_all (mpifile, 0, ptr, zcount, t, ocount);
 }
 
 int
@@ -1275,24 +1281,25 @@ sc_io_close (sc_MPI_File * file)
   mpiret = sc_io_error_class (mpiret, &eclass);
   SC_CHECK_MPI (mpiret);
 #else
-  if (file->file != NULL) {
+  if ((*file)->file != NULL) {
 #ifdef SC_ENABLE_DEBUG
 #ifdef SC_ENABLE_MPI
     /* by convention this can only happen on proc 0 */
-    mpiret = sc_MPI_Comm_rank (file->mpicomm, &rank);
+    mpiret = sc_MPI_Comm_rank ((*file)->mpicomm, &rank);
     SC_CHECK_MPI (mpiret);
     SC_ASSERT (rank == 0);
 #endif
 #endif
     eclass = sc_MPI_SUCCESS;
     errno = 0;
-    fclose (file->file);
+    fclose ((*file)->file);
     mpiret = sc_io_error_class (errno, &eclass);
     SC_CHECK_MPI (mpiret);
   }
   else {
     eclass = sc_MPI_SUCCESS;
   }
+  SC_FREE (*file);
 #endif
 
   return eclass;
