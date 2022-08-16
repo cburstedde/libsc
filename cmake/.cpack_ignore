@@ -21,6 +21,5 @@ config/ltsugar.m4
 config/ltversion.m4
 config/lt~obsolete.m4
 configure
-src/sc_config_autotools.h.in
-scindent
-scspell
+example/openmp
+test/test_pqueue.c

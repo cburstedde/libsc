@@ -45,13 +45,13 @@ endif()
 string(APPEND SC_CPP " -E")
 set(SC_CPP \"${SC_CPP}\")
 
-set(SC_CFLAGS "${CMAKE_C_FLAGS} ${MPI_C_COMPILE_OPTIONS}")
+set(SC_CFLAGS "${CMAKE_C_FLAGS}\ ${MPI_C_COMPILE_OPTIONS}")
 set(SC_CFLAGS \"${SC_CFLAGS}\")
 
 set(SC_CPPFLAGS \"\")
 
 set(SC_LDFLAGS \"${MPI_C_LINK_FLAGS}\")
-set(SC_LIBS \"${ZLIB_LIBRARIES} m\")
+set(SC_LIBS \"${ZLIB_LIBRARIES}\ m\")
 
 set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
 set(SC_ENABLE_MEMALIGN 1)
@@ -75,7 +75,6 @@ endif()
 check_symbol_exists(backtrace execinfo.h SC_HAVE_BACKTRACE)
 check_symbol_exists(backtrace_symbols execinfo.h SC_HAVE_BACKTRACE_SYMBOLS)
 
-# check_include_file(dlfcn.h SC_HAVE_DLFCN_H)
 check_include_file(execinfo.h SC_HAVE_EXECINFO_H)
 check_symbol_exists(fsync unistd.h SC_HAVE_FSYNC)
 check_include_file(inttypes.h SC_HAVE_INTTYPES_H)
@@ -137,7 +136,7 @@ check_include_file(sys/select.h SC_HAVE_SYS_SELECT_H)
 check_include_file(sys/stat.h SC_HAVE_SYS_STAT_H)
 check_include_file(fcntl.h SC_HAVE_FCNTL_H)
 
-if(CMAKE_SYSTEM_NAME STREQUAL Linux)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   check_include_file(linux/videodev2.h SC_HAVE_LINUX_VIDEODEV2_H)
   check_include_file(linux/version.h SC_HAVE_LINUX_VERSION_H)
 

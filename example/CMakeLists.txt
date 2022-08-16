@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.23)
+cmake_minimum_required(VERSION 3.13...3.24)
 project(libscExamples LANGUAGES C)
 
 include(CTest)
@@ -57,9 +57,9 @@ else()
   add_test(NAME sc:example:${name} COMMAND sc_${name})
 endif()
 
-set_tests_properties(sc:example:${name} PROPERTIES TIMEOUT 10)
+set_property(TEST sc:example:${name} PROPERTY TIMEOUT 10)
 if(WIN32 AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
-  set_tests_properties(sc:example:${name} PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_append:${SC_INCLUDE_DIR}/../bin")
+  set_property(TEST sc:example:${name} PROPERTY ENVIRONMENT_MODIFICATION "PATH=path_list_append:${SC_INCLUDE_DIR}/../bin")
 endif()
 
 endfunction(test_sc_example)
