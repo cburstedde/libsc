@@ -26,6 +26,20 @@
 
 #include <sc.h>
 #include <sc_containers.h>
+#include <sc3_mpi_types.h>
+
+/** Examine the MPI return value and print an error if there is one.
+ * The message passed is appended to MPI, file and line information.
+ */
+#define SC_CHECK_MPI_VERBOSE(errcode,user_msg) do {            \
+  char msg[sc_MPI_MAX_ERROR_STRING];                           \
+  int msglen, errclass;                                        \
+  if ((errcode) != sc_MPI_SUCCESS) {                           \
+    sc_io_error_class ((errcode), &errclass);                  \
+    sc_MPI_Error_string (errclass, msg, &msglen);              \
+    SC_LERRORF ("%s at %s:%d: %s\n",                           \
+                (user_msg), __FILE__, __LINE__, msg);          \
+  }} while (0)
 
 SC_EXTERN_C_BEGIN;
 
@@ -90,6 +104,14 @@ typedef struct sc_io_source
   sc_array_t         *mirror_buffer;
 }
 sc_io_source_t;
+
+typedef enum
+{
+  SC_READ,
+  SC_WRITE_CREATE,
+  SC_WRITE_APPEND
+}
+sc_io_open_mode_t;
 
 /** Create a generic data sink.
  * \param [in] iotype           Type of the sink.
@@ -258,6 +280,12 @@ int                 sc_vtk_write_compressed (FILE * vtkfile,
                                              char *numeric_data,
                                              size_t byte_length);
 
+/** Wrapper for fopen(3).
+ * We provide an additional argument that contains the error message.
+ */
+FILE               *sc_fopen (const char *filename, const char *mode,
+                              const char *errmsg);
+
 /** Write memory content to a file.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] size     Size of one array member.
@@ -285,19 +313,107 @@ void                sc_fread (void *ptr, size_t size,
  */
 void                sc_fflush_fsync_fclose (FILE * file);
 
+/** Translate an I/O error into an appropriate MPI error class.
+ * This function is strictly meant for file access functions.
+ * If MPI I/O is not present, translate an errno set by stdio.
+ * It is thus possible to substitute MPI I/O by fopen, fread, etc.
+ * and to process the errors with this one function regardless.
+ * \param [in] errorcode   Without MPI I/O: Translate errors from
+ *                         fopen, fclose, fread, fwrite, fseek, ftell
+ *                         into an appropriate MPI error class.
+ *                         With MPI I/O: Turn error code into its class.
+ * \param [out] errorclass Regardless of whether MPI I/O is enabled,
+ *                         an MPI file related error from \ref sc_mpi.h.
+ *                         It may be passed to \ref sc_MPI_Error_string.
+ * \return                 sc_MPI_SUCCESS only on successful conversion.
+ */
+int                 sc_io_error_class (int errorcode, int *errorclass);
+
+/** Opens a MPI file or without MPI I/O or even without MPI a file context.
+ * \param[in] mpicomm   MPI communicator
+ * \param[in] filename  The path to the file that we want to open.
+ * \param[in] amode     An access mode.
+ * \param[in] mpiinfo   The MPI info
+ * \param[out] mpifile  The MPI file that is opened. This can be a
+ *                      an actual MPI IO file or an internal file
+ *                      conntext to preserve some MPI IO functionalities
+ *                      without MPI IO and to have working code without
+ *                      MPI at all.
+ */
+int                 sc_io_open (sc_MPI_Comm mpicomm,
+                                const char *filename, sc_io_open_mode_t amode,
+                                sc3_MPI_Info_t mpiinfo,
+                                sc_MPI_File * mpifile);
+
 #ifdef SC_ENABLE_MPIIO
+
+#define sc_mpi_read         sc_io_read   /**< For backwards compatibility. */
 
 /** Read MPI file content into memory.
  * \param [in,out] mpifile      MPI file object opened for reading.
- * \param [in] ptr      Data array to read from disk.
+ * \param [out] ptr     Data array to read in from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
  * \note                This function aborts on MPI file and count errors.
+ *                      This function does not use the calling convention
+ *                      and error handling as the other sc_io MPI file
+ *                      functions to ensure backwards compatibility.
  */
-void                sc_mpi_read (MPI_File mpifile, const void *ptr,
-                                 size_t zcount, sc_MPI_Datatype t,
-                                 const char *errmsg);
+void                sc_io_read (sc_MPI_File mpifile, void *ptr,
+                                size_t zcount, sc_MPI_Datatype t,
+                                const char *errmsg);
+
+#endif
+
+/** Read MPI file content into memory for an explicit offset.
+ * This function does not update the file pointer of the MPI file.
+ * Contrary to \ref sc_mpi_read, it does not abort on read errors.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in counts of the type \b t.
+ * \param [in] ptr      Data array to read from disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of read bytes.
+ * \return              The function returns the MPI error code.
+ * \note                This function is only valid to call on rank 0.
+ */
+int                 sc_io_read_at (sc_MPI_File mpifile,
+                                   sc_MPI_Offset offset, void *ptr,
+                                   int zcount, sc_MPI_Datatype t,
+                                   int *ocount);
+
+/** Read MPI file content collectively into memory for an explicit offset.
+ * This function does not update the file pointer of the MPI file.
+ * Contrary to \ref sc_mpi_read, it does not abort on read errors.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in counts of the type \b t.
+ * \param [in] ptr      Data array to read from disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of read bytes.
+ * \return              The function returns the MPI error code.
+ */
+int                 sc_io_read_at_all (sc_MPI_File mpifile,
+                                       sc_MPI_Offset offset, void *ptr,
+                                       int zcount, sc_MPI_Datatype t,
+                                       int *ocount);
+
+/** Read memory content collectively from an MPI file.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] ptr      Data array to read from disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of read bytes.
+ * \return              The function returns the MPI error code.
+ */
+int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
+                                    int zcount, sc_MPI_Datatype t,
+                                    int *ocount);
+
+#ifdef SC_ENABLE_MPIIO
+
+#define sc_mpi_write        sc_io_write  /**< For backwards compatibility. */
 
 /** Write memory content to an MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
@@ -306,12 +422,73 @@ void                sc_mpi_read (MPI_File mpifile, const void *ptr,
  * \param [in] t        The MPI type for each array member.
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
  * \note                This function aborts on MPI file and count errors.
+ *                      This function does not use the calling convention
+ *                      and error handling as the other sc_io MPI file
+ *                      functions to ensure backwards compatibility.
  */
-void                sc_mpi_write (MPI_File mpifile, const void *ptr,
-                                  size_t zcount, sc_MPI_Datatype t,
-                                  const char *errmsg);
+void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
+                                 size_t zcount, sc_MPI_Datatype t,
+                                 const char *errmsg);
 
 #endif
+
+/** Write MPI file content into memory for an explicit offset.
+ * This function does not update the file pointer that is part of mpifile.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in etype, where the etype is given by
+ *                      the type t.
+ * \param [in] ptr      Data array to write to disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of written bytes.
+ * \return              The function returns the MPI error code.
+ * \note                This function is only valid to call on rank 0.
+ */
+int                 sc_io_write_at (sc_MPI_File mpifile,
+                                    sc_MPI_Offset offset,
+                                    const void *ptr, size_t zcount,
+                                    sc_MPI_Datatype t, int *ocount);
+
+/** Write MPI file content collectively into memory for an explicit offset.
+ * This function does not update the file pointer that is part of mpifile.
+ * If there is no MPI IO but MPI avaiable, the offset parameter is ignored
+ * and the ranks just write at the current end of the file according to
+ * their rank-induced order.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in etype, where the etype is given by
+ *                      the type t.
+ * \param [in] ptr      Data array to write to disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of written bytes.
+ * \return              The function returns the MPI error code.
+ * \note                This function does not abort on MPI file errors.
+ */
+int                 sc_io_write_at_all (sc_MPI_File mpifile,
+                                        sc_MPI_Offset offset,
+                                        const void *ptr, size_t zcount,
+                                        sc_MPI_Datatype t, int *ocount);
+
+/** Write memory content collectively to an MPI file.
+ * \param [in,out] mpifile      MPI file object opened for writing.
+ * \param [in] ptr      Data array to write to disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of written bytes.
+ * \return              The function returns the MPI error code.
+ * \note                This function does not abort on MPI file errors.
+ */
+int                 sc_io_write_all (sc_MPI_File mpifile,
+                                     const void *ptr, size_t zcount,
+                                     sc_MPI_Datatype t, int *ocount);
+
+/** Close collectively a sc_MPI_File.
+ * \param[in] file  MPI file object that is closed.
+ * \return          MPI error code that is returned by internally called I/O
+ *                  functions.
+ *
+ */
+int                 sc_io_close (sc_MPI_File * file);
 
 SC_EXTERN_C_END;
 
