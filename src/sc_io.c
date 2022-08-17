@@ -808,7 +808,7 @@ sc_io_read (sc_MPI_File mpifile, void *ptr, size_t zcount,
 #ifdef SC_ENABLE_DEBUG
   mpiret = sc_MPI_Get_count (&mpistatus, t, &icount);
   SC_CHECK_MPI (mpiret);
-  SC_CHECK_ABORT (icount == zcount, errmsg);
+  SC_CHECK_ABORT (icount == (int) zcount, errmsg);
 #endif
 }
 
