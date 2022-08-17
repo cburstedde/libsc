@@ -293,7 +293,6 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_ERR_CONVERSION             SC3_MPI_ERR_CONVERSION
 #define sc_MPI_ERR_IO                     SC3_MPI_ERR_IO
 #define sc_MPI_ERR_LASTCODE               SC3_MPI_ERR_LASTCODE
-#define sc_MPI_ERR_COUNT                  -1 /**< Error code for MPI count error */
 
 #define sc_MPI_MAX_ERROR_STRING    SC3_MPI_MAX_ERROR_STRING
 
@@ -534,7 +533,7 @@ int                 sc_MPI_Init_thread (int *argc, char ***argv,
 #else
 
 typedef long        sc_MPI_Offset;
-typedef struct no_mpiio_file
+struct no_mpiio_file
 {
   const char         *filename;
   FILE               *file;
@@ -542,7 +541,8 @@ typedef struct no_mpiio_file
   sc_MPI_Comm         mpicomm;
 #endif
 }
-                   *sc_MPI_File, sc_MPI_File_struct;
+
+typedef struct no_mpiio_file *sc_MPI_File;
 
 #define sc_MPI_FILE_NULL           NULL
 
@@ -569,7 +569,7 @@ int                 sc_MPI_Error_class (int errorcode, int *errorclass);
  * \param [in,out] string       At least sc_MPI_MAX_ERROR_STRING bytes.
  * \param [out] resultlen       Length of string on return.
  * \return                      sc_MPI_SUCCESS on success or
- *                              something else on invalid arguments.
+ *                              other MPI error cocde on invalid arguments.
  */
 int                 sc_MPI_Error_string (int errorcode, char *string,
                                          int *resultlen);

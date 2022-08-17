@@ -743,7 +743,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     char                mode[4];
 
     /* allocate file struct */
-    *mpifile = (sc_MPI_File) SC_ALLOC (sc_MPI_File_struct, 1);
+    *mpifile = (sc_MPI_File) SC_ALLOC (struct no_mpiio_file, 1);
 
     /* serialize the I/O operations */
     /* active flag is set later in  */
@@ -777,7 +777,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     char                mode[4];
 
     /* allocate file struct */
-    *mpifile = (sc_MPI_File) SC_ALLOC (sc_MPI_File_struct, 1);
+    *mpifile = (sc_MPI_File) SC_ALLOC (struct no_mpiio_file, 1);
 
     (*mpifile)->filename = filename;
 
@@ -793,7 +793,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
 #ifdef SC_ENABLE_MPIIO
 
 void
-sc_io_read (sc_MPI_File mpifile, void *ptr, int zcount,
+sc_io_read (sc_MPI_File mpifile, void *ptr, size_t zcount,
             sc_MPI_Datatype t, const char *errmsg)
 {
 #ifdef SC_ENABLE_DEBUG
@@ -802,7 +802,7 @@ sc_io_read (sc_MPI_File mpifile, void *ptr, int zcount,
   int                 mpiret;
   sc_MPI_Status       mpistatus;
 
-  mpiret = MPI_File_read (mpifile, ptr, zcount, t, &mpistatus);
+  mpiret = MPI_File_read (mpifile, ptr, (int) zcount, t, &mpistatus);
   SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, errmsg);
 
 #ifdef SC_ENABLE_DEBUG
