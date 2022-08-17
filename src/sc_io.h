@@ -28,30 +28,6 @@
 #include <sc_containers.h>
 #include <sc3_mpi_types.h>
 
-#if !defined (SC_ENABLE_MPIIO) && !defined (SC_ENABLE_MPI)
-
-/* We report errors without MPI I/O and MPI, but without MPI we abort. */
-
-/** Check the return value of fopen.
- * If it fails, print an error report and return NULL from the calling
- * function.  This works with all I/O functions that usually return a valid
- * pointer and set errno.
- */
-#define SC_CHECK_FOPEN_NULL(fp,fn) do { fp = (fn);             \
-  if (fp == NULL) {                                            \
-    SC_LERRORF ("Error by calling %s at %s:%d: %s.\n",         \
-                #fn, __FILE__, __LINE__, strerror (errno));    \
-    return NULL; }} while (0)
-
-/** Check the return value of a function that usually returns 0. */
-#define SC_CHECK_FOPEN_INT(fp,fn) do { fp = (fn);              \
-  if (fp == NULL) {                                            \
-    SC_LERRORF ("Error by calling %s at %s:%d: %s.\n",         \
-                #fn, __FILE__, __LINE__, strerror (errno));    \
-    return -1; }} while (0)
-
-#endif /* !MPIIO and !MPI */
-
 /** Examine the MPI return value and print an error if there is one.
  * The message passed is appended to MPI, file and line information.
  */
