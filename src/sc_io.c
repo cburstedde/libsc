@@ -719,6 +719,7 @@ parse_mpiio_access_mode (sc_io_open_mode_t amode, int *mode)
     break;
   case SC_WRITE_APPEND:
     *mode = sc_MPI_MODE_WRONLY | sc_MPI_MODE_APPEND;
+    break;
   default:
     SC_ABORT ("Invalid MPI IO file access mode");
     break;
