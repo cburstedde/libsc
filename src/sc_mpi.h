@@ -540,7 +540,7 @@ struct no_mpiio_file
 #ifdef SC_ENABLE_MPI
   sc_MPI_Comm         mpicomm;
 #endif
-}
+};
 
 typedef struct no_mpiio_file *sc_MPI_File;
 
