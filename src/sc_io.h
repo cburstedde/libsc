@@ -48,7 +48,7 @@ SC_EXTERN_C_BEGIN;
 typedef enum
 {
   SC_IO_ERROR_NONE,     /**< The value of zero means no error. */
-  SC_IO_ERROR_FATAL = -1,       /**< The io object is now disfunctional. */
+  SC_IO_ERROR_FATAL = -1,       /**< The io object is now dysfunctional. */
   SC_IO_ERROR_AGAIN = -2        /**< Another io operation may resolve it.
                                 The function just returned was a noop. */
 }
@@ -451,7 +451,7 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
 
 /** Write MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
- * If there is no MPI IO but MPI avaiable, the offset parameter is ignored
+ * If there is no MPI IO but MPI available, the offset parameter is ignored
  * and the ranks just write at the current end of the file according to
  * their rank-induced order.
  * \param [in,out] mpifile      MPI file object opened for reading.

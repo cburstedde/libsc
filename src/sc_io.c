@@ -887,7 +887,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
     /* initially only rank 0 writes to the disk */
     active = (rank == 0) ? -1 : 0;
 
-    /* intialize potential return value */
+    /* initialize potential return value */
     errval = sc_MPI_SUCCESS;
 
     if (rank != 0) {
@@ -933,7 +933,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
       errno = 0;
       *ocount = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
       errval = errno;
-      /* the consective error codes fflush and fclose are not reported */
+      /* the consecutive error codes fflush and fclose are not reported */
       SC_CHECK_ABORT (fflush (mpifile->file) == 0,
                       "read_at_all: fflush failed");
       SC_CHECK_ABORT (fclose (mpifile->file) == 0,
@@ -1133,7 +1133,7 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
     /* initially only rank 0 writes to the disk */
     active = (rank == 0) ? -1 : 0;
 
-    /* intialize potential return value */
+    /* initialize potential return value */
     errval = sc_MPI_SUCCESS;
 
     if (rank != 0) {
@@ -1177,7 +1177,7 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
       errno = 0;
       *ocount = (int) fwrite (ptr, (size_t) size, zcount, mpifile->file);
       errval = errno;
-      /* the consective error codes fflush and fclose are not reported */
+      /* the consecutive error codes fflush and fclose are not reported */
       SC_CHECK_ABORT (fflush (mpifile->file) == 0,
                       "write_at_all: fflush failed");
       SC_CHECK_ABORT (fclose (mpifile->file) == 0,
