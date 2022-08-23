@@ -62,3 +62,12 @@ jobs:
           make -j V=0
           make -j check V=0
           cd ..
+
+     - name: Upload config.log on configure script failure
+       if: always()
+       uses: actions/upload-artifact@v1
+       with:
+         name: log_files
+         path: |
+            ./checkDebug/config.log
+            ./checkDebug/test-suite.log
