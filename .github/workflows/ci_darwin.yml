@@ -67,6 +67,7 @@ jobs:
        shell: bash
        run: |
           pwd
+          ls -l
 
      - name: Upload config.log and test-suite.log
        if: always()
