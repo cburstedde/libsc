@@ -82,7 +82,9 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: test_suite_log
-        path: ./**/test-suite.log
+        path: |
+          ./**/test-suite.log
+          ./**/config.log
 
   linux-tarball:
     runs-on: ubuntu-latest
