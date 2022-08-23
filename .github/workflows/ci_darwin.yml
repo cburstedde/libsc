@@ -68,6 +68,7 @@ jobs:
        run: |
           pwd
           ls -l
+          ls checkDebug
 
      - name: Upload config.log and test-suite.log
        if: always()
