@@ -74,5 +74,5 @@ jobs:
        with:
          name: log_files
          path: |
-            ./**/config.log
-            ./**/test-suite.log
+            ./checkDebug/config.log
+            ./checkDebug/test-suite.log
