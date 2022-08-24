@@ -83,6 +83,16 @@ jobs:
         ls -l
         ls -l ./build
 
+    - name: Upload CMakeOutput.log, CMakeError.log and LastTest.log
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux_cmake_log
+        path: |
+          ./build/CMakeFiles/CMakeOutput.log
+          ./build/CMakeFiles/CMakeError.log
+          ./Testing/Temporary/LastTest.log
+
   mac:
     runs-on: macos-latest
     name: CMake build on MacOS
