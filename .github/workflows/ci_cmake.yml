@@ -89,9 +89,9 @@ jobs:
       with:
         name: linux_cmake_log
         path: |
-          ./build/CMakeFiles/CMakeOutput.log
-          ./build/CMakeFiles/CMakeError.log
-          ./Testing/Temporary/LastTest.log
+          ./**/**/CMakeOutput.log
+          ./**/**/CMakeError.log
+          ./**/**/LastTest.log
 
   mac:
     runs-on: macos-latest
