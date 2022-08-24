@@ -76,6 +76,11 @@ jobs:
         name: binary-archive
         path: build/package
 
+    - name: Check file structure
+      shell: bash
+      run: |
+        pwd
+        ls -l
 
   mac:
     runs-on: macos-latest
