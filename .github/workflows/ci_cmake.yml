@@ -81,7 +81,7 @@ jobs:
       run: |
         pwd
         ls -l
-        ll ./build
+        ls -l ./build
 
   mac:
     runs-on: macos-latest
