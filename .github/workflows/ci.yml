@@ -81,7 +81,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: log_files
+        name: linux_multi_log
         path: |
           ./**/test-suite.log
           ./**/config.log
@@ -124,3 +124,12 @@ jobs:
       with:
         name: libsc_tarball
         path: ./libsc-*.tar.gz
+
+    - name: Upload config.log and test-suite.log
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux_tarball_log
+        path: |
+          ./**/test-suite.log
+          ./**/config.log

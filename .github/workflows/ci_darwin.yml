@@ -72,7 +72,7 @@ jobs:
        if: always()
        uses: actions/upload-artifact@v3
        with:
-         name: log_files
+         name: darwin_log
          path: |
             ./checkDebug/config.log
             ./checkDebug/test-suite.log
