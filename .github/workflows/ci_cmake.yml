@@ -76,13 +76,6 @@ jobs:
         name: binary-archive
         path: build/package
 
-    - name: Check file structure
-      shell: bash
-      run: |
-        pwd
-        ls -l
-        ls -l ./build
-
     - name: Upload CMakeOutput.log, CMakeError.log and LastTest.log
       if: always()
       uses: actions/upload-artifact@v3
@@ -146,6 +139,15 @@ jobs:
         name: binary-archive
         path: build/package
 
+    - name: Upload CMakeOutput.log, CMakeError.log and LastTest.log
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: mac_cmake_log
+        path: |
+          ./build/CMakeFiles/CMakeOutput.log
+          ./build/CMakeFiles/CMakeError.log
+          ./build/Testing/Temporary/LastTest.log
 
   windows:
     runs-on: windows-latest
@@ -194,3 +196,13 @@ jobs:
       with:
         name: binary-archive
         path: build/package
+
+    - name: Upload CMakeOutput.log, CMakeError.log and LastTest.log
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows_cmake_log
+        path: |
+          ./build/CMakeFiles/CMakeOutput.log
+          ./build/CMakeFiles/CMakeError.log
+          ./build/Testing/Temporary/LastTest.log
