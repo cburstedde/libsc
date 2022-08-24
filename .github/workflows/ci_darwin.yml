@@ -62,12 +62,6 @@ jobs:
           make -j V=0
           make -j check V=0
 
-     - name: check path
-       shell: bash
-       run: |
-          pwd
-          ls -l
-
      - name: Upload config.log and test-suite.log
        if: always()
        uses: actions/upload-artifact@v3
