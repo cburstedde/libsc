@@ -76,7 +76,7 @@ jobs:
         name: binary-archive
         path: build/package
 
-    - name: Upload CMakeOutput.log, CMakeError.log and LastTest.log
+    - name: Upload log files
       if: always()
       uses: actions/upload-artifact@v3
       with:
@@ -139,7 +139,7 @@ jobs:
         name: binary-archive
         path: build/package
 
-    - name: Upload CMakeOutput.log, CMakeError.log and LastTest.log
+    - name: Upload log files
       if: always()
       uses: actions/upload-artifact@v3
       with:
@@ -197,7 +197,7 @@ jobs:
         name: binary-archive
         path: build/package
 
-    - name: Upload CMakeOutput.log, CMakeError.log and LastTest.log
+    - name: Upload log files
       if: always()
       uses: actions/upload-artifact@v3
       with:

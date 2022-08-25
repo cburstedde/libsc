@@ -61,8 +61,9 @@ jobs:
             CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
           make -j V=0
           make -j check V=0
+          cd ..
 
-     - name: Upload config.log and test-suite.log
+     - name: Upload log files
        if: always()
        uses: actions/upload-artifact@v3
        with:
