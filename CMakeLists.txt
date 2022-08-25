@@ -57,7 +57,7 @@ FILES_MATCHING PATTERN "*.h"
 )
 
 install(TARGETS sc
-EXPORT ${PROJECT_NAME}Targets
+EXPORT ${PROJECT_NAME}-targets
 ARCHIVE DESTINATION lib
 LIBRARY DESTINATION lib
 RUNTIME DESTINATION bin
@@ -72,8 +72,8 @@ endif(BUILD_TESTING)
 # --- packaging
 
 install(FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/FindSC.cmake
-  DESTINATION lib/cmake/Modules)
+${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSC.cmake
+DESTINATION cmake)
 
 include(cmake/pkgconf.cmake)
 include(cmake/install.cmake)
