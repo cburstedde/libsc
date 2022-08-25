@@ -1,5 +1,6 @@
 option(mpi "use MPI library" off)
 option(openmp "use OpenMP" off)
+option(BUILD_TESTING "build libsc self-tests" on)
 
 # --- default install directory under build/local
 # users can specify like "cmake -B build -DCMAKE_INSTALL_PREFIX=~/mydir"
