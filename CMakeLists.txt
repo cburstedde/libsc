@@ -8,7 +8,7 @@ HOMEPAGE_URL https://www.p4est.org/
 DESCRIPTION "The SC library supports parallel scientific applications."
 VERSION ${PROJECT_VERSION})
 
-include(CTest)
+enable_testing()
 
 include(cmake/options.cmake)
 message(STATUS "libsc ${PROJECT_VERSION} "
@@ -65,7 +65,9 @@ RUNTIME DESTINATION bin
 
 add_subdirectory(src)
 
+
 if(BUILD_TESTING)
+  add_subdirectory(example)
   add_subdirectory(test)
 endif(BUILD_TESTING)
 
