@@ -90,10 +90,13 @@ if(SC_HAVE_GETOPT_H)
   test_sc_example(options options/options.c)
 endif()
 
-if(OpenMP_FOUND)
-  test_sc_example(openmp openmp/openmp.c)
-  target_link_libraries(sc_openmp PRIVATE OpenMP::OpenMP_C)
-endif()
+# The OpenMP example is disabled
+# We are likely removing the OpenMP configuration entirely
+#
+# if(OpenMP_FOUND)
+#   test_sc_example(openmp openmp/openmp.c)
+#   target_link_libraries(sc_openmp PRIVATE OpenMP::OpenMP_C)
+# endif()
 
 if(Threads_FOUND)
   check_include_file(pthread.h HAS_PTHREAD)

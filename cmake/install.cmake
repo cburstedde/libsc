@@ -62,8 +62,6 @@ config/ltsugar.m4
 config/ltversion.m4
 config/lt~obsolete.m4
 configure
-example/openmp
-test/test_pqueue.c
 )
 
 install(FILES ${CPACK_RESOURCE_FILE_README} ${CPACK_RESOURCE_FILE_LICENSE}
