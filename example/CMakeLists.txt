@@ -68,6 +68,7 @@ add_executable(sc_${name} ${files})
 
 target_link_libraries(sc_${name} PRIVATE SC::SC)
 
+if(0) # it is not intended to run examples as tests
 if(MPI_C_FOUND)
   add_test(NAME sc:example:${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_${name}>)
 else()
@@ -77,6 +78,7 @@ endif()
 set_property(TEST sc:example:${name} PROPERTY TIMEOUT 10)
 if(WIN32 AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
   set_property(TEST sc:example:${name} PROPERTY ENVIRONMENT_MODIFICATION "PATH=path_list_append:${SC_INCLUDE_DIR}/../bin")
+endif()
 endif()
 
 endfunction(test_sc_example)
