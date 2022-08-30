@@ -48,7 +48,6 @@ LINT_CSOURCES += \
         $(test_sc_test_io_sink_SOURCES) \
         $(test_sc_test_keyvalue_SOURCES) \
         $(test_sc_test_notify_SOURCES) \
-        $(test_sc_test_pqueue_SOURCES) \
         $(test_sc_test_reduce_SOURCES) \
         $(test_sc_test_search_SOURCES) \
         $(test_sc_test_sort_SOURCES) \

@@ -8,7 +8,8 @@ include(CheckIncludeFile)
 
 option(mpi "use MPI" off)
 
-set_property(DIRECTORY PROPERTY LABELS "example")
+# --- find external libraries
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 
 if(CMAKE_VERSION VERSION_LESS 3.21)
   get_property(not_top DIRECTORY PROPERTY PARENT_DIRECTORY)
@@ -67,6 +68,7 @@ add_executable(sc_${name} ${files})
 
 target_link_libraries(sc_${name} PRIVATE SC::SC)
 
+if(0) # it is not intended to run examples as tests
 if(MPI_C_FOUND)
   add_test(NAME sc:example:${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_${name}>)
 else()
@@ -76,6 +78,7 @@ endif()
 set_property(TEST sc:example:${name} PROPERTY TIMEOUT 10)
 if(WIN32 AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
   set_property(TEST sc:example:${name} PROPERTY ENVIRONMENT_MODIFICATION "PATH=path_list_append:${SC_INCLUDE_DIR}/../bin")
+endif()
 endif()
 
 endfunction(test_sc_example)
@@ -89,10 +92,13 @@ if(SC_HAVE_GETOPT_H)
   test_sc_example(options options/options.c)
 endif()
 
-if(OpenMP_FOUND)
-  test_sc_example(openmp openmp/openmp.c)
-  target_link_libraries(sc_openmp PRIVATE OpenMP::OpenMP_C)
-endif()
+# The OpenMP example is disabled
+# We are likely removing the OpenMP configuration entirely
+#
+# if(OpenMP_FOUND)
+#   test_sc_example(openmp openmp/openmp.c)
+#   target_link_libraries(sc_openmp PRIVATE OpenMP::OpenMP_C)
+# endif()
 
 if(Threads_FOUND)
   check_include_file(pthread.h HAS_PTHREAD)
