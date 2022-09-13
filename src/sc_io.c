@@ -605,7 +605,21 @@ sc_fflush_fsync_fclose (FILE * file)
   SC_CHECK_ABORT (!retval, "file close");
 }
 
-int
+/** Translate an I/O error into an appropriate MPI error class.
+ * This function is strictly meant for file access functions.
+ * If MPI I/O is not present, translate an errno set by stdio.
+ * It is thus possible to substitute MPI I/O by fopen, fread, etc.
+ * and to process the errors with this one function regardless.
+ * \param [in] errorcode   Without MPI I/O: Translate errors from
+ *                         fopen, fclose, fread, fwrite, fseek, ftell
+ *                         into an appropriate MPI error class.
+ *                         With MPI I/O: Turn error code into its class.
+ * \param [out] errorclass Regardless of whether MPI I/O is enabled,
+ *                         an MPI file related error from \ref sc_mpi.h.
+ *                         It may be passed to \ref sc_MPI_Error_string.
+ * \return                 sc_MPI_SUCCESS only on successful conversion.
+ */
+static int
 sc_io_error_class (int errorcode, int *errorclass)
 {
 #ifdef SC_ENABLE_MPIIO
@@ -733,14 +747,18 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
             sc_MPI_File * mpifile)
 {
 #ifdef SC_ENABLE_MPIIO
-  int                 mode;
+  int                 retval, mpiret, errcode, mode;
 
   parse_mpiio_access_mode (amode, &mode);
 
-  return MPI_File_open (mpicomm, filename, mode, mpiinfo, mpifile);
+  mpiret = MPI_File_open (mpicomm, filename, mode, mpiinfo, mpifile);
+  retval = sc_io_error_class (mpiret, &errcode);
+  SC_CHECK_MPI (retval);
+
+  return errcode;
 #elif defined (SC_ENABLE_MPI)
   {
-    int                 rank, mpiret;
+    int                 rank, mpiret, retval, errcode;
     char                mode[4];
 
     /* allocate file struct */
@@ -770,11 +788,15 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     /* broadcast errno */
     sc_MPI_Bcast (&mpiret, 1, sc_MPI_INT, 0, mpicomm);
 
-    return mpiret;
+    retval = sc_io_error_class (mpiret, &errcode);
+    SC_CHECK_MPI (retval);
+
+    return errcode;
   }
 #else
 /* no MPI */
   {
+    int                 retval, errcode;
     char                mode[4];
 
     /* allocate file struct */
@@ -786,7 +808,10 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     errno = 0;
     (*mpifile)->file = fopen (filename, mode);
 
-    return errno;
+    retval = sc_io_error_class (errno, &errcode);
+    SC_CHECK_MPI (retval);
+
+    return errcode;
   }
 #endif
 }
@@ -822,7 +847,7 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 #ifndef SC_ENABLE_MPIIO
   int                 size;
 #endif
-  int                 mpiret;
+  int                 mpiret, errcode, retval;
 
   *ocount = 0;
 
@@ -835,7 +860,9 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
     SC_CHECK_MPI (mpiret);
     return sc_MPI_SUCCESS;
   }
-  return mpiret;
+  retval = sc_io_error_class (mpiret, &errcode);
+  SC_CHECK_MPI (retval);
+  return errcode;
 #else
   mpiret = fseek (mpifile->file, offset, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "read_at: fseek failed");
@@ -844,7 +871,9 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   SC_CHECK_ABORT (mpiret == 0, "read_at: get type size failed");
   errno = 0;
   *ocount = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
-  return errno;
+  retval = sc_io_error_class (errno, &errcode);
+  SC_CHECK_MPI (retval);
+  return errcode;
 #endif
 }
 
@@ -853,9 +882,10 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
                    int zcount, sc_MPI_Datatype t, int *ocount)
 {
 #ifdef SC_ENABLE_MPI
-  int                 mpiret;
+  int                 mpiret, errcode;
 #endif
 #ifdef SC_ENABLE_MPIIO
+  int                 retval;
   sc_MPI_Status       mpistatus;
 
   *ocount = 0;
@@ -869,12 +899,15 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
     return sc_MPI_SUCCESS;
   }
 
-  return mpiret;
+  retval = sc_io_error_class (mpiret, &errcode);
+  SC_CHECK_MPI (retval);
+
+  return errcode;
 #elif defined (SC_ENABLE_MPI)
   /* MPI but no MPI IO */
   {
     int                 mpisize, rank, count, size;
-    int                 active, errval;
+    int                 active, errval, retval;
     sc_MPI_Status       status;
 
     *ocount = 0;
@@ -1006,7 +1039,10 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
     /* last rank broadcasts the first error that appeared */
     sc_MPI_Bcast (&errval, 1, sc_MPI_INT, mpisize - 1, mpifile->mpicomm);
 
-    return errval;
+    retval = sc_io_error_class (errval, &errcode);
+    SC_CHECK_MPI (retval);
+
+    return errcode;
   }
 #else
   /* There is no collective read without MPI. */
@@ -1051,6 +1087,7 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
                 const void *ptr, size_t zcount, sc_MPI_Datatype t,
                 int *ocount)
 {
+  int                 retval, errcode;
 #ifndef SC_ENABLE_MPIIO
   int                 size;
 #endif
@@ -1068,7 +1105,10 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
     return sc_MPI_SUCCESS;
   }
 
-  return mpiret;
+  retval = sc_io_error_class (mpiret, &errcode);
+  SC_CHECK_MPI (retval);
+
+  return errcode;
 #else
   *ocount = 0;
 
@@ -1083,7 +1123,9 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   *ocount = (int) fwrite (ptr, (size_t) size, zcount, mpifile->file);
   mpiret = errno;
   SC_CHECK_ABORT (fflush (mpifile->file) == 0, "write_at: fflush failed");
-  return mpiret;
+  retval = sc_io_error_class (mpiret, &errcode);
+  SC_CHECK_MPI (retval);
+  return errcode;
 #endif
 }
 
@@ -1093,7 +1135,7 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
                     int *ocount)
 {
 #ifdef SC_ENABLE_MPI
-  int                 mpiret;
+  int                 mpiret, errcode, retval;
 #endif
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
@@ -1108,7 +1150,10 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
     return sc_MPI_SUCCESS;
   }
 
-  return mpiret;
+  retval = sc_io_error_class (mpiret, &errcode);
+  SC_CHECK_MPI (retval);
+
+  return errcode;
 #elif defined (SC_ENABLE_MPI)
   /* MPI but no MPI IO */
   /* offset is ignored and we use here the append mode.
@@ -1251,7 +1296,10 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
     /* last rank broadcasts the first error that appeared */
     sc_MPI_Bcast (&errval, 1, sc_MPI_INT, mpisize - 1, mpifile->mpicomm);
 
-    return errval;
+    retval = sc_io_error_class (errval, &errcode);
+    SC_CHECK_MPI (retval);
+
+    return errcode;
   }
 #else
   /* There is no collective write without MPI. */
