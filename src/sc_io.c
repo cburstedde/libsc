@@ -697,7 +697,7 @@ sc_io_error_class (int errorcode, int *errorclass)
 
 #ifndef SC_ENABLE_MPIIO
 static void
-parse_nompiio_access_mode (sc_io_open_mode_t amode, char mode[4])
+sc_io_parse_nompiio_access_mode (sc_io_open_mode_t amode, char mode[4])
 {
   /* parse access mode */
   switch (amode) {
@@ -721,7 +721,7 @@ parse_nompiio_access_mode (sc_io_open_mode_t amode, char mode[4])
 }
 #else
 static void
-parse_mpiio_access_mode (sc_io_open_mode_t amode, int *mode)
+sc_io_parse_mpiio_access_mode (sc_io_open_mode_t amode, int *mode)
 {
   /* parse access mode */
   switch (amode) {
@@ -749,7 +749,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
 #ifdef SC_ENABLE_MPIIO
   int                 retval, mpiret, errcode, mode;
 
-  parse_mpiio_access_mode (amode, &mode);
+  sc_io_parse_mpiio_access_mode (amode, &mode);
 
   mpiret = MPI_File_open (mpicomm, filename, mode, mpiinfo, mpifile);
   retval = sc_io_error_class (mpiret, &errcode);
@@ -771,7 +771,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     /* store the communicator */
     (*mpifile)->mpicomm = mpicomm;
 
-    parse_nompiio_access_mode (amode, mode);
+    sc_io_parse_nompiio_access_mode (amode, mode);
 
     /* get my rank */
     mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
@@ -804,7 +804,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
 
     (*mpifile)->filename = filename;
 
-    parse_nompiio_access_mode (amode, mode);
+    sc_io_parse_nompiio_access_mode (amode, mode);
     errno = 0;
     (*mpifile)->file = fopen (filename, mode);
 
