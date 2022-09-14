@@ -12,7 +12,9 @@ For details, see http://sourceforge.net/projects/libb64
 
 #include "libb64.h"
 
+#ifdef SC_BASE64_WRAP
 const int           CHARS_PER_LINE = 72;
+#endif
 
 static inline char
 base64_encode_value (char value_in)
