@@ -32,22 +32,21 @@
 #endif
 
 sc_io_sink_t       *
-sc_io_sink_new (sc_io_type_t iotype, sc_io_mode_t mode,
-                sc_io_encode_t encode, ...)
+sc_io_sink_new (int iotype, int iomode, int ioencode, ...)
 {
   sc_io_sink_t       *sink;
   va_list             ap;
 
   SC_ASSERT (0 <= iotype && iotype < SC_IO_TYPE_LAST);
-  SC_ASSERT (0 <= mode && mode < SC_IO_MODE_LAST);
-  SC_ASSERT (0 <= encode && encode < SC_IO_ENCODE_LAST);
+  SC_ASSERT (0 <= iomode && iomode < SC_IO_MODE_LAST);
+  SC_ASSERT (0 <= ioencode && ioencode < SC_IO_ENCODE_LAST);
 
   sink = SC_ALLOC_ZERO (sc_io_sink_t, 1);
-  sink->iotype = iotype;
-  sink->mode = mode;
-  sink->encode = encode;
+  sink->iotype = (sc_io_type_t) iotype;
+  sink->mode = (sc_io_mode_t) iomode;
+  sink->encode = (sc_io_encode_t) ioencode;
 
-  va_start (ap, encode);
+  va_start (ap, ioencode);
   if (iotype == SC_IO_TYPE_BUFFER) {
     sink->buffer = va_arg (ap, sc_array_t *);
     if (sink->mode == SC_IO_MODE_WRITE) {
@@ -185,19 +184,19 @@ sc_io_sink_align (sc_io_sink_t * sink, size_t bytes_align)
 }
 
 sc_io_source_t     *
-sc_io_source_new (sc_io_type_t iotype, sc_io_encode_t encode, ...)
+sc_io_source_new (int iotype, int ioencode, ...)
 {
   sc_io_source_t     *source;
   va_list             ap;
 
   SC_ASSERT (0 <= iotype && iotype < SC_IO_TYPE_LAST);
-  SC_ASSERT (0 <= encode && encode < SC_IO_ENCODE_LAST);
+  SC_ASSERT (0 <= ioencode && ioencode < SC_IO_ENCODE_LAST);
 
   source = SC_ALLOC_ZERO (sc_io_source_t, 1);
-  source->iotype = iotype;
-  source->encode = encode;
+  source->iotype = (sc_io_type_t) iotype;
+  source->encode = (sc_io_encode_t) ioencode;
 
-  va_start (ap, encode);
+  va_start (ap, ioencode);
   if (iotype == SC_IO_TYPE_BUFFER) {
     source->buffer = va_arg (ap, sc_array_t *);
   }

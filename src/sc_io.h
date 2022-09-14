@@ -114,20 +114,19 @@ typedef enum
 sc_io_open_mode_t;
 
 /** Create a generic data sink.
- * \param [in] iotype           Type of the sink.
+ * \param [in] iotype           Type must be a value from \ref sc_io_type_t.
  *                              Depending on iotype, varargs must follow:
  *                              BUFFER: sc_array_t * (existing array).
  *                              FILENAME: const char * (name of file to open).
  *                              FILEFILE: FILE * (file open for writing).
  *                              These buffers are only borrowed by the sink.
- * \param [in] mode             Mode to add data to sink.
+ * \param [in] iomode           Mode must be a value from \ref sc_io_mode_t.
  *                              For type FILEFILE, data is always appended.
- * \param [in] encode           Type of data encoding.
+ * \param [in] ioencode         Must be a value from \ref sc_io_encode_t.
  * \return                      Newly allocated sink, or NULL on error.
  */
-sc_io_sink_t       *sc_io_sink_new (sc_io_type_t iotype,
-                                    sc_io_mode_t mode,
-                                    sc_io_encode_t encode, ...);
+sc_io_sink_t       *sc_io_sink_new (int iotype, int iomode,
+                                    int ioencode, ...);
 
 /** Free data sink.
  * Calls sc_io_sink_complete and discards the final counts.
@@ -179,16 +178,15 @@ int                 sc_io_sink_align (sc_io_sink_t * sink,
                                       size_t bytes_align);
 
 /** Create a generic data source.
- * \param [in] iotype           Type of the source.
+ * \param [in] iotype           Type must be a value from \ref sc_io_type_t.
  *                              Depending on iotype, varargs must follow:
  *                              BUFFER: sc_array_t * (existing array).
  *                              FILENAME: const char * (name of file to open).
  *                              FILEFILE: FILE * (file open for reading).
- * \param [in] encode           Type of data encoding.
+ * \param [in] ioencode         Encoding value from \ref sc_io_encode_t.
  * \return                      Newly allocated source, or NULL on error.
  */
-sc_io_source_t     *sc_io_source_new (sc_io_type_t iotype,
-                                      sc_io_encode_t encode, ...);
+sc_io_source_t     *sc_io_source_new (int iotype, int ioencode, ...);
 
 /** Free data source.
  * Calls sc_io_source_complete and requires it to return no error.
