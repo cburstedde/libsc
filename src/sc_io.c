@@ -629,6 +629,20 @@ sc_io_error_class (int errorcode, int *errorclass)
     return sc_MPI_ERR_ARG;
   }
 
+  /* We do not check for a certain range of error codes
+   * since we do not know the last errno.
+   */
+
+  if (errorcode == 0) {
+    /* This the errno for no error or
+     * possibly also the sc_MPI_SUCESS value.
+     * In both cases, we want to set errorclass to
+     * sc_MPI_SUCCESS.
+     */
+    *errorclass = sc_MPI_SUCCESS;
+    return sc_MPI_SUCCESS;
+  }
+
   switch (errorcode) {
   case sc_MPI_SUCCESS:
     *errorclass = sc_MPI_SUCCESS;
@@ -868,7 +882,7 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   SC_CHECK_ABORT (mpiret == 0, "read_at: fseek failed");
   /* get the data size of the data type */
   mpiret = sc_MPI_Type_size (t, &size);
-  SC_CHECK_ABORT (mpiret == 0, "read_at: get type size failed");
+  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, "read_at: get type size failed");
   errno = 0;
   *ocount = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
   retval = sc_io_error_class (errno, &errcode);
@@ -1118,7 +1132,7 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   SC_CHECK_ABORT (mpiret == 0, "write_at: fseek failed");
   /* get the data size of the data type */
   mpiret = sc_MPI_Type_size (t, &size);
-  SC_CHECK_ABORT (mpiret == 0, "write_at: get type size failed");
+  SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, "write_at: get type size failed");
   errno = 0;
   *ocount = (int) fwrite (ptr, (size_t) size, zcount, mpifile->file);
   mpiret = errno;
