@@ -32,12 +32,12 @@
  * The message passed is appended to MPI, file and line information.
  */
 #define SC_CHECK_MPI_VERBOSE(errcode,user_msg) do {            \
-  char msg[sc_MPI_MAX_ERROR_STRING];                           \
-  int msglen;                                                  \
+  char sc_msg[sc_MPI_MAX_ERROR_STRING];                        \
+  int sc_msglen;                                               \
   if ((errcode) != sc_MPI_SUCCESS) {                           \
-    sc_MPI_Error_string (errcode, msg, &msglen);               \
+    sc_MPI_Error_string (errcode, sc_msg, &sc_msglen);         \
     SC_LERRORF ("%s at %s:%d: %s\n",                           \
-                (user_msg), __FILE__, __LINE__, msg);          \
+                (user_msg), __FILE__, __LINE__, sc_msg);       \
   }} while (0)
 
 SC_EXTERN_C_BEGIN;
