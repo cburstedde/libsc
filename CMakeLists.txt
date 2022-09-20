@@ -8,7 +8,7 @@ HOMEPAGE_URL https://www.p4est.org/
 DESCRIPTION "The SC library supports parallel scientific applications."
 VERSION ${PROJECT_VERSION})
 
-include(CTest)
+enable_testing()
 
 include(cmake/options.cmake)
 message(STATUS "libsc ${PROJECT_VERSION} "
@@ -57,13 +57,14 @@ FILES_MATCHING PATTERN "*.h"
 )
 
 install(TARGETS sc
-EXPORT ${PROJECT_NAME}Targets
+EXPORT ${PROJECT_NAME}-targets
 ARCHIVE DESTINATION lib
 LIBRARY DESTINATION lib
 RUNTIME DESTINATION bin
 )
 
 add_subdirectory(src)
+add_subdirectory(example)
 
 if(BUILD_TESTING)
   add_subdirectory(test)
@@ -72,8 +73,8 @@ endif(BUILD_TESTING)
 # --- packaging
 
 install(FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/FindSC.cmake
-  DESTINATION lib/cmake/Modules)
+${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSC.cmake
+DESTINATION cmake)
 
 include(cmake/pkgconf.cmake)
 include(cmake/install.cmake)

@@ -47,7 +47,7 @@ SC_EXTERN_C_BEGIN;
 typedef enum
 {
   SC_IO_ERROR_NONE,     /**< The value of zero means no error. */
-  SC_IO_ERROR_FATAL = -1,       /**< The io object is now disfunctional. */
+  SC_IO_ERROR_FATAL = -1,       /**< The io object is now dysfunctional. */
   SC_IO_ERROR_AGAIN = -2        /**< Another io operation may resolve it.
                                 The function just returned was a noop. */
 }
@@ -113,20 +113,19 @@ typedef enum
 sc_io_open_mode_t;
 
 /** Create a generic data sink.
- * \param [in] iotype           Type of the sink.
+ * \param [in] iotype           Type must be a value from \ref sc_io_type_t.
  *                              Depending on iotype, varargs must follow:
  *                              BUFFER: sc_array_t * (existing array).
  *                              FILENAME: const char * (name of file to open).
  *                              FILEFILE: FILE * (file open for writing).
  *                              These buffers are only borrowed by the sink.
- * \param [in] mode             Mode to add data to sink.
+ * \param [in] iomode           Mode must be a value from \ref sc_io_mode_t.
  *                              For type FILEFILE, data is always appended.
- * \param [in] encode           Type of data encoding.
+ * \param [in] ioencode         Must be a value from \ref sc_io_encode_t.
  * \return                      Newly allocated sink, or NULL on error.
  */
-sc_io_sink_t       *sc_io_sink_new (sc_io_type_t iotype,
-                                    sc_io_mode_t mode,
-                                    sc_io_encode_t encode, ...);
+sc_io_sink_t       *sc_io_sink_new (int iotype, int iomode,
+                                    int ioencode, ...);
 
 /** Free data sink.
  * Calls sc_io_sink_complete and discards the final counts.
@@ -178,16 +177,15 @@ int                 sc_io_sink_align (sc_io_sink_t * sink,
                                       size_t bytes_align);
 
 /** Create a generic data source.
- * \param [in] iotype           Type of the source.
+ * \param [in] iotype           Type must be a value from \ref sc_io_type_t.
  *                              Depending on iotype, varargs must follow:
  *                              BUFFER: sc_array_t * (existing array).
  *                              FILENAME: const char * (name of file to open).
  *                              FILEFILE: FILE * (file open for reading).
- * \param [in] encode           Type of data encoding.
+ * \param [in] ioencode         Encoding value from \ref sc_io_encode_t.
  * \return                      Newly allocated source, or NULL on error.
  */
-sc_io_source_t     *sc_io_source_new (sc_io_type_t iotype,
-                                      sc_io_encode_t encode, ...);
+sc_io_source_t     *sc_io_source_new (int iotype, int ioencode, ...);
 
 /** Free data source.
  * Calls sc_io_source_complete and requires it to return no error.
@@ -450,7 +448,7 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
 
 /** Write MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
- * If there is no MPI IO but MPI avaiable, the offset parameter is ignored
+ * If there is no MPI IO but MPI available, the offset parameter is ignored
  * and the ranks just write at the current end of the file according to
  * their rank-induced order.
  * \param [in,out] mpifile      MPI file object opened for reading.

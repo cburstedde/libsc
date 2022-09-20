@@ -32,22 +32,21 @@
 #endif
 
 sc_io_sink_t       *
-sc_io_sink_new (sc_io_type_t iotype, sc_io_mode_t mode,
-                sc_io_encode_t encode, ...)
+sc_io_sink_new (int iotype, int iomode, int ioencode, ...)
 {
   sc_io_sink_t       *sink;
   va_list             ap;
 
   SC_ASSERT (0 <= iotype && iotype < SC_IO_TYPE_LAST);
-  SC_ASSERT (0 <= mode && mode < SC_IO_MODE_LAST);
-  SC_ASSERT (0 <= encode && encode < SC_IO_ENCODE_LAST);
+  SC_ASSERT (0 <= iomode && iomode < SC_IO_MODE_LAST);
+  SC_ASSERT (0 <= ioencode && ioencode < SC_IO_ENCODE_LAST);
 
   sink = SC_ALLOC_ZERO (sc_io_sink_t, 1);
-  sink->iotype = iotype;
-  sink->mode = mode;
-  sink->encode = encode;
+  sink->iotype = (sc_io_type_t) iotype;
+  sink->mode = (sc_io_mode_t) iomode;
+  sink->encode = (sc_io_encode_t) ioencode;
 
-  va_start (ap, encode);
+  va_start (ap, ioencode);
   if (iotype == SC_IO_TYPE_BUFFER) {
     sink->buffer = va_arg (ap, sc_array_t *);
     if (sink->mode == SC_IO_MODE_WRITE) {
@@ -185,19 +184,19 @@ sc_io_sink_align (sc_io_sink_t * sink, size_t bytes_align)
 }
 
 sc_io_source_t     *
-sc_io_source_new (sc_io_type_t iotype, sc_io_encode_t encode, ...)
+sc_io_source_new (int iotype, int ioencode, ...)
 {
   sc_io_source_t     *source;
   va_list             ap;
 
   SC_ASSERT (0 <= iotype && iotype < SC_IO_TYPE_LAST);
-  SC_ASSERT (0 <= encode && encode < SC_IO_ENCODE_LAST);
+  SC_ASSERT (0 <= ioencode && ioencode < SC_IO_ENCODE_LAST);
 
   source = SC_ALLOC_ZERO (sc_io_source_t, 1);
-  source->iotype = iotype;
-  source->encode = encode;
+  source->iotype = (sc_io_type_t) iotype;
+  source->encode = (sc_io_encode_t) ioencode;
 
-  va_start (ap, encode);
+  va_start (ap, ioencode);
   if (iotype == SC_IO_TYPE_BUFFER) {
     source->buffer = va_arg (ap, sc_array_t *);
   }
@@ -934,7 +933,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
     /* initially only rank 0 writes to the disk */
     active = (rank == 0) ? -1 : 0;
 
-    /* intialize potential return value */
+    /* initialize potential return value */
     errval = sc_MPI_SUCCESS;
 
     if (rank != 0) {
@@ -980,7 +979,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
       errno = 0;
       *ocount = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
       errval = errno;
-      /* the consective error codes fflush and fclose are not reported */
+      /* the consecutive error codes fflush and fclose are not reported */
       SC_CHECK_ABORT (fflush (mpifile->file) == 0,
                       "read_at_all: fflush failed");
       SC_CHECK_ABORT (fclose (mpifile->file) == 0,
@@ -1192,7 +1191,7 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
     /* initially only rank 0 writes to the disk */
     active = (rank == 0) ? -1 : 0;
 
-    /* intialize potential return value */
+    /* initialize potential return value */
     errval = sc_MPI_SUCCESS;
 
     if (rank != 0) {
@@ -1236,7 +1235,7 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
       errno = 0;
       *ocount = (int) fwrite (ptr, (size_t) size, zcount, mpifile->file);
       errval = errno;
-      /* the consective error codes fflush and fclose are not reported */
+      /* the consecutive error codes fflush and fclose are not reported */
       SC_CHECK_ABORT (fflush (mpifile->file) == 0,
                       "write_at_all: fflush failed");
       SC_CHECK_ABORT (fclose (mpifile->file) == 0,
