@@ -633,7 +633,7 @@ sc_io_error_class (int errorcode, int *errorclass)
    */
 
   if (errorcode == 0) {
-    /* This the errno for no error or
+    /* This is the errno for no error or
      * possibly also the sc_MPI_SUCESS value.
      * In both cases, we want to set errorclass to
      * sc_MPI_SUCCESS.
