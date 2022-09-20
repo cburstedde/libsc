@@ -193,8 +193,9 @@ sc3_MPI_Op_t;
 /** We wrap some MPI error codes and the I/O error classes. */
 typedef enum sc3_MPI_Errorcode
 {
-  SC3_MPI_SUCCESS = 123456,  /**< An MPI function has exited successfully. */
-  SC3_MPI_ERR_ARG,      /**< An MPI function encountered invalid arguments. */
+  /* we separate the error values from errno values */
+  SC3_MPI_SUCCESS = 0,  /**< An MPI function has exited successfully. */
+  SC3_MPI_ERR_ARG = 14000, /**< An MPI function encountered invalid arguments. */
   SC3_MPI_ERR_UNKNOWN,  /**< An MPI function has produced an unknown error. */
   SC3_MPI_ERR_OTHER,    /**< An MPI function has produced some known error. */
   SC3_MPI_ERR_NO_MEM,   /**< An MPI function ran out of memory. */
