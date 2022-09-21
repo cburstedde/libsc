@@ -488,7 +488,7 @@ int                 sc_io_write_all (sc_MPI_File mpifile,
 /** Close collectively a sc_MPI_File.
  * \param[in] file  MPI file object that is closed.
  * \return              A sc_io error code that is a MPI error code if
- *                      MPI I/O is available and sc_io error code.
+ *                      MPI I/O is available and else a sc_io error code.
  *                      In both cases the error code can be passed to
  *                      \ref sc_MPI_Error_string.
  *
