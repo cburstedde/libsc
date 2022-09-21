@@ -321,7 +321,7 @@ void                sc_fflush_fsync_fclose (FILE * file);
  *                      without MPI IO and to have working code without
  *                      MPI at all.
  * \return              A sc_io error code that is a MPI error code if
- *                      MPI I/O is available and else sc_io error code.
+ *                      MPI I/O is available and else a sc_io error code.
  *                      In both cases the error code can be passed to
  *                      \ref sc_MPI_Error_string.
  */
@@ -361,7 +361,7 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of read bytes.
  * \return              A sc_io error code that is a MPI error code if
- *                      MPI I/O is available and else sc_io error code.
+ *                      MPI I/O is available and else a sc_io error code.
  *                      In both cases the error code can be passed to
  *                      \ref sc_MPI_Error_string.
  * \note                This function is only valid to call on rank 0.
@@ -381,7 +381,7 @@ int                 sc_io_read_at (sc_MPI_File mpifile,
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of read bytes.
  * \return              A sc_io error code that is a MPI error code if
- *                      MPI I/O is available and else sc_io error code.
+ *                      MPI I/O is available and else a sc_io error code.
  *                      In both cases the error code can be passed to
  *                      \ref sc_MPI_Error_string.
  */
@@ -397,7 +397,7 @@ int                 sc_io_read_at_all (sc_MPI_File mpifile,
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of read bytes.
  * \return              A sc_io error code that is a MPI error code if
- *                      MPI I/O is available and else sc_io error code.
+ *                      MPI I/O is available and else a sc_io error code.
  *                      In both cases the error code can be passed to
  *                      \ref sc_MPI_Error_string.
  */
@@ -436,7 +436,7 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of written bytes.
  * \return              A sc_io error code that is a MPI error code if
- *                      MPI I/O is available and else sc_io error code.
+ *                      MPI I/O is available and else a sc_io error code.
  *                      In both cases the error code can be passed to
  *                      \ref sc_MPI_Error_string.
  * \note                This function is only valid to call on rank 0.
@@ -459,7 +459,7 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of written bytes.
  * \return              A sc_io error code that is a MPI error code if
- *                      MPI I/O is available and else sc_io error code.
+ *                      MPI I/O is available and else a sc_io error code.
  *                      In both cases the error code can be passed to
  *                      \ref sc_MPI_Error_string.
  * \note                This function does not abort on MPI file errors.
@@ -476,7 +476,7 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of written bytes.
  * \return              A sc_io error code that is a MPI error code if
- *                      MPI I/O is available and else sc_io error code.
+ *                      MPI I/O is available and else a sc_io error code.
  *                      In both cases the error code can be passed to
  *                      \ref sc_MPI_Error_string.
  * \note                This function does not abort on MPI file errors.
