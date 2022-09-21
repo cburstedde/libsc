@@ -714,13 +714,13 @@ sc_io_parse_nompiio_access_mode (sc_io_open_mode_t amode, char mode[4])
 {
   /* parse access mode */
   switch (amode) {
-  case SC_READ:
+  case SC_IO_READ:
     snprintf (mode, 3, "%s", "rb");
     break;
-  case SC_WRITE_CREATE:
+  case SC_IO_WRITE_CREATE:
     snprintf (mode, 3, "%s", "wb");
     break;
-  case SC_WRITE_APPEND:
+  case SC_IO_WRITE_APPEND:
     /* the file is opened in the corresponding write call */
 #if 0
     snprintf (mode, 3, "%s", "rb");
@@ -738,13 +738,13 @@ sc_io_parse_mpiio_access_mode (sc_io_open_mode_t amode, int *mode)
 {
   /* parse access mode */
   switch (amode) {
-  case SC_READ:
+  case SC_IO_READ:
     *mode = sc_MPI_MODE_RDONLY;
     break;
-  case SC_WRITE_CREATE:
+  case SC_IO_WRITE_CREATE:
     *mode = sc_MPI_MODE_WRONLY | sc_MPI_MODE_CREATE;
     break;
-  case SC_WRITE_APPEND:
+  case SC_IO_WRITE_APPEND:
     *mode = sc_MPI_MODE_WRONLY | sc_MPI_MODE_APPEND;
     break;
   default:

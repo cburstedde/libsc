@@ -106,9 +106,9 @@ sc_io_source_t;
 
 typedef enum
 {
-  SC_READ,
-  SC_WRITE_CREATE,
-  SC_WRITE_APPEND
+  SC_IO_READ,
+  SC_IO_WRITE_CREATE,
+  SC_IO_WRITE_APPEND
 }
 sc_io_open_mode_t;
 
