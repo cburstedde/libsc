@@ -61,7 +61,7 @@ AC_ARG_ENABLE([mpi],
 if test "x$enableval" = xyes ; then
   HAVE_PKG_MPI=yes
 elif test "x$enableval" != xno ; then
-  AC_MSG_ERROR([Use --enable-mpi without an argument, or with yes or no])
+  AC_MSG_ERROR([use --enable-mpi without an argument, or with yes or no])
 fi
 AC_MSG_CHECKING([whether we are using MPI])
 AC_MSG_RESULT([$HAVE_PKG_MPI])

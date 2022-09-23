@@ -37,7 +37,7 @@ if test "x$$1_ENABLE_MEMALIGN" != xno ; then
     $1_MEMALIGN_BYTES=`echo "$$1_ENABLE_MEMALIGN" | tr -c -d '[[:digit:]]'`
     $1_MEMALIGN_BYTES_LINK="$$1_MEMALIGN_BYTES"
     if test "x$$1_MEMALIGN_BYTES" = x ; then
-      AC_MSG_ERROR([Please provide --enable-memalign with a numeric value or nothing])
+      AC_MSG_ERROR([please provide --enable-memalign with a numeric value or nothing])
     fi
   else
     $1_MEMALIGN_BYTES_LINK="SIZEOF_VOID_P"
@@ -60,7 +60,7 @@ extern "C" void* aligned_alloc(size_t, size_t);
 int *a = (int *) aligned_alloc ($$1_MEMALIGN_BYTES_LINK, 3 * sizeof(*a));
 free(a);
 ]])],
-                   [], [AC_MSG_ERROR([Linking aligned_alloc failed])])
+                   [], [AC_MSG_ERROR([linking aligned_alloc failed])])
   fi
 
 dnl verify that posix_memalign can be linked against
@@ -75,7 +75,7 @@ int *a;
 posix_memalign((void **) &a, $$1_MEMALIGN_BYTES_LINK, 3 * sizeof(*a));
 free(a);
 ]])],
-                   [], [AC_MSG_ERROR([Linking posix_memalign failed])])
+                   [], [AC_MSG_ERROR([linking posix_memalign failed])])
   fi
 
 dnl the function memalign is obsolete and not used
