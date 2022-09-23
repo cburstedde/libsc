@@ -152,7 +152,7 @@ dnl Check for FUNCTION in LIBRARY, exit with error if not found
 dnl
 AC_DEFUN([SC_REQUIRE_LIB],
     [AC_SEARCH_LIBS([$2], [$1],,
-      [AC_MSG_ERROR([Could not find function $2 in $1])])])
+      [AC_MSG_ERROR([cannot find function $2 in $1])])])
 
 dnl SC_CHECK_MATH(PREFIX)
 dnl Check whether sqrt is found, possibly in -lm, using a link test.
@@ -173,7 +173,7 @@ double a = 3.14149;
 for (; sqrt (a) < a; a *= 1.000023) { putc ('1', stdout); }
 ]], [m],
   [AC_DEFINE([HAVE_MATH], [1], [Define to 1 if sqrt links successfully])],
-  [AC_ERROR([Unable to link with sqrt of the math library])])
+  [AC_MSG_ERROR([unable to link with sqrt, cos, sin, both as is and with -lm])])
 ])
 
 dnl SC_CHECK_ZLIB(PREFIX)
@@ -233,7 +233,7 @@ AC_DEFUN([SC_REQUIRE_FUNCS],
 m4_foreach_w([sc_thefunc], [$1],
              [AC_CHECK_FUNC([sc_thefunc], ,
                             [AC_MSG_ERROR([\
-Could not find function sc_thefunc])])])
+cannot find function sc_thefunc])])])
 ])
 
 dnl SC_DETERMINE_INSTALL(PREFIX)
@@ -244,7 +244,7 @@ dnl
 AC_DEFUN([SC_DETERMINE_INSTALL],
 [
 if test ! -d "$$1_DIR" ; then
-  AC_MSG_ERROR([Directory "$$1_DIR" does not exist])
+  AC_MSG_ERROR([directory "$$1_DIR" does not exist])
 fi
 if test -d "$$1_DIR/include" || test -d "$$1_DIR/lib" || \
    test -d "$$1_DIR/bin" || test -d "$$1_DIR/share/aclocal" ; then
@@ -267,7 +267,7 @@ if test ! -d "$$1_INC" ; then
   $1_INC="$$1_DIR/src"
 fi
 if test ! -d "$$1_INC" ; then
-  AC_MSG_ERROR([Include directories based on $$1_DIR not found])
+  AC_MSG_ERROR([include directories based on $$1_DIR not found])
 fi
 $1_CPPFLAGS="-I$$1_INC $2"
 ])
@@ -285,7 +285,7 @@ if test ! -d "$$1_LIB" ; then
   $1_LIB="$$1_DIR/src"
 fi
 if test ! -d "$$1_LIB" ; then
-  AC_MSG_ERROR([Library directories based on $$1_DIR not found])
+  AC_MSG_ERROR([library directories based on $$1_DIR not found])
 fi
 $1_LDADD="-L$$1_LIB $2"
 ])
@@ -303,7 +303,7 @@ if test ! -d "$$1_CONFIG" ; then
   $1_CONFIG="$$1_DIR/config"
 fi
 if test ! -d "$$1_CONFIG" ; then
-  AC_MSG_ERROR([Config directories based on $$1_DIR not found])
+  AC_MSG_ERROR([config directories based on $$1_DIR not found])
 fi
 $1_AMFLAGS="-I $$1_CONFIG"
 ])
@@ -323,7 +323,7 @@ dnl AC_MSG_NOTICE([Checking BLAS])
 dnl SC_BLAS([$1], [$dgemm],
 dnl         [AC_DEFINE([WITH_BLAS], 1, [Define to 1 if BLAS is used])],
 dnl         [AC_MSG_ERROR([[\
-dnl Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
+dnl cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
 dnl  LIBS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB\
 dnl  (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
 dnl
@@ -340,7 +340,7 @@ dnl AC_MSG_NOTICE([Checking LAPACK])
 dnl SC_LAPACK([$1], [$dgecon],
 dnl           [AC_DEFINE([WITH_LAPACK], 1, [Define to 1 if LAPACK is used])],
 dnl           [AC_MSG_ERROR([[\
-dnl Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
+dnl cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
 dnl  LIBS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB\
 dnl  (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
 dnl
