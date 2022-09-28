@@ -86,8 +86,9 @@ jobs:
       with:
         name: linux_multi_log
         path: |
-          ./**/test-suite.log
           ./**/config.log
+          ./**/test-suite.log
+          ./**/test/*.log
 
   linux-valgrind:
     runs-on: ubuntu-latest
@@ -122,8 +123,9 @@ jobs:
       with:
         name: linux_valgrind_log
         path: |
-          ./**/test-suite.log
           ./**/config.log
+          ./**/test-suite.log
+          ./**/test/*.log
 
   linux-tarball:
     runs-on: ubuntu-latest
@@ -175,5 +177,6 @@ jobs:
       with:
         name: linux_tarball_log
         path: |
-          ./**/test-suite.log
           ./**/config.log
+          ./**/test-suite.log
+          ./**/test/*.log
