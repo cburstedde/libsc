@@ -58,7 +58,7 @@ DISTCLEANFILES += \
 
 # setup test environment
 LOG_COMPILER = @SC_MPIRUN@
-AM_LOG_FLAGS = @SC_MPI_TEST_FLAGS@
+AM_LOG_FLAGS = @SC_MPI_TEST_FLAGS@ @SC_VALGRIND@
 
 # non-recursive build
 include src/Makefile.am
