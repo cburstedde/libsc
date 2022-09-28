@@ -91,7 +91,7 @@ jobs:
 
   linux-valgrind:
     runs-on: ubuntu-latest
-    name: Autotools with valgrind on Linux
+    name: Autotools with valgrind
     steps:
 
     - name: Install system dependencies
@@ -115,6 +115,15 @@ jobs:
           CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
         make -j V=0
         make -j check V=0
+
+    - name: Upload log files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux_valgrind_log
+        path: |
+          ./**/test-suite.log
+          ./**/config.log
 
   linux-tarball:
     runs-on: ubuntu-latest
