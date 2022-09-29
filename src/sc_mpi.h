@@ -262,7 +262,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_Get_count           MPI_Get_count
 #define sc_MPI_Wtime               MPI_Wtime
 #define sc_MPI_Wait                MPI_Wait
-/* The MPI_Waitsome and MPI_Waitall functions are wrapped. */
+/* The MPI_Waitsome, MPI_Waitall and MPI_Testall functions are wrapped. */
 #define sc_MPI_Type_size           MPI_Type_size
 
 #else /* !SC_ENABLE_MPI */
@@ -480,6 +480,8 @@ int                 sc_MPI_Wait (sc_MPI_Request *, sc_MPI_Status *);
 int                 sc_MPI_Waitsome (int, sc_MPI_Request *,
                                      int *, int *, sc_MPI_Status *);
 int                 sc_MPI_Waitall (int, sc_MPI_Request *, sc_MPI_Status *);
+int                 sc_MPI_Testall (int, sc_MPI_Request *, int *,
+                                    sc_MPI_Status *);
 
 #if defined SC_ENABLE_MPI && defined SC_ENABLE_MPITHREAD
 

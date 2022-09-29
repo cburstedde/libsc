@@ -1963,7 +1963,7 @@ sc_notify_payload_nbx (sc_array_t * receivers, sc_array_t * senders,
       int                 sent;
 
       mpiret =
-        MPI_Testall (num_receivers, sendreqs, &sent, MPI_STATUSES_IGNORE);
+        sc_MPI_Testall (num_receivers, sendreqs, &sent, MPI_STATUSES_IGNORE);
       SC_CHECK_MPI (mpiret);
       if (sent) {
         mpiret = MPI_Ibarrier (comm, &barreq);
@@ -2090,7 +2090,7 @@ sc_notify_payloadv_nbx (sc_array_t * receivers, sc_array_t * senders,
       int                 sent;
 
       mpiret =
-        MPI_Testall (num_receivers, sendreqs, &sent, MPI_STATUSES_IGNORE);
+        sc_MPI_Testall (num_receivers, sendreqs, &sent, MPI_STATUSES_IGNORE);
       SC_CHECK_MPI (mpiret);
       if (sent) {
         mpiret = MPI_Ibarrier (comm, &barreq);
