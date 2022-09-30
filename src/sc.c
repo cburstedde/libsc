@@ -1521,7 +1521,7 @@ sc_snprintf (char *str, size_t size, const char *fmt, ...)
   }
 
   /* avoid uninitialized bytes if strlen (src) < size - 1 */
-  memset (str, (int) '\0', size);
+  memset (str, 0, size);
 
   /* Writing this function just to catch the return value.
      Avoiding -Wnoformat-truncation gcc option this way */
