@@ -119,6 +119,7 @@ dnl If given and valgrind is found, we use it to run tests on make check.
 dnl If given and valgrind is not found, we abort with an error message.
 dnl If not given, we run tests in the default manner (ignoring valgrind).
 $1_VALGRIND=
+$1_VALGRIND_FLAGS=
 AC_ARG_ENABLE([valgrind],
               [AS_HELP_STRING([--enable-valgrind],
                [use valgrind with make check to run tests])],,
@@ -128,10 +129,12 @@ if test "x$enableval" = xyes ; then
   if test "x$$1_VALGRIND" != xvalgrind ; then
     AC_MSG_ERROR([--enable-valgrind given but valgrind not found in PATH])
   fi
+  $1_VALGRIND_FLAGS="--error-exitcode=1"
 fi
 dnl We are not making $1_VALGRIND a precious variable for simplicity
 dnl AC_ARG_VAR([$1_VALGRIND], [valgrind wrapper to invoke for tests on make check])
 AC_SUBST([$1_VALGRIND])
+AC_SUBST([$1_VALGRIND_FLAGS])
 
 dnl Establish the MPI test environment
 $1_MPIRUN=
