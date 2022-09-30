@@ -114,28 +114,43 @@ elif test "x$enableval" != xno ; then
   AC_MSG_WARN([Ignoring --enable-mpishared with unsupported argument])
 fi
 
+dnl We allow the user to specify the configure option --enable-valgrind.
+dnl If given and valgrind is found, we use it to run tests on make check.
+dnl If given and valgrind is not found, we abort with an error message.
+dnl If not given, we run tests in the default manner (ignoring valgrind).
+$1_VALGRIND=
+AC_ARG_ENABLE([valgrind],
+              [AS_HELP_STRING([--enable-valgrind],
+               [use valgrind with make check to run tests])],,
+              [enableval=no])
+if test "x$enableval" = xyes ; then
+  AC_CHECK_PROG([$1_VALGRIND], [valgrind], [valgrind])
+  if test "x$$1_VALGRIND" != xvalgrind ; then
+    AC_MSG_ERROR([--enable-valgrind given but valgrind not found in PATH])
+  fi
+fi
+dnl We are not making $1_VALGRIND a precious variable for simplicity
+dnl AC_ARG_VAR([$1_VALGRIND], [valgrind wrapper to invoke for tests on make check])
+AC_SUBST([$1_VALGRIND])
+
 dnl Establish the MPI test environment
 $1_MPIRUN=
 $1_MPI_TEST_FLAGS=
 if test "x$HAVE_PKG_MPI" = xyes ; then
-AC_CHECK_PROGS([$1_MPIRUN], [mpiexec mpirun])
-if test "x$MPIRUN" != x && test -x `which "$MPIRUN" 2> /dev/null` ; then
-  $1_MPIRUN="$MPIRUN"
-  $1_MPI_TEST_FLAGS="-np 2"
-  dnl AC_MSG_NOTICE([Test environment "$$1_MPIRUN" "$$1_MPI_TEST_FLAGS"])
-elif test "x$$1_MPIRUN" = xmpiexec ; then
-  # $1_MPIRUN=mpiexec
-  $1_MPI_TEST_FLAGS="-n 2"
-elif test "x$$1_MPIRUN" = xmpirun ; then
-  # $1_MPIRUN=mpirun
-  $1_MPI_TEST_FLAGS="-np 2"
-else
-  $1_MPIRUN=
+  AC_CHECK_PROGS([$1_MPIRUN], [mpirun mpiexec])
+  if test "x$$1_MPIRUN" = xmpirun ; then
+    $1_MPI_TEST_FLAGS="-np 2"
+  elif test "x$$1_MPIRUN" = xmpiexec ; then
+    $1_MPI_TEST_FLAGS="-n 2"
+  else
+    AC_MSG_ERROR([--enable-mpi given but neither mpirun nor mpiexec found])
+  fi
 fi
+dnl We are not using precious variables for simplicity
+dnl AC_ARG_VAR([$1_MPIRUN], [mpirun wrapper to invoke for tests on make check])
 AC_SUBST([$1_MPIRUN])
+dnl AC_ARG_VAR([$1_MPI_TEST_FLAGS], [arguments passed to mpirun wrapper on make check])
 AC_SUBST([$1_MPI_TEST_FLAGS])
-fi
-AM_CONDITIONAL([$1_MPIRUN], [test "x$$1_MPIRUN" != x])
 
 dnl Set compilers if not already set and set define and conditionals
 if test "x$HAVE_PKG_MPI" = xyes ; then

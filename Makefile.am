@@ -57,10 +57,8 @@ DISTCLEANFILES += \
 .PHONY: ChangeLog
 
 # setup test environment
-if SC_MPIRUN
 LOG_COMPILER = @SC_MPIRUN@
-AM_LOG_FLAGS = @SC_MPI_TEST_FLAGS@
-endif
+AM_LOG_FLAGS = @SC_MPI_TEST_FLAGS@ @SC_VALGRIND@
 
 # non-recursive build
 include src/Makefile.am
