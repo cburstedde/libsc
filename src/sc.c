@@ -1520,6 +1520,9 @@ sc_snprintf (char *str, size_t size, const char *fmt, ...)
     return;
   }
 
+  /* avoid uninitialized bytes if strlen (src) < size - 1 */
+  memset (str, (int) '\0', size);
+
   /* Writing this function just to catch the return value.
      Avoiding -Wnoformat-truncation gcc option this way */
   va_start (ap, fmt);
