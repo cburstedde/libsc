@@ -763,6 +763,9 @@ int                 sc_is_root (void);
 /** Provide a string copy function.
  * \param [out] dest    Buffer of length at least \a size.
  *                      On output, not touched if NULL or \a size == 0.
+ *                      Otherwise, \a src is copied to \a dest and
+ *                      \a dest is padded with '\0' from the right
+ *                      if strlen (src) < size - 1.
  * \param [in] size     Allocation length of \a dest.
  * \param [in] src      Null-terminated string.
  * \return              Equivalent to \ref
@@ -777,6 +780,9 @@ void                sc_strcopy (char *dest, size_t size, const char *src);
  * \param [out] str     Buffer of length at least \a size.
  *                      On output, not touched if NULL or \a size == 0.
  *                      Otherwise, "" on snprintf error or the proper result.
+ *                      The proper result is padded on the right with '\0'
+ *                      if the allocation length of the string that is
+ *                      defined by \a format is shorter than \a size.
  * \param [in] size     Allocation length of \a str.
  * \param [in] format   Format string as in man (3) snprintf.
  */
