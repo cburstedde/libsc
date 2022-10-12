@@ -230,6 +230,38 @@ sc3_error_t        *sc3_mpienv_get_info_noncont (const sc3_mpienv_t * m,
  */
 sc3_error_t        *sc3_mpienv_get_node_frank (const sc3_mpienv_t * m,
                                                int *node_frank);
+
+/** Query a zero-based node number.
+ * \param [in] m        Valid and setup mpi environment.
+ * \param [out] node_num Pointer must not be NULL.
+ *                       Output number of the current node.
+ *                       Written to -1 on error return.
+ * \return               NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_get_node_num (const sc3_mpienv_t * m,
+                                             int *node_num);
+
+/** Query a pointer to an array of the numbers of ranks in each node.
+ * \param [in] m        Valid and setup mpi environment.
+ * \param [out] node_sizes Address of a pointer must not be NULL.
+ *                         Output he number of ranks in nodes.
+ *                         Written to NULL on error return.
+ * \return                 NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m,
+                                               int *node_sizes);
+
+/** Query a pointer to an array of the numbers of ranks
+ *  before each node and one beyond.
+ * \param [in] m        Valid and setup mpi environment.
+ * \param [out] node_offsets Address of a pointer must not be NULL.
+ *                           Output offsets of nodes.
+ *                           Written to NULL on error return.
+ * \return                   NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_get_node_offsets (const sc3_mpienv_t * m,
+                                                 int *node_offsets);
+
 #ifdef __cplusplus
 #if 0
 {

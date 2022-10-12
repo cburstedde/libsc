@@ -423,3 +423,33 @@ sc3_mpienv_get_node_frank (const sc3_mpienv_t * m, int *node_frank)
   *node_frank = m->node_frank;
   return NULL;
 }
+
+sc3_error_t        *
+sc3_mpienv_get_node_num (const sc3_mpienv_t * m, int *node_num)
+{
+  SC3E_RETVAL (node_num, -1);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *node_num = m->node_num;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m, int *node_sizes)
+{
+  SC3E_RETVAL (node_sizes, NULL);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *(int **)node_sizes = m->node_sizes;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_node_offsets (const sc3_mpienv_t * m, int *node_offsets)
+{
+  SC3E_RETVAL (node_offsets, NULL);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *(int **)node_offsets = m->node_offsets;
+  return NULL;
+}
