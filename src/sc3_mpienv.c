@@ -453,3 +453,13 @@ sc3_mpienv_get_node_offsets (const sc3_mpienv_t * m, int **node_offsets)
   *node_offsets = m->node_offsets;
   return NULL;
 }
+
+sc3_error_t        *
+sc3_mpienv_get_mpisize (const sc3_mpienv_t * m, int *mpisize)
+{
+  SC3E_RETVAL (mpisize, -1);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *mpisize = m->mpisize;
+  return NULL;
+}

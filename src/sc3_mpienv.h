@@ -262,6 +262,16 @@ sc3_error_t        *sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m,
 sc3_error_t        *sc3_mpienv_get_node_offsets (const sc3_mpienv_t * m,
                                                  int **node_offsets);
 
+/** Query a size of global communicator.
+ * \param [in] m        Valid and setup mpi environment.
+ * \param [out] mpisize Pointer must not be NULL.
+ *                      Output a size of global communicator.
+ *                      Written to NULL on error return.
+ * \return              NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_get_mpisize (const sc3_mpienv_t * m,
+                                            int *mpisize);
+
 #ifdef __cplusplus
 #if 0
 {
