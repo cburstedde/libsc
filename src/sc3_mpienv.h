@@ -249,7 +249,7 @@ sc3_error_t        *sc3_mpienv_get_node_num (const sc3_mpienv_t * m,
  * \return                 NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m,
-                                               int *node_sizes);
+                                               int **node_sizes);
 
 /** Query a pointer to an array of the numbers of ranks
  *  before each node and one beyond.
@@ -260,7 +260,7 @@ sc3_error_t        *sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m,
  * \return                   NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_get_node_offsets (const sc3_mpienv_t * m,
-                                                 int *node_offsets);
+                                                 int **node_offsets);
 
 #ifdef __cplusplus
 #if 0
