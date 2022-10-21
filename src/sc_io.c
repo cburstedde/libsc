@@ -903,6 +903,19 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 
   *ocount = 0;
 
+  if (zcount == 0) {
+    /* This should be not necessary according to the MPI standard but some
+     * MPI impementations trigger valgrind warnigs due to uninitialized
+     * MPI status members.
+     */
+    mpiret = sc_MPI_SUCCESS;
+
+    retval = sc_io_error_class (mpiret, &errcode);
+    SC_CHECK_MPI (retval);
+
+    return errcode;
+  }
+
   mpiret = MPI_File_read_at_all (mpifile, offset, ptr,
                                  (int) zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS) {
@@ -943,7 +956,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
                             rank - 1, sc_MPI_ANY_TAG,
                             mpifile->mpicomm, &status);
       SC_CHECK_MPI (mpiret);
-      mpiret = MPI_Get_count (&status, sc_MPI_INT, &count);
+      mpiret = sc_MPI_Get_count (&status, sc_MPI_INT, &count);
       SC_CHECK_MPI (mpiret);
       SC_CHECK_ABORT (count == 1, "MPI receive");
     }
@@ -1155,6 +1168,19 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
 
   *ocount = 0;
 
+  if (zcount == 0) {
+    /* This should be not necessary according to the MPI standard but some
+     * MPI impementations trigger valgrind warnigs due to uninitialized
+     * MPI status members.
+     */
+    mpiret = sc_MPI_SUCCESS;
+
+    retval = sc_io_error_class (mpiret, &errcode);
+    SC_CHECK_MPI (retval);
+
+    return errcode;
+  }
+
   mpiret = MPI_File_write_at_all (mpifile, offset, (void *) ptr,
                                   (int) zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS) {
@@ -1201,7 +1227,7 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
                             rank - 1, sc_MPI_ANY_TAG,
                             mpifile->mpicomm, &status);
       SC_CHECK_MPI (mpiret);
-      mpiret = MPI_Get_count (&status, sc_MPI_INT, &count);
+      mpiret = sc_MPI_Get_count (&status, sc_MPI_INT, &count);
       SC_CHECK_MPI (mpiret);
       SC_CHECK_ABORT (count == 1, "MPI receive");
     }
