@@ -943,7 +943,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
                             rank - 1, sc_MPI_ANY_TAG,
                             mpifile->mpicomm, &status);
       SC_CHECK_MPI (mpiret);
-      mpiret = MPI_Get_count (&status, sc_MPI_INT, &count);
+      mpiret = sc_MPI_Get_count (&status, sc_MPI_INT, &count);
       SC_CHECK_MPI (mpiret);
       SC_CHECK_ABORT (count == 1, "MPI receive");
     }
@@ -1201,7 +1201,7 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
                             rank - 1, sc_MPI_ANY_TAG,
                             mpifile->mpicomm, &status);
       SC_CHECK_MPI (mpiret);
-      mpiret = MPI_Get_count (&status, sc_MPI_INT, &count);
+      mpiret = sc_MPI_Get_count (&status, sc_MPI_INT, &count);
       SC_CHECK_MPI (mpiret);
       SC_CHECK_ABORT (count == 1, "MPI receive");
     }
