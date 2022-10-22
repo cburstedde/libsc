@@ -363,6 +363,7 @@ dnl We also test for some tool executables.
 dnl
 AC_DEFUN([SC_CHECK_LIBRARIES],
 [
+AC_DEFINE([USING_AUTOCONF], 1, [Define to 1 if using autoconf build])
 SC_CHECK_MATH([$1])
 SC_CHECK_ZLIB([$1])
 dnl SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua5 lua],
