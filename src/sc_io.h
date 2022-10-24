@@ -165,8 +165,7 @@ int                 sc_io_sink_write (sc_io_sink_t * sink,
  * \return                      0 if completed, nonzero on error.
  */
 int                 sc_io_sink_complete (sc_io_sink_t * sink,
-                                         size_t * bytes_in,
-                                         size_t * bytes_out);
+                                         size_t *bytes_in, size_t *bytes_out);
 
 /** Align sink to a byte boundary by writing zeros.
  * \param [in,out] sink         The sink object to align.
@@ -213,7 +212,7 @@ int                 sc_io_source_destroy (sc_io_source_t * source);
  */
 int                 sc_io_source_read (sc_io_source_t * source,
                                        void *data, size_t bytes_avail,
-                                       size_t * bytes_out);
+                                       size_t *bytes_out);
 
 /** Determine whether all data buffered from source has been returned by read.
  * If it returns SC_IO_ERROR_AGAIN, another sc_io_source_read is required.
@@ -231,8 +230,8 @@ int                 sc_io_source_read (sc_io_source_t * source,
  *                              Otherwise return ERROR_NONE and reset counters.
  */
 int                 sc_io_source_complete (sc_io_source_t * source,
-                                           size_t * bytes_in,
-                                           size_t * bytes_out);
+                                           size_t *bytes_in,
+                                           size_t *bytes_out);
 
 /** Align source to a byte boundary by skipping.
  * \param [in,out] source       The source object to align.
@@ -256,7 +255,7 @@ int                 sc_io_source_activate_mirror (sc_io_source_t * source);
 int                 sc_io_source_read_mirror (sc_io_source_t * source,
                                               void *data,
                                               size_t bytes_avail,
-                                              size_t * bytes_out);
+                                              size_t *bytes_out);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream opened for writing.
