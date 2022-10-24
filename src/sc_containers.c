@@ -143,6 +143,18 @@ sc_array_init_view (sc_array_t * view, sc_array_t * array, size_t offset,
 }
 
 void
+sc_array_init_reshape (sc_array_t * view, sc_array_t * array,
+                       size_t elem_size, size_t elem_count)
+{
+  SC_ASSERT (view != NULL);
+  SC_ASSERT (array != NULL);
+  SC_ASSERT (array->elem_size * array->elem_count == elem_size * elem_count);
+
+  /* create a view with the same memory content but different layout */
+  sc_array_init_data (view, array->array, elem_size, elem_count);
+}
+
+void
 sc_array_init_data (sc_array_t * view, void *base, size_t elem_size,
                     size_t elem_count)
 {

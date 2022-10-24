@@ -205,6 +205,23 @@ void                sc_array_init_count (sc_array_t * array,
 void                sc_array_init_view (sc_array_t * view, sc_array_t * array,
                                         size_t offset, size_t length);
 
+/** Initialize an already allocated (or static) view from existing sc_array_t.
+ * The total data size of the view is the same, but size and count may differ.
+ * The array view returned does not require sc_array_reset (doesn't hurt though).
+ * \param [in,out] view  Array structure to be initialized.
+ * \param [in] array        The array must not be resized while view is alive.
+ * \param [in] elem_size    Size of one array element of the view in bytes.
+ *                          The product of size and count of \a array must be
+ *                          the same as \a elem_size * \a elem_count.
+ * \param [in] elem_count   The length of the view in element units.
+ *                          The view cannot be resized to exceed this length.
+ *                          It is not necessary to call sc_array_reset later.
+ */
+void                sc_array_init_reshape (sc_array_t * view,
+                                           sc_array_t * array,
+                                           size_t elem_size,
+                                           size_t elem_count);
+
 /** Initializes an already allocated (or static) view from given plain C data.
  * The array view returned does not require sc_array_reset (doesn't hurt though).
  * \param [in,out] view     Array structure to be initialized.
