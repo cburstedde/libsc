@@ -583,17 +583,17 @@ sc_io_decode (sc_array_t *data, sc_array_t *out)
 
     SC_ASSERT (lein > 0);
     if (lout == 0) {
-      SC_LERROR ("base 64 decode short");
+      SC_LERROR ("base 64 decode short\n");
       goto decode_error;
     }
     if (ipos[lein] != '\n') {
-      SC_LERROR ("base 64 missing newline");
+      SC_LERROR ("base 64 missing newline\n");
       goto decode_error;
     }
     if (zlin < base64_lines - 1) {
       SC_ASSERT (lein == 72);
       if (lout != 54) {
-        SC_LERROR ("base 64 decode mismatch");
+        SC_LERROR ("base 64 decode mismatch\n");
         goto decode_error;
       }
       memcpy (opos, base_out, 54);
@@ -618,7 +618,7 @@ sc_io_decode (sc_array_t *data, sc_array_t *out)
   SC_ASSERT (ocnt <= compressed_size);
   SC_ASSERT (ipos + 1 == data->array + encoded_size);
   if (ocnt < 8) {
-    SC_LERROR ("base 64 decodes to less than 8 bytes");
+    SC_LERROR ("base 64 decodes to less than 8 bytes\n");
     goto decode_error;
   }
 
@@ -635,7 +635,7 @@ sc_io_decode (sc_array_t *data, sc_array_t *out)
     encoded_size |= ((size_t) uc) << (i * 8);
   }
   if (encoded_size % out->elem_size != 0) {
-    SC_LERROR ("encoded size not commensurable");
+    SC_LERROR ("encoded size not commensurable\n");
     goto decode_error;
   }
 
@@ -650,11 +650,11 @@ sc_io_decode (sc_array_t *data, sc_array_t *out)
   zrv = uncompress ((Bytef *) out->array, (uLongf *) &encoded_size,
                     (Bytef *) (8 + compressed.array), ocnt - 8);
   if (zrv != Z_OK) {
-    SC_LERRORF ("zlib uncompress error: %d\n", zrv);
+    SC_LERROR ("zlib uncompress error\n");
     goto decode_error;
   }
   if (encoded_size != out->elem_count * out->elem_size) {
-    SC_LERROR ("zlib uncompress short");
+    SC_LERROR ("zlib uncompress short\n");
     goto decode_error;
   }
 #endif /* SC_HAVE_ZLIB */
