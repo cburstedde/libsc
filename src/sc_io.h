@@ -257,7 +257,7 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
                                               size_t bytes_avail,
                                               size_t *bytes_out);
 
-/** Compress and base 64 encode a block of arbitrary data.
+/** Encode a block of arbitrary data, compressed, into an ASCII string.
  * This is a two-stage process: zlib compress and then encode to base 64.
  * The output is a NUL-terminated string of printable characters.
  *
@@ -266,12 +266,15 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
  * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
  * Both ways are readable by a standard zlib uncompress call.
  *
- * Secondly, we run the compressed data through a base 64 encoder.
- * We break lines after 72 characters.  Each line ends in '\n'.
+ * Secondly, we process the input data size as an 8-byte big-endian number
+ * and then the zlib compressed data, concatenated, with a base 64 encoder.
+ * We break lines after 72 code characters.  Each line ends in '\n'.
  * The line breaks are considered part of the output data.
- * A final terminating zero is also considered part of it.
+ * A final terminating NUL is also considered part of it.
  *
  * This routine can work in place or write to an output array.
+ * The corresponding decoder function is \ref sc_io_decode.
+ * This function cannot crash.
  *
  * \param [in,out] data     If \a out is NULL, we work in place.
  *                          In this case, the array must on input have
@@ -281,7 +284,7 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
  *                          Otherwise, this is a read-only argument
  *                          that may have arbitrary element size.
  *                          On input, all data in the array is used.
- * \param [in,out] out      If given, a valid array of element size 1.
+ * \param [in,out] out      If not NULL, a valid array of element size 1.
  *                          It must be resizable (not a view).
  *                          We resize the array to the output data, which
  *                          always includes a final terminating zero.

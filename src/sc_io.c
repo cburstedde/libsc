@@ -387,6 +387,7 @@ sc_io_source_read_mirror (sc_io_source_t * source, void *data,
 void
 sc_io_encode (sc_array_t *data, sc_array_t *out)
 {
+  int                 i;
 #ifdef SC_HAVE_ZLIB
   int                 zrv;
   uLong               input_compress_bound;
@@ -400,6 +401,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
 #ifdef SC_ENABLE_DEBUG
   size_t              ocnt;
 #endif
+  unsigned char       original_size[8];
   sc_array_t          compressed;
   base64_encodestate  bstate;
 
@@ -415,14 +417,20 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
     SC_ASSERT (out->elem_size == 1);
   }
   input_size = data->elem_count * data->elem_size;
+  for (i = 0; i < 8; ++i) {
+    /* enforce big endian byte order for original size */
+    original_size[i] = (input_size >> (i * 8)) & 0xFF;
+  }
 
 #ifndef SC_HAVE_ZLIB
   SC_ABORT_NOT_REACH ();
 #else
   /* zlib compress input */
   input_compress_bound = compressBound ((uLong) input_size);
-  sc_array_init_count (&compressed, 1, input_compress_bound);
-  zrv = compress2 ((Bytef *) compressed.array, &input_compress_bound,
+  sc_array_init_count (&compressed, 1, 8 + input_compress_bound);
+  memcpy (compressed.array, original_size, 8);
+  zrv = compress2 ((Bytef *) compressed.array + 8,
+                   (uLongf *) &input_compress_bound,
                    (Bytef *) data->array, (uLong) input_size,
                    Z_BEST_COMPRESSION);
   SC_CHECK_ABORT (zrv == Z_OK, "Error on zlib compression");
@@ -437,7 +445,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
     out = data;
   }
   SC_ASSERT (out->elem_size == 1);
-  input_size = (size_t) input_compress_bound;
+  input_size = (size_t) (8 + input_compress_bound);
   base64_lines = (input_size + 53) / 54;
   encoded_size = 4 * ((input_size + 2) / 3) + base64_lines + 1;
   sc_array_resize (out, encoded_size);
@@ -467,6 +475,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
                 (unsigned) lein, (unsigned) lout);
 #endif
 
+    SC_ASSERT (lein > 0);
     if (zlin < base64_lines - 1) {
       /* not the final line */
       SC_ASSERT (irem > 54);
