@@ -291,6 +291,50 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
  */
 void                sc_io_encode (sc_array_t *data, sc_array_t *out);
 
+/** Decode a block of base 64 encoded compressed data.
+ * The base 64 data must have a line break after every 72 code characters.
+ *
+ * This is a two-stage process: we decode the input from base 64
+ * and then extract the 8-byte big-endian original data size and
+ * execute a standard zlib decompression on the remaining decode.
+ * If zlib is not detected on configuration, the function executes ok
+ * if Z_NO_COMPRESSION was used on encoding and errors out otherwise.
+ * This function detects malformed input by erroring out.
+ *
+ * Any error condition is indicated by a nonzero return value.
+ * Possible causes for error are:
+ *  - the input data string is not NUL-terminated
+ *  - the input data is compressed and zlib is not configured
+ *  - the input data is corrupt for decoding or decompression
+ *  - the output data array has non-unit element size and the
+ *    length of the decoded data is not divisible by the size
+ *
+ * The corresponding encoder function is \ref sc_io_encode.
+ * This function cannot crash.
+ *
+ * \param [in,out] data     If \a out is NULL, we work in place.
+ *                          In that case, output is written into
+ *                          this array after a suitable resize.
+ *                          Either way, we expect a NUL-terminated
+ *                          base 64 encoded string on input that has
+ *                          in turn been obtained by zlib compression.
+ *                          The element size of the input array must be 1.
+ * \param [in,out] out      If not NULL, a valid array.
+ *                          It must be resizable (not a view).
+ *                          We resize the array to the output data exactly,
+ *                          expecting commensurable element and data size,
+ *                          which restores the original input to encoding.
+ * \return                  0 on success, negative if zlib is not configured
+ *                          and the data is compressed, as opposed to having
+ *                          been created with Z_NO_COMPRESSION, and also if
+ *                          the element size of the output array is not
+ *                          a divisor of the output data's byte length,
+ *                          or if the input data is not NUL-terminated,
+ *                          or if the base 64 input misses the newlines
+ *                          expected after every 72 code characters.
+ */
+int                sc_io_decode (sc_array_t *data, sc_array_t *out);
+
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream opened for writing.
  * \param numeric_data   A pointer to a numeric data array.

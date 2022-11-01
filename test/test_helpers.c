@@ -75,21 +75,50 @@ test_helpers (const char *str, const char *label, int tint, int tlong)
   return nft;
 }
 
-static void
+static int
 single_code_test (sc_array_t *src)
 {
+  int                 num_failed_tests = 0;
+  int                 retval;
   sc_array_t          dest;
+  sc_array_t          comp;
+
+  /* encode */
   sc_array_init (&dest, 1);
-
   sc_io_encode (src, &dest);
-  sc_array_reset (&dest);
 
+  /* decode */
+  sc_array_init (&comp, src->elem_size);
+  retval = sc_io_decode (&dest, &comp);
+  sc_array_reset (&dest);
+  if (retval) {
+    SC_LERROR ("sc_io_decode internal error\n");
+    ++num_failed_tests;
+    goto error_code_test;
+  }
+  if (src->elem_count != comp.elem_count) {
+    SC_LERROR ("sc_io_decode length mismatch\n");
+    ++num_failed_tests;
+    goto error_code_test;
+  }
+
+  /* compare input and output data */
+  if (memcmp (src->array, comp.array, src->elem_size * src->elem_count)) {
+    SC_LERROR ("encode/decode data mismatch\n");
+    ++num_failed_tests;
+    goto error_code_test;
+  }
+
+error_code_test:
+  sc_array_reset (&comp);
   sc_array_reset (src);
+  return num_failed_tests;
 }
 
 static int
 test_encode_decode (void)
 {
+  int                 num_failed_tests = 0;
   int                 i, j;
   const char         *str1 = "Hello world.  This is a short text.";
   const char         *str2 =
@@ -121,10 +150,10 @@ test_encode_decode (void)
     for (j = 0; j < i; ++j) {
       *(int *) sc_array_index_int (&src, j) = 3 * i + 4 * j + 5;
     }
-    single_code_test (&src);
+    num_failed_tests += single_code_test (&src);
   }
 
-  return 0;
+  return num_failed_tests;
 }
 
 int

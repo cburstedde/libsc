@@ -527,6 +527,146 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
 }
 
 int
+sc_io_decode (sc_array_t *data, sc_array_t *out)
+{
+  int                 i;
+#ifdef SC_HAVE_ZLIB
+  int                 zrv;
+#endif
+  int                 retval = -1;
+  char               *ipos, *opos;
+  char                base_out[72];
+  size_t              compressed_size;
+  size_t              base64_lines;
+  size_t              encoded_size;
+  size_t              zlin, irem;
+  size_t              ocnt;
+  sc_array_t          compressed;
+  base64_decodestate  bstate;
+
+  /* examine input data */
+  SC_ASSERT (data != NULL);
+  SC_ASSERT (data->elem_size == 1);
+  if (out == NULL) {
+    /* in-place operation on string */
+    SC_ASSERT (SC_ARRAY_IS_OWNER (data));
+  }
+  else {
+    /* data is placed in output string */
+    SC_ASSERT (SC_ARRAY_IS_OWNER (out));
+  }
+  encoded_size = data->elem_count;
+  if (encoded_size == 0 ||
+      *(char *) sc_array_index (data, encoded_size - 1) != '\0') {
+    return -1;
+  }
+
+  /* decode line by line from base 64 */
+  base64_init_decodestate (&bstate);
+  base64_lines = (encoded_size - 1 + 72) / 73;
+  compressed_size = base64_lines * 54;
+  ipos = data->array;
+  SC_ASSERT (encoded_size >= base64_lines + 1);
+  irem = encoded_size - 1 - base64_lines;
+  sc_array_init_count (&compressed, 1, compressed_size);
+  opos = compressed.array;
+  ocnt = 0;
+  for (zlin = 0; zlin < base64_lines; ++zlin) {
+    size_t              lein = SC_MIN (irem, 72);
+    size_t              lout =
+      base64_decode_block (ipos, lein, base_out, &bstate);
+
+#if 0
+    SC_LDEBUGF ("Line %u lein %u lout %u\n", (unsigned) zlin,
+                (unsigned) lein, (unsigned) lout);
+#endif
+
+    SC_ASSERT (lein > 0);
+    if (lout == 0) {
+      SC_LERROR ("base 64 decode short");
+      goto decode_error;
+    }
+    if (ipos[lein] != '\n') {
+      SC_LERROR ("base 64 missing newline");
+      goto decode_error;
+    }
+    if (zlin < base64_lines - 1) {
+      SC_ASSERT (lein == 72);
+      if (lout != 54) {
+        SC_LERROR ("base 64 decode mismatch");
+        goto decode_error;
+      }
+      memcpy (opos, base_out, 54);
+      ipos += 73;
+      SC_ASSERT (irem >= 72);
+      irem -= 72;
+      opos += 54;
+      ocnt += 54;
+    }
+    else {
+      SC_ASSERT (lein <= 72);
+      SC_ASSERT (lout <= 54);
+      memcpy (opos, base_out, lout);
+      ipos += lein + 1;
+      SC_ASSERT (irem >= lein);
+      irem -= lein;
+      opos += lout;
+      ocnt += lout;
+    }
+  }
+  SC_ASSERT (irem == 0);
+  SC_ASSERT (ocnt <= compressed_size);
+  SC_ASSERT (ipos + 1 == data->array + encoded_size);
+  if (ocnt < 8) {
+    SC_LERROR ("base 64 decodes to less than 8 bytes");
+    goto decode_error;
+  }
+
+#if 0
+  SC_LDEBUGF ("Decoded to %u lines for total %lu\n",
+              (unsigned) base64_lines, (unsigned long) ocnt);
+#endif
+
+  /* decompress decoded data */
+  encoded_size = 0;
+  for (i = 0; i < 8; ++i) {
+    /* enforce big endian byte order for original size */
+    unsigned char uc = (unsigned char) compressed.array[i];
+    encoded_size |= ((size_t) uc) << (i * 8);
+  }
+  if (encoded_size % out->elem_size != 0) {
+    SC_LERROR ("encoded size not commensurable");
+    goto decode_error;
+  }
+
+#if 0
+  SC_LDEBUGF ("Original size: %lu\n", (unsigned long) encoded_size);
+#endif
+
+  sc_array_resize (out, encoded_size / out->elem_size);
+#ifndef SC_HAVE_ZLIB
+  SC_ABORT_NOT_REACH ();
+#else
+  zrv = uncompress ((Bytef *) out->array, (uLongf *) &encoded_size,
+                    (Bytef *) (8 + compressed.array), ocnt - 8);
+  if (zrv != Z_OK) {
+    SC_LERRORF ("zlib uncompress error: %d\n", zrv);
+    goto decode_error;
+  }
+  if (encoded_size != out->elem_count * out->elem_size) {
+    SC_LERROR ("zlib uncompress short");
+    goto decode_error;
+  }
+#endif /* SC_HAVE_ZLIB */
+
+  /* exit cleanly */
+  retval = 0;
+decode_error:
+  sc_array_reset (&compressed);
+  return retval;
+}
+
+int
 sc_vtk_write_binary (FILE * vtkfile, char *numeric_data, size_t byte_length)
 {
   size_t              chunks, chunksize, remaining, writenow;
