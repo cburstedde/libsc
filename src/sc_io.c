@@ -384,6 +384,126 @@ sc_io_source_read_mirror (sc_io_source_t * source, void *data,
   return retval;
 }
 
+void
+sc_io_encode (sc_array_t *data, sc_array_t *out)
+{
+#ifdef SC_HAVE_ZLIB
+  int zrv;
+  uLong input_compress_bound;
+#endif
+  char *ipos, *opos;
+  char base_out[2 * 72];
+  size_t input_size;
+  size_t base64_lines;
+  size_t encoded_size;
+  size_t zlin, irem, ocnt;
+  sc_array_t compressed;
+  base64_encodestate bstate;
+
+  SC_ASSERT (data != NULL);
+  if (out == NULL) {
+    /* in-place operation */
+    SC_ASSERT (SC_ARRAY_IS_OWNER (data));
+  }
+  else {
+    /* data is placed in output array */
+    SC_ASSERT (SC_ARRAY_IS_OWNER (out));
+    SC_ASSERT (out->elem_size == 1);
+  }
+  input_size = data->elem_count * data->elem_size;
+
+#ifndef SC_HAVE_ZLIB
+  SC_ABORT_NOT_REACH ();
+#else
+  /* zlib compress input */
+  input_compress_bound = compressBound ((uLong) input_size);
+  sc_array_init_count (&compressed, 1, input_compress_bound);
+  zrv = compress2 ((Bytef *) compressed.array, &input_compress_bound,
+                   (Bytef *) data->array, (uLong) input_size,
+                   Z_BEST_COMPRESSION);
+  SC_CHECK_ABORT (zrv == Z_OK, "Error on zlib compression");
+
+#if 0
+  SC_LDEBUGF ("Compress %u %u\n",
+              (unsigned) input_size, (unsigned) input_compress_bound);
+#endif
+
+  /* prepare output array */
+  if (out == NULL) {
+    /* to do: write function sc_array_reshape */
+    data->elem_size = 1;
+    data->elem_count = input_size;
+    out = data;
+  }
+  input_size = (size_t) input_compress_bound;
+  base64_lines = (input_size + 53) / 54;
+  encoded_size = 4 * ((input_size + 2) / 3) + base64_lines + 1;
+  sc_array_resize (out, encoded_size);
+
+#if 0
+  SC_LDEBUGF ("Lines %u encoded size %u\n",
+              (unsigned) base64_lines, (unsigned) encoded_size);
+#endif
+
+  /* run base64 encoder */
+  base64_init_encodestate (&bstate);
+  ipos = compressed.array;
+  irem = input_size;
+  opos = out->array;
+  ocnt = 0;
+  SC_ASSERT (ocnt + 1 <= encoded_size);
+  opos[0] = '\0';
+  for (zlin = 0; zlin < base64_lines; ++zlin) {
+    size_t lein = SC_MIN (irem, 54);
+    size_t lout = base64_encode_block (ipos, lein, base_out, &bstate);
+
+#if 0
+    SC_LDEBUGF ("Line %u lein %u lout %u\n", (unsigned) zlin,
+                (unsigned) lein, (unsigned) lout);
+#endif
+
+    if (zlin < base64_lines - 1) {
+      /* not the final line */
+      SC_ASSERT (irem > 54);
+      SC_ASSERT (lout == 72);
+      SC_ASSERT (ocnt + 74 <= encoded_size);
+      memcpy (opos, base_out, 72);
+      opos[72] = '\n';
+      opos[73] = '\0';
+      opos += 73;
+      ocnt += 73;
+      ipos += 54;
+      irem -= 54;
+    }
+    else {
+      /* the final line */
+      SC_ASSERT (irem <= 54);
+      SC_ASSERT (lout <= 72);
+      SC_ASSERT (ocnt + lout <= encoded_size);
+      memcpy (opos, base_out, lout);
+      opos += lout;
+      ocnt += lout;
+      lout = base64_encode_blockend (base_out, &bstate);
+      SC_ASSERT (lout <= 4);
+      SC_ASSERT (ocnt + lout <= encoded_size);
+      memcpy (opos, base_out, lout);
+      opos += lout;
+      ocnt += lout;
+      SC_ASSERT (ocnt + 2 <= encoded_size);
+      opos[0] = '\n';
+      opos[1] = '\0';
+      opos = NULL;
+      ocnt += 2;
+      SC_ASSERT (ocnt == encoded_size);
+      ipos = NULL;
+      irem = 0;
+    }
+  }
+
+  sc_array_reset (&compressed);
+#endif
+}
+
 int
 sc_vtk_write_binary (FILE * vtkfile, char *numeric_data, size_t byte_length)
 {

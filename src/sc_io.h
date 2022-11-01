@@ -257,6 +257,35 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
                                               size_t bytes_avail,
                                               size_t *bytes_out);
 
+/** Compress and base 64 encode a block of arbitrary data.
+ * This is a two-stage process: zlib compress and then encode to base 64.
+ *
+ * We first compress the data into the zlib format (RFC 1950).
+ * If zlib is detected on configuration, we compress with Z_BEST_COMPRESSION.
+ * If zlib is not detected, we write data equivalrent to Z_NO_COMPRESSION.
+ * Both ways are readable by a standard zlib uncompress call.
+ *
+ * Secondly, we run the compressed data through a base 64 encoder.
+ * We break lines after 72 characters.  Each line ends in '\n'.
+ * The line breaks are considered part of the output data.
+ * A final terminating zero is not considered part of it.
+ *
+ * This routine can work in place or write to an output array.
+ *
+ * \param [in,out] data     If \a out is NULL, we work in place.
+ *                          In this case, after reading the input
+ *                          from this array, it assumes the identity
+ *                          of the \a out argument described below.
+ *                          In particular, element size resets to 1.
+ *                          Otherwise, this is a read-only argument.
+ *                          On input, all data in the array is used.
+ * \param [in,out] out      If given, a valid array of element size 1.
+ *                          It must be resizable (not a view).
+ *                          We resize to the output data size + 1,
+ *                          always writing a terminating zero.
+ */
+void                sc_io_encode (sc_array_t *data, sc_array_t *out);
+
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream opened for writing.
  * \param numeric_data   A pointer to a numeric data array.

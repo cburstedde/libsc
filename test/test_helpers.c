@@ -27,7 +27,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <sc.h>
+#include <sc_io.h>
 
 #define SC_TEST_TOOLONG 123456789012345678901234567890123456789
 #define SC_TEST_LONG    1234567890123456789
@@ -75,6 +75,39 @@ test_helpers (const char *str, const char *label, int tint, int tlong)
   return nft;
 }
 
+static int
+test_encode_decode (void)
+{
+  const char *str1 = "Hello world.  This is a short text.";
+  const char *str2 = "This is a much longer text.  We just paste stuff.\n"
+ "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\
+ ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE\
+ LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR\
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF\
+ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS\
+ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN\
+ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\
+ POSSIBILITY OF SUCH DAMAGE.";
+
+  sc_array_t src, dest;
+  sc_array_init (&dest, 1);
+
+  sc_array_init_data (&src, (void *) str1, 1, strlen (str1) + 1);
+  sc_io_encode (&src, &dest);
+  sc_array_reset (&src);
+
+  sc_array_init_data (&src, (void *) str2, 1, strlen (str2) + 1);
+  sc_io_encode (&src, &dest);
+  sc_array_reset (&src);
+
+  sc_array_reset (&dest);
+
+  return 0;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -94,6 +127,9 @@ main (int argc, char **argv)
   num_failed_tests += TH (SC_TEST_TOOLONG, "too long", 0, 0);
   num_failed_tests += TH (SC_TEST_LONG, "long", 0, 1);
   num_failed_tests += TH (SC_TEST_INT, "int", 1, 1);
+
+  /* test encode and decode functions */
+  num_failed_tests += test_encode_decode ();
 
   /* clean up and exit */
   sc_finalize ();
