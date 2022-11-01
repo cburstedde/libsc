@@ -78,7 +78,7 @@ test_helpers (const char *str, const char *label, int tint, int tlong)
 static void
 single_code_test (sc_array_t *src)
 {
-  sc_array_t dest;
+  sc_array_t          dest;
   sc_array_init (&dest, 1);
 
   sc_io_encode (src, &dest);
@@ -90,10 +90,11 @@ single_code_test (sc_array_t *src)
 static int
 test_encode_decode (void)
 {
-  int i, j;
-  const char *str1 = "Hello world.  This is a short text.";
-  const char *str2 = "This is a much longer text.  We just paste stuff.\n"
- "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\
+  int                 i, j;
+  const char         *str1 = "Hello world.  This is a short text.";
+  const char         *str2 =
+    "This is a much longer text.  We just paste stuff.\n"
+    "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\
  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\
  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\
  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE\
@@ -104,7 +105,7 @@ test_encode_decode (void)
  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\
  POSSIBILITY OF SUCH DAMAGE.";
-  sc_array_t src;
+  sc_array_t          src;
 
   sc_array_init_data (&src, (void *) str1, 1, strlen (str1) + 1);
   single_code_test (&src);

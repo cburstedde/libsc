@@ -388,20 +388,20 @@ void
 sc_io_encode (sc_array_t *data, sc_array_t *out)
 {
 #ifdef SC_HAVE_ZLIB
-  int zrv;
-  uLong input_compress_bound;
+  int                 zrv;
+  uLong               input_compress_bound;
 #endif
-  char *ipos, *opos;
-  char base_out[2 * 72];
-  size_t input_size;
-  size_t base64_lines;
-  size_t encoded_size;
-  size_t zlin, irem;
+  char               *ipos, *opos;
+  char                base_out[2 * 72];
+  size_t              input_size;
+  size_t              base64_lines;
+  size_t              encoded_size;
+  size_t              zlin, irem;
 #ifdef SC_ENABLE_DEBUG
-  size_t ocnt;
+  size_t              ocnt;
 #endif
-  sc_array_t compressed;
-  base64_encodestate bstate;
+  sc_array_t          compressed;
+  base64_encodestate  bstate;
 
   SC_ASSERT (data != NULL);
   if (out == NULL) {
@@ -458,8 +458,9 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
   SC_ASSERT (ocnt + 1 <= encoded_size);
   opos[0] = '\0';
   for (zlin = 0; zlin < base64_lines; ++zlin) {
-    size_t lein = SC_MIN (irem, 54);
-    size_t lout = base64_encode_block (ipos, lein, base_out, &bstate);
+    size_t              lein = SC_MIN (irem, 54);
+    size_t              lout =
+      base64_encode_block (ipos, lein, base_out, &bstate);
 
 #if 0
     SC_LDEBUGF ("Line %u lein %u lout %u\n", (unsigned) zlin,
