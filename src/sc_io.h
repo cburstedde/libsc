@@ -301,16 +301,17 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  * if Z_NO_COMPRESSION was used on encoding and errors out otherwise.
  * This function detects malformed input by erroring out.
  *
- * Any error condition is indicated by a nonzero return value.
+ * Any error condition is indicated by a negative return value.
  * Possible causes for error are:
  *  - the input data string is not NUL-terminated
  *  - the input data is compressed and zlib is not configured
  *  - the input data is corrupt for decoding or decompression
  *  - the output data array has non-unit element size and the
  *    length of the decoded data is not divisible by the size
+ *  - the output data would exceed a preset threshold size
  *
  * The corresponding encoder function is \ref sc_io_encode.
- * This function cannot crash.
+ * This function cannot crash unless out of memory.
  *
  * \param [in,out] data     If \a out is NULL, we work in place.
  *                          In that case, output is written into
@@ -324,6 +325,9 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  *                          We resize the array to the output data exactly,
  *                          expecting commensurable element and data size,
  *                          which restores the original input to encoding.
+ * \param [in] max_original_size    If nonzero, this is the maximal data
+ *                          size that we will accept after uncompression.
+ *                          If exceeded, return a negative value.
  * \return                  0 on success, negative if zlib is not configured
  *                          and the data is compressed, as opposed to having
  *                          been created with Z_NO_COMPRESSION, and also if
@@ -333,7 +337,8 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  *                          or if the base 64 input misses the newlines
  *                          expected after every 72 code characters.
  */
-int                sc_io_decode (sc_array_t *data, sc_array_t *out);
+int                sc_io_decode (sc_array_t *data, sc_array_t *out,
+                                 size_t max_original_size);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream opened for writing.

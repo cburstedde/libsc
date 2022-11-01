@@ -89,7 +89,7 @@ single_code_test (sc_array_t *src)
 
   /* decode */
   sc_array_init (&comp, src->elem_size);
-  retval = sc_io_decode (&dest, &comp);
+  retval = sc_io_decode (&dest, &comp, 0);
   sc_array_reset (&dest);
   if (retval) {
     SC_LERROR ("sc_io_decode internal error\n");
@@ -151,6 +151,9 @@ test_encode_decode (void)
       *(int *) sc_array_index_int (&src, j) = 3 * i + 4 * j + 5;
     }
     num_failed_tests += single_code_test (&src);
+    if (num_failed_tests >= 100) {
+      break;
+    }
   }
 
   return num_failed_tests;

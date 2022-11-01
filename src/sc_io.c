@@ -527,7 +527,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
 }
 
 int
-sc_io_decode (sc_array_t *data, sc_array_t *out)
+sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
 {
   int                 i;
 #ifdef SC_HAVE_ZLIB
@@ -637,6 +637,12 @@ sc_io_decode (sc_array_t *data, sc_array_t *out)
   }
   if (encoded_size % out->elem_size != 0) {
     SC_LERROR ("encoded size not commensurable\n");
+    goto decode_error;
+  }
+  if (max_original_size > 0 && encoded_size > max_original_size) {
+    SC_LERRORF ("encoded size %llu larger than permitted %llu\n",
+                (unsigned long long) encoded_size,
+                (unsigned long long) max_original_size);
     goto decode_error;
   }
 
