@@ -396,17 +396,21 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
   size_t input_size;
   size_t base64_lines;
   size_t encoded_size;
-  size_t zlin, irem, ocnt;
+  size_t zlin, irem;
+#ifdef SC_ENABLE_DEBUG
+  size_t ocnt;
+#endif
   sc_array_t compressed;
   base64_encodestate bstate;
 
   SC_ASSERT (data != NULL);
   if (out == NULL) {
-    /* in-place operation */
+    /* in-place operation on string */
     SC_ASSERT (SC_ARRAY_IS_OWNER (data));
+    SC_ASSERT (data->elem_size == 1);
   }
   else {
-    /* data is placed in output array */
+    /* data is placed in output string */
     SC_ASSERT (SC_ARRAY_IS_OWNER (out));
     SC_ASSERT (out->elem_size == 1);
   }
@@ -430,11 +434,9 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
 
   /* prepare output array */
   if (out == NULL) {
-    /* to do: write function sc_array_reshape */
-    data->elem_size = 1;
-    data->elem_count = input_size;
     out = data;
   }
+  SC_ASSERT (out->elem_size == 1);
   input_size = (size_t) input_compress_bound;
   base64_lines = (input_size + 53) / 54;
   encoded_size = 4 * ((input_size + 2) / 3) + base64_lines + 1;
@@ -450,7 +452,9 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
   ipos = compressed.array;
   irem = input_size;
   opos = out->array;
+#ifdef SC_ENABLE_DEBUG
   ocnt = 0;
+#endif
   SC_ASSERT (ocnt + 1 <= encoded_size);
   opos[0] = '\0';
   for (zlin = 0; zlin < base64_lines; ++zlin) {
@@ -471,7 +475,9 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
       opos[72] = '\n';
       opos[73] = '\0';
       opos += 73;
+#ifdef SC_ENABLE_DEBUG
       ocnt += 73;
+#endif
       ipos += 54;
       irem -= 54;
     }
@@ -482,18 +488,24 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
       SC_ASSERT (ocnt + lout <= encoded_size);
       memcpy (opos, base_out, lout);
       opos += lout;
+#ifdef SC_ENABLE_DEBUG
       ocnt += lout;
+#endif
       lout = base64_encode_blockend (base_out, &bstate);
       SC_ASSERT (lout <= 4);
       SC_ASSERT (ocnt + lout <= encoded_size);
       memcpy (opos, base_out, lout);
       opos += lout;
+#ifdef SC_ENABLE_DEBUG
       ocnt += lout;
+#endif
       SC_ASSERT (ocnt + 2 <= encoded_size);
       opos[0] = '\n';
       opos[1] = '\0';
       opos = NULL;
+#ifdef SC_ENABLE_DEBUG
       ocnt += 2;
+#endif
       SC_ASSERT (ocnt == encoded_size);
       ipos = NULL;
       irem = 0;
@@ -501,7 +513,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
   }
 
   sc_array_reset (&compressed);
-#endif
+#endif /* SC_HAVE_ZLIB */
 }
 
 int
