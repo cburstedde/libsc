@@ -558,6 +558,7 @@ sc_io_decode (sc_array_t *data, sc_array_t *out)
   encoded_size = data->elem_count;
   if (encoded_size == 0 ||
       *(char *) sc_array_index (data, encoded_size - 1) != '\0') {
+    SC_LERROR ("input not NUL-terminated\n");
     return -1;
   }
 
