@@ -387,23 +387,23 @@ sc_io_source_read_mirror (sc_io_source_t * source, void *data,
 void
 sc_io_encode (sc_array_t *data, sc_array_t *out)
 {
-  int                 i;
 #ifdef SC_HAVE_ZLIB
+  int                 i;
   int                 zrv;
-  uLong               input_compress_bound;
-#endif
   char               *ipos, *opos;
   char                base_out[2 * 72];
+  unsigned char       original_size[8];
   size_t              input_size;
   size_t              base64_lines;
   size_t              encoded_size;
   size_t              zlin, irem;
+  sc_array_t          compressed;
+  uLong               input_compress_bound;
+  base64_encodestate  bstate;
 #ifdef SC_ENABLE_DEBUG
   size_t              ocnt;
 #endif
-  unsigned char       original_size[8];
-  sc_array_t          compressed;
-  base64_encodestate  bstate;
+#endif
 
   SC_ASSERT (data != NULL);
   if (out == NULL) {
@@ -416,15 +416,17 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
     SC_ASSERT (SC_ARRAY_IS_OWNER (out));
     SC_ASSERT (out->elem_size == 1);
   }
+
+#ifndef SC_HAVE_ZLIB
+  SC_ABORT ("Configure did not find a recent enough zlib.  Abort.\n");
+#else
+  /* save original size to output */
   input_size = data->elem_count * data->elem_size;
   for (i = 0; i < 8; ++i) {
     /* enforce big endian byte order for original size */
     original_size[i] = (input_size >> (i * 8)) & 0xFF;
   }
 
-#ifndef SC_HAVE_ZLIB
-  SC_ABORT_NOT_REACH ();
-#else
   /* zlib compress input */
   input_compress_bound = compressBound ((uLong) input_size);
   sc_array_init_count (&compressed, 1, 8 + input_compress_bound);
@@ -652,7 +654,7 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
 
   sc_array_resize (out, encoded_size / out->elem_size);
 #ifndef SC_HAVE_ZLIB
-  SC_ABORT_NOT_REACH ();
+  SC_ABORT ("Configure did not find a recent enough zlib.  Abort.\n");
 #else
   zrv = uncompress ((Bytef *) out->array, (uLongf *) &encoded_size,
                     (Bytef *) (8 + compressed.array), ocnt - 8);
