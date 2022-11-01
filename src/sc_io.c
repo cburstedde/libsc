@@ -631,7 +631,7 @@ sc_io_decode (sc_array_t *data, sc_array_t *out)
   encoded_size = 0;
   for (i = 0; i < 8; ++i) {
     /* enforce big endian byte order for original size */
-    unsigned char uc = (unsigned char) compressed.array[i];
+    unsigned char       uc = (unsigned char) compressed.array[i];
     encoded_size |= ((size_t) uc) << (i * 8);
   }
   if (encoded_size % out->elem_size != 0) {
