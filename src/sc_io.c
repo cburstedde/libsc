@@ -641,7 +641,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
   input_compress_bound = sc_io_noncompress_bound (input_size);
 #else
   input_compress_bound = compressBound ((uLong) input_size);
-#endif
+#endif /* !SC_HAVE_ZLIB */
   sc_array_init_count (&compressed, 1, 8 + input_compress_bound);
   memcpy (compressed.array, original_size, 8);
 #ifndef SC_HAVE_ZLIB
@@ -655,11 +655,6 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
   SC_CHECK_ABORT (zrv == Z_OK, "Error on zlib compression");
 #endif /* !SC_HAVE_ZLIB */
 
-#if 0
-  SC_LDEBUGF ("Compress %u %u\n",
-              (unsigned) input_size, (unsigned) input_compress_bound);
-#endif
-
   /* prepare output array */
   if (out == NULL) {
     out = data;
@@ -669,11 +664,6 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
   base64_lines = (input_size + 53) / 54;
   encoded_size = 4 * ((input_size + 2) / 3) + base64_lines + 1;
   sc_array_resize (out, encoded_size);
-
-#if 0
-  SC_LDEBUGF ("Lines %u encoded size %u\n",
-              (unsigned) base64_lines, (unsigned) encoded_size);
-#endif
 
   /* run base64 encoder */
   base64_init_encodestate (&bstate);
@@ -689,11 +679,6 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
     size_t              lein = SC_MIN (irem, 54);
     size_t              lout =
       base64_encode_block (ipos, lein, base_out, &bstate);
-
-#if 0
-    SC_LDEBUGF ("Line %u lein %u lout %u\n", (unsigned) zlin,
-                (unsigned) lein, (unsigned) lout);
-#endif
 
     SC_ASSERT (lein > 0);
     if (zlin < base64_lines - 1) {
@@ -795,11 +780,6 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
     size_t              lout =
       base64_decode_block (ipos, lein, base_out, &bstate);
 
-#if 0
-    SC_LDEBUGF ("Line %u lein %u lout %u\n", (unsigned) zlin,
-                (unsigned) lein, (unsigned) lout);
-#endif
-
     SC_ASSERT (lein > 0);
     if (lout == 0) {
       SC_LERROR ("base 64 decode short\n");
@@ -841,11 +821,6 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
     goto decode_error;
   }
 
-#if 0
-  SC_LDEBUGF ("Decoded to %u lines for total %lu\n",
-              (unsigned) base64_lines, (unsigned long) ocnt);
-#endif
-
   /* decompress decoded data */
   encoded_size = 0;
   for (i = 0; i < 8; ++i) {
@@ -863,10 +838,6 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
                 (unsigned long long) max_original_size);
     goto decode_error;
   }
-
-#if 0
-  SC_LDEBUGF ("Original size: %lu\n", (unsigned long) encoded_size);
-#endif
 
   sc_array_resize (out, encoded_size / out->elem_size);
 #ifndef SC_HAVE_ZLIB

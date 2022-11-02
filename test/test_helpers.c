@@ -144,7 +144,7 @@ test_encode_decode (void)
   single_code_test (&src, -1);
 
   for (i = 0; i <= 4500; ++i) {
-    if (i % 1000 == 0) {
+    if (i % 500 == 0) {
       SC_LDEBUGF ("Code iteration %d\n", i);
     }
     slen = i <= 4000 ? i : 7 * i;
@@ -153,7 +153,7 @@ test_encode_decode (void)
       *(int *) sc_array_index_int (&src, j) = 3 * i + 4 * j + 5;
     }
     num_failed_tests += single_code_test (&src, i);
-    if (num_failed_tests >= 100) {
+    if (num_failed_tests >= 50) {
       break;
     }
   }
