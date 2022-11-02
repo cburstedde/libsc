@@ -521,12 +521,12 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
   }
   uca = (unsigned char) src[0];
   if ((uca >> 4) > 7 || (uca & 0x0F) != 8) {
-    SC_LERROR ("uncompress method invalid\n");
+    SC_LERROR ("uncompress method unsupported\n");
     return -1;
   }
   ucb = (unsigned char) src[1];
   if ((ucb & (7 << 5)) || ((((unsigned) uca) << 8) + ucb) % 31) {
-    SC_LERROR ("uncompress header invalid\n");
+    SC_LERROR ("uncompress header not conforming\n");
     return -1;
   }
   src += 2;
@@ -544,7 +544,7 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
     }
     uca = (unsigned char) src[0];
     if (uca > 1) {
-      SC_LERROR ("uncompress block header invalid\n");
+      SC_LERROR ("uncompress block header unsupported\n");
       return -1;
     }
     final_block = (uca == 1);
@@ -555,7 +555,7 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
     ucb = (unsigned char) src[4];
     nsize = (ucb << 8) + uca;
     if ((final_block && bsize < dest_size) || bsize + nsize != 65535) {
-      SC_LERROR ("uncompress block header mismatch\n");
+      SC_LERROR ("uncompress block header invalid\n");
       return -1;
     }
     src += 5;
@@ -846,7 +846,8 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
   zrv = sc_io_nonuncompress (out->array, encoded_size,
                              compressed.array + 8, ocnt - 8);
   if (zrv) {
-    SC_LERROR ("uncompress attempt error\n");
+    SC_LERROR ("Please consider configuring the build"
+               " such that zlib is found.\n");
     goto decode_error;
   }
 #else

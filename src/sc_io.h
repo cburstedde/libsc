@@ -271,18 +271,18 @@ int                 sc_io_have_zlib (void);
  * If zlib is detected on configuration, we compress with Z_BEST_COMPRESSION.
  * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
  * The status of zlib detection can be queried at compile time using
- * `#ifdef SC_HAVE_ZLIB`, or at run time using \ref sc_io_have_zlib.
- * Both ways are readable by a standard zlib uncompress call.
+ * `#ifdef SC_HAVE_ZLIB` or at run time using \ref sc_io_have_zlib.
+ * Both approaches are readable by a standard zlib uncompress call.
  *
- * Secondly, we process the input data size as an 8-byte big-endian number
+ * Secondly, we process the input data size as an 8-byte little-endian number
  * and then the zlib compressed data, concatenated, with a base 64 encoder.
  * We break lines after 72 code characters.  Each line ends in '\n'.
- * The line breaks are considered part of the output data.
- * A final terminating NUL is also considered part of it.
+ * The line breaks are considered part of the output data format.
+ * A final terminating NUL is also considered part of the format.
  *
  * This routine can work in place or write to an output array.
  * The corresponding decoder function is \ref sc_io_decode.
- * This function cannot crash.
+ * This function cannot crash unless out of memory.
  *
  * \param [in,out] data     If \a out is NULL, we work in place.
  *                          In this case, the array must on input have
@@ -300,13 +300,13 @@ int                 sc_io_have_zlib (void);
 void                sc_io_encode (sc_array_t *data, sc_array_t *out);
 
 /** Decode a block of base 64 encoded compressed data.
- * The base 64 data must have a line break after every 72 code characters.
+ * The base 64 data must contain a line break after every 72 code characters.
  *
  * This is a two-stage process: we decode the input from base 64
- * and then extract the 8-byte big-endian original data size and
- * execute a standard zlib decompression on the remaining decode.
+ * and then extract the 8-byte little-endian original data size and
+ * execute a standard zlib decompression on the remaining decoded data.
  * If zlib is not detected on configuration, the function executes ok
- * if Z_NO_COMPRESSION was used on encoding and errors out otherwise.
+ * if Z_NO_COMPRESSION was used on encoding, and errors out otherwise.
  * This function detects malformed input by erroring out.
  *
  * Any error condition is indicated by a negative return value.
@@ -327,6 +327,8 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  *                          Either way, we expect a NUL-terminated
  *                          base 64 encoded string on input that has
  *                          in turn been obtained by zlib compression.
+ *                          It must be in the exact format produced by
+ *                          \ref sc_io_encode; please see documentation.
  *                          The element size of the input array must be 1.
  * \param [in,out] out      If not NULL, a valid array.
  *                          It must be resizable (not a view).
@@ -343,7 +345,8 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  *                          a divisor of the output data's byte length,
  *                          or if the input data is not NUL-terminated,
  *                          or if the base 64 input misses the newlines
- *                          expected after every 72 code characters.
+ *                          expected after every 72 code characters,
+ *                          or the input data is otherwise corrupt.
  */
 int                 sc_io_decode (sc_array_t *data, sc_array_t *out,
                                   size_t max_original_size);
