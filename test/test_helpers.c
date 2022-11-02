@@ -76,7 +76,7 @@ test_helpers (const char *str, const char *label, int tint, int tlong)
 }
 
 static int
-single_code_test (sc_array_t *src)
+single_code_test (sc_array_t *src, int itest)
 {
   int                 num_failed_tests = 0;
   int                 retval;
@@ -92,19 +92,19 @@ single_code_test (sc_array_t *src)
   retval = sc_io_decode (&dest, &comp, 0);
   sc_array_reset (&dest);
   if (retval) {
-    SC_LERROR ("sc_io_decode internal error\n");
+    SC_LERRORF ("test %d: sc_io_decode internal error\n", itest);
     ++num_failed_tests;
     goto error_code_test;
   }
   if (src->elem_count != comp.elem_count) {
-    SC_LERROR ("sc_io_decode length mismatch\n");
+    SC_LERRORF ("test %d: sc_io_decode length mismatch\n", itest);
     ++num_failed_tests;
     goto error_code_test;
   }
 
   /* compare input and output data */
   if (memcmp (src->array, comp.array, src->elem_size * src->elem_count)) {
-    SC_LERROR ("encode/decode data mismatch\n");
+    SC_LERRORF ("test %d: encode/decode data mismatch\n", itest);
     ++num_failed_tests;
     goto error_code_test;
   }
@@ -137,10 +137,10 @@ test_encode_decode (void)
   sc_array_t          src;
 
   sc_array_init_data (&src, (void *) str1, 1, strlen (str1) + 1);
-  single_code_test (&src);
+  single_code_test (&src, -2);
 
   sc_array_init_data (&src, (void *) str2, 1, strlen (str2) + 1);
-  single_code_test (&src);
+  single_code_test (&src, -1);
 
   for (i = 0; i <= 6000; ++i) {
     if (i % 1000 == 0) {
@@ -150,7 +150,7 @@ test_encode_decode (void)
     for (j = 0; j < i; ++j) {
       *(int *) sc_array_index_int (&src, j) = 3 * i + 4 * j + 5;
     }
-    num_failed_tests += single_code_test (&src);
+    num_failed_tests += single_code_test (&src, i);
     if (num_failed_tests >= 100) {
       break;
     }

@@ -435,10 +435,10 @@ sc_io_adler32_update (uint32_t *ps1, uint32_t *ps2,
 static size_t
 sc_io_noncompress_bound (size_t length)
 {
-  const size_t        num_blocks =
+  size_t              num_blocks =
     (length + (SC_IO_NONCOMP_BLOCK - 1)) / SC_IO_NONCOMP_BLOCK;
 
-  return 2 + 5 * num_blocks + length + 4;
+  return 2 + 5 * SC_MAX (num_blocks, 1) + length + 4;
 }
 
 static void
@@ -447,7 +447,6 @@ sc_io_noncompress (char *dest, size_t dest_size,
 {
   uint16_t            bsize, nsize;
   uint32_t            s1, s2;
-  char               *blbeg;
 
   /* write zlib format header */
   SC_ASSERT (dest_size >= 2);
@@ -460,9 +459,7 @@ sc_io_noncompress (char *dest, size_t dest_size,
   sc_io_adler32_init (&s1, &s2);
 
   /* write individual non-compressed blocks */
-  while (src_size > 0) {
-    blbeg = dest;
-
+  do {
     /* write block header */
     SC_ASSERT (dest_size >= 5);
     if (src_size > SC_IO_NONCOMP_BLOCK) {
@@ -476,10 +473,10 @@ sc_io_noncompress (char *dest, size_t dest_size,
       dest[0] = 1;
     }
     nsize = ~bsize;
-    dest[1] = (char) (bsize >> 8);
-    dest[2] = (char) (bsize & 0xFF);
-    dest[3] = (char) (nsize >> 8);
-    dest[4] = (char) (nsize & 0xFF);
+    dest[1] = (char) (bsize & 0xFF);
+    dest[2] = (char) (bsize >> 8);
+    dest[3] = (char) (nsize & 0xFF);
+    dest[4] = (char) (nsize >> 8);
     dest += 5;
     dest_size -= 5;
 
@@ -489,12 +486,13 @@ sc_io_noncompress (char *dest, size_t dest_size,
     memcpy (dest, src, bsize);
     dest += bsize;
     dest_size -= bsize;
-    src += bsize;
-    src_size -= bsize;
 
     /* extend adler32 checksum */
-    sc_io_adler32_update (&s1, &s2, blbeg, 5 + bsize);
+    sc_io_adler32_update (&s1, &s2, src, bsize);
+    src += bsize;
+    src_size -= bsize;
   }
+  while (src_size > 0);
 
   /* write adler32 checksum */
   SC_ASSERT (src_size == 0);
