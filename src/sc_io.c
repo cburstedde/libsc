@@ -651,8 +651,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
   sc_io_noncompress (compressed.array + 8, input_compress_bound,
                      data->array, input_size);
 #else
-  zrv = compress2 ((Bytef *) compressed.array + 8,
-                   (uLongf *) &input_compress_bound,
+  zrv = compress2 ((Bytef *) compressed.array + 8, &input_compress_bound,
                    (Bytef *) data->array, (uLong) input_size,
                    Z_BEST_COMPRESSION);
   SC_CHECK_ABORT (zrv == Z_OK, "Error on zlib compression");
@@ -747,6 +746,9 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
   size_t              encoded_size;
   size_t              zlin, irem;
   size_t              ocnt;
+#ifdef SC_HAVE_ZLIB
+  uLong               uncompsize;
+#endif
   sc_array_t          compressed;
   base64_decodestate  bstate;
 
@@ -852,13 +854,14 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
     goto decode_error;
   }
 #else
-  zrv = uncompress ((Bytef *) out->array, (uLongf *) &encoded_size,
+  uncompsize = (uLong) encoded_size;
+  zrv = uncompress ((Bytef *) out->array, &uncompsize,
                     (Bytef *) (compressed.array + 8), ocnt - 8);
   if (zrv != Z_OK) {
     SC_LERROR ("zlib uncompress error\n");
     goto decode_error;
   }
-  if (encoded_size != out->elem_count * out->elem_size) {
+  if (uncompsize != (uLong) encoded_size) {
     SC_LERROR ("zlib uncompress short\n");
     goto decode_error;
   }
