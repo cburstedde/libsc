@@ -636,7 +636,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
   input_size = data->elem_count * data->elem_size;
   for (i = 0; i < 8; ++i) {
     /* enforce big endian byte order for original size */
-    original_size[i] = (input_size >> (i * 8)) & 0xFF;
+    original_size[i] = (input_size >> ((7 - i) * 8)) & 0xFF;
   }
 
   /* zlib compress input */
@@ -829,7 +829,7 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
   for (i = 0; i < 8; ++i) {
     /* enforce big endian byte order for original size */
     unsigned char       uc = (unsigned char) compressed.array[i];
-    encoded_size |= ((size_t) uc) << (i * 8);
+    encoded_size |= ((size_t) uc) << ((7 - i) * 8);
   }
   if (encoded_size % out->elem_size != 0) {
     SC_LERROR ("encoded size not commensurable\n");
