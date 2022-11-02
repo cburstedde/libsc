@@ -257,6 +257,12 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
                                               size_t bytes_avail,
                                               size_t *bytes_out);
 
+/** Return a boolean indicating whether zlib has been configured.
+ * \return          True if zlib has been found on runnning configure,
+ *                  or respectively on calling cmake.
+ */
+int                 sc_io_have_zlib (void);
+
 /** Encode a block of arbitrary data, compressed, into an ASCII string.
  * This is a two-stage process: zlib compress and then encode to base 64.
  * The output is a NUL-terminated string of printable characters.
@@ -264,6 +270,8 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
  * We first compress the data into the zlib format (RFC 1950).
  * If zlib is detected on configuration, we compress with Z_BEST_COMPRESSION.
  * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
+ * The status of zlib detection can be queried at compile time using
+ * `#ifdef SC_HAVE_ZLIB`, or at run time using \ref sc_io_have_zlib.
  * Both ways are readable by a standard zlib uncompress call.
  *
  * Secondly, we process the input data size as an 8-byte big-endian number

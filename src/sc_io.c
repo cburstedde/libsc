@@ -384,26 +384,102 @@ sc_io_source_read_mirror (sc_io_source_t * source, void *data,
   return retval;
 }
 
+int
+sc_io_have_zlib (void)
+{
+#ifndef SC_HAVE_ZLIB
+  return 0;
+#else
+  return 1;
+#endif
+}
+
+#ifndef SC_HAVE_ZLIB
+#define SC_IO_NONCOMP_BLOCK 65535
+
+static size_t
+sc_io_noncompress_bound (size_t length)
+{
+  const size_t        num_blocks =
+    (length + (SC_IO_NONCOMP_BLOCK - 1)) / SC_IO_NONCOMP_BLOCK;
+
+  return 2 + 5 * num_blocks + length + 4;
+}
+
+static void
+sc_io_noncompress (char *dest, size_t dest_size,
+                   const char *src, size_t src_size)
+{
+  uint16_t            bsize, nsize;
+
+  /* write zlib format header */
+  SC_ASSERT (dest_size >= 2);
+  dest[0] = (7 << 4) + 8;
+  dest[1] = 1;
+  dest += 2;
+  dest_size -= 2;
+
+  /* write individual non-compressed blocks */
+  while (src_size > 0) {
+    SC_ASSERT (dest_size >= 5);
+    if (src_size > SC_IO_NONCOMP_BLOCK) {
+      /* not the final block */
+      bsize = SC_IO_NONCOMP_BLOCK;
+      dest[0] = 0;
+    }
+    else {
+      /* last block */
+      bsize = src_size;
+      dest[0] = 1;
+    }
+    nsize = ~bsize;
+    dest[1] = (char) (bsize >> 8);
+    dest[2] = (char) (bsize & 0xFF);
+    dest[3] = (char) (nsize >> 8);
+    dest[4] = (char) (nsize & 0xFF);
+    dest += 5;
+    dest_size -= 5;
+
+    /* copy data and extend adler32 checksum */
+    SC_ASSERT (dest_size >= bsize);
+    SC_ASSERT (src_size >= bsize);
+    memcpy (dest, src, bsize);
+    dest += bsize;
+    dest_size -= bsize;
+    src += bsize;
+    src_size -= bsize;
+  }
+
+  /* write adler32 checksum */
+  SC_ASSERT (src_size == 0);
+  SC_ASSERT (dest_size == 4);
+  dest[0] = dest[1] = dest[2] = dest[3] = 0;
+}
+
+#endif /* !SC_HAVE_ZLIB */
+
 void
 sc_io_encode (sc_array_t *data, sc_array_t *out)
 {
-#ifdef SC_HAVE_ZLIB
   int                 i;
+  size_t              input_size;
+#ifndef SC_HAVE_ZLIB
+  size_t              input_compress_bound;
+#else
   int                 zrv;
+  uLong               input_compress_bound;
+#endif
   char               *ipos, *opos;
   char                base_out[2 * 72];
-  unsigned char       original_size[8];
-  size_t              input_size;
   size_t              base64_lines;
   size_t              encoded_size;
   size_t              zlin, irem;
-  sc_array_t          compressed;
-  uLong               input_compress_bound;
-  base64_encodestate  bstate;
 #ifdef SC_ENABLE_DEBUG
   size_t              ocnt;
 #endif
-#endif
+  unsigned char       original_size[8];
+  sc_array_t          compressed;
+  base64_encodestate  bstate;
 
   SC_ASSERT (data != NULL);
   if (out == NULL) {
@@ -417,9 +493,6 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
     SC_ASSERT (out->elem_size == 1);
   }
 
-#ifndef SC_HAVE_ZLIB
-  SC_ABORT ("Configure did not find a recent enough zlib.  Abort.\n");
-#else
   /* save original size to output */
   input_size = data->elem_count * data->elem_size;
   for (i = 0; i < 8; ++i) {
@@ -428,14 +501,23 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
   }
 
   /* zlib compress input */
+#ifndef SC_HAVE_ZLIB
+  input_compress_bound = sc_io_noncompress_bound (input_size);
+#else
   input_compress_bound = compressBound ((uLong) input_size);
+#endif
   sc_array_init_count (&compressed, 1, 8 + input_compress_bound);
   memcpy (compressed.array, original_size, 8);
+#ifndef SC_HAVE_ZLIB
+  sc_io_noncompress (compressed.array + 8, input_compress_bound,
+                     data->array, input_size);
+#else
   zrv = compress2 ((Bytef *) compressed.array + 8,
                    (uLongf *) &input_compress_bound,
                    (Bytef *) data->array, (uLong) input_size,
                    Z_BEST_COMPRESSION);
   SC_CHECK_ABORT (zrv == Z_OK, "Error on zlib compression");
+#endif
 
 #if 0
   SC_LDEBUGF ("Compress %u %u\n",
@@ -524,8 +606,8 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
     }
   }
 
+  /* free temporary memory */
   sc_array_reset (&compressed);
-#endif /* SC_HAVE_ZLIB */
 }
 
 int
