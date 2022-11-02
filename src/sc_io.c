@@ -578,6 +578,7 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
   while (!final_block);
   if (src_size != 4 || dest_size != 0) {
     SC_LERROR ("uncompress content error\n");
+    return -1;
   }
 
   /* verify adler32 checksum */
@@ -586,7 +587,10 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
   if (src[0] != (char) (s2 >> 8) || src[1] != (char) (s2 & 0xFF) ||
       src[2] != (char) (s1 >> 8) || src[3] != (char) (s1 & 0xFF)) {
     SC_LERROR ("uncompress checksum error\n");
+    return -1;
   }
+
+  /* task accomplished */
   return 0;
 }
 
