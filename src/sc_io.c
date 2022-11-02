@@ -396,6 +396,41 @@ sc_io_have_zlib (void)
 
 #ifndef SC_HAVE_ZLIB
 #define SC_IO_NONCOMP_BLOCK 65535
+#define SC_IO_ADLER32_PRIME 65521
+
+/* see RFC 1950 and RFC 1950 for the uncompressed zlib format */
+
+static void
+sc_io_adler32_init (uint32_t *s1, uint32_t *s2)
+{
+  *s1 = 1;
+  *s2 = 0;
+}
+
+static void
+sc_io_adler32_update (uint32_t *ps1, uint32_t *ps2,
+                      const char *buffer, size_t length)
+{
+  int16_t    cn;
+  uint32_t   s1 = *ps1;
+  uint32_t   s2 = *ps2;
+  size_t     iz;
+
+  cn = 0;
+  for (iz = 0; iz < length; ++iz) {
+    unsigned char uc = (unsigned char) buffer[iz];
+    if (cn == 5000) {
+      s1 = s1 % SC_IO_ADLER32_PRIME;
+      s2 = s2 % SC_IO_ADLER32_PRIME;
+      cn = 0;
+    }
+    s1 += uc;
+    s2 += s1;
+    ++cn;
+  }
+  *ps1 = s1 % SC_IO_ADLER32_PRIME;
+  *ps2 = s2 % SC_IO_ADLER32_PRIME;
+}
 
 static size_t
 sc_io_noncompress_bound (size_t length)
@@ -411,6 +446,8 @@ sc_io_noncompress (char *dest, size_t dest_size,
                    const char *src, size_t src_size)
 {
   uint16_t            bsize, nsize;
+  uint32_t            s1, s2;
+  char               *blbeg;
 
   /* write zlib format header */
   SC_ASSERT (dest_size >= 2);
@@ -419,8 +456,14 @@ sc_io_noncompress (char *dest, size_t dest_size,
   dest += 2;
   dest_size -= 2;
 
+  /* prepare checksum */
+  sc_io_adler32_init (&s1, &s2);
+
   /* write individual non-compressed blocks */
   while (src_size > 0) {
+    blbeg = dest;
+
+    /* write block header */
     SC_ASSERT (dest_size >= 5);
     if (src_size > SC_IO_NONCOMP_BLOCK) {
       /* not the final block */
@@ -440,7 +483,7 @@ sc_io_noncompress (char *dest, size_t dest_size,
     dest += 5;
     dest_size -= 5;
 
-    /* copy data and extend adler32 checksum */
+    /* copy data */
     SC_ASSERT (dest_size >= bsize);
     SC_ASSERT (src_size >= bsize);
     memcpy (dest, src, bsize);
@@ -448,12 +491,20 @@ sc_io_noncompress (char *dest, size_t dest_size,
     dest_size -= bsize;
     src += bsize;
     src_size -= bsize;
+
+    /* extend adler32 checksum */
+    sc_io_adler32_update (&s1, &s2, blbeg, 5 + bsize);
   }
 
   /* write adler32 checksum */
   SC_ASSERT (src_size == 0);
   SC_ASSERT (dest_size == 4);
-  dest[0] = dest[1] = dest[2] = dest[3] = 0;
+  SC_ASSERT (s1 < SC_IO_ADLER32_PRIME);
+  SC_ASSERT (s2 < SC_IO_ADLER32_PRIME);
+  dest[0] = (char) (s2 >> 8);
+  dest[1] = (char) (s2 & 0xFF);
+  dest[2] = (char) (s1 >> 8);
+  dest[3] = (char) (s1 & 0xFF);
 }
 
 #endif /* !SC_HAVE_ZLIB */
