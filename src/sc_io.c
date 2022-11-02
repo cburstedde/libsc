@@ -411,14 +411,14 @@ static void
 sc_io_adler32_update (uint32_t *ps1, uint32_t *ps2,
                       const char *buffer, size_t length)
 {
-  int16_t    cn;
-  uint32_t   s1 = *ps1;
-  uint32_t   s2 = *ps2;
-  size_t     iz;
+  int16_t             cn;
+  uint32_t            s1 = *ps1;
+  uint32_t            s2 = *ps2;
+  size_t              iz;
 
   cn = 0;
   for (iz = 0; iz < length; ++iz) {
-    unsigned char uc = (unsigned char) buffer[iz];
+    unsigned char       uc = (unsigned char) buffer[iz];
     if (cn == 5000) {
       s1 = s1 % SC_IO_ADLER32_PRIME;
       s2 = s2 % SC_IO_ADLER32_PRIME;
@@ -583,10 +583,8 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
   /* verify adler32 checksum */
   SC_ASSERT (s1 < SC_IO_ADLER32_PRIME);
   SC_ASSERT (s2 < SC_IO_ADLER32_PRIME);
-  if (src[0] != (char) (s2 >> 8) ||
-      src[1] != (char) (s2 & 0xFF) ||
-      src[2] != (char) (s1 >> 8) ||
-      src[3] != (char) (s1 & 0xFF)) {
+  if (src[0] != (char) (s2 >> 8) || src[1] != (char) (s2 & 0xFF) ||
+      src[2] != (char) (s1 >> 8) || src[3] != (char) (s1 & 0xFF)) {
     SC_LERROR ("uncompress checksum error\n");
   }
   return 0;

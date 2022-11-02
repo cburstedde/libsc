@@ -345,8 +345,8 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  *                          or if the base 64 input misses the newlines
  *                          expected after every 72 code characters.
  */
-int                sc_io_decode (sc_array_t *data, sc_array_t *out,
-                                 size_t max_original_size);
+int                 sc_io_decode (sc_array_t *data, sc_array_t *out,
+                                  size_t max_original_size);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream opened for writing.
