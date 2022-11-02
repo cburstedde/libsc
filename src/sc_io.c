@@ -505,6 +505,93 @@ sc_io_noncompress (char *dest, size_t dest_size,
   dest[3] = (char) (s1 & 0xFF);
 }
 
+static int
+sc_io_nonuncompress (char *dest, size_t dest_size,
+                     const char *src, size_t src_size)
+{
+  int                 final_block;
+  uint16_t            bsize, nsize;
+  uint32_t            s1, s2;
+  unsigned char       uca, ucb;
+
+  /* check zlib format header */
+  if (src_size < 2) {
+    SC_LERROR ("uncompress header short\n");
+    return -1;
+  }
+  uca = (unsigned char) src[0];
+  if ((uca >> 4) > 7 || (uca & 0x0F) != 8) {
+    SC_LERROR ("uncompress method invalid\n");
+    return -1;
+  }
+  ucb = (unsigned char) src[1];
+  if ((ucb & (7 << 5)) || ((((unsigned) uca) << 8) + ucb) % 31) {
+    SC_LERROR ("uncompress header invalid\n");
+    return -1;
+  }
+  src += 2;
+  src_size -= 2;
+
+  /* prepare checksum */
+  sc_io_adler32_init (&s1, &s2);
+
+  /* go through zlib blocks */
+  do {
+    /* examine block header */
+    if (src_size < 5) {
+      SC_LERROR ("uncompress block header short\n");
+      return -1;
+    }
+    uca = (unsigned char) src[0];
+    if (uca > 1) {
+      SC_LERROR ("uncompress block header invalid\n");
+      return -1;
+    }
+    final_block = (uca == 1);
+    uca = (unsigned char) src[1];
+    ucb = (unsigned char) src[2];
+    bsize = (ucb << 8) + uca;
+    uca = (unsigned char) src[3];
+    ucb = (unsigned char) src[4];
+    nsize = (ucb << 8) + uca;
+    if ((final_block && bsize < dest_size) || bsize + nsize != 65535) {
+      SC_LERROR ("uncompress block header mismatch\n");
+      return -1;
+    }
+    src += 5;
+    src_size -= 5;
+
+    /* copy data */
+    if (bsize > dest_size || bsize > src_size) {
+      SC_LERROR ("uncompress content overflow\n");
+      return -1;
+    }
+    memcpy (dest, src, bsize);
+    src += bsize;
+    src_size -= bsize;
+
+    /* extend adler32 checksum */
+    sc_io_adler32_update (&s1, &s2, dest, bsize);
+    dest += bsize;
+    dest_size -= bsize;
+  }
+  while (!final_block);
+  if (src_size != 4 || dest_size != 0) {
+    SC_LERROR ("uncompress content error\n");
+  }
+
+  /* verify adler32 checksum */
+  SC_ASSERT (s1 < SC_IO_ADLER32_PRIME);
+  SC_ASSERT (s2 < SC_IO_ADLER32_PRIME);
+  if (src[0] != (char) (s2 >> 8) ||
+      src[1] != (char) (s2 & 0xFF) ||
+      src[2] != (char) (s1 >> 8) ||
+      src[3] != (char) (s1 & 0xFF)) {
+    SC_LERROR ("uncompress checksum error\n");
+  }
+  return 0;
+}
+
 #endif /* !SC_HAVE_ZLIB */
 
 void
@@ -566,7 +653,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
                    (Bytef *) data->array, (uLong) input_size,
                    Z_BEST_COMPRESSION);
   SC_CHECK_ABORT (zrv == Z_OK, "Error on zlib compression");
-#endif
+#endif /* !SC_HAVE_ZLIB */
 
 #if 0
   SC_LDEBUGF ("Compress %u %u\n",
@@ -663,9 +750,7 @@ int
 sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
 {
   int                 i;
-#ifdef SC_HAVE_ZLIB
   int                 zrv;
-#endif
   int                 retval = -1;
   char               *ipos, *opos;
   char                base_out[72];
@@ -785,10 +870,15 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
 
   sc_array_resize (out, encoded_size / out->elem_size);
 #ifndef SC_HAVE_ZLIB
-  SC_ABORT ("Configure did not find a recent enough zlib.  Abort.\n");
+  zrv = sc_io_nonuncompress (out->array, encoded_size,
+                             compressed.array + 8, ocnt - 8);
+  if (zrv) {
+    SC_LERROR ("uncompress attempt error\n");
+    goto decode_error;
+  }
 #else
   zrv = uncompress ((Bytef *) out->array, (uLongf *) &encoded_size,
-                    (Bytef *) (8 + compressed.array), ocnt - 8);
+                    (Bytef *) (compressed.array + 8), ocnt - 8);
   if (zrv != Z_OK) {
     SC_LERROR ("zlib uncompress error\n");
     goto decode_error;

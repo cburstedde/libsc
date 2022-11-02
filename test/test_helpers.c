@@ -120,6 +120,7 @@ test_encode_decode (void)
 {
   int                 num_failed_tests = 0;
   int                 i, j;
+  size_t              slen;
   const char         *str1 = "Hello world.  This is a short text.";
   const char         *str2 =
     "This is a much longer text.  We just paste stuff.\n"
@@ -142,12 +143,13 @@ test_encode_decode (void)
   sc_array_init_data (&src, (void *) str2, 1, strlen (str2) + 1);
   single_code_test (&src, -1);
 
-  for (i = 0; i <= 6000; ++i) {
+  for (i = 0; i <= 4500; ++i) {
     if (i % 1000 == 0) {
       SC_LDEBUGF ("Code iteration %d\n", i);
     }
-    sc_array_init_count (&src, sizeof (int), i);
-    for (j = 0; j < i; ++j) {
+    slen = i <= 4000 ? i : 7 * i;
+    sc_array_init_count (&src, sizeof (int), slen);
+    for (j = 0; j < (int) slen; ++j) {
       *(int *) sc_array_index_int (&src, j) = 3 * i + 4 * j + 5;
     }
     num_failed_tests += single_code_test (&src, i);
