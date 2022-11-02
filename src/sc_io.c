@@ -401,20 +401,23 @@ sc_io_have_zlib (void)
 /* see RFC 1950 and RFC 1950 for the uncompressed zlib format */
 
 static void
-sc_io_adler32_init (uint32_t *s1, uint32_t *s2)
+sc_io_adler32_init (uint32_t *adler)
 {
-  *s1 = 1;
-  *s2 = 0;
+  SC_ASSERT (adler != NULL);
+  *adler = 1;
 }
 
 static void
-sc_io_adler32_update (uint32_t *ps1, uint32_t *ps2,
+sc_io_adler32_update (uint32_t *adler,
                       const char *buffer, size_t length)
 {
-  int16_t             cn;
-  uint32_t            s1 = *ps1;
-  uint32_t            s2 = *ps2;
   size_t              iz;
+  int16_t             cn;
+  uint32_t            s1, s2;
+
+  SC_ASSERT (adler != NULL);
+  s1 = (*adler) & 0xFFFFU;
+  s2 = (*adler) >> 16;
 
   cn = 0;
   for (iz = 0; iz < length; ++iz) {
@@ -428,8 +431,8 @@ sc_io_adler32_update (uint32_t *ps1, uint32_t *ps2,
     s2 += s1;
     ++cn;
   }
-  *ps1 = s1 % SC_IO_ADLER32_PRIME;
-  *ps2 = s2 % SC_IO_ADLER32_PRIME;
+  *adler = s2 % SC_IO_ADLER32_PRIME;
+  *adler = (*adler << 16) + (s1 % SC_IO_ADLER32_PRIME);
 }
 
 static size_t
@@ -446,7 +449,7 @@ sc_io_noncompress (char *dest, size_t dest_size,
                    const char *src, size_t src_size)
 {
   uint16_t            bsize, nsize;
-  uint32_t            s1, s2;
+  uint32_t            adler;
 
   /* write zlib format header */
   SC_ASSERT (dest_size >= 2);
@@ -456,7 +459,7 @@ sc_io_noncompress (char *dest, size_t dest_size,
   dest_size -= 2;
 
   /* prepare checksum */
-  sc_io_adler32_init (&s1, &s2);
+  sc_io_adler32_init (&adler);
 
   /* write individual non-compressed blocks */
   do {
@@ -488,7 +491,7 @@ sc_io_noncompress (char *dest, size_t dest_size,
     dest_size -= bsize;
 
     /* extend adler32 checksum */
-    sc_io_adler32_update (&s1, &s2, src, bsize);
+    sc_io_adler32_update (&adler, src, bsize);
     src += bsize;
     src_size -= bsize;
   }
@@ -497,12 +500,10 @@ sc_io_noncompress (char *dest, size_t dest_size,
   /* write adler32 checksum */
   SC_ASSERT (src_size == 0);
   SC_ASSERT (dest_size == 4);
-  SC_ASSERT (s1 < SC_IO_ADLER32_PRIME);
-  SC_ASSERT (s2 < SC_IO_ADLER32_PRIME);
-  dest[0] = (char) (s2 >> 8);
-  dest[1] = (char) (s2 & 0xFF);
-  dest[2] = (char) (s1 >> 8);
-  dest[3] = (char) (s1 & 0xFF);
+  dest[0] = (char) (adler >> 24);
+  dest[1] = (char) ((adler >> 16) & 0xFF);
+  dest[2] = (char) ((adler >> 8) & 0xFF);
+  dest[3] = (char) (adler & 0xFF);
 }
 
 static int
@@ -511,7 +512,7 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
 {
   int                 final_block;
   uint16_t            bsize, nsize;
-  uint32_t            s1, s2;
+  uint32_t            adler;
   unsigned char       uca, ucb;
 
   /* check zlib format header */
@@ -533,7 +534,7 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
   src_size -= 2;
 
   /* prepare checksum */
-  sc_io_adler32_init (&s1, &s2);
+  sc_io_adler32_init (&adler);
 
   /* go through zlib blocks */
   do {
@@ -571,7 +572,7 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
     src_size -= bsize;
 
     /* extend adler32 checksum */
-    sc_io_adler32_update (&s1, &s2, dest, bsize);
+    sc_io_adler32_update (&adler, dest, bsize);
     dest += bsize;
     dest_size -= bsize;
   }
@@ -582,10 +583,10 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
   }
 
   /* verify adler32 checksum */
-  SC_ASSERT (s1 < SC_IO_ADLER32_PRIME);
-  SC_ASSERT (s2 < SC_IO_ADLER32_PRIME);
-  if (src[0] != (char) (s2 >> 8) || src[1] != (char) (s2 & 0xFF) ||
-      src[2] != (char) (s1 >> 8) || src[3] != (char) (s1 & 0xFF)) {
+  if (src[0] != (char) (adler >> 24) ||
+      src[1] != (char) ((adler >> 16) & 0xFF) ||
+      src[2] != (char) ((adler >> 8) & 0xFF) ||
+      src[3] != (char) (adler & 0xFF)) {
     SC_LERROR ("uncompress checksum error\n");
     return -1;
   }
