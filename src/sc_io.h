@@ -304,6 +304,7 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  * No matter how much data has been encoded by it, this much is available.
  * We verify the format and if successful decode the original data size.
  *
+ * Note that this function is not required before \ref sc_io_decode.
  * Calling this function on any result produced by \ref sc_io_encode
  * will succeed.  This function cannot crash.
  *
@@ -360,7 +361,7 @@ int                 sc_io_decode_length (sc_array_t *data,
  *                          We expect commensurable element and data size
  *                          and resize the output to it exactly, which
  *                          restores the original input passed to encoding.
- *                          Output data and view of matching size can be
+ *                          An output view array of matching size can be
  *                          constructed using \ref sc_io_decode_length.
  * \param [in] max_original_size    If nonzero, this is the maximal data
  *                          size that we will accept after uncompression.
