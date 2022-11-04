@@ -299,6 +299,27 @@ int                 sc_io_have_zlib (void);
  */
 void                sc_io_encode (sc_array_t *data, sc_array_t *out);
 
+/** Decode length of original input from encoded data.
+ * We expect at least 12 bytes of the format produced by \ref sc_io_encode.
+ * No matter how much data has been encoded by it, this much is available.
+ * We verify the format and if successful decode the original data size.
+ *
+ * Calling this function on any result produced by \ref sc_io_encode
+ * will succeed.  This function cannot crash.
+ *
+ * \param [in] data     This must be an array with element size 1.
+ *                      If it contains less than 12 code bytes we error out.
+ *                      It its first 12 bytes do not base 64 decode to 9 bytes
+ *                      we error out.  We generally ignore the remaining data.
+ *                      If the ninth decoded byte does not conform to the first
+ *                      of the zlib format standard (RFC 1950), we error out.
+ * \param [in,out] original_size    If not NULL and we do not error out,
+ *                      set to the original size as encoded in the data.
+ * \return              0 on success, negative value on error.
+ */
+int                 sc_io_decode_length (sc_array_t *data,
+                                         size_t *original_size);
+
 /** Decode a block of base 64 encoded compressed data.
  * The base 64 data must contain a line break after every 72 code characters.
  *

@@ -744,6 +744,51 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
 }
 
 int
+sc_io_decode_length (sc_array_t *data, size_t *original_size)
+{
+  int                 i;
+  unsigned char       uc;
+  size_t              osize;
+  char                dec[12];
+  base64_decodestate  bstate;
+
+  SC_ASSERT (data != NULL);
+  SC_ASSERT (data->elem_size == 1);
+  if (data->elem_count < 12) {
+    SC_LERROR ("sc_io_decode_length requires >= 12 bytes of input\n");
+    return -1;
+  }
+
+  /* decode first 12 characters of encoded data */
+  memset (dec, 0, 12);
+  base64_init_decodestate (&bstate);
+  osize = base64_decode_block (data->array, 12, dec, &bstate);
+  if (osize != 9) {
+    SC_LERROR ("sc_io_decode_length base 64 error\n");
+    return - 1;
+  }
+
+  /* verify first byte of zlib format */
+  uc = (unsigned char) dec[8];
+  if ((uc & 0x8F) != 8) {
+    SC_LERROR ("sc_io_decode_length data format error\n");
+    return - 1;
+  }
+
+  /* decode original length of data */
+  if (original_size != NULL) {
+    osize = 0;
+    for (i = 0; i < 8; ++i) {
+      /* read original byte order in big endian */
+      uc = (unsigned char) dec[i];
+      osize |= ((size_t) uc) << ((7 - i) * 8);
+    }
+    *original_size = osize;
+  }
+  return 0;
+}
+
+int
 sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
 {
   int                 i;

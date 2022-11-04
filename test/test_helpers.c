@@ -80,17 +80,30 @@ single_code_test (sc_array_t *src, int itest)
 {
   int                 num_failed_tests = 0;
   int                 retval;
+  size_t              original_size;
   sc_array_t          dest;
   sc_array_t          comp;
 
   /* encode */
+  SC_ASSERT (src != NULL);
+  sc_array_init (&comp, src->elem_size);
   sc_array_init (&dest, 1);
   sc_io_encode (src, &dest);
 
+  /* decode and verify original data size */
+  if (sc_io_decode_length (&dest, &original_size)) {
+    SC_LERRORF ("decode length error on test %d\n", itest);
+    ++num_failed_tests;
+    goto error_code_test;
+  }
+  if (original_size != src->elem_count * src->elem_size) {
+    SC_LERRORF ("decode length mismatch on test %d\n", itest);
+    ++num_failed_tests;
+    goto error_code_test;
+  }
+
   /* decode */
-  sc_array_init (&comp, src->elem_size);
   retval = sc_io_decode (&dest, &comp, 0);
-  sc_array_reset (&dest);
   if (retval) {
     SC_LERRORF ("test %d: sc_io_decode internal error\n", itest);
     ++num_failed_tests;
@@ -111,6 +124,7 @@ single_code_test (sc_array_t *src, int itest)
 
 error_code_test:
   sc_array_reset (&comp);
+  sc_array_reset (&dest);
   sc_array_reset (src);
   return num_failed_tests;
 }
