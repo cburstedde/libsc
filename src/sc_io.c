@@ -22,6 +22,7 @@
 */
 
 #include <sc_io.h>
+#include <sc_puff.h>
 #include <libb64.h>
 #ifdef SC_HAVE_ZLIB
 #include <zlib.h>
@@ -521,9 +522,13 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
                      const char *src, size_t src_size)
 {
   int                 final_block;
-  uint16_t            bsize, nsize;
   uint32_t            adler;
   unsigned char       uca, ucb;
+#ifndef SC_PUFF_INCLUDED
+  uint16_t            bsize, nsize;
+#else
+  unsigned  long      destlen, sourcelen;
+#endif
 
   /* check zlib format header */
   if (src_size < 2) {
@@ -553,6 +558,30 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
       SC_LERROR ("uncompress block header short\n");
       return -1;
     }
+#ifdef SC_PUFF_INCLUDED
+
+    /* use the builtin puff fallback to decompress deflate data */
+    destlen = (unsigned long) dest_size;
+    sourcelen = (unsigned long) src_size - 4;
+    if (sc_puff ((unsigned char *) dest, &destlen,
+                 (const unsigned char *) src, &sourcelen)) {
+      SC_LERROR ("uncompress by puff failed\n");
+      return -1;
+    }
+    if (destlen != (unsigned long) dest_size ||
+        sourcelen != (unsigned long) src_size - 4) {
+      SC_LERROR ("uncompress by puff mismatch\n");
+      return -1;
+    }
+
+    /* extend adler32 checksum */
+    sc_io_adler32_update (&adler, dest, dest_size);
+    src += sourcelen;
+    src_size = 4;
+    dest += destlen;
+    dest_size = 0;
+    final_block = 1;
+#else
 
     /* examine block header */
     uca = (unsigned char) src[0];
@@ -587,6 +616,7 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
     sc_io_adler32_update (&adler, dest, bsize);
     dest += bsize;
     dest_size -= bsize;
+#endif
   }
   while (!final_block);
   if (src_size != 4 || dest_size != 0) {

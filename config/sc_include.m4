@@ -394,8 +394,10 @@ if test "x$$1_HAVE_ZLIB" = x ; then
 AC_MSG_NOTICE([- $1 -------------------------------------------------
 We did not find a recent zlib containing the function adler32_combine.
 This is OK if the following does not matter to you:
-Calling any sc functions that rely on zlib will abort your program.
-These functions include sc_array_checksum and sc_vtk_write_compressed.
+ - Calling some functions that rely on zlib will abort your program.
+   These include sc_array_checksum and sc_vtk_write_compressed.
+ - The data produced by sc_io_encode is not compressed.
+ - The function sc_io_decode is slower than with zlib.
 You can fix this by compiling a recent zlib and pointing LIBS to it.
 ])
 fi
