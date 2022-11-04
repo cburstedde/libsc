@@ -76,6 +76,116 @@ test_helpers (const char *str, const char *label, int tint, int tlong)
 }
 
 static int
+single_inplace_test (sc_array_t *src, int itest)
+{
+  const size_t        inz[3] = { 0, 1324, 139422 };
+  int                 i;
+  int                 retval;
+  int                 num_failed_tests = 0;
+  size_t              sz, mz;
+  size_t              original_size;
+  sc_array_t          inp, view, targ;
+
+  SC_ASSERT (src != NULL);
+  sc_array_init (&inp, 1);
+  sc_array_init (&view, 1);
+  sc_array_init (&targ, 1);
+
+  for (i = 0; i < 3; ++i) {
+    /* original size */
+    sz = src->elem_size * src->elem_count;
+
+    /* encode input in place */
+    sc_array_init_count (&inp, 1, sz);
+    memcpy (inp.array, src->array, sz);
+    sc_io_encode (&inp, NULL);
+
+    /* decode in place with array */
+    retval = sc_io_decode (&inp, NULL, 0);
+    if (retval) {
+      SC_LERRORF ("decode array in place error %d %d\n", itest, i);
+      ++num_failed_tests;
+      goto error_inplace_test;
+    }
+    if (inp.elem_count != sz) {
+      SC_LERRORF ("decode array in place size %d %d\n", itest, i);
+      ++num_failed_tests;
+      goto error_inplace_test;
+    }
+    sc_array_reset (&inp);
+
+    if (!sc_io_have_zlib () || itest != -1) {
+      /* for the examples we call, test -1 has a large enough data
+         size that the encoded data is shorter than the plaintext. */
+
+      /* encode input in place */
+      sc_array_init_count (&inp, 1, sz);
+      memcpy (inp.array, src->array, sz);
+      sc_io_encode (&inp, NULL);
+
+      /* decode in place with view */
+      sc_array_init_view (&view, &inp, 0, inp.elem_count);
+      retval = sc_io_decode (&view, NULL, 0);
+      if (retval) {
+        SC_LERRORF ("decode view in place error %d %d\n", itest, i);
+        ++num_failed_tests;
+        goto error_inplace_test;
+      }
+
+      if (view.elem_count != sz) {
+        SC_LERRORF ("decode view in place size %d %d\n", itest, i);
+        ++num_failed_tests;
+        goto error_inplace_test;
+      }
+      sc_array_reset (&view);
+      sc_array_reset (&inp);
+    }
+
+    /* encode input in place */
+    sc_array_init_count (&inp, 1, sz);
+    memcpy (inp.array, src->array, sz);
+    sc_io_encode (&inp, NULL);
+
+    /* decode and verify original data size */
+    if (sc_io_decode_length (&inp, &original_size)) {
+      SC_LERRORF ("decode length error on test %d %d\n", itest, i);
+      ++num_failed_tests;
+      goto error_inplace_test;
+    }
+    if (original_size != sz) {
+      SC_LERRORF ("decode length mismatch on test %d %d\n", itest, i);
+      ++num_failed_tests;
+      goto error_inplace_test;
+    }
+
+    /* decode into view of fitting size */
+    mz = SC_MAX (sz, inz[i]);
+    sc_array_init_count (&targ, 1, mz);
+    sc_array_init_view (&view, &targ, 0, mz);
+    retval = sc_io_decode (&inp, &view, 0);
+    if (retval) {
+      SC_LERRORF ("decode view error %d %d\n", itest, i);
+      ++num_failed_tests;
+      goto error_inplace_test;
+    }
+    if (view.elem_count != sz) {
+      SC_LERRORF ("decode view size %d %d\n", itest, i);
+      ++num_failed_tests;
+      goto error_inplace_test;
+    }
+    sc_array_reset (&inp);
+    sc_array_reset (&view);
+    sc_array_reset (&targ);
+  }
+
+error_inplace_test:
+  sc_array_reset (&inp);
+  sc_array_reset (&view);
+  sc_array_reset (&targ);
+  return num_failed_tests;
+}
+
+static int
 single_code_test (sc_array_t *src, int itest)
 {
   int                 num_failed_tests = 0;
@@ -83,6 +193,10 @@ single_code_test (sc_array_t *src, int itest)
   size_t              original_size;
   sc_array_t          dest;
   sc_array_t          comp;
+
+  if (itest < 3) {
+    num_failed_tests += single_inplace_test (src, itest);
+  }
 
   /* encode */
   SC_ASSERT (src != NULL);
