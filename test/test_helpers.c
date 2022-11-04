@@ -271,11 +271,11 @@ test_encode_decode (void)
   sc_array_init_data (&src, (void *) str2, 1, strlen (str2) + 1);
   single_code_test (&src, -1);
 
-  for (i = 0; i <= 4500; ++i) {
+  for (i = 0; i <= 2000; ++i) {
     if (i % 500 == 0) {
       SC_LDEBUGF ("Code iteration %d\n", i);
     }
-    slen = i <= 4000 ? i : 7 * i;
+    slen = i <= 1800 ? i : 8 * i;
     sc_array_init_count (&src, sizeof (int), slen);
     for (j = 0; j < (int) slen; ++j) {
       *(int *) sc_array_index_int (&src, j) = 3 * i + 4 * j + 5;

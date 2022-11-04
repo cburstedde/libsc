@@ -419,8 +419,7 @@ sc_io_adler32_init (uint32_t *adler)
 }
 
 static void
-sc_io_adler32_update (uint32_t *adler,
-                      const char *buffer, size_t length)
+sc_io_adler32_update (uint32_t *adler, const char *buffer, size_t length)
 {
   size_t              iz;
   int16_t             cn;
@@ -527,7 +526,7 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
 #ifndef SC_PUFF_INCLUDED
   uint16_t            bsize, nsize;
 #else
-  unsigned  long      destlen, sourcelen;
+  unsigned long       destlen, sourcelen;
 #endif
 
   /* check zlib format header */
@@ -797,14 +796,14 @@ sc_io_decode_length (sc_array_t *data, size_t *original_size)
   osize = base64_decode_block (data->array, 12, dec, &bstate);
   if (osize != 9) {
     SC_LERROR ("sc_io_decode_length base 64 error\n");
-    return - 1;
+    return -1;
   }
 
   /* verify first byte of zlib format */
   uc = (unsigned char) dec[8];
   if ((uc & 0x8F) != 8) {
     SC_LERROR ("sc_io_decode_length data format error\n");
-    return - 1;
+    return -1;
   }
 
   /* decode original length of data */

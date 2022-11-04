@@ -303,6 +303,7 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  * We expect at least 12 bytes of the format produced by \ref sc_io_encode.
  * No matter how much data has been encoded by it, this much is available.
  * We verify the format and if successful decode the original data size.
+ * This function does not require zlib.
  *
  * Note that this function is not required before \ref sc_io_decode.
  * Calling this function on any result produced by \ref sc_io_encode
@@ -324,25 +325,24 @@ int                 sc_io_decode_length (sc_array_t *data,
 /** Decode a block of base 64 encoded compressed data.
  * The base 64 data must contain a line break after every 72 code
  * characters and a final NUL character right after the last line.
+ * This function does not require zlib but benefits for speed.
  *
  * This is a two-stage process: we decode the input from base 64
  * and then extract the 8-byte big-endian original data size and
- * execute a standard zlib decompression on the remaining decoded data.
- * If zlib is not detected on configuration, the function executes ok
- * if Z_NO_COMPRESSION was used on encoding, and errors out otherwise.
+ * execute a zlib decompression on the remaining decoded data.
  * This function detects malformed input by erroring out.
  *
  * Any error condition is indicated by a negative return value.
  * Possible causes for error are:
  *  - the input data string is not NUL-terminated
- *  - the input data is compressed and zlib is not configured
  *  - the input data is corrupt for decoding or decompression
  *  - the output data array has non-unit element size and the
  *    length of the output data is not divisible by the size
  *  - the output data would exceed the specified threshold
  *  - the output array is a view of insufficient length
  *
- * The corresponding encoder function is \ref sc_io_encode.
+ * The corresponding encode function is \ref sc_io_encode.
+ * When passing an array as output, we resize it properly.
  * This function cannot crash unless out of memory.
  *
  * \param [in,out] data     If \a out is NULL, we work in place.
@@ -355,26 +355,19 @@ int                 sc_io_decode_length (sc_array_t *data,
  *                          \ref sc_io_encode; please see documentation.
  *                          The element size of the input array must be 1.
  * \param [in,out] out      If not NULL, a valid array (may be a view).
- *                          If NULL, we operate on the input array instead.
+ *                          If NULL, the input array becomes the output.
  *                          If the output array is a view and the output
- *                          data larger than its byte size, we error out.
+ *                          data larger than its view size, we error out.
  *                          We expect commensurable element and data size
- *                          and resize the output to it exactly, which
+ *                          and resize the output to fit exactly, which
  *                          restores the original input passed to encoding.
- *                          An output view array of matching size can be
+ *                          An output view array of matching size may be
  *                          constructed using \ref sc_io_decode_length.
  * \param [in] max_original_size    If nonzero, this is the maximal data
  *                          size that we will accept after uncompression.
  *                          If exceeded, return a negative value.
- * \return                  0 on success, negative if zlib is not configured
- *                          and the data is compressed, as opposed to having
- *                          been created with Z_NO_COMPRESSION, and also if
- *                          the element size of the output array is not
- *                          a divisor of the output data's byte length,
- *                          or if the input data is not NUL-terminated,
- *                          or if the base 64 input misses the newlines
- *                          expected after every 72 code characters,
- *                          or the input data is otherwise corrupt.
+ * \return                  0 on success, negative on malformed input
+ *                          data or insufficient output space.
  */
 int                 sc_io_decode (sc_array_t *data, sc_array_t *out,
                                   size_t max_original_size);
