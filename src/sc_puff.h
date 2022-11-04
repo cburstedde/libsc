@@ -31,8 +31,10 @@
 #ifndef SC_PUFF_H
 #define SC_PUFF_H
 
+/* every libsc file includes at least sc_config.h */
 #include <sc_config.h>
 
+/* convenient define for code to fallback even further without puff */
 #define SC_PUFF_INCLUDED
 
 #ifdef __cplusplus
@@ -40,12 +42,11 @@ extern "C"
 #endif
 
 /*
- * See puff.c for purpose and usage.
+ * See sc_puff.c for purpose and usage.
  */
 int sc_puff (unsigned char *dest,           /* pointer to destination pointer */
              unsigned long *destlen,        /* amount of output space */
              const unsigned char *source,   /* pointer to source data pointer */
              unsigned long *sourcelen);     /* amount of input available */
-
 
 #endif /* !SC_PUFF_H */
