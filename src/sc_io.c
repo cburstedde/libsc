@@ -531,12 +531,12 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
     return -1;
   }
   uca = (unsigned char) src[0];
-  if ((uca >> 4) > 7 || (uca & 0x0F) != 8) {
+  if ((uca & 0x8F) != 8) {
     SC_LERROR ("uncompress method unsupported\n");
     return -1;
   }
   ucb = (unsigned char) src[1];
-  if ((ucb & (7 << 5)) || ((((unsigned) uca) << 8) + ucb) % 31) {
+  if (((((unsigned) uca) << 8) + ucb) % 31) {
     SC_LERROR ("uncompress header not conforming\n");
     return -1;
   }
@@ -548,11 +548,13 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
 
   /* go through zlib blocks */
   do {
-    /* examine block header */
+    /* verify minimum required size */
     if (src_size < 5) {
       SC_LERROR ("uncompress block header short\n");
       return -1;
     }
+
+    /* examine block header */
     uca = (unsigned char) src[0];
     if (uca > 1) {
       SC_LERROR ("uncompress block header unsupported\n");
