@@ -321,7 +321,8 @@ int                 sc_io_decode_length (sc_array_t *data,
                                          size_t *original_size);
 
 /** Decode a block of base 64 encoded compressed data.
- * The base 64 data must contain a line break after every 72 code characters.
+ * The base 64 data must contain a line break after every 72 code
+ * characters and a final NUL character right after the last line.
  *
  * This is a two-stage process: we decode the input from base 64
  * and then extract the 8-byte big-endian original data size and
@@ -336,8 +337,9 @@ int                 sc_io_decode_length (sc_array_t *data,
  *  - the input data is compressed and zlib is not configured
  *  - the input data is corrupt for decoding or decompression
  *  - the output data array has non-unit element size and the
- *    length of the decoded data is not divisible by the size
- *  - the output data would exceed a preset threshold size
+ *    length of the output data is not divisible by the size
+ *  - the output data would exceed the specified threshold
+ *  - the output array is a view of insufficient length
  *
  * The corresponding encoder function is \ref sc_io_encode.
  * This function cannot crash unless out of memory.
@@ -351,11 +353,15 @@ int                 sc_io_decode_length (sc_array_t *data,
  *                          It must be in the exact format produced by
  *                          \ref sc_io_encode; please see documentation.
  *                          The element size of the input array must be 1.
- * \param [in,out] out      If not NULL, a valid array.
- *                          It must be resizable (not a view).
- *                          We resize the array to the output data exactly,
- *                          expecting commensurable element and data size,
- *                          which restores the original input to encoding.
+ * \param [in,out] out      If not NULL, a valid array (may be a view).
+ *                          If NULL, we operate on the input array instead.
+ *                          If the output array is a view and the output
+ *                          data larger than its byte size, we error out.
+ *                          We expect commensurable element and data size
+ *                          and resize the output to it exactly, which
+ *                          restores the original input passed to encoding.
+ *                          Output data and view of matching size can be
+ *                          constructed using \ref sc_io_decode_length.
  * \param [in] max_original_size    If nonzero, this is the maximal data
  *                          size that we will accept after uncompression.
  *                          If exceeded, return a negative value.

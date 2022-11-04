@@ -799,6 +799,7 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
   size_t              compressed_size;
   size_t              base64_lines;
   size_t              encoded_size;
+  size_t              current_size;
   size_t              zlin, irem;
   size_t              ocnt;
 #ifdef SC_HAVE_ZLIB
@@ -810,14 +811,6 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
   /* examine input data */
   SC_ASSERT (data != NULL);
   SC_ASSERT (data->elem_size == 1);
-  if (out == NULL) {
-    /* in-place operation on string */
-    SC_ASSERT (SC_ARRAY_IS_OWNER (data));
-  }
-  else {
-    /* data is placed in output string */
-    SC_ASSERT (SC_ARRAY_IS_OWNER (out));
-  }
   encoded_size = data->elem_count;
   if (encoded_size == 0 ||
       *(char *) sc_array_index (data, encoded_size - 1) != '\0') {
@@ -881,25 +874,37 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
     goto decode_error;
   }
 
-  /* decompress decoded data */
+  /* determine length of uncompressed data */
   encoded_size = 0;
   for (i = 0; i < 8; ++i) {
     /* enforce big endian byte order for original size */
     unsigned char       uc = (unsigned char) compressed.array[i];
     encoded_size |= ((size_t) uc) << ((7 - i) * 8);
   }
+  if (out == NULL) {
+    /* allow for in-place operation */
+    out = data;
+  }
   if (encoded_size % out->elem_size != 0) {
-    SC_LERROR ("encoded size not commensurable\n");
+    SC_LERROR ("encoded size not commensurable with output array\n");
     goto decode_error;
   }
   if (max_original_size > 0 && encoded_size > max_original_size) {
-    SC_LERRORF ("encoded size %llu larger than permitted %llu\n",
+    SC_LERRORF ("encoded size %llu larger than specified maximum %llu\n",
                 (unsigned long long) encoded_size,
                 (unsigned long long) max_original_size);
     goto decode_error;
   }
-
+  if (!SC_ARRAY_IS_OWNER (out) &&
+      encoded_size > (current_size = out->elem_count * out->elem_size)) {
+    SC_LERRORF ("encoded size %llu larger than byte size of view %llu\n",
+                (unsigned long long) encoded_size,
+                (unsigned long long) current_size);
+    goto decode_error;
+  }
   sc_array_resize (out, encoded_size / out->elem_size);
+
+  /* decompress decoded data */
 #ifndef SC_HAVE_ZLIB
   zrv = sc_io_nonuncompress (out->array, encoded_size,
                              compressed.array + 8, ocnt - 8);
