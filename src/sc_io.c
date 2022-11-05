@@ -544,12 +544,10 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
     SC_LERROR ("uncompress header not conforming\n");
     return -1;
   }
-#ifndef SC_PUFF_INCLUDED
-  if (ucb & 0xE0) {
-    SC_LERROR ("uncompress cannot handle header\n");
+  if (ucb & 0x20) {
+    SC_LERROR ("uncompress cannot handle dictionary\n");
     return -1;
   }
-#endif
   src += 2;
   src_size -= 2;
 

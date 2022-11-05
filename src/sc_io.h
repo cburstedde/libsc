@@ -268,6 +268,7 @@ int                 sc_io_have_zlib (void);
  * The output is a NUL-terminated string of printable characters.
  *
  * We first compress the data into the zlib format (RFC 1950).
+ * The compressor must use no preset dictionary (this is the default).
  * If zlib is detected on configuration, we compress with Z_BEST_COMPRESSION.
  * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
  * The status of zlib detection can be queried at compile time using
@@ -334,12 +335,16 @@ int                 sc_io_decode_length (sc_array_t *data,
  *
  * Any error condition is indicated by a negative return value.
  * Possible causes for error are:
+ *
  *  - the input data string is not NUL-terminated
  *  - the input data is corrupt for decoding or decompression
  *  - the output data array has non-unit element size and the
  *    length of the output data is not divisible by the size
  *  - the output data would exceed the specified threshold
  *  - the output array is a view of insufficient length
+ *
+ * We also error out if the data requires a compression dictionary,
+ * which would be a violation of above encode format specification.
  *
  * The corresponding encode function is \ref sc_io_encode.
  * When passing an array as output, we resize it properly.
