@@ -147,13 +147,6 @@ AS_IF([test "$ac_res" != no],
 AS_VAR_POPDEF([ac_Search])dnl
 ])
 
-dnl SC_REQUIRE_LIB(LIBRARY LIST, FUNCTION)
-dnl Check for FUNCTION in LIBRARY, exit with error if not found
-dnl
-AC_DEFUN([SC_REQUIRE_LIB],
-    [AC_SEARCH_LIBS([$2], [$1],,
-      [AC_MSG_ERROR([cannot find function $2 in $1])])])
-
 dnl SC_CHECK_MATH(PREFIX)
 dnl Check whether sqrt is found, possibly in -lm, using a link test.
 dnl We AC_DEFINE HAVE_MATH to 1 depending on whether it found.
