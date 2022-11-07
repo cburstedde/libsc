@@ -187,6 +187,25 @@ if (a == adler32_combine (a, b, len)) {;}
   [$1_HAVE_ZLIB=])
 ])
 
+dnl SC_CHECK_JSON(PREFIX)
+dnl Check whether json_integer, json_real are found (in -ljansson).
+dnl We AC_DEFINE HAVE_JSON to 1 depending on whether it is found.
+dnl We set the shell variable PREFIX_HAVE_JSON to yes if found.
+dnl
+AC_DEFUN([SC_CHECK_JSON],
+[
+  SC_SEARCH_LIBS([json_integer], [[#include <jansson.h>]],
+[[
+json_t *jint, *jreal;
+if (jint == json_integer ((json_int_t) 15)) { json_decref (jint); }
+if (jreal == json_real (.5)) { json_decref (jreal); }
+]], [jansson],
+  [AC_DEFINE([HAVE_JSON], [1],
+             [Define to 1 if json_integer and json_real link])
+   $1_HAVE_JSON="yes"],
+  [$1_HAVE_JSON=])
+])
+
 dnl SC_CHECK_LIB(LIBRARY LIST, FUNCTION, TOKEN, PREFIX)
 dnl Check for FUNCTION first as is, then in each of the libraries.
 dnl Set shell variable PREFIX_HAVE_TOKEN to nonempty if found.
@@ -359,6 +378,7 @@ AC_DEFUN([SC_CHECK_LIBRARIES],
 AC_DEFINE([USING_AUTOCONF], 1, [Define to 1 if using autoconf build])
 SC_CHECK_MATH([$1])
 SC_CHECK_ZLIB([$1])
+SC_CHECK_JSON([$1])
 dnl SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua5 lua],
 dnl              [lua_createtable], [LUA], [$1])
 dnl SC_CHECK_BLAS_LAPACK([$1])
@@ -390,5 +410,11 @@ This is OK if the following does not matter to you:
 Calling any sc functions that rely on zlib will abort your program.
 These functions include sc_array_checksum and sc_vtk_write_compressed.
 You can fix this by compiling a recent zlib and pointing LIBS to it.])
+fi
+if test "x$$1_HAVE_JSON" = x ; then
+AC_MSG_NOTICE([- $1 ----------------------------------------------------
+We did not find a JSON library containing json_integer and json_real.
+At this point, this is of no consequence to using $1.
+You can fix this by installing the jansson library.])
 fi
 ])
