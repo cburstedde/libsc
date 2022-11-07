@@ -26,6 +26,9 @@
 #include <iniparser.h>
 
 #include <errno.h>
+#ifdef SC_HAVE_JANSSON_H
+#include <jansson.h>
+#endif
 
 typedef enum
 {
@@ -987,6 +990,44 @@ sc_options_load_ini (int package_id, int err_priority,
 }
 
 int
+sc_options_load_json (int package_id, int err_priority,
+                      sc_options_t * opt, const char *jsonfile)
+{
+  int                 retval = -1;
+#ifndef SC_HAVE_JSON
+  SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+              "JSON not configured: could not parse input file\n");
+#else
+  json_t             *file;
+  json_t             *root;
+  json_error_t        jerr;
+
+  file = NULL;
+  if ((file = json_load_file (jsonfile, 0, &jerr)) == NULL) {
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                 "Could not load or parse JSON file %s line %d column %d\n",
+                 jerr.source, jerr.line, jerr.column);
+    goto load_json_error;
+  }
+  if ((root = json_object_get (file, "Options")) == NULL) {
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "Could not access Options object\n");
+    goto load_json_error;
+  }
+
+  /* to do: implement grabbing option values from JSON object */
+
+  retval = 0;
+load_json_error:
+  /* free non-borrowed references */
+  if (file != NULL) {
+    json_decref (file);
+  }
+#endif
+  return retval;
+}
+
+int
 sc_options_save (int package_id, int err_priority,
                  sc_options_t * opt, const char *inifile)
 {
@@ -1325,22 +1366,11 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       break;
     case SC_OPTION_JSONFILE:
-#ifndef SC_HAVE_JSON
-      if (1) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                     "JSON support not configured: %s\n", optarg);
-        retval = -1;            /* this ends option processing */
-      }
-#else
-      if (0) {
-        /* to do: implement JSON file parsing */
-      }
-      else {
+      if (sc_options_load_json (package_id, err_priority, opt, optarg)) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
                      "Error loading JSON file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
-#endif
       break;
     case SC_OPTION_CALLBACK:
       if (item->has_arg) {

@@ -325,6 +325,19 @@ int                 sc_options_load_ini (int package_id, int err_priority,
                                          sc_options_t * opt,
                                          const char *inifile);
 
+/** Load a file in JSON format and update entries from object Options.
+ * An option whose name contains a colon such as "prefix:basename" will be
+ * updated by a "basename =" entry in a prefix nested object.
+ * \param [in] package_id       Registered package id or -1.
+ * \param [in] err_priority     Error log priority according to sc.h.
+ * \param [in] opt              The option structure.
+ * \param [in] inifile          Filename of the JSON file to load.
+ * \return                      Returns 0 on success, -1 on failure.
+ */
+int                 sc_options_load_json (int package_id, int err_priority,
+                                          sc_options_t * opt,
+                                          const char *jsonfile);
+
 /** Save all options and arguments to a file in .ini format.
  * This function must only be called after successful option parsing.
  * This function should only be called on rank 0.
