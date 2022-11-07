@@ -800,7 +800,14 @@ sc_options_print_summary (int package_id, int log_priority,
 
 int
 sc_options_load (int package_id, int err_priority,
-                 sc_options_t * opt, const char *inifile)
+                 sc_options_t * opt, const char *file)
+{
+  return sc_options_load_ini (package_id, err_priority, opt, file);
+}
+
+int
+sc_options_load_ini (int package_id, int err_priority,
+                     sc_options_t * opt, const char *inifile)
 {
   int                 found_short, found_long;
   size_t              iz;
@@ -819,7 +826,7 @@ sc_options_load (int package_id, int err_priority,
   dict = iniparser_load (inifile);
   if (dict == NULL) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
-                "Could not load or parse inifile\n");
+                "Could not load or parse .ini file\n");
     return -1;
   }
 
@@ -1311,7 +1318,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
         SC_STRDUP (optarg);
       break;
     case SC_OPTION_INIFILE:
-      if (sc_options_load (package_id, err_priority, opt, optarg)) {
+      if (sc_options_load_ini (package_id, err_priority, opt, optarg)) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
                      "Error loading .ini file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
