@@ -172,7 +172,7 @@ for (; sqrt (a) < a; a *= 1.000023) { putc ('1', stdout); }
 dnl SC_CHECK_ZLIB(PREFIX)
 dnl Check whether adler32_combine is found, possibly in -lz, using a link test.
 dnl We AC_DEFINE HAVE_ZLIB to 1 depending on whether it is found.
-dnl We also set PREFIX_HAVE_ZLIB to yes if found.
+dnl We set the shell variable PREFIX_HAVE_ZLIB to yes if found.
 dnl
 AC_DEFUN([SC_CHECK_ZLIB],
 [
@@ -384,12 +384,11 @@ dnl
 AC_DEFUN([SC_FINAL_MESSAGES],
 [
 if test "x$$1_HAVE_ZLIB" = x ; then
-AC_MSG_NOTICE([- $1 -------------------------------------------------
+AC_MSG_NOTICE([- $1 ----------------------------------------------------
 We did not find a recent zlib containing the function adler32_combine.
 This is OK if the following does not matter to you:
 Calling any sc functions that rely on zlib will abort your program.
 These functions include sc_array_checksum and sc_vtk_write_compressed.
-You can fix this by compiling a recent zlib and pointing LIBS to it.
-])
+You can fix this by compiling a recent zlib and pointing LIBS to it.])
 fi
 ])
