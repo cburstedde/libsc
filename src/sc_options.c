@@ -36,6 +36,7 @@ typedef enum
   SC_OPTION_DOUBLE,
   SC_OPTION_STRING,
   SC_OPTION_INIFILE,
+  SC_OPTION_JSONFILE,
   SC_OPTION_CALLBACK,
   SC_OPTION_KEYVALUE
 }
@@ -428,6 +429,29 @@ sc_options_add_inifile (sc_options_t * opt, int opt_char,
 }
 
 void
+sc_options_add_jsonfile (sc_options_t * opt, int opt_char,
+                         const char *opt_name, const char *help_string)
+{
+  sc_option_item_t   *item;
+
+  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
+  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
+
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
+
+  item->opt_type = SC_OPTION_JSONFILE;
+  item->opt_char = opt_char;
+  item->opt_name = opt_name;
+  item->opt_var = NULL;
+  item->opt_fn = NULL;
+  item->has_arg = 1;
+  item->called = 0;
+  item->help_string = help_string;
+  item->string_value = NULL;
+  item->user_data = NULL;
+}
+
+void
 sc_options_add_callback (sc_options_t * opt, int opt_char,
                          const char *opt_name, int has_arg,
                          sc_options_callback_t fn, void *data,
@@ -540,6 +564,9 @@ sc_options_add_suboptions (sc_options_t * opt,
     case SC_OPTION_INIFILE:
       sc_options_add_inifile (opt, '\0', *name, item->help_string);
       break;
+    case SC_OPTION_JSONFILE:
+      sc_options_add_jsonfile (opt, '\0', *name, item->help_string);
+      break;
     case SC_OPTION_CALLBACK:
       sc_options_add_callback (opt, '\0', *name, item->has_arg,
                                (sc_options_callback_t) item->opt_fn,
@@ -602,7 +629,10 @@ sc_options_print_usage (int package_id, int log_priority,
       provide = "<STRING>";
       break;
     case SC_OPTION_INIFILE:
-      provide = "<FILE>";
+      provide = "<INIFILE>";
+      break;
+    case SC_OPTION_JSONFILE:
+      provide = "<JSONFILE>";
       break;
     case SC_OPTION_CALLBACK:
       if (item->has_arg) {
@@ -677,6 +707,7 @@ sc_options_print_summary (int package_id, int log_priority,
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_JSONFILE ||
         item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
@@ -795,6 +826,7 @@ sc_options_load (int package_id, int err_priority,
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_JSONFILE ||
         item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
@@ -994,6 +1026,7 @@ sc_options_save (int package_id, int err_priority,
       continue;
     }
     if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_JSONFILE ||
         item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
@@ -1280,9 +1313,27 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
     case SC_OPTION_INIFILE:
       if (sc_options_load (package_id, err_priority, opt, optarg)) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                     "Error loading file: %s\n", optarg);
+                     "Error loading .ini file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
+      break;
+    case SC_OPTION_JSONFILE:
+#ifndef SC_HAVE_JSON
+      if (1) {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "JSON support not configured: %s\n", optarg);
+        retval = -1;            /* this ends option processing */
+      }
+#else
+      if (0) {
+        /* to do: implement JSON file parsing */
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Error loading JSON file: %s\n", optarg);
+        retval = -1;            /* this ends option processing */
+      }
+#endif
       break;
     case SC_OPTION_CALLBACK:
       if (item->has_arg) {

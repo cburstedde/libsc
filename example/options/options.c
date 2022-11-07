@@ -77,7 +77,8 @@ main (int argc, char **argv)
   sc_options_add_callback (opt, 'C', "call2", 0, callback, (void *) cd,
                            "Callback 2");
   sc_options_add_string (opt, 't', NULL, &s2, NULL, "String 2");
-  sc_options_add_inifile (opt, 'f', "inifile", ".ini file");
+  sc_options_add_inifile (opt, 'F', "inifile", ".ini file");
+  sc_options_add_jsonfile (opt, 'J', "jsonfile", "JSON file");
   sc_options_add_int (opt, '\0', "integer2", &i2, 7, "Integer 2");
   sc_options_add_size_t (opt, 'z', "sizet", &z, (size_t) 7000000000ULL,
                          "Size_t");

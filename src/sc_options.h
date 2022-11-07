@@ -190,6 +190,24 @@ void                sc_options_add_inifile (sc_options_t * opt,
                                             const char *opt_name,
                                             const char *help_string);
 
+/** Add an option to read in a file in JSON format.
+ * The argument to this option must be a filename.
+ * On parsing the specified file is read to set known option variables.
+ * It does not have an associated option variable itself.
+ *
+ * This functionality is only active when \ref sc_have_json returns true,
+ * equivalent to the #define SC_HAVE_JSON existing, and ignored otherwise.
+ *
+ * \param [in,out] opt       A valid options structure.
+ * \param [in] opt_char      Short option character, may be '\0'.
+ * \param [in] opt_name      Long option name without initial dashes, may be NULL.
+ * \param [in] help_string   Help string for usage message, may be NULL.
+ */
+void                sc_options_add_jsonfile (sc_options_t * opt,
+                                             int opt_char,
+                                             const char *opt_name,
+                                             const char *help_string);
+
 /** Add an option that calls a user-defined function when parsed.
  * The callback function should be implemented to allow multiple calls.
  * The option does not have an associated variable.
