@@ -47,13 +47,13 @@ main (int argc, char **argv)
   int                 rank;
   int                 first_arg;
   int                 i1, i2, si1;
-  int                 kvint;
+  int                 kvint, deep;
   size_t              z;
   double              d, sd;
   const char         *s1, *s2, *ss1, *ss2;
   const char         *cd = "Callback example";
   sc_keyvalue_t      *keyvalue;
-  sc_options_t       *opt, *subopt;
+  sc_options_t       *opt, *subopt, *deepopt;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -92,6 +92,10 @@ main (int argc, char **argv)
   sc_options_add_keyvalue (subopt, 'n', "number", &kvint, "one",
                            keyvalue, "Subset keyvalue number");
 
+  deepopt = sc_options_new (argv[0]);
+  sc_options_add_int (deepopt, '\0', "deep", &deep, 3, "Deep option");
+
+  sc_options_add_suboptions (subopt, deepopt, "Deeper");
   sc_options_add_suboptions (opt, subopt, "Subset");
 
   /* this is just to show off the load function */
@@ -135,6 +139,7 @@ main (int argc, char **argv)
 
   sc_options_destroy (opt);
   sc_options_destroy (subopt);
+  sc_options_destroy (deepopt);
   sc_keyvalue_destroy (keyvalue);
 
   sc_finalize ();
