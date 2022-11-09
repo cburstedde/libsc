@@ -998,6 +998,100 @@ sc_options_load_ini (int package_id, int err_priority,
   return 0;
 }
 
+/** Look up a key, possibly with ':' hierarchy markers, in a JSON object.
+ *
+ * We look up each substring between ':'s as key to a sub-object and
+ * continue recursively.  If a key is not found, we try the concatenation
+ * with the next substring as key, and so forth.
+ * Values dound at deeper levels of recursion take precedence.
+ *
+ * This allows for both a hierarchical and a flat JSON representation.
+ *
+ * \param [in] object   Must be a JSON object.
+ * \param [in] key      NUL-terminated string.
+ * \return              NULL if key not found in \a object
+ *                      and a borrowed reference to the value otherwise.
+ */
+static json_t      *
+sc_options_json_lookup (json_t *object, const char *keystring)
+{
+  int                 ended;
+  size_t              len;
+  const char         *begp, *midp, *endp;
+  char               *key;
+  json_t             *entry, *recurse;
+
+  /* initial consistency checks */
+  SC_ASSERT (json_is_object (object));
+  SC_ASSERT (keystring != NULL);
+
+  /* setup first sub string and loop over contents */
+  begp = midp = keystring;
+  ended = 0;
+  for (;;) {
+    /* search substring ending before the next ':' */
+    if ((endp = strchr (midp, ':')) == NULL) {
+      len = strlen (begp);
+      ended = 1;
+    }
+    else {
+      len = (size_t) (endp - begp);
+      SC_ASSERT (len < strlen (begp));
+      SC_ASSERT (endp[0] != '\0');
+    }
+
+    /* consider substring as key */
+    if (len == 0) {
+      /* empty keys are not considered */
+      entry = NULL;
+    }
+    else {
+      /* conduct proper member search */
+      key = SC_ALLOC (char, len + 1);
+      sc_strcopy (key, len + 1, begp);
+      entry = json_object_get (object, key);
+      SC_FREE (key);
+    }
+
+    /* deal with result of lookup */
+    if (entry == NULL) {
+      if (ended) {
+        /* an empty string cannot be found */
+        return NULL;
+      }
+      else {
+        /* concatenate same string across the ':' symbol */
+        ++midp;
+        continue;
+      }
+    }
+    else {
+      /* key exists in object */
+      if (ended) {
+        /* we have retrieved a value from the entire key */
+        return entry;
+      }
+      else {
+        /* examine the value just found */
+        if (!json_is_object (entry)) {
+          /* key must be an object in order to continue searching */
+          return NULL;
+        }
+        else if ((recurse = sc_options_json_lookup (entry, endp + 1))
+                 != NULL) {
+          /* recursive lookup has succeeded */
+          return recurse;
+        }
+        else {
+          /* continue with next loop iteration and advanced key */
+          SC_ASSERT (endp != NULL);
+          midp = endp + 1;
+        }
+      }
+    }
+  }
+}
+
 int
 sc_options_load_json (int package_id, int err_priority,
                       sc_options_t * opt, const char *jsonfile)
