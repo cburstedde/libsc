@@ -814,8 +814,8 @@ sc_options_load_ini (int package_id, int err_priority,
 {
   int                 found_short, found_long;
   size_t              iz;
-  sc_array_t         *items = opt->option_items;
-  size_t              count = items->elem_count;
+  size_t              count;
+  sc_array_t         *items;
   sc_option_item_t   *item;
   dictionary         *dict;
   int                 iserror;
@@ -826,6 +826,10 @@ sc_options_load_ini (int package_id, int err_priority,
   const char         *s, *key;
   char                skey[BUFSIZ], lkey[BUFSIZ];
 
+  SC_ASSERT (opt != NULL);
+  SC_ASSERT (inifile != NULL);
+
+  /* read .ini file in one go */
   dict = iniparser_load (inifile);
   if (dict == NULL) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
@@ -833,6 +837,9 @@ sc_options_load_ini (int package_id, int err_priority,
     return -1;
   }
 
+  /* loop through option items */
+  items = opt->option_items;
+  count = items->elem_count;
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE ||
@@ -841,6 +848,7 @@ sc_options_load_ini (int package_id, int err_priority,
       continue;
     }
 
+    /* check existence of key */
     key = NULL;
     skey[0] = lkey[0] = '\0';
     found_short = found_long = 0;
@@ -875,6 +883,7 @@ sc_options_load_ini (int package_id, int err_priority,
       continue;
     }
 
+    /* access value by key */
     ++item->called;
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
