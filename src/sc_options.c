@@ -1094,17 +1094,30 @@ sc_options_json_lookup (json_t *object, const char *keystring)
 
 int
 sc_options_load_json (int package_id, int err_priority,
-                      sc_options_t * opt, const char *jsonfile)
+                      sc_options_t *opt, const char *jsonfile)
 {
   int                 retval = -1;
 #ifndef SC_HAVE_JSON
   SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
               "JSON not configured: could not parse input file\n");
 #else
+  int                 bvalue, ivalue;
+  double              dvalue;
+  size_t              iz, zvalue;
+  size_t              count;
+  sc_array_t         *items;
+  sc_option_item_t   *item;
   json_t             *file;
-  json_t             *root;
+  json_t             *jopt;
+  json_t             *jval, *jv2;
   json_error_t        jerr;
+  const char         *s, *key;
+  char                skey[BUFSIZ];
 
+  SC_ASSERT (opt != NULL);
+  SC_ASSERT (jsonfile != NULL);
+
+  /* read JSON file in one go */
   file = NULL;
   if ((file = json_load_file (jsonfile, 0, &jerr)) == NULL) {
     SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
@@ -1112,14 +1125,141 @@ sc_options_load_json (int package_id, int err_priority,
                  jerr.source, jerr.line, jerr.column);
     goto load_json_error;
   }
-  if ((root = json_object_get (file, "Options")) == NULL) {
+  if ((jopt = json_object_get (file, "Options")) == NULL) {
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "Could not find Options entry\n");
+    goto load_json_error;
+  }
+  if (!json_is_object (jopt)) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
                 "Could not access Options object\n");
     goto load_json_error;
   }
 
-  /* to do: implement grabbing option values from JSON object */
+  /* loop through option items */
+  items = opt->option_items;
+  count = items->elem_count;
+  for (iz = 0; iz < count; ++iz) {
+    item = (sc_option_item_t *) sc_array_index (items, iz);
+    if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_JSONFILE ||
+        item->opt_type == SC_OPTION_CALLBACK) {
+      continue;
+    }
 
+    /* try to retrieve by short option character, then by long name */
+    /* since JSON generally allows for duplicate keys, we take the same
+     * approach: we look for short option and possibly replace by long */
+    key = NULL;
+    jval = NULL;
+    if (item->opt_char != '\0') {
+      snprintf (skey, BUFSIZ, "-%c", item->opt_char);
+      key = skey;
+      jval = json_object_get (jopt, key);
+    }
+    if (item->opt_name != NULL) {
+      key = item->opt_name;
+      if ((jv2 = sc_options_json_lookup (jopt, key)) != NULL) {
+        jval = jv2;
+      }
+    }
+    if (jval == NULL) {
+      continue;
+    }
+    SC_ASSERT (key != NULL);
+
+    /* each option type has an individual interpretation of the value */
+    ++item->called;
+    switch (item->opt_type) {
+    case SC_OPTION_SWITCH:
+      if (json_is_boolean (jval)) {
+        bvalue = json_is_true (jval);
+      }
+      else if (json_is_integer (jval) &&
+               (bvalue = (int) json_integer_value (jval)) >= 0) {
+        /* switch may have values larger than 1 */
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid switch %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      *(int *) item->opt_var = bvalue;
+      break;
+    case SC_OPTION_BOOL:
+      if (json_is_boolean (jval)) {
+        bvalue = json_is_true (jval);
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid boolean %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      *(int *) item->opt_var = bvalue;
+      break;
+    case SC_OPTION_INT:
+      if (json_is_integer (jval)) {
+        /* to do: range check */
+        ivalue = (int) json_integer_value (jval);
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid int %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      *(int *) item->opt_var = ivalue;
+      break;
+    case SC_OPTION_SIZE_T:
+      if (json_is_integer (jval)) {
+        /* to do: range check */
+        zvalue = (size_t) json_integer_value (jval);
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid size_t %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      *(size_t *) item->opt_var = zvalue;
+      break;
+    case SC_OPTION_DOUBLE:
+      if (json_is_number (jval)) {
+        if (json_is_integer (jval)) {
+          /* to do: range check */
+          dvalue = (double) json_integer_value (jval);
+        }
+        else {
+          SC_ASSERT (json_is_real (jval));
+          dvalue = json_real_value (jval);
+        }
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid double %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      *(double *) item->opt_var = dvalue;
+      break;
+    case SC_OPTION_STRING:
+      if (json_is_string (jval)) {
+        s = json_string_value (jval);
+        SC_FREE (item->string_value);   /* deals with NULL */
+        *(const char **) item->opt_var = item->string_value = SC_STRDUP (s);
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid string %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      break;
+    case SC_OPTION_KEYVALUE:
+      /* to do: figure out how to read an associative array */
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  }
+
+  /* clean return under all circmstances */
   retval = 0;
 load_json_error:
   /* free non-borrowed references */
