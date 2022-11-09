@@ -252,29 +252,37 @@ sc_options_set_spacing (sc_options_t * opt, int space_type, int space_help)
   opt->space_help = space_help < 0 ? sc_options_space_help : space_help;
 }
 
+static sc_option_item_t *
+sc_options_add_item (sc_options_t * opt, int opt_char, const char *opt_name,
+                     sc_option_type_t otype, const char *help_string)
+{
+  sc_option_item_t   *item;
+
+  SC_ASSERT (opt != NULL);
+  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
+  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
+
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
+  memset (item, 0, sizeof (sc_option_item_t));
+
+  item->opt_type = otype;
+  item->opt_char = opt_char;
+  item->opt_name = opt_name;
+  item->help_string = help_string;
+
+  return item;
+}
+
 void
 sc_options_add_switch (sc_options_t * opt, int opt_char,
                        const char *opt_name,
                        int *variable, const char *help_string)
 {
-  sc_option_item_t   *item;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_SWITCH, help_string);
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_SWITCH;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
   item->opt_var = variable;
-  item->opt_fn = NULL;
-  item->has_arg = 0;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
-
   *variable = 0;
 }
 
@@ -283,24 +291,12 @@ sc_options_add_bool (sc_options_t * opt, int opt_char,
                      const char *opt_name,
                      int *variable, int init_value, const char *help_string)
 {
-  sc_option_item_t   *item;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_BOOL, help_string);
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_BOOL;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = variable;
-  item->opt_fn = NULL;
   item->has_arg = 2;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
-
+  item->opt_var = variable;
   *variable = init_value;
 }
 
@@ -308,24 +304,12 @@ void
 sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
                     int *variable, int init_value, const char *help_string)
 {
-  sc_option_item_t   *item;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_INT, help_string);
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_INT;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = variable;
-  item->opt_fn = NULL;
   item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
-
+  item->opt_var = variable;
   *variable = init_value;
 }
 
@@ -334,24 +318,12 @@ sc_options_add_size_t (sc_options_t * opt, int opt_char, const char *opt_name,
                        size_t *variable, size_t init_value,
                        const char *help_string)
 {
-  sc_option_item_t   *item;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_SIZE_T, help_string);
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_SIZE_T;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = variable;
-  item->opt_fn = NULL;
   item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
-
+  item->opt_var = variable;
   *variable = init_value;
 }
 
@@ -361,24 +333,12 @@ sc_options_add_double (sc_options_t * opt, int opt_char,
                        double *variable, double init_value,
                        const char *help_string)
 {
-  sc_option_item_t   *item;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_DOUBLE, help_string);
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_DOUBLE;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = variable;
-  item->opt_fn = NULL;
   item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
-
+  item->opt_var = variable;
   *variable = init_value;
 }
 
