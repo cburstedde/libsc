@@ -263,13 +263,36 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
  */
 int                 sc_io_have_zlib (void);
 
+/** Encode a block of arbitrary data with the default sc_io format.
+ * The corresponding decoder function is \ref sc_io_decode.
+ * This function cannot crash unless out of memory.
+ *
+ * Currently this function calls \ref sc_io_encode_zlib with
+ * compression level Z_BEST_COMPRESSION (subject to change).
+ * Without zlib configured that function works uncompressed.
+ *
+ * \param [in,out] data     If \a out is NULL, we work in place.
+ *                          In this case, the array must on input have
+ *                          an element size of 1 byte, which is preserved.
+ *                          After reading all data from this array, it assumes
+ *                          the identity of the \a out argument below.
+ *                          Otherwise, this is a read-only argument
+ *                          that may have arbitrary element size.
+ *                          On input, all data in the array is used.
+ * \param [in,out] out      If not NULL, a valid array of element size 1.
+ *                          It must be resizable (not a view).
+ *                          We resize the array to the output data, which
+ *                          always includes a final terminating zero.
+ */
+void                sc_io_encode (sc_array_t *data, sc_array_t *out);
+
 /** Encode a block of arbitrary data, compressed, into an ASCII string.
  * This is a two-stage process: zlib compress and then encode to base 64.
  * The output is a NUL-terminated string of printable characters.
  *
  * We first compress the data into the zlib format (RFC 1950).
  * The compressor must use no preset dictionary (this is the default).
- * If zlib is detected on configuration, we compress with Z_BEST_COMPRESSION.
+ * If zlib is detected on configuration, we compress with given level.
  * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
  * The status of zlib detection can be queried at compile time using
  * `#ifdef SC_HAVE_ZLIB` or at run time using \ref sc_io_have_zlib.
@@ -298,30 +321,35 @@ int                 sc_io_have_zlib (void);
  *                          It must be resizable (not a view).
  *                          We resize the array to the output data, which
  *                          always includes a final terminating zero.
+ * \param [in] zlib_compression_level     Legal zlib compression level.
+ *                          Ignored when zlib is not configured.
  */
-void                sc_io_encode (sc_array_t *data, sc_array_t *out);
+void                sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
+                                       int zlib_compression_level);
 
 /** Decode length and format of original input from encoded data.
  * We expect at least 12 bytes of the format produced by \ref sc_io_encode.
  * No matter how much data has been encoded by it, this much is available.
- * We verify the format and if successful decode the original data size.
+ * We decode the original data size and the character indicating the format.
  * This function does not require zlib.
  *
  * Note that this function is not required before \ref sc_io_decode.
  * Calling this function on any result produced by \ref sc_io_encode
- * will succeed.  This function cannot crash.
+ * will succeed and report a legal format.  This function cannot crash.
  *
  * \param [in] data     This must be an array with element size 1.
  *                      If it contains less than 12 code bytes we error out.
  *                      It its first 12 bytes do not base 64 decode to 9 bytes
  *                      we error out.  We generally ignore the remaining data.
- *                      If the ninth decoded byte is not 'z', we error out.
- * \param [in,out] original_size    If not NULL and we do not error out,
+ * \param [out] original_size   If not NULL and we do not error out,
  *                      set to the original size as encoded in the data.
+ * \param [out] format_char     If not NULL and we do not error out, the
+ *                      ninth character of decoded data indicating the format.
  * \return              0 on success, negative value on error.
  */
 int                 sc_io_decode_info (sc_array_t *data,
-                                       size_t *original_size);
+                                       size_t *original_size,
+                                       char *format_char);
 
 /** Decode a block of base 64 encoded compressed data.
  * The base 64 data must contain a line break after every 72 code
@@ -332,6 +360,9 @@ int                 sc_io_decode_info (sc_array_t *data,
  * Then we extract the 8-byte big-endian original data size, the character
  * 'z', and execute a zlib decompression on the remaining decoded data.
  * This function detects malformed input by erroring out.
+ *
+ * If we should add another format in the future, the format character
+ * may be something else than 'z', as permitted by our specification.
  *
  * Any error condition is indicated by a negative return value.
  * Possible causes for error are:
@@ -368,7 +399,7 @@ int                 sc_io_decode_info (sc_array_t *data,
  *                          and resize the output to fit exactly, which
  *                          restores the original input passed to encoding.
  *                          An output view array of matching size may be
- *                          constructed using \ref sc_io_decode_length.
+ *                          constructed using \ref sc_io_decode_info.
  * \param [in] max_original_size    If nonzero, this is the maximal data
  *                          size that we will accept after uncompression.
  *                          If exceeded, return a negative value.

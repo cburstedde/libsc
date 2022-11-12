@@ -647,6 +647,13 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
 void
 sc_io_encode (sc_array_t *data, sc_array_t *out)
 {
+  sc_io_encode_zlib (data, out, Z_BEST_COMPRESSION);
+}
+
+void
+sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
+                   int zlib_compression_level)
+{
   int                 i;
   size_t              input_size;
 #ifndef SC_HAVE_ZLIB
@@ -678,6 +685,10 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
     SC_ASSERT (SC_ARRAY_IS_OWNER (out));
     SC_ASSERT (out->elem_size == 1);
   }
+#ifdef SC_HAVE_ZLIB
+  SC_ASSERT (zlib_compression_level == Z_DEFAULT_COMPRESSION ||
+             (zlib_compression_level >= 0 && zlib_compression_level <= 9));
+#endif
 
   /* save original size to output */
   input_size = data->elem_count * data->elem_size;
@@ -692,7 +703,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
   input_compress_bound = sc_io_noncompress_bound (input_size);
 #else
   input_compress_bound = compressBound ((uLong) input_size);
-#endif /* !SC_HAVE_ZLIB */
+#endif /* SC_HAVE_ZLIB */
   sc_array_init_count (&compressed, 1,
                        SC_IO_ENCODE_INFO_LEN + input_compress_bound);
   memcpy (compressed.array, original_size, SC_IO_ENCODE_INFO_LEN);
@@ -702,9 +713,9 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
 #else
   zrv = compress2 ((Bytef *) compressed.array + SC_IO_ENCODE_INFO_LEN,
                    &input_compress_bound, (Bytef *) data->array,
-                   (uLong) input_size, Z_BEST_COMPRESSION);
+                   (uLong) input_size, zlib_compression_level);
   SC_CHECK_ABORT (zrv == Z_OK, "Error on zlib compression");
-#endif /* !SC_HAVE_ZLIB */
+#endif /* SC_HAVE_ZLIB */
 
   /* prepare output array */
   if (out == NULL) {
@@ -783,7 +794,8 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
 }
 
 int
-sc_io_decode_info (sc_array_t *data, size_t *original_size)
+sc_io_decode_info (sc_array_t *data,
+                   size_t *original_size, char *format_char)
 {
   int                 i;
   size_t              osize;
@@ -807,11 +819,13 @@ sc_io_decode_info (sc_array_t *data, size_t *original_size)
     return -1;
   }
 
+#if 0
   /* verify first byte for zlib format */
   if (dec[8] != 'z') {
     SC_LERROR ("sc_io_decode_info data format error\n");
     return -1;
   }
+#endif
 
   /* decode original length of data */
   if (original_size != NULL) {
@@ -824,6 +838,13 @@ sc_io_decode_info (sc_array_t *data, size_t *original_size)
     }
     *original_size = osize;
   }
+
+  /* return format character */
+  if (format_char != NULL) {
+    *format_char = dec[8];
+  }
+
+  /* success! */
   return 0;
 }
 

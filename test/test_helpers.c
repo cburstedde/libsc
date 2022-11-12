@@ -82,6 +82,7 @@ single_inplace_test (sc_array_t *src, int itest)
   int                 i;
   int                 retval;
   int                 num_failed_tests = 0;
+  char                fc;
   size_t              sz, mz;
   size_t              original_size;
   sc_array_t          inp, view, targ;
@@ -147,7 +148,7 @@ single_inplace_test (sc_array_t *src, int itest)
     sc_io_encode (&inp, NULL);
 
     /* decode and verify original data size */
-    if (sc_io_decode_info (&inp, &original_size)) {
+    if (sc_io_decode_info (&inp, &original_size, &fc) || fc != 'z') {
       SC_LERRORF ("decode info error on test %d %d\n", itest, i);
       ++num_failed_tests;
       goto error_inplace_test;
@@ -190,6 +191,7 @@ single_code_test (sc_array_t *src, int itest)
 {
   int                 num_failed_tests = 0;
   int                 retval;
+  char                fc;
   size_t              original_size;
   sc_array_t          dest;
   sc_array_t          comp;
@@ -205,7 +207,7 @@ single_code_test (sc_array_t *src, int itest)
   sc_io_encode (src, &dest);
 
   /* decode and verify original data size */
-  if (sc_io_decode_info (&dest, &original_size)) {
+  if (sc_io_decode_info (&dest, &original_size, &fc) || fc != 'z') {
     SC_LERRORF ("decode info error on test %d\n", itest);
     ++num_failed_tests;
     goto error_code_test;
