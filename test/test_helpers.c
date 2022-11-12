@@ -147,8 +147,8 @@ single_inplace_test (sc_array_t *src, int itest)
     sc_io_encode (&inp, NULL);
 
     /* decode and verify original data size */
-    if (sc_io_decode_length (&inp, &original_size)) {
-      SC_LERRORF ("decode length error on test %d %d\n", itest, i);
+    if (sc_io_decode_info (&inp, &original_size)) {
+      SC_LERRORF ("decode info error on test %d %d\n", itest, i);
       ++num_failed_tests;
       goto error_inplace_test;
     }
@@ -205,8 +205,8 @@ single_code_test (sc_array_t *src, int itest)
   sc_io_encode (src, &dest);
 
   /* decode and verify original data size */
-  if (sc_io_decode_length (&dest, &original_size)) {
-    SC_LERRORF ("decode length error on test %d\n", itest);
+  if (sc_io_decode_info (&dest, &original_size)) {
+    SC_LERRORF ("decode info error on test %d\n", itest);
     ++num_failed_tests;
     goto error_code_test;
   }

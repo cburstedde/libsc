@@ -642,6 +642,8 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
 
 #endif /* !SC_HAVE_ZLIB */
 
+#define SC_IO_ENCODE_INFO_LEN 9
+
 void
 sc_io_encode (sc_array_t *data, sc_array_t *out)
 {
@@ -661,7 +663,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
 #ifdef SC_ENABLE_DEBUG
   size_t              ocnt;
 #endif
-  unsigned char       original_size[8];
+  unsigned char       original_size[SC_IO_ENCODE_INFO_LEN];
   sc_array_t          compressed;
   base64_encodestate  bstate;
 
@@ -683,6 +685,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
     /* enforce big endian byte order for original size */
     original_size[i] = (input_size >> ((7 - i) * 8)) & 0xFF;
   }
+  original_size[SC_IO_ENCODE_INFO_LEN - 1] = 'z';
 
   /* zlib compress input */
 #ifndef SC_HAVE_ZLIB
@@ -690,15 +693,16 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
 #else
   input_compress_bound = compressBound ((uLong) input_size);
 #endif /* !SC_HAVE_ZLIB */
-  sc_array_init_count (&compressed, 1, 8 + input_compress_bound);
-  memcpy (compressed.array, original_size, 8);
+  sc_array_init_count (&compressed, 1,
+                       SC_IO_ENCODE_INFO_LEN + input_compress_bound);
+  memcpy (compressed.array, original_size, SC_IO_ENCODE_INFO_LEN);
 #ifndef SC_HAVE_ZLIB
-  sc_io_noncompress (compressed.array + 8, input_compress_bound,
-                     data->array, input_size);
+  sc_io_noncompress (compressed.array + SC_IO_ENCODE_INFO_LEN,
+                     input_compress_bound, data->array, input_size);
 #else
-  zrv = compress2 ((Bytef *) compressed.array + 8, &input_compress_bound,
-                   (Bytef *) data->array, (uLong) input_size,
-                   Z_BEST_COMPRESSION);
+  zrv = compress2 ((Bytef *) compressed.array + SC_IO_ENCODE_INFO_LEN,
+                   &input_compress_bound, (Bytef *) data->array,
+                   (uLong) input_size, Z_BEST_COMPRESSION);
   SC_CHECK_ABORT (zrv == Z_OK, "Error on zlib compression");
 #endif /* !SC_HAVE_ZLIB */
 
@@ -707,7 +711,7 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
     out = data;
   }
   SC_ASSERT (out->elem_size == 1);
-  input_size = (size_t) (8 + input_compress_bound);
+  input_size = (size_t) (SC_IO_ENCODE_INFO_LEN + input_compress_bound);
   base64_lines = (input_size + SC_IO_DBC - 1) / SC_IO_DBC;
   encoded_size = 4 * ((input_size + 2) / 3) + base64_lines + 1;
   sc_array_resize (out, encoded_size);
@@ -779,18 +783,18 @@ sc_io_encode (sc_array_t *data, sc_array_t *out)
 }
 
 int
-sc_io_decode_length (sc_array_t *data, size_t *original_size)
+sc_io_decode_info (sc_array_t *data, size_t *original_size)
 {
   int                 i;
-  unsigned char       uc;
   size_t              osize;
   char                dec[12];
   base64_decodestate  bstate;
 
+  SC_ASSERT (SC_IO_ENCODE_INFO_LEN == 9);
   SC_ASSERT (data != NULL);
   SC_ASSERT (data->elem_size == 1);
   if (data->elem_count < 12) {
-    SC_LERROR ("sc_io_decode_length requires >= 12 bytes of input\n");
+    SC_LERROR ("sc_io_decode_info requires >= 12 bytes of input\n");
     return -1;
   }
 
@@ -799,19 +803,19 @@ sc_io_decode_length (sc_array_t *data, size_t *original_size)
   base64_init_decodestate (&bstate);
   osize = base64_decode_block (data->array, 12, dec, &bstate);
   if (osize != 9) {
-    SC_LERROR ("sc_io_decode_length base 64 error\n");
+    SC_LERROR ("sc_io_decode_info base 64 error\n");
     return -1;
   }
 
-  /* verify first byte of zlib format */
-  uc = (unsigned char) dec[8];
-  if ((uc & 0x8F) != 8) {
-    SC_LERROR ("sc_io_decode_length data format error\n");
+  /* verify first byte for zlib format */
+  if (dec[8] != 'z') {
+    SC_LERROR ("sc_io_decode_info data format error\n");
     return -1;
   }
 
   /* decode original length of data */
   if (original_size != NULL) {
+    unsigned char       uc;
     osize = 0;
     for (i = 0; i < 8; ++i) {
       /* read original byte order in big endian */
@@ -904,8 +908,13 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
   SC_ASSERT (irem == 0);
   SC_ASSERT (ocnt <= compressed_size);
   SC_ASSERT (ipos + 1 == data->array + encoded_size);
-  if (ocnt < 8) {
-    SC_LERROR ("base 64 decodes to less than 8 bytes\n");
+  if (ocnt < SC_IO_ENCODE_INFO_LEN) {
+    SC_LERRORF ("base 64 decodes to less than %d bytes\n",
+                SC_IO_ENCODE_INFO_LEN);
+    goto decode_error;
+  }
+  if (compressed.array[SC_IO_ENCODE_INFO_LEN - 1] != 'z') {
+    SC_LERROR ("encoded format character mismatch\n");
     goto decode_error;
   }
 
@@ -942,7 +951,8 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
   /* decompress decoded data */
 #ifndef SC_HAVE_ZLIB
   zrv = sc_io_nonuncompress (out->array, encoded_size,
-                             compressed.array + 8, ocnt - 8);
+                             compressed.array + SC_IO_ENCODE_INFO_LEN,
+                             ocnt - SC_IO_ENCODE_INFO_LEN);
   if (zrv) {
     SC_LERROR ("Please consider configuring the build"
                " such that zlib is found.\n");
@@ -951,7 +961,8 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
 #else
   uncompsize = (uLong) encoded_size;
   zrv = uncompress ((Bytef *) out->array, &uncompsize,
-                    (Bytef *) (compressed.array + 8), ocnt - 8);
+                    (Bytef *) (compressed.array + SC_IO_ENCODE_INFO_LEN),
+                    ocnt - SC_IO_ENCODE_INFO_LEN);
   if (zrv != Z_OK) {
     SC_LERROR ("zlib uncompress error\n");
     goto decode_error;

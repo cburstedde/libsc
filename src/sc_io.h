@@ -275,11 +275,12 @@ int                 sc_io_have_zlib (void);
  * `#ifdef SC_HAVE_ZLIB` or at run time using \ref sc_io_have_zlib.
  * Both approaches are readable by a standard zlib uncompress call.
  *
- * Secondly, we process the input data size as an 8-byte big-endian number
- * and then the zlib compressed data, concatenated, with a base 64 encoder.
- * We break lines after 72 code characters.  Each line ends in '\n'.
+ * Secondly, we process the input data size as an 8-byte big-endian number,
+ * then the letter 'z', and then the zlib compressed data, concatenated,
+ * with a base 64 encoder.  We break lines after 72 code characters.
  * The line breaks are considered part of the output data format.
- * A final terminating NUL is also considered part of the format.
+ * The last line is terminated with a line break and then a NUL.
+ * The terminating NUL is also considered part of the format.
  *
  * This routine can work in place or write to an output array.
  * The corresponding decoder function is \ref sc_io_decode.
@@ -300,7 +301,7 @@ int                 sc_io_have_zlib (void);
  */
 void                sc_io_encode (sc_array_t *data, sc_array_t *out);
 
-/** Decode length of original input from encoded data.
+/** Decode length and format of original input from encoded data.
  * We expect at least 12 bytes of the format produced by \ref sc_io_encode.
  * No matter how much data has been encoded by it, this much is available.
  * We verify the format and if successful decode the original data size.
@@ -314,29 +315,29 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  *                      If it contains less than 12 code bytes we error out.
  *                      It its first 12 bytes do not base 64 decode to 9 bytes
  *                      we error out.  We generally ignore the remaining data.
- *                      If the ninth decoded byte does not conform to the first
- *                      of the zlib format standard (RFC 1950), we error out.
+ *                      If the ninth decoded byte is not 'z', we error out.
  * \param [in,out] original_size    If not NULL and we do not error out,
  *                      set to the original size as encoded in the data.
  * \return              0 on success, negative value on error.
  */
-int                 sc_io_decode_length (sc_array_t *data,
-                                         size_t *original_size);
+int                 sc_io_decode_info (sc_array_t *data,
+                                       size_t *original_size);
 
 /** Decode a block of base 64 encoded compressed data.
  * The base 64 data must contain a line break after every 72 code
  * characters and a final NUL character right after the last line.
  * This function does not require zlib but benefits for speed.
  *
- * This is a two-stage process: we decode the input from base 64
- * and then extract the 8-byte big-endian original data size and
- * execute a zlib decompression on the remaining decoded data.
+ * This is a two-stage process: we decode the input from base 64 first.
+ * Then we extract the 8-byte big-endian original data size, the character
+ * 'z', and execute a zlib decompression on the remaining decoded data.
  * This function detects malformed input by erroring out.
  *
  * Any error condition is indicated by a negative return value.
  * Possible causes for error are:
  *
  *  - the input data string is not NUL-terminated
+ *  - the first 12 characters of input do not decode properly
  *  - the input data is corrupt for decoding or decompression
  *  - the output data array has non-unit element size and the
  *    length of the output data is not divisible by the size
