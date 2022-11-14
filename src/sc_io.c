@@ -408,8 +408,8 @@ sc_io_have_zlib (void)
 
 /* see RFC 1950 and RFC 1950 for the uncompressed zlib format */
 #ifndef SC_HAVE_ZLIB
-#define SC_IO_NONCOMP_BLOCK 65535
-#define SC_IO_ADLER32_PRIME 65521
+#define SC_IO_NONCOMP_BLOCK 65531       /**< +5 byte header = 64k */
+#define SC_IO_ADLER32_PRIME 65521       /**< defined by RFC 1950 */
 
 static void
 sc_io_adler32_init (uint32_t *adler)

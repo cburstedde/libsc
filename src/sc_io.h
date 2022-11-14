@@ -271,6 +271,11 @@ int                 sc_io_have_zlib (void);
  * compression level Z_BEST_COMPRESSION (subject to change).
  * Without zlib configured that function works uncompressed.
  *
+ * The encoding method and input data size can be retrieved, optionally,
+ * from the encoded data by \sc_io_decode_info.  This function decodes
+ * the method as a character, which is 'z' for \ref sc_io_encoded_zlib.
+ * We reserve the characters A-C, d-z indefinitely.
+ *
  * \param [in,out] data     If \a out is NULL, we work in place.
  *                          In this case, the array must on input have
  *                          an element size of 1 byte, which is preserved.
@@ -303,7 +308,6 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  * with a base 64 encoder.  We break lines after 72 code characters.
  * The line breaks are considered part of the output data format.
  * The last line is terminated with a line break and then a NUL.
- * The terminating NUL is also considered part of the format.
  *
  * This routine can work in place or write to an output array.
  * The corresponding decoder function is \ref sc_io_decode.
@@ -331,7 +335,8 @@ void                sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
  * We expect at least 12 bytes of the format produced by \ref sc_io_encode.
  * No matter how much data has been encoded by it, this much is available.
  * We decode the original data size and the character indicating the format.
- * This function does not require zlib.
+ *
+ * This function does not require zlib.  It works with any well-defined data.
  *
  * Note that this function is not required before \ref sc_io_decode.
  * Calling this function on any result produced by \ref sc_io_encode
@@ -363,6 +368,7 @@ int                 sc_io_decode_info (sc_array_t *data,
  *
  * If we should add another format in the future, the format character
  * may be something else than 'z', as permitted by our specification.
+ * To this end, we reserve the characters A-C and d-z indefinitely.
  *
  * Any error condition is indicated by a negative return value.
  * Possible causes for error are:
