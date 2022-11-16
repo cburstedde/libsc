@@ -38,13 +38,15 @@ typedef struct sc_options sc_options_t;
 
 /** This callback can be invoked during sc_options_parse.
  * \param [in] opt      Valid options data structure.
- *                      This is passed in case a file should be loaded.
- * \param [in] optarg   The option argument or NULL if there is none.
+ *                      This is passed as a matter of principle.
+ * \param [in] opt_arg  The option argument or NULL if there is none.
+ *                      This variable is internal.  Do not store pointer.
  * \param [in] data     User-defined data passed to sc_options_add_callback.
- * \return              Return 0 if successful, -1 on error.
+ * \return              Return 0 if successful, -1 to indicate a parse error.
  */
 typedef int         (*sc_options_callback_t) (sc_options_t * opt,
-                                              const char *optarg, void *data);
+                                              const char *opt_arg,
+                                              void *data);
 
 /** Create an empty options structure.
  * \param [in] program_path   Name or path name of the program to display.
@@ -196,7 +198,7 @@ void                sc_options_add_inifile (sc_options_t * opt,
  * It does not have an associated option variable itself.
  *
  * This functionality is only active when \ref sc_have_json returns true,
- * equivalent to the #define SC_HAVE_JSON existing, and ignored otherwise.
+ * equivalent to the define SC_HAVE_JSON existing, and ignored otherwise.
  *
  * \param [in,out] opt       A valid options structure.
  * \param [in] opt_char      Short option character, may be '\0'.
@@ -210,17 +212,15 @@ void                sc_options_add_jsonfile (sc_options_t * opt,
 
 /** Add an option that calls a user-defined function when parsed.
  * The callback function should be implemented to allow multiple calls.
- * The option does not have an associated variable.
- * The callback can be used to set multiple option variables in bulk that would
- * otherwise require an inconvenient number of individual options.
- * This is, however, currently not possible for options with
- * string values or key-value pairs due to the way the API is set up.
- * This function should not have non-option related side effects.
+ * The callback may be used to set multiple option variables in bulk that
+ * would otherwise require an inconvenient number of individual options.
  * This option is not loaded from or saved to files.
  * \param [in,out] opt      A valid options structure.
  * \param [in] opt_char     Short option character, may be '\0'.
  * \param [in] opt_name     Long option name without initial dashes, may be NULL.
- * \param [in] has_arg      Specify if the option needs an option argument.
+ * \param [in] has_arg      Specify whether the option needs an option argument.
+ *                          This can be 0 for none, 1 for a required argument,
+ *                          and 2 for an optional argument; see getopt_long (3).
  * \param [in] fn           Function to call when this option is encountered.
  * \param [in] data         User-defined data passed to the callback.
  * \param [in] help_string  Help string for usage message, may be NULL.

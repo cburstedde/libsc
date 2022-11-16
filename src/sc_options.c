@@ -31,6 +31,8 @@
 #include <jansson.h>
 #endif
 
+#define SC_OPTION_CALLBACK_NULL ((sc_options_callback_t) 0)
+
 typedef enum
 {
   SC_OPTION_SWITCH,
@@ -60,7 +62,7 @@ typedef struct
   int                 opt_char;
   const char         *opt_name;
   void               *opt_var;
-  void                (*opt_fn) (void);
+  sc_options_callback_t opt_fn;
   int                 has_arg;
   int                 called;           /**< set to 0 and ignored */
   const char         *help_string;
@@ -449,46 +451,20 @@ void
 sc_options_add_inifile (sc_options_t * opt, int opt_char,
                         const char *opt_name, const char *help_string)
 {
-  sc_option_item_t   *item;
-
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_INIFILE;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = NULL;
-  item->opt_fn = NULL;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_INIFILE, help_string);
   item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
 }
 
 void
 sc_options_add_jsonfile (sc_options_t * opt, int opt_char,
                          const char *opt_name, const char *help_string)
 {
-  sc_option_item_t   *item;
-
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_JSONFILE;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = NULL;
-  item->opt_fn = NULL;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_JSONFILE, help_string);
   item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
 }
 
 void
@@ -499,20 +475,12 @@ sc_options_add_callback (sc_options_t * opt, int opt_char,
 {
   sc_option_item_t   *item;
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
+  SC_ASSERT (fn != SC_OPTION_CALLBACK_NULL);
 
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_CALLBACK;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = NULL;
-  item->opt_fn = (void (*)(void)) fn;
+  item = sc_options_add_item (opt, opt_char, opt_name,
+                              SC_OPTION_CALLBACK, help_string);
   item->has_arg = has_arg;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
+  item->opt_fn = fn;
   item->user_data = data;
 }
 
@@ -609,8 +577,8 @@ sc_options_add_suboptions (sc_options_t * opt,
       sc_options_add_jsonfile (opt, '\0', *name, item->help_string);
       break;
     case SC_OPTION_CALLBACK:
-      sc_options_add_callback (opt, '\0', *name, item->has_arg,
-                               (sc_options_callback_t) item->opt_fn,
+      sc_options_add_callback (opt, '\0', *name,
+                               item->has_arg, item->opt_fn,
                                item->user_data, item->help_string);
       break;
     case SC_OPTION_KEYVALUE:
@@ -677,7 +645,7 @@ sc_options_print_usage (int package_id, int log_priority,
       break;
     case SC_OPTION_CALLBACK:
       if (item->has_arg) {
-        provide = "<ARG>";
+        provide = item->has_arg == 2 ? "[<ARG>]" : "<ARG>";
       }
       break;
     case SC_OPTION_KEYVALUE:
@@ -796,18 +764,6 @@ sc_options_print_summary (int package_id, int log_priority,
       }
       printed += snprintf (outbuf + printed, BUFSIZ - printed, "%s", s);
       break;
-#if 0
-    case SC_OPTION_CALLBACK:
-      if (item->called) {
-        string_val = item->has_arg ? item->string_value : "true";
-      }
-      else {
-        string_val = "<unspecified>";
-      }
-      printed += snprintf (outbuf + printed, BUFSIZ - printed,
-                           "%s", string_val);
-      break;
-#endif
     case SC_OPTION_KEYVALUE:
       SC_ASSERT (item->string_value != NULL);
       printed += snprintf (outbuf + printed, BUFSIZ - printed,
@@ -982,29 +938,6 @@ sc_options_load_ini (int package_id, int err_priority,
         sc_options_string_set ((sc_option_string_t *) item->opt_var, s);
       }
       break;
-#if 0
-    case SC_OPTION_CALLBACK:
-      if (item->has_arg) {
-        s = iniparser_getstring (dict, key, NULL);
-        if (s == NULL) {
-          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                       "Invalid string %s in file: %s\n", key, inifile);
-          iniparser_freedict (dict);
-          return -1;
-        }
-        SC_FREE (item->string_value);   /* deals with NULL */
-        item->string_value = SC_STRDUP (s);
-      }
-      else {
-        s = NULL;
-      }
-      fn = (sc_options_callback_t) item->opt_fn;
-      if (fn (opt, s, item->user_data)) {
-        iniparser_freedict (dict);
-        return -1;
-      }
-      break;
-#endif
     case SC_OPTION_KEYVALUE:
       SC_ASSERT (item->string_value != NULL);
       s = iniparser_getstring (dict, key, NULL);
@@ -1349,11 +1282,6 @@ sc_options_save (int package_id, int err_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
-#if 0
-    if (item->opt_type == SC_OPTION_STRING && item->string_value == NULL) {
-      continue;
-    }
-#endif
     if (item->opt_type == SC_OPTION_INIFILE ||
         item->opt_type == SC_OPTION_JSONFILE ||
         item->opt_type == SC_OPTION_CALLBACK) {
@@ -1436,17 +1364,6 @@ sc_options_save (int package_id, int err_priority,
         retval = fprintf (file, "%s\n", s);
       }
       break;
-#if 0
-    case SC_OPTION_CALLBACK:
-      if (item->has_arg) {
-        SC_ASSERT (item->string_value != NULL);
-        retval = fprintf (file, "%s\n", item->string_value);
-      }
-      else {
-        retval = fprintf (file, "%s\n", "true");
-      }
-      break;
-#endif
     case SC_OPTION_KEYVALUE:
       SC_ASSERT (item->string_value != NULL);
       retval = fprintf (file, "%s\n", item->string_value);
@@ -1509,7 +1426,6 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   sc_option_item_t   *item;
   char                optstring[BUFSIZ];
   struct option      *longopts, *lo;
-  sc_options_callback_t fn;
 
   /* build getopt string and long option structures */
 
@@ -1655,16 +1571,15 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       break;
     case SC_OPTION_CALLBACK:
-      if (item->has_arg) {
-        SC_FREE (item->string_value);   /* deals with NULL */
-        item->string_value = SC_STRDUP (optarg);
-      }
-      fn = (sc_options_callback_t) item->opt_fn;
-      if (fn (opt, item->has_arg ? optarg : NULL, item->user_data)) {
-#if 0
-        SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
-                    "Error in callback option\n");
-#endif
+      if (item->opt_fn (opt, optarg, item->user_data)) {
+        if (optarg == NULL) {
+          SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                      "Error by option callback\n");
+        }
+        else {
+          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                       "Error by option callback: %s\n", optarg);
+        }
         retval = -1;            /* this ends option processing */
       }
       break;
