@@ -258,6 +258,7 @@ void                sc_options_add_keyvalue (sc_options_t * opt,
                                              const char *help_string);
 
 /** Copy one set of options to another as a subset, with a prefix.
+ * The variables referenced by the options and the suboptions are the same.
  * \param [in,out] opt  A set of options.
  * \param [in]  subopt  Another set of options to be copied.
  * \param [in]  prefix  The prefix to add to option names as they are copied.

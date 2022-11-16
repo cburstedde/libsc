@@ -500,16 +500,10 @@ sc_options_add_keyvalue (sc_options_t * opt,
   SC_ASSERT (init_value != NULL);
   SC_ASSERT (keyvalue != NULL);
 
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_KEYVALUE;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = variable;
-  item->opt_fn = NULL;
+  item = sc_options_add_item (opt, opt_char, opt_name,
+                              SC_OPTION_KEYVALUE, help_string);
   item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
+  item->opt_var = variable;
   item->user_data = keyvalue;
 
   /* we expect that the key points to a valid integer entry by design */
@@ -949,7 +943,7 @@ sc_options_load_ini (int package_id, int err_priority,
         if (iserror) {
           /* key not found or of the wrong type; this cannot be ignored */
           SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                       "Invalid key %s for option %s in file: %s\n",
+                       "Invalid keyvalue %s for option %s in file: %s\n",
                        s, key, inifile);
           iniparser_freedict (dict);
           return -1;
@@ -1070,6 +1064,7 @@ sc_options_load_json (int package_id, int err_priority,
   SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
               "JSON not configured: could not parse input file\n");
 #else
+  int                 iserror;
   int                 bvalue, ivalue;
   double              dvalue;
   size_t              iz, zvalue;
@@ -1209,18 +1204,46 @@ sc_options_load_json (int package_id, int err_priority,
       *(double *) item->opt_var = dvalue;
       break;
     case SC_OPTION_STRING:
-      if (json_is_string (jval)) {
+      if (json_is_null (jval)) {
+        s = NULL;
+      }
+      else if (json_is_string (jval)) {
         s = json_string_value (jval);
-        sc_options_string_set ((sc_option_string_t *) item->opt_var, s);
       }
       else {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
                      "Invalid string %s in file: %s\n", key, jsonfile);
         goto load_json_error;
       }
+      sc_options_string_set ((sc_option_string_t *) item->opt_var, s);
       break;
     case SC_OPTION_KEYVALUE:
-      /* to do: figure out how to read an associative array */
+      SC_ASSERT (item->string_value != NULL);
+      if (json_is_string (jval)) {
+        /* we must find a string and not the null value */
+        s = json_string_value (jval);
+        SC_ASSERT (s != NULL);
+
+        /* lookup the key and see if the result is valid */
+        iserror = *(int *) item->opt_var;
+        ivalue = sc_keyvalue_get_int_check ((sc_keyvalue_t *)
+                                            item->user_data, s, &iserror);
+        if (iserror) {
+          /* key not found or of the wrong type; this cannot be ignored */
+          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                       "Invalid keyvalue %s for option %s in file: %s\n",
+                       s, key, jsonfile);
+          goto load_json_error;
+        }
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid key %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      SC_FREE (item->string_value);
+      item->string_value = SC_STRDUP (s);
+      *(int *) item->opt_var = ivalue;
       break;
     default:
       SC_ABORT_NOT_REACHED ();
