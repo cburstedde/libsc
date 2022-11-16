@@ -5,6 +5,7 @@
     "-d" : 7.55,
     "switch" : true,
     "string" : "This string is read from the options JSON file!",
+    "sizet" : 13428237819423,
 
     "Subset" : {
       "integer" : 23,

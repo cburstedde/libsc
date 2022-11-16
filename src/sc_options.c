@@ -1074,6 +1074,7 @@ sc_options_load_json (int package_id, int err_priority,
   json_t             *file;
   json_t             *jopt;
   json_t             *jval, *jv2;
+  json_int_t          jint;
   json_error_t        jerr;
   const char         *s, *key;
   char                skey[BUFSIZ];
@@ -1162,9 +1163,10 @@ sc_options_load_json (int package_id, int err_priority,
       *(int *) item->opt_var = bvalue;
       break;
     case SC_OPTION_INT:
-      if (json_is_integer (jval)) {
-        /* to do: range check */
-        ivalue = (int) json_integer_value (jval);
+      if (json_is_integer (jval) &&
+          (jint = json_integer_value (jval)) >= (json_int_t) INT_MIN &&
+          jint <= (json_int_t) INT_MAX) {
+        ivalue = (int) jint;
       }
       else {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
@@ -1174,9 +1176,9 @@ sc_options_load_json (int package_id, int err_priority,
       *(int *) item->opt_var = ivalue;
       break;
     case SC_OPTION_SIZE_T:
-      if (json_is_integer (jval)) {
-        /* to do: range check */
-        zvalue = (size_t) json_integer_value (jval);
+      if (json_is_integer (jval) &&
+          (jint = json_integer_value (jval)) >= 0) {
+        zvalue = (size_t) jint;
       }
       else {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
@@ -1188,7 +1190,6 @@ sc_options_load_json (int package_id, int err_priority,
     case SC_OPTION_DOUBLE:
       if (json_is_number (jval)) {
         if (json_is_integer (jval)) {
-          /* to do: range check */
           dvalue = (double) json_integer_value (jval);
         }
         else {
