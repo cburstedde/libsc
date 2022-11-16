@@ -406,7 +406,7 @@ sc_io_have_zlib (void)
 #define SC_IO_LBD (SC_IO_LBC + 1)
 #define SC_IO_LBE (SC_IO_LBC + 2)
 
-/* see RFC 1950 and RFC 1950 for the uncompressed zlib format */
+/* see RFC 1950 and RFC 1951 for the uncompressed zlib format */
 #ifndef SC_HAVE_ZLIB
 #define SC_IO_NONCOMP_BLOCK 65531       /**< +5 byte header = 64k */
 #define SC_IO_ADLER32_PRIME 65521       /**< defined by RFC 1950 */
@@ -1519,8 +1519,8 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   *ocount = 0;
 
   if (zcount == 0) {
-    /* This should be not necessary according to the MPI standard but some
-     * MPI impementations trigger valgrind warnigs due to uninitialized
+    /* This should not be necessary according to the MPI standard but some
+     * MPI implementations trigger valgrind warnings due to uninitialized
      * MPI status members.
      */
     mpiret = sc_MPI_SUCCESS;
@@ -1784,8 +1784,8 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
   *ocount = 0;
 
   if (zcount == 0) {
-    /* This should be not necessary according to the MPI standard but some
-     * MPI impementations trigger valgrind warnigs due to uninitialized
+    /* This should not be necessary according to the MPI standard but some
+     * MPI imlementations trigger valgrind warnings due to uninitialized
      * MPI status members.
      */
     mpiret = sc_MPI_SUCCESS;

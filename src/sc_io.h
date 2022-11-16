@@ -258,7 +258,7 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
                                               size_t *bytes_out);
 
 /** Return a boolean indicating whether zlib has been configured.
- * \return          True if zlib has been found on runnning configure,
+ * \return          True if zlib has been found on running configure,
  *                  or respectively on calling cmake.
  */
 int                 sc_io_have_zlib (void);
