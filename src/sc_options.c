@@ -792,12 +792,12 @@ int
 sc_options_load (int package_id, int err_priority,
                  sc_options_t * opt, const char *file)
 {
-  return sc_options_load_ini (package_id, err_priority, opt, file);
+  return sc_options_load_ini (package_id, err_priority, opt, file, NULL);
 }
 
 int
 sc_options_load_ini (int package_id, int err_priority,
-                     sc_options_t * opt, const char *inifile)
+                     sc_options_t * opt, const char *inifile, void *re)
 {
   int                 found_short, found_long;
   size_t              iz;
@@ -815,6 +815,9 @@ sc_options_load_ini (int package_id, int err_priority,
 
   SC_ASSERT (opt != NULL);
   SC_ASSERT (inifile != NULL);
+
+  /* prepare for runtime error checking implementation */
+  SC_ASSERT (re == NULL);
 
   /* read .ini file in one go */
   dict = iniparser_load (inifile);
@@ -1061,7 +1064,7 @@ sc_options_json_lookup (json_t *object, const char *keystring)
 
 int
 sc_options_load_json (int package_id, int err_priority,
-                      sc_options_t *opt, const char *jsonfile)
+                      sc_options_t *opt, const char *jsonfile, void *re)
 {
   int                 retval = -1;
 #ifndef SC_HAVE_JSON
@@ -1085,6 +1088,9 @@ sc_options_load_json (int package_id, int err_priority,
 
   SC_ASSERT (opt != NULL);
   SC_ASSERT (jsonfile != NULL);
+
+  /* prepare for runtime error checking implementation */
+  SC_ASSERT (re == NULL);
 
   /* read JSON file in one go */
   file = NULL;
@@ -1585,14 +1591,16 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       sc_options_string_set ((sc_option_string_t *) item->opt_var, optarg);
       break;
     case SC_OPTION_INIFILE:
-      if (sc_options_load_ini (package_id, err_priority, opt, optarg)) {
+      if (sc_options_load_ini (package_id, err_priority,
+                               opt, optarg, NULL)) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
                      "Error loading .ini file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
       break;
     case SC_OPTION_JSONFILE:
-      if (sc_options_load_json (package_id, err_priority, opt, optarg)) {
+      if (sc_options_load_json (package_id, err_priority,
+                                opt, optarg, NULL)) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
                      "Error loading JSON file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
