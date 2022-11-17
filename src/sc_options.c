@@ -961,6 +961,8 @@ sc_options_load_ini (int package_id, int err_priority,
   return 0;
 }
 
+#ifdef SC_HAVE_JSON
+
 /** Look up a key, possibly with ':' hierarchy markers, in a JSON object.
  *
  * We look up each substring between ':'s as key to a sub-object and
@@ -1054,6 +1056,8 @@ sc_options_json_lookup (json_t *object, const char *keystring)
     }
   }
 }
+
+#endif /* SC_HAVE_JSON */
 
 int
 sc_options_load_json (int package_id, int err_priority,
