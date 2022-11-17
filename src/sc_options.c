@@ -971,7 +971,7 @@ sc_options_load_ini (int package_id, int err_priority,
  * We look up each substring between ':'s as key to a sub-object and
  * continue recursively.  If a key is not found, we try the concatenation
  * with the next substring as key, and so forth.
- * Values dound at deeper levels of recursion take precedence.
+ * Values found at deeper levels of recursion take precedence.
  *
  * This allows for both a hierarchical and a flat JSON representation.
  *
