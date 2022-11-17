@@ -414,7 +414,7 @@ fi
 if test "x$$1_HAVE_JSON" = x ; then
 AC_MSG_NOTICE([- $1 ----------------------------------------------------
 We did not find a JSON library containing json_integer and json_real.
-At this point, this is of no consequence to using $1.
-You can fix this by installing the jansson library.])
+This means that loading JSON files for option values will fail.
+You can fix this by installing the jansson development library.])
 fi
 ])
