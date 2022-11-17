@@ -325,8 +325,9 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  *                          It must be resizable (not a view).
  *                          We resize the array to the output data, which
  *                          always includes a final terminating zero.
- * \param [in] zlib_compression_level     Legal zlib compression level.
- *                          Ignored when zlib is not configured.
+ * \param [in] zlib_compression_level     Compression level between 0
+ *                          (no compression) and 9 (best compression).
+ *                          The value -1 indicates some default level.
  */
 void                sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
                                        int zlib_compression_level);

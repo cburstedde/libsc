@@ -688,6 +688,7 @@ sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
     SC_ASSERT (SC_ARRAY_IS_OWNER (out));
     SC_ASSERT (out->elem_size == 1);
   }
+  SC_ASSERT (-1 <= zlib_compression_level && zlib_compression_level <= 9);
 #ifdef SC_HAVE_ZLIB
   SC_ASSERT (zlib_compression_level == Z_DEFAULT_COMPRESSION ||
              (zlib_compression_level >= 0 && zlib_compression_level <= 9));
