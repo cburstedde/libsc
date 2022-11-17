@@ -8,6 +8,7 @@ sc_polynom.c
 sc_keyvalue.c sc_refcount.c sc_shmem.c
 sc_allgather.c sc_reduce.c sc_notify.c
 sc_uint128.c sc_v4l2.c
+sc_puff.c
 )
 
 if(SC_HAVE_GETOPT_H)

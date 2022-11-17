@@ -16,7 +16,8 @@ libsc_installed_headers = \
         src/sc_getopt.h src/sc_polynom.h \
         src/sc_keyvalue.h src/sc_refcount.h src/sc_shmem.h \
         src/sc_allgather.h src/sc_reduce.h src/sc_notify.h \
-        src/sc_uint128.h src/sc_v4l2.h
+        src/sc_uint128.h src/sc_v4l2.h \
+        src/sc_puff.h
 libsc_internal_headers =
 libsc_compiled_sources = \
         src/sc.c src/sc_mpi.c src/sc_containers.c src/sc_avl.c \
@@ -28,9 +29,11 @@ libsc_compiled_sources = \
         src/sc_getopt.c src/sc_getopt1.c src/sc_polynom.c \
         src/sc_keyvalue.c src/sc_refcount.c src/sc_shmem.c \
         src/sc_allgather.c src/sc_reduce.c src/sc_notify.c \
-        src/sc_uint128.c src/sc_v4l2.c
+        src/sc_uint128.c src/sc_v4l2.c \
+        src/sc_puff.c
 libsc_original_headers = \
-        src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h
+        src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h \
+        src/sc_builtin/puff.h
 
 # this variable is used for headers that are not publicly installed
 LIBSC_CPPFLAGS =
