@@ -1564,4 +1564,14 @@ sc_version_point (void)
 }
 #endif
 
+int
+sc_have_json (void)
+{
+#ifndef SC_HAVE_JSON
+  return 0;
+#else
+  return 1;
+#endif
+}
+
 #endif

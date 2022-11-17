@@ -147,13 +147,6 @@ AS_IF([test "$ac_res" != no],
 AS_VAR_POPDEF([ac_Search])dnl
 ])
 
-dnl SC_REQUIRE_LIB(LIBRARY LIST, FUNCTION)
-dnl Check for FUNCTION in LIBRARY, exit with error if not found
-dnl
-AC_DEFUN([SC_REQUIRE_LIB],
-    [AC_SEARCH_LIBS([$2], [$1],,
-      [AC_MSG_ERROR([cannot find function $2 in $1])])])
-
 dnl SC_CHECK_MATH(PREFIX)
 dnl Check whether sqrt is found, possibly in -lm, using a link test.
 dnl We AC_DEFINE HAVE_MATH to 1 depending on whether it found.
@@ -179,7 +172,7 @@ for (; sqrt (a) < a; a *= 1.000023) { putc ('1', stdout); }
 dnl SC_CHECK_ZLIB(PREFIX)
 dnl Check whether adler32_combine is found, possibly in -lz, using a link test.
 dnl We AC_DEFINE HAVE_ZLIB to 1 depending on whether it is found.
-dnl We also set PREFIX_HAVE_ZLIB to yes if found.
+dnl We set the shell variable PREFIX_HAVE_ZLIB to yes if found.
 dnl
 AC_DEFUN([SC_CHECK_ZLIB],
 [
@@ -192,6 +185,25 @@ if (a == adler32_combine (a, b, len)) {;}
   [AC_DEFINE([HAVE_ZLIB], [1], [Define to 1 if zlib's adler32_combine links])
    $1_HAVE_ZLIB="yes"],
   [$1_HAVE_ZLIB=])
+])
+
+dnl SC_CHECK_JSON(PREFIX)
+dnl Check whether json_integer, json_real are found (in -ljansson).
+dnl We AC_DEFINE HAVE_JSON to 1 depending on whether it is found.
+dnl We set the shell variable PREFIX_HAVE_JSON to yes if found.
+dnl
+AC_DEFUN([SC_CHECK_JSON],
+[
+  SC_SEARCH_LIBS([json_integer], [[#include <jansson.h>]],
+[[
+json_t *jint, *jreal;
+if (jint == json_integer ((json_int_t) 15)) { json_decref (jint); }
+if (jreal == json_real (.5)) { json_decref (jreal); }
+]], [jansson],
+  [AC_DEFINE([HAVE_JSON], [1],
+             [Define to 1 if json_integer and json_real link])
+   $1_HAVE_JSON="yes"],
+  [$1_HAVE_JSON=])
 ])
 
 dnl SC_CHECK_LIB(LIBRARY LIST, FUNCTION, TOKEN, PREFIX)
@@ -366,6 +378,7 @@ AC_DEFUN([SC_CHECK_LIBRARIES],
 AC_DEFINE([USING_AUTOCONF], 1, [Define to 1 if using autoconf build])
 SC_CHECK_MATH([$1])
 SC_CHECK_ZLIB([$1])
+SC_CHECK_JSON([$1])
 dnl SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua5 lua],
 dnl              [lua_createtable], [LUA], [$1])
 dnl SC_CHECK_BLAS_LAPACK([$1])
@@ -391,14 +404,19 @@ dnl
 AC_DEFUN([SC_FINAL_MESSAGES],
 [
 if test "x$$1_HAVE_ZLIB" = x ; then
-AC_MSG_NOTICE([- $1 -------------------------------------------------
+AC_MSG_NOTICE([- $1 ----------------------------------------------------
 We did not find a recent zlib containing the function adler32_combine.
 This is OK if the following does not matter to you:
  - Calling some functions that rely on zlib will abort your program.
    These include sc_array_checksum and sc_vtk_write_compressed.
  - The data produced by sc_io_encode is not compressed.
  - The function sc_io_decode is slower than with zlib.
-You can fix this by compiling a recent zlib and pointing LIBS to it.
-])
+You can fix this by compiling a recent zlib and pointing LIBS to it.])
+fi
+if test "x$$1_HAVE_JSON" = x ; then
+AC_MSG_NOTICE([- $1 ----------------------------------------------------
+We did not find a JSON library containing json_integer and json_real.
+This means that loading JSON files for option values will fail.
+You can fix this by installing the jansson development library.])
 fi
 ])

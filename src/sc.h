@@ -175,7 +175,7 @@
 #include <unistd.h>
 #elif defined _WIN32
 #include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
+typedef SSIZE_T     ssize_t;
 #endif
 
 /* definitions to allow user code to query the sc library */
@@ -823,6 +823,11 @@ int                 sc_version_minor (void);
  */
 int                 sc_version_point (void);
 #endif /* 0 */
+
+/** Return whether we have found a JSON library at configure time.
+ * \return          True if and only if SC_HAVE_JSON is defined.
+ */
+int                 sc_have_json (void);
 
 SC_EXTERN_C_END;
 
