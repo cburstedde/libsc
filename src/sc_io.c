@@ -518,7 +518,7 @@ sc_io_noncompress (char *dest, size_t dest_size,
 
 static int
 sc_io_nonuncompress (char *dest, size_t dest_size,
-                     const char *src, size_t src_size)
+                     const char *src, size_t src_size, void *re)
 {
   int                 final_block;
   uint32_t            adler;
@@ -528,6 +528,9 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
 #else
   unsigned long       destlen, sourcelen;
 #endif
+
+  /* in the future we will add runtime error reporting */
+  SC_ASSERT (re == NULL);
 
   /* check zlib format header */
   if (src_size < 2) {
@@ -794,14 +797,18 @@ sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
 }
 
 int
-sc_io_decode_info (sc_array_t *data,
-                   size_t *original_size, char *format_char)
+sc_io_decode_info (sc_array_t *data, size_t *original_size,
+                   char *format_char, void *re)
 {
   int                 i;
   size_t              osize;
   char                dec[12];
   base64_decodestate  bstate;
 
+  /* in the future we will add runtime error reporting */
+  SC_ASSERT (re == NULL);
+
+  /* basic checks */
   SC_ASSERT (SC_IO_ENCODE_INFO_LEN == 9);
   SC_ASSERT (data != NULL);
   SC_ASSERT (data->elem_size == 1);
@@ -849,7 +856,8 @@ sc_io_decode_info (sc_array_t *data,
 }
 
 int
-sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
+sc_io_decode (sc_array_t *data, sc_array_t *out,
+              size_t max_original_size, void *re)
 {
   int                 i;
   int                 zrv;
@@ -867,6 +875,9 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
 #endif
   sc_array_t          compressed;
   base64_decodestate  bstate;
+
+  /* in the future we will add runtime error reporting */
+  SC_ASSERT (re == NULL);
 
   /* examine input data */
   SC_ASSERT (data != NULL);
@@ -973,7 +984,7 @@ sc_io_decode (sc_array_t *data, sc_array_t *out, size_t max_original_size)
 #ifndef SC_HAVE_ZLIB
   zrv = sc_io_nonuncompress (out->array, encoded_size,
                              compressed.array + SC_IO_ENCODE_INFO_LEN,
-                             ocnt - SC_IO_ENCODE_INFO_LEN);
+                             ocnt - SC_IO_ENCODE_INFO_LEN, re);
   if (zrv) {
     SC_LERROR ("Please consider configuring the build"
                " such that zlib is found.\n");

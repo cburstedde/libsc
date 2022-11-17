@@ -102,7 +102,7 @@ single_inplace_test (sc_array_t *src, int itest)
     sc_io_encode (&inp, NULL);
 
     /* decode in place with array */
-    retval = sc_io_decode (&inp, NULL, 0);
+    retval = sc_io_decode (&inp, NULL, 0, NULL);
     if (retval) {
       SC_LERRORF ("decode array in place error %d %d\n", itest, i);
       ++num_failed_tests;
@@ -126,7 +126,7 @@ single_inplace_test (sc_array_t *src, int itest)
 
       /* decode in place with view */
       sc_array_init_view (&view, &inp, 0, inp.elem_count);
-      retval = sc_io_decode (&view, NULL, 0);
+      retval = sc_io_decode (&view, NULL, 0, NULL);
       if (retval) {
         SC_LERRORF ("decode view in place error %d %d\n", itest, i);
         ++num_failed_tests;
@@ -148,7 +148,7 @@ single_inplace_test (sc_array_t *src, int itest)
     sc_io_encode (&inp, NULL);
 
     /* decode and verify original data size */
-    if (sc_io_decode_info (&inp, &original_size, &fc) || fc != 'z') {
+    if (sc_io_decode_info (&inp, &original_size, &fc, NULL) || fc != 'z') {
       SC_LERRORF ("decode info error on test %d %d\n", itest, i);
       ++num_failed_tests;
       goto error_inplace_test;
@@ -163,7 +163,7 @@ single_inplace_test (sc_array_t *src, int itest)
     mz = SC_MAX (sz, inz[i]);
     sc_array_init_count (&targ, 1, mz);
     sc_array_init_view (&view, &targ, 0, mz);
-    retval = sc_io_decode (&inp, &view, 0);
+    retval = sc_io_decode (&inp, &view, 0, NULL);
     if (retval) {
       SC_LERRORF ("decode view error %d %d\n", itest, i);
       ++num_failed_tests;
@@ -207,7 +207,7 @@ single_code_test (sc_array_t *src, int itest)
   sc_io_encode (src, &dest);
 
   /* decode and verify original data size */
-  if (sc_io_decode_info (&dest, &original_size, &fc) || fc != 'z') {
+  if (sc_io_decode_info (&dest, &original_size, &fc, NULL) || fc != 'z') {
     SC_LERRORF ("decode info error on test %d\n", itest);
     ++num_failed_tests;
     goto error_code_test;
@@ -219,7 +219,7 @@ single_code_test (sc_array_t *src, int itest)
   }
 
   /* decode */
-  retval = sc_io_decode (&dest, &comp, 0);
+  retval = sc_io_decode (&dest, &comp, 0, NULL);
   if (retval) {
     SC_LERRORF ("test %d: sc_io_decode internal error\n", itest);
     ++num_failed_tests;

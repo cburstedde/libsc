@@ -350,11 +350,12 @@ void                sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
  *                      set to the original size as encoded in the data.
  * \param [out] format_char     If not NULL and we do not error out, the
  *                      ninth character of decoded data indicating the format.
+ * \param [in,out] re   Provided for error reporting, presently must be NULL.
  * \return              0 on success, negative value on error.
  */
 int                 sc_io_decode_info (sc_array_t *data,
                                        size_t *original_size,
-                                       char *format_char);
+                                       char *format_char, void *re);
 
 /** Decode a block of base 64 encoded compressed data.
  * The base 64 data must contain a line break after every 72 code
@@ -409,11 +410,12 @@ int                 sc_io_decode_info (sc_array_t *data,
  * \param [in] max_original_size    If nonzero, this is the maximal data
  *                          size that we will accept after uncompression.
  *                          If exceeded, return a negative value.
+ * \param [in,out] re   Provided for error reporting, presently must be NULL.
  * \return                  0 on success, negative on malformed input
  *                          data or insufficient output space.
  */
 int                 sc_io_decode (sc_array_t *data, sc_array_t *out,
-                                  size_t max_original_size);
+                                  size_t max_original_size, void *re);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream opened for writing.
