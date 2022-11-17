@@ -56,6 +56,11 @@ jobs:
         make -j V=0
         make -j check V=0
 
+    - name: Install JSON parser library halfway through CI run
+      run: |
+        sudo apt-get install -yq --no-install-recommends \
+            libjansson-dev
+
     - name: Make check with MPI, debug and C++ compiler
       shell: bash
       run: |
