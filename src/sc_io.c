@@ -22,6 +22,7 @@
 */
 
 #include <sc_io.h>
+#include <sc_puff.h>
 #include <libb64.h>
 #ifdef SC_HAVE_ZLIB
 #include <zlib.h>
@@ -381,6 +382,633 @@ sc_io_source_read_mirror (sc_io_source_t * source, void *data,
     retval = sc_io_source_destroy (mirror_src) || retval;
   }
 
+  return retval;
+}
+
+int
+sc_io_have_zlib (void)
+{
+#ifndef SC_HAVE_ZLIB
+  return 0;
+#else
+  return 1;
+#endif
+}
+
+/* byte count for one line of data must be a multiple of 3 */
+#define SC_IO_DBC 54
+#if SC_IO_DBC % 3 != 0
+#error "SC_IO_DBC must be a multiple of 3"
+#endif
+
+/* byte count for one line of base64 encoded data and newline */
+#define SC_IO_LBC (SC_IO_DBC / 3 * 4)
+#define SC_IO_LBD (SC_IO_LBC + 1)
+#define SC_IO_LBE (SC_IO_LBC + 2)
+
+/* see RFC 1950 and RFC 1951 for the uncompressed zlib format */
+#ifndef SC_HAVE_ZLIB
+#define SC_IO_NONCOMP_BLOCK 65531       /**< +5 byte header = 64k */
+#define SC_IO_ADLER32_PRIME 65521       /**< defined by RFC 1950 */
+
+static void
+sc_io_adler32_init (uint32_t *adler)
+{
+  SC_ASSERT (adler != NULL);
+  *adler = 1;
+}
+
+static void
+sc_io_adler32_update (uint32_t *adler, const char *buffer, size_t length)
+{
+  size_t              iz;
+  int16_t             cn;
+  uint32_t            s1, s2;
+
+  SC_ASSERT (adler != NULL);
+  s1 = (*adler) & 0xFFFFU;
+  s2 = (*adler) >> 16;
+
+  cn = 0;
+  for (iz = 0; iz < length; ++iz) {
+    unsigned char       uc = (unsigned char) buffer[iz];
+    if (cn == 5000) {
+      s1 = s1 % SC_IO_ADLER32_PRIME;
+      s2 = s2 % SC_IO_ADLER32_PRIME;
+      cn = 0;
+    }
+    s1 += uc;
+    s2 += s1;
+    ++cn;
+  }
+  *adler = s2 % SC_IO_ADLER32_PRIME;
+  *adler = (*adler << 16) + (s1 % SC_IO_ADLER32_PRIME);
+}
+
+static size_t
+sc_io_noncompress_bound (size_t length)
+{
+  size_t              num_blocks =
+    (length + (SC_IO_NONCOMP_BLOCK - 1)) / SC_IO_NONCOMP_BLOCK;
+
+  return 2 + 5 * SC_MAX (num_blocks, 1) + length + 4;
+}
+
+static void
+sc_io_noncompress (char *dest, size_t dest_size,
+                   const char *src, size_t src_size)
+{
+  uint16_t            bsize, nsize;
+  uint32_t            adler;
+
+  /* write zlib format header */
+  SC_ASSERT (dest_size >= 2);
+  dest[0] = (7 << 4) + 8;
+  dest[1] = 1;
+  dest += 2;
+  dest_size -= 2;
+
+  /* prepare checksum */
+  sc_io_adler32_init (&adler);
+
+  /* write individual non-compressed blocks */
+  do {
+    /* write block header */
+    SC_ASSERT (dest_size >= 5);
+    if (src_size > SC_IO_NONCOMP_BLOCK) {
+      /* not the final block */
+      bsize = SC_IO_NONCOMP_BLOCK;
+      dest[0] = 0;
+    }
+    else {
+      /* last block */
+      bsize = src_size;
+      dest[0] = 1;
+    }
+    nsize = ~bsize;
+    dest[1] = (char) (bsize & 0xFF);
+    dest[2] = (char) (bsize >> 8);
+    dest[3] = (char) (nsize & 0xFF);
+    dest[4] = (char) (nsize >> 8);
+    dest += 5;
+    dest_size -= 5;
+
+    /* copy data */
+    SC_ASSERT (dest_size >= bsize);
+    SC_ASSERT (src_size >= bsize);
+    memcpy (dest, src, bsize);
+    dest += bsize;
+    dest_size -= bsize;
+
+    /* extend adler32 checksum */
+    sc_io_adler32_update (&adler, src, bsize);
+    src += bsize;
+    src_size -= bsize;
+  }
+  while (src_size > 0);
+
+  /* write adler32 checksum */
+  SC_ASSERT (src_size == 0);
+  SC_ASSERT (dest_size == 4);
+  dest[0] = (char) (adler >> 24);
+  dest[1] = (char) ((adler >> 16) & 0xFF);
+  dest[2] = (char) ((adler >> 8) & 0xFF);
+  dest[3] = (char) (adler & 0xFF);
+}
+
+static int
+sc_io_nonuncompress (char *dest, size_t dest_size,
+                     const char *src, size_t src_size, void *re)
+{
+  int                 final_block;
+  uint32_t            adler;
+  unsigned char       uca, ucb;
+#ifndef SC_PUFF_INCLUDED
+  uint16_t            bsize, nsize;
+#else
+  unsigned long       destlen, sourcelen;
+#endif
+
+  /* in the future we will add runtime error reporting */
+  SC_ASSERT (re == NULL);
+
+  /* check zlib format header */
+  if (src_size < 2) {
+    SC_LERROR ("uncompress header short\n");
+    return -1;
+  }
+  uca = (unsigned char) src[0];
+  if ((uca & 0x8F) != 8) {
+    SC_LERROR ("uncompress method unsupported\n");
+    return -1;
+  }
+  ucb = (unsigned char) src[1];
+  if (((((unsigned) uca) << 8) + ucb) % 31) {
+    SC_LERROR ("uncompress header not conforming\n");
+    return -1;
+  }
+  if (ucb & 0x20) {
+    SC_LERROR ("uncompress cannot handle dictionary\n");
+    return -1;
+  }
+  src += 2;
+  src_size -= 2;
+
+  /* prepare checksum */
+  sc_io_adler32_init (&adler);
+
+  /* go through zlib blocks */
+  do {
+    /* verify minimum required size */
+    if (src_size < 5) {
+      SC_LERROR ("uncompress block header short\n");
+      return -1;
+    }
+#ifdef SC_PUFF_INCLUDED
+
+    /* use the builtin puff fallback to decompress deflate data */
+    destlen = (unsigned long) dest_size;
+    sourcelen = (unsigned long) src_size - 4;
+    if (sc_puff ((unsigned char *) dest, &destlen,
+                 (const unsigned char *) src, &sourcelen)) {
+      SC_LERROR ("uncompress by puff failed\n");
+      return -1;
+    }
+    if (destlen != (unsigned long) dest_size ||
+        sourcelen != (unsigned long) src_size - 4) {
+      SC_LERROR ("uncompress by puff mismatch\n");
+      return -1;
+    }
+
+    /* extend adler32 checksum */
+    sc_io_adler32_update (&adler, dest, dest_size);
+    src += sourcelen;
+    src_size = 4;
+    dest += destlen;
+    dest_size = 0;
+    final_block = 1;
+#else
+
+    /* examine block header */
+    uca = (unsigned char) src[0];
+    if (uca > 1) {
+      SC_LERROR ("uncompress block header unsupported\n");
+      return -1;
+    }
+    final_block = (uca == 1);
+    uca = (unsigned char) src[1];
+    ucb = (unsigned char) src[2];
+    bsize = (ucb << 8) + uca;
+    uca = (unsigned char) src[3];
+    ucb = (unsigned char) src[4];
+    nsize = (ucb << 8) + uca;
+    if ((final_block && bsize < dest_size) || bsize + nsize != 65535) {
+      SC_LERROR ("uncompress block header invalid\n");
+      return -1;
+    }
+    src += 5;
+    src_size -= 5;
+
+    /* copy data */
+    if (bsize > dest_size || bsize > src_size) {
+      SC_LERROR ("uncompress content overflow\n");
+      return -1;
+    }
+    memcpy (dest, src, bsize);
+    src += bsize;
+    src_size -= bsize;
+
+    /* extend adler32 checksum */
+    sc_io_adler32_update (&adler, dest, bsize);
+    dest += bsize;
+    dest_size -= bsize;
+#endif
+  }
+  while (!final_block);
+  if (src_size != 4 || dest_size != 0) {
+    SC_LERROR ("uncompress content error\n");
+    return -1;
+  }
+
+  /* verify adler32 checksum */
+  if (src[0] != (char) (adler >> 24) ||
+      src[1] != (char) ((adler >> 16) & 0xFF) ||
+      src[2] != (char) ((adler >> 8) & 0xFF) ||
+      src[3] != (char) (adler & 0xFF)) {
+    SC_LERROR ("uncompress checksum error\n");
+    return -1;
+  }
+
+  /* task accomplished */
+  return 0;
+}
+
+#endif /* !SC_HAVE_ZLIB */
+
+#define SC_IO_ENCODE_INFO_LEN 9
+
+void
+sc_io_encode (sc_array_t *data, sc_array_t *out)
+{
+  sc_io_encode_zlib (data, out, Z_BEST_COMPRESSION);
+}
+
+void
+sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
+                   int zlib_compression_level)
+{
+  int                 i;
+  size_t              input_size;
+#ifndef SC_HAVE_ZLIB
+  size_t              input_compress_bound;
+#else
+  int                 zrv;
+  uLong               input_compress_bound;
+#endif
+  char               *ipos, *opos;
+  char                base_out[2 * SC_IO_LBC];
+  size_t              base64_lines;
+  size_t              encoded_size;
+  size_t              zlin, irem;
+#ifdef SC_ENABLE_DEBUG
+  size_t              ocnt;
+#endif
+  unsigned char       original_size[SC_IO_ENCODE_INFO_LEN];
+  sc_array_t          compressed;
+  base64_encodestate  bstate;
+
+  SC_ASSERT (data != NULL);
+  if (out == NULL) {
+    /* in-place operation on string */
+    SC_ASSERT (SC_ARRAY_IS_OWNER (data));
+    SC_ASSERT (data->elem_size == 1);
+  }
+  else {
+    /* data is placed in output string */
+    SC_ASSERT (SC_ARRAY_IS_OWNER (out));
+    SC_ASSERT (out->elem_size == 1);
+  }
+#ifdef SC_HAVE_ZLIB
+  SC_ASSERT (zlib_compression_level == Z_DEFAULT_COMPRESSION ||
+             (zlib_compression_level >= 0 && zlib_compression_level <= 9));
+#endif
+
+  /* save original size to output */
+  input_size = data->elem_count * data->elem_size;
+  for (i = 0; i < 8; ++i) {
+    /* enforce big endian byte order for original size */
+    original_size[i] = (input_size >> ((7 - i) * 8)) & 0xFF;
+  }
+  original_size[SC_IO_ENCODE_INFO_LEN - 1] = 'z';
+
+  /* zlib compress input */
+#ifndef SC_HAVE_ZLIB
+  input_compress_bound = sc_io_noncompress_bound (input_size);
+#else
+  input_compress_bound = compressBound ((uLong) input_size);
+#endif /* SC_HAVE_ZLIB */
+  sc_array_init_count (&compressed, 1,
+                       SC_IO_ENCODE_INFO_LEN + input_compress_bound);
+  memcpy (compressed.array, original_size, SC_IO_ENCODE_INFO_LEN);
+#ifndef SC_HAVE_ZLIB
+  sc_io_noncompress (compressed.array + SC_IO_ENCODE_INFO_LEN,
+                     input_compress_bound, data->array, input_size);
+#else
+  zrv = compress2 ((Bytef *) compressed.array + SC_IO_ENCODE_INFO_LEN,
+                   &input_compress_bound, (Bytef *) data->array,
+                   (uLong) input_size, zlib_compression_level);
+  SC_CHECK_ABORT (zrv == Z_OK, "Error on zlib compression");
+#endif /* SC_HAVE_ZLIB */
+
+  /* prepare output array */
+  if (out == NULL) {
+    out = data;
+  }
+  SC_ASSERT (out->elem_size == 1);
+  input_size = (size_t) (SC_IO_ENCODE_INFO_LEN + input_compress_bound);
+  base64_lines = (input_size + SC_IO_DBC - 1) / SC_IO_DBC;
+  encoded_size = 4 * ((input_size + 2) / 3) + base64_lines + 1;
+  sc_array_resize (out, encoded_size);
+
+  /* run base64 encoder */
+  base64_init_encodestate (&bstate);
+  ipos = compressed.array;
+  irem = input_size;
+  opos = out->array;
+#ifdef SC_ENABLE_DEBUG
+  ocnt = 0;
+#endif
+  SC_ASSERT (ocnt + 1 <= encoded_size);
+  opos[0] = '\0';
+  for (zlin = 0; zlin < base64_lines; ++zlin) {
+    size_t              lein = SC_MIN (irem, SC_IO_DBC);
+    size_t              lout =
+      base64_encode_block (ipos, lein, base_out, &bstate);
+
+    SC_ASSERT (lein > 0);
+    if (zlin < base64_lines - 1) {
+      /* not the final line */
+      SC_ASSERT (irem > SC_IO_DBC);
+      SC_ASSERT (lout == SC_IO_LBC);
+      SC_ASSERT (ocnt + SC_IO_LBE <= encoded_size);
+      memcpy (opos, base_out, SC_IO_LBC);
+      opos[SC_IO_LBC] = '\n';
+      opos[SC_IO_LBD] = '\0';
+      opos += SC_IO_LBD;
+#ifdef SC_ENABLE_DEBUG
+      ocnt += SC_IO_LBD;
+#endif
+      ipos += SC_IO_DBC;
+      irem -= SC_IO_DBC;
+    }
+    else {
+      /* the final line */
+      SC_ASSERT (irem <= SC_IO_DBC);
+      SC_ASSERT (lout <= SC_IO_LBC);
+      SC_ASSERT (ocnt + lout <= encoded_size);
+      memcpy (opos, base_out, lout);
+      opos += lout;
+#ifdef SC_ENABLE_DEBUG
+      ocnt += lout;
+#endif
+      lout = base64_encode_blockend (base_out, &bstate);
+      SC_ASSERT (lout <= 4);
+      SC_ASSERT (ocnt + lout <= encoded_size);
+      memcpy (opos, base_out, lout);
+      opos += lout;
+#ifdef SC_ENABLE_DEBUG
+      ocnt += lout;
+#endif
+      SC_ASSERT (ocnt + 2 <= encoded_size);
+      opos[0] = '\n';
+      opos[1] = '\0';
+      opos = NULL;
+#ifdef SC_ENABLE_DEBUG
+      ocnt += 2;
+#endif
+      SC_ASSERT (ocnt == encoded_size);
+      ipos = NULL;
+      irem = 0;
+    }
+  }
+
+  /* free temporary memory */
+  sc_array_reset (&compressed);
+}
+
+int
+sc_io_decode_info (sc_array_t *data, size_t *original_size,
+                   char *format_char, void *re)
+{
+  int                 i;
+  size_t              osize;
+  char                dec[12];
+  base64_decodestate  bstate;
+
+  /* in the future we will add runtime error reporting */
+  SC_ASSERT (re == NULL);
+
+  /* basic checks */
+  SC_ASSERT (SC_IO_ENCODE_INFO_LEN == 9);
+  SC_ASSERT (data != NULL);
+  SC_ASSERT (data->elem_size == 1);
+  if (data->elem_count < 12) {
+    SC_LERROR ("sc_io_decode_info requires >= 12 bytes of input\n");
+    return -1;
+  }
+
+  /* decode first 12 characters of encoded data */
+  memset (dec, 0, 12);
+  base64_init_decodestate (&bstate);
+  osize = base64_decode_block (data->array, 12, dec, &bstate);
+  if (osize != 9) {
+    SC_LERROR ("sc_io_decode_info base 64 error\n");
+    return -1;
+  }
+
+#if 0
+  /* verify first byte for zlib format */
+  if (dec[8] != 'z') {
+    SC_LERROR ("sc_io_decode_info data format error\n");
+    return -1;
+  }
+#endif
+
+  /* decode original length of data */
+  if (original_size != NULL) {
+    unsigned char       uc;
+    osize = 0;
+    for (i = 0; i < 8; ++i) {
+      /* read original byte order in big endian */
+      uc = (unsigned char) dec[i];
+      osize |= ((size_t) uc) << ((7 - i) * 8);
+    }
+    *original_size = osize;
+  }
+
+  /* return format character */
+  if (format_char != NULL) {
+    *format_char = dec[8];
+  }
+
+  /* success! */
+  return 0;
+}
+
+int
+sc_io_decode (sc_array_t *data, sc_array_t *out,
+              size_t max_original_size, void *re)
+{
+  int                 i;
+  int                 zrv;
+  int                 retval = -1;
+  char               *ipos, *opos;
+  char                base_out[SC_IO_LBC];
+  size_t              compressed_size;
+  size_t              base64_lines;
+  size_t              encoded_size;
+  size_t              current_size;
+  size_t              zlin, irem;
+  size_t              ocnt;
+#ifdef SC_HAVE_ZLIB
+  uLong               uncompsize;
+#endif
+  sc_array_t          compressed;
+  base64_decodestate  bstate;
+
+  /* in the future we will add runtime error reporting */
+  SC_ASSERT (re == NULL);
+
+  /* examine input data */
+  SC_ASSERT (data != NULL);
+  SC_ASSERT (data->elem_size == 1);
+  encoded_size = data->elem_count;
+  if (encoded_size == 0 ||
+      *(char *) sc_array_index (data, encoded_size - 1) != '\0') {
+    SC_LERROR ("input not NUL-terminated\n");
+    return -1;
+  }
+
+  /* decode line by line from base 64 */
+  base64_init_decodestate (&bstate);
+  base64_lines = (encoded_size - 1 + SC_IO_LBC) / SC_IO_LBD;
+  compressed_size = base64_lines * SC_IO_DBC;
+  ipos = data->array;
+  SC_ASSERT (encoded_size >= base64_lines + 1);
+  irem = encoded_size - 1 - base64_lines;
+  sc_array_init_count (&compressed, 1, compressed_size);
+  opos = compressed.array;
+  ocnt = 0;
+  for (zlin = 0; zlin < base64_lines; ++zlin) {
+    size_t              lein = SC_MIN (irem, SC_IO_LBC);
+    size_t              lout =
+      base64_decode_block (ipos, lein, base_out, &bstate);
+
+    SC_ASSERT (lein > 0);
+    if (lout == 0) {
+      SC_LERROR ("base 64 decode short\n");
+      goto decode_error;
+    }
+    if (ipos[lein] != '\n') {
+      SC_LERROR ("base 64 missing newline\n");
+      goto decode_error;
+    }
+    if (zlin < base64_lines - 1) {
+      SC_ASSERT (lein == SC_IO_LBC);
+      if (lout != SC_IO_DBC) {
+        SC_LERROR ("base 64 decode mismatch\n");
+        goto decode_error;
+      }
+      memcpy (opos, base_out, SC_IO_DBC);
+      ipos += SC_IO_LBD;
+      SC_ASSERT (irem >= SC_IO_LBC);
+      irem -= SC_IO_LBC;
+      opos += SC_IO_DBC;
+      ocnt += SC_IO_DBC;
+    }
+    else {
+      SC_ASSERT (lein <= SC_IO_LBC);
+      SC_ASSERT (lout <= SC_IO_DBC);
+      memcpy (opos, base_out, lout);
+      ipos += lein + 1;
+      SC_ASSERT (irem >= lein);
+      irem -= lein;
+      opos += lout;
+      ocnt += lout;
+    }
+  }
+  SC_ASSERT (irem == 0);
+  SC_ASSERT (ocnt <= compressed_size);
+  SC_ASSERT (ipos + 1 == data->array + encoded_size);
+  if (ocnt < SC_IO_ENCODE_INFO_LEN) {
+    SC_LERRORF ("base 64 decodes to less than %d bytes\n",
+                SC_IO_ENCODE_INFO_LEN);
+    goto decode_error;
+  }
+  if (compressed.array[SC_IO_ENCODE_INFO_LEN - 1] != 'z') {
+    SC_LERROR ("encoded format character mismatch\n");
+    goto decode_error;
+  }
+
+  /* determine length of uncompressed data */
+  encoded_size = 0;
+  for (i = 0; i < 8; ++i) {
+    /* enforce big endian byte order for original size */
+    unsigned char       uc = (unsigned char) compressed.array[i];
+    encoded_size |= ((size_t) uc) << ((7 - i) * 8);
+  }
+  if (out == NULL) {
+    /* allow for in-place operation */
+    out = data;
+  }
+  if (encoded_size % out->elem_size != 0) {
+    SC_LERROR ("encoded size not commensurable with output array\n");
+    goto decode_error;
+  }
+  if (max_original_size > 0 && encoded_size > max_original_size) {
+    SC_LERRORF ("encoded size %llu larger than specified maximum %llu\n",
+                (unsigned long long) encoded_size,
+                (unsigned long long) max_original_size);
+    goto decode_error;
+  }
+  if (!SC_ARRAY_IS_OWNER (out) &&
+      encoded_size > (current_size = out->elem_count * out->elem_size)) {
+    SC_LERRORF ("encoded size %llu larger than byte size of view %llu\n",
+                (unsigned long long) encoded_size,
+                (unsigned long long) current_size);
+    goto decode_error;
+  }
+  sc_array_resize (out, encoded_size / out->elem_size);
+
+  /* decompress decoded data */
+#ifndef SC_HAVE_ZLIB
+  zrv = sc_io_nonuncompress (out->array, encoded_size,
+                             compressed.array + SC_IO_ENCODE_INFO_LEN,
+                             ocnt - SC_IO_ENCODE_INFO_LEN, re);
+  if (zrv) {
+    SC_LERROR ("Please consider configuring the build"
+               " such that zlib is found.\n");
+    goto decode_error;
+  }
+#else
+  uncompsize = (uLong) encoded_size;
+  zrv = uncompress ((Bytef *) out->array, &uncompsize,
+                    (Bytef *) (compressed.array + SC_IO_ENCODE_INFO_LEN),
+                    ocnt - SC_IO_ENCODE_INFO_LEN);
+  if (zrv != Z_OK) {
+    SC_LERROR ("zlib uncompress error\n");
+    goto decode_error;
+  }
+  if (uncompsize != (uLong) encoded_size) {
+    SC_LERROR ("zlib uncompress short\n");
+    goto decode_error;
+  }
+#endif /* SC_HAVE_ZLIB */
+
+  /* exit cleanly */
+  retval = 0;
+decode_error:
+  sc_array_reset (&compressed);
   return retval;
 }
 
@@ -902,8 +1530,8 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   *ocount = 0;
 
   if (zcount == 0) {
-    /* This should be not necessary according to the MPI standard but some
-     * MPI impementations trigger valgrind warnigs due to uninitialized
+    /* This should not be necessary according to the MPI standard but some
+     * MPI implementations trigger valgrind warnings due to uninitialized
      * MPI status members.
      */
     mpiret = sc_MPI_SUCCESS;
@@ -1167,8 +1795,8 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
   *ocount = 0;
 
   if (zcount == 0) {
-    /* This should be not necessary according to the MPI standard but some
-     * MPI impementations trigger valgrind warnigs due to uninitialized
+    /* This should not be necessary according to the MPI standard but some
+     * MPI imlementations trigger valgrind warnings due to uninitialized
      * MPI status members.
      */
     mpiret = sc_MPI_SUCCESS;
