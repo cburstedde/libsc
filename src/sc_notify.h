@@ -24,7 +24,6 @@
 #ifndef SC_NOTIFY_H
 #define SC_NOTIFY_H
 
-#include <sc_containers.h>
 #include <sc_statistics.h>
 
 SC_EXTERN_C_BEGIN;

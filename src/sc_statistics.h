@@ -24,7 +24,6 @@
 #ifndef SC_STATISTICS_H
 #define SC_STATISTICS_H
 
-#include <sc.h>
 #include <sc_keyvalue.h>
 
 SC_EXTERN_C_BEGIN;

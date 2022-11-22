@@ -28,7 +28,6 @@
  * Register and parse command line options and read/write configuration files.
  */
 
-#include <sc_containers.h>
 #include <sc_keyvalue.h>
 
 SC_EXTERN_C_BEGIN;

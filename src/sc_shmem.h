@@ -25,7 +25,6 @@
 #define SC_SHMEM_H
 
 #include <sc.h>
-#include <sc_mpi.h>
 
 SC_EXTERN_C_BEGIN;
 
