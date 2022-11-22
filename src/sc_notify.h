@@ -21,6 +21,11 @@
   02110-1301, USA.
 */
 
+/** \file sc_notify.h
+ *
+ * Provide various algorithms to invert the communication pattern.
+ */
+
 #ifndef SC_NOTIFY_H
 #define SC_NOTIFY_H
 
@@ -218,7 +223,7 @@ void                sc_notify_superset_get_callback
 
 /** Collective call to notify a set of receiver ranks of current rank.
  * This version uses one call to sc_MPI_Allgather and one to sc_MPI_Allgatherv.
- * We provide hand-coded alternatives \ref sc_notify and \ref sc_notify_nary.
+ * We provide hand-coded alternatives \ref sc_notify and \ref SC_NOTIFY_NARY.
  * \param [in] receivers        Array of MPI ranks to inform.
  * \param [in] num_receivers    Count of ranks contained in receivers.
  * \param [in,out] senders      Array of at least size sc_MPI_Comm_size.
@@ -236,7 +241,7 @@ int                 sc_notify_allgather (int *receivers, int num_receivers,
  * matrix, where each row and column corresponds to an MPI rank in order.
  * We use a binary tree to construct the communication pattern.
  * This minimizes the number of messages at the cost of more messages
- * compared to a fatter tree such as configurable with \ref sc_notify_nary.
+ * compared to a fatter tree such as configurable with \ref SC_NOTIFY_NARY.
  * \param [in] receivers        Sorted and unique array of MPI ranks to inform.
  * \param [in] num_receivers    Count of ranks contained in receivers.
  * \param [in,out] senders      Array of at least size sc_MPI_Comm_size.
