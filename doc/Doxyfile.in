@@ -994,7 +994,7 @@ COLS_IN_ALPHA_INDEX    = 3
 # while generating the index headers.
 # This tag requires that the tag ALPHABETICAL_INDEX is set to YES.
 
-IGNORE_PREFIX          = sc_
+IGNORE_PREFIX          = sc_ SC_ sc3_ SC3_
 
 #---------------------------------------------------------------------------
 # Configuration options related to the HTML output
