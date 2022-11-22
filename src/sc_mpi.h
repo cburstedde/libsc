@@ -601,7 +601,7 @@ typedef long        sc_MPI_Offset;      /**< Emulate the MPI offset type. */
 /** Replacement structure for \c MPI_File.
  * When MPI I/O is not enabled, this is used as file object.
  */
-struct no_mpiio_file
+struct sc_no_mpiio_file
 {
   const char         *filename;         /**< Name of the file. */
   FILE               *file;             /**< Underlying file object. */
@@ -611,7 +611,7 @@ struct no_mpiio_file
 };
 
 /** Replacement object for an MPI file. */
-typedef struct no_mpiio_file *sc_MPI_File;
+typedef struct sc_no_mpiio_file *sc_MPI_File;
 
 #define sc_MPI_FILE_NULL           NULL     /**< The null MPI file. */
 
@@ -647,7 +647,7 @@ int                 sc_MPI_Error_string (int errorcode, char *string,
  */
 size_t              sc_mpi_sizeof (sc_MPI_Datatype t);
 
-/** \cond MPI_NODE_COMM */
+/** \cond MPI_DOCUMENT_NODE_COMM */
 
 /** Compute ``sc_intranode_comm'' and ``sc_internode_comm''
  * communicators and attach them to the current communicator.  This split

@@ -1403,7 +1403,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     char                mode[4];
 
     /* allocate file struct */
-    *mpifile = (sc_MPI_File) SC_ALLOC (struct no_mpiio_file, 1);
+    *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
 
     /* serialize the I/O operations */
     /* active flag is set later in  */
@@ -1440,7 +1440,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     char                mode[4];
 
     /* allocate file struct */
-    *mpifile = (sc_MPI_File) SC_ALLOC (struct no_mpiio_file, 1);
+    *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
 
     (*mpifile)->filename = filename;
 
