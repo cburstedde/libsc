@@ -154,15 +154,22 @@ static void         sc_notify_nary_init (sc_notify_t * notify);
 static void         sc_notify_ranges_init (sc_notify_t * notify);
 
 int
+sc_notify_supports_type (sc_notify_type_t type)
+{
+  return type >= 0 && type < SC_NOTIFY_NUM_TYPES;
+}
+
+int
 sc_notify_set_type (sc_notify_t * notify, sc_notify_type_t in_type)
 {
   sc_notify_type_t    current_type;
+
+  SC_ASSERT (sc_notify_supports_type (in_type));
 
   current_type = sc_notify_get_type (notify);
   if (in_type == SC_NOTIFY_DEFAULT) {
     in_type = sc_notify_type_default;
   }
-  SC_ASSERT (in_type >= 0 && in_type < SC_NOTIFY_NUM_TYPES);
   if (current_type != in_type) {
     notify->type = in_type;
     /* initialize_data */

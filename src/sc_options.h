@@ -61,9 +61,11 @@ sc_options_t       *sc_options_new (const char *program_path);
 
 /** Destroy the options structure and all allocated structures contained.
  * The keyvalue structure passed into sc_keyvalue_add is destroyed.
- * \param [in,out] opt          This options structure is deallocated,
- *                              including all key-value containers referenced.
- * \deprecated                  This function may go away soon.
+ * \param [in,out] opt      This options structure is deallocated,
+ *                          including all key-value containers referenced.
+ * \deprecated              This function is kept for backwards compatibility.
+ *                          It is best to destroy any key-value container
+ *                          outside of the lifetime of the options object.
  */
 void                sc_options_destroy_deep (sc_options_t * opt);
 

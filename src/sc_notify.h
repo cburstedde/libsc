@@ -22,8 +22,11 @@
 */
 
 /** \file sc_notify.h
- *
  * Provide various algorithms to invert the communication pattern.
+ *
+ * The task at hand is: given an individual set of receiver ranks for each
+ * process in a sender role, compute efficiently for the receiver role of
+ * each rank the set of senders to it.
  */
 
 #ifndef SC_NOTIFY_H
@@ -33,47 +36,57 @@
 
 SC_EXTERN_C_BEGIN;
 
-/** Opaque object used for controlling notification (AKA dynamic sparse data exchange) operations */
+/** Opaque object used for controlling notification
+ * (AKA dynamic sparse data exchange) operations.
+ */
 typedef struct sc_notify_s sc_notify_t;
 
-/** Type of callback function for the superset variant */
+/** Type of callback function for the superset variant.
+ * Please feel free to remove this condition once it is doxygen clean.
+ * \cond NOTIFY_UNRECOMMENDED
+ */
 typedef void        (*sc_compute_superset_t) (sc_array_t *, sc_array_t *,
                                               sc_array_t *, sc_notify_t *,
                                               void *);
+/** \endcond */
 
-/** Existing implementations */
+/** Various equivalent implementations of the functionality. */
 typedef enum
 {
-  SC_NOTIFY_DEFAULT = -1,  /**< choose whatever type is stored in sc_notify_type_default */
-  SC_NOTIFY_ALLGATHER = 0, /**< choose allgather algorithm */
-  SC_NOTIFY_BINARY,        /**< choose simple binary recursion */
-  SC_NOTIFY_NARY,          /**< choose nary (k-way) recursion */
-  SC_NOTIFY_PEX,           /**< choose alltoall algorithm (AKA personalized exchange) */
-  SC_NOTIFY_PCX,           /**< choose reduce_scatter algorithm (AKA personalized census) */
-  SC_NOTIFY_RSX,           /**< choose remote summation algorithm */
-  SC_NOTIFY_NBX,           /**< choose non-blocking consensus algorithm */
-  SC_NOTIFY_RANGES,        /**< use sc_ranges */
-  SC_NOTIFY_SUPERSET,      /**< use a computable superset of communicators, computed by
-                                a callback function */
-  SC_NOTIFY_NUM_TYPES
+  SC_NOTIFY_DEFAULT = -1,  /**< Choose whatever type is stored in sc_notify_type_default. */
+  SC_NOTIFY_ALLGATHER = 0, /**< Choose allgather algorithm. */
+  SC_NOTIFY_BINARY,        /**< Choose simple binary recursion. */
+  SC_NOTIFY_NARY,          /**< Choose nary (k-way) recursion. */
+  SC_NOTIFY_PEX,           /**< Choose alltoall algorithm (AKA personalized exchange). */
+  SC_NOTIFY_PCX,           /**< Choose reduce_scatter algorithm (AKA personalized census). */
+  SC_NOTIFY_RSX,           /**< Choose remote summation algorithm. */
+  SC_NOTIFY_NBX,           /**< Choose non-blocking consensus algorithm. */
+/** \cond NOTIFY_UNRECOMMENDED */
+  SC_NOTIFY_RANGES,        /**< Use the sc_ranges functionality. */
+  SC_NOTIFY_SUPERSET,      /**< Use a computable superset of communicators, computed by
+                                a callback function. */
+/** \endcond */
+  SC_NOTIFY_NUM_TYPES      /**< End of list marker for notify algorithms. */
 }
 sc_notify_type_t;
 
-#define SC_NOTIFY_STR_ALLGATHER "allgather"
-#define SC_NOTIFY_STR_BINARY "binary"
-#define SC_NOTIFY_STR_NARY "nary"
-#define SC_NOTIFY_STR_PEX "pex"
-#define SC_NOTIFY_STR_PCX "pcx"
-#define SC_NOTIFY_STR_RSX "rsx"
-#define SC_NOTIFY_STR_NBX "nbx"
+#define SC_NOTIFY_STR_ALLGATHER "allgather" /**< String for the allgather variant. */
+#define SC_NOTIFY_STR_BINARY "binary"       /**< String for the binary tree variant. */
+#define SC_NOTIFY_STR_NARY "nary"           /**< String for the n-ary tree variant. */
+#define SC_NOTIFY_STR_PEX "pex"             /**< String for the PEX variant. */
+#define SC_NOTIFY_STR_PCX "pcx"             /**< String for the PCX variant. */
+#define SC_NOTIFY_STR_RSX "rsx"             /**< String for the RSX variant. */
+#define SC_NOTIFY_STR_NBX "nbx"             /**< String for the NBX variant. */
+/** \cond NOTIFY_UNRECOMMENDED */
 #define SC_NOTIFY_STR_RANGES "ranges"
-#define SC_NOTIFY_STR_SUPERSET "superset"
+#define SC_NOTIFY_STR_SUPERSET "superset"   /**< String for the superset variant. */
+/** \endcond */
 
 /** Names for each notify method */
 extern const char  *sc_notify_type_strings[SC_NOTIFY_NUM_TYPES];
 
-/** The default type used when constructing a notify controller.  Initialized
- * to SC_NOTIFY_NARY */
+/** The default type used when constructing a notify controller.
+ * Initialized to \ref SC_NOTIFY_NARY. */
 extern sc_notify_type_t sc_notify_type_default;
 
 /** The default threshold for payload sizes (in bytes) that are communicated
@@ -97,7 +110,7 @@ sc_notify_t        *sc_notify_new (sc_MPI_Comm mpicomm);
 void                sc_notify_destroy (sc_notify_t * notify);
 
 /** Get the payload size above which payloads are no longer transferred with
- * notification packets in sc_notify_payload().  Default is 256k bytes.
+ * notification packets in \ref sc_notify_payload.
  *
  * \param[in] notify      The notify controller.
  * \return                The size in bytes of the maximum eager payload size.
@@ -105,7 +118,7 @@ void                sc_notify_destroy (sc_notify_t * notify);
 size_t              sc_notify_get_eager_threshold (sc_notify_t * notify);
 
 /** Get the payload size above which payloads are no longer transferred with
- * notification packets in sc_notify_payload().
+ * notification packets in \ref sc_notify_payload.
  *
  * \param[in,out] notify      The notify controller.
  * \param[in]     thresh      The size in bytes of the maximum eager payload
@@ -114,11 +127,11 @@ size_t              sc_notify_get_eager_threshold (sc_notify_t * notify);
 void                sc_notify_set_eager_threshold (sc_notify_t * notify,
                                                    size_t thresh);
 
-/** Set a sc_statistics_t * object for logging runtimes (added by function
- * name).
+/** Set a \ref sc_statistics_t object for logging runtimes (added by
+ * function name).
  *
  * \param[in,out] notify      The notify controller.
- * \param[in]     stats       The sc_statistics_t * object.  The notify
+ * \param[in]     stats       The \ref sc_statistics_t object.  The notify
  *                            controller will add timings for functions
  *                            to the object, listed under their function
  *                            names.
@@ -126,8 +139,8 @@ void                sc_notify_set_eager_threshold (sc_notify_t * notify,
 void                sc_notify_set_stats (sc_notify_t * notify,
                                          sc_statistics_t * stats);
 
-/** Get the sc_statistics_t * object for logging runtimes (added by function
- * name).
+/** Get the \ref sc_statistics_t object for logging runtimes (added by
+ * function name).
  *
  * \param[in,out] notify      The notify controller.
  * \return                    The sc_statistics_t * object, may be NULL.
@@ -161,7 +174,11 @@ sc_notify_type_t    sc_notify_get_type (sc_notify_t * notify);
 int                 sc_notify_set_type (sc_notify_t * notify,
                                         sc_notify_type_t type);
 
-/* TODO: sc_notify_supports_type() */
+/** Query whether \ref sc_notify_set_type supports a given type.
+ * \param [in] type        Notify algorithm type from \ref sc_notify_type_t.
+ * \return                 True if supported, false if not.
+ */
+int                 sc_notify_supports_type (sc_notify_type_t type);
 
 /** Default number of children at root node of nary tree; initialized to 2 */
 extern int          sc_notify_nary_ntop_default;
@@ -195,6 +212,7 @@ void                sc_notify_nary_get_widths (sc_notify_t * notify,
 void                sc_notify_nary_set_widths (sc_notify_t * notify, int ntop,
                                                int nint, int nbot);
 
+/** \cond NOTIFY_UNRECOMMENDED */
 int                 sc_notify_ranges_get_num_ranges (sc_notify_t * notify);
 void                sc_notify_ranges_set_num_ranges (sc_notify_t * notify,
                                                      int num_ranges);
@@ -212,7 +230,6 @@ void                sc_notify_ranges_get_peer_range (sc_notify_t * notify,
 void                sc_notify_ranges_set_peer_range (sc_notify_t * notify,
                                                      int first_peer,
                                                      int last_peer);
-
 extern int          sc_notify_ranges_num_ranges_default;
 
 void                sc_notify_superset_set_callback
@@ -220,6 +237,7 @@ void                sc_notify_superset_set_callback
 
 void                sc_notify_superset_get_callback
   (sc_notify_t * notify, sc_compute_superset_t * compute_superset, void *ctx);
+/** \endcond */
 
 /** Collective call to notify a set of receiver ranks of current rank.
  * This version uses one call to sc_MPI_Allgather and one to sc_MPI_Allgatherv.

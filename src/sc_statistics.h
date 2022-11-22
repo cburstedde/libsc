@@ -21,6 +21,11 @@
   02110-1301, USA.
 */
 
+/** \file sc_statistics.h
+ *
+ * Computation of average and mean values etc. between parallel processes.
+ */
+
 #ifndef SC_STATISTICS_H
 #define SC_STATISTICS_H
 
@@ -34,23 +39,26 @@ extern const int    sc_stats_group_all;
 /** This special group number (negative) will refer to any priority. */
 extern const int    sc_stats_prio_all;
 
-/* sc_statinfo_t stores information for one random variable */
+/** Store information of one random variable. */
 typedef struct sc_statinfo
 {
-  int                 dirty;    /* only update stats if this is true */
-  long                count;    /* inout, global count is 52bit accurate */
-  double              sum_values, sum_squares, min, max;        /* inout */
+  int                 dirty;            /**< Only update stats if this is true. */
+  long                count;            /**< Inout; global count is 52 bit accurate. */
+  double              sum_values;       /**< Inout; global sum of values. */
+  double              sum_squares;      /**< Inout; global sum of squares. */
+  double              min;              /**< Inout; minimum over values. */
+  double              max;              /**< Inout; maximum over values. */
   int                 min_at_rank, max_at_rank; /* out */
   double              average, variance, standev;       /* out */
   double              variance_mean, standev_mean;      /* out */
-  const char         *variable; /* name of the variable for output */
-  char               *variable_owned;   /* NULL or deep copy of variable */
-  int                 group;
-  int                 prio;
+  const char         *variable;         /**< Name of the variable for output. */
+  char               *variable_owned;   /**< NULL or deep copy of variable. */
+  int                 group;            /**< Grouping identifier. */
+  int                 prio;             /**< Priority identifier. */
 }
 sc_statinfo_t;
 
-/* sc_statistics_t allows dynamically adding random variables */
+/** The statistics container allows dynamically adding random variables. */
 typedef struct sc_stats
 {
   sc_MPI_Comm         mpicomm;
@@ -222,6 +230,10 @@ void                sc_stats_print_ext (int package_id, int log_priority,
 /** Create a new statistics structure that can grow dynamically.
  */
 sc_statistics_t    *sc_statistics_new (sc_MPI_Comm mpicomm);
+
+/** Destroy a statistics structure.
+ * \param [in,out] stats    Valid object is invalidated.
+ */
 void                sc_statistics_destroy (sc_statistics_t * stats);
 
 /** Register a statistics variable by name and set its value to 0.
