@@ -33,6 +33,7 @@
 
 SC_EXTERN_C_BEGIN;
 
+/** Opaque structure for a video device. */
 typedef struct sc_v4l2_device sc_v4l2_device_t;
 
 /** Open a video device by special file name.
