@@ -26,6 +26,11 @@
 
 /** \file sc_options.h
  * Register and parse command line options and read/write configuration files.
+ *
+ * \example{lineno} options.c
+ * This example demonstrates how the library can be used to parse command
+ * line options and to load and save them to configuration files.
+ * \see sc_options.h
  */
 
 #include <sc_keyvalue.h>
