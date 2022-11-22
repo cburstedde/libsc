@@ -46,7 +46,11 @@
 #ifndef SC_MPI_H
 #define SC_MPI_H
 
+/* this works both standalone and when included from sc.h */
 #include <sc_config.h>
+#ifdef SC_ENABLE_MPI
+#include <mpi.h>
+#endif
 
 SC_EXTERN_C_BEGIN;
 

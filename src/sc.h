@@ -197,7 +197,7 @@ typedef SSIZE_T     ssize_t;
 #define SC_NOARGS
 #endif
 
-/* this libsc header is always included */
+/* this header is always included */
 #include <sc_mpi.h>
 
 SC_EXTERN_C_BEGIN;
