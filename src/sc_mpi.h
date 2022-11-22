@@ -108,7 +108,7 @@ sc_tag_t;
 
 #define sc_MPI_ERR_LASTCODE               MPI_ERR_LASTCODE
 
-#else
+#else /* !SC_ENABLE_MPIIO */
 
 typedef enum sc_MPI_IO_Errorcode
 {
@@ -313,8 +313,8 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_STATUSES_IGNORE     (sc_MPI_Status *) 1
 
 #define sc_MPI_REQUEST_NULL        ((sc_MPI_Request) 0x2c000000)
-
 #define sc_MPI_DATATYPE_NULL       SC3_MPI_DATATYPE_NULL
+
 #define sc_MPI_CHAR                ((sc_MPI_Datatype) 0x4c000101)
 #define sc_MPI_SIGNED_CHAR         ((sc_MPI_Datatype) 0x4c000118)
 #define sc_MPI_UNSIGNED_CHAR       ((sc_MPI_Datatype) 0x4c000102)
@@ -352,11 +352,12 @@ sc_MPI_IO_Errorcode_t;
 
 /* types */
 
-typedef sc3_MPI_Comm_t sc_MPI_Comm;
 typedef int         sc_MPI_Group;
+typedef int         sc_MPI_Request;
+typedef sc3_MPI_Comm_t sc_MPI_Comm;
+typedef sc3_MPI_Info_t sc_MPI_Info;
 typedef sc3_MPI_Datatype_t sc_MPI_Datatype;
 typedef sc3_MPI_Op_t sc_MPI_Op;
-typedef int         sc_MPI_Request;
 typedef struct sc_MPI_Status
 {
   int                 count;

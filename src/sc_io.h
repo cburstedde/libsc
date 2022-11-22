@@ -486,8 +486,7 @@ void                sc_fflush_fsync_fclose (FILE * file);
  */
 int                 sc_io_open (sc_MPI_Comm mpicomm,
                                 const char *filename, sc_io_open_mode_t amode,
-                                sc3_MPI_Info_t mpiinfo,
-                                sc_MPI_File * mpifile);
+                                sc_MPI_Info mpiinfo, sc_MPI_File * mpifile);
 
 #ifdef SC_ENABLE_MPIIO
 
