@@ -25,6 +25,7 @@
 #define SC_OPTIONS_H
 
 /** \file sc_options.h
+ *
  * Register and parse command line options and read/write configuration files.
  * A detailed description can be found under \ref options.
  * In addition, we provide the example \ref options.c.
@@ -34,19 +35,21 @@
 
 /**
  * \example{lineno} options.c
+ *
  * This example demonstrates how the library can be used to parse command
  * line options and to load and save them to configuration files.
- * \see sc_options.h
+ *
+ * \see options
  */
 
 /**
  * \defgroup options Option Parser
  * \ingroup sc
  *
- * The option parser mechanism is targeted at runtime configuration.
+ * The option parser reads the command line as well as configuration files.
  *
  * The library provides a rather flexible and powerful means for
- * configuring a program at run time.
+ * configuring a program at runtime.
  * Configuration can be effected by parsing command line options
  * or by reading `.ini` or JSON files, or a combination thereof.
  *

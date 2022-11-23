@@ -42,7 +42,7 @@ do {                                                       \
 
 /*== INTERFACE == */
 
-sc_notify_type_t    sc_notify_type_default = SC_NOTIFY_NARY;
+sc_notify_type_t    sc_notify_type_default = SC_NOTIFY_PEX;
 size_t              sc_notify_eager_threshold_default = 1024;
 
 typedef struct sc_notify_nary_s
@@ -3003,6 +3003,19 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
 }
 
 void
+sc_notify_nary (sc_array_t * receivers, sc_array_t * senders,
+                sc_array_t * in_payload, sc_array_t * out_payload,
+                sc_MPI_Comm mpicomm)
+{
+  sc_notify_t        *notifyc;
+
+  notifyc = sc_notify_new (mpicomm);
+  sc_notify_set_type (notifyc, SC_NOTIFY_NARY);
+  sc_notify_payload (receivers, senders, in_payload, out_payload, 1, notifyc);
+  sc_notify_destroy (notifyc);
+}
+
+void
 sc_notify_ext (sc_array_t * receivers, sc_array_t * senders,
                sc_array_t * in_payload, sc_array_t * out_payload,
                sc_MPI_Comm mpicomm)
@@ -3010,7 +3023,6 @@ sc_notify_ext (sc_array_t * receivers, sc_array_t * senders,
   sc_notify_t        *notifyc;
 
   notifyc = sc_notify_new (mpicomm);
-  sc_notify_set_type (notifyc, SC_NOTIFY_PEX);
   sc_notify_payload (receivers, senders, in_payload, out_payload, 1, notifyc);
   sc_notify_destroy (notifyc);
 }
