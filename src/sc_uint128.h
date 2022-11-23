@@ -34,8 +34,6 @@
  *
  * Routines for managing unsigned 128 bit integers.
  * We do this to have a portable way on systems that have no native support.
- *
- * \ingroup sc
  */
 
 #include <sc.h>

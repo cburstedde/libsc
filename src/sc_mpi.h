@@ -24,6 +24,9 @@
 /** \file sc_mpi.h
  *
  * Provide a consistent MPI interface with and without MPI configured.
+ *
+ * \ingroup parallelism
+ *
  * When MPI is configured, we redefine many MPI functions and objects.
  * Without MPI, we emulate collective MPI routines to work as expected.
  *
@@ -44,6 +47,16 @@
  * no messages are sent to the same processor when mpisize == 1, such aborts
  * will not occur.  The `MPI_Wait*` routines are safe to call as long as no or
  * only MPI_REQUEST_NULL requests are passed in.
+ */
+
+/**
+ * \defgroup parallelism Parallelism
+ *
+ * The sc library provides several mechanisms to work with MPI.
+ * The most important one is a wrapper that looks the same to the user
+ * whether MPI has been configured or not.
+ *
+ * \ingroup sc
  */
 
 #ifndef SC_MPI_H
