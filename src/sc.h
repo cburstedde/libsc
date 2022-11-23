@@ -26,7 +26,7 @@
  * Support for process management (memory allocation, logging, etc.)
  */
 
-/** \defgroup sc libsc
+/** \defgroup sc The sc Library
  *
  * The SC Library provides support for parallel scientific applications.
  */
@@ -373,32 +373,47 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_LC_GLOBAL      1     /**< log only for master process */
 #define SC_LC_NORMAL      2     /**< log for every process */
 
-/** \defgroup logpriorities log priorities
+/** \defgroup logprios Log Priorities
  *
- * Numbers designating the level of logging output.
+ * The log level is a number designating the priority of a log action.
  *
- * Priorities TRACE to VERBOSE are appropriate when all parallel processes
- * contribute log messages.  INFO and above must not clutter the output of
- * large parallel runs.  STATISTICS can be used for important measurements.
- * PRODUCTION is meant for rudimentary information on the program flow.
- * ESSENTIAL can be used for one-time messages, say at program startup.
+ * Log levels serve both to indicate the priority of a message and as a
+ * filter passed to functions to determine which priorities to log.
+ *
+ * The priorities \ref SC_LP_TRACE to \ref SC_LP_VERBOSE may be used
+ * profusely and are appropriate when all parallel processes contribute
+ * low-priority, informative log messages.
+ *
+ *  \ref SC_LP_INFO and above should not clutter the output of large
+ *  parallel runs.  \ref SC_LP_STATISTICS is suggested for important
+ *  measurements.  \ref SC_LP_PRODUCTION is meant for rudimentary
+ *  information on the program flow.
+ *
+ * \ref SC_LP_ESSENTIAL can be used for one-time messages, say at program
+ * startup to communicate program version or licence information.
+ *
+ * \ref SC_LP_ERROR shall never be used during clean operation.
+ * Thus, it can be used to indicate abnormal behavior of the program
+ * and will not disturb the silent appearance of a clean run.
+ * Recommended for those who generally prefer to see absolutely no output
+ * from the libraries they use.
  *
  * \ingroup sc
+ *
+ * @{ \ingroup logprios
  */
-/*@{ \ingroup logpriorities */
-/* log priorities */
-#define SC_LP_DEFAULT   (-1)    /**< this selects the SC default threshold */
-#define SC_LP_ALWAYS      0     /**< this will log everything */
-#define SC_LP_TRACE       1     /**< this will prefix file and line number */
-#define SC_LP_DEBUG       2     /**< any information on the internal state */
-#define SC_LP_VERBOSE     3     /**< information on conditions, decisions */
-#define SC_LP_INFO        4     /**< the main things a function is doing */
-#define SC_LP_STATISTICS  5     /**< important for consistency/performance */
-#define SC_LP_PRODUCTION  6     /**< a few lines for a major api function */
-#define SC_LP_ESSENTIAL   7     /**< this logs a few lines max per program */
-#define SC_LP_ERROR       8     /**< this logs errors only */
-#define SC_LP_SILENT      9     /**< this never logs anything */
-/*@}*/
+#define SC_LP_DEFAULT   (-1)    /**< Selects the SC default threshold. */
+#define SC_LP_ALWAYS      0     /**< Log absolutely everything. */
+#define SC_LP_TRACE       1     /**< Prefix file and line number. */
+#define SC_LP_DEBUG       2     /**< Any information on the internal state. */
+#define SC_LP_VERBOSE     3     /**< Information on conditions, decisions. */
+#define SC_LP_INFO        4     /**< Most relevant things a function is doing. */
+#define SC_LP_STATISTICS  5     /**< Important for consistency/performance. */
+#define SC_LP_PRODUCTION  6     /**< A few lines at most for a major api function. */
+#define SC_LP_ESSENTIAL   7     /**< Log a few lines max per program. */
+#define SC_LP_ERROR       8     /**< Log errors only.  This is suggested over \ref SC_LP_SILENT. */
+#define SC_LP_SILENT      9     /**< Never log anything.  Instead suggesting \ref SC_LP_ERROR. */
+/** @} */
 
 /** The log priority for the sc package.
  *
