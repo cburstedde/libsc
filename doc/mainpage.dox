@@ -62,6 +62,6 @@
  * A typical production configure line looks as follows:
  * > `relative/path/to/configure CFLAGS="-Wall -O2" --enable-mpi`
  *
- * \see http://www.p4est.org/
- * \see http://www.gnu.org/licenses/licenses.html
+ * \see https://www.p4est.org/
+ * \see https://www.gnu.org/licenses/licenses.html
  */
