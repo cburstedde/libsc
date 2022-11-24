@@ -54,7 +54,11 @@
  *
  * The sc library provides several mechanisms to work with MPI.
  * The most important one is a wrapper that looks the same to the user
- * whether MPI has been configured or not.
+ * whether MPI has been configured or not.  This allows to use MPI commands
+ * in code without protecting \#defines.
+ *
+ * In addition, we provide MPI reduce and allreduce replacements with
+ * reproducible associativity.
  *
  * \ingroup sc
  */
@@ -362,8 +366,6 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_LONG_DOUBLE         ((sc_MPI_Datatype) 0x4c000c0c)
 
 #define sc_MPI_OP_NULL             SC3_MPI_OP_NULL
-#define sc_MPI_MIN                 SC3_MPI_MIN
-#define sc_MPI_MAX                 SC3_MPI_MAX
 #define sc_MPI_MINLOC              SC3_MPI_MINLOC
 #define sc_MPI_MAXLOC              SC3_MPI_MAXLOC
 #define sc_MPI_LOR                 SC3_MPI_LOR
@@ -374,8 +376,11 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_BXOR                SC3_MPI_BXOR
 #define sc_MPI_REPLACE             SC3_MPI_REPLACE
 #define sc_MPI_PROD                SC3_MPI_PROD
-#define sc_MPI_SUM                 SC3_MPI_SUM
 /** \endcond  */
+
+#define sc_MPI_MIN          SC3_MPI_MIN     /**< Minimum operator. */
+#define sc_MPI_MAX          SC3_MPI_MAX     /**< Maximum operator. */
+#define sc_MPI_SUM          SC3_MPI_SUM     /**< Summation operator. */
 
 /** Emulate \c MPI_UNDEFINED. */
 #define sc_MPI_UNDEFINED           SC3_MPI_UNDEFINED
