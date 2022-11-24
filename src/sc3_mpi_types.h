@@ -34,6 +34,8 @@
  *
  * This header file provides definitions of MPI data types for the case
  * that no MPI implementation is available or MPI is not configured.
+ *
+ * \ingroup parallelism
  */
 
 #ifndef SC3_MPI_TYPES_H
