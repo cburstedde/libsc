@@ -133,7 +133,7 @@ distclean-local:
 ## maintainer-clean should delete it. However maintainer-clean should not delete
 ## anything that needs to exist in order to run ‘./configure && make’.
 maintainer-clean-local:
-	rm -rf doxygen
+	rm -rf doc/{html,latex,man,*.doxygen.tags}
 
 doxygen: doc/Doxyfile
 	cd doc && doxygen Doxyfile
