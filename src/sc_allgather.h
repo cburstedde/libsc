@@ -21,12 +21,22 @@
   02110-1301, USA.
 */
 
+/** \file sc_allgather.h
+ * Self-contained implementation of MPI_Allgather.
+ *
+ * The algorithm uses a binary communication tree.
+ *
+ * \ingroup parallelism
+ *
+ */
+
 #ifndef SC_ALLGATHER_H
 #define SC_ALLGATHER_H
 
 #include <sc.h>
 
 #ifndef SC_AG_ALLTOALL_MAX
+/** The largest group size that uses direct all-to-all. */
 #define SC_AG_ALLTOALL_MAX      5
 #endif
 
@@ -34,6 +44,13 @@ SC_EXTERN_C_BEGIN;
 
 /** Allgather by direct point-to-point communication.
  * Only makes sense for small group sizes.
+ * \param [in] mpicomm      Valid MPI communicator.
+ * \param [in,out] data     Send and receive buffer for a subgroup of the
+                            communicator.
+ * \param [in] datasize     Number of bytes to send.
+ * \param [in] groupsize    Number of processes in the subgroup.
+ * \param [in] myoffset     Offset of the subgroup in the communicator.
+ * \param [in] myrank       MPI rank in the communicator.
  */
 void                sc_allgather_alltoall (sc_MPI_Comm mpicomm, char *data,
                                            int datasize, int groupsize,
@@ -41,12 +58,27 @@ void                sc_allgather_alltoall (sc_MPI_Comm mpicomm, char *data,
 
 /** Performs recursive bisection allgather.
  * When size becomes small enough, calls sc_ag_alltoall.
+ * \param [in] mpicomm      Valid MPI communicator.
+ * \param [in,out] data     Send and receive buffer for a subgroup of the
+                            communicator.
+ * \param [in] datasize     Number of bytes to send.
+ * \param [in] groupsize    Number of processes in the subgroup.
+ * \param [in] myoffset     Offset of the subgroup in the communicator.
+ * \param [in] myrank       MPI rank in the communicator.
  */
 void                sc_allgather_recursive (sc_MPI_Comm mpicomm, char *data,
                                             int datasize, int groupsize,
                                             int myoffset, int myrank);
 
 /** Drop-in allgather replacement.
+ * \param [in] sendbuf      Send buffer conforming to MPI specification.
+ * \param [in] sendcount    Number of data items to send.
+ * \param [in] sendtype     Valid MPI Datatype.
+ * \param [out] recvbuf     Receive buffer conforming to MPI specification.
+ * \param [in] recvcount    Number of data items to receive.
+ * \param [in] recvtype     Valid MPI Datatype.
+ * \param [in] mpicomm      Valid MPI communicator.
+ * \return int              sc_MPI_SUCCESS if not aborting on MPI error.
  */
 int                 sc_allgather (void *sendbuf, int sendcount,
                                   sc_MPI_Datatype sendtype, void *recvbuf,
