@@ -400,8 +400,7 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
  *
  * \ingroup sc
  *
- * @{ \ingroup logprios
- */
+ * @{ */
 #define SC_LP_DEFAULT   (-1)    /**< Selects the SC default threshold. */
 #define SC_LP_ALWAYS      0     /**< Log absolutely everything. */
 #define SC_LP_TRACE       1     /**< Prefix file and line number. */
@@ -603,7 +602,7 @@ long                sc_atol (const char *nptr);
  */
 void                sc_set_log_defaults (FILE * log_stream,
                                          sc_log_handler_t log_handler,
-                                         int log_thresold);
+                                         int log_threshold);
 
 /** Set the default SC abort behavior.
  * \param [in] abort_handler Set default SC above handler (NULL selects

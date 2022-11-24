@@ -34,7 +34,7 @@
  */
 
 /**
- * \example{lineno} options.c
+ * \example options.c
  *
  * This example demonstrates how the library can be used to parse command
  * line options and to load and save them to configuration files.

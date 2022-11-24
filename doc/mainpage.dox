@@ -38,7 +38,7 @@
  *  * The library provides MPI wrappers in case it is configured without
  *    MPI.  They implement initialize/finalize and collective calls as
  *    noops, which means that these do not have to be protected with the
- *    `#ifdef SC_MPI` construct in the code.
+ *    \#ifdef SC_MPI construct in the code.
  *  * The library provides a logging framework that can be adapted by other
  *    packages.  Multiple log levels are available, as well as options to
  *    output on just one or all MPI processes.

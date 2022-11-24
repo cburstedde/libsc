@@ -37,13 +37,13 @@
  * file provides macros that map the `sc_`-prefixed form to the standard
  * form of the symbols.
  *
- * When including this file in your code, everything inside `#ifdef
- * SC_ENABLE_MPI` may as well use the standard MPI API.  Outside of this
+ * When including this file in your code, everything inside \#ifdef
+ * SC_ENABLE_MPI may as well use the standard MPI API.  Outside of this
  * definition block, the sc_MPI_* routines specified here are allow
  * to seamlessly use MPI calls without breaking non-MPI code.
  *
  * Some send and receive routines are wrapped.  They can thus be used
- * in code outside of `#ifdef SC_ENABLE_MPI` even though they will abort.  If
+ * in code outside of \#ifdef SC_ENABLE_MPI even though they will abort.  If
  * no messages are sent to the same processor when mpisize == 1, such aborts
  * will not occur.  The `MPI_Wait*` routines are safe to call as long as no or
  * only MPI_REQUEST_NULL requests are passed in.
