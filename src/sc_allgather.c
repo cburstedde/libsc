@@ -69,7 +69,7 @@ sc_allgather_recursive (sc_MPI_Comm mpicomm, char *data, int datasize,
 
   SC_ASSERT (myoffset >= 0 && myoffset < groupsize);
 
-  if (groupsize > SC_AG_ALLTOALL_MAX) {
+  if (groupsize > SC_ALLGATHER_ALLTOALL_MAX) {
     if (myoffset < g2) {
       sc_allgather_recursive (mpicomm, data, datasize, g2, myoffset, myrank);
 

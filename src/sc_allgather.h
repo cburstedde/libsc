@@ -35,9 +35,9 @@
 
 #include <sc.h>
 
-#ifndef SC_AG_ALLTOALL_MAX
+#ifndef SC_ALLGATHER_ALLTOALL_MAX
 /** The largest group size that uses direct all-to-all. */
-#define SC_AG_ALLTOALL_MAX      5
+#define SC_ALLGATHER_ALLTOALL_MAX   5
 #endif
 
 SC_EXTERN_C_BEGIN;
@@ -56,8 +56,9 @@ void                sc_allgather_alltoall (sc_MPI_Comm mpicomm, char *data,
                                            int datasize, int groupsize,
                                            int myoffset, int myrank);
 
-/** Performs recursive bisection allgather.
- * When size becomes small enough, calls sc_ag_alltoall.
+/** Perform recursive bisection allgather.
+ * When size becomes less equal \ref SC_ALLGATHER_ALLTOALL_MAX, call \ref
+ * sc_allgather_alltoall.
  * \param [in] mpicomm      Valid MPI communicator.
  * \param [in,out] data     Send and receive buffer for a subgroup of the
                             communicator.
