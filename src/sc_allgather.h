@@ -25,9 +25,9 @@
  * Self-contained implementation of MPI_Allgather.
  *
  * The algorithm uses a binary communication tree.
+ * The recursion terminates at a specified depth by an all-to-all step.
  *
  * \ingroup parallelism
- *
  */
 
 #ifndef SC_ALLGATHER_H
@@ -43,7 +43,7 @@
 SC_EXTERN_C_BEGIN;
 
 /** Allgather by direct point-to-point communication.
- * Only makes sense for small group sizes.
+ * This function is only efficient for small group sizes.
  * \param [in] mpicomm      Valid MPI communicator.
  * \param [in,out] data     Send and receive buffer for a subgroup of the
                             communicator.

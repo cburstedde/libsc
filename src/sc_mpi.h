@@ -57,8 +57,8 @@
  * whether MPI has been configured or not.  This allows to use MPI commands
  * in code without protecting \#defines.
  *
- * In addition, we provide MPI reduce and allreduce replacements with
- * reproducible associativity.
+ * In addition, we provide MPI reduce, allreduce replacements with
+ * reproducible associativity as well as an allgather replacement.
  *
  * \ingroup sc
  */
@@ -474,32 +474,52 @@ int                 sc_MPI_Group_rank (sc_MPI_Group mpigroup, int *rank);
  * \param [in] mpicomm      Valid communicator.
  */
 int                 sc_MPI_Barrier (sc_MPI_Comm mpicomm);
+
+/** Execute the MPI_Bcast algorithm. */
 int                 sc_MPI_Bcast (void *, int, sc_MPI_Datatype, int,
                                   sc_MPI_Comm);
+
 int                 sc_MPI_Gather (void *, int, sc_MPI_Datatype, void *, int,
                                    sc_MPI_Datatype, int, sc_MPI_Comm);
 int                 sc_MPI_Gatherv (void *, int, sc_MPI_Datatype, void *,
                                     int *, int *, sc_MPI_Datatype, int,
                                     sc_MPI_Comm);
+
+/** Execute the MPI_Allgather algorithm. */
 int                 sc_MPI_Allgather (void *, int, sc_MPI_Datatype, void *,
                                       int, sc_MPI_Datatype, sc_MPI_Comm);
+
+/** Execute the MPI_Allgatherv algorithm. */
 int                 sc_MPI_Allgatherv (void *, int, sc_MPI_Datatype, void *,
                                        int *, int *, sc_MPI_Datatype,
                                        sc_MPI_Comm);
+
+/** Execute the MPI_Alltoall algorithm. */
 int                 sc_MPI_Alltoall (void *, int, sc_MPI_Datatype, void *,
                                      int, sc_MPI_Datatype, sc_MPI_Comm);
+
+/** Execute the MPI_Reduce algorithm. */
 int                 sc_MPI_Reduce (void *, void *, int, sc_MPI_Datatype,
                                    sc_MPI_Op, int, sc_MPI_Comm);
+
 int                 sc_MPI_Reduce_scatter_block (void *, void *,
                                                  int, sc_MPI_Datatype,
                                                  sc_MPI_Op, sc_MPI_Comm);
+
+/** Execute the MPI_Allreduce algorithm. */
 int                 sc_MPI_Allreduce (void *, void *, int, sc_MPI_Datatype,
                                       sc_MPI_Op, sc_MPI_Comm);
+
+/** Execute the MPI_Scan algorithm. */
 int                 sc_MPI_Scan (void *, void *, int, sc_MPI_Datatype,
                                  sc_MPI_Op, sc_MPI_Comm);
+
+/** Execute the MPI_Exscan algorithm. */
 int                 sc_MPI_Exscan (void *, void *, int, sc_MPI_Datatype,
                                    sc_MPI_Op, sc_MPI_Comm);
 
+/** Execute the MPI_Wtime function.
+ * \return          Number of seconds since the epoch. */
 double              sc_MPI_Wtime (void);
 
 /* These functions will run but their results/actions are not defined. */
