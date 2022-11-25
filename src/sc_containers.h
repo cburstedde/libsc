@@ -25,17 +25,15 @@
 #define SC_CONTAINERS_H
 
 /** \file sc_containers.h
- *
- * Defines lists, arrays, hash tables, etc.
- *
  * \ingroup containers
+ *
+ * Dynamic containers such as lists, arrays, and hash tables.
  */
 
-/** \defgroup containers containers
- *
- * Defines lists, arrays, hash tables, etc.
- *
+/** \defgroup containers Containers
  * \ingroup sc
+ *
+ * Provide dynamic containers such as lists, arrays, and hash tables.
  */
 
 #include <sc.h>
@@ -643,7 +641,7 @@ void                sc_mstamp_init (sc_mstamp_t * mst,
                                     size_t stamp_unit, size_t elem_size);
 
 /** Free all memory in a stamp structure and all items previously returned.
- * \param [in,out]              Properly initialized stamp container.
+ * \param [in,out] mst          Properly initialized stamp container.
  *                              On output, the structure is undefined.
  */
 void                sc_mstamp_reset (sc_mstamp_t * mst);
@@ -653,7 +651,7 @@ void                sc_mstamp_reset (sc_mstamp_t * mst);
  *                       \ref sc_mstamp_init with the same
  *                            stamp_unit and elem_size.
  *
- * \param [in,out]              Properly initialized stamp container.
+ * \param [in,out] mst          Properly initialized stamp container.
  *                              On output, its elements have been freed
  *                              and it is ready for further use.
  */
@@ -662,15 +660,15 @@ void                sc_mstamp_truncate (sc_mstamp_t * mst);
 /** Return a new item.
  * The memory returned will stay legal
  * until container is destroyed or truncated.
- * \param [in,out]              Properly initialized stamp container.
+ * \param [in,out] mst          Properly initialized stamp container.
  * \return                      Pointer to an item ready to use.
- *                              Legal until \ref sc_stamp_destroy or
- *                              \ref sc_stamp_truncate is called on mst.
+ *                              Legal until \ref sc_mstamp_reset or
+ *                              \ref sc_mstamp_truncate is called on mst.
  */
 void               *sc_mstamp_alloc (sc_mstamp_t * mst);
 
 /** Return memory size in bytes of all data allocated in the container.
- * \param [in]                  Properly initialized stamp container.
+ * \param [in] mst              Properly initialized stamp container.
  * \return                      Total container memory size in bytes.
  */
 size_t              sc_mstamp_memory_used (sc_mstamp_t * mst);
@@ -698,7 +696,7 @@ typedef struct sc_mempool
 sc_mempool_t;
 
 /** Calculate the memory used by a memory pool.
- * \param [in] array       The memory pool.
+ * \param [in] mempool     The memory pool.
  * \return                 Memory used in bytes.
  */
 size_t              sc_mempool_memory_used (sc_mempool_t * mempool);

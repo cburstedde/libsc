@@ -34,8 +34,6 @@
  *
  * Routines for managing unsigned 128 bit integers.
  * We do this to have a portable way on systems that have no native support.
- *
- * \ingroup sc
  */
 
 #include <sc.h>
@@ -78,7 +76,7 @@ void                sc_uint128_init (sc_uint128_t * a,
 /** Returns the bit_number-th bit of \a input.
  * This function checks a bit of an existing, initialized value.
  * \param [in]     input      A pointer to a sc_uint128_t.
- * \param[in]      bit_number The bit (counted from the right hand side)
+ * \param[in]      exponent   The bit (counted from the right hand side)
  *                            that is checked by logical and.
  *                            Require 0 <= \a bit_number < 128.
  * \return                    True if the checked bit is set, false if not.

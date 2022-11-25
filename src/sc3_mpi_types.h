@@ -30,17 +30,19 @@
 /** \file sc3_mpi_types.h \ingroup sc3
  *
  * We provide MPI replacement data types for configuring without MPI.
- * These are included from both sc_mpi.h and \ref sc3_mpi.h.
+ * Included from both \ref sc_mpi.h and the future \c sc3_mpi.h.
  *
  * This header file provides definitions of MPI data types for the case
  * that no MPI implementation is available or MPI is not configured.
+ *
+ * \ingroup parallelism
  */
 
 #ifndef SC3_MPI_TYPES_H
 #define SC3_MPI_TYPES_H
 
+/* this works both standalone and when included from sc.h */
 #include <sc_config.h>
-
 #ifdef SC_ENABLE_MPI
 #include <mpi.h>
 
@@ -292,7 +294,7 @@ typedef enum sc3_MPI_Win_mode
 {
   SC3_MPI_LOCK_SHARED = 0x13,     /**< Shared (multiple readers) lock. */
   SC3_MPI_LOCK_EXCLUSIVE = 0x14,  /**< Exclusive (usually reader) lock. */
-  SC3_MPI_MODE_NOCHECK = 0x15     /**< Option to \ref sc3_MPI_Win_lock. */
+  SC3_MPI_MODE_NOCHECK = 0x15     /**< Option to \c MPI_Win_lock. */
 }
 sc3_MPI_Win_mode_t;
 

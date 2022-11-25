@@ -118,7 +118,7 @@ main (int argc, char **argv)
   SC_FREE (ddata2);
 
   SC_GLOBAL_STATISTICSF ("Timings with threshold %d on %d cores\n",
-                         SC_AG_ALLTOALL_MAX, mpisize);
+                         SC_ALLGATHER_ALLTOALL_MAX, mpisize);
   SC_GLOBAL_STATISTICSF ("   alltoall %g\n", elapsed_alltoall);
   SC_GLOBAL_STATISTICSF ("   recursive %g\n", elapsed_recursive);
   SC_GLOBAL_STATISTICSF ("   allgather %g\n", elapsed_allgather);

@@ -376,6 +376,7 @@ dnl
 AC_DEFUN([SC_CHECK_LIBRARIES],
 [
 AC_DEFINE([USING_AUTOCONF], 1, [Define to 1 if using autoconf build])
+AC_CHECK_PROG([$1_HAVE_DOT], [dot], [YES], [NO])
 SC_CHECK_MATH([$1])
 SC_CHECK_ZLIB([$1])
 SC_CHECK_JSON([$1])

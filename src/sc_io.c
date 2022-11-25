@@ -1384,7 +1384,7 @@ sc_io_parse_mpiio_access_mode (sc_io_open_mode_t amode, int *mode)
 
 int
 sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
-            sc_io_open_mode_t amode, sc3_MPI_Info_t mpiinfo,
+            sc_io_open_mode_t amode, sc_MPI_Info mpiinfo,
             sc_MPI_File * mpifile)
 {
 #ifdef SC_ENABLE_MPIIO
@@ -1403,7 +1403,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     char                mode[4];
 
     /* allocate file struct */
-    *mpifile = (sc_MPI_File) SC_ALLOC (struct no_mpiio_file, 1);
+    *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
 
     /* serialize the I/O operations */
     /* active flag is set later in  */
@@ -1440,7 +1440,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     char                mode[4];
 
     /* allocate file struct */
-    *mpifile = (sc_MPI_File) SC_ALLOC (struct no_mpiio_file, 1);
+    *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
 
     (*mpifile)->filename = filename;
 

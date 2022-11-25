@@ -21,6 +21,10 @@
   02110-1301, USA.
 */
 
+/*
+ * Demo program to use the command line parser of the sc library.
+ */
+
 #include <sc_options.h>
 
 /* quick and dirty -- please use callback's data argument instead */

@@ -28,7 +28,6 @@
  * This file provides a lookup structure for key-value pairs.
  */
 
-#include <sc.h>
 #include <sc_containers.h>
 
 SC_EXTERN_C_BEGIN;

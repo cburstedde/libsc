@@ -21,6 +21,14 @@
   02110-1301, USA.
 */
 
+/** \file sc_sort.h
+ *
+ * Provide a parallel sort algorithm.
+ * We use a variant of the bitonic sort algorithm.
+ * Within each process we rely on the system quick sort function.
+ * The partition of data on input is arbitrary and remains invariant.
+ */
+
 #ifndef SC_SORT_H
 #define SC_SORT_H
 
@@ -31,7 +39,7 @@ SC_EXTERN_C_BEGIN;
 /** Sort a distributed set of fixed-size data items in parallel.
  * This algorithm uses bitonic sort between processors and qsort locally.
  *
- * This function is thread-safe if src/sc_config.h #defines SC_HAVE_QSORT_R.
+ * This function is thread-safe if src/sc_config.h \#defines SC_HAVE_QSORT_R.
  * Otherwise, it uses a static read-only variable for the comparison function,
  * and calling \ref sc_psort concurrently is likely to fail.
  *
