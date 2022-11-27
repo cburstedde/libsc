@@ -87,14 +87,17 @@ dnl be used from there, use --with-me=<path to me's install directory>.
 dnl In this case, PROG expects subdirectories etc, include, lib, and
 dnl share/aclocal, which are routinely created by me's make install.
 dnl
-dnl SC_ME_AS_SUBPACKAGE(PREFIX, prefix, ME, me)
+dnl SC_ME_AS_SUBPACKAGE(PREFIX, prefix, ME, me, mepackage)
 dnl Call from a package that is using this package ME as a subpackage.
 dnl Sets PREFIX_DIST_DENY=yes if me is make install'd.
+dnl The last argument $5 is optional and defaults to $4.
+dnl Sometimes $5 is longer, such as `libsomething'.
 dnl
 AC_DEFUN([SC_ME_AS_SUBPACKAGE],
 [
 $1_$3_SUBDIR=
 $1_$3_MK_USE=
+$1_$3_DOXTAG=
 $1_DISTCLEAN="$$1_DISTCLEAN $1_$3_SOURCE.log"
 
 SC_ARG_WITH_PREFIX([$4], [path to installed package $4 (optional)], [$3], [$1])
@@ -123,6 +126,7 @@ else
     else
       $1_$3_SOURCE="$4"
       $1_$3_SUBDIR="$4"
+      $1_$3_DOXTAG="../$4/doc/m4_default([$5], [$4]).doxygen.tags=../../sc/doc/html"
       AC_CONFIG_SUBDIRS([$4])
     fi
   else
@@ -141,6 +145,9 @@ AC_SUBST([$1_$3_AMFLAGS])
 
 dnl We call make in this subdirectory if not empty
 AC_SUBST([$1_$3_SUBDIR])
+
+dnl We make the Doxygen tag file available
+AC_SUBST([$1_$3_DOXTAG])
 
 dnl We will need these variables to compile and link with me
 AM_CONDITIONAL([$1_$3_MK_USE], [test "x$$1_$3_MK_USE" != x])

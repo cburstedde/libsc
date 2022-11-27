@@ -397,7 +397,8 @@ dnl Call from a package that is using libsc as a subpackage.
 dnl Sets PREFIX_DIST_DENY=yes if sc is make install'd.
 dnl
 AC_DEFUN([SC_AS_SUBPACKAGE],
-         [SC_ME_AS_SUBPACKAGE([$1], [m4_tolower([$1])], [SC], [sc])])
+         [SC_ME_AS_SUBPACKAGE([$1], [m4_tolower([$1])],
+                              [SC], [sc], [libsc])])
 
 dnl SC_FINAL_MESSAGES(PREFIX)
 dnl This macro prints messages at the end of the configure run.
