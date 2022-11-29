@@ -294,8 +294,10 @@ dictionary * iniparser_load(const char * ininame);
 
 /*-------------------------------------------------------------------------*/
 /**
-  @brief    Parse a string and return an allocated dictionary object
-  @param    buf     NUL-terminated string of at most \a len bytes.
+  @brief    Parse from memory and return an allocated dictionary object
+  @param    buf     Buffer of at most \a len bytes.
+                    NUL termination is not required.
+                    Reading a NUL is treated as end.
   @param    len     Maximum number of bytes to access in \a buf.
   @param    errname Name of the source for error reporting.
   @return   Pointer to newly allocated dictionary
