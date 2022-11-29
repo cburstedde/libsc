@@ -618,6 +618,42 @@ static line_status iniparser_line(
     return sta ;
 }
 
+typedef struct iniparser_input
+{
+  const char         *errname;
+  const char         *buf;
+  size_t              len;
+  size_t              rem;
+  FILE               *file;
+}
+iniparser_input_t;
+
+static char *
+iniparser_fgets (iniparser_input_t *in, char *s, int size)
+{
+  if (in == NULL || (in->buf == NULL && in->file == NULL)) {
+    return NULL;
+  }
+  if (in->file == NULL) {
+
+
+    return s;
+  }
+  else {
+    return fgets (s, size, in->file);
+  }
+}
+
+static void
+iniparser_close (iniparser_input_t *in)
+{
+  if (in != NULL && in->file != NULL) {
+    if (fclose (in->file)) {
+      fprintf (stderr, "iniparser: cannot close %s\n", in->errname);
+    }
+  }
+}
+
 /*-------------------------------------------------------------------------*/
 /**
   @brief    Parse an ini file and return an allocated dictionary object
@@ -734,6 +770,32 @@ dictionary * iniparser_load(const char * ininame)
     fclose(in);
     return dict ;
 }
+
+dictionary *
+iniparser_load_file (const char * ininame)
+{
+  iniparser_input_t   input, *in = &input;
+
+  memset (in, 0, sizeof (*in));
+  in->errname = ininame;
+
+  if ((in->file = fopen (ininame, "r")) == NULL) {
+    fprintf(stderr, "iniparser: cannot open %s\n", ininame);
+    return NULL;
+  }
+
+#if 0
+  return iniparser_load_internal (in);
+#endif
+  return NULL;
+}
+
+dictionary *
+iniparser_load_buf (const char *buf, size_t len, const char *errname)
+{
+  return NULL;
+}
+
 
 /*-------------------------------------------------------------------------*/
 /**

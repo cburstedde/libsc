@@ -294,6 +294,24 @@ dictionary * iniparser_load(const char * ininame);
 
 /*-------------------------------------------------------------------------*/
 /**
+  @brief    Parse a string and return an allocated dictionary object
+  @param    buf     NUL-terminated string of at most \a len bytes.
+  @param    len     Maximum number of bytes to access in \a buf.
+  @param    errname Name of the source for error reporting.
+  @return   Pointer to newly allocated dictionary
+
+  This is a parser for ini file content.  It returns a dictionary object
+  that should not be accessed directly, but through accessor functions
+  instead.
+
+  The returned dictionary must be freed using iniparser_freedict().
+ */
+/*--------------------------------------------------------------------------*/
+dictionary * iniparser_load_buffer (const char *buf, size_t len,
+                                    const char * errname);
+
+/*-------------------------------------------------------------------------*/
+/**
   @brief    Free all memory associated to an ini dictionary
   @param    d Dictionary to free
   @return   void
