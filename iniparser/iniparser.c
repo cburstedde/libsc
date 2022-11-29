@@ -648,7 +648,7 @@ iniparser_fgets (iniparser_input_t *in, char *s, int size)
     for (;;) {
       if (size > 1) {
         /* there is room to read one character */
-        if (in->len == 0 || *in->buf == '\0') {
+        if (in->len == 0) {
           /* this is the EOF condition */
           *s = '\0';
           return ncop > 0 ? rets : NULL;
