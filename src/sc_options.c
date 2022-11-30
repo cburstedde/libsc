@@ -23,9 +23,15 @@
 
 #include <sc_getopt.h>
 #include <sc_options.h>
+#include <sc_refcount.h>
 #include <iniparser.h>
 
 #include <errno.h>
+#ifdef SC_HAVE_JANSSON_H
+#include <jansson.h>
+#endif
+
+#define SC_OPTION_CALLBACK_NULL ((sc_options_callback_t) 0)
 
 typedef enum
 {
@@ -36,6 +42,7 @@ typedef enum
   SC_OPTION_DOUBLE,
   SC_OPTION_STRING,
   SC_OPTION_INIFILE,
+  SC_OPTION_JSONFILE,
   SC_OPTION_CALLBACK,
   SC_OPTION_KEYVALUE
 }
@@ -43,11 +50,19 @@ sc_option_type_t;
 
 typedef struct
 {
+  const char        **string_var;
+  char               *string_value;
+  sc_refcount_t       rc;
+}
+sc_option_string_t;
+
+typedef struct
+{
   sc_option_type_t    opt_type;
   int                 opt_char;
   const char         *opt_name;
   void               *opt_var;
-  void                (*opt_fn) (void);
+  sc_options_callback_t opt_fn;
   int                 has_arg;
   int                 called;           /**< set to 0 and ignored */
   const char         *help_string;
@@ -151,6 +166,67 @@ sc_iniparser_getdouble (dictionary * d, const char *key, double notfound,
   return dbl;
 }
 
+static sc_option_string_t *
+sc_options_string_new (const char **variable, const char *init_value)
+{
+  sc_option_string_t *s = SC_ALLOC (sc_option_string_t, 1);
+
+  /* init_value may be NULL */
+  *(s->string_var = variable) = s->string_value = SC_STRDUP (init_value);
+  sc_refcount_init (&s->rc, sc_package_id);
+
+  return s;
+}
+
+static sc_option_string_t *
+sc_options_string_ref (sc_option_string_t *s)
+{
+  SC_ASSERT (s != NULL);
+  SC_ASSERT (sc_refcount_is_active (&s->rc));
+
+  sc_refcount_ref (&s->rc);
+  return s;
+}
+
+static void
+sc_options_string_unref (sc_option_string_t *s)
+{
+  SC_ASSERT (s != NULL);
+  SC_ASSERT (sc_refcount_is_active (&s->rc));
+
+  if (sc_refcount_unref (&s->rc)) {
+    *s->string_var = "corresponding options structure has been destroyed";
+    SC_FREE (s->string_value);
+    SC_FREE (s);
+  }
+}
+
+static const char *
+sc_options_string_get (sc_option_string_t *s)
+{
+  SC_ASSERT (s != NULL);
+  SC_ASSERT (sc_refcount_is_active (&s->rc));
+
+  /* the pointed-to variable may have been modified externally */
+  if ((*s->string_var != NULL) != (s->string_value != NULL) ||
+      (*s->string_var != NULL && s->string_value != NULL &&
+       strcmp (*s->string_var, s->string_value))) {
+    SC_FREE (s->string_value);
+    s->string_value = SC_STRDUP (*s->string_var);
+  }
+  return s->string_value;
+}
+
+static void
+sc_options_string_set (sc_option_string_t *s, const char *newval)
+{
+  SC_ASSERT (s != NULL);
+  SC_ASSERT (sc_refcount_is_active (&s->rc));
+
+  SC_FREE (s->string_value);
+  *s->string_var = s->string_value = SC_STRDUP (newval);
+}
+
 static void
 sc_options_free_args (sc_options_t * opt)
 {
@@ -208,10 +284,20 @@ sc_options_destroy_internal (sc_options_t * opt, int deep)
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
+
+    /* special handling for key-value pairs */
     if (deep && item->opt_type == SC_OPTION_KEYVALUE) {
       sc_keyvalue_destroy ((sc_keyvalue_t *) item->user_data);
     }
     SC_FREE (item->string_value);
+
+    /* the string type is reference counted */
+    if (item->opt_type == SC_OPTION_STRING) {
+      sc_option_string_t *s = (sc_option_string_t *) item->opt_var;
+      SC_ASSERT (s != NULL && sc_refcount_is_active (&s->rc));
+      sc_options_string_unref (s);
+      SC_ASSERT (item->string_value == NULL);
+    }
   }
 
   sc_options_free_args (opt);
@@ -248,29 +334,37 @@ sc_options_set_spacing (sc_options_t * opt, int space_type, int space_help)
   opt->space_help = space_help < 0 ? sc_options_space_help : space_help;
 }
 
+static sc_option_item_t *
+sc_options_add_item (sc_options_t * opt, int opt_char, const char *opt_name,
+                     sc_option_type_t opt_type, const char *help_string)
+{
+  sc_option_item_t   *item;
+
+  SC_ASSERT (opt != NULL);
+  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
+  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
+
+  item = (sc_option_item_t *) sc_array_push (opt->option_items);
+  memset (item, 0, sizeof (sc_option_item_t));
+
+  item->opt_type = opt_type;
+  item->opt_char = opt_char;
+  item->opt_name = opt_name;
+  item->help_string = help_string;
+
+  return item;
+}
+
 void
 sc_options_add_switch (sc_options_t * opt, int opt_char,
                        const char *opt_name,
                        int *variable, const char *help_string)
 {
-  sc_option_item_t   *item;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_SWITCH, help_string);
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_SWITCH;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
   item->opt_var = variable;
-  item->opt_fn = NULL;
-  item->has_arg = 0;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
-
   *variable = 0;
 }
 
@@ -279,24 +373,12 @@ sc_options_add_bool (sc_options_t * opt, int opt_char,
                      const char *opt_name,
                      int *variable, int init_value, const char *help_string)
 {
-  sc_option_item_t   *item;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_BOOL, help_string);
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_BOOL;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = variable;
-  item->opt_fn = NULL;
   item->has_arg = 2;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
-
+  item->opt_var = variable;
   *variable = init_value;
 }
 
@@ -304,24 +386,12 @@ void
 sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
                     int *variable, int init_value, const char *help_string)
 {
-  sc_option_item_t   *item;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_INT, help_string);
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_INT;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = variable;
-  item->opt_fn = NULL;
   item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
-
+  item->opt_var = variable;
   *variable = init_value;
 }
 
@@ -330,24 +400,12 @@ sc_options_add_size_t (sc_options_t * opt, int opt_char, const char *opt_name,
                        size_t *variable, size_t init_value,
                        const char *help_string)
 {
-  sc_option_item_t   *item;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_SIZE_T, help_string);
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_SIZE_T;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = variable;
-  item->opt_fn = NULL;
   item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
-
+  item->opt_var = variable;
   *variable = init_value;
 }
 
@@ -357,25 +415,27 @@ sc_options_add_double (sc_options_t * opt, int opt_char,
                        double *variable, double init_value,
                        const char *help_string)
 {
-  sc_option_item_t   *item;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_DOUBLE, help_string);
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_DOUBLE;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = variable;
-  item->opt_fn = NULL;
   item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
-
+  item->opt_var = variable;
   *variable = init_value;
+}
+
+static void
+sc_options_add_item_string (sc_options_t * opt,
+                            int opt_char, const char *opt_name,
+                            sc_option_string_t *s, const char *help_string)
+{
+  sc_option_item_t *item;
+
+  SC_ASSERT (s != NULL && sc_refcount_is_active (&s->rc));
+  item = sc_options_add_item (opt, opt_char, opt_name,
+                              SC_OPTION_STRING, help_string);
+  item->has_arg = 1;
+  item->opt_var = s;
 }
 
 void
@@ -383,48 +443,28 @@ sc_options_add_string (sc_options_t * opt, int opt_char,
                        const char *opt_name, const char **variable,
                        const char *init_value, const char *help_string)
 {
-  sc_option_item_t   *item;
-
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_STRING;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = variable;
-  item->opt_fn = NULL;
-  item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
-  item->user_data = NULL;
-
-  /* init_value may be NULL */
-  *variable = item->string_value = SC_STRDUP (init_value);
+  sc_options_add_item_string (opt, opt_char, opt_name,
+   sc_options_string_new (variable, init_value), help_string);
 }
 
 void
 sc_options_add_inifile (sc_options_t * opt, int opt_char,
                         const char *opt_name, const char *help_string)
 {
-  sc_option_item_t   *item;
-
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
-
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_INIFILE;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = NULL;
-  item->opt_fn = NULL;
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_INIFILE, help_string);
   item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
-  item->user_data = NULL;
+}
+
+void
+sc_options_add_jsonfile (sc_options_t * opt, int opt_char,
+                         const char *opt_name, const char *help_string)
+{
+  sc_option_item_t   *item =
+    sc_options_add_item (opt, opt_char, opt_name,
+                         SC_OPTION_JSONFILE, help_string);
+  item->has_arg = 1;
 }
 
 void
@@ -435,20 +475,12 @@ sc_options_add_callback (sc_options_t * opt, int opt_char,
 {
   sc_option_item_t   *item;
 
-  SC_ASSERT (opt_char != '\0' || opt_name != NULL);
-  SC_ASSERT (opt_name == NULL || opt_name[0] != '-');
+  SC_ASSERT (fn != SC_OPTION_CALLBACK_NULL);
 
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_CALLBACK;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = NULL;
-  item->opt_fn = (void (*)(void)) fn;
+  item = sc_options_add_item (opt, opt_char, opt_name,
+                              SC_OPTION_CALLBACK, help_string);
   item->has_arg = has_arg;
-  item->called = 0;
-  item->help_string = help_string;
-  item->string_value = NULL;
+  item->opt_fn = fn;
   item->user_data = data;
 }
 
@@ -468,16 +500,10 @@ sc_options_add_keyvalue (sc_options_t * opt,
   SC_ASSERT (init_value != NULL);
   SC_ASSERT (keyvalue != NULL);
 
-  item = (sc_option_item_t *) sc_array_push (opt->option_items);
-
-  item->opt_type = SC_OPTION_KEYVALUE;
-  item->opt_char = opt_char;
-  item->opt_name = opt_name;
-  item->opt_var = variable;
-  item->opt_fn = NULL;
+  item = sc_options_add_item (opt, opt_char, opt_name,
+                              SC_OPTION_KEYVALUE, help_string);
   item->has_arg = 1;
-  item->called = 0;
-  item->help_string = help_string;
+  item->opt_var = variable;
   item->user_data = keyvalue;
 
   /* we expect that the key points to a valid integer entry by design */
@@ -493,6 +519,7 @@ sc_options_add_suboptions (sc_options_t * opt,
   sc_array_t         *items = subopt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
+  sc_option_string_t *s;
   size_t              iz;
   int                 prefixlen = strlen (prefix);
   int                 namelen;
@@ -534,15 +561,18 @@ sc_options_add_suboptions (sc_options_t * opt,
                              *((double *) item->opt_var), item->help_string);
       break;
     case SC_OPTION_STRING:
-      sc_options_add_string (opt, '\0', *name, (const char **) item->opt_var,
-                             item->string_value, item->help_string);
+      s = sc_options_string_ref ((sc_option_string_t *) item->opt_var);
+      sc_options_add_item_string (opt, '\0', *name, s, item->help_string);
       break;
     case SC_OPTION_INIFILE:
       sc_options_add_inifile (opt, '\0', *name, item->help_string);
       break;
+    case SC_OPTION_JSONFILE:
+      sc_options_add_jsonfile (opt, '\0', *name, item->help_string);
+      break;
     case SC_OPTION_CALLBACK:
-      sc_options_add_callback (opt, '\0', *name, item->has_arg,
-                               (sc_options_callback_t) item->opt_fn,
+      sc_options_add_callback (opt, '\0', *name,
+                               item->has_arg, item->opt_fn,
                                item->user_data, item->help_string);
       break;
     case SC_OPTION_KEYVALUE:
@@ -602,11 +632,14 @@ sc_options_print_usage (int package_id, int log_priority,
       provide = "<STRING>";
       break;
     case SC_OPTION_INIFILE:
-      provide = "<FILE>";
+      provide = "<INIFILE>";
+      break;
+    case SC_OPTION_JSONFILE:
+      provide = "<JSONFILE>";
       break;
     case SC_OPTION_CALLBACK:
       if (item->has_arg) {
-        provide = "<ARG>";
+        provide = item->has_arg == 2 ? "[<ARG>]" : "<ARG>";
       }
       break;
     case SC_OPTION_KEYVALUE:
@@ -669,7 +702,7 @@ sc_options_print_summary (int package_id, int log_priority,
   sc_array_t         *items = opt->option_items;
   size_t              count = items->elem_count;
   sc_option_item_t   *item;
-  const char         *string_val;
+  const char         *s;
   char                outbuf[BUFSIZ];
 
   SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Options:\n");
@@ -677,6 +710,7 @@ sc_options_print_summary (int package_id, int log_priority,
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_JSONFILE ||
         item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
@@ -718,25 +752,12 @@ sc_options_print_summary (int package_id, int log_priority,
                            "%g", *(double *) item->opt_var);
       break;
     case SC_OPTION_STRING:
-      string_val = *(const char **) item->opt_var;
-      if (string_val == NULL) {
-        string_val = "<unspecified>";
+      s = sc_options_string_get ((sc_option_string_t *) item->opt_var);
+      if (s == NULL) {
+        s = "<unspecified>";
       }
-      printed += snprintf (outbuf + printed, BUFSIZ - printed,
-                           "%s", string_val);
+      printed += snprintf (outbuf + printed, BUFSIZ - printed, "%s", s);
       break;
-#if 0
-    case SC_OPTION_CALLBACK:
-      if (item->called) {
-        string_val = item->has_arg ? item->string_value : "true";
-      }
-      else {
-        string_val = "<unspecified>";
-      }
-      printed += snprintf (outbuf + printed, BUFSIZ - printed,
-                           "%s", string_val);
-      break;
-#endif
     case SC_OPTION_KEYVALUE:
       SC_ASSERT (item->string_value != NULL);
       printed += snprintf (outbuf + printed, BUFSIZ - printed,
@@ -769,12 +790,19 @@ sc_options_print_summary (int package_id, int log_priority,
 
 int
 sc_options_load (int package_id, int err_priority,
-                 sc_options_t * opt, const char *inifile)
+                 sc_options_t * opt, const char *file)
+{
+  return sc_options_load_ini (package_id, err_priority, opt, file, NULL);
+}
+
+int
+sc_options_load_ini (int package_id, int err_priority,
+                     sc_options_t * opt, const char *inifile, void *re)
 {
   int                 found_short, found_long;
   size_t              iz;
-  sc_array_t         *items = opt->option_items;
-  size_t              count = items->elem_count;
+  size_t              count;
+  sc_array_t         *items;
   sc_option_item_t   *item;
   dictionary         *dict;
   int                 iserror;
@@ -785,20 +813,32 @@ sc_options_load (int package_id, int err_priority,
   const char         *s, *key;
   char                skey[BUFSIZ], lkey[BUFSIZ];
 
+  SC_ASSERT (opt != NULL);
+  SC_ASSERT (inifile != NULL);
+
+  /* prepare for runtime error checking implementation */
+  SC_ASSERT (re == NULL);
+
+  /* read .ini file in one go */
   dict = iniparser_load (inifile);
   if (dict == NULL) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
-                "Could not load or parse inifile\n");
+                "Could not load or parse .ini file\n");
     return -1;
   }
 
+  /* loop through option items */
+  items = opt->option_items;
+  count = items->elem_count;
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_JSONFILE ||
         item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
 
+    /* check existence of key */
     key = NULL;
     skey[0] = lkey[0] = '\0';
     found_short = found_long = 0;
@@ -833,6 +873,7 @@ sc_options_load (int package_id, int err_priority,
       continue;
     }
 
+    /* access value by key */
     ++item->called;
     switch (item->opt_type) {
     case SC_OPTION_SWITCH:
@@ -891,33 +932,9 @@ sc_options_load (int package_id, int err_priority,
     case SC_OPTION_STRING:
       s = iniparser_getstring (dict, key, NULL);
       if (s != NULL) {
-        SC_FREE (item->string_value);   /* deals with NULL */
-        *(const char **) item->opt_var = item->string_value = SC_STRDUP (s);
+        sc_options_string_set ((sc_option_string_t *) item->opt_var, s);
       }
       break;
-#if 0
-    case SC_OPTION_CALLBACK:
-      if (item->has_arg) {
-        s = iniparser_getstring (dict, key, NULL);
-        if (s == NULL) {
-          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                       "Invalid string %s in file: %s\n", key, inifile);
-          iniparser_freedict (dict);
-          return -1;
-        }
-        SC_FREE (item->string_value);   /* deals with NULL */
-        item->string_value = SC_STRDUP (s);
-      }
-      else {
-        s = NULL;
-      }
-      fn = (sc_options_callback_t) item->opt_fn;
-      if (fn (opt, s, item->user_data)) {
-        iniparser_freedict (dict);
-        return -1;
-      }
-      break;
-#endif
     case SC_OPTION_KEYVALUE:
       SC_ASSERT (item->string_value != NULL);
       s = iniparser_getstring (dict, key, NULL);
@@ -929,7 +946,7 @@ sc_options_load (int package_id, int err_priority,
         if (iserror) {
           /* key not found or of the wrong type; this cannot be ignored */
           SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                       "Invalid key %s for option %s in file: %s\n",
+                       "Invalid keyvalue %s for option %s in file: %s\n",
                        s, key, inifile);
           iniparser_freedict (dict);
           return -1;
@@ -945,6 +962,314 @@ sc_options_load (int package_id, int err_priority,
 
   iniparser_freedict (dict);
   return 0;
+}
+
+#ifdef SC_HAVE_JSON
+
+/** Look up a key, possibly with ':' hierarchy markers, in a JSON object.
+ *
+ * We look up each substring between ':'s as key to a sub-object and
+ * continue recursively.  If a key is not found, we try the concatenation
+ * with the next substring as key, and so forth.
+ * Values found at deeper levels of recursion take precedence.
+ *
+ * This allows for both a hierarchical and a flat JSON representation.
+ *
+ * \param [in] object   Must be a JSON object.
+ * \param [in] key      NUL-terminated string.
+ * \return              NULL if key not found in \a object
+ *                      and a borrowed reference to the value otherwise.
+ */
+static json_t      *
+sc_options_json_lookup (json_t *object, const char *keystring)
+{
+  int                 ended;
+  size_t              len;
+  const char         *begp, *midp, *endp;
+  char               *key;
+  json_t             *entry, *recurse;
+
+  /* initial consistency checks */
+  SC_ASSERT (json_is_object (object));
+  SC_ASSERT (keystring != NULL);
+
+  /* setup first sub string and loop over contents */
+  begp = midp = keystring;
+  ended = 0;
+  for (;;) {
+    /* search substring ending before the next ':' */
+    if ((endp = strchr (midp, ':')) == NULL) {
+      len = strlen (begp);
+      ended = 1;
+    }
+    else {
+      len = (size_t) (endp - begp);
+      SC_ASSERT (len < strlen (begp));
+      SC_ASSERT (endp[0] != '\0');
+    }
+
+    /* consider substring as key */
+    if (len == 0) {
+      /* empty keys are not considered */
+      entry = NULL;
+    }
+    else {
+      /* conduct proper member search */
+      key = SC_ALLOC (char, len + 1);
+      sc_strcopy (key, len + 1, begp);
+      entry = json_object_get (object, key);
+      SC_FREE (key);
+    }
+
+    /* deal with result of lookup */
+    if (entry == NULL) {
+      if (ended) {
+        /* an empty string cannot be found */
+        return NULL;
+      }
+      else {
+        /* concatenate same string across the ':' symbol */
+        ++midp;
+        continue;
+      }
+    }
+    else {
+      /* key exists in object */
+      if (ended) {
+        /* we have retrieved a value from the entire key */
+        return entry;
+      }
+      else {
+        /* examine the value just found */
+        if (!json_is_object (entry)) {
+          /* key must be an object in order to continue searching */
+          return NULL;
+        }
+        else if ((recurse = sc_options_json_lookup (entry, endp + 1))
+                 != NULL) {
+          /* recursive lookup has succeeded */
+          return recurse;
+        }
+        else {
+          /* continue with next loop iteration and advanced key */
+          SC_ASSERT (endp != NULL);
+          midp = endp + 1;
+        }
+      }
+    }
+  }
+}
+
+#endif /* SC_HAVE_JSON */
+
+int
+sc_options_load_json (int package_id, int err_priority,
+                      sc_options_t *opt, const char *jsonfile, void *re)
+{
+  int                 retval = -1;
+#ifndef SC_HAVE_JSON
+  SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+              "JSON not configured: could not parse input file\n");
+#else
+  int                 iserror;
+  int                 bvalue, ivalue;
+  double              dvalue;
+  size_t              iz, zvalue;
+  size_t              count;
+  sc_array_t         *items;
+  sc_option_item_t   *item;
+  json_t             *file;
+  json_t             *jopt;
+  json_t             *jval, *jv2;
+  json_int_t          jint;
+  json_error_t        jerr;
+  const char         *s, *key;
+  char                skey[BUFSIZ];
+
+  SC_ASSERT (opt != NULL);
+  SC_ASSERT (jsonfile != NULL);
+
+  /* prepare for runtime error checking implementation */
+  SC_ASSERT (re == NULL);
+
+  /* read JSON file in one go */
+  file = NULL;
+  if ((file = json_load_file (jsonfile, 0, &jerr)) == NULL) {
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                 "Could not load or parse JSON file %s line %d column %d\n",
+                 jerr.source, jerr.line, jerr.column);
+    goto load_json_error;
+  }
+  if ((jopt = json_object_get (file, "Options")) == NULL) {
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "Could not find Options entry\n");
+    goto load_json_error;
+  }
+  if (!json_is_object (jopt)) {
+    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                "Could not access Options object\n");
+    goto load_json_error;
+  }
+
+  /* loop through option items */
+  items = opt->option_items;
+  count = items->elem_count;
+  for (iz = 0; iz < count; ++iz) {
+    item = (sc_option_item_t *) sc_array_index (items, iz);
+    if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_JSONFILE ||
+        item->opt_type == SC_OPTION_CALLBACK) {
+      continue;
+    }
+
+    /* try to retrieve by short option character, then by long name */
+    /* since JSON generally allows for duplicate keys, we take the same
+     * approach: we look for short option and possibly replace by long */
+    key = NULL;
+    jval = NULL;
+    if (item->opt_char != '\0') {
+      snprintf (skey, BUFSIZ, "-%c", item->opt_char);
+      key = skey;
+      jval = json_object_get (jopt, key);
+    }
+    if (item->opt_name != NULL) {
+      key = item->opt_name;
+      if ((jv2 = sc_options_json_lookup (jopt, key)) != NULL) {
+        jval = jv2;
+      }
+    }
+    if (jval == NULL) {
+      continue;
+    }
+    SC_ASSERT (key != NULL);
+
+    /* each option type has an individual interpretation of the value */
+    ++item->called;
+    switch (item->opt_type) {
+    case SC_OPTION_SWITCH:
+      if (json_is_boolean (jval)) {
+        bvalue = json_is_true (jval);
+      }
+      else if (json_is_integer (jval) &&
+               (bvalue = (int) json_integer_value (jval)) >= 0) {
+        /* switch may have values larger than 1 */
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid switch %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      *(int *) item->opt_var = bvalue;
+      break;
+    case SC_OPTION_BOOL:
+      if (json_is_boolean (jval)) {
+        bvalue = json_is_true (jval);
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid boolean %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      *(int *) item->opt_var = bvalue;
+      break;
+    case SC_OPTION_INT:
+      if (json_is_integer (jval) &&
+          (jint = json_integer_value (jval)) >= (json_int_t) INT_MIN &&
+          jint <= (json_int_t) INT_MAX) {
+        ivalue = (int) jint;
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid int %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      *(int *) item->opt_var = ivalue;
+      break;
+    case SC_OPTION_SIZE_T:
+      if (json_is_integer (jval) &&
+          (jint = json_integer_value (jval)) >= 0) {
+        zvalue = (size_t) jint;
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid size_t %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      *(size_t *) item->opt_var = zvalue;
+      break;
+    case SC_OPTION_DOUBLE:
+      if (json_is_number (jval)) {
+        if (json_is_integer (jval)) {
+          dvalue = (double) json_integer_value (jval);
+        }
+        else {
+          SC_ASSERT (json_is_real (jval));
+          dvalue = json_real_value (jval);
+        }
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid double %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      *(double *) item->opt_var = dvalue;
+      break;
+    case SC_OPTION_STRING:
+      if (json_is_null (jval)) {
+        s = NULL;
+      }
+      else if (json_is_string (jval)) {
+        s = json_string_value (jval);
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid string %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      sc_options_string_set ((sc_option_string_t *) item->opt_var, s);
+      break;
+    case SC_OPTION_KEYVALUE:
+      SC_ASSERT (item->string_value != NULL);
+      if (json_is_string (jval)) {
+        /* we must find a string and not the null value */
+        s = json_string_value (jval);
+        SC_ASSERT (s != NULL);
+
+        /* lookup the key and see if the result is valid */
+        iserror = *(int *) item->opt_var;
+        ivalue = sc_keyvalue_get_int_check ((sc_keyvalue_t *)
+                                            item->user_data, s, &iserror);
+        if (iserror) {
+          /* key not found or of the wrong type; this cannot be ignored */
+          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                       "Invalid keyvalue %s for option %s in file: %s\n",
+                       s, key, jsonfile);
+          goto load_json_error;
+        }
+      }
+      else {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Invalid key %s in file: %s\n", key, jsonfile);
+        goto load_json_error;
+      }
+      SC_FREE (item->string_value);
+      item->string_value = SC_STRDUP (s);
+      *(int *) item->opt_var = ivalue;
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+    }
+  }
+
+  /* clean return under all circmstances */
+  retval = 0;
+load_json_error:
+  /* free non-borrowed references */
+  if (file != NULL) {
+    json_decref (file);
+  }
+#endif
+  return retval;
 }
 
 int
@@ -963,6 +1288,7 @@ sc_options_save (int package_id, int err_priority,
   const char         *last_prefix;
   const char         *this_prefix;
   const char         *base_name;
+  const char         *s;
   size_t              last_n;
   size_t              this_n;
 
@@ -990,10 +1316,8 @@ sc_options_save (int package_id, int err_priority,
 
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
-    if (item->opt_type == SC_OPTION_STRING && item->string_value == NULL) {
-      continue;
-    }
     if (item->opt_type == SC_OPTION_INIFILE ||
+        item->opt_type == SC_OPTION_JSONFILE ||
         item->opt_type == SC_OPTION_CALLBACK) {
       continue;
     }
@@ -1069,19 +1393,11 @@ sc_options_save (int package_id, int err_priority,
       retval = fprintf (file, "%.16g\n", *(double *) item->opt_var);
       break;
     case SC_OPTION_STRING:
-      retval = fprintf (file, "%s\n", item->string_value);
-      break;
-#if 0
-    case SC_OPTION_CALLBACK:
-      if (item->has_arg) {
-        SC_ASSERT (item->string_value != NULL);
-        retval = fprintf (file, "%s\n", item->string_value);
-      }
-      else {
-        retval = fprintf (file, "%s\n", "true");
+      s = sc_options_string_get ((sc_option_string_t *) item->opt_var);
+      if (s != NULL) {
+        retval = fprintf (file, "%s\n", s);
       }
       break;
-#endif
     case SC_OPTION_KEYVALUE:
       SC_ASSERT (item->string_value != NULL);
       retval = fprintf (file, "%s\n", item->string_value);
@@ -1144,7 +1460,6 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
   sc_option_item_t   *item;
   char                optstring[BUFSIZ];
   struct option      *longopts, *lo;
-  sc_options_callback_t fn;
 
   /* build getopt string and long option structures */
 
@@ -1273,28 +1588,34 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       }
       break;
     case SC_OPTION_STRING:
-      SC_FREE (item->string_value);     /* deals with NULL */
-      *(const char **) item->opt_var = item->string_value =
-        SC_STRDUP (optarg);
+      sc_options_string_set ((sc_option_string_t *) item->opt_var, optarg);
       break;
     case SC_OPTION_INIFILE:
-      if (sc_options_load (package_id, err_priority, opt, optarg)) {
+      if (sc_options_load_ini (package_id, err_priority,
+                               opt, optarg, NULL)) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                     "Error loading file: %s\n", optarg);
+                     "Error loading .ini file: %s\n", optarg);
+        retval = -1;            /* this ends option processing */
+      }
+      break;
+    case SC_OPTION_JSONFILE:
+      if (sc_options_load_json (package_id, err_priority,
+                                opt, optarg, NULL)) {
+        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                     "Error loading JSON file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
       break;
     case SC_OPTION_CALLBACK:
-      if (item->has_arg) {
-        SC_FREE (item->string_value);   /* deals with NULL */
-        item->string_value = SC_STRDUP (optarg);
-      }
-      fn = (sc_options_callback_t) item->opt_fn;
-      if (fn (opt, item->has_arg ? optarg : NULL, item->user_data)) {
-#if 0
-        SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
-                    "Error in callback option\n");
-#endif
+      if (item->opt_fn (opt, optarg, item->user_data)) {
+        if (optarg == NULL) {
+          SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+                      "Error by option callback\n");
+        }
+        else {
+          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                       "Error by option callback: %s\n", optarg);
+        }
         retval = -1;            /* this ends option processing */
       }
       break;

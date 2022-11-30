@@ -48,7 +48,7 @@ if test "x$$1_ENABLE_OPENMP" != xno ; then
     int id = omp_get_thread_num ();
   }
 ]])],,
-                 [AC_MSG_ERROR([Unable to link with OpenMP])])
+                 [AC_MSG_ERROR([unable to link with OpenMP])])
 dnl Keep the variables changed as done above
 dnl CFLAGS="$PRE_OPENMP_CFLAGS"
 

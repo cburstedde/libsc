@@ -29,6 +29,26 @@
 
 #include <sc.h>
 
+static int
+test_config_libraries (void)
+{
+  int                 num_failed_tests = 0;
+
+#ifndef SC_HAVE_JSON
+  if (sc_have_json ()) {
+    SC_GLOBAL_LERROR ("Negative JSON presence mismatch\n");
+    ++num_failed_tests;
+  }
+#else
+  if (!sc_have_json ()) {
+    SC_GLOBAL_LERROR ("Positive JSON presence mismatch\n");
+    ++num_failed_tests;
+  }
+#endif
+
+  return num_failed_tests;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -50,34 +70,37 @@ main (int argc, char **argv)
   /* check all functions related to version numbers of libsc */
   num_failed_tests = 0;
   version = sc_version ();
-  SC_GLOBAL_LDEBUGF ("Full libsc version: %s\n", version);
+  SC_GLOBAL_INFOF ("Full libsc version: %s\n", version);
 
   if (!strncmp (version, unknown, strlen (unknown))) {
-    SC_GLOBAL_VERBOSE ("Version is unknown\n");
+    SC_GLOBAL_INFO ("Version is unknown\n");
     version_major = sc_version_major ();
     version_minor = sc_version_minor ();
     if (version_major != 0 || version_minor != 0) {
-      SC_GLOBAL_VERBOSE ("Unknown version of libsc not zero\n");
+      SC_GLOBAL_LERROR ("Unknown version of libsc not zero\n");
       num_failed_tests++;
     }
   }
   else {
     version_major = sc_version_major ();
-    SC_GLOBAL_LDEBUGF ("Major libsc version: %d\n", version_major);
+    SC_GLOBAL_INFOF ("Major libsc version: %d\n", version_major);
     snprintf (version_tmp, 32, "%d", version_major);
     if (strncmp (version, version_tmp, strlen (version_tmp))) {
-      SC_GLOBAL_VERBOSE ("Test failure for major version of libsc\n");
+      SC_GLOBAL_LERROR ("Test failure for major version of libsc\n");
       num_failed_tests++;
     }
 
     version_minor = sc_version_minor ();
-    SC_GLOBAL_LDEBUGF ("Minor libsc version: %d\n", version_minor);
+    SC_GLOBAL_INFOF ("Minor libsc version: %d\n", version_minor);
     snprintf (version_tmp, 32, "%d.%d", version_major, version_minor);
     if (strncmp (version, version_tmp, strlen (version_tmp))) {
-      SC_GLOBAL_VERBOSE ("Test failure for minor version of libsc\n");
+      SC_GLOBAL_LERROR ("Test failure for minor version of libsc\n");
       num_failed_tests++;
     }
   }
+
+  /* further tests */
+  num_failed_tests += test_config_libraries ();
 
   /* clean up and exit */
   sc_finalize ();

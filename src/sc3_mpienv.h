@@ -183,19 +183,19 @@ sc3_error_t        *sc3_mpienv_destroy (sc3_mpienv_t ** mp);
 sc3_error_t        *sc3_mpienv_get_shared (const sc3_mpienv_t * m,
                                            int *shared);
 
-/** Query whether the rank of a process within a node.
+/** Query the rank of a process within a node.
  * \param [in] m        Valid and setup mpi environment.
- * \param [out] shared  Pointer must not be NULL.  Output node rank.
- *                      Written to -1 on error return.
+ * \param [out] noderank    Pointer must not be NULL.  Output node rank.
+ *                          Written to -1 on error return.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_get_noderank (const sc3_mpienv_t * m,
                                              int *noderank);
 
-/** Query whether the size of the node communicator.
+/** Query the size of the node communicator.
  * \param [in] m        Valid and setup mpi environment.
- * \param [out] shared  Pointer must not be NULL.  Output node size.
- *                      Written to -1 on error return.
+ * \param [out] nodesize    Pointer must not be NULL.  Output node size.
+ *                          Written to -1 on error return.
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_get_nodesize (const sc3_mpienv_t * m,

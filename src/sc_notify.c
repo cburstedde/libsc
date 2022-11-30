@@ -42,7 +42,7 @@ do {                                                       \
 
 /*== INTERFACE == */
 
-sc_notify_type_t    sc_notify_type_default = SC_NOTIFY_NARY;
+sc_notify_type_t    sc_notify_type_default = SC_NOTIFY_PEX;
 size_t              sc_notify_eager_threshold_default = 1024;
 
 typedef struct sc_notify_nary_s
@@ -154,15 +154,22 @@ static void         sc_notify_nary_init (sc_notify_t * notify);
 static void         sc_notify_ranges_init (sc_notify_t * notify);
 
 int
+sc_notify_supports_type (sc_notify_type_t type)
+{
+  return type >= 0 && type < SC_NOTIFY_NUM_TYPES;
+}
+
+int
 sc_notify_set_type (sc_notify_t * notify, sc_notify_type_t in_type)
 {
   sc_notify_type_t    current_type;
+
+  SC_ASSERT (sc_notify_supports_type (in_type));
 
   current_type = sc_notify_get_type (notify);
   if (in_type == SC_NOTIFY_DEFAULT) {
     in_type = sc_notify_type_default;
   }
-  SC_ASSERT (in_type >= 0 && in_type < SC_NOTIFY_NUM_TYPES);
   if (current_type != in_type) {
     notify->type = in_type;
     /* initialize_data */
@@ -1963,7 +1970,7 @@ sc_notify_payload_nbx (sc_array_t * receivers, sc_array_t * senders,
       int                 sent;
 
       mpiret =
-        MPI_Testall (num_receivers, sendreqs, &sent, MPI_STATUSES_IGNORE);
+        sc_MPI_Testall (num_receivers, sendreqs, &sent, MPI_STATUSES_IGNORE);
       SC_CHECK_MPI (mpiret);
       if (sent) {
         mpiret = MPI_Ibarrier (comm, &barreq);
@@ -2090,7 +2097,7 @@ sc_notify_payloadv_nbx (sc_array_t * receivers, sc_array_t * senders,
       int                 sent;
 
       mpiret =
-        MPI_Testall (num_receivers, sendreqs, &sent, MPI_STATUSES_IGNORE);
+        sc_MPI_Testall (num_receivers, sendreqs, &sent, MPI_STATUSES_IGNORE);
       SC_CHECK_MPI (mpiret);
       if (sent) {
         mpiret = MPI_Ibarrier (comm, &barreq);
@@ -2996,6 +3003,19 @@ sc_notify_payloadv (sc_array_t * receivers, sc_array_t * senders,
 }
 
 void
+sc_notify_nary (sc_array_t * receivers, sc_array_t * senders,
+                sc_array_t * in_payload, sc_array_t * out_payload,
+                sc_MPI_Comm mpicomm)
+{
+  sc_notify_t        *notifyc;
+
+  notifyc = sc_notify_new (mpicomm);
+  sc_notify_set_type (notifyc, SC_NOTIFY_NARY);
+  sc_notify_payload (receivers, senders, in_payload, out_payload, 1, notifyc);
+  sc_notify_destroy (notifyc);
+}
+
+void
 sc_notify_ext (sc_array_t * receivers, sc_array_t * senders,
                sc_array_t * in_payload, sc_array_t * out_payload,
                sc_MPI_Comm mpicomm)
@@ -3003,7 +3023,6 @@ sc_notify_ext (sc_array_t * receivers, sc_array_t * senders,
   sc_notify_t        *notifyc;
 
   notifyc = sc_notify_new (mpicomm);
-  sc_notify_set_type (notifyc, SC_NOTIFY_PEX);
   sc_notify_payload (receivers, senders, in_payload, out_payload, 1, notifyc);
   sc_notify_destroy (notifyc);
 }

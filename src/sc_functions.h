@@ -30,7 +30,7 @@ SC_EXTERN_C_BEGIN;
 
 /** Integer power routine.
  * Found in github.com:bfam/bfam.git, and originally in
- * http://stackoverflow.com/questions/101439/\
+ * https://stackoverflow.com/questions/101439/\
  * the-most-efficient-way-to-implement-an-integer-based-power-function-powint-int
  *
  * \param [in] base         This integer is taken to the power of \exp.

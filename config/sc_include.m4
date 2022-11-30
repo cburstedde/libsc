@@ -105,36 +105,105 @@ $4_WITH_$3="$withval"
 AC_DEFUN([SC_ARG_WITHOUT],
          [SC_ARG_WITHOUT_PREFIX([$1], [$2], [$3], [SC], [$4])])
 
-dnl SC_REQUIRE_LIB(LIBRARY LIST, FUNCTION)
-dnl Check for FUNCTION in LIBRARY, exit with error if not found
+dnl SC_SEARCH_LIBS(FUNCTION, INCLUDE, INVOCATION, SEARCH_LIBS,
+dnl                ACTION_IF_FOUND, ACTION_IF_NOT_FOUND, OTHER_LIBS)
 dnl
-AC_DEFUN([SC_REQUIRE_LIB],
-    [AC_SEARCH_LIBS([$2], [$1],,
-      [AC_MSG_ERROR([Could not find function $2 in $1])])])
-
-dnl SC_CHECK_FABS(PREFIX)
-dnl Check whether fabs is found in libm, do a link test if not found.
-dnl The PREFIX argument is currently unused but should be supplied.
+dnl Try to link to a given function first with no extra libs
+dnl and then with each out of a list of libraries until found.
+dnl The FUNCTION is just the function name in one word, while
+dnl its INVOCATION is one valid statement of a C/C++ program.
+dnl It may require INCLUDE statements to compile and link ok.
+dnl On the inside we call AC_LANG_PROGRAM(INCLUDE, INVOCATION).
+dnl The SEARCH_LIBS are a white-space separated list or empty.
+dnl The OTHER_LIBS may be empty or a list of depency libraries.
 dnl
-AC_DEFUN([SC_CHECK_FABS],
+dnl This macro is modified from AC_SEARCH_LIBS.  In particular,
+dnl we use a separate cache variable ac_cv_sc_search_FUNCTION.
+dnl
+AC_DEFUN([SC_SEARCH_LIBS],
 [
-  AC_SEARCH_LIBS([fabs], [m],,
-  [
-   AC_MSG_CHECKING([whether a fabs link test works])
-   AC_LINK_IFELSE([AC_LANG_PROGRAM(
-   [[
-#include <stdio.h>
+AS_VAR_PUSHDEF([ac_Search], [ac_cv_sc_search_$1])dnl
+AC_CACHE_CHECK([for library containing $1], [ac_Search],
+[
+ac_func_sc_search_save_LIBS=$LIBS
+for ac_lib in '' $4; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib $7 $ac_func_sc_search_save_LIBS"
+  fi
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([$2], [$3])],
+                 [AS_VAR_SET([ac_Search], [$ac_res])])
+  AS_VAR_SET_IF([ac_Search], [break])
+done
+AS_VAR_SET_IF([ac_Search],, [AS_VAR_SET([ac_Search], [no])])
+LIBS=$ac_func_sc_search_save_LIBS
+])
+AS_VAR_COPY([ac_res], [ac_Search])
+AS_IF([test "$ac_res" != no],
+  [test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+   $5], [$6])
+AS_VAR_POPDEF([ac_Search])dnl
+])
+
+dnl SC_CHECK_MATH(PREFIX)
+dnl Check whether sqrt is found, possibly in -lm, using a link test.
+dnl We AC_DEFINE HAVE_MATH to 1 depending on whether it found.
+dnl We throw a fatal error if sqrt does not link at all.
+dnl
+AC_DEFUN([SC_CHECK_MATH],
+[
+  SC_SEARCH_LIBS([sqrt],
+[[
+/* provoke side effect to inhibit compiler optimization */
 #include <math.h>
-   ]],
-   [[
-const float farg = -4.12;
-const float fres = fabs (farg);
-printf("%f\n", fres);
-   ]])],
-   [AC_DEFINE([HAVE_FABS], [1], [Define to 1 if fabs links successfully])
-    AC_MSG_RESULT([yes])],
-   [AC_MSG_RESULT([no])])
-   ])
+#include <stdio.h>
+]],
+[[
+/* make this so complex that the compiler cannot predict the result */
+double a = 3.14149;
+for (; sqrt (a) < a; a *= 1.000023) { putc ('1', stdout); }
+]], [m],
+  [AC_DEFINE([HAVE_MATH], [1], [Define to 1 if sqrt links successfully])],
+  [AC_MSG_ERROR([unable to link with sqrt, cos, sin, both as is and with -lm])])
+])
+
+dnl SC_CHECK_ZLIB(PREFIX)
+dnl Check whether adler32_combine is found, possibly in -lz, using a link test.
+dnl We AC_DEFINE HAVE_ZLIB to 1 depending on whether it is found.
+dnl We set the shell variable PREFIX_HAVE_ZLIB to yes if found.
+dnl
+AC_DEFUN([SC_CHECK_ZLIB],
+[
+  SC_SEARCH_LIBS([adler32_combine], [[#include <zlib.h>]],
+[[
+z_off_t len = 3000;
+uLong a = 1, b = 2;
+if (a == adler32_combine (a, b, len)) {;}
+]], [z],
+  [AC_DEFINE([HAVE_ZLIB], [1], [Define to 1 if zlib's adler32_combine links])
+   $1_HAVE_ZLIB="yes"],
+  [$1_HAVE_ZLIB=])
+])
+
+dnl SC_CHECK_JSON(PREFIX)
+dnl Check whether json_integer, json_real are found (in -ljansson).
+dnl We AC_DEFINE HAVE_JSON to 1 depending on whether it is found.
+dnl We set the shell variable PREFIX_HAVE_JSON to yes if found.
+dnl
+AC_DEFUN([SC_CHECK_JSON],
+[
+  SC_SEARCH_LIBS([json_integer], [[#include <jansson.h>]],
+[[
+json_t *jint, *jreal;
+if (jint == json_integer ((json_int_t) 15)) { json_decref (jint); }
+if (jreal == json_real (.5)) { json_decref (jreal); }
+]], [jansson],
+  [AC_DEFINE([HAVE_JSON], [1],
+             [Define to 1 if json_integer and json_real link])
+   $1_HAVE_JSON="yes"],
+  [$1_HAVE_JSON=])
 ])
 
 dnl SC_CHECK_LIB(LIBRARY LIST, FUNCTION, TOKEN, PREFIX)
@@ -176,7 +245,7 @@ AC_DEFUN([SC_REQUIRE_FUNCS],
 m4_foreach_w([sc_thefunc], [$1],
              [AC_CHECK_FUNC([sc_thefunc], ,
                             [AC_MSG_ERROR([\
-Could not find function sc_thefunc])])])
+cannot find function sc_thefunc])])])
 ])
 
 dnl SC_DETERMINE_INSTALL(PREFIX)
@@ -187,7 +256,7 @@ dnl
 AC_DEFUN([SC_DETERMINE_INSTALL],
 [
 if test ! -d "$$1_DIR" ; then
-  AC_MSG_ERROR([Directory "$$1_DIR" does not exist])
+  AC_MSG_ERROR([directory "$$1_DIR" does not exist])
 fi
 if test -d "$$1_DIR/include" || test -d "$$1_DIR/lib" || \
    test -d "$$1_DIR/bin" || test -d "$$1_DIR/share/aclocal" ; then
@@ -210,7 +279,7 @@ if test ! -d "$$1_INC" ; then
   $1_INC="$$1_DIR/src"
 fi
 if test ! -d "$$1_INC" ; then
-  AC_MSG_ERROR([Include directories based on $$1_DIR not found])
+  AC_MSG_ERROR([include directories based on $$1_DIR not found])
 fi
 $1_CPPFLAGS="-I$$1_INC $2"
 ])
@@ -228,7 +297,7 @@ if test ! -d "$$1_LIB" ; then
   $1_LIB="$$1_DIR/src"
 fi
 if test ! -d "$$1_LIB" ; then
-  AC_MSG_ERROR([Library directories based on $$1_DIR not found])
+  AC_MSG_ERROR([library directories based on $$1_DIR not found])
 fi
 $1_LDADD="-L$$1_LIB $2"
 ])
@@ -246,7 +315,7 @@ if test ! -d "$$1_CONFIG" ; then
   $1_CONFIG="$$1_DIR/config"
 fi
 if test ! -d "$$1_CONFIG" ; then
-  AC_MSG_ERROR([Config directories based on $$1_DIR not found])
+  AC_MSG_ERROR([config directories based on $$1_DIR not found])
 fi
 $1_AMFLAGS="-I $$1_CONFIG"
 ])
@@ -266,7 +335,7 @@ dnl AC_MSG_NOTICE([Checking BLAS])
 dnl SC_BLAS([$1], [$dgemm],
 dnl         [AC_DEFINE([WITH_BLAS], 1, [Define to 1 if BLAS is used])],
 dnl         [AC_MSG_ERROR([[\
-dnl Cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
+dnl cannot find BLAS library, specify a path using LIBS=-L<DIR> (ex.\
 dnl  LIBS=-L/usr/path/lib) or a specific library using BLAS_LIBS=DIR/LIB\
 dnl  (for example BLAS_LIBS=/usr/path/lib/libcxml.a)]])])
 dnl
@@ -283,7 +352,7 @@ dnl AC_MSG_NOTICE([Checking LAPACK])
 dnl SC_LAPACK([$1], [$dgecon],
 dnl           [AC_DEFINE([WITH_LAPACK], 1, [Define to 1 if LAPACK is used])],
 dnl           [AC_MSG_ERROR([[\
-dnl Cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
+dnl cannot find LAPACK library, specify a path using LIBS=-L<DIR> (ex.\
 dnl  LIBS=-L/usr/path/lib) or a specific library using LAPACK_LIBS=DIR/LIB\
 dnl  (for example LAPACK_LIBS=/usr/path/lib/libcxml.a)]])])
 dnl
@@ -306,9 +375,11 @@ dnl We also test for some tool executables.
 dnl
 AC_DEFUN([SC_CHECK_LIBRARIES],
 [
+AC_DEFINE([USING_AUTOCONF], 1, [Define to 1 if using autoconf build])
 AC_CHECK_PROG([$1_HAVE_DOT], [dot], [YES], [NO])
-SC_CHECK_FABS([$1])
-SC_CHECK_LIB([z], [adler32_combine], [ZLIB], [$1])
+SC_CHECK_MATH([$1])
+SC_CHECK_ZLIB([$1])
+SC_CHECK_JSON([$1])
 dnl SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua5 lua],
 dnl              [lua_createtable], [LUA], [$1])
 dnl SC_CHECK_BLAS_LAPACK([$1])
@@ -326,7 +397,8 @@ dnl Call from a package that is using libsc as a subpackage.
 dnl Sets PREFIX_DIST_DENY=yes if sc is make install'd.
 dnl
 AC_DEFUN([SC_AS_SUBPACKAGE],
-         [SC_ME_AS_SUBPACKAGE([$1], [m4_tolower([$1])], [SC], [sc])])
+         [SC_ME_AS_SUBPACKAGE([$1], [m4_tolower([$1])],
+                              [SC], [sc], [libsc])])
 
 dnl SC_FINAL_MESSAGES(PREFIX)
 dnl This macro prints messages at the end of the configure run.
@@ -334,12 +406,19 @@ dnl
 AC_DEFUN([SC_FINAL_MESSAGES],
 [
 if test "x$$1_HAVE_ZLIB" = x ; then
-AC_MSG_NOTICE([- $1 -------------------------------------------------
+AC_MSG_NOTICE([- $1 ----------------------------------------------------
 We did not find a recent zlib containing the function adler32_combine.
 This is OK if the following does not matter to you:
-Calling any sc functions that rely on zlib will abort your program.
-These functions include sc_array_checksum and sc_vtk_write_compressed.
-You can fix this by compiling a recent zlib and pointing LIBS to it.
-])
+ - Calling some functions that rely on zlib will abort your program.
+   These include sc_array_checksum and sc_vtk_write_compressed.
+ - The data produced by sc_io_encode is not compressed.
+ - The function sc_io_decode is slower than with zlib.
+You can fix this by compiling a recent zlib and pointing LIBS to it.])
+fi
+if test "x$$1_HAVE_JSON" = x ; then
+AC_MSG_NOTICE([- $1 ----------------------------------------------------
+We did not find a JSON library containing json_integer and json_real.
+This means that loading JSON files for option values will fail.
+You can fix this by installing the jansson development library.])
 fi
 ])

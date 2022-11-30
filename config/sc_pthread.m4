@@ -44,7 +44,7 @@ void *start_routine (void *v)
   pthread_join (thread, NULL);
   pthread_exit (NULL);
 ]])],,
-                 [AC_MSG_ERROR([Unable to link with POSIX threads])])
+                 [AC_MSG_ERROR([unable to link with POSIX threads])])
 dnl Keep the variables changed as done above
 dnl CFLAGS="$PRE_PTHREAD_CFLAGS"
 

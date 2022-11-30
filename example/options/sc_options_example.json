@@ -1,0 +1,28 @@
+{
+  "comment" : "This file is for playing around with the -J option.",
+
+  "Options" : {
+    "-d" : 7.55,
+    "switch" : true,
+    "string" : "This string is read from the options JSON file!",
+    "sizet" : 13428237819423,
+
+    "Subset" : {
+      "integer" : 23,
+       "double" : 3.62,
+      "-s" : "Subset string 1",
+      "string2" : "Subset string 2",
+
+      "Deeper" : {
+        "deep" : 6
+      }
+    },
+
+    "Subset:Deeper" : {
+      "deep" : 5
+    },
+
+    "Subset:Deeper:deep" : 4,
+    "Subset:double" : 5.872
+  }
+}

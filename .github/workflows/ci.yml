@@ -6,7 +6,10 @@ on:
       - "**/CMakeLists.txt"
       - "**.cmake"
       - "**.cmake.in"
+      - "cmake/**"
+      - "CMake*"
       - ".github/workflows/ci_cmake.yml"
+      - ".github/workflows/ci_darwin.yml"
   pull_request:
 
 jobs:
@@ -15,15 +18,19 @@ jobs:
     runs-on: ubuntu-latest
     name: Autotools build on Linux
     steps:
+
     - name: Install system dependencies
       run: |
         sudo apt-get update -yq
         sudo apt-get install -yq --no-install-recommends \
             zlib1g-dev libmpich-dev mpich
+
     - name: Checkout source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+
     - name: Run bootstrap script
       run: ./bootstrap
+
     - name: Make check with MPI and debug, without shared
       shell: bash
       run: |
@@ -32,7 +39,7 @@ jobs:
             CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
         make -j V=0
         make -j check V=0
-        cd ..
+
     - name: Make check with MPI, without debug
       shell: bash
       run: |
@@ -40,7 +47,7 @@ jobs:
         ../configure --enable-mpi CFLAGS="-O2"
         make -j V=0
         make -j check V=0
-        cd ..
+
     - name: Make check without MPI, with debug
       shell: bash
       run: |
@@ -48,7 +55,12 @@ jobs:
         ../configure --enable-debug CFLAGS="-O0 -g -Wall -Wno-uninitialized"
         make -j V=0
         make -j check V=0
-        cd ..
+
+    - name: Install JSON parser library halfway through CI run
+      run: |
+        sudo apt-get install -yq --no-install-recommends \
+            libjansson-dev
+
     - name: Make check with MPI, debug and C++ compiler
       shell: bash
       run: |
@@ -56,7 +68,7 @@ jobs:
         ../configure --enable-mpi --enable-debug CFLAGS="-O0" CC=mpicxx
         make -j V=0
         make -j check V=0
-        cd ..
+
     - name: Make check with OpenMP, MPI, debug
       shell: bash
       run: |
@@ -65,41 +77,86 @@ jobs:
             --enable-debug CFLAGS="-O0"
         make -j V=0
         make -j check V=0
-        cd ..
+
     - name: Make distcheck
       shell: bash
       run: |
         DIR="distcheck" && mkdir -p "$DIR" && cd "$DIR"
         ../configure
         make -j distcheck V=0
-        cd ..
-    - name: Save test suite log
+
+    - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
-        name: test_suite_log
-        path: ./**/test-suite.log
+        name: linux_multi_log
+        path: |
+          ./**/config.log
+          ./**/test-suite.log
+          ./**/test/*.log
+
+  linux-valgrind:
+    runs-on: ubuntu-latest
+    name: Autotools with valgrind
+    steps:
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -yq
+        sudo apt-get install -yq --no-install-recommends \
+            zlib1g-dev libmpich-dev mpich valgrind
+
+    - name: Checkout source code
+      uses: actions/checkout@v3
+
+    - name: Run bootstrap script
+      run: ./bootstrap
+
+    - name: Make check with MPI, debug and valgrind, without shared
+      shell: bash
+      run: |
+        DIR="checkMPIdebug_valgrind" && mkdir -p "$DIR" && cd "$DIR"
+        ../configure --enable-mpi --enable-debug \
+                     --disable-shared --enable-valgrind \
+          CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
+        make -j V=0
+        make -j check V=0
+
+    - name: Upload log files
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux_valgrind_log
+        path: |
+          ./**/config.log
+          ./**/test-suite.log
+          ./**/test/*.log
 
   linux-tarball:
     runs-on: ubuntu-latest
     name: Pack tarball on Linux
     steps:
+
     - name: Install system dependencies
       run: |
         sudo apt-get update -yq
         sudo apt-get install -yq --no-install-recommends \
             zlib1g-dev libmpich-dev mpich
+
     - name: Checkout source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
+
     - name: Identify version
       shell: bash
       run: |
         git tag
         git describe --abbrev=4 --match 'v*'
+
     - name: Run bootstrap script
       run: ./bootstrap
+
     - name: Configure and make
       shell: bash
       run: |
@@ -112,9 +169,19 @@ jobs:
         make -j check V=0
         make -j distcheck V=0
         mv libsc-*.tar.gz ..
-        cd ..
-    - name: Save tarball
-      uses: actions/upload-artifact@v2
+
+    - name: Upload tarball
+      uses: actions/upload-artifact@v3
       with:
         name: libsc_tarball
         path: ./libsc-*.tar.gz
+
+    - name: Upload log files
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux_tarball_log
+        path: |
+          ./**/config.log
+          ./**/test-suite.log
+          ./**/test/*.log

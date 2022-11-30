@@ -21,141 +21,134 @@
 #define SC_CPPFLAGS @SC_CPPFLAGS@
 #endif
 
-#cmakedefine SC_ENABLE_PTHREAD
+/* Define to 1 if we are using threads */
+#cmakedefine SC_ENABLE_PTHREAD 1
 
 /* Define to 1 if we are using debug build type (assertions and extra checks) */
-#cmakedefine SC_ENABLE_DEBUG @SC_ENABLE_DEBUG@
+#cmakedefine SC_ENABLE_DEBUG 1
 
-/* Undefine if: use aligned malloc (optionally use --enable-memalign=<bytes>) */
-#cmakedefine SC_ENABLE_MEMALIGN
+/* Define to 1 if we use aligned malloc (optionally use --enable-memalign=<bytes>) */
+#cmakedefine SC_ENABLE_MEMALIGN 1
 
 /* Define to 1 if we are using MPI */
-#cmakedefine SC_ENABLE_MPI
+#cmakedefine SC_ENABLE_MPI 1
 
 /* Define to 1 if we can use MPI_COMM_TYPE_SHARED */
-#cmakedefine SC_ENABLE_MPICOMMSHARED
+#cmakedefine SC_ENABLE_MPICOMMSHARED 1
 
 /* Define to 1 if we are using MPI I/O */
-#cmakedefine SC_ENABLE_MPIIO
+#cmakedefine SC_ENABLE_MPIIO 1
 
 /* Define to 1 if we are using MPI_Init_thread */
-#cmakedefine SC_ENABLE_MPITHREAD
+#cmakedefine SC_ENABLE_MPITHREAD 1
 
 /* Define to 1 if we can use MPI_Win_allocate_shared */
-#cmakedefine SC_ENABLE_MPIWINSHARED
+#cmakedefine SC_ENABLE_MPIWINSHARED 1
 
 /* Undefine if: disable non-thread-safe internal debug counters */
 #define SC_ENABLE_USE_COUNTERS 1
 
 /* Undefine if: replace array/dmatrix resize with malloc/copy/free */
-#cmakedefine SC_ENABLE_USE_REALLOC
+#cmakedefine SC_ENABLE_USE_REALLOC 1
 
-/* Development with V4L2 devices works */
-#cmakedefine SC_ENABLE_V4L2
+/* Define to 1 if we use v4l2 */
+#cmakedefine SC_ENABLE_V4L2 1
 
-/* Define to 1 if you have the `aligned_alloc' function. */
-#cmakedefine SC_HAVE_ALIGNED_ALLOC
+/* Define to 1 if `aligned_alloc' is available. */
+#cmakedefine SC_HAVE_ALIGNED_ALLOC 1
 
-/* Define to 1 if you have the `_aligned_,alloc' function. */
-#cmakedefine SC_HAVE_ALIGNED_MALLOC
+/* Define to 1 if `aligned_malloc' is available. */
+#cmakedefine SC_HAVE_ALIGNED_MALLOC 1
 
-/* Define to 1 if you have the `backtrace' function. */
-#cmakedefine SC_HAVE_BACKTRACE
+/* Define to 1 if `backtrace' is available. */
+#cmakedefine SC_HAVE_BACKTRACE 1
 
-/* Define to 1 if you have the `backtrace_symbols' function. */
-#cmakedefine SC_HAVE_BACKTRACE_SYMBOLS
-
-/* Define to 1 if you have the <dlfcn.h> header file. */
-// #cmakedefine SC_HAVE_DLFCN_H
+/* Define to 1 if `backtrace symbols' is available. */
+#cmakedefine SC_HAVE_BACKTRACE_SYMBOLS 1
 
 /* Define to 1 if you have the <execinfo.h> header file. */
-#cmakedefine SC_HAVE_EXECINFO_H
+#cmakedefine SC_HAVE_EXECINFO_H 1
 
 /* Define to 1 if you have the <fcntl.h> header file. */
-#cmakedefine SC_HAVE_FCNTL_H
+#cmakedefine SC_HAVE_FCNTL_H 1
 
-/* Define to 1 if you have the `fsync' function. */
-#cmakedefine SC_HAVE_FSYNC
+/* Define to 1 if `fsync' is available. */
+#cmakedefine SC_HAVE_FSYNC 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-#cmakedefine SC_HAVE_INTTYPES_H
+#cmakedefine SC_HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the <linux/version.h> header file. */
-#cmakedefine SC_HAVE_LINUX_VERSION_H
+#cmakedefine SC_HAVE_LINUX_VERSION_H 1
 
 /* Define to 1 if you have the <linux/videodev2.h> header file. */
-#cmakedefine SC_HAVE_LINUX_VIDEODEV2_H
+#cmakedefine SC_HAVE_LINUX_VIDEODEV2_H 1
 
 /* Define to 1 if you have the <memory.h> header file. */
-#cmakedefine SC_HAVE_MEMORY_H
+#cmakedefine SC_HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the `posix_memalign' function. */
-#cmakedefine SC_HAVE_POSIX_MEMALIGN
+#cmakedefine SC_HAVE_POSIX_MEMALIGN 1
 
 /* Define to 1 if you have the `fabs' function. */
-#cmakedefine SC_HAVE_FABS
+#cmakedefine SC_HAVE_FABS 1
 
 /* Define to 1 if you have the `qsort_r' function. */
-#cmakedefine SC_HAVE_QSORT_R
+#cmakedefine SC_HAVE_QSORT_R 1
 
 /* Define to 1 if `qsort_r' conforms to the GNU/Linux definition. */
-#cmakedefine SC_HAVE_GNU_QSORT_R
+#cmakedefine SC_HAVE_GNU_QSORT_R 1
 
 /* Define to 1 if `qsort_r' conforms to the BSD definition. */
-#cmakedefine SC_HAVE_BSD_QSORT_R
+#cmakedefine SC_HAVE_BSD_QSORT_R 1
 
 /* Define to 1 if you have the <signal.h> header file. */
-#cmakedefine SC_HAVE_SIGNAL_H
+#cmakedefine SC_HAVE_SIGNAL_H 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#cmakedefine SC_HAVE_STDINT_H
+#cmakedefine SC_HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#cmakedefine SC_HAVE_STDLIB_H
+#cmakedefine SC_HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
-#cmakedefine SC_HAVE_STRING_H
+#cmakedefine SC_HAVE_STRING_H 1
 
 /* Define to 1 if you have the <libgen.h> header file. */
-#cmakedefine SC_HAVE_LIBGEN_H
+#cmakedefine SC_HAVE_LIBGEN_H 1
 
 /* Define to 1 if you have the `strtoll' function. */
-#cmakedefine SC_HAVE_STRTOLL
+#cmakedefine SC_HAVE_STRTOLL 1
 
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
-#cmakedefine SC_HAVE_SYS_IOCTL_H
+#cmakedefine SC_HAVE_SYS_IOCTL_H 1
 
 /* Define to 1 if you have the <sys/select.h> header file. */
-#cmakedefine SC_HAVE_SYS_SELECT_H
+#cmakedefine SC_HAVE_SYS_SELECT_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#cmakedefine SC_HAVE_SYS_STAT_H
+#cmakedefine SC_HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/time.h> header file. */
-#cmakedefine SC_HAVE_SYS_TIME_H
+#cmakedefine SC_HAVE_SYS_TIME_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#cmakedefine SC_HAVE_SYS_TYPES_H
+#cmakedefine SC_HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <time.h> header file. */
-#cmakedefine SC_HAVE_TIME_H
+#cmakedefine SC_HAVE_TIME_H 1
 
-/* Replace autoconf feature for simultaneous inclusion. */
-#if defined SC_HAVE_SYS_TIME_H && defined SC_HAVE_TIME_H
-#define SC_TIME_WITH_SYS_TIME
-#endif
-
-/* windows-specific include file */
-#cmakedefine SC_HAVE_WINSOCK2_H
+/* Define to 1 if you have the <winsock2.h> header file. */
+#cmakedefine SC_HAVE_WINSOCK2_H 1
 
 /* desired alignment of allocations in bytes */
 #define SC_MEMALIGN_BYTES (SC_SIZEOF_VOID_P)
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#cmakedefine SC_HAVE_UNISTD_H
+#cmakedefine SC_HAVE_UNISTD_H 1
 
-/* Have we found function adler32_combine. */
-#cmakedefine SC_HAVE_ZLIB
+/* Define to 1 if you have <zlib.h> header file. */
+#cmakedefine SC_HAVE_ZLIB 1
 
 /* Linker flags */
 #ifndef SC_LDFLAGS
@@ -174,7 +167,7 @@
 
 /* Define to the address where bug reports for this package should be sent. */
 #ifndef SC_PACKAGE_BUGREPORT
-#define SC_PACKAGE_BUGREPORT "info@SC.org"
+#define SC_PACKAGE_BUGREPORT "p4est@ins.uni-bonn.de"
 #endif
 
 /* Define to the full name of this package. */
@@ -184,7 +177,7 @@
 
 /* Define to the full name and version of this package. */
 #ifndef SC_PACKAGE_STRING
-#define SC_PACKAGE_STRING "libsc 2.8.1.57-a813"
+#define SC_PACKAGE_STRING "libsc @PROJECT_VERSION@"
 #endif
 
 /* Define to the one symbol short name of this package. */
@@ -199,7 +192,7 @@
 
 /* Define to the version of this package. */
 #ifndef SC_PACKAGE_VERSION
-#define SC_PACKAGE_VERSION "2.8.1.57-a813"
+#define SC_PACKAGE_VERSION "@PROJECT_VERSION@"
 #endif
 
 /* Byte sizes of standard types */
@@ -229,22 +222,22 @@
 
 /* Version number of package */
 #ifndef SC_VERSION
-#define SC_VERSION "2.8.1.57-a813"
+#define SC_VERSION "@PROJECT_VERSION@"
 #endif
 
 /* Package major version */
 #ifndef SC_VERSION_MAJOR
-#define SC_VERSION_MAJOR 2
+#define SC_VERSION_MAJOR @PROJECT_MAJOR@
 #endif
 
 /* Package minor version */
 #ifndef SC_VERSION_MINOR
-#define SC_VERSION_MINOR 8
+#define SC_VERSION_MINOR @PROJECT_MINOR@
 #endif
 
 /* Package point version */
 #ifndef SC_VERSION_POINT
-#define SC_VERSION_POINT 1.57-a813
+#define SC_VERSION_POINT @PROJECT_PATCH@
 #endif
 
 /* once: _SRC_SC_CONFIG_H */

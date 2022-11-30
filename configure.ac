@@ -14,7 +14,7 @@ AC_PREFIX_DEFAULT([$PWD/local])
 AX_PREFIX_CONFIG_H([config/sc_config.h], [SC])
 AM_INIT_AUTOMAKE([parallel-tests subdir-objects])
 AM_SILENT_RULES
-AM_EXTRA_RECURSIVE_TARGETS([justlibs])
+AM_EXTRA_RECURSIVE_TARGETS([justlibs doxygen])
 PKG_INSTALLDIR
 SC_VERSION([SC])
 
@@ -78,10 +78,9 @@ echo "o---------------------------------------"
 echo "| Checking headers"
 echo "o---------------------------------------"
 
-AC_HEADER_TIME
 AC_CHECK_HEADERS([fcntl.h sys/ioctl.h sys/select.h sys/stat.h])
 AC_CHECK_HEADERS([execinfo.h signal.h libgen.h time.h sys/time.h])
-AC_CHECK_HEADERS([linux/version.h linux/videodev2.h])
+AC_CHECK_HEADERS([linux/version.h linux/videodev2.h jansson.h])
 
 echo "o---------------------------------------"
 echo "| Checking functions"
