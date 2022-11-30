@@ -24,8 +24,19 @@
 #ifndef SC_IO_H
 #define SC_IO_H
 
-#include <sc.h>
 #include <sc_containers.h>
+
+/** Examine the MPI return value and print an error if there is one.
+ * The message passed is appended to MPI, file and line information.
+ */
+#define SC_CHECK_MPI_VERBOSE(errcode,user_msg) do {            \
+  char sc_msg[sc_MPI_MAX_ERROR_STRING];                        \
+  int sc_msglen;                                               \
+  if ((errcode) != sc_MPI_SUCCESS) {                           \
+    sc_MPI_Error_string (errcode, sc_msg, &sc_msglen);         \
+    SC_LERRORF ("%s at %s:%d: %s\n",                           \
+                (user_msg), __FILE__, __LINE__, sc_msg);       \
+  }} while (0)
 
 SC_EXTERN_C_BEGIN;
 
@@ -34,7 +45,7 @@ SC_EXTERN_C_BEGIN;
 typedef enum
 {
   SC_IO_ERROR_NONE,     /**< The value of zero means no error. */
-  SC_IO_ERROR_FATAL = -1,       /**< The io object is now disfunctional. */
+  SC_IO_ERROR_FATAL = -1,       /**< The io object is now dysfunctional. */
   SC_IO_ERROR_AGAIN = -2        /**< Another io operation may resolve it.
                                 The function just returned was a noop. */
 }
@@ -91,21 +102,28 @@ typedef struct sc_io_source
 }
 sc_io_source_t;
 
+typedef enum
+{
+  SC_IO_READ,
+  SC_IO_WRITE_CREATE,
+  SC_IO_WRITE_APPEND
+}
+sc_io_open_mode_t;
+
 /** Create a generic data sink.
- * \param [in] iotype           Type of the sink.
+ * \param [in] iotype           Type must be a value from \ref sc_io_type_t.
  *                              Depending on iotype, varargs must follow:
  *                              BUFFER: sc_array_t * (existing array).
  *                              FILENAME: const char * (name of file to open).
  *                              FILEFILE: FILE * (file open for writing).
  *                              These buffers are only borrowed by the sink.
- * \param [in] mode             Mode to add data to sink.
+ * \param [in] iomode           Mode must be a value from \ref sc_io_mode_t.
  *                              For type FILEFILE, data is always appended.
- * \param [in] encode           Type of data encoding.
+ * \param [in] ioencode         Must be a value from \ref sc_io_encode_t.
  * \return                      Newly allocated sink, or NULL on error.
  */
-sc_io_sink_t       *sc_io_sink_new (sc_io_type_t iotype,
-                                    sc_io_mode_t mode,
-                                    sc_io_encode_t encode, ...);
+sc_io_sink_t       *sc_io_sink_new (int iotype, int iomode,
+                                    int ioencode, ...);
 
 /** Free data sink.
  * Calls sc_io_sink_complete and discards the final counts.
@@ -145,8 +163,7 @@ int                 sc_io_sink_write (sc_io_sink_t * sink,
  * \return                      0 if completed, nonzero on error.
  */
 int                 sc_io_sink_complete (sc_io_sink_t * sink,
-                                         size_t * bytes_in,
-                                         size_t * bytes_out);
+                                         size_t *bytes_in, size_t *bytes_out);
 
 /** Align sink to a byte boundary by writing zeros.
  * \param [in,out] sink         The sink object to align.
@@ -157,16 +174,15 @@ int                 sc_io_sink_align (sc_io_sink_t * sink,
                                       size_t bytes_align);
 
 /** Create a generic data source.
- * \param [in] iotype           Type of the source.
+ * \param [in] iotype           Type must be a value from \ref sc_io_type_t.
  *                              Depending on iotype, varargs must follow:
  *                              BUFFER: sc_array_t * (existing array).
  *                              FILENAME: const char * (name of file to open).
  *                              FILEFILE: FILE * (file open for reading).
- * \param [in] encode           Type of data encoding.
+ * \param [in] ioencode         Encoding value from \ref sc_io_encode_t.
  * \return                      Newly allocated source, or NULL on error.
  */
-sc_io_source_t     *sc_io_source_new (sc_io_type_t iotype,
-                                      sc_io_encode_t encode, ...);
+sc_io_source_t     *sc_io_source_new (int iotype, int ioencode, ...);
 
 /** Free data source.
  * Calls sc_io_source_complete and requires it to return no error.
@@ -194,7 +210,7 @@ int                 sc_io_source_destroy (sc_io_source_t * source);
  */
 int                 sc_io_source_read (sc_io_source_t * source,
                                        void *data, size_t bytes_avail,
-                                       size_t * bytes_out);
+                                       size_t *bytes_out);
 
 /** Determine whether all data buffered from source has been returned by read.
  * If it returns SC_IO_ERROR_AGAIN, another sc_io_source_read is required.
@@ -212,8 +228,8 @@ int                 sc_io_source_read (sc_io_source_t * source,
  *                              Otherwise return ERROR_NONE and reset counters.
  */
 int                 sc_io_source_complete (sc_io_source_t * source,
-                                           size_t * bytes_in,
-                                           size_t * bytes_out);
+                                           size_t *bytes_in,
+                                           size_t *bytes_out);
 
 /** Align source to a byte boundary by skipping.
  * \param [in,out] source       The source object to align.
@@ -237,7 +253,168 @@ int                 sc_io_source_activate_mirror (sc_io_source_t * source);
 int                 sc_io_source_read_mirror (sc_io_source_t * source,
                                               void *data,
                                               size_t bytes_avail,
-                                              size_t * bytes_out);
+                                              size_t *bytes_out);
+
+/** Return a boolean indicating whether zlib has been configured.
+ * \return          True if zlib has been found on running configure,
+ *                  or respectively on calling cmake.
+ */
+int                 sc_io_have_zlib (void);
+
+/** Encode a block of arbitrary data with the default sc_io format.
+ * The corresponding decoder function is \ref sc_io_decode.
+ * This function cannot crash unless out of memory.
+ *
+ * Currently this function calls \ref sc_io_encode_zlib with
+ * compression level Z_BEST_COMPRESSION (subject to change).
+ * Without zlib configured that function works uncompressed.
+ *
+ * The encoding method and input data size can be retrieved, optionally,
+ * from the encoded data by \sc_io_decode_info.  This function decodes
+ * the method as a character, which is 'z' for \ref sc_io_encoded_zlib.
+ * We reserve the characters A-C, d-z indefinitely.
+ *
+ * \param [in,out] data     If \a out is NULL, we work in place.
+ *                          In this case, the array must on input have
+ *                          an element size of 1 byte, which is preserved.
+ *                          After reading all data from this array, it assumes
+ *                          the identity of the \a out argument below.
+ *                          Otherwise, this is a read-only argument
+ *                          that may have arbitrary element size.
+ *                          On input, all data in the array is used.
+ * \param [in,out] out      If not NULL, a valid array of element size 1.
+ *                          It must be resizable (not a view).
+ *                          We resize the array to the output data, which
+ *                          always includes a final terminating zero.
+ */
+void                sc_io_encode (sc_array_t *data, sc_array_t *out);
+
+/** Encode a block of arbitrary data, compressed, into an ASCII string.
+ * This is a two-stage process: zlib compress and then encode to base 64.
+ * The output is a NUL-terminated string of printable characters.
+ *
+ * We first compress the data into the zlib format (RFC 1950).
+ * The compressor must use no preset dictionary (this is the default).
+ * If zlib is detected on configuration, we compress with given level.
+ * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
+ * The status of zlib detection can be queried at compile time using
+ * `#ifdef SC_HAVE_ZLIB` or at run time using \ref sc_io_have_zlib.
+ * Both approaches are readable by a standard zlib uncompress call.
+ *
+ * Secondly, we process the input data size as an 8-byte big-endian number,
+ * then the letter 'z', and then the zlib compressed data, concatenated,
+ * with a base 64 encoder.  We break lines after 72 code characters.
+ * The line breaks are considered part of the output data format.
+ * The last line is terminated with a line break and then a NUL.
+ *
+ * This routine can work in place or write to an output array.
+ * The corresponding decoder function is \ref sc_io_decode.
+ * This function cannot crash unless out of memory.
+ *
+ * \param [in,out] data     If \a out is NULL, we work in place.
+ *                          In this case, the array must on input have
+ *                          an element size of 1 byte, which is preserved.
+ *                          After reading all data from this array, it assumes
+ *                          the identity of the \a out argument below.
+ *                          Otherwise, this is a read-only argument
+ *                          that may have arbitrary element size.
+ *                          On input, all data in the array is used.
+ * \param [in,out] out      If not NULL, a valid array of element size 1.
+ *                          It must be resizable (not a view).
+ *                          We resize the array to the output data, which
+ *                          always includes a final terminating zero.
+ * \param [in] zlib_compression_level     Compression level between 0
+ *                          (no compression) and 9 (best compression).
+ *                          The value -1 indicates some default level.
+ */
+void                sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
+                                       int zlib_compression_level);
+
+/** Decode length and format of original input from encoded data.
+ * We expect at least 12 bytes of the format produced by \ref sc_io_encode.
+ * No matter how much data has been encoded by it, this much is available.
+ * We decode the original data size and the character indicating the format.
+ *
+ * This function does not require zlib.  It works with any well-defined data.
+ *
+ * Note that this function is not required before \ref sc_io_decode.
+ * Calling this function on any result produced by \ref sc_io_encode
+ * will succeed and report a legal format.  This function cannot crash.
+ *
+ * \param [in] data     This must be an array with element size 1.
+ *                      If it contains less than 12 code bytes we error out.
+ *                      It its first 12 bytes do not base 64 decode to 9 bytes
+ *                      we error out.  We generally ignore the remaining data.
+ * \param [out] original_size   If not NULL and we do not error out,
+ *                      set to the original size as encoded in the data.
+ * \param [out] format_char     If not NULL and we do not error out, the
+ *                      ninth character of decoded data indicating the format.
+ * \param [in,out] re   Provided for error reporting, presently must be NULL.
+ * \return              0 on success, negative value on error.
+ */
+int                 sc_io_decode_info (sc_array_t *data,
+                                       size_t *original_size,
+                                       char *format_char, void *re);
+
+/** Decode a block of base 64 encoded compressed data.
+ * The base 64 data must contain a line break after every 72 code
+ * characters and a final NUL character right after the last line.
+ * This function does not require zlib but benefits for speed.
+ *
+ * This is a two-stage process: we decode the input from base 64 first.
+ * Then we extract the 8-byte big-endian original data size, the character
+ * 'z', and execute a zlib decompression on the remaining decoded data.
+ * This function detects malformed input by erroring out.
+ *
+ * If we should add another format in the future, the format character
+ * may be something else than 'z', as permitted by our specification.
+ * To this end, we reserve the characters A-C and d-z indefinitely.
+ *
+ * Any error condition is indicated by a negative return value.
+ * Possible causes for error are:
+ *
+ *  - the input data string is not NUL-terminated
+ *  - the first 12 characters of input do not decode properly
+ *  - the input data is corrupt for decoding or decompression
+ *  - the output data array has non-unit element size and the
+ *    length of the output data is not divisible by the size
+ *  - the output data would exceed the specified threshold
+ *  - the output array is a view of insufficient length
+ *
+ * We also error out if the data requires a compression dictionary,
+ * which would be a violation of above encode format specification.
+ *
+ * The corresponding encode function is \ref sc_io_encode.
+ * When passing an array as output, we resize it properly.
+ * This function cannot crash unless out of memory.
+ *
+ * \param [in,out] data     If \a out is NULL, we work in place.
+ *                          In that case, output is written into
+ *                          this array after a suitable resize.
+ *                          Either way, we expect a NUL-terminated
+ *                          base 64 encoded string on input that has
+ *                          in turn been obtained by zlib compression.
+ *                          It must be in the exact format produced by
+ *                          \ref sc_io_encode; please see documentation.
+ *                          The element size of the input array must be 1.
+ * \param [in,out] out      If not NULL, a valid array (may be a view).
+ *                          If NULL, the input array becomes the output.
+ *                          If the output array is a view and the output
+ *                          data larger than its view size, we error out.
+ *                          We expect commensurable element and data size
+ *                          and resize the output to fit exactly, which
+ *                          restores the original input passed to encoding.
+ *                          An output view array of matching size may be
+ *                          constructed using \ref sc_io_decode_info.
+ * \param [in] max_original_size    If nonzero, this is the maximal data
+ *                          size that we will accept after uncompression.
+ *                          If exceeded, return a negative value.
+ * \param [in,out] re   Provided for error reporting, presently must be NULL.
+ * \return                  0 on success, negative on malformed input
+ *                          data or insufficient output space.
+ */
+int                 sc_io_decode (sc_array_t *data, sc_array_t *out,
+                                  size_t max_original_size, void *re);
 
 /** This function writes numeric binary data in VTK base64 encoding.
  * \param vtkfile        Stream opened for writing.
@@ -257,6 +434,12 @@ int                 sc_vtk_write_binary (FILE * vtkfile, char *numeric_data,
 int                 sc_vtk_write_compressed (FILE * vtkfile,
                                              char *numeric_data,
                                              size_t byte_length);
+
+/** Wrapper for fopen(3).
+ * We provide an additional argument that contains the error message.
+ */
+FILE               *sc_fopen (const char *filename, const char *mode,
+                              const char *errmsg);
 
 /** Write memory content to a file.
  * \param [in] ptr      Data array to write to disk.
@@ -285,19 +468,99 @@ void                sc_fread (void *ptr, size_t size,
  */
 void                sc_fflush_fsync_fclose (FILE * file);
 
+/** Opens a MPI file or without MPI I/O or even without MPI a file context.
+ * \param[in] mpicomm   MPI communicator
+ * \param[in] filename  The path to the file that we want to open.
+ * \param[in] amode     An access mode.
+ * \param[in] mpiinfo   The MPI info
+ * \param[out] mpifile  The MPI file that is opened. This can be a
+ *                      an actual MPI IO file or an internal file
+ *                      conntext to preserve some MPI IO functionalities
+ *                      without MPI IO and to have working code without
+ *                      MPI at all.
+ * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
+ *                      The error code can be passed to
+ *                      \ref sc_MPI_Error_string.
+ */
+int                 sc_io_open (sc_MPI_Comm mpicomm,
+                                const char *filename, sc_io_open_mode_t amode,
+                                sc_MPI_Info mpiinfo, sc_MPI_File * mpifile);
+
 #ifdef SC_ENABLE_MPIIO
+
+#define sc_mpi_read         sc_io_read   /**< For backwards compatibility. */
 
 /** Read MPI file content into memory.
  * \param [in,out] mpifile      MPI file object opened for reading.
- * \param [in] ptr      Data array to read from disk.
+ * \param [out] ptr     Data array to read in from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
  * \note                This function aborts on MPI file and count errors.
+ *                      This function does not use the calling convention
+ *                      and error handling as the other sc_io MPI file
+ *                      functions to ensure backwards compatibility.
  */
-void                sc_mpi_read (MPI_File mpifile, const void *ptr,
-                                 size_t zcount, sc_MPI_Datatype t,
-                                 const char *errmsg);
+void                sc_io_read (sc_MPI_File mpifile, void *ptr,
+                                size_t zcount, sc_MPI_Datatype t,
+                                const char *errmsg);
+
+#endif
+
+/** Read MPI file content into memory for an explicit offset.
+ * This function does not update the file pointer of the MPI file.
+ * Contrary to \ref sc_mpi_read, it does not abort on read errors.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in counts of the type \b t.
+ * \param [in] ptr      Data array to read from disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of read bytes.
+ * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
+ *                      The error code can be passed to
+ *                      \ref sc_MPI_Error_string.
+ * \note                This function is only valid to call on rank 0.
+ */
+int                 sc_io_read_at (sc_MPI_File mpifile,
+                                   sc_MPI_Offset offset, void *ptr,
+                                   int zcount, sc_MPI_Datatype t,
+                                   int *ocount);
+
+/** Read MPI file content collectively into memory for an explicit offset.
+ * This function does not update the file pointer of the MPI file.
+ * Contrary to \ref sc_mpi_read, it does not abort on read errors.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in counts of the type \b t.
+ * \param [in] ptr      Data array to read from disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of read bytes.
+ * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
+ *                      The error code can be passed to
+ *                      \ref sc_MPI_Error_string.
+ */
+int                 sc_io_read_at_all (sc_MPI_File mpifile,
+                                       sc_MPI_Offset offset, void *ptr,
+                                       int zcount, sc_MPI_Datatype t,
+                                       int *ocount);
+
+/** Read memory content collectively from an MPI file.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] ptr      Data array to read from disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of read bytes.
+ * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
+ *                      The error code can be passed to
+ *                      \ref sc_MPI_Error_string.
+ */
+int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
+                                    int zcount, sc_MPI_Datatype t,
+                                    int *ocount);
+
+#ifdef SC_ENABLE_MPIIO
+
+#define sc_mpi_write        sc_io_write  /**< For backwards compatibility. */
 
 /** Write memory content to an MPI file.
  * \param [in,out] mpifile      MPI file object opened for writing.
@@ -306,12 +569,80 @@ void                sc_mpi_read (MPI_File mpifile, const void *ptr,
  * \param [in] t        The MPI type for each array member.
  * \param [in] errmsg   Error message passed to SC_CHECK_ABORT.
  * \note                This function aborts on MPI file and count errors.
+ *                      This function does not use the calling convention
+ *                      and error handling as the other sc_io MPI file
+ *                      functions to ensure backwards compatibility.
  */
-void                sc_mpi_write (MPI_File mpifile, const void *ptr,
-                                  size_t zcount, sc_MPI_Datatype t,
-                                  const char *errmsg);
+void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
+                                 size_t zcount, sc_MPI_Datatype t,
+                                 const char *errmsg);
 
 #endif
+
+/** Write MPI file content into memory for an explicit offset.
+ * This function does not update the file pointer that is part of mpifile.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in etype, where the etype is given by
+ *                      the type t.
+ * \param [in] ptr      Data array to write to disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of written bytes.
+ * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
+ *                      The error code can be passed to
+ *                      \ref sc_MPI_Error_string.
+ * \note                This function is only valid to call on rank 0.
+ */
+int                 sc_io_write_at (sc_MPI_File mpifile,
+                                    sc_MPI_Offset offset,
+                                    const void *ptr, size_t zcount,
+                                    sc_MPI_Datatype t, int *ocount);
+
+/** Write MPI file content collectively into memory for an explicit offset.
+ * This function does not update the file pointer that is part of mpifile.
+ * If there is no MPI IO but MPI available, the offset parameter is ignored
+ * and the ranks just write at the current end of the file according to
+ * their rank-induced order.
+ * \param [in,out] mpifile      MPI file object opened for reading.
+ * \param [in] offset   Starting offset in etype, where the etype is given by
+ *                      the type t.
+ * \param [in] ptr      Data array to write to disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of written bytes.
+ * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
+ *                      The error code can be passed to
+ *                      \ref sc_MPI_Error_string.
+ * \note                This function does not abort on MPI file errors.
+ */
+int                 sc_io_write_at_all (sc_MPI_File mpifile,
+                                        sc_MPI_Offset offset,
+                                        const void *ptr, size_t zcount,
+                                        sc_MPI_Datatype t, int *ocount);
+
+/** Write memory content collectively to an MPI file.
+ * \param [in,out] mpifile      MPI file object opened for writing.
+ * \param [in] ptr      Data array to write to disk.
+ * \param [in] zcount   Number of array members.
+ * \param [in] t        The MPI type for each array member.
+ * \param [out] ocount  The number of written bytes.
+ * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
+ *                      The error code can be passed to
+ *                      \ref sc_MPI_Error_string.
+ * \note                This function does not abort on MPI file errors.
+ */
+int                 sc_io_write_all (sc_MPI_File mpifile,
+                                     const void *ptr, size_t zcount,
+                                     sc_MPI_Datatype t, int *ocount);
+
+/** Close collectively a sc_MPI_File.
+ * \param[in] file  MPI file object that is closed.
+ * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
+ *                      The error code can be passed to
+ *                      \ref sc_MPI_Error_string.
+ *
+ */
+int                 sc_io_close (sc_MPI_File * file);
 
 SC_EXTERN_C_END;
 

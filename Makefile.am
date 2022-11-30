@@ -57,10 +57,8 @@ DISTCLEANFILES += \
 .PHONY: ChangeLog
 
 # setup test environment
-if SC_MPIRUN
-LOG_COMPILER = @SC_MPIRUN@
-AM_LOG_FLAGS = @SC_MPI_TEST_FLAGS@
-endif
+LOG_COMPILER = @SC_MPIRUN@ @SC_MPI_TEST_FLAGS@ \
+               @SC_VALGRIND@ @SC_VALGRIND_FLAGS@
 
 # non-recursive build
 include src/Makefile.am
@@ -137,16 +135,9 @@ distclean-local:
 ## maintainer-clean should delete it. However maintainer-clean should not delete
 ## anything that needs to exist in order to run ‘./configure && make’.
 maintainer-clean-local:
-	rm -rf doc/{html,latex,man}
-	rmdir --ignore-fail-on-non-empty doc
+	rm -rf doc/{html,latex,man,*.doxygen.tags}
 
-doxygen: doc/Doxyfile
+doxygen-local: doc/Doxyfile
 	cd doc && doxygen Doxyfile
 
 .PHONY: doxygen
-
-## # CUDA support
-## if SC_WITH_CUDA
-## .cu.o:
-## 	$(SC_NVCC) -o $@ -c $< @NVCCFLAGS@
-## endif

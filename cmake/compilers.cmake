@@ -12,7 +12,5 @@ else()
   endif()
 endif()
 
-if(MSVC)
-  # disable nuisance warnings from Visual Studio
-  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-endif()
+# disable nuisance warnings from Visual Studio
+add_compile_definitions($<$<BOOL:${MSVC}>:_CRT_SECURE_NO_WARNINGS>)

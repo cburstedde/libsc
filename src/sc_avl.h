@@ -31,6 +31,8 @@
 
 /* renamed from avl.h to sc_avl.h for the SC Library and modified */
 
+/** \cond AVL_DOCUMENT */
+
 #ifndef _AVL_H
 #define _AVL_H
 
@@ -210,3 +212,5 @@ extern void avl_to_array (avl_tree_t *, sc_array_t *);
 SC_EXTERN_C_END;
 
 #endif /* !_AVL_H */
+
+/** \endcond */

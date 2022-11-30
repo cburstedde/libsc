@@ -17,28 +17,27 @@ if(SC_HAVE_GETOPT_H)
 endif()
 
 # ---
-
+set(MPIEXEC_MAX_NUMPROCS 2)
 foreach(t IN LISTS sc_tests)
 
-  add_executable(test_${t} test_${t}.c)
-  target_link_libraries(test_${t} PRIVATE SC::SC)
-
+  add_executable(sc_test_${t} test_${t}.c)
+  target_link_libraries(sc_test_${t} PRIVATE SC::SC)
 
   if(MPIEXEC_EXECUTABLE)
-    add_test(NAME sc:${t} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:test_${t}>)
+    add_test(NAME ${t} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_test_${t}>)
   else()
-    add_test(NAME sc:${t} COMMAND test_${t})
+    add_test(NAME ${t} COMMAND sc_test_${t})
   endif()
-  set_tests_properties(sc:${t} PROPERTIES
-    TIMEOUT 300
-    RESOURCE_LOCK cpu_mpi
-  )
 
 endforeach()
 
-if(WIN32 AND BUILD_SHARED_LIBS AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
-  add_custom_command(TARGET test_allgather POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:test_allgather> $<TARGET_FILE_DIR:test_allgather>
-  COMMAND_EXPAND_LISTS
-  )
+set_property(TEST ${sc_tests} PROPERTY TIMEOUT 300)
+set_property(TEST ${sc_tests} PROPERTY LABELS "unit;libsc")
+
+if(MPIEXEC_EXECUTABLE)
+  set_property(TEST ${sc_tests} PROPERTY RESOURCE_LOCK cpu_mpi)
+endif()
+
+if(WIN32 AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
+  set_property(TEST ${sc_tests} PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:$<TARGET_FILE_DIR:sc>)
 endif()

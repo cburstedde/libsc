@@ -1520,6 +1520,9 @@ sc_snprintf (char *str, size_t size, const char *fmt, ...)
     return;
   }
 
+  /* avoid uninitialized bytes if strlen (src) < size - 1 */
+  memset (str, 0, size);
+
   /* Writing this function just to catch the return value.
      Avoiding -Wnoformat-truncation gcc option this way */
   va_start (ap, fmt);
@@ -1560,5 +1563,15 @@ sc_version_point (void)
   return sc_atoi (SC_TOSTRING (SC_VERSION_POINT));
 }
 #endif
+
+int
+sc_have_json (void)
+{
+#ifndef SC_HAVE_JSON
+  return 0;
+#else
+  return 1;
+#endif
+}
 
 #endif

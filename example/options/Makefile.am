@@ -8,7 +8,8 @@ example_options_sc_options_SOURCES = example/options/options.c
 example_options_sc_logging_SOURCES = example/options/logging.c
 
 dist_scini_DATA += \
+        example/options/sc_options_preload.ini \
         example/options/sc_options_example.ini \
-        example/options/sc_options_preload.ini
+        example/options/sc_options_example.json
 
 LINT_CSOURCES += $(example_options_sc_options_SOURCES)

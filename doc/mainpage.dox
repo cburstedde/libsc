@@ -20,7 +20,7 @@
   02110-1301, USA.
 */
 
-/** \mainpage The sc auxiliary library
+/** \mainpage The sc Auxiliary Library
  *
  * \author Carsten Burstedde, Lucas C. Wilcox, Tobin Isaac et.al.
  * \copyright GNU Lesser General Public License version 2.1.
@@ -37,7 +37,7 @@
  *  * The library provides MPI wrappers in case it is configured without
  *    MPI.  They implement initialize/finalize and collective calls as
  *    noops, which means that these do not have to be protected with the
- *    `#ifdef SC_MPI` construct in the code.
+ *    \#ifdef SC_MPI construct in the code.
  *  * The library provides a logging framework that can be adapted by other
  *    packages.  Multiple log levels are available, as well as options to
  *    output on just one or all MPI processes.
@@ -61,6 +61,6 @@
  * A typical production configure line looks as follows:
  * > `relative/path/to/configure CFLAGS="-Wall -O2" --enable-mpi`
  *
- * \see http://www.p4est.org/
- * \see http://www.gnu.org/licenses/licenses.html
+ * \see https://www.p4est.org/
+ * \see https://www.gnu.org/licenses/licenses.html
  */
