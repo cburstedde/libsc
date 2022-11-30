@@ -87,7 +87,8 @@ sc_shmem_type_t     sc_shmem_get_type (sc_MPI_Comm comm);
 void               *sc_shmem_malloc (int package, size_t elem_size,
                                      size_t elem_count, sc_MPI_Comm comm);
 
-#define SC_SHMEM_ALLOC(t,e,c) (t *) sc_shmem_malloc(sc_package_id,sizeof(t),e,c)
+#define SC_SHMEM_ALLOC(t,e,c) (t *) \
+  sc_shmem_malloc (sc_get_package_id (), sizeof (t), e, c)
 
 /** Destroy a shmem array created with sc_shmem_alloc()
  *
@@ -99,7 +100,8 @@ void               *sc_shmem_malloc (int package, size_t elem_size,
 void                sc_shmem_free (int package, void *array,
                                    sc_MPI_Comm comm);
 
-#define SC_SHMEM_FREE(a,c) sc_shmem_free (sc_package_id,a,c)
+#define SC_SHMEM_FREE(a,c) \
+  sc_shmem_free (sc_get_package_id (), a, c)
 
 /** Start a write window for a shared array.
  *

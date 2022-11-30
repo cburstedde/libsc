@@ -173,7 +173,7 @@ sc_options_string_new (const char **variable, const char *init_value)
 
   /* init_value may be NULL */
   *(s->string_var = variable) = s->string_value = SC_STRDUP (init_value);
-  sc_refcount_init (&s->rc, sc_package_id);
+  sc_refcount_init (&s->rc, sc_get_package_id ());
 
   return s;
 }

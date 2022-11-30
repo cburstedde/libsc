@@ -211,8 +211,25 @@ extern const int    sc_log2_lookup_table[256];
  * This is the package id for core sc functions, which is meant to be read only.
  * It starts out with a value of -1, which is fine by itself.
  * It is set to a non-negative value by the (optional) \ref sc_init.
+ * \deprecated      This variable is read-only and deprecated in favor
+ *                  of \ref sc_get_package_id.
  */
 extern int          sc_package_id;
+
+/** Return the internal identifier for libsc as a package.
+ * This package id relates to \ref sc_package_register and friends.
+ * Outside of the \ref sc_init and \ref sc_finalize pair, it is -1.
+ * Otherwise, a non-negative number.
+ */
+int                 sc_get_package_id (void);
+
+/** Return the communicator that was passed to \ref sc_init.
+ * This communicator is the one used for collective aspects of logging
+ * and can be relied upon by the \ref sc_options.h mechanism
+ * to read and write configuration files safely in parallel.
+ * Outside of \ref sc_init and \ref sc_finalize, it is \ref sc_MPI_COMM_NULL.
+ */
+sc_MPI_Comm         sc_get_comm (void);
 
 /** Optional trace file for logging (see \ref sc_init).
  * Initialized to NULL. */
@@ -303,13 +320,14 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 
 /* macros for memory allocation, will abort if out of memory */
 
-#define SC_ALLOC(t,n)         (t *) sc_malloc (sc_package_id, (n) * sizeof(t))
-#define SC_ALLOC_ZERO(t,n)    (t *) sc_calloc (sc_package_id, \
-                                               (size_t) (n), sizeof(t))
-#define SC_REALLOC(p,t,n)     (t *) sc_realloc (sc_package_id,          \
-                                             (p), (n) * sizeof(t))
-#define SC_STRDUP(s)                sc_strdup (sc_package_id, (s))
-#define SC_FREE(p)                  sc_free (sc_package_id, (p))
+#define SC_ALLOC(t,n)        ((t *) sc_malloc (sc_get_package_id (),    \
+                                               (n) * sizeof(t)))
+#define SC_ALLOC_ZERO(t,n)   ((t *) sc_calloc (sc_get_package_id (),    \
+                                               (size_t) (n), sizeof(t)))
+#define SC_REALLOC(p,t,n)    ((t *) sc_realloc (sc_get_package_id (),   \
+                                             (p), (n) * sizeof(t)))
+#define SC_STRDUP(s)                sc_strdup (sc_get_package_id (), (s))
+#define SC_FREE(p)                  sc_free (sc_get_package_id (), (p))
 
 /* macros for memory alignment */
 /* some copied from bfam: https://github.com/bfam/bfam */
@@ -431,8 +449,10 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_GEN_LOG(package,category,priority,s)                         \
   ((priority) < SC_LP_THRESHOLD ? (void) 0 :                            \
    sc_log (__FILE__, __LINE__, (package), (category), (priority), (s)))
-#define SC_GLOBAL_LOG(p,s) SC_GEN_LOG (sc_package_id, SC_LC_GLOBAL, (p), (s))
-#define SC_LOG(p,s) SC_GEN_LOG (sc_package_id, SC_LC_NORMAL, (p), (s))
+#define SC_GLOBAL_LOG(p,s) SC_GEN_LOG (sc_get_package_id (),            \
+                                       SC_LC_GLOBAL, (p), (s))
+#define SC_LOG(p,s) SC_GEN_LOG (sc_get_package_id (),                   \
+                                SC_LC_NORMAL, (p), (s))
 void                SC_GEN_LOGF (int package, int category, int priority,
                                  const char *fmt, ...)
   __attribute__ ((format (printf, 4, 5)));
@@ -446,9 +466,9 @@ void                SC_LOGF (int priority, const char *fmt, ...)
    sc_logf (__FILE__, __LINE__, (package), (category), (priority),      \
             (fmt), __VA_ARGS__))
 #define SC_GLOBAL_LOGF(p,fmt,...)                                       \
-  SC_GEN_LOGF (sc_package_id, SC_LC_GLOBAL, (p), (fmt), __VA_ARGS__)
+  SC_GEN_LOGF (sc_get_package_id (), SC_LC_GLOBAL, (p), (fmt), __VA_ARGS__)
 #define SC_LOGF(p,fmt,...)                                              \
-  SC_GEN_LOGF (sc_package_id, SC_LC_NORMAL, (p), (fmt), __VA_ARGS__)
+  SC_GEN_LOGF (sc_get_package_id (), SC_LC_NORMAL, (p), (fmt), __VA_ARGS__)
 #endif
 
 /* convenience global log macros will only output if identifier <= 0 */
