@@ -27,7 +27,7 @@
   POSSIBILITY OF SUCH DAMAGE.
 */
 
-/** \file sc3_mpi_types.h \ingroup sc3
+/** \file sc3_mpi_types.h
  *
  * We provide MPI replacement data types for configuring without MPI.
  * Included from both \ref sc_mpi.h and the future \c sc3_mpi.h.
@@ -35,7 +35,7 @@
  * This header file provides definitions of MPI data types for the case
  * that no MPI implementation is available or MPI is not configured.
  *
- * \ingroup parallelism
+ * \ingroup sc_parallelism
  */
 
 #ifndef SC3_MPI_TYPES_H

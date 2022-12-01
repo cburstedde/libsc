@@ -373,7 +373,7 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_LC_GLOBAL      1     /**< log only for master process */
 #define SC_LC_NORMAL      2     /**< log for every process */
 
-/** \defgroup logprios Log Priorities
+/** \defgroup sc_logprios Log Priorities
  *
  * The log level is a number designating the priority of a log action.
  *
