@@ -21,6 +21,20 @@
   02110-1301, USA.
 */
 
+/** \file sc_io.h
+ *
+ * Helper routines for general and parallel I/O.
+ *
+ * \ingroup sc_io
+ */
+
+/** \defgroup sc_io I/O support
+ *
+ * Functionality specific to file/data input/output.
+ *
+ * \ingroup sc
+ */
+
 #ifndef SC_IO_H
 #define SC_IO_H
 
@@ -270,8 +284,8 @@ int                 sc_io_have_zlib (void);
  * Without zlib configured that function works uncompressed.
  *
  * The encoding method and input data size can be retrieved, optionally,
- * from the encoded data by \sc_io_decode_info.  This function decodes
- * the method as a character, which is 'z' for \ref sc_io_encoded_zlib.
+ * from the encoded data by \ref sc_io_decode_info.  This function decodes
+ * the method as a character, which is 'z' for \ref sc_io_encode_zlib.
  * We reserve the characters A-C, d-z indefinitely.
  *
  * \param [in,out] data     If \a out is NULL, we work in place.
@@ -298,7 +312,7 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  * If zlib is detected on configuration, we compress with given level.
  * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
  * The status of zlib detection can be queried at compile time using
- * `#ifdef SC_HAVE_ZLIB` or at run time using \ref sc_io_have_zlib.
+ * \#ifdef SC_HAVE_ZLIB or at run time using \ref sc_io_have_zlib.
  * Both approaches are readable by a standard zlib uncompress call.
  *
  * Secondly, we process the input data size as an 8-byte big-endian number,
