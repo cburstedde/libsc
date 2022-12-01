@@ -241,6 +241,16 @@ sc3_error_t        *sc3_mpienv_get_node_frank (const sc3_mpienv_t * m,
 sc3_error_t        *sc3_mpienv_get_node_num (const sc3_mpienv_t * m,
                                              int *node_num);
 
+/** Query the number of nodes.
+ * \param [in] m        Valid and setup mpi environment.
+ * \param [out] num_nodes Pointer must not be NULL.
+ *                        Output the total number of nodes.
+ *                        Written to -1 on error return.
+ * \return               NULL on success, error object otherwise.
+ */
+sc3_error_t        *sc3_mpienv_get_num_nodes (const sc3_mpienv_t *m,
+                                              int *num_nodes);
+
 /** Query a pointer to an array of the numbers of ranks in each node.
  * \param [in] m        Valid and setup mpi environment.
  * \param [out] node_sizes Address of a pointer must not be NULL.

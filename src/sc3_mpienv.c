@@ -435,6 +435,16 @@ sc3_mpienv_get_node_num (const sc3_mpienv_t * m, int *node_num)
 }
 
 sc3_error_t        *
+sc3_mpienv_get_num_nodes (const sc3_mpienv_t *m, int *num_nodes)
+{
+  SC3E_RETVAL (num_nodes, -1);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *num_nodes = m->num_nodes;
+  return NULL;
+}
+
+sc3_error_t        *
 sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m, int **node_sizes)
 {
   SC3A_IS (sc3_mpienv_is_setup, m);
