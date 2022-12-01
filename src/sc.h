@@ -337,7 +337,7 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #endif
 
 #if (defined __GNUC__) || (defined __PGI) || (defined __IBMC__)
-#define SC_ATTR_ALIGN(n) __attribute__((aligned(n)))
+#define SC_ATTR_ALIGN(n) __attribute__ ((aligned(n)))
 #else
 #define SC_ATTR_ALIGN(n)
 #endif
