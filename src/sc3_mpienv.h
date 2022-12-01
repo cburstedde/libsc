@@ -251,7 +251,9 @@ sc3_error_t        *sc3_mpienv_get_node_num (const sc3_mpienv_t * m,
 sc3_error_t        *sc3_mpienv_get_num_nodes (const sc3_mpienv_t *m,
                                               int *num_nodes);
 
-/** Query a pointer to an array of the numbers of ranks in each node.
+/** Warning! Please, do not use call this function, since it returns a pointer
+ * to a c-array, which is not safe. This function is for service use only!
+ * Query a pointer to an array of the numbers of ranks in each node.
  * \param [in] m        Valid and setup mpi environment.
  * \param [out] node_sizes Address of a pointer must not be NULL.
  *                         Output he number of ranks in nodes.
@@ -261,7 +263,9 @@ sc3_error_t        *sc3_mpienv_get_num_nodes (const sc3_mpienv_t *m,
 sc3_error_t        *sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m,
                                                int **node_sizes);
 
-/** Query a pointer to an array of the numbers of ranks
+/** Warning! Please, do not use call this function, since it returns a pointer
+ * to a c-array, which is not safe. This function is for service use only!
+ * Query a pointer to an array of the numbers of ranks
  *  before each node and one beyond.
  * \param [in] m        Valid and setup mpi environment.
  * \param [out] node_offsets Address of a pointer must not be NULL.
