@@ -261,7 +261,7 @@ sc3_error_t        *sc3_mpienv_get_num_nodes (const sc3_mpienv_t *m,
  * \return                 NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m,
-                                               int **node_sizes);
+                                               const int **node_sizes);
 
 /** Warning! Please, do not use call this function, since it returns a pointer
  * to a c-array, which is not safe. This function is for service use only!
@@ -274,7 +274,7 @@ sc3_error_t        *sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m,
  * \return                   NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_mpienv_get_node_offsets (const sc3_mpienv_t * m,
-                                                 int **node_offsets);
+                                                 const int **node_offsets);
 
 /** Query a size of global communicator.
  * \param [in] m        Valid and setup mpi environment.

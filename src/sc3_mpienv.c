@@ -445,7 +445,7 @@ sc3_mpienv_get_num_nodes (const sc3_mpienv_t *m, int *num_nodes)
 }
 
 sc3_error_t        *
-sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m, int **node_sizes)
+sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m, const int **node_sizes)
 {
   SC3A_IS (sc3_mpienv_is_setup, m);
   SC3A_CHECK (node_sizes != NULL);
@@ -455,7 +455,7 @@ sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m, int **node_sizes)
 }
 
 sc3_error_t        *
-sc3_mpienv_get_node_offsets (const sc3_mpienv_t * m, int **node_offsets)
+sc3_mpienv_get_node_offsets (const sc3_mpienv_t * m, const int **node_offsets)
 {
   SC3A_IS (sc3_mpienv_is_setup, m);
   SC3A_CHECK (node_offsets != NULL);
