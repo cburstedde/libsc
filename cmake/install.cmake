@@ -3,12 +3,12 @@
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/config.cmake.in
-${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}Config.cmake
+${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake
 INSTALL_DESTINATION cmake
 )
 
 write_basic_package_version_file(
-${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}ConfigVersion.cmake
+${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake
 COMPATIBILITY SameMajorVersion
 )
 
@@ -18,19 +18,19 @@ DESTINATION cmake
 )
 
 install(FILES
-${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}Config.cmake
-${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}ConfigVersion.cmake
+${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake
+${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake
 DESTINATION cmake
 )
 
+export(EXPORT ${PROJECT_NAME}-targets
+FILE ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-targets.cmake
+NAMESPACE ${PROJECT_NAME}::
+)
+
 # --- CPack
-if(WIN32)
-  set(CPACK_GENERATOR "ZIP")
-  set(CPACK_SOURCE_GENERATOR "ZIP")
-else()
-  set(CPACK_GENERATOR "TGZ")
-  set(CPACK_SOURCE_GENERATOR "TGZ")
-endif()
+set(CPACK_GENERATOR "TBZ2")
+set(CPACK_SOURCE_GENERATOR "TBZ2")
 set(CPACK_PACKAGE_VENDOR "Carsten Burstedde")
 set(CPACK_PACKAGE_CONTACT "Carsten Burstedde")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")

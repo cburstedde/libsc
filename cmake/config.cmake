@@ -12,7 +12,9 @@ endif()
 if(openmp)
   find_package(OpenMP COMPONENTS C REQUIRED)
 endif()
-find_package(ZLIB)
+if(zlib)
+  include(${CMAKE_CURRENT_LIST_DIR}/zlib.cmake)
+endif()
 find_package(Threads)
 
 # --- set global compile environment
@@ -51,13 +53,18 @@ set(SC_CFLAGS \"${SC_CFLAGS}\")
 set(SC_CPPFLAGS \"\")
 
 set(SC_LDFLAGS \"${MPI_C_LINK_FLAGS}\")
-set(SC_LIBS \"${ZLIB_LIBRARIES}\ m\")
+
+if(zlib)
+  set(SC_LIBS \"${ZLIB_LIBRARIES}\ m\")
+else()
+  set(SC_LIBS \"m\")
+endif()
 
 set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
 set(SC_ENABLE_MEMALIGN 1)
 
 if(MPI_FOUND)
-  set(SC_ENABLE_MPI ${MPI_FOUND})
+  set(SC_ENABLE_MPI 1)
   check_symbol_exists(MPI_COMM_TYPE_SHARED mpi.h SC_ENABLE_MPICOMMSHARED)
   set(SC_ENABLE_MPIIO 1)
   check_symbol_exists(MPI_Init_thread mpi.h SC_ENABLE_MPITHREAD)
@@ -146,9 +153,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   endif()
 endif()
 
-if(ZLIB_FOUND)
+if(zlib)
   set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
-  check_symbol_exists(adler32_combine zlib.h SC_HAVE_ZLIB)
+  set(SC_HAVE_ZLIB true)
 endif()
 
 check_type_size(int SC_SIZEOF_INT BUILTIN_TYPES_ONLY)

@@ -4,10 +4,17 @@
 "configurePresets": [
 {
   "name": "default",
+  "binaryDir": "${sourceDir}/build",
   "cacheVariables": {
     "mpi": true,
     "openmp": false
     }
+}
+],
+"buildPresets":[
+{
+  "name": "default",
+  "configurePreset": "default"
 }
 ],
 "testPresets": [

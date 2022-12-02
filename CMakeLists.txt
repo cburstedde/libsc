@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.24)
+cmake_minimum_required(VERSION 3.13...3.25)
 
 include(cmake/git.cmake)
 
@@ -43,7 +43,7 @@ $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(sc PUBLIC
 $<$<BOOL:${MPI_FOUND}>:MPI::MPI_C>
-$<$<BOOL:${ZLIB_FOUND}>:ZLIB::ZLIB>
+$<$<BOOL:${zlib}>:ZLIB::ZLIB>
 $<$<BOOL:${SC_NEED_M}>:m>
 )
 
@@ -83,5 +83,6 @@ include(FeatureSummary)
 
 add_feature_info(MPI mpi "MPI features of libsc")
 add_feature_info(OpenMP openmp "OpenMP features of libsc")
+add_feature_info(ZLIB zlib "ZLIB features of libsc")
 
 feature_summary(WHAT ENABLED_FEATURES DISABLED_FEATURES)

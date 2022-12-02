@@ -1,15 +1,10 @@
-cmake_minimum_required(VERSION 3.13...3.24)
+cmake_minimum_required(VERSION 3.13...3.25)
 project(libscExamples LANGUAGES C)
 
 enable_testing()
 
 include(CheckSymbolExists)
 include(CheckIncludeFile)
-
-option(mpi "use MPI" off)
-
-# --- find external libraries
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 
 if(CMAKE_VERSION VERSION_LESS 3.21)
   get_property(not_top DIRECTORY PROPERTY PARENT_DIRECTORY)
@@ -19,35 +14,19 @@ if(CMAKE_VERSION VERSION_LESS 3.21)
 endif()
 
 if(PROJECT_IS_TOP_LEVEL)
-  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/Modules)
 
   # --- auto-ignore build directory
   if(NOT EXISTS ${PROJECT_BINARY_DIR}/.gitignore)
     file(WRITE ${PROJECT_BINARY_DIR}/.gitignore "*")
   endif()
 
-
-  if(mpi)
-    find_package(MPI COMPONENTS C REQUIRED)
-    if(NOT MPIEXEC_EXECUTABLE)
-      message(FATAL_ERROR "MPIEXEC not found")
-    endif()
-  endif(mpi)
-
-  find_package(ZLIB REQUIRED)
   find_package(Threads)
 
-  # --- find our library
-  find_package(SC REQUIRED)
+  # --- find our library package
+  find_package(SC CONFIG REQUIRED)
   set(cfg_h ${SC_INCLUDE_DIRS}/sc_config.h)
 
   # --- get system capabilities
-
-  check_symbol_exists(sqrt math.h SC_NONEED_M)
-  if(NOT SC_NONEED_M)
-    set(CMAKE_REQUIRED_LIBRARIES m)
-    check_symbol_exists(sqrt math.h SC_NEED_M)
-  endif()
 
   check_symbol_exists(SC_HAVE_UNISTD_H ${cfg_h} SC_HAVE_UNISTD_H)
   check_symbol_exists(SC_HAVE_GETOPT_H ${cfg_h} SC_HAVE_GETOPT_H)
@@ -55,7 +34,7 @@ if(PROJECT_IS_TOP_LEVEL)
 
   target_link_libraries(SC::SC INTERFACE
   $<$<BOOL:${MPI_C_FOUND}>:MPI::MPI_C>
-  $<$<BOOL:${ZLIB_FOUND}>:ZLIB::ZLIB>
+  $<$<BOOL:${SC_HAVE_ZLIB}>:ZLIB::ZLIB>
   $<$<BOOL:${SC_NEED_M}>:m>
   )
 endif()
