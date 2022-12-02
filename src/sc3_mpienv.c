@@ -423,3 +423,53 @@ sc3_mpienv_get_node_frank (const sc3_mpienv_t * m, int *node_frank)
   *node_frank = m->node_frank;
   return NULL;
 }
+
+sc3_error_t        *
+sc3_mpienv_get_node_num (const sc3_mpienv_t * m, int *node_num)
+{
+  SC3E_RETVAL (node_num, -1);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *node_num = m->node_num;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_num_nodes (const sc3_mpienv_t *m, int *num_nodes)
+{
+  SC3E_RETVAL (num_nodes, -1);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *num_nodes = m->num_nodes;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_node_sizes (const sc3_mpienv_t * m, const int **node_sizes)
+{
+  SC3A_IS (sc3_mpienv_is_setup, m);
+  SC3A_CHECK (node_sizes != NULL);
+
+  *node_sizes = m->node_sizes;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_node_offsets (const sc3_mpienv_t * m, const int **node_offsets)
+{
+  SC3A_IS (sc3_mpienv_is_setup, m);
+  SC3A_CHECK (node_offsets != NULL);
+
+  *node_offsets = m->node_offsets;
+  return NULL;
+}
+
+sc3_error_t        *
+sc3_mpienv_get_mpisize (const sc3_mpienv_t * m, int *mpisize)
+{
+  SC3E_RETVAL (mpisize, -1);
+  SC3A_IS (sc3_mpienv_is_setup, m);
+
+  *mpisize = m->mpisize;
+  return NULL;
+}
