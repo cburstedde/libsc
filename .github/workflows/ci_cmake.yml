@@ -151,7 +151,8 @@ jobs:
 
     strategy:
       matrix:
-        shared: [true, false]
+        shared: [false]
+    # GitHub Action Windows shared libs is generally broken, even with MSYS2, but works on real laptops etc.
 
     env:
       CMAKE_GENERATOR: "MinGW Makefiles"
