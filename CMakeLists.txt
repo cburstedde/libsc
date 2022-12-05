@@ -23,7 +23,7 @@ include(cmake/compilers.cmake)
 add_library(iniparser OBJECT
             iniparser/inistring.c iniparser/dictionary.c iniparser/iniparser.c)
 target_include_directories(iniparser PRIVATE iniparser src ${PROJECT_BINARY_DIR}/include)
-target_link_libraries(iniparser PRIVATE $<$<BOOL:${MPI_C_FOUND}>:MPI::MPI_C>)
+target_link_libraries(iniparser PRIVATE $<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>)
 
 # --- libb64
 add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c)
@@ -42,8 +42,8 @@ $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/sc_builtin>
 $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(sc PUBLIC
-$<$<BOOL:${MPI_FOUND}>:MPI::MPI_C>
-$<$<BOOL:${zlib}>:ZLIB::ZLIB>
+$<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>
+$<$<BOOL:${SC_HAVE_ZLIB}>:ZLIB::ZLIB>
 $<$<BOOL:${SC_NEED_M}>:m>
 )
 

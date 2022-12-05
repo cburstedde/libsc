@@ -24,16 +24,9 @@ if(PROJECT_IS_TOP_LEVEL)
 
   # --- find our library package
   find_package(SC CONFIG REQUIRED)
-  set(cfg_h ${SC_INCLUDE_DIRS}/sc_config.h)
-
-  # --- get system capabilities
-
-  check_symbol_exists(SC_HAVE_UNISTD_H ${cfg_h} SC_HAVE_UNISTD_H)
-  check_symbol_exists(SC_HAVE_GETOPT_H ${cfg_h} SC_HAVE_GETOPT_H)
-  check_symbol_exists(SC_ENABLE_V4L2 ${cfg_h} SC_ENABLE_V4L2)
 
   target_link_libraries(SC::SC INTERFACE
-  $<$<BOOL:${MPI_C_FOUND}>:MPI::MPI_C>
+  $<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>
   $<$<BOOL:${SC_HAVE_ZLIB}>:ZLIB::ZLIB>
   $<$<BOOL:${SC_NEED_M}>:m>
   )
@@ -48,7 +41,7 @@ add_executable(sc_${name} ${files})
 target_link_libraries(sc_${name} PRIVATE SC::SC)
 
 if(0) # it is not intended to run examples as tests
-if(MPI_C_FOUND)
+if(SC_ENABLE_MPI)
   add_test(NAME sc:example:${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_${name}>)
 else()
   add_test(NAME sc:example:${name} COMMAND sc_${name})
@@ -79,12 +72,9 @@ endif()
 #   target_link_libraries(sc_openmp PRIVATE OpenMP::OpenMP_C)
 # endif()
 
-if(Threads_FOUND)
-  check_include_file(pthread.h HAS_PTHREAD)
-  if(HAS_PTHREAD)
-    test_sc_example(pthread pthread/pthread.c)
-    target_link_libraries(sc_pthread PRIVATE Threads::Threads)
-  endif()
+if(CMAKE_USE_PTHREADS_INIT)
+  test_sc_example(pthread pthread/pthread.c)
+  target_link_libraries(sc_pthread PRIVATE Threads::Threads)
 endif()
 
 if(SC_ENABLE_V4L2)

@@ -184,7 +184,7 @@ set(CMAKE_REQUIRED_DEFINITIONS)
 check_symbol_exists(SC_ENABLE_MPI ${PROJECT_BINARY_DIR}/include/sc_config.h SC_has_mpi)
 check_symbol_exists(SC_ENABLE_MPIIO ${PROJECT_BINARY_DIR}/include/sc_config.h SC_has_mpi_io)
 
-if(MPI_C_FOUND)
+if(SC_ENABLE_MPI)
   # a sign the current project is using MPI
   if(NOT (SC_has_mpi AND SC_has_mpi_io))
     message(FATAL_ERROR "MPI used, but sc_config.h is not configured for MPI")
