@@ -486,11 +486,10 @@ int                 sc_io_open (sc_MPI_Comm mpicomm,
                                 const char *filename, sc_io_open_mode_t amode,
                                 sc_MPI_Info mpiinfo, sc_MPI_File * mpifile);
 
-#ifdef SC_ENABLE_MPIIO
-
 #define sc_mpi_read         sc_io_read   /**< For backwards compatibility. */
 
 /** Read MPI file content into memory.
+ * This function aborts if MPI I/O is not enabled.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [out] ptr     Data array to read in from disk.
  * \param [in] zcount   Number of array members.
@@ -504,8 +503,6 @@ int                 sc_io_open (sc_MPI_Comm mpicomm,
 void                sc_io_read (sc_MPI_File mpifile, void *ptr,
                                 size_t zcount, sc_MPI_Datatype t,
                                 const char *errmsg);
-
-#endif
 
 /** Read MPI file content into memory for an explicit offset.
  * This function does not update the file pointer of the MPI file.
@@ -558,11 +555,10 @@ int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
                                     int zcount, sc_MPI_Datatype t,
                                     int *ocount);
 
-#ifdef SC_ENABLE_MPIIO
-
 #define sc_mpi_write        sc_io_write  /**< For backwards compatibility. */
 
 /** Write memory content to an MPI file.
+ * This function aborts if MPI I/O is not enabled.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
@@ -576,8 +572,6 @@ int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
 void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
                                  size_t zcount, sc_MPI_Datatype t,
                                  const char *errmsg);
-
-#endif
 
 /** Write MPI file content into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
