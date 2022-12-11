@@ -542,6 +542,9 @@ int                 sc_io_read_at_all (sc_MPI_File mpifile,
                                        int *ocount);
 
 /** Read memory content collectively from an MPI file.
+ * A call of this function is equivalent to call \ref sc_io_read_at_all
+ * with offset = 0 but the call of this function is not equivalent
+ * to a call of MPI_File_read_all.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
@@ -615,6 +618,9 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
                                         sc_MPI_Datatype t, int *ocount);
 
 /** Write memory content collectively to an MPI file.
+ * A call of this function is equivalent to call \ref sc_io_write_at_all
+ * with offset = 0 but the call of this function is not equivalent
+ * to a call of MPI_File_write_all.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
