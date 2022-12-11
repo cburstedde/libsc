@@ -1683,7 +1683,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
       if (errval != 0) {
         /* it occurred an error */
         SC_ASSERT (errval > 0);
-        SC_ABORT ("sc_mpi_read_at_all: rank 0 open failed");
+        SC_ABORT ("sc_io_read_at_all: rank 0 open failed");
       }
     }
     else {
