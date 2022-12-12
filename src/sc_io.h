@@ -312,7 +312,7 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  * If zlib is detected on configuration, we compress with given level.
  * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
  * The status of zlib detection can be queried at compile time using
- * <tt>\#ifdef SC_HAVE_ZLIB</tt> or at run time using \ref sc_io_have_zlib.
+ * \#ifdef \a SC_HAVE_ZLIB or at run time using \ref sc_io_have_zlib.
  * Both approaches are readable by a standard zlib uncompress call.
  *
  * Secondly, we process the input data size as an 8-byte big-endian number,
@@ -503,7 +503,6 @@ int                 sc_io_open (sc_MPI_Comm mpicomm,
 #define sc_mpi_read         sc_io_read   /**< For backwards compatibility. */
 
 /** Read MPI file content into memory.
- * This function aborts if MPI I/O is not enabled.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [out] ptr     Data array to read in from disk.
  * \param [in] zcount   Number of array members.
@@ -513,6 +512,7 @@ int                 sc_io_open (sc_MPI_Comm mpicomm,
  *                      This function does not use the calling convention
  *                      and error handling as the other sc_io MPI file
  *                      functions to ensure backwards compatibility.
+ * \note                This function aborts if MPI I/O is not enabled.
  */
 void                sc_io_read (sc_MPI_File mpifile, void *ptr,
                                 size_t zcount, sc_MPI_Datatype t,
@@ -575,7 +575,6 @@ int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
 #define sc_mpi_write        sc_io_write  /**< For backwards compatibility. */
 
 /** Write memory content to an MPI file.
- * This function aborts if MPI I/O is not enabled.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
@@ -585,6 +584,7 @@ int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
  *                      This function does not use the calling convention
  *                      and error handling as the other sc_io MPI file
  *                      functions to ensure backwards compatibility.
+ * \note                This function aborts if MPI I/O is not enabled.
  */
 void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
                                  size_t zcount, sc_MPI_Datatype t,
