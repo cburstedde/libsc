@@ -24,6 +24,17 @@
 #ifndef SC_IO_H
 #define SC_IO_H
 
+/** \file sc_io.h
+ *
+ * The I/O functionalities provide functions to
+ * read and write data based on C-standard functions
+ * and also an other set of functions to read and write
+ * in parallel if at least MPI is enabled.
+ * Furthermore, there are functions to encode and decode
+ * based on zlib.
+ *
+ */
+
 #include <sc_containers.h>
 
 /** Examine the MPI return value and print an error if there is one.
