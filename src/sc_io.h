@@ -113,11 +113,14 @@ typedef struct sc_io_source
 }
 sc_io_source_t;
 
+/** Open modes for \ref sc_io_open */
 typedef enum
 {
-  SC_IO_READ,
-  SC_IO_WRITE_CREATE,
-  SC_IO_WRITE_APPEND
+  SC_IO_READ,                         /**< open a file in read-only mode */
+  SC_IO_WRITE_CREATE,                 /**< open a file in write-only mode;
+                                           if the file exists, the file will
+                                           be overwritten */
+  SC_IO_WRITE_APPEND                  /**< append to an already existing file */
 }
 sc_io_open_mode_t;
 
