@@ -431,6 +431,28 @@ MPI_Finalize ();
  $2])
 ])
 
+dnl SC_OMPICOMMSOCKET_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an OMPI_COMM_TYPE_SOCKET test program
+dnl
+AC_DEFUN([SC_OMPICOMMSOCKET_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for OMPI_COMM_TYPE_SOCKET C program])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+MPI_Comm subcomm;
+MPI_Init ((int *) 0, (char ***) 0);
+MPI_Comm_split_type(MPI_COMM_WORLD,OMPI_COMM_TYPE_SOCKET,0,MPI_INFO_NULL,&subcomm);
+MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $1],
+[AC_MSG_RESULT([failed])
+ $2])
+])
+
 dnl This was only used for our lint code, which needs to be replaced.
 dnl
 dnl dnl SC_MPI_INCLUDES
@@ -533,6 +555,13 @@ dnl  ])
   if test "x$$1_ENABLE_MPICOMMSHARED" = xyes ; then
     AC_DEFINE([ENABLE_MPICOMMSHARED], 1,
               [Define to 1 if we can use MPI_COMM_TYPE_SHARED])
+  fi
+  dnl Run test to check availability of MPI split socket communicator
+  $1_ENABLE_MPICOMMSOCKET=yes
+  SC_MPICOMMSOCKET_C_COMPILE_AND_LINK(,[$1_ENABLE_MPICOMMSOCKET=no])
+  if test "x$$1_ENABLE_MPICOMMSOCKET" = xyes ; then
+    AC_DEFINE([ENABLE_MPICOMMSOCKET], 1,
+              [Define to 1 if we can use OMPI_COMM_TYPE_SOCKET])
   fi
   dnl Deactivate overall MPI 3 code when not available or not configured
   AC_MSG_CHECKING([whether we are using MPI 3 node shared memory])
