@@ -23,6 +23,7 @@ dnl If MPI is enabled, set AC_DEFINE and AC_CONDITIONAL for PREFIX_ENABLE_MPI.
 dnl If MPI I/O is not disabled, set these for PREFIX_ENABLE_MPIIO.
 dnl If MPI_Init_thread is not disabled, set these for PREFIX_ENABLE_MPITHREAD.
 dnl If MPI shared nodes are supported, set these for PREFIX_ENABLE_MPISHARED.
+dnl If MPI shared memory is continious, set these for PREFIX_ENABLE_MPISOCKET.
 dnl
 dnl SC_MPI_ENGAGE(PREFIX)
 dnl
@@ -558,7 +559,7 @@ dnl  ])
   fi
   dnl Run test to check availability of MPI split socket communicator
   $1_ENABLE_MPICOMMSOCKET=yes
-  SC_MPICOMMSOCKET_C_COMPILE_AND_LINK(,[$1_ENABLE_MPICOMMSOCKET=no])
+  SC_OMPICOMMSOCKET_C_COMPILE_AND_LINK(,[$1_ENABLE_MPICOMMSOCKET=no])
   if test "x$$1_ENABLE_MPICOMMSOCKET" = xyes ; then
     AC_DEFINE([ENABLE_MPICOMMSOCKET], 1,
               [Define to 1 if we can use OMPI_COMM_TYPE_SOCKET])
