@@ -32,7 +32,6 @@
  * in parallel if at least MPI is enabled.
  * Furthermore, there are functions to encode and decode
  * based on zlib.
- *
  */
 
 #include <sc_containers.h>
