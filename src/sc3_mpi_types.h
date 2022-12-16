@@ -271,13 +271,9 @@ sc3_MPI_Comm_type_t;
 
 #ifdef SC3_ENABLE_MPISOCKET
 /* We can split by socket */
-
 #define SC3_MPI_COMM_TYPE_SHARED OMPI_COMM_TYPE_SOCKET
-
 #else
-
 #define SC3_MPI_COMM_TYPE_SHARED MPI_COMM_TYPE_SHARED
-
 #endif /* SC3_ENABLE_MPISOCKET */
 
 #endif /* SC_ENABLE_MPICOMMSHARED */
