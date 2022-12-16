@@ -24,6 +24,16 @@
 #ifndef SC_IO_H
 #define SC_IO_H
 
+/** \file sc_io.h
+ *
+ * The I/O functionalities provide functions to
+ * read and write data based on C-standard functions
+ * and also an other set of functions to read and write
+ * in parallel if at least MPI is enabled.
+ * Furthermore, there are functions to encode and decode
+ * based on zlib.
+ */
+
 #include <sc_containers.h>
 
 /** Examine the MPI return value and print an error if there is one.
@@ -102,11 +112,14 @@ typedef struct sc_io_source
 }
 sc_io_source_t;
 
+/** Open modes for \ref sc_io_open */
 typedef enum
 {
-  SC_IO_READ,
-  SC_IO_WRITE_CREATE,
-  SC_IO_WRITE_APPEND
+  SC_IO_READ,                         /**< open a file in read-only mode */
+  SC_IO_WRITE_CREATE,                 /**< open a file in write-only mode;
+                                           if the file exists, the file will
+                                           be overwritten */
+  SC_IO_WRITE_APPEND                  /**< append to an already existing file */
 }
 sc_io_open_mode_t;
 
@@ -270,8 +283,8 @@ int                 sc_io_have_zlib (void);
  * Without zlib configured that function works uncompressed.
  *
  * The encoding method and input data size can be retrieved, optionally,
- * from the encoded data by \sc_io_decode_info.  This function decodes
- * the method as a character, which is 'z' for \ref sc_io_encoded_zlib.
+ * from the encoded data by \ref sc_io_decode_info.  This function decodes
+ * the method as a character, which is 'z' for \ref sc_io_encode_zlib.
  * We reserve the characters A-C, d-z indefinitely.
  *
  * \param [in,out] data     If \a out is NULL, we work in place.
@@ -298,7 +311,7 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  * If zlib is detected on configuration, we compress with given level.
  * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
  * The status of zlib detection can be queried at compile time using
- * `#ifdef SC_HAVE_ZLIB` or at run time using \ref sc_io_have_zlib.
+ * \#ifdef \a SC_HAVE_ZLIB or at run time using \ref sc_io_have_zlib.
  * Both approaches are readable by a standard zlib uncompress call.
  *
  * Secondly, we process the input data size as an 8-byte big-endian number,
@@ -486,8 +499,6 @@ int                 sc_io_open (sc_MPI_Comm mpicomm,
                                 const char *filename, sc_io_open_mode_t amode,
                                 sc_MPI_Info mpiinfo, sc_MPI_File * mpifile);
 
-#ifdef SC_ENABLE_MPIIO
-
 #define sc_mpi_read         sc_io_read   /**< For backwards compatibility. */
 
 /** Read MPI file content into memory.
@@ -500,12 +511,11 @@ int                 sc_io_open (sc_MPI_Comm mpicomm,
  *                      This function does not use the calling convention
  *                      and error handling as the other sc_io MPI file
  *                      functions to ensure backwards compatibility.
+ * \note                This function aborts if MPI I/O is not enabled.
  */
 void                sc_io_read (sc_MPI_File mpifile, void *ptr,
                                 size_t zcount, sc_MPI_Datatype t,
                                 const char *errmsg);
-
-#endif
 
 /** Read MPI file content into memory for an explicit offset.
  * This function does not update the file pointer of the MPI file.
@@ -545,6 +555,9 @@ int                 sc_io_read_at_all (sc_MPI_File mpifile,
                                        int *ocount);
 
 /** Read memory content collectively from an MPI file.
+ * A call of this function is equivalent to call \ref sc_io_read_at_all
+ * with offset = 0 but the call of this function is not equivalent
+ * to a call of MPI_File_read_all.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
@@ -558,8 +571,6 @@ int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
                                     int zcount, sc_MPI_Datatype t,
                                     int *ocount);
 
-#ifdef SC_ENABLE_MPIIO
-
 #define sc_mpi_write        sc_io_write  /**< For backwards compatibility. */
 
 /** Write memory content to an MPI file.
@@ -572,12 +583,11 @@ int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
  *                      This function does not use the calling convention
  *                      and error handling as the other sc_io MPI file
  *                      functions to ensure backwards compatibility.
+ * \note                This function aborts if MPI I/O is not enabled.
  */
 void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
                                  size_t zcount, sc_MPI_Datatype t,
                                  const char *errmsg);
-
-#endif
 
 /** Write MPI file content into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
@@ -621,6 +631,9 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
                                         sc_MPI_Datatype t, int *ocount);
 
 /** Write memory content collectively to an MPI file.
+ * A call of this function is equivalent to call \ref sc_io_write_at_all
+ * with offset = 0 but the call of this function is not equivalent
+ * to a call of MPI_File_write_all.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
