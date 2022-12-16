@@ -1456,12 +1456,11 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
 #endif
 }
 
-#ifdef SC_ENABLE_MPIIO
-
 void
 sc_io_read (sc_MPI_File mpifile, void *ptr, size_t zcount,
             sc_MPI_Datatype t, const char *errmsg)
 {
+#ifdef SC_ENABLE_MPIIO
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
 #endif
@@ -1476,9 +1475,11 @@ sc_io_read (sc_MPI_File mpifile, void *ptr, size_t zcount,
   SC_CHECK_MPI (mpiret);
   SC_CHECK_ABORT (icount == (int) zcount, errmsg);
 #endif
-}
-
+#else
+  /* we do not provide a non-MPI I/O implementation of sc_io_read */
+  SC_ABORT ("no non-MPI I/O implementation of sc_io_read/sc_mpi_read");
 #endif
+}
 
 int
 sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
@@ -1682,7 +1683,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
       if (errval != 0) {
         /* it occurred an error */
         SC_ASSERT (errval > 0);
-        SC_ABORT ("sc_mpi_read_at_all: rank 0 open failed");
+        SC_ABORT ("sc_io_read_at_all: rank 0 open failed");
       }
     }
     else {
@@ -1710,12 +1711,11 @@ sc_io_read_all (sc_MPI_File mpifile, void *ptr, int zcount, sc_MPI_Datatype t,
   return sc_io_read_at_all (mpifile, 0, ptr, zcount, t, ocount);
 }
 
-#ifdef SC_ENABLE_MPIIO
-
 void
 sc_io_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
              sc_MPI_Datatype t, const char *errmsg)
 {
+#ifdef SC_ENABLE_MPIIO
 #ifdef SC_ENABLE_DEBUG
   int                 icount;
 #endif
@@ -1731,9 +1731,11 @@ sc_io_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
   SC_CHECK_MPI (mpiret);
   SC_CHECK_ABORT (icount == (int) zcount, errmsg);
 #endif
-}
-
+#else
+  /* we do not provide a non-MPI I/O implementation of sc_io_write */
+  SC_ABORT ("no non-MPI I/O implementation of sc_io_write/sc_mpi_write");
 #endif
+}
 
 int
 sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
