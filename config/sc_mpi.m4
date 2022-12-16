@@ -23,7 +23,7 @@ dnl If MPI is enabled, set AC_DEFINE and AC_CONDITIONAL for PREFIX_ENABLE_MPI.
 dnl If MPI I/O is not disabled, set these for PREFIX_ENABLE_MPIIO.
 dnl If MPI_Init_thread is not disabled, set these for PREFIX_ENABLE_MPITHREAD.
 dnl If MPI shared nodes are supported, set these for PREFIX_ENABLE_MPISHARED.
-dnl If MPI shared memory is continious, set these for PREFIX_ENABLE_MPISOCKET.
+dnl If MPI split by socket is supported, set these for PREFIX_ENABLE_MPISOCKET.
 dnl
 dnl SC_MPI_ENGAGE(PREFIX)
 dnl
