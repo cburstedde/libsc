@@ -27,7 +27,7 @@
  * The algorithm uses a binary communication tree.
  * The recursion terminates at a specified depth by an all-to-all step.
  *
- * \ingroup parallelism
+ * \ingroup sc_parallelism
  */
 
 #ifndef SC_ALLGATHER_H
