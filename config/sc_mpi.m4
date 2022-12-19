@@ -118,6 +118,7 @@ dnl We allow the user to specify the configure option --enable-valgrind.
 dnl If given and valgrind is found, we use it to run tests on make check.
 dnl If given and valgrind is not found, we abort with an error message.
 dnl If not given, we run tests in the default manner (ignoring valgrind).
+dnl If given and found, we add the #define PREFIX_ENABLE_VALGRIND.
 $1_VALGRIND=
 $1_VALGRIND_FLAGS=
 AC_ARG_ENABLE([valgrind],
@@ -128,6 +129,8 @@ if test "x$enableval" = xyes ; then
   AC_CHECK_PROG([$1_VALGRIND], [valgrind], [valgrind])
   if test "x$$1_VALGRIND" != xvalgrind ; then
     AC_MSG_ERROR([--enable-valgrind given but valgrind not found in PATH])
+  else
+    AC_DEFINE([ENABLE_VALGRIND], 1, [Enable valgrind in executing tests])
   fi
   $1_VALGRIND_FLAGS="--error-exitcode=1"
 fi
