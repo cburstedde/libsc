@@ -117,10 +117,10 @@ main (int argc, char **argv)
   num_failed_tests += CHECKE (init_alloc (mainalloc, &alloc));
   num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_SELF, 0, 0));
   num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 0, 0));
-  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1, 0));
 #ifndef SC_ENABLE_VALGRIND
   /* Valgrind might indicate false-positiv errors
      with some MPI shared memory implementations */
+  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1, 0));
   num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1, 1));
 #endif /* SC_ENABLE_VALGRIND */
   num_failed_tests += CHECKE (reset_alloc (mainalloc, &alloc));
