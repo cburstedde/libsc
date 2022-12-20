@@ -129,6 +129,7 @@ sc3_mpienv_new (sc3_allocator_t * mator, sc3_mpienv_t ** mp)
   m->nodecomm = SC3_MPI_COMM_NULL;
 #ifdef SC3_ENABLE_MPI3
   m->shared = 1;
+  m->contiguous = 0;
 #endif
 
   SC3A_IS (sc3_mpienv_is_new, m);
