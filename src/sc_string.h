@@ -28,13 +28,15 @@
 
 /** \file sc_string.h
  * This file declares a simple string object that can be appended to.
+ *
+ * \ingroup sc_containers
  */
 
 /** This defines the maximum string storage including the trailing '\0'. */
 #define SC_STRING_SIZE 4088
 
-/** This is a simple opaque type for growing a string by printf-like commands.
- * It can be declared on the stack to avoid malloc and free.
+/** This is a simple type for growing a string by printf-like commands.
+ * It is public so it can be declared on the stack to avoid malloc and free.
  * This means that the length of the string is limited to \ref SC_STRING_SIZE - 1.
  * The current string can be accessed by \ref sc_string_get_content.
  * This is really an opaque object: its members shall not be accessed directly.

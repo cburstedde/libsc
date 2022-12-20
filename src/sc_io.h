@@ -21,6 +21,20 @@
   02110-1301, USA.
 */
 
+/** \file sc_io.h
+ *
+ * Helper routines for general and parallel I/O.
+ *
+ * \ingroup sc_io
+ */
+
+/** \defgroup sc_io I/O support
+ *
+ * Functionality specific to file/data input/output.
+ *
+ * \ingroup sc
+ */
+
 #ifndef SC_IO_H
 #define SC_IO_H
 
@@ -311,7 +325,7 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  * If zlib is detected on configuration, we compress with given level.
  * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
  * The status of zlib detection can be queried at compile time using
- * \#ifdef \a SC_HAVE_ZLIB or at run time using \ref sc_io_have_zlib.
+ * \#ifdef SC_HAVE_ZLIB or at run time using \ref sc_io_have_zlib.
  * Both approaches are readable by a standard zlib uncompress call.
  *
  * Secondly, we process the input data size as an 8-byte big-endian number,
