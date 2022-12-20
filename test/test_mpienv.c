@@ -121,8 +121,8 @@ main (int argc, char **argv)
   /* Valgrind might indicate false-positiv errors
      with some MPI shared memory implementations */
   num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1, 0));
-  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1, 1));
 #endif /* SC_ENABLE_VALGRIND */
+  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1, 1));
   num_failed_tests += CHECKE (reset_alloc (mainalloc, &alloc));
   if (num_failed_tests > 0) {
     fprintf (stderr, "Number failed tests: %d\n", num_failed_tests);
