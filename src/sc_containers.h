@@ -25,12 +25,12 @@
 #define SC_CONTAINERS_H
 
 /** \file sc_containers.h
- * \ingroup containers
+ * \ingroup sc_containers
  *
  * Dynamic containers such as lists, arrays, and hash tables.
  */
 
-/** \defgroup containers Containers
+/** \defgroup sc_containers Containers
  * \ingroup sc
  *
  * Provide dynamic containers such as lists, arrays, and hash tables.

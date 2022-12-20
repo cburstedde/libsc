@@ -52,7 +52,7 @@
  *    setting its type and further parameters, and passing it into the general
  *    \ref sc_notify_payload or \ref sc_notify_payloadv functions.
  *
- * \ingroup parallelism
+ * \ingroup sc_parallelism
  */
 
 #ifndef SC_NOTIFY_H

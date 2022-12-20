@@ -34,7 +34,7 @@
  * as well as drop-in replacements for minimum, maximum, and sum.
  * We do not currently support user-defined MPI datatypes.
  *
- * \ingroup parallelism
+ * \ingroup sc_parallelism
  */
 
 #ifndef SC_REDUCE_H
