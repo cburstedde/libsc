@@ -56,6 +56,7 @@ main (int argc, char **argv)
   double              d, sd;
   const char         *s1, *s2, *ss1, *ss2;
   const char         *cd = "Callback example";
+  const char         *dstring;
   sc_keyvalue_t      *keyvalue;
   sc_options_t       *opt, *subopt, *deepopt;
 
@@ -98,6 +99,8 @@ main (int argc, char **argv)
 
   deepopt = sc_options_new (argv[0]);
   sc_options_add_int (deepopt, '\0', "deep", &deep, 3, "Deep option");
+  sc_options_add_string (deepopt, '\0', "dstr", &dstring, "Nested string",
+                         "Deep string");
 
   sc_options_add_suboptions (subopt, deepopt, "Deeper");
   sc_options_add_suboptions (opt, subopt, "Subset");
@@ -142,8 +145,14 @@ main (int argc, char **argv)
   }
 
   sc_options_destroy (opt);
+  SC_GLOBAL_LDEBUGF ("After options destroy: %s\n", dstring);
+
   sc_options_destroy (subopt);
+  SC_GLOBAL_LDEBUGF ("After suboptions destroy: %s\n", dstring);
+
   sc_options_destroy (deepopt);
+  SC_GLOBAL_LDEBUGF ("After deep options destroy: %s\n", dstring);
+
   sc_keyvalue_destroy (keyvalue);
 
   sc_finalize ();
