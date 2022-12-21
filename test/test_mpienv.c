@@ -30,7 +30,7 @@
 #include <sc3_mpienv.h>
 
 static sc3_error_t *
-test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared)
+test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared, int contig)
 {
   int                 i;
   int                 get_shared;
@@ -41,6 +41,7 @@ test_mpienv (sc3_allocator_t * alloc, sc3_MPI_Comm_t mpicomm, int shared)
   SC3E (sc3_mpienv_new (alloc, &m));
   SC3E (sc3_mpienv_set_comm (m, mpicomm, 1));
   SC3E (sc3_mpienv_set_shared (m, shared));
+  SC3E (sc3_mpienv_set_contiguous (m, contig));
   SC3E (sc3_mpienv_setup (m));
 
   /* fun tests */
@@ -114,9 +115,14 @@ main (int argc, char **argv)
 
   /* Sophisticated error checking */
   num_failed_tests += CHECKE (init_alloc (mainalloc, &alloc));
-  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_SELF, 0));
-  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 0));
-  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1));
+  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_SELF, 0, 0));
+  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 0, 0));
+#ifndef SC_ENABLE_VALGRIND
+  /* Valgrind might indicate false-positiv errors
+     with some MPI shared memory implementations */
+  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1, 0));
+#endif /* SC_ENABLE_VALGRIND */
+  num_failed_tests += CHECKE (test_mpienv (alloc, SC3_MPI_COMM_WORLD, 1, 1));
   num_failed_tests += CHECKE (reset_alloc (mainalloc, &alloc));
   if (num_failed_tests > 0) {
     fprintf (stderr, "Number failed tests: %d\n", num_failed_tests);

@@ -324,6 +324,17 @@ long                sc3_longcut (long N, int P, int p);
  */
 unsigned long       sc3_ulongcut (unsigned long N, int P, int p);
 
+/** Compute a cumulative partition cut by floor (Np / P).
+ * The product NP must fit into a long integer.
+ * For p <= 0 we return 0 and for p >= P we return N.
+ * \param [in] N       Non-negative integer to divide between P slots.
+ * \param [in] P       The total number of slots, a positive integer.
+ * \param [in] p       Slot number is trimmed to satisfy 0 <= p <= P.
+ * \return             floor (Np / P) in long integer arithmetic or
+ *                     0 if any argument is invalid.
+ */
+uint64_t            sc3_uint64cut (uint64_t N, int P, int p);
+
 /** Extract the basename of a path.
  * This function uses the system's `basename` function if available
  * and falls back to returning the input string otherwise.

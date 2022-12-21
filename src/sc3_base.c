@@ -173,6 +173,15 @@ sc3_ulongcut (unsigned long N, int P, int p)
   return p < P ? (N * p) / P : N;
 }
 
+uint64_t
+sc3_uint64cut (uint64_t N, int P, int p)
+{
+  if (N <= 0 || P <= 0 || p <= 0) {
+    return 0;
+  }
+  return p < P ? (N * p) / P : N;
+}
+
 char               *
 sc3_basename (char *path)
 {
