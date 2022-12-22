@@ -23,11 +23,11 @@ jobs:
 
     strategy:
       matrix:
-        cc: [clang-7, clang-8, clang-9, clang-10, gcc-7, gcc-8, gcc-9, gcc-10, gcc-11]
+        cc: [clang-10, clang-11, clang-12, gcc-9, gcc-10]
         shared: [false]
         include:
-          - shared: true
-            cc: gcc
+        - shared: true
+          cc: gcc
 
     env:
       CC: ${{ matrix.cc }}
@@ -38,25 +38,24 @@ jobs:
 
     - name: Install system dependencies
       run: |
-        sudo apt-get update -yq
-        sudo apt-get install -yq --no-install-recommends \
-            zlib1g-dev libmpich-dev mpich \
-            ${{ matrix.cc }}
+        sudo apt-get update
+        sudo apt-get install --no-install-recommends \
+            libmpich-dev mpich
 
     - name: CMake configure
-      run: cmake -B build --preset default --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake --preset default --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
-      run: cmake --build build --parallel
+      run: cmake --build --preset default --parallel
 
     - name: CMake install (for examples)
       run: cmake --install build
 
     - name: CMake self-tests
-      run: ctest --test-dir build --preset default
+      run: ctest --preset default
 
     - name: CMake configure examples
-      run: cmake -B example/build -S example -Dmpi=yes -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake -B example/build -S example -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
 
     - name: CMake build examples
       run: cmake --build example/build --parallel
@@ -92,8 +91,8 @@ jobs:
         cc: [clang, gcc-11]
         shared: [false]
         include:
-          - shared: true
-            cc: clang
+        - shared: true
+          cc: clang
 
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
@@ -107,19 +106,19 @@ jobs:
       run: brew install open-mpi
 
     - name: CMake configure
-      run: cmake -B build -Dmpi=yes --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake --preset default --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
-      run: cmake --build build --parallel
+      run: cmake --build --preset default --parallel
 
     - name: CMake install (for examples)
       run: cmake --install build
 
     - name: CMake self-tests
-      run: ctest --test-dir build --preset default
+      run: ctest --preset default
 
     - name: CMake configure examples
-      run: cmake -B example/build -S example -Dmpi=yes -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake -B example/build -S example -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
 
     - name: CMake build examples
       run: cmake --build example/build --parallel
@@ -152,7 +151,8 @@ jobs:
 
     strategy:
       matrix:
-        shared: [true, false]
+        shared: [false]
+    # GitHub Action Windows shared libs is generally broken, even with MSYS2, but works on real laptops etc.
 
     env:
       CMAKE_GENERATOR: "MinGW Makefiles"
@@ -162,19 +162,19 @@ jobs:
       name: Checkout source code
 
     - name: CMake configure without MPI
-      run: cmake -B build -Dmpi:BOOL=no --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake --preset default -Dmpi:BOOL=no --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
-      run: cmake --build build --parallel
+      run: cmake --build --preset default --parallel
 
     - name: CMake install (for examples)
       run: cmake --install build
 
     - name: CMake self-tests
-      run: ctest --test-dir build --preset default
+      run: ctest --preset default
 
     - name: CMake configure examples without MPI
-      run: cmake -B example/build -S example -Dmpi:BOOL=no -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake -B example/build -S example -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
 
     - name: CMake build examples
       run: cmake --build example/build --parallel
