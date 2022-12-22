@@ -1,4 +1,4 @@
-set(sc_tests allgather arrays keyvalue notify reduce search sortb version)
+set(sc_tests allgather arrays keyvalue notify reduce search sortb version mpienv containers)
 
 if(SC_HAVE_RANDOM AND SC_HAVE_SRANDOM)
   list(APPEND sc_tests node_comm)
