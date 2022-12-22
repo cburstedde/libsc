@@ -127,9 +127,7 @@ sc3_mpienv_new (sc3_allocator_t * mator, sc3_mpienv_t ** mp)
   m->nodesizewin = SC3_MPI_WIN_NULL;
   m->headcomm = SC3_MPI_COMM_NULL;
   m->nodecomm = SC3_MPI_COMM_NULL;
-#ifdef SC3_ENABLE_MPI3
   m->shared = 1;
-#endif
 
   SC3A_IS (sc3_mpienv_is_new, m);
   *mp = m;
@@ -163,9 +161,7 @@ sc3_error_t        *
 sc3_mpienv_set_shared (sc3_mpienv_t * m, int shared)
 {
   SC3A_IS (sc3_mpienv_is_new, m);
-#ifdef SC3_ENABLE_MPI3
   m->shared = shared;
-#endif
   return NULL;
 }
 
