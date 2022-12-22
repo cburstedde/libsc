@@ -10,7 +10,7 @@ sc_allgather.c sc_reduce.c sc_notify.c
 sc_uint128.c sc_v4l2.c
 sc_puff.c
 sc3_base.c sc3_alloc.c sc3_error.c sc3_refcount.c sc3_omp.c sc3_mpi.c
-sc3_array.c sc3_log.c sc3_trace.c sc3_memstamp.c
+sc3_array.c sc3_log.c sc3_trace.c sc3_memstamp.c sc3_mpienv.c
 )
 
 if(SC_HAVE_GETOPT_H)
