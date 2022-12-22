@@ -27,7 +27,7 @@
 #include <iniparser.h>
 
 #include <errno.h>
-#ifdef SC_HAVE_JANSSON_H
+#ifdef SC_HAVE_JSON
 #include <jansson.h>
 #endif
 

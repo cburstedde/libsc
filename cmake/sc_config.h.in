@@ -147,7 +147,7 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine SC_HAVE_UNISTD_H 1
 
-/* Define to 1 if you have <zlib.h> header file. */
+/* Define to 1 if you have a working zlib installation. */
 #cmakedefine SC_HAVE_ZLIB 1
 
 /* Linker flags */

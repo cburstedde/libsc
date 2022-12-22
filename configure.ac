@@ -80,7 +80,7 @@ echo "o---------------------------------------"
 
 AC_CHECK_HEADERS([fcntl.h sys/ioctl.h sys/select.h sys/stat.h])
 AC_CHECK_HEADERS([execinfo.h signal.h libgen.h time.h sys/time.h])
-AC_CHECK_HEADERS([linux/version.h linux/videodev2.h jansson.h])
+AC_CHECK_HEADERS([linux/version.h linux/videodev2.h])
 
 echo "o---------------------------------------"
 echo "| Checking functions"
