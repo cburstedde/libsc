@@ -372,9 +372,9 @@ sc_options_add_switch (sc_options_t * opt, int opt_char,
                        const char *opt_name,
                        int *variable, const char *help_string)
 {
-  sc_option_item_t   *item =
-    sc_options_add_item (opt, opt_char, opt_name,
-                         SC_OPTION_SWITCH, help_string);
+  sc_option_item_t   *item = sc_options_add_item (opt, opt_char, opt_name,
+                                                  SC_OPTION_SWITCH,
+                                                  help_string);
 
   item->opt_var = variable;
   *variable = 0;
@@ -385,9 +385,9 @@ sc_options_add_bool (sc_options_t * opt, int opt_char,
                      const char *opt_name,
                      int *variable, int init_value, const char *help_string)
 {
-  sc_option_item_t   *item =
-    sc_options_add_item (opt, opt_char, opt_name,
-                         SC_OPTION_BOOL, help_string);
+  sc_option_item_t   *item = sc_options_add_item (opt, opt_char, opt_name,
+                                                  SC_OPTION_BOOL,
+                                                  help_string);
 
   item->has_arg = 2;
   item->opt_var = variable;
@@ -398,9 +398,8 @@ void
 sc_options_add_int (sc_options_t * opt, int opt_char, const char *opt_name,
                     int *variable, int init_value, const char *help_string)
 {
-  sc_option_item_t   *item =
-    sc_options_add_item (opt, opt_char, opt_name,
-                         SC_OPTION_INT, help_string);
+  sc_option_item_t   *item = sc_options_add_item (opt, opt_char, opt_name,
+                                                  SC_OPTION_INT, help_string);
 
   item->has_arg = 1;
   item->opt_var = variable;
@@ -412,9 +411,9 @@ sc_options_add_size_t (sc_options_t * opt, int opt_char, const char *opt_name,
                        size_t *variable, size_t init_value,
                        const char *help_string)
 {
-  sc_option_item_t   *item =
-    sc_options_add_item (opt, opt_char, opt_name,
-                         SC_OPTION_SIZE_T, help_string);
+  sc_option_item_t   *item = sc_options_add_item (opt, opt_char, opt_name,
+                                                  SC_OPTION_SIZE_T,
+                                                  help_string);
 
   item->has_arg = 1;
   item->opt_var = variable;
@@ -427,9 +426,9 @@ sc_options_add_double (sc_options_t * opt, int opt_char,
                        double *variable, double init_value,
                        const char *help_string)
 {
-  sc_option_item_t   *item =
-    sc_options_add_item (opt, opt_char, opt_name,
-                         SC_OPTION_DOUBLE, help_string);
+  sc_option_item_t   *item = sc_options_add_item (opt, opt_char, opt_name,
+                                                  SC_OPTION_DOUBLE,
+                                                  help_string);
 
   item->has_arg = 1;
   item->opt_var = variable;
@@ -441,7 +440,7 @@ sc_options_add_item_string (sc_options_t * opt,
                             int opt_char, const char *opt_name,
                             sc_option_string_t *s, const char *help_string)
 {
-  sc_option_item_t *item;
+  sc_option_item_t   *item;
 
   SC_ASSERT (s != NULL && sc_refcount_is_active (&s->rc));
   item = sc_options_add_item (opt, opt_char, opt_name,
@@ -456,16 +455,17 @@ sc_options_add_string (sc_options_t * opt, int opt_char,
                        const char *init_value, const char *help_string)
 {
   sc_options_add_item_string (opt, opt_char, opt_name,
-   sc_options_string_new (variable, init_value), help_string);
+                              sc_options_string_new (variable, init_value),
+                              help_string);
 }
 
 void
 sc_options_add_inifile (sc_options_t * opt, int opt_char,
                         const char *opt_name, const char *help_string)
 {
-  sc_option_item_t   *item =
-    sc_options_add_item (opt, opt_char, opt_name,
-                         SC_OPTION_INIFILE, help_string);
+  sc_option_item_t   *item = sc_options_add_item (opt, opt_char, opt_name,
+                                                  SC_OPTION_INIFILE,
+                                                  help_string);
   item->has_arg = 1;
 }
 
@@ -473,9 +473,9 @@ void
 sc_options_add_jsonfile (sc_options_t * opt, int opt_char,
                          const char *opt_name, const char *help_string)
 {
-  sc_option_item_t   *item =
-    sc_options_add_item (opt, opt_char, opt_name,
-                         SC_OPTION_JSONFILE, help_string);
+  sc_option_item_t   *item = sc_options_add_item (opt, opt_char, opt_name,
+                                                  SC_OPTION_JSONFILE,
+                                                  help_string);
   item->has_arg = 1;
 }
 
@@ -1198,8 +1198,7 @@ sc_options_load_json (int package_id, int err_priority,
       *(int *) item->opt_var = ivalue;
       break;
     case SC_OPTION_SIZE_T:
-      if (json_is_integer (jval) &&
-          (jint = json_integer_value (jval)) >= 0) {
+      if (json_is_integer (jval) && (jint = json_integer_value (jval)) >= 0) {
         zvalue = (size_t) jint;
       }
       else {
@@ -1603,16 +1602,14 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       sc_options_string_set ((sc_option_string_t *) item->opt_var, optarg);
       break;
     case SC_OPTION_INIFILE:
-      if (sc_options_load_ini (package_id, err_priority,
-                               opt, optarg, NULL)) {
+      if (sc_options_load_ini (package_id, err_priority, opt, optarg, NULL)) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
                      "Error loading .ini file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
       break;
     case SC_OPTION_JSONFILE:
-      if (sc_options_load_json (package_id, err_priority,
-                                opt, optarg, NULL)) {
+      if (sc_options_load_json (package_id, err_priority, opt, optarg, NULL)) {
         SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
                      "Error loading JSON file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
