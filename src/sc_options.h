@@ -122,6 +122,29 @@ void                sc_options_destroy_deep (sc_options_t * opt);
  */
 void                sc_options_destroy (sc_options_t * opt);
 
+/** Enable or disable collective parsing and configuration file load/save.
+ * The default is for \ref sc_options_parse, which may load .ini or JSON
+ * configuration files, and the load and save functions themselves, to be
+ * called without regard for parallelism, that is, redundantly on the same
+ * file.  This traditional default choice relies on a scalable file system.
+ * Furthermore, it requires to actively save a file on the root rank only.
+ *
+ * Thus, it may be more prudent to generally call this function with \a
+ * enable set to true.  This requires, however, that the parse, load and
+ * save functions are called like an MPI collective call over the
+ * communicator at the time of parse/load/save returned by \ref sc_get_comm.
+ * This is, generally, the communicator passed to \ref sc_init.
+ * The benefit is that file access is restricted to the root.
+ *
+ * Outside of any \ref sc_init, \ref sc_finalize pair, we fall back to the
+ * default, concurrent file access operation.
+ *
+ * \param [in,out] opt          Valid options structure.
+ * \param [in] enable           Boolean to specify collective operation.
+ */
+void                sc_options_set_collective (sc_options_t * opt,
+                                               int enable);
+
 /** Set the spacing for \ref sc_options_print_summary.
  * There are two values to be set: the spacing from the beginning of the
  * printed line to the type of the option variable, and from the beginning

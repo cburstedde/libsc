@@ -71,7 +71,10 @@ main (int argc, char **argv)
   sc_keyvalue_set_int (keyvalue, "one", 1);
   sc_keyvalue_set_int (keyvalue, "two", 2);
 
+  /* the root options structure is configured collective */
   opt = sc_options_new (argv[0]);
+  sc_options_set_collective (opt, 1);
+
   sc_options_add_switch (opt, 'w', "switch", &w, "Switch");
   sc_options_add_int (opt, 'i', "integer1", &i1, 0, "Integer 1");
   sc_options_add_double (opt, 'd', "double", &d, 0., "Double");

@@ -76,6 +76,7 @@ struct sc_options
   char                program_path[BUFSIZ];
   const char         *program_name;
   sc_array_t         *option_items;
+  int                 collective;
   int                 space_type;
   int                 space_help;
   int                 args_alloced;
@@ -266,6 +267,9 @@ sc_options_new (const char *program_path)
   opt->argc = 0;
   opt->argv = NULL;
 
+  /* set backwards compatible default */
+  opt->collective = 0;
+
   /* set default spacing for printing option summary */
   sc_options_set_spacing (opt, -1, -1);
 
@@ -323,6 +327,14 @@ void
 sc_options_destroy (sc_options_t * opt)
 {
   sc_options_destroy_internal (opt, 0);
+}
+
+void
+sc_options_set_collective (sc_options_t * opt, int enable)
+{
+  SC_ASSERT (opt != NULL);
+
+  opt->collective = enable;
 }
 
 void
