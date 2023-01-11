@@ -65,7 +65,7 @@ sc3_log_is_valid (const sc3_log_t * log, char *reason)
 {
   SC3E_TEST (log != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &log->rc, reason);
-  SC3E_TEST (!log->alloced == (log->lator == NULL), reason);
+  SC3E_TEST ((!log->alloced) == (log->lator == NULL), reason);
   if (log->lator != NULL) {
     SC3E_IS (sc3_allocator_is_setup, log->lator, reason);
   }

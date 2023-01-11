@@ -88,7 +88,7 @@ sc3_error_is_valid (const sc3_error_t * e, char *reason)
 {
   SC3E_TEST (e != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &e->rc, reason);
-  SC3E_TEST (!e->alloced == (e->eator == NULL), reason);
+  SC3E_TEST ((!e->alloced) == (e->eator == NULL), reason);
   if (e->eator != NULL) {
     SC3E_IS (sc3_allocator_is_setup, e->eator, reason);
   }
