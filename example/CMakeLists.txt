@@ -47,7 +47,6 @@ else()
   add_test(NAME sc:example:${name} COMMAND sc_${name})
 endif()
 
-set_property(TEST sc:example:${name} PROPERTY TIMEOUT 10)
 if(WIN32 AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
   set_property(TEST sc:example:${name} PROPERTY ENVIRONMENT_MODIFICATION "PATH=path_list_append:${SC_INCLUDE_DIR}/../bin")
 endif()

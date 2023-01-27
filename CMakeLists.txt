@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.25)
+cmake_minimum_required(VERSION 3.14...3.25)
 
 include(cmake/git.cmake)
 
@@ -40,7 +40,7 @@ PUBLIC
 $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/sc_builtin>
-$<INSTALL_INTERFACE:include>
+$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(sc PUBLIC
 $<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>
@@ -53,16 +53,11 @@ add_library(SC::SC INTERFACE IMPORTED GLOBAL)
 target_link_libraries(SC::SC INTERFACE sc)
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/ ${PROJECT_SOURCE_DIR}/src/sc_builtin/ ${PROJECT_BINARY_DIR}/include/
-DESTINATION include
+DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 FILES_MATCHING PATTERN "*.h"
 )
 
-install(TARGETS sc
-EXPORT ${PROJECT_NAME}-targets
-ARCHIVE DESTINATION lib
-LIBRARY DESTINATION lib
-RUNTIME DESTINATION bin
-)
+install(TARGETS sc EXPORT ${PROJECT_NAME}-targets)
 
 add_subdirectory(src)
 add_subdirectory(example)
