@@ -33,6 +33,7 @@ target_include_directories(libb64 PRIVATE libb64)
 add_library(sc $<TARGET_OBJECTS:iniparser> $<TARGET_OBJECTS:libb64>)
 target_compile_features(sc PRIVATE c_std_99)
 set_property(TARGET sc PROPERTY EXPORT_NAME SC)
+set_property(TARGET sc PROPERTY VERSION ${PROJECT_VERSION})
 target_include_directories(sc
 PRIVATE iniparser libb64
 PUBLIC
@@ -84,5 +85,6 @@ include(FeatureSummary)
 add_feature_info(MPI mpi "MPI features of libsc")
 add_feature_info(OpenMP openmp "OpenMP features of libsc")
 add_feature_info(ZLIB zlib "ZLIB features of libsc")
+add_feature_info(shared BUILD_SHARED_LIBS "shared libsc library")
 
 feature_summary(WHAT ENABLED_FEATURES DISABLED_FEATURES)
