@@ -82,7 +82,7 @@ int
 sc_MPI_Comm_split (sc_MPI_Comm comm, int color, int key,
                    sc_MPI_Comm * newcomm)
 {
-  *newcomm = sc_MPI_COMM_NULL;
+  *newcomm = comm;
 
   return sc_MPI_SUCCESS;
 }

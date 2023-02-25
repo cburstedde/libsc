@@ -522,11 +522,15 @@ int                 sc_MPI_Exscan (void *, void *, int, sc_MPI_Datatype,
  * \return          Number of seconds since the epoch. */
 double              sc_MPI_Wtime (void);
 
+/** Return the input communicator in lieu of splitting.
+ * \return          MPI_SUCCESS.
+ */
+int                 sc_MPI_Comm_split (sc_MPI_Comm, int, int, sc_MPI_Comm *);
+
 /* These functions will run but their results/actions are not defined. */
 
 int                 sc_MPI_Comm_create (sc_MPI_Comm, sc_MPI_Group,
                                         sc_MPI_Comm *);
-int                 sc_MPI_Comm_split (sc_MPI_Comm, int, int, sc_MPI_Comm *);
 int                 sc_MPI_Comm_compare (sc_MPI_Comm, sc_MPI_Comm, int *);
 int                 sc_MPI_Comm_group (sc_MPI_Comm, sc_MPI_Group *);
 
