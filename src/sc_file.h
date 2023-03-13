@@ -1,0 +1,115 @@
+/*
+  This file is part of the SC Library.
+  The SC Library provides support for parallel scientific applications.
+
+  Copyright (C) 2010 The University of Texas System
+  Additional copyright (C) 2011 individual authors
+
+  The SC Library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  The SC Library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with the SC Library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  02110-1301, USA.
+*/
+
+/** \file sc_file.h
+ *
+ * Routines for parallel I/O format.
+ *
+ * \ingroup sc_file
+ */
+
+/** \defgroup sc_file Parallel file format
+ * 
+ * Functionality read and write in parallel using a prescribed
+ * file format.
+ *
+ * \ingroup sc 
+ */
+
+#ifndef SC_FILE_H
+#define SC_FILE_H
+
+#include <sc.h>
+
+SC_EXTERN_C_BEGIN;
+
+#define SC_FILE_MAGIC_NUMBER "scfile0" /**< magic string for libsc data files */
+#define SC_FILE_HEADER_BYTES 128 /**< number of file header bytes in total incl. padding */
+/* the following macros are the number of bytes without the line feed */
+#define SC_FILE_MAGIC_BYTES 7 /**< number of bytes of the magic number */
+#define SC_FILE_VERSION_STR_BYTES 53 /**< number of bytes of the version string*/
+#define SC_FILE_ARRAY_METADATA_BYTES 14 /**< number of array metadata bytes */
+/* subtract 2 for '\n' at the beginning and end of the array metadata */
+#define SC_FILE_ARRAY_METADATA_CHARS (SC_FILE_ARRAY_METADATA_BYTES - 2) /**< number of array metadata chars */
+#define SC_FILE_BYTE_DIV 16 /**< All data blocks are padded to be divisible by this. */
+#define SC_FILE_MAX_NUM_PAD_BYTES (SC_FILE_BYTE_DIV + 1) /**< We enforce to pad in any
+                                                               case and the padding string
+                                                               needs to contain two
+                                                               newline characters and
+                                                               therefore this is the
+                                                               maximal number of pad
+                                                               bytes. */
+#define SC_FILE_LINE_FEED_STR "\n" /**< line feed as string */
+#define SC_FILE_PAD_CHAR '=' /**< the padding char as string */
+#define SC_FILE_PAD_STRING_CHAR '-' /**< the padding char for user strings as string */
+#define SC_FILE_USER_STRING_BYTES 61 /**< number of user string bytes */
+#define SC_FILE_FIELD_HEADER_BYTES (2 + SC_FILE_ARRAY_METADATA_BYTES + SC_FILE_USER_STRING_BYTES)
+                                     /**< number of bytes of one field header */
+#define SC_FILE_MAX_GLOBAL_QUAD 9999999999999999 /**< maximal number of global quadrants */
+#define SC_FILE_MAX_BLOCK_SIZE 9999999999999 /**< maximal number of block bytes */
+#define SC_FILE_MAX_FIELD_ENTRY_SIZE 9999999999999 /**< maximal number of bytes per field entry */
+
+/** Opaque context used for writing a libsc data file. */
+typedef struct sc_file_context sc_file_context_t;
+
+/** Error values for sc_file functions.
+ */
+/* TODO */
+typedef enum sc_file_error
+{
+  SC_FILE_ERROR_SUCCESS = sc_MPI_ERR_LASTCODE,
+  SC_FILE_ERR_FILE, /**< invalid file handle */
+  SC_FILE_ERR_NOT_SAME, /**< collective arg not identical */
+  SC_FILE_ERR_AMODE, /**< access mode error */
+  SC_FILE_ERR_NO_SUCH_FILE, /**< file does not exist */
+  SC_FILE_ERR_FILE_EXIST, /**< file exists already */
+  SC_FILE_ERR_BAD_FILE, /**< invalid file name */
+  SC_FILE_ERR_ACCESS, /**< permission denied */
+  SC_FILE_ERR_NO_SPACE, /**< not enough space */
+  SC_FILE_ERR_QUOTA, /**< quota exceeded */
+  SC_FILE_ERR_READ_ONLY, /**< read only file (system) */
+  SC_FILE_ERR_IN_USE, /**< file currently open by other process */
+  SC_FILE_ERR_IO, /**< other I/O error */
+  SC_FILE_ERR_FORMAT,  /**< read file has a wrong format */
+  SC_FILE_ERR_SECTION_TYPE, /**< a valid non-matching section type */
+  SC_FILE_ERR_IN_DATA, /**< input data of file function is invalid */
+  SC_FILE_ERR_COUNT,   /**< read or write count error that was not
+                                 classified as a format error */
+  SC_FILE_ERR_UNKNOWN, /**< unknown error */
+  SC_FILE_ERR_LASTCODE /**< to define own error codes for
+                                  a higher level application
+                                  that is using sc_file
+                                  functions */
+}
+sc_file_error_t;
+
+sc_file_context_t  *sc_file_open_write (const char *filename,
+                                        sc_MPI_Comm mpicomm,
+                                        const char *user_string,
+                                        int *errcode);
+
+int                 sc_file_close (sc_file_context_t * fc, int *errcode);
+
+SC_EXTERN_C_END;
+
+#endif /* SC_FILE_H */
