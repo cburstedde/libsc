@@ -4,9 +4,9 @@
 typedef struct sc_file_context
 {
   sc_MPI_Comm         mpicomm;            /**< corresponding MPI communicator */
+#if 0
   uint64_t           *global_first;       /**< represents the partition */
-  int                 gf_owned;          /**< Boolean to indicate if global_first array
-                                               is owned. */
+#endif
   size_t              num_calls;        /**< redundant but for convenience;
                                             counts the number of calls of
                                             write and read, respectively */
@@ -135,8 +135,9 @@ sc_file_open_write (const char *filename, sc_MPI_Comm mpicomm,
   fc->mpicomm = mpicomm;
   fc->accessed_bytes = 0;
   fc->num_calls = 0;
+#if 0
   fc->global_first = NULL;
-  fc->gf_owned = 0;
+#endif
 
   return fc;
 }
@@ -151,9 +152,9 @@ sc_file_close (sc_file_context_t * fc, int *errcode)
 
   mpiret = sc_io_close (&fc->file);
 
-  if (fc->gf_owned) {
-    SC_FREE (fc->global_first);
-  }
+#if 0
+  SC_FREE (fc->global_first);
+#endif
   SC_FREE (fc);
 
   return 0;
