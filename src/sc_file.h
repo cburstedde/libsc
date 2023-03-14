@@ -43,7 +43,7 @@
 
 SC_EXTERN_C_BEGIN;
 
-#define SC_FILE_MAGIC_NUMBER "scfile0" /**< magic string for libsc data files */
+#define SC_FILE_MAGIC_NUMBER "scdata0" /**< magic string for libsc data files */
 #define SC_FILE_HEADER_BYTES 128 /**< number of file header bytes in total incl. padding */
 /* the following macros are the number of bytes without the line feed */
 #define SC_FILE_MAGIC_BYTES 7 /**< number of bytes of the magic number */
