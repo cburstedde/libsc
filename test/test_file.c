@@ -31,6 +31,7 @@ main (int argc, char **argv)
 {
   int                 mpiret, errcode;
   const char         *filename = SC_FILE_TEST_FILE;
+  char                read_user_string[SC_FILE_USER_STRING_BYTES + 1];
   sc_file_context_t  *fc;
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -41,6 +42,12 @@ main (int argc, char **argv)
     sc_file_open_write (filename, sc_MPI_COMM_WORLD, "This is a test file",
                         &errcode);
   /* TODO: check errcode */
+
+  sc_file_close (fc, &errcode);
+
+  fc =
+    sc_file_open_read (sc_MPI_COMM_WORLD, filename, read_user_string,
+                       &errcode);
 
   sc_file_close (fc, &errcode);
 

@@ -108,6 +108,10 @@ sc_file_context_t  *sc_file_open_write (const char *filename,
                                         const char *user_string,
                                         int *errcode);
 
+sc_file_context_t  *sc_file_open_read (sc_MPI_Comm mpicomm,
+                                       const char *filename,
+                                       char *user_string, int *errcode);
+
 int                 sc_file_close (sc_file_context_t * fc, int *errcode);
 
 SC_EXTERN_C_END;

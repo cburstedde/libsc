@@ -142,6 +142,48 @@ sc_file_open_write (const char *filename, sc_MPI_Comm mpicomm,
   return fc;
 }
 
+sc_file_context_t  *
+sc_file_open_read (sc_MPI_Comm mpicomm, const char *filename,
+                   char *user_string, int *errcode)
+{
+  SC_ASSERT (filename != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  int                 mpiret, mpirank, count;
+  sc_file_context_t  *fc = SC_ALLOC (sc_file_context_t, 1);
+  char                file_header[SC_FILE_HEADER_BYTES + 1];
+
+  /* Open the file in the reading mode */
+  mpiret =
+    sc_io_open (mpicomm, filename, SC_IO_READ, sc_MPI_INFO_NULL, &fc->file);
+
+  /* initialize file context */
+  fc->mpicomm = mpicomm;
+#if 0
+  fc->global_first = NULL;
+#endif
+  fc->accessed_bytes = 0;
+  fc->num_calls = 0;
+
+  /* get the MPI rank */
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+
+  if (mpirank == 0) {
+    /* read metadata on rank 0 */
+    mpiret =
+      sc_io_read_at (fc->file, 0, file_header,
+                     SC_FILE_HEADER_BYTES, sc_MPI_BYTE, &count);
+    /* TODO: error checking */
+
+    file_header[SC_FILE_HEADER_BYTES + 1] = '\0';
+    /* TODO: check file header */
+  }
+
+  return fc;
+}
+
 int
 sc_file_close (sc_file_context_t * fc, int *errcode)
 {
