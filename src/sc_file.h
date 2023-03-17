@@ -69,6 +69,16 @@ SC_EXTERN_C_BEGIN;
 #define SC_FILE_MAX_BLOCK_SIZE 9999999999999 /**< maximal number of block bytes */
 #define SC_FILE_MAX_FIELD_ENTRY_SIZE 9999999999999 /**< maximal number of bytes per field entry */
 
+/** libsc data file format
+ * All libsc data files have a \ref SC_FILE_HEADER_BYTES bytes file header at
+ * the beginning of the file.
+ *
+ * File header (\ref SC_FILE_HEADER_BYTES bytes):
+ * \ref SC_FILE_MAGIC_BYTES bytes magic number (scdata0) and one byte \ref SC_FILE_LINE_FEED_STR.
+ * \ref SC_FILE_VERSION_STR_BYTES 
+ * 
+ */
+
 /** Opaque context used for writing a libsc data file. */
 typedef struct sc_file_context sc_file_context_t;
 
@@ -111,6 +121,11 @@ sc_file_context_t  *sc_file_open_write (const char *filename,
 sc_file_context_t  *sc_file_open_read (sc_MPI_Comm mpicomm,
                                        const char *filename,
                                        char *user_string, int *errcode);
+
+sc_file_context_t  *sc_file_write_block (sc_file_context_t * fc,
+                                         size_t block_size,
+                                         sc_array_t * block_data,
+                                         const char *user_string, int * errcode);
 
 int                 sc_file_close (sc_file_context_t * fc, int *errcode);
 
