@@ -539,6 +539,24 @@ sc_MPI_Waitall (int count, sc_MPI_Request * array_of_requests,
 #endif
 }
 
+int
+sc_MPI_Testall (int count, sc_MPI_Request * array_of_requests, int *flag,
+                sc_MPI_Status * array_of_statuses)
+{
+#ifdef SC_ENABLE_MPI
+  /* we do this to avoid warnings when the prototype uses [] */
+  return MPI_Testall (count, array_of_requests, flag, array_of_statuses);
+#else
+  int                 i;
+
+  for (i = 0; i < count; ++i) {
+    SC_CHECK_ABORT (array_of_requests[i] == sc_MPI_REQUEST_NULL,
+                    "non-MPI MPI_Testall handles NULL requests only");
+  }
+  return sc_MPI_SUCCESS;
+#endif
+}
+
 size_t
 sc_mpi_sizeof (sc_MPI_Datatype t)
 {

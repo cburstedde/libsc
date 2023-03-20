@@ -369,6 +369,8 @@ int                 sc_MPI_Wait (sc_MPI_Request *, sc_MPI_Status *);
 int                 sc_MPI_Waitsome (int, sc_MPI_Request *,
                                      int *, int *, sc_MPI_Status *);
 int                 sc_MPI_Waitall (int, sc_MPI_Request *, sc_MPI_Status *);
+int                 sc_MPI_Testall (int, sc_MPI_Request *, int *,
+                                    sc_MPI_Status *);
 
 #if defined SC_ENABLE_MPI && defined SC_ENABLE_MPITHREAD
 
