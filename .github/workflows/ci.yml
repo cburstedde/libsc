@@ -14,7 +14,7 @@ jobs:
         sudo apt-get install -yq --no-install-recommends \
             zlib1g-dev libmpich-dev mpich
     - name: Checkout source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Run bootstrap script
       run: ./bootstrap
     - name: Make check with debug, without BLAS and shared
@@ -69,7 +69,7 @@ jobs:
         cd ..
     - name: Save test suite log
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: test_suite_log
         path: ./**/test-suite.log
@@ -84,7 +84,7 @@ jobs:
         sudo apt-get install -yq --no-install-recommends \
             zlib1g-dev libmpich-dev mpich
     - name: Checkout source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Identify version
@@ -108,7 +108,7 @@ jobs:
         mv libsc-*.tar.gz ..
         cd ..
     - name: Save tarball
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: libsc_tarball
         path: ./libsc-*.tar.gz
