@@ -193,8 +193,7 @@ sc_tag_t;
 #define sc_MPI_Get_count           MPI_Get_count
 #define sc_MPI_Wtime               MPI_Wtime
 #define sc_MPI_Wait                MPI_Wait
-#define sc_MPI_Waitsome            MPI_Waitsome
-#define sc_MPI_Waitall             MPI_Waitall
+/* The MPI_Waitsome, MPI_Waitall and MPI_Testall functions are wrapped. */
 
 #else /* !SC_ENABLE_MPI */
 
@@ -362,11 +361,14 @@ int                 sc_MPI_Get_count (sc_MPI_Status *, sc_MPI_Datatype,
 /* These functions are only allowed to be called with NULL requests. */
 
 int                 sc_MPI_Wait (sc_MPI_Request *, sc_MPI_Status *);
+
+#endif /* !SC_ENABLE_MPI */
+
+/* Without SC_ENABLE_MPI, only allowed to be called with NULL requests. */
+
 int                 sc_MPI_Waitsome (int, sc_MPI_Request *,
                                      int *, int *, sc_MPI_Status *);
 int                 sc_MPI_Waitall (int, sc_MPI_Request *, sc_MPI_Status *);
-
-#endif /* !SC_ENABLE_MPI */
 
 #if defined SC_ENABLE_MPI && defined SC_ENABLE_MPITHREAD
 
