@@ -82,6 +82,17 @@ SC_EXTERN_C_BEGIN;
 /** Opaque context used for writing a libsc data file. */
 typedef struct sc_file_context sc_file_context_t;
 
+/** Section types in libsc data file. */
+typedef enum sc_file_section
+{
+  SC_FILE_INLINE, /**< inline data */
+  SC_FILE_BLOCK, /**< block of given size */
+  SC_FILE_FIXED, /**< array with a fixed size partition */
+  SC_FILE_VARIABLE, /**< array with a variable size partition */
+  SC_FILE_NUM_SECTIONS /**< number of current sections in sc_file */
+}
+sc_file_section_t;
+
 /** Error values for sc_file functions.
  */
 /* TODO */
@@ -125,7 +136,34 @@ sc_file_context_t  *sc_file_open_read (sc_MPI_Comm mpicomm,
 sc_file_context_t  *sc_file_write_block (sc_file_context_t * fc,
                                          size_t block_size,
                                          sc_array_t * block_data,
-                                         const char *user_string, int * errcode);
+                                         const char *user_string,
+                                         int *errcode);
+
+/** Write a variable size array file section.
+ *
+ * This function writes an array of variable-sized elements in parallel
+ * to the opened file.
+ *
+ * \param [in,out]  fc      File context previously opened by \ref
+ *                          sc_file_open_write.
+ * \param [in]      sizes   An allocated sc_array that has as element count
+ *                          the number of local elements and as element size
+ *                          sizeof (uint64_t). 
+ * \param [in]      data    An allocated sc_array of sizes->elem_count many
+ *                          sc_arrays. Each element data[i] of data that is
+ *                          itself an array has the element size 1 and element
+ *                          count sizes[i].
+ */
+sc_file_context_t  *sc_file_write_variable (sc_file_context_t * fc,
+                                            sc_array_t * sizes,
+                                            sc_array_t * data);
+
+/** Read a file section of an arbitrary section type.
+ * 
+ */
+sc_file_context_t  *sc_file_read (sc_file_context_t * fc, sc_array_t * data,
+                                  sc_file_section_t type,
+                                  const char *user_string);
 
 int                 sc_file_close (sc_file_context_t * fc, int *errcode);
 
