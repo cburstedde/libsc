@@ -150,13 +150,21 @@ sc_file_context_t  *sc_file_write_block (sc_file_context_t * fc,
  *                          the number of local elements and as element size
  *                          sizeof (uint64_t). 
  * \param [in]      data    An allocated sc_array of sizes->elem_count many
- *                          sc_arrays. Each element data[i] of data that is
- *                          itself an array has the element size 1 and element
- *                          count sizes[i].
+ *                          sc_arrays. For i in 0 ... \b data->elem_count
+ *                          the i-th element of \b data, which is
+ *                          itself a sc_array, has the element size 1 and
+ *                          the element count equals the i-th element of
+ *                          \b sizes.
+ * \param [out]     errcode An errcode that can be interpreted by \ref
+ *                          sc_file_error_string.
+ * \return                  Return a pointer to input context or NULL in case
+ *                          of errors that does not abort the program.
+ *                          In case of error the file is tried to close
+ *                          and \b fc is freed.
  */
 sc_file_context_t  *sc_file_write_variable (sc_file_context_t * fc,
                                             sc_array_t * sizes,
-                                            sc_array_t * data);
+                                            sc_array_t * data, int *errcode);
 
 /** Read a file section of an arbitrary section type.
  * 
