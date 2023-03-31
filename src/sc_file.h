@@ -111,12 +111,12 @@ sc_file_section_t;
  * \return                        A pointer to at least \b element_size
  *                                many allocated bytes.
  */
-typedef void       *(sc_file_allocate_t) (size_t element_index,
-                                          size_t element_count,
-                                          size_t element_size,
-                                          sc_array_t * sizes,
-                                          sc_file_section_t type,
-                                          void *user_data);
+typedef void        (*sc_file_allocate_t) (size_t element_index,
+                                           size_t element_count,
+                                           size_t element_size,
+                                           sc_array_t * sizes,
+                                           sc_file_section_t type,
+                                           void *user_data);
 
 /** Error values for sc_file functions.
  */
