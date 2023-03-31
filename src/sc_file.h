@@ -167,19 +167,20 @@ sc_file_error_t;
  * This function does not abort on MPI I/O errors but returns NULL.
  * Without MPI I/O the function may abort on file system dependent errors.
  *
- * \param [in]  filename    Path to parallel file that is to be created.
  * \param [in]  mpicomm     The MPI communicator that is used to open the
  *                          parallel file.
- * \param [in]  user_string At most 61 characters in a nul-terminated string.
- *                          These characters are written to the file header.
+ * \param [in]  filename    Path to parallel file that is to be created.
+ * \param [in]  user_string At most \ref SC_FILE_USER_STRING_BYTES characters in
+ *                          a nul-terminated string. These characters are
+ *                          written to the file header.
  * \param [out] errcode     An errcode that can be interpreted by \ref
  *                          sc_file_error_string.
  * \return                  Newly allocated context to continue writing
  *                          and eventually closing the file. NULL in
  *                          case of error, i.e. errcode != SC_FILE_SUCCESS.
  */
-sc_file_context_t  *sc_file_open_write (const char *filename,
-                                        sc_MPI_Comm mpicomm,
+sc_file_context_t  *sc_file_open_write (sc_MPI_Comm mpicomm,
+                                        const char *filename,
                                         const char *user_string,
                                         int *errcode);
 
