@@ -239,6 +239,9 @@ sc_file_context_t  *sc_file_write_block (sc_file_context_t * fc,
  *                          itself a sc_array, has the element size 1 and
  *                          the element count equals the i-th element of
  *                          \b sizes.
+ * \param [out] user_string At least \ref SC_FILE_SECTION_USER_STRING_BYTES + 1
+ *                          bytes. The user string is read on rank 0 and
+ *                          internally broadcasted to all ranks.
  * \param [out]     errcode An errcode that can be interpreted by \ref
  *                          sc_file_error_string.
  * \return                  Return a pointer to input context or NULL in case
