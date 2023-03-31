@@ -124,6 +124,35 @@ typedef enum sc_file_error
 }
 sc_file_error_t;
 
+/** Open a file for writing and write the file header to the file.
+ *
+ * This function creates a new file or overwrites an existing one.
+ * It is collective and creates the file on a parallel file system.
+ * This function leaves the file open if MPI I/O is available.
+ * Independent of the availability of MPI I/O the user can write one or more
+ * file sections before closing the file using \ref sc_file_close.
+ *
+ * It is the user's responsibility to write any further metadata of the file
+ * that is required by the application. This can be done by writing file
+ * sections. However, the user can use \ref sc_file_info to parse the structure
+ * of a given file and some metadata that is written by sc_file.
+ * In addition, the user can read file sections without knowing their type
+ * and data size(s) using \ref sc_file_read.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent errors.
+ *
+ * \param [in]  filename    Path to parallel file that is to be created.
+ * \param [in]  mpicomm     The MPI communicator that is used to open the
+ *                          parallel file.
+ * \param [in]  user_string At most 61 characters in a nul-terminated string.
+ *                          These characters are written to the file header.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_file_error_string.
+ * \return                  Newly allocated context to continue writing
+ *                          and eventually closing the file. NULL in
+ *                          case of error, i.e. errcode != SC_FILE_SUCCESS.
+ */
 sc_file_context_t  *sc_file_open_write (const char *filename,
                                         sc_MPI_Comm mpicomm,
                                         const char *user_string,
