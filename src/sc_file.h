@@ -77,7 +77,7 @@ SC_EXTERN_C_BEGIN;
  * File header (\ref SC_FILE_HEADER_BYTES bytes):
  * \ref SC_FILE_MAGIC_BYTES bytes magic number (scdata0) and one byte \ref SC_FILE_LINE_FEED_STR.
  * \ref SC_FILE_VERSION_STR_BYTES 
- * 
+ * TODO: continue.
  */
 
 /** Opaque context used for writing a libsc data file. */
@@ -223,6 +223,30 @@ sc_file_context_t  *sc_file_write_block (sc_file_context_t * fc,
                                          const char *user_string,
                                          int *errcode);
 
+/**
+ *
+ * \note                    If one wants to read a file section without knowing
+ *                          file section type and the sizes, one can use the
+ *                          function \ref sc_file_read.
+ */
+sc_file_context_t  *sc_file_read_block (sc_file_context_t * fc,
+                                        size_t block_size,
+                                        sc_array_t * block_data,
+                                        char *user_string, int *errcode);
+
+sc_file_context_t  *sc_file_write_fixed (sc_file_context_t * fc,
+                                         size_t element_count,
+                                         size_t element_size,
+                                         sc_array_t * data_array,
+                                         const char *user_string,
+                                         int *errcode);
+
+sc_file_context_t  *sc_file_read_fixed (sc_file_context_t * fc,
+                                        size_t element_count,
+                                        size_t element_size,
+                                        sc_array_t * data_array,
+                                        char *user_string, int *errcode);
+
 /** Write a variable size array file section.
  *
  * This function writes an array of variable-sized elements in parallel
@@ -250,8 +274,17 @@ sc_file_context_t  *sc_file_write_block (sc_file_context_t * fc,
  *                          and \b fc is freed.
  */
 sc_file_context_t  *sc_file_write_variable (sc_file_context_t * fc,
+                                            size_t element_count,
                                             sc_array_t * sizes,
-                                            sc_array_t * data, int *errcode);
+                                            sc_array_t * data,
+                                            const char *user_string,
+                                            int *errcode);
+
+sc_file_context_t  *sc_file_read_variable (sc_file_context_t * fc,
+                                           size_t element_count,
+                                           sc_array_t * sizes,
+                                           sc_array_t * data,
+                                           char *user_string, int *errcode);
 
 /** Read a file section of an arbitrary section type.
  *
@@ -290,7 +323,7 @@ sc_file_context_t  *sc_file_write_variable (sc_file_context_t * fc,
  * \param [in,out]  user_data       Anonymous user data that is passed to
  *                                  \b alloc_callback.
  * \param [out]     user_string     At least
- *                                  \ref SC_FILE_SECTION_USER_STRING_BYTES
+ *                                  \ref SC_FILE_SECTION_USER_STRING_BYTES + 1
  *                                  bytes. The user string is read on rank 0 and
  *                                  internally broadcasted to all ranks.
  * \param [out]     errcode         An errcode that can be interpreted by \ref
@@ -332,6 +365,10 @@ sc_file_context_t  *sc_file_read (sc_file_context_t * fc,
  *                        by the user.
  */
 int                 sc_file_free (sc_array_t * data, int *errcode);
+
+/* sc_file_info */
+
+/* sc_file_error_string */
 
 int                 sc_file_close (sc_file_context_t * fc, int *errcode);
 
