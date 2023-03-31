@@ -184,6 +184,35 @@ sc_file_context_t  *sc_file_open_write (sc_MPI_Comm mpicomm,
                                         const char *user_string,
                                         int *errcode);
 
+/** Open a file for reading and read its file header on rank 0.
+ *
+ * This function is a collective function.
+ * The read user string is broadcasted to all ranks.
+ * The file must exist and be at least of the size of the file header, i.e.
+ * \ref SC_FILE_HEADER_BYTES bytes.
+ *
+ * If the file has a file header that does not satisfy the sc_file file
+ * header format, the function reports the error using \ref SC_LERRORF,
+ * collectively close the file and deallocate the file context. In this case
+ * the function returns NULL on all ranks. A wrong file header format causes
+ * \ref SC_FILE_ERR_FORMAT as \b errcode.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
+ *
+ * \param [in]    mpicomm     The MPI communicator that is used to open the
+ *                            parallel file.
+ * \param [in]    filename    Path to parallel file that is to be opened.
+ * \param [out]   user_string At least \ref SC_FILE_USER_STRING_BYTES + 1 bytes.
+ *                            The user string is read on rank 0 and internally
+ *                            broadcasted to all ranks.
+ * \param [out] errcode       An errcode that can be interpreted by \ref
+ *                            sc_file_error_string.
+ * \return                    Newly allocated context to continue reading
+ *                            and eventually closing the file. NULL in case
+ *                            of error, i.e. errcode != SC_FILE_SUCCESS.
+ */
 sc_file_context_t  *sc_file_open_read (sc_MPI_Comm mpicomm,
                                        const char *filename,
                                        char *user_string, int *errcode);
