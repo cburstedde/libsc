@@ -93,6 +93,30 @@ typedef enum sc_file_section
 }
 sc_file_section_t;
 
+/** An allocation callback to read data from a file using \ref sc_file_read.
+ *
+ * \param [in]  element_index     The index of the current element.
+ * \param [in]  element_count     The number of elements that are read from the
+ *                                file.
+ * \param [in]  element_size      The size of the current element in number of
+ *                                bytes.
+ * \param [in]  sizes             An array of the sizes in number of bytes for
+ *                                each element. \b sizes->elem_count equals
+ *                                \b element_count.
+ * \param [in]  type              The file section type.
+ * \param [in,out] user_data      User data that the user passed to \ref
+ *                                sc_file_read and that is passed onto the
+ *                                allocation callback
+ * \return                        A pointer to at least \b element_size
+ *                                many allocated bytes.
+ */
+typedef void       *(sc_file_allocate_t) (size_t element_index,
+                                          size_t element_count,
+                                          size_t element_size,
+                                          sc_array_t * sizes,
+                                          sc_file_section_t type,
+                                          void *user_data);
+
 /** Error values for sc_file functions.
  */
 /* TODO */
