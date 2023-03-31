@@ -14,6 +14,9 @@ on:
   release:
     types: [published]
 
+env:
+  CTEST_NO_TESTS_ACTION: "error"
+
 jobs:
 
   linux:
@@ -23,7 +26,7 @@ jobs:
 
     strategy:
       matrix:
-        cc: [gcc-9, gcc-10, gcc-11]
+        cc: [gcc-9, gcc-10, gcc-11, gcc-12]
         shared: [false]
         mpi: [true]
         include:
@@ -93,7 +96,7 @@ jobs:
 
     strategy:
       matrix:
-        cc: [clang, gcc-11]
+        cc: [clang, gcc-12]
         shared: [false]
         include:
         - shared: true
