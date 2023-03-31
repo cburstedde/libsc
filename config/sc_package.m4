@@ -98,6 +98,8 @@ AC_DEFUN([SC_ME_AS_SUBPACKAGE],
 $1_$3_SUBDIR=
 $1_$3_MK_USE=
 $1_$3_DOXTAG=
+$1_$3_LDADD=
+$1_$3_RPATH=
 $1_DISTCLEAN="$$1_DISTCLEAN $1_$3_SOURCE.log"
 
 SC_ARG_WITH_PREFIX([$4], [path to installed package $4 (optional)], [$3], [$1])
@@ -115,7 +117,8 @@ if test "x$$1_WITH_$3" != xno ; then
   $1_$3_MK_USE=yes
   $1_$3_MK_INCLUDE="include $$1_$3_ETC/Makefile.$4.mk"
   $1_$3_CPPFLAGS="\$($3_CPPFLAGS)"
-  $1_$3_LDADD="$$1_$3_DIR/lib/lib$4.la"
+  $1_$3_LDADD="-L$$1_$3_LIB -l$4"
+  $1_$3_RPATH="-rpath $$1_$3_LIB"
 else
   AC_MSG_NOTICE([Building with source of package $4])
 
@@ -154,4 +157,5 @@ AM_CONDITIONAL([$1_$3_MK_USE], [test "x$$1_$3_MK_USE" != x])
 AC_SUBST([$1_$3_MK_INCLUDE])
 AC_SUBST([$1_$3_CPPFLAGS])
 AC_SUBST([$1_$3_LDADD])
+AC_SUBST([$1_$3_RPATH])
 ])
