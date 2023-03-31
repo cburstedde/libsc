@@ -63,6 +63,7 @@ SC_EXTERN_C_BEGIN;
 #define SC_FILE_PAD_CHAR '=' /**< the padding char as string */
 #define SC_FILE_PAD_STRING_CHAR '-' /**< the padding char for user strings as string */
 #define SC_FILE_USER_STRING_BYTES 61 /**< number of user string bytes */
+#define SC_FILE_SECTION_USER_STRING_BYTES 29 /**< number of section user string bytes */
 #define SC_FILE_FIELD_HEADER_BYTES (2 + SC_FILE_ARRAY_METADATA_BYTES + SC_FILE_USER_STRING_BYTES)
                                      /**< number of bytes of one field header */
 #define SC_FILE_MAX_GLOBAL_QUAD 9999999999999999 /**< maximal number of global quadrants */
@@ -220,11 +221,63 @@ sc_file_context_t  *sc_file_write_variable (sc_file_context_t * fc,
                                             sc_array_t * data, int *errcode);
 
 /** Read a file section of an arbitrary section type.
- * 
+ *
+ * This function reads the next file section without requiring the file section
+ * type and the size(s) of the file section.
+ *
+ * The function reads the file section header to determine the file section
+ * type and the sizes.
+ * If the user passes NULL for \b alloc_callback, \b data must be unequal NULL.
+ * In this case, the function allocates the memory for the user and sets
+ * the data pointer of \b data to the allcocated data. This data must be freed
+ * using the function \ref sc_file_free.
+ * Alternatively, the user can pass NULL for \b data and then must pass an
+ * allocation callback \b alloc_callback. Then the allocation callback can
+ * give a pointer to allocated memory for each read element. The parameters
+ * of \ref sc_file_allocate_t inform the user about the file section type and
+ * the size(s). In the case of using \b alloc_callback the user is responsible
+ * to free the allocated data.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
+ *
+ * \param [in]      fc              File context previously opened by
+ *                                  \ref sc_file_open_read.
+ * \param [out]     data            If not NULL, \b data is set to newly
+ *                                  allocated data that is filled with the read
+ *                                  data.
+ *                                  Use \b type to get the data layout of
+ *                                  \b data.
+ * \param [out]     type            The file section type that is read from the
+ *                                  file.
+ * \param [in]      alloc_callback  An allocation callback to give a pointer
+ *                                  to memory for each element that is read from
+ *                                  the file.
+ * \param [in,out]  user_data       Anonymous user data that is passed to
+ *                                  \b alloc_callback.
+ * \param [out]     user_string     At least
+ *                                  \ref SC_FILE_SECTION_USER_STRING_BYTES
+ *                                  bytes. The user string is read on rank 0 and
+ *                                  internally broadcasted to all ranks.
+ * \param [out]     errcode         An errcode that can be interpreted by \ref
+ *                                  sc_file_error_string.
+ * \return                          Return a pointer to input context or NULL in
+ *                                  case of errors that does not abort the
+ *                                  program. In case of error the file is tried
+ *                                  to close and \b fc is freed.
+ *
+ * \note                            This function differs from the
+ *                                  sc_file_read_* functions in the sense that
+ *                                  it does not expect the user to know the file
+ *                                  section type and the size(s).
  */
-sc_file_context_t  *sc_file_read (sc_file_context_t * fc, sc_array_t * data,
+sc_file_context_t  *sc_file_read (sc_file_context_t * fc,
+                                  sc_array_t * data,
                                   sc_file_section_t type,
-                                  const char *user_string);
+                                  sc_file_allocate_t alloc_callback,
+                                  void *user_data,
+                                  const char *user_string, int *errcode);
 
 int                 sc_file_close (sc_file_context_t * fc, int *errcode);
 
