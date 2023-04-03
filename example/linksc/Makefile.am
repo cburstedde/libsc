@@ -2,8 +2,8 @@
 ## Makefile source file for sc link example
 
 bin_PROGRAMS =
-AM_CPPFLAGS = -I @LSC_SC_INC@
-ACLOCAL_AMFLAGS = -I config
+AM_CPPFLAGS = -I@LSC_SC_INC@
+ACLOCAL_AMFLAGS = -Iconfig
 
 ## If make built it, and it is commonly something that one would want to rebuild
 ## (for instance, a .o file), then mostlyclean should delete it.
@@ -20,3 +20,4 @@ maintainer-clean-local:
 
 bin_PROGRAMS += linksc
 linksc_SOURCES = linksc.c
+linksc_LDADD = -L@LSC_SC_LIB@ -lsc
