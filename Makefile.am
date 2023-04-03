@@ -51,8 +51,9 @@ EXTRA_DIST += \
         bootstrap scindent build-aux/git-version-gen build-aux/git2cl doc \
         cmake CMakeLists.txt src/CMakeLists.txt \
         example/CMakeLists.txt test/CMakeLists.txt CMakePresets.json \
-        example/linksc/README example/linksc/linksc.c \
-        example/linksc/configure.ac example/linksc/Makefile.am
+        example/linksc/README example/linksc/bootstrap \
+        example/linksc/configure.ac example/linksc/Makefile.am \
+        example/linksc/linksc.c
 
 DISTCLEANFILES += \
         _configs.sed config/sc_config.h config/sc_autotools.pc
