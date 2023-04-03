@@ -31,11 +31,13 @@ AC_ARG_ENABLE(
   [
 if test "x$enableval" = xyes ; then
   LSC_ENABLE_MPI=yes
+  export CC=mpicc
 elif test "x$enableval" != xno ; then
   AC_MSG_ERROR([Please use --enable-mpi, --disable-mpi without argument])
 fi
   ]
 )
+AC_SUBST([LSC_ENABLE_MPI])
 
 dnl Specify directory of make installed libsc
 dnl This flag is required with a valid shared library installation
@@ -59,6 +61,8 @@ fi
 AC_MSG_ERROR([This demo requires --with-sc=<path to make installed sc>])
   ]
 )
+AC_SUBST([LSC_SC_LIB])
+AC_SUBST([LSC_SC_INC])
 
 dnl Check for programs
 AC_PROG_CC
@@ -67,6 +71,7 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
+AM_PROG_CC_C_O
 
 dnl Check for headers
 AC_HEADER_STDC
