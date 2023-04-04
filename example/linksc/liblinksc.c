@@ -22,23 +22,23 @@
 */
 
 #include <liblinksc.h>
+#include <sc_io.h>
 
-int
-main (int argc, char **argv)
+void
+linksc_hello (void)
 {
-  int                 mpiret;
+  static const char  *hello = "Hello, world!";
+  sc_array_t         *in, *out;
 
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
+  SC_GLOBAL_PRODUCTIONF ("%s\n", hello);
 
-  sc_init (sc_MPI_COMM_WORLD, 0, 0, NULL, SC_LP_DEFAULT);
+  in = sc_array_new_data ((void *) hello, 1, strlen (hello) + 1);
+  out = sc_array_new (1);
 
-  linksc_hello ();
+  sc_io_encode (in, out);
 
-  sc_finalize ();
+  SC_GLOBAL_PRODUCTIONF ("Encoded: %s", (const char *) out->array);
 
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-
-  return EXIT_SUCCESS;
+  sc_array_destroy (in);
+  sc_array_destroy (out);
 }

@@ -21,24 +21,16 @@
   02110-1301, USA.
 */
 
-#include <liblinksc.h>
+#ifndef LIBLINKSC_H
+#define LIBLINKSC_H
 
-int
-main (int argc, char **argv)
-{
-  int                 mpiret;
+#include <linksc_config.h>
+#include <sc.h>
 
-  mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
+SC_EXTERN_C_BEGIN;
 
-  sc_init (sc_MPI_COMM_WORLD, 0, 0, NULL, SC_LP_DEFAULT);
+void                linksc_hello (void);
 
-  linksc_hello ();
+SC_EXTERN_C_END;
 
-  sc_finalize ();
-
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-
-  return EXIT_SUCCESS;
-}
+#endif /* !LIBLINKSC_H */
