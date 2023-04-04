@@ -20,9 +20,7 @@ linksc_SOURCES = linksc.c
 linksc_LDADD = liblinksc.la -L@LSC_SC_LIB@ -lsc
 
 ## We add -rpath to all executables to find the installed libsc code.
-## For package maintainers this may not be the proper thing to do.
-## To disable -rpath, specify --disable-rpath on the command line.
-## AM_LDFLAGS += -rpath @LSC_SC_LIB@
+AM_LDFLAGS += -rpath @LSC_SC_LIB@
 
 ## LDADD shall contain no linker flags except -L, -l and -dl*open.
 ## Use LDFLAGS for other linker flags (such as -rpath).
