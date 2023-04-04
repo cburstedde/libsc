@@ -99,6 +99,7 @@ $1_$3_SUBDIR=
 $1_$3_MK_USE=
 $1_$3_DOXTAG=
 $1_$3_LDADD=
+$1_$3_EDEPS=
 $1_$3_RPATH=
 $1_DISTCLEAN="$$1_DISTCLEAN $1_$3_SOURCE.log"
 
@@ -141,6 +142,7 @@ else
   $1_$3_CPPFLAGS="-I$$1_$3_SOURCE/config -I$$1_$3_SOURCE/src \
                   -I\$(top_srcdir)/$$1_$3_SOURCE/src"
   $1_$3_LDADD="$$1_$3_SOURCE/src/lib$4.la"
+  $1_$3_EDEPS="$$1_$3_SOURCE/src/lib$4.la"
 fi
 
 dnl Make sure we find the m4 macros provided by me
@@ -157,5 +159,6 @@ AM_CONDITIONAL([$1_$3_MK_USE], [test "x$$1_$3_MK_USE" != x])
 AC_SUBST([$1_$3_MK_INCLUDE])
 AC_SUBST([$1_$3_CPPFLAGS])
 AC_SUBST([$1_$3_LDADD])
+AC_SUBST([$1_$3_EDEPS])
 AC_SUBST([$1_$3_RPATH])
 ])
