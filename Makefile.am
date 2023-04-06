@@ -53,6 +53,7 @@ EXTRA_DIST += \
         example/CMakeLists.txt test/CMakeLists.txt CMakePresets.json \
         example/linksc/README example/linksc/bootstrap \
         example/linksc/configure.ac example/linksc/Makefile.am \
+        example/linksc/liblinksc.h example/linksc/liblinksc.c \
         example/linksc/linksc.c
 
 DISTCLEANFILES += \
