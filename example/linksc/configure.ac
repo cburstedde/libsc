@@ -70,8 +70,8 @@ AC_ARG_WITH(
                   [path to make installed sc library (shared build)])],
   [
 LSC_SC_LIB="$withval/lib"
-if test ! -e "$LSC_SC_LIB/libsc.so" ; then
-  AC_MSG_ERROR([This demo requires installed lib/libsc.so])
+if test ! -d "$LSC_SC_LIB" ; then
+  AC_MSG_ERROR([This demo requires an installed sc library])
 fi
 LSC_SC_INC="$withval/include"
 if test ! -e "$LSC_SC_INC/sc_config.h" ; then
