@@ -86,6 +86,8 @@ dnl However, if me is already make install'd in the system and should
 dnl be used from there, use --with-me=<path to me's install directory>.
 dnl In this case, PROG expects subdirectories etc, include, lib, and
 dnl share/aclocal, which are routinely created by me's make install.
+dnl As another alternative, all information about using ME may be put
+dnl in the environment LDFLAGS, CPPFLAGS, etc. for --with-me=external.
 dnl
 dnl SC_ME_AS_SUBPACKAGE(PREFIX, prefix, ME, me, mepackage)
 dnl Call from a package that is using this package ME as a subpackage.
@@ -103,9 +105,22 @@ $1_$3_EDEPS=
 $1_$3_RPATH=
 $1_DISTCLEAN="$$1_DISTCLEAN $1_$3_SOURCE.log"
 
-SC_ARG_WITH_PREFIX([$4], [path to installed package $4 (optional)], [$3], [$1])
+SC_ARG_WITH_PREFIX([$4],
+  [specifiy how to depend on package $4 (optional).
+   If the option value is literal no or the option is not present, use the
+   source subdirectory.  If the option value is the literal external, expect
+   all necessary environment variables to be set to compile and link against
+   $4 and to run the examples.  Otherwise, the option value must be a path
+   to the toplevel directory of a make installed $4.],
+  [$3], [$1])
 
-if test "x$$1_WITH_$3" != xno ; then
+if test "x$$1_WITH_$3" = xexternal ; then
+  AC_MSG_NOTICE([Relying on environment for package $4])
+
+  # Set pretty much no variables at all
+  $1_DIST_DENY=yes
+
+elif test "x$$1_WITH_$3" != xno ; then
   AC_MSG_NOTICE([Using make installed package $4])
 
   # Verify that we are using a me installation
@@ -120,6 +135,7 @@ if test "x$$1_WITH_$3" != xno ; then
   $1_$3_CPPFLAGS="\$($3_CPPFLAGS)"
   $1_$3_LDADD="-L$$1_$3_LIB -l$4"
   $1_$3_RPATH="-rpath $$1_$3_LIB"
+
 else
   AC_MSG_NOTICE([Building with source of package $4])
 
