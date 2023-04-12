@@ -1,0 +1,7 @@
+#! /bin/sh
+
+echo "--- This is the bootstrap script for the sc link example ---"
+echo "Current directory is $PWD"
+
+rm -rf autom4te.cache
+autoreconf -i

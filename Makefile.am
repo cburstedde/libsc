@@ -50,10 +50,15 @@ dist_scini_DATA =
 EXTRA_DIST += \
         bootstrap scindent build-aux/git-version-gen build-aux/git2cl doc \
         cmake CMakeLists.txt src/CMakeLists.txt \
-        example/CMakeLists.txt test/CMakeLists.txt CMakePresets.json
+        example/CMakeLists.txt test/CMakeLists.txt CMakePresets.json \
+        example/linksc/README example/linksc/bootstrap \
+        example/linksc/configure.ac example/linksc/Makefile.am \
+        example/linksc/liblinksc.h example/linksc/liblinksc.c \
+        example/linksc/linksc.c
 
 DISTCLEANFILES += \
         _configs.sed config/sc_config.h config/sc_autotools.pc
+
 .PHONY: ChangeLog
 
 # setup test environment
