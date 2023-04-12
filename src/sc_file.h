@@ -216,6 +216,34 @@ sc_file_context_t  *sc_file_open_read (sc_MPI_Comm mpicomm,
                                        const char *filename,
                                        char *user_string, int *errcode);
 
+/** Write a fixed-size block file section.
+ *
+ * This function writes a data block of fixed size to the file. The data
+ * and its section header is written on the MPI rank 0.
+ * The number of block bytes must be less or equal \ref SC_FILE_MAX_BLOCK_SIZE.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
+ *
+ * \param [in,out]  fc          File context previously opened by \ref
+ *                              sc_file_open_write.
+ * \param [in]      block_size  The size of the data block in bytes.
+ * \param [in]      block_data  A sc_array woth one element and element size
+ *                              equals to \b block_size.
+ * \param [in]      user_string Maximal \ref
+ *                              SC_FILE_SECTION_USER_STRING_BYTES + 1 bytes. The
+ *                              user string is written without the
+ *                              nul-termination by MPI rank 0.
+ * \param [out]     errcode     An errcode that can be interpreted by \ref
+ *                              sc_file_error_string.
+ * \return                      Return a pointer to input context or NULL in case
+ *                              of errors that does not abort the program.
+ *                              In case of error the file is tried to close
+ *                              and \b fc is freed.
+ *                              The file context can be used to continue writing
+ *                              and eventually closing the file.
+ */
 sc_file_context_t  *sc_file_write_block (sc_file_context_t * fc,
                                          size_t block_size,
                                          sc_array_t * block_data,
@@ -276,6 +304,8 @@ sc_file_context_t  *sc_file_read_fixed (sc_file_context_t * fc,
  *                          of errors that does not abort the program.
  *                          In case of error the file is tried to close
  *                          and \b fc is freed.
+ *                          The file context can be used to continue writing
+ *                          and eventually closing the file.
  */
 sc_file_context_t  *sc_file_write_variable (sc_file_context_t * fc,
                                             size_t element_count,
