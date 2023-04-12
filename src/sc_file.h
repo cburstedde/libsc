@@ -206,7 +206,7 @@ sc_file_context_t  *sc_file_open_write (sc_MPI_Comm mpicomm,
  * \param [out]   user_string At least \ref SC_FILE_USER_STRING_BYTES + 1 bytes.
  *                            The user string is read on rank 0 and internally
  *                            broadcasted to all ranks.
- * \param [out] errcode       An errcode that can be interpreted by \ref
+ * \param [out]   errcode     An errcode that can be interpreted by \ref
  *                            sc_file_error_string.
  * \return                    Newly allocated context to continue reading
  *                            and eventually closing the file. NULL in case
@@ -249,7 +249,12 @@ sc_file_context_t  *sc_file_read_fixed (sc_file_context_t * fc,
 /** Write a variable size array file section.
  *
  * This function writes an array of variable-sized elements in parallel
- * to the opened file.
+ * to the opened file. In addition, this function prepends a file section
+ * header containing metadata. The file section header is written on MPI rank 0.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
  *
  * \param [in,out]  fc      File context previously opened by \ref
  *                          sc_file_open_write.
@@ -262,9 +267,9 @@ sc_file_context_t  *sc_file_read_fixed (sc_file_context_t * fc,
  *                          itself a sc_array, has the element size 1 and
  *                          the element count equals the i-th element of
  *                          \b sizes.
- * \param [out] user_string At least \ref SC_FILE_SECTION_USER_STRING_BYTES + 1
- *                          bytes. The user string is read on rank 0 and
- *                          internally broadcasted to all ranks.
+ * \param [in] user_string  Maximal \ref SC_FILE_SECTION_USER_STRING_BYTES + 1
+ *                          bytes. The user string is written without the
+ *                          nul-termination by MPI rank 0.
  * \param [out]     errcode An errcode that can be interpreted by \ref
  *                          sc_file_error_string.
  * \return                  Return a pointer to input context or NULL in case
