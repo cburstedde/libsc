@@ -66,7 +66,6 @@ SC_EXTERN_C_BEGIN;
 #define SC_FILE_SECTION_USER_STRING_BYTES 29 /**< number of section user string bytes */
 #define SC_FILE_FIELD_HEADER_BYTES (2 + SC_FILE_ARRAY_METADATA_BYTES + SC_FILE_USER_STRING_BYTES)
                                      /**< number of bytes of one field header */
-#define SC_FILE_MAX_GLOBAL_QUAD 9999999999999999 /**< maximal number of global quadrants */
 #define SC_FILE_MAX_BLOCK_SIZE 9999999999999 /**< maximal number of block bytes */
 #define SC_FILE_MAX_FIELD_ENTRY_SIZE 9999999999999 /**< maximal number of bytes per field entry */
 
