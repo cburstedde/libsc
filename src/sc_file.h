@@ -355,7 +355,7 @@ sc_file_context_t  *sc_file_read (sc_file_context_t * fc,
  * \param [out] errcode   An errcode that can be interpreted by \ref
  *                        sc_file_error_string.
  * \return                0 for a successful call and -1 in case of error.
- *                        See also \b errcode for further informations on the
+ *                        See also \b errcode for further information on the
  *                        error.
  *
  * \note                  It is important to notice that this function
@@ -370,6 +370,25 @@ int                 sc_file_free (sc_array_t * data, int *errcode);
 
 /* sc_file_error_string */
 
+/** Close a file opened for parallel write/read and the free the file context.
+ *
+ * Every call of \ref sc_file_open_read or \ref sc_file_open_write must be
+ * matched by a corresponding call of \ref sc_file_close on the created file
+ * context.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
+ *
+ * \param [in,out]  fc        File context previously created by
+ *                            \ref sc_file_open_read or \ref sc_file_open_write.
+ *                            This file context is freed after a call of this
+ *                            function.
+ * \param [out]     errcode   An errcode that can be interpreted by \ref
+ *                            sc_file_error_string.
+ * \return                    0 for a successful call and -1 in case a of an
+ *                            error. See also \b errcode argument.
+ */
 int                 sc_file_close (sc_file_context_t * fc, int *errcode);
 
 SC_EXTERN_C_END;
