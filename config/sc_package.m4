@@ -110,8 +110,8 @@ SC_ARG_WITH_PREFIX([$4],
    If the option value is literal no or the option is not present, use the
    source subdirectory.  If the option value is the literal external, expect
    all necessary environment variables to be set to compile and link against
-   $4 and to run the examples.  Otherwise, the option value must be a path
-   to the toplevel directory of a make installed $4.],
+   $4 and to run the examples.  Otherwise, the option value must be an
+   absolute path to the toplevel directory of a make installed $4.],
   [$3], [$1])
 
 if test "x$$1_WITH_$3" = xexternal ; then
@@ -132,7 +132,7 @@ elif test "x$$1_WITH_$3" != xno ; then
   $1_$3_AMFLAGS="-I $$1_$3_CFG"
   $1_$3_MK_USE=yes
   $1_$3_MK_INCLUDE="include $$1_$3_ETC/Makefile.$4.mk"
-  $1_$3_CPPFLAGS="\$($3_CPPFLAGS)"
+  $1_$3_CPPFLAGS="-I$$1_$3_INC"
   $1_$3_LDADD="-L$$1_$3_LIB -l$4"
   $1_$3_RPATH="-rpath $$1_$3_LIB"
 
