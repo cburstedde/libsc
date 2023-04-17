@@ -281,7 +281,7 @@ if (mpiret == MPI_ERR_ARG ||
     mpiret == MPI_ERR_UNKNOWN ||
     mpiret == MPI_ERR_OTHER ||
     mpiret == MPI_ERR_NO_MEM) {
-  mpiret = MPI_SUCESS;
+  mpiret = MPI_SUCCESS;
 }
 MPI_Finalize ();
 ]])],
