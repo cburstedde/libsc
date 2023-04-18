@@ -17,6 +17,8 @@ if(zlib)
 endif()
 find_package(Threads)
 
+include(${CMAKE_CURRENT_LIST_DIR}/jansson.cmake)
+
 # --- set global compile environment
 
 # Build all targets with -fPIC so that libsc itself can be linked as a
