@@ -26,6 +26,11 @@
 #include <libb64.h>
 #ifdef SC_HAVE_ZLIB
 #include <zlib.h>
+#else
+/* when SC_HAVE_ZLIB is undefined, we need to define Z_BEST_COMPRESSION (zlib.h compatibility) */
+#ifndef Z_BEST_COMPRESSION
+#define Z_BEST_COMPRESSION 9
+#endif
 #endif
 
 #ifndef SC_ENABLE_MPIIO
