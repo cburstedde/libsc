@@ -149,7 +149,7 @@ if test "x$HAVE_PKG_MPI" = xyes ; then
   elif test "x$$1_MPIRUN" = xmpiexec ; then
     $1_MPI_TEST_FLAGS="-n 2"
   else
-    AC_MSG_ERROR([--enable-mpi given but neither mpirun nor mpiexec found])
+    $1_MPIRUN=
   fi
 fi
 dnl We are not using precious variables for simplicity
