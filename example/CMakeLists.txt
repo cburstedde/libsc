@@ -60,6 +60,9 @@ test_sc_example(logging logging/logging.c)
 test_sc_example(test_shmem testing/sc_test_shmem.c)
 
 if(SC_HAVE_GETOPT_H)
+  configure_file(options/sc_options_example.ini sc_options_example.ini COPYONLY)
+  configure_file(options/sc_options_example.json sc_options_example.json COPYONLY)
+  configure_file(options/sc_options_preload.ini sc_options_preload.ini COPYONLY)
   test_sc_example(options options/options.c)
 endif()
 
