@@ -153,6 +153,9 @@
 /* Define to 1 if you have a working zlib installation. */
 #cmakedefine SC_HAVE_ZLIB 1
 
+/* Use builtin getopt */
+#cmakedefine SC_PROVIDE_GETOPT 1
+
 /* Linker flags */
 #ifndef SC_LDFLAGS
 #define SC_LDFLAGS @SC_LDFLAGS@

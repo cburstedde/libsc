@@ -12,9 +12,7 @@ if(SC_HAVE_UNISTD_H)
   list(APPEND sc_tests sort)
 endif()
 
-if(SC_HAVE_GETOPT_H)
-  list(APPEND sc_tests builtin io_sink)
-endif()
+list(APPEND sc_tests builtin io_sink)
 
 # ---
 set(MPIEXEC_MAX_NUMPROCS 2)

@@ -140,6 +140,10 @@ if(SC_HAVE_UNISTD_H)
   check_include_file(getopt.h SC_HAVE_GETOPT_H)
 endif()
 
+if(NOT SC_HAVE_GETOPT_H)
+  set(SC_PROVIDE_GETOPT True)
+endif()
+
 check_include_file(sys/ioctl.h SC_HAVE_SYS_IOCTL_H)
 check_include_file(sys/select.h SC_HAVE_SYS_SELECT_H)
 check_include_file(sys/stat.h SC_HAVE_SYS_STAT_H)
