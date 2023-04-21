@@ -57,7 +57,11 @@ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 FILES_MATCHING PATTERN "*.h"
 )
 
-install(TARGETS sc EXPORT ${PROJECT_NAME}-targets)
+install(TARGETS sc
+  EXPORT ${PROJECT_NAME}-targets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
 
 add_subdirectory(src)
 add_subdirectory(example)
