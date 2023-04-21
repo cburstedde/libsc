@@ -10,4 +10,4 @@ set(pc_filename libsc-${git_version}.pc)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/pkgconf.pc.in ${pc_filename} @ONLY)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pc_filename}
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+        DESTINATION lib/pkgconfig)
