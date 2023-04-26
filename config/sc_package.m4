@@ -160,7 +160,7 @@ else
   $1_$3_CPPFLAGS="-I$$1_$3_SOURCE/config -I$$1_$3_SOURCE/src \
                   -I\$(top_srcdir)/$$1_$3_SOURCE/src"
   $1_$3_LDADD="$$1_$3_SOURCE/src/lib$4.la"
-  $1_$3_LIDADD="$$1_$3_SOURCE/src/lib$4.la"
+  $1_$3_LIBADD="$$1_$3_SOURCE/src/lib$4.la"
   $1_$3_EDEPS="$$1_$3_SOURCE/src/lib$4.la"
 fi
 
