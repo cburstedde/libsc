@@ -9,13 +9,29 @@ include(CheckCSourceCompiles)
 if(mpi)
   find_package(MPI COMPONENTS C REQUIRED)
 endif()
+
 if(openmp)
   find_package(OpenMP COMPONENTS C REQUIRED)
 endif()
+
 if(zlib)
+  message(STATUS "Using builtin zlib")
   include(${CMAKE_CURRENT_LIST_DIR}/zlib.cmake)
+  set(SC_HAVE_ZLIB true)
+else()
+  find_package(ZLIB)
+  if(ZLIB_FOUND)
+    message(STATUS "Using system zlib : ${ZLIB_VERSION_STRING}")
+    set(SC_HAVE_ZLIB true)
+  else()
+    message(STATUS "Zlib disabled (not found). Consider using cmake \"-Dzlib=ON\" to turn on builtin zlib.")
+    set(SC_HAVE_ZLIB false)
+  endif()
 endif()
+
 find_package(Threads)
+
+include(${CMAKE_CURRENT_LIST_DIR}/jansson.cmake)
 
 # --- set global compile environment
 
@@ -136,6 +152,10 @@ check_include_file(libgen.h SC_HAVE_LIBGEN_H)
 check_include_file(unistd.h SC_HAVE_UNISTD_H)
 if(SC_HAVE_UNISTD_H)
   check_include_file(getopt.h SC_HAVE_GETOPT_H)
+endif()
+
+if(NOT SC_HAVE_GETOPT_H)
+  set(SC_PROVIDE_GETOPT True)
 endif()
 
 check_include_file(sys/ioctl.h SC_HAVE_SYS_IOCTL_H)

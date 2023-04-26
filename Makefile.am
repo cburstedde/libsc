@@ -119,9 +119,11 @@ dist-hook:
 install-data-hook:
 	cd $(DESTDIR)$(pkgconfigdir) && \
               mv -f sc_autotools.pc "libsc-$(VERSION).pc"
+	cd $(DESTDIR)$(pkgconfigdir) && ln -sf "libsc-$(VERSION).pc" libsc.pc
 
 uninstall-hook:
 	cd $(DESTDIR)$(pkgconfigdir) && rm -f "libsc-$(VERSION).pc"
+	cd $(DESTDIR)$(pkgconfigdir) && rm -f "libsc.pc"
 
 ## From the GNU automake documentation "What gets Cleaned"
 ## -------------------------------------------------------

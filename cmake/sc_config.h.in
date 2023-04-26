@@ -78,6 +78,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #cmakedefine SC_HAVE_INTTYPES_H 1
 
+/* Define to 1 if jansson library is available. */
+#cmakedefine SC_HAVE_JSON 1
+
 /* Define to 1 if you have the <linux/version.h> header file. */
 #cmakedefine SC_HAVE_LINUX_VERSION_H 1
 
@@ -149,6 +152,9 @@
 
 /* Define to 1 if you have a working zlib installation. */
 #cmakedefine SC_HAVE_ZLIB 1
+
+/* Use builtin getopt */
+#cmakedefine SC_PROVIDE_GETOPT 1
 
 /* Linker flags */
 #ifndef SC_LDFLAGS
