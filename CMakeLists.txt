@@ -10,6 +10,13 @@ VERSION ${PROJECT_VERSION})
 
 enable_testing()
 
+include(cmake/init_build_type.cmake)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(debug_build ON)
+else()
+  set(debug_build OFF)
+endif()
+
 include(cmake/options.cmake)
 message(STATUS "libsc ${PROJECT_VERSION} "
                "install prefix: ${CMAKE_INSTALL_PREFIX}")
