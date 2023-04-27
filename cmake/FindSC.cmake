@@ -45,8 +45,9 @@ if(SC_CONFIG_H)
   set(CMAKE_REQUIRED_LIBRARIES)
 
   # libsc and current project must both be compiled with/without MPI
-  check_symbol_exists(SC_ENABLE_MPI ${SC_CONFIG_H} SC_has_mpi)
+  check_symbol_exists(SC_ENABLE_MPI   ${SC_CONFIG_H} SC_has_mpi)
   check_symbol_exists(SC_ENABLE_MPIIO ${SC_CONFIG_H} SC_has_mpi_io)
+  check_symbol_exists(SC_HAVE_JSON    ${SC_CONFIG_H} SC_have_json)
   check_symbol_exists(SC_ENABLE_DEBUG ${SC_CONFIG_H} SC_debug_build)
 
   if(MPI_C_FOUND)
@@ -82,4 +83,4 @@ endif()
 
 endif(SC_FOUND)
 
-mark_as_advanced(SC_INCLUDE_DIR SC_LIBRARY SC_has_mpi SC_has_mpi_io SC_debug_build)
+mark_as_advanced(SC_INCLUDE_DIR SC_LIBRARY SC_has_mpi SC_has_mpi_io SC_debug_build SC_have_json)

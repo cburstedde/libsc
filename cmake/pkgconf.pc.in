@@ -7,7 +7,8 @@ includedir=${prefix}/include
 libsc_CC=@SC_CC@
 libsc_CFLAGS=@SC_CPPFLAGS@ @SC_CFLAGS@
 
-enable_mpi=@mpi_pc@
+have_mpi=@mpi_pc@
+have_json=@sc_have_json_pc@
 build_zlib=@zlib_pc@
 debug_build=@debug_build_pc@
 
