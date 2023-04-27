@@ -10,7 +10,7 @@ include(cmake/utils.cmake)
 convert_yn(mpi mpi_pc)
 convert_yn(openmp openmp_pc)
 convert_yn(zlib zlib_pc)
-convert_yn(debug_build debug_build_pc)
+convert_yn(SC_ENABLE_DEBUG debug_build_pc)
 
 set(pc_filename libsc-${git_version}.pc)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/pkgconf.pc.in ${pc_filename} @ONLY)
