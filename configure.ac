@@ -37,6 +37,7 @@ See sc.h for possible log priorities in --enable-logging=PRIO])
                esac])
 SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
+AC_SUBST(SC_ENABLE_DEBUG)
 SC_ARG_DISABLE([realloc], [replace array/dmatrix resize with malloc/copy/free],
                [USE_REALLOC])
 SC_ARG_DISABLE([counters], [disable non-thread-safe internal debug counters],

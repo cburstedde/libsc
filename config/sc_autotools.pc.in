@@ -7,6 +7,10 @@ includedir=@includedir@
 libsc_CC=@CC@
 libsc_CFLAGS=@CPPFLAGS@ @CFLAGS@
 
+enable_mpi=@HAVE_PKG_MPI@
+build_zlib=no
+debug_build=@SC_ENABLE_DEBUG@
+
 Name: libsc
 Description: The SC library supports parallel scientific applications.
 Version: @VERSION@

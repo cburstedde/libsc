@@ -7,6 +7,10 @@ includedir=${prefix}/include
 libsc_CC=@SC_CC@
 libsc_CFLAGS=@SC_CPPFLAGS@ @SC_CFLAGS@
 
+enable_mpi=@mpi_pc@
+build_zlib=@zlib_pc@
+debug_build=@debug_build_pc@
+
 Name: libsc
 Description: @CMAKE_PROJECT_DESCRIPTION@
 Version: @git_version@
