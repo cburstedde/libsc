@@ -180,7 +180,6 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_STATUSES_IGNORE     MPI_STATUSES_IGNORE
 
 #define sc_MPI_REQUEST_NULL        MPI_REQUEST_NULL
-#define sc_MPI_INFO_NULL           MPI_INFO_NULL
 
 #define sc_MPI_DATATYPE_NULL       MPI_DATATYPE_NULL
 #define sc_MPI_CHAR                MPI_CHAR
