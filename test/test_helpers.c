@@ -115,7 +115,7 @@ single_inplace_test (sc_array_t *src, int itest)
     }
     sc_array_reset (&inp);
 
-    if (!sc_io_have_zlib () || itest != -1) {
+    if (!sc_have_zlib () || itest != -1) {
       /* for the examples we call, test -1 has a large enough data
          size that the encoded data is shorter than the plaintext. */
 

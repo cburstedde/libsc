@@ -390,16 +390,6 @@ sc_io_source_read_mirror (sc_io_source_t * source, void *data,
   return retval;
 }
 
-int
-sc_io_have_zlib (void)
-{
-#ifndef SC_HAVE_ZLIB
-  return 0;
-#else
-  return 1;
-#endif
-}
-
 /* byte count for one line of data must be a multiple of 3 */
 #define SC_IO_DBC 54
 #if SC_IO_DBC % 3 != 0
@@ -1072,6 +1062,8 @@ sc_vtk_write_binary (FILE * vtkfile, char *numeric_data, size_t byte_length)
   return 0;
 }
 
+#define SC_IO_CHECK_ZLIB(r) SC_CHECK_ABORT ((r) == Z_OK, "zlib error")
+
 int
 sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
                          size_t byte_length)
@@ -1128,7 +1120,7 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
     retval = compress2 ((Bytef *) comp_data, &comp_length,
                         (const Bytef *) (numeric_data + theblock * blocksize),
                         (uLong) blocksize, Z_BEST_COMPRESSION);
-    SC_CHECK_ZLIB (retval);
+    SC_IO_CHECK_ZLIB (retval);
     compression_header[3 + theblock] = comp_length;
     base_length = base64_encode_block (comp_data, comp_length,
                                        base_data, &encode_state);
@@ -1143,7 +1135,7 @@ sc_vtk_write_compressed (FILE * vtkfile, char *numeric_data,
     retval = compress2 ((Bytef *) comp_data, &comp_length,
                         (const Bytef *) (numeric_data + theblock * blocksize),
                         (uLong) lastsize, Z_BEST_COMPRESSION);
-    SC_CHECK_ZLIB (retval);
+    SC_IO_CHECK_ZLIB (retval);
     compression_header[3 + theblock] = comp_length;
     base_length = base64_encode_block (comp_data, comp_length,
                                        base_data, &encode_state);

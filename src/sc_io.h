@@ -282,12 +282,6 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
                                               size_t bytes_avail,
                                               size_t *bytes_out);
 
-/** Return a boolean indicating whether zlib has been configured.
- * \return          True if zlib has been found on running configure,
- *                  or respectively on calling cmake.
- */
-int                 sc_io_have_zlib (void);
-
 /** Encode a block of arbitrary data with the default sc_io format.
  * The corresponding decoder function is \ref sc_io_decode.
  * This function cannot crash unless out of memory.
@@ -325,7 +319,7 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  * If zlib is detected on configuration, we compress with given level.
  * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
  * The status of zlib detection can be queried at compile time using
- * \#ifdef SC_HAVE_ZLIB or at run time using \ref sc_io_have_zlib.
+ * \#ifdef SC_HAVE_ZLIB or at run time using \ref sc_have_zlib.
  * Both approaches are readable by a standard zlib uncompress call.
  *
  * Secondly, we process the input data size as an 8-byte big-endian number,
