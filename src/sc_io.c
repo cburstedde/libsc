@@ -391,15 +391,16 @@ sc_io_source_read_mirror (sc_io_source_t * source, void *data,
 }
 
 /* byte count for one line of data must be a multiple of 3 */
-#define SC_IO_DBC 54
+#define SC_IO_DBC 57
 #if SC_IO_DBC % 3 != 0
 #error "SC_IO_DBC must be a multiple of 3"
 #endif
 
 /* byte count for one line of base64 encoded data and newline */
 #define SC_IO_LBC (SC_IO_DBC / 3 * 4)
-#define SC_IO_LBD (SC_IO_LBC + 1)
-#define SC_IO_LBE (SC_IO_LBC + 2)
+#define SC_IO_LBD (SC_IO_LBC + 1)   /* after first line break byte */
+#define SC_IO_LBE (SC_IO_LBD + 1)   /* after second line break byte */
+#define SC_IO_LBF (SC_IO_LBE + 1)   /* after line break and NUL byte */
 
 /* see RFC 1950 and RFC 1951 for the uncompressed zlib format */
 #ifndef SC_HAVE_ZLIB
@@ -645,12 +646,12 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
 void
 sc_io_encode (sc_array_t *data, sc_array_t *out)
 {
-  sc_io_encode_zlib (data, out, Z_BEST_COMPRESSION);
+  sc_io_encode_zlib (data, out, Z_BEST_COMPRESSION, '=');
 }
 
 void
 sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
-                   int zlib_compression_level)
+                   int zlib_compression_level, int line_break_character)
 {
   int                 i;
   size_t              input_size;
@@ -723,7 +724,7 @@ sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
   SC_ASSERT (out->elem_size == 1);
   input_size = (size_t) (SC_IO_ENCODE_INFO_LEN + input_compress_bound);
   base64_lines = (input_size + SC_IO_DBC - 1) / SC_IO_DBC;
-  encoded_size = 4 * ((input_size + 2) / 3) + base64_lines + 1;
+  encoded_size = 4 * ((input_size + 2) / 3) + 2 * base64_lines + 1;
   sc_array_resize (out, encoded_size);
 
   /* run base64 encoder */
@@ -746,13 +747,14 @@ sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
       /* not the final line */
       SC_ASSERT (irem > SC_IO_DBC);
       SC_ASSERT (lout == SC_IO_LBC);
-      SC_ASSERT (ocnt + SC_IO_LBE <= encoded_size);
+      SC_ASSERT (ocnt + SC_IO_LBF <= encoded_size);
       memcpy (opos, base_out, SC_IO_LBC);
-      opos[SC_IO_LBC] = '\n';
-      opos[SC_IO_LBD] = '\0';
-      opos += SC_IO_LBD;
+      opos[SC_IO_LBC] = (char) line_break_character;
+      opos[SC_IO_LBD] = '\n';
+      opos[SC_IO_LBE] = '\0';
+      opos += SC_IO_LBE;
 #ifdef SC_ENABLE_DEBUG
-      ocnt += SC_IO_LBD;
+      ocnt += SC_IO_LBE;
 #endif
       ipos += SC_IO_DBC;
       irem -= SC_IO_DBC;
@@ -775,12 +777,13 @@ sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
 #ifdef SC_ENABLE_DEBUG
       ocnt += lout;
 #endif
-      SC_ASSERT (ocnt + 2 <= encoded_size);
-      opos[0] = '\n';
-      opos[1] = '\0';
+      SC_ASSERT (ocnt + 3 <= encoded_size);
+      opos[0] = '=';
+      opos[1] = '\n';
+      opos[2] = '\0';
       opos = NULL;
 #ifdef SC_ENABLE_DEBUG
-      ocnt += 2;
+      ocnt += 3;
 #endif
       SC_ASSERT (ocnt == encoded_size);
       ipos = NULL;
@@ -887,11 +890,11 @@ sc_io_decode (sc_array_t *data, sc_array_t *out,
 
   /* decode line by line from base 64 */
   base64_init_decodestate (&bstate);
-  base64_lines = (encoded_size - 1 + SC_IO_LBC) / SC_IO_LBD;
+  base64_lines = (encoded_size - 1 + SC_IO_LBD) / SC_IO_LBE;
   compressed_size = base64_lines * SC_IO_DBC;
   ipos = data->array;
   SC_ASSERT (encoded_size >= base64_lines + 1);
-  irem = encoded_size - 1 - base64_lines;
+  irem = encoded_size - 1 - 2 * base64_lines;
   sc_array_init_count (&compressed, 1, compressed_size);
   opos = compressed.array;
   ocnt = 0;
@@ -905,10 +908,12 @@ sc_io_decode (sc_array_t *data, sc_array_t *out,
       SC_LERROR ("base 64 decode short\n");
       goto decode_error;
     }
+#if 0
     if (ipos[lein] != '\n') {
       SC_LERROR ("base 64 missing newline\n");
       goto decode_error;
     }
+#endif
     if (zlin < base64_lines - 1) {
       SC_ASSERT (lein == SC_IO_LBC);
       if (lout != SC_IO_DBC) {
@@ -916,7 +921,7 @@ sc_io_decode (sc_array_t *data, sc_array_t *out,
         goto decode_error;
       }
       memcpy (opos, base_out, SC_IO_DBC);
-      ipos += SC_IO_LBD;
+      ipos += SC_IO_LBE;
       SC_ASSERT (irem >= SC_IO_LBC);
       irem -= SC_IO_LBC;
       opos += SC_IO_DBC;
@@ -926,7 +931,7 @@ sc_io_decode (sc_array_t *data, sc_array_t *out,
       SC_ASSERT (lein <= SC_IO_LBC);
       SC_ASSERT (lout <= SC_IO_DBC);
       memcpy (opos, base_out, lout);
-      ipos += lein + 1;
+      ipos += lein + 2;
       SC_ASSERT (irem >= lein);
       irem -= lein;
       opos += lout;

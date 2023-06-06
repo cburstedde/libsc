@@ -314,19 +314,20 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  * This is a two-stage process: zlib compress and then encode to base 64.
  * The output is a NUL-terminated string of printable characters.
  *
- * We first compress the data into the zlib format (RFC 1950).
+ * We first compress the data into the zlib deflate format (RFC 1951).
  * The compressor must use no preset dictionary (this is the default).
- * If zlib is detected on configuration, we compress with given level.
+ * If zlib is detected on configuration, we compress with the given level.
  * If zlib is not detected, we write data equivalent to Z_NO_COMPRESSION.
  * The status of zlib detection can be queried at compile time using
  * \#ifdef SC_HAVE_ZLIB or at run time using \ref sc_have_zlib.
- * Both approaches are readable by a standard zlib uncompress call.
+ * Both types of result are readable by a standard zlib uncompress call.
  *
  * Secondly, we process the input data size as an 8-byte big-endian number,
  * then the letter 'z', and then the zlib compressed data, concatenated,
- * with a base 64 encoder.  We break lines after 72 code characters.
- * The line breaks are considered part of the output data format.
- * The last line is terminated with a line break and then a NUL.
+ * with a base 64 encoder.  We break lines after 76 code characters.
+ * Each line break consists of two configurable but arbitrary bytes.
+ * The line breaks are considered part of the output data specification.
+ * The last line is terminated with the same line break and then a NUL.
  *
  * This routine can work in place or write to an output array.
  * The corresponding decoder function is \ref sc_io_decode.
@@ -347,9 +348,13 @@ void                sc_io_encode (sc_array_t *data, sc_array_t *out);
  * \param [in] zlib_compression_level     Compression level between 0
  *                          (no compression) and 9 (best compression).
  *                          The value -1 indicates some default level.
+ * \param [in] line_break_character       This character is arbitrary
+ *                          and specifies the first of two line break
+ *                          bytes.  The second byte is always '\n'.
  */
 void                sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
-                                       int zlib_compression_level);
+                                       int zlib_compression_level,
+                                       int line_break_character);
 
 /** Decode length and format of original input from encoded data.
  * We expect at least 12 bytes of the format produced by \ref sc_io_encode.
@@ -378,8 +383,9 @@ int                 sc_io_decode_info (sc_array_t *data,
                                        char *format_char, void *re);
 
 /** Decode a block of base 64 encoded compressed data.
- * The base 64 data must contain a line break after every 72 code
- * characters and a final NUL character right after the last line.
+ * The base 64 data must contain two arbitrary bytes after every 76 code
+ * characters and also at the end of the last line if it is short,
+ * and then a final NUL character.
  * This function does not require zlib but benefits for speed.
  *
  * This is a two-stage process: we decode the input from base 64 first.
