@@ -199,6 +199,8 @@ scdat_context_t    *scdat_fopen (sc_MPI_Comm mpicomm,
  *                              communicator that was used to create \b fc.
  *                              \b root indicates the MPI rank on that the
  *                              IO operations take place.
+ * \param [out]    errcode      An errcode that can be interpreted by \ref
+ *                              sc_ferror_string.
  */
 scdat_context_t     scdat_fwrite_inline (scdat_context_t * fc,
                                          sc_array_t * data,
