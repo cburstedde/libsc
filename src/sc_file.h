@@ -225,7 +225,7 @@ scdat_fcontext_t   *scdat_fwrite_inline (scdat_fcontext_t * fc,
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_fopen with mode 'w'.
- * \param [in]      block_data  On rank \b roor a sc_array with one element and
+ * \param [in]      block_data  On rank \b root a sc_array with one element and
  *                              element size equals to \b block_size. On all
  *                              other ranks the parameter is ignored.
  * \param [in]      block_size  The size of the data block in bytes.
@@ -246,7 +246,7 @@ scdat_fcontext_t   *scdat_fwrite_inline (scdat_fcontext_t * fc,
  *                              The scdat file context can be used to continue
  *                              writing and eventually closing the file.
  */
-scdat_fcontext_t   *scdat_fwrite_block (sc_file_context_t * fc,
+scdat_fcontext_t   *scdat_fwrite_block (scdat_fcontext_t * fc,
                                         sc_array_t * block_data,
                                         size_t block_size,
                                         const char *user_string,
