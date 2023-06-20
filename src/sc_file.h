@@ -210,36 +210,41 @@ scdat_context_t     scdat_fwrite_inline (scdat_context_t * fc,
 /** Write a fixed-size block file section.
  *
  * This function writes a data block of fixed size to the file. The data
- * and its section header is written on the MPI rank 0.
- * The number of block bytes must be less or equal \ref SC_FILE_MAX_BLOCK_SIZE.
+ * and its section header is written on the MPI rank \b root.
+ * The number of block bytes must be less or equal \ref SCDAT_MAX_BLOCK_SIZE.
  *
  * This function does not abort on MPI I/O errors but returns NULL.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_file_open_write.
+ *                              sc_fopen with mode 'w'.
+ * \param [in]      block_data  On rank \b roor a sc_array with one element and
+ *                              element size equals to \b block_size. On all
+ *                              other ranks the parameter is ignored.
  * \param [in]      block_size  The size of the data block in bytes.
- * \param [in]      block_data  A sc_array woth one element and element size
- *                              equals to \b block_size.
- * \param [in]      user_string Maximal \ref
- *                              SC_FILE_SECTION_USER_STRING_BYTES + 1 bytes. The
- *                              user string is written without the
- *                              nul-termination by MPI rank 0.
+ * \param [in]      user_string Maximal \ref SCDAT_USER_STRING_BYTES + 1 bytes
+ *                              on rank \b root and otherwise ignored.
+ *                              The user string is written without the
+ *                              nul-termination by MPI rank \b root.
+ * \param [in]      root        An integer between 0 and mpisize of the MPI
+ *                              communicator that was used to create \b fc.
+ *                              \b root indicates the MPI rank on that the
+ *                              IO operations take place.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_file_error_string.
+ *                              sc_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
  *                              and \b fc is freed.
- *                              The file context can be used to continue writing
- *                              and eventually closing the file.
+ *                              The scdat file context can be used to continue
+ *                              writing and eventually closing the file.
  */
-sc_file_context_t  *sc_file_write_block (sc_file_context_t * fc,
-                                         size_t block_size,
-                                         sc_array_t * block_data,
-                                         const char *user_string,
-                                         int *errcode);
+scdat_fcontext_t   *scdat_fwrite_block (sc_file_context_t * fc,
+                                        sc_array_t * block_data,
+                                        size_t block_size,
+                                        const char *user_string,
+                                        int *errcode);
 
 /**
  *
