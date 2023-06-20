@@ -175,7 +175,7 @@ scdat_fcontext_t   *scdat_fwrite_inline (scdat_fcontext_t * fc,
  * This is a collective function.
  * This function writes a data block of fixed size to the file. The data
  * and its section header is written on the MPI rank \b root.
- * The number of block bytes must be less or equal \ref SCDAT_MAX_BLOCK_SIZE.
+ * The number of block bytes must be less or equal 10^{26} - 1.
  *
  * This function does not abort on MPI I/O errors but returns NULL.
  * Without MPI I/O the function may abort on file system dependent
