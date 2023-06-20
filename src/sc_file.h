@@ -472,7 +472,7 @@ scdat_fcontext_t   *scdat_fread_section_header (scdat_fcontext_t * fc,
  *                              size \b block_size. On output the sc_array is
  *                              filled with the block data of the read block data
  *                              section.
- * \param [in]      block_size  The number of bytes of the block as retrived
+ * \param [in]      block_size  The number of bytes of the block as retrieved
  *                              from the preceding call of \ref
  *                              scdat_fread_section_header.
  * \param [in]      root        An integer between 0 and mpisize of the MPI
@@ -666,6 +666,17 @@ scdat_fcontext_t   *scdat_fread_varray_data (scdat_fcontext_t * fc,
                                              sc_array_t * elem_counts,
                                              sc_array_t * proc_sizes,
                                              int indirect, int *errcode);
+
+/** Translate a scdat error code to an error string.
+ *
+ * \param [in]    errcode       An errcode that is output by a
+ *                              scdat function.
+ * \param [out]   string        At least sc_MPI_MAX_ERROR_STRING bytes.
+ * \param [out]   len           Length of string on return.
+ * \return                      0 on success or
+ *                              something else on invalid arguments.
+ */
+int                 scdat_ferror_string (int errcode, char *str, int *len);
 
 /** Close a file opened for parallel write/read and the free the file context.
  *
