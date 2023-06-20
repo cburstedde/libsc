@@ -318,10 +318,7 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
 /** Write a variable-size array file section.
  *
  * This function can be used instead of \ref scdat_fwrite_array if the array
- * elements do not have a constant element size in bytes. For the sake of
- * efficiency this functions never gets to know  about the element sizes for
- * each array element but only about the cumulative byte count per process
- * conforming with the partition of the array elements.
+ * elements do not have a constant element size in bytes.
  *
  * This function does not abort on MPI I/O errors but returns NULL.
  * Without MPI I/O the function may abort on file system dependent
@@ -332,19 +329,17 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
  * \param [in]      array_data  Let p be the calling rank. If \b indirect is
  *                              false, \b array_data must have element count 1
  *                              and as element size the p-th entry of
- *                              \b elem_sizes. The data of the array must be the
- *                              local array elements according to \b elem_counts
- *                              \b elem_sizes.
+ *                              \b proc_sizes. The data of the array must be the
+ *                              local array elements conforming with
+ *                              \b elem_counts, \b proc_sizes and \b elem_sizes.
  *                              If \b indirect is true, \b array_data must be
  *                              a sc_array with element count equal to the p-th
  *                              array entry of \b elem_counts and element size
  *                              equal to sizeof (sc_array_t). Each array element
  *                              is again a sc_array. Now, with element count 1
  *                              and element size equals to the actual array
- *                              element size that is not checked by this function.
- *                              This function only ensures that the sum of all
- *                              local array element byte counts equals its
- *                              corresponding entries in \b elem_sizes.
+ *                              element size as passed in \b elem_sizes.
+ *                              corresponding entries in \b proc_sizes.
  * \param [in]      elem_counts An sc_array that must be equal on all
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
@@ -354,7 +349,12 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
  *                              counts (unsigned int). That is why it induces
  *                              the partition that is used to write the array
  *                              data in parallel.
- * \param [in]      elem_sizes  An sc_array that must be equal on all
+ * \param [in]      elem_sizes  A sc_array with the element sizes for the local
+ *                              array elements. The sc_array has an element
+ *                              count of p-th entry of \b elem_counts for p
+ *                              being the calling rank. The element size is 8
+ *                              = sizeof (uint8_t).
+ * \param [in]      proc_sizes  An sc_array that must be equal on all
  *                              ranks. The element count and element size
  *                              must be the same as for \b elem_counts. The
  *                              array must contain the overall byte count per
@@ -385,6 +385,7 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
                                          sc_array_t * array_data,
                                          sc_array_t * elem_counts,
                                          sc_array_t * elem_sizes,
+                                         sc_array_t * proc_sizes,
                                          int indirect,
                                          const char *user_string,
                                          int *errcode);
