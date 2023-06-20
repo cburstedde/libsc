@@ -250,7 +250,7 @@ scdat_fcontext_t   *scdat_fwrite_block (scdat_fcontext_t * fc,
                                         sc_array_t * block_data,
                                         size_t block_size,
                                         const char *user_string,
-                                        int *errcode);
+                                        int root, int *errcode);
 
 /** Write a fixed-size array file section.
  *
