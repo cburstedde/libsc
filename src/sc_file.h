@@ -186,7 +186,7 @@ scdat_fcontext_t   *scdat_fwrite_inline (scdat_fcontext_t * fc,
  * \param [in]      block_data  On rank \b root a sc_array with one element and
  *                              element size equals to \b block_size. On all
  *                              other ranks the parameter is ignored.
- * \param [in]      block_size  The size of the data block in bytes. Muste be
+ * \param [in]      block_size  The size of the data block in bytes. Must be
  *                              less or equal than 10^{26} - 1.
  * \param [in]      user_string Maximal \ref SCDAT_USER_STRING_BYTES + 1 bytes
  *                              on rank \b root and otherwise ignored.
