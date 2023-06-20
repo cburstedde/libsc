@@ -43,41 +43,8 @@
 
 SC_EXTERN_C_BEGIN;
 
-#define SCDAT_MAGIC_NUMBER "scdata0" /**< magic string for libsc data files */
 #define SCDAT_HEADER_BYTES 128 /**< number of file header bytes in total incl. padding */
-/* the following macros are the number of bytes without the line feed */
-#define SCDAT_MAGIC_BYTES 7 /**< number of bytes of the magic number */
-#define SCDAT_VERSION_STR_BYTES 53 /**< number of bytes of the version string*/
-#define SCDAT_ARRAY_METADATA_BYTES 14 /**< number of array metadata bytes */
-/* subtract 2 for '\n' at the beginning and end of the array metadata */
-#define SCDAT_ARRAY_METADATA_CHARS (SCDAT_ARRAY_METADATA_BYTES - 2) /**< number of array metadata chars */
-#define SCDAT_BYTE_DIV 16 /**< All data blocks are padded to be divisible by this. */
-#define SCDAT_MAX_NUM_PAD_BYTES (SCDAT_BYTE_DIV + 1) /**< We enforce to pad in any
-                                                               case and the padding string
-                                                               needs to contain two
-                                                               newline characters and
-                                                               therefore this is the
-                                                               maximal number of pad
-                                                               bytes. */
-#define SCDAT_LINE_FEED_STR "\n" /**< line feed as string */
-#define SCDAT_PAD_CHAR '=' /**< the padding char as string */
-#define SCDAT_PAD_STRING_CHAR '-' /**< the padding char for user strings as string */
 #define SCDAT_USER_STRING_BYTES 58 /**< number of user string bytes */
-#define SCDAT_SECTION_USER_STRING_BYTES 29 /**< number of section user string bytes */
-#define SCDAT_FIELD_HEADER_BYTES (2 + SCDAT_ARRAY_METADATA_BYTES + SCDAT_USER_STRING_BYTES)
-                                     /**< number of bytes of one field header */
-#define SCDAT_MAX_BLOCK_SIZE 9999999999999 /**< maximal number of block bytes */
-#define SCDAT_MAX_FIELD_ENTRY_SIZE 9999999999999 /**< maximal number of bytes per field entry */
-
-/** libsc data file format
- * All libsc data files have a \ref SCDAT_HEADER_BYTES bytes file header at
- * the beginning of the file.
- *
- * File header (\ref SCDAT_HEADER_BYTES bytes):
- * \ref SCDAT_MAGIC_BYTES bytes magic number (scdata0) and one byte \ref SCDAT_LINE_FEED_STR.
- * \ref SCDAT_VERSION_STR_BYTES
- * TODO: continue.
- */
 
 /** Opaque context used for writing a libsc data file. */
 typedef struct scdat_fcontext scdat_fcontext_t;
@@ -219,7 +186,8 @@ scdat_fcontext_t   *scdat_fwrite_inline (scdat_fcontext_t * fc,
  * \param [in]      block_data  On rank \b root a sc_array with one element and
  *                              element size equals to \b block_size. On all
  *                              other ranks the parameter is ignored.
- * \param [in]      block_size  The size of the data block in bytes.
+ * \param [in]      block_size  The size of the data block in bytes. Muste be
+ *                              less or equal than 10^{26} - 1.
  * \param [in]      user_string Maximal \ref SCDAT_USER_STRING_BYTES + 1 bytes
  *                              on rank \b root and otherwise ignored.
  *                              The user string is written without the
