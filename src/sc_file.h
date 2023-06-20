@@ -448,10 +448,42 @@ scdat_fcontext_t   *scdat_fread_section_header (scdat_fcontext_t * fc,
                                                 char *user_string,
                                                 int root, int *errcode);
 
-sc_file_context_t  *sc_file_read_block (sc_file_context_t * fc,
-                                        size_t block_size,
-                                        sc_array_t * block_data,
-                                        char *user_string, int *errcode);
+/** Read the data of a block of given size.
+ *
+ * This function is only valid to call directly after a call of \ref
+ * scdat_fread_section_header. This preceding call gives also the required
+ * \b block_size.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
+ *
+ * \param [in,out]  fc          File context previously opened by \ref
+ *                              sc_fopen with mode 'r'.
+ * \param [out]     block_data  A sc_array with element count 1 and element
+ *                              size \b block_size. On output the sc_array is
+ *                              filled with the block data of the read block data
+ *                              section.
+ * \param [in]      block_size  The number of bytes of the block as retrived
+ *                              from the preceding call of \ref
+ *                              scdat_fread_section_header.
+ * \param [in]      root        An integer between 0 and mpisize of the MPI
+ *                              communicator that was used to create \b fc.
+ *                              \b root indicates the MPI rank on that the
+ *                              IO operations take place.
+ * \param [out]     errcode     An errcode that can be interpreted by \ref
+ *                              sc_ferror_string.
+ * \return                      Return a pointer to input context or NULL in case
+ *                              of errors that does not abort the program.
+ *                              In case of error the file is tried to close
+ *                              and \b fc is freed.
+ *                              The scdat file context can be used to continue
+ *                              reading and eventually closing the file.
+ */
+scdat_fcontext_t   *sc_fread_block (scdat_fcontext_t * fc,
+                                    sc_array_t * block_data,
+                                    size_t block_size, int root,
+                                    int *errcode);
 
 sc_file_context_t  *sc_file_write_fixed (sc_file_context_t * fc,
                                          size_t element_count,
