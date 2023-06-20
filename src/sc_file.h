@@ -485,11 +485,62 @@ scdat_fcontext_t   *sc_fread_block (scdat_fcontext_t * fc,
                                     size_t block_size, int root,
                                     int *errcode);
 
-sc_file_context_t  *sc_file_read_fixed (sc_file_context_t * fc,
-                                        size_t element_count,
-                                        size_t element_size,
-                                        sc_array_t * data_array,
-                                        char *user_string, int *errcode);
+/** Read the data of a fixed-size array.
+ *
+ * This function is only valid to call directly after a call of \ref
+ * scdat_fread_section_header. This preceding call gives also the required
+ * \b elem_size and the global number of array elements. The user must pass
+ * a parallel partition of the array elements by \b elem_counts.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
+ *
+ * \param [in,out]  fc          File context previously opened by \ref
+ *                              sc_fopen with mode 'r'.
+ * \param [out]     array_data  If \b indirect is false, a sc_array with
+ *                              element count equals to the p-th entry of
+ *                              \b elem_counts for p being the calling rank.
+ *                              The element size must be equal to \b elem_size.
+ *                              If \b indirect is true, a sc_array with the
+ *                              same element count as fir \b indirect false
+ *                              but with sizeof (sc_array_t) as element size.
+ *                              Each array element is then again a sc_array but
+ *                              with element count 1 and element size
+ *                              \b elem_size.
+ * \param [in]      elem_counts An sc_array that must be equal on all
+ *                              ranks. The element count of \b elem_counts
+ *                              must be the mpisize of the MPI communicator
+ *                              that was used to create \b fc. The element size
+ *                              of the sc_array must be equal to 8.
+ *                              The sc_array must contain the local array elements
+ *                              counts (unsigned int). That is why it induces
+ *                              the partition that is used to write the array
+ *                              data in parallel. The sum of all array elements
+ *                              must be equal to elem_count as retrieved from
+ *                              \ref scdat_fread_section_header.
+ * \param [in]      elem_size   The element size of one array element on number
+ *                              of bytes. Must be the same on all ranks and as
+ *                              retrieved from \ref scdat_fread_section_header.
+ * \param [in]      indirect    A Boolean to determine whether \b array_data
+ *                              must be a sc_array of sc_arrays to write
+ *                              indirectly and in particular from potentially
+ *                              non-contigous memory. See the documentation of
+ *                              the parameter \b array_data for more information.
+ * \param [out]     errcode     An errcode that can be interpreted by \ref
+ *                              sc_ferror_string.
+ * \return                      Return a pointer to input context or NULL in case
+ *                              of errors that does not abort the program.
+ *                              In case of error the file is tried to close
+ *                              and \b fc is freed.
+ *                              The scdat file context can be used to continue
+ *                              reading and eventually closing the file.
+ */
+scdat_fcontext_t   *scdat_fread_array_data (scdat_fcontext_t * fc,
+                                            sc_array_t * array_data,
+                                            sc_array_t * elem_counts,
+                                            size_t elem_size,
+                                            int indirect, int *errcode);
 
 /** Write a variable size array file section.
  *
