@@ -62,7 +62,7 @@ SC_EXTERN_C_BEGIN;
 #define SCDAT_LINE_FEED_STR "\n" /**< line feed as string */
 #define SCDAT_PAD_CHAR '=' /**< the padding char as string */
 #define SCDAT_PAD_STRING_CHAR '-' /**< the padding char for user strings as string */
-#define SCDAT_USER_STRING_BYTES 61 /**< number of user string bytes */
+#define SCDAT_USER_STRING_BYTES 58 /**< number of user string bytes */
 #define SCDAT_SECTION_USER_STRING_BYTES 29 /**< number of section user string bytes */
 #define SCDAT_FIELD_HEADER_BYTES (2 + SCDAT_ARRAY_METADATA_BYTES + SCDAT_USER_STRING_BYTES)
                                      /**< number of bytes of one field header */
@@ -124,7 +124,7 @@ typedef enum sc_file_error
 }
 sc_file_error_t;
 
-/** Open a file for writing and write the file header to the file.
+/** Open a file for writing/reading and write/read the file header to the file.
  *
  * This function creates a new file or overwrites an existing one.
  * It is collective and creates the file on a parallel file system.
@@ -132,65 +132,47 @@ sc_file_error_t;
  * Independent of the availability of MPI I/O the user can write one or more
  * file sections before closing the file using \ref sc_file_close.
  *
- * It is the user's responsibility to write any further metadata of the file
- * that is required by the application. This can be done by writing file
- * sections. However, the user can use \ref sc_file_info to parse the structure
- * of a given file and some metadata that is written by sc_file.
- * In addition, the user can read file sections without knowing their type
- * and data size(s) using \ref sc_file_read.
+ * In the case of writing it is the user's responsibility to write any further
+ * metadata of the file that is required by the application. This can be done
+ * by writing file sections. However, the user can use \ref
+ * sc_fread_section_header and skipping the respective data bytes using the
+ * respective read functions scdat_fread_*_data to parse the structure
+ * of a given file and some metadata that is written by scdat.
+ *
+ * In the case of reading  the file must exist and be at least of the size of
+ * the file header, i.e. \ref SCDAT_HEADER_BYTES bytes. If the file has a file
+ * header that does not satisfy the scdat file header format, the function
+ * reports the error using \ref SC_LERRORF, collectively close the file and
+ * deallocate the file context. In this case the function returns NULL on all
+ * ranks. A wrong file header format causes \ref SCDAT_ERR_FORMAT as \b errcode.
  *
  * This function does not abort on MPI I/O errors but returns NULL.
  * Without MPI I/O the function may abort on file system dependent errors.
  *
- * \param [in]  mpicomm     The MPI communicator that is used to open the
- *                          parallel file.
- * \param [in]  filename    Path to parallel file that is to be created.
- * \param [in]  user_string At most \ref SC_FILE_USER_STRING_BYTES characters in
+ * \param [in]     mpicomm   The MPI communicator that is used to open the
+ *                           parallel file.
+ * \param [in]     filename  Path to parallel file that is to be created or
+ *                           to be opened.
+ * \param [in]     mode      Either 'w' for writing to newly created file or
+ *                          'r' to read from a file.
+ * \param [in,out] user_string For \b mode == 'w' at most \ref
+ *                          SCDAT_USER_STRING_BYTES characters in
  *                          a nul-terminated string. These characters are
- *                          written to the file header.
- * \param [out] errcode     An errcode that can be interpreted by \ref
- *                          sc_file_error_string.
- * \return                  Newly allocated context to continue writing
+ *                          written on rank 0 to the file header.
+ *                          For \b mode == 'r' at least \ref
+ *                          SCDAT_USER_STRING_BYTES + 1 bytes. The user string
+ *                          is read on rank 0 and internally broadcasted to all
+ *                          ranks.
+ * \param [out]    errcode  An errcode that can be interpreted by \ref
+ *                          sc_ferror_string.
+ * \return                  Newly allocated context to continue writing/reading
  *                          and eventually closing the file. NULL in
- *                          case of error, i.e. errcode != SC_FILE_SUCCESS.
+ *                          case of error, i.e. errcode != SCDAT_SUCCESS.
  */
-sc_file_context_t  *sc_file_open_write (sc_MPI_Comm mpicomm,
-                                        const char *filename,
-                                        const char *user_string,
-                                        int *errcode);
-
-/** Open a file for reading and read its file header on rank 0.
- *
- * This function is a collective function.
- * The read user string is broadcasted to all ranks.
- * The file must exist and be at least of the size of the file header, i.e.
- * \ref SC_FILE_HEADER_BYTES bytes.
- *
- * If the file has a file header that does not satisfy the sc_file file
- * header format, the function reports the error using \ref SC_LERRORF,
- * collectively close the file and deallocate the file context. In this case
- * the function returns NULL on all ranks. A wrong file header format causes
- * \ref SC_FILE_ERR_FORMAT as \b errcode.
- *
- * This function does not abort on MPI I/O errors but returns NULL.
- * Without MPI I/O the function may abort on file system dependent
- * errors.
- *
- * \param [in]    mpicomm     The MPI communicator that is used to open the
- *                            parallel file.
- * \param [in]    filename    Path to parallel file that is to be opened.
- * \param [out]   user_string At least \ref SC_FILE_USER_STRING_BYTES + 1 bytes.
- *                            The user string is read on rank 0 and internally
- *                            broadcasted to all ranks.
- * \param [out]   errcode     An errcode that can be interpreted by \ref
- *                            sc_file_error_string.
- * \return                    Newly allocated context to continue reading
- *                            and eventually closing the file. NULL in case
- *                            of error, i.e. errcode != SC_FILE_SUCCESS.
- */
-sc_file_context_t  *sc_file_open_read (sc_MPI_Comm mpicomm,
-                                       const char *filename,
-                                       char *user_string, int *errcode);
+sc_file_context_t  *scdat_fopen (sc_MPI_Comm mpicomm,
+                                 const char *filename,
+                                 char mode,
+                                 const char *user_string, int *errcode);
 
 /** Write a fixed-size block file section.
  *
