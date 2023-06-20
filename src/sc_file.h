@@ -169,7 +169,7 @@ sc_file_error_t;
  *                          and eventually closing the file. NULL in
  *                          case of error, i.e. errcode != SCDAT_SUCCESS.
  */
-sc_file_context_t  *scdat_fopen (sc_MPI_Comm mpicomm,
+scdat_context_t    *scdat_fopen (sc_MPI_Comm mpicomm,
                                  const char *filename,
                                  char mode,
                                  const char *user_string, int *errcode);
