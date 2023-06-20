@@ -174,6 +174,37 @@ scdat_context_t    *scdat_fopen (sc_MPI_Comm mpicomm,
                                  char mode,
                                  const char *user_string, int *errcode);
 
+/** Write an inline data section.
+ *
+ * This function writes 32 bytes of user-defined data preceded by a file
+ * section header containing a user string. In contrast to other file sections
+ * the inline data section does not end with padded data bytes and therefore
+ * require exactly 32 bytes data from the user. This enables the user to
+ * implement custom file structuring or padding.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors. 
+ *
+ * \param [in,out]  fc          File context previously opened by \ref
+ *                              sc_fopen with mode 'w'.
+ * \param [in]      data        On the rank \b root a sc_array with element
+ *                              count 1 and element size 32. On all other ranks
+ *                              this parameter is ignored.
+ * \param [in]      user_string Maximal \ref SCDAT_USER_STRING_BYTES + 1 bytes
+ *                              on rank \b root and otherwise ignored.
+ *                              The user string is written without the
+ *                              nul-termination by MPI rank \b root.
+ * \param [in]      root        An integer between 0 and mpisize of the MPI
+ *                              communicator that was used to create \b fc.
+ *                              \b root indicates the MPI rank on that the
+ *                              IO operations take place.
+ */
+scdat_context_t     scdat_fwrite_inline (scdat_context_t * fc,
+                                         sc_array_t * data,
+                                         const char *user_string, int root,
+                                         int *errcode);
+
 /** Write a fixed-size block file section.
  *
  * This function writes a data block of fixed size to the file. The data
