@@ -82,47 +82,36 @@ SC_EXTERN_C_BEGIN;
 /** Opaque context used for writing a libsc data file. */
 typedef struct scdat_fcontext scdat_fcontext_t;
 
-/** Section types in libsc data file. */
-typedef enum scdat_section
-{
-  SCDAT_INLINE, /**< inline data */
-  SCDAT_BLOCK, /**< block of given size */
-  SCDAT_FIXED, /**< array with a fixed size partition */
-  SCDAT_VARIABLE, /**< array with a variable size partition */
-  SCDAT_NUM_SECTIONS /**< number of current sections in sc_file */
-}
-scdat_section_t;
-
 /** Error values for sc_file functions.
  */
 /* TODO */
-typedef enum sc_file_error
+typedef enum scdat_ferror
 {
-  SC_FILE_ERROR_SUCCESS = sc_MPI_ERR_LASTCODE,
-  SC_FILE_ERR_FILE, /**< invalid file handle */
-  SC_FILE_ERR_NOT_SAME, /**< collective arg not identical */
-  SC_FILE_ERR_AMODE, /**< access mode error */
-  SC_FILE_ERR_NO_SUCH_FILE, /**< file does not exist */
-  SC_FILE_ERR_FILE_EXIST, /**< file exists already */
-  SC_FILE_ERR_BAD_FILE, /**< invalid file name */
-  SC_FILE_ERR_ACCESS, /**< permission denied */
-  SC_FILE_ERR_NO_SPACE, /**< not enough space */
-  SC_FILE_ERR_QUOTA, /**< quota exceeded */
-  SC_FILE_ERR_READ_ONLY, /**< read only file (system) */
-  SC_FILE_ERR_IN_USE, /**< file currently open by other process */
-  SC_FILE_ERR_IO, /**< other I/O error */
-  SC_FILE_ERR_FORMAT,  /**< read file has a wrong format */
-  SC_FILE_ERR_SECTION_TYPE, /**< a valid non-matching section type */
-  SC_FILE_ERR_IN_DATA, /**< input data of file function is invalid */
-  SC_FILE_ERR_COUNT,   /**< read or write count error that was not
+  SCDAT_FERROR_SUCCESS = sc_MPI_ERR_LASTCODE,
+  SCDAT_FERR_FILE, /**< invalid file handle */
+  SCDAT_FERR_NOT_SAME, /**< collective arg not identical */
+  SCDAT_FERR_AMODE, /**< access mode error */
+  SCDAT_FERR_NO_SUCH_FILE, /**< file does not exist */
+  SCDAT_FERR_FILE_EXIST, /**< file exists already */
+  SCDAT_FERR_BAD_FILE, /**< invalid file name */
+  SCDAT_FERR_ACCESS, /**< permission denied */
+  SCDAT_FERR_NO_SPACE, /**< not enough space */
+  SCDAT_FERR_QUOTA, /**< quota exceeded */
+  SCDAT_FERR_READ_ONLY, /**< read only file (system) */
+  SCDAT_FERR_IN_USE, /**< file currently open by other process */
+  SCDAT_FERR_IO, /**< other I/O error */
+  SCDAT_FERR_FORMAT,  /**< read file has a wrong format */
+  SCDAT_FERR_SECTION_TYPE, /**< a valid non-matching section type */
+  SCDAT_FERR_IN_DATA, /**< input data of file function is invalid */
+  SCDAT_FERR_COUNT,   /**< read or write count error that was not
                                  classified as a format error */
-  SC_FILE_ERR_UNKNOWN, /**< unknown error */
-  SC_FILE_ERR_LASTCODE /**< to define own error codes for
+  SCDAT_FERR_UNKNOWN, /**< unknown error */
+  SCDAT_FERR_LASTCODE /**< to define own error codes for
                                   a higher level application
                                   that is using sc_file
                                   functions */
 }
-sc_file_error_t;
+scdat_ferror_t;
 
 /** Open a file for writing/reading and write/read the file header to the file.
  *
@@ -167,7 +156,7 @@ sc_file_error_t;
  *                          sc_ferror_string.
  * \return                  Newly allocated context to continue writing/reading
  *                          and eventually closing the file. NULL in
- *                          case of error, i.e. errcode != SCDAT_SUCCESS.
+ *                          case of error, i.e. errcode != SCDAT_FERROR_SUCCESS.
  */
 scdat_fcontext_t   *scdat_fopen (sc_MPI_Comm mpicomm,
                                  const char *filename,
@@ -673,7 +662,7 @@ scdat_fcontext_t   *scdat_fread_varray_data (scdat_fcontext_t * fc,
  *                              scdat function.
  * \param [out]   string        At least sc_MPI_MAX_ERROR_STRING bytes.
  * \param [out]   len           Length of string on return.
- * \return                      0 on success or
+ * \return                      SCDAT_FERROR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
 int                 scdat_ferror_string (int errcode, char *str, int *len);
@@ -693,8 +682,9 @@ int                 scdat_ferror_string (int errcode, char *str, int *len);
  *                            a call of this function.
  * \param [out]     errcode   An errcode that can be interpreted by \ref
  *                            sc_ferror_string.
- * \return                    0 for a successful call and -1 in case a of an
- *                            error. See also \b errcode argument.
+ * \return                    \ref SCDAT_FERROR_SUCCESS for a successful call
+ *                            and -1 in case a of an error.
+ *                            See also \b errcode argument.
  */
 int                 sc_fclose (scdat_fcontext_t * fc, int *errcode);
 
