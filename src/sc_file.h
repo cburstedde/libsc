@@ -485,13 +485,6 @@ scdat_fcontext_t   *sc_fread_block (scdat_fcontext_t * fc,
                                     size_t block_size, int root,
                                     int *errcode);
 
-sc_file_context_t  *sc_file_write_fixed (sc_file_context_t * fc,
-                                         size_t element_count,
-                                         size_t element_size,
-                                         sc_array_t * data_array,
-                                         const char *user_string,
-                                         int *errcode);
-
 sc_file_context_t  *sc_file_read_fixed (sc_file_context_t * fc,
                                         size_t element_count,
                                         size_t element_size,
