@@ -80,7 +80,7 @@ SC_EXTERN_C_BEGIN;
  */
 
 /** Opaque context used for writing a libsc data file. */
-typedef struct scdat_context scdat_context_t;
+typedef struct scdat_fcontext scdat_fcontext_t;
 
 /** Section types in libsc data file. */
 typedef enum scdat_section
@@ -169,7 +169,7 @@ sc_file_error_t;
  *                          and eventually closing the file. NULL in
  *                          case of error, i.e. errcode != SCDAT_SUCCESS.
  */
-scdat_context_t    *scdat_fopen (sc_MPI_Comm mpicomm,
+scdat_fcontext_t   *scdat_fopen (sc_MPI_Comm mpicomm,
                                  const char *filename,
                                  char mode,
                                  const char *user_string, int *errcode);
@@ -199,10 +199,16 @@ scdat_context_t    *scdat_fopen (sc_MPI_Comm mpicomm,
  *                              communicator that was used to create \b fc.
  *                              \b root indicates the MPI rank on that the
  *                              IO operations take place.
- * \param [out]    errcode      An errcode that can be interpreted by \ref
+ * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_ferror_string.
+ * \return                      Return a pointer to input context or NULL in case
+ *                              of errors that does not abort the program.
+ *                              In case of error the file is tried to close
+ *                              and \b fc is freed.
+ *                              The scdat file context can be used to continue
+ *                              writing and eventually closing the file.
  */
-scdat_context_t     scdat_fwrite_inline (scdat_context_t * fc,
+scdat_fcontext_t    scdat_fwrite_inline (scdat_fcontext_t * fc,
                                          sc_array_t * data,
                                          const char *user_string, int root,
                                          int *errcode);
@@ -397,7 +403,7 @@ sc_file_context_t  *sc_file_read (sc_file_context_t * fc,
  * \return                    0 for a successful call and -1 in case a of an
  *                            error. See also \b errcode argument.
  */
-int                 sc_fclose (scdat_context_t * fc, int *errcode);
+int                 sc_fclose (scdat_fcontext_t * fc, int *errcode);
 
 SC_EXTERN_C_END;
 
