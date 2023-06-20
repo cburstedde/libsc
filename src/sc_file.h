@@ -43,55 +43,55 @@
 
 SC_EXTERN_C_BEGIN;
 
-#define SC_FILE_MAGIC_NUMBER "scdata0" /**< magic string for libsc data files */
-#define SC_FILE_HEADER_BYTES 128 /**< number of file header bytes in total incl. padding */
+#define SCDAT_MAGIC_NUMBER "scdata0" /**< magic string for libsc data files */
+#define SCDAT_HEADER_BYTES 128 /**< number of file header bytes in total incl. padding */
 /* the following macros are the number of bytes without the line feed */
-#define SC_FILE_MAGIC_BYTES 7 /**< number of bytes of the magic number */
-#define SC_FILE_VERSION_STR_BYTES 53 /**< number of bytes of the version string*/
-#define SC_FILE_ARRAY_METADATA_BYTES 14 /**< number of array metadata bytes */
+#define SCDAT_MAGIC_BYTES 7 /**< number of bytes of the magic number */
+#define SCDAT_VERSION_STR_BYTES 53 /**< number of bytes of the version string*/
+#define SCDAT_ARRAY_METADATA_BYTES 14 /**< number of array metadata bytes */
 /* subtract 2 for '\n' at the beginning and end of the array metadata */
-#define SC_FILE_ARRAY_METADATA_CHARS (SC_FILE_ARRAY_METADATA_BYTES - 2) /**< number of array metadata chars */
-#define SC_FILE_BYTE_DIV 16 /**< All data blocks are padded to be divisible by this. */
-#define SC_FILE_MAX_NUM_PAD_BYTES (SC_FILE_BYTE_DIV + 1) /**< We enforce to pad in any
+#define SCDAT_ARRAY_METADATA_CHARS (SCDAT_ARRAY_METADATA_BYTES - 2) /**< number of array metadata chars */
+#define SCDAT_BYTE_DIV 16 /**< All data blocks are padded to be divisible by this. */
+#define SCDAT_MAX_NUM_PAD_BYTES (SCDAT_BYTE_DIV + 1) /**< We enforce to pad in any
                                                                case and the padding string
                                                                needs to contain two
                                                                newline characters and
                                                                therefore this is the
                                                                maximal number of pad
                                                                bytes. */
-#define SC_FILE_LINE_FEED_STR "\n" /**< line feed as string */
-#define SC_FILE_PAD_CHAR '=' /**< the padding char as string */
-#define SC_FILE_PAD_STRING_CHAR '-' /**< the padding char for user strings as string */
-#define SC_FILE_USER_STRING_BYTES 61 /**< number of user string bytes */
-#define SC_FILE_SECTION_USER_STRING_BYTES 29 /**< number of section user string bytes */
-#define SC_FILE_FIELD_HEADER_BYTES (2 + SC_FILE_ARRAY_METADATA_BYTES + SC_FILE_USER_STRING_BYTES)
+#define SCDAT_LINE_FEED_STR "\n" /**< line feed as string */
+#define SCDAT_PAD_CHAR '=' /**< the padding char as string */
+#define SCDAT_PAD_STRING_CHAR '-' /**< the padding char for user strings as string */
+#define SCDAT_USER_STRING_BYTES 61 /**< number of user string bytes */
+#define SCDAT_SECTION_USER_STRING_BYTES 29 /**< number of section user string bytes */
+#define SCDAT_FIELD_HEADER_BYTES (2 + SCDAT_ARRAY_METADATA_BYTES + SCDAT_USER_STRING_BYTES)
                                      /**< number of bytes of one field header */
-#define SC_FILE_MAX_BLOCK_SIZE 9999999999999 /**< maximal number of block bytes */
-#define SC_FILE_MAX_FIELD_ENTRY_SIZE 9999999999999 /**< maximal number of bytes per field entry */
+#define SCDAT_MAX_BLOCK_SIZE 9999999999999 /**< maximal number of block bytes */
+#define SCDAT_MAX_FIELD_ENTRY_SIZE 9999999999999 /**< maximal number of bytes per field entry */
 
 /** libsc data file format
- * All libsc data files have a \ref SC_FILE_HEADER_BYTES bytes file header at
+ * All libsc data files have a \ref SCDAT_HEADER_BYTES bytes file header at
  * the beginning of the file.
  *
- * File header (\ref SC_FILE_HEADER_BYTES bytes):
- * \ref SC_FILE_MAGIC_BYTES bytes magic number (scdata0) and one byte \ref SC_FILE_LINE_FEED_STR.
- * \ref SC_FILE_VERSION_STR_BYTES 
+ * File header (\ref SCDAT_HEADER_BYTES bytes):
+ * \ref SCDAT_MAGIC_BYTES bytes magic number (scdata0) and one byte \ref SCDAT_LINE_FEED_STR.
+ * \ref SCDAT_VERSION_STR_BYTES
  * TODO: continue.
  */
 
 /** Opaque context used for writing a libsc data file. */
-typedef struct sc_file_context sc_file_context_t;
+typedef struct scdat_context scdat_context_t;
 
 /** Section types in libsc data file. */
-typedef enum sc_file_section
+typedef enum scdat_section
 {
-  SC_FILE_INLINE, /**< inline data */
-  SC_FILE_BLOCK, /**< block of given size */
-  SC_FILE_FIXED, /**< array with a fixed size partition */
-  SC_FILE_VARIABLE, /**< array with a variable size partition */
-  SC_FILE_NUM_SECTIONS /**< number of current sections in sc_file */
+  SCDAT_INLINE, /**< inline data */
+  SCDAT_BLOCK, /**< block of given size */
+  SCDAT_FIXED, /**< array with a fixed size partition */
+  SCDAT_VARIABLE, /**< array with a variable size partition */
+  SCDAT_NUM_SECTIONS /**< number of current sections in sc_file */
 }
-sc_file_section_t;
+scdat_section_t;
 
 /** An allocation callback to read data from a file using \ref sc_file_read.
  *
