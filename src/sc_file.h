@@ -275,20 +275,21 @@ scdat_fcontext_t   *scdat_fwrite_block (scdat_fcontext_t * fc,
  *                              count 1 and element size \b elem_size.
  *                              See also the documentation of the parameter
  *                              \b indirect.
- * \param [in]      elem_counts An sc_array that must have equal data on all
+ * \param [in]      elem_counts An sc_array that must be equal on all
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
  *                              that was used to create \b fc. The element size
- *                              of the sc_array must be equal to \b elem_size
+ *                              of the sc_array must be equal to 8.
  *                              The sc_array must contain the local array elements
- *                              counts. That is why it induces the partition
- *                              that is used to write the array data in parallel.
+ *                              counts (unsigned int). That is why it induces
+ *                              the partition that is used to write the array
+ *                              data in parallel.
  * \param [in]      elem_size   The element size of one array element on number
  *                              of bytes. Must be the same on all ranks.
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to write
  *                              indirectly and in particular from potentially
- *                              non-contigous memory. In the other case of
+ *                              non-contigous memory. In the remaining case of
  *                              \b indirect being false \b array_data must be
  *                              a sc_array with element size equals to
  *                              \b elem_size that contains the actual array
@@ -313,6 +314,80 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
                                         int indirect,
                                         const char *user_string,
                                         int *errcode);
+
+/** Write a variable-size array file section.
+ *
+ * This function can be used instead of \ref scdat_fwrite_array if the array
+ * elements do not have a constant element size in bytes. For the sake of
+ * efficiency this functions never gets to know  about the element sizes for
+ * each array element but only about the cumulative byte count per process
+ * conforming with the partition of the array elements.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
+ *
+ * \param [in,out]  fc          File context previously opened by \ref
+ *                              sc_fopen with mode 'w'.
+ * \param [in]      array_data  Let p be the calling rank. If \b indirect is
+ *                              false, \b array_data must have element count 1
+ *                              and as element size the p-th entry of
+ *                              \b elem_sizes. The data of the array must be the
+ *                              local array elements according to \b elem_counts
+ *                              \b elem_sizes.
+ *                              If \b indirect is true, \b array_data must be
+ *                              a sc_array with element count equal to the p-th
+ *                              array entry of \b elem_counts and element size
+ *                              equal to sizeof (sc_array_t). Each array element
+ *                              is again a sc_array. Now, with element count 1
+ *                              and element size equals to the actual array
+ *                              element size that is not checked by this function.
+ *                              This function only ensures that the sum of all
+ *                              local array element byte counts equals its
+ *                              corresponding entries in \b elem_sizes.
+ * \param [in]      elem_counts An sc_array that must be equal on all
+ *                              ranks. The element count of \b elem_counts
+ *                              must be the mpisize of the MPI communicator
+ *                              that was used to create \b fc. The element size
+ *                              of the sc_array must be equal to 8.
+ *                              The sc_array must contain the local array elements
+ *                              counts (unsigned int). That is why it induces
+ *                              the partition that is used to write the array
+ *                              data in parallel.
+ * \param [in]      elem_sizes  An sc_array that must be equal on all
+ *                              ranks. The element count and element size
+ *                              must be the same as for \b elem_counts. The
+ *                              array must contain the overall byte count per
+ *                              rank conforming with the passed array element
+ *                              partition \b elem_counts.
+ * \param [in]      indirect    A Boolean to determine whether \b array_data
+ *                              must be a sc_array of sc_arrays to write
+ *                              indirectly and in particular from potentially
+ *                              non-contigous memory. In the remaining case of
+ *                              \b indirect being false \b array_data must be
+ *                              a sc_array with the acutal array elements as
+ *                              data as further explained in the documentation
+ *                              of \b array_data.
+ * \param [in]      user_string Maximal \ref SCDAT_USER_STRING_BYTES + 1 bytes
+ *                              on rank \b root and otherwise ignored.
+ *                              The user string is written without the
+ *                              nul-termination by MPI rank 0.
+ * \param [out]     errcode     An errcode that can be interpreted by \ref
+ *                              sc_ferror_string.
+ * \return                      Return a pointer to input context or NULL in case
+ *                              of errors that does not abort the program.
+ *                              In case of error the file is tried to close
+ *                              and \b fc is freed.
+ *                              The scdat file context can be used to continue
+ *                              writing and eventually closing the file.
+ */
+scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
+                                         sc_array_t * array_data,
+                                         sc_array_t * elem_counts,
+                                         sc_array_t * elem_sizes,
+                                         int indirect,
+                                         const char *user_string,
+                                         int *errcode);
 
 /**
  *
