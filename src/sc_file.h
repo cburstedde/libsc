@@ -363,7 +363,8 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
  *                              must be the same as for \b elem_counts. The
  *                              array must contain the overall byte count per
  *                              rank conforming with the passed array element
- *                              partition \b elem_counts.
+ *                              partition \b elem_counts and the local array
+ *                              element sizes in \b elem_sizes.
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to write
  *                              indirectly and in particular from potentially
@@ -590,10 +591,81 @@ scdat_fcontext_t   *scdat_fread_array_data (scdat_fcontext_t * fc,
  *                              The scdat file context can be used to continue
  *                              reading and eventually closing the file.
  */
-scdat_fcontext_t *scdat_fread_varray_sizes (scdat_fcontext_t *fc,
-                                            sc_array_t *elem_sizes,
-                                            sc_array_t *elem_counts,
-                                            int *errcode);
+scdat_fcontext_t   *scdat_fread_varray_sizes (scdat_fcontext_t * fc,
+                                              sc_array_t * elem_sizes,
+                                              sc_array_t * elem_counts,
+                                              int *errcode);
+
+/** Read the data of a variable-size array.
+ *
+ * This is a collective function.
+ * This function is only valid to call directly after a call of \ref
+ * scdat_fread_varray_sizes. This preceding call gives also the required
+ * \b elem_sizes.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
+ *
+ * \param [in,out]  fc          File context previously opened by \ref
+ *                              sc_fopen with mode 'r'.
+ * \param [out]     array_data  Let p be the calling rank. If \b indirect is
+ *                              false, \b array_data must have element count 1
+ *                              and as element size the p-th entry of
+ *                              \b proc_sizes. On output the data of the array
+ *                              is set to the local array elements conforming
+ *                              with \b elem_counts, \b proc_sizes and
+ *                              \b elem_sizes.
+ *                              If \b indirect is true, \b array_data must be
+ *                              a sc_array with element count equal to the p-th
+ *                              array entry of \b elem_counts and element size
+ *                              equal to sizeof (sc_array_t). Each array element
+ *                              is again a sc_array. Now, with element count 1
+ *                              and element size equals to the actual array
+ *                              element size as passed in \b elem_sizes.
+ *                              On output these arrays are filled with the
+ *                              actual elements of the read variable-size array.
+ * \param [in]    elem_sizes    The local element sizes conforming to the array
+ *                              element partition \b elem_counts as retrieved
+ *                              from \ref scdat_fread_varray_sizes.
+ * \param [in]    elem_counts   An sc_array that must be equal on all
+ *                              ranks. The element count of \b elem_counts
+ *                              must be the mpisize of the MPI communicator
+ *                              that was used to create \b fc. The element size
+ *                              of the sc_array must be equal to sizeof (uint8_t).
+ *                              The sc_array must contain the local array elements
+ *                              counts. That is why it induces
+ *                              the partition that is used to read the array
+ *                              data in parallel. The sum of all array elements
+ *                              must be equal to elem_count as retrieved from
+ *                              \ref scdat_fread_section_header.
+ * \param [in]      proc_sizes  An sc_array that must be equal on all
+ *                              ranks. The element count and element size
+ *                              must be the same as for \b elem_counts. The
+ *                              array must contain the overall byte count per
+ *                              rank conforming with the passed array element
+ *                              partition \b elem_counts and the local array
+ *                              element sizes in \b elem_sizes.
+ * \param [in]      indirect    A Boolean to determine whether \b array_data
+ *                              must be a sc_array of sc_arrays to read
+ *                              indirectly and in particular from potentially
+ *                              non-contigous memory. See the documentation of
+ *                              the parameter \b array_data for more information.
+ * \param [out]     errcode     An errcode that can be interpreted by \ref
+ *                              sc_ferror_string.
+ * \return                      Return a pointer to input context or NULL in case
+ *                              of errors that does not abort the program.
+ *                              In case of error the file is tried to close
+ *                              and \b fc is freed.
+ *                              The scdat file context can be used to continue
+ *                              reading and eventually closing the file.
+ */
+scdat_fcontext_t   *scdat_fread_varray_data (scdat_fcontext_t * fc,
+                                             sc_array_t * array_data,
+                                             sc_array_t * elem_sizes,
+                                             sc_array_t * elem_counts,
+                                             sc_array_t * proc_sizes,
+                                             int indirect, int *errcode);
 
 /** Write a variable size array file section.
  *
