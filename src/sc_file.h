@@ -389,12 +389,7 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
                                          const char *user_string,
                                          int *errcode);
 
-/**
- *
- * \note                    If one wants to read a file section without knowing
- *                          file section type and the sizes, one can use the
- *                          function \ref sc_file_read.
- */
+
 sc_file_context_t  *sc_file_read_block (sc_file_context_t * fc,
                                         size_t block_size,
                                         sc_array_t * block_data,
