@@ -337,27 +337,6 @@ sc_file_context_t  *sc_file_read (sc_file_context_t * fc,
                                   void *user_data,
                                   const char *user_string, int *errcode);
 
-/** Deallocates memory that was allocated by \ref sc_file_read.
- *
- * This function is only dedicated to free memory that was allocated by
- * \ref sc_file_read using \b alloc_callback equals NULL. If the data was
- * allocated by \b alloc_callback the user is responsible to free the memory.
- *
- * \param [in]  data      The array that points to the data that is freed.
- * \param [out] errcode   An errcode that can be interpreted by \ref
- *                        sc_file_error_string.
- * \return                0 for a successful call and -1 in case of error.
- *                        See also \b errcode for further information on the
- *                        error.
- *
- * \note                  It is important to notice that this function
- *                        deallocates the memory that the sc_array \b data
- *                        points to but the sc_array structure was created
- *                        by the user and therefore must be reset or destroyed
- *                        by the user.
- */
-int                 sc_file_free (sc_array_t * data, int *errcode);
-
 /* sc_file_info */
 
 /* sc_file_error_string */
