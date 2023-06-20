@@ -33,7 +33,7 @@
  * Functionality read and write in parallel using a prescribed
  * file format.
  *
- * \ingroup sc 
+ * \ingroup sc
  */
 
 #ifndef SC_FILE_H
@@ -43,7 +43,7 @@
 
 SC_EXTERN_C_BEGIN;
 
-#define SCDAT_HEADER_BYTES 128 /**< number of file header bytes in total incl. padding */
+#define SCDAT_HEADER_BYTES 128 /**< number of file header bytes */
 #define SCDAT_USER_STRING_BYTES 58 /**< number of user string bytes */
 
 /** Opaque context used for writing a libsc data file. */
@@ -86,21 +86,21 @@ scdat_ferror_t;
  * It is collective and creates the file on a parallel file system.
  * This function leaves the file open if MPI I/O is available.
  * Independent of the availability of MPI I/O the user can write one or more
- * file sections before closing the file using \ref sc_file_close.
+ * file sections before closing the file using \ref sc_fclose.
  *
  * In the case of writing it is the user's responsibility to write any further
  * metadata of the file that is required by the application. This can be done
  * by writing file sections. However, the user can use \ref
- * sc_fread_section_header and skipping the respective data bytes using the
+ * scdat_fread_section_header and skipping the respective data bytes using the
  * respective read functions scdat_fread_*_data to parse the structure
  * of a given file and some metadata that is written by scdat.
  *
  * In the case of reading  the file must exist and be at least of the size of
  * the file header, i.e. \ref SCDAT_HEADER_BYTES bytes. If the file has a file
  * header that does not satisfy the scdat file header format, the function
- * reports the error using \ref SC_LERRORF, collectively close the file and
+ * reports the error using SC_LERRORF, collectively close the file and
  * deallocate the file context. In this case the function returns NULL on all
- * ranks. A wrong file header format causes \ref SCDAT_ERR_FORMAT as \b errcode.
+ * ranks. A wrong file header format causes SCDAT_ERR_FORMAT as \b errcode.
  *
  * This function does not abort on MPI I/O errors but returns NULL.
  * Without MPI I/O the function may abort on file system dependent errors.
@@ -120,7 +120,7 @@ scdat_ferror_t;
  *                          is read on rank 0 and internally broadcasted to all
  *                          ranks.
  * \param [out]    errcode  An errcode that can be interpreted by \ref
- *                          sc_ferror_string.
+ *                          scdat_ferror_string.
  * \return                  Newly allocated context to continue writing/reading
  *                          and eventually closing the file. NULL in
  *                          case of error, i.e. errcode != SCDAT_FERROR_SUCCESS.
@@ -157,7 +157,7 @@ scdat_fcontext_t   *scdat_fopen (sc_MPI_Comm mpicomm,
  *                              \b root indicates the MPI rank on that the
  *                              IO operations take place.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_ferror_string.
+ *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
@@ -197,7 +197,7 @@ scdat_fcontext_t   *scdat_fwrite_inline (scdat_fcontext_t * fc,
  *                              \b root indicates the MPI rank on that the
  *                              IO operations take place.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_ferror_string.
+ *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
@@ -259,7 +259,7 @@ scdat_fcontext_t   *scdat_fwrite_block (scdat_fcontext_t * fc,
  *                              The user string is written without the
  *                              nul-termination by MPI rank 0.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_ferror_string.
+ *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
@@ -335,7 +335,7 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
  *                              The user string is written without the
  *                              nul-termination by MPI rank 0.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_ferror_string.
+ *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
@@ -396,7 +396,7 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
  *                              \b root indicates the MPI rank on that the
  *                              IO operations take place.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_ferror_string.
+ *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
@@ -406,7 +406,7 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
  */
 scdat_fcontext_t   *scdat_fread_section_header (scdat_fcontext_t * fc,
                                                 char *type,
-                                                void *bytes_32,
+                                                void *bytes32,
                                                 size_t *elem_count,
                                                 size_t *elem_size,
                                                 char *user_string,
@@ -437,7 +437,7 @@ scdat_fcontext_t   *scdat_fread_section_header (scdat_fcontext_t * fc,
  *                              \b root indicates the MPI rank on that the
  *                              IO operations take place.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_ferror_string.
+ *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
@@ -445,10 +445,10 @@ scdat_fcontext_t   *scdat_fread_section_header (scdat_fcontext_t * fc,
  *                              The scdat file context can be used to continue
  *                              reading and eventually closing the file.
  */
-scdat_fcontext_t   *sc_fread_block (scdat_fcontext_t * fc,
-                                    sc_array_t * block_data,
-                                    size_t block_size, int root,
-                                    int *errcode);
+scdat_fcontext_t   *scdat_fread_block (scdat_fcontext_t * fc,
+                                       sc_array_t * block_data,
+                                       size_t block_size, int root,
+                                       int *errcode);
 
 /** Read the data of a fixed-size array.
  *
@@ -494,7 +494,7 @@ scdat_fcontext_t   *sc_fread_block (scdat_fcontext_t * fc,
  *                              non-contigous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_ferror_string.
+ *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
@@ -540,7 +540,7 @@ scdat_fcontext_t   *scdat_fread_array_data (scdat_fcontext_t * fc,
  *                              must be equal to elem_count as retrieved from
  *                              \ref scdat_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_ferror_string.
+ *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
@@ -609,7 +609,7 @@ scdat_fcontext_t   *scdat_fread_varray_sizes (scdat_fcontext_t * fc,
  *                              non-contigous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_ferror_string.
+ *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
@@ -628,7 +628,7 @@ scdat_fcontext_t   *scdat_fread_varray_data (scdat_fcontext_t * fc,
  *
  * \param [in]    errcode       An errcode that is output by a
  *                              scdat function.
- * \param [out]   string        At least sc_MPI_MAX_ERROR_STRING bytes.
+ * \param [out]   str           At least sc_MPI_MAX_ERROR_STRING bytes.
  * \param [out]   len           Length of string on return.
  * \return                      SCDAT_FERROR_SUCCESS on success or
  *                              something else on invalid arguments.
@@ -649,8 +649,8 @@ int                 scdat_ferror_string (int errcode, char *str, int *len);
  *                            \ref sc_fopen. This file context is freed after
  *                            a call of this function.
  * \param [out]     errcode   An errcode that can be interpreted by \ref
- *                            sc_ferror_string.
- * \return                    \ref SCDAT_FERROR_SUCCESS for a successful call
+ *                            scdat_ferror_string.
+ * \return                    SCDAT_FERROR_SUCCESS for a successful call
  *                            and -1 in case a of an error.
  *                            See also \b errcode argument.
  */
