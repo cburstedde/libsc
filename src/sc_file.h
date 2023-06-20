@@ -285,10 +285,6 @@ scdat_fcontext_t   *scdat_fwrite_block (scdat_fcontext_t * fc,
  *                              that is used to write the array data in parallel.
  * \param [in]      elem_size   The element size of one array element on number
  *                              of bytes. Must be the same on all ranks.
- * \param [in]      user_string Maximal \ref SCDAT_USER_STRING_BYTES + 1 bytes
- *                              on rank \b root and otherwise ignored.
- *                              The user string is written without the
- *                              nul-termination by MPI rank 0.
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to write
  *                              indirectly and in particular from potentially
@@ -297,13 +293,26 @@ scdat_fcontext_t   *scdat_fwrite_block (scdat_fcontext_t * fc,
  *                              a sc_array with element size equals to
  *                              \b elem_size that contains the actual array
  *                              elements.
+ * \param [in]      user_string Maximal \ref SCDAT_USER_STRING_BYTES + 1 bytes
+ *                              on rank \b root and otherwise ignored.
+ *                              The user string is written without the
+ *                              nul-termination by MPI rank 0.
+ * \param [out]     errcode     An errcode that can be interpreted by \ref
+ *                              sc_ferror_string.
+ * \return                      Return a pointer to input context or NULL in case
+ *                              of errors that does not abort the program.
+ *                              In case of error the file is tried to close
+ *                              and \b fc is freed.
+ *                              The scdat file context can be used to continue
+ *                              writing and eventually closing the file.
  */
 scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
                                         sc_array_t * array_data,
                                         sc_array_t * elem_counts,
                                         size_t elem_size,
+                                        int indirect,
                                         const char *user_string,
-                                        int indirect, int *errcode);
+                                        int *errcode);
 
 /**
  *
