@@ -365,7 +365,7 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
  *                              indirectly and in particular from potentially
  *                              non-contigous memory. In the remaining case of
  *                              \b indirect being false \b array_data must be
- *                              a sc_array with the acutal array elements as
+ *                              a sc_array with the actual array elements as
  *                              data as further explained in the documentation
  *                              of \b array_data.
  * \param [in]      user_string Maximal \ref SCDAT_USER_STRING_BYTES + 1 bytes
@@ -389,6 +389,64 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
                                          const char *user_string,
                                          int *errcode);
 
+/** Read the next file section header.
+ *
+ * This functions reads the next file section header and provides the user
+ * information on the subsequent file section that can be used to read the
+ * actual data in a next calling depending on the file section type one
+ * (or for a variable-size array two) functions out of \ref scdat_fread_block,
+ * \ref scdat_fread_array_data, \ref scdat_fread_varray_sizes and \ref
+ * scdat_fread_varray_data. In the case that the considered file section is a
+ * an inline data section one does not need any further function calls since
+ * the file section is already completely read and the user could proceed by
+ * trying to read the next file section header.
+ *
+ * Except of \b bytes32 all output parameters are internally broadcasted.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
+ *
+ * \param [in,out]  fc          File context previously opened by \ref
+ *                              sc_fopen with mode 'r'.
+ * \param [out]     type        On output this char is set
+ *                              'I' (inline data), 'B' (block of given size),
+ *                              'A' (fixed-size array) or 'V' (variable-size
+ *                              array) depending on the file section type.
+ * \param [out]     bytes32     Exactly 32 bytes on the rank \b root or NULL
+ *                              on \b root to not read the bytes. These bytes
+ *                              are only filled on output if \b type
+ *                              is equal to 'I'. The parameter is ignored on
+ *                              all ranks unequal to \b root.
+ * \param [out]     elem_count  On output set to the number of bytes if \b type
+ *                              equals 'B' to the global number of array elements
+ *                              if \b type equals 'A' or 'V'. For 'I' as \b type
+ *                              \b elem_count is set 0.
+ * \param [out]     elem_size   On output set to the byte count of the array
+ *                              elements if \b type is 'A'. Otherwise
+ *                              \b elem_size is set to 0.
+ * \param [out]     user_string At least \ref SCDAT_USER_STRING_BYTES + 1 bytes.
+ *                              On output filled with the user section string.
+ * \param [in]      root        An integer between 0 and mpisize of the MPI
+ *                              communicator that was used to create \b fc.
+ *                              \b root indicates the MPI rank on that the
+ *                              IO operations take place.
+ * \param [out]     errcode     An errcode that can be interpreted by \ref
+ *                              sc_ferror_string.
+ * \return                      Return a pointer to input context or NULL in case
+ *                              of errors that does not abort the program.
+ *                              In case of error the file is tried to close
+ *                              and \b fc is freed.
+ *                              The scdat file context can be used to continue
+ *                              reading and eventually closing the file.
+ */
+scdat_fcontext_t   *scdat_fread_section_header (scdat_fcontext_t * fc,
+                                                char *type,
+                                                void *bytes_32,
+                                                size_t *elem_count,
+                                                size_t *elem_size,
+                                                char *user_string,
+                                                int root, int *errcode);
 
 sc_file_context_t  *sc_file_read_block (sc_file_context_t * fc,
                                         size_t block_size,
