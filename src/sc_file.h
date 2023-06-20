@@ -208,7 +208,7 @@ scdat_fcontext_t   *scdat_fopen (sc_MPI_Comm mpicomm,
  *                              The scdat file context can be used to continue
  *                              writing and eventually closing the file.
  */
-scdat_fcontext_t    scdat_fwrite_inline (scdat_fcontext_t * fc,
+scdat_fcontext_t   *scdat_fwrite_inline (scdat_fcontext_t * fc,
                                          sc_array_t * data,
                                          const char *user_string, int root,
                                          int *errcode);
