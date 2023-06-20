@@ -176,6 +176,7 @@ scdat_fcontext_t   *scdat_fopen (sc_MPI_Comm mpicomm,
 
 /** Write an inline data section.
  *
+ * This is a collective function.
  * This function writes 32 bytes of user-defined data preceded by a file
  * section header containing a user string. In contrast to other file sections
  * the inline data section does not end with padded data bytes and therefore
@@ -215,6 +216,7 @@ scdat_fcontext_t   *scdat_fwrite_inline (scdat_fcontext_t * fc,
 
 /** Write a fixed-size block file section.
  *
+ * This is a collective function.
  * This function writes a data block of fixed size to the file. The data
  * and its section header is written on the MPI rank \b root.
  * The number of block bytes must be less or equal \ref SCDAT_MAX_BLOCK_SIZE.
@@ -254,6 +256,7 @@ scdat_fcontext_t   *scdat_fwrite_block (scdat_fcontext_t * fc,
 
 /** Write a fixed-size array file section.
  *
+ * This is a collective function.
  * The fixed-size array is the simplest file section that enables the user to
  * write and read data in parallel. This function writes an array of a given
  * element global count and a fixed element size.
@@ -279,7 +282,7 @@ scdat_fcontext_t   *scdat_fwrite_block (scdat_fcontext_t * fc,
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
  *                              that was used to create \b fc. The element size
- *                              of the sc_array must be equal to 8.
+ *                              of the sc_array must be equal to sizeof (uint8_t).
  *                              The sc_array must contain the local array elements
  *                              counts (unsigned int). That is why it induces
  *                              the partition that is used to write the array
@@ -317,6 +320,7 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
 
 /** Write a variable-size array file section.
  *
+ * This is a collective function.
  * This function can be used instead of \ref scdat_fwrite_array if the array
  * elements do not have a constant element size in bytes.
  *
@@ -344,7 +348,7 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
  *                              that was used to create \b fc. The element size
- *                              of the sc_array must be equal to 8.
+ *                              of the sc_array must be equal to sizeof (unint8_t).
  *                              The sc_array must contain the local array elements
  *                              counts (unsigned int). That is why it induces
  *                              the partition that is used to write the array
@@ -352,8 +356,8 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
  * \param [in]      elem_sizes  A sc_array with the element sizes for the local
  *                              array elements. The sc_array has an element
  *                              count of p-th entry of \b elem_counts for p
- *                              being the calling rank. The element size is 8
- *                              = sizeof (uint8_t).
+ *                              being the calling rank. The element size is
+ *                              sizeof (uint8_t).
  * \param [in]      proc_sizes  An sc_array that must be equal on all
  *                              ranks. The element count and element size
  *                              must be the same as for \b elem_counts. The
@@ -392,6 +396,7 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
 
 /** Read the next file section header.
  *
+ * This is a collective function.
  * This functions reads the next file section header and provides the user
  * information on the subsequent file section that can be used to read the
  * actual data in a next calling depending on the file section type one
@@ -451,6 +456,7 @@ scdat_fcontext_t   *scdat_fread_section_header (scdat_fcontext_t * fc,
 
 /** Read the data of a block of given size.
  *
+ * This is a collective function.
  * This function is only valid to call directly after a call of \ref
  * scdat_fread_section_header. This preceding call gives also the required
  * \b block_size.
@@ -488,6 +494,7 @@ scdat_fcontext_t   *sc_fread_block (scdat_fcontext_t * fc,
 
 /** Read the data of a fixed-size array.
  *
+ * This is a collective function.
  * This function is only valid to call directly after a call of \ref
  * scdat_fread_section_header. This preceding call gives also the required
  * \b elem_size and the global number of array elements. The user must pass
@@ -513,10 +520,10 @@ scdat_fcontext_t   *sc_fread_block (scdat_fcontext_t * fc,
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
  *                              that was used to create \b fc. The element size
- *                              of the sc_array must be equal to 8.
+ *                              of the sc_array must be equal to sizeof (uint8_t).
  *                              The sc_array must contain the local array elements
- *                              counts (unsigned int). That is why it induces
- *                              the partition that is used to write the array
+ *                              counts. That is why it induces
+ *                              the partition that is used to read the array
  *                              data in parallel. The sum of all array elements
  *                              must be equal to elem_count as retrieved from
  *                              \ref scdat_fread_section_header.
@@ -524,7 +531,7 @@ scdat_fcontext_t   *sc_fread_block (scdat_fcontext_t * fc,
  *                              of bytes. Must be the same on all ranks and as
  *                              retrieved from \ref scdat_fread_section_header.
  * \param [in]      indirect    A Boolean to determine whether \b array_data
- *                              must be a sc_array of sc_arrays to write
+ *                              must be a sc_array of sc_arrays to read
  *                              indirectly and in particular from potentially
  *                              non-contigous memory. See the documentation of
  *                              the parameter \b array_data for more information.
@@ -542,6 +549,51 @@ scdat_fcontext_t   *scdat_fread_array_data (scdat_fcontext_t * fc,
                                             sc_array_t * elem_counts,
                                             size_t elem_size,
                                             int indirect, int *errcode);
+
+/** Read the element sizes of a variable-size array.
+ *
+ * This is a collective function.
+ * This function is only valid to call directly after a call of \ref
+ * scdat_fread_section_header. This preceding call gives also the for
+ * \b elem_counts required global number of array elements. The user must pass
+ * a parallel partition of the array elements by \b elem_counts.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
+ *
+ * \param [in,out]  fc          File context previously opened by \ref
+ *                              sc_fopen with mode 'r'.
+ * \param [out]     elem_sizes  A sc_array with element count equals to
+ *                              p-th entry of \b elem_counts for p being the
+ *                              calling rank. The element size must be
+ *                              sizeof (uint8_t). On output the array is
+ *                              filled with the local array element byte counts,
+ *                              where locality is determined by \b elem_counts.
+ * \param [in]      elem_counts An sc_array that must be equal on all
+ *                              ranks. The element count of \b elem_counts
+ *                              must be the mpisize of the MPI communicator
+ *                              that was used to create \b fc. The element size
+ *                              of the sc_array must be equal to sizeof (uint8_t).
+ *                              The sc_array must contain the local array elements
+ *                              counts. That is why it induces
+ *                              the partition that is used to read the array
+ *                              data in parallel. The sum of all array elements
+ *                              must be equal to elem_count as retrieved from
+ *                              \ref scdat_fread_section_header.
+ * \param [out]     errcode     An errcode that can be interpreted by \ref
+ *                              sc_ferror_string.
+ * \return                      Return a pointer to input context or NULL in case
+ *                              of errors that does not abort the program.
+ *                              In case of error the file is tried to close
+ *                              and \b fc is freed.
+ *                              The scdat file context can be used to continue
+ *                              reading and eventually closing the file.
+ */
+scdat_fcontext_t *scdat_fread_varray_sizes (scdat_fcontext_t *fc,
+                                            sc_array_t *elem_sizes,
+                                            sc_array_t *elem_counts,
+                                            int *errcode);
 
 /** Write a variable size array file section.
  *
