@@ -404,11 +404,6 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
  *                              'I' (inline data), 'B' (block of given size),
  *                              'A' (fixed-size array) or 'V' (variable-size
  *                              array) depending on the file section type.
- * \param [out]     bytes32     Exactly 32 bytes on the rank \b root or NULL
- *                              on \b root to not read the bytes. These bytes
- *                              are only filled on output if \b type
- *                              is equal to 'I'. The parameter is ignored on
- *                              all ranks unequal to \b root.
  * \param [out]     elem_count  On output set to the number of bytes if \b type
  *                              equals 'B' to the global number of array elements
  *                              if \b type equals 'A' or 'V'. For 'I' as \b type
@@ -418,10 +413,6 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
  *                              \b elem_size is set to 0.
  * \param [out]     user_string At least \ref SCDAT_USER_STRING_BYTES + 1 bytes.
  *                              On output filled with the user section string.
- * \param [in]      root        An integer between 0 and mpisize of the MPI
- *                              communicator that was used to create \b fc.
- *                              \b root indicates the MPI rank on that the
- *                              IO operations take place.
  * \param [in]      decode      A Boolean to decide whether the two following
  *                              file sections should be interpreted as encoded
  *                              in the sense that they were written by a
@@ -443,12 +434,42 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
  */
 scdat_fcontext_t   *scdat_fread_section_header (scdat_fcontext_t * fc,
                                                 char *type,
-                                                void *bytes32,
                                                 size_t *elem_count,
                                                 size_t *elem_size,
                                                 char *user_string,
-                                                int root, int decode,
-                                                int *errcode);
+                                                int decode, int *errcode);
+
+/** Read the data of a inline data section.
+ *
+ * This is a collective function.
+ * This function is only valid to call directly after a call of \ref
+ * scdat_fread_section_header.
+ *
+ * This function does not abort on MPI I/O errors but returns NULL.
+ * Without MPI I/O the function may abort on file system dependent
+ * errors.
+ *
+ * \param [in,out]  fc          File context previously opened by \ref
+ *                              sc_fopen with mode 'r'.
+ * \param [out]     data        Exactly 32 bytes on the rank \b root or NULL
+ *                              on \b root to not read the bytes. The parameter
+ *                              is ignored on all ranks unequal to \b root.
+ * \param [in]      root        An integer between 0 and mpisize of the MPI
+ *                              communicator that was used to create \b fc.
+ *                              \b root indicates the MPI rank on that the
+ *                              IO operations take place.
+ * \param [out]     errcode     An errcode that can be interpreted by \ref
+ *                              scdat_ferror_string.
+ * \return                      Return a pointer to input context or NULL in case
+ *                              of errors that does not abort the program.
+ *                              In case of error the file is tried to close
+ *                              and \b fc is freed.
+ *                              The scdat file context can be used to continue
+ *                              reading and eventually closing the file.
+ */
+scdat_fcontext_t   *scdat_fread_inline_data (scdat_fcontext_t * fc,
+                                             sc_array_t * data, int root,
+                                             int *errcode);
 
 /** Read the data of a block of given size.
  *
