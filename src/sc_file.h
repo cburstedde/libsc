@@ -392,7 +392,7 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
  * the file section is already completely read and the user could proceed by
  * trying to read the next file section header.
  *
- * Except of \b bytes32 all output parameters are internally broadcasted.
+ * All output parameters are internally broadcasted.
  *
  * This function does not abort on MPI I/O errors but returns NULL.
  * Without MPI I/O the function may abort on file system dependent
@@ -404,13 +404,13 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
  *                              'I' (inline data), 'B' (block of given size),
  *                              'A' (fixed-size array) or 'V' (variable-size
  *                              array) depending on the file section type.
- * \param [out]     elem_count  On output set to the number of bytes if \b type
- *                              equals 'B' to the global number of array elements
- *                              if \b type equals 'A' or 'V'. For 'I' as \b type
- *                              \b elem_count is set 0.
+ * \param [out]     elem_count  On output set to the global number of array
+ *                              elements if \b type equals 'A' or 'V'. For
+ *                              'I' and 'B' as \b type \b elem_count is set 0.
  * \param [out]     elem_size   On output set to the byte count of the array
- *                              elements if \b type is 'A'. Otherwise
- *                              \b elem_size is set to 0.
+ *                              elements if \b type is 'A' and for the \b type
+ *                              'B' the number of bytes. Otherwise \b elem_size
+ *                              is set to 0.
  * \param [out]     user_string At least \ref SCDAT_USER_STRING_BYTES + 1 bytes.
  *                              On output filled with the user section string.
  * \param [in]      decode      A Boolean to decide whether the two following
