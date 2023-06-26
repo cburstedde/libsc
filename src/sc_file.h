@@ -640,10 +640,7 @@ scdat_fcontext_t   *scdat_fread_varray_sizes (scdat_fcontext_t * fc,
  *                              and element size equals to the actual array
  *                              element size as passed in \b elem_sizes.
  *                              On output these arrays are filled with the
- *                              actual elements of the read variable-size array.
- * \param [in]    elem_sizes    The local element sizes conforming to the array
- *                              element partition \b elem_counts as retrieved
- *                              from \ref scdat_fread_varray_sizes.
+ *                              actual elements of the read variable-size array.x
  * \param [in]    elem_counts   An sc_array that must be equal on all
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
@@ -655,6 +652,9 @@ scdat_fcontext_t   *scdat_fread_varray_sizes (scdat_fcontext_t * fc,
  *                              data in parallel. The sum of all array elements
  *                              must be equal to elem_count as retrieved from
  *                              \ref scdat_fread_section_header.
+ * \param [in]    elem_sizes    The local element sizes conforming to the array
+ *                              element partition \b elem_counts as retrieved
+ *                              from \ref scdat_fread_varray_sizes.
  * \param [in]      proc_sizes  An sc_array that must be equal on all
  *                              ranks. The element count and element size
  *                              must be the same as for \b elem_counts. The
@@ -678,8 +678,8 @@ scdat_fcontext_t   *scdat_fread_varray_sizes (scdat_fcontext_t * fc,
  */
 scdat_fcontext_t   *scdat_fread_varray_data (scdat_fcontext_t * fc,
                                              sc_array_t * array_data,
-                                             sc_array_t * elem_sizes,
                                              sc_array_t * elem_counts,
+                                             sc_array_t * elem_sizes,
                                              sc_array_t * proc_sizes,
                                              int indirect, int *errcode);
 
