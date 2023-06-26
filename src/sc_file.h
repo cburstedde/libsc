@@ -196,6 +196,15 @@ scdat_fcontext_t   *scdat_fwrite_inline (scdat_fcontext_t * fc,
  *                              communicator that was used to create \b fc.
  *                              \b root indicates the MPI rank on that the
  *                              IO operations take place.
+ * \param [in]      encode      A Boolean to decide whether the file section
+ *                              is written compressed. This results in two
+ *                              written file sections that can be read without
+ *                              the encoding interpretation by using \ref
+ *                              scdat_fread_section_header with decode set to
+ *                              false followed by the usual scdat_fread
+ *                              functions. The data can be read as passed to
+ *                              this function by using decode true in \ref
+ *                              scdat_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
@@ -209,7 +218,7 @@ scdat_fcontext_t   *scdat_fwrite_block (scdat_fcontext_t * fc,
                                         sc_array_t * block_data,
                                         size_t block_size,
                                         const char *user_string,
-                                        int root, int *errcode);
+                                        int root, int encode, int *errcode);
 
 /** Write a fixed-size array file section.
  *
@@ -258,6 +267,15 @@ scdat_fcontext_t   *scdat_fwrite_block (scdat_fcontext_t * fc,
  *                              on rank \b root and otherwise ignored.
  *                              The user string is written without the
  *                              nul-termination by MPI rank 0.
+ * \param [in]      encode      A Boolean to decide whether the file section
+ *                              is written compressed. This results in two
+ *                              written file sections that can be read without
+ *                              the encoding interpretation by using \ref
+ *                              scdat_fread_section_header with decode set to
+ *                              false followed by the usual scdat_fread
+ *                              functions. The data can be read as passed to
+ *                              this function by using decode true in \ref
+ *                              scdat_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
@@ -273,7 +291,7 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
                                         size_t elem_size,
                                         int indirect,
                                         const char *user_string,
-                                        int *errcode);
+                                        int encode, int *errcode);
 
 /** Write a variable-size array file section.
  *
@@ -334,6 +352,15 @@ scdat_fcontext_t   *scdat_fwrite_array (scdat_fcontext_t * fc,
  *                              on rank \b root and otherwise ignored.
  *                              The user string is written without the
  *                              nul-termination by MPI rank 0.
+ * \param [in]      encode      A Boolean to decide whether the file section
+ *                              is written compressed. This results in two
+ *                              written file sections that can be read without
+ *                              the encoding interpretation by using \ref
+ *                              scdat_fread_section_header with decode set to
+ *                              false followed by the usual scdat_fread
+ *                              functions. The data can be read as passed to
+ *                              this function by using decode true in \ref
+ *                              scdat_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
@@ -350,7 +377,7 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
                                          sc_array_t * proc_sizes,
                                          int indirect,
                                          const char *user_string,
-                                         int *errcode);
+                                         int encode, int *errcode);
 
 /** Read the next file section header.
  *
@@ -395,6 +422,16 @@ scdat_fcontext_t   *scdat_fwrite_varray (scdat_fcontext_t * fc,
  *                              communicator that was used to create \b fc.
  *                              \b root indicates the MPI rank on that the
  *                              IO operations take place.
+ * \param [in]      decode      A Boolean to decide whether the two following
+ *                              file sections should be interpreted as encoded
+ *                              in the sense that they were written by a
+ *                              scdat_fread_* function with encode set to true.
+ *                              If the encoding convention is not satisfied,
+ *                              this function outputs an \b errcode unequal
+ *                              to SCDAT_FERROR_SUCCESS, deallocates and closes
+ *                              \b fc and returns NULL. The subsequent
+ *                              scdat_fread_* calls do not require any
+ *                              adjustment dependent on \b decode.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              scdat_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
@@ -410,7 +447,8 @@ scdat_fcontext_t   *scdat_fread_section_header (scdat_fcontext_t * fc,
                                                 size_t *elem_count,
                                                 size_t *elem_size,
                                                 char *user_string,
-                                                int root, int *errcode);
+                                                int root, int decode,
+                                                int *errcode);
 
 /** Read the data of a block of given size.
  *
