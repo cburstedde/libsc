@@ -696,7 +696,8 @@ scda_fcontext_t    *scda_fread_varray_data (scda_fcontext_t * fc,
  * \param [in]    errcode       An errcode that is output by a
  *                              scda function.
  * \param [out]   str           At least sc_MPI_MAX_ERROR_STRING bytes.
- * \param [out]   len           Length of string on return.
+ * \param [in, out] len         On output the length of string on return.
+ *                              On input the number of bytes os \b str on input.
  * \return                      SCDA_FERROR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
