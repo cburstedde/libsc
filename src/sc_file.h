@@ -51,11 +51,10 @@ typedef struct scda_fcontext scda_fcontext_t;
 
 /** Error values for sc_file functions.
  */
-/* TODO */
 typedef enum scda_ferror
 {
-  SCDA_FERROR_SUCCESS = sc_MPI_ERR_LASTCODE,
-  SCDA_FERR_FILE, /**< invalid file handle */
+  SCDA_FERROR_SUCCESS = 0,
+  SCDA_FERR_FILE = sc_MPI_ERR_LASTCODE, /**< invalid file handle */
   SCDA_FERR_NOT_SAME, /**< collective arg not identical */
   SCDA_FERR_AMODE, /**< access mode error */
   SCDA_FERR_NO_SUCH_FILE, /**< file does not exist */
