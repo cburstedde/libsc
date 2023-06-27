@@ -533,6 +533,8 @@ scdat_fcontext_t   *scdat_fread_block (scdat_fcontext_t * fc,
  *                              Each array element is then again a sc_array but
  *                              with element count 1 and element size
  *                              \b elem_size.
+ *                              The data can be skipped on each process by
+ *                              locally passing NULL.
  * \param [in]      elem_counts An sc_array that must be equal on all
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
@@ -587,6 +589,8 @@ scdat_fcontext_t   *scdat_fread_array_data (scdat_fcontext_t * fc,
  *                              sizeof (uint8_t). On output the array is
  *                              filled with the local array element byte counts,
  *                              where locality is determined by \b elem_counts.
+ *                              The element sizes can be skipped on each process
+ *                              by locally passing NULL.
  * \param [in]      elem_counts An sc_array that must be equal on all
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
@@ -640,7 +644,9 @@ scdat_fcontext_t   *scdat_fread_varray_sizes (scdat_fcontext_t * fc,
  *                              and element size equals to the actual array
  *                              element size as passed in \b elem_sizes.
  *                              On output these arrays are filled with the
- *                              actual elements of the read variable-size array.x
+ *                              actual elements of the read variable-size array.
+ *                              The data can be skipped on each process by
+ *                              locally passing NULL.
  * \param [in]    elem_counts   An sc_array that must be equal on all
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
@@ -655,6 +661,8 @@ scdat_fcontext_t   *scdat_fread_varray_sizes (scdat_fcontext_t * fc,
  * \param [in]    elem_sizes    The local element sizes conforming to the array
  *                              element partition \b elem_counts as retrieved
  *                              from \ref scdat_fread_varray_sizes.
+ *                              This parameter is ignored for ranks to which
+ *                              NULL for \b array_data was passed.
  * \param [in]      proc_sizes  An sc_array that must be equal on all
  *                              ranks. The element count and element size
  *                              must be the same as for \b elem_counts. The
