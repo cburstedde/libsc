@@ -1417,8 +1417,6 @@ sc_is_root (void)
 #undef SC_LERRORF
 #endif
 
-#ifndef SC_SPLINT
-
 void
 SC_ABORTF (const char *fmt, ...)
 {
@@ -1565,6 +1563,16 @@ sc_version_point (void)
 #endif
 
 int
+sc_have_zlib (void)
+{
+#ifndef SC_HAVE_ZLIB
+  return 0;
+#else
+  return 1;
+#endif
+}
+
+int
 sc_have_json (void)
 {
 #ifndef SC_HAVE_JSON
@@ -1573,5 +1581,3 @@ sc_have_json (void)
   return 1;
 #endif
 }
-
-#endif
