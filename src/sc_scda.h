@@ -21,14 +21,14 @@
   02110-1301, USA.
 */
 
-/** \file sc_file.h
+/** \file sc_scda.h
  *
  * Routines for parallel I/O format.
  *
- * \ingroup sc_file
+ * \ingroup sc_scda
  */
 
-/** \defgroup sc_file Parallel file format
+/** \defgroup sc_scda Parallel file format
  * 
  * Functionality read and write in parallel using a prescribed
  * file format.
@@ -36,8 +36,8 @@
  * \ingroup sc
  */
 
-#ifndef SC_FILE_H
-#define SC_FILE_H
+#ifndef SC_SCDA_H
+#define SC_SCDA_H
 
 #include <sc.h>
 
@@ -49,7 +49,7 @@ SC_EXTERN_C_BEGIN;
 /** Opaque context used for writing a libsc data file. */
 typedef struct sc_scda_fcontext sc_scda_fcontext_t;
 
-/** Error values for sc_file functions.
+/** Error values for scdafile functions.
  */
 typedef enum sc_scda_ferror
 {
@@ -74,7 +74,7 @@ typedef enum sc_scda_ferror
   SC_SCDA_FERR_UNKNOWN, /**< unknown error */
   SC_SCDA_FERR_LASTCODE /**< to define own error codes for
                                   a higher level application
-                                  that is using sc_file
+                                  that is using sc_scda
                                   functions */
 }
 sc_scda_ferror_t;
@@ -737,4 +737,4 @@ int                 sc_fclose (sc_scda_fcontext_t * fc, int *errcode);
 
 SC_EXTERN_C_END;
 
-#endif /* SC_FILE_H */
+#endif /* SC_SCDA_H */
