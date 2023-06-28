@@ -778,7 +778,7 @@ sc_io_encode_zlib (sc_array_t *data, sc_array_t *out,
       ocnt += lout;
 #endif
       SC_ASSERT (ocnt + 3 <= encoded_size);
-      opos[0] = '=';
+      opos[0] = (char) line_break_character;
       opos[1] = '\n';
       opos[2] = '\0';
       opos = NULL;
