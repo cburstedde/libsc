@@ -25,13 +25,32 @@
  *
  * Routines for parallel I/O format.
  *
+ * This module contains functions to write and read data in parallel according
+ * to a user prescribed partition of contigously indexed potentially
+ * variable-sized elements. In addition, the user can also write and read
+ * data in serial and the data can be stored element-wise compressed.
+ *
+ * If MPI I/O is available, it is used to write and read in
+ * parallel. Otherwise, the behaviour is emulated using serial I/O and MPI.
+ * Without MPI this module still enables the user to write and read equivalent
+ * files but only in serial.
+ *
  * \ingroup sc_scda
  */
 
-/** \defgroup sc_scda Parallel file format
+/** \defgroup sc_scda Parallel file I/0
  * 
- * Functionality read and write in parallel using a prescribed
- * file format.
+ * Functionality to write and read in parallel using a prescribed
+ * serial-equivalent file format called \b scda.
+ *
+ * The file format \b scda is in particular suitable for parallel I/O and is
+ * accompanied by a convention for element-wise compression.
+ *
+ * The format is designed such that the the parallel partition and in particular
+ * the process count can differ between writing and reading.
+ *
+ * The main purpose of \b scda is to enable the user to implement parallel I/O
+ * for numerical appliations, e.g. simulation checkpoint/restart.
  *
  * \ingroup sc
  */
@@ -53,7 +72,7 @@ typedef struct sc_scda_fcontext sc_scda_fcontext_t;
  */
 typedef enum sc_scda_ferror
 {
-  SC_SCDA_FERROR_SUCCESS = 0,
+  SC_SCDA_FERROR_SUCCESS = 0, /**< successful function call */
   SC_SCDA_FERR_FILE = sc_MPI_ERR_LASTCODE, /**< invalid file handle */
   SC_SCDA_FERR_NOT_SAME, /**< collective arg not identical */
   SC_SCDA_FERR_AMODE, /**< access mode error */
