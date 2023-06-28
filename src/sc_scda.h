@@ -109,7 +109,7 @@ sc_scda_ferror_t;
  * Moreover, all parameters are collective.
  * This function leaves the file open if MPI I/O is available.
  * Independent of the availability of MPI I/O the user can write one or more
- * file sections before closing the file using \ref sc_fclose.
+ * file sections before closing the file using \ref sc_scda_fclose.
  *
  * In the case of writing it is the user's responsibility to write any further
  * metadata of the file that is required by the application. This can be done
@@ -168,7 +168,7 @@ sc_scda_fcontext_t *sc_scda_fopen (sc_MPI_Comm mpicomm,
  * errors. 
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_fopen with mode 'w'.
+ *                              sc_scda_fopen with mode 'w'.
  * \param [in]      data        On the rank \b root a sc_array with element
  *                              count 1 and element size 32. On all other ranks
  *                              this parameter is ignored.
@@ -207,7 +207,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_fopen with mode 'w'.
+ *                              sc_scda_fopen with mode 'w'.
  * \param [in]      block_data  On rank \b root a sc_array with one element and
  *                              element size equals to \b block_size. On all
  *                              other ranks the parameter is ignored.
@@ -258,7 +258,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_fopen with mode 'w'.
+ *                              sc_scda_fopen with mode 'w'.
  * \param [in]      array_data  On rank p the p-th entry of \b elem_counts
  *                              must be the element count of \b array_data.
  *                              The element size of the sc_array must be equal
@@ -331,7 +331,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_fopen with mode 'w'.
+ *                              sc_scda_fopen with mode 'w'.
  * \param [in]      array_data  Let p be the calling rank. If \b indirect is
  *                              false, \b array_data must have element count 1
  *                              and as element size the p-th entry of
@@ -425,7 +425,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_fopen with mode 'r'.
+ *                              sc_scda_fopen with mode 'r'.
  * \param [out]     type        On output this char is set
  *                              'I' (inline data), 'B' (block of given size),
  *                              'A' (fixed-size array) or 'V' (variable-size
@@ -477,7 +477,7 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_fopen with mode 'r'.
+ *                              sc_scda_fopen with mode 'r'.
  * \param [out]     data        Exactly 32 bytes on the rank \b root or NULL
  *                              on \b root to not read the bytes. The parameter
  *                              is ignored on all ranks unequal to \b root.
@@ -511,7 +511,7 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_fopen with mode 'r'.
+ *                              sc_scda_fopen with mode 'r'.
  * \param [out]     block_data  A sc_array with element count 1 and element
  *                              size \b block_size. On output the sc_array is
  *                              filled with the block data of the read block data
@@ -551,7 +551,7 @@ sc_scda_fcontext_t *sc_scda_fread_block (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_fopen with mode 'r'.
+ *                              sc_scda_fopen with mode 'r'.
  * \param [out]     array_data  If \b indirect is false, a sc_array with
  *                              element count equals to the p-th entry of
  *                              \b elem_counts for p being the calling rank.
@@ -612,7 +612,7 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_fopen with mode 'r'.
+ *                              sc_scda_fopen with mode 'r'.
  * \param [out]     elem_sizes  A sc_array with element count equals to
  *                              p-th entry of \b elem_counts for p being the
  *                              calling rank. The element size must be
@@ -659,7 +659,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_fopen with mode 'r'.
+ *                              sc_scda_fopen with mode 'r'.
  * \param [out]     array_data  Let p be the calling rank. If \b indirect is
  *                              false, \b array_data must have element count 1
  *                              and as element size the p-th entry of
@@ -739,8 +739,8 @@ int                 sc_scda_ferror_string (int errcode, char *str, int *len);
 /** Close a file opened for parallel write/read and the free the file context.
  *
  * This is a collective function.
- * Every call of \ref sc_fopen must be matched by a corresponding call of \ref
- * sc_fclose on the created file context.
+ * Every call of \ref sc_scda_fopen must be matched by a corresponding call of
+ * \ref sc_scda_fclose on the created file context.
  * All parameters are collective.
  *
  * This function does not abort on MPI I/O errors but returns NULL.
@@ -748,15 +748,15 @@ int                 sc_scda_ferror_string (int errcode, char *str, int *len);
  * errors.
  *
  * \param [in,out]  fc        File context previously created by
- *                            \ref sc_fopen. This file context is freed after
- *                            a call of this function.
+ *                            \ref sc_scda_fopen. This file context is freed
+ *                            after a call of this function.
  * \param [out]     errcode   An errcode that can be interpreted by \ref
  *                            sc_scda_ferror_string.
  * \return                    SC_SCDA_FERROR_SUCCESS for a successful call
  *                            and -1 in case a of an error.
  *                            See also \b errcode argument.
  */
-int                 sc_fclose (sc_scda_fcontext_t * fc, int *errcode);
+int                 sc_scda_fclose (sc_scda_fcontext_t * fc, int *errcode);
 
 SC_EXTERN_C_END;
 
