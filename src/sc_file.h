@@ -43,41 +43,41 @@
 
 SC_EXTERN_C_BEGIN;
 
-#define SCDA_HEADER_BYTES 128 /**< number of file header bytes */
-#define SCDA_USER_STRING_BYTES 58 /**< number of user string bytes */
+#define SC_SCDA_HEADER_BYTES 128 /**< number of file header bytes */
+#define SC_SCDA_USER_STRING_BYTES 58 /**< number of user string bytes */
 
 /** Opaque context used for writing a libsc data file. */
-typedef struct scda_fcontext scda_fcontext_t;
+typedef struct sc_scda_fcontext sc_scda_fcontext_t;
 
 /** Error values for sc_file functions.
  */
-typedef enum scda_ferror
+typedef enum sc_scda_ferror
 {
-  SCDA_FERROR_SUCCESS = 0,
-  SCDA_FERR_FILE = sc_MPI_ERR_LASTCODE, /**< invalid file handle */
-  SCDA_FERR_NOT_SAME, /**< collective arg not identical */
-  SCDA_FERR_AMODE, /**< access mode error */
-  SCDA_FERR_NO_SUCH_FILE, /**< file does not exist */
-  SCDA_FERR_FILE_EXIST, /**< file exists already */
-  SCDA_FERR_BAD_FILE, /**< invalid file name */
-  SCDA_FERR_ACCESS, /**< permission denied */
-  SCDA_FERR_NO_SPACE, /**< not enough space */
-  SCDA_FERR_QUOTA, /**< quota exceeded */
-  SCDA_FERR_READ_ONLY, /**< read only file (system) */
-  SCDA_FERR_IN_USE, /**< file currently open by other process */
-  SCDA_FERR_IO, /**< other I/O error */
-  SCDA_FERR_FORMAT,  /**< read file has a wrong format */
-  SCDA_FERR_SECTION_TYPE, /**< a valid non-matching section type */
-  SCDA_FERR_IN_DATA, /**< input data of file function is invalid */
-  SCDA_FERR_COUNT,   /**< read or write count error that was not
+  SC_SCDA_FERROR_SUCCESS = 0,
+  SC_SCDA_FERR_FILE = sc_MPI_ERR_LASTCODE, /**< invalid file handle */
+  SC_SCDA_FERR_NOT_SAME, /**< collective arg not identical */
+  SC_SCDA_FERR_AMODE, /**< access mode error */
+  SC_SCDA_FERR_NO_SUCH_FILE, /**< file does not exist */
+  SC_SCDA_FERR_FILE_EXIST, /**< file exists already */
+  SC_SCDA_FERR_BAD_FILE, /**< invalid file name */
+  SC_SCDA_FERR_ACCESS, /**< permission denied */
+  SC_SCDA_FERR_NO_SPACE, /**< not enough space */
+  SC_SCDA_FERR_QUOTA, /**< quota exceeded */
+  SC_SCDA_FERR_READ_ONLY, /**< read only file (system) */
+  SC_SCDA_FERR_IN_USE, /**< file currently open by other process */
+  SC_SCDA_FERR_IO, /**< other I/O error */
+  SC_SCDA_FERR_FORMAT,  /**< read file has a wrong format */
+  SC_SCDA_FERR_SECTION_TYPE, /**< a valid non-matching section type */
+  SC_SCDA_FERR_IN_DATA, /**< input data of file function is invalid */
+  SC_SCDA_FERR_COUNT,   /**< read or write count error that was not
                                  classified as a format error */
-  SCDA_FERR_UNKNOWN, /**< unknown error */
-  SCDA_FERR_LASTCODE /**< to define own error codes for
+  SC_SCDA_FERR_UNKNOWN, /**< unknown error */
+  SC_SCDA_FERR_LASTCODE /**< to define own error codes for
                                   a higher level application
                                   that is using sc_file
                                   functions */
 }
-scda_ferror_t;
+sc_scda_ferror_t;
 
 /** Open a file for writing/reading and write/read the file header to the file.
  *
@@ -91,16 +91,16 @@ scda_ferror_t;
  * In the case of writing it is the user's responsibility to write any further
  * metadata of the file that is required by the application. This can be done
  * by writing file sections. However, the user can use \ref
- * scda_fread_section_header and skipping the respective data bytes using the
- * respective read functions scda_fread_*_data to parse the structure
- * of a given file and some metadata that is written by scda.
+ * sc_scda_fread_section_header and skipping the respective data bytes using the
+ * respective read functions sc_scda_fread_*_data to parse the structure
+ * of a given file and some metadata that is written by sc_scda.
  *
  * In the case of reading  the file must exist and be at least of the size of
- * the file header, i.e. \ref SCDA_HEADER_BYTES bytes. If the file has a file
- * header that does not satisfy the scda file header format, the function
+ * the file header, i.e. \ref SC_SCDA_HEADER_BYTES bytes. If the file has a file
+ * header that does not satisfy the sc_scda file header format, the function
  * reports the error using SC_LERRORF, collectively close the file and
  * deallocate the file context. In this case the function returns NULL on all
- * ranks. A wrong file header format causes SCDA_ERR_FORMAT as \b errcode.
+ * ranks. A wrong file header format causes SC_SCDA_ERR_FORMAT as \b errcode.
  *
  * This function does not abort on MPI I/O errors but returns NULL.
  * Without MPI I/O the function may abort on file system dependent errors.
@@ -112,23 +112,23 @@ scda_ferror_t;
  * \param [in]     mode      Either 'w' for writing to newly created file or
  *                          'r' to read from a file.
  * \param [in,out] user_string For \b mode == 'w' at most \ref
- *                          SCDA_USER_STRING_BYTES characters in
+ *                          SC_SCDA_USER_STRING_BYTES characters in
  *                          a nul-terminated string. These characters are
  *                          written on rank 0 to the file header.
  *                          For \b mode == 'r' at least \ref
- *                          SCDA_USER_STRING_BYTES + 1 bytes. The user string
+ *                          SC_SCDA_USER_STRING_BYTES + 1 bytes. The user string
  *                          is read on rank 0 and internally broadcasted to all
  *                          ranks.
  * \param [out]    errcode  An errcode that can be interpreted by \ref
- *                          scda_ferror_string.
+ *                          sc_scda_ferror_string.
  * \return                  Newly allocated context to continue writing/reading
  *                          and eventually closing the file. NULL in
- *                          case of error, i.e. errcode != SCDA_FERROR_SUCCESS.
+ *                          case of error, i.e. errcode != SC_SCDA_FERROR_SUCCESS.
  */
-scda_fcontext_t    *scda_fopen (sc_MPI_Comm mpicomm,
-                                const char *filename,
-                                char mode,
-                                const char *user_string, int *errcode);
+sc_scda_fcontext_t *sc_scda_fopen (sc_MPI_Comm mpicomm,
+                                   const char *filename,
+                                   char mode,
+                                   const char *user_string, int *errcode);
 
 /** Write an inline data section.
  *
@@ -149,7 +149,7 @@ scda_fcontext_t    *scda_fopen (sc_MPI_Comm mpicomm,
  * \param [in]      data        On the rank \b root a sc_array with element
  *                              count 1 and element size 32. On all other ranks
  *                              this parameter is ignored.
- * \param [in]      user_string Maximal \ref SCDA_USER_STRING_BYTES + 1 bytes
+ * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
  *                              on rank \b root and otherwise ignored.
  *                              The user string is written without the
  *                              nul-termination by MPI rank \b root.
@@ -158,18 +158,18 @@ scda_fcontext_t    *scda_fopen (sc_MPI_Comm mpicomm,
  *                              \b root indicates the MPI rank on that the
  *                              IO operations take place.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              scda_ferror_string.
+ *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
  *                              and \b fc is freed.
- *                              The scda file context can be used to continue
+ *                              The sc_scda file context can be used to continue
  *                              writing and eventually closing the file.
  */
-scda_fcontext_t    *scda_fwrite_inline (scda_fcontext_t * fc,
-                                        sc_array_t * data,
-                                        const char *user_string, int root,
-                                        int *errcode);
+sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
+                                           sc_array_t * data,
+                                           const char *user_string, int root,
+                                           int *errcode);
 
 /** Write a fixed-size block file section.
  *
@@ -190,7 +190,7 @@ scda_fcontext_t    *scda_fwrite_inline (scda_fcontext_t * fc,
  *                              other ranks the parameter is ignored.
  * \param [in]      block_size  The size of the data block in bytes. Must be
  *                              less or equal than 10^{26} - 1.
- * \param [in]      user_string Maximal \ref SCDA_USER_STRING_BYTES + 1 bytes
+ * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
  *                              on rank \b root and otherwise ignored.
  *                              The user string is written without the
  *                              nul-termination by MPI rank \b root.
@@ -202,25 +202,25 @@ scda_fcontext_t    *scda_fwrite_inline (scda_fcontext_t * fc,
  *                              is written compressed. This results in two
  *                              written file sections that can be read without
  *                              the encoding interpretation by using \ref
- *                              scda_fread_section_header with decode set to
- *                              false followed by the usual scda_fread
+ *                              sc_scda_fread_section_header with decode set to
+ *                              false followed by the usual sc_scda_fread
  *                              functions. The data can be read as passed to
  *                              this function by using decode true in \ref
- *                              scda_fread_section_header.
+ *                              sc_scda_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              scda_ferror_string.
+ *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
  *                              and \b fc is freed.
- *                              The scda file context can be used to continue
+ *                              The sc_scda file context can be used to continue
  *                              writing and eventually closing the file.
  */
-scda_fcontext_t    *scda_fwrite_block (scda_fcontext_t * fc,
-                                       sc_array_t * block_data,
-                                       size_t block_size,
-                                       const char *user_string,
-                                       int root, int encode, int *errcode);
+sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
+                                          sc_array_t * block_data,
+                                          size_t block_size,
+                                          const char *user_string,
+                                          int root, int encode, int *errcode);
 
 /** Write a fixed-size array file section.
  *
@@ -266,7 +266,7 @@ scda_fcontext_t    *scda_fwrite_block (scda_fcontext_t * fc,
  *                              a sc_array with element size equals to
  *                              \b elem_size that contains the actual array
  *                              elements.
- * \param [in]      user_string Maximal \ref SCDA_USER_STRING_BYTES + 1 bytes
+ * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
  *                              on rank \b root and otherwise ignored.
  *                              The user string is written without the
  *                              nul-termination by MPI rank 0.
@@ -274,32 +274,32 @@ scda_fcontext_t    *scda_fwrite_block (scda_fcontext_t * fc,
  *                              is written compressed. This results in two
  *                              written file sections that can be read without
  *                              the encoding interpretation by using \ref
- *                              scda_fread_section_header with decode set to
- *                              false followed by the usual scda_fread
+ *                              sc_scda_fread_section_header with decode set to
+ *                              false followed by the usual sc_scda_fread
  *                              functions. The data can be read as passed to
  *                              this function by using decode true in \ref
- *                              scda_fread_section_header.
+ *                              sc_scda_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              scda_ferror_string.
+ *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
  *                              and \b fc is freed.
- *                              The scda file context can be used to continue
+ *                              The sc_scda file context can be used to continue
  *                              writing and eventually closing the file.
  */
-scda_fcontext_t    *scda_fwrite_array (scda_fcontext_t * fc,
-                                       sc_array_t * array_data,
-                                       sc_array_t * elem_counts,
-                                       size_t elem_size,
-                                       int indirect,
-                                       const char *user_string,
-                                       int encode, int *errcode);
+sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
+                                          sc_array_t * array_data,
+                                          sc_array_t * elem_counts,
+                                          size_t elem_size,
+                                          int indirect,
+                                          const char *user_string,
+                                          int encode, int *errcode);
 
 /** Write a variable-size array file section.
  *
  * This is a collective function.
- * This function can be used instead of \ref scda_fwrite_array if the array
+ * This function can be used instead of \ref sc_scda_fwrite_array if the array
  * elements do not have a constant element size in bytes.
  * All parameters except of \b array_data and \b elem_sizes are collective.
  *
@@ -352,7 +352,7 @@ scda_fcontext_t    *scda_fwrite_array (scda_fcontext_t * fc,
  *                              a sc_array with the actual array elements as
  *                              data as further explained in the documentation
  *                              of \b array_data.
- * \param [in]      user_string Maximal \ref SCDA_USER_STRING_BYTES + 1 bytes
+ * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
  *                              on rank \b root and otherwise ignored.
  *                              The user string is written without the
  *                              nul-termination by MPI rank 0.
@@ -360,28 +360,28 @@ scda_fcontext_t    *scda_fwrite_array (scda_fcontext_t * fc,
  *                              is written compressed. This results in two
  *                              written file sections that can be read without
  *                              the encoding interpretation by using \ref
- *                              scda_fread_section_header with decode set to
- *                              false followed by the usual scda_fread
+ *                              sc_scda_fread_section_header with decode set to
+ *                              false followed by the usual sc_scda_fread
  *                              functions. The data can be read as passed to
  *                              this function by using decode true in \ref
- *                              scda_fread_section_header.
+ *                              sc_scda_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              scda_ferror_string.
+ *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
  *                              and \b fc is freed.
- *                              The scda file context can be used to continue
+ *                              The sc_scda file context can be used to continue
  *                              writing and eventually closing the file.
  */
-scda_fcontext_t    *scda_fwrite_varray (scda_fcontext_t * fc,
-                                        sc_array_t * array_data,
-                                        sc_array_t * elem_counts,
-                                        sc_array_t * elem_sizes,
-                                        sc_array_t * proc_sizes,
-                                        int indirect,
-                                        const char *user_string,
-                                        int encode, int *errcode);
+sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
+                                           sc_array_t * array_data,
+                                           sc_array_t * elem_counts,
+                                           sc_array_t * elem_sizes,
+                                           sc_array_t * proc_sizes,
+                                           int indirect,
+                                           const char *user_string,
+                                           int encode, int *errcode);
 
 /** Read the next file section header.
  *
@@ -389,9 +389,9 @@ scda_fcontext_t    *scda_fwrite_varray (scda_fcontext_t * fc,
  * This functions reads the next file section header and provides the user
  * information on the subsequent file section that can be used to read the
  * actual data in a next calling depending on the file section type one
- * (or for a variable-size array two) functions out of \ref scda_fread_block,
- * \ref scda_fread_array_data, \ref scda_fread_varray_sizes and \ref
- * scda_fread_varray_data. In the case that the considered file section is a
+ * (or for a variable-size array two) functions out of \ref sc_scda_fread_block,
+ * \ref sc_scda_fread_array_data, \ref sc_scda_fread_varray_sizes and \ref
+ * sc_scda_fread_varray_data. In the case that the considered file section is a
  * an inline data section one does not need any further function calls since
  * the file section is already completely read and the user could proceed by
  * trying to read the next file section header.
@@ -414,39 +414,39 @@ scda_fcontext_t    *scda_fwrite_varray (scda_fcontext_t * fc,
  *                              elements if \b type is 'A' and for the \b type
  *                              'B' the number of bytes. Otherwise \b elem_size
  *                              is set to 0.
- * \param [out]     user_string At least \ref SCDA_USER_STRING_BYTES + 1 bytes.
+ * \param [out]     user_string At least \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
  *                              On output filled with the user section string.
  * \param [in]      decode      A Boolean to decide whether the two following
  *                              file sections should be interpreted as encoded
  *                              in the sense that they were written by a
- *                              scda_fread_* function with encode set to true.
+ *                              sc_scda_fread_* function with encode set to true.
  *                              If the encoding convention is not satisfied,
  *                              this function outputs an \b errcode unequal
- *                              to SCDA_FERROR_SUCCESS, deallocates and closes
+ *                              to SC_SCDA_FERROR_SUCCESS, deallocates and closes
  *                              \b fc and returns NULL. The subsequent
- *                              scda_fread_* calls do not require any
+ *                              sc_scda_fread_* calls do not require any
  *                              adjustment dependent on \b decode.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              scda_ferror_string.
+ *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
  *                              and \b fc is freed.
- *                              The scda file context can be used to continue
+ *                              The sc_scda file context can be used to continue
  *                              reading and eventually closing the file.
  */
-scda_fcontext_t    *scda_fread_section_header (scda_fcontext_t * fc,
-                                               char *type,
-                                               size_t *elem_count,
-                                               size_t *elem_size,
-                                               char *user_string,
-                                               int decode, int *errcode);
+sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
+                                                  char *type,
+                                                  size_t *elem_count,
+                                                  size_t *elem_size,
+                                                  char *user_string,
+                                                  int decode, int *errcode);
 
 /** Read the data of a inline data section.
  *
  * This is a collective function.
  * This function is only valid to call directly after a call of \ref
- * scda_fread_section_header.
+ * sc_scda_fread_section_header.
  * All parameters except of \b data are collective.
  *
  * This function does not abort on MPI I/O errors but returns NULL.
@@ -463,23 +463,23 @@ scda_fcontext_t    *scda_fread_section_header (scda_fcontext_t * fc,
  *                              \b root indicates the MPI rank on that the
  *                              IO operations take place.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              scda_ferror_string.
+ *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
  *                              and \b fc is freed.
- *                              The scda file context can be used to continue
+ *                              The sc_scda file context can be used to continue
  *                              reading and eventually closing the file.
  */
-scda_fcontext_t    *scda_fread_inline_data (scda_fcontext_t * fc,
-                                            sc_array_t * data, int root,
-                                            int *errcode);
+sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
+                                               sc_array_t * data, int root,
+                                               int *errcode);
 
 /** Read the data of a block of given size.
  *
  * This is a collective function.
  * This function is only valid to call directly after a call of \ref
- * scda_fread_section_header. This preceding call gives also the required
+ * sc_scda_fread_section_header. This preceding call gives also the required
  * \b block_size.
  * All parameters except of \b data_block are collective.
  *
@@ -495,30 +495,30 @@ scda_fcontext_t    *scda_fread_inline_data (scda_fcontext_t * fc,
  *                              section.
  * \param [in]      block_size  The number of bytes of the block as retrieved
  *                              from the preceding call of \ref
- *                              scda_fread_section_header.
+ *                              sc_scda_fread_section_header.
  * \param [in]      root        An integer between 0 and mpisize of the MPI
  *                              communicator that was used to create \b fc.
  *                              \b root indicates the MPI rank on that the
  *                              IO operations take place.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              scda_ferror_string.
+ *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
  *                              and \b fc is freed.
- *                              The scda file context can be used to continue
+ *                              The sc_scda file context can be used to continue
  *                              reading and eventually closing the file.
  */
-scda_fcontext_t    *scda_fread_block (scda_fcontext_t * fc,
-                                      sc_array_t * block_data,
-                                      size_t block_size, int root,
-                                      int *errcode);
+sc_scda_fcontext_t *sc_scda_fread_block (sc_scda_fcontext_t * fc,
+                                         sc_array_t * block_data,
+                                         size_t block_size, int root,
+                                         int *errcode);
 
 /** Read the data of a fixed-size array.
  *
  * This is a collective function.
  * This function is only valid to call directly after a call of \ref
- * scda_fread_section_header. This preceding call gives also the required
+ * sc_scda_fread_section_header. This preceding call gives also the required
  * \b elem_size and the global number of array elements. The user must pass
  * a parallel partition of the array elements by \b elem_counts.
  * All parameters except of \b array_data are collective.
@@ -551,35 +551,35 @@ scda_fcontext_t    *scda_fread_block (scda_fcontext_t * fc,
  *                              the partition that is used to read the array
  *                              data in parallel. The sum of all array elements
  *                              must be equal to elem_count as retrieved from
- *                              \ref scda_fread_section_header.
+ *                              \ref sc_scda_fread_section_header.
  * \param [in]      elem_size   The element size of one array element on number
  *                              of bytes. Must be the same on all ranks and as
- *                              retrieved from \ref scda_fread_section_header.
+ *                              retrieved from \ref sc_scda_fread_section_header.
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to read
  *                              indirectly and in particular from potentially
  *                              non-contigous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              scda_ferror_string.
+ *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
  *                              and \b fc is freed.
- *                              The scda file context can be used to continue
+ *                              The sc_scda file context can be used to continue
  *                              reading and eventually closing the file.
  */
-scda_fcontext_t    *scda_fread_array_data (scda_fcontext_t * fc,
-                                           sc_array_t * array_data,
-                                           sc_array_t * elem_counts,
-                                           size_t elem_size,
-                                           int indirect, int *errcode);
+sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
+                                              sc_array_t * array_data,
+                                              sc_array_t * elem_counts,
+                                              size_t elem_size,
+                                              int indirect, int *errcode);
 
 /** Read the element sizes of a variable-size array.
  *
  * This is a collective function.
  * This function is only valid to call directly after a call of \ref
- * scda_fread_section_header. This preceding call gives also the for
+ * sc_scda_fread_section_header. This preceding call gives also the for
  * \b elem_counts required global number of array elements. The user must pass
  * a parallel partition of the array elements by \b elem_counts.
  * All parameters except of \b elem_sizes are collective.
@@ -608,26 +608,26 @@ scda_fcontext_t    *scda_fread_array_data (scda_fcontext_t * fc,
  *                              the partition that is used to read the array
  *                              data in parallel. The sum of all array elements
  *                              must be equal to elem_count as retrieved from
- *                              \ref scda_fread_section_header.
+ *                              \ref sc_scda_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              scda_ferror_string.
+ *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
  *                              and \b fc is freed.
- *                              The scda file context can be used to continue
+ *                              The sc_scda file context can be used to continue
  *                              reading and eventually closing the file.
  */
-scda_fcontext_t    *scda_fread_varray_sizes (scda_fcontext_t * fc,
-                                             sc_array_t * elem_sizes,
-                                             sc_array_t * elem_counts,
-                                             int *errcode);
+sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
+                                                sc_array_t * elem_sizes,
+                                                sc_array_t * elem_counts,
+                                                int *errcode);
 
 /** Read the data of a variable-size array.
  *
  * This is a collective function.
  * This function is only valid to call directly after a call of \ref
- * scda_fread_varray_sizes. This preceding call gives also the required
+ * sc_scda_fread_varray_sizes. This preceding call gives also the required
  * \b elem_sizes.
  * All parameters except of \b array_data and \b elem_sizes are collective.
  *
@@ -665,10 +665,10 @@ scda_fcontext_t    *scda_fread_varray_sizes (scda_fcontext_t * fc,
  *                              the partition that is used to read the array
  *                              data in parallel. The sum of all array elements
  *                              must be equal to elem_count as retrieved from
- *                              \ref scda_fread_section_header.
+ *                              \ref sc_scda_fread_section_header.
  * \param [in]    elem_sizes    The local element sizes conforming to the array
  *                              element partition \b elem_counts as retrieved
- *                              from \ref scda_fread_varray_sizes.
+ *                              from \ref sc_scda_fread_varray_sizes.
  *                              This parameter is ignored for ranks to which
  *                              NULL for \b array_data was passed.
  * \param [in]      proc_sizes  An sc_array that must be equal on all
@@ -684,34 +684,34 @@ scda_fcontext_t    *scda_fread_varray_sizes (scda_fcontext_t * fc,
  *                              non-contigous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              scda_ferror_string.
+ *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
  *                              of errors that does not abort the program.
  *                              In case of error the file is tried to close
  *                              and \b fc is freed.
- *                              The scda file context can be used to continue
+ *                              The sc_scda file context can be used to continue
  *                              reading and eventually closing the file.
  */
-scda_fcontext_t    *scda_fread_varray_data (scda_fcontext_t * fc,
-                                            sc_array_t * array_data,
-                                            sc_array_t * elem_counts,
-                                            sc_array_t * elem_sizes,
-                                            sc_array_t * proc_sizes,
-                                            int indirect, int *errcode);
+sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
+                                               sc_array_t * array_data,
+                                               sc_array_t * elem_counts,
+                                               sc_array_t * elem_sizes,
+                                               sc_array_t * proc_sizes,
+                                               int indirect, int *errcode);
 
-/** Translate a scda error code to an error string.
+/** Translate a sc_scda error code to an error string.
  *
  * This is a non-collective function.
  *
  * \param [in]    errcode       An errcode that is output by a
- *                              scda function.
+ *                              sc_scda function.
  * \param [out]   str           At least sc_MPI_MAX_ERROR_STRING bytes.
  * \param [in, out] len         On output the length of string on return.
  *                              On input the number of bytes os \b str on input.
- * \return                      SCDA_FERROR_SUCCESS on success or
+ * \return                      SC_SCDA_FERROR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
-int                 scda_ferror_string (int errcode, char *str, int *len);
+int                 sc_scda_ferror_string (int errcode, char *str, int *len);
 
 /** Close a file opened for parallel write/read and the free the file context.
  *
@@ -728,12 +728,12 @@ int                 scda_ferror_string (int errcode, char *str, int *len);
  *                            \ref sc_fopen. This file context is freed after
  *                            a call of this function.
  * \param [out]     errcode   An errcode that can be interpreted by \ref
- *                            scda_ferror_string.
- * \return                    SCDA_FERROR_SUCCESS for a successful call
+ *                            sc_scda_ferror_string.
+ * \return                    SC_SCDA_FERROR_SUCCESS for a successful call
  *                            and -1 in case a of an error.
  *                            See also \b errcode argument.
  */
-int                 sc_fclose (scda_fcontext_t * fc, int *errcode);
+int                 sc_fclose (sc_scda_fcontext_t * fc, int *errcode);
 
 SC_EXTERN_C_END;
 
