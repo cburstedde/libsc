@@ -39,7 +39,7 @@
  */
 
 /** \defgroup sc_scda Parallel file I/0
- * 
+ *
  * Functionality to write and read in parallel using a prescribed
  * serial-equivalent file format called \b scda.
  *
@@ -58,7 +58,7 @@
 #ifndef SC_SCDA_H
 #define SC_SCDA_H
 
-#include <sc.h>
+#include <sc_containers.h>
 
 SC_EXTERN_C_BEGIN;
 
@@ -165,7 +165,7 @@ sc_scda_fcontext_t *sc_scda_fopen (sc_MPI_Comm mpicomm,
  *
  * This function does not abort on MPI I/O errors but returns NULL.
  * Without MPI I/O the function may abort on file system dependent
- * errors. 
+ * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen with mode 'w'.
