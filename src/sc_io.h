@@ -28,6 +28,9 @@
  * This file provides functions that wraps C-standard I/O functions and abort on
  * file errors. Furthermore, it offers a set functions that use the C-standard
  * I/O functions too but provide a source/sink semantic.
+ * For parallel I/O it provides another set of functions to read and write
+ * in parallel if at least MPI is enabled. If MPI I/O is avaiable it is used
+ * by these functions.
  * In addition, there is a set of function to compress and decompress data
  * based on zlib.
  * Finally, the file also provides functions to write in the VTK file format.
@@ -44,9 +47,9 @@
  * The I/O support provides functions to
  * read and write data based on C-standard functions
  * and also an other set of functions to read and write
- * in parallel if at least MPI is enabled.
+ * based on MPI I/O if it is enabled.
  * Furthermore, there are functions to encode and decode
- * based on zlib.
+ * based on zlib and to write VTK files.
  *
  * \b Parallel \b file \b format
  *
