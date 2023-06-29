@@ -25,23 +25,12 @@
  *
  * Routines for parallel I/O format.
  *
- * This module contains functions to write and read data in parallel according
- * to a user prescribed partition of contigously indexed potentially
- * variable-sized elements. In addition, the user can also write and read
- * data in serial and the data can be stored element-wise compressed.
- *
- * If MPI I/O is available, it is used to write and read in
- * parallel. Otherwise, the behaviour is emulated using serial I/O and MPI.
- * Without MPI this module still enables the user to write and read equivalent
- * files but only in serial.
- *
- * \ingroup sc_scda
- */
-
-/** \defgroup sc_scda Parallel file I/0
- *
  * Functionality to write and read in parallel using a prescribed
  * serial-equivalent file format called \b scda.
+ *
+ * The file format includes
+ * metadata in ASCII and therefore enables the human eye to parse the
+ * file structure using a standard text editor.
  *
  * The file format \b scda is in particular suitable for parallel I/O and is
  * accompanied by a convention for element-wise compression.
@@ -52,7 +41,41 @@
  * The main purpose of \b scda is to enable the user to implement parallel I/O
  * for numerical appliations, e.g. simulation checkpoint/restart.
  *
- * \ingroup sc
+ * \b Workflow
+ *
+ * All workflows start with \ref sc_scda_fopen that creates a file context
+ * \ref sc_scda_fcontext_t that never moves backwards.
+ *
+ * Then the user can call a sequence of functions out of:
+ *
+ * \ref sc_scda_fwrite_inline,
+ * \ref sc_scda_fwrite_block,
+ * \ref sc_scda_fwrite_array and
+ * \ref sc_scda_fwrite_varray,
+ *
+ * for the case of using the writing mode in \ref sc_scda_fopen.
+ *
+ * Alternatively, for the reading mode the user must call
+ * \ref sc_scda_fread_section_header that examines the current file section
+ * and then call accordingly to the retrieved file section type
+ *
+ * \ref sc_scda_fread_inline_data,
+ * \ref sc_scda_fread_block_data,
+ * \ref sc_scda_fread_array_data,
+ * \ref sc_scda_fread_varray_sizes and
+ * \ref sc_scda_fread_varray_data.
+ *
+ * Finally, the file context is collectively closed and deallocated by \ref
+ * sc_scda_fclose.
+ *
+ * All above mentioned sc_scda functions are collective and  output an
+ * error code (cf. \ref sc_scda_ferror_t) that can be examined by \ref
+ * sc_scda_ferror_string.
+ *
+ * For more details and the option for encoded data see the functions
+ * below.
+ *
+ * \ingroup io
  */
 
 #ifndef SC_SCDA_H
@@ -412,9 +435,10 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * This functions reads the next file section header and provides the user
  * information on the subsequent file section that can be used to read the
  * actual data in a next calling depending on the file section type one
- * (or for a variable-size array two) functions out of \ref sc_scda_fread_block,
- * \ref sc_scda_fread_array_data, \ref sc_scda_fread_varray_sizes and \ref
- * sc_scda_fread_varray_data. In the case that the considered file section is a
+ * (or for a variable-size array two) functions out of
+ * \ref sc_scda_fread_block_data, \ref sc_scda_fread_array_data,
+ * \ref sc_scda_fread_varray_sizes and \ref sc_scda_fread_varray_data.
+ * In the case that the considered file section is a
  * an inline data section one does not need any further function calls since
  * the file section is already completely read and the user could proceed by
  * trying to read the next file section header.
@@ -532,10 +556,10 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  *                              The sc_scda file context can be used to continue
  *                              reading and eventually closing the file.
  */
-sc_scda_fcontext_t *sc_scda_fread_block (sc_scda_fcontext_t * fc,
-                                         sc_array_t * block_data,
-                                         size_t block_size, int root,
-                                         int *errcode);
+sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
+                                              sc_array_t * block_data,
+                                              size_t block_size, int root,
+                                              int *errcode);
 
 /** Read the data of a fixed-size array.
  *

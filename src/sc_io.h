@@ -25,28 +25,47 @@
  *
  * Helper routines for general and parallel I/O.
  *
- * \ingroup sc_io
+ * This file provides functions that wraps C-standard I/O functions and abort on
+ * file errors. Furthermore, it offers a set functions that use the C-standard
+ * I/O functions too but provide a source/sink semantic.
+ * In addition, there is a set of function to compress and decompress data
+ * based on zlib.
+ * Finally, the file also provides functions to write in the VTK file format.
+ *
+ * \ingroup io
  */
 
-/** \defgroup sc_io I/O support
+/** \defgroup io I/O
  *
  * Functionality specific to file/data input/output.
+ *
+ * \b I/O \b support
+ *
+ * The I/O support provides functions to
+ * read and write data based on C-standard functions
+ * and also an other set of functions to read and write
+ * in parallel if at least MPI is enabled.
+ * Furthermore, there are functions to encode and decode
+ * based on zlib.
+ *
+ * \b Parallel \b file \b format
+ *
+ * This file contains routines for parallel I/O format.
+ * In particular there are functions to write and read data in parallel according
+ * to a user prescribed partition of contigously indexed potentially
+ * variable-sized elements. In addition, the user can also write and read
+ * data in serial and the data can be stored element-wise compressed.
+ *
+ * If MPI I/O is available, it is used to write and read in
+ * parallel. Otherwise, the behaviour is emulated using serial I/O and MPI.
+ * Without MPI this module still enables the user to write and read equivalent
+ * files but only in serial.
  *
  * \ingroup sc
  */
 
 #ifndef SC_IO_H
 #define SC_IO_H
-
-/** \file sc_io.h
- *
- * The I/O functionalities provide functions to
- * read and write data based on C-standard functions
- * and also an other set of functions to read and write
- * in parallel if at least MPI is enabled.
- * Furthermore, there are functions to encode and decode
- * based on zlib.
- */
 
 #include <sc_containers.h>
 
