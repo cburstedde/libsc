@@ -44,6 +44,9 @@ src_libsc_la_SOURCES = \
         $(libsc_internal_headers) \
         $(libsc_compiled_sources)
 src_libsc_la_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
+## This is the official API versioning scheme of libtool.  Please see:
+## Read https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
+src_libsc_la_LDFLAGS = -version-info 2:0:0
 LDADD += src/libsc.la
 
 nodist_include_HEADERS += $(libsc_generated_headers)

@@ -237,7 +237,6 @@ extern int          sc_trace_prio;
 #define SC_CHECK_ABORT(q,s)                     \
   ((q) ? (void) 0 : SC_ABORT (s))
 #define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == sc_MPI_SUCCESS, "MPI error")
-#define SC_CHECK_ZLIB(r) SC_CHECK_ABORT ((r) == Z_OK, "zlib error")
 
 /*
  * C++98 does not allow variadic macros
@@ -839,6 +838,13 @@ int                 sc_version_minor (void);
  */
 int                 sc_version_point (void);
 #endif /* 0 */
+
+/** Return a boolean indicating whether zlib has been configured.
+ * \return          True if zlib including adler32_combine (3)
+ *                  has been found on running configure
+ *                  or respectively on calling cmake.
+ */
+int                 sc_have_zlib (void);
 
 /** Return whether we have found a JSON library at configure time.
  * \return          True if and only if SC_HAVE_JSON is defined.

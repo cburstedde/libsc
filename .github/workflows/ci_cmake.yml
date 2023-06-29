@@ -14,6 +14,9 @@ on:
   release:
     types: [published]
 
+env:
+  CTEST_NO_TESTS_ACTION: "error"
+
 jobs:
 
   linux:
@@ -23,7 +26,7 @@ jobs:
 
     strategy:
       matrix:
-        cc: [gcc-9, gcc-10, gcc-11]
+        cc: [gcc-9, gcc-10, gcc-11, gcc-12]
         shared: [false]
         mpi: [true]
         include:
@@ -83,8 +86,7 @@ jobs:
       with:
         name: linux_cmake_log
         path: |
-          ./build/CMakeFiles/CMakeOutput.log
-          ./build/CMakeFiles/CMakeError.log
+          ./build/CMakeFiles/CMakeConfigureLog.yaml
           ./build/Testing/Temporary/LastTest.log
 
   mac:
@@ -94,7 +96,7 @@ jobs:
 
     strategy:
       matrix:
-        cc: [clang, gcc-11]
+        cc: [clang, gcc-12]
         shared: [false]
         include:
         - shared: true
@@ -146,8 +148,7 @@ jobs:
       with:
         name: mac_cmake_log
         path: |
-          ./build/CMakeFiles/CMakeOutput.log
-          ./build/CMakeFiles/CMakeError.log
+          ./build/CMakeFiles/CMakeConfigureLog.yaml
           ./build/Testing/Temporary/LastTest.log
 
   windows:
@@ -202,6 +203,5 @@ jobs:
       with:
         name: windows_cmake_log
         path: |
-          ./build/CMakeFiles/CMakeOutput.log
-          ./build/CMakeFiles/CMakeError.log
+          ./build/CMakeFiles/CMakeConfigureLog.yaml
           ./build/Testing/Temporary/LastTest.log

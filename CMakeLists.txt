@@ -52,12 +52,16 @@ $<$<BOOL:${SC_NEED_M}>:m>
 add_library(SC::SC INTERFACE IMPORTED GLOBAL)
 target_link_libraries(SC::SC INTERFACE sc)
 
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/ ${PROJECT_SOURCE_DIR}/src/sc_builtin/ ${PROJECT_BINARY_DIR}/include/
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/ ${PROJECT_BINARY_DIR}/include/
 DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 FILES_MATCHING PATTERN "*.h"
 )
 
-install(TARGETS sc EXPORT ${PROJECT_NAME}-targets)
+install(TARGETS sc
+  EXPORT ${PROJECT_NAME}-targets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
 
 add_subdirectory(src)
 add_subdirectory(example)

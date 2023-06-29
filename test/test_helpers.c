@@ -75,6 +75,20 @@ test_helpers (const char *str, const char *label, int tint, int tlong)
   return nft;
 }
 
+static void
+encode_and_print (sc_array_t *src)
+{
+  sc_array_t          dest;
+
+  /* encode */
+  SC_ASSERT (src != NULL);
+  sc_array_init (&dest, 1);
+  sc_io_encode (src, &dest);
+  SC_GLOBAL_PRODUCTIONF ("\"%s\": %u: %s", src->array,
+                         (unsigned int) strlen (dest.array), dest.array);
+  sc_array_reset (&dest);
+}
+
 static int
 single_inplace_test (sc_array_t *src, int itest)
 {
@@ -115,7 +129,7 @@ single_inplace_test (sc_array_t *src, int itest)
     }
     sc_array_reset (&inp);
 
-    if (!sc_io_have_zlib () || itest != -1) {
+    if (!sc_have_zlib () || itest != -1) {
       /* for the examples we call, test -1 has a large enough data
          size that the encoded data is shorter than the plaintext. */
 
@@ -251,6 +265,7 @@ test_encode_decode (void)
   int                 num_failed_tests = 0;
   int                 i, j;
   size_t              slen;
+  const char         *str0 = "Hello, world!";
   const char         *str1 = "Hello world.  This is a short text.";
   const char         *str2 =
     "This is a much longer text.  We just paste stuff.\n"
@@ -266,6 +281,12 @@ test_encode_decode (void)
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\
  POSSIBILITY OF SUCH DAMAGE.";
   sc_array_t          src;
+
+  sc_array_init_data (&src, (void *) "", 1, 1);
+  encode_and_print (&src);
+
+  sc_array_init_data (&src, (void *) str0, 1, strlen (str0) + 1);
+  encode_and_print (&src);
 
   sc_array_init_data (&src, (void *) str1, 1, strlen (str1) + 1);
   single_code_test (&src, -2);
