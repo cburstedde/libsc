@@ -122,14 +122,14 @@ typedef enum sc_scda_ferror
 }
 sc_scda_ferror_t;
 
-/** Open a file for writing/reading and write/read the file header to the file.
+/** Open a file for writing/reading and write/read the file header to/from the file.
  *
  * This function creates a new file or overwrites an existing one.
  * It is collective and creates the file on a parallel file system.
  * Moreover, all parameters are collective.
  * This function leaves the file open if MPI I/O is available.
  * Independent of the availability of MPI I/O the user can write one or more
- * file sections before closing the file using \ref sc_scda_fclose.
+ * file sections before closing the file (context) using \ref sc_scda_fclose.
  *
  * In the case of writing it is the user's responsibility to write any further
  * metadata of the file that is required by the application. This can be done
@@ -153,7 +153,7 @@ sc_scda_ferror_t;
  * \param [in]     filename  Path to parallel file that is to be created or
  *                           to be opened.
  * \param [in]     mode      Either 'w' for writing to newly created file or
- *                          'r' to read from a file.
+ *                          'r' to read from an existing file.
  * \param [in,out] user_string For \b mode == 'w' at most \ref
  *                          SC_SCDA_USER_STRING_BYTES characters in
  *                          a nul-terminated string. These characters are
@@ -192,10 +192,9 @@ sc_scda_fcontext_t *sc_scda_fopen (sc_MPI_Comm mpicomm,
  * \param [in]      data        On the rank \b root a sc_array with element
  *                              count 1 and element size 32. On all other ranks
  *                              this parameter is ignored.
- * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
- *                              on rank \b root and otherwise ignored.
+ * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
  *                              The user string is written without the
- *                              nul-termination by MPI rank \b root.
+ *                              nul-termination.
  * \param [in]      root        An integer between 0 and mpisize of the MPI
  *                              communicator that was used to create \b fc.
  *                              \b root indicates the MPI rank on that the
@@ -233,10 +232,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              other ranks the parameter is ignored.
  * \param [in]      block_size  The size of the data block in bytes. Must be
  *                              less or equal than 10^{26} - 1.
- * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
- *                              on rank \b root and otherwise ignored.
+ * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
  *                              The user string is written without the
- *                              nul-termination by MPI rank \b root.
+ *                              nul-termination.
  * \param [in]      root        An integer between 0 and mpisize of the MPI
  *                              communicator that was used to create \b fc.
  *                              \b root indicates the MPI rank on that the
@@ -249,7 +247,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              false followed by the usual sc_scda_fread
  *                              functions. The data can be read as passed to
  *                              this function by using decode true in \ref
- *                              sc_scda_fread_section_header.
+ *                              sc_scda_fread_section_header and calling the
+ *                              usual sc_scda_fread function.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
@@ -271,7 +270,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  * The fixed-size array is the simplest file section that enables the user to
  * write and read data in parallel. This function writes an array of a given
  * element global count and a fixed element size.
- * All parameters except of \b array_data and \b elem_size are collective.
+ * All parameters except of \b array_data are collective.
  *
  * This function does not abort on MPI I/O errors but returns NULL.
  * Without MPI I/O the function may abort on file system dependent
@@ -309,10 +308,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              a sc_array with element size equals to
  *                              \b elem_size that contains the actual array
  *                              elements.
- * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
- *                              on rank \b root and otherwise ignored.
+ * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
  *                              The user string is written without the
- *                              nul-termination by MPI rank 0.
+ *                              nul-termination.
  * \param [in]      encode      A Boolean to decide whether the file section
  *                              is written compressed. This results in two
  *                              written file sections that can be read without
@@ -321,7 +319,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              false followed by the usual sc_scda_fread
  *                              functions. The data can be read as passed to
  *                              this function by using decode true in \ref
- *                              sc_scda_fread_section_header.
+ *                              sc_scda_fread_section_header and calling the
+ *                              usual sc_scda_fread function.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
@@ -365,14 +364,13 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              is again a sc_array. Now, with element count 1
  *                              and element size equals to the actual array
  *                              element size as passed in \b elem_sizes.
- *                              corresponding entries in \b proc_sizes.
  * \param [in]      elem_counts An sc_array that must be equal on all
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
  *                              that was used to create \b fc. The element size
  *                              of the sc_array must be equal to sizeof (unint8_t).
  *                              The sc_array must contain the local array elements
- *                              counts (unsigned int). That is why it induces
+ *                              counts. That is why it induces
  *                              the partition that is used to write the array
  *                              data in parallel.
  * \param [in]      elem_sizes  A sc_array with the element sizes for the local
@@ -395,10 +393,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              a sc_array with the actual array elements as
  *                              data as further explained in the documentation
  *                              of \b array_data.
- * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
- *                              on rank \b root and otherwise ignored.
+ * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
  *                              The user string is written without the
- *                              nul-termination by MPI rank 0.
+ *                              nul-termination.
  * \param [in]      encode      A Boolean to decide whether the file section
  *                              is written compressed. This results in two
  *                              written file sections that can be read without
@@ -407,7 +404,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              false followed by the usual sc_scda_fread
  *                              functions. The data can be read as passed to
  *                              this function by using decode true in \ref
- *                              sc_scda_fread_section_header.
+ *                              sc_scda_fread_section_header and calling the
+ *                              usual sc_scda_fread function.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
  * \return                      Return a pointer to input context or NULL in case
@@ -435,10 +433,6 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * (or for a variable-size array two) functions out of
  * \ref sc_scda_fread_block_data, \ref sc_scda_fread_array_data,
  * \ref sc_scda_fread_varray_sizes and \ref sc_scda_fread_varray_data.
- * In the case that the considered file section is a
- * an inline data section one does not need any further function calls since
- * the file section is already completely read and the user could proceed by
- * trying to read the next file section header.
  * All parameters are collective.
  *
  * This function does not abort on MPI I/O errors but returns NULL.
@@ -447,7 +441,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen with mode 'r'.
- * \param [out]     type        On output this char is set
+ * \param [out]     type        On output this char is set to
  *                              'I' (inline data), 'B' (block of given size),
  *                              'A' (fixed-size array) or 'V' (variable-size
  *                              array) depending on the file section type.
@@ -486,10 +480,10 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
                                                   char *user_string,
                                                   int decode, int *errcode);
 
-/** Read the data of a inline data section.
+/** Read the data of an inline data section.
  *
  * This is a collective function.
- * This function is only valid to call directly after a call of \ref
+ * This function is only valid to call directly after a successful call of \ref
  * sc_scda_fread_section_header.
  * All parameters except of \b data are collective.
  *
@@ -522,7 +516,7 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
 /** Read the data of a block of given size.
  *
  * This is a collective function.
- * This function is only valid to call directly after a call of \ref
+ * This function is only valid to call directly after a successful call of \ref
  * sc_scda_fread_section_header. This preceding call gives also the required
  * \b block_size.
  * All parameters except of \b data_block are collective.
@@ -561,7 +555,7 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
 /** Read the data of a fixed-size array.
  *
  * This is a collective function.
- * This function is only valid to call directly after a call of \ref
+ * This function is only valid to call directly after a successful call of \ref
  * sc_scda_fread_section_header. This preceding call gives also the required
  * \b elem_size and the global number of array elements. The user must pass
  * a parallel partition of the array elements by \b elem_counts.
@@ -578,7 +572,7 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  *                              \b elem_counts for p being the calling rank.
  *                              The element size must be equal to \b elem_size.
  *                              If \b indirect is true, a sc_array with the
- *                              same element count as fir \b indirect false
+ *                              same element count as for \b indirect false
  *                              but with sizeof (sc_array_t) as element size.
  *                              Each array element is then again a sc_array but
  *                              with element count 1 and element size
@@ -601,7 +595,7 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  *                              retrieved from \ref sc_scda_fread_section_header.
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to read
- *                              indirectly and in particular from potentially
+ *                              indirectly and in particular to potentially
  *                              non-contigous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
@@ -622,7 +616,7 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
 /** Read the element sizes of a variable-size array.
  *
  * This is a collective function.
- * This function is only valid to call directly after a call of \ref
+ * This function is only valid to call directly after a successful call of \ref
  * sc_scda_fread_section_header. This preceding call gives also the for
  * \b elem_counts required global number of array elements. The user must pass
  * a parallel partition of the array elements by \b elem_counts.
@@ -670,7 +664,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
 /** Read the data of a variable-size array.
  *
  * This is a collective function.
- * This function is only valid to call directly after a call of \ref
+ * This function is only valid to call directly after a successful call of \ref
  * sc_scda_fread_varray_sizes. This preceding call gives also the required
  * \b elem_sizes.
  * All parameters except of \b array_data and \b elem_sizes are collective.
@@ -724,7 +718,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  *                              element sizes in \b elem_sizes.
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to read
- *                              indirectly and in particular from potentially
+ *                              indirectly and in particular to potentially
  *                              non-contigous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
@@ -751,7 +745,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
  *                              sc_scda function.
  * \param [out]   str           At least sc_MPI_MAX_ERROR_STRING bytes.
  * \param [in, out] len         On output the length of string on return.
- *                              On input the number of bytes os \b str on input.
+ *                              On input the number of bytes of \b str on input.
  * \return                      SC_SCDA_FERROR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
