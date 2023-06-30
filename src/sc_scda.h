@@ -111,7 +111,8 @@ typedef enum sc_scda_ferror
   SC_SCDA_FERR_FORMAT,  /**< read file has a wrong format */
   SC_SCDA_FERR_SECTION_TYPE, /**< a non-matching section type
                                   when trying to read a file section */
-  SC_SCDA_FERR_IN_DATA, /**< input data of file function is invalid */
+  SC_SCDA_FERR_DECODE, /**< decode parameter does not conform to file section */
+  SC_SCDA_FERR_INPUT, /**< input of file function is invalid */
   SC_SCDA_FERR_COUNT,   /**< read or write count error that was not
                                  classified as a format error */
   SC_SCDA_FERR_UNKNOWN, /**< unknown error */
