@@ -109,15 +109,12 @@ typedef enum sc_scda_ferror
   SC_SCDA_FERR_IN_USE, /**< file currently open by other process */
   SC_SCDA_FERR_IO, /**< other I/O error */
   SC_SCDA_FERR_FORMAT,  /**< read file has a wrong format */
-  SC_SCDA_FERR_SECTION_TYPE, /**< a valid non-matching section type */
+  SC_SCDA_FERR_SECTION_TYPE, /**< a non-matching section type
+                                  when trying to read a file section */
   SC_SCDA_FERR_IN_DATA, /**< input data of file function is invalid */
   SC_SCDA_FERR_COUNT,   /**< read or write count error that was not
                                  classified as a format error */
   SC_SCDA_FERR_UNKNOWN, /**< unknown error */
-  SC_SCDA_FERR_USAGE, /**< usage error of the user, e.g.
-                           trying to read a file section
-                           with the wrong file section type
-                           reading function */
   SC_SCDA_FERR_LASTCODE /**< to define own error codes for
                                   a higher level application
                                   that is using sc_scda
