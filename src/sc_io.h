@@ -25,15 +25,24 @@
  *
  * Helper routines for general and parallel I/O.
  *
- * This file provides functions that wraps C-standard I/O functions and abort on
- * file errors. Furthermore, it offers a set functions that use the C-standard
- * I/O functions too but provide a source/sink semantic.
- * For parallel I/O it provides another set of functions to read and write
- * in parallel if at least MPI is enabled. If MPI I/O is avaiable it is used
- * by these functions.
- * In addition, there is a set of function to compress and decompress data
- * based on zlib.
- * Finally, the file also provides functions to write in the VTK file format.
+ * This file provides various sets of functions related to write and read
+ * data as well es to encode and decode it to certain formats.
+ *
+ *  - To abstract transparent writing/reading into/from files or buffers, we
+ *    provide functions centered around \ref sc_io_sink_new and \ref
+ *    sc_io_source_new.
+ *  - To abstract parallel file I/O in a way that works both with and
+ *    without MPI I/O support, we provide \ref sc_io_open, \ref sc_io_write
+ *    and friends.
+ *  - To write to the VTK binary compressed format, we provide suitable
+ *    functions to base64 encode and zlib-compress as required; see
+ *    \ref sc_vtk_write_binary and \ref sc_vtk_write_compressed.
+ *  - To support self-contained ASCII-armored compression, we provide the
+ *    functions \ref sc_io_encode, \ref sc_io_decode_info and \ref
+ *    sc_io_decode.
+ *    They losslessly transform a block of arbitrary data into a compressed
+ *    and base64-encoded format and back that is unambigously defined and
+ *    human-friendly.
  *
  * \ingroup io
  */
