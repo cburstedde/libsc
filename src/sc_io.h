@@ -41,7 +41,7 @@
  *    functions \ref sc_io_encode, \ref sc_io_decode_info and \ref
  *    sc_io_decode.
  *    They losslessly transform a block of arbitrary data into a compressed
- *    and base64-encoded format and back that is unambigously defined and
+ *    and base64-encoded format and back that is unambiguously defined and
  *    human-friendly.
  *
  * \ingroup io
