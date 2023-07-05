@@ -101,7 +101,7 @@ typedef struct sc_scda_fcontext sc_scda_fcontext_t;
  */
 typedef enum sc_scda_ferror
 {
-  SC_SCDA_FERROR_SUCCESS = 0, /**< successful function call */
+  SC_SCDA_FERR_SUCCESS = 0, /**< successful function call */
   SC_SCDA_FERR_FILE = sc_MPI_ERR_LASTCODE, /**< invalid file handle */
   SC_SCDA_FERR_NOT_SAME, /**< collective argument not identical */
   SC_SCDA_FERR_AMODE, /**< access mode error */
@@ -190,7 +190,7 @@ sc_scda_ferror_t;
  *                          sc_scda_ferror_string.
  * \return                  Newly allocated context to continue writing/reading
  *                          and eventually closing the file. NULL in
- *                          case of error, i.e. errcode != SC_SCDA_FERROR_SUCCESS.
+ *                          case of error, i.e. errcode != SC_SCDA_FERR_SUCCESS.
  */
 sc_scda_fcontext_t *sc_scda_fopen (sc_MPI_Comm mpicomm,
                                    const char *filename,
@@ -483,7 +483,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  *                              sc_scda_fread_* function with encode set to true.
  *                              If the encoding convention is not satisfied,
  *                              this function outputs an \b errcode unequal
- *                              to SC_SCDA_FERROR_SUCCESS, deallocates and closes
+ *                              to SC_SCDA_FERR_SUCCESS, deallocates and closes
  *                              \b fc and returns NULL. The subsequent
  *                              sc_scda_fread_* calls do not require any
  *                              adjustment dependent on \b decode.
@@ -769,7 +769,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
  * \param [out]   str           At least sc_MPI_MAX_ERROR_STRING bytes.
  * \param [in, out] len         On output the length of string on return.
  *                              On input the number of bytes of \b str on input.
- * \return                      SC_SCDA_FERROR_SUCCESS on success or
+ * \return                      SC_SCDA_FERR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
 int                 sc_scda_ferror_string (int errcode, char *str, int *len);
@@ -790,7 +790,7 @@ int                 sc_scda_ferror_string (int errcode, char *str, int *len);
  *                            after a call of this function.
  * \param [out]     errcode   An errcode that can be interpreted by \ref
  *                            sc_scda_ferror_string.
- * \return                    SC_SCDA_FERROR_SUCCESS for a successful call
+ * \return                    SC_SCDA_FERR_SUCCESS for a successful call
  *                            and -1 in case a of an error.
  *                            See also \b errcode argument.
  */
