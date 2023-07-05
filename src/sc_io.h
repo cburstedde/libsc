@@ -51,7 +51,7 @@
  *
  * Functionality specific to file/data input/output.
  *
- * \b I/O \b support
+ * Generic I/O support: \ref sc_io.h
  *
  * The I/O support provides functions to
  * read and write data based on C-standard functions
@@ -60,7 +60,7 @@
  * Furthermore, there are functions to encode and decode
  * based on zlib and to write VTK files.
  *
- * \b Parallel \b file \b format
+ * Parallel file format: \ref sc_scda.h
  *
  * This file contains routines for parallel I/O format.
  * In particular there are functions to write and read data in parallel according
@@ -72,6 +72,8 @@
  * parallel. Otherwise, the behaviour is emulated using serial I/O and MPI.
  * Without MPI this module still enables the user to write and read equivalent
  * files but only in serial.
+ *
+ * We elaborate further on the workflow in \ref scda_workflow .
  *
  * \ingroup sc
  */

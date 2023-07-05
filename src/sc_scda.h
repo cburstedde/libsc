@@ -41,7 +41,15 @@
  * The main purpose of \b scda is to enable the user to implement parallel I/O
  * for numerical appliations, e.g. simulation checkpoint/restart.
  *
- * \b Workflow
+ * We elaborate further on the workflow in \ref scda_workflow .
+ *
+ * \ingroup io
+ */
+
+/**
+ * \page scda_workflow Parallel I/O workflow
+ *
+ * The general workflow on writing and reading the scda format.
  *
  * All workflows start with \ref sc_scda_fopen that creates a file context
  * \ref sc_scda_fcontext_t that never moves backwards.
@@ -74,8 +82,6 @@
  *
  * For more details and the option for encoded data see the functions
  * below.
- *
- * \ingroup io
  */
 
 #ifndef SC_SCDA_H
