@@ -23,7 +23,7 @@
 
 /** \file sc_scda.h
  *
- * Routines for parallel I/O format.
+ * Routines for parallel I/O with the \b scda format.
  *
  * Functionality to write and read in parallel using a prescribed
  * serial-equivalent file format called \b scda.
@@ -49,7 +49,7 @@
 /**
  * \page scda_workflow Parallel I/O workflow
  *
- * The general workflow on writing and reading the scda format.
+ * The general workflow for the scda format provided by \ref sc_scda.h
  *
  * All workflows start with \ref sc_scda_fopen that creates a file context
  * \ref sc_scda_fcontext_t that never moves backwards.
@@ -103,7 +103,7 @@ typedef enum sc_scda_ferror
 {
   SC_SCDA_FERROR_SUCCESS = 0, /**< successful function call */
   SC_SCDA_FERR_FILE = sc_MPI_ERR_LASTCODE, /**< invalid file handle */
-  SC_SCDA_FERR_NOT_SAME, /**< collective arg not identical */
+  SC_SCDA_FERR_NOT_SAME, /**< collective argument not identical */
   SC_SCDA_FERR_AMODE, /**< access mode error */
   SC_SCDA_FERR_NO_SUCH_FILE, /**< file does not exist */
   SC_SCDA_FERR_FILE_EXIST, /**< file exists already */
@@ -114,15 +114,31 @@ typedef enum sc_scda_ferror
   SC_SCDA_FERR_READ_ONLY, /**< read only file (system) */
   SC_SCDA_FERR_IN_USE, /**< file currently open by other process */
   SC_SCDA_FERR_IO, /**< other I/O error */
-  SC_SCDA_FERR_FORMAT,  /**< read file has a wrong format */
-  SC_SCDA_FERR_SECTION_TYPE, /**< a non-matching section type
-                                  when trying to read a file section */
-  SC_SCDA_FERR_DECODE, /**< decode parameter does not conform to file section */
-  SC_SCDA_FERR_INPUT, /**< input of file function is invalid but is not
-                          in the case of SC_SCDA_FERR_{SECTION_TYPE,DECODE}*/
-  SC_SCDA_FERR_COUNT,   /**< read or write count error that was not
-                                 classified as a format error */
-  SC_SCDA_FERR_UNKNOWN, /**< unknown error */
+  SC_SCDA_FERR_UNKNOWN, /**< unknown I/O error */
+  SC_SCDA_FERR_FORMAT,  /**< File not conforming to the \b scda format. */
+  SC_SCDA_FERR_USAGE,   /**< Incorrect workflow of an \b scda reading function.
+                             For example, the user might have identified a
+                             certain file section type
+                             using \ref sc_scda_fread_section_header but then
+                             calls a function to read the section
+                             data for a different type.
+                             Another example is to try reading the data
+                             of a 'V' section before reading its element sizes.
+                             This error also occurs when the user tries to
+                             read section data before reading the section header.
+                          */
+  SC_SCDA_FERR_DECODE, /**< The decode parameter to
+                            \ref sc_scda_fread_section_header is true but
+                            the file section header(s) encountered
+                            does not conform to the \b scda encoding convention.
+                           */
+  SC_SCDA_FERR_INPUT, /**< An argument to a \b scda file function is invalid.
+                           This occurs for example when an essential pointer
+                           argument is NULL or a user string for
+                           writing is too long. */
+  SC_SCDA_FERR_COUNT,   /**< A byte count error that may occur
+                             transiently on writing or the file is short
+                             on reading. */
   SC_SCDA_FERR_LASTCODE /**< to define own error codes for
                                   a higher level application
                                   that is using sc_scda
@@ -455,11 +471,10 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  *                              array) depending on the file section type.
  * \param [out]     elem_count  On output set to the global number of array
  *                              elements if \b type equals 'A' or 'V'. For
- *                              'I' and 'B' as \b type \b elem_count is set 0.
+ *                              'I' and 'B' as \b type, \b elem_count is set 0.
  * \param [out]     elem_size   On output set to the byte count of the array
  *                              elements if \b type is 'A' and for the \b type
- *                              'B' the number of bytes. Otherwise \b elem_size
- *                              is set to 0.
+ *                              'B' the number of bytes. Otherwise set to 0.
  * \param [out]     user_string At least \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
  *                              On output filled with the user section string.
  * \param [in]      decode      A Boolean to decide whether the two following
@@ -474,12 +489,12 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  *                              adjustment dependent on \b decode.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
- * \return                      Return a pointer to input context or NULL in case
- *                              of errors that does not abort the program.
- *                              In case of error the file is tried to close
- *                              and \b fc is freed.
- *                              The sc_scda file context can be used to continue
+ * \return                      Return a pointer to the input
+ *                              context \b fc on success.
+ *                              The context is used to continue
  *                              reading and eventually closing the file.
+ *                              In case of any error, attempt to close the
+ *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
                                                   char *type,
