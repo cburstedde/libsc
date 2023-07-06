@@ -98,6 +98,8 @@ SC_EXTERN_C_BEGIN;
 typedef struct sc_scda_fcontext sc_scda_fcontext_t;
 
 /** Error values for scdafile functions.
+ *
+ * The error codes can be examined by \ref sc_scda_ferror_string.
  */
 typedef enum sc_scda_ferror
 {
