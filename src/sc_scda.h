@@ -225,12 +225,12 @@ sc_scda_fcontext_t *sc_scda_fopen (sc_MPI_Comm mpicomm,
  *                              IO operations take place.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
- * \return                      Return a pointer to input context or NULL in case
- *                              of errors that does not abort the program.
- *                              In case of error the file is tried to close
- *                              and \b fc is freed.
- *                              The sc_scda file context can be used to continue
+ * \return                      Return a pointer to the input
+ *                              context \b fc on success.
+ *                              The context is used to continue
  *                              writing and eventually closing the file.
+ *                              In case of any error, attempt to close the
+ *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
                                            sc_array_t * data,
@@ -275,12 +275,12 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              usual sc_scda_fread function.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
- * \return                      Return a pointer to input context or NULL in case
- *                              of errors that does not abort the program.
- *                              In case of error the file is tried to close
- *                              and \b fc is freed.
- *                              The sc_scda file context can be used to continue
+ * \return                      Return a pointer to the input
+ *                              context \b fc on success.
+ *                              The context is used to continue
  *                              writing and eventually closing the file.
+ *                              In case of any error, attempt to close the
+ *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
                                           sc_array_t * block_data,
@@ -347,12 +347,12 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              usual sc_scda_fread function.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
- * \return                      Return a pointer to input context or NULL in case
- *                              of errors that does not abort the program.
- *                              In case of error the file is tried to close
- *                              and \b fc is freed.
- *                              The sc_scda file context can be used to continue
+ * \return                      Return a pointer to the input
+ *                              context \b fc on success.
+ *                              The context is used to continue
  *                              writing and eventually closing the file.
+ *                              In case of any error, attempt to close the
+ *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
                                           sc_array_t * array_data,
@@ -432,12 +432,12 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              usual sc_scda_fread function.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
- * \return                      Return a pointer to input context or NULL in case
- *                              of errors that does not abort the program.
- *                              In case of error the file is tried to close
- *                              and \b fc is freed.
- *                              The sc_scda file context can be used to continue
+ * \return                      Return a pointer to the input
+ *                              context \b fc on success.
+ *                              The context is used to continue
  *                              writing and eventually closing the file.
+ *                              In case of any error, attempt to close the
+ *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
                                            sc_array_t * array_data,
@@ -525,12 +525,12 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  *                              IO operations take place.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
- * \return                      Return a pointer to input context or NULL in case
- *                              of errors that does not abort the program.
- *                              In case of error the file is tried to close
- *                              and \b fc is freed.
- *                              The sc_scda file context can be used to continue
+ * \return                      Return a pointer to the input
+ *                              context \b fc on success.
+ *                              The context is used to continue
  *                              reading and eventually closing the file.
+ *                              In case of any error, attempt to close the
+ *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
                                                sc_array_t * data, int root,
@@ -563,12 +563,12 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  *                              IO operations take place.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
- * \return                      Return a pointer to input context or NULL in case
- *                              of errors that does not abort the program.
- *                              In case of error the file is tried to close
- *                              and \b fc is freed.
- *                              The sc_scda file context can be used to continue
+ * \return                      Return a pointer to the input
+ *                              context \b fc on success.
+ *                              The context is used to continue
  *                              reading and eventually closing the file.
+ *                              In case of any error, attempt to close the
+ *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
                                               sc_array_t * block_data,
@@ -623,12 +623,12 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
- * \return                      Return a pointer to input context or NULL in case
- *                              of errors that does not abort the program.
- *                              In case of error the file is tried to close
- *                              and \b fc is freed.
- *                              The sc_scda file context can be used to continue
+ * \return                      Return a pointer to the input
+ *                              context \b fc on success.
+ *                              The context is used to continue
  *                              reading and eventually closing the file.
+ *                              In case of any error, attempt to close the
+ *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
                                               sc_array_t * array_data,
@@ -672,12 +672,12 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  *                              \ref sc_scda_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
- * \return                      Return a pointer to input context or NULL in case
- *                              of errors that does not abort the program.
- *                              In case of error the file is tried to close
- *                              and \b fc is freed.
- *                              The sc_scda file context can be used to continue
+ * \return                      Return a pointer to the input
+ *                              context \b fc on success.
+ *                              The context is used to continue
  *                              reading and eventually closing the file.
+ *                              In case of any error, attempt to close the
+ *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
                                                 sc_array_t * elem_sizes,
@@ -746,12 +746,12 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
- * \return                      Return a pointer to input context or NULL in case
- *                              of errors that does not abort the program.
- *                              In case of error the file is tried to close
- *                              and \b fc is freed.
- *                              The sc_scda file context can be used to continue
+ * \return                      Return a pointer to the input
+ *                              context \b fc on success.
+ *                              The context is used to continue
  *                              reading and eventually closing the file.
+ *                              In case of any error, attempt to close the
+ *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
                                                sc_array_t * array_data,
