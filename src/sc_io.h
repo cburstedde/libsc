@@ -132,7 +132,8 @@ typedef enum
   SC_IO_READ,                         /**< open a file in read-only mode */
   SC_IO_WRITE_CREATE,                 /**< open a file in write-only mode;
                                            if the file exists, the file will
-                                           be overwritten */
+                                           be truncated to length zero and
+                                           then overwritten */
   SC_IO_WRITE_APPEND                  /**< append to an already existing file */
 }
 sc_io_open_mode_t;
@@ -508,6 +509,9 @@ void                sc_fflush_fsync_fclose (FILE * file);
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
+ * \note                This function does not exactly follow the MPI_File
+ *                      semantic in the sense that it truncates files to the
+ *                      length zero before overwriting them.
  */
 int                 sc_io_open (sc_MPI_Comm mpicomm,
                                 const char *filename, sc_io_open_mode_t amode,
