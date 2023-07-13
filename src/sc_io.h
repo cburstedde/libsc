@@ -543,7 +543,7 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of read bytes.
+ * \param [out] ocount  The number of read elments of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
@@ -562,7 +562,7 @@ int                 sc_io_read_at (sc_MPI_File mpifile,
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of read bytes.
+ * \param [out] ocount  The number of read elments of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
@@ -580,7 +580,7 @@ int                 sc_io_read_at_all (sc_MPI_File mpifile,
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of read bytes.
+ * \param [out] ocount  The number of read elments of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
@@ -615,7 +615,7 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of written bytes.
+ * \param [out] ocount  The number of written elments of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
@@ -637,7 +637,7 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of written bytes.
+ * \param [out] ocount  The number of written elments of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
@@ -656,7 +656,7 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of written bytes.
+ * \param [out] ocount  The number of written elments of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
