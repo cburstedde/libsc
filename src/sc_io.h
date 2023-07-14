@@ -582,7 +582,7 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
 
 /** Read MPI file content into memory for an explicit offset.
  * This function does not update the file pointer of the MPI file.
- * Contrary to \ref sc_mpi_read, it does not abort on read errors.
+ * Contrary to \ref sc_io_read, it does not abort on read errors.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in counts of the type \b t.
  * \param [in] ptr      Data array to read from disk.
@@ -601,7 +601,6 @@ int                 sc_io_read_at (sc_MPI_File mpifile,
 
 /** Read MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer of the MPI file.
- * Contrary to \ref sc_mpi_read, it does not abort on read errors.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in counts of the type \b t.
  * \param [in] ptr      Data array to read from disk.
@@ -620,7 +619,8 @@ int                 sc_io_read_at_all (sc_MPI_File mpifile,
 /** Read memory content collectively from an MPI file.
  * A call of this function is equivalent to call \ref sc_io_read_at_all
  * with offset = 0 but the call of this function is not equivalent
- * to a call of MPI_File_read_all.
+ * to a call of MPI_File_read_all since this function ignores the current
+ * position of the file cursor.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
@@ -654,6 +654,7 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
 
 /** Write MPI file content into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
+ * Contrary to \ref sc_io_write, it does not abort on read errors. 
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in etype, where the etype is given by
  *                      the type t.
@@ -686,7 +687,6 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
- * \note                This function does not abort on MPI file errors.
  */
 int                 sc_io_write_at_all (sc_MPI_File mpifile,
                                         sc_MPI_Offset offset,
@@ -696,7 +696,8 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
 /** Write memory content collectively to an MPI file.
  * A call of this function is equivalent to call \ref sc_io_write_at_all
  * with offset = 0 but the call of this function is not equivalent
- * to a call of MPI_File_write_all.
+ * to a call of MPI_File_write_all since this function ignores the current
+ * position of the file cursor.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
@@ -705,7 +706,6 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
- * \note                This function does not abort on MPI file errors.
  */
 int                 sc_io_write_all (sc_MPI_File mpifile,
                                      const void *ptr, size_t zcount,
