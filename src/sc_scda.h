@@ -479,14 +479,23 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  *                              'B' the number of bytes. Otherwise set to 0.
  * \param [out]     user_string At least \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
  *                              On output filled with the user section string.
- * \param [in]      decode      A Boolean to decide whether the two following
- *                              file sections should be interpreted as encoded
- *                              in the sense that they were written by a
- *                              sc_scda_fread_* function with encode set to true.
- *                              If the encoding convention is not satisfied,
- *                              this function outputs an \b errcode unequal
- *                              to SC_SCDA_FERR_SUCCESS, deallocates and closes
- *                              \b fc and returns NULL. The subsequent
+ * \param [in,out]  decode      On input a Boolean to decide whether the file
+ *                              section shall possibly be interpreted as a
+ *                              compressed section, i.e. they were written by a
+ *                              sc_scda_fwrite_* function with encode set to
+ *                              true. For \b decode true as input the file
+ *                              section is interpreted as a compressed file
+ *                              section if the type and user string of the first
+ *                              raw file section satisfiy the compression
+ *                              convention. If the compression convention is not
+ *                              satisfied the data is read raw. For false as
+ *                              input the data will be read raw by the
+ *                              subsequent sc_scda_fread_* calls. The output
+ *                              value is always false if the input was set to
+ *                              false. Otherwise, the output is a Boolean that
+ *                              indicates if the nex file section contains a
+ *                              file section type and user string matching the
+ *                              compression convention. The subsequent
  *                              sc_scda_fread_* calls do not require any
  *                              adjustment dependent on \b decode.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
@@ -503,7 +512,7 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
                                                   size_t *elem_count,
                                                   size_t *elem_size,
                                                   char *user_string,
-                                                  int decode, int *errcode);
+                                                  int *decode, int *errcode);
 
 /** Read the data of an inline data section.
  *
