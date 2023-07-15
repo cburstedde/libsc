@@ -32,8 +32,7 @@ libsc_compiled_sources = \
         src/sc_uint128.c src/sc_v4l2.c \
         src/sc_puff.c
 libsc_original_headers = \
-        src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h \
-        src/sc_builtin/puff.h
+        src/sc_builtin/getopt.h src/sc_builtin/getopt_int.h
 
 # this variable is used for headers that are not publicly installed
 LIBSC_CPPFLAGS =
