@@ -1398,6 +1398,13 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
   retval = sc_io_error_class (mpiret, &errcode);
   SC_CHECK_MPI (retval);
 
+  if (mpiret == sc_MPI_SUCCESS && amode == SC_IO_WRITE_CREATE) {
+    /* fopen with the mode "wb" truncates the file to length zero */
+    mpiret = MPI_File_set_size (*mpifile, 0);
+    retval = sc_io_error_class (mpiret, &errcode);
+    SC_CHECK_MPI (retval);
+  }
+
   return errcode;
 #elif defined (SC_ENABLE_MPI)
   {
