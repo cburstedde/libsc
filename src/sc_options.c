@@ -21,7 +21,8 @@
   02110-1301, USA.
 */
 
-#include <sc_getopt.h>
+#include <sc_builtin/sc_getopt.h>
+
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <iniparser.h>
