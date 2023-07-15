@@ -3,11 +3,14 @@
 
 ## Current
 
+There have been breaking changes, very strictly speaking.
+
 ### Build system
 
  - No longer install getopt and puff origignal headers.
  - Further align CMake with the autoconf build system.
  - Add a generic external library installation option.
+ - Make sc_getopt.h a purely internal header file.
 
 ### Functionality
 
