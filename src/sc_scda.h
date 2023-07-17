@@ -171,7 +171,7 @@ sc_scda_ferror_t;
  * deallocate the file context. In this case the function returns NULL on all
  * ranks. A wrong file header format causes SC_SCDA_ERR_FORMAT as \b errcode.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent errors.
  *
  * \param [in]     mpicomm   The MPI communicator that is used to open the
@@ -209,7 +209,7 @@ sc_scda_fcontext_t *sc_scda_fopen (sc_MPI_Comm mpicomm,
  * implement custom file structuring or padding.
  * All parameters except of \b data are collective.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
@@ -247,7 +247,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  * The number of block bytes must be less or equal 10^{26} - 1.
  * All parameters except of \b block_data are collective.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
@@ -298,7 +298,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  * element global count and a fixed element size.
  * All parameters except of \b array_data are collective.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
@@ -371,7 +371,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  * elements do not have a constant element size in bytes.
  * All parameters except of \b array_data and \b elem_sizes are collective.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
@@ -461,7 +461,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * \ref sc_scda_fread_varray_sizes and \ref sc_scda_fread_varray_data.
  * All parameters are collective.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
@@ -521,7 +521,7 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  * sc_scda_fread_section_header.
  * All parameters except of \b data are collective.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
@@ -555,7 +555,7 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  * \b block_size.
  * All parameters except of \b data_block are collective.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
@@ -595,7 +595,7 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  * a parallel partition of the array elements by \b elem_counts.
  * All parameters except of \b array_data are collective.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
@@ -656,7 +656,7 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  * a parallel partition of the array elements by \b elem_counts.
  * All parameters except of \b elem_sizes are collective.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
@@ -703,7 +703,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  * \b elem_sizes.
  * All parameters except of \b array_data and \b elem_sizes are collective.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
@@ -792,7 +792,7 @@ int                 sc_scda_ferror_string (int errcode, char *str, int *len);
  * \ref sc_scda_fclose on the created file context.
  * All parameters are collective.
  *
- * This function does not abort on MPI I/O errors but returns NULL.
+ * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent
  * errors.
  *
