@@ -180,7 +180,6 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_STATUSES_IGNORE     MPI_STATUSES_IGNORE
 
 #define sc_MPI_REQUEST_NULL        MPI_REQUEST_NULL
-#define sc_MPI_INFO_NULL           MPI_INFO_NULL
 
 #define sc_MPI_DATATYPE_NULL       MPI_DATATYPE_NULL
 #define sc_MPI_CHAR                MPI_CHAR
@@ -635,6 +634,18 @@ int                 sc_MPI_Init_thread (int *argc, char ***argv,
 
 #define sc_MPI_File_open           MPI_File_open
 #define sc_MPI_File_close          MPI_File_close
+
+#define sc_MPI_File_get_view       MPI_File_get_view
+#define sc_MPI_File_set_view       MPI_File_set_view
+
+#define sc_MPI_File_write_all      MPI_File_write_all
+#define sc_MPI_File_read_all       MPI_File_read_all
+
+#define sc_MPI_File_write_at_all   MPI_File_write_at_all
+#define sc_MPI_File_read_at_all    MPI_File_read_at_all
+
+#define sc_MPI_File_get_size       MPI_File_get_size
+#define sc_MPI_File_set_size       MPI_File_set_size
 
 #else
 

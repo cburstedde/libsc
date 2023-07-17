@@ -86,6 +86,8 @@ dnl However, if me is already make install'd in the system and should
 dnl be used from there, use --with-me=<path to me's install directory>.
 dnl In this case, PROG expects subdirectories etc, include, lib, and
 dnl share/aclocal, which are routinely created by me's make install.
+dnl As another alternative, all information about using ME may be put
+dnl in the environment LDFLAGS, CPPFLAGS, etc. for --with-me=external.
 dnl
 dnl SC_ME_AS_SUBPACKAGE(PREFIX, prefix, ME, me, mepackage)
 dnl Call from a package that is using this package ME as a subpackage.
@@ -98,11 +100,28 @@ AC_DEFUN([SC_ME_AS_SUBPACKAGE],
 $1_$3_SUBDIR=
 $1_$3_MK_USE=
 $1_$3_DOXTAG=
+$1_$3_LDADD=
+$1_$3_LIBADD=
+$1_$3_EDEPS=
+$1_$3_RPATH=
 $1_DISTCLEAN="$$1_DISTCLEAN $1_$3_SOURCE.log"
 
-SC_ARG_WITH_PREFIX([$4], [path to installed package $4 (optional)], [$3], [$1])
+SC_ARG_WITH_PREFIX([$4],
+  [specifiy how to depend on package $4 (optional).
+   If the option value is literal no or the option is not present, use the
+   source subdirectory.  If the option value is the literal external, expect
+   all necessary environment variables to be set to compile and link against
+   $4 and to run the examples.  Otherwise, the option value must be an
+   absolute path to the toplevel directory of a make installed $4.],
+  [$3], [$1])
 
-if test "x$$1_WITH_$3" != xno ; then
+if test "x$$1_WITH_$3" = xexternal ; then
+  AC_MSG_NOTICE([Relying on environment for package $4])
+
+  # Set pretty much no variables at all
+  $1_DIST_DENY=yes
+
+elif test "x$$1_WITH_$3" != xno ; then
   AC_MSG_NOTICE([Using make installed package $4])
 
   # Verify that we are using a me installation
@@ -114,8 +133,11 @@ if test "x$$1_WITH_$3" != xno ; then
   $1_$3_AMFLAGS="-I $$1_$3_CFG"
   $1_$3_MK_USE=yes
   $1_$3_MK_INCLUDE="include $$1_$3_ETC/Makefile.$4.mk"
-  $1_$3_CPPFLAGS="\$($3_CPPFLAGS)"
-  $1_$3_LDADD="$$1_$3_DIR/lib/lib$4.la"
+  $1_$3_CPPFLAGS="-I$$1_$3_INC"
+  $1_$3_LDADD="-L$$1_$3_LIB -l$4"
+  $1_$3_LIBADD="-L$$1_$3_LIB -l$4"
+  $1_$3_RPATH="-rpath $$1_$3_LIB"
+
 else
   AC_MSG_NOTICE([Building with source of package $4])
 
@@ -138,6 +160,8 @@ else
   $1_$3_CPPFLAGS="-I$$1_$3_SOURCE/config -I$$1_$3_SOURCE/src \
                   -I\$(top_srcdir)/$$1_$3_SOURCE/src"
   $1_$3_LDADD="$$1_$3_SOURCE/src/lib$4.la"
+  $1_$3_LIBADD="$$1_$3_SOURCE/src/lib$4.la"
+  $1_$3_EDEPS="$$1_$3_SOURCE/src/lib$4.la"
 fi
 
 dnl Make sure we find the m4 macros provided by me
@@ -154,4 +178,7 @@ AM_CONDITIONAL([$1_$3_MK_USE], [test "x$$1_$3_MK_USE" != x])
 AC_SUBST([$1_$3_MK_INCLUDE])
 AC_SUBST([$1_$3_CPPFLAGS])
 AC_SUBST([$1_$3_LDADD])
+AC_SUBST([$1_$3_LIBADD])
+AC_SUBST([$1_$3_EDEPS])
+AC_SUBST([$1_$3_RPATH])
 ])

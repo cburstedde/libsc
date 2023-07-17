@@ -82,7 +82,8 @@ set(SC_ENABLE_MEMALIGN 1)
 if(MPI_FOUND)
   set(SC_ENABLE_MPI 1)
   check_symbol_exists(MPI_COMM_TYPE_SHARED mpi.h SC_ENABLE_MPICOMMSHARED)
-  set(SC_ENABLE_MPIIO 1)
+  # perform check to set SC_ENABLE_MPIIO
+  include(cmake/check_mpiio.cmake)
   check_symbol_exists(MPI_Init_thread mpi.h SC_ENABLE_MPITHREAD)
   check_symbol_exists(MPI_Win_allocate_shared mpi.h SC_ENABLE_MPIWINSHARED)
 endif(MPI_FOUND)
@@ -188,6 +189,8 @@ set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
 if(CMAKE_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
   set(SC_ENABLE_DEBUG 1)
+else()
+  set(SC_ENABLE_DEBUG 0)
 endif()
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/sc_config.h.in ${PROJECT_BINARY_DIR}/include/sc_config.h)

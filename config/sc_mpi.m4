@@ -65,6 +65,7 @@ elif test "x$enableval" != xno ; then
 fi
 AC_MSG_CHECKING([whether we are using MPI])
 AC_MSG_RESULT([$HAVE_PKG_MPI])
+AC_SUBST([HAVE_PKG_MPI])
 
 dnl The shell variable SC_ENABLE_MPIIO is set if --disable-mpiio is not given.
 dnl If not disabled, MPI I/O will be verified by a compile/link test below.
