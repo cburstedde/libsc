@@ -47,37 +47,6 @@
  * \ingroup io
  */
 
-/** \defgroup io I/O
- *
- * Functionality specific to file/data input/output.
- *
- * Generic I/O support: \ref sc_io.h
- *
- * The I/O support provides functions to
- * read and write data based on C-standard functions
- * and also an other set of functions to read and write
- * based on MPI I/O if it is enabled.
- * Furthermore, there are functions to encode and decode
- * based on zlib and to write VTK files.
- *
- * Parallel file format: \ref sc_scda.h
- *
- * This file contains routines for parallel I/O format.
- * In particular there are functions to write and read data in parallel according
- * to a user prescribed partition of contigously indexed potentially
- * variable-sized elements. In addition, the user can also write and read
- * data in serial and the data can be stored element-wise compressed.
- *
- * If MPI I/O is available, it is used to write and read in
- * parallel. Otherwise, the behaviour is emulated using serial I/O and MPI.
- * Without MPI this module still enables the user to write and read equivalent
- * files but only in serial.
- *
- * We elaborate further on the workflow in \ref scda_workflow .
- *
- * \ingroup sc
- */
-
 #ifndef SC_IO_H
 #define SC_IO_H
 
