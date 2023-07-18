@@ -730,6 +730,12 @@ void                sc_package_unregister (int package_id);
  */
 void                sc_package_print_summary (int log_priority);
 
+/** Query SC's own package identity.
+ * \return          This is -1 before \ref sc_init has been called
+ *                  and a proper package identifier (>= 0) afterwards.
+ */
+int                 sc_get_package_id (void);
+
 /** Sets the global program identifier (e.g. the MPI rank) and some flags.
  * This function is optional.
  * This function must only be called before additional threads are created.
