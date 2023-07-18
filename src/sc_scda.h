@@ -183,24 +183,32 @@ sc_scda_ferror_t;
  * \param [in,out] user_string For \b mode == 'w' at most \ref
  *                          SC_SCDA_USER_STRING_BYTES characters in
  *                          a nul-terminated string if \b len is equal to NULL.
- *                          Otherwise, \b len bytes of allocated data.
+ *                          The terminating nul is not written to the file.
+ *                          Otherwise, \b len bytes of allocated data, where
+ *                          \b len is less or equal \ref SC_SCDA_USER_STRING_BYTES.
  *                          The \b user_string is written to the file header
  *                          on rank 0.
- *                          For \b mode == 'r' at least \b len bytes. The user
- *                          string is read on rank 0 and internally broadcasted
- *                          to all ranks. If the read user string is shorter
- *                          than \b len, it is padded from the right with NUL.
+ *                          For \b mode == 'r' at least \b len bytes, with
+ *                          \b len being at least \ref
+ *                          SC_SCDA_USER_STRING_BYTES + 1 bytes. The user string
+ *                          is read on rank 0 and internally broadcasted to all
+ *                          ranks. If the read user string is shorter than
+ *                          \b len, it is padded from the right with nul.
+ *                          Since the user string has at most \ref
+ *                          SC_SCDA_USER_STRING_BYTES bytes there is at least
+ *                          one terminating nul on outptut.
  * \param [in,out] len      For \b mode == 'w' on NULL as input \b user_string
- *                          is expected to be NUL-terminated. If \b len is not
- *                          NULL, it must be set to the byte count of
- *                          \b user_string. In this case \b len must be less or
- *                          equal \ref SC_SCDA_USER_STRING_BYTES. On output
- *                          \b len stays unchanged.
- *                          For \b mode == 'r' \b len must be unequal to NULL.
- *                          On input \b len must be the number of allocated bytes
- *                          in \b user_string. Hereby, \b len must be at least
- *                          \ref SC_SCDA_USER_STRING_BYTES + 1. On output \b len
- *                          is set to the number of written bytes.
+ *                          is expected to be nul-terminated having at most
+ *                          \ref SC_SCDA_USER_STRING_BYTES + 1 bytes including
+ *                          the terminating nul. If \b len is not NULL, it must
+ *                          be set to the byte count of \b user_string. In this
+ *                          case \b len must be less or equal \ref
+ *                          SC_SCDA_USER_STRING_BYTES. On output \b len stays
+ *                          unchanged. For \b mode == 'r' \b len must be unequal
+ *                          to NULL. On input \b len must be the number of
+ *                          allocated bytes in \b user_string. Hereby, \b len
+ *                          must be at least \ref SC_SCDA_USER_STRING_BYTES + 1.
+ *                          On output \b len is set to the number of written bytes.
  * \param [out]    errcode  An errcode that can be interpreted by \ref
  *                          sc_scda_ferror_string.
  * \return                  Newly allocated context to continue writing/reading
