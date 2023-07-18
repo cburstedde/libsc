@@ -208,7 +208,8 @@ sc_scda_ferror_t;
  *                          to NULL. On input \b len must be the number of
  *                          allocated bytes in \b user_string. Hereby, \b len
  *                          must be at least \ref SC_SCDA_USER_STRING_BYTES + 1.
- *                          On output \b len is set to the number of written bytes.
+ *                          On output \b len is set to the number of written
+ *                          \b user_string bytes.
  * \param [out]    errcode  An errcode that can be interpreted by \ref
  *                          sc_scda_ferror_string.
  * \return                  Newly allocated context to continue writing/reading
@@ -240,9 +241,21 @@ sc_scda_fcontext_t *sc_scda_fopen (sc_MPI_Comm mpicomm,
  * \param [in]      data        On the rank \b root a sc_array with element
  *                              count 1 and element size 32. On all other ranks
  *                              this parameter is ignored.
- * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
- *                              The user string is written without the
- *                              nul-termination.
+ * \param [in]      user_string At most \ref SC_SCDA_USER_STRING_BYTES characters
+ *                              in a nul-terminated string if \b len is equal to
+ *                              NULL. The terminating nul is not written to the
+ *                              file. Otherwise, \b len bytes of allocated data,
+ *                              where \b len is less or equal \ref
+ *                              SC_SCDA_USER_STRING_BYTES. The \b user_string is
+ *                              written to the file header on rank 0.
+ * \param [in]      len         For  NULL as input \b user_string is expected to
+ *                              be nul-terminated having at most \ref
+ *                              SC_SCDA_USER_STRING_BYTES + 1 bytes including
+ *                              the terminating nul. If \b len is not NULL, it
+ *                              must be set to the byte count of \b user_string.
+ *                              In this case \b len must be less or equal \ref
+    *                           SC_SCDA_USER_STRING_BYTES. On output \b len stays
+    *                           unchanged.
  * \param [in]      root        An integer between 0 and mpisize of the MPI
  *                              communicator that was used to create \b fc.
  *                              \b root indicates the MPI rank on that the
@@ -258,7 +271,8 @@ sc_scda_fcontext_t *sc_scda_fopen (sc_MPI_Comm mpicomm,
  */
 sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
                                            sc_array_t * data,
-                                           const char *user_string, int root,
+                                           const char *user_string,
+                                           size_t *len, int root,
                                            int *errcode);
 
 /** Write a fixed-size block file section.
@@ -280,9 +294,21 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              other ranks the parameter is ignored.
  * \param [in]      block_size  The size of the data block in bytes. Must be
  *                              less or equal than 10^{26} - 1.
- * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
- *                              The user string is written without the
- *                              nul-termination.
+ * \param [in]      user_string At most \ref SC_SCDA_USER_STRING_BYTES characters
+ *                              in a nul-terminated string if \b len is equal to
+ *                              NULL. The terminating nul is not written to the
+ *                              file. Otherwise, \b len bytes of allocated data,
+ *                              where \b len is less or equal \ref
+ *                              SC_SCDA_USER_STRING_BYTES. The \b user_string is
+ *                              written to the file header on rank 0.
+ * \param [in]      len         For  NULL as input \b user_string is expected to
+ *                              be nul-terminated having at most \ref
+ *                              SC_SCDA_USER_STRING_BYTES + 1 bytes including
+ *                              the terminating nul. If \b len is not NULL, it
+ *                              must be set to the byte count of \b user_string.
+ *                              In this case \b len must be less or equal \ref
+    *                           SC_SCDA_USER_STRING_BYTES. On output \b len stays
+    *                           unchanged.
  * \param [in]      root        An integer between 0 and mpisize of the MPI
  *                              communicator that was used to create \b fc.
  *                              \b root indicates the MPI rank on that the
@@ -310,7 +336,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
                                           sc_array_t * block_data,
                                           size_t block_size,
                                           const char *user_string,
-                                          int root, int encode, int *errcode);
+                                          size_t *len, int root, int encode,
+                                          int *errcode);
 
 /** Write a fixed-size array file section.
  *
@@ -356,9 +383,21 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              a sc_array with element size equals to
  *                              \b elem_size that contains the actual array
  *                              elements.
- * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
- *                              The user string is written without the
- *                              nul-termination.
+ * \param [in]      user_string At most \ref SC_SCDA_USER_STRING_BYTES characters
+ *                              in a nul-terminated string if \b len is equal to
+ *                              NULL. The terminating nul is not written to the
+ *                              file. Otherwise, \b len bytes of allocated data,
+ *                              where \b len is less or equal \ref
+ *                              SC_SCDA_USER_STRING_BYTES. The \b user_string is
+ *                              written to the file header on rank 0.
+ * \param [in]      len         For  NULL as input \b user_string is expected to
+ *                              be nul-terminated having at most \ref
+ *                              SC_SCDA_USER_STRING_BYTES + 1 bytes including
+ *                              the terminating nul. If \b len is not NULL, it
+ *                              must be set to the byte count of \b user_string.
+ *                              In this case \b len must be less or equal \ref
+    *                           SC_SCDA_USER_STRING_BYTES. On output \b len stays
+    *                           unchanged.
  * \param [in]      encode      A Boolean to decide whether the file section
  *                              is written compressed. This results in two
  *                              written file sections that can be read without
@@ -384,7 +423,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
                                           size_t elem_size,
                                           int indirect,
                                           const char *user_string,
-                                          int encode, int *errcode);
+                                          size_t *len, int encode,
+                                          int *errcode);
 
 /** Write a variable-size array file section.
  *
@@ -441,9 +481,21 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              a sc_array with the actual array elements as
  *                              data as further explained in the documentation
  *                              of \b array_data.
- * \param [in]      user_string Maximal \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
- *                              The user string is written without the
- *                              nul-termination.
+ * \param [in]      user_string At most \ref SC_SCDA_USER_STRING_BYTES characters
+ *                              in a nul-terminated string if \b len is equal to
+ *                              NULL. The terminating nul is not written to the
+ *                              file. Otherwise, \b len bytes of allocated data,
+ *                              where \b len is less or equal \ref
+ *                              SC_SCDA_USER_STRING_BYTES. The \b user_string is
+ *                              written to the file header on rank 0.
+ * \param [in]      len         For  NULL as input \b user_string is expected to
+ *                              be nul-terminated having at most \ref
+ *                              SC_SCDA_USER_STRING_BYTES + 1 bytes including
+ *                              the terminating nul. If \b len is not NULL, it
+ *                              must be set to the byte count of \b user_string.
+ *                              In this case \b len must be less or equal \ref
+    *                           SC_SCDA_USER_STRING_BYTES. On output \b len stays
+    *                           unchanged.
  * \param [in]      encode      A Boolean to decide whether the file section
  *                              is written compressed. This results in two
  *                              written file sections that can be read without
@@ -470,7 +522,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
                                            sc_array_t * proc_sizes,
                                            int indirect,
                                            const char *user_string,
-                                           int encode, int *errcode);
+                                           size_t *len, int encode,
+                                           int *errcode);
 
 /** Read the next file section header.
  *
@@ -499,8 +552,20 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * \param [out]     elem_size   On output set to the byte count of the array
  *                              elements if \b type is 'A' and for the \b type
  *                              'B' the number of bytes. Otherwise set to 0.
- * \param [out]     user_string At least \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
- *                              On output filled with the user section string.
+ * \param [out]      user_string  At least \b len bytes, with \b len being at
+ *                              least \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
+ *                              The user string is read on rank 0 and internally
+ *                              broadcasted to all ranks. If the read user
+ *                              string is shorter than \b len, it is padded from
+ *                              the right with nul. Since the user string has at
+ *                              most \ref SC_SCDA_USER_STRING_BYTES bytes there
+ *                              is at least one terminating nul on outptut.
+ * \param [in, out]  len        \b len must be unequal to NULL. On input \b len
+ *                              must be the number of allocated bytes in
+ *                              \b user_string. Hereby, \b len must be at least
+ *                              \ref SC_SCDA_USER_STRING_BYTES + 1. On output
+ *                              \b len is set to the number of written
+ *                              \b user_string bytes.
  * \param [in,out]  decode      On input a Boolean to decide whether the file
  *                              section shall possibly be interpreted as a
  *                              compressed section, i.e. they were written by a
@@ -534,7 +599,8 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
                                                   size_t *elem_count,
                                                   size_t *elem_size,
                                                   char *user_string,
-                                                  int *decode, int *errcode);
+                                                  size_t *len, int *decode,
+                                                  int *errcode);
 
 /** Read the data of an inline data section.
  *
