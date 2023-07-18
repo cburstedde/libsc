@@ -730,12 +730,6 @@ void                sc_package_unregister (int package_id);
  */
 void                sc_package_print_summary (int log_priority);
 
-/** Query SC's own package identity.
- * \return          This is -1 before \ref sc_init has been called
- *                  and a proper package identifier (>= 0) afterwards.
- */
-int                 sc_get_package_id (void);
-
 /** Sets the global program identifier (e.g. the MPI rank) and some flags.
  * This function is optional.
  * This function must only be called before additional threads are created.
@@ -754,6 +748,19 @@ int                 sc_get_package_id (void);
 void                sc_init (sc_MPI_Comm mpicomm,
                              int catch_signals, int print_backtrace,
                              sc_log_handler_t log_handler, int log_threshold);
+
+/** Return whether SC has been initialized or not.
+*
+ * \return          True if SC has been initialized with a call to
+ *                  \ref sc_init and false otherwise.
+ */
+int                 sc_is_initialized (void);
+
+/** Query SC's own package identity.
+ * \return          This is -1 before \ref sc_init has been called
+ *                  and a proper package identifier (>= 0) afterwards.
+ */
+int                 sc_get_package_id (void);
 
 /** Unregisters all packages, runs the memory check, removes the
  * signal handlers and resets sc_identifier and sc_root_*.
