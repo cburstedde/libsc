@@ -44,6 +44,15 @@
  *    and base64-encoded format and back that is unambiguously defined and
  *    human-friendly.
  *
+ * \note For the function \ref sc_io_write_at_all without MPI IO but with MPI
+ *       the \b offset argument is ignored. In this case the function writes at
+ *       the current end of the file. Hereby, the MPI ranks write in the
+ *       rank-induced order. That is why the function may work equivalent to
+ *       the MPI IO and non-MPI case but it can not be guaranteed.
+ *       Furthermore, it important to notice that \ref sc_io_write_at and
+ *      \ref sc_io_read_at are only valid to call on rank 0 independent of
+ *       MPI IO being available or not.
+ *
  * \ingroup io
  */
 
@@ -647,12 +656,16 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
 
 /** Write MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
- * If there is no MPI IO but MPI available, the offset parameter is ignored
- * and the ranks just write at the current end of the file according to
- * their rank-induced order.
+ *
+ * \note  If there is no MPI IO but MPI available, the offset parameter is
+ *        ignored and the ranks just write at the current end of the file
+ *        according to their rank-induced order.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in etype, where the etype is given by
- *                      the type t.
+ *                      the type t. This parameter is ignored in the case of
+ *                      having MPI but no MPI IO. In this case this function
+ *                      writes to the current end of the file as described
+ *                      above.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
