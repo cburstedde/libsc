@@ -89,6 +89,8 @@ const int sc_log2_lookup_table[256] =
 /* *INDENT-ON* */
 
 int                 sc_package_id = -1;
+int                 sc_initialized = 0;
+
 FILE               *sc_trace_file = NULL;
 int                 sc_trace_prio = SC_LP_STATISTICS;
 
@@ -1346,6 +1348,14 @@ sc_init (sc_MPI_Comm mpicomm,
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LAPACK_LIBS", SC_LAPACK_LIBS);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FLIBS", SC_FLIBS);
 #endif
+
+  sc_initialized = 1;
+}
+
+int
+sc_is_initialized (void)
+{
+  return sc_initialized;
 }
 
 int
