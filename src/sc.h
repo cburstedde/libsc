@@ -753,12 +753,16 @@ void                sc_init (sc_MPI_Comm mpicomm,
 *
  * \return          True if SC has been initialized with a call to
  *                  \ref sc_init and false otherwise.
+ *
+ * \note            This routine is not thread-safe.
  */
 int                 sc_is_initialized (void);
 
 /** Query SC's own package identity.
  * \return          This is -1 before \ref sc_init has been called
  *                  and a proper package identifier (>= 0) afterwards.
+ *
+ * \note            This routine is not thread-safe.
  */
 int                 sc_get_package_id (void);
 

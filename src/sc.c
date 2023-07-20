@@ -1391,6 +1391,10 @@ sc_finalize_noabort (void)
     }
     sc_trace_file = NULL;
   }
+
+  sc_package_id = -1;
+  sc_initialized = 0;
+
   return num_errors;
 }
 
