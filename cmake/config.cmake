@@ -9,11 +9,29 @@ include(CheckCSourceCompiles)
 if(mpi)
   find_package(MPI COMPONENTS C REQUIRED)
 endif()
+
 if(openmp)
   find_package(OpenMP COMPONENTS C REQUIRED)
 endif()
-find_package(ZLIB)
+
+if(zlib)
+  message(STATUS "Using builtin zlib")
+  include(${CMAKE_CURRENT_LIST_DIR}/zlib.cmake)
+  set(SC_HAVE_ZLIB true)
+else()
+  find_package(ZLIB)
+  if(ZLIB_FOUND)
+    message(STATUS "Using system zlib : ${ZLIB_VERSION_STRING}")
+    set(SC_HAVE_ZLIB true)
+  else()
+    message(STATUS "Zlib disabled (not found). Consider using cmake \"-Dzlib=ON\" to turn on builtin zlib.")
+    set(SC_HAVE_ZLIB false)
+  endif()
+endif()
+
 find_package(Threads)
+
+include(${CMAKE_CURRENT_LIST_DIR}/jansson.cmake)
 
 # --- set global compile environment
 
@@ -51,23 +69,21 @@ set(SC_CFLAGS \"${SC_CFLAGS}\")
 set(SC_CPPFLAGS \"\")
 
 set(SC_LDFLAGS \"${MPI_C_LINK_FLAGS}\")
-set(SC_LIBS \"${ZLIB_LIBRARIES}\ m\")
+
+if(zlib)
+  set(SC_LIBS \"${ZLIB_LIBRARIES}\ m\")
+else()
+  set(SC_LIBS \"m\")
+endif()
 
 set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
 set(SC_ENABLE_MEMALIGN 1)
 
 if(MPI_FOUND)
-  set(SC_ENABLE_MPI ${MPI_FOUND})
-  check_c_source_compiles("
-  #include <mpi.h>
-  int main (void) {
-    MPI_Comm subcomm;
-    MPI_Init ((int *) 0, (char ***) 0);
-    MPI_Comm_split_type(MPI_COMM_WORLD,MPI_COMM_TYPE_SHARED,0,MPI_INFO_NULL,&subcomm);
-    MPI_Finalize ();
-    return 0;
-  }" SC_ENABLE_MPICOMMSHARED)
-  set(SC_ENABLE_MPIIO 1)
+  set(SC_ENABLE_MPI 1)
+  check_symbol_exists(MPI_COMM_TYPE_SHARED mpi.h SC_ENABLE_MPICOMMSHARED)
+  # perform check to set SC_ENABLE_MPIIO
+  include(cmake/check_mpiio.cmake)
   check_symbol_exists(MPI_Init_thread mpi.h SC_ENABLE_MPITHREAD)
   check_symbol_exists(MPI_Win_allocate_shared mpi.h SC_ENABLE_MPIWINSHARED)
 endif(MPI_FOUND)
@@ -147,6 +163,10 @@ if(SC_HAVE_UNISTD_H)
   check_include_file(getopt.h SC_HAVE_GETOPT_H)
 endif()
 
+if(NOT SC_HAVE_GETOPT_H)
+  set(SC_PROVIDE_GETOPT True)
+endif()
+
 check_include_file(sys/ioctl.h SC_HAVE_SYS_IOCTL_H)
 check_include_file(sys/select.h SC_HAVE_SYS_SELECT_H)
 check_include_file(sys/stat.h SC_HAVE_SYS_STAT_H)
@@ -162,9 +182,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   endif()
 endif()
 
-if(ZLIB_FOUND)
+if(zlib)
   set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
-  check_symbol_exists(adler32_combine zlib.h SC_HAVE_ZLIB)
+  set(SC_HAVE_ZLIB true)
 endif()
 
 check_type_size(int SC_SIZEOF_INT BUILTIN_TYPES_ONLY)
@@ -177,6 +197,8 @@ set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
 if(CMAKE_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
   set(SC_ENABLE_DEBUG 1)
+else()
+  set(SC_ENABLE_DEBUG 0)
 endif()
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/sc_config.h.in ${PROJECT_BINARY_DIR}/include/sc_config.h)
@@ -193,7 +215,7 @@ set(CMAKE_REQUIRED_DEFINITIONS)
 check_symbol_exists(SC_ENABLE_MPI ${PROJECT_BINARY_DIR}/include/sc_config.h SC_has_mpi)
 check_symbol_exists(SC_ENABLE_MPIIO ${PROJECT_BINARY_DIR}/include/sc_config.h SC_has_mpi_io)
 
-if(MPI_C_FOUND)
+if(SC_ENABLE_MPI)
   # a sign the current project is using MPI
   if(NOT (SC_has_mpi AND SC_has_mpi_io))
     message(FATAL_ERROR "MPI used, but sc_config.h is not configured for MPI")

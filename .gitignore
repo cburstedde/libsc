@@ -18,3 +18,7 @@ config/ltversion.m4
 config/lt~obsolete.m4
 config/sc_config_autotools.h.in
 configure
+example/linksc/build-aux/
+example/linksc/config/
+example/linksc/linksc_config.h.in
+example/linksc/Makefile.in

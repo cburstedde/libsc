@@ -180,7 +180,6 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_STATUSES_IGNORE     MPI_STATUSES_IGNORE
 
 #define sc_MPI_REQUEST_NULL        MPI_REQUEST_NULL
-#define sc_MPI_INFO_NULL           MPI_INFO_NULL
 
 #define sc_MPI_DATATYPE_NULL       MPI_DATATYPE_NULL
 #define sc_MPI_CHAR                MPI_CHAR
@@ -522,11 +521,15 @@ int                 sc_MPI_Exscan (void *, void *, int, sc_MPI_Datatype,
  * \return          Number of seconds since the epoch. */
 double              sc_MPI_Wtime (void);
 
+/** Return the input communicator in lieu of splitting.
+ * \return          MPI_SUCCESS.
+ */
+int                 sc_MPI_Comm_split (sc_MPI_Comm, int, int, sc_MPI_Comm *);
+
 /* These functions will run but their results/actions are not defined. */
 
 int                 sc_MPI_Comm_create (sc_MPI_Comm, sc_MPI_Group,
                                         sc_MPI_Comm *);
-int                 sc_MPI_Comm_split (sc_MPI_Comm, int, int, sc_MPI_Comm *);
 int                 sc_MPI_Comm_compare (sc_MPI_Comm, sc_MPI_Comm, int *);
 int                 sc_MPI_Comm_group (sc_MPI_Comm, sc_MPI_Group *);
 
@@ -631,6 +634,18 @@ int                 sc_MPI_Init_thread (int *argc, char ***argv,
 
 #define sc_MPI_File_open           MPI_File_open
 #define sc_MPI_File_close          MPI_File_close
+
+#define sc_MPI_File_get_view       MPI_File_get_view
+#define sc_MPI_File_set_view       MPI_File_set_view
+
+#define sc_MPI_File_write_all      MPI_File_write_all
+#define sc_MPI_File_read_all       MPI_File_read_all
+
+#define sc_MPI_File_write_at_all   MPI_File_write_at_all
+#define sc_MPI_File_read_at_all    MPI_File_read_at_all
+
+#define sc_MPI_File_get_size       MPI_File_get_size
+#define sc_MPI_File_set_size       MPI_File_set_size
 
 #else
 

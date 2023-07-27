@@ -12,9 +12,7 @@ if(SC_HAVE_UNISTD_H)
   list(APPEND sc_tests sort)
 endif()
 
-if(SC_HAVE_GETOPT_H)
-  list(APPEND sc_tests builtin io_sink)
-endif()
+list(APPEND sc_tests builtin io_sink)
 
 # ---
 set(MPIEXEC_MAX_NUMPROCS 2)
@@ -31,7 +29,6 @@ foreach(t IN LISTS sc_tests)
 
 endforeach()
 
-set_property(TEST ${sc_tests} PROPERTY TIMEOUT 300)
 set_property(TEST ${sc_tests} PROPERTY LABELS "unit;libsc")
 
 if(MPIEXEC_EXECUTABLE)
