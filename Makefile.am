@@ -136,7 +136,6 @@ clean-local:
 
 ## If configure built it, then distclean should delete it.
 distclean-local:
-	rm -f doc/Doxyfile
 
 ## If the maintainer built it (for instance, a .info file), then
 ## maintainer-clean should delete it. However maintainer-clean should not delete

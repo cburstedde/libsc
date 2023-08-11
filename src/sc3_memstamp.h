@@ -32,7 +32,7 @@
  * Allocations are bundled so it's fast for small memory sizes.
  * The items created will remain valid until the container is destroyed.
  * It is possible to return allocated items to the container for reuse.
- * 
+ *
  * The memstamp container stores any number of fixed-size items within a new
  * allocation, or stamp. If needed, memory is reallocated internally.
  *
