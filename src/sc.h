@@ -750,10 +750,9 @@ void                sc_init (sc_MPI_Comm mpicomm,
                              sc_log_handler_t log_handler, int log_threshold);
 
 /** Return whether SC has been initialized or not.
-*
- * \return          True if SC has been initialized with a call to
+ * \return          True if libsc has been initialized with a call to
  *                  \ref sc_init and false otherwise.
- *
+ *                  After \ref sc_finalize the result resets to false.
  * \note            This routine is not thread-safe.
  */
 int                 sc_is_initialized (void);
@@ -761,7 +760,7 @@ int                 sc_is_initialized (void);
 /** Query SC's own package identity.
  * \return          This is -1 before \ref sc_init has been called
  *                  and a proper package identifier (>= 0) afterwards.
- *
+ *                  After \ref sc_finalize the identifier resets to -1.
  * \note            This routine is not thread-safe.
  */
 int                 sc_get_package_id (void);
@@ -770,16 +769,18 @@ int                 sc_get_package_id (void);
  * signal handlers and resets sc_identifier and sc_root_*.
  * This function aborts on any inconsistency found unless
  * the global variable default_abort_mismatch is false.
- * This function is optional.
+ * Function is optional if memory cleanliness is no concern.
  * This function does not require sc_init to be called first.
+ * In any case it makes \ref sc_is_initialized return false.
  */
 void                sc_finalize (void);
 
 /** Unregisters all packages, runs the memory check, removes the
  * signal handlers and resets sc_identifier and sc_root_*.
  * This function never aborts but returns the number of errors encountered.
- * This function is optional.
+ * Function is optional if memory cleanliness is no concern.
  * This function does not require sc_init to be called first.
+ * In any case it makes \ref sc_is_initialized return false.
  * \return          0 when everything is consistent, nonzero otherwise.
  */
 int                 sc_finalize_noabort (void);
