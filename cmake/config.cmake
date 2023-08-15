@@ -80,8 +80,16 @@ set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
 set(SC_ENABLE_MEMALIGN 1)
 
 if(MPI_FOUND)
-  set(SC_ENABLE_MPI 1)
-  check_symbol_exists(MPI_COMM_TYPE_SHARED mpi.h SC_ENABLE_MPICOMMSHARED)
+  set(SC_ENABLE_MPI ${MPI_FOUND})
+  check_c_source_compiles("
+  #include <mpi.h>
+  int main (void) {
+    MPI_Comm subcomm;
+    MPI_Init ((int *) 0, (char ***) 0);
+    MPI_Comm_split_type(MPI_COMM_WORLD,MPI_COMM_TYPE_SHARED,0,MPI_INFO_NULL,&subcomm);
+    MPI_Finalize ();
+    return 0;
+  }" SC_ENABLE_MPICOMMSHARED)
   # perform check to set SC_ENABLE_MPIIO
   include(cmake/check_mpiio.cmake)
   check_symbol_exists(MPI_Init_thread mpi.h SC_ENABLE_MPITHREAD)
