@@ -132,7 +132,8 @@ typedef enum
   SC_IO_READ,                         /**< open a file in read-only mode */
   SC_IO_WRITE_CREATE,                 /**< open a file in write-only mode;
                                            if the file exists, the file will
-                                           be overwritten */
+                                           be truncated to length zero and
+                                           then overwritten */
   SC_IO_WRITE_APPEND                  /**< append to an already existing file */
 }
 sc_io_open_mode_t;
@@ -508,6 +509,9 @@ void                sc_fflush_fsync_fclose (FILE * file);
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
+ * \note                This function does not exactly follow the MPI_File
+ *                      semantic in the sense that it truncates files to the
+ *                      length zero before overwriting them.
  */
 int                 sc_io_open (sc_MPI_Comm mpicomm,
                                 const char *filename, sc_io_open_mode_t amode,
@@ -539,7 +543,7 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of read bytes.
+ * \param [out] ocount  The number of read elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
@@ -558,7 +562,7 @@ int                 sc_io_read_at (sc_MPI_File mpifile,
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of read bytes.
+ * \param [out] ocount  The number of read elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
@@ -576,7 +580,7 @@ int                 sc_io_read_at_all (sc_MPI_File mpifile,
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of read bytes.
+ * \param [out] ocount  The number of read elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
@@ -611,7 +615,7 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of written bytes.
+ * \param [out] ocount  The number of written elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
@@ -633,7 +637,7 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of written bytes.
+ * \param [out] ocount  The number of written elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
@@ -652,7 +656,7 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
- * \param [out] ocount  The number of written bytes.
+ * \param [out] ocount  The number of written elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.

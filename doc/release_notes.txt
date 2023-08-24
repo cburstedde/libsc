@@ -1,0 +1,24 @@
+
+# Release notes for the sc software library
+
+## Current
+
+There have been breaking changes, very strictly speaking.
+
+### Build system
+
+ - No longer install getopt and puff origignal headers.
+ - Further align CMake with the autoconf build system.
+ - Add a generic external library installation option.
+ - Make sc_getopt.h a purely internal header file.
+
+### Functionality
+
+ - Further align I/O wrappers with and without MPI I/O.
+ - Update zlib and base64 encode/compression routines.
+
+## 2.8.5
+
+### General
+
+ - We have been reminded to maintain a release notes file.
