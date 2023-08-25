@@ -6,7 +6,7 @@ find_package(jansson CONFIG)
 
 if(jansson_FOUND)
 
-  message(STATUS "jansson library found via find_package")
+  message(STATUS "[libsc] jansson library found via find_package")
   set(SC_HAVE_JSON 1)
 
 else()
@@ -15,11 +15,15 @@ else()
   find_package(PkgConfig)
 
   if (PKG_CONFIG_FOUND)
-    pkg_check_modules(LIBSC_JANSSON QUIET IMPORTED_TARGET jansson)
+    pkg_check_modules(LIBSC_JANSSON QUIET jansson IMPORTED_TARGET GLOBAL)
 
     if (LIBSC_JANSSON_FOUND)
-      message(STATUS "jansson library found via pkg-config")
-      add_library(jansson::jansson ALIAS PkgConfig::LIBSC_JANSSON)
+      message(STATUS "[libsc] jansson library found via pkg-config")
+
+      add_library(jansson::jansson INTERFACE IMPORTED GLOBAL)
+      target_include_directories(jansson::jansson INTERFACE "${LIBSC_JANSSON_INCLUDE_DIRS}")
+      target_link_libraries(jansson::jansson INTERFACE "${LIBSC_JANSSON_LIBRARIES}")
+
       set(jansson_FOUND 1)
       set(SC_HAVE_JSON 1)
     else()

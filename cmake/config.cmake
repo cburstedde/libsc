@@ -187,7 +187,7 @@ check_type_size("unsigned long" SC_SIZEOF_UNSIGNED_LONG BUILTIN_TYPES_ONLY)
 check_type_size("unsigned long long" SC_SIZEOF_UNSIGNED_LONG_LONG BUILTIN_TYPES_ONLY)
 set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
-if(CMAKE_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(SC_ENABLE_DEBUG 1)
 else()
   set(SC_ENABLE_DEBUG 0)

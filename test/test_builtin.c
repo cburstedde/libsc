@@ -23,7 +23,7 @@
 
 /* this test checks the possibly builtin third-party libraries */
 
-#include <sc_getopt.h>
+#include <sc_builtin/sc_getopt.h>
 
 /* truthfully, the libraries below are not builtin anymore */
 #ifdef SC_HAVE_ZLIB
