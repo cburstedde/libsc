@@ -51,8 +51,8 @@
  *
  * The general workflow for the scda format provided by \ref sc_scda.h
  *
- * All workflows start with \ref sc_scda_fopen that creates a file context
- * \ref sc_scda_fcontext_t that never moves backwards.
+ * All workflows start with \ref sc_scda_fopen_write or \ref sc_scda_fopen_read
+ * that creates a file context \ref sc_scda_fcontext_t that never moves backwards.
  *
  * Then the user can call a sequence of functions out of:
  *
@@ -61,9 +61,9 @@
  * \ref sc_scda_fwrite_array and
  * \ref sc_scda_fwrite_varray,
  *
- * for the case of using the writing mode in \ref sc_scda_fopen.
+ * for the case of using \ref sc_scda_fopen_write.
  *
- * Alternatively, for the reading mode the user must call
+ * Alternatively, for using \ref sc_scda_fopen_read the user must call
  * \ref sc_scda_fread_section_header that examines the current file section
  * and then call accordingly to the retrieved file section type
  *
@@ -148,7 +148,17 @@ typedef enum sc_scda_ferror
 }
 sc_scda_ferror_t;
 
-/** Open a file for writing/reading and write/read the file header to/from the file.
+/** An options struct for the functions \ref sc_scda_fopen_write and
+ * \ref sc_scda_fopen_read. The struct elements may be extended in the future.
+ */
+typedef             sc_scda_fopen_options
+{
+  sc_MPI_Info         info;
+                     /**< info that is passed to MPI_File_open */
+}
+sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
+
+/** Open a file for writing and write the file header to the file.
  *
  * This function creates a new file or overwrites an existing one.
  * It is collective and creates the file on a parallel file system.
@@ -157,19 +167,13 @@ sc_scda_ferror_t;
  * Independent of the availability of MPI I/O the user can write one or more
  * file sections before closing the file (context) using \ref sc_scda_fclose.
  *
- * In the case of writing it is the user's responsibility to write any further
+ * It is the user's responsibility to write any further
  * metadata of the file that is required by the application. This can be done
- * by writing file sections. However, the user can use \ref
+ * by writing file sections. However, the user can use \ref sc_scda_fopen_read
+ * to open a not already opened file and the use \ref
  * sc_scda_fread_section_header and skipping the respective data bytes using the
  * respective read functions sc_scda_fread_*_data to parse the structure
  * of a given file and some metadata that is written by sc_scda.
- *
- * In the case of reading  the file must exist and be at least of the size of
- * the file header, i.e. \ref SC_SCDA_HEADER_BYTES bytes. If the file has a file
- * header that does not satisfy the sc_scda file header format, the function
- * reports the error using SC_LERRORF, collectively close the file and
- * deallocate the file context. In this case the function returns NULL on all
- * ranks. A wrong file header format causes SC_SCDA_ERR_FORMAT as \b errcode.
  *
  * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent errors.
@@ -178,49 +182,36 @@ sc_scda_ferror_t;
  *                           parallel file.
  * \param [in]     filename  Path to parallel file that is to be created or
  *                           to be opened.
- * \param [in]     mode      Either 'w' for writing to newly created file or
- *                          'r' to read from an existing file.
- * \param [in,out] user_string For \b mode == 'w' at most \ref
- *                          SC_SCDA_USER_STRING_BYTES characters in
- *                          a nul-terminated string if \b len is equal to NULL.
- *                          The terminating nul is not written to the file.
- *                          Otherwise, \b len bytes of allocated data, where
- *                          \b len is less or equal \ref SC_SCDA_USER_STRING_BYTES.
- *                          The \b user_string is written to the file header
- *                          on rank 0.
- *                          For \b mode == 'r' at least \b len bytes, with
- *                          \b len being at least \ref
- *                          SC_SCDA_USER_STRING_BYTES + 1 bytes. The user string
- *                          is read on rank 0 and internally broadcasted to all
- *                          ranks. If the read user string is shorter than
- *                          \b len, it is padded from the right with nul.
- *                          Since the user string has at most \ref
- *                          SC_SCDA_USER_STRING_BYTES bytes there is at least
- *                          one terminating nul on outptut.
- * \param [in,out] len      For \b mode == 'w' on NULL as input \b user_string
+ * \param [in] user_string   At most \ref SC_SCDA_USER_STRING_BYTES characters
+ *                           in a nul-terminated string if \b len is equal to NULL.
+ *                           The terminating nul is not written to the file.
+ *                           Otherwise, \b len bytes of allocated data, where
+ *                           \b len is less or equal \ref SC_SCDA_USER_STRING_BYTES.
+ *                           The \b user_string is written to the file header
+ *                           on rank 0.
+ * \param [in,out] len      On NULL as input \b user_string
  *                          is expected to be nul-terminated having at most
  *                          \ref SC_SCDA_USER_STRING_BYTES + 1 bytes including
  *                          the terminating nul. If \b len is not NULL, it must
  *                          be set to the byte count of \b user_string. In this
  *                          case \b len must be less or equal \ref
  *                          SC_SCDA_USER_STRING_BYTES. On output \b len stays
- *                          unchanged. For \b mode == 'r' \b len must be unequal
- *                          to NULL. On input \b len must be the number of
- *                          allocated bytes in \b user_string. Hereby, \b len
- *                          must be at least \ref SC_SCDA_USER_STRING_BYTES + 1.
- *                          On output \b len is set to the number of written
- *                          \b user_string bytes.
+ *                          unchanged.
+ * \param [in]     opt      An options structure that provides the possibility
+ *                          to pass further options. See \ref
+ *                          sc_scda_fopen_options for more details.
+ *                          It is valid to pass NULL for \b opt.
  * \param [out]    errcode  An errcode that can be interpreted by \ref
  *                          sc_scda_ferror_string.
- * \return                  Newly allocated context to continue writing/reading
+ * \return                  Newly allocated context to continue writing
  *                          and eventually closing the file. NULL in
  *                          case of error, i.e. errcode != SC_SCDA_FERR_SUCCESS.
  */
-sc_scda_fcontext_t *sc_scda_fopen (sc_MPI_Comm mpicomm,
-                                   const char *filename,
-                                   char mode,
-                                   const char *user_string, size_t *len,
-                                   int *errcode);
+sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
+                                         const char *filename,
+                                         const char *user_string, size_t *len,
+                                         scda_fopen_options_t * opt,
+                                         int *errcode);
 
 /** Write an inline data section.
  *
@@ -237,7 +228,7 @@ sc_scda_fcontext_t *sc_scda_fopen (sc_MPI_Comm mpicomm,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_scda_fopen with mode 'w'.
+ *                              sc_scda_fopen_write.
  * \param [in]      data        On the rank \b root a sc_array with element
  *                              count 1 and element size 32. On all other ranks
  *                              this parameter is ignored.
@@ -288,7 +279,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_scda_fopen with mode 'w'.
+ *                              sc_scda_fopen_write.
  * \param [in]      block_data  On rank \b root a sc_array with one element and
  *                              element size equals to \b block_size. On all
  *                              other ranks the parameter is ignored.
@@ -352,7 +343,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_scda_fopen with mode 'w'.
+ *                              sc_scda_fopen_write.
  * \param [in]      array_data  On rank p the p-th entry of \b elem_counts
  *                              must be the element count of \b array_data.
  *                              The element size of the sc_array must be equal
@@ -438,7 +429,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_scda_fopen with mode 'w'.
+ *                              sc_scda_fopen_write.
  * \param [in]      array_data  Let p be the calling rank. If \b indirect is
  *                              false, \b array_data must have element count 1
  *                              and as element size the p-th entry of
@@ -525,6 +516,52 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
                                            size_t *len, int encode,
                                            int *errcode);
 
+/** Open a file for reading and read the file header from the file.
+ *
+ * The file must exist and be at least of the size of the file header, i.e.
+ * \ref SC_SCDA_HEADER_BYTES bytes. If the file has a file header that does not
+ * satisfy the sc_scda file header format, the function reports the error using
+ * SC_LERRORF, collectively close the file and deallocate the file context. In
+ * this case the function returns NULL on all ranks. A wrong file header format
+ * causes SC_SCDA_ERR_FORMAT as \b errcode.
+ *
+ * This function returns NULL on MPI I/O errors.
+ * Without MPI I/O the function may abort on file system dependent errors.
+ *
+ * \param [in]     mpicomm   The MPI communicator that is used to open the
+ *                           parallel file.
+ * \param [in]     filename  Path to parallel file that is to be created or
+ *                           to be opened.
+ * \param [out]  user_string At least \b len bytes, with \b len being at least
+ *                           \ref SC_SCDA_USER_STRING_BYTES + 1 bytes. The user
+ *                           string is read on rank 0 and internally broadcasted
+ *                           to all ranks. If the read user string is shorter
+ *                           than \b len, it is padded from the right with nul.
+ *                           Since the user string has at most \ref
+ *                           SC_SCDA_USER_STRING_BYTES bytes there is at least
+ *                           one terminating nul on outptut.
+ * \param [in,out] len       \b len must be unequal to NULL. On input \b len
+ *                           must be the number of allocated bytes in
+ *                           \b user_string. Hereby, \b len must be at least
+ *                           \ref SC_SCDA_USER_STRING_BYTES + 1. On output
+ *                           \b len is set to the number of written
+ *                           \b user_string bytes.
+ * \param [in]     opt       An options structure that provides the possibility
+ *                           to pass further options. See \ref
+ *                           sc_scda_fopen_options for more details.
+ *                           It is valid to pass NULL for \b opt.
+ * \param [out]    errcode   An errcode that can be interpreted by \ref
+ *                           sc_scda_ferror_string.
+ * \return                   Newly allocated context to continue reading
+ *                           and eventually closing the file. NULL in
+ *                           case of error, i.e. errcode != SC_SCDA_FERR_SUCCESS.
+ */
+sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
+                                        const char *filename,
+                                        char *user_string, size_t *len,
+                                        scda_fopen_options_t * opt,
+                                        int *errcode);
+
 /** Read the next file section header.
  *
  * This is a collective function.
@@ -541,7 +578,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_scda_fopen with mode 'r'.
+ *                              sc_scda_fopen_read.
  * \param [out]     type        On output this char is set to
  *                              'I' (inline data), 'B' (block of given size),
  *                              'A' (fixed-size array) or 'V' (variable-size
@@ -614,7 +651,7 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_scda_fopen with mode 'r'.
+ *                              sc_scda_fopen_read.
  * \param [out]     data        Exactly 32 bytes on the rank \b root or NULL
  *                              on \b root to not read the bytes. The parameter
  *                              is ignored on all ranks unequal to \b root.
@@ -648,7 +685,7 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_scda_fopen with mode 'r'.
+ *                              sc_scda_fopen_read.
  * \param [out]     block_data  A sc_array with element count 1 and element
  *                              size \b block_size. On output the sc_array is
  *                              filled with the block data of the read block data
@@ -688,7 +725,7 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_scda_fopen with mode 'r'.
+ *                              sc_scda_fopen_read.
  * \param [out]     array_data  If \b indirect is false, a sc_array with
  *                              element count equals to the p-th entry of
  *                              \b elem_counts for p being the calling rank.
@@ -749,7 +786,7 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_scda_fopen with mode 'r'.
+ *                              sc_scda_fopen_read.
  * \param [out]     elem_sizes  A sc_array with element count equals to
  *                              p-th entry of \b elem_counts for p being the
  *                              calling rank. The element size must be
@@ -796,7 +833,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
- *                              sc_scda_fopen with mode 'r'.
+ *                              sc_scda_fopen_read.
  * \param [out]     array_data  Let p be the calling rank. If \b indirect is
  *                              false, \b array_data must have element count 1
  *                              and as element size the p-th entry of
@@ -876,8 +913,9 @@ int                 sc_scda_ferror_string (int errcode, char *str, int *len);
 /** Close a file opened for parallel write/read and the free the file context.
  *
  * This is a collective function.
- * Every call of \ref sc_scda_fopen must be matched by a corresponding call of
- * \ref sc_scda_fclose on the created file context.
+ * Every call of \ref sc_scda_fopen_write and \ref sc_scda_fopen_read must be
+ * matched by a corresponding call of \ref sc_scda_fclose on the created file
+ * context.
  * All parameters are collective.
  *
  * This function returns NULL on MPI I/O errors.
@@ -885,7 +923,8 @@ int                 sc_scda_ferror_string (int errcode, char *str, int *len);
  * errors.
  *
  * \param [in,out]  fc        File context previously created by
- *                            \ref sc_scda_fopen. This file context is freed
+ *                            \ref sc_scda_fopen_write or \ref
+ *                            sc_scda_fopen_read. This file context is freed
  *                            after a call of this function.
  * \param [out]     errcode   An errcode that can be interpreted by \ref
  *                            sc_scda_ferror_string.
