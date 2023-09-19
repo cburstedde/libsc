@@ -149,7 +149,7 @@ typedef enum sc_scda_ferror
 sc_scda_ferror_t;
 
 /** An options struct for the functions \ref sc_scda_fopen_write and
- * \ref sc_scda_fopen_read. The struct elements may be extended in the future.
+ * \ref sc_scda_fopen_read. The struct may be extended in the future.
  */
 typedef             sc_scda_fopen_options
 {
@@ -189,28 +189,28 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  *                           \b len is less or equal \ref SC_SCDA_USER_STRING_BYTES.
  *                           The \b user_string is written to the file header
  *                           on rank 0.
- * \param [in,out] len      On NULL as input \b user_string
- *                          is expected to be nul-terminated having at most
- *                          \ref SC_SCDA_USER_STRING_BYTES + 1 bytes including
- *                          the terminating nul. If \b len is not NULL, it must
- *                          be set to the byte count of \b user_string. In this
- *                          case \b len must be less or equal \ref
- *                          SC_SCDA_USER_STRING_BYTES. On output \b len stays
- *                          unchanged.
- * \param [in]     opt      An options structure that provides the possibility
- *                          to pass further options. See \ref
- *                          sc_scda_fopen_options for more details.
- *                          It is valid to pass NULL for \b opt.
- * \param [out]    errcode  An errcode that can be interpreted by \ref
- *                          sc_scda_ferror_string.
- * \return                  Newly allocated context to continue writing
- *                          and eventually closing the file. NULL in
- *                          case of error, i.e. errcode != SC_SCDA_FERR_SUCCESS.
+ * \param [in,out] len       On NULL as input \b user_string
+ *                           is expected to be nul-terminated having at most
+ *                           \ref SC_SCDA_USER_STRING_BYTES + 1 bytes including
+ *                           the terminating nul. If \b len is not NULL, it must
+ *                           be set to the byte count of \b user_string. In this
+ *                           case \b len must be less or equal \ref
+ *                           SC_SCDA_USER_STRING_BYTES. On output \b len stays
+ *                           unchanged.
+ * \param [in]     opt       An options structure that provides the possibility
+ *                           to pass further options. See \ref
+ *                           sc_scda_fopen_options for more details.
+ *                           It is valid to pass NULL for \b opt.
+ * \param [out]    errcode   An errcode that can be interpreted by \ref
+ *                           sc_scda_ferror_string.
+ * \return                   Newly allocated context to continue writing
+ *                           and eventually closing the file. NULL in
+ *                           case of error, i.e. errcode != SC_SCDA_FERR_SUCCESS.
  */
 sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                                          const char *filename,
                                          const char *user_string, size_t *len,
-                                         scda_fopen_options_t * opt,
+                                         sc_scda_fopen_options_t * opt,
                                          int *errcode);
 
 /** Write an inline data section.
@@ -559,7 +559,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
 sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
                                         const char *filename,
                                         char *user_string, size_t *len,
-                                        scda_fopen_options_t * opt,
+                                        sc_scda_fopen_options_t * opt,
                                         int *errcode);
 
 /** Read the next file section header.
