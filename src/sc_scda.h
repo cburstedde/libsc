@@ -261,7 +261,7 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
-                                           sc_array_t * data,
+                                           sc_array_t * inline_data,
                                            const char *user_string,
                                            size_t *len, int root,
                                            int *errcode);
@@ -291,7 +291,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              file. Otherwise, \b len bytes of allocated data,
  *                              where \b len is less or equal \ref
  *                              SC_SCDA_USER_STRING_BYTES. The \b user_string is
- *                              written to the file header on rank 0.
+ *                              written to the file header on rank root.
  * \param [in]      len         For  NULL as input \b user_string is expected to
  *                              be nul-terminated having at most \ref
  *                              SC_SCDA_USER_STRING_BYTES + 1 bytes including
@@ -359,7 +359,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
  *                              that was used to create \b fc. The element size
- *                              of the sc_array must be equal to sizeof (uint8_t).
+ *                              of the sc_array must be equal to sizeof (uint64_t).
  *                              The sc_array must contain the local array elements
  *                              counts (unsigned int). That is why it induces
  *                              the partition that is used to write the array
