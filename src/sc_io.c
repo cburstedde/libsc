@@ -1540,19 +1540,6 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 
   *ocount = 0;
 
-  if (zcount == 0) {
-    /* This should not be necessary according to the MPI standard but some
-     * MPI implementations trigger valgrind warnings due to uninitialized
-     * MPI status members.
-     */
-    mpiret = sc_MPI_SUCCESS;
-
-    retval = sc_io_error_class (mpiret, &errcode);
-    SC_CHECK_MPI (retval);
-
-    return errcode;
-  }
-
   mpiret = MPI_File_read_at_all (mpifile, offset, ptr,
                                  (int) zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS) {
@@ -1805,19 +1792,6 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
   sc_MPI_Status       mpistatus;
 
   *ocount = 0;
-
-  if (zcount == 0) {
-    /* This should not be necessary according to the MPI standard but some
-     * MPI imlementations trigger valgrind warnings due to uninitialized
-     * MPI status members.
-     */
-    mpiret = sc_MPI_SUCCESS;
-
-    retval = sc_io_error_class (mpiret, &errcode);
-    SC_CHECK_MPI (retval);
-
-    return errcode;
-  }
 
   mpiret = MPI_File_write_at_all (mpifile, offset, (void *) ptr,
                                   (int) zcount, t, &mpistatus);
