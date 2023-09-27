@@ -14,27 +14,33 @@ endif()
 
 list(APPEND sc_tests builtin io_sink)
 
+set(MPI_WRAPPER)
+if(MPIEXEC_EXECUTABLE)
+  set(MPIEXEC_MAX_NUMPROCS 2)
+  set(MPI_WRAPPER ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS})
+endif()
+
 # ---
-set(MPIEXEC_MAX_NUMPROCS 2)
 foreach(t IN LISTS sc_tests)
 
   add_executable(sc_test_${t} test_${t}.c)
   target_link_libraries(sc_test_${t} PRIVATE SC::SC)
+  target_compile_definitions(sc_test_${t} PRIVATE $<$<BOOL:${TEST_WITH_VALGRIND}>:SC_ENABLE_VALGRIND=1>)
 
-  if(MPIEXEC_EXECUTABLE)
-    add_test(NAME ${t} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_test_${t}>)
-  else()
-    add_test(NAME ${t} COMMAND sc_test_${t})
-  endif()
+  add_test(NAME ${t} COMMAND ${MPI_WRAPPER} ${VALGRIND_COMMAND} $<TARGET_FILE:sc_test_${t}>)
 
 endforeach()
 
-set_property(TEST ${sc_tests} PROPERTY LABELS "unit;libsc")
+set_tests_properties(${sc_tests} 
+PROPERTIES 
+  LABELS "unit;libsc"
+  TIMEOUT 60 
+)
 
 if(MPIEXEC_EXECUTABLE)
-  set_property(TEST ${sc_tests} PROPERTY RESOURCE_LOCK cpu_mpi)
+  set_tests_properties(${sc_tests} PROPERTIES RESOURCE_LOCK cpu_mpi)
 endif()
 
 if(WIN32 AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
-  set_property(TEST ${sc_tests} PROPERTY ENVIRONMENT_MODIFICATION PATH=path_list_append:$<TARGET_FILE_DIR:sc>)
+  set_tests_properties(${sc_tests} PROPERTIES ENVIRONMENT_MODIFICATION PATH=path_list_append:$<TARGET_FILE_DIR:sc>)
 endif()

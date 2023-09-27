@@ -41,7 +41,7 @@ jobs:
       CC: ${{ matrix.cc }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout source code
 
     - name: Install system dependencies
@@ -89,10 +89,53 @@ jobs:
           ./build/CMakeFiles/CMakeConfigureLog.yaml
           ./build/Testing/Temporary/LastTest.log
 
+  linux-valgrind:
+    runs-on: ubuntu-22.04
+    name: CMake with Valgrind
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        cc: [gcc]
+        shared: [false]
+        mpi: [true]
+        valgrind: [ON]
+
+    env:
+      CC: ${{ matrix.cc }}
+
+    steps:
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -yq
+        sudo apt-get install -yq --no-install-recommends \
+            libmpich-dev mpich valgrind
+
+    - name: Checkout source code
+      uses: actions/checkout@v4
+
+    - name: CMake configure
+      run: cmake --preset default -Dmpi:BOOL=${{ matrix.mpi }} --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DTEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }}
+
+    - name: CMake build
+      run: cmake --build --preset default --parallel
+
+    - name: CMake Test
+      run: ctest --preset default
+
+    - name: Upload log files
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux_cmake_valgrind_log
+        path: |
+          ./build/CMakeFiles/CMakeConfigureLog.yaml
+          ./build/Testing/Temporary/LastTest.log
+
   mac:
     runs-on: macos-latest
     name: CMake build on MacOS
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     strategy:
       matrix:
@@ -107,7 +150,7 @@ jobs:
       CC: ${{ matrix.cc }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout source code
 
     - name: Install system dependencies
@@ -165,7 +208,7 @@ jobs:
       CMAKE_GENERATOR: "MinGW Makefiles"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout source code
 
     - name: CMake configure without MPI
