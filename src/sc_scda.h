@@ -253,6 +253,10 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  * respective read functions sc_scda_fread_*_data to parse the structure
  * of a given file and some metadata that is written by sc_scda.
  *
+ * This function differs from the one opening function for writing and reading
+ * introduced in this \b scda
+ * [preprint](https://doi.org/10.48550/arXiv.2307.06789).
+ *
  * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent errors.
  *
@@ -575,6 +579,10 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * causes \ref SC_SCDA_FERR_FORMAT as \b errcode.
  * \note
  * All parameters are collective.
+ *
+ * This function differs from the one opening function for writing and reading
+ * introduced in this \b scda
+ * [preprint](https://doi.org/10.48550/arXiv.2307.06789).
  *
  * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent errors.
