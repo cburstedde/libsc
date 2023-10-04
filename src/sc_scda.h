@@ -270,10 +270,10 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *                              the terminating nul.
  *                              On NULL as input \b user_string is expected to
  *                              be a nul-terminated C string.
- * \param [in]      root        An integer between 0 and mpisize of the MPI
- *                              communicator that was used to create \b fc.
- *                              \b root indicates the MPI rank on that the
- *                              IO operations take place.
+ * \param [in]      root        An integer between 0 and mpisize exclusive of
+ *                              the MPI communicator that was used to create
+ *                              \b fc. \b root indicates the MPI rank on that
+ *                              \b inline_data is written to the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
  * \return                      Return a pointer to the input
@@ -292,8 +292,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
 /** Write a fixed-size block file section.
  *
  * This is a collective function.
- * This function writes a data block of fixed size to the file. The data
- * and its section header is written on the MPI rank \b root.
+ * This function writes a data block of fixed size to the file. The \b block_data
+ * is written on the MPI rank \b root.
  * The number of block bytes must be less or equal 10^{26} - 1.
  * All parameters except of \b block_data are collective.
  *
@@ -318,8 +318,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              be a nul-terminated C string.
  * \param [in]      root        An integer between 0 and mpisize of the MPI
  *                              communicator that was used to create \b fc.
- *                              \b root indicates the MPI rank on that the
- *                              IO operations take place.
+ *                              \b root indicates the MPI rank on that
+ *                              \b block_data is written to the file.
  * \param [in]      encode      A Boolean to decide whether the file section
  *                              is written compressed. This results in two
  *                              written file sections that can be read without
@@ -465,7 +465,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              array elements. The sc_array has an element
  *                              count of p-th entry of \b elem_counts for p
  *                              being the calling rank. The element size is
- *                              sizeof (uint8_t).
+ *                              sizeof (uint64_t).
  * \param [in]      proc_sizes  An sc_array that must be equal on all
  *                              ranks. The element count and element size
  *                              must be the same as for \b elem_counts. The
@@ -641,10 +641,10 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  * \param [out]     data        Exactly 32 bytes on the rank \b root or NULL
  *                              on \b root to not read the bytes. The parameter
  *                              is ignored on all ranks unequal to \b root.
- * \param [in]      root        An integer between 0 and mpisize of the MPI
- *                              communicator that was used to create \b fc.
- *                              \b root indicates the MPI rank on that the
- *                              IO operations take place.
+ * \param [in]      root        An integer between 0 and mpisize exclusive of
+ *                              the MPI communicator that was used to create
+ *                              \b fc. \b root indicates the MPI rank on that
+ *                              \b data is read from the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
  * \return                      Return a pointer to the input
@@ -679,10 +679,10 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  * \param [in]      block_size  The number of bytes of the block as retrieved
  *                              from the preceding call of \ref
  *                              sc_scda_fread_section_header.
- * \param [in]      root        An integer between 0 and mpisize of the MPI
- *                              communicator that was used to create \b fc.
- *                              \b root indicates the MPI rank on that the
- *                              IO operations take place.
+ * \param [in]      root        An integer between 0 and mpisize exclusive of
+ *                              the MPI communicator that was used to create
+ *                              \b fc. \b root indicates the MPI rank on that
+ *                              \b block_data is read from the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
  * \return                      Return a pointer to the input
@@ -776,7 +776,7 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  * \param [out]     elem_sizes  A sc_array with element count equals to
  *                              p-th entry of \b elem_counts for p being the
  *                              calling rank. The element size must be
- *                              sizeof (uint8_t). On output the array is
+ *                              sizeof (uint64_t). On output the array is
  *                              filled with the local array element byte counts,
  *                              where locality is determined by \b elem_counts.
  *                              The element sizes can be skipped on each process
