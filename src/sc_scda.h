@@ -475,6 +475,33 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
                                           int indirect, int encode,
                                           int *errcode);
 
+/** This is a collective function to determine the processor sizes.
+ *
+ * The purpose of this function is determine the \b proc_sizes argument
+ * as required by \ref sc_scda_fread_varray_data given the data that can
+ * be retrieved by calling \ref sc_scda_fread_varray_sizes or as required by
+ * \ref sc_scda_fwrite_varray given \b elem_sizes and \b elem_counts as passed
+ * to \ref sc_scda_fwrite_varray.
+ * \note
+ * All parameters are collective.
+ *
+ * \param [in]    elem_sizes    The \b elem_sizes array as retrieved by \ref
+ *                              sc_scda_fread_varray_sizes or passed to \ref
+ *                              sc_scda_fwrite_varray.
+ * \param [in]    elem_counts   The \b elem_counts array as retrieved by \ref
+ *                              sc_scda_fread_varray_sizes or passed to \ref
+ *                              sc_scda_fwrite_varray.
+ * \param [out]   proc_sizes    A sc_array with element size \ref sc_scda_ulong
+ *                              that is resized on output to the length of
+ *                              \b elem_sizes and \b elem_counts. The array is
+ *                              filled with the number bytes per process.
+ * \param [out]     errcode     An errcode that can be interpreted by \ref
+ *                              sc_scda_ferror_string.
+ * \return                      0 in case of success and -1 otherwise.
+ */
+int sc_scda_proc_sizes (sc_array_t *elem_sizes, sc_array_t *elem_counts,
+                        sc_array_t *proc_sizes, int *errcode);
+
 /** Write a variable-size array file section.
  *
  * This is a collective function.
@@ -530,7 +557,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              array must contain the overall byte count per
  *                              rank conforming with the passed array element
  *                              partition \b elem_counts and the local array
- *                              element sizes in \b elem_sizes.
+ *                              element sizes in \b elem_sizes. This parameter
+ *                              can be computed using \ref sc_scda_proc_sizes.
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to write
  *                              indirectly and in particular from potentially
@@ -924,7 +952,8 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  *                              array must contain the overall byte count per
  *                              rank conforming with the passed array element
  *                              partition \b elem_counts and the local array
- *                              element sizes in \b elem_sizes.
+ *                              element sizes in \b elem_sizes. This parameter
+ *                              can be computed using \ref sc_scda_proc_sizes.
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to read
  *                              indirectly and in particular to potentially
