@@ -135,6 +135,9 @@ SC_EXTERN_C_BEGIN;
 /** Opaque context used for writing a libsc data file. */
 typedef struct sc_scda_fcontext sc_scda_fcontext_t;
 
+/** Type for element counts and sizes. */
+typedef uint64_t sc_scda_ulong;
+
 /** Error values for scdafile functions.
  *
  * The error codes can be examined by \ref sc_scda_ferror_string.
@@ -375,11 +378,11 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
  *                              that was used to create \b fc. The element size
- *                              of the sc_array must be equal to sizeof (uint64_t).
- *                              The sc_array must contain the local array elements
- *                              counts (unsigned int). That is why it induces
- *                              the partition that is used to write the array
- *                              data in parallel.
+ *                              of the sc_array must be equal to sizeof (\ref
+ *                              sc_scda_ulong). The sc_array must contain the
+ *                              local array elements counts (\ref sc_scda_ulong).
+ *                              That is why it induces the partition that is
+ *                              used to write the array data in parallel.
  * \param [in]      elem_size   The element size of one array element on number
  *                              of bytes. Must be the same on all ranks.
  * \param [in]      indirect    A Boolean to determine whether \b array_data
@@ -465,7 +468,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              array elements. The sc_array has an element
  *                              count of p-th entry of \b elem_counts for p
  *                              being the calling rank. The element size is
- *                              sizeof (uint64_t).
+ *                              sizeof (\ref sc_scda_ulong).
  * \param [in]      proc_sizes  An sc_array that must be equal on all
  *                              ranks. The element count and element size
  *                              must be the same as for \b elem_counts. The
@@ -728,13 +731,13 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
  *                              that was used to create \b fc. The element size
- *                              of the sc_array must be equal to sizeof (uint8_t).
- *                              The sc_array must contain the local array elements
- *                              counts. That is why it induces
- *                              the partition that is used to read the array
- *                              data in parallel. The sum of all array elements
- *                              must be equal to elem_count as retrieved from
- *                              \ref sc_scda_fread_section_header.
+ *                              of the sc_array must be equal to sizeof (\ref
+ *                              sc_scda_ulong). The sc_array must contain the
+ *                              local array elements counts. That is why it
+ *                              induces the partition that is used to read the
+ *                              array data in parallel. The sum of all array
+ *                              elements must be equal to elem_count as
+ *                              retrieved from \ref sc_scda_fread_section_header.
  * \param [in]      elem_size   The element size of one array element on number
  *                              of bytes. Must be the same on all ranks and as
  *                              retrieved from \ref sc_scda_fread_section_header.
@@ -776,7 +779,7 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  * \param [out]     elem_sizes  A sc_array with element count equals to
  *                              p-th entry of \b elem_counts for p being the
  *                              calling rank. The element size must be
- *                              sizeof (uint64_t). On output the array is
+ *                              sizeof (\ref sc_scda_ulong). On output the array is
  *                              filled with the local array element byte counts,
  *                              where locality is determined by \b elem_counts.
  *                              The element sizes can be skipped on each process
@@ -785,9 +788,9 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
  *                              that was used to create \b fc. The element size
- *                              of the sc_array must be equal to sizeof (uint8_t).
- *                              The sc_array must contain the local array elements
- *                              counts. That is why it induces
+ *                              of the sc_array must be equal to sizeof (\ref
+ *                              sc_scda_ulong). The sc_array must contain the
+ *                              local array elements counts. That is why it induces
  *                              the partition that is used to read the array
  *                              data in parallel. The sum of all array elements
  *                              must be equal to elem_count as retrieved from
@@ -842,13 +845,13 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
  *                              that was used to create \b fc. The element size
- *                              of the sc_array must be equal to sizeof (uint8_t).
- *                              The sc_array must contain the local array elements
- *                              counts. That is why it induces
- *                              the partition that is used to read the array
- *                              data in parallel. The sum of all array elements
- *                              must be equal to elem_count as retrieved from
- *                              \ref sc_scda_fread_section_header.
+ *                              of the sc_array must be equal to sizeof (\ref
+ *                              sc_scda_ulong). The sc_array must contain the
+ *                              local array elements counts. That is why it
+ *                              induces the partition that is used to read the
+ *                              array data in parallel. The sum of all array
+ *                              elements must be equal to elem_count as retrieved
+ *                              from \ref sc_scda_fread_section_header.
  * \param [in]    elem_sizes    The local element sizes conforming to the array
  *                              element partition \b elem_counts as retrieved
  *                              from \ref sc_scda_fread_varray_sizes.
