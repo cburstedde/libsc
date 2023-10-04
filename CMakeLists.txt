@@ -83,9 +83,10 @@ include(cmake/install.cmake)
 
 include(FeatureSummary)
 
-add_feature_info(MPI mpi "MPI features of libsc")
+add_feature_info(MPI SC_ENABLE_MPI "MPI features of libsc")
 add_feature_info(OpenMP openmp "OpenMP features of libsc")
-add_feature_info(ZLIB zlib "ZLIB features of libsc")
+add_feature_info(ZLIB SC_HAVE_ZLIB "ZLIB features of libsc")
 add_feature_info(shared BUILD_SHARED_LIBS "shared libsc library")
+add_feature_info(json SC_HAVE_JSON "JSON features of libsc")
 
 feature_summary(WHAT ENABLED_FEATURES DISABLED_FEATURES)
