@@ -28,6 +28,19 @@
  * Functionality to write and read in parallel using a prescribed
  * serial-equivalent file format called \b scda.
  *
+ * ### General
+ *
+ * The \b scda format is as in this
+ * [preprint](https://doi.org/10.48550/arXiv.2307.06789).
+ *
+ * However, in contrast to the preprint the API in this file provides the two
+ * functions \ref sc_scda_fopen_write and \ref sc_scda_fopen_read instead of
+ * providing one opening function with a mode parameter to decide and writing
+ * and reading.
+ *
+ * In addition, we add in this file the options structure \ref
+ * sc_scda_fopen_options as parameter for opening files.
+ *
  * The file format includes
  * metadata in ASCII and therefore enables the human eye to parse the
  * file structure using a standard text editor.
