@@ -2,11 +2,11 @@ include(GNUInstallDirs)
 include(ExternalProject)
 
 # default zlib source archive
-if (NOT DEFINED LIBSC_BUILD_ZLIB_ARCHIVE_FILE)
-  if (NOT DEFINED LIBSC_BUILD_ZLIB_VERSION)
-    set(LIBSC_BUILD_ZLIB_VERSION 2.1.3)
+if (NOT DEFINED SC_BUILD_ZLIB_ARCHIVE_FILE)
+  if (NOT DEFINED SC_BUILD_ZLIB_VERSION)
+    set(SC_BUILD_ZLIB_VERSION 2.1.3)
   endif()
-  set(LIBSC_BUILD_ZLIB_ARCHIVE_FILE https://github.com/zlib-ng/zlib-ng/archive/refs/tags/${LIBSC_BUILD_ZLIB_VERSION}.tar.gz CACHE STRING "zlib source archive (URL or local filepath).")
+  set(SC_BUILD_ZLIB_ARCHIVE_FILE https://github.com/zlib-ng/zlib-ng/archive/refs/tags/${SC_BUILD_ZLIB_VERSION}.tar.gz CACHE STRING "zlib source archive (URL or local filepath).")
 endif()
 
 set(ZLIB_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/include)
@@ -37,7 +37,7 @@ set(zlib_cmake_args
 )
 
 ExternalProject_Add(ZLIB
-URL ${LIBSC_BUILD_ZLIB_ARCHIVE_FILE}
+URL ${SC_BUILD_ZLIB_ARCHIVE_FILE}
 CMAKE_ARGS ${zlib_cmake_args}
 BUILD_BYPRODUCTS ${ZLIB_LIBRARIES}
 TLS_VERIFY true
