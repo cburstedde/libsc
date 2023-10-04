@@ -226,7 +226,8 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  *
  * This function creates a new file or overwrites an existing one.
  * It is collective and creates the file on a parallel file system.
- * Moreover, all parameters are collective.
+ * \note
+ * All parameters are collective.
  * This function leaves the file open if MPI I/O is available.
  * Independent of the availability of MPI I/O the user can write one or more
  * file sections before closing the file (context) using \ref sc_scda_fclose.
@@ -278,6 +279,7 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  * the inline data section does not end with padded data bytes and therefore
  * require exactly 32 bytes data from the user. This enables the user to
  * implement custom file structuring or padding.
+ * \note
  * All parameters except of \b data are collective.
  *
  * This function returns NULL on MPI I/O errors.
@@ -322,6 +324,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  * This function writes a data block of fixed size to the file. The \b block_data
  * is written on the MPI rank \b root.
  * The number of block bytes must be less or equal 10^{26} - 1.
+ * \note
  * All parameters except of \b block_data are collective.
  *
  * This function returns NULL on MPI I/O errors.
@@ -381,6 +384,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  * The fixed-size array is the simplest file section that enables the user to
  * write and read data in parallel. This function writes an array of a given
  * element global count and a fixed element size.
+ * \note
  * All parameters except of \b array_data are collective.
  *
  * This function returns NULL on MPI I/O errors.
@@ -462,6 +466,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  * This is a collective function.
  * This function can be used instead of \ref sc_scda_fwrite_array if the array
  * elements do not have a constant element size in bytes.
+ * \note
  * All parameters except of \b array_data and \b elem_sizes are collective.
  *
  * This function returns NULL on MPI I/O errors.
@@ -559,6 +564,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * SC_LERRORF, collectively close the file and deallocate the file context. In
  * this case the function returns NULL on all ranks. A wrong file header format
  * causes \ref SC_SCDA_FERR_FORMAT as \b errcode.
+ * \note
+ * All parameters are collective.
  *
  * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent errors.
@@ -598,6 +605,7 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  * (or for a variable-size array two) functions out of
  * \ref sc_scda_fread_block_data, \ref sc_scda_fread_array_data,
  * \ref sc_scda_fread_varray_sizes and \ref sc_scda_fread_varray_data.
+ * \note
  * All parameters are collective.
  *
  * This function returns NULL on MPI I/O errors.
@@ -665,6 +673,7 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  * This is a collective function.
  * This function is only valid to call directly after a successful call of \ref
  * sc_scda_fread_section_header.
+ * \note
  * All parameters except of \b data are collective.
  *
  * This function returns NULL on MPI I/O errors.
@@ -699,6 +708,7 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  * This function is only valid to call directly after a successful call of \ref
  * sc_scda_fread_section_header. This preceding call gives also the required
  * \b block_size.
+ * \note
  * All parameters except of \b data_block are collective.
  *
  * This function returns NULL on MPI I/O errors.
@@ -739,6 +749,7 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  * sc_scda_fread_section_header. This preceding call gives also the required
  * \b elem_size and the global number of array elements. The user must pass
  * a parallel partition of the array elements by \b elem_counts.
+ * \note
  * All parameters except of \b array_data are collective.
  *
  * This function returns NULL on MPI I/O errors.
@@ -800,6 +811,7 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  * sc_scda_fread_section_header. This preceding call gives also the for
  * \b elem_counts required global number of array elements. The user must pass
  * a parallel partition of the array elements by \b elem_counts.
+ * \note
  * All parameters except of \b elem_sizes are collective.
  *
  * This function returns NULL on MPI I/O errors.
@@ -847,6 +859,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  * This function is only valid to call directly after a successful call of \ref
  * sc_scda_fread_varray_sizes. This preceding call gives also the required
  * \b elem_sizes.
+ * \note
  * All parameters except of \b array_data and \b elem_sizes are collective.
  *
  * This function returns NULL on MPI I/O errors.
@@ -936,6 +949,7 @@ int                 sc_scda_ferror_string (int errcode, char *str, int *len);
  * Every call of \ref sc_scda_fopen_write and \ref sc_scda_fopen_read must be
  * matched by a corresponding call of \ref sc_scda_fclose on the created file
  * context.
+ * \note
  * All parameters are collective.
  *
  * This function returns NULL on MPI I/O errors.
