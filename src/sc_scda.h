@@ -288,9 +288,6 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_write.
- * \param [in]      inline_data On the rank \b root a sc_array with element
- *                              count 1 and element size 32. On all other ranks
- *                              this parameter is ignored.
  * \param [in]      user_string At most \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
  *                              in a nul-terminated string. See the 'User Strings'
  *                              section in the detailed description of this file
@@ -299,6 +296,9 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *                              the terminating nul.
  *                              On NULL as input \b user_string is expected to
  *                              be a nul-terminated C string.
+ * \param [in]      inline_data On the rank \b root a sc_array with element
+ *                              count 1 and element size 32. On all other ranks
+ *                              this parameter is ignored.
  * \param [in]      root        An integer between 0 and mpisize exclusive of
  *                              the MPI communicator that was used to create
  *                              \b fc. \b root indicates the MPI rank on that
@@ -313,10 +313,9 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
-                                           sc_array_t * inline_data,
                                            const char *user_string,
-                                           size_t *len, int root,
-                                           int *errcode);
+                                           size_t *len, sc_array_t * inline_data,
+                                           int root, int *errcode);
 
 /** Write a fixed-size block file section.
  *
@@ -333,11 +332,6 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_write.
- * \param [in]      block_data  On rank \b root a sc_array with one element and
- *                              element size equals to \b block_size. On all
- *                              other ranks the parameter is ignored.
- * \param [in]      block_size  The size of the data block in bytes. Must be
- *                              less or equal than 10^{26} - 1.
  * \param [in]      user_string At most \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
  *                              in a nul-terminated string. See the 'User Strings'
  *                              section in the detailed description of this file
@@ -346,6 +340,11 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              the terminating nul.
  *                              On NULL as input \b user_string is expected to
  *                              be a nul-terminated C string.
+ * \param [in]      block_data  On rank \b root a sc_array with one element and
+ *                              element size equals to \b block_size. On all
+ *                              other ranks the parameter is ignored.
+ * \param [in]      block_size  The size of the data block in bytes. Must be
+ *                              less or equal than 10^{26} - 1.
  * \param [in]      root        An integer between 0 and mpisize of the MPI
  *                              communicator that was used to create \b fc.
  *                              \b root indicates the MPI rank on that
@@ -372,11 +371,10 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
-                                          sc_array_t * block_data,
-                                          size_t block_size,
                                           const char *user_string,
-                                          size_t *len, int root, int encode,
-                                          int *errcode);
+                                          size_t *len, sc_array_t * block_data,
+                                          size_t block_size, int root,
+                                          int encode, int *errcode);
 
 /** Write a fixed-size array file section.
  *
@@ -393,6 +391,14 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_write.
+ * \param [in]      user_string At most \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
+ *                              in a nul-terminated string. See the 'User Strings'
+ *                              section in the detailed description of this file
+ *                              for more information.
+ * \param [in]      len         The number of bytes in \b user_string excluding
+ *                              the terminating nul.
+ *                              On NULL as input \b user_string is expected to
+ *                              be a nul-terminated C string.
  * \param [in]      array_data  On rank p the p-th entry of \b elem_counts
  *                              must be the element count of \b array_data.
  *                              The element size of the sc_array must be equal
@@ -423,14 +429,6 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              a sc_array with element size equals to
  *                              \b elem_size that contains the actual array
  *                              elements.
- * \param [in]      user_string At most \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
- *                              in a nul-terminated string. See the 'User Strings'
- *                              section in the detailed description of this file
- *                              for more information.
- * \param [in]      len         The number of bytes in \b user_string excluding
- *                              the terminating nul.
- *                              On NULL as input \b user_string is expected to
- *                              be a nul-terminated C string.
  * \param [in]      encode      A Boolean to decide whether the file section
  *                              is written compressed. This results in two
  *                              written file sections that can be read without
@@ -453,12 +451,11 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
-                                          sc_array_t * array_data,
+                                          const char *user_string,
+                                          size_t *len, sc_array_t * array_data,
                                           sc_array_t * elem_counts,
                                           size_t elem_size,
-                                          int indirect,
-                                          const char *user_string,
-                                          size_t *len, int encode,
+                                          int indirect, int encode,
                                           int *errcode);
 
 /** Write a variable-size array file section.
@@ -475,6 +472,14 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_write.
+ * \param [in]      user_string At most \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
+ *                              in a nul-terminated string. See the 'User Strings'
+ *                              section in the detailed description of this file
+ *                              for more information.
+ * \param [in]      len         The number of bytes in \b user_string excluding
+ *                              the terminating nul.
+ *                              On NULL as input \b user_string is expected to
+ *                              be a nul-terminated C string.
  * \param [in]      array_data  Let p be the calling rank. If \b indirect is
  *                              false, \b array_data must have element count 1
  *                              and as element size the p-th entry of
@@ -517,14 +522,6 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              a sc_array with the actual array elements as
  *                              data as further explained in the documentation
  *                              of \b array_data.
- * \param [in]      user_string At most \ref SC_SCDA_USER_STRING_BYTES + 1 bytes
- *                              in a nul-terminated string. See the 'User Strings'
- *                              section in the detailed description of this file
- *                              for more information.
- * \param [in]      len         The number of bytes in \b user_string excluding
- *                              the terminating nul.
- *                              On NULL as input \b user_string is expected to
- *                              be a nul-terminated C string.
  * \param [in]      encode      A Boolean to decide whether the file section
  *                              is written compressed. This results in two
  *                              written file sections that can be read without
@@ -547,13 +544,12 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
+                                           const char *user_string, size_t *len,
                                            sc_array_t * array_data,
                                            sc_array_t * elem_counts,
                                            sc_array_t * elem_sizes,
                                            sc_array_t * proc_sizes,
-                                           int indirect,
-                                           const char *user_string,
-                                           size_t *len, int encode,
+                                           int indirect, int encode,
                                            int *errcode);
 
 /** Open a file for reading and read the file header from the file.
@@ -574,7 +570,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  *                           parallel file.
  * \param [in]     filename  Path to parallel file that is to be created or
  *                           to be opened.
- * \param [out]  user_string At least \ref SC_SCDA_USER_STRING_BYTES +1 bytes.
+ * \param [out]  user_string At least \ref SC_SCDA_USER_STRING_BYTES + 1 bytes.
  *                           \b user_string is filled with the read user string
  *                           from file and is nul-terminated.
  * \param [out]    len       On output \b len is set to the number of bytes
@@ -614,6 +610,12 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_read.
+ * \param [out]  user_string    At least \ref SC_SCDA_USER_STRING_BYTES +1 bytes.
+ *                              \b user_string is filled with the read user
+ *                              string from file and is nul-terminated.
+ * \param [out]    len          On output \b len is set to the number of bytes
+ *                              written to \b user_string excluding the
+ *                              terminating nul.
  * \param [out]     type        On output this char is set to
  *                              'I' (inline data), 'B' (block of given size),
  *                              'A' (fixed-size array) or 'V' (variable-size
@@ -624,12 +626,6 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  * \param [out]     elem_size   On output set to the byte count of the array
  *                              elements if \b type is 'A' and for the \b type
  *                              'B' the number of bytes. Otherwise set to 0.
- * \param [out]  user_string    At least \ref SC_SCDA_USER_STRING_BYTES +1 bytes.
- *                              \b user_string is filled with the read user
- *                              string from file and is nul-terminated.
- * \param [out]    len          On output \b len is set to the number of bytes
- *                              written to \b user_string excluding the
- *                              terminating nul.
  * \param [in,out]  decode      On input a Boolean to decide whether the file
  *                              section shall possibly be interpreted as a
  *                              compressed section, i.e. they were written by a
@@ -661,12 +657,11 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
-                                                  char *type,
+                                                  char *user_string,
+                                                  size_t *len, char *type,
                                                   size_t *elem_count,
                                                   size_t *elem_size,
-                                                  char *user_string,
-                                                  size_t *len, int *decode,
-                                                  int *errcode);
+                                                  int *decode, int *errcode);
 
 /** Read the data of an inline data section.
  *
