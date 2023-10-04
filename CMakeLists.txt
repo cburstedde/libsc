@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14...3.25)
+cmake_minimum_required(VERSION 3.14...3.28)
 
 include(cmake/git.cmake)
 
@@ -59,7 +59,7 @@ add_library(SC::SC INTERFACE IMPORTED GLOBAL)
 target_link_libraries(SC::SC INTERFACE sc)
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/src/ ${PROJECT_BINARY_DIR}/include/
-DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+TYPE INCLUDE
 FILES_MATCHING PATTERN "*.h"
 )
 
