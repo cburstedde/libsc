@@ -81,6 +81,30 @@
  * SC_SCDA_USER_STRING_BYTES + 1 bytes. On output \b len is set to the number
  * of bytes actually written to \b user_string excluding the nul-termination.
  *
+ * ### Encoding
+ *
+ * \b scda provides optional transparent, element-wise compression of data of
+ * file sections.
+ * The compression for writing can be enabled by passing true for \b encode to
+ * one of the functions
+ *
+ * - \ref sc_scda_fwrite_inline,
+ * - \ref sc_scda_fwrite_block,
+ * - \ref sc_scda_fwrite_array and
+ * - \ref sc_scda_fwrite_varray.
+ *
+ * The compression on writing can be decided by the user for each file section
+ * separately. All parameters on the size of the data written to the file refer
+ * to the uncompressed data.
+ *
+ * On reading it sufficies to pass \b decode true to the function \ref
+ * sc_scda_fread_section_header. Then the file section data is decompressed
+ * if it was compressed and otherwise the file section data is read raw.
+ * Again all data sizes in reading functions refer to the uncompressed data.
+ *
+ * If \b decode is false, the data is read raw even if it was written according
+ * to the compression convention.
+ *
  * \ingroup io
  */
 
@@ -114,12 +138,12 @@
  * Finally, the file context is collectively closed and deallocated by \ref
  * sc_scda_fclose.
  *
- * All above mentioned sc_scda functions are collective and  output an
+ * All above mentioned sc_scda functions are collective and output an
  * error code (cf. \ref sc_scda_ferror_t) that can be examined by \ref
  * sc_scda_ferror_string.
  *
  * For more details and the option for encoded data see the functions
- * below.
+ * in \ref sc_scda.h.
  */
 
 #ifndef SC_SCDA_H
@@ -332,7 +356,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              functions. The data can be read as passed to
  *                              this function by using decode true in \ref
  *                              sc_scda_fread_section_header and calling the
- *                              usual sc_scda_fread function.
+ *                              usual sc_scda_fread function. See also
+ *                              the 'Encoding' section in the detailed
+ *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
  * \return                      Return a pointer to the input
@@ -410,7 +436,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              functions. The data can be read as passed to
  *                              this function by using decode true in \ref
  *                              sc_scda_fread_section_header and calling the
- *                              usual sc_scda_fread function.
+ *                              usual sc_scda_fread function. See also
+ *                              the 'Encoding' section in the detailed
+ *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
  * \return                      Return a pointer to the input
@@ -501,7 +529,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              functions. The data can be read as passed to
  *                              this function by using decode true in \ref
  *                              sc_scda_fread_section_header and calling the
- *                              usual sc_scda_fread function.
+ *                              usual sc_scda_fread function. See also
+ *                              the 'Encoding' section in the detailed
+ *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
  * \return                      Return a pointer to the input
@@ -610,7 +640,9 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  *                              file section type and user string matching the
  *                              compression convention. The subsequent
  *                              sc_scda_fread_* calls do not require any
- *                              adjustment dependent on \b decode.
+ *                              adjustment dependent on \b decode. See also
+ *                              the 'Encoding' section in the detailed
+ *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string.
  * \return                      Return a pointer to the input
