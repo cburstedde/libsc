@@ -12,8 +12,6 @@ VERSION ${PROJECT_VERSION})
 
 enable_testing()
 
-
-
 set(CMAKE_C_STANDARD 99)
 
 include(cmake/options.cmake)
