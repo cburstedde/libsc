@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.14...3.28)
 
 include(cmake/git.cmake)
 
+include(cmake/init_build_type.cmake)
+
 project(SC
 LANGUAGES C
 HOMEPAGE_URL https://www.p4est.org/
@@ -10,12 +12,7 @@ VERSION ${PROJECT_VERSION})
 
 enable_testing()
 
-include(cmake/init_build_type.cmake)
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(debug_build ON)
-else()
-  set(debug_build OFF)
-endif()
+
 
 set(CMAKE_C_STANDARD 99)
 
