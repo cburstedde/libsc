@@ -17,6 +17,8 @@ else()
   set(debug_build OFF)
 endif()
 
+set(CMAKE_C_STANDARD 99)
+
 include(cmake/options.cmake)
 message(STATUS "libsc ${PROJECT_VERSION} "
                "install prefix: ${CMAKE_INSTALL_PREFIX}")
@@ -38,7 +40,6 @@ target_include_directories(libb64 PRIVATE libb64)
 
 # --- sc
 add_library(sc $<TARGET_OBJECTS:iniparser> $<TARGET_OBJECTS:libb64>)
-target_compile_features(sc PRIVATE c_std_99)
 set_property(TARGET sc PROPERTY EXPORT_NAME SC)
 set_property(TARGET sc PROPERTY VERSION ${PROJECT_VERSION})
 target_include_directories(sc
