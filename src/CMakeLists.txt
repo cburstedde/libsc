@@ -16,7 +16,3 @@ if(SC_HAVE_WINSOCK2_H)
   target_sources(sc PRIVATE sc_builtin/gettimeofday.c)
   target_link_libraries(sc PRIVATE ${WINSOCK_LIBRARIES})
 endif()
-
-if(SC_HAVE_JSON)
-  target_link_libraries(sc PRIVATE jansson::jansson)
-endif()

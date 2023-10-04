@@ -17,22 +17,28 @@ endif()
 if(zlib)
   message(STATUS "Using builtin zlib")
   include(${CMAKE_CURRENT_LIST_DIR}/zlib.cmake)
-  set(SC_HAVE_ZLIB true)
 else()
   find_package(ZLIB)
   if(ZLIB_FOUND)
     message(STATUS "Using system zlib : ${ZLIB_VERSION_STRING}")
-    set(SC_HAVE_ZLIB true)
   else()
     message(STATUS "Zlib disabled (not found). Consider using cmake \"-Dzlib=ON\" to turn on builtin zlib.")
-    set(SC_HAVE_ZLIB false)
   endif()
+endif()
+if(TARGET ZLIB::ZLIB)
+  set(SC_HAVE_ZLIB 1)
+else()
+  set(SC_HAVE_ZLIB 0)
 endif()
 
 find_package(Threads)
 
-include(${CMAKE_CURRENT_LIST_DIR}/jansson.cmake)
-
+find_package(jansson CONFIG)
+if(TARGET jansson::jansson)
+  set(SC_HAVE_JSON 1)
+else()
+  set(SC_HAVE_JSON 0)
+endif()
 # --- set global compile environment
 
 # Build all targets with -fPIC so that libsc itself can be linked as a

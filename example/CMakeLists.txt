@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.25)
+cmake_minimum_required(VERSION 3.22)
 project(libscExamples LANGUAGES C)
 
 enable_testing()
@@ -6,24 +6,8 @@ enable_testing()
 include(CheckSymbolExists)
 include(CheckIncludeFile)
 
-if(CMAKE_VERSION VERSION_LESS 3.21)
-  get_property(not_top DIRECTORY PROPERTY PARENT_DIRECTORY)
-  if(NOT not_top)
-    set(PROJECT_IS_TOP_LEVEL true)
-  endif()
-endif()
-
 if(PROJECT_IS_TOP_LEVEL)
-  find_package(Threads)
-
-  # --- find our library package
   find_package(SC CONFIG REQUIRED)
-
-  target_link_libraries(SC::SC INTERFACE
-  $<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>
-  $<$<BOOL:${SC_HAVE_ZLIB}>:ZLIB::ZLIB>
-  $<$<BOOL:${SC_NEED_M}>:m>
-  )
 endif()
 
 # --- build examples
@@ -45,7 +29,7 @@ else()
   add_test(NAME sc:example:${name} COMMAND sc_${name})
 endif()
 
-if(WIN32 AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
+if(WIN32)
   set_property(TEST sc:example:${name} PROPERTY ENVIRONMENT_MODIFICATION "PATH=path_list_append:${SC_INCLUDE_DIR}/../bin")
 endif()
 
