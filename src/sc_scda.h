@@ -229,7 +229,7 @@ sc_scda_ferror_t;
 /** An options struct for the functions \ref sc_scda_fopen_write and
  * \ref sc_scda_fopen_read. The struct may be extended in the future.
  */
-typedef             sc_scda_fopen_options
+typedef         struct sc_scda_fopen_options
 {
   sc_MPI_Info         info; /**< info that is passed to MPI_File_open */
 }
