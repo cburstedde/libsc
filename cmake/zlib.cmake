@@ -1,18 +1,11 @@
-# build Zlib to ensure compatibility.
-# We use Zlib 2.x for speed and robustness.
 include(GNUInstallDirs)
 include(ExternalProject)
 
-# option to chose if we want to download zlib sources, or use a local archive file
-option(LIBSC_USE_ZLIB_ARCHIVE "Turn ON if you want to use a local archive of zlib sources (default: OFF)." OFF)
-
-# select which version of zlib will be build
-if (NOT DEFINED LIBS_BUILD_ZLIB_VERSION)
-  set(LIBSC_BUILD_ZLIB_VERSION 2.1.3)
-endif()
-
 # default zlib source archive
 if (NOT DEFINED LIBSC_BUILD_ZLIB_ARCHIVE_FILE)
+  if (NOT DEFINED LIBSC_BUILD_ZLIB_VERSION)
+    set(LIBSC_BUILD_ZLIB_VERSION 2.1.3)
+  endif()
   set(LIBSC_BUILD_ZLIB_ARCHIVE_FILE https://github.com/zlib-ng/zlib-ng/archive/refs/tags/${LIBSC_BUILD_ZLIB_VERSION}.tar.gz CACHE STRING "zlib source archive (URL or local filepath).")
 endif()
 
@@ -43,27 +36,15 @@ set(zlib_cmake_args
 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
 )
 
-if(LIBSC_USE_ZLIB_ARCHIVE)
-  ExternalProject_Add(ZLIB
-    URL ${LIBSC_BUILD_ZLIB_ARCHIVE_FILE}
-    CMAKE_ARGS ${zlib_cmake_args}
-    BUILD_BYPRODUCTS ${ZLIB_LIBRARIES}
-    TLS_VERIFY true
-    CONFIGURE_HANDLED_BY_BUILD ON
-    INACTIVITY_TIMEOUT 60
-    )
-else()
-  ExternalProject_Add(ZLIB
-    GIT_REPOSITORY https://github.com/zlib-ng/zlib-ng.git
-    GIT_TAG ${LIBSC_BUILD_ZLIB_VERSION}
-    GIT_SHALLOW true
-    CMAKE_ARGS ${zlib_cmake_args}
-    BUILD_BYPRODUCTS ${ZLIB_LIBRARIES}
-    TLS_VERIFY true
-    CONFIGURE_HANDLED_BY_BUILD ON
-    INACTIVITY_TIMEOUT 60
-    )
-endif()
+ExternalProject_Add(ZLIB
+URL ${LIBSC_BUILD_ZLIB_ARCHIVE_FILE}
+CMAKE_ARGS ${zlib_cmake_args}
+BUILD_BYPRODUCTS ${ZLIB_LIBRARIES}
+TLS_VERIFY true
+CONFIGURE_HANDLED_BY_BUILD ON
+INACTIVITY_TIMEOUT 60
+)
+
 
 # --- imported target
 
