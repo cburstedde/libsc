@@ -8,7 +8,7 @@ option(LIBSC_USE_ZLIB_ARCHIVE "Turn ON if you want to use a local archive of zli
 
 # select which version of zlib will be build
 if (NOT DEFINED LIBS_BUILD_ZLIB_VERSION)
-  set(LIBSC_BUILD_ZLIB_VERSION 2.0.6)
+  set(LIBSC_BUILD_ZLIB_VERSION 2.1.3)
 endif()
 
 # default zlib source archive
@@ -38,6 +38,7 @@ set(zlib_cmake_args
 -DCMAKE_BUILD_TYPE=Release
 -DZLIB_COMPAT:BOOL=on
 -DZLIB_ENABLE_TESTS:BOOL=off
+-DZLIBNG_ENABLE_TESTS:BOOL=off
 -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
 )
