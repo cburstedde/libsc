@@ -43,6 +43,44 @@
  *
  * We elaborate further on the workflow in \ref scda_workflow .
  *
+ * ### User Strings
+ *
+ * The functions
+ *
+ * - \ref sc_scda_fopen_write,
+ * - \ref sc_scda_fwrite_inline,
+ * - \ref sc_scda_fwrite_block,
+ * - \ref sc_scda_fwrite_array,
+ * - \ref sc_scda_fwrite_varray,
+ * - \ref sc_scda_fopen_read and
+ * - \ref sc_scda_fread_section_header
+ *
+ * have \b user_string and \b len as an argument.
+ *
+ * The user string consisting of the two parameters \b user_string and \b len is
+ * always a collective parameter.
+ *
+ * In the case of writing these arguments have the purpose to pass the user
+ * string that is written to the file.
+ *
+ * There are two options writing the user string to the file.
+ *
+ * 1. A nul-terminated string \b user_string, i.e. a standard C string. In this
+ * case \b len is set to NULL since the length of \b user_string is implicitly
+ * given by the nul-termination.
+ *
+ * 2. Arbitrary data for the user string. Then one needs to explicitly pass the
+ * length, i.e. the number of bytes excluding the nul-termination. In the second
+ * case we still require a terminating nul for safety.
+ *
+ * For both options it must be respected that the number of maximal \b user_string
+ * bytes is \ref SC_SCDA_USER_STRING_BYTES + 1 including the nul-termination for
+ * options introduced above.
+ *
+ * In case of reading \b user_string must be at least \ref
+ * SC_SCDA_USER_STRING_BYTES + 1 bytes. On output \b len is set to the number
+ * of bytes actually written to \b user_string excluding the nul-termination.
+ *
  * \ingroup io
  */
 
@@ -56,10 +94,10 @@
  *
  * Then the user can call a sequence of functions out of:
  *
- * \ref sc_scda_fwrite_inline,
- * \ref sc_scda_fwrite_block,
- * \ref sc_scda_fwrite_array and
- * \ref sc_scda_fwrite_varray,
+ * - \ref sc_scda_fwrite_inline,
+ * - \ref sc_scda_fwrite_block,
+ * - \ref sc_scda_fwrite_array and
+ * - \ref sc_scda_fwrite_varray,
  *
  * for the case of using \ref sc_scda_fopen_write.
  *
@@ -67,11 +105,11 @@
  * \ref sc_scda_fread_section_header that examines the current file section
  * and then call accordingly to the retrieved file section type
  *
- * \ref sc_scda_fread_inline_data,
- * \ref sc_scda_fread_block_data,
- * \ref sc_scda_fread_array_data,
- * \ref sc_scda_fread_varray_sizes and
- * \ref sc_scda_fread_varray_data.
+ * - \ref sc_scda_fread_inline_data,
+ * - \ref sc_scda_fread_block_data,
+ * - \ref sc_scda_fread_array_data,
+ * - \ref sc_scda_fread_varray_sizes and
+ * - \ref sc_scda_fread_varray_data.
  *
  * Finally, the file context is collectively closed and deallocated by \ref
  * sc_scda_fclose.
@@ -153,8 +191,7 @@ sc_scda_ferror_t;
  */
 typedef             sc_scda_fopen_options
 {
-  sc_MPI_Info         info;
-                     /**< info that is passed to MPI_File_open */
+  sc_MPI_Info         info; /**< info that is passed to MPI_File_open */
 }
 sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
 
@@ -229,7 +266,7 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_write.
- * \param [in]      data        On the rank \b root a sc_array with element
+ * \param [in]      inline_data On the rank \b root a sc_array with element
  *                              count 1 and element size 32. On all other ranks
  *                              this parameter is ignored.
  * \param [in]      user_string At most \ref SC_SCDA_USER_STRING_BYTES characters
@@ -523,7 +560,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * satisfy the sc_scda file header format, the function reports the error using
  * SC_LERRORF, collectively close the file and deallocate the file context. In
  * this case the function returns NULL on all ranks. A wrong file header format
- * causes SC_SCDA_ERR_FORMAT as \b errcode.
+ * causes \ref SC_SCDA_FERR_FORMAT as \b errcode.
  *
  * This function returns NULL on MPI I/O errors.
  * Without MPI I/O the function may abort on file system dependent errors.
@@ -903,8 +940,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
  * \param [in]    errcode       An errcode that is output by a
  *                              sc_scda function.
  * \param [out]   str           At least sc_MPI_MAX_ERROR_STRING bytes.
- * \param [in, out] len         On output the length of string on return.
- *                              On input the number of bytes of \b str on input.
+ * \param [out]   len           On output the length of string on return.
  * \return                      SC_SCDA_FERR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
