@@ -82,17 +82,21 @@
  * case \b len is set to NULL since the length of \b user_string is implicitly
  * given by the nul-termination.
  *
- * 2. Arbitrary data for the user string. Then one needs to explicitly pass the
- * length, i.e. the number of bytes excluding the nul-termination. In the second
- * case we still require a terminating nul for safety.
+ * 2. Arbitrary data for the user string including possible '\0' in
+ * non-terminating positions. We still require nul-termination for safety.
+ * One needs to explicitly pass the length, i.e. the number of bytes
+ * excluding the nul-termination.
  *
  * For both options it must be respected that the number of maximal \b user_string
- * bytes is \ref SC_SCDA_USER_STRING_BYTES + 1 including the nul-termination for
- * options introduced above.
+ * bytes is \ref SC_SCDA_USER_STRING_BYTES + 1 including the nul-termination.
  *
  * In case of reading \b user_string must be at least \ref
  * SC_SCDA_USER_STRING_BYTES + 1 bytes. On output \b len is set to the number
  * of bytes actually written to \b user_string excluding the nul-termination.
+ *
+ * If it is desired to write arbitrary data without the nul-termination, which
+ * is required for the user string, one can write a block data section using
+ * the function \ref sc_scda_fwrite_block.
  *
  * ### Encoding
  *
