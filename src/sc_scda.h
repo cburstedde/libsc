@@ -248,7 +248,7 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  * It is the user's responsibility to write any further
  * metadata of the file that is required by the application. This can be done
  * by writing file sections. However, the user can use \ref sc_scda_fopen_read
- * to open a not already opened file and the use \ref
+ * to open a not already opened file and then use \ref
  * sc_scda_fread_section_header and skipping the respective data bytes using the
  * respective read functions sc_scda_fread_*_data to parse the structure
  * of a given file and some metadata that is written by sc_scda.
