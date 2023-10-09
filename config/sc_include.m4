@@ -204,6 +204,7 @@ if (jreal == json_real (.5)) { json_decref (jreal); }
              [Define to 1 if json_integer and json_real link])
    $1_HAVE_JSON="yes"],
   [$1_HAVE_JSON=])
+  AC_SUBST([$1_HAVE_JSON])
 ])
 
 dnl SC_CHECK_LIB(LIBRARY LIST, FUNCTION, TOKEN, PREFIX)
@@ -380,7 +381,6 @@ AC_CHECK_PROG([$1_HAVE_DOT], [dot], [YES], [NO])
 SC_CHECK_MATH([$1])
 SC_CHECK_ZLIB([$1])
 SC_CHECK_JSON([$1])
-AC_SUBST([SC_HAVE_JSON])
 dnl SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua5 lua],
 dnl              [lua_createtable], [LUA], [$1])
 dnl SC_CHECK_BLAS_LAPACK([$1])
