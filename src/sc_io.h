@@ -25,28 +25,39 @@
  *
  * Helper routines for general and parallel I/O.
  *
- * \ingroup sc_io
- */
-
-/** \defgroup sc_io I/O support
+ * This file provides various sets of functions related to write and read
+ * data as well es to encode and decode it to certain formats.
  *
- * Functionality specific to file/data input/output.
+ *  - To abstract transparent writing/reading into/from files or buffers, we
+ *    provide functions centered around \ref sc_io_sink_new and \ref
+ *    sc_io_source_new.
+ *  - To abstract parallel file I/O in a way that works both with and
+ *    without MPI I/O support, we provide \ref sc_io_open, \ref sc_io_write
+ *    and friends.
+ *  - To write to the VTK binary compressed format, we provide suitable
+ *    functions to base64 encode and zlib-compress as required; see
+ *    \ref sc_vtk_write_binary and \ref sc_vtk_write_compressed.
+ *  - To support self-contained ASCII-armored compression, we provide the
+ *    functions \ref sc_io_encode, \ref sc_io_decode_info and \ref
+ *    sc_io_decode.
+ *    They losslessly transform a block of arbitrary data into a compressed
+ *    and base64-encoded format and back that is unambiguously defined and
+ *    human-friendly.
  *
- * \ingroup sc
+ * \note For the function \ref sc_io_write_at_all without MPI IO but with MPI
+ *       the \b offset argument is ignored. In this case the function writes at
+ *       the current end of the file. Hereby, the MPI ranks write in the
+ *       rank-induced order. That is why the function may work equivalent to
+ *       the MPI IO and non-MPI case but it can not be guaranteed.
+ *       Furthermore, it important to notice that \ref sc_io_write_at and
+ *      \ref sc_io_read_at are only valid to call on rank 0 independent of
+ *       MPI IO being available or not.
+ *
+ * \ingroup io
  */
 
 #ifndef SC_IO_H
 #define SC_IO_H
-
-/** \file sc_io.h
- *
- * The I/O functionalities provide functions to
- * read and write data based on C-standard functions
- * and also an other set of functions to read and write
- * in parallel if at least MPI is enabled.
- * Furthermore, there are functions to encode and decode
- * based on zlib.
- */
 
 #include <sc_containers.h>
 
@@ -75,6 +86,7 @@ typedef enum
 }
 sc_io_error_t;
 
+/** The I/O mode for writing using \ref sc_io_sink. */
 typedef enum
 {
   SC_IO_MODE_WRITE,     /**< Semantics as "w" in fopen. */
@@ -83,46 +95,56 @@ typedef enum
 }
 sc_io_mode_t;
 
+/** Enum to specify encoding for \ref sc_io_sink and \ref sc_io_source. */
 typedef enum
 {
-  SC_IO_ENCODE_NONE,
+  SC_IO_ENCODE_NONE,    /**< No encoding */
   SC_IO_ENCODE_LAST     /**< Invalid entry to close list */
 }
 sc_io_encode_t;
 
+/** The type of I/O operation \ref sc_io_sink and \ref sc_io_source. */
 typedef enum
 {
-  SC_IO_TYPE_BUFFER,
-  SC_IO_TYPE_FILENAME,
-  SC_IO_TYPE_FILEFILE,
+  SC_IO_TYPE_BUFFER,    /**< Write to a buffer */
+  SC_IO_TYPE_FILENAME,  /**< Write to a file to be opened */
+  SC_IO_TYPE_FILEFILE,  /**< Write to an already opened file */
   SC_IO_TYPE_LAST       /**< Invalid entry to close list */
 }
 sc_io_type_t;
 
+/** A generic data sink. */
 typedef struct sc_io_sink
 {
-  sc_io_type_t        iotype;
-  sc_io_mode_t        mode;
-  sc_io_encode_t      encode;
-  sc_array_t         *buffer;
+  sc_io_type_t        iotype;          /**< type of the I/O operation */
+  sc_io_mode_t        mode;            /**< write semantics */
+  sc_io_encode_t      encode;          /**< encoding of data */
+  sc_array_t         *buffer;          /**< buffer for the iotype
+                                            SC_IO_TYPE_BUFFER*/
   size_t              buffer_bytes;    /**< distinguish from array elems */
-  FILE               *file;
-  size_t              bytes_in;
-  size_t              bytes_out;
+  FILE               *file;            /**< file pointer for iotype unequal to
+                                            SC_IO_TYPE_BUFFER */
+  size_t              bytes_in;        /**< input bytes count */
+  size_t              bytes_out;       /**< written bytes count */
 }
 sc_io_sink_t;
 
+/** A generic data source. */
 typedef struct sc_io_source
 {
-  sc_io_type_t        iotype;
-  sc_io_encode_t      encode;
-  sc_array_t         *buffer;
+  sc_io_type_t        iotype;          /**< type of the I/O operation */
+  sc_io_encode_t      encode;          /**< encoding of data */
+  sc_array_t         *buffer;          /**< buffer for the iotype
+                                            SC_IO_TYPE_BUFFER*/
   size_t              buffer_bytes;    /**< distinguish from array elems */
-  FILE               *file;
-  size_t              bytes_in;
-  size_t              bytes_out;
-  sc_io_sink_t       *mirror;
-  sc_array_t         *mirror_buffer;
+  FILE               *file;            /**< file pointer for iotype unequal to
+                                            SC_IO_TYPE_BUFFER */
+  size_t              bytes_in;        /**< input bytes count */
+  size_t              bytes_out;       /**< read bytes count */
+  sc_io_sink_t       *mirror;          /**< if activated, a sink to store the
+                                            data*/
+  sc_array_t         *mirror_buffer;   /**< if activated, the buffer for the
+                                            mirror */
 }
 sc_io_source_t;
 
@@ -276,6 +298,11 @@ int                 sc_io_source_activate_mirror (sc_io_source_t * source);
 /** Read data from the source's mirror.
  * Same behaviour as sc_io_source_read.
  * \param [in,out] source       The source object to read mirror data from.
+ * \param [in] data             Data buffer for reading from source's mirror.
+ *                              If NULL the output data will be thrown away.
+ * \param [in] bytes_avail      Number of bytes available in data buffer.
+ * \param [in,out] bytes_out    If not NULL, byte count read into data buffer.
+ *                              Otherwise, requires to read exactly bytes_avail.
  * \return                      0 on success, nonzero on error.
  */
 int                 sc_io_source_read_mirror (sc_io_source_t * source,
@@ -537,7 +564,7 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
 
 /** Read MPI file content into memory for an explicit offset.
  * This function does not update the file pointer of the MPI file.
- * Contrary to \ref sc_mpi_read, it does not abort on read errors.
+ * Contrary to \ref sc_io_read, it does not abort on read errors.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in counts of the type \b t.
  * \param [in] ptr      Data array to read from disk.
@@ -556,7 +583,6 @@ int                 sc_io_read_at (sc_MPI_File mpifile,
 
 /** Read MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer of the MPI file.
- * Contrary to \ref sc_mpi_read, it does not abort on read errors.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in counts of the type \b t.
  * \param [in] ptr      Data array to read from disk.
@@ -575,7 +601,8 @@ int                 sc_io_read_at_all (sc_MPI_File mpifile,
 /** Read memory content collectively from an MPI file.
  * A call of this function is equivalent to call \ref sc_io_read_at_all
  * with offset = 0 but the call of this function is not equivalent
- * to a call of MPI_File_read_all.
+ * to a call of MPI_File_read_all since this function ignores the current
+ * position of the file cursor.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] ptr      Data array to read from disk.
  * \param [in] zcount   Number of array members.
@@ -609,6 +636,7 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
 
 /** Write MPI file content into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
+ * Contrary to \ref sc_io_write, it does not abort on read errors. 
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in etype, where the etype is given by
  *                      the type t.
@@ -628,12 +656,16 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
 
 /** Write MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
- * If there is no MPI IO but MPI available, the offset parameter is ignored
- * and the ranks just write at the current end of the file according to
- * their rank-induced order.
+ *
+ * \note  If there is no MPI IO but MPI available, the offset parameter is
+ *        ignored and the ranks just write at the current end of the file
+ *        according to their rank-induced order.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in etype, where the etype is given by
- *                      the type t.
+ *                      the type t. This parameter is ignored in the case of
+ *                      having MPI but no MPI IO. In this case this function
+ *                      writes to the current end of the file as described
+ *                      above.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
  * \param [in] t        The MPI type for each array member.
@@ -641,7 +673,6 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
- * \note                This function does not abort on MPI file errors.
  */
 int                 sc_io_write_at_all (sc_MPI_File mpifile,
                                         sc_MPI_Offset offset,
@@ -651,7 +682,8 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
 /** Write memory content collectively to an MPI file.
  * A call of this function is equivalent to call \ref sc_io_write_at_all
  * with offset = 0 but the call of this function is not equivalent
- * to a call of MPI_File_write_all.
+ * to a call of MPI_File_write_all since this function ignores the current
+ * position of the file cursor.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
  * \param [in] zcount   Number of array members.
@@ -660,7 +692,6 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
- * \note                This function does not abort on MPI file errors.
  */
 int                 sc_io_write_all (sc_MPI_File mpifile,
                                      const void *ptr, size_t zcount,

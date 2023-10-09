@@ -22,3 +22,10 @@ There have been breaking changes, very strictly speaking.
 ### General
 
  - We have been reminded to maintain a release notes file.
+
+## 2.8.6
+
+- Completion and some polishing of the doxygen documentation in sc_io.h.
+- Add the scda (file-oriented data format suitable for parallel,
+  partition-independent disk I/O) API including its documentation in sc_scda.h.
+- Restructure the I/O module in the doxygen documentation.
