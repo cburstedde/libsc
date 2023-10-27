@@ -174,11 +174,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   endif()
 endif()
 
-if(zlib)
-  set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
-  set(SC_HAVE_ZLIB true)
-endif()
-
 check_type_size(int SC_SIZEOF_INT BUILTIN_TYPES_ONLY)
 check_type_size("unsigned int" SC_SIZEOF_UNSIGNED_INT BUILTIN_TYPES_ONLY)
 check_type_size(long SC_SIZEOF_LONG BUILTIN_TYPES_ONLY)
