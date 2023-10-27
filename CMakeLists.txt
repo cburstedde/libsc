@@ -47,6 +47,7 @@ $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 target_link_libraries(sc PUBLIC
 $<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>
 $<$<BOOL:${SC_HAVE_ZLIB}>:ZLIB::ZLIB>
+$<$<BOOL:${SC_HAVE_JSON}>:jansson::jansson>
 $<$<BOOL:${SC_NEED_M}>:m>
 )
 
@@ -66,9 +67,12 @@ install(TARGETS sc
   RUNTIME DESTINATION bin)
 
 add_subdirectory(src)
-add_subdirectory(example)
 
 if(BUILD_TESTING)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
+    add_subdirectory(example)
+  endif()
+
   add_subdirectory(test)
 endif(BUILD_TESTING)
 

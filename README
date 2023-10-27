@@ -67,9 +67,16 @@ For faster builds that work on Windows as well as MacOS and Linux, and
 that are easily usable from other CMake projects, libsc can be built directly,
 or used via FetchContent or ExternalProject from other CMake projects.
 
-MPI and OpenMP are enabled by default, and the default build configuration is Release:
+MPI and OpenMP are enabled by default, and the default build configuration is RelWithDebInfo:
 
     cmake -B build
+    cmake --build build --parallel
+
+To enable JSON via jansson, first install
+[jansson CMake project](https://github.com/akheron/jansson), then specify path where you
+installed jansson to CMake, say ~/local:
+
+    cmake -B build -Djansson_ROOT=~/local
     cmake --build build --parallel
 
 To disable MPI:
