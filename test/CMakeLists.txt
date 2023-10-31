@@ -31,10 +31,10 @@ foreach(t IN LISTS sc_tests)
 
 endforeach()
 
-set_tests_properties(${sc_tests} 
-PROPERTIES 
+set_tests_properties(${sc_tests}
+PROPERTIES
   LABELS "unit;libsc"
-  TIMEOUT 60 
+  TIMEOUT 60
 )
 
 if(MPIEXEC_EXECUTABLE)

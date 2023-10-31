@@ -70,7 +70,7 @@ add_subdirectory(src)
 
 if(BUILD_TESTING)
   include(cmake/valgrind.cmake)
-  
+
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
     add_subdirectory(example)
   endif()
