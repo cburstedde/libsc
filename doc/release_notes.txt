@@ -28,6 +28,7 @@ There have been breaking changes, very strictly speaking.
  - Add a generic external library installation option.
  - Update CMake logic to configure zlib and jansson.
  - Make sc_getopt.h a purely internal header file.
+ - Add CMake option to run tests with Valgrind
 
 ### Functionality
 
