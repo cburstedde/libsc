@@ -36,8 +36,10 @@ jobs:
         - cc: clang-14
           mpi: false
           shared: false
+        - cc: clang-15
+          mpi: false
+          shared: false
 # Clang is ABI-incompatible with the libmpich on the CI Ubuntu images.
-# clang-15 has false warnings about set but unused variables that are actually used.
 
     env:
       CC: ${{ matrix.cc }}
