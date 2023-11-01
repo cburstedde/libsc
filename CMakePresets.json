@@ -38,5 +38,24 @@
     }
   }
 }
+],
+"workflowPresets": [
+  {
+    "name": "default",
+    "steps": [
+      {
+        "type": "configure",
+        "name": "default"
+      },
+      {
+        "type": "build",
+        "name": "default"
+      },
+      {
+        "type": "test",
+        "name": "default"
+      }
+    ]
+  }
 ]
 }

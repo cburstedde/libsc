@@ -25,7 +25,10 @@ foreach(t IN LISTS sc_tests)
 
   add_executable(sc_test_${t} test_${t}.c)
   target_link_libraries(sc_test_${t} PRIVATE SC::SC)
-  target_compile_definitions(sc_test_${t} PRIVATE $<$<BOOL:${TEST_WITH_VALGRIND}>:SC_ENABLE_VALGRIND=1>)
+  target_compile_definitions(sc_test_${t} PRIVATE
+    $<$<BOOL:${TEST_WITH_VALGRIND}>:SC_ENABLE_VALGRIND=1>
+    $<$<BOOL:${SC_HAVE_ZLIB}>:SC_HAVE_ZLIB>
+    )
 
   add_test(NAME ${t} COMMAND ${MPI_WRAPPER} ${VALGRIND_COMMAND} $<TARGET_FILE:sc_test_${t}>)
 
