@@ -33,9 +33,11 @@ jobs:
         - shared: true
           cc: gcc
           mpi: true
-        - shared: false
-          cc: clang-14
+        - cc: clang-14
           mpi: false
+          shared: false
+# Clang is ABI-incompatible with the libmpich on the CI Ubuntu images.
+# clang-15 has false warnings about set but unused variables that are actually used.
 
     env:
       CC: ${{ matrix.cc }}
@@ -52,7 +54,20 @@ jobs:
             libmpich-dev mpich
 
     - name: CMake configure
-      run: cmake --preset default -Dmpi:BOOL=${{ matrix.mpi }} --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: >-
+        cmake --preset default
+        -Dmpi:BOOL=${{ matrix.mpi }}
+        --install-prefix=${{ runner.temp }}
+        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+
+    - name: CMake print debug find
+      if: failure()
+      run: >-
+        cmake --preset default
+        -Dmpi:BOOL=${{ matrix.mpi }}
+        --install-prefix=${{ runner.temp }}
+        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+        --debug-find --fresh
 
     - name: CMake build
       run: cmake --build --preset default --parallel
@@ -90,6 +105,7 @@ jobs:
           ./build/Testing/Temporary/LastTest.log
 
   linux-valgrind:
+    needs: linux
     runs-on: ubuntu-22.04
     name: CMake with Valgrind
     timeout-minutes: 15
