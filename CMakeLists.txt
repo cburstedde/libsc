@@ -80,10 +80,6 @@ endif(BUILD_TESTING)
 
 # --- packaging
 
-install(FILES
-${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSC.cmake
-DESTINATION cmake)
-
 include(cmake/pkgconf.cmake)
 include(cmake/install.cmake)
 
