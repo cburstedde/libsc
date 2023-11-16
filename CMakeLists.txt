@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14...3.28)
+cmake_minimum_required(VERSION 3.15...3.28)
 
 include(cmake/git.cmake)
 
@@ -79,10 +79,6 @@ if(BUILD_TESTING)
 endif(BUILD_TESTING)
 
 # --- packaging
-
-install(FILES
-${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSC.cmake
-DESTINATION cmake)
 
 include(cmake/pkgconf.cmake)
 include(cmake/install.cmake)
