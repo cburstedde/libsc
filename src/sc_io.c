@@ -1421,6 +1421,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
   *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
   (*mpifile)->filename = filename;
   (*mpifile)->mpicomm = mpicomm;
+  (*mpifile)->file = NULL;
 
   /* get my rank and open file only on root process */
   mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
@@ -1431,7 +1432,6 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
     mpiret = errno;
   }
   else {
-    (*mpifile)->file = sc_MPI_FILE_NULL;
     mpiret = sc_MPI_SUCCESS;
   }
 
@@ -1442,6 +1442,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
 
   /* free file structure on open error */
   if (errcode != sc_MPI_SUCCESS) {
+    SC_ASSERT ((*mpifile)->file == NULL);
     SC_FREE (*mpifile);
     *mpifile = sc_MPI_FILE_NULL;
   }
@@ -1584,7 +1585,8 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
         mpifile->file = fopen (mpifile->filename, "rb");
         errval = errno;
         if (errval != 0) {
-          /* it occurred an error */
+          /* an error occurred */
+          SC_ASSERT (mpifile->file == NULL);
           SC_ASSERT (errval > 0);
           if (rank < mpisize - 1) {
             active = errval;
@@ -1673,7 +1675,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
       }
     }
     else {
-      mpifile->file = sc_MPI_FILE_NULL;
+      mpifile->file = NULL;
     }
 
     /* last rank broadcasts the first error that appeared */
@@ -1935,7 +1937,7 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
       }
     }
     else {
-      mpifile->file = sc_MPI_FILE_NULL;
+      mpifile->file = NULL;
     }
 
     /* last rank broadcasts the first error that appeared */
