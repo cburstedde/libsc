@@ -659,6 +659,7 @@ struct sc_no_mpiio_file
   sc_MPI_Comm         mpicomm;          /**< The MPI communicator. */
   const char         *filename;         /**< Name of the file. */
   FILE               *file;             /**< Underlying file object. */
+  int                 mpisize;          /**< Ranks in communicator. */
   int                 mpirank;          /**< Rank of this process. */
 };
 

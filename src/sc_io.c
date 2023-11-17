@@ -1425,6 +1425,8 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
   (*mpifile)->file = NULL;
 
   /* get my rank and open file only on root process */
+  mpiret = sc_MPI_Comm_size (mpicomm, &(*mpifile)->mpisize);
+  SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_rank (mpicomm, &(*mpifile)->mpirank);
   SC_CHECK_MPI (mpiret);
   if ((*mpifile)->mpirank == 0) {
@@ -1552,11 +1554,8 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
     int                 mpisize, rank, count, size;
     int                 active, errval;
 
-    *ocount = 0;
-
+    mpisize = mpifile->mpisize;
     rank = mpifile->mpirank;
-    mpiret = sc_MPI_Comm_size (mpifile->mpicomm, &mpisize);
-    SC_CHECK_MPI (mpiret);
 
     /* initially only rank 0 writes to the disk */
     active = (rank == 0) ? -1 : 0;
@@ -1815,12 +1814,8 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
     int                 mpisize, rank, count, size;
     int                 active, errval;
 
-    *ocount = 0;
-
-    mpiret = sc_MPI_Comm_rank (mpifile->mpicomm, &rank);
-    SC_CHECK_MPI (mpiret);
-    mpiret = sc_MPI_Comm_size (mpifile->mpicomm, &mpisize);
-    SC_CHECK_MPI (mpiret);
+    mpisize = mpifile->mpisize;
+    rank = mpifile->mpirank;
 
     /* initially only rank 0 writes to the disk */
     active = (rank == 0) ? -1 : 0;
