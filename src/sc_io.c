@@ -1435,11 +1435,18 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
       (*mpifile)->file = sc_MPI_FILE_NULL;
       mpiret = sc_MPI_SUCCESS;
     }
+
     /* broadcast errno */
     sc_MPI_Bcast (&mpiret, 1, sc_MPI_INT, 0, mpicomm);
 
     retval = sc_io_error_class (mpiret, &errcode);
     SC_CHECK_MPI (retval);
+
+    /* free file structure on open error */
+    if (errcode != sc_MPI_SUCCESS) {
+      SC_FREE (*mpifile);
+      *mpifile = sc_MPI_FILE_NULL;
+    }
 
     return errcode;
   }
@@ -1459,6 +1466,12 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
 
     retval = sc_io_error_class (errno, &errcode);
     SC_CHECK_MPI (retval);
+
+    /* free file structure on open error */
+    if (errcode != sc_MPI_SUCCESS) {
+      SC_FREE (*mpifile);
+      *mpifile = sc_MPI_FILE_NULL;
+    }
 
     return errcode;
   }
