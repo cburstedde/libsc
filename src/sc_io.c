@@ -1494,7 +1494,9 @@ int
 sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
                int zcount, sc_MPI_Datatype t, int *ocount)
 {
-#ifndef SC_ENABLE_MPIIO
+#ifdef SC_ENABLE_MPIIO
+  sc_MPI_Status       mpistatus;
+#else
   int                 size;
 #endif
   int                 mpiret, errcode, retval;
@@ -1503,8 +1505,6 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   *ocount = 0;
 
 #ifdef SC_ENABLE_MPIIO
-  sc_MPI_Status       mpistatus;
-
   mpiret = MPI_File_read_at (mpifile, offset, ptr, zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS && zcount > 0) {
     /* working around 0 count not working for some implementations */
@@ -1516,6 +1516,9 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   SC_CHECK_MPI (retval);
   return errcode;
 #else
+
+  /* TO DO: remember file pointer and set it back after reading */
+
   mpiret = fseek (mpifile->file, offset, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "read_at: fseek failed");
   /* get the data size of the data type */
@@ -1534,15 +1537,14 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
                    int zcount, sc_MPI_Datatype t, int *ocount)
 {
 #ifdef SC_ENABLE_MPI
-  int                 mpiret, errcode;
-#endif
-#ifdef SC_ENABLE_MPIIO
-  int                 retval;
+  int                 mpiret, errcode, retval;
   sc_MPI_Status       mpistatus;
+#endif
 
   SC_ASSERT (ocount != NULL);
   *ocount = 0;
 
+#ifdef SC_ENABLE_MPIIO
   mpiret = MPI_File_read_at_all (mpifile, offset, ptr,
                                  (int) zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS && zcount > 0) {
@@ -1561,8 +1563,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   /* MPI but no MPI IO */
   {
     int                 mpisize, rank, count, size;
-    int                 active, errval, retval;
-    sc_MPI_Status       status;
+    int                 active, errval;
 
     *ocount = 0;
 
@@ -1582,9 +1583,9 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
       /* receive */
       mpiret = sc_MPI_Recv (&active, 1, sc_MPI_INT,
                             rank - 1, sc_MPI_ANY_TAG,
-                            mpifile->mpicomm, &status);
+                            mpifile->mpicomm, &mpistatus);
       SC_CHECK_MPI (mpiret);
-      mpiret = sc_MPI_Get_count (&status, sc_MPI_INT, &count);
+      mpiret = sc_MPI_Get_count (&mpistatus, sc_MPI_INT, &count);
       SC_CHECK_MPI (mpiret);
       SC_CHECK_ABORT (count == 1, "MPI receive");
     }
@@ -1742,17 +1743,17 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
                 const void *ptr, size_t zcount, sc_MPI_Datatype t,
                 int *ocount)
 {
-  int                 retval, errcode;
-#ifndef SC_ENABLE_MPIIO
-  int                 size;
-#endif
-  int                 mpiret;
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
+#else
+  int                 size;
+#endif
+  int                 mpiret, errcode, retval;
 
   SC_ASSERT (ocount != NULL);
   *ocount = 0;
 
+#ifdef SC_ENABLE_MPIIO
   mpiret = MPI_File_write_at (mpifile, offset, (void *) ptr,
                               (int) zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS && zcount > 0) {
@@ -1761,13 +1762,14 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
     SC_CHECK_MPI (mpiret);
     return sc_MPI_SUCCESS;
   }
-
   retval = sc_io_error_class (mpiret, &errcode);
   SC_CHECK_MPI (retval);
-
   return errcode;
 #else
-  *ocount = 0;
+
+  /* TO DO: remember file pointer and set it back after reading */
+  /* TO DO: make the MPI/non-MPI version symmetric to sc_io_read_at */
+  /* TO DO: do we need the flush -- remove it to keep it simple? */
 
   /* This code is only legal on one process. */
   /* This works with and without MPI */
@@ -1793,13 +1795,13 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
 {
 #ifdef SC_ENABLE_MPI
   int                 mpiret, errcode, retval;
-#endif
-#ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
+#endif
 
   SC_ASSERT (ocount != NULL);
   *ocount = 0;
 
+#ifdef SC_ENABLE_MPIIO
   mpiret = MPI_File_write_at_all (mpifile, offset, (void *) ptr,
                                   (int) zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS && zcount > 0) {
@@ -1825,7 +1827,6 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
   {
     int                 mpisize, rank, count, size;
     int                 active, errval;
-    sc_MPI_Status       status;
 
     *ocount = 0;
 
@@ -1845,9 +1846,9 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
       /* receive */
       mpiret = sc_MPI_Recv (&active, 1, sc_MPI_INT,
                             rank - 1, sc_MPI_ANY_TAG,
-                            mpifile->mpicomm, &status);
+                            mpifile->mpicomm, &mpistatus);
       SC_CHECK_MPI (mpiret);
-      mpiret = sc_MPI_Get_count (&status, sc_MPI_INT, &count);
+      mpiret = sc_MPI_Get_count (&mpistatus, sc_MPI_INT, &count);
       SC_CHECK_MPI (mpiret);
       SC_CHECK_ABORT (count == 1, "MPI receive");
     }
