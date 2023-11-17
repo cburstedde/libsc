@@ -1367,7 +1367,7 @@ sc_io_parse_access_mode (sc_io_open_mode_t amode, const char **mode)
 
 #else
 
-typedef int sc_io_access_mode_t;
+typedef int         sc_io_access_mode_t;
 
 static void
 sc_io_parse_access_mode (sc_io_open_mode_t amode, int *mode)
@@ -1401,10 +1401,10 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
 {
   sc_io_access_mode_t mode;
   int                 mpiret, errcode, retval;
-#ifdef SC_ENABLE_MPIIO
 
   sc_io_parse_access_mode (amode, &mode);
 
+#ifdef SC_ENABLE_MPIIO
   mpiret = MPI_File_open (mpicomm, filename, mode, mpiinfo, mpifile);
   retval = sc_io_error_class (mpiret, &errcode);
   SC_CHECK_MPI (retval);
@@ -1418,10 +1418,6 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
 
   return errcode;
 #else
-  int                 rank;
-
-  sc_io_parse_access_mode (amode, &mode);
-
   /* allocate internal file context */
   *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
   (*mpifile)->filename = filename;
@@ -1429,9 +1425,9 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
   (*mpifile)->file = NULL;
 
   /* get my rank and open file only on root process */
-  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &(*mpifile)->mpirank);
   SC_CHECK_MPI (mpiret);
-  if (rank == 0) {
+  if ((*mpifile)->mpirank == 0) {
     errno = 0;
     (*mpifile)->file = fopen (filename, mode);
     mpiret = errno;
@@ -1558,8 +1554,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 
     *ocount = 0;
 
-    mpiret = sc_MPI_Comm_rank (mpifile->mpicomm, &rank);
-    SC_CHECK_MPI (mpiret);
+    rank = mpifile->mpirank;
     mpiret = sc_MPI_Comm_size (mpifile->mpicomm, &mpisize);
     SC_CHECK_MPI (mpiret);
 

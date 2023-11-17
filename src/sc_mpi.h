@@ -656,9 +656,10 @@ typedef long        sc_MPI_Offset;      /**< Emulate the MPI offset type. */
  */
 struct sc_no_mpiio_file
 {
+  sc_MPI_Comm         mpicomm;          /**< The MPI communicator. */
   const char         *filename;         /**< Name of the file. */
   FILE               *file;             /**< Underlying file object. */
-  sc_MPI_Comm         mpicomm;          /**< MPI communicatior. */
+  int                 mpirank;          /**< Rank of this process. */
 };
 
 /** Replacement object for an MPI file. */
