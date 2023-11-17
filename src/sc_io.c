@@ -1499,13 +1499,15 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 #endif
   int                 mpiret, errcode, retval;
 
+  SC_ASSERT (ocount != NULL);
   *ocount = 0;
 
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
   mpiret = MPI_File_read_at (mpifile, offset, ptr, zcount, t, &mpistatus);
-  if (mpiret == sc_MPI_SUCCESS) {
+  if (mpiret == sc_MPI_SUCCESS && zcount > 0) {
+    /* working around 0 count not working for some implementations */
     mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
     SC_CHECK_MPI (mpiret);
     return sc_MPI_SUCCESS;
@@ -1538,11 +1540,13 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   int                 retval;
   sc_MPI_Status       mpistatus;
 
+  SC_ASSERT (ocount != NULL);
   *ocount = 0;
 
   mpiret = MPI_File_read_at_all (mpifile, offset, ptr,
                                  (int) zcount, t, &mpistatus);
-  if (mpiret == sc_MPI_SUCCESS) {
+  if (mpiret == sc_MPI_SUCCESS && zcount > 0) {
+    /* working around 0 count not working for some implementations */
     mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
     SC_CHECK_MPI (mpiret);
 
@@ -1746,11 +1750,13 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
+  SC_ASSERT (ocount != NULL);
   *ocount = 0;
 
   mpiret = MPI_File_write_at (mpifile, offset, (void *) ptr,
                               (int) zcount, t, &mpistatus);
-  if (mpiret == sc_MPI_SUCCESS) {
+  if (mpiret == sc_MPI_SUCCESS && zcount > 0) {
+    /* working around 0 count not working for some implementations */
     mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
     SC_CHECK_MPI (mpiret);
     return sc_MPI_SUCCESS;
@@ -1791,11 +1797,13 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
 
+  SC_ASSERT (ocount != NULL);
   *ocount = 0;
 
   mpiret = MPI_File_write_at_all (mpifile, offset, (void *) ptr,
                                   (int) zcount, t, &mpistatus);
-  if (mpiret == sc_MPI_SUCCESS) {
+  if (mpiret == sc_MPI_SUCCESS && zcount > 0) {
+    /* working around 0 count not working for some implementations */
     mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
     SC_CHECK_MPI (mpiret);
     return sc_MPI_SUCCESS;
