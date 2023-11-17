@@ -658,9 +658,7 @@ struct sc_no_mpiio_file
 {
   const char         *filename;         /**< Name of the file. */
   FILE               *file;             /**< Underlying file object. */
-#ifdef SC_ENABLE_MPI
-  sc_MPI_Comm         mpicomm;
-#endif
+  sc_MPI_Comm         mpicomm;          /**< MPI communicatior. */
 };
 
 /** Replacement object for an MPI file. */

@@ -1389,8 +1389,9 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
             sc_io_open_mode_t amode, sc_MPI_Info mpiinfo,
             sc_MPI_File * mpifile)
 {
+  int                 mpiret, errcode, retval;
 #ifdef SC_ENABLE_MPIIO
-  int                 retval, mpiret, errcode, mode;
+  int                 mode;
 
   sc_io_parse_mpiio_access_mode (amode, &mode);
 
@@ -1406,76 +1407,47 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
   }
 
   return errcode;
-#elif defined (SC_ENABLE_MPI)
-  {
-    int                 rank, mpiret, retval, errcode;
-    char                mode[4];
-
-    /* allocate file struct */
-    *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
-
-    /* serialize the I/O operations */
-    /* active flag is set later in  */
-    (*mpifile)->filename = filename;
-
-    /* store the communicator */
-    (*mpifile)->mpicomm = mpicomm;
-
-    sc_io_parse_nompiio_access_mode (amode, mode);
-
-    /* get my rank */
-    mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
-    SC_CHECK_MPI (mpiret);
-    if (rank == 0) {
-      errno = 0;
-      (*mpifile)->file = fopen (filename, mode);
-      mpiret = errno;
-    }
-    else {
-      (*mpifile)->file = sc_MPI_FILE_NULL;
-      mpiret = sc_MPI_SUCCESS;
-    }
-
-    /* broadcast errno */
-    sc_MPI_Bcast (&mpiret, 1, sc_MPI_INT, 0, mpicomm);
-
-    retval = sc_io_error_class (mpiret, &errcode);
-    SC_CHECK_MPI (retval);
-
-    /* free file structure on open error */
-    if (errcode != sc_MPI_SUCCESS) {
-      SC_FREE (*mpifile);
-      *mpifile = sc_MPI_FILE_NULL;
-    }
-
-    return errcode;
-  }
+#else
+  int                 rank;
+#if defined (SC_ENABLE_MPI)
+  char                mode[4];
+  sc_io_parse_nompiio_access_mode (amode, mode);
 #else /* no MPI */
-  {
-    int                 retval, errcode;
-    char                mode[4];
+  char                mode[4];
+  sc_io_parse_nompiio_access_mode (amode, mode);
+#endif
 
-    /* allocate file struct */
-    *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
+  /* allocate internal file context */
+  *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
+  (*mpifile)->filename = filename;
+  (*mpifile)->mpicomm = mpicomm;
 
-    (*mpifile)->filename = filename;
-
-    sc_io_parse_nompiio_access_mode (amode, mode);
+  /* get my rank and open file only on root process */
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
+  SC_CHECK_MPI (mpiret);
+  if (rank == 0) {
     errno = 0;
     (*mpifile)->file = fopen (filename, mode);
-
-    retval = sc_io_error_class (errno, &errcode);
-    SC_CHECK_MPI (retval);
-
-    /* free file structure on open error */
-    if (errcode != sc_MPI_SUCCESS) {
-      SC_FREE (*mpifile);
-      *mpifile = sc_MPI_FILE_NULL;
-    }
-
-    return errcode;
+    mpiret = errno;
   }
-#endif
+  else {
+    (*mpifile)->file = sc_MPI_FILE_NULL;
+    mpiret = sc_MPI_SUCCESS;
+  }
+
+  /* synchronize error return value */
+  sc_MPI_Bcast (&mpiret, 1, sc_MPI_INT, 0, mpicomm);
+  retval = sc_io_error_class (mpiret, &errcode);
+  SC_CHECK_MPI (retval);
+
+  /* free file structure on open error */
+  if (errcode != sc_MPI_SUCCESS) {
+    SC_FREE (*mpifile);
+    *mpifile = sc_MPI_FILE_NULL;
+  }
+
+  return errcode;
+#endif /* !SC_ENABLE_MPIIO */
 }
 
 void
