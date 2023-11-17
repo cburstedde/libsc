@@ -1957,40 +1957,34 @@ sc_io_write_all (sc_MPI_File mpifile, const void *ptr, size_t zcount,
 }
 
 int
-sc_io_close (sc_MPI_File * file)
+sc_io_close (sc_MPI_File * mpifile)
 {
-  SC_ASSERT (file != NULL);
+  SC_ASSERT (mpifile != NULL);
 
   int                 mpiret;
   int                 eclass;
-#if defined (SC_ENABLE_MPI) && defined (SC_ENABLE_DEBUG) && !defined (SC_ENABLE_MPIIO)
-  int                 rank;
-#endif
 
 #ifdef SC_ENABLE_MPIIO
-  mpiret = MPI_File_close (file);
+  mpiret = MPI_File_close (mpifile);
   mpiret = sc_io_error_class (mpiret, &eclass);
   SC_CHECK_MPI (mpiret);
 #else
-  if ((*file)->file != NULL) {
-#ifdef SC_ENABLE_DEBUG
-#ifdef SC_ENABLE_MPI
-    /* by convention this can only happen on proc 0 */
-    mpiret = sc_MPI_Comm_rank ((*file)->mpicomm, &rank);
-    SC_CHECK_MPI (mpiret);
-    SC_ASSERT (rank == 0);
-#endif
-#endif
-    eclass = sc_MPI_SUCCESS;
+  int                 retval;
+
+  eclass = sc_MPI_SUCCESS;
+  if ((*mpifile)->file != NULL) {
+    /* by convention this can only happen on process 0 */
+    SC_ASSERT ((*mpifile)->mpirank == 0);
+
     errno = 0;
-    fclose ((*file)->file);
+    retval = fclose ((*mpifile)->file);
     mpiret = sc_io_error_class (errno, &eclass);
     SC_CHECK_MPI (mpiret);
+    SC_CHECK_ABORT (!retval == (eclass == sc_MPI_SUCCESS),
+                    "fclose return value inconsistent");
   }
-  else {
-    eclass = sc_MPI_SUCCESS;
-  }
-  SC_FREE (*file);
+  SC_FREE (*mpifile);
+  *mpifile = sc_MPI_FILE_NULL;
 #endif
 
   return eclass;
