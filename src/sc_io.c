@@ -1339,33 +1339,42 @@ sc_io_error_class (int errorcode, int *errorclass)
 }
 
 #ifndef SC_ENABLE_MPIIO
+
+typedef const char *sc_io_access_mode_t;
+
 static void
-sc_io_parse_nompiio_access_mode (sc_io_open_mode_t amode, char mode[4])
+sc_io_parse_access_mode (sc_io_open_mode_t amode, const char **mode)
 {
+  SC_ASSERT (mode != NULL);
+  *mode = "";
+
   /* parse access mode */
   switch (amode) {
   case SC_IO_READ:
-    snprintf (mode, 3, "%s", "rb");
+    *mode = "rb";
     break;
   case SC_IO_WRITE_CREATE:
-    snprintf (mode, 3, "%s", "wb");
+    *mode = "wb";
     break;
   case SC_IO_WRITE_APPEND:
     /* the file is opened in the corresponding write call */
-#if 0
-    snprintf (mode, 3, "%s", "rb");
-#endif
-    snprintf (mode, 1, "%s", "");
     break;
   default:
     SC_ABORT ("Invalid non MPI IO file access mode");
     break;
   }
 }
+
 #else
+
+typedef int sc_io_access_mode_t;
+
 static void
-sc_io_parse_mpiio_access_mode (sc_io_open_mode_t amode, int *mode)
+sc_io_parse_access_mode (sc_io_open_mode_t amode, int *mode)
 {
+  SC_ASSERT (mode != NULL);
+  *mode = 0;
+
   /* parse access mode */
   switch (amode) {
   case SC_IO_READ:
@@ -1382,6 +1391,7 @@ sc_io_parse_mpiio_access_mode (sc_io_open_mode_t amode, int *mode)
     break;
   }
 }
+
 #endif
 
 int
@@ -1389,11 +1399,11 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
             sc_io_open_mode_t amode, sc_MPI_Info mpiinfo,
             sc_MPI_File * mpifile)
 {
+  sc_io_access_mode_t mode;
   int                 mpiret, errcode, retval;
 #ifdef SC_ENABLE_MPIIO
-  int                 mode;
 
-  sc_io_parse_mpiio_access_mode (amode, &mode);
+  sc_io_parse_access_mode (amode, &mode);
 
   mpiret = MPI_File_open (mpicomm, filename, mode, mpiinfo, mpifile);
   retval = sc_io_error_class (mpiret, &errcode);
@@ -1409,13 +1419,8 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
   return errcode;
 #else
   int                 rank;
-#if defined (SC_ENABLE_MPI)
-  char                mode[4];
-  sc_io_parse_nompiio_access_mode (amode, mode);
-#else /* no MPI */
-  char                mode[4];
-  sc_io_parse_nompiio_access_mode (amode, mode);
-#endif
+
+  sc_io_parse_access_mode (amode, &mode);
 
   /* allocate internal file context */
   *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
