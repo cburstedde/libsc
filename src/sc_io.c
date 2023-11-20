@@ -1527,9 +1527,6 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   mpiret = fseek (mpifile->file, pos, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "read_at: fseek for file pointer reset failed");
 
-  /* synchronize error return value */
-  mpiret = sc_MPI_Bcast (&errcode, 1, sc_MPI_INT, 0, mpifile->mpicomm);
-  SC_CHECK_MPI (mpiret);
   return errcode;
 #endif
 }
@@ -1786,9 +1783,6 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   mpiret = fseek (mpifile->file, pos, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "write_at: fseek for file pointer reset failed");
 
-  /* synchronize error return value */
-  mpiret = sc_MPI_Bcast (&errcode, 1, sc_MPI_INT, 0, mpifile->mpicomm);
-  SC_CHECK_MPI (mpiret);
   return errcode;
 #endif
 }
