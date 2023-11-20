@@ -532,10 +532,12 @@ void                sc_fflush_fsync_fclose (FILE * file);
  *                      an actual MPI IO file or an internal file
  *                      conntext to preserve some MPI IO functionalities
  *                      without MPI IO and to have working code without
- *                      MPI at all.
+ *                      MPI at all. This output variable is only filled if the
+ *                      return value of the function is \ref sc_MPI_SUCCESS.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
- *                      \ref sc_MPI_Error_string.
+ *                      \ref sc_MPI_Error_string. If the return value is
+ *                      not \ref sc_MPI_SUCCESS, \b mpifile is not filled.
  * \note                This function does not exactly follow the MPI_File
  *                      semantic in the sense that it truncates files to the
  *                      length zero before overwriting them.
