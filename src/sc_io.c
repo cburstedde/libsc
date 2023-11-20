@@ -1507,7 +1507,10 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   return errcode;
 #else
 
-  /* remember file pointer */
+  /* This code is only legal on one process. */
+  /* This works with and without MPI */
+
+  /* remember the file pointer */
   pos = ftell (mpifile->file);
 
   mpiret = fseek (mpifile->file, offset, SEEK_SET);
@@ -1516,7 +1519,7 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   mpiret = sc_MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, "read_at: get type size failed");
   errno = 0;
-  *ocount = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
+  *ocount = (int) fread (ptr, (size_t) size, (size_t) zcount, mpifile->file);
   retval = sc_io_error_class (errno, &errcode);
   SC_CHECK_MPI (retval);
   /* set the file pointer back after reading */
@@ -1731,7 +1734,7 @@ sc_io_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
 
 int
 sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
-                const void *ptr, size_t zcount, sc_MPI_Datatype t,
+                const void *ptr, int zcount, sc_MPI_Datatype t,
                 int *ocount)
 {
 #ifdef SC_ENABLE_MPIIO
@@ -1746,8 +1749,7 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   *ocount = 0;
 
 #ifdef SC_ENABLE_MPIIO
-  mpiret = MPI_File_write_at (mpifile, offset, (void *) ptr,
-                              (int) zcount, t, &mpistatus);
+  mpiret = MPI_File_write_at (mpifile, offset, ptr, zcount, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS && zcount > 0) {
     /* working around 0 count not working for some implementations */
     mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
@@ -1758,9 +1760,6 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   SC_CHECK_MPI (retval);
   return errcode;
 #else
-
-  /* TO DO: make the MPI/non-MPI version symmetric to sc_io_read_at */
-  /* TO DO: do we need the flush -- remove it to keep it simple? */
 
   /* This code is only legal on one process. */
   /* This works with and without MPI */
@@ -1774,10 +1773,9 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   mpiret = sc_MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, "write_at: get type size failed");
   errno = 0;
-  *ocount = (int) fwrite (ptr, (size_t) size, zcount, mpifile->file);
-  mpiret = errno;
+  *ocount = (int) fwrite (ptr, (size_t) size, (size_t) zcount, mpifile->file);
   SC_CHECK_ABORT (fflush (mpifile->file) == 0, "write_at: fflush failed");
-  retval = sc_io_error_class (mpiret, &errcode);
+  retval = sc_io_error_class (errno, &errcode);
   SC_CHECK_MPI (retval);
   /* set the file pointer back after reading */
   mpiret = fseek (mpifile->file, pos, SEEK_SET);

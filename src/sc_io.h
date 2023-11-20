@@ -651,7 +651,7 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
  */
 int                 sc_io_write_at (sc_MPI_File mpifile,
                                     sc_MPI_Offset offset,
-                                    const void *ptr, size_t zcount,
+                                    const void *ptr, int zcount,
                                     sc_MPI_Datatype t, int *ocount);
 
 /** Write MPI file content collectively into memory for an explicit offset.
