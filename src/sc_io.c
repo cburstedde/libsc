@@ -1400,7 +1400,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
             sc_MPI_File * mpifile)
 {
   sc_io_access_mode_t mode;
-  int                 mpiret, errcode, retval;
+  int                 mpiret, errcode, retval, retval_fopen;
 
   sc_io_parse_access_mode (amode, &mode);
 
@@ -1432,15 +1432,16 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
   if ((*mpifile)->mpirank == 0) {
     errno = 0;
     (*mpifile)->file = fopen (filename, mode);
-    mpiret = errno;
+    retval_fopen = errno;
   }
   else {
-    mpiret = sc_MPI_SUCCESS;
+    retval_fopen = sc_MPI_SUCCESS;
   }
 
   /* synchronize error return value */
-  sc_MPI_Bcast (&mpiret, 1, sc_MPI_INT, 0, mpicomm);
-  retval = sc_io_error_class (mpiret, &errcode);
+  mpiret = sc_MPI_Bcast (&retval_fopen, 1, sc_MPI_INT, 0, mpicomm);
+  SC_CHECK_MPI (mpiret);
+  retval = sc_io_error_class (retval_fopen, &errcode);
   SC_CHECK_MPI (retval);
 
   /* free file structure on open error */
@@ -1525,6 +1526,10 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   /* set the file pointer back after reading */
   mpiret = fseek (mpifile->file, pos, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "read_at: fseek for file pointer reset failed");
+
+  /* synchronize error return value */
+  mpiret = sc_MPI_Bcast (&errcode, 1, sc_MPI_INT, 0, mpifile->mpicomm);
+  SC_CHECK_MPI (mpiret);
   return errcode;
 #endif
 }
@@ -1780,6 +1785,10 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   /* set the file pointer back after reading */
   mpiret = fseek (mpifile->file, pos, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "write_at: fseek for file pointer reset failed");
+
+  /* synchronize error return value */
+  mpiret = sc_MPI_Bcast (&errcode, 1, sc_MPI_INT, 0, mpifile->mpicomm);
+  SC_CHECK_MPI (mpiret);
   return errcode;
 #endif
 }
@@ -1995,6 +2004,10 @@ sc_io_close (sc_MPI_File * mpifile)
   }
   SC_FREE (*mpifile);
   *mpifile = sc_MPI_FILE_NULL;
+
+  /* synchronize error return value*/
+  mpiret = sc_MPI_Bcast (&eclass, 1, sc_MPI_INT, 0, (*mpifile)->mpicomm);
+  SC_CHECK_MPI (mpiret);
 #endif
 
   return eclass;
