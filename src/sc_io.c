@@ -1487,6 +1487,7 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   sc_MPI_Status       mpistatus;
 #else
   int                 size;
+  long                pos;
 #endif
   int                 mpiret, errcode, retval;
 
@@ -1506,7 +1507,8 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   return errcode;
 #else
 
-  /* TO DO: remember file pointer and set it back after reading */
+  /* remember file pointer */
+  pos = ftell (mpifile->file);
 
   mpiret = fseek (mpifile->file, offset, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "read_at: fseek failed");
@@ -1517,6 +1519,9 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   *ocount = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
   retval = sc_io_error_class (errno, &errcode);
   SC_CHECK_MPI (retval);
+  /* set the file pointer back after reading */
+  mpiret = fseek (mpifile->file, pos, SEEK_SET);
+  SC_CHECK_ABORT (mpiret == 0, "read_at: fseek for file pointer reset failed");
   return errcode;
 #endif
 }
@@ -1733,6 +1738,7 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   sc_MPI_Status       mpistatus;
 #else
   int                 size;
+  long                pos;
 #endif
   int                 mpiret, errcode, retval;
 
@@ -1753,12 +1759,15 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   return errcode;
 #else
 
-  /* TO DO: remember file pointer and set it back after reading */
   /* TO DO: make the MPI/non-MPI version symmetric to sc_io_read_at */
   /* TO DO: do we need the flush -- remove it to keep it simple? */
 
   /* This code is only legal on one process. */
   /* This works with and without MPI */
+
+  /* remember the file pointer */
+  pos = ftell (mpifile->file);
+
   mpiret = fseek (mpifile->file, offset, SEEK_SET);
   SC_CHECK_ABORT (mpiret == 0, "write_at: fseek failed");
   /* get the data size of the data type */
@@ -1770,6 +1779,9 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   SC_CHECK_ABORT (fflush (mpifile->file) == 0, "write_at: fflush failed");
   retval = sc_io_error_class (mpiret, &errcode);
   SC_CHECK_MPI (retval);
+  /* set the file pointer back after reading */
+  mpiret = fseek (mpifile->file, pos, SEEK_SET);
+  SC_CHECK_ABORT (mpiret == 0, "write_at: fseek for file pointer reset failed");
   return errcode;
 #endif
 }
