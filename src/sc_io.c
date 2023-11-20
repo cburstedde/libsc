@@ -1400,7 +1400,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
             sc_MPI_File * mpifile)
 {
   sc_io_access_mode_t mode;
-  int                 mpiret, errcode, retval, retval_fopen;
+  int                 mpiret, errcode, retval;
 
   sc_io_parse_access_mode (amode, &mode);
 
@@ -1432,16 +1432,16 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
   if ((*mpifile)->mpirank == 0) {
     errno = 0;
     (*mpifile)->file = fopen (filename, mode);
-    retval_fopen = errno;
+    retval = errno;
   }
   else {
-    retval_fopen = sc_MPI_SUCCESS;
+    retval = sc_MPI_SUCCESS;
   }
 
   /* synchronize error return value */
-  mpiret = sc_MPI_Bcast (&retval_fopen, 1, sc_MPI_INT, 0, mpicomm);
+  mpiret = sc_MPI_Bcast (&retval, 1, sc_MPI_INT, 0, mpicomm);
   SC_CHECK_MPI (mpiret);
-  retval = sc_io_error_class (retval_fopen, &errcode);
+  retval = sc_io_error_class (retval, &errcode);
   SC_CHECK_MPI (retval);
 
   /* free file structure on open error */
