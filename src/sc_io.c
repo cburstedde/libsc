@@ -1799,7 +1799,6 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   }
 
   errno = 0;
-
   mpiret = fseek (mpifile->file, offset, SEEK_SET);
   if (mpiret != 0) {
     /* fseek failed */
@@ -1813,7 +1812,6 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, "write_at: get type size failed");
   errno = 0;
   *ocount = (int) fwrite (ptr, (size_t) size, (size_t) zcount, mpifile->file);
-  SC_CHECK_ABORT (fflush (mpifile->file) == 0, "write_at: fflush failed");
   retval = sc_io_error_class (errno, &errcode);
   SC_CHECK_MPI (retval);
   if (errno != 0 && *ocount == 0) {
