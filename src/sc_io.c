@@ -1787,11 +1787,27 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   /* This code is only legal on one process. */
   /* This works with and without MPI */
 
+  errno = 0;
   /* remember the file pointer */
   pos = ftell (mpifile->file);
+  if (pos == -1) {
+    /* call of ftell resulted in an error */
+    retval = sc_io_error_class (errno, &errcode);
+    SC_CHECK_MPI (retval);
+
+    return errcode;
+  }
+
+  errno = 0;
 
   mpiret = fseek (mpifile->file, offset, SEEK_SET);
-  SC_CHECK_ABORT (mpiret == 0, "write_at: fseek failed");
+  if (mpiret != 0) {
+    /* fseek failed */
+    retval = sc_io_error_class (errno, &errcode);
+    SC_CHECK_MPI (retval);
+
+    return errcode;
+  }
   /* get the data size of the data type */
   mpiret = sc_MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, "write_at: get type size failed");
@@ -1800,9 +1816,15 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   SC_CHECK_ABORT (fflush (mpifile->file) == 0, "write_at: fflush failed");
   retval = sc_io_error_class (errno, &errcode);
   SC_CHECK_MPI (retval);
-  /* set the file pointer back after reading */
+  if (errno != 0 && *ocount == 0) {
+    /* fwrite failed and did not move the file pointer */
+    return errcode;
+  }
+  errno = 0;
+  /* set the file pointer back after writing */
   mpiret = fseek (mpifile->file, pos, SEEK_SET);
-  SC_CHECK_ABORT (mpiret == 0, "write_at: fseek for file pointer reset failed");
+  retval = sc_io_error_class (errno, &errcode);
+  SC_CHECK_MPI (retval);
 
   return errcode;
 #endif
