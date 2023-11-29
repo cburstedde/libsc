@@ -1508,7 +1508,18 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   return errcode;
 #else
 
-  /* This code is only legal on one process. */
+#ifdef SC_ENABLE_MPI
+  /* This code with zcount > 0 is only legal on rank 0.
+   * On all other ranks the code is only legal for zcount == 0.
+   */
+  if (mpifile->mpirank > 0 && zcount != 0) {
+    return sc_MPI_ERR_ARG;
+  }
+  if (zcount == 0) {
+    return sc_MPI_SUCCESS;
+  }
+#endif
+
   /* This works with and without MPI */
 
   errno = 0;
@@ -1784,7 +1795,18 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   return errcode;
 #else
 
-  /* This code is only legal on one process. */
+#ifdef SC_ENABLE_MPI
+  /* This code with zcount > 0 is only legal on rank 0.
+   * On all other ranks the code is only legal for zcount == 0.
+   */
+  if (mpifile->mpirank > 0 && zcount != 0) {
+    return sc_MPI_ERR_ARG;
+  }
+  if (zcount == 0) {
+    return sc_MPI_SUCCESS;
+  }
+#endif
+
   /* This works with and without MPI */
 
   errno = 0;

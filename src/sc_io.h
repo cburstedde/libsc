@@ -49,9 +49,9 @@
  *       the current end of the file. Hereby, the MPI ranks write in the
  *       rank-induced order. That is why the function may work equivalent to
  *       the MPI IO and non-MPI case but it can not be guaranteed.
- *       Furthermore, it important to notice that \ref sc_io_write_at and
- *      \ref sc_io_read_at are only valid to call on rank 0 independent of
- *       MPI IO being available or not.
+ *       Furthermore, it is important to notice that \ref sc_io_write_at and
+ *       \ref sc_io_read_at are only valid to call with zcount > 0 on rank 0,
+ *       if MPI IO is not available.
  *
  * \ingroup io
  */
@@ -576,7 +576,11 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
- * \note                This function is only valid to call on rank 0.
+ * \note                If MPI I/O is not available this function has restricted
+ *                      functionality in the sense that for \b zcount > 0, this
+ *                      function is only legal to call on rank 0. On all other
+ *                      ranks \b zcount must be 0. If this requirement is
+ *                      violated this function returns \ref sc_MPI_ERR_ARG.
  */
 int                 sc_io_read_at (sc_MPI_File mpifile,
                                    sc_MPI_Offset offset, void *ptr,
@@ -649,7 +653,11 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
- * \note                This function is only valid to call on rank 0.
+ * \note                If MPI I/O is not available this function has restricted
+ *                      functionality in the sense that for \b zcount > 0, this
+ *                      function is only legal to call on rank 0. On all other
+ *                      ranks \b zcount must be 0. If this requirement is
+ *                      violated this function returns \ref sc_MPI_ERR_ARG.
  */
 int                 sc_io_write_at (sc_MPI_File mpifile,
                                     sc_MPI_Offset offset,
