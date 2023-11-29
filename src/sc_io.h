@@ -51,7 +51,9 @@
  *       the MPI IO and non-MPI case but it can not be guaranteed.
  *       Furthermore, it is important to notice that \ref sc_io_write_at and
  *       \ref sc_io_read_at are only valid to call with zcount > 0 on rank 0,
- *       if MPI IO is not available.
+ *       if MPI IO is not available. During runtime this can be checked by the
+ *       user by calling \ref sc_io_read_at_legal and \ref sc_io_write_at_legal,
+ *       respectively.
  *
  * \ingroup io
  */
@@ -564,6 +566,17 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
                                 size_t zcount, sc_MPI_Datatype t,
                                 const char *errmsg);
 
+/** Check for restricted usage of \ref sc_io_read_at.
+ *
+ * \return              0 if the restriction described in the note of \ref
+ *                      sc_io_read_at applies. This is equivalent to MPI I/O
+ *                      being not available.
+ *                      Otherwise, the function returns 1, i.e. MPI I/O is
+ *                      available and the restriction in the note of \ref
+ *                      sc_io_read_at does not apply.
+ */
+int                 sc_io_read_at_legal (void);
+
 /** Read MPI file content into memory for an explicit offset.
  * This function does not update the file pointer of the MPI file.
  * Contrary to \ref sc_io_read, it does not abort on read errors.
@@ -639,6 +652,17 @@ int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
 void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
                                  size_t zcount, sc_MPI_Datatype t,
                                  const char *errmsg);
+
+/** Check for restricted usage of \ref sc_io_write_at.
+ *
+ * \return              0 if the restriction described in the note of \ref
+ *                      sc_io_write_at applies. This is equivalent to MPI I/O
+ *                      being not available.
+ *                      Otherwise, the function returns 1, i.e. MPI I/O is
+ *                      available and the restriction in the note of \ref
+ *                      sc_io_write_at does not apply.
+ */
+int                 sc_io_write_at_legal (void);
 
 /** Write MPI file content into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
