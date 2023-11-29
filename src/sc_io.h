@@ -54,6 +54,11 @@
  *       if MPI IO is not available. During runtime this can be checked by the
  *       user by calling \ref sc_io_read_at_legal and \ref sc_io_write_at_legal,
  *       respectively.
+ *       The recommended way of reading/writing with multiple ranks with
+ *       zcount > 0 if \ref sc_io_read_at_legal / \ref sc_io_write_at_legal
+ *       returns 0 is to use \ref sc_io_read_at_all / \ref sc_io_write_at_all
+ *       with the whished zcount on the ranks whished by the user and set zcount
+ *       to 0 on the remaining ranks. 
  *
  * \ingroup io
  */
