@@ -2075,12 +2075,12 @@ sc_io_close (sc_MPI_File * mpifile)
     SC_CHECK_ABORT (!retval == (eclass == sc_MPI_SUCCESS),
                     "fclose return value inconsistent");
   }
-  SC_FREE (*mpifile);
-  *mpifile = sc_MPI_FILE_NULL;
-
-  /* synchronize error return value*/
+  /* synchronize error return value */
   mpiret = sc_MPI_Bcast (&eclass, 1, sc_MPI_INT, 0, (*mpifile)->mpicomm);
   SC_CHECK_MPI (mpiret);
+
+  SC_FREE (*mpifile);
+  *mpifile = sc_MPI_FILE_NULL;
 #endif
 
   return eclass;
