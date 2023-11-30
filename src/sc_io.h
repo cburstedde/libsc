@@ -574,11 +574,14 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
 /** Check for restricted usage of \ref sc_io_read_at.
  *
  * \return              0 if the restriction described in the note of \ref
- *                      sc_io_read_at applies. This is equivalent to MPI I/O
- *                      being not available.
+ *                      sc_io_read_at applies, i.e. zcount > 0 is only legal
+ *                      on rank 0. This is equivalent to MPI I/O being not
+ *                      available.
  *                      Otherwise, the function returns 1, i.e. MPI I/O is
  *                      available and the restriction in the note of \ref
- *                      sc_io_read_at does not apply.
+ *                      sc_io_read_at does not apply, i.e. the user can pass
+ *                      any valid zcount on any valid rank.
+ *
  */
 int                 sc_io_read_at_legal (void);
 
@@ -661,11 +664,14 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
 /** Check for restricted usage of \ref sc_io_write_at.
  *
  * \return              0 if the restriction described in the note of \ref
- *                      sc_io_write_at applies. This is equivalent to MPI I/O
- *                      being not available.
+ *                      sc_io_write_at applies, i.e. zcount > 0 is only legal
+ *                      on rank 0. This is equivalent to MPI I/O being not
+ *                      available.
  *                      Otherwise, the function returns 1, i.e. MPI I/O is
  *                      available and the restriction in the note of \ref
- *                      sc_io_write_at does not apply.
+ *                      sc_io_write_at does not apply, i.e. the user can pass
+ *                      any valid zcount on any valid rank.
+ *
  */
 int                 sc_io_write_at_legal (void);
 
