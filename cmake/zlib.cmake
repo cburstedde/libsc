@@ -1,26 +1,18 @@
-# build Zlib to ensure compatibility.
-# We use Zlib 2.x for speed and robustness.
-include(GNUInstallDirs)
 include(ExternalProject)
 
-# option to chose if we want to download zlib sources, or use a local archive file
-option(LIBSC_USE_ZLIB_ARCHIVE "Turn ON if you want to use a local archive of zlib sources (default: OFF)." OFF)
-
-# select which version of zlib will be build
-if (NOT DEFINED LIBS_BUILD_ZLIB_VERSION)
-  set(LIBSC_BUILD_ZLIB_VERSION 2.0.6)
-endif()
-
 # default zlib source archive
-if (NOT DEFINED LIBSC_BUILD_ZLIB_ARCHIVE_FILE)
-  set(LIBSC_BUILD_ZLIB_ARCHIVE_FILE https://github.com/zlib-ng/zlib-ng/archive/refs/tags/${LIBSC_BUILD_ZLIB_VERSION}.tar.gz CACHE STRING "zlib source archive (URL or local filepath).")
+if (NOT DEFINED SC_BUILD_ZLIB_ARCHIVE_FILE)
+  if (NOT DEFINED SC_BUILD_ZLIB_VERSION)
+    set(SC_BUILD_ZLIB_VERSION 2.1.4)
+  endif()
+  set(SC_BUILD_ZLIB_ARCHIVE_FILE https://github.com/zlib-ng/zlib-ng/archive/refs/tags/${SC_BUILD_ZLIB_VERSION}.tar.gz CACHE STRING "zlib source archive (URL or local filepath).")
 endif()
 
 set(ZLIB_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/include)
 
 if(BUILD_SHARED_LIBS)
   if(WIN32)
-    set(ZLIB_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}zlib1${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(ZLIB_LIBRARIES ${CMAKE_INSTALL_PREFIX}/bin/${CMAKE_SHARED_LIBRARY_PREFIX}zlib1${CMAKE_SHARED_LIBRARY_SUFFIX})
   else()
     set(ZLIB_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}z${CMAKE_SHARED_LIBRARY_SUFFIX})
   endif()
@@ -38,31 +30,25 @@ set(zlib_cmake_args
 -DCMAKE_BUILD_TYPE=Release
 -DZLIB_COMPAT:BOOL=on
 -DZLIB_ENABLE_TESTS:BOOL=off
+-DZLIBNG_ENABLE_TESTS:BOOL=off
 -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
 )
 
-if(LIBSC_USE_ZLIB_ARCHIVE)
-  ExternalProject_Add(ZLIB
-    URL ${LIBSC_BUILD_ZLIB_ARCHIVE_FILE}
-    CMAKE_ARGS ${zlib_cmake_args}
-    BUILD_BYPRODUCTS ${ZLIB_LIBRARIES}
-    TLS_VERIFY true
-    CONFIGURE_HANDLED_BY_BUILD ON
-    INACTIVITY_TIMEOUT 60
-    )
-else()
-  ExternalProject_Add(ZLIB
-    GIT_REPOSITORY https://github.com/zlib-ng/zlib-ng.git
-    GIT_TAG ${LIBSC_BUILD_ZLIB_VERSION}
-    GIT_SHALLOW true
-    CMAKE_ARGS ${zlib_cmake_args}
-    BUILD_BYPRODUCTS ${ZLIB_LIBRARIES}
-    TLS_VERIFY true
-    CONFIGURE_HANDLED_BY_BUILD ON
-    INACTIVITY_TIMEOUT 60
-    )
-endif()
+ExternalProject_Add(ZLIB
+URL ${SC_BUILD_ZLIB_ARCHIVE_FILE}
+CMAKE_ARGS ${zlib_cmake_args}
+BUILD_BYPRODUCTS ${ZLIB_LIBRARIES}
+TLS_VERIFY true
+CONFIGURE_HANDLED_BY_BUILD ON
+INACTIVITY_TIMEOUT 60
+USES_TERMINAL_DOWNLOAD true
+USES_TERMINAL_UPDATE true
+USES_TERMINAL_BUILD true
+USES_TERMINAL_INSTALL true
+USES_TERMINAL_TEST true
+)
+
 
 # --- imported target
 

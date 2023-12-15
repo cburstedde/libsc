@@ -21,6 +21,8 @@
 #define SC_CPPFLAGS @SC_CPPFLAGS@
 #endif
 
+#cmakedefine SC_HAVE_ZLIB 1
+
 /* Define to 1 if we are using threads */
 #cmakedefine SC_ENABLE_PTHREAD 1
 
