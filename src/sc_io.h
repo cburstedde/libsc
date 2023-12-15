@@ -49,9 +49,16 @@
  *       the current end of the file. Hereby, the MPI ranks write in the
  *       rank-induced order. That is why the function may work equivalent to
  *       the MPI IO and non-MPI case but it can not be guaranteed.
- *       Furthermore, it important to notice that \ref sc_io_write_at and
- *      \ref sc_io_read_at are only valid to call on rank 0 independent of
- *       MPI IO being available or not.
+ *       Furthermore, it is important to notice that \ref sc_io_write_at and
+ *       \ref sc_io_read_at are only valid to call with zcount > 0 on rank 0,
+ *       if MPI IO is not available. During runtime this can be checked by the
+ *       user by calling \ref sc_io_read_at_legal and \ref sc_io_write_at_legal,
+ *       respectively.
+ *       The recommended way of reading/writing with multiple ranks with
+ *       zcount > 0 if \ref sc_io_read_at_legal / \ref sc_io_write_at_legal
+ *       returns 0 is to use \ref sc_io_read_at_all / \ref sc_io_write_at_all
+ *       with the whished zcount on the ranks whished by the user and set zcount
+ *       to 0 on the remaining ranks. 
  *
  * \ingroup io
  */
@@ -532,10 +539,12 @@ void                sc_fflush_fsync_fclose (FILE * file);
  *                      an actual MPI IO file or an internal file
  *                      conntext to preserve some MPI IO functionalities
  *                      without MPI IO and to have working code without
- *                      MPI at all.
+ *                      MPI at all. This output variable is only filled if the
+ *                      return value of the function is \ref sc_MPI_SUCCESS.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
- *                      \ref sc_MPI_Error_string.
+ *                      \ref sc_MPI_Error_string. If the return value is
+ *                      not \ref sc_MPI_SUCCESS, \b mpifile is not filled.
  * \note                This function does not exactly follow the MPI_File
  *                      semantic in the sense that it truncates files to the
  *                      length zero before overwriting them.
@@ -562,23 +571,41 @@ void                sc_io_read (sc_MPI_File mpifile, void *ptr,
                                 size_t zcount, sc_MPI_Datatype t,
                                 const char *errmsg);
 
+/** Check for restricted usage of \ref sc_io_read_at.
+ *
+ * \return              0 if the restriction described in the note of \ref
+ *                      sc_io_read_at applies, i.e. count > 0 is only legal
+ *                      on rank 0. This is equivalent to MPI I/O being not
+ *                      available.
+ *                      Otherwise, the function returns 1, i.e. MPI I/O is
+ *                      available and the restriction in the note of \ref
+ *                      sc_io_read_at does not apply, i.e. the user can pass
+ *                      any valid count on any valid rank.
+ *
+ */
+int                 sc_io_read_at_legal (void);
+
 /** Read MPI file content into memory for an explicit offset.
  * This function does not update the file pointer of the MPI file.
  * Contrary to \ref sc_io_read, it does not abort on read errors.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in counts of the type \b t.
  * \param [in] ptr      Data array to read from disk.
- * \param [in] zcount   Number of array members.
+ * \param [in] count    Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of read elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
- * \note                This function is only valid to call on rank 0.
+ * \note                If MPI I/O is not available this function has restricted
+ *                      functionality in the sense that for \b count > 0, this
+ *                      function is only legal to call on rank 0. On all other
+ *                      ranks \b count must be 0. If this requirement is
+ *                      violated this function returns \ref sc_MPI_ERR_ARG.
  */
 int                 sc_io_read_at (sc_MPI_File mpifile,
                                    sc_MPI_Offset offset, void *ptr,
-                                   int zcount, sc_MPI_Datatype t,
+                                   int count, sc_MPI_Datatype t,
                                    int *ocount);
 
 /** Read MPI file content collectively into memory for an explicit offset.
@@ -586,7 +613,7 @@ int                 sc_io_read_at (sc_MPI_File mpifile,
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] offset   Starting offset in counts of the type \b t.
  * \param [in] ptr      Data array to read from disk.
- * \param [in] zcount   Number of array members.
+ * \param [in] count    Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of read elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
@@ -595,7 +622,7 @@ int                 sc_io_read_at (sc_MPI_File mpifile,
  */
 int                 sc_io_read_at_all (sc_MPI_File mpifile,
                                        sc_MPI_Offset offset, void *ptr,
-                                       int zcount, sc_MPI_Datatype t,
+                                       int count, sc_MPI_Datatype t,
                                        int *ocount);
 
 /** Read memory content collectively from an MPI file.
@@ -605,7 +632,7 @@ int                 sc_io_read_at_all (sc_MPI_File mpifile,
  * position of the file cursor.
  * \param [in,out] mpifile      MPI file object opened for reading.
  * \param [in] ptr      Data array to read from disk.
- * \param [in] zcount   Number of array members.
+ * \param [in] count    Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of read elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
@@ -613,7 +640,7 @@ int                 sc_io_read_at_all (sc_MPI_File mpifile,
  *                      \ref sc_MPI_Error_string.
  */
 int                 sc_io_read_all (sc_MPI_File mpifile, void *ptr,
-                                    int zcount, sc_MPI_Datatype t,
+                                    int count, sc_MPI_Datatype t,
                                     int *ocount);
 
 #define sc_mpi_write        sc_io_write  /**< For backwards compatibility. */
@@ -634,6 +661,20 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
                                  size_t zcount, sc_MPI_Datatype t,
                                  const char *errmsg);
 
+/** Check for restricted usage of \ref sc_io_write_at.
+ *
+ * \return              0 if the restriction described in the note of \ref
+ *                      sc_io_write_at applies, i.e. count > 0 is only legal
+ *                      on rank 0. This is equivalent to MPI I/O being not
+ *                      available.
+ *                      Otherwise, the function returns 1, i.e. MPI I/O is
+ *                      available and the restriction in the note of \ref
+ *                      sc_io_write_at does not apply, i.e. the user can pass
+ *                      any valid count on any valid rank.
+ *
+ */
+int                 sc_io_write_at_legal (void);
+
 /** Write MPI file content into memory for an explicit offset.
  * This function does not update the file pointer that is part of mpifile.
  * Contrary to \ref sc_io_write, it does not abort on read errors. 
@@ -641,17 +682,21 @@ void                sc_io_write (sc_MPI_File mpifile, const void *ptr,
  * \param [in] offset   Starting offset in etype, where the etype is given by
  *                      the type t.
  * \param [in] ptr      Data array to write to disk.
- * \param [in] zcount   Number of array members.
+ * \param [in] count    Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of written elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
  *                      \ref sc_MPI_Error_string.
- * \note                This function is only valid to call on rank 0.
+ * \note                If MPI I/O is not available this function has restricted
+ *                      functionality in the sense that for \b count > 0, this
+ *                      function is only legal to call on rank 0. On all other
+ *                      ranks \b count must be 0. If this requirement is
+ *                      violated this function returns \ref sc_MPI_ERR_ARG.
  */
 int                 sc_io_write_at (sc_MPI_File mpifile,
                                     sc_MPI_Offset offset,
-                                    const void *ptr, size_t zcount,
+                                    const void *ptr, int count,
                                     sc_MPI_Datatype t, int *ocount);
 
 /** Write MPI file content collectively into memory for an explicit offset.
@@ -667,7 +712,7 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
  *                      writes to the current end of the file as described
  *                      above.
  * \param [in] ptr      Data array to write to disk.
- * \param [in] zcount   Number of array members.
+ * \param [in] count    Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of written elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
@@ -676,7 +721,7 @@ int                 sc_io_write_at (sc_MPI_File mpifile,
  */
 int                 sc_io_write_at_all (sc_MPI_File mpifile,
                                         sc_MPI_Offset offset,
-                                        const void *ptr, size_t zcount,
+                                        const void *ptr, int count,
                                         sc_MPI_Datatype t, int *ocount);
 
 /** Write memory content collectively to an MPI file.
@@ -686,7 +731,7 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
  * position of the file cursor.
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.
- * \param [in] zcount   Number of array members.
+ * \param [in] count    Number of array members.
  * \param [in] t        The MPI type for each array member.
  * \param [out] ocount  The number of written elements of type \b t.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
@@ -694,7 +739,7 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
  *                      \ref sc_MPI_Error_string.
  */
 int                 sc_io_write_all (sc_MPI_File mpifile,
-                                     const void *ptr, size_t zcount,
+                                     const void *ptr, int count,
                                      sc_MPI_Datatype t, int *ocount);
 
 /** Close collectively a sc_MPI_File.

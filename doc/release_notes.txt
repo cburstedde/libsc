@@ -33,6 +33,7 @@ There have been breaking changes, very strictly speaking.
 ### Functionality
 
  - Further align I/O wrappers with and without MPI I/O.
+ - Simplify the replacements for MPI_{read,write}_at*.
  - Update zlib and base64 encode/compression routines.
 
 ## 2.8.5
