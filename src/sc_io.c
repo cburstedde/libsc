@@ -1392,7 +1392,7 @@ sc_io_parse_access_mode (sc_io_open_mode_t amode, int *mode)
   }
 }
 
-#endif
+#endif /* SC_ENABLE_MPIIO */
 
 int
 sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
@@ -1492,7 +1492,7 @@ sc_io_read_at_legal (void)
 
 int
 sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
-               int zcount, sc_MPI_Datatype t, int *ocount)
+               int count, sc_MPI_Datatype t, int *ocount)
 {
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
@@ -1506,8 +1506,8 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   *ocount = 0;
 
 #ifdef SC_ENABLE_MPIIO
-  mpiret = MPI_File_read_at (mpifile, offset, ptr, zcount, t, &mpistatus);
-  if (mpiret == sc_MPI_SUCCESS && zcount > 0) {
+  mpiret = MPI_File_read_at (mpifile, offset, ptr, count, t, &mpistatus);
+  if (mpiret == sc_MPI_SUCCESS && count > 0) {
     /* working around 0 count not working for some implementations */
     mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
     SC_CHECK_MPI (mpiret);
@@ -1518,22 +1518,18 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   return errcode;
 #else
 
-#ifdef SC_ENABLE_MPI
-  /* This code with zcount > 0 is only legal on rank 0.
-   * On all other ranks the code is only legal for zcount == 0.
+  /* The value count > 0 is only legal on rank 0.
+   * On all other ranks the code is only legal for count == 0.
    */
-  if (mpifile->mpirank > 0 && zcount != 0) {
+  if (mpifile->mpirank > 0 && count != 0) {
     return sc_MPI_ERR_ARG;
   }
-  if (zcount == 0) {
+  if (count == 0) {
     return sc_MPI_SUCCESS;
   }
-#endif
 
-  /* This works with and without MPI */
-
-  errno = 0;
   /* remember the file pointer */
+  errno = 0;
   pos = ftell (mpifile->file);
   if (pos == -1) {
     /* call of ftell resulted in an error */
@@ -1543,6 +1539,7 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
     return errcode;
   }
 
+  /* set file pointer to begin reading */
   errno = 0;
   mpiret = fseek (mpifile->file, offset, SEEK_SET);
   if (mpiret != 0) {
@@ -1552,11 +1549,12 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 
     return errcode;
   }
+
   /* get the data size of the data type */
   mpiret = sc_MPI_Type_size (t, &size);
   SC_CHECK_ABORT (mpiret == sc_MPI_SUCCESS, "read_at: get type size failed");
   errno = 0;
-  *ocount = (int) fread (ptr, (size_t) size, (size_t) zcount, mpifile->file);
+  *ocount = (int) fread (ptr, (size_t) size, (size_t) count, mpifile->file);
   retval = sc_io_error_class (errno, &errcode);
   SC_CHECK_MPI (retval);
   if (errno != 0 && *ocount == 0) {
@@ -1564,6 +1562,7 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
     return errcode;
   }
   errno = 0;
+
   /* set the file pointer back after reading */
   mpiret = fseek (mpifile->file, pos, SEEK_SET);
   retval = sc_io_error_class (errno, &errcode);
@@ -1575,7 +1574,7 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 
 int
 sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
-                   int zcount, sc_MPI_Datatype t, int *ocount)
+                   int count, sc_MPI_Datatype t, int *ocount)
 {
 #ifdef SC_ENABLE_MPI
   int                 mpiret, errcode, retval;
@@ -1587,8 +1586,8 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 
 #ifdef SC_ENABLE_MPIIO
   mpiret = MPI_File_read_at_all (mpifile, offset, ptr,
-                                 (int) zcount, t, &mpistatus);
-  if (mpiret == sc_MPI_SUCCESS && zcount > 0) {
+                                 count, t, &mpistatus);
+  if (mpiret == sc_MPI_SUCCESS && count > 0) {
     /* working around 0 count not working for some implementations */
     mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
     SC_CHECK_MPI (mpiret);
@@ -1657,7 +1656,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
       SC_CHECK_ABORT (mpiret == 0, "read_at_all: seek failed");
       /* read data */
       errno = 0;
-      *ocount = (int) fread (ptr, (size_t) size, zcount, mpifile->file);
+      *ocount = (int) fread (ptr, (size_t) size, (size_t) count, mpifile->file);
       errval = errno;
       /* the consecutive error codes fflush and fclose are not reported */
       SC_CHECK_ABORT (fflush (mpifile->file) == 0,
@@ -1739,15 +1738,15 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   }
 #else
   /* There is no collective read without MPI. */
-  return sc_io_read_at (mpifile, offset, ptr, zcount, t, ocount);
+  return sc_io_read_at (mpifile, offset, ptr, count, t, ocount);
 #endif
 }
 
 int
-sc_io_read_all (sc_MPI_File mpifile, void *ptr, int zcount, sc_MPI_Datatype t,
+sc_io_read_all (sc_MPI_File mpifile, void *ptr, int count, sc_MPI_Datatype t,
                 int *ocount)
 {
-  return sc_io_read_at_all (mpifile, 0, ptr, zcount, t, ocount);
+  return sc_io_read_at_all (mpifile, 0, ptr, count, t, ocount);
 }
 
 void
