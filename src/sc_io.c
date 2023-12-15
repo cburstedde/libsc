@@ -1561,9 +1561,9 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
     /* fread failed and did not move the file pointer */
     return errcode;
   }
-  errno = 0;
 
   /* set the file pointer back after reading */
+  errno = 0;
   mpiret = fseek (mpifile->file, pos, SEEK_SET);
   retval = sc_io_error_class (errno, &errcode);
   SC_CHECK_MPI (retval);
@@ -1716,6 +1716,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
      */
     if (rank == 0) {
       /* open the file on rank 0 to be ready for the next file_read call */
+      errno = 0;
       mpifile->file = fopen (mpifile->filename, "rb");
       errval = errno;
       if (errval != 0) {
