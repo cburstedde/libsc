@@ -1,14 +1,12 @@
 cmake_minimum_required(VERSION 3.15...3.28)
 
-include(cmake/git.cmake)
-
 include(cmake/init_build_type.cmake)
 
 project(SC
 LANGUAGES C
 HOMEPAGE_URL https://www.p4est.org/
 DESCRIPTION "The SC library supports parallel scientific applications."
-VERSION ${PROJECT_VERSION})
+VERSION 2.0.0)
 
 enable_testing()
 
@@ -35,8 +33,12 @@ target_include_directories(libb64 PRIVATE libb64)
 
 # --- sc
 add_library(sc $<TARGET_OBJECTS:iniparser> $<TARGET_OBJECTS:libb64>)
-set_property(TARGET sc PROPERTY EXPORT_NAME SC)
-set_property(TARGET sc PROPERTY VERSION ${PROJECT_VERSION})
+set_target_properties(
+  sc PROPERTIES
+  EXPORT_NAME SC
+  VERSION ${PROJECT_VERSION}
+  SOVERSION ${PROJECT_VERSION_MAJOR}
+)
 target_include_directories(sc
 PRIVATE iniparser libb64
 PUBLIC
