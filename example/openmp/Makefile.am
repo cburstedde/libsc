@@ -8,6 +8,4 @@ if SC_ENABLE_OPENMP
 bin_PROGRAMS += example/openmp/sc_openmp
 example_openmp_sc_openmp_SOURCES = example/openmp/openmp.c
 
-LINT_CSOURCES += $(example_openmp_sc_openmp_SOURCES)
-
 endif

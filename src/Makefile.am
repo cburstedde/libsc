@@ -55,5 +55,3 @@ scbuiltindir = $(includedir)/sc_builtin
 scbuiltin_HEADERS = $(libsc_original_headers)
 
 AM_CPPFLAGS += -I@top_srcdir@/src
-
-LINT_CSOURCES += $(libsc_compiled_sources)

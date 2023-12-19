@@ -12,7 +12,6 @@ CLEANFILES =
 DISTCLEANFILES =
 EXTRA_DIST =
 LDADD =
-LINT_CSOURCES =
 TESTS =
 bin_PROGRAMS =
 check_PROGRAMS =
@@ -82,23 +81,6 @@ include example/pthread/Makefile.am
 include example/v4l2/Makefile.am
 ## include example/warp/Makefile.am
 include example/testing/Makefile.am
-
-## This was only used for our lint code, which needs to be replaced.
-##
-## # lint static syntax checker
-## ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-##                  $(MPI_INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) \
-##                  $(src_libsc_a_CPPFLAGS)
-## lint:
-## if LINT
-## 	for f in $(LINT_CSOURCES) ; do \
-## 		$(LINT) $(ALL_LINT_FLAGS) $(top_srcdir)/$$f || \
-## 		echo "Lint check failed for $$f" ; \
-## 	done
-## else
-## 	@echo "Static source code check disabled by configure"
-## endif
-## .PHONY: lint
 
 # revision control and ChangeLog
 ChangeLog:
