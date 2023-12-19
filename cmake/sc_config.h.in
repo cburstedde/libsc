@@ -235,12 +235,12 @@
 
 /* Package major version */
 #ifndef SC_VERSION_MAJOR
-#define SC_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define SC_VERSION_MAJOR @LIBSC_VERSION_MAJOR@
 #endif
 
 /* Package minor version */
 #ifndef SC_VERSION_MINOR
-#define SC_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define SC_VERSION_MINOR @LIBSC_VERSION_MINOR@
 #endif
 
 /* Package point version */
