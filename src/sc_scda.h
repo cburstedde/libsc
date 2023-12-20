@@ -122,6 +122,85 @@
  * If \b decode is false, the data is read raw even if it was written according
  * to the compression convention.
  *
+ * ### Error management
+ *
+ * All \b scda functions that receive a file context have an output parameter
+ * called \b errcode. In case of an unsuccessful function call, the respective
+ * function returns NULL instead of the file context and sets the output
+ * parameter \b errcode to the respective error code. If such a case occurs,
+ * the file that is associated to the used file context is closed and the file
+ * context is deallocated.
+ *
+ * The error code can be examined by the user using the two functions
+ * - \ref sc_scda_ferror_class and
+ * - \ref sc_scda_ferror_string.
+ *
+ * If MPI I/O is available \b errcode may be an MPI error code. In this case
+ * the two error examination functions output the error class and error string
+ * as it would be output by the corresponding MPI functions, respectively.
+ * Moreover, \b errcode can be an error code related to \b scda, i.e.
+ * the I/O operations were successful but there is some violation of the \b scda
+ * format, workflow or API.
+ *
+ * In particular, there are at least the following MPI-related error classes.
+ *
+ * Error class                            | Description          
+ * ---------------------------------------|-------------------------------------
+ * SC_SCDA_FERR_SUCCESS = 0               | successful function call
+ * SC_SCDA_FERR_FILE                      | invalid file handle
+ * SC_SCDA_FERR_NOT_SAME                  | collective argument not identical
+ * SC_SCDA_FERR_AMODE                     | access mode error
+ * SC_SCDA_FERR_NO_SUCH_FILE              | file does not exist
+ * SC_SCDA_FERR_FILE_EXIST                | file exists already
+ * SC_SCDA_FERR_BAD_FILE                  | invalid file name
+ * SC_SCDA_FERR_ACCESS                    | permission denied
+ * SC_SCDA_FERR_NO_SPACE                  | not enough space
+ * SC_SCDA_FERR_QUOTA                     | quota exceeded
+ * SC_SCDA_FERR_READ_ONLY                 | read only file (system)
+ * SC_SCDA_FERR_IN_USE                    | file currently open by other process
+ * SC_SCDA_FERR_IO                        | other I/O error
+ * SC_SCDA_FERR_UNKNOWN                   | unknown I/O error
+ *
+ * In addition, we provide at least the following \b scda format, workflow and
+ * API related error classes.
+ * Error class          | Description          
+ * --------------------|------------------------------------------
+ * SC_SCDA_FERR_FORMAT | file not conforming to the \b scda format
+ * SC_SCDA_FERR_USAGE  | incorrect workflow of an \b scda reading function
+ * SC_SCDA_FERR_DECODE | \b scda encoding convention violated
+ * SC_SCDA_FERR_INPUT  | invalid \b scda function argument passed
+ * SC_SCDA_FERR_COUNT  | byte count error for successful I/O operation
+ *
+ * The follwing subsections comment further on the \b scda related error classes.
+ *
+ * #### SC_SCDA_FERR_FORMAT
+ * The read file does not conform to the prescribed \b scda format.
+ *
+ * It is not possible to further read this file or write to this file. However,
+ * if the format violation does not happen at the beginning of the file, the
+ * user can read the file until the format violation occurs.  
+ *
+ * #### SC_SCDA_FERR_USAGE
+ * The workflow of the \b scda reading functions was incorrect. See also
+ * \ref scda_workflow for further informations on the workflow.
+ *
+ * For example, the user might have identified a certain file section type
+ * using \ref sc_scda_fread_section_header but then calls a function to read
+ * the section  data for a different type. Another example is to try reading
+ * the data of a 'V' section before reading its element sizes. This error also
+ * occurs when the user tries to read section data before reading the section
+ * header.
+ * 
+ * #### SC_SCDA_FERR_INPUT
+ * An argument to a \b scda function was invalid.
+ * 
+ * This occurs for example when an essential pointer argument is NULL or a user
+ * string for writing is too long.
+ *
+ * #### SC_SCDA_FERR_COUNT 
+ * A byte count error that may occur transiently on writing or the file is short
+ * on reading.
+ * 
  * \ingroup io
  */
 
@@ -979,12 +1058,27 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
                                                sc_array_t * proc_sizes,
                                                int indirect, int *errcode);
 
-/** Translate a sc_scda error code to an error string.
+/** Translate a sc_scda error code to an error class.
+ *
+ * If \b errcode is already an error class, \b errclass if filled with
+ * \b errcode.
+ *
+ * \param [in]    errcode       An errcode that is output by a sc_scda function.
+ * \param [out]   errclass      On output filled with the error class that
+ *                              corresponds to the given \b errcode.
+ *                              See the function description above for more
+ *                              information on error classes and error codes
+ *                              in scda.
+ * \return                      SC_SCDA_FERR_SUCCESS on success or
+ *                              something else on invalid arguments.
+ */
+int                 sc_scda_ferror_class (int errcode, int *errclass);
+
+/** Translate a sc_scda error code/class to an error string.
  *
  * This is a non-collective function.
  *
- * \param [in]    errcode       An errcode that is output by a
- *                              sc_scda function.
+ * \param [in]    errcode       An errcode that is output by a sc_scda function.
  * \param [out]   str           At least sc_MPI_MAX_ERROR_STRING bytes.
  * \param [out]   len           On output the length of string on return.
  * \return                      SC_SCDA_FERR_SUCCESS on success or
