@@ -4,6 +4,13 @@ include(CheckTypeSize)
 include(CheckPrototypeDefinition)
 include(CheckCSourceCompiles)
 
+# --- retrieve library interface version from configuration file
+file(STRINGS config/sc_soversion.in SC_SOVERSION_READ
+             REGEX "^[ \t]*SC_SOVERSION *= *[0-9:]+")
+string(REGEX REPLACE ".*([0-9]+):([0-9]+):([0-9]+)" "\\1.\\2.\\3"
+             SC_SOVERSION ${SC_SOVERSION_READ})
+message(STATUS "libsc SOVERSION configured as ${SC_SOVERSION}")
+
 # --- keep library finds in here so we don't forget to do them first
 
 if(mpi)
