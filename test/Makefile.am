@@ -42,18 +42,3 @@ test_sc_test_helpers_SOURCES = test/test_helpers.c
 test_sc_test_scda_SOURCES = test/test_scda.c
 
 TESTS += $(sc_test_programs)
-
-LINT_CSOURCES += \
-        $(test_sc_test_allgather_SOURCES) \
-        $(test_sc_test_arrays_SOURCES) \
-        $(test_sc_test_builtin_SOURCES) \
-        $(test_sc_test_io_sink_SOURCES) \
-        $(test_sc_test_keyvalue_SOURCES) \
-        $(test_sc_test_notify_SOURCES) \
-        $(test_sc_test_reduce_SOURCES) \
-        $(test_sc_test_search_SOURCES) \
-        $(test_sc_test_sort_SOURCES) \
-        $(test_sc_test_sortb_SOURCES) \
-        $(test_sc_test_version_SOURCES) \
-        $(test_sc_test_helpers_SOURCES) \
-        $(test_sc_test_scda_SOURCES)
