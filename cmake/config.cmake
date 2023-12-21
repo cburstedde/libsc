@@ -18,9 +18,28 @@ if(zlib)
   message(STATUS "Using builtin zlib")
   include(${CMAKE_CURRENT_LIST_DIR}/zlib.cmake)
 else()
-  find_package(ZLIB)
+  # find_package(ZLIB) is too aggressive in that it may find a too-old Zlib and then we can't override that ZLIB::ZLIB
+  find_library(ZLIB_LIBRARIES NAMES z zlib zlibstatic HINTS ${ZLIB_ROOT} $ENV{ZLIB_ROOT})
+  find_path(ZLIB_INCLUDE_DIRS NAMES zlib.h HINTS ${ZLIB_ROOT} $ENV{ZLIB_ROOT})
+  if(ZLIB_LIBRARIES AND ZLIB_INCLUDE_DIRS)
+    set(CMAKE_REQUIRED_LIBRARIES ${ZLIB_LIBRARIES})
+    set(CMAKE_REQUIRED_INCLUDES ${ZLIB_INCLUDE_DIRS})
+
+    check_c_source_compiles("#include <zlib.h>
+    int main(void)
+    {
+      z_off_t len = 3000; uLong a = 1, b = 2;
+      a == adler32_combine (a, b, len);
+      return 0;
+    }"
+    ZLIB_FOUND
+    )
+  endif()
   if(ZLIB_FOUND)
-    message(STATUS "Using system zlib : ${ZLIB_VERSION_STRING}")
+    message(STATUS "Using system zlib : ${ZLIB_VERSION}")
+    add_library(ZLIB::ZLIB INTERFACE IMPORTED GLOBAL)
+    set_property(TARGET ZLIB::ZLIB PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${ZLIB_INCLUDE_DIRS}")
+    set_property(TARGET ZLIB::ZLIB PROPERTY INTERFACE_LINK_LIBRARIES "${ZLIB_LIBRARIES}")
   else()
     message(STATUS "Zlib disabled (not found). Consider using cmake \"-Dzlib=ON\" to turn on builtin zlib.")
   endif()
