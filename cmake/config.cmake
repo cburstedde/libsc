@@ -56,6 +56,8 @@ endif()
 
 # Build all targets with -fPIC so that libsc itself can be linked as a
 # shared library, or linked into a shared library.
+include(CheckPIESupported)
+check_pie_supported()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # --- generate sc_config.h
