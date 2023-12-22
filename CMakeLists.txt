@@ -36,7 +36,7 @@ target_include_directories(libb64 PRIVATE libb64)
 # --- sc
 add_library(sc $<TARGET_OBJECTS:iniparser> $<TARGET_OBJECTS:libb64>)
 set_property(TARGET sc PROPERTY EXPORT_NAME SC)
-set_property(TARGET sc PROPERTY VERSION ${PROJECT_VERSION})
+set_property(TARGET sc PROPERTY SOVERSION ${SC_SOVERSION})
 target_include_directories(sc
 PRIVATE iniparser libb64
 PUBLIC
