@@ -12,6 +12,8 @@ VERSION ${PROJECT_VERSION})
 
 enable_testing()
 
+include(GNUInstallDirs)
+
 set(CMAKE_C_STANDARD 99)
 
 include(cmake/options.cmake)
