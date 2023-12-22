@@ -1,5 +1,7 @@
 include(ExternalProject)
 
+set(ZLIB_FOUND true)
+
 # default zlib source archive
 if (NOT DEFINED SC_BUILD_ZLIB_ARCHIVE_FILE)
   if (NOT DEFINED SC_BUILD_ZLIB_VERSION)
