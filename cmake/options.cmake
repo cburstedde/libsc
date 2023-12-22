@@ -4,6 +4,7 @@ option(zlib "build ZLIB" off)
 option(BUILD_TESTING "build libsc self-tests" on)
 option(TEST_WITH_VALGRIND "run self-tests with valgrind" OFF)
 option(BUILD_SHARED_LIBS "build shared libsc")
+option(CMAKE_TLS_VERIFY "verify TLS certificate" on)
 
 # --- default install directory under build/local
 # users can specify like "cmake -B build -DCMAKE_INSTALL_PREFIX=~/mydir"
