@@ -11,11 +11,11 @@ option(BUILD_SHARED_LIBS "build shared libsc")
 if(CMAKE_VERSION VERSION_LESS 3.21)
   get_property(_not_top DIRECTORY PROPERTY PARENT_DIRECTORY)
   if(NOT _not_top)
-    set(PROJECT_IS_TOP_LEVEL true)
+    set(SC_IS_TOP_LEVEL true)
   endif()
 endif()
 
-if(PROJECT_IS_TOP_LEVEL AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+if(SC_IS_TOP_LEVEL AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   # will not take effect without FORCE
   set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/local" CACHE PATH "Install top-level directory" FORCE)
 endif()
