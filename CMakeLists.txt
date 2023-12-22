@@ -62,11 +62,7 @@ TYPE INCLUDE
 FILES_MATCHING PATTERN "*.h"
 )
 
-install(TARGETS sc
-  EXPORT ${PROJECT_NAME}-targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+install(TARGETS sc EXPORT ${PROJECT_NAME}-targets)
 
 add_subdirectory(src)
 
