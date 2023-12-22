@@ -26,7 +26,7 @@ jobs:
 
     strategy:
       matrix:
-        cc: [gcc-9, gcc-10, gcc-11, gcc-12]
+        cc: [gcc-9, gcc-10, gcc-11, gcc-12, gcc-13]
         shared: [false]
         mpi: [true]
         include:
@@ -157,7 +157,7 @@ jobs:
 
     strategy:
       matrix:
-        cc: [clang, gcc-12]
+        cc: [clang, gcc-13]
         shared: [false]
         include:
         - shared: true
