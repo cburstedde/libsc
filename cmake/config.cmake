@@ -26,13 +26,26 @@ if(zlib)
   include(${CMAKE_CURRENT_LIST_DIR}/zlib.cmake)
 else()
   find_package(ZLIB)
+  # need to verify adler32_combine is available
   if(ZLIB_FOUND)
-    message(STATUS "Using system zlib : ${ZLIB_VERSION_STRING}")
-  else()
+    set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
+
+    check_c_source_compiles("#include <zlib.h>
+    int main(void)
+    {
+      z_off_t len = 3000; uLong a = 1, b = 2;
+      a == adler32_combine (a, b, len);
+      return 0;
+    }"
+    ZLIB_WORKS
+    )
+  endif()
+  if(NOT ZLIB_WORKS)
+    set(ZLIB_FOUND FALSE)
     message(STATUS "Zlib disabled (not found). Consider using cmake \"-Dzlib=ON\" to turn on builtin zlib.")
   endif()
 endif()
-if(TARGET ZLIB::ZLIB)
+if(ZLIB_FOUND)
   set(SC_HAVE_ZLIB 1)
 else()
   set(SC_HAVE_ZLIB 0)
@@ -50,6 +63,8 @@ endif()
 
 # Build all targets with -fPIC so that libsc itself can be linked as a
 # shared library, or linked into a shared library.
+include(CheckPIESupported)
+check_pie_supported()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # --- generate sc_config.h

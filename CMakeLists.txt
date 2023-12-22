@@ -12,6 +12,8 @@ VERSION ${PROJECT_VERSION})
 
 enable_testing()
 
+include(GNUInstallDirs)
+
 set(CMAKE_C_STANDARD 99)
 
 include(cmake/options.cmake)
@@ -60,11 +62,7 @@ TYPE INCLUDE
 FILES_MATCHING PATTERN "*.h"
 )
 
-install(TARGETS sc
-  EXPORT ${PROJECT_NAME}-targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+install(TARGETS sc EXPORT ${PROJECT_NAME}-targets)
 
 add_subdirectory(src)
 
