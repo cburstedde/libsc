@@ -37,18 +37,14 @@ else()
       a == adler32_combine (a, b, len);
       return 0;
     }"
-    ZLIB_WORKS
+    SC_HAVE_ZLIB
     )
+  else()
+    set(SC_HAVE_ZLIB 0 CACHE BOOL "Zlib not found or built")
   endif()
-  if(NOT ZLIB_WORKS)
-    set(ZLIB_FOUND FALSE)
+  if(NOT SC_HAVE_ZLIB)
     message(STATUS "Zlib disabled (not found). Consider using cmake \"-Dzlib=ON\" to turn on builtin zlib.")
   endif()
-endif()
-if(ZLIB_FOUND)
-  set(SC_HAVE_ZLIB 1)
-else()
-  set(SC_HAVE_ZLIB 0)
 endif()
 
 find_package(Threads)
