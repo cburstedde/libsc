@@ -171,9 +171,9 @@ check_include_file(sys/types.h SC_HAVE_SYS_TYPES_H)
 check_include_file(sys/time.h SC_HAVE_SYS_TIME_H)
 check_include_file(time.h SC_HAVE_TIME_H)
 
+check_symbol_exists(gettimeofday sys/time.h SC_HAVE_GETTIMEOFDAY)
+
 if(WIN32)
-  # even though Windows has time.h, struct timeval is in Winsock2.h
-  check_include_file(Winsock2.h SC_HAVE_WINSOCK2_H)
   set(WINSOCK_LIBRARIES wsock32 ws2_32 Iphlpapi)
 endif()
 

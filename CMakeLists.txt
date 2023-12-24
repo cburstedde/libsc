@@ -51,6 +51,7 @@ $<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>
 $<$<BOOL:${SC_HAVE_ZLIB}>:ZLIB::ZLIB>
 $<$<BOOL:${SC_HAVE_JSON}>:jansson::jansson>
 $<$<BOOL:${SC_NEED_M}>:m>
+$<$<BOOL:${WIN32}>:${WINSOCK_LIBRARIES}>
 )
 
 # imported target, for use from FetchContent
