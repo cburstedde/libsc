@@ -43,6 +43,11 @@ typedef void        (*sc_sig_t) (int);
 #include <pthread.h>
 #endif
 
+#ifdef _MSC_VER
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
+
 typedef struct sc_package
 {
   int                 is_registered;
@@ -287,10 +292,10 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
     char                bn[BUFSIZ], *bp;
 
     snprintf (bn, BUFSIZ, "%s", filename);
-#ifdef _MSC_VER
-    bp = bn;
-#else
+#ifdef SC_HAVE_LIBGEN_H
     bp = basename (bn);
+#else
+    bp = bn;
 #endif
     fprintf (log_stream, "%s:%d ", bp, lineno);
   }
@@ -1030,7 +1035,9 @@ sc_abort_handler (void)
 
   fflush (stdout);
   fflush (stderr);
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+  Sleep (1);
+#else
   sleep (1);                    /* allow time for pending output */
 #endif
   if (sc_mpicomm != sc_MPI_COMM_NULL) {
@@ -1081,7 +1088,9 @@ sc_abort_collective (const char *msg)
     SC_ABORT (msg);
   }
   else {
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+    Sleep (3);
+#else
     sleep (3);                  /* wait for root rank's sc_MPI_Abort ()... */
 #endif
     abort ();                   /* ... otherwise this may call sc_MPI_Abort () */
