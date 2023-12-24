@@ -706,7 +706,7 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
   SC_ABORT_NOT_REACHED ();
 }
 
-#if defined(SC_ENABLE_MPI) && defined (SC_ENABLE_MPICOMMSHARED)
+#if defined SC_ENABLE_MPI && defined SC_ENABLE_MPICOMMSHARED
 
 /* Make this a parameter to sc_mpi_comm_attach_node_comms and friends! */
 static int          sc_mpi_node_comm_keyval = sc_MPI_KEYVAL_INVALID;
@@ -770,7 +770,7 @@ sc_mpi_node_comms_copy (sc_MPI_Comm oldcomm, int comm_keyval,
 void
 sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm, int processes_per_node)
 {
-#if defined(SC_ENABLE_MPI) && defined (SC_ENABLE_MPICOMMSHARED)
+#if defined SC_ENABLE_MPI && defined SC_ENABLE_MPICOMMSHARED
   int                 mpiret, rank, size;
   sc_MPI_Comm        *node_comms, internode, intranode;
 
@@ -857,7 +857,7 @@ sc_mpi_comm_attach_node_comms (sc_MPI_Comm comm, int processes_per_node)
 void
 sc_mpi_comm_detach_node_comms (sc_MPI_Comm comm)
 {
-#if defined(SC_ENABLE_MPI) && defined (SC_ENABLE_MPICOMMSHARED)
+#if defined SC_ENABLE_MPI && defined SC_ENABLE_MPICOMMSHARED
   if (comm != sc_MPI_COMM_NULL) {
     int                 mpiret;
 
@@ -871,7 +871,7 @@ void
 sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
                             sc_MPI_Comm * intranode, sc_MPI_Comm * internode)
 {
-#if defined(SC_ENABLE_MPI) && defined (SC_ENABLE_MPICOMMSHARED)
+#if defined SC_ENABLE_MPI && defined SC_ENABLE_MPICOMMSHARED
   int                 mpiret, flag;
   sc_MPI_Comm        *node_comms;
 #endif
@@ -880,7 +880,7 @@ sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
   *intranode = sc_MPI_COMM_NULL;
   *internode = sc_MPI_COMM_NULL;
 
-#if defined(SC_ENABLE_MPI) && defined (SC_ENABLE_MPICOMMSHARED)
+#if defined SC_ENABLE_MPI && defined SC_ENABLE_MPICOMMSHARED
   if (sc_mpi_node_comm_keyval == sc_MPI_KEYVAL_INVALID) {
     return;
   }

@@ -1599,7 +1599,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   SC_CHECK_MPI (retval);
 
   return errcode;
-#elif defined (SC_ENABLE_MPI)
+#elif defined SC_ENABLE_MPI
   /* MPI but no MPI IO */
   {
     int                 mpisize, rank, count, size;
@@ -1892,7 +1892,7 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
   SC_CHECK_MPI (retval);
 
   return errcode;
-#elif defined (SC_ENABLE_MPI)
+#elif defined SC_ENABLE_MPI
   /* MPI but no MPI IO */
   /* offset is ignored and we use here the append mode.
    * This is the case since the C-standard open mode

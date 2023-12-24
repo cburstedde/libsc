@@ -364,7 +364,7 @@ sc_malloc_aligned (size_t alignment, size_t size)
                     "Returned NULL from aligned_alloc");
     return data;
   }
-#elif defined (SC_HAVE_ANY_MEMALIGN) && defined (SC_HAVE_ALIGNED_MALLOC)
+#elif defined SC_HAVE_ANY_MEMALIGN && defined SC_HAVE_ALIGNED_MALLOC
   /* MinGW, MSVC */
   {
     void               *data = _aligned_malloc (size, alignment);
@@ -543,7 +543,7 @@ sc_malloc (int package, size_t size)
 #endif
 
   /* allocate memory */
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
   ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, size);
 #else
   ret = malloc (size);
@@ -583,7 +583,7 @@ sc_calloc (int package, size_t nmemb, size_t size)
 #endif
 
   /* allocate memory */
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
   ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, nmemb * size);
   memset (ret, 0, nmemb * size);
 #else
@@ -628,7 +628,7 @@ sc_realloc (int package, void *ptr, size_t size)
   else {
     void               *ret;
 
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
     ret = sc_realloc_aligned (ptr, SC_MEMALIGN_BYTES, size);
 #else
     ret = realloc (ptr, size);
@@ -683,7 +683,7 @@ sc_free (int package, void *ptr)
   }
 
   /* free memory */
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
   sc_free_aligned (ptr, SC_MEMALIGN_BYTES);
 #else
   free (ptr);
