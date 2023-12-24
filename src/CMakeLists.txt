@@ -12,7 +12,6 @@ sc_puff.c
 sc_options.c sc_getopt.c sc_getopt1.c
 )
 
-if(SC_HAVE_WINSOCK2_H)
+if(MSVC AND NOT SC_HAVE_GETTIMEOFDAY)
   target_sources(sc PRIVATE sc_builtin/gettimeofday.c)
-  target_link_libraries(sc PRIVATE ${WINSOCK_LIBRARIES})
 endif()
