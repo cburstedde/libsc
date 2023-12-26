@@ -12,8 +12,11 @@
 # set installation root to local subdirectory
 PREFIX="$PWD/local"
 
-# versions of zlib and jansson
+# download zlib
 ZVER=1.3
+ZSHA=ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e
+
+# download jansson
 JVER=2.14
 
 # feel free to make changes to the libsc and p4est configure line.
@@ -26,13 +29,15 @@ bdie () {
 }
 
 # download, build and install zlib
-wget -N "https://www.zlib.net/zlib-$ZVER.tar.gz"        && \
-tar -xvzf "zlib-$ZVER.tar.gz"                           && \
+ZTAR="zlib-$ZVER.tar.gz"
+wget -N "https://www.zlib.net/$ZTAR"                    && \
+test `sha256sum "$ZTAR" | cut -d ' ' -f1` = "$ZSHA"     && \
+tar -xvzf "$ZTAR"                                       && \
 cd "zlib-$ZVER"                                         && \
 ./configure --prefix="$PREFIX/zlib"                     && \
 make -j install                                         && \
 cd ..                                                   && \
-rm -r "zlib-$ZVER" "zlib-$ZVER.tar.gz"                  || bdie "zlib"
+rm -r "zlib-$ZVER" "$ZTAR"                              || bdie "zlib"
 
 # download, build and install jansson
 JRELEASE="https://github.com/akheron/jansson/releases/"
