@@ -8,7 +8,7 @@
 # This results in three installation directories that any higher
 # level software package may be compiled and linked against.
 # The options are similar to those used in this script.
-# In particular, we would recommended to use -rpath.
+# In particular, the -rpath option may turn out useful.
 
 # set installation root to local subdirectory
 PREFIX="$PWD/local"
