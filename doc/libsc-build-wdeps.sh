@@ -2,12 +2,13 @@
 
 # Build and install the latest develop branch including zlib and jansson.
 # We first download and install a recent zlib to a local directory, then do
-# the same for libjansson.  We set a build environment to point to these two.
+# the same for jansson.  We set a build environment to point to these two.
 # Then we clone and install the current develop branch of libsc using them.
 
 # This results in three installation directories that any higher
 # level software package may be compiled and linked against.
 # The options are similar to those used in this script.
+# In particular, we would recommended to use -rpath.
 
 # set installation root to local subdirectory
 PREFIX="$PWD/local"
@@ -20,7 +21,9 @@ ZSHA=ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e
 JVER=2.14
 JSHA=5798d010e41cf8d76b66236cfb2f2543c8d082181d16bc3085ab49538d4b9929
 
-# feel free to make changes to the libsc and p4est configure line.
+# feel free to make changes to the libsc configure line.
+# CONFIG="--enable-mpi --disable-shared"
+# CONFIG="--enable-mpi --enable-debug"
 CONFIG="--enable-mpi"
 
 # exit on error
