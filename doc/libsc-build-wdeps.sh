@@ -18,6 +18,7 @@ ZSHA=ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e
 
 # download jansson
 JVER=2.14
+JSHA=5798d010e41cf8d76b66236cfb2f2543c8d082181d16bc3085ab49538d4b9929
 
 # feel free to make changes to the libsc and p4est configure line.
 CONFIG="--enable-mpi"
@@ -40,15 +41,17 @@ cd ..                                                   && \
 rm -r "zlib-$ZVER" "$ZTAR"                              || bdie "zlib"
 
 # download, build and install jansson
-JRELEASE="https://github.com/akheron/jansson/releases/"
-JDOWNLOAD="download/v$JVER/jansson-$JVER.tar.gz"
-wget -N "$JRELEASE$JDOWNLOAD"                           && \
-tar -xvzf "jansson-$JVER.tar.gz"                        && \
+JTAR="jansson-$JVER.tar.gz"
+JRELEASE="https://github.com/akheron/jansson/releases"
+JDOWNLOAD="download/v$JVER/$JTAR"
+wget -N "$JRELEASE/$JDOWNLOAD"                          && \
+test `sha256sum "$JTAR" | cut -d ' ' -f1` = "$JSHA"     && \
+tar -xvzf "$JTAR"                                       && \
 cd "jansson-$JVER"                                      && \
 ./configure --prefix="$PREFIX/jansson"                  && \
 make -j install V=0                                     && \
 cd ..                                                   && \
-rm -r "jansson-$JVER" "jansson-$JVER.tar.gz"            || bdie "jansson"
+rm -r "jansson-$JVER" "$JTAR"                           || bdie "jansson"
 
 # provide environment that links to installed zlib and jansson
 export CPPFLAGS="-I$PREFIX/zlib/include -I$PREFIX/jansson/include"
