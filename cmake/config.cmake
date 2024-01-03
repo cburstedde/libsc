@@ -51,9 +51,9 @@ find_package(Threads)
 
 find_package(jansson CONFIG)
 if(TARGET jansson::jansson)
-  set(SC_HAVE_JSON 1)
+  set(SC_HAVE_JSON 1 CACHE BOOL "JSON features enabled")
 else()
-  set(SC_HAVE_JSON 0)
+  set(SC_HAVE_JSON 0 CACHE BOOL "JSON features disabled")
 endif()
 # --- set global compile environment
 
