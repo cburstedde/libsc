@@ -95,7 +95,7 @@ set(SC_CPPFLAGS \"\")
 
 set(SC_LDFLAGS \"${MPI_C_LINK_FLAGS}\")
 
-if(zlib)
+if(SC_HAVE_ZLIB)
   set(SC_LIBS \"${ZLIB_LIBRARIES}\ m\")
 else()
   set(SC_LIBS \"m\")
