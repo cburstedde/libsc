@@ -1,8 +1,8 @@
 # --- generate pkg-config .pc
 set(pc_req_private "")
-if(mpi)
+if(SC_ENABLE_MPI)
   string(APPEND pc_req_private " ompi ompi-c zlib")
-elseif(zlib)
+elseif(SC_HAVE_ZLIB)
   string(APPEND pc_req_private " zlib")
 endif()
 
