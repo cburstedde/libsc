@@ -51,9 +51,9 @@ find_package(Threads)
 
 find_package(jansson CONFIG)
 if(TARGET jansson::jansson)
-  set(SC_HAVE_JSON 1)
+  set(SC_HAVE_JSON 1 CACHE BOOL "JSON features enabled")
 else()
-  set(SC_HAVE_JSON 0)
+  set(SC_HAVE_JSON 0 CACHE BOOL "JSON features disabled")
 endif()
 # --- set global compile environment
 
@@ -68,7 +68,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_REQUIRED_INCLUDES)
 set(CMAKE_REQUIRED_LIBRARIES)
 
-if(MPI_FOUND)
+if(mpi)
+  set(SC_ENABLE_MPI 1)  # need this temporary for sc_config.h, we unset below
   set(CMAKE_REQUIRED_LIBRARIES MPI::MPI_C)
   set(SC_CC \"${MPI_C_COMPILER}\")
   set(SC_CPP ${MPI_C_COMPILER})
@@ -94,7 +95,7 @@ set(SC_CPPFLAGS \"\")
 
 set(SC_LDFLAGS \"${MPI_C_LINK_FLAGS}\")
 
-if(zlib)
+if(SC_HAVE_ZLIB)
   set(SC_LIBS \"${ZLIB_LIBRARIES}\ m\")
 else()
   set(SC_LIBS \"m\")
@@ -103,14 +104,13 @@ endif()
 set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
 set(SC_ENABLE_MEMALIGN 1)
 
-if(MPI_FOUND)
-  set(SC_ENABLE_MPI 1)
+if(mpi)
   check_symbol_exists(MPI_COMM_TYPE_SHARED mpi.h SC_ENABLE_MPICOMMSHARED)
   # perform check to set SC_ENABLE_MPIIO
   include(cmake/check_mpiio.cmake)
   check_symbol_exists(MPI_Init_thread mpi.h SC_ENABLE_MPITHREAD)
   check_symbol_exists(MPI_Win_allocate_shared mpi.h SC_ENABLE_MPIWINSHARED)
-endif(MPI_FOUND)
+endif()
 
 
 check_symbol_exists(realloc stdlib.h SC_ENABLE_USE_REALLOC)
@@ -216,6 +216,9 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/sc_config.h.in ${PROJECT_BINARY_DIR}/in
 
 # --- sanity check of MPI sc_config.h
 
+unset(SC_ENABLE_MPI)
+# so we don't override cache var check below that's propagated to parent projects
+
 # check if libsc was configured properly
 set(CMAKE_REQUIRED_FLAGS)
 set(CMAKE_REQUIRED_INCLUDES)
@@ -223,16 +226,9 @@ set(CMAKE_REQUIRED_LIBRARIES)
 set(CMAKE_REQUIRED_DEFINITIONS)
 
 # libsc and current project must both be compiled with/without MPI
-check_symbol_exists(SC_ENABLE_MPI ${PROJECT_BINARY_DIR}/include/sc_config.h SC_has_mpi)
-check_symbol_exists(SC_ENABLE_MPIIO ${PROJECT_BINARY_DIR}/include/sc_config.h SC_has_mpi_io)
+check_symbol_exists(SC_ENABLE_MPI ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPI)
+check_symbol_exists(SC_ENABLE_MPIIO ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPIIO)
 
-if(SC_ENABLE_MPI)
-  # a sign the current project is using MPI
-  if(NOT (SC_has_mpi AND SC_has_mpi_io))
-    message(FATAL_ERROR "MPI used, but sc_config.h is not configured for MPI")
-  endif()
-else()
-  if(SC_has_mpi OR SC_has_mpi_io)
-    message(FATAL_ERROR "MPI not used, but sc_config.h is configured for MPI")
-  endif()
+if(mpi AND NOT (SC_ENABLE_MPI AND SC_ENABLE_MPIIO))
+  message(FATAL_ERROR "libsc MPI support was requested, but not configured in ${PROJECT_BINARY_DIR}/include/sc_config.h")
 endif()
