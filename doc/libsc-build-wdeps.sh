@@ -57,10 +57,10 @@ cd ..                                                   && \
 rm -r "jansson-$JVER" "$JTAR"                           || bdie "jansson"
 
 # provide environment that links to installed zlib and jansson
-export CPPFLAGS="-I$PREFIX/zlib/include -I$PREFIX/jansson/include"
-export CFLAGS="-O2 -g -Wall \
+export CPPFLAGS="$CPPFLAGS -I$PREFIX/zlib/include -I$PREFIX/jansson/include"
+export CFLAGS="$CFLAGS -O2 -g -Wall \
   -Wl,-rpath=$PREFIX/zlib/lib -Wl,-rpath=$PREFIX/jansson/lib"
-export LDFLAGS="-L$PREFIX/zlib/lib -L$PREFIX/jansson/lib"
+export LDFLAGS="$LDFLAGS -L$PREFIX/zlib/lib -L$PREFIX/jansson/lib"
 
 # clone, build and install libsc
 rm -rf libsc
