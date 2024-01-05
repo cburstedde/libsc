@@ -64,7 +64,7 @@ export LDFLAGS="$LDFLAGS -L$PREFIX/zlib/lib -L$PREFIX/jansson/lib"
 
 # clone, build and install libsc
 rm -rf libsc
-git clone https://github.com/cburstedde/libsc.git -b develop    && \
+git clone --depth 1 https://github.com/cburstedde/libsc.git -b develop  && \
 cd libsc                                                && \
 ./bootstrap                                             && \
 mkdir build                                             && \
