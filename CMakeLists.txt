@@ -67,7 +67,7 @@ install(TARGETS sc EXPORT ${PROJECT_NAME}-targets)
 
 add_subdirectory(src)
 
-if(BUILD_TESTING)
+if(SC_BUILD_TESTING)
   include(cmake/valgrind.cmake)
 
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
@@ -75,7 +75,7 @@ if(BUILD_TESTING)
   endif()
 
   add_subdirectory(test)
-endif(BUILD_TESTING)
+endif()
 
 # --- packaging
 
