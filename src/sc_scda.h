@@ -138,6 +138,9 @@
  * If MPI I/O is available \b errcode may encode an MPI error code. In this case
  * the two error examination functions output the error class and error string
  * as it would be output by the corresponding MPI functions, respectively.
+ * Without MPI I/O or MPI it is still possible that \b errcode encodes an I/O
+ * operation related error code. This case does not differ concerning the error
+ * code examiniation.
  * Moreover, \b errcode can encode an error code related to \b scda, i.e.
  * the I/O operations were successful but there is some violation of the \b scda
  * format, workflow or API.
@@ -261,7 +264,10 @@ sc_scda_ret_t;
  */
 typedef struct sc_scda_ferror
 {
-  int mpiret;            /**< MPI function return value */
+  int mpiret;            /**< MPI function return value; without MPI I/O or MPI
+                              this variable can get filled by other I/O operation
+                              error codes, which are still interpretable by
+                              the error \b scda examination functions */
   sc_scda_ret_t scdaret; /**< scda file format related return value */
 }
 sc_scda_ferror_t;
