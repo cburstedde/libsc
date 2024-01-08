@@ -168,10 +168,10 @@
  * SC_SCDA_FERR_FORMAT | file not conforming to the \b scda format
  * SC_SCDA_FERR_USAGE  | incorrect workflow of an \b scda reading function
  * SC_SCDA_FERR_DECODE | \b scda encoding convention violated
- * SC_SCDA_FERR_INPUT  | invalid \b scda function argument passed
+ * SC_SCDA_FERR_ARG    | invalid \b scda function argument passed
  * SC_SCDA_FERR_COUNT  | byte count error for successful I/O operation
  *
- * The follwing subsections comment further on the \b scda related error classes.
+ * The following subsections comment further on the \b scda related error classes.
  *
  * #### SC_SCDA_FERR_FORMAT
  * The read file does not conform to the prescribed \b scda format.
@@ -182,7 +182,7 @@
  *
  * #### SC_SCDA_FERR_USAGE
  * The workflow of the \b scda reading functions was incorrect. See also
- * \ref scda_workflow for further informations on the workflow.
+ * \ref scda_workflow for further information on the workflow.
  *
  * For example, the user might have identified a certain file section type
  * using \ref sc_scda_fread_section_header but then calls a function to read
@@ -191,7 +191,7 @@
  * occurs when the user tries to read section data before reading the section
  * header.
  * 
- * #### SC_SCDA_FERR_INPUT
+ * #### SC_SCDA_FERR_ARG
  * An argument to a \b scda function was invalid.
  * 
  * This occurs for example when an essential pointer argument is NULL or a user
@@ -258,27 +258,16 @@ typedef struct sc_scda_fcontext sc_scda_fcontext_t;
 /** Type for element counts and sizes. */
 typedef uint64_t sc_scda_ulong;
 
-/** Error values for scdafile functions.
+/** Error values for scda-related errors.
  *
- * The error codes can be examined by \ref sc_scda_ferror_string.
+ * The error codes are part of the struct \ref sc_scda_ferror_t and can be
+ * examined as part of this struct.
  */
-typedef enum sc_scda_ferror
+typedef enum sc_scda_ret
 {
   SC_SCDA_FERR_SUCCESS = 0, /**< successful function call */
-  SC_SCDA_FERR_FILE = sc_MPI_ERR_LASTCODE, /**< invalid file handle */
-  SC_SCDA_FERR_NOT_SAME, /**< collective argument not identical */
-  SC_SCDA_FERR_AMODE, /**< access mode error */
-  SC_SCDA_FERR_NO_SUCH_FILE, /**< file does not exist */
-  SC_SCDA_FERR_FILE_EXIST, /**< file exists already */
-  SC_SCDA_FERR_BAD_FILE, /**< invalid file name */
-  SC_SCDA_FERR_ACCESS, /**< permission denied */
-  SC_SCDA_FERR_NO_SPACE, /**< not enough space */
-  SC_SCDA_FERR_QUOTA, /**< quota exceeded */
-  SC_SCDA_FERR_READ_ONLY, /**< read only file (system) */
-  SC_SCDA_FERR_IN_USE, /**< file currently open by other process */
-  SC_SCDA_FERR_IO, /**< other I/O error */
-  SC_SCDA_FERR_UNKNOWN, /**< unknown I/O error */
-  SC_SCDA_FERR_FORMAT,  /**< File not conforming to the \b scda format. */
+  SC_SCDA_FERR_FORMAT = sc_MPI_ERR_LASTCODE,  /**< File not conforming to the
+                                                   \b scda format. */
   SC_SCDA_FERR_USAGE,   /**< Incorrect workflow of an \b scda reading function.
                              For example, the user might have identified a
                              certain file section type
@@ -290,22 +279,45 @@ typedef enum sc_scda_ferror
                              This error also occurs when the user tries to
                              read section data before reading the section header.
                           */
-  SC_SCDA_FERR_DECODE, /**< The decode parameter to
+  SC_SCDA_FERR_DECODE,  /**< The decode parameter to
                             \ref sc_scda_fread_section_header is true but
                             the file section header(s) encountered
                             does not conform to the \b scda encoding convention.
                            */
-  SC_SCDA_FERR_INPUT, /**< An argument to a \b scda file function is invalid.
+  SC_SCDA_FERR_ARG, /**< An argument to a \b scda file function is invalid.
                            This occurs for example when an essential pointer
                            argument is NULL or a user string for
                            writing is too long. */
-  SC_SCDA_FERR_COUNT,   /**< A byte count error that may occur
-                             transiently on writing or the file is short
-                             on reading. */
+  SC_SCDA_FERR_COUNT, /**< A byte count error that may occur
+                           transiently on writing or the file is short
+                           on reading. */
+  SC_SCDA_FERR_MPI,   /**< An MPI error occurred; see \b mpiret in the
+                           corresponding \ref sc_scda_ferror_t. */
   SC_SCDA_FERR_LASTCODE /**< to define own error codes for
-                                  a higher level application
-                                  that is using sc_scda
-                                  functions */
+                             a higher level application
+                             that is using sc_scda
+                             functions */
+}
+sc_scda_ret_t;
+
+/** Error values for the scda functions.
+ * The error values are a struct since the error can be related to the scda
+ * file format or to MPI. The error code can be converted to a string by
+ * \ref sc_scda_ferror_string and mapped to an error class by \ref
+ * sc_scda_ferror_class.
+ *
+ * The parsing logic of \ref sc_scda_ferror_t is that first \b scdaret is examined
+ * and if \b scdaret != \ref SC_SCDA_FERR_MPI, we know that \b mpiret = 0.
+ * If \b scdaret = \ref SC_SCDA_FERR_MPI, we know that an MPI error occurred and
+ * we can examine \b mpiret for more informartion.
+ *
+ * Moreover, a valid sc_scda_ferror always satisfy that if \b scdaret = 0 then
+ * \b mpiret = 0 and if \b scdaret = \ref SC_SCDA_FERR_MPI then \b mpiret !=0.
+ */
+typedef struct sc_scda_ferror
+{
+  int mpiret;            /**< MPI function return value */
+  sc_scda_ret_t scdaret; /**< scda file format related return value */
 }
 sc_scda_ferror_t;
 
