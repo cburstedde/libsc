@@ -376,7 +376,8 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  *                           by \ref sc_scda_ferror_class.
  * \return                   Newly allocated context to continue writing
  *                           and eventually closing the file. NULL in
- *                           case of error, i.e. errcode != SC_SCDA_FERR_SUCCESS.
+ *                           case of error, i.e. errcode != \ref
+ *                           SC_SCDA_FERR_SUCCESS.
  */
 sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                                          const char *filename,
@@ -742,7 +743,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  *                           by \ref sc_scda_ferror_class.
  * \return                   Newly allocated context to continue reading
  *                           and eventually closing the file. NULL in
- *                           case of error, i.e. errcode != SC_SCDA_FERR_SUCCESS.
+ *                           case of error, i.e. errcode != \ref
+ *                           SC_SCDA_FERR_SUCCESS.
  */
 sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
                                         const char *filename,
@@ -1110,7 +1112,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
  *                              See the function description above for more
  *                              information on error classes and error codes
  *                              in scda.
- * \return                      SC_SCDA_FERR_SUCCESS on success or
+ * \return                      \ref SC_SCDA_FERR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
 int                 sc_scda_ferror_class (sc_scda_ferror_t errcode,
@@ -1123,7 +1125,7 @@ int                 sc_scda_ferror_class (sc_scda_ferror_t errcode,
  * \param [in]    errcode       An errcode that is output by a sc_scda function.
  * \param [out]   str           At least sc_MPI_MAX_ERROR_STRING bytes.
  * \param [out]   len           On output the length of string on return.
- * \return                      SC_SCDA_FERR_SUCCESS on success or
+ * \return                      \ref SC_SCDA_FERR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
 int                 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str,
@@ -1149,7 +1151,7 @@ int                 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str,
  * \param [out]     errcode   An errcode that can be interpreted by \ref
  *                            sc_scda_ferror_string or mapped to an error class
  *                            by \ref sc_scda_ferror_class.
- * \return                    SC_SCDA_FERR_SUCCESS for a successful call
+ * \return                    \ref SC_SCDA_FERR_SUCCESS for a successful call
  *                            and -1 in case a of an error.
  *                            See also \b errcode argument.
  */
