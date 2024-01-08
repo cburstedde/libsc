@@ -12,7 +12,7 @@ libb64_compiled_sources = libb64/cencode.c libb64/cdecode.c
 
 libsc_internal_headers += $(libb64_internal_headers)
 libsc_compiled_sources += $(libb64_compiled_sources)
-LIBSC_CPPFLAGS += -I@top_srcdir@/libb64
+SC_CPPFLAGS += -I@top_srcdir@/libb64
 
 EXTRA_DIST += \
 	libb64/AUTHORS libb64/CHANGELOG libb64/LICENSE libb64/README

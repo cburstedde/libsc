@@ -35,17 +35,20 @@ libsc_compiled_sources = \
 libsc_original_headers =
 
 # this variable is used for headers that are not publicly installed
-LIBSC_CPPFLAGS =
+SC_CPPFLAGS =
+
+# read the .so version from configuration file
+include config/sc_soversion.in
 
 justlibs-local: src/libsc.la
 lib_LTLIBRARIES += src/libsc.la
 src_libsc_la_SOURCES = \
         $(libsc_internal_headers) \
         $(libsc_compiled_sources)
-src_libsc_la_CPPFLAGS = $(AM_CPPFLAGS) $(LIBSC_CPPFLAGS)
+src_libsc_la_CPPFLAGS = $(AM_CPPFLAGS) $(SC_CPPFLAGS)
 ## This is the official API versioning scheme of libtool.  Please see:
 ## Read https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
-src_libsc_la_LDFLAGS = -version-info 2:0:0
+src_libsc_la_LDFLAGS = -version-info $(SC_SOVERSION)
 LDADD += src/libsc.la
 
 nodist_include_HEADERS += $(libsc_generated_headers)

@@ -12,6 +12,8 @@ VERSION ${PROJECT_VERSION})
 
 enable_testing()
 
+include(GNUInstallDirs)
+
 set(CMAKE_C_STANDARD 99)
 
 include(cmake/options.cmake)
@@ -36,7 +38,7 @@ target_include_directories(libb64 PRIVATE libb64)
 # --- sc
 add_library(sc $<TARGET_OBJECTS:iniparser> $<TARGET_OBJECTS:libb64>)
 set_property(TARGET sc PROPERTY EXPORT_NAME SC)
-set_property(TARGET sc PROPERTY VERSION ${PROJECT_VERSION})
+set_property(TARGET sc PROPERTY SOVERSION ${SC_SOVERSION})
 target_include_directories(sc
 PRIVATE iniparser libb64
 PUBLIC
@@ -49,6 +51,7 @@ $<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>
 $<$<BOOL:${SC_HAVE_ZLIB}>:ZLIB::ZLIB>
 $<$<BOOL:${SC_HAVE_JSON}>:jansson::jansson>
 $<$<BOOL:${SC_NEED_M}>:m>
+$<$<BOOL:${WIN32}>:${WINSOCK_LIBRARIES}>
 )
 
 # imported target, for use from FetchContent
@@ -60,15 +63,11 @@ TYPE INCLUDE
 FILES_MATCHING PATTERN "*.h"
 )
 
-install(TARGETS sc
-  EXPORT ${PROJECT_NAME}-targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+install(TARGETS sc EXPORT ${PROJECT_NAME}-targets)
 
 add_subdirectory(src)
 
-if(BUILD_TESTING)
+if(SC_BUILD_TESTING)
   include(cmake/valgrind.cmake)
 
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
@@ -76,7 +75,7 @@ if(BUILD_TESTING)
   endif()
 
   add_subdirectory(test)
-endif(BUILD_TESTING)
+endif()
 
 # --- packaging
 
