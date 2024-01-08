@@ -256,7 +256,7 @@ SC_EXTERN_C_BEGIN;
 typedef struct sc_scda_fcontext sc_scda_fcontext_t;
 
 /** Type for element counts and sizes. */
-typedef uint64_t sc_scda_ulong;
+typedef uint64_t    sc_scda_ulong;
 
 /** Error values for scda-related errors.
  *
@@ -324,7 +324,7 @@ sc_scda_ferror_t;
 /** An options struct for the functions \ref sc_scda_fopen_write and
  * \ref sc_scda_fopen_read. The struct may be extended in the future.
  */
-typedef         struct sc_scda_fopen_options
+typedef struct sc_scda_fopen_options
 {
   sc_MPI_Info         info; /**< info that is passed to MPI_File_open */
 }
@@ -372,7 +372,8 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  *                           sc_scda_fopen_options for more details.
  *                           It is valid to pass NULL for \b opt.
  * \param [out]    errcode   An errcode that can be interpreted by \ref
- *                           sc_scda_ferror_string.
+ *                           sc_scda_ferror_string or mapped to an error class
+ *                           by \ref sc_scda_ferror_class.
  * \return                   Newly allocated context to continue writing
  *                           and eventually closing the file. NULL in
  *                           case of error, i.e. errcode != SC_SCDA_FERR_SUCCESS.
@@ -381,7 +382,7 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                                          const char *filename,
                                          const char *user_string, size_t *len,
                                          sc_scda_fopen_options_t * opt,
-                                         int *errcode);
+                                         sc_scda_ferror_t * errcode);
 
 /** Write an inline data section.
  *
@@ -416,7 +417,8 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *                              \b fc. \b root indicates the MPI rank on that
  *                              \b inline_data is written to the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -426,8 +428,9 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  */
 sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
                                            const char *user_string,
-                                           size_t *len, sc_array_t * inline_data,
-                                           int root, int *errcode);
+                                           size_t *len,
+                                           sc_array_t * inline_data, int root,
+                                           sc_scda_ferror_t * errcode);
 
 /** Write a fixed-size block file section.
  *
@@ -474,7 +477,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              the 'Encoding' section in the detailed
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -484,9 +488,11 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  */
 sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
                                           const char *user_string,
-                                          size_t *len, sc_array_t * block_data,
+                                          size_t *len,
+                                          sc_array_t * block_data,
                                           size_t block_size, int root,
-                                          int encode, int *errcode);
+                                          int encode,
+                                          sc_scda_ferror_t * errcode);
 
 /** Write a fixed-size array file section.
  *
@@ -554,7 +560,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              the 'Encoding' section in the detailed
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -564,11 +571,12 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  */
 sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
                                           const char *user_string,
-                                          size_t *len, sc_array_t * array_data,
+                                          size_t *len,
+                                          sc_array_t * array_data,
                                           sc_array_t * elem_counts,
-                                          size_t elem_size,
-                                          int indirect, int encode,
-                                          int *errcode);
+                                          size_t elem_size, int indirect,
+                                          int encode,
+                                          sc_scda_ferror_t * errcode);
 
 /** This is a collective function to determine the processor sizes.
  *
@@ -591,11 +599,14 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              \b elem_sizes and \b elem_counts. The array is
  *                              filled with the number bytes per process.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      0 in case of success and -1 otherwise.
  */
-int sc_scda_proc_sizes (sc_array_t *elem_sizes, sc_array_t *elem_counts,
-                        sc_array_t *proc_sizes, int *errcode);
+int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
+                                        sc_array_t * elem_counts,
+                                        sc_array_t * proc_sizes,
+                                        sc_scda_ferror_t * errcode);
 
 /** Write a variable-size array file section.
  *
@@ -675,7 +686,8 @@ int sc_scda_proc_sizes (sc_array_t *elem_sizes, sc_array_t *elem_counts,
  *                              the 'Encoding' section in the detailed
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -684,13 +696,14 @@ int sc_scda_proc_sizes (sc_array_t *elem_sizes, sc_array_t *elem_counts,
  *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
-                                           const char *user_string, size_t *len,
+                                           const char *user_string,
+                                           size_t *len,
                                            sc_array_t * array_data,
                                            sc_array_t * elem_counts,
                                            sc_array_t * elem_sizes,
                                            sc_array_t * proc_sizes,
                                            int indirect, int encode,
-                                           int *errcode);
+                                           sc_scda_ferror_t * errcode);
 
 /** Open a file for reading and read the file header from the file.
  *
@@ -725,7 +738,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  *                           sc_scda_fopen_options for more details.
  *                           It is valid to pass NULL for \b opt.
  * \param [out]    errcode   An errcode that can be interpreted by \ref
- *                           sc_scda_ferror_string.
+ *                           sc_scda_ferror_string or mapped to an error class
+ *                           by \ref sc_scda_ferror_class.
  * \return                   Newly allocated context to continue reading
  *                           and eventually closing the file. NULL in
  *                           case of error, i.e. errcode != SC_SCDA_FERR_SUCCESS.
@@ -734,7 +748,7 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
                                         const char *filename,
                                         char *user_string, size_t *len,
                                         sc_scda_fopen_options_t * opt,
-                                        int *errcode);
+                                        sc_scda_ferror_t * errcode);
 
 /** Read the next file section header.
  *
@@ -792,7 +806,8 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  *                              the 'Encoding' section in the detailed
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -805,7 +820,8 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
                                                   size_t *len, char *type,
                                                   size_t *elem_count,
                                                   size_t *elem_size,
-                                                  int *decode, int *errcode);
+                                                  int *decode,
+                                                  sc_scda_ferror_t * errcode);
 
 /** Read the data of an inline data section.
  *
@@ -829,7 +845,8 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  *                              \b fc. \b root indicates the MPI rank on that
  *                              \b data is read from the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -839,7 +856,7 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  */
 sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
                                                sc_array_t * data, int root,
-                                               int *errcode);
+                                               sc_scda_ferror_t * errcode);
 
 /** Read the data of a block of given size.
  *
@@ -868,7 +885,8 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  *                              \b fc. \b root indicates the MPI rank on that
  *                              \b block_data is read from the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -879,7 +897,7 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
 sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
                                               sc_array_t * block_data,
                                               size_t block_size, int root,
-                                              int *errcode);
+                                              sc_scda_ferror_t * errcode);
 
 /** Read the data of a fixed-size array.
  *
@@ -929,7 +947,8 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  *                              non-contigous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -941,7 +960,8 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
                                               sc_array_t * array_data,
                                               sc_array_t * elem_counts,
                                               size_t elem_size,
-                                              int indirect, int *errcode);
+                                              int indirect,
+                                              sc_scda_ferror_t * errcode);
 
 /** Read the element sizes of a variable-size array.
  *
@@ -979,7 +999,8 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  *                              must be equal to elem_count as retrieved from
  *                              \ref sc_scda_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -990,7 +1011,7 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
 sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
                                                 sc_array_t * elem_sizes,
                                                 sc_array_t * elem_counts,
-                                                int *errcode);
+                                                sc_scda_ferror_t * errcode);
 
 /** Read the data of a variable-size array.
  *
@@ -1055,7 +1076,8 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  *                              non-contigous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -1068,7 +1090,8 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
                                                sc_array_t * elem_counts,
                                                sc_array_t * elem_sizes,
                                                sc_array_t * proc_sizes,
-                                               int indirect, int *errcode);
+                                               int indirect,
+                                               sc_scda_ferror_t * errcode);
 
 /** Translate a sc_scda error code to an error class.
  *
@@ -1116,12 +1139,14 @@ int                 sc_scda_ferror_string (int errcode, char *str, int *len);
  *                            sc_scda_fopen_read. This file context is freed
  *                            after a call of this function.
  * \param [out]     errcode   An errcode that can be interpreted by \ref
- *                            sc_scda_ferror_string.
+ *                            sc_scda_ferror_string or mapped to an error class
+ *                            by \ref sc_scda_ferror_class.
  * \return                    SC_SCDA_FERR_SUCCESS for a successful call
  *                            and -1 in case a of an error.
  *                            See also \b errcode argument.
  */
-int                 sc_scda_fclose (sc_scda_fcontext_t * fc, int *errcode);
+int                 sc_scda_fclose (sc_scda_fcontext_t * fc,
+                                    sc_scda_ferror_t * errcode);
 
 SC_EXTERN_C_END;
 
