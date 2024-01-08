@@ -249,9 +249,9 @@ typedef enum sc_scda_ret
 sc_scda_ret_t;
 
 /** Error values for the scda functions.
- * The error values are a struct since the error can be related to the scda
- * file format or to MPI. The error code can be converted to a string by
- * \ref sc_scda_ferror_string and mapped to an error class by \ref
+ * An error value is a struct since the error can be related to the scda
+ * file format or to MPI (I/O operations). The error code can be converted to a
+ * string by \ref sc_scda_ferror_string and mapped to an error class by \ref
  * sc_scda_ferror_class.
  *
  * The parsing logic of \ref sc_scda_ferror_t is that first \b scdaret is examined
