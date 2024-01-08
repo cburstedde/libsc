@@ -1095,8 +1095,14 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
 
 /** Translate a sc_scda error code to an error class.
  *
+ * The semantic of error class and error code is the same as in the MPI standard,
+ * i.e. all error classes are error codes but potentially there are more error
+ * codes than error classes.
+ *
  * If \b errcode is already an error class, \b errclass if filled with
  * \b errcode.
+ *
+ * This is a non-collective function.
  *
  * \param [in]    errcode       An errcode that is output by a sc_scda function.
  * \param [out]   errclass      On output filled with the error class that
@@ -1107,7 +1113,8 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
  * \return                      SC_SCDA_FERR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
-int                 sc_scda_ferror_class (int errcode, int *errclass);
+int                 sc_scda_ferror_class (sc_scda_ferror_t errcode,
+                                          sc_scda_ferror_t *errclass);
 
 /** Translate a sc_scda error code/class to an error string.
  *
@@ -1119,7 +1126,8 @@ int                 sc_scda_ferror_class (int errcode, int *errclass);
  * \return                      SC_SCDA_FERR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
-int                 sc_scda_ferror_string (int errcode, char *str, int *len);
+int                 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str,
+                                           int *len);
 
 /** Close a file opened for parallel write/read and the free the file context.
  *
