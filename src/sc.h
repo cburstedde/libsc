@@ -225,21 +225,6 @@ extern const int    sc_log2_lookup_table[256];
  */
 extern int          sc_package_id;
 
-/** Return the internal identifier for libsc as a package.
- * This package id relates to \ref sc_package_register and friends.
- * Outside of the \ref sc_init and \ref sc_finalize pair, it is -1.
- * Otherwise, a non-negative number.
- */
-int                 sc_get_package_id (void);
-
-/** Return the communicator that was passed to \ref sc_init.
- * This communicator is the one used for collective aspects of logging
- * and can be relied upon by the \ref sc_options.h mechanism
- * to read and write configuration files safely in parallel.
- * Outside of \ref sc_init and \ref sc_finalize, it is \ref sc_MPI_COMM_NULL.
- */
-sc_MPI_Comm         sc_get_comm (void);
-
 /** Optional trace file for logging (see \ref sc_init).
  * Initialized to NULL. */
 extern FILE        *sc_trace_file;
@@ -786,13 +771,20 @@ void                sc_init (sc_MPI_Comm mpicomm,
  */
 int                 sc_is_initialized (void);
 
-/** Query SC's own package identity.
- * \return          This is -1 before \ref sc_init has been called
- *                  and a proper package identifier (>= 0) afterwards.
- *                  After \ref sc_finalize the identifier resets to -1.
- * \note            This routine is not thread-safe.
+/** Return the internal identifier for libsc as a package.
+ * This package id relates to \ref sc_package_register and friends.
+ * Outside of the \ref sc_init and \ref sc_finalize pair, it is -1.
+ * Otherwise, a non-negative number.
  */
 int                 sc_get_package_id (void);
+
+/** Return the communicator that was passed to \ref sc_init.
+ * This communicator is the one used for collective aspects of logging
+ * and can be relied upon by the \ref sc_options.h mechanism
+ * to read and write configuration files safely in parallel.
+ * Outside of \ref sc_init and \ref sc_finalize, it is \ref sc_MPI_COMM_NULL.
+ */
+sc_MPI_Comm         sc_get_comm (void);
 
 /** Unregisters all packages, runs the memory check, removes the
  * signal handlers and resets sc_identifier and sc_root_*.

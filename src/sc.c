@@ -129,12 +129,6 @@ static sc_package_t *sc_packages = NULL;
 static pthread_mutex_t sc_default_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t sc_error_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int
-sc_get_package_id (void)
-{
-  return sc_package_id;
-}
-
 static void
 sc_check_abort_thread (int condition, int package, const char *message)
 {
@@ -163,18 +157,6 @@ sc_package_mutex (int package)
 }
 
 #endif /* SC_ENABLE_PTHREAD */
-
-int
-sc_get_package_id (void)
-{
-  return sc_package_id;
-}
-
-sc_MPI_Comm
-sc_get_comm (void)
-{
-  return sc_mpicomm;
-}
 
 void
 sc_package_lock (int package)
@@ -1377,6 +1359,18 @@ int
 sc_is_initialized (void)
 {
   return sc_initialized;
+}
+
+int
+sc_get_package_id (void)
+{
+  return sc_package_id;
+}
+
+sc_MPI_Comm
+sc_get_comm (void)
+{
+  return sc_mpicomm;
 }
 
 int

@@ -134,7 +134,7 @@ void                sc_options_destroy (sc_options_t * opt);
  * save functions are called like an MPI collective call over the
  * communicator at the time of parse/load/save returned by \ref sc_get_comm.
  * This is, generally, the communicator passed to \ref sc_init.
- * The benefit is that file access is restricted to the root.
+ * The benefit is that file access is only by the root process.
  *
  * Outside of any \ref sc_init, \ref sc_finalize pair, we fall back to the
  * default, concurrent file access operation.
