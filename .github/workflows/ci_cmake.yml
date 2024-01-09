@@ -14,49 +14,74 @@ on:
   release:
     types: [published]
 
+env:
+  CTEST_NO_TESTS_ACTION: "error"
+
 jobs:
 
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: CMake build on Linux
     timeout-minutes: 15
 
     strategy:
       matrix:
-        cc: [clang-7, clang-8, clang-9, clang-10, gcc-7, gcc-8, gcc-9, gcc-10, gcc-11]
+        cc: [gcc-9, gcc-10, gcc-11, gcc-12, gcc-13]
         shared: [false]
+        mpi: [true]
         include:
-          - shared: true
-            cc: gcc
+        - shared: true
+          cc: gcc
+          mpi: true
+        - cc: clang-14
+          mpi: false
+          shared: false
+        - cc: clang-15
+          mpi: false
+          shared: false
+# Clang is ABI-incompatible with the libmpich on the CI Ubuntu images.
 
     env:
       CC: ${{ matrix.cc }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout source code
 
     - name: Install system dependencies
+      if: ${{ matrix.mpi }}
       run: |
-        sudo apt-get update -yq
-        sudo apt-get install -yq --no-install-recommends \
-            zlib1g-dev libmpich-dev mpich \
-            ${{ matrix.cc }}
+        sudo apt-get update
+        sudo apt-get install --no-install-recommends \
+            libmpich-dev mpich
 
     - name: CMake configure
-      run: cmake -B build --preset default --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: >-
+        cmake --preset default
+        -Dmpi:BOOL=${{ matrix.mpi }}
+        --install-prefix=${{ runner.temp }}
+        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+
+    - name: CMake print debug find
+      if: failure()
+      run: >-
+        cmake --preset default
+        -Dmpi:BOOL=${{ matrix.mpi }}
+        --install-prefix=${{ runner.temp }}
+        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+        --debug-find --fresh
 
     - name: CMake build
-      run: cmake --build build --parallel
+      run: cmake --build --preset default --parallel
+
+    - name: CMake Test
+      run: ctest --preset default
 
     - name: CMake install (for examples)
       run: cmake --install build
 
-    - name: CMake self-tests
-      run: ctest --test-dir build --preset default
-
     - name: CMake configure examples
-      run: cmake -B example/build -S example -Dmpi=yes -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake -B example/build -S example -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
 
     - name: CMake build examples
       run: cmake --build example/build --parallel
@@ -78,48 +103,91 @@ jobs:
       with:
         name: linux_cmake_log
         path: |
-          ./build/CMakeFiles/CMakeOutput.log
-          ./build/CMakeFiles/CMakeError.log
+          ./build/CMakeFiles/CMakeConfigureLog.yaml
+          ./build/Testing/Temporary/LastTest.log
+
+  linux-valgrind:
+    needs: linux
+    runs-on: ubuntu-22.04
+    name: CMake with Valgrind
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        cc: [gcc]
+        shared: [false]
+        mpi: [true]
+        valgrind: [ON]
+
+    env:
+      CC: ${{ matrix.cc }}
+
+    steps:
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -yq
+        sudo apt-get install -yq --no-install-recommends \
+            libmpich-dev mpich valgrind
+
+    - name: Checkout source code
+      uses: actions/checkout@v4
+
+    - name: CMake configure
+      run: cmake --preset default -Dmpi:BOOL=${{ matrix.mpi }} --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DTEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }}
+
+    - name: CMake build
+      run: cmake --build --preset default --parallel
+
+    - name: CMake Test
+      run: ctest --preset default
+
+    - name: Upload log files
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux_cmake_valgrind_log
+        path: |
+          ./build/CMakeFiles/CMakeConfigureLog.yaml
           ./build/Testing/Temporary/LastTest.log
 
   mac:
     runs-on: macos-latest
     name: CMake build on MacOS
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     strategy:
       matrix:
-        cc: [clang, gcc-11]
+        cc: [clang, gcc-13]
         shared: [false]
         include:
-          - shared: true
-            cc: clang
+        - shared: true
+          cc: clang
 
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       CC: ${{ matrix.cc }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout source code
 
     - name: Install system dependencies
       run: brew install open-mpi
 
     - name: CMake configure
-      run: cmake -B build -Dmpi=yes --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake --preset default --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
-      run: cmake --build build --parallel
+      run: cmake --build --preset default --parallel
+
+    - name: CMake Test
+      run: ctest --preset default
 
     - name: CMake install (for examples)
       run: cmake --install build
 
-    - name: CMake self-tests
-      run: ctest --test-dir build --preset default
-
     - name: CMake configure examples
-      run: cmake -B example/build -S example -Dmpi=yes -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake -B example/build -S example -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
 
     - name: CMake build examples
       run: cmake --build example/build --parallel
@@ -141,8 +209,7 @@ jobs:
       with:
         name: mac_cmake_log
         path: |
-          ./build/CMakeFiles/CMakeOutput.log
-          ./build/CMakeFiles/CMakeError.log
+          ./build/CMakeFiles/CMakeConfigureLog.yaml
           ./build/Testing/Temporary/LastTest.log
 
   windows:
@@ -152,29 +219,30 @@ jobs:
 
     strategy:
       matrix:
-        shared: [true, false]
+        shared: [false]
+    # GitHub Action Windows shared libs is generally broken, even with MSYS2, but works on real laptops etc.
 
     env:
       CMAKE_GENERATOR: "MinGW Makefiles"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout source code
 
     - name: CMake configure without MPI
-      run: cmake -B build -Dmpi:BOOL=no --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake --preset default -Dmpi:BOOL=no --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
-      run: cmake --build build --parallel
+      run: cmake --build --preset default --parallel
+
+    - name: CMake Test
+      run: ctest --preset default
 
     - name: CMake install (for examples)
       run: cmake --install build
 
-    - name: CMake self-tests
-      run: ctest --test-dir build --preset default
-
     - name: CMake configure examples without MPI
-      run: cmake -B example/build -S example -Dmpi:BOOL=no -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake -B example/build -S example -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
 
     - name: CMake build examples
       run: cmake --build example/build --parallel
@@ -196,6 +264,5 @@ jobs:
       with:
         name: windows_cmake_log
         path: |
-          ./build/CMakeFiles/CMakeOutput.log
-          ./build/CMakeFiles/CMakeError.log
+          ./build/CMakeFiles/CMakeConfigureLog.yaml
           ./build/Testing/Temporary/LastTest.log

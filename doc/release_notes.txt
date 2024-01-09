@@ -1,0 +1,41 @@
+
+# Release notes for the sc software library
+
+## General
+
+ - We have been reminded, for good reason, to maintain release notes.
+ - Please record explicitly if there have been any breaking changes wrt. the
+   software API or ABI.  In this case, we'll bump the libtool version with
+   the next release version.  Please also note if there have been A*I
+   extensions, in which case we'll bump the libtool minor version.
+
+## 2.8.6
+
+There have been breaking changes, very strictly speaking.
+
+### Documentation
+
+- Begin maintaining a release notes file.
+- Completion and some polishing of the doxygen documentation in sc_io.h.
+- Add the scda (file-oriented data format suitable for parallel,
+  partition-independent disk I/O) API including its documentation in sc_scda.h.
+- Restructure the I/O module in the doxygen documentation.
+
+### Build system
+
+ - No longer install getopt and puff original headers.
+ - Further align CMake with the autoconf build system.
+ - Add a generic external library installation option.
+ - Update CMake logic to configure zlib and jansson.
+ - Make sc_getopt.h a purely internal header file.
+ - Add CMake option to run tests with Valgrind
+
+### Functionality
+
+ - Further align I/O wrappers with and without MPI I/O.
+ - Simplify the replacements for MPI_{read,write}_at*.
+ - Update zlib and base64 encode/compression routines.
+
+## 2.8.5
+
+This was the last version without a release notes file.

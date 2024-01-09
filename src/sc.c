@@ -43,6 +43,11 @@ typedef void        (*sc_sig_t) (int);
 #include <pthread.h>
 #endif
 
+#ifdef _MSC_VER
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
+
 typedef struct sc_package
 {
   int                 is_registered;
@@ -89,6 +94,8 @@ const int sc_log2_lookup_table[256] =
 /* *INDENT-ON* */
 
 int                 sc_package_id = -1;
+int                 sc_initialized = 0;
+
 FILE               *sc_trace_file = NULL;
 int                 sc_trace_prio = SC_LP_STATISTICS;
 
@@ -121,6 +128,12 @@ static sc_package_t *sc_packages = NULL;
 
 static pthread_mutex_t sc_default_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t sc_error_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+int
+sc_get_package_id (void)
+{
+  return sc_package_id;
+}
 
 static void
 sc_check_abort_thread (int condition, int package, const char *message)
@@ -291,10 +304,10 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
     char                bn[BUFSIZ], *bp;
 
     snprintf (bn, BUFSIZ, "%s", filename);
-#ifdef _MSC_VER
-    bp = bn;
-#else
+#ifdef SC_HAVE_LIBGEN_H
     bp = basename (bn);
+#else
+    bp = bn;
 #endif
     fprintf (log_stream, "%s:%d ", bp, lineno);
   }
@@ -363,7 +376,7 @@ sc_malloc_aligned (size_t alignment, size_t size)
                     "Returned NULL from aligned_alloc");
     return data;
   }
-#elif defined (SC_HAVE_ANY_MEMALIGN) && defined (SC_HAVE_ALIGNED_MALLOC)
+#elif defined SC_HAVE_ANY_MEMALIGN && defined SC_HAVE_ALIGNED_MALLOC
   /* MinGW, MSVC */
   {
     void               *data = _aligned_malloc (size, alignment);
@@ -542,7 +555,7 @@ sc_malloc (int package, size_t size)
 #endif
 
   /* allocate memory */
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
   ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, size);
 #else
   ret = malloc (size);
@@ -582,7 +595,7 @@ sc_calloc (int package, size_t nmemb, size_t size)
 #endif
 
   /* allocate memory */
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
   ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, nmemb * size);
   memset (ret, 0, nmemb * size);
 #else
@@ -627,7 +640,7 @@ sc_realloc (int package, void *ptr, size_t size)
   else {
     void               *ret;
 
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
     ret = sc_realloc_aligned (ptr, SC_MEMALIGN_BYTES, size);
 #else
     ret = realloc (ptr, size);
@@ -682,7 +695,7 @@ sc_free (int package, void *ptr)
   }
 
   /* free memory */
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
   sc_free_aligned (ptr, SC_MEMALIGN_BYTES);
 #else
   free (ptr);
@@ -1034,7 +1047,9 @@ sc_abort_handler (void)
 
   fflush (stdout);
   fflush (stderr);
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+  Sleep (1);
+#else
   sleep (1);                    /* allow time for pending output */
 #endif
   if (sc_mpicomm != sc_MPI_COMM_NULL) {
@@ -1085,7 +1100,9 @@ sc_abort_collective (const char *msg)
     SC_ABORT (msg);
   }
   else {
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+    Sleep (3);
+#else
     sleep (3);                  /* wait for root rank's sc_MPI_Abort ()... */
 #endif
     abort ();                   /* ... otherwise this may call sc_MPI_Abort () */
@@ -1352,6 +1369,14 @@ sc_init (sc_MPI_Comm mpicomm,
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LAPACK_LIBS", SC_LAPACK_LIBS);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FLIBS", SC_FLIBS);
 #endif
+
+  sc_initialized = 1;
+}
+
+int
+sc_is_initialized (void)
+{
+  return sc_initialized;
 }
 
 int
@@ -1387,6 +1412,10 @@ sc_finalize_noabort (void)
     }
     sc_trace_file = NULL;
   }
+
+  sc_package_id = -1;
+  sc_initialized = 0;
+
   return num_errors;
 }
 
@@ -1428,8 +1457,6 @@ sc_is_root (void)
 #undef SC_ESSENTIALF
 #undef SC_LERRORF
 #endif
-
-#ifndef SC_SPLINT
 
 void
 SC_ABORTF (const char *fmt, ...)
@@ -1579,6 +1606,16 @@ sc_version_point (void)
 #endif
 
 int
+sc_have_zlib (void)
+{
+#ifndef SC_HAVE_ZLIB
+  return 0;
+#else
+  return 1;
+#endif
+}
+
+int
 sc_have_json (void)
 {
 #ifndef SC_HAVE_JSON
@@ -1587,5 +1624,3 @@ sc_have_json (void)
   return 1;
 #endif
 }
-
-#endif

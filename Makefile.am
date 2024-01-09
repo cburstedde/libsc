@@ -6,12 +6,12 @@ ACLOCAL_AMFLAGS = -I config
 
 # initialize empty variables
 AM_CPPFLAGS =
+AM_LDFLAGS =
 BUILT_SOURCES =
 CLEANFILES =
 DISTCLEANFILES =
 EXTRA_DIST =
 LDADD =
-LINT_CSOURCES =
 TESTS =
 bin_PROGRAMS =
 check_PROGRAMS =
@@ -50,10 +50,15 @@ dist_scini_DATA =
 EXTRA_DIST += \
         bootstrap scindent build-aux/git-version-gen build-aux/git2cl doc \
         cmake CMakeLists.txt src/CMakeLists.txt \
-        example/CMakeLists.txt test/CMakeLists.txt CMakePresets.json
+        example/CMakeLists.txt test/CMakeLists.txt CMakePresets.json \
+        example/linksc/README example/linksc/bootstrap \
+        example/linksc/configure.ac example/linksc/Makefile.am \
+        example/linksc/liblinksc.h example/linksc/liblinksc.c \
+        example/linksc/linksc.c
 
 DISTCLEANFILES += \
         _configs.sed config/sc_config.h config/sc_autotools.pc
+
 .PHONY: ChangeLog
 
 # setup test environment
@@ -77,23 +82,6 @@ include example/v4l2/Makefile.am
 ## include example/warp/Makefile.am
 include example/testing/Makefile.am
 
-## This was only used for our lint code, which needs to be replaced.
-##
-## # lint static syntax checker
-## ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-##                  $(MPI_INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) \
-##                  $(src_libsc_a_CPPFLAGS)
-## lint:
-## if LINT
-## 	for f in $(LINT_CSOURCES) ; do \
-## 		$(LINT) $(ALL_LINT_FLAGS) $(top_srcdir)/$$f || \
-## 		echo "Lint check failed for $$f" ; \
-## 	done
-## else
-## 	@echo "Static source code check disabled by configure"
-## endif
-## .PHONY: lint
-
 # revision control and ChangeLog
 ChangeLog:
 	(GIT_DIR=@top_srcdir@/.git git log > .ChangeLog.tmp && \
@@ -113,9 +101,11 @@ dist-hook:
 install-data-hook:
 	cd $(DESTDIR)$(pkgconfigdir) && \
               mv -f sc_autotools.pc "libsc-$(VERSION).pc"
+	cd $(DESTDIR)$(pkgconfigdir) && ln -sf "libsc-$(VERSION).pc" libsc.pc
 
 uninstall-hook:
 	cd $(DESTDIR)$(pkgconfigdir) && rm -f "libsc-$(VERSION).pc"
+	cd $(DESTDIR)$(pkgconfigdir) && rm -f "libsc.pc"
 
 ## From the GNU automake documentation "What gets Cleaned"
 ## -------------------------------------------------------

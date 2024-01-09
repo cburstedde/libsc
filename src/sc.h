@@ -152,7 +152,7 @@
 #endif
 #include <ctype.h>
 #include <float.h>
-#if defined SC_HAVE_LIBGEN_H && !defined _MSC_VER
+#ifdef SC_HAVE_LIBGEN_H
 #include <libgen.h>
 #endif
 #include <limits.h>
@@ -170,6 +170,15 @@
 #endif
 #ifdef SC_HAVE_SYS_TIME_H
 #include <sys/time.h>
+#elif defined(_MSC_VER) && !defined(SC_HAVE_GETTIMEOFDAY)
+#define WIN32_LEAN_AND_MEAN
+#include <Winsock2.h>
+struct timezone
+{
+  int                 tz_minuteswest;
+  int                 tz_dsttime;
+};
+int gettimeofday (struct timeval*, struct timezone*);
 #endif
 #ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
@@ -254,7 +263,6 @@ extern int          sc_trace_prio;
 #define SC_CHECK_ABORT(q,s)                     \
   ((q) ? (void) 0 : SC_ABORT (s))
 #define SC_CHECK_MPI(r) SC_CHECK_ABORT ((r) == sc_MPI_SUCCESS, "MPI error")
-#define SC_CHECK_ZLIB(r) SC_CHECK_ABORT ((r) == Z_OK, "zlib error")
 
 /*
  * C++98 does not allow variadic macros
@@ -355,7 +363,7 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #endif
 
 #if (defined __GNUC__) || (defined __PGI) || (defined __IBMC__)
-#define SC_ATTR_ALIGN(n) __attribute__((aligned(n)))
+#define SC_ATTR_ALIGN(n) __attribute__ ((aligned(n)))
 #else
 #define SC_ATTR_ALIGN(n)
 #endif
@@ -391,7 +399,7 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_LC_GLOBAL      1     /**< log only for master process */
 #define SC_LC_NORMAL      2     /**< log for every process */
 
-/** \defgroup logprios Log Priorities
+/** \defgroup sc_logprios Log Priorities
  *
  * The log level is a number designating the priority of a log action.
  *
@@ -770,20 +778,38 @@ void                sc_init (sc_MPI_Comm mpicomm,
                              int catch_signals, int print_backtrace,
                              sc_log_handler_t log_handler, int log_threshold);
 
+/** Return whether SC has been initialized or not.
+ * \return          True if libsc has been initialized with a call to
+ *                  \ref sc_init and false otherwise.
+ *                  After \ref sc_finalize the result resets to false.
+ * \note            This routine is not thread-safe.
+ */
+int                 sc_is_initialized (void);
+
+/** Query SC's own package identity.
+ * \return          This is -1 before \ref sc_init has been called
+ *                  and a proper package identifier (>= 0) afterwards.
+ *                  After \ref sc_finalize the identifier resets to -1.
+ * \note            This routine is not thread-safe.
+ */
+int                 sc_get_package_id (void);
+
 /** Unregisters all packages, runs the memory check, removes the
  * signal handlers and resets sc_identifier and sc_root_*.
  * This function aborts on any inconsistency found unless
  * the global variable default_abort_mismatch is false.
- * This function is optional.
+ * Function is optional if memory cleanliness is no concern.
  * This function does not require sc_init to be called first.
+ * In any case it makes \ref sc_is_initialized return false.
  */
 void                sc_finalize (void);
 
 /** Unregisters all packages, runs the memory check, removes the
  * signal handlers and resets sc_identifier and sc_root_*.
  * This function never aborts but returns the number of errors encountered.
- * This function is optional.
+ * Function is optional if memory cleanliness is no concern.
  * This function does not require sc_init to be called first.
+ * In any case it makes \ref sc_is_initialized return false.
  * \return          0 when everything is consistent, nonzero otherwise.
  */
 int                 sc_finalize_noabort (void);
@@ -859,6 +885,13 @@ int                 sc_version_minor (void);
  */
 int                 sc_version_point (void);
 #endif /* 0 */
+
+/** Return a boolean indicating whether zlib has been configured.
+ * \return          True if zlib including adler32_combine (3)
+ *                  has been found on running configure
+ *                  or respectively on calling cmake.
+ */
+int                 sc_have_zlib (void);
 
 /** Return whether we have found a JSON library at configure time.
  * \return          True if and only if SC_HAVE_JSON is defined.

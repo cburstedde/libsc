@@ -1655,7 +1655,8 @@ sc_notify_payload_pex (sc_array_t * receivers, sc_array_t * senders,
 static int
 sc_notify_census_pcx (sc_array_t * receivers, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && (MPI_VERSION > 2 || (MPI_VERSION == 2 && MPI_SUBVERSION >= 2))
+#if defined SC_ENABLE_MPI && \
+    (MPI_VERSION > 2 || (MPI_VERSION == 2 && MPI_SUBVERSION >= 2))
   int                 i;
   int                 num_senders, num_receivers;
   int                 mpiret;
@@ -1700,7 +1701,8 @@ static void
 sc_notify_censusv_pcx (sc_array_t * receivers, sc_array_t * in_offsets,
                        int *num_senders_size, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && (MPI_VERSION > 2 || (MPI_VERSION == 2 && MPI_SUBVERSION >= 2))
+#if defined SC_ENABLE_MPI && \
+    (MPI_VERSION > 2 || (MPI_VERSION == 2 && MPI_SUBVERSION >= 2))
   int                 i;
   int                 num_receivers;
   int                 mpiret;
@@ -1748,7 +1750,7 @@ sc_notify_censusv_pcx (sc_array_t * receivers, sc_array_t * in_offsets,
 static int
 sc_notify_census_rsx (sc_array_t * receivers, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && MPI_VERSION >= 2
+#if defined SC_ENABLE_MPI && MPI_VERSION >= 2
   int                 i;
   int                 num_senders, *inum_senders, num_receivers;
   int                 mpiret;
@@ -1809,7 +1811,7 @@ static void
 sc_notify_censusv_rsx (sc_array_t * receivers, sc_array_t * in_offsets,
                        int *num_senders_size, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && MPI_VERSION >= 2
+#if defined SC_ENABLE_MPI && MPI_VERSION >= 2
   int                 i;
   int                *inum_senders_size, num_receivers;
   int                 mpiret;
@@ -1880,7 +1882,7 @@ sc_notify_payload_nbx (sc_array_t * receivers, sc_array_t * senders,
                        sc_array_t * in_payload, sc_array_t * out_payload,
                        int sorted, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && MPI_VERSION >= 3
+#if defined SC_ENABLE_MPI && MPI_VERSION >= 3
   int                 num_receivers;
   int                *ireceivers, i;
   int                 mpiret, rank, size;
@@ -1999,7 +2001,7 @@ sc_notify_payloadv_nbx (sc_array_t * receivers, sc_array_t * senders,
                         sc_array_t * in_offsets, sc_array_t * out_offsets,
                         int sorted, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && MPI_VERSION >= 3
+#if defined SC_ENABLE_MPI && MPI_VERSION >= 3
   int                 num_receivers;
   int                *ireceivers, i;
   int                *inoff;

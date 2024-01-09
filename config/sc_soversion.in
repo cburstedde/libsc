@@ -1,0 +1,7 @@
+# This file contains libsc's .so version in libtool format; see:
+# https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
+# The format is SC_SOVERSION = current:revision:age (note the colons)
+
+# This file is included by src/Makefile.am and parsed by cmake/config.cmake.
+
+SC_SOVERSION = 2:0:0

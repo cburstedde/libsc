@@ -204,6 +204,7 @@ if (jreal == json_real (.5)) { json_decref (jreal); }
              [Define to 1 if json_integer and json_real link])
    $1_HAVE_JSON="yes"],
   [$1_HAVE_JSON=])
+  AC_SUBST([$1_HAVE_JSON])
 ])
 
 dnl SC_CHECK_LIB(LIBRARY LIST, FUNCTION, TOKEN, PREFIX)

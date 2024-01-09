@@ -25,7 +25,7 @@
  *
  * Provide a consistent MPI interface with and without MPI configured.
  *
- * \ingroup parallelism
+ * \ingroup sc_parallelism
  *
  * When MPI is configured, we redefine many MPI functions and objects.
  * Without MPI, we emulate collective MPI routines to work as expected.
@@ -50,7 +50,7 @@
  */
 
 /**
- * \defgroup parallelism Parallelism
+ * \defgroup sc_parallelism Parallelism
  *
  * The sc library provides several mechanisms to work with MPI.
  * The most important one is a wrapper that looks the same to the user
@@ -180,7 +180,6 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_STATUSES_IGNORE     MPI_STATUSES_IGNORE
 
 #define sc_MPI_REQUEST_NULL        MPI_REQUEST_NULL
-#define sc_MPI_INFO_NULL           MPI_INFO_NULL
 
 #define sc_MPI_DATATYPE_NULL       MPI_DATATYPE_NULL
 #define sc_MPI_CHAR                MPI_CHAR
@@ -522,11 +521,15 @@ int                 sc_MPI_Exscan (void *, void *, int, sc_MPI_Datatype,
  * \return          Number of seconds since the epoch. */
 double              sc_MPI_Wtime (void);
 
+/** Return the input communicator in lieu of splitting.
+ * \return          MPI_SUCCESS.
+ */
+int                 sc_MPI_Comm_split (sc_MPI_Comm, int, int, sc_MPI_Comm *);
+
 /* These functions will run but their results/actions are not defined. */
 
 int                 sc_MPI_Comm_create (sc_MPI_Comm, sc_MPI_Group,
                                         sc_MPI_Comm *);
-int                 sc_MPI_Comm_split (sc_MPI_Comm, int, int, sc_MPI_Comm *);
 int                 sc_MPI_Comm_compare (sc_MPI_Comm, sc_MPI_Comm, int *);
 int                 sc_MPI_Comm_group (sc_MPI_Comm, sc_MPI_Group *);
 
@@ -632,6 +635,18 @@ int                 sc_MPI_Init_thread (int *argc, char ***argv,
 #define sc_MPI_File_open           MPI_File_open
 #define sc_MPI_File_close          MPI_File_close
 
+#define sc_MPI_File_get_view       MPI_File_get_view
+#define sc_MPI_File_set_view       MPI_File_set_view
+
+#define sc_MPI_File_write_all      MPI_File_write_all
+#define sc_MPI_File_read_all       MPI_File_read_all
+
+#define sc_MPI_File_write_at_all   MPI_File_write_at_all
+#define sc_MPI_File_read_at_all    MPI_File_read_at_all
+
+#define sc_MPI_File_get_size       MPI_File_get_size
+#define sc_MPI_File_set_size       MPI_File_set_size
+
 #else
 
 typedef long        sc_MPI_Offset;      /**< Emulate the MPI offset type. */
@@ -641,11 +656,11 @@ typedef long        sc_MPI_Offset;      /**< Emulate the MPI offset type. */
  */
 struct sc_no_mpiio_file
 {
+  sc_MPI_Comm         mpicomm;          /**< The MPI communicator. */
   const char         *filename;         /**< Name of the file. */
   FILE               *file;             /**< Underlying file object. */
-#ifdef SC_ENABLE_MPI
-  sc_MPI_Comm         mpicomm;
-#endif
+  int                 mpisize;          /**< Ranks in communicator. */
+  int                 mpirank;          /**< Rank of this process. */
 };
 
 /** Replacement object for an MPI file. */

@@ -27,10 +27,10 @@
 /** \file sc_options.h
  *
  * Register and parse command line options and read/write configuration files.
- * A detailed description can be found under \ref options.
+ * A detailed description can be found under \ref sc_options.
  * In addition, we provide the example \ref options.c.
  *
- * \ingroup options
+ * \ingroup sc_options
  */
 
 /**
@@ -39,11 +39,11 @@
  * This example demonstrates how the library can be used to parse command
  * line options and to load and save them to configuration files.
  *
- * \see options
+ * \see sc_options
  */
 
 /**
- * \defgroup options Option Parser
+ * \defgroup sc_options Option Parser
  * \ingroup sc
  *
  * The option parser reads the command line as well as configuration files.
@@ -356,7 +356,7 @@ void                sc_options_add_suboptions (sc_options_t * opt,
  * That means the default action is to print only on rank 0.
  * Applications can change that by providing a user-defined log handler.
  * \param [in] package_id       Registered package id or -1.
- * \param [in] log_priority     Priority for output according to \ref logprios.
+ * \param [in] log_priority     Priority for output according to \ref sc_logprios.
  * \param [in] opt              The option structure.
  * \param [in] arg_usage        If not NULL, an \<ARGUMENTS\> string is appended
  *                              to the usage line.  If the string is non-empty,
@@ -375,7 +375,7 @@ void                sc_options_print_usage (int package_id, int log_priority,
  * That means the default action is to print only on rank 0.
  * Applications can change that by providing a user-defined log handler.
  * \param [in] package_id       Registered package id or -1.
- * \param [in] log_priority     Priority for output according to \ref logprios.
+ * \param [in] log_priority     Priority for output according to \ref sc_logprios.
  * \param [in] opt              The option structure.
  */
 void                sc_options_print_summary (int package_id,
@@ -387,7 +387,7 @@ void                sc_options_print_summary (int package_id,
 /** Load a file in the default format and update option values.
  * The default is a file in the `.ini` format; see \ref sc_options_load_ini.
  * \param [in] package_id       Registered package id or -1.
- * \param [in] err_priority     Error priority according to \ref logprios.
+ * \param [in] err_priority     Error priority according to \ref sc_logprios.
  * \param [in] opt              The option structure.
  * \param [in] file             Filename of the file to load.
  * \return                      Returns 0 on success, -1 on failure.
@@ -399,7 +399,7 @@ int                 sc_options_load (int package_id, int err_priority,
  * An option whose name contains a colon such as "prefix:basename" will be
  * updated by a "basename =" entry in a [prefix] section.
  * \param [in] package_id       Registered package id or -1.
- * \param [in] err_priority     Error priority according to \ref logprios.
+ * \param [in] err_priority     Error priority according to \ref sc_logprios.
  * \param [in] opt              The option structure.
  * \param [in] inifile          Filename of the ini file to load.
  * \param [in,out] re           Provisioned for runtime error checking
@@ -414,7 +414,7 @@ int                 sc_options_load_ini (int package_id, int err_priority,
  * An option whose name contains a colon such as "Prefix:basename" will be
  * updated by a "basename :" entry in a "Prefix" nested object.
  * \param [in] package_id       Registered package id or -1.
- * \param [in] err_priority     Error priority according to \ref logprios.
+ * \param [in] err_priority     Error priority according to \ref sc_logprios.
  * \param [in] opt              The option structure.
  * \param [in] jsonfile         Filename of the JSON file to load.
  * \param [in,out] re           Provisioned for runtime error checking
@@ -432,7 +432,7 @@ int                 sc_options_load_json (int package_id, int err_priority,
  * An options whose name contains a colon such as "Prefix:basename" will be
  * written in a section titled [Prefix] as "basename =".
  * \param [in] package_id       Registered package id or -1.
- * \param [in] err_priority     Error priority according to \ref logprios.
+ * \param [in] err_priority     Error priority according to \ref sc_logprios.
  * \param [in] opt              The option structure.
  * \param [in] inifile          Filename of the ini file to save.
  * \return                      Returns 0 on success, -1 on failure.
@@ -444,7 +444,7 @@ int                 sc_options_save (int package_id, int err_priority,
  * There needs to be a key Arguments.count specifying the number.
  * Then as many integer keys starting with 0 need to be present.
  * \param [in] package_id       Registered package id or -1.
- * \param [in] err_priority     Error priority according to \ref logprios.
+ * \param [in] err_priority     Error priority according to \ref sc_logprios.
  * \param [in] opt              The args are stored in this option structure.
  * \param [in] inifile          Filename of the ini file to load.
  * \return                      Returns 0 on success, -1 on failure.
@@ -457,7 +457,7 @@ int                 sc_options_load_args (int package_id, int err_priority,
 
 /** Parse command line options.
  * \param [in] package_id       Registered package id or -1.
- * \param [in] err_priority     Error priority according to \ref logprios.
+ * \param [in] err_priority     Error priority according to \ref sc_logprios.
  * \param [in] opt              The option structure.
  * \param [in] argc             Length of argument list.
  * \param [in,out] argv         Argument list may be permuted.

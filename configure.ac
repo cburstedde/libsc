@@ -37,6 +37,7 @@ See sc.h for possible log priorities in --enable-logging=PRIO])
                esac])
 SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
+AC_SUBST([SC_ENABLE_DEBUG])
 SC_ARG_DISABLE([realloc], [replace array/dmatrix resize with malloc/copy/free],
                [USE_REALLOC])
 SC_ARG_DISABLE([counters], [disable non-thread-safe internal debug counters],
@@ -52,8 +53,6 @@ SC_MPI_CONFIG([SC], [], [])
 SC_MPI_ENGAGE([SC])
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
-dnl SC_PROG_LINT
-dnl SC_C_VERSION
 LT_INIT
 
 echo "o---------------------------------------"
@@ -80,7 +79,7 @@ echo "o---------------------------------------"
 
 AC_CHECK_HEADERS([fcntl.h sys/ioctl.h sys/select.h sys/stat.h])
 AC_CHECK_HEADERS([execinfo.h signal.h libgen.h time.h sys/time.h])
-AC_CHECK_HEADERS([linux/version.h linux/videodev2.h jansson.h])
+AC_CHECK_HEADERS([linux/version.h linux/videodev2.h])
 
 echo "o---------------------------------------"
 echo "| Checking functions"
@@ -91,6 +90,7 @@ AC_CHECK_FUNCS([basename dirname])
 AC_CHECK_FUNCS([strtol strtoll strtok_r])
 AC_CHECK_FUNCS([fsync])
 AC_CHECK_FUNCS([qsort_r])
+AC_CHECK_FUNCS([gettimeofday])
 
 echo "o---------------------------------------"
 echo "| Checking libraries"

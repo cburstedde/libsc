@@ -5,5 +5,3 @@
 
 bin_PROGRAMS += example/testing/sc_test_shmem
 example_testing_sc_test_shmem_SOURCES = example/testing/sc_test_shmem.c
-
-LINT_CSOURCES += $(example_testing_sc_test_shmem_SOURCES)
