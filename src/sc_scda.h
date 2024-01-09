@@ -122,6 +122,33 @@
  * If \b decode is false, the data is read raw even if it was written according
  * to the compression convention.
  *
+ * ### Error management
+ *
+ * All \b scda functions that receive a file context have an output parameter
+ * called \b errcode. In case of an unsuccessful function call, the respective
+ * function returns NULL instead of the file context and sets the output
+ * parameter \b errcode to the respective error code. If such a case occurs,
+ * the file that is associated to the used file context is closed and the file
+ * context is deallocated.
+ *
+ * The error code can be examined by the user using the two functions
+ * - \ref sc_scda_ferror_class and
+ * - \ref sc_scda_ferror_string.
+ *
+ * If MPI I/O is available \b errcode may encode an MPI error code. In this case
+ * the two error examination functions output the error class and error string
+ * as it would be output by the corresponding MPI functions, respectively.
+ * Without MPI I/O or MPI it is still possible that \b errcode encodes an I/O
+ * operation related error code. This case does not differ concerning the error
+ * code examiniation.
+ * Moreover, \b errcode can encode an error code related to \b scda, i.e.
+ * the I/O operations were successful but there is some violation of the \b scda
+ * format, workflow or API.
+ *
+ * For more technical details on \b errcode see the documentation of \ref
+ * sc_scda_ferror_t. Furthermore, the \b scda format, workflow or API errors
+ * description can be found in the documentation of \ref sc_scda_ret.
+ *
  * \ingroup io
  */
 
@@ -177,29 +204,18 @@ SC_EXTERN_C_BEGIN;
 typedef struct sc_scda_fcontext sc_scda_fcontext_t;
 
 /** Type for element counts and sizes. */
-typedef uint64_t sc_scda_ulong;
+typedef uint64_t    sc_scda_ulong;
 
-/** Error values for scdafile functions.
+/** Error values for scda-related errors.
  *
- * The error codes can be examined by \ref sc_scda_ferror_string.
+ * The error codes are part of the struct \ref sc_scda_ferror_t and can be
+ * examined as part of this struct.
  */
-typedef enum sc_scda_ferror
+typedef enum sc_scda_ret
 {
   SC_SCDA_FERR_SUCCESS = 0, /**< successful function call */
-  SC_SCDA_FERR_FILE = sc_MPI_ERR_LASTCODE, /**< invalid file handle */
-  SC_SCDA_FERR_NOT_SAME, /**< collective argument not identical */
-  SC_SCDA_FERR_AMODE, /**< access mode error */
-  SC_SCDA_FERR_NO_SUCH_FILE, /**< file does not exist */
-  SC_SCDA_FERR_FILE_EXIST, /**< file exists already */
-  SC_SCDA_FERR_BAD_FILE, /**< invalid file name */
-  SC_SCDA_FERR_ACCESS, /**< permission denied */
-  SC_SCDA_FERR_NO_SPACE, /**< not enough space */
-  SC_SCDA_FERR_QUOTA, /**< quota exceeded */
-  SC_SCDA_FERR_READ_ONLY, /**< read only file (system) */
-  SC_SCDA_FERR_IN_USE, /**< file currently open by other process */
-  SC_SCDA_FERR_IO, /**< other I/O error */
-  SC_SCDA_FERR_UNKNOWN, /**< unknown I/O error */
-  SC_SCDA_FERR_FORMAT,  /**< File not conforming to the \b scda format. */
+  SC_SCDA_FERR_FORMAT = sc_MPI_ERR_LASTCODE,  /**< File not conforming to the
+                                                   \b scda format. */
   SC_SCDA_FERR_USAGE,   /**< Incorrect workflow of an \b scda reading function.
                              For example, the user might have identified a
                              certain file section type
@@ -211,29 +227,55 @@ typedef enum sc_scda_ferror
                              This error also occurs when the user tries to
                              read section data before reading the section header.
                           */
-  SC_SCDA_FERR_DECODE, /**< The decode parameter to
+  SC_SCDA_FERR_DECODE,  /**< The decode parameter to
                             \ref sc_scda_fread_section_header is true but
                             the file section header(s) encountered
                             does not conform to the \b scda encoding convention.
                            */
-  SC_SCDA_FERR_INPUT, /**< An argument to a \b scda file function is invalid.
+  SC_SCDA_FERR_ARG, /**< An argument to a \b scda file function is invalid.
                            This occurs for example when an essential pointer
                            argument is NULL or a user string for
                            writing is too long. */
-  SC_SCDA_FERR_COUNT,   /**< A byte count error that may occur
-                             transiently on writing or the file is short
-                             on reading. */
+  SC_SCDA_FERR_COUNT, /**< A byte count error that may occur
+                           transiently on writing or the file is short
+                           on reading. */
+  SC_SCDA_FERR_MPI,   /**< An MPI error occurred; see \b mpiret in the
+                           corresponding \ref sc_scda_ferror_t. */
   SC_SCDA_FERR_LASTCODE /**< to define own error codes for
-                                  a higher level application
-                                  that is using sc_scda
-                                  functions */
+                             a higher level application
+                             that is using sc_scda
+                             functions */
+}
+sc_scda_ret_t;
+
+/** Error values for the scda functions.
+ * An error value is a struct since the error can be related to the scda
+ * file format or to MPI (I/O operations). The error code can be converted to a
+ * string by \ref sc_scda_ferror_string and mapped to an error class by \ref
+ * sc_scda_ferror_class.
+ *
+ * The parsing logic of \ref sc_scda_ferror_t is that first \b scdaret is examined
+ * and if \b scdaret != \ref SC_SCDA_FERR_MPI, we know that \b mpiret = 0.
+ * If \b scdaret = \ref SC_SCDA_FERR_MPI, we know that an MPI error occurred and
+ * we can examine \b mpiret for more informartion.
+ *
+ * Moreover, a valid sc_scda_ferror always satisfy that if \b scdaret = 0 then
+ * \b mpiret = 0 and if \b scdaret = \ref SC_SCDA_FERR_MPI then \b mpiret !=0.
+ */
+typedef struct sc_scda_ferror
+{
+  int mpiret;            /**< MPI function return value; without MPI I/O or MPI
+                              this variable can get filled by other I/O operation
+                              error codes, which are still interpretable by
+                              the error \b scda examination functions */
+  sc_scda_ret_t scdaret; /**< scda file format related return value */
 }
 sc_scda_ferror_t;
 
 /** An options struct for the functions \ref sc_scda_fopen_write and
  * \ref sc_scda_fopen_read. The struct may be extended in the future.
  */
-typedef         struct sc_scda_fopen_options
+typedef struct sc_scda_fopen_options
 {
   sc_MPI_Info         info; /**< info that is passed to MPI_File_open */
 }
@@ -281,16 +323,18 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  *                           sc_scda_fopen_options for more details.
  *                           It is valid to pass NULL for \b opt.
  * \param [out]    errcode   An errcode that can be interpreted by \ref
- *                           sc_scda_ferror_string.
+ *                           sc_scda_ferror_string or mapped to an error class
+ *                           by \ref sc_scda_ferror_class.
  * \return                   Newly allocated context to continue writing
  *                           and eventually closing the file. NULL in
- *                           case of error, i.e. errcode != SC_SCDA_FERR_SUCCESS.
+ *                           case of error, i.e. errcode != \ref
+ *                           SC_SCDA_FERR_SUCCESS.
  */
 sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                                          const char *filename,
                                          const char *user_string, size_t *len,
                                          sc_scda_fopen_options_t * opt,
-                                         int *errcode);
+                                         sc_scda_ferror_t * errcode);
 
 /** Write an inline data section.
  *
@@ -325,7 +369,8 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *                              \b fc. \b root indicates the MPI rank on that
  *                              \b inline_data is written to the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -335,8 +380,9 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  */
 sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
                                            const char *user_string,
-                                           size_t *len, sc_array_t * inline_data,
-                                           int root, int *errcode);
+                                           size_t *len,
+                                           sc_array_t * inline_data, int root,
+                                           sc_scda_ferror_t * errcode);
 
 /** Write a fixed-size block file section.
  *
@@ -383,7 +429,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              the 'Encoding' section in the detailed
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -393,9 +440,11 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  */
 sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
                                           const char *user_string,
-                                          size_t *len, sc_array_t * block_data,
+                                          size_t *len,
+                                          sc_array_t * block_data,
                                           size_t block_size, int root,
-                                          int encode, int *errcode);
+                                          int encode,
+                                          sc_scda_ferror_t * errcode);
 
 /** Write a fixed-size array file section.
  *
@@ -463,7 +512,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              the 'Encoding' section in the detailed
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -473,11 +523,12 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  */
 sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
                                           const char *user_string,
-                                          size_t *len, sc_array_t * array_data,
+                                          size_t *len,
+                                          sc_array_t * array_data,
                                           sc_array_t * elem_counts,
-                                          size_t elem_size,
-                                          int indirect, int encode,
-                                          int *errcode);
+                                          size_t elem_size, int indirect,
+                                          int encode,
+                                          sc_scda_ferror_t * errcode);
 
 /** This is a collective function to determine the processor sizes.
  *
@@ -500,11 +551,14 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              \b elem_sizes and \b elem_counts. The array is
  *                              filled with the number bytes per process.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      0 in case of success and -1 otherwise.
  */
-int sc_scda_proc_sizes (sc_array_t *elem_sizes, sc_array_t *elem_counts,
-                        sc_array_t *proc_sizes, int *errcode);
+int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
+                                        sc_array_t * elem_counts,
+                                        sc_array_t * proc_sizes,
+                                        sc_scda_ferror_t * errcode);
 
 /** Write a variable-size array file section.
  *
@@ -584,7 +638,8 @@ int sc_scda_proc_sizes (sc_array_t *elem_sizes, sc_array_t *elem_counts,
  *                              the 'Encoding' section in the detailed
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -593,13 +648,14 @@ int sc_scda_proc_sizes (sc_array_t *elem_sizes, sc_array_t *elem_counts,
  *                              file and deallocate the context \b fc.
  */
 sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
-                                           const char *user_string, size_t *len,
+                                           const char *user_string,
+                                           size_t *len,
                                            sc_array_t * array_data,
                                            sc_array_t * elem_counts,
                                            sc_array_t * elem_sizes,
                                            sc_array_t * proc_sizes,
                                            int indirect, int encode,
-                                           int *errcode);
+                                           sc_scda_ferror_t * errcode);
 
 /** Open a file for reading and read the file header from the file.
  *
@@ -634,16 +690,18 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  *                           sc_scda_fopen_options for more details.
  *                           It is valid to pass NULL for \b opt.
  * \param [out]    errcode   An errcode that can be interpreted by \ref
- *                           sc_scda_ferror_string.
+ *                           sc_scda_ferror_string or mapped to an error class
+ *                           by \ref sc_scda_ferror_class.
  * \return                   Newly allocated context to continue reading
  *                           and eventually closing the file. NULL in
- *                           case of error, i.e. errcode != SC_SCDA_FERR_SUCCESS.
+ *                           case of error, i.e. errcode != \ref
+ *                           SC_SCDA_FERR_SUCCESS.
  */
 sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
                                         const char *filename,
                                         char *user_string, size_t *len,
                                         sc_scda_fopen_options_t * opt,
-                                        int *errcode);
+                                        sc_scda_ferror_t * errcode);
 
 /** Read the next file section header.
  *
@@ -701,7 +759,8 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  *                              the 'Encoding' section in the detailed
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -714,7 +773,8 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
                                                   size_t *len, char *type,
                                                   size_t *elem_count,
                                                   size_t *elem_size,
-                                                  int *decode, int *errcode);
+                                                  int *decode,
+                                                  sc_scda_ferror_t * errcode);
 
 /** Read the data of an inline data section.
  *
@@ -738,7 +798,8 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  *                              \b fc. \b root indicates the MPI rank on that
  *                              \b data is read from the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -748,7 +809,7 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  */
 sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
                                                sc_array_t * data, int root,
-                                               int *errcode);
+                                               sc_scda_ferror_t * errcode);
 
 /** Read the data of a block of given size.
  *
@@ -777,7 +838,8 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  *                              \b fc. \b root indicates the MPI rank on that
  *                              \b block_data is read from the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -788,7 +850,7 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
 sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
                                               sc_array_t * block_data,
                                               size_t block_size, int root,
-                                              int *errcode);
+                                              sc_scda_ferror_t * errcode);
 
 /** Read the data of a fixed-size array.
  *
@@ -838,7 +900,8 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  *                              non-contigous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -850,7 +913,8 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
                                               sc_array_t * array_data,
                                               sc_array_t * elem_counts,
                                               size_t elem_size,
-                                              int indirect, int *errcode);
+                                              int indirect,
+                                              sc_scda_ferror_t * errcode);
 
 /** Read the element sizes of a variable-size array.
  *
@@ -888,7 +952,8 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  *                              must be equal to elem_count as retrieved from
  *                              \ref sc_scda_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -899,7 +964,7 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
 sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
                                                 sc_array_t * elem_sizes,
                                                 sc_array_t * elem_counts,
-                                                int *errcode);
+                                                sc_scda_ferror_t * errcode);
 
 /** Read the data of a variable-size array.
  *
@@ -964,7 +1029,8 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  *                              non-contigous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
- *                              sc_scda_ferror_string.
+ *                              sc_scda_ferror_string or mapped to an error class
+ *                              by \ref sc_scda_ferror_class.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -977,20 +1043,44 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
                                                sc_array_t * elem_counts,
                                                sc_array_t * elem_sizes,
                                                sc_array_t * proc_sizes,
-                                               int indirect, int *errcode);
+                                               int indirect,
+                                               sc_scda_ferror_t * errcode);
 
-/** Translate a sc_scda error code to an error string.
+/** Translate a sc_scda error code to an error class.
+ *
+ * The semantic of error class and error code is the same as in the MPI standard,
+ * i.e. all error classes are error codes but potentially there are more error
+ * codes than error classes.
+ *
+ * If \b errcode is already an error class, \b errclass if filled with
+ * \b errcode.
  *
  * This is a non-collective function.
  *
- * \param [in]    errcode       An errcode that is output by a
- *                              sc_scda function.
- * \param [out]   str           At least sc_MPI_MAX_ERROR_STRING bytes.
- * \param [out]   len           On output the length of string on return.
- * \return                      SC_SCDA_FERR_SUCCESS on success or
+ * \param [in]    errcode       An errcode that is output by a sc_scda function.
+ * \param [out]   errclass      On output filled with the error class that
+ *                              corresponds to the given \b errcode.
+ *                              See the function description above for more
+ *                              information on error classes and error codes
+ *                              in scda.
+ * \return                      \ref SC_SCDA_FERR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
-int                 sc_scda_ferror_string (int errcode, char *str, int *len);
+int                 sc_scda_ferror_class (sc_scda_ferror_t errcode,
+                                          sc_scda_ferror_t *errclass);
+
+/** Translate a sc_scda error code/class to an error string.
+ *
+ * This is a non-collective function.
+ *
+ * \param [in]    errcode       An errcode that is output by a sc_scda function.
+ * \param [out]   str           At least sc_MPI_MAX_ERROR_STRING bytes.
+ * \param [out]   len           On output the length of string on return.
+ * \return                      \ref SC_SCDA_FERR_SUCCESS on success or
+ *                              something else on invalid arguments.
+ */
+int                 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str,
+                                           int *len);
 
 /** Close a file opened for parallel write/read and the free the file context.
  *
@@ -1010,12 +1100,14 @@ int                 sc_scda_ferror_string (int errcode, char *str, int *len);
  *                            sc_scda_fopen_read. This file context is freed
  *                            after a call of this function.
  * \param [out]     errcode   An errcode that can be interpreted by \ref
- *                            sc_scda_ferror_string.
- * \return                    SC_SCDA_FERR_SUCCESS for a successful call
+ *                            sc_scda_ferror_string or mapped to an error class
+ *                            by \ref sc_scda_ferror_class.
+ * \return                    \ref SC_SCDA_FERR_SUCCESS for a successful call
  *                            and -1 in case a of an error.
  *                            See also \b errcode argument.
  */
-int                 sc_scda_fclose (sc_scda_fcontext_t * fc, int *errcode);
+int                 sc_scda_fclose (sc_scda_fcontext_t * fc,
+                                    sc_scda_ferror_t * errcode);
 
 SC_EXTERN_C_END;
 
