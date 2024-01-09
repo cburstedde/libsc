@@ -23,6 +23,7 @@
 
 #include <sc_builtin/sc_getopt.h>
 
+#include <sc_io.h>
 #include <sc_options.h>
 #include <sc_refcount.h>
 #include <iniparser.h>
@@ -801,6 +802,75 @@ sc_options_print_summary (int package_id, int log_priority,
   }
 }
 
+static dictionary *
+sc_iniparser_load (const char *inifile, int collective, sc_MPI_Comm mpicomm)
+{
+  /* string holds name of file to load */
+  SC_ASSERT (inifile != NULL);
+
+  if (!collective) {
+    /* each process reads the same file at the same time */
+    return iniparser_load (inifile);
+  }
+  else {
+    int                 mpiret;
+    int                 rank;
+    int                 ibyt;
+    char               *buf;
+    size_t              len;
+    sc_array_t          arr;
+    dictionary         *dic;
+
+    /* query rank of process */
+    SC_ASSERT (mpicomm != sc_MPI_COMM_NULL);
+    mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
+    SC_CHECK_MPI (mpiret);
+
+    /* physically read file on rank zero */
+    len = 0;
+    ibyt = -1;
+    sc_array_init (&arr, 1);
+    if (rank == 0) {
+      /* root rank reads file from disk into byte array memory */
+      if (sc_io_file_load (inifile, &arr)) {
+        SC_LERRORF ("Error loading file %s\n", inifile);
+      }
+      else if ((len = arr.elem_count) > (size_t) INT_MAX) {
+        SC_LERRORF ("File %s too large\n", inifile);
+      }
+      else {
+        /* we are successful if and only if ibyt is non-negative */
+        ibyt = (int) len;
+      }
+    }
+
+    /* broadcast file size or error condition */
+    mpiret = sc_MPI_Bcast (&ibyt, 1, sc_MPI_INT, 0, mpicomm);
+    SC_CHECK_MPI (mpiret);
+    if (ibyt < 0) {
+      /* reset is redundant on higher ranks but ok for simplicity */
+      sc_array_reset (&arr);
+      return NULL; 
+    }
+
+    /* replicate file contents on all other ranks */
+    if (rank > 0) {
+      len = (size_t) ibyt;
+      sc_array_resize (&arr, len);
+    }
+
+    /* broadcast file contents*/
+    buf = (char *) sc_array_index (&arr, 0);
+    mpiret = sc_MPI_Bcast (buf, ibyt, sc_MPI_BYTE, 0, mpicomm);
+    SC_CHECK_MPI (mpiret);
+
+    /* populate dictionary and free buffer afterwards */
+    dic = iniparser_load_buffer (buf, len, inifile);
+    sc_array_reset (&arr);
+    return dic;
+  }
+}
+
 int
 sc_options_load (int package_id, int err_priority,
                  sc_options_t * opt, const char *file)
@@ -833,7 +903,7 @@ sc_options_load_ini (int package_id, int err_priority,
   SC_ASSERT (re == NULL);
 
   /* read .ini file in one go */
-  dict = iniparser_load (inifile);
+  dict = sc_iniparser_load (inifile, opt->collective, sc_get_comm ());
   if (dict == NULL) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
                 "Could not load or parse .ini file\n");
@@ -1115,12 +1185,12 @@ sc_options_load_json (int package_id, int err_priority,
   }
   if ((jopt = json_object_get (file, "Options")) == NULL) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
-                "Could not find Options entry\n");
+                "Could not find options entry\n");
     goto load_json_error;
   }
   if (!json_is_object (jopt)) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
-                "Could not access Options object\n");
+                "Could not access options object\n");
     goto load_json_error;
   }
 
@@ -1671,10 +1741,10 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
   const char         *s;
   char                key[BUFSIZ];
 
-  dict = iniparser_load (inifile);
+  dict = sc_iniparser_load (inifile, opt->collective, sc_get_comm ());
   if (dict == NULL) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
-                "Could not load or parse inifile\n");
+                "Could not load or parse .ini file\n");
     return -1;
   }
 
