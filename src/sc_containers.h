@@ -48,10 +48,18 @@ SC_EXTERN_C_BEGIN;
 
 /* Hash macros from lookup3.c by Bob Jenkins, May 2006, public domain. */
 
-/** Bijective bit rotation as building block for hash functions. */
+/** Bijective bit rotation as building block for hash functions.
+ * \param [in] x            Input value (32-bit integer).
+ * \param [in] k            Bit shift amount (<= 32).
+ * \return                  Circular shifted integer.
+ */
 #define sc_hash_rot(x,k) (((x) << (k)) | ((x) >> (32 - (k))))
 
-/** Integer bit mixer as building block for hash functions. */
+/** Integer bit mixer as building block for hash functions.
+ * \param [in,out] a        First in/out value (32-bit integer).
+ * \param [in,out] b        Second in/out value (32-bit integer).
+ * \param [in,out] c        Third in/out value (32-bit integer).
+ */
 #define sc_hash_mix(a,b,c) ((void)                                      \
                             (a -= c, a ^= sc_hash_rot(c, 4), c += b,    \
                              b -= a, b ^= sc_hash_rot(a, 6), a += c,    \
@@ -60,7 +68,11 @@ SC_EXTERN_C_BEGIN;
                              b -= a, b ^= sc_hash_rot(a,19), a += c,    \
                              c -= b, c ^= sc_hash_rot(b, 4), b += a))
 
-/** Integer bit operations as building block for hash functions. */
+/** Integer bit operations as building block for hash functions.
+ * \param [in,out] a        First in/out value (32-bit integer).
+ * \param [in,out] b        Second in/out value (32-bit integer).
+ * \param [in,out] c        Third in/out value (32-bit integer).
+ */
 #define sc_hash_final(a,b,c) ((void)                            \
                               (c ^= b, c -= sc_hash_rot(b,14),  \
                                a ^= c, a -= sc_hash_rot(c,11),  \
@@ -733,7 +745,10 @@ sc_mempool_t       *sc_mempool_new (size_t elem_size);
  */
 sc_mempool_t       *sc_mempool_new_zero_and_persist (size_t elem_size);
 
-/** Same as sc_mempool_new, but for an already allocated sc_mempool_t pointer. */
+/** Same as sc_mempool_new, but for an already allocated object.
+ * \param [out] mempool   Allocated memory is overwritten and initialized.
+ * \param [in] elem_size  Size of one element in bytes.
+ */
 void                sc_mempool_init (sc_mempool_t * mempool,
                                      size_t elem_size);
 
@@ -750,10 +765,14 @@ void                sc_mempool_destroy (sc_mempool_t * mempool);
  */
 void                sc_mempool_destroy_null (sc_mempool_t ** pmempool);
 
-/** Same as sc_mempool_destroy, but does not free the pointer */
+/** Same as sc_mempool_destroy, but does not free the pointer.
+ * \param [in,out] mempool      Valid mempool object is deallocated.
+ *                              The structure memory itself stays alive.
+ */
 void                sc_mempool_reset (sc_mempool_t * mempool);
 
 /** Invalidates all previously returned pointers, resets count to 0.
+ * \param [in,out] mempool      Valid mempool is truncated.
  */
 void                sc_mempool_truncate (sc_mempool_t * mempool);
 
