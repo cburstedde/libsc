@@ -1517,6 +1517,16 @@ sc_hash_print_statistics (int package_id, int log_priority, sc_hash_t * hash)
 
 /* hash array routines */
 
+struct sc_hash_array_data
+{
+  sc_hash_array_t     the_hash_array;
+  sc_array_t         *pa;
+  sc_hash_function_t  hash_fn;
+  sc_equal_function_t equal_fn;
+  void               *user_data;
+  void               *current_item;
+};
+
 size_t
 sc_hash_array_memory_used (sc_hash_array_t * ha)
 {
@@ -1560,17 +1570,22 @@ sc_hash_array_new (size_t elem_size, sc_hash_function_t hash_fn,
                    sc_equal_function_t equal_fn, void *user_data)
 {
   sc_hash_array_t    *hash_array;
+  sc_hash_array_data_t *had;
 
-  hash_array = SC_ALLOC (sc_hash_array_t, 1);
+  /* save one allocation by storing the hash array inside its context */
+  had = SC_ALLOC (sc_hash_array_data_t, 1);
+  hash_array = &had->the_hash_array;
+  hash_array->internal_data = had;
 
+  /* initialize all members */
   sc_array_init (&hash_array->a, elem_size);
-  hash_array->internal_data.pa = &hash_array->a;
-  hash_array->internal_data.hash_fn = hash_fn;
-  hash_array->internal_data.equal_fn = equal_fn;
-  hash_array->internal_data.user_data = user_data;
-  hash_array->internal_data.current_item = NULL;
+  had->pa = &hash_array->a;
+  had->hash_fn = hash_fn;
+  had->equal_fn = equal_fn;
+  had->user_data = user_data;
+  had->current_item = NULL;
   hash_array->h = sc_hash_new (sc_hash_array_hash_fn, sc_hash_array_equal_fn,
-                               &hash_array->internal_data, NULL);
+                               had, NULL);
 
   return hash_array;
 }
@@ -1581,7 +1596,8 @@ sc_hash_array_destroy (sc_hash_array_t * hash_array)
   sc_hash_destroy (hash_array->h);
   sc_array_reset (&hash_array->a);
 
-  SC_FREE (hash_array);
+  /* the hash_array memory lives as part of internal data */
+  SC_FREE (hash_array->internal_data);
 }
 
 int
@@ -1615,9 +1631,9 @@ sc_hash_array_lookup (sc_hash_array_t * hash_array, void *v, size_t *position)
   int                 found;
   void              **found_void;
 
-  hash_array->internal_data.current_item = v;
+  hash_array->internal_data->current_item = v;
   found = sc_hash_lookup (hash_array->h, (void *) (-1L), &found_void);
-  hash_array->internal_data.current_item = NULL;
+  hash_array->internal_data->current_item = NULL;
 
   if (found) {
     if (position != NULL) {
@@ -1639,9 +1655,9 @@ sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
 
   SC_ASSERT (hash_array->a.elem_count == hash_array->h->elem_count);
 
-  hash_array->internal_data.current_item = v;
+  hash_array->internal_data->current_item = v;
   added = sc_hash_insert_unique (hash_array->h, (void *) (-1L), &found_void);
-  hash_array->internal_data.current_item = NULL;
+  hash_array->internal_data->current_item = NULL;
 
   if (added) {
     if (position != NULL) {

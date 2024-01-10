@@ -1040,15 +1040,8 @@ void                sc_hash_print_statistics (int package_id,
                                               int log_priority,
                                               sc_hash_t * hash);
 
-typedef struct sc_hash_array_data
-{
-  sc_array_t         *pa;
-  sc_hash_function_t  hash_fn;
-  sc_equal_function_t equal_fn;
-  void               *user_data;
-  void               *current_item;
-}
-sc_hash_array_data_t;
+/** Internal context structure for \ref sc_hash_array. */
+typedef struct sc_hash_array_data sc_hash_array_data_t;
 
 /** The sc_hash_array implements an array backed up by a hash table.
  * This enables O(1) access for array elements.
@@ -1057,8 +1050,8 @@ typedef struct sc_hash_array
 {
   /* implementation variables */
   sc_array_t          a;        /**< Array storing the elements. */
-  sc_hash_array_data_t internal_data;   /**< Private context data. */
   sc_hash_t          *h;        /**< Hash map pointing into element array. */
+  sc_hash_array_data_t *internal_data;  /**< Private context data. */
 }
 sc_hash_array_t;
 
