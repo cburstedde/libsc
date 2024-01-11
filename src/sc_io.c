@@ -390,6 +390,37 @@ sc_io_source_read_mirror (sc_io_source_t * source, void *data,
   return retval;
 }
 
+int
+sc_io_file_load (const char *filename, sc_array_t *buffer)
+{
+  sc_io_source_t     *iosrc;
+
+  SC_ASSERT (filename != NULL);
+  SC_ASSERT (buffer != NULL);
+  SC_ASSERT (buffer->elem_size == 1);
+  SC_ASSERT (SC_ARRAY_IS_OWNER (buffer));
+
+  /* open file */
+  if ((iosrc = sc_io_source_new
+       (SC_IO_TYPE_FILENAME, SC_IO_ENCODE_NONE, filename)) == NULL) {
+    SC_LERRORF ("Error opening file for reading: %s\n", filename);
+    return -1;
+  }
+
+  /* prepare read buffer */
+  sc_array_resize (buffer, 0);
+
+  /* perform reading */
+
+  /* close file */
+  if (sc_io_source_destroy (iosrc)) {
+    SC_LERRORF ("Error closing file after reading: %s\n", filename);
+    return -1;
+  }
+
+  return 0;
+}
+
 /* byte count for one line of data must be a multiple of 3 */
 #define SC_IO_DBC 57
 #if SC_IO_DBC % 3 != 0
