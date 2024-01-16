@@ -326,24 +326,28 @@ sc_io_source_read (sc_io_source_t * source, void *data,
   if (source->iotype == SC_IO_TYPE_BUFFER) {
     SC_ASSERT (source->buffer != NULL);
 
-    /* access total byte count theoretically available in input buffer */
-    bbytes_out = SC_ARRAY_BYTE_ALLOC (source->buffer);
-    SC_ASSERT (bbytes_out >= source->buffer_bytes);
+    /* access available elements by their byte count */
+    bbytes_out = source->buffer->elem_count * source->buffer->elem_size;
 
     /* compute how many bytes may be read now on top of the previous ones */
-    bbytes_out -= source->buffer_bytes;
+    if (bbytes_out < source->buffer_bytes) {
+      /* the input buffer has shrunk by side effects: stop reading gracefully */
+      bbytes_out = 0;
+    }
+    else {
+      /* we may have some remaining bytes to read */
+      bbytes_out -= source->buffer_bytes;
+    }
+
+    /* check for end of input and read if data is available */
     if (bbytes_out == 0) {
-      /* note end of buffer memory */
+      /* register end of available data */
       source->is_eof = 1;
     }
     else {
       /* we may be instructed to read less bytes than available */
       bbytes_out = SC_MIN (bbytes_out, bytes_avail);
-
-      /* In the present code we read to the end of the buffer allocation.
-       * This may not be what we want: we may only read actual elements,
-       * which may be less.
-       * TO DO: look into it. */
+      SC_ASSERT (bbytes_out > 0);
 
       /* copy into output buffer only if that is made available */
       if (data != NULL) {

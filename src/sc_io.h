@@ -291,6 +291,7 @@ int                 sc_io_source_destroy_null (sc_io_source_t ** source);
  * \param [in] bytes_avail      Number of bytes available in data buffer.
  * \param [in,out] bytes_out    If not NULL, byte count read into data buffer.
  *                              Otherwise, requires to read exactly bytes_avail.
+ *                              If this condition is not met, return an error.
  * \return                      0 on success, nonzero on error.
  */
 int                 sc_io_source_read (sc_io_source_t * source,
