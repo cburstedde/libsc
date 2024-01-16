@@ -506,27 +506,30 @@ sc_io_file_load (const char *filename, sc_array_t * buffer)
     return file_return (-1, sink, source);
   }
 
-  /* prepare read buffer */
-  bpos = 0;
-  sc_array_resize (buffer, bpos + bwins);
-
   /* perform reading in a loop */
+  bpos = 0;
   for (i = 0;; ++i) {
+    /* make room in read buffer */
+    sc_array_resize (buffer, bpos + bwins);
+
     /* read next fixed size batch of data */
     if (sc_io_source_read (source, sc_array_index (buffer, bpos),
                            bwins, &bout)) {
       SC_LERRORF ("sc_io_file_load: error reading from %s\n", filename);
       return file_return (-1, sink, source);
     }
+
+    /* examine buffer status after reading */
     if (bout < bwins) {
-      /* we have reached end of file */
+      /* we have reached end of file: finalize buffer */
       sc_array_resize (buffer, bpos += bout);
       break;
     }
-    sc_array_resize (buffer, bpos += bwins);
 
-    /* TO DO: do not read twice if EOF was reached on window size */
+    /* update read buffer size */
+    bpos += bwins;
   }
+  SC_ASSERT (bpos == buffer->elem_count);
 
   /* close file and free metadata */
   if (source_destroy_null (&source)) {
