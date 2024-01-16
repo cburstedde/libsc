@@ -43,17 +43,21 @@ sc_io_sink_new (int iotype, int iomode, int ioencode, ...)
   sc_io_sink_t       *sink;
   va_list             ap;
 
+  /* verify preconditions */
   SC_ASSERT (0 <= iotype && iotype < SC_IO_TYPE_LAST);
   SC_ASSERT (0 <= iomode && iomode < SC_IO_MODE_LAST);
   SC_ASSERT (0 <= ioencode && ioencode < SC_IO_ENCODE_LAST);
 
+  /* initialize members of sink object */
   sink = SC_ALLOC_ZERO (sc_io_sink_t, 1);
   sink->iotype = (sc_io_type_t) iotype;
   sink->mode = (sc_io_mode_t) iomode;
   sink->encode = (sc_io_encode_t) ioencode;
 
+  /* there is at least one type-dependent argument */
   va_start (ap, ioencode);
   if (iotype == SC_IO_TYPE_BUFFER) {
+    /* register the buffer to write to */
     sink->buffer = va_arg (ap, sc_array_t *);
     if (sink->mode == SC_IO_MODE_WRITE) {
       sc_array_resize (sink->buffer, 0);
@@ -62,6 +66,7 @@ sc_io_sink_new (int iotype, int iomode, int ioencode, ...)
   else if (iotype == SC_IO_TYPE_FILENAME) {
     const char         *filename = va_arg (ap, const char *);
 
+    /* open a file on disk by name */
     sink->file = fopen (filename,
                         sink->mode == SC_IO_MODE_WRITE ? "wb" : "ab");
     if (sink->file == NULL) {
@@ -70,6 +75,7 @@ sc_io_sink_new (int iotype, int iomode, int ioencode, ...)
     }
   }
   else if (iotype == SC_IO_TYPE_FILEFILE) {
+    /* write to existing (writable) object */
     sink->file = va_arg (ap, FILE *);
     if (ferror (sink->file)) {
       SC_FREE (sink);
@@ -81,6 +87,7 @@ sc_io_sink_new (int iotype, int iomode, int ioencode, ...)
   }
   va_end (ap);
 
+  /* this sink can now be called for writing */
   return sink;
 }
 
@@ -126,21 +133,35 @@ sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_avail)
 {
   size_t              bytes_out;
 
+  /* basic output preconditions */
+  SC_ASSERT (sink != NULL);
+  SC_ASSERT (data != NULL || bytes_avail == 0);
+
+  /* do nothing if there is no data requested */
+  if (bytes_avail == 0) {
+    return SC_IO_ERROR_NONE;
+  }
+
+  /* do a regular write */
   bytes_out = 0;
 
+  /* switch on the type of sink */
   if (sink->iotype == SC_IO_TYPE_BUFFER) {
     size_t              elem_size, new_count;
 
+    /* extend the buffer by an even number of elements if necessary */
     SC_ASSERT (sink->buffer != NULL);
     elem_size = sink->buffer->elem_size;
     new_count =
       (sink->buffer_bytes + bytes_avail + elem_size - 1) / elem_size;
     sc_array_resize (sink->buffer, new_count);
-    /* For a view sufficient size is asserted only in debug mode. */
+    /* For a view, sufficient size is asserted only in debug mode.
+       Therefore, we add an explicit unconditional check. */
     if (new_count * elem_size > SC_ARRAY_BYTE_ALLOC (sink->buffer)) {
       return SC_IO_ERROR_FATAL;
     }
 
+    /* copy new data into the buffer at the proper position */
     memcpy (sink->buffer->array + sink->buffer_bytes, data, bytes_avail);
     sink->buffer_bytes += bytes_avail;
     bytes_out = bytes_avail;
@@ -150,13 +171,16 @@ sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_avail)
     SC_ASSERT (sink->file != NULL);
     bytes_out = fwrite (data, 1, bytes_avail, sink->file);
     if (bytes_out != bytes_avail) {
+      /* a short byte count indicates end of file (not acceptable) or error */
       return SC_IO_ERROR_FATAL;
     }
   }
 
+  /* update internal state and return on successful operation */
   sink->bytes_in += bytes_avail;
   sink->bytes_out += bytes_out;
 
+  /* success! */
   return SC_IO_ERROR_NONE;
 }
 

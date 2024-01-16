@@ -127,12 +127,13 @@ typedef struct sc_io_sink
   sc_io_mode_t        mode;            /**< write semantics */
   sc_io_encode_t      encode;          /**< encoding of data */
   sc_array_t         *buffer;          /**< buffer for the iotype
-                                            SC_IO_TYPE_BUFFER*/
-  size_t              buffer_bytes;    /**< distinguish from array elems */
+                                            \ref SC_IO_TYPE_BUFFER */
+  size_t              buffer_bytes;    /**< distinguish from array elements */
   FILE               *file;            /**< file pointer for iotype unequal to
-                                            SC_IO_TYPE_BUFFER */
+                                            \ref SC_IO_TYPE_BUFFER */
   size_t              bytes_in;        /**< input bytes count */
   size_t              bytes_out;       /**< written bytes count */
+  int                 is_eof;          /**< Have we reached the end of file? */
 }
 sc_io_sink_t;
 
@@ -208,7 +209,7 @@ int                 sc_io_sink_destroy_null (sc_io_sink_t ** sink);
 /** Write data to a sink.  Data may be buffered and sunk in a later call.
  * The internal counters sink->bytes_in and sink->bytes_out are updated.
  * \param [in,out] sink         The sink object to write to.
- * \param [in] data             Data passed into sink.
+ * \param [in] data             Data passed into sink must be non-NULL.
  * \param [in] bytes_avail      Number of data bytes passed in.
  * \return                      0 on success, nonzero on error.
  */
