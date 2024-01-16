@@ -191,6 +191,19 @@ sc_io_sink_t       *sc_io_sink_new (int iotype, int iomode,
  */
 int                 sc_io_sink_destroy (sc_io_sink_t * sink);
 
+/** Free data sink and NULL the pointer to it.
+ * Except for the handling of the pointer argument,
+ * the behavior is the same as for \ref sc_io_sink_destroy.
+ * \param [in,out] sink         Non-NULL pointer to sink pointer.
+ *                              The sink pointer may be NULL, in which case
+ *                              this function does nothing successfully,
+ *                              or a valid \ref sc_io_sink, which is
+ *                              passed to \ref sc_io_sink_destroy, and the
+ *                              sink pointer is set to NULL afterwards.
+ * \return                      0 on success, nonzero on error.
+ */
+int                 sc_io_sink_destroy_null (sc_io_sink_t ** sink);
+
 /** Write data to a sink.  Data may be buffered and sunk in a later call.
  * The internal counters sink->bytes_in and sink->bytes_out are updated.
  * \param [in,out] sink         The sink object to write to.
@@ -250,6 +263,19 @@ sc_io_source_t     *sc_io_source_new (int iotype, int ioencode, ...);
  */
 int                 sc_io_source_destroy (sc_io_source_t * source);
 
+/** Free data source and NULL the pointer to it.
+ * Except for the handling of the pointer argument,
+ * the behavior is the same as for \ref sc_io_source_destroy.
+ * \param [in,out] source       Non-NULL pointer to source pointer.
+ *                              The source pointer may be NULL, in which case
+ *                              this function does nothing successfully,
+ *                              or a valid \ref sc_io_source, which is
+ *                              passed to \ref sc_io_source_destroy, and the
+ *                              source pointer is set to NULL afterwards.
+ * \return                      0 on success, nonzero on error.
+ */
+int                 sc_io_source_destroy_null (sc_io_source_t ** source);
+
 /** Read data from a source.
  * The internal counters source->bytes_in and source->bytes_out are updated.
  * Data is read until the data buffer has not enough room anymore, or source
@@ -258,7 +284,7 @@ int                 sc_io_source_destroy (sc_io_source_t * source);
  * check its return value to find out.
  * Returns an error if bytes_out is NULL and less than bytes_avail are read.
  * \param [in,out] source       The source object to read from.
- * \param [in] data             Data buffer for reading from sink.
+ * \param [in] data             Data buffer for reading from source.
  *                              If NULL the output data will be thrown away.
  * \param [in] bytes_avail      Number of bytes available in data buffer.
  * \param [in,out] bytes_out    If not NULL, byte count read into data buffer.

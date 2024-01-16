@@ -103,6 +103,25 @@ sc_io_sink_destroy (sc_io_sink_t * sink)
 }
 
 int
+sc_io_sink_destroy_null (sc_io_sink_t ** sink)
+{
+  int                 retval = SC_IO_ERROR_NONE;
+
+  /* pointer to sink pointer must be set */
+  SC_ASSERT (sink != NULL);
+
+  /* if sink is still open, close it and NULL the pointer to it */
+  if (*sink != NULL) {
+    retval = sc_io_sink_destroy (*sink);
+    *sink = NULL;
+  }
+
+  /* in any case the sink does no longer exist */
+  SC_ASSERT (*sink == NULL);
+  return retval;
+}
+
+int
 sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_avail)
 {
   size_t              bytes_out;
@@ -253,6 +272,25 @@ sc_io_source_destroy (sc_io_source_t * source)
   SC_FREE (source);
 
   return retval ? SC_IO_ERROR_FATAL : SC_IO_ERROR_NONE;
+}
+
+int
+sc_io_source_destroy_null (sc_io_source_t ** source)
+{
+  int                 retval = SC_IO_ERROR_NONE;
+
+  /* pointer to source pointer must be set */
+  SC_ASSERT (source != NULL);
+
+  /* if source is still open, close it and NULL the pointer to it */
+  if (*source != NULL) {
+    retval = sc_io_source_destroy (*source);
+    *source = NULL;
+  }
+
+  /* in any case the source does no longer exist */
+  SC_ASSERT (*source == NULL);
+  return retval;
 }
 
 int
