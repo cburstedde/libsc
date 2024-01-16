@@ -142,14 +142,15 @@ typedef struct sc_io_source
   sc_io_type_t        iotype;          /**< type of the I/O operation */
   sc_io_encode_t      encode;          /**< encoding of data */
   sc_array_t         *buffer;          /**< buffer for the iotype
-                                            SC_IO_TYPE_BUFFER*/
-  size_t              buffer_bytes;    /**< distinguish from array elems */
+                                            \ref SC_IO_TYPE_BUFFER */
+  size_t              buffer_bytes;    /**< distinguish from array elements */
   FILE               *file;            /**< file pointer for iotype unequal to
-                                            SC_IO_TYPE_BUFFER */
+                                            \ref SC_IO_TYPE_BUFFER */
   size_t              bytes_in;        /**< input bytes count */
   size_t              bytes_out;       /**< read bytes count */
+  int                 is_eof;          /**< Have we reached the end of file? */
   sc_io_sink_t       *mirror;          /**< if activated, a sink to store the
-                                            data*/
+                                            data */
   sc_array_t         *mirror_buffer;   /**< if activated, the buffer for the
                                             mirror */
 }
@@ -285,7 +286,8 @@ int                 sc_io_source_destroy_null (sc_io_source_t ** source);
  * Returns an error if bytes_out is NULL and less than bytes_avail are read.
  * \param [in,out] source       The source object to read from.
  * \param [in] data             Data buffer for reading from source.
- *                              If NULL the output data will be thrown away.
+ *                              If NULL the output data will be ignored
+ *                              and we seek forward in the input.
  * \param [in] bytes_avail      Number of bytes available in data buffer.
  * \param [in,out] bytes_out    If not NULL, byte count read into data buffer.
  *                              Otherwise, requires to read exactly bytes_avail.

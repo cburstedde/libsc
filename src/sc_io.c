@@ -213,20 +213,25 @@ sc_io_source_new (int iotype, int ioencode, ...)
   sc_io_source_t     *source;
   va_list             ap;
 
+  /* verify preconditions */
   SC_ASSERT (0 <= iotype && iotype < SC_IO_TYPE_LAST);
   SC_ASSERT (0 <= ioencode && ioencode < SC_IO_ENCODE_LAST);
 
+  /* initialize members of source object */
   source = SC_ALLOC_ZERO (sc_io_source_t, 1);
   source->iotype = (sc_io_type_t) iotype;
   source->encode = (sc_io_encode_t) ioencode;
 
+  /* there is at least one type-dependent argument */
   va_start (ap, ioencode);
   if (iotype == SC_IO_TYPE_BUFFER) {
+    /* the source is presented in the form of an array */
     source->buffer = va_arg (ap, sc_array_t *);
   }
   else if (iotype == SC_IO_TYPE_FILENAME) {
     const char         *filename = va_arg (ap, const char *);
 
+    /* open a file on disk by name */
     source->file = fopen (filename, "rb");
     if (source->file == NULL) {
       SC_FREE (source);
@@ -234,6 +239,7 @@ sc_io_source_new (int iotype, int ioencode, ...)
     }
   }
   else if (iotype == SC_IO_TYPE_FILEFILE) {
+    /* read from an existing (readable) file object */
     source->file = va_arg (ap, FILE *);
     if (ferror (source->file)) {
       SC_FREE (source);
@@ -245,6 +251,7 @@ sc_io_source_new (int iotype, int ioencode, ...)
   }
   va_end (ap);
 
+  /* this source can now be called for reading */
   return source;
 }
 
@@ -300,38 +307,74 @@ sc_io_source_read (sc_io_source_t * source, void *data,
   int                 retval;
   size_t              bbytes_out;
 
+  /* basic input preconditions.  It is legal if data is NULL */
+  SC_ASSERT (source != NULL);
+
+  /* do nothing also if the end of the file has been reached */
+  if (bytes_avail == 0 || source->is_eof) {
+    if (bytes_out != NULL) {
+      *bytes_out = 0;
+    }
+    return SC_IO_ERROR_NONE;
+  }
+
+  /* do a regular read */
   retval = 0;
   bbytes_out = 0;
 
+  /* switch on the type of source */
   if (source->iotype == SC_IO_TYPE_BUFFER) {
     SC_ASSERT (source->buffer != NULL);
+
+    /* access total byte count theoretically available in input buffer */
     bbytes_out = SC_ARRAY_BYTE_ALLOC (source->buffer);
     SC_ASSERT (bbytes_out >= source->buffer_bytes);
-    bbytes_out -= source->buffer_bytes;
-    bbytes_out = SC_MIN (bbytes_out, bytes_avail);
 
-    if (data != NULL) {
-      memcpy (data, source->buffer->array + source->buffer_bytes, bbytes_out);
+    /* compute how many bytes may be read now on top of the previous ones */
+    bbytes_out -= source->buffer_bytes;
+    if (bbytes_out == 0) {
+      /* note end of buffer memory */
+      source->is_eof = 1;
     }
-    source->buffer_bytes += bbytes_out;
+    else {
+      /* we may be instructed to read less bytes than available */
+      bbytes_out = SC_MIN (bbytes_out, bytes_avail);
+
+      /* In the present code we read to the end of the buffer allocation.
+       * This may not be what we want: we may only read actual elements,
+       * which may be less.
+       * TO DO: look into it. */
+
+      /* copy into output buffer only if that is made available */
+      if (data != NULL) {
+        memcpy (data, source->buffer->array + source->buffer_bytes, bbytes_out);
+      }
+      source->buffer_bytes += bbytes_out;
+    }
   }
   else if (source->iotype == SC_IO_TYPE_FILENAME ||
            source->iotype == SC_IO_TYPE_FILEFILE) {
     SC_ASSERT (source->file != NULL);
     if (data != NULL) {
+      SC_ASSERT (bytes_avail > 0);
       bbytes_out = fread (data, 1, bytes_avail, source->file);
       if (bbytes_out < bytes_avail) {
-        retval = !feof (source->file) || ferror (source->file);
+        /* the item count read is short or zero, which is also short */
+        retval = !(source->is_eof = feof (source->file)) ||
+                 ferror (source->file);
       }
       if (retval == SC_IO_ERROR_NONE && source->mirror != NULL) {
         retval = sc_io_sink_write (source->mirror, data, bbytes_out);
       }
     }
     else {
+      /* seek now and check for potential end of file next time */
       retval = fseek (source->file, (long) bytes_avail, SEEK_CUR);
       bbytes_out = bytes_avail;
     }
   }
+
+  /* process error conditions */
   if (retval) {
     return SC_IO_ERROR_FATAL;
   }
@@ -339,12 +382,14 @@ sc_io_source_read (sc_io_source_t * source, void *data,
     return SC_IO_ERROR_FATAL;
   }
 
+  /* complete and return on successful operation */
   if (bytes_out != NULL) {
     *bytes_out = bbytes_out;
   }
   source->bytes_in += bbytes_out;
   source->bytes_out += bbytes_out;
 
+  /* success! */
   return SC_IO_ERROR_NONE;
 }
 
