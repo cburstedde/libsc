@@ -459,8 +459,6 @@ sc_io_file_save (const char *filename, sc_array_t * buffer)
   return file_return (0, sink, source);
 }
 
-/* TO DO: export destroy_null functions for sink and source */
-
 static int
 source_destroy_null (sc_io_source_t ** source)
 {
