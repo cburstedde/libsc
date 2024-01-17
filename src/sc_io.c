@@ -502,25 +502,6 @@ sc_io_source_read_mirror (sc_io_source_t * source, void *data,
 }
 
 static int
-sink_destroy_null (sc_io_sink_t ** sink)
-{
-  int                 retval = 0;
-
-  /* pointer to sink pointer must be set */
-  SC_ASSERT (sink != NULL);
-
-  /* if sink is still open, close it and NULL the pointer to it */
-  if (*sink != NULL) {
-    retval = sc_io_sink_destroy (*sink);
-    *sink = NULL;
-  }
-
-  /* in any case the sink does no longer exist */
-  SC_ASSERT (*sink == NULL);
-  return retval;
-}
-
-static int
 file_return (int retval, sc_io_sink_t * sink, sc_io_source_t * source)
 {
   if (sink != NULL) {
@@ -561,32 +542,13 @@ sc_io_file_save (const char *filename, sc_array_t * buffer)
   }
 
   /* close file and free metadata */
-  if (sink_destroy_null (&sink)) {
+  if (sc_io_sink_destroy_null (&sink)) {
     SC_LERRORF ("sc_io_file_save: error closing %s\n", filename);
     return file_return (-1, sink, source);
   }
 
   /* return success by the same convention */
   return file_return (0, sink, source);
-}
-
-static int
-source_destroy_null (sc_io_source_t ** source)
-{
-  int                 retval = 0;
-
-  /* pointer to source pointer must be set */
-  SC_ASSERT (source != NULL);
-
-  /* if source is still open, close it and NULL the pointer to it */
-  if (*source != NULL) {
-    retval = sc_io_source_destroy (*source);
-    *source = NULL;
-  }
-
-  /* in any case the source does no longer exist */
-  SC_ASSERT (*source == NULL);
-  return retval;
 }
 
 int
@@ -641,7 +603,7 @@ sc_io_file_load (const char *filename, sc_array_t * buffer)
   SC_ASSERT (bpos == buffer->elem_count);
 
   /* close file and free metadata */
-  if (source_destroy_null (&source)) {
+  if (sc_io_source_destroy_null (&source)) {
     SC_LERRORF ("Error closing file after reading: %s\n", filename);
     return file_return (-1, sink, source);
   }
