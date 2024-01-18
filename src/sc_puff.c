@@ -35,6 +35,12 @@
  *     inclusion, an extern "C", and white space.
  */
 
+#include <sc_config.h>
+#ifdef SC_HAVE_ZLIB
+/* make sure the file contains at least one symbol */
+const int             sc_puff_dummy = 1;
+#else
+
 #include "sc_builtin/sc_puff.h"         /* prototype for sc_puff() */
 #ifndef NIL
 #  define NIL ((unsigned char *)0)      /* for no output option */
@@ -853,3 +859,5 @@ sc_puff (unsigned char *dest,           /* pointer to destination pointer */
     }
     return err;
 }
+
+#endif /* !SC_HAVE_ZLIB */

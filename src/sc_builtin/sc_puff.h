@@ -33,6 +33,10 @@
 
 /* every libsc file includes at least sc_config.h */
 #include <sc_config.h>
+#ifdef SC_HAVE_ZLIB
+/* puff is not necessary and not used in the library */
+extern const int      sc_puff_dummy;
+#else
 
 /* convenient define for code to fallback even further without puff */
 #define SC_PUFF_INCLUDED
@@ -49,4 +53,5 @@ int sc_puff (unsigned char *dest,           /* pointer to destination pointer */
              const unsigned char *source,   /* pointer to source data pointer */
              unsigned long *sourcelen);     /* amount of input available */
 
+#endif /* !SC_HAVE_ZLIB */
 #endif /* !SC_PUFF_H */
