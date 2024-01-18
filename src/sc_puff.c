@@ -35,7 +35,7 @@
  *     inclusion, an extern "C", and white space.
  */
 
-#include <sc_puff.h>            /* prototype for sc_puff() */
+#include "sc_builtin/sc_puff.h"         /* prototype for sc_puff() */
 #ifndef NIL
 #  define NIL ((unsigned char *)0)      /* for no output option */
 #endif

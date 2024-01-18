@@ -22,7 +22,6 @@
 */
 
 #include <sc_io.h>
-#include <sc_puff.h>
 #include <libb64.h>
 #ifdef SC_HAVE_ZLIB
 #include <zlib.h>
@@ -31,6 +30,8 @@
 #ifndef Z_BEST_COMPRESSION
 #define Z_BEST_COMPRESSION 9
 #endif
+/* include simple fallback for zlib's uncompress algorithm */
+#include "sc_builtin/sc_puff.h"
 #endif
 
 #ifndef SC_ENABLE_MPIIO
@@ -742,6 +743,7 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
   uint32_t            adler;
   unsigned char       uca, ucb;
 #ifndef SC_PUFF_INCLUDED
+#error "It cannot be that sc_puff is not included at this point"
   uint16_t            bsize, nsize;
 #else
   unsigned long       destlen, sourcelen;
@@ -806,6 +808,7 @@ sc_io_nonuncompress (char *dest, size_t dest_size,
     dest_size = 0;
     final_block = 1;
 #else
+#error "It cannot be that sc_puff is not included at this point"
 
     /* examine block header */
     uca = (unsigned char) src[0];
