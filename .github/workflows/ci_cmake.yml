@@ -153,7 +153,7 @@ jobs:
   mac:
     runs-on: macos-latest
     name: CMake build on MacOS
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     strategy:
       matrix:
