@@ -347,6 +347,28 @@ int                 sc_io_source_read_mirror (sc_io_source_t * source,
                                               size_t bytes_avail,
                                               size_t *bytes_out);
 
+/** Save a buffer to a file in one call.
+ * This function performs error checking and always returns cleanly.
+ * \param [in] filename     Name of the file to save.
+ * \param [in] buffer       An array of element size 1 and arbitrary
+ *                          contents, which are written to the file.
+ * \return                  0 on success, -1 on error.
+ */
+int                 sc_io_file_save (const char *filename,
+                                     sc_array_t * buffer);
+
+/** Read a file into a buffer in one call.
+ * This function performs error checking and always returns cleanly.
+ * \param [in] filename     Name of the file to load.
+ * \param [in,out] buffer   On input, an array (not a view) of
+ *                          element size 1 and arbitrary contents.
+ *                          On output and success, the complete file
+ *                          contents.  On error, contents are undefined.
+ * \return                  0 on success, -1 on error.
+ */
+int                 sc_io_file_load (const char *filename,
+                                     sc_array_t * buffer);
+
 /** Encode a block of arbitrary data with the default sc_io format.
  * The corresponding decoder function is \ref sc_io_decode.
  * This function cannot crash unless out of memory.

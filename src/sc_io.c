@@ -501,6 +501,117 @@ sc_io_source_read_mirror (sc_io_source_t * source, void *data,
   return retval;
 }
 
+static int
+file_return (int retval, sc_io_sink_t * sink, sc_io_source_t * source)
+{
+  if (sink != NULL) {
+    /* preserve error condition */
+    retval = sc_io_sink_destroy (sink) || retval;
+  }
+  if (source != NULL) {
+    /* preserve error condition */
+    retval = sc_io_source_destroy (source) || retval;
+  }
+  return retval;
+}
+
+int
+sc_io_file_save (const char *filename, sc_array_t * buffer)
+{
+  /* sink is always a meaningful pointer and freed before return */
+  sc_io_sink_t       *sink = NULL;
+
+  /* source is always NULL for symmetric error checking code */
+  sc_io_source_t     *source = NULL;
+
+  SC_ASSERT (filename != NULL);
+  SC_ASSERT (buffer != NULL);
+  SC_ASSERT (buffer->elem_size == 1);
+
+  /* open a file to write to */
+  if ((sink = sc_io_sink_new (SC_IO_TYPE_FILENAME, SC_IO_MODE_WRITE,
+                              SC_IO_ENCODE_NONE, filename)) == NULL) {
+    SC_LERRORF ("sc_io_file_save: error opening %s\n", filename);
+    return file_return (-1, sink, source);
+  }
+
+  /* write all data in one call */
+  if (sc_io_sink_write (sink, buffer->array, buffer->elem_count)) {
+    SC_LERRORF ("sc_io_file_save: error writing to %s\n", filename);
+    return file_return (-1, sink, source);
+  }
+
+  /* close file and free metadata */
+  if (sc_io_sink_destroy_null (&sink)) {
+    SC_LERRORF ("sc_io_file_save: error closing %s\n", filename);
+    return file_return (-1, sink, source);
+  }
+
+  /* return success by the same convention */
+  return file_return (0, sink, source);
+}
+
+int
+sc_io_file_load (const char *filename, sc_array_t * buffer)
+{
+  /* sink is always NULL for symmetric error checking code */
+  sc_io_sink_t       *sink = NULL;
+
+  /* source is always a meaningful pointer and freed before return */
+  sc_io_source_t     *source = NULL;
+
+  /* fixed window size for reading a usually small file */
+  const size_t        bwins = 1 << 14;
+  size_t              bpos, bout;
+  int                 i;
+
+  SC_ASSERT (filename != NULL);
+  SC_ASSERT (buffer != NULL);
+  SC_ASSERT (buffer->elem_size == 1);
+  SC_ASSERT (SC_ARRAY_IS_OWNER (buffer));
+
+  /* open a file to read from */
+  if ((source = sc_io_source_new
+       (SC_IO_TYPE_FILENAME, SC_IO_ENCODE_NONE, filename)) == NULL) {
+    SC_LERRORF ("sc_io_file_load: error opening %s\n", filename);
+    return file_return (-1, sink, source);
+  }
+
+  /* perform reading in a loop */
+  bpos = 0;
+  for (i = 0;; ++i) {
+    /* make room in read buffer */
+    sc_array_resize (buffer, bpos + bwins);
+
+    /* read next fixed size batch of data */
+    if (sc_io_source_read (source, sc_array_index (buffer, bpos),
+                           bwins, &bout)) {
+      SC_LERRORF ("sc_io_file_load: error reading from %s\n", filename);
+      return file_return (-1, sink, source);
+    }
+
+    /* examine buffer status after reading */
+    if (bout < bwins) {
+      /* we have reached end of file: finalize buffer */
+      sc_array_resize (buffer, bpos += bout);
+      break;
+    }
+
+    /* update read buffer size */
+    bpos += bwins;
+  }
+  SC_ASSERT (bpos == buffer->elem_count);
+
+  /* close file and free metadata */
+  if (sc_io_source_destroy_null (&source)) {
+    SC_LERRORF ("Error closing file after reading: %s\n", filename);
+    return file_return (-1, sink, source);
+  }
+
+  /* return success by the same convention */
+  return file_return (0, sink, source);
+}
+
 /* byte count for one line of data must be a multiple of 3 */
 #define SC_IO_DBC 57
 #if SC_IO_DBC % 3 != 0
