@@ -49,11 +49,16 @@ endif()
 
 find_package(Threads)
 
-find_package(jansson CONFIG)
-if(TARGET jansson::jansson)
-  set(SC_HAVE_JSON 1 CACHE BOOL "JSON features enabled")
+if(json)
+  message(STATUS "Using builtin jansson")
+  include(${CMAKE_CURRENT_LIST_DIR}/jansson.cmake)
 else()
-  set(SC_HAVE_JSON 0 CACHE BOOL "JSON features disabled")
+  find_package(jansson CONFIG)
+  if(TARGET jansson::jansson)
+    set(SC_HAVE_JSON 1 CACHE BOOL "JSON features enabled")
+  else()
+    set(SC_HAVE_JSON 0 CACHE BOOL "JSON features disabled")
+  endif()
 endif()
 # --- set global compile environment
 
