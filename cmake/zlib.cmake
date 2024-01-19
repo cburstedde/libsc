@@ -6,7 +6,7 @@ set(SC_HAVE_ZLIB 1 CACHE BOOL "using SC-built Zlib")
 # default zlib source archive
 if (NOT DEFINED SC_BUILD_ZLIB_ARCHIVE_FILE)
   if (NOT DEFINED SC_BUILD_ZLIB_VERSION)
-    set(SC_BUILD_ZLIB_VERSION 2.1.5)
+    set(SC_BUILD_ZLIB_VERSION 2.1.6)
   endif()
   set(SC_BUILD_ZLIB_ARCHIVE_FILE https://github.com/zlib-ng/zlib-ng/archive/refs/tags/${SC_BUILD_ZLIB_VERSION}.tar.gz CACHE STRING "zlib source archive (URL or local filepath).")
 endif()
