@@ -98,7 +98,7 @@ typedef unsigned int (*sc_hash_function_t) (const void *v, const void *u);
 typedef int         (*sc_equal_function_t) (const void *v1,
                                             const void *v2, const void *u);
 
-/** Function to call on every data item of a hash table.
+/** Function to call on every data item of a hash table or hash array.
  * \param [in] v   The address of the pointer to the current object.
  * \param [in] u   Arbitrary user data.
  * \return Return true if the traversal should continue, false to stop.
@@ -1070,6 +1070,7 @@ typedef struct sc_hash_array
   /* implementation variables */
   sc_array_t          a;        /**< Array storing the elements. */
   sc_hash_t          *h;        /**< Hash map pointing into element array. */
+  void               *user_data;        /**< Context passed by the user. */
   sc_hash_array_data_t *internal_data;  /**< Private context data. */
 }
 sc_hash_array_t;
@@ -1133,6 +1134,13 @@ int                 sc_hash_array_lookup (sc_hash_array_t * hash_array,
  */
 void               *sc_hash_array_insert_unique (sc_hash_array_t * hash_array,
                                                  void *v, size_t *position);
+
+/** Invoke a callback for every member of the hash array.
+ * \param [in,out] hash_array   Valid hash array.
+ * \param [in] fn               Callback executed on every hash array element.
+ */
+void                sc_hash_array_foreach (sc_hash_array_t * hash_array,
+                                           sc_hash_foreach_t fn);
 
 /** Extract the array data from a hash array and destroy everything else.
  * \param [in] hash_array   The hash array is destroyed after extraction.

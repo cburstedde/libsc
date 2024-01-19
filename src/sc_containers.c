@@ -1523,7 +1523,7 @@ struct sc_hash_array_data
   sc_array_t         *pa;
   sc_hash_function_t  hash_fn;
   sc_equal_function_t equal_fn;
-  void               *user_data;
+  sc_hash_foreach_t   foreach_fn;
   void               *current_item;
 };
 
@@ -1545,7 +1545,7 @@ sc_hash_array_hash_fn (const void *v, const void *u)
   p = (l == -1L) ? internal_data->current_item :
     sc_array_index_ssize_t (internal_data->pa, l);
 
-  return internal_data->hash_fn (p, internal_data->user_data);
+  return internal_data->hash_fn (p, internal_data->the_hash_array.user_data);
 }
 
 static int
@@ -1562,7 +1562,8 @@ sc_hash_array_equal_fn (const void *v1, const void *v2, const void *u)
   p2 = (l2 == -1L) ? internal_data->current_item :
     sc_array_index_ssize_t (internal_data->pa, l2);
 
-  return internal_data->equal_fn (p1, p2, internal_data->user_data);
+  return internal_data->equal_fn
+    (p1, p2, internal_data->the_hash_array.user_data);
 }
 
 sc_hash_array_t    *
@@ -1573,8 +1574,9 @@ sc_hash_array_new (size_t elem_size, sc_hash_function_t hash_fn,
   sc_hash_array_data_t *had;
 
   /* save one allocation by storing the hash array inside its context */
-  had = SC_ALLOC (sc_hash_array_data_t, 1);
+  had = SC_ALLOC_ZERO (sc_hash_array_data_t, 1);
   hash_array = &had->the_hash_array;
+  hash_array->user_data = user_data;
   hash_array->internal_data = had;
 
   /* initialize all members */
@@ -1582,8 +1584,6 @@ sc_hash_array_new (size_t elem_size, sc_hash_function_t hash_fn,
   had->pa = &hash_array->a;
   had->hash_fn = hash_fn;
   had->equal_fn = equal_fn;
-  had->user_data = user_data;
-  had->current_item = NULL;
   hash_array->h = sc_hash_new (sc_hash_array_hash_fn, sc_hash_array_equal_fn,
                                had, NULL);
 
@@ -1606,6 +1606,12 @@ sc_hash_array_is_valid (sc_hash_array_t * hash_array)
   int                 found;
   size_t              zz, position;
   void               *v;
+
+  SC_ASSERT (hash_array != NULL);
+
+  if (hash_array->a.elem_count != hash_array->h->elem_count) {
+    return 0;
+  }
 
   for (zz = 0; zz < hash_array->a.elem_count; ++zz) {
     v = sc_array_index (&hash_array->a, zz);
@@ -1631,6 +1637,11 @@ sc_hash_array_lookup (sc_hash_array_t * hash_array, void *v, size_t *position)
   int                 found;
   void              **found_void;
 
+  /* verify general invariant */
+  SC_ASSERT (hash_array != NULL);
+  SC_ASSERT (hash_array->a.elem_count == hash_array->h->elem_count);
+  SC_ASSERT (hash_array->internal_data->foreach_fn == NULL);
+
   hash_array->internal_data->current_item = v;
   found = sc_hash_lookup (hash_array->h, (void *) (-1L), &found_void);
   hash_array->internal_data->current_item = NULL;
@@ -1653,7 +1664,10 @@ sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
   int                 added;
   void              **found_void;
 
+  /* verify general invariant */
+  SC_ASSERT (hash_array != NULL);
   SC_ASSERT (hash_array->a.elem_count == hash_array->h->elem_count);
+  SC_ASSERT (hash_array->internal_data->foreach_fn == NULL);
 
   hash_array->internal_data->current_item = v;
   added = sc_hash_insert_unique (hash_array->h, (void *) (-1L), &found_void);
@@ -1672,6 +1686,36 @@ sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
     }
     return NULL;
   }
+}
+
+static int
+sc_hash_array_foreach_fn (void **v, const void *u)
+{
+  const sc_hash_array_data_t *internal_data =
+    (const sc_hash_array_data_t *) u;
+
+  SC_ASSERT (internal_data != NULL);
+  SC_ASSERT (internal_data->foreach_fn != NULL);
+
+  return internal_data->foreach_fn
+    (v, internal_data->the_hash_array.user_data);
+}
+
+void
+sc_hash_array_foreach (sc_hash_array_t * hash_array, sc_hash_foreach_t fn)
+{
+  /* verify general invariant */
+  SC_ASSERT (hash_array != NULL);
+  SC_ASSERT (hash_array->a.elem_count == hash_array->h->elem_count);
+  SC_ASSERT (hash_array->internal_data->foreach_fn == NULL);
+
+  /* verify remaining input arguments */
+  SC_ASSERT (fn != NULL);
+
+  /* rely on internal hash table's foreach function */
+  hash_array->internal_data->foreach_fn = fn;
+  sc_hash_foreach (hash_array->h, sc_hash_array_foreach_fn);
+  hash_array->internal_data->foreach_fn = NULL;
 }
 
 void
