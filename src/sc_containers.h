@@ -940,10 +940,10 @@ typedef struct sc_hash
 {
   /* interface variables */
   size_t              elem_count;       /**< total number of objects contained */
+  void               *user_data;        /**< User data passed to hash function. */
 
   /* implementation variables */
   sc_array_t         *slots;    /**< The slot count is slots->elem_count. */
-  void               *user_data;        /**< User data passed to hash function. */
   sc_hash_function_t  hash_fn;  /**< Function called to compute the hash value. */
   sc_equal_function_t equal_fn; /**< Function called to check objects for equality. */
   size_t              resize_checks;    /**< Running count of resize checks. */
@@ -1067,10 +1067,12 @@ typedef struct sc_hash_array_data sc_hash_array_data_t;
  */
 typedef struct sc_hash_array
 {
+  /* interface variables */
+  void               *user_data;        /**< Context passed by the user. */
+
   /* implementation variables */
   sc_array_t          a;        /**< Array storing the elements. */
   sc_hash_t          *h;        /**< Hash map pointing into element array. */
-  void               *user_data;        /**< Context passed by the user. */
   sc_hash_array_data_t *internal_data;  /**< Private context data. */
 }
 sc_hash_array_t;
