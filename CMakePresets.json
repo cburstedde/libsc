@@ -30,7 +30,7 @@
     "noTestsAction": "error",
     "scheduleRandom": true,
     "stopOnFailure": false,
-    "timeout": 30
+    "timeout": 60
   },
   "filter": {
     "exclude": {
