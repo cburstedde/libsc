@@ -54,7 +54,7 @@ $<$<BOOL:${SC_NEED_M}>:m>
 $<$<BOOL:${WIN32}>:${WINSOCK_LIBRARIES}>
 )
 
-# imported target, for use from FetchContent
+# imported target, for use from parent project
 add_library(SC::SC INTERFACE IMPORTED GLOBAL)
 target_link_libraries(SC::SC INTERFACE sc)
 
