@@ -33,10 +33,12 @@
 
 /* every libsc file includes at least sc_config.h */
 #include <sc_config.h>
-#ifdef SC_HAVE_ZLIB
-/* puff is not necessary and not used in the library */
+
+/** Make sure there is at least one symbol in the file. */
 extern const int      sc_puff_dummy;
-#else
+
+#ifndef SC_HAVE_ZLIB
+/* sc_puff is a fallback for the zlib uncompress function */
 
 /* convenient define for code to fallback even further without puff */
 #define SC_PUFF_INCLUDED

@@ -35,13 +35,14 @@
  *     inclusion, an extern "C", and white space.
  */
 
-#include <sc_config.h>
-#ifdef SC_HAVE_ZLIB
-/* make sure the file contains at least one symbol */
-const int             sc_puff_dummy = 1;
-#else
-
 #include "sc_builtin/sc_puff.h"         /* prototype for sc_puff() */
+
+/* Make sure there is at least one symbol in the file. */
+const int             sc_puff_dummy = 1;
+
+#ifdef SC_PUFF_INCLUDED
+/* sc_puff is a fallback for the zlib uncompress function */
+
 #ifndef NIL
 #  define NIL ((unsigned char *)0)      /* for no output option */
 #endif
