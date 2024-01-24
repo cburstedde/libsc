@@ -861,4 +861,4 @@ sc_puff (unsigned char *dest,           /* pointer to destination pointer */
     return err;
 }
 
-#endif /* !SC_HAVE_ZLIB */
+#endif /* SC_PUFF_INCLUDED */
