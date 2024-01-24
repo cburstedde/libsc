@@ -17,10 +17,6 @@ if(mpi)
   find_package(MPI COMPONENTS C REQUIRED)
 endif()
 
-if(openmp)
-  find_package(OpenMP COMPONENTS C REQUIRED)
-endif()
-
 if(zlib)
   message(STATUS "Using builtin zlib")
   include(${CMAKE_CURRENT_LIST_DIR}/zlib.cmake)

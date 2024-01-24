@@ -8,7 +8,6 @@ endif()
 
 include(cmake/utils.cmake)
 convert_yn(mpi mpi_pc)
-convert_yn(openmp openmp_pc)
 convert_yn(SC_HAVE_JSON sc_have_json_pc)
 convert_yn(zlib zlib_pc)
 convert_yn(SC_ENABLE_DEBUG debug_build_pc)

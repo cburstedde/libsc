@@ -1,5 +1,4 @@
 option(mpi "use MPI library" off)
-option(openmp "use OpenMP" off)
 option(zlib "build ZLIB" off)
 option(json "build Jansson" off)
 
