@@ -34,7 +34,7 @@ wget -N "https://www.zlib.net/current/zlib.tar.gz"      && \
 ZDIR=`tar -tzf "$ZTAR" | head -1 | perl -p -e 's/.*(zlib-[\d\.]+).*/\1/'` && \
 tar -xvzf "$ZTAR"                                       && \
 cd $ZDIR                                                && \
-./configure --prefix="$PREFIX/$ZDIR"                    && \
+./configure --prefix="$PREFIX/zlib"                     && \
 make -j install                                         && \
 cd ..                                                   && \
 rm -r "$ZDIR" "$ZTAR"                              || bdie "zlib"
