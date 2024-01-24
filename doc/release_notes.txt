@@ -40,6 +40,7 @@ There have been breaking changes, very strictly speaking.
  - Add sc_io_source, sink_destroy_null functions.
  - Make sure not to sc_io_source_read an array beyond its length.
  - Add sc_io_file_load, save functions and test program.
+ - Update sc_hash_array to hide much of internal state.
  - Update zlib and base64 encode/compression routines.
 
 ## 2.8.5

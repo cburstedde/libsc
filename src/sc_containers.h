@@ -98,7 +98,7 @@ typedef unsigned int (*sc_hash_function_t) (const void *v, const void *u);
 typedef int         (*sc_equal_function_t) (const void *v1,
                                             const void *v2, const void *u);
 
-/** Function to call on every data item of a hash table.
+/** Function to call on every data item of a hash table or hash array.
  * \param [in] v   The address of the pointer to the current object.
  * \param [in] u   Arbitrary user data.
  * \return Return true if the traversal should continue, false to stop.
@@ -940,10 +940,10 @@ typedef struct sc_hash
 {
   /* interface variables */
   size_t              elem_count;       /**< total number of objects contained */
+  void               *user_data;        /**< User data passed to hash function. */
 
   /* implementation variables */
   sc_array_t         *slots;    /**< The slot count is slots->elem_count. */
-  void               *user_data;        /**< User data passed to hash function. */
   sc_hash_function_t  hash_fn;  /**< Function called to compute the hash value. */
   sc_equal_function_t equal_fn; /**< Function called to check objects for equality. */
   size_t              resize_checks;    /**< Running count of resize checks. */
@@ -1067,6 +1067,9 @@ typedef struct sc_hash_array_data sc_hash_array_data_t;
  */
 typedef struct sc_hash_array
 {
+  /* interface variables */
+  void               *user_data;        /**< Context passed by the user. */
+
   /* implementation variables */
   sc_array_t          a;        /**< Array storing the elements. */
   sc_hash_t          *h;        /**< Hash map pointing into element array. */
@@ -1133,6 +1136,13 @@ int                 sc_hash_array_lookup (sc_hash_array_t * hash_array,
  */
 void               *sc_hash_array_insert_unique (sc_hash_array_t * hash_array,
                                                  void *v, size_t *position);
+
+/** Invoke a callback for every member of the hash array.
+ * \param [in,out] hash_array   Valid hash array.
+ * \param [in] fn               Callback executed on every hash array element.
+ */
+void                sc_hash_array_foreach (sc_hash_array_t * hash_array,
+                                           sc_hash_foreach_t fn);
 
 /** Extract the array data from a hash array and destroy everything else.
  * \param [in] hash_array   The hash array is destroyed after extraction.
