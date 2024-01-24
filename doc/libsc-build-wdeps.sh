@@ -13,10 +13,6 @@
 # set installation root to local subdirectory
 PREFIX="$PWD/local"
 
-# download zlib
-ZVER=1.3
-ZSHA=ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e
-
 # download jansson
 JVER=2.14
 JSHA=5798d010e41cf8d76b66236cfb2f2543c8d082181d16bc3085ab49538d4b9929
@@ -33,15 +29,15 @@ bdie () {
 }
 
 # download, build and install zlib
-ZTAR="zlib-$ZVER.tar.gz"
-wget -N "https://www.zlib.net/$ZTAR"                    && \
-test `sha256sum "$ZTAR" | cut -d ' ' -f1` = "$ZSHA"     && \
+ZTAR="zlib.tar.gz"
+wget -N "https://www.zlib.net/current/zlib.tar.gz"      && \
+ZDIR=`tar -tzf "$ZTAR" | head -1 | cut -f1 -d"/"`       && \
 tar -xvzf "$ZTAR"                                       && \
-cd "zlib-$ZVER"                                         && \
-./configure --prefix="$PREFIX/zlib"                     && \
+cd $ZDIR                                                && \
+./configure --prefix="$PREFIX/$ZDIR"                    && \
 make -j install                                         && \
 cd ..                                                   && \
-rm -r "zlib-$ZVER" "$ZTAR"                              || bdie "zlib"
+rm -r "$ZDIR" "$ZTAR"                              || bdie "zlib"
 
 # download, build and install jansson
 JTAR="jansson-$JVER.tar.gz"
