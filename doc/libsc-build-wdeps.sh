@@ -30,7 +30,7 @@ bdie () {
 
 # download, build and install zlib
 ZTAR="zlib.tar.gz"
-wget -N "https://www.zlib.net/current/zlib.tar.gz"      && \
+wget -N "https://www.zlib.net/current/$ZTAR"            && \
 ZDIR=`tar -tzf "$ZTAR" | head -1 | perl -p -e 's/.*(zlib-[\d\.]+).*/\1/'` && \
 tar -xvzf "$ZTAR"                                       && \
 cd $ZDIR                                                && \
