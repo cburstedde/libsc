@@ -31,7 +31,7 @@ bdie () {
 # download, build and install zlib
 ZTAR="zlib.tar.gz"
 wget -N "https://www.zlib.net/current/zlib.tar.gz"      && \
-ZDIR=`tar -tzf "$ZTAR" | head -1 | cut -f1 -d"/"`       && \
+ZDIR=`tar -tzf "$ZTAR" | head -1 | perl -p -e 's/.*(zlib-[\d\.]+).*/\1/'` && \
 tar -xvzf "$ZTAR"                                       && \
 cd $ZDIR                                                && \
 ./configure --prefix="$PREFIX/$ZDIR"                    && \
