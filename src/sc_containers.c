@@ -1641,6 +1641,7 @@ sc_hash_array_lookup (sc_hash_array_t * hash_array, void *v, size_t *position)
   SC_ASSERT (hash_array != NULL);
   SC_ASSERT (hash_array->a.elem_count == hash_array->h->elem_count);
   SC_ASSERT (hash_array->internal_data->foreach_fn == NULL);
+  SC_ASSERT (hash_array->internal_data->current_item == NULL);
 
   hash_array->internal_data->current_item = v;
   found = sc_hash_lookup (hash_array->h, (void *) (-1L), &found_void);
@@ -1668,6 +1669,7 @@ sc_hash_array_insert_unique (sc_hash_array_t * hash_array, void *v,
   SC_ASSERT (hash_array != NULL);
   SC_ASSERT (hash_array->a.elem_count == hash_array->h->elem_count);
   SC_ASSERT (hash_array->internal_data->foreach_fn == NULL);
+  SC_ASSERT (hash_array->internal_data->current_item == NULL);
 
   hash_array->internal_data->current_item = v;
   added = sc_hash_insert_unique (hash_array->h, (void *) (-1L), &found_void);
@@ -1708,6 +1710,7 @@ sc_hash_array_foreach (sc_hash_array_t * hash_array, sc_hash_foreach_t fn)
   SC_ASSERT (hash_array != NULL);
   SC_ASSERT (hash_array->a.elem_count == hash_array->h->elem_count);
   SC_ASSERT (hash_array->internal_data->foreach_fn == NULL);
+  SC_ASSERT (hash_array->internal_data->current_item == NULL);
 
   /* verify remaining input arguments */
   SC_ASSERT (fn != NULL);
