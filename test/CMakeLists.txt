@@ -1,3 +1,5 @@
+include(CTest)
+
 set(sc_tests allgather arrays keyvalue notify reduce search sortb version)
 
 if(SC_HAVE_RANDOM AND SC_HAVE_SRANDOM)

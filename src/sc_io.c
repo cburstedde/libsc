@@ -43,17 +43,21 @@ sc_io_sink_new (int iotype, int iomode, int ioencode, ...)
   sc_io_sink_t       *sink;
   va_list             ap;
 
+  /* verify preconditions */
   SC_ASSERT (0 <= iotype && iotype < SC_IO_TYPE_LAST);
   SC_ASSERT (0 <= iomode && iomode < SC_IO_MODE_LAST);
   SC_ASSERT (0 <= ioencode && ioencode < SC_IO_ENCODE_LAST);
 
+  /* initialize members of sink object */
   sink = SC_ALLOC_ZERO (sc_io_sink_t, 1);
   sink->iotype = (sc_io_type_t) iotype;
   sink->mode = (sc_io_mode_t) iomode;
   sink->encode = (sc_io_encode_t) ioencode;
 
+  /* there is at least one type-dependent argument */
   va_start (ap, ioencode);
   if (iotype == SC_IO_TYPE_BUFFER) {
+    /* register the buffer to write to */
     sink->buffer = va_arg (ap, sc_array_t *);
     if (sink->mode == SC_IO_MODE_WRITE) {
       sc_array_resize (sink->buffer, 0);
@@ -62,6 +66,7 @@ sc_io_sink_new (int iotype, int iomode, int ioencode, ...)
   else if (iotype == SC_IO_TYPE_FILENAME) {
     const char         *filename = va_arg (ap, const char *);
 
+    /* open a file on disk by name */
     sink->file = fopen (filename,
                         sink->mode == SC_IO_MODE_WRITE ? "wb" : "ab");
     if (sink->file == NULL) {
@@ -70,6 +75,7 @@ sc_io_sink_new (int iotype, int iomode, int ioencode, ...)
     }
   }
   else if (iotype == SC_IO_TYPE_FILEFILE) {
+    /* write to existing (writable) object */
     sink->file = va_arg (ap, FILE *);
     if (ferror (sink->file)) {
       SC_FREE (sink);
@@ -81,6 +87,7 @@ sc_io_sink_new (int iotype, int iomode, int ioencode, ...)
   }
   va_end (ap);
 
+  /* this sink can now be called for writing */
   return sink;
 }
 
@@ -103,25 +110,58 @@ sc_io_sink_destroy (sc_io_sink_t * sink)
 }
 
 int
+sc_io_sink_destroy_null (sc_io_sink_t ** sink)
+{
+  int                 retval = SC_IO_ERROR_NONE;
+
+  /* pointer to sink pointer must be set */
+  SC_ASSERT (sink != NULL);
+
+  /* if sink is still open, close it and NULL the pointer to it */
+  if (*sink != NULL) {
+    retval = sc_io_sink_destroy (*sink);
+    *sink = NULL;
+  }
+
+  /* in any case the sink does no longer exist */
+  SC_ASSERT (*sink == NULL);
+  return retval;
+}
+
+int
 sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_avail)
 {
   size_t              bytes_out;
 
+  /* basic output preconditions */
+  SC_ASSERT (sink != NULL);
+  SC_ASSERT (data != NULL || bytes_avail == 0);
+
+  /* do nothing if there is no data requested */
+  if (bytes_avail == 0) {
+    return SC_IO_ERROR_NONE;
+  }
+
+  /* do a regular write */
   bytes_out = 0;
 
+  /* switch on the type of sink */
   if (sink->iotype == SC_IO_TYPE_BUFFER) {
     size_t              elem_size, new_count;
 
+    /* extend the buffer by an even number of elements if necessary */
     SC_ASSERT (sink->buffer != NULL);
     elem_size = sink->buffer->elem_size;
     new_count =
       (sink->buffer_bytes + bytes_avail + elem_size - 1) / elem_size;
     sc_array_resize (sink->buffer, new_count);
-    /* For a view sufficient size is asserted only in debug mode. */
+    /* For a view, sufficient size is asserted only in debug mode.
+       Therefore, we add an explicit unconditional check. */
     if (new_count * elem_size > SC_ARRAY_BYTE_ALLOC (sink->buffer)) {
       return SC_IO_ERROR_FATAL;
     }
 
+    /* copy new data into the buffer at the proper position */
     memcpy (sink->buffer->array + sink->buffer_bytes, data, bytes_avail);
     sink->buffer_bytes += bytes_avail;
     bytes_out = bytes_avail;
@@ -131,13 +171,16 @@ sc_io_sink_write (sc_io_sink_t * sink, const void *data, size_t bytes_avail)
     SC_ASSERT (sink->file != NULL);
     bytes_out = fwrite (data, 1, bytes_avail, sink->file);
     if (bytes_out != bytes_avail) {
+      /* a short byte count indicates end of file (not acceptable) or error */
       return SC_IO_ERROR_FATAL;
     }
   }
 
+  /* update internal state and return on successful operation */
   sink->bytes_in += bytes_avail;
   sink->bytes_out += bytes_out;
 
+  /* success! */
   return SC_IO_ERROR_NONE;
 }
 
@@ -194,20 +237,25 @@ sc_io_source_new (int iotype, int ioencode, ...)
   sc_io_source_t     *source;
   va_list             ap;
 
+  /* verify preconditions */
   SC_ASSERT (0 <= iotype && iotype < SC_IO_TYPE_LAST);
   SC_ASSERT (0 <= ioencode && ioencode < SC_IO_ENCODE_LAST);
 
+  /* initialize members of source object */
   source = SC_ALLOC_ZERO (sc_io_source_t, 1);
   source->iotype = (sc_io_type_t) iotype;
   source->encode = (sc_io_encode_t) ioencode;
 
+  /* there is at least one type-dependent argument */
   va_start (ap, ioencode);
   if (iotype == SC_IO_TYPE_BUFFER) {
+    /* the source is presented in the form of an array */
     source->buffer = va_arg (ap, sc_array_t *);
   }
   else if (iotype == SC_IO_TYPE_FILENAME) {
     const char         *filename = va_arg (ap, const char *);
 
+    /* open a file on disk by name */
     source->file = fopen (filename, "rb");
     if (source->file == NULL) {
       SC_FREE (source);
@@ -215,6 +263,7 @@ sc_io_source_new (int iotype, int ioencode, ...)
     }
   }
   else if (iotype == SC_IO_TYPE_FILEFILE) {
+    /* read from an existing (readable) file object */
     source->file = va_arg (ap, FILE *);
     if (ferror (source->file)) {
       SC_FREE (source);
@@ -226,6 +275,7 @@ sc_io_source_new (int iotype, int ioencode, ...)
   }
   va_end (ap);
 
+  /* this source can now be called for reading */
   return source;
 }
 
@@ -256,44 +306,103 @@ sc_io_source_destroy (sc_io_source_t * source)
 }
 
 int
+sc_io_source_destroy_null (sc_io_source_t ** source)
+{
+  int                 retval = SC_IO_ERROR_NONE;
+
+  /* pointer to source pointer must be set */
+  SC_ASSERT (source != NULL);
+
+  /* if source is still open, close it and NULL the pointer to it */
+  if (*source != NULL) {
+    retval = sc_io_source_destroy (*source);
+    *source = NULL;
+  }
+
+  /* in any case the source does no longer exist */
+  SC_ASSERT (*source == NULL);
+  return retval;
+}
+
+int
 sc_io_source_read (sc_io_source_t * source, void *data,
                    size_t bytes_avail, size_t *bytes_out)
 {
   int                 retval;
   size_t              bbytes_out;
 
+  /* basic input preconditions.  It is legal if data is NULL */
+  SC_ASSERT (source != NULL);
+
+  /* do nothing also if the end of the file has been reached */
+  if (bytes_avail == 0 || source->is_eof) {
+    if (bytes_out != NULL) {
+      *bytes_out = 0;
+    }
+    return SC_IO_ERROR_NONE;
+  }
+
+  /* do a regular read */
   retval = 0;
   bbytes_out = 0;
 
+  /* switch on the type of source */
   if (source->iotype == SC_IO_TYPE_BUFFER) {
     SC_ASSERT (source->buffer != NULL);
-    bbytes_out = SC_ARRAY_BYTE_ALLOC (source->buffer);
-    SC_ASSERT (bbytes_out >= source->buffer_bytes);
-    bbytes_out -= source->buffer_bytes;
-    bbytes_out = SC_MIN (bbytes_out, bytes_avail);
 
-    if (data != NULL) {
-      memcpy (data, source->buffer->array + source->buffer_bytes, bbytes_out);
+    /* access available elements by their byte count */
+    bbytes_out = source->buffer->elem_count * source->buffer->elem_size;
+
+    /* compute how many bytes may be read now on top of the previous ones */
+    if (bbytes_out < source->buffer_bytes) {
+      /* the input buffer has shrunk by side effects: stop reading gracefully */
+      bbytes_out = 0;
     }
-    source->buffer_bytes += bbytes_out;
+    else {
+      /* we may have some remaining bytes to read */
+      bbytes_out -= source->buffer_bytes;
+    }
+
+    /* check for end of input and read if data is available */
+    if (bbytes_out == 0) {
+      /* register end of available data */
+      source->is_eof = 1;
+    }
+    else {
+      /* we may be instructed to read less bytes than available */
+      bbytes_out = SC_MIN (bbytes_out, bytes_avail);
+      SC_ASSERT (bbytes_out > 0);
+
+      /* copy into output buffer only if that is made available */
+      if (data != NULL) {
+        memcpy (data, source->buffer->array + source->buffer_bytes, bbytes_out);
+      }
+      source->buffer_bytes += bbytes_out;
+    }
   }
   else if (source->iotype == SC_IO_TYPE_FILENAME ||
            source->iotype == SC_IO_TYPE_FILEFILE) {
     SC_ASSERT (source->file != NULL);
     if (data != NULL) {
+      SC_ASSERT (bytes_avail > 0);
       bbytes_out = fread (data, 1, bytes_avail, source->file);
       if (bbytes_out < bytes_avail) {
-        retval = !feof (source->file) || ferror (source->file);
+        /* the item count read is short or zero, which is also short */
+        retval = !(source->is_eof = feof (source->file)) ||
+                 ferror (source->file);
       }
       if (retval == SC_IO_ERROR_NONE && source->mirror != NULL) {
         retval = sc_io_sink_write (source->mirror, data, bbytes_out);
       }
     }
     else {
+      /* seek now and check for potential end of file next time */
       retval = fseek (source->file, (long) bytes_avail, SEEK_CUR);
       bbytes_out = bytes_avail;
     }
   }
+
+  /* process error conditions */
   if (retval) {
     return SC_IO_ERROR_FATAL;
   }
@@ -301,12 +410,14 @@ sc_io_source_read (sc_io_source_t * source, void *data,
     return SC_IO_ERROR_FATAL;
   }
 
+  /* complete and return on successful operation */
   if (bytes_out != NULL) {
     *bytes_out = bbytes_out;
   }
   source->bytes_in += bbytes_out;
   source->bytes_out += bbytes_out;
 
+  /* success! */
   return SC_IO_ERROR_NONE;
 }
 
@@ -388,6 +499,117 @@ sc_io_source_read_mirror (sc_io_source_t * source, void *data,
   }
 
   return retval;
+}
+
+static int
+file_return (int retval, sc_io_sink_t * sink, sc_io_source_t * source)
+{
+  if (sink != NULL) {
+    /* preserve error condition */
+    retval = sc_io_sink_destroy (sink) || retval;
+  }
+  if (source != NULL) {
+    /* preserve error condition */
+    retval = sc_io_source_destroy (source) || retval;
+  }
+  return retval;
+}
+
+int
+sc_io_file_save (const char *filename, sc_array_t * buffer)
+{
+  /* sink is always a meaningful pointer and freed before return */
+  sc_io_sink_t       *sink = NULL;
+
+  /* source is always NULL for symmetric error checking code */
+  sc_io_source_t     *source = NULL;
+
+  SC_ASSERT (filename != NULL);
+  SC_ASSERT (buffer != NULL);
+  SC_ASSERT (buffer->elem_size == 1);
+
+  /* open a file to write to */
+  if ((sink = sc_io_sink_new (SC_IO_TYPE_FILENAME, SC_IO_MODE_WRITE,
+                              SC_IO_ENCODE_NONE, filename)) == NULL) {
+    SC_LERRORF ("sc_io_file_save: error opening %s\n", filename);
+    return file_return (-1, sink, source);
+  }
+
+  /* write all data in one call */
+  if (sc_io_sink_write (sink, buffer->array, buffer->elem_count)) {
+    SC_LERRORF ("sc_io_file_save: error writing to %s\n", filename);
+    return file_return (-1, sink, source);
+  }
+
+  /* close file and free metadata */
+  if (sc_io_sink_destroy_null (&sink)) {
+    SC_LERRORF ("sc_io_file_save: error closing %s\n", filename);
+    return file_return (-1, sink, source);
+  }
+
+  /* return success by the same convention */
+  return file_return (0, sink, source);
+}
+
+int
+sc_io_file_load (const char *filename, sc_array_t * buffer)
+{
+  /* sink is always NULL for symmetric error checking code */
+  sc_io_sink_t       *sink = NULL;
+
+  /* source is always a meaningful pointer and freed before return */
+  sc_io_source_t     *source = NULL;
+
+  /* fixed window size for reading a usually small file */
+  const size_t        bwins = 1 << 14;
+  size_t              bpos, bout;
+  int                 i;
+
+  SC_ASSERT (filename != NULL);
+  SC_ASSERT (buffer != NULL);
+  SC_ASSERT (buffer->elem_size == 1);
+  SC_ASSERT (SC_ARRAY_IS_OWNER (buffer));
+
+  /* open a file to read from */
+  if ((source = sc_io_source_new
+       (SC_IO_TYPE_FILENAME, SC_IO_ENCODE_NONE, filename)) == NULL) {
+    SC_LERRORF ("sc_io_file_load: error opening %s\n", filename);
+    return file_return (-1, sink, source);
+  }
+
+  /* perform reading in a loop */
+  bpos = 0;
+  for (i = 0;; ++i) {
+    /* make room in read buffer */
+    sc_array_resize (buffer, bpos + bwins);
+
+    /* read next fixed size batch of data */
+    if (sc_io_source_read (source, sc_array_index (buffer, bpos),
+                           bwins, &bout)) {
+      SC_LERRORF ("sc_io_file_load: error reading from %s\n", filename);
+      return file_return (-1, sink, source);
+    }
+
+    /* examine buffer status after reading */
+    if (bout < bwins) {
+      /* we have reached end of file: finalize buffer */
+      sc_array_resize (buffer, bpos += bout);
+      break;
+    }
+
+    /* update read buffer size */
+    bpos += bwins;
+  }
+  SC_ASSERT (bpos == buffer->elem_count);
+
+  /* close file and free metadata */
+  if (sc_io_source_destroy_null (&source)) {
+    SC_LERRORF ("Error closing file after reading: %s\n", filename);
+    return file_return (-1, sink, source);
+  }
+
+  /* return success by the same convention */
+  return file_return (0, sink, source);
 }
 
 /* byte count for one line of data must be a multiple of 3 */

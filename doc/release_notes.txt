@@ -16,6 +16,7 @@ There have been breaking changes, very strictly speaking.
 ### Documentation
 
 - Begin maintaining a release notes file.
+- Add to documentation of sc_containers.h.
 - Completion and some polishing of the doxygen documentation in sc_io.h.
 - Add the scda (file-oriented data format suitable for parallel,
   partition-independent disk I/O) API including its documentation in sc_scda.h.
@@ -24,16 +25,22 @@ There have been breaking changes, very strictly speaking.
 ### Build system
 
  - No longer install getopt and puff original headers.
- - Further align CMake with the autoconf build system.
- - Add a generic external library installation option.
- - Update CMake logic to configure zlib and jansson.
  - Make sc_getopt.h a purely internal header file.
+ - Add a generic external library installation option.
+ - Add script doc/p4est-build-wdeps.sh for autotools build.
+ - Further align CMake with the autoconf build system.
+ - Update CMake logic to configure zlib and jansson.
  - Add CMake option to run tests with Valgrind
 
 ### Functionality
 
  - Further align I/O wrappers with and without MPI I/O.
  - Simplify the replacements for MPI_{read,write}_at*.
+ - Further updates to the MPI I/O wrapper code.
+ - Add sc_io_source, sink_destroy_null functions.
+ - Make sure not to sc_io_source_read an array beyond its length.
+ - Add sc_io_file_load, save functions and test program.
+ - Update sc_hash_array to hide much of internal state.
  - Update zlib and base64 encode/compression routines.
 
 ## 2.8.5
