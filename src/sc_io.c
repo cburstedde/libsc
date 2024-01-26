@@ -624,6 +624,59 @@ sc_io_file_load (const char *filename, sc_array_t * buffer, int max_bytes)
   return file_return (0, sink, source);
 }
 
+int
+sc_io_file_bcast (const char *filename, sc_array_t * buffer, int max_bytes,
+                  int root, sc_MPI_Comm mpicomm)
+{
+  int                 mpiret;
+  int                 size, rank;
+  int                 ibyt;
+  char               *mem;
+
+  /* check arguments not passed to sc_io_file_load */
+  SC_ASSERT (root >= 0);
+  SC_ASSERT (mpicomm != sc_MPI_COMM_NULL);
+
+  /* query size and rank of process */
+  mpiret = sc_MPI_Comm_size (mpicomm, &size);
+  SC_CHECK_MPI (mpiret);
+  SC_ASSERT (root < size);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
+  SC_CHECK_MPI (mpiret);
+
+  /* physically read file only on root rank */
+  ibyt = -1;
+  if (rank == root) {
+    /* read file from disk into byte array memory */
+    if (sc_io_file_load (filename, buffer, max_bytes)) {
+      SC_LERRORF ("Error loading file %s\n", filename);
+    }
+    else {
+      /* we are successful if and only if ibyt is non-negative */
+      ibyt = (int) buffer->elem_count;
+    }
+  }
+
+  /* broadcast file size or error condition */
+  mpiret = sc_MPI_Bcast (&ibyt, 1, sc_MPI_INT, root, mpicomm);
+  SC_CHECK_MPI (mpiret);
+  if (ibyt < 0) {
+    /* collective error return */
+    return -1;
+  }
+
+  /* replicate file contents on all other ranks */
+  if (rank != root) {
+    sc_array_resize (buffer, (size_t) ibyt);
+  }
+
+  /* broadcast file contents */
+  mem = (char *) sc_array_index (buffer, 0);
+  mpiret = sc_MPI_Bcast (mem, ibyt, sc_MPI_BYTE, root, mpicomm);
+  SC_CHECK_MPI (mpiret);
+  return 0;
+}
+
 /* byte count for one line of data must be a multiple of 3 */
 #define SC_IO_DBC 57
 #if SC_IO_DBC % 3 != 0

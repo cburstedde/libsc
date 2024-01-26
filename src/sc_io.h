@@ -376,6 +376,28 @@ int                 sc_io_file_load (const char *filename,
                                      sc_array_t * buffer,
                                      int max_bytes);
 
+/** Read a file into a buffer on rank zero and broadcast its contents.
+ * This function is intended as a convenience for not very large files.
+ * It performs error checking and always returns cleanly.
+ * It is collective over the communicator passed.
+ * \param [in] filename     Name of the file to load.
+ * \param [in,out] buffer   On input, an array (not a view) of
+ *                          element size 1 and arbitrary contents.
+ *                          On output and success, the complete file
+ *                          contents.  On error, contents are undefined.
+ * \param [in] max_bytes    If more than this number of bytes are found
+ *                          in the file, we return an error.
+ *                          A value of 0 means exactly that.
+ *                          A value of -1 signifies INT_MAX.
+ *                          Other negative values are not allowed.
+ * \param [in] root         Valid rank of \a mpicomm.
+ * \param [in,out] mpicomm  Valid communicator.
+ * \return                  0 on success, -1 on error.
+ */
+int                 sc_io_file_bcast (const char *filename,
+                                      sc_array_t * buffer, int max_bytes,
+                                      int root, sc_MPI_Comm mpicomm);
+
 /** Encode a block of arbitrary data with the default sc_io format.
  * The corresponding decoder function is \ref sc_io_decode.
  * This function cannot crash unless out of memory.
