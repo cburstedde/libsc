@@ -917,3 +917,41 @@ sc_mpi_comm_get_and_attach (sc_MPI_Comm mpicomm)
 
   return intrasize;
 }
+
+int
+sc_MPI_Pack (const void *inbuf, int incount, sc_MPI_Datatype datatype,
+             void *outbuf, int outsize, int *position, sc_MPI_Comm comm)
+{
+  int                 size;
+  sc_MPI_Pack_size (incount, datatype, comm, &size);
+  /** Check that we have enough space to pack the datatypes */
+  if (*position + size > outsize)
+    return sc_MPI_ERR_NO_SPACE;
+  /* Copy the contiguous memory */
+  memcpy ((char *) outbuf + *position, inbuf, size);
+  *position += size;
+  return 0;
+}
+
+int
+sc_MPI_Unpack (const void *inbuf, int insize, int *position,
+               void *outbuf, int outcount, sc_MPI_Datatype datatype,
+               sc_MPI_Comm comm)
+{
+  int                 size;
+  sc_MPI_Pack_size (outcount, datatype, comm, &size);
+  /* Check that the message is big enough for the datatypes that we want */
+  if (*position + size > insize)
+    return sc_MPI_ERR_NO_SPACE;
+  /* Copy the contiguous memory */
+  memcpy (outbuf, (char *) inbuf + *position, size);
+  *position += size;
+  return 0;
+}
+
+int
+sc_MPI_Pack_size (int incount, sc_MPI_Datatype datatype, sc_MPI_Comm comm,
+                  int *size)
+{
+  return incount * sc_MPI_Type_size (datatype, size);
+}

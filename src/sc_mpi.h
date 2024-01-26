@@ -198,6 +198,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_FLOAT               MPI_FLOAT
 #define sc_MPI_DOUBLE              MPI_DOUBLE
 #define sc_MPI_LONG_DOUBLE         MPI_LONG_DOUBLE
+#define sc_MPI_PACKED              MPI_PACKED
 
 #define sc_MPI_OP_NULL             MPI_OP_NULL
 #define sc_MPI_MAX                 MPI_MAX
@@ -288,6 +289,9 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_Wait                MPI_Wait
 /* The MPI_Waitsome, MPI_Waitall and MPI_Testall functions are wrapped. */
 #define sc_MPI_Type_size           MPI_Type_size
+#define sc_MPI_Pack                MPI_Pack
+#define sc_MPI_Unpack              MPI_Unpack
+#define sc_MPI_Pack_size           MPI_Pack_size
 
 #else /* !SC_ENABLE_MPI */
 #include <sc3_mpi_types.h>
@@ -363,6 +367,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_DOUBLE              SC3_MPI_DOUBLE
 #define sc_MPI_DOUBLE_INT          SC3_MPI_DOUBLE_INT
 #define sc_MPI_LONG_DOUBLE         ((sc_MPI_Datatype) 0x4c000c0c)
+#define sc_MPI_PACKED              ((sc_MPI_Datatype) 0x4c001001)
 
 #define sc_MPI_OP_NULL             SC3_MPI_OP_NULL
 #define sc_MPI_MINLOC              SC3_MPI_MINLOC
@@ -444,6 +449,22 @@ int                 sc_MPI_Comm_free (sc_MPI_Comm *freecomm);
  * \return                  MPI_SUCCESS on success.
  */
 int                 sc_MPI_Type_size (sc_MPI_Datatype datatype, int *size);
+
+/** Pack several instances of the same datatype into contiguous memory */
+int                 sc_MPI_Pack (const void *inbuf, int incount,
+                                 sc_MPI_Datatype datatype, void *outbuf,
+                                 int outsize, int *position,
+                                 sc_MPI_Comm comm);
+
+/** Unpack contiguous memory into several instances of the same datatype */
+int                 sc_MPI_Unpack (const void *inbuf, int insize,
+                                   int *position, void *outbuf, int outcount,
+                                   sc_MPI_Datatype datatype,
+                                   sc_MPI_Comm comm);
+
+/** Determine how much space in bytes is needed to pack several instances of the same datatype */
+int                 sc_MPI_Pack_size (int incount, sc_MPI_Datatype datatype,
+                                      sc_MPI_Comm comm, int *size);
 
 /** Query size of an MPI communicator.
  * \param [in] mpicomm      Valid MPI communicator.
