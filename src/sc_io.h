@@ -358,16 +358,23 @@ int                 sc_io_file_save (const char *filename,
                                      sc_array_t * buffer);
 
 /** Read a file into a buffer in one call.
- * This function performs error checking and always returns cleanly.
+ * This function is intended as a convenience for not very large files.
+ * It performs error checking and always returns cleanly.
  * \param [in] filename     Name of the file to load.
  * \param [in,out] buffer   On input, an array (not a view) of
  *                          element size 1 and arbitrary contents.
  *                          On output and success, the complete file
  *                          contents.  On error, contents are undefined.
+ * \param [in] max_bytes    If more than this number of bytes are found
+ *                          in the file, we return an error.
+ *                          A value of 0 means exactly that.
+ *                          A value of -1 signifies INT_MAX.
+ *                          Other negative values are not allowed.
  * \return                  0 on success, -1 on error.
  */
 int                 sc_io_file_load (const char *filename,
-                                     sc_array_t * buffer);
+                                     sc_array_t * buffer,
+                                     int max_bytes);
 
 /** Encode a block of arbitrary data with the default sc_io format.
  * The corresponding decoder function is \ref sc_io_decode.

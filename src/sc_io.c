@@ -552,7 +552,7 @@ sc_io_file_save (const char *filename, sc_array_t * buffer)
 }
 
 int
-sc_io_file_load (const char *filename, sc_array_t * buffer)
+sc_io_file_load (const char *filename, sc_array_t * buffer, int max_bytes)
 {
   /* sink is always NULL for symmetric error checking code */
   sc_io_sink_t       *sink = NULL;
@@ -569,6 +569,10 @@ sc_io_file_load (const char *filename, sc_array_t * buffer)
   SC_ASSERT (buffer != NULL);
   SC_ASSERT (buffer->elem_size == 1);
   SC_ASSERT (SC_ARRAY_IS_OWNER (buffer));
+  SC_ASSERT (max_bytes >= -1);
+  if (max_bytes == -1) {
+    max_bytes = INT_MAX;
+  }
 
   /* open a file to read from */
   if ((source = sc_io_source_new
@@ -590,6 +594,13 @@ sc_io_file_load (const char *filename, sc_array_t * buffer)
       return file_return (-1, sink, source);
     }
 
+    /* have we found too many bytes? */
+    if (bout > (size_t) max_bytes) {
+      SC_LERRORF ("sc_io_file_load: byte limit of %d exceeded\n", max_bytes);
+      return file_return (-1, sink, source);
+    }
+    max_bytes -= (int) bout;
+
     /* examine buffer status after reading */
     if (bout < bwins) {
       /* we have reached end of file: finalize buffer */
@@ -601,6 +612,7 @@ sc_io_file_load (const char *filename, sc_array_t * buffer)
     bpos += bwins;
   }
   SC_ASSERT (bpos == buffer->elem_count);
+  SC_ASSERT (max_bytes >= 0);
 
   /* close file and free metadata */
   if (sc_io_source_destroy_null (&source)) {
