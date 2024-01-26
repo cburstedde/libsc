@@ -52,6 +52,7 @@
  * configuring a program at runtime.
  * Configuration can be effected by parsing command line options
  * or by reading `.ini` or JSON files, or a combination thereof.
+ * We are limiting the maximum permitted file size to 1 MiB.
  *
  * The first thing to do is to allocate an empty \ref sc_options_t object.
  * Then one or more options can be added to it.

@@ -78,6 +78,7 @@ struct sc_options
   char                program_path[BUFSIZ];
   const char         *program_name;
   sc_array_t         *option_items;
+  int                 max_bytes;
   int                 collective;
   int                 space_type;
   int                 space_help;
@@ -92,6 +93,7 @@ static char        *sc_iniparser_invalid_key = (char *) -1;
 
 static const int    sc_options_space_type = 20;
 static const int    sc_options_space_help = 32;
+static const int    sc_options_max_bytes = 1 << 20;
 
 static int
 sc_iniparser_getint (dictionary * d, const char *key, int notfound,
@@ -268,6 +270,9 @@ sc_options_new (const char *program_path)
   opt->first_arg = -1;
   opt->argc = 0;
   opt->argv = NULL;
+
+  /* set default number of bytes to accept in .ini/JSON files */
+  opt->max_bytes = sc_options_max_bytes;
 
   /* set backwards compatible default */
   opt->collective = 0;
@@ -803,7 +808,7 @@ sc_options_print_summary (int package_id, int log_priority,
 }
 
 static dictionary *
-sc_iniparser_load (const char *inifile, int collective, sc_MPI_Comm mpicomm)
+sc_iniparser_load (const char *inifile, int max_bytes, int collective)
 {
   /* string holds name of file to load */
   SC_ASSERT (inifile != NULL);
@@ -813,59 +818,20 @@ sc_iniparser_load (const char *inifile, int collective, sc_MPI_Comm mpicomm)
     return iniparser_load (inifile);
   }
   else {
-    int                 mpiret;
-    int                 rank;
-    int                 ibyt;
-    char               *buf;
-    size_t              len;
     sc_array_t          arr;
     dictionary         *dic;
 
-    /* query rank of process */
-    SC_ASSERT (mpicomm != sc_MPI_COMM_NULL);
-    mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
-    SC_CHECK_MPI (mpiret);
-
-    /* physically read file on rank zero */
-    len = 0;
-    ibyt = -1;
+    /* read file on rank zero and broadcast contents */
     sc_array_init (&arr, 1);
-    if (rank == 0) {
-      /* root rank reads file from disk into byte array memory */
-      if (sc_io_file_load (inifile, &arr)) {
-        SC_LERRORF ("Error loading file %s\n", inifile);
-      }
-      else if ((len = arr.elem_count) > (size_t) INT_MAX) {
-        SC_LERRORF ("File %s too large\n", inifile);
-      }
-      else {
-        /* we are successful if and only if ibyt is non-negative */
-        ibyt = (int) len;
-      }
-    }
-
-    /* broadcast file size or error condition */
-    mpiret = sc_MPI_Bcast (&ibyt, 1, sc_MPI_INT, 0, mpicomm);
-    SC_CHECK_MPI (mpiret);
-    if (ibyt < 0) {
-      /* reset is redundant on higher ranks but ok for simplicity */
+    if (sc_io_file_bcast (inifile, &arr, max_bytes, 0, sc_get_comm ())) {
+      SC_GLOBAL_LERRORF ("Error bcasting file %s\n", inifile);
       sc_array_reset (&arr);
-      return NULL; 
+      return NULL;
     }
-
-    /* replicate file contents on all other ranks */
-    if (rank > 0) {
-      len = (size_t) ibyt;
-      sc_array_resize (&arr, len);
-    }
-
-    /* broadcast file contents*/
-    buf = (char *) sc_array_index (&arr, 0);
-    mpiret = sc_MPI_Bcast (buf, ibyt, sc_MPI_BYTE, 0, mpicomm);
-    SC_CHECK_MPI (mpiret);
 
     /* populate dictionary and free buffer afterwards */
-    dic = iniparser_load_buffer (buf, len, inifile);
+    dic = iniparser_load_buffer ((const char *) sc_array_index (&arr, 0),
+                                 arr.elem_count, inifile);
     sc_array_reset (&arr);
     return dic;
   }
@@ -903,7 +869,7 @@ sc_options_load_ini (int package_id, int err_priority,
   SC_ASSERT (re == NULL);
 
   /* read .ini file in one go */
-  dict = sc_iniparser_load (inifile, opt->collective, sc_get_comm ());
+  dict = sc_iniparser_load (inifile, opt->max_bytes, opt->collective);
   if (dict == NULL) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
                 "Could not load or parse .ini file\n");
@@ -1741,7 +1707,7 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
   const char         *s;
   char                key[BUFSIZ];
 
-  dict = sc_iniparser_load (inifile, opt->collective, sc_get_comm ());
+  dict = sc_iniparser_load (inifile, opt->max_bytes, opt->collective);
   if (dict == NULL) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
                 "Could not load or parse .ini file\n");
