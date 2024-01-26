@@ -21,15 +21,22 @@
   02110-1301, USA.
 */
 
-/* Save a file to disk in one call, read it and compare. */
+/* Save a file to disk in one call, read it and compare.
+ * The first read is replicated on all processes.
+ * The second read is on one rank and broadcast.
+ * We round robin this over all available ranks. */
 
 #include <sc_io.h>
 #include <sc_options.h>
 
 /** Create a dynamic array initialized by copying a const string.
+ * The array contains the string bytes without the terminating NUL.
+ * We would rather do this using a view to maintain an inofficial NUL
+ * at the buffer's end, but the \ref sc_array_t does not work with const.
  * \param [in] cstr     String constant must not be NULL.
  * \param [out] plen    If not NULL, on output assigned length of \a str.
- * \return              Byte array with length and contents of \a string.
+ * \return              Byte array with length and contents of \a string
+ *                      not including the input's terminating NUL.
  */
 static sc_array_t  *
 array_new_string (const char *cstr, size_t *plen)
@@ -52,11 +59,12 @@ array_new_string (const char *cstr, size_t *plen)
   return arr;
 }
 
+/** Return and free loose ends is a collective function. */
 static int
 test_return (int retval, sc_array_t * buffer)
 {
   if (retval) {
-    SC_LERROR ("Error testing save/load file\n");
+    SC_GLOBAL_LERROR ("Error testing save/load file\n");
   }
   if (buffer != NULL) {
     sc_array_destroy (buffer);
@@ -64,43 +72,135 @@ test_return (int retval, sc_array_t * buffer)
   return retval;
 }
 
-int
-test_file (const char *filename)
+/** Broadcast in-argument retval from rank 0 to all.
+ * \return input \a retval collectively on all ranks.
+ */
+static int
+bcast_retval (sc_MPI_Comm mpicomm, int *retval)
 {
+  int                 mpiret;
+
+  SC_ASSERT (retval != NULL);
+
+  mpiret = sc_MPI_Bcast (retval, 1, sc_MPI_INT, 0, mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  return *retval;
+}
+
+/** Logical OR the in-argument over all ranks.
+ * \return result collectively on all ranks.
+ */
+static int
+bclor_retval (sc_MPI_Comm mpicomm, int *retval)
+{
+  int                 mpiret;
+  int                 retres;
+
+  SC_ASSERT (retval != NULL);
+
+  mpiret = sc_MPI_Allreduce (retval, &retres, 1, sc_MPI_INT,
+                             sc_MPI_LOR, mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  return *retval = retres;
+}
+
+/** Non-collective function to verify buffer against a given string */
+static int
+verify_contents (const char *filename, const char *verbing,
+                 sc_array_t *buffer, const char *string, size_t length)
+{
+  SC_ASSERT (buffer != NULL && buffer->elem_size == 1);
+  SC_ASSERT (string != NULL);
+
+  if (buffer->elem_count != length) {
+    SC_LERRORF ("Length %ld/%ld error %s file %s\n",
+                (long int) buffer->elem_count, (long int) length,
+                verbing, filename);
+    return -1;
+  }
+  if (strncmp (sc_array_index (buffer, 0), string, length)) {
+    SC_LERRORF ("Content error %s file %s\n", verbing, filename);
+    return -1;
+  }
+  return 0;
+}
+
+/** This function has a collective return over the communicator. */
+int
+test_file (const char *filename, sc_MPI_Comm mpicomm)
+{
+  int                 mpiret;
+  int                 retval;
+  int                 size, rank, root;
   size_t              length;
   const char         *string = "This is a test string for sc_test_io_file.\n";
 
   /* the buffer is freed before returning from this function */
   sc_array_t         *buffer = NULL;
 
-  /* save a given string to a file */
+  /* access properties of communicator */
+  mpiret = sc_MPI_Comm_size (mpicomm, &size);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_rank (mpicomm, &rank);
+  SC_CHECK_MPI (mpiret);
+
+  /* save the string to a file and remember length on all ranks */
+  retval = -1;
   buffer = array_new_string (string, &length);
-
-  /* save the string to a file */
-  if (sc_io_file_save (filename, buffer)) {
+  if (rank == 0 && (retval = sc_io_file_save (filename, buffer))) {
     SC_LERRORF ("Error saving file %s\n", filename);
+  }
+  if (bcast_retval (mpicomm, &retval)) {
+
+    /* this return is collective */
     return test_return (-1, buffer);
   }
   sc_array_destroy_null (&buffer);
+  SC_ASSERT (!retval);
 
-  /* load file contents */
+  /* we are synced in time: load file contents replicated */
   buffer = sc_array_new (1);
-  if (sc_io_file_load (filename, buffer)) {
+  if ((retval = sc_io_file_load (filename, buffer, -1))) {
     SC_LERRORF ("Error loading file %s\n", filename);
-    return test_return (-1, buffer);
   }
+  if (bclor_retval (mpicomm, &retval)) {
 
-  /* verify contents */
-  if (buffer->elem_count != length) {
-    SC_LERRORF ("Length %ld error loading file %s\n",
-                (long int) buffer->elem_count, filename);
+    /* this return is collective */
     return test_return (-1, buffer);
   }
-  if (strncmp (buffer->array, string, length)) {
-    SC_LERRORF ("Content error loading file %s\n", filename);
+  SC_ASSERT (!retval);
+
+  /* verify length and content found in file */
+  retval = verify_contents (filename, "loading", buffer, string, length);
+  if (bclor_retval (mpicomm, &retval)) {
+
+    /* this return is collective */
     return test_return (-1, buffer);
   }
   sc_array_destroy_null (&buffer);
+
+  /* round robin single read and broadcast over all ranks */
+  for (root = 0; root < size; ++root) {
+    /* load and broadcast file contents */
+    buffer = sc_array_new (1);
+    if (sc_io_file_bcast (filename, buffer, -1, root, mpicomm)) {
+
+      /* this return is collective */
+      SC_GLOBAL_LERRORF ("Error bcasting file %s\n", filename);
+      return test_return (-1, buffer);
+    }
+
+    /* verify length and content found in file */
+    retval = verify_contents (filename, "bcasting", buffer, string, length);
+    if (bclor_retval (mpicomm, &retval)) {
+
+      /* this return is collective */
+      return test_return (-1, buffer);
+    }
+    sc_array_destroy_null (&buffer);
+  }
 
   /* clean up and return using the same convention as above */
   return test_return (0, buffer);
@@ -110,10 +210,8 @@ int
 main (int argc, char **argv)
 {
   int                 mpiret;
-  int                 mpirank;
   int                 first;
   int                 iserr;
-  int                 retval;
   const char         *filepref;
   char                filename[BUFSIZ];
   sc_MPI_Comm         mpicomm;
@@ -122,8 +220,6 @@ main (int argc, char **argv)
   /* define communicator for logging and general operation */
   mpicomm = sc_MPI_COMM_WORLD;
   mpiret = sc_MPI_Init (&argc, &argv);
-  SC_CHECK_MPI (mpiret);
-  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
   SC_CHECK_MPI (mpiret);
 
   /* setup logging and stack trace */
@@ -142,17 +238,12 @@ main (int argc, char **argv)
 
   /* execute test for real */
   if (!iserr) {
-    int                 retloc;
 
     /* run test function */
-    snprintf (filename, BUFSIZ, "%s.%06d", filepref, mpirank);
-    retloc = test_file (filename);
+    snprintf (filename, BUFSIZ, "%s.dat", filepref);
+    if (test_file (filename, mpicomm)) {
 
-    /* the test function is not collective; synchronize error value */
-    mpiret = sc_MPI_Allreduce (&retloc, &retval, 1, sc_MPI_INT,
-                               sc_MPI_LOR, mpicomm);
-    SC_CHECK_MPI (mpiret);
-    if (retval) {
+      /* this branch is collective */
       SC_GLOBAL_LERRORF ("Operational error in %s\n", argv[0]);
       iserr = 1;
     }
