@@ -691,6 +691,8 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
     return sizeof (short);
   if (t == sc_MPI_INT || t == sc_MPI_UNSIGNED)
     return sizeof (int);
+  if (t == sc_MPI_INT8_T)
+    return sizeof (int8_t);
   if (t == sc_MPI_LONG || t == sc_MPI_UNSIGNED_LONG)
     return sizeof (long);
   if (t == sc_MPI_LONG_LONG_INT)

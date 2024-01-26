@@ -189,6 +189,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_SHORT               MPI_SHORT
 #define sc_MPI_UNSIGNED_SHORT      MPI_UNSIGNED_SHORT
 #define sc_MPI_INT                 MPI_INT
+#define sc_MPI_INT8_T              MPI_INT8_T
 #define sc_MPI_2INT                MPI_2INT
 #define sc_MPI_UNSIGNED            MPI_UNSIGNED
 #define sc_MPI_LONG                MPI_LONG
@@ -357,6 +358,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_SHORT               ((sc_MPI_Datatype) 0x4c000203)
 #define sc_MPI_UNSIGNED_SHORT      ((sc_MPI_Datatype) 0x4c000204)
 #define sc_MPI_INT                 SC3_MPI_INT
+#define sc_MPI_INT8_T              SC3_MPI_INT8_T
 #define sc_MPI_2INT                SC3_MPI_2INT
 #define sc_MPI_UNSIGNED            SC3_MPI_UNSIGNED
 #define sc_MPI_LONG                SC3_MPI_LONG
