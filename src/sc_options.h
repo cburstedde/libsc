@@ -28,13 +28,13 @@
  *
  * Register and parse command line options and read/write configuration files.
  * A detailed description can be found under \ref sc_options.
- * In addition, we provide the example \ref options.c.
+ * In addition, we provide the example \ref options/options.c.
  *
  * \ingroup sc_options
  */
 
 /**
- * \example options.c
+ * \example options/options.c
  *
  * This example demonstrates how the library can be used to parse command
  * line options and to load and save them to configuration files.
@@ -52,22 +52,51 @@
  * configuring a program at runtime.
  * Configuration can be effected by parsing command line options
  * or by reading `.ini` or JSON files, or a combination thereof.
- * We are limiting the maximum permitted file size to 1 MiB.
+ * All variables parsed update a variable designated in user code.
+ * To avoid the library being crashed, we are soft-limiting the maximum
+ * permitted file size to 1 MiB, but that can be overridden in the source.
  *
- * The first thing to do is to allocate an empty \ref sc_options_t object.
- * Then one or more options can be added to it.
+ * The first thing to do for the user is to allocate an empty \ref
+ * sc_options_t object.  Then one or more options can be added to it, for
+ * example by calling \ref sc_options_add_int or \ref sc_options_add_string.
  * Such an addition provides details on the option name and type, a help
  * string, and a pointer to an existing variable in user memory
- * that shall be updated when options are parsed or loaded.
- * This variable must not go out of scope while the options
- * object it has been added to is in use.
- *
- * Once the desired variables have been added to the options object
- * variables can be loaded from configuration files by calling the
- * loader function explicitly, for example \ref sc_options_load_json.
+ * that shall be updated when options are parsed or loaded.  Any such
+ * variable must not go out of scope while the options object is live.
+ * In addition, switches to read a whole file while parsing the command
+ * line may be added by e. g. \ref sc_options_add_jsonfile.
  * Every variable that is found in the file is parsed and updated.
- * Similarly, a command line can be queried by \ref sc_options_parse.
- * The options in an object can be saved to a file as well.
+ *
+ * After setting all options, the user may call \ref sc_options_parse, \ref
+ * sc_options_load_ini and/or \ref sc_options_load_json to populate the
+ * user's option variables.
+ * Note that the JSON support hinges on finding the jansson library at
+ * configure time, while we provide the traditional \ref
+ * sc_options_add_inifile and \ref sc_options_load_ini unconditionally.
+ * At the end of the program, the options object should be freed by \ref
+ * sc_options_destroy.
+ *
+ * Historically, parallel programs call the function to parse the command
+ * line options on all ranks collectively, which ensures setting the user
+ * variables consistently as long as the command line remains collective.
+ * More interesting is the reading of configuration files, which in the
+ * default backwards-compatible mode is done replicated on each rank.
+ * The function to save all option variables to a configuration file
+ * is by default not protected against multiple concurrent writes.
+ * Printing the usage message is by default called on all ranks,
+ * but only the root rank prints any information.
+ * We maintain this somewhat questionable behavior for compatibility.
+ *
+ * For newly written code, we recommend a fix by calling \ref
+ * sc_options_set_collective just after \ref sc_options_new with a value of
+ * true.  This effects the following changes:
+ *
+ *  - Loading .ini and JSON files is done on the root rank and broadcast.
+ *  - Saving an .ini or JSON file becomes a noop on all ranks but root.
+ *
+ * If the function is called with a value of false, instead we effect:
+ *
+ *  - Printing the usage message is done on every calling rank.
  *
  * The suboptions feature allows options to be nested.
  * To this end, any options object can be passed as suboptions to \ref
@@ -78,7 +107,7 @@
  * or the new, hierarchical options object, or both.
  * Suboptions are loaded from and saved to files hierarchically.
  *
- * Please see the example \ref options.c for a demonstration.
+ * Please see the example \ref options/options.c for a demonstration.
  */
 
 #include <sc_keyvalue.h>
