@@ -80,6 +80,7 @@ struct sc_options
   sc_array_t         *option_items;
   int                 max_bytes;
   int                 collective;
+  int                 set_collective_explicit;
   int                 space_type;
   int                 space_help;
   int                 args_alloced;
@@ -94,6 +95,32 @@ static char        *sc_iniparser_invalid_key = (char *) -1;
 static const int    sc_options_space_type = 20;
 static const int    sc_options_space_help = 32;
 static const int    sc_options_max_bytes = 1 << 20;
+
+static int
+sc_options_log_category (sc_options_t *opt)
+{
+  /* decide whether all ranks print a message or only root does */
+  int                 log_category;
+
+  /* check proper calling and consistent collective settings */
+  SC_ASSERT (opt != NULL);
+
+  /* Historically the collective default is false.
+     It may only be changed to true by explicitly setting it. */
+  SC_ASSERT (!opt->collective || opt->set_collective_explicit);
+
+  /* log on root rank or replicated on all: historic default */
+  log_category = SC_LC_GLOBAL;
+  if (opt->set_collective_explicit) {
+    /* only when using the updated interface do we change the default */
+    if (!opt->collective) {
+      log_category = SC_LC_NORMAL;
+    }
+  }
+
+  /* this category is for use with functions that may act collectively */
+  return log_category;
+}
 
 static int
 sc_iniparser_getint (dictionary * d, const char *key, int notfound,
@@ -274,8 +301,11 @@ sc_options_new (const char *program_path)
   /* set default number of bytes to accept in .ini/JSON files */
   opt->max_bytes = sc_options_max_bytes;
 
-  /* set backwards compatible default */
+  /* set backwards compatible defaults.
+   * we activate new functionality when explicitly setting collective,
+     no matter to which value, by calling sc_options_set_collective. */
   opt->collective = 0;
+  opt->set_collective_explicit = 0;
 
   /* set default spacing for printing option summary */
   sc_options_set_spacing (opt, -1, -1);
@@ -341,7 +371,9 @@ sc_options_set_collective (sc_options_t * opt, int enable)
 {
   SC_ASSERT (opt != NULL);
 
+  /* this function is newly added to enable a consistent collective mode */
   opt->collective = enable;
+  opt->set_collective_explicit = 1;
 }
 
 void
@@ -611,6 +643,8 @@ void
 sc_options_print_usage (int package_id, int log_priority,
                         sc_options_t * opt, const char *arg_usage)
 {
+  /* this function may implictly or explicitly print collectively */
+  const int           log_category = sc_options_log_category (opt);
   int                 printed;
   size_t              iz;
   sc_array_t         *items = opt->option_items;
@@ -621,14 +655,16 @@ sc_options_print_usage (int package_id, int log_priority,
   char                outbuf[BUFSIZ];
   char               *copy, *tok;
 
-  SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority,
+  /* begin outputting a block of usage message */
+  SC_GEN_LOGF (package_id, log_category, log_priority,
                "Usage: %s%s%s\n", opt->program_name,
                count == 0 ? "" : " <OPTIONS>",
                arg_usage == NULL ? "" : " <ARGUMENTS>");
   if (count > 0) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Options:\n");
+    SC_GEN_LOG (package_id, log_category, log_priority, "Options:\n");
   }
 
+  /* we print one line for each option variable */
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
     provide = "";
@@ -697,15 +733,16 @@ sc_options_print_usage (int package_id, int log_priority,
                            SC_MAX (1, opt->space_help - printed), "",
                            item->help_string);
     }
-    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
+    SC_GEN_LOGF (package_id, log_category, log_priority, "%s\n", outbuf);
   }
 
+  /* we also print usage for the non-option arguments */
   if (arg_usage != NULL && arg_usage[0] != '\0') {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
+    SC_GEN_LOG (package_id, log_category, log_priority, "Arguments:\n");
     copy = SC_STRDUP (arg_usage);
     for (tok = strtok (copy, "\n\r"); tok != NULL;
          tok = strtok (NULL, "\n\r")) {
-      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %s\n", tok);
+      SC_GEN_LOGF (package_id, log_category, log_priority, "   %s\n", tok);
     }
     SC_FREE (copy);
   }
@@ -715,6 +752,8 @@ void
 sc_options_print_summary (int package_id, int log_priority,
                           sc_options_t * opt)
 {
+  /* this function may implictly or explicitly print collectively */
+  const int           log_category = sc_options_log_category (opt);
   int                 i;
   int                 bvalue, printed;
   size_t              iz;
@@ -724,8 +763,10 @@ sc_options_print_summary (int package_id, int log_priority,
   const char         *s;
   char                outbuf[BUFSIZ];
 
-  SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Options:\n");
+  /* begin printing a multi-line block of option variable values */
+  SC_GEN_LOG (package_id, log_category, log_priority, "Options:\n");
 
+  /* we print one line for each option variable */
   for (iz = 0; iz < count; ++iz) {
     item = (sc_option_item_t *) sc_array_index (items, iz);
     if (item->opt_type == SC_OPTION_INIFILE ||
@@ -785,23 +826,24 @@ sc_options_print_summary (int package_id, int log_priority,
     default:
       SC_ABORT_NOT_REACHED ();
     }
-    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "%s\n", outbuf);
+    SC_GEN_LOGF (package_id, log_category, log_priority, "%s\n", outbuf);
   }
 
+  /* print a summary for each non-option argument */
   if (opt->first_arg < 0) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
+    SC_GEN_LOG (package_id, log_category, log_priority,
                 "Arguments: not parsed\n");
   }
   else {
     if (opt->first_arg == opt->argc) {
-      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority,
+      SC_GEN_LOG (package_id, log_category, log_priority,
                   "Arguments: none\n");
     }
     else {
-      SC_GEN_LOG (package_id, SC_LC_GLOBAL, log_priority, "Arguments:\n");
+      SC_GEN_LOG (package_id, log_category, log_priority, "Arguments:\n");
     }
     for (i = opt->first_arg; i < opt->argc; ++i) {
-      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, log_priority, "   %d: %s\n",
+      SC_GEN_LOGF (package_id, log_category, log_priority, "   %d: %s\n",
                    i - opt->first_arg, opt->argv[i]);
     }
   }
@@ -813,11 +855,13 @@ sc_iniparser_load (const char *inifile, int max_bytes, int collective)
   /* string holds name of file to load */
   SC_ASSERT (inifile != NULL);
 
+  /* the collective switch is newly added.  If true, assume it's intentional */
   if (!collective) {
     /* each process reads the same file at the same time */
     return iniparser_load (inifile);
   }
   else {
+    /* in this block we can expect to be called collectively */
     sc_array_t          arr;
     dictionary         *dic;
 
@@ -829,7 +873,7 @@ sc_iniparser_load (const char *inifile, int max_bytes, int collective)
       return NULL;
     }
 
-    /* populate dictionary and free buffer afterwards */
+    /* populate dictionary identically and free buffer afterwards */
     dic = iniparser_load_buffer ((const char *) sc_array_index (&arr, 0),
                                  arr.elem_count, inifile);
     sc_array_reset (&arr);
@@ -841,6 +885,7 @@ int
 sc_options_load (int package_id, int err_priority,
                  sc_options_t * opt, const char *file)
 {
+  /* expect the .ini format if nothing else changes the historic default */
   return sc_options_load_ini (package_id, err_priority, opt, file, NULL);
 }
 
@@ -862,6 +907,7 @@ sc_options_load_ini (int package_id, int err_priority,
   const char         *s, *key;
   char                skey[BUFSIZ], lkey[BUFSIZ];
 
+  /* this function is a historic entry point */
   SC_ASSERT (opt != NULL);
   SC_ASSERT (inifile != NULL);
 
