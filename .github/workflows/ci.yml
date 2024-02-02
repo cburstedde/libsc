@@ -26,7 +26,7 @@ jobs:
             zlib1g-dev libmpich-dev mpich
 
     - name: Checkout source code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Run bootstrap script
       run: ./bootstrap
@@ -87,7 +87,7 @@ jobs:
 
     - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: linux_multi_log
         path: |
@@ -107,7 +107,7 @@ jobs:
             zlib1g-dev libmpich-dev mpich valgrind
 
     - name: Checkout source code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Run bootstrap script
       run: ./bootstrap
@@ -124,7 +124,7 @@ jobs:
 
     - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: linux_valgrind_log
         path: |
@@ -144,7 +144,7 @@ jobs:
             zlib1g-dev libmpich-dev mpich
 
     - name: Checkout source code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -171,14 +171,14 @@ jobs:
         mv libsc-*.tar.gz ..
 
     - name: Upload tarball
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: libsc_tarball
         path: ./libsc-*.tar.gz
 
     - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: linux_tarball_log
         path: |
