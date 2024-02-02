@@ -373,8 +373,7 @@ int                 sc_io_file_save (const char *filename,
  * \return                  0 on success, -1 on error.
  */
 int                 sc_io_file_load (const char *filename,
-                                     sc_array_t * buffer,
-                                     int max_bytes);
+                                     sc_array_t * buffer, int max_bytes);
 
 /** Read a file into a buffer on rank zero and broadcast its contents.
  * This function is intended as a convenience for not very large files.
@@ -686,8 +685,7 @@ int                 sc_io_read_at_legal (void);
  */
 int                 sc_io_read_at (sc_MPI_File mpifile,
                                    sc_MPI_Offset offset, void *ptr,
-                                   int count, sc_MPI_Datatype t,
-                                   int *ocount);
+                                   int count, sc_MPI_Datatype t, int *ocount);
 
 /** Read MPI file content collectively into memory for an explicit offset.
  * This function does not update the file pointer of the MPI file.

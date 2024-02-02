@@ -375,7 +375,8 @@ sc_io_source_read (sc_io_source_t * source, void *data,
 
       /* copy into output buffer only if that is made available */
       if (data != NULL) {
-        memcpy (data, source->buffer->array + source->buffer_bytes, bbytes_out);
+        memcpy (data, source->buffer->array + source->buffer_bytes,
+                bbytes_out);
       }
       source->buffer_bytes += bbytes_out;
     }
@@ -388,8 +389,8 @@ sc_io_source_read (sc_io_source_t * source, void *data,
       bbytes_out = fread (data, 1, bytes_avail, source->file);
       if (bbytes_out < bytes_avail) {
         /* the item count read is short or zero, which is also short */
-        retval = !(source->is_eof = feof (source->file)) ||
-                 ferror (source->file);
+        retval =
+          !(source->is_eof = feof (source->file)) || ferror (source->file);
       }
       if (retval == SC_IO_ERROR_NONE && source->mirror != NULL) {
         retval = sc_io_sink_write (source->mirror, data, bbytes_out);
@@ -687,9 +688,9 @@ sc_io_file_bcast (const char *filename, sc_array_t * buffer, int max_bytes,
 
 /* byte count for one line of base64 encoded data and newline */
 #define SC_IO_LBC (SC_IO_DBC / 3 * 4)
-#define SC_IO_LBD (SC_IO_LBC + 1)   /* after first line break byte */
-#define SC_IO_LBE (SC_IO_LBD + 1)   /* after second line break byte */
-#define SC_IO_LBF (SC_IO_LBE + 1)   /* after line break and NUL byte */
+#define SC_IO_LBD (SC_IO_LBC + 1)       /* after first line break byte */
+#define SC_IO_LBE (SC_IO_LBD + 1)       /* after second line break byte */
+#define SC_IO_LBF (SC_IO_LBE + 1)       /* after line break and NUL byte */
 
 /* see RFC 1950 and RFC 1951 for the uncompressed zlib format */
 #ifndef SC_HAVE_ZLIB
@@ -1874,8 +1875,7 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   *ocount = 0;
 
 #ifdef SC_ENABLE_MPIIO
-  mpiret = MPI_File_read_at_all (mpifile, offset, ptr,
-                                 count, t, &mpistatus);
+  mpiret = MPI_File_read_at_all (mpifile, offset, ptr, count, t, &mpistatus);
   if (mpiret == sc_MPI_SUCCESS && count > 0) {
     /* working around 0 count not working for some implementations */
     mpiret = sc_MPI_Get_count (&mpistatus, t, ocount);
@@ -1945,7 +1945,8 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
       SC_CHECK_ABORT (mpiret == 0, "read_at_all: seek failed");
       /* read data */
       errno = 0;
-      *ocount = (int) fread (ptr, (size_t) size, (size_t) count, mpifile->file);
+      *ocount =
+        (int) fread (ptr, (size_t) size, (size_t) count, mpifile->file);
       errval = errno;
       /* the consecutive error codes fflush and fclose are not reported */
       SC_CHECK_ABORT (fflush (mpifile->file) == 0,
@@ -2073,8 +2074,7 @@ sc_io_write_at_legal (void)
 
 int
 sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
-                const void *ptr, int count, sc_MPI_Datatype t,
-                int *ocount)
+                const void *ptr, int count, sc_MPI_Datatype t, int *ocount)
 {
 #ifdef SC_ENABLE_MPIIO
   sc_MPI_Status       mpistatus;
@@ -2242,7 +2242,8 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
       SC_CHECK_ABORT (mpiret == 0, "write_at_all: get type size failed");
       /* write data */
       errno = 0;
-      *ocount = (int) fwrite (ptr, (size_t) size, (size_t) count, mpifile->file);
+      *ocount =
+        (int) fwrite (ptr, (size_t) size, (size_t) count, mpifile->file);
       errval = errno;
       /* the consecutive error codes fflush and fclose are not reported */
       SC_CHECK_ABORT (fflush (mpifile->file) == 0,
