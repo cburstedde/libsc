@@ -120,7 +120,7 @@ verify_contents (const char *filename, const char *verbing,
                 verbing, filename);
     return -1;
   }
-  if (strncmp (sc_array_index (buffer, 0), string, length)) {
+  if (strncmp ((const char *) sc_array_index (buffer, 0), string, length)) {
     SC_LERRORF ("Content error %s file %s\n", verbing, filename);
     return -1;
   }
