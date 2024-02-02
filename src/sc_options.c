@@ -893,6 +893,8 @@ int
 sc_options_load_ini (int package_id, int err_priority,
                      sc_options_t * opt, const char *inifile, void *re)
 {
+  /* this function can be configured wrt. collective calling */
+  const int           log_category = sc_options_log_category (opt);
   int                 found_short, found_long;
   size_t              iz;
   size_t              count;
@@ -917,7 +919,7 @@ sc_options_load_ini (int package_id, int err_priority,
   /* read .ini file in one go */
   dict = sc_iniparser_load (inifile, opt->max_bytes, opt->collective);
   if (dict == NULL) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+    SC_GEN_LOG (package_id, log_category, err_priority,
                 "Could not load or parse .ini file\n");
     return -1;
   }
@@ -953,7 +955,7 @@ sc_options_load_ini (int package_id, int err_priority,
       found_long = iniparser_find_entry (dict, lkey);
     }
     if (found_short && found_long) {
-      SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+      SC_GEN_LOGF (package_id, log_category, err_priority,
                    "Duplicates %s %s in file: %s\n", skey, lkey, inifile);
       iniparser_freedict (dict);
       return -1;
@@ -976,7 +978,7 @@ sc_options_load_ini (int package_id, int err_priority,
       if (bvalue == -1) {
         bvalue = sc_iniparser_getint (dict, key, 0, &iserror);
         if (bvalue <= 0 || iserror) {
-          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+          SC_GEN_LOGF (package_id, log_category, err_priority,
                        "Invalid switch %s in file: %s\n", key, inifile);
           iniparser_freedict (dict);
           return -1;
@@ -987,7 +989,7 @@ sc_options_load_ini (int package_id, int err_priority,
     case SC_OPTION_BOOL:
       bvalue = iniparser_getboolean (dict, key, -1);
       if (bvalue == -1) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid boolean %s in file: %s\n", key, inifile);
         iniparser_freedict (dict);
         return -1;
@@ -998,7 +1000,7 @@ sc_options_load_ini (int package_id, int err_priority,
       ivalue = (int *) item->opt_var;
       *ivalue = sc_iniparser_getint (dict, key, *ivalue, &iserror);
       if (iserror) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid int %s in file: %s\n", key, inifile);
         iniparser_freedict (dict);
         return -1;
@@ -1008,7 +1010,7 @@ sc_options_load_ini (int package_id, int err_priority,
       zvalue = (size_t *) item->opt_var;
       *zvalue = sc_iniparser_getsizet (dict, key, *zvalue, &iserror);
       if (iserror) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid size_t %s in file: %s\n", key, inifile);
         iniparser_freedict (dict);
         return -1;
@@ -1018,7 +1020,7 @@ sc_options_load_ini (int package_id, int err_priority,
       dvalue = (double *) item->opt_var;
       *dvalue = sc_iniparser_getdouble (dict, key, *dvalue, &iserror);
       if (iserror) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid double %s in file: %s\n", key, inifile);
         iniparser_freedict (dict);
         return -1;
@@ -1040,7 +1042,7 @@ sc_options_load_ini (int package_id, int err_priority,
                                              item->user_data, s, &iserror);
         if (iserror) {
           /* key not found or of the wrong type; this cannot be ignored */
-          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+          SC_GEN_LOGF (package_id, log_category, err_priority,
                        "Invalid keyvalue %s for option %s in file: %s\n",
                        s, key, inifile);
           iniparser_freedict (dict);
