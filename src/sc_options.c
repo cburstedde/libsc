@@ -1169,6 +1169,24 @@ sc_options_json_lookup (json_t *object, const char *keystring)
 
 #endif /* SC_HAVE_JSON */
 
+static int
+sc_options_load_file (const char *filename, sc_options_t *opt,
+                      sc_array_t *arr)
+{
+  SC_ASSERT (opt != NULL);
+  SC_ASSERT (arr != NULL);
+  SC_ASSERT (arr->elem_size == 1);
+
+  /* read file collectively if explicitly required */
+  if (sc_options_get_collective (opt)) {
+    return sc_io_file_bcast (filename, arr, opt->max_bytes,
+                             0, sc_get_comm ());
+  }
+  else {
+    return sc_io_file_load (filename, arr, opt->max_bytes);
+  }
+}
+
 int
 sc_options_load_json (int package_id, int err_priority,
                       sc_options_t *opt, const char *jsonfile, void *re)
@@ -1192,6 +1210,7 @@ sc_options_load_json (int package_id, int err_priority,
   json_error_t        jerr;
   const char         *s, *key;
   char                skey[BUFSIZ];
+  sc_array_t          arr;
 
   SC_ASSERT (opt != NULL);
   SC_ASSERT (jsonfile != NULL);
@@ -1199,12 +1218,23 @@ sc_options_load_json (int package_id, int err_priority,
   /* prepare for runtime error checking implementation */
   SC_ASSERT (re == NULL);
 
-  /* read JSON file in one go */
+  /* set consistent return state */
+  sc_array_init (&arr, 1);
   file = NULL;
-  if ((file = json_load_file (jsonfile, 0, &jerr)) == NULL) {
+
+  /* read file collectively if explicitly required */
+  if (sc_options_load_file (jsonfile, opt, &arr)) {
     SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
-                 "Could not load or parse JSON file %s line %d column %d\n",
-                 jerr.source, jerr.line, jerr.column);
+                 "Could not load file %s into memory\n", jsonfile);
+    goto load_json_error;
+  }
+
+  /* parse JSON data from memory */
+  if ((file = json_loadb ((const char *) sc_array_index (&arr, 0),
+                          arr.elem_count, 0, &jerr)) == NULL) {
+    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+                 "Could not parse JSON file %s line %d column %d\n",
+                 jsonfile, jerr.line, jerr.column);
     goto load_json_error;
   }
   if ((jopt = json_object_get (file, "Options")) == NULL) {
@@ -1374,6 +1404,7 @@ load_json_error:
   if (file != NULL) {
     json_decref (file);
   }
+  sc_array_reset (&arr);
 #endif
   return retval;
 }
