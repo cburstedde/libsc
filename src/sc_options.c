@@ -1378,10 +1378,13 @@ load_json_error:
   return retval;
 }
 
-int
-sc_options_save (int package_id, int err_priority,
-                 sc_options_t * opt, const char *inifile)
+static int
+sc_options_save_ini_internal (int package_id, int err_priority,
+                              sc_options_t * opt, const char *inifile,
+                              void *re)
 {
+  /* this function can be configured wrt. collective calling */
+  const int           log_category = sc_options_log_category (opt);
   int                 retval;
   int                 i;
   int                 bvalue;
@@ -1404,13 +1407,13 @@ sc_options_save (int package_id, int err_priority,
 
   file = fopen (inifile, "wb");
   if (file == NULL) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority, "File open failed\n");
+    SC_GEN_LOG (package_id, log_category, err_priority, "File open failed\n");
     return -1;
   }
 
   retval = fprintf (file, "# written by sc_options_save\n");
   if (retval < 0) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+    SC_GEN_LOG (package_id, log_category, err_priority,
                 "Write title 1 failed\n");
     fclose (file);
     return -1;
@@ -1449,7 +1452,7 @@ sc_options_save (int package_id, int err_priority,
          strncmp (this_prefix, last_prefix, this_n) != 0)) {
       retval = fprintf (file, "[%.*s]\n", (int) this_n, this_prefix);
       if (retval < 0) {
-        SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOG (package_id, log_category, err_priority,
                     "Write section heading failed\n");
         fclose (file);
         return -1;
@@ -1469,7 +1472,7 @@ sc_options_save (int package_id, int err_priority,
       SC_ABORT_NOT_REACHED ();
     }
     if (retval < 0) {
-      SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+      SC_GEN_LOG (package_id, log_category, err_priority,
                   "Write key failed\n");
       fclose (file);
       return -1;
@@ -1512,7 +1515,7 @@ sc_options_save (int package_id, int err_priority,
       SC_ABORT_NOT_REACHED ();
     }
     if (retval < 0) {
-      SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+      SC_GEN_LOG (package_id, log_category, err_priority,
                   "Write value failed\n");
       fclose (file);
       return -1;
@@ -1522,7 +1525,7 @@ sc_options_save (int package_id, int err_priority,
   retval = fprintf (file, "[Arguments]\n        count = %d\n",
                     opt->argc - opt->first_arg);
   if (retval < 0) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+    SC_GEN_LOG (package_id, log_category, err_priority,
                 "Write title 2 failed\n");
     fclose (file);
     return -1;
@@ -1531,7 +1534,7 @@ sc_options_save (int package_id, int err_priority,
     retval = fprintf (file, "        %d = %s\n",
                       i - opt->first_arg, opt->argv[i]);
     if (retval < 0) {
-      SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+      SC_GEN_LOG (package_id, log_category, err_priority,
                   "Write argument failed\n");
       fclose (file);
       return -1;
@@ -1540,12 +1543,68 @@ sc_options_save (int package_id, int err_priority,
 
   retval = fclose (file);
   if (retval) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+    SC_GEN_LOG (package_id, log_category, err_priority,
                 "File close failed\n");
     return -1;
   }
 
   return 0;
+}
+
+int
+sc_options_save_ini (int package_id, int err_priority,
+                     sc_options_t * opt, const char *inifile, void *re)
+{
+  int                 retval;
+  int                 mpiret;
+  int                 mpirank;
+  int                 trucoll;
+  sc_MPI_Comm         mpicomm;
+
+  /* basic argument checks */
+  SC_ASSERT (opt != NULL);
+  SC_ASSERT (inifile != NULL);
+
+  /* prepare for runtime error checking implementation */
+  SC_ASSERT (re == NULL);
+
+  /* respect collective status in calling */
+  retval = -1;
+  mpirank = 0;
+  mpicomm = sc_MPI_COMM_NULL;
+  trucoll = sc_options_get_collective (opt);
+  if (trucoll) {
+    mpiret = sc_MPI_Comm_rank (mpicomm = sc_get_comm (), &mpirank);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  /* save the file on the root rank only if properly instructed */
+  if (mpirank == 0) {
+    /* we enter historically on all ranks and otherwise on root only */
+    retval = sc_options_save_ini_internal
+      (package_id, err_priority, opt, inifile, re);
+  }
+
+  /* synchronize return value if truly collective */
+  if (trucoll) {
+    mpiret = sc_MPI_Bcast (&retval, 1, sc_MPI_INT, 0, mpicomm);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  /* print error message as needed and return */
+  if (retval) {
+    SC_GEN_LOGF (package_id, sc_options_log_category (opt), err_priority,
+                 "Error saving file %s\n", inifile);
+  }
+  return retval;
+}
+
+int
+sc_options_save (int package_id, int err_priority,
+                 sc_options_t * opt, const char *file)
+{
+  /* write the .ini format if nothing else changes the historic default */
+  return sc_options_save_ini (package_id, err_priority, opt, file, NULL);
 }
 
 int

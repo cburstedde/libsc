@@ -478,20 +478,35 @@ int                 sc_options_load_json (int package_id, int err_priority,
                                           sc_options_t * opt,
                                           const char *jsonfile, void *re);
 
+/** Save a file in the default format from given option values.
+ * The default is a file in the `.ini` format; see \ref sc_options_save_ini.
+ * \param [in] package_id       Registered package id or -1.
+ * \param [in] err_priority     Error priority according to \ref sc_logprios.
+ * \param [in] opt              The option structure.
+ * \param [in] file             Filename of the file to load.
+ * \return                      Returns 0 on success, -1 on failure.
+ */
+int                 sc_options_save (int package_id, int err_priority,
+                                     sc_options_t * opt, const char *file);
+
 /** Save all options and arguments to a file in `.ini` format.
- * This function must only be called after successful option parsing.
- * This function should only be called on rank 0.
- * This function will log errors with category SC_LC_GLOBAL.
+ * When \ref sc_options_set_collective is not called with an
+ * argument of true, this function should only be called on rank 0.
+ * This function will log errors with category \ref SC_LC_GLOBAL unless
+ * it is set explicitly to non-collective, when it uses \ref SC_LC_NORMAL.
  * An options whose name contains a colon such as "Prefix:basename" will be
  * written in a section titled [Prefix] as "basename =".
  * \param [in] package_id       Registered package id or -1.
  * \param [in] err_priority     Error priority according to \ref sc_logprios.
  * \param [in] opt              The option structure.
  * \param [in] inifile          Filename of the ini file to save.
+ * \param [in,out] re           Provisioned for runtime error checking
+ *                              implementation; currently must be NULL.
  * \return                      Returns 0 on success, -1 on failure.
  */
-int                 sc_options_save (int package_id, int err_priority,
-                                     sc_options_t * opt, const char *inifile);
+int                 sc_options_save_ini (int package_id, int err_priority,
+                                         sc_options_t * opt,
+                                         const char *inifile, void *re);
 
 /** Load a file in `.ini` format and update entries found under [Arguments].
  * There needs to be a key Arguments.count specifying the number.
