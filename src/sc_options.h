@@ -56,8 +56,8 @@
  * To avoid the library being crashed, we are soft-limiting the maximum
  * permitted file size to 1 MiB, but that can be overridden in the source.
  *
- * The first thing to do for the user is to allocate an empty \ref
- * sc_options_t object.  Then one or more options can be added to it, for
+ * The first thing to do for the user is to create an empty \ref
+ * sc_options_t object.  Then any number of options can be added to it, for
  * example by calling \ref sc_options_add_int or \ref sc_options_add_string.
  * Such an addition provides details on the option name and type, a help
  * string, and a pointer to an existing variable in user memory
@@ -75,6 +75,15 @@
  * sc_options_add_inifile and \ref sc_options_load_ini unconditionally.
  * At the end of the program, the options object should be freed by \ref
  * sc_options_destroy.
+ *
+ * The suboptions feature allows options to be nested.
+ * To this end, any options object can be passed as suboptions to \ref
+ * sc_options_add_suboptions, which duplicates its variable entries
+ * to the options object under construction below an option name prefix.
+ * This copies meta-data of the option but passes the same user variable,
+ * which can thus be modified by parsing either with the original suboptions
+ * or the new, hierarchical options object, or both.
+ * Suboptions are loaded from and saved to files hierarchically.
  *
  * Historically, parallel programs call the function to parse the command
  * line options on all ranks collectively, which ensures setting the user
@@ -97,15 +106,8 @@
  * If the function is called with a value of false, instead we effect:
  *
  *  - Printing the usage message is done on every calling rank.
- *
- * The suboptions feature allows options to be nested.
- * To this end, any options object can be passed as suboptions to \ref
- * sc_options_add_suboptions, which duplicates its variable entries
- * to the options object under construction below an option name prefix.
- * This copies meta-data of the option but passes the same user variable,
- * which can thus be modified by parsing either with the original suboptions
- * or the new, hierarchical options object, or both.
- * Suboptions are loaded from and saved to files hierarchically.
+ *  - Loading and saving files is not protected against simultaneous
+ *    access, thus the user is expected to implement such mechanisms.
  *
  * Please see the example \ref options/options.c for a demonstration.
  */
@@ -130,6 +132,17 @@ typedef int         (*sc_options_callback_t) (sc_options_t * opt,
                                               void *data);
 
 /** Create an empty options structure.
+ *
+ * It implements the backwards-compatible default parallel mode:
+ * All options functions are called collectively, but the logging of
+ * \ref sc_options_print_usage and \ref sc_options_print_summary uses
+ * the \ref SC_LC_GLOBAL category.  Saving the options to a file is not
+ * protected against simultaneous calls from multiple ranks.
+ *
+ * The collective behavior can be straightened out by calling
+ * \ref sc_options_set_collective, which affects the file load/save
+ * functions as well as the log category of the usage/summary functions.
+ *
  * \param [in] program_path   Name or path name of the program to display.
  *                            Usually argv[0] is fine.
  * \return                    A valid and empty options structure.
@@ -382,9 +395,14 @@ void                sc_options_add_suboptions (sc_options_t * opt,
 /** @} */
 
 /** Print a usage message.
+ *
  * This function uses the SC_LC_GLOBAL log category.
  * That means the default action is to print only on rank 0.
  * Applications can change that by providing a user-defined log handler.
+ *
+ * When calling \ref sc_options_set_collective, the log category is set
+ * according to its enable argument.
+ *
  * \param [in] package_id       Registered package id or -1.
  * \param [in] log_priority     Priority for output according to \ref sc_logprios.
  * \param [in] opt              The option structure.
@@ -401,9 +419,14 @@ void                sc_options_print_usage (int package_id, int log_priority,
 /** Print a summary of all option values.
  * Prints the title "Options:" and a line for every option,
  * then the title "Arguments:" and a line for every argument.
+ *
  * This function uses the SC_LC_GLOBAL log category.
  * That means the default action is to print only on rank 0.
  * Applications can change that by providing a user-defined log handler.
+ *
+ * When calling \ref sc_options_set_collective, the log category is set
+ * according to its enable argument.
+ *
  * \param [in] package_id       Registered package id or -1.
  * \param [in] log_priority     Priority for output according to \ref sc_logprios.
  * \param [in] opt              The option structure.

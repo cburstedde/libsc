@@ -123,6 +123,15 @@ sc_options_log_category (sc_options_t *opt)
 }
 
 static int
+sc_options_get_collective (sc_options_t *opt)
+{
+  SC_ASSERT (opt != NULL);
+
+  /* we act truly collective only when it is explicitly enabled */
+  return opt->set_collective_explicit && opt->collective;
+}
+
+static int
 sc_iniparser_getint (dictionary * d, const char *key, int notfound,
                      int *iserror)
 {
@@ -303,7 +312,7 @@ sc_options_new (const char *program_path)
 
   /* set backwards compatible defaults.
    * we activate new functionality when explicitly setting collective,
-     no matter to which value, by calling sc_options_set_collective. */
+   * no matter to which value, by calling sc_options_set_collective. */
   opt->collective = 0;
   opt->set_collective_explicit = 0;
 
@@ -849,7 +858,7 @@ sc_options_print_summary (int package_id, int log_priority,
   }
 }
 
-static dictionary *
+static dictionary  *
 sc_iniparser_load (const char *inifile, int max_bytes, int collective)
 {
   /* string holds name of file to load */
@@ -917,7 +926,8 @@ sc_options_load_ini (int package_id, int err_priority,
   SC_ASSERT (re == NULL);
 
   /* read .ini file in one go */
-  dict = sc_iniparser_load (inifile, opt->max_bytes, opt->collective);
+  dict = sc_iniparser_load (inifile, opt->max_bytes,
+                            sc_options_get_collective (opt));
   if (dict == NULL) {
     SC_GEN_LOG (package_id, log_category, err_priority,
                 "Could not load or parse .ini file\n");
@@ -1755,7 +1765,9 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
   const char         *s;
   char                key[BUFSIZ];
 
-  dict = sc_iniparser_load (inifile, opt->max_bytes, opt->collective);
+  /* enable true collective loading inside the call */
+  dict = sc_iniparser_load (inifile, opt->max_bytes,
+                            sc_options_get_collective (opt));
   if (dict == NULL) {
     SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
                 "Could not load or parse .ini file\n");
