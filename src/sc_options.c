@@ -1611,6 +1611,8 @@ int
 sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
                   int argc, char **argv)
 {
+  /* this function can be configured wrt. collective calling */
+  const int           log_category = sc_options_log_category (opt);
   int                 retval, iserror;
   int                 position, printed;
   int                 c, option_index;
@@ -1661,11 +1663,11 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
     }
     if (c == '?') {             /* invalid option */
       if (optopt == '-' || !isprint (optopt)) {
-        SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOG (package_id, log_category, err_priority,
                     "Invalid long option or missing argument\n");
       }
       else {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid short option: -%c or missing argument\n",
                      optopt);
       }
@@ -1686,7 +1688,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
         }
       }
       if (iz == count) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Encountered invalid short option: -%c\n", c);
         retval = -1;
         break;
@@ -1710,7 +1712,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
         *(int *) item->opt_var = 0;
       }
       else {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Error parsing boolean: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
@@ -1718,7 +1720,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
     case SC_OPTION_INT:
       ilong = strtol (optarg, NULL, 0);
       if (ilong < (long) INT_MIN || ilong > (long) INT_MAX || errno == ERANGE) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Error parsing int: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
@@ -1733,7 +1735,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       ilonglong = strtoll (optarg, NULL, 0);
 #endif
       if (ilonglong < 0LL || errno == ERANGE) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Error parsing size_t: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
@@ -1744,7 +1746,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
     case SC_OPTION_DOUBLE:
       dbl = strtod (optarg, NULL);
       if (errno == ERANGE) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Error parsing double: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
@@ -1757,14 +1759,14 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       break;
     case SC_OPTION_INIFILE:
       if (sc_options_load_ini (package_id, err_priority, opt, optarg, NULL)) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Error loading .ini file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
       break;
     case SC_OPTION_JSONFILE:
       if (sc_options_load_json (package_id, err_priority, opt, optarg, NULL)) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Error loading JSON file: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
@@ -1772,11 +1774,11 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
     case SC_OPTION_CALLBACK:
       if (item->opt_fn (opt, optarg, item->user_data)) {
         if (optarg == NULL) {
-          SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+          SC_GEN_LOG (package_id, log_category, err_priority,
                       "Error by option callback\n");
         }
         else {
-          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+          SC_GEN_LOGF (package_id, log_category, err_priority,
                        "Error by option callback: %s\n", optarg);
         }
         retval = -1;            /* this ends option processing */
@@ -1788,7 +1790,7 @@ sc_options_parse (int package_id, int err_priority, sc_options_t * opt,
       *ivalue = sc_keyvalue_get_int_check ((sc_keyvalue_t *) item->user_data,
                                            optarg, &iserror);
       if (iserror) {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Error looking up: %s\n", optarg);
         retval = -1;            /* this ends option processing */
       }
@@ -1818,6 +1820,8 @@ int
 sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
                       const char *inifile)
 {
+  /* this function can be configured wrt. collective calling */
+  const int           log_category = sc_options_log_category (opt);
   int                 i, count;
   int                 iserror;
   dictionary         *dict;
@@ -1828,14 +1832,14 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
   dict = sc_iniparser_load (inifile, opt->max_bytes,
                             sc_options_get_collective (opt));
   if (dict == NULL) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+    SC_GEN_LOG (package_id, log_category, err_priority,
                 "Could not load or parse .ini file\n");
     return -1;
   }
 
   count = sc_iniparser_getint (dict, "Arguments:count", -1, &iserror);
   if (count < 0 || iserror) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+    SC_GEN_LOG (package_id, log_category, err_priority,
                 "Invalid or missing argument count\n");
     iniparser_freedict (dict);
     return -1;
@@ -1852,7 +1856,7 @@ sc_options_load_args (int package_id, int err_priority, sc_options_t * opt,
     snprintf (key, BUFSIZ, "Arguments:%d", i);
     s = iniparser_getstring (dict, key, NULL);
     if (s == NULL) {
-      SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+      SC_GEN_LOG (package_id, log_category, err_priority,
                   "Invalid or missing argument count\n");
       iniparser_freedict (dict);
       return -1;
