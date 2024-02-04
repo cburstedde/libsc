@@ -1191,9 +1191,11 @@ int
 sc_options_load_json (int package_id, int err_priority,
                       sc_options_t *opt, const char *jsonfile, void *re)
 {
+  /* this function can be configured wrt. collective calling */
+  const int           log_category = sc_options_log_category (opt);
   int                 retval = -1;
 #ifndef SC_HAVE_JSON
-  SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+  SC_GEN_LOG (package_id, log_category, err_priority,
               "JSON not configured: could not parse input file\n");
 #else
   int                 iserror;
@@ -1224,7 +1226,7 @@ sc_options_load_json (int package_id, int err_priority,
 
   /* read file collectively if explicitly required */
   if (sc_options_load_file (jsonfile, opt, &arr)) {
-    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+    SC_GEN_LOGF (package_id, log_category, err_priority,
                  "Could not load file %s into memory\n", jsonfile);
     goto load_json_error;
   }
@@ -1232,18 +1234,18 @@ sc_options_load_json (int package_id, int err_priority,
   /* parse JSON data from memory */
   if ((file = json_loadb ((const char *) sc_array_index (&arr, 0),
                           arr.elem_count, 0, &jerr)) == NULL) {
-    SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+    SC_GEN_LOGF (package_id, log_category, err_priority,
                  "Could not parse JSON file %s line %d column %d\n",
                  jsonfile, jerr.line, jerr.column);
     goto load_json_error;
   }
   if ((jopt = json_object_get (file, "Options")) == NULL) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+    SC_GEN_LOG (package_id, log_category, err_priority,
                 "Could not find options entry\n");
     goto load_json_error;
   }
   if (!json_is_object (jopt)) {
-    SC_GEN_LOG (package_id, SC_LC_GLOBAL, err_priority,
+    SC_GEN_LOG (package_id, log_category, err_priority,
                 "Could not access options object\n");
     goto load_json_error;
   }
@@ -1292,7 +1294,7 @@ sc_options_load_json (int package_id, int err_priority,
         /* switch may have values larger than 1 */
       }
       else {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid switch %s in file: %s\n", key, jsonfile);
         goto load_json_error;
       }
@@ -1303,7 +1305,7 @@ sc_options_load_json (int package_id, int err_priority,
         bvalue = json_is_true (jval);
       }
       else {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid boolean %s in file: %s\n", key, jsonfile);
         goto load_json_error;
       }
@@ -1316,7 +1318,7 @@ sc_options_load_json (int package_id, int err_priority,
         ivalue = (int) jint;
       }
       else {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid int %s in file: %s\n", key, jsonfile);
         goto load_json_error;
       }
@@ -1327,7 +1329,7 @@ sc_options_load_json (int package_id, int err_priority,
         zvalue = (size_t) jint;
       }
       else {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid size_t %s in file: %s\n", key, jsonfile);
         goto load_json_error;
       }
@@ -1344,7 +1346,7 @@ sc_options_load_json (int package_id, int err_priority,
         }
       }
       else {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid double %s in file: %s\n", key, jsonfile);
         goto load_json_error;
       }
@@ -1358,7 +1360,7 @@ sc_options_load_json (int package_id, int err_priority,
         s = json_string_value (jval);
       }
       else {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid string %s in file: %s\n", key, jsonfile);
         goto load_json_error;
       }
@@ -1377,14 +1379,14 @@ sc_options_load_json (int package_id, int err_priority,
                                             item->user_data, s, &iserror);
         if (iserror) {
           /* key not found or of the wrong type; this cannot be ignored */
-          SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+          SC_GEN_LOGF (package_id, log_category, err_priority,
                        "Invalid keyvalue %s for option %s in file: %s\n",
                        s, key, jsonfile);
           goto load_json_error;
         }
       }
       else {
-        SC_GEN_LOGF (package_id, SC_LC_GLOBAL, err_priority,
+        SC_GEN_LOGF (package_id, log_category, err_priority,
                      "Invalid key %s in file: %s\n", key, jsonfile);
         goto load_json_error;
       }
