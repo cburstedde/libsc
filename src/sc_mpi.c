@@ -955,5 +955,6 @@ int
 sc_MPI_Pack_size (int incount, sc_MPI_Datatype datatype, sc_MPI_Comm comm,
                   int *size)
 {
-  return incount * sc_MPI_Type_size (datatype, size);
+  sc_MPI_Type_size (datatype, size);
+  *size *=incount;
 }
