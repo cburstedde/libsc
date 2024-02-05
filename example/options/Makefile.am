@@ -11,5 +11,3 @@ dist_scini_DATA += \
         example/options/sc_options_preload.ini \
         example/options/sc_options_example.ini \
         example/options/sc_options_example.json
-
-LINT_CSOURCES += $(example_options_sc_options_SOURCES)

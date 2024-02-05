@@ -53,8 +53,6 @@ SC_MPI_CONFIG([SC], [], [])
 SC_MPI_ENGAGE([SC])
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
-dnl SC_PROG_LINT
-dnl SC_C_VERSION
 LT_INIT
 
 echo "o---------------------------------------"
@@ -92,6 +90,7 @@ AC_CHECK_FUNCS([basename dirname])
 AC_CHECK_FUNCS([strtol strtoll strtok_r])
 AC_CHECK_FUNCS([fsync])
 AC_CHECK_FUNCS([qsort_r])
+AC_CHECK_FUNCS([gettimeofday])
 
 echo "o---------------------------------------"
 echo "| Checking libraries"

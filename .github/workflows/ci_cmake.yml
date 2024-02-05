@@ -22,26 +22,30 @@ jobs:
   linux:
     runs-on: ubuntu-22.04
     name: CMake build on Linux
-    timeout-minutes: 15
+    timeout-minutes: 60
 
     strategy:
       matrix:
-        cc: [gcc-9, gcc-10, gcc-11, gcc-12]
+        cc: [gcc-9, gcc-10, gcc-11, gcc-12, gcc-13]
         shared: [false]
         mpi: [true]
         include:
         - shared: true
           cc: gcc
           mpi: true
-        - shared: false
-          cc: clang-14
+        - cc: clang-14
           mpi: false
+          shared: false
+        - cc: clang-15
+          mpi: false
+          shared: false
+# Clang is ABI-incompatible with the libmpich on the CI Ubuntu images.
 
     env:
       CC: ${{ matrix.cc }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout source code
 
     - name: Install system dependencies
@@ -52,7 +56,20 @@ jobs:
             libmpich-dev mpich
 
     - name: CMake configure
-      run: cmake --preset default -Dmpi:BOOL=${{ matrix.mpi }} --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: >-
+        cmake --preset default
+        -Dmpi:BOOL=${{ matrix.mpi }}
+        --install-prefix=${{ runner.temp }}
+        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+
+    - name: CMake print debug find
+      if: failure()
+      run: >-
+        cmake --preset default
+        -Dmpi:BOOL=${{ matrix.mpi }}
+        --install-prefix=${{ runner.temp }}
+        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+        --debug-find --fresh
 
     - name: CMake build
       run: cmake --build --preset default --parallel
@@ -75,16 +92,60 @@ jobs:
 
     - name: Upload package
       if: github.event.action == 'published'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: binary-archive
+        name: linux-binary-archive-${{ matrix.cc }}-${{ matrix.mpi }}-shared-${{ matrix.shared }}
         path: build/package
 
     - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: linux_cmake_log
+        name: linux_cmake_log-${{ matrix.cc }}-${{ matrix.mpi }}-shared-${{ matrix.shared }}
+        path: |
+          ./build/CMakeFiles/CMakeConfigureLog.yaml
+          ./build/Testing/Temporary/LastTest.log
+
+  linux-valgrind:
+    needs: linux
+    runs-on: ubuntu-22.04
+    name: CMake with Valgrind
+    timeout-minutes: 60
+
+    strategy:
+      matrix:
+        cc: [gcc]
+        shared: [false]
+        mpi: [true]
+        valgrind: [ON]
+
+    env:
+      CC: ${{ matrix.cc }}
+
+    steps:
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -yq
+        sudo apt-get install -yq --no-install-recommends \
+            libmpich-dev mpich valgrind
+
+    - name: Checkout source code
+      uses: actions/checkout@v4
+
+    - name: CMake configure
+      run: cmake --preset default -Dmpi:BOOL=${{ matrix.mpi }} --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DTEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }}
+
+    - name: CMake build
+      run: cmake --build --preset default --parallel
+
+    - name: CMake Test
+      run: ctest --preset default
+
+    - name: Upload log files
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux_cmake_valgrind_log
         path: |
           ./build/CMakeFiles/CMakeConfigureLog.yaml
           ./build/Testing/Temporary/LastTest.log
@@ -92,11 +153,11 @@ jobs:
   mac:
     runs-on: macos-latest
     name: CMake build on MacOS
-    timeout-minutes: 20
+    timeout-minutes: 60
 
     strategy:
       matrix:
-        cc: [clang, gcc-12]
+        cc: [clang, gcc-13]
         shared: [false]
         include:
         - shared: true
@@ -107,7 +168,7 @@ jobs:
       CC: ${{ matrix.cc }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout source code
 
     - name: Install system dependencies
@@ -137,16 +198,16 @@ jobs:
 
     - name: Upload package
       if: github.event.action == 'published'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: binary-archive
+        name: mac-binary-archive-${{ matrix.cc }}-shared-${{ matrix.shared }}
         path: build/package
 
     - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: mac_cmake_log
+        name: mac_cmake_log-${{ matrix.cc }}-shared-${{ matrix.shared }}
         path: |
           ./build/CMakeFiles/CMakeConfigureLog.yaml
           ./build/Testing/Temporary/LastTest.log
@@ -154,7 +215,7 @@ jobs:
   windows:
     runs-on: windows-latest
     name: CMake build on Windows
-    timeout-minutes: 20
+    timeout-minutes: 60
 
     strategy:
       matrix:
@@ -165,7 +226,7 @@ jobs:
       CMAKE_GENERATOR: "MinGW Makefiles"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout source code
 
     - name: CMake configure without MPI
@@ -192,14 +253,14 @@ jobs:
 
     - name: Upload package
       if: github.event.action == 'published'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: binary-archive
+        name: windows-binary-archive
         path: build/package
 
     - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windows_cmake_log
         path: |

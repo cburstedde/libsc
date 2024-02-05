@@ -1,38 +1,52 @@
-# optional json library :
-# 1. try cmake find_package in config mode
-# 2. try pkg-config
+include(ExternalProject)
+include(GNUInstallDirs)
 
-find_package(jansson CONFIG)
+set(SC_HAVE_JSON 1 CACHE BOOL "using SC-built JANSSON")
 
-if(jansson_FOUND)
+set(jansson_url "https://github.com/akheron/jansson/releases/download/v2.14/jansson-2.14.tar.bz2")
 
-  message(STATUS "jansson library found via find_package")
-  set(SC_HAVE_JSON 1)
+set(JANSSON_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/include)
 
-else()
-
-  # make sure cmake macro pkg_check_modules is available
-  find_package(PkgConfig)
-
-  if (PKG_CONFIG_FOUND)
-    pkg_check_modules(LIBSC_JANSSON QUIET IMPORTED_TARGET jansson)
-
-    if (LIBSC_JANSSON_FOUND)
-      message(STATUS "jansson library found via pkg-config")
-      add_library(jansson::jansson ALIAS PkgConfig::LIBSC_JANSSON)
-      set(jansson_FOUND 1)
-      set(SC_HAVE_JSON 1)
-    else()
-      set(jansson_FOUND 0)
-    endif()
+if(BUILD_SHARED_LIBS)
+  if(WIN32)
+    set(JANSSON_LIBRARIES ${CMAKE_INSTALL_FULL_BINDIR}/${CMAKE_SHARED_LIBRARY_PREFIX}jansson${CMAKE_SHARED_LIBRARY_SUFFIX})
   else()
-    message(NOTICE "pkg-config executable is not available.")
-    set(jansson_FOUND 0)
+    set(JANSSON_LIBRARIES ${CMAKE_INSTALL_FULL_LIBDIR}/${CMAKE_SHARED_LIBRARY_PREFIX}jansson${CMAKE_SHARED_LIBRARY_SUFFIX})
   endif()
-
+else()
+    set(JANSSON_LIBRARIES ${CMAKE_INSTALL_FULL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}jansson${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
 
-if( NOT jansson_FOUND )
-  message(NOTICE "libjansson was not found")
-  set(SC_HAVE_JSON 0)
-endif()
+set(jansson_cmake_args
+-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
+-DJANSSON_BUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
+-DCMAKE_BUILD_TYPE=Release
+-DJANSSON_EXAMPLES:BOOL=off
+-DJANSSON_WITHOUT_TESTS:BOOL=on
+-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
+-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+)
+
+ExternalProject_Add(JANSSON
+URL ${jansson_url}
+CMAKE_ARGS ${jansson_cmake_args}
+BUILD_BYPRODUCTS ${JANSSON_LIBRARIES}
+CONFIGURE_HANDLED_BY_BUILD ON
+USES_TERMINAL_DOWNLOAD true
+USES_TERMINAL_UPDATE true
+USES_TERMINAL_CONFIGURE true
+USES_TERMINAL_BUILD true
+USES_TERMINAL_INSTALL true
+USES_TERMINAL_TEST true
+)
+
+
+# --- imported target
+
+file(MAKE_DIRECTORY ${JANSSON_INCLUDE_DIRS})
+# avoid race condition
+
+add_library(jansson::jansson INTERFACE IMPORTED GLOBAL)
+add_dependencies(jansson::jansson JANSSON)  # to avoid include directory race condition
+target_link_libraries(jansson::jansson INTERFACE ${JANSSON_LIBRARIES})
+target_include_directories(jansson::jansson INTERFACE ${JANSSON_INCLUDE_DIRS})

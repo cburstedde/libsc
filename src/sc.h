@@ -152,7 +152,7 @@
 #endif
 #include <ctype.h>
 #include <float.h>
-#if defined SC_HAVE_LIBGEN_H && !defined _MSC_VER
+#ifdef SC_HAVE_LIBGEN_H
 #include <libgen.h>
 #endif
 #include <limits.h>
@@ -170,6 +170,15 @@
 #endif
 #ifdef SC_HAVE_SYS_TIME_H
 #include <sys/time.h>
+#elif defined(_MSC_VER) && !defined(SC_HAVE_GETTIMEOFDAY)
+#define WIN32_LEAN_AND_MEAN
+#include <Winsock2.h>
+struct timezone
+{
+  int                 tz_minuteswest;
+  int                 tz_dsttime;
+};
+int gettimeofday (struct timeval*, struct timezone*);
 #endif
 #ifdef SC_HAVE_UNISTD_H
 #include <unistd.h>
