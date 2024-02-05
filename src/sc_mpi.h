@@ -452,19 +452,43 @@ int                 sc_MPI_Comm_free (sc_MPI_Comm *freecomm);
  */
 int                 sc_MPI_Type_size (sc_MPI_Datatype datatype, int *size);
 
-/** Pack several instances of the same datatype into contiguous memory */
+/** Pack several instances of the same datatype into contiguous memory 
+ * \param [in] inbuf          buffer of elements of type \b datatype
+ * \param [in] incount        number of elements in \b inbuf
+ * \param [in] datatype       datatype of elements in \b inbuf
+ * \param [out] outbuf        output buffer in which elements are packed
+ * \param [in] outsize        size of output buffer in bytes
+ * \param [in, out] position  The current position in the output buffer
+ * \param [in] comm           Valid MPI communicator.
+ * \return                  MPI_SUCCESS on success.
+ * /
 int                 sc_MPI_Pack (const void *inbuf, int incount,
                                  sc_MPI_Datatype datatype, void *outbuf,
                                  int outsize, int *position,
                                  sc_MPI_Comm comm);
 
-/** Unpack contiguous memory into several instances of the same datatype */
+/** Unpack contiguous memory into several instances of the same datatype 
+ * \param [in] inbuf          buffer of packed data
+ * \param [in] insize         number of bytes in \b inbuf
+ * \param [in, out] position  The current position in the input buffer
+ * \param [out] outbuf        output buffer in which elements are unpacked
+ * \param [in] outcount       number of elements to unpack
+ * \param [in] datatype       datatype of elements to be unpacked
+ * \param [in] comm           Valid MPI communicator.
+ * \return                  MPI_SUCCESS on success.
+ * /
 int                 sc_MPI_Unpack (const void *inbuf, int insize,
                                    int *position, void *outbuf, int outcount,
                                    sc_MPI_Datatype datatype,
                                    sc_MPI_Comm comm);
 
-/** Determine how much space in bytes is needed to pack several instances of the same datatype */
+/** Determine how much space in bytes is needed to pack several instances of the same datatype 
+ * \param [in] incount        number of elements to pack
+ * \param [in] datatype       datatype of elements to pack
+ * \param [in] comm           Valid MPI communicator.
+ * \param [out] size          number of bytes needed to packed \b incount instances of \b datatype.
+ * \return                  MPI_SUCCESS on success.
+ */
 int                 sc_MPI_Pack_size (int incount, sc_MPI_Datatype datatype,
                                       sc_MPI_Comm comm, int *size);
 
