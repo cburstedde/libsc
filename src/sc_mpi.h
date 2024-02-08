@@ -460,8 +460,8 @@ int                 sc_MPI_Type_size (sc_MPI_Datatype datatype, int *size);
  * \param [in] outsize        size of output buffer in bytes
  * \param [in, out] position  The current position in the output buffer
  * \param [in] comm           Valid MPI communicator.
- * \return                  MPI_SUCCESS on success.
- * /
+ * \return                    MPI_SUCCESS on success.
+ */
 int                 sc_MPI_Pack (const void *inbuf, int incount,
                                  sc_MPI_Datatype datatype, void *outbuf,
                                  int outsize, int *position,
@@ -475,8 +475,8 @@ int                 sc_MPI_Pack (const void *inbuf, int incount,
  * \param [in] outcount       number of elements to unpack
  * \param [in] datatype       datatype of elements to be unpacked
  * \param [in] comm           Valid MPI communicator.
- * \return                  MPI_SUCCESS on success.
- * /
+ * \return                    MPI_SUCCESS on success.
+ */
 int                 sc_MPI_Unpack (const void *inbuf, int insize,
                                    int *position, void *outbuf, int outcount,
                                    sc_MPI_Datatype datatype,
