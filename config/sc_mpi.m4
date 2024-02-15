@@ -279,6 +279,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM(
 int mpiret =
 MPI_Init ((int *) 0, (char ***) 0);
 if (mpiret == MPI_ERR_ARG ||
+    mpiret == MPI_ERR_COUNT ||
     mpiret == MPI_ERR_UNKNOWN ||
     mpiret == MPI_ERR_OTHER ||
     mpiret == MPI_ERR_NO_MEM) {
