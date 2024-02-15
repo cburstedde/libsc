@@ -318,7 +318,6 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_ERR_FILE_IN_USE  SC3_MPI_ERR_FILE_IN_USE /**< Emulate \c SC_MPI_ERR_FILE_IN_USE. */
 #define sc_MPI_ERR_DUP_DATAREP  SC3_MPI_ERR_DUP_DATAREP /**< Emulate \c SC_MPI_ERR_DUP_DATAREP. */
 #define sc_MPI_ERR_CONVERSION   SC3_MPI_ERR_CONVERSION  /**< Emulate \c SC_MPI_ERR_CONVERSION. */
-#define sc_MPI_ERR_COUNT        SC3_MPI_ERR_COUNT       /**< Emulate \c SC_MPI_ERR_COUNT. */
 #define sc_MPI_ERR_IO           SC3_MPI_ERR_IO          /**< Emulate \c SC_MPI_ERR_IO. */
 #define sc_MPI_ERR_LASTCODE     SC3_MPI_ERR_LASTCODE    /**< Emulate \c SC_MPI_ERR_LASTCODE. */
 
