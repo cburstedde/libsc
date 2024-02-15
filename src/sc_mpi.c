@@ -463,7 +463,7 @@ sc_MPI_Pack (const void *inbuf, int incount, sc_MPI_Datatype datatype,
   mpiret = sc_MPI_Pack_size (incount, datatype, comm, &size);
   SC_CHECK_MPI (mpiret);
 
-  /** Check that we have enough space to pack the datatypes */
+  /* Check that we have enough space to pack the datatypes */
   if (*position + size > outsize) {
     return sc_MPI_ERR_NO_SPACE;
   }

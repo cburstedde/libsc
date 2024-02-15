@@ -26,11 +26,12 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 */
+
 #include <sc.h>
 #include <sc_mpi.h>
 
 #define TEST_NUM_TYPES 3
-int                 num_values[] = { 2, 5, 6 };
+const int           num_values[TEST_NUM_TYPES] = { 2, 5, 6 };
 
 typedef struct message
 {
@@ -68,7 +69,7 @@ test_message_equal (test_message_t *message1, test_message_t *message2)
   return 1;
 }
 
-/** Pack several instances of test messages into contiguous memory */
+/* Pack several instances of test messages into contiguous memory */
 int
 test_message_MPI_Pack (const test_message_t *messages, int incount,
                        void *outbuf, int outsize, int *position,
@@ -84,7 +85,7 @@ test_message_MPI_Pack (const test_message_t *messages, int incount,
   return 0;
 }
 
-/** Unpack contiguous memory into several instances of the same datatype */
+/* Unpack contiguous memory into several instances of the same datatype */
 int
 test_message_MPI_Unpack (const void *inbuf, int insize,
                          int *position, test_message_t *messages,
@@ -101,7 +102,7 @@ test_message_MPI_Unpack (const void *inbuf, int insize,
   return 0;
 }
 
-/** Determine how much space in bytes is needed to pack several test messages */
+/* Determine how much space in bytes is needed to pack several test messages */
 int
 test_message_MPI_Pack_size (int incount, const test_message_t *messages,
                             sc_MPI_Comm comm, int *size)
@@ -124,11 +125,11 @@ main (int argc, char **argv)
 {
   int                 mpiret;
   sc_MPI_Comm         mpicomm;
+
   /* standard initialization */
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
   mpicomm = sc_MPI_COMM_WORLD;
-
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
   int                 num_test_messages = 5;
@@ -138,7 +139,7 @@ main (int argc, char **argv)
                             imessage + 1.0);
   }
 
-  // get message size, pack, unpack and compare
+  /* get message size, pack, unpack and compare */
   int                 buffer_size = 0;
   test_message_MPI_Pack_size (num_test_messages, messages, mpicomm,
                               &buffer_size);
