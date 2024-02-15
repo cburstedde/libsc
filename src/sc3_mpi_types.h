@@ -89,6 +89,7 @@ typedef MPI_Op      sc3_MPI_Op_t;
 #define SC3_MPI_MAX_ERROR_STRING MPI_MAX_ERROR_STRING
 #define SC3_MPI_SUCCESS MPI_SUCCESS
 #define SC3_MPI_ERR_ARG MPI_ERR_ARG
+#define SC3_MPI_ERR_COUNT MPI_ERR_COUNT
 #define SC3_MPI_ERR_UNKNOWN MPI_ERR_UNKNOWN
 #define SC3_MPI_ERR_OTHER MPI_ERR_OTHER
 #define SC3_MPI_ERR_NO_MEM MPI_ERR_NO_MEM
@@ -134,7 +135,6 @@ typedef enum sc3_MPI_IO_Errorcode
   SC3_MPI_ERR_FILE_IN_USE,
   SC3_MPI_ERR_DUP_DATAREP,
   SC3_MPI_ERR_CONVERSION,
-  SC3_MPI_ERR_COUNT,
   SC3_MPI_ERR_IO,
   SC3_MPI_ERR_LASTCODE
 }
@@ -199,6 +199,7 @@ typedef enum sc3_MPI_Errorcode
   /* we separate the error values from errno values */
   SC3_MPI_SUCCESS = 0,  /**< An MPI function has exited successfully. */
   SC3_MPI_ERR_ARG = 14000, /**< An MPI function encountered invalid arguments. */
+  SC3_MPI_ERR_COUNT,     /**< An MPI function encountered an invalid count argument. */
   SC3_MPI_ERR_UNKNOWN,  /**< An MPI function has produced an unknown error. */
   SC3_MPI_ERR_OTHER,    /**< An MPI function has produced some known error. */
   SC3_MPI_ERR_NO_MEM,   /**< An MPI function ran out of memory. */
@@ -219,7 +220,6 @@ typedef enum sc3_MPI_Errorcode
   SC3_MPI_ERR_FILE_IN_USE,
   SC3_MPI_ERR_DUP_DATAREP,
   SC3_MPI_ERR_CONVERSION,
-  SC3_MPI_ERR_COUNT,
   SC3_MPI_ERR_IO,
   SC3_MPI_ERR_LASTCODE
 }

@@ -107,6 +107,7 @@ sc_tag_t;
 /* constants */
 #define sc_MPI_SUCCESS             MPI_SUCCESS
 #define sc_MPI_ERR_ARG             MPI_ERR_ARG
+#define sc_MPI_ERR_COUNT           MPI_ERR_COUNT
 #define sc_MPI_ERR_UNKNOWN         MPI_ERR_UNKNOWN
 #define sc_MPI_ERR_OTHER           MPI_ERR_OTHER
 #define sc_MPI_ERR_NO_MEM          MPI_ERR_NO_MEM
@@ -129,7 +130,6 @@ sc_tag_t;
 #define sc_MPI_ERR_FILE_IN_USE            MPI_ERR_FILE_IN_USE
 #define sc_MPI_ERR_DUP_DATAREP            MPI_ERR_DUP_DATAREP
 #define sc_MPI_ERR_CONVERSION             MPI_ERR_CONVERSION
-#define sc_MPI_ERR_COUNT                  MPI_ERR_COUNT
 #define sc_MPI_ERR_IO                     MPI_ERR_IO
 
 #define sc_MPI_ERR_LASTCODE               MPI_ERR_LASTCODE
@@ -154,7 +154,6 @@ typedef enum sc_MPI_IO_Errorcode
   sc_MPI_ERR_FILE_IN_USE,
   sc_MPI_ERR_DUP_DATAREP,
   sc_MPI_ERR_CONVERSION,
-  sc_MPI_ERR_COUNT,
   sc_MPI_ERR_IO,
   sc_MPI_ERR_LASTCODE
 }
@@ -297,6 +296,7 @@ sc_MPI_IO_Errorcode_t;
 
 #define sc_MPI_SUCCESS          SC3_MPI_SUCCESS         /**< Emulate \c SC_MPI_SUCCESS. */
 #define sc_MPI_ERR_ARG          SC3_MPI_ERR_ARG         /**< Emulate \c SC_MPI_ERR_ARG. */
+#define sc_MPI_ERR_COUNT        SC3_MPI_ERR_COUNT       /**< Emulate \c SC_MPI_ERR_COUNT. */
 #define sc_MPI_ERR_UNKNOWN      SC3_MPI_ERR_UNKNOWN     /**< Emulate \c SC_MPI_ERR_UNKNOWN. */
 #define sc_MPI_ERR_OTHER        SC3_MPI_ERR_OTHER       /**< Emulate \c SC_MPI_ERR_OTHER. */
 #define sc_MPI_ERR_NO_MEM       SC3_MPI_ERR_NO_MEM      /**< Emulate \c SC_MPI_ERR_NO_MEM. */
