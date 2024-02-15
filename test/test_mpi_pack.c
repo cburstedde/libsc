@@ -37,7 +37,8 @@ typedef struct message
 {
   int8_t              type;
   double             *values;
-} test_message_t;
+}
+test_message_t;
 
 void
 test_message_construct (test_message_t *message, int8_t type,
@@ -59,8 +60,9 @@ test_message_destroy (test_message_t *message)
 int
 test_message_equal (test_message_t *message1, test_message_t *message2)
 {
-  if (message1->type != message2->type)
+  if (message1->type != message2->type) {
     return 0;
+  }
   for (int ivalue = 0; ivalue < num_values[message1->type]; ivalue++) {
     if (message1->values[ivalue] != message2->values[ivalue]) {
       return 0;
@@ -111,6 +113,7 @@ test_message_MPI_Pack_size (int incount, const test_message_t *messages,
   for (int imessage = 0; imessage < incount; imessage++) {
     int                 pack_size;
     int                 single_message_size = 0;
+
     sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &pack_size);
     single_message_size += pack_size;
     sc_MPI_Pack_size (1, sc_MPI_DOUBLE, comm, &pack_size);
