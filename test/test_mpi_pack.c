@@ -26,6 +26,7 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 */
+
 #include <sc.h>
 #include <sc_mpi.h>
 
@@ -35,13 +36,14 @@
 */
 
 #define TEST_NUM_TYPES 3
-int                 num_values[] = { 2, 5, 6 };
+const int           num_values[TEST_NUM_TYPES] = { 2, 5, 6 };
 
 typedef struct message
 {
   int8_t              type;
   double             *values;
-} test_message_t;
+}
+test_message_t;
 
 void
 test_message_construct (test_message_t *message, int8_t type,
@@ -64,8 +66,9 @@ test_message_destroy (test_message_t *message)
 int
 test_message_equal (test_message_t *message1, test_message_t *message2)
 {
-  if (message1->type != message2->type)
+  if (message1->type != message2->type) {
     return 0;
+  }
   for (int ivalue = 0; ivalue < num_values[message1->type]; ivalue++) {
     if (message1->values[ivalue] != message2->values[ivalue]) {
       return 0;
@@ -74,7 +77,7 @@ test_message_equal (test_message_t *message1, test_message_t *message2)
   return 1;
 }
 
-/** Pack several instances of test messages into contiguous memory */
+/* Pack several instances of test messages into contiguous memory */
 int
 test_message_MPI_Pack (const test_message_t *messages, int incount,
                        void *outbuf, int outsize, int *position,
@@ -95,7 +98,7 @@ test_message_MPI_Pack (const test_message_t *messages, int incount,
   return 0;
 }
 
-/** Unpack contiguous memory into several instances of the same datatype */
+/* Unpack contiguous memory into several instances of the same datatype */
 int
 test_message_MPI_Unpack (const void *inbuf, int insize,
                          int *position, test_message_t *messages,
@@ -120,7 +123,7 @@ test_message_MPI_Unpack (const void *inbuf, int insize,
   return 0;
 }
 
-/** Determine how much space in bytes is needed to pack several test messages */
+/* Determine how much space in bytes is needed to pack several test messages */
 int
 test_message_MPI_Pack_size (int incount, const test_message_t *messages,
                             sc_MPI_Comm comm, int *size)
