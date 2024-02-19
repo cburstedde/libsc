@@ -163,6 +163,7 @@ typedef enum sc3_MPI_Datatype
                          * It is preferred over MPI_CHAR since the latter
                          * may amount to multiple bytes for wide chars. */
   SC3_MPI_INT,          /**< Same as in original MPI.  System int type. */
+  SC3_MPI_INT8_T,       /**< Same as in original MPI.  System int8 type. */
   SC3_MPI_2INT,         /**< Same as in original MPI.  Two system ints. */
   SC3_MPI_UNSIGNED,     /**< Same as in original MPI.  System unsigned. */
   SC3_MPI_LONG,         /**< Same as in original MPI.  System long type. */
