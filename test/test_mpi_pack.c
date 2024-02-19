@@ -45,11 +45,12 @@ typedef struct message
 }
 test_message_t;
 
-void
+static void
 test_message_construct (test_message_t *message, int8_t type,
                         double startvalue)
 {
   int                 ival;
+
   message->type = type;
   message->values = SC_ALLOC (double, num_values[type]);
   for (ival = 0; ival < num_values[type]; ival++) {
@@ -57,19 +58,21 @@ test_message_construct (test_message_t *message, int8_t type,
   }
 }
 
-void
+static void
 test_message_destroy (test_message_t *message)
 {
   SC_FREE (message->values);
 }
 
-int
+static int
 test_message_equal (test_message_t *message1, test_message_t *message2)
 {
+  int                 ivalue;
+
   if (message1->type != message2->type) {
     return 0;
   }
-  for (int ivalue = 0; ivalue < num_values[message1->type]; ivalue++) {
+  for (ivalue = 0; ivalue < num_values[message1->type]; ivalue++) {
     if (message1->values[ivalue] != message2->values[ivalue]) {
       return 0;
     }
@@ -78,14 +81,16 @@ test_message_equal (test_message_t *message1, test_message_t *message2)
 }
 
 /* Pack several instances of test messages into contiguous memory */
-int
+static int
 test_message_MPI_Pack (const test_message_t *messages, int incount,
                        void *outbuf, int outsize, int *position,
                        sc_MPI_Comm comm)
 {
   int                 imessage;
+
   for (imessage = 0; imessage < incount; imessage++) {
     int                 mpiret;
+
     mpiret =
       sc_MPI_Pack (&(messages[imessage].type), 1, sc_MPI_INT8_T, outbuf,
                    outsize, position, comm);
@@ -99,14 +104,16 @@ test_message_MPI_Pack (const test_message_t *messages, int incount,
 }
 
 /* Unpack contiguous memory into several instances of the same datatype */
-int
+static int
 test_message_MPI_Unpack (const void *inbuf, int insize,
                          int *position, test_message_t *messages,
                          int outcount, sc_MPI_Comm comm)
 {
   int                 imessage;
+
   for (imessage = 0; imessage < outcount; imessage++) {
     int                 mpiret;
+
     mpiret =
       sc_MPI_Unpack (inbuf, insize, position, &(messages[imessage].type), 1,
                      sc_MPI_INT8_T, comm);
@@ -124,12 +131,13 @@ test_message_MPI_Unpack (const void *inbuf, int insize,
 }
 
 /* Determine how much space in bytes is needed to pack several test messages */
-int
+static int
 test_message_MPI_Pack_size (int incount, const test_message_t *messages,
                             sc_MPI_Comm comm, int *size)
 {
-  *size = 0;
   int                 imessage;
+
+  *size = 0;
   for (imessage = 0; imessage < incount; imessage++) {
     int                 pack_size;
     int                 single_message_size = 0;
@@ -154,7 +162,7 @@ main (int argc, char **argv)
   int                 mpiret;
   sc_MPI_Comm         mpicomm;
 
-  int                 num_test_messages = 5;
+  const int           num_test_messages = 5;
   int                 imessage;
   test_message_t     *messages;
   test_message_t     *unpacked_messages;
