@@ -214,7 +214,7 @@ typedef uint64_t    sc_scda_ulong;
 typedef enum sc_scda_ret
 {
   SC_SCDA_FERR_SUCCESS = 0, /**< successful function call */
-  SC_SCDA_FERR_FORMAT = sc_MPI_ERR_LASTCODE,  /**< File not conforming to the
+  SC_SCDA_FERR_FORMAT ,     /**< File not conforming to the
                                                    \b scda format. */
   SC_SCDA_FERR_USAGE,   /**< Incorrect workflow of an \b scda reading function.
                              For example, the user might have identified a
