@@ -120,6 +120,9 @@ typedef MPI_Op      sc3_MPI_Op_t;
 typedef enum sc3_MPI_IO_Errorcode
 {
   /* only MPI I/O error classes */
+  /* WARNING: This enum is only used in the deprecated case of activated MPI but
+   * deactivated MPI I/O.
+   */
   SC3_MPI_ERR_FILE = MPI_ERR_LASTCODE,
   SC3_MPI_ERR_NOT_SAME,
   SC3_MPI_ERR_AMODE,

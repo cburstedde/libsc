@@ -1640,6 +1640,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
 
   return errcode;
 #else
+  /* WARNING: This code with activated MPI (SC_ENABLE_MPI) is deprecated. */
   /* allocate internal file context */
   *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
   (*mpifile)->filename = filename;
@@ -1740,6 +1741,8 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   return errcode;
 #else
 
+  /* WARNING: This code with activated MPI (SC_ENABLE_MPI) is deprecated. */
+
   /* The value count > 0 is only legal on rank 0.
    * On all other ranks the code is only legal for count == 0.
    */
@@ -1823,6 +1826,9 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   return errcode;
 #elif defined SC_ENABLE_MPI
   /* MPI but no MPI IO */
+
+  /* WARNING: This code and configuration case is deprecated. */
+
   {
     int                 mpisize, rank, count, size;
     int                 active, errval;
@@ -2033,6 +2039,8 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   return errcode;
 #else
 
+  /* WARNING: This code with activated MPI (SC_ENABLE_MPI) is deprecated. */
+
   /* The value count > 0 is only legal on rank 0.
    * On all other ranks the code is only legal for count == 0.
    */
@@ -2116,6 +2124,9 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
   return errcode;
 #elif defined SC_ENABLE_MPI
   /* MPI but no MPI IO */
+
+  /* WARNING: This code and configuration case is deprecated. */
+
   /* offset is ignored and we use here the append mode.
    * This is the case since the C-standard open mode
    * "wb" would earse the existing file and create a
@@ -2282,6 +2293,9 @@ sc_io_close (sc_MPI_File * mpifile)
   mpiret = sc_io_error_class (mpiret, &eclass);
   SC_CHECK_MPI (mpiret);
 #else
+
+  /* WARNING: This code with activated MPI (SC_ENABLE_MPI) is deprecated. */
+
   int                 retval;
 
   eclass = sc_MPI_SUCCESS;
