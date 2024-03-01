@@ -1704,16 +1704,6 @@ sc_io_read (sc_MPI_File mpifile, void *ptr, size_t zcount,
 }
 
 int
-sc_io_read_at_legal (void)
-{
-#ifdef SC_ENABLE_MPIIO
-  return 1;
-#else
-  return 0;
-#endif
-}
-
-int
 sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
                int count, sc_MPI_Datatype t, int *ocount)
 {
@@ -2002,12 +1992,6 @@ sc_io_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
   /* we do not provide a non-MPI I/O implementation of sc_io_write */
   SC_ABORT ("no non-MPI I/O implementation of sc_io_write/sc_mpi_write");
 #endif
-}
-
-int
-sc_io_write_at_legal (void)
-{
-  return sc_io_read_at_legal ();
 }
 
 int
