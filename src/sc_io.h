@@ -820,7 +820,7 @@ int                 sc_io_write_all (sc_MPI_File mpifile,
 /** Close collectively a sc_MPI_File.
  *
  * \note This case of activated MPI but deactivated MPI I/O is deprecated.
- * 
+ *
  * \param[in] file  MPI file object that is closed.
  * \return              A sc_MPI_ERR_* as defined in \ref sc_mpi.h.
  *                      The error code can be passed to
