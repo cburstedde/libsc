@@ -418,6 +418,12 @@ dnl This macro prints messages at the end of the configure run.
 dnl
 AC_DEFUN([SC_FINAL_MESSAGES],
 [
+if test "x$HAVE_PKG_MPI" = xyes && test "x$HAVE_PKG_MPIIO" != xyes ; then
+AC_MSG_NOTICE([SC_SINGLE_LINE
+$1 has been configured --enable-mpi and --disable-mpiio.
+This configuration is DEPRECATED and will be disallowed in the future.
+If the MPI File API is not available, please configure to --disable-mpi.])
+fi
 if test "x$$1_HAVE_ZLIB" = x ; then
 AC_MSG_NOTICE([SC_SINGLE_LINE
 $1 did not find a recent zlib containing the function adler32_combine.
