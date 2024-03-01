@@ -55,7 +55,9 @@
  *                    compiler wrappers.  If this option is not given, wrappers
  *                    for MPI routines are used instead and the code is compiled
  *                    in serial only.
- * * `--disable-mpiio`  may be used to avoid using `MPI_File` based calls.
+ * * `--disable-mpiio`  may be used to avoid using `MPI_File` based calls. The
+                      usage of `--disable-mpiio` is deprecated and should not be
+                      used anymore.
  *
  * A typical development configure line looks as follows:
  * > `relative/path/to/configure CFLAGS="-Wall -O0 -g" --enable-mpi --enable-debug`
