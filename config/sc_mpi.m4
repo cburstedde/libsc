@@ -78,7 +78,7 @@ if test "x$enableval" = xyes ; then
     HAVE_PKG_MPIIO=yes
   fi
 elif test "x$enableval" != xno ; then
-  AC_MSG_WARN([Ignoring --enable-mpiio with unsupported argument])
+  AC_MSG_ERROR([use --enable-mpiio without an argument, or with yes or no])
 fi
 AC_MSG_CHECKING([whether we are using MPI I/O])
 AC_MSG_RESULT([$HAVE_PKG_MPIIO])
