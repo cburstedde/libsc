@@ -32,7 +32,7 @@
  *    provide functions centered around \ref sc_io_sink_new and \ref
  *    sc_io_source_new.
  *  - To abstract parallel file I/O in a way that works both with and
- *    without MPI I/O support, we provide \ref sc_io_open, \ref sc_io_write
+ *    without MPI support, we provide \ref sc_io_open, \ref sc_io_write
  *    and friends.
  *  - To write to the VTK binary compressed format, we provide suitable
  *    functions to base64 encode and zlib-compress as required; see
@@ -566,7 +566,7 @@ void                sc_fread (void *ptr, size_t size,
  */
 void                sc_fflush_fsync_fclose (FILE * file);
 
-/** Opens a MPI file or without MPI I/O or even without MPI a file context.
+/** Opens a MPI file or without MPI a file context.
  *
  * \param[in] mpicomm   MPI communicator
  * \param[in] filename  The path to the file that we want to open.
@@ -574,7 +574,7 @@ void                sc_fflush_fsync_fclose (FILE * file);
  * \param[in] mpiinfo   The MPI info
  * \param[out] mpifile  The MPI file that is opened. This can be a
  *                      an actual MPI IO file or an internal file
- *                      conntext to preserve some MPI IO functionalities
+ *                      conntext to preserve some IO functionalities
  *                      without MPI IO and to have working code without
  *                      MPI at all. This output variable is only filled if the
  *                      return value of the function is \ref sc_MPI_SUCCESS.
@@ -726,8 +726,6 @@ int                 sc_io_write_at_all (sc_MPI_File mpifile,
  * with offset = 0 but the call of this function is not equivalent
  * to a call of MPI_File_write_all since this function ignores the current
  * position of the file cursor.
- *
- * \note This case of activated MPI but deactivated MPI I/O is deprecated.
  *
  * \param [in,out] mpifile      MPI file object opened for writing.
  * \param [in] ptr      Data array to write to disk.

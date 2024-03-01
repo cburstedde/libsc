@@ -135,10 +135,10 @@
  * - \ref sc_scda_ferror_class and
  * - \ref sc_scda_ferror_string.
  *
- * If MPI I/O is available \b errcode may encode an MPI error code. In this case
+ * If MPI is available \b errcode may encode an MPI error code. In this case
  * the two error examination functions output the error class and error string
  * as it would be output by the corresponding MPI functions, respectively.
- * Without MPI I/O or MPI it is still possible that \b errcode encodes an I/O
+ * Without MPI it is still possible that \b errcode encodes an I/O
  * operation related error code. This case does not differ concerning the error
  * code examiniation.
  * Moreover, \b errcode can encode an error code related to \b scda, i.e.
@@ -264,7 +264,7 @@ sc_scda_ret_t;
  */
 typedef struct sc_scda_ferror
 {
-  int mpiret;            /**< MPI function return value; without MPI I/O or MPI
+  int mpiret;            /**< MPI function return value; without MPI
                               this variable can get filled by other I/O operation
                               error codes, which are still interpretable by
                               the error \b scda examination functions */
@@ -287,8 +287,8 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  * It is collective and creates the file on a parallel file system.
  * \note
  * All parameters are collective.
- * This function leaves the file open if MPI I/O is available.
- * Independent of the availability of MPI I/O the user can write one or more
+ * This function leaves the file open if MPI is available.
+ * Independent of the availability of MPI the user can write one or more
  * file sections before closing the file (context) using \ref sc_scda_fclose.
  *
  * It is the user's responsibility to write any further
@@ -304,7 +304,7 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  * [preprint](https://doi.org/10.48550/arXiv.2307.06789).
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent errors.
+ * Without MPI the function may abort on file system dependent errors.
  *
  * \param [in]     mpicomm   The MPI communicator that is used to open the
  *                           parallel file.
@@ -348,7 +348,7 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  * All parameters except of \b data are collective.
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent
+ * Without MPI the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -394,7 +394,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  * All parameters except of \b block_data are collective.
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent
+ * Without MPI the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -456,7 +456,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  * All parameters except of \b array_data are collective.
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent
+ * Without MPI the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -569,7 +569,7 @@ int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
  * All parameters except of \b array_data and \b elem_sizes are collective.
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent
+ * Without MPI the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -673,7 +673,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * [preprint](https://doi.org/10.48550/arXiv.2307.06789).
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent errors.
+ * Without MPI the function may abort on file system dependent errors.
  *
  * \param [in]     mpicomm   The MPI communicator that is used to open the
  *                           parallel file.
@@ -716,7 +716,7 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  * All parameters are collective.
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent
+ * Without MPI the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -785,7 +785,7 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  * All parameters except of \b data are collective.
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent
+ * Without MPI the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -821,7 +821,7 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  * All parameters except of \b data_block are collective.
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent
+ * Without MPI the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -863,7 +863,7 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  * All parameters except of \b array_data are collective.
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent
+ * Without MPI the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -927,7 +927,7 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  * All parameters except of \b elem_sizes are collective.
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent
+ * Without MPI the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -976,7 +976,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  * All parameters except of \b array_data and \b elem_sizes are collective.
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent
+ * Without MPI the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -1092,7 +1092,7 @@ int                 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str,
  * All parameters are collective.
  *
  * This function returns NULL on MPI I/O errors.
- * Without MPI I/O the function may abort on file system dependent
+ * Without MPI the function may abort on file system dependent
  * errors.
  *
  * \param [in,out]  fc        File context previously created by
