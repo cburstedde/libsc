@@ -1,4 +1,4 @@
-
+dnl
 dnl sc_include.m4 - general custom macros
 dnl
 dnl This file is part of the SC Library.
@@ -7,6 +7,18 @@ dnl
 dnl Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
 
 dnl Documentation for macro names: brackets indicate optional arguments
+
+dnl SC_SINGLE_LINE
+dnl Print 72 characters '-' without any trailing newline.
+AC_DEFUN([SC_SINGLE_LINE],[dnl
+------------------------------------------------------------------------dnl
+])
+
+dnl SC_DOUBLE_LINE
+dnl Print 72 characters '=' without any trailing newline.
+AC_DEFUN([SC_DOUBLE_LINE],[dnl
+========================================================================dnl
+])
 
 dnl SC_VERSION(PREFIX)
 dnl Expose major, minor, and point version numbers as CPP defines.
@@ -407,8 +419,8 @@ dnl
 AC_DEFUN([SC_FINAL_MESSAGES],
 [
 if test "x$$1_HAVE_ZLIB" = x ; then
-AC_MSG_NOTICE([- $1 ----------------------------------------------------
-We did not find a recent zlib containing the function adler32_combine.
+AC_MSG_NOTICE([SC_SINGLE_LINE
+$1 did not find a recent zlib containing the function adler32_combine.
 This is OK if the following does not matter to you:
  - Calling some functions that rely on zlib will abort your program.
    These include sc_array_checksum and sc_vtk_write_compressed.
@@ -417,9 +429,10 @@ This is OK if the following does not matter to you:
 You can fix this by compiling a recent zlib and pointing LIBS to it.])
 fi
 if test "x$$1_HAVE_JSON" = x ; then
-AC_MSG_NOTICE([- $1 ----------------------------------------------------
-We did not find a JSON library containing json_integer and json_real.
+AC_MSG_NOTICE([SC_SINGLE_LINE
+$1 did not find a JSON library containing json_integer and json_real.
 This means that loading JSON files for option values will fail.
 You can fix this by installing the jansson development library.])
 fi
+AC_MSG_NOTICE([SC_SINGLE_LINE])
 ])
