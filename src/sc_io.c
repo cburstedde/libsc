@@ -1961,13 +1961,6 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 #endif
 }
 
-int
-sc_io_read_all (sc_MPI_File mpifile, void *ptr, int count, sc_MPI_Datatype t,
-                int *ocount)
-{
-  return sc_io_read_at_all (mpifile, 0, ptr, count, t, ocount);
-}
-
 void
 sc_io_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
              sc_MPI_Datatype t, const char *errmsg)
@@ -2255,13 +2248,6 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
   /* There is no collective write without MPI. */
   return sc_io_write_at (mpifile, offset, ptr, count, t, ocount);
 #endif
-}
-
-int
-sc_io_write_all (sc_MPI_File mpifile, const void *ptr, int count,
-                 sc_MPI_Datatype t, int *ocount)
-{
-  return sc_io_write_at_all (mpifile, 0, ptr, count, t, ocount);
 }
 
 int
