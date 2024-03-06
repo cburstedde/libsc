@@ -37,6 +37,7 @@ There have been breaking changes, very strictly speaking.
  - Further align I/O wrappers with and without MPI I/O.
  - Simplify the replacements for MPI_{read,write}_at*.
  - Further updates to the MPI I/O wrapper code.
+ - Deprecate the confiuration with MPI but without MPI I/O.
  - Add sc_io_source, sink_destroy_null functions.
  - Make sure not to sc_io_source_read an array beyond its length.
  - Add sc_io_file_load, save functions and test program.
