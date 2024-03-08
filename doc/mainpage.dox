@@ -90,7 +90,7 @@
  * data in serial and the data can be stored element-wise compressed.
  *
  * If MPI I/O is available, it is used to write and read in
- * parallel. Otherwise, the behaviour is emulated using serial I/O and MPI.
+ * parallel. The configuration case of MPI without MPI I/O is deprecated.
  * Without MPI this module still enables the user to write and read equivalent
  * files but only in serial.
  *
