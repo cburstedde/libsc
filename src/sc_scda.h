@@ -303,7 +303,7 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  * introduced in this \b scda
  * [preprint](https://doi.org/10.48550/arXiv.2307.06789).
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in]     mpicomm   The MPI communicator that is used to open the
  *                           parallel file.
@@ -346,7 +346,7 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  * \note
  * All parameters except of \b data are collective.
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_write.
@@ -390,7 +390,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  * \note
  * All parameters except of \b block_data are collective.
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_write.
@@ -450,7 +450,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  * \note
  * All parameters except of \b array_data are collective.
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_write.
@@ -561,7 +561,7 @@ int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
  * \note
  * All parameters except of \b array_data and \b elem_sizes are collective.
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_write.
@@ -663,7 +663,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * introduced in this \b scda
  * [preprint](https://doi.org/10.48550/arXiv.2307.06789).
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in]     mpicomm   The MPI communicator that is used to open the
  *                           parallel file.
@@ -705,7 +705,7 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  * \note
  * All parameters are collective.
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_read.
@@ -772,7 +772,7 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  * \note
  * All parameters except of \b data are collective.
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_read.
@@ -806,7 +806,7 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  * \note
  * All parameters except of \b data_block are collective.
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_read.
@@ -846,7 +846,7 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  * \note
  * All parameters except of \b array_data are collective.
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_read.
@@ -908,7 +908,7 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  * \note
  * All parameters except of \b elem_sizes are collective.
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_read.
@@ -955,7 +955,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  * \note
  * All parameters except of \b array_data and \b elem_sizes are collective.
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_read.
@@ -1069,7 +1069,7 @@ int                 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str,
  * \note
  * All parameters are collective.
  *
- * This function returns NULL on MPI I/O errors.
+ * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc        File context previously created by
  *                            \ref sc_scda_fopen_write or \ref
