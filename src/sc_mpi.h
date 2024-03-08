@@ -139,6 +139,9 @@ sc_tag_t;
 typedef enum sc_MPI_IO_Errorcode
 {
   /* only MPI I/O error classes */
+  /* WARNING: This enum is only used in the deprecated case of activated MPI but
+   * deactivated MPI I/O.
+   */
   sc_MPI_ERR_FILE = MPI_ERR_LASTCODE,
   sc_MPI_ERR_NOT_SAME,
   sc_MPI_ERR_AMODE,
