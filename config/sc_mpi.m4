@@ -12,6 +12,7 @@ dnl                   on the configure command line.
 dnl                   Likewise for F77, FC and CXX if enabled in SC_MPI_CONFIG.
 dnl --disable-mpiio   Only effective if --enable-mpi is given.  In this case,
 dnl                   do not use MPI I/O in sc and skip the compile-and-link test.
+dnl                   DEPRECATED: we will disallow this combination in the future.
 dnl --disable-mpithread Only effective if --enable-mpi is given.  In this case,
 dnl                   do not use MPI_Init_thread () and skip compile-and-link test.
 dnl --disable-mpishared Only effective if --enable-mpi is given.  In this case,
@@ -71,14 +72,14 @@ dnl The shell variable SC_ENABLE_MPIIO is set if --disable-mpiio is not given.
 dnl If not disabled, MPI I/O will be verified by a compile/link test below.
 AC_ARG_ENABLE([mpiio],
               [AS_HELP_STRING([--disable-mpiio],
-               [do not use MPI I/O (even if MPI is enabled)])],,
+               [do not use MPI I/O (this option is DEPRECATED)])],,
               [enableval=yes])
 if test "x$enableval" = xyes ; then
   if test "x$HAVE_PKG_MPI" = xyes ; then
     HAVE_PKG_MPIIO=yes
   fi
 elif test "x$enableval" != xno ; then
-  AC_MSG_WARN([Ignoring --enable-mpiio with unsupported argument])
+  AC_MSG_ERROR([use --disable-mpiio without an argument (option DEPRECATED)])
 fi
 AC_MSG_CHECKING([whether we are using MPI I/O])
 AC_MSG_RESULT([$HAVE_PKG_MPIIO])
@@ -514,7 +515,7 @@ dnl  ])
   ])
   if test "x$HAVE_PKG_MPIIO" = xyes ; then
     SC_MPIIO_C_COMPILE_AND_LINK(,
-      [AC_MSG_ERROR([MPI I/O not found; you may try --disable-mpiio])])
+      [AC_MSG_ERROR([MPI I/O not found; you may --disable-mpi altogether])])
   fi
   if test "x$HAVE_PKG_MPITHREAD" = xyes ; then
     SC_MPITHREAD_C_COMPILE_AND_LINK(,
