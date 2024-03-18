@@ -747,22 +747,18 @@ sc_MPI_Error_string (int errorcode, char *string, int *resultlen)
 size_t
 sc_mpi_sizeof (sc_MPI_Datatype t)
 {
-  if (t == sc_MPI_CHAR)
-    return sizeof (char);
   if (t == sc_MPI_BYTE)
     return 1;
+  if (t == sc_MPI_CHAR || t == sc_MPI_UNSIGNED_CHAR)
+    return sizeof (char);
   if (t == sc_MPI_SHORT || t == sc_MPI_UNSIGNED_SHORT)
     return sizeof (short);
   if (t == sc_MPI_INT || t == sc_MPI_UNSIGNED)
     return sizeof (int);
-  if (t == sc_MPI_INT8_T)
-    return sizeof (int8_t);
   if (t == sc_MPI_LONG || t == sc_MPI_UNSIGNED_LONG)
     return sizeof (long);
   if (t == sc_MPI_LONG_LONG_INT)
     return sizeof (long long);
-  if (t == sc_MPI_UNSIGNED_LONG_LONG)
-    return sizeof (unsigned long long);
   if (t == sc_MPI_FLOAT)
     return sizeof (float);
   if (t == sc_MPI_DOUBLE)
@@ -771,6 +767,8 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
     return sizeof (long double);
   if (t == sc_MPI_2INT)
     return 2 * sizeof (int);
+  if (t == sc_MPI_DOUBLE_INT)
+    return sizeof (double) + sizeof (int);
 
   SC_ABORT_NOT_REACHED ();
 }

@@ -185,23 +185,21 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_REQUEST_NULL        MPI_REQUEST_NULL
 
 #define sc_MPI_DATATYPE_NULL       MPI_DATATYPE_NULL
-#define sc_MPI_CHAR                MPI_CHAR
-#define sc_MPI_SIGNED_CHAR         MPI_SIGNED_CHAR
-#define sc_MPI_UNSIGNED_CHAR       MPI_UNSIGNED_CHAR
 #define sc_MPI_BYTE                MPI_BYTE
+#define sc_MPI_CHAR                MPI_CHAR
+#define sc_MPI_UNSIGNED_CHAR       MPI_UNSIGNED_CHAR
 #define sc_MPI_SHORT               MPI_SHORT
 #define sc_MPI_UNSIGNED_SHORT      MPI_UNSIGNED_SHORT
 #define sc_MPI_INT                 MPI_INT
-#define sc_MPI_INT8_T              MPI_INT8_T
-#define sc_MPI_2INT                MPI_2INT
 #define sc_MPI_UNSIGNED            MPI_UNSIGNED
 #define sc_MPI_LONG                MPI_LONG
 #define sc_MPI_UNSIGNED_LONG       MPI_UNSIGNED_LONG
 #define sc_MPI_LONG_LONG_INT       MPI_LONG_LONG_INT
-#define sc_MPI_UNSIGNED_LONG_LONG  MPI_UNSIGNED_LONG_LONG
 #define sc_MPI_FLOAT               MPI_FLOAT
 #define sc_MPI_DOUBLE              MPI_DOUBLE
 #define sc_MPI_LONG_DOUBLE         MPI_LONG_DOUBLE
+#define sc_MPI_2INT                MPI_2INT
+#define sc_MPI_DOUBLE_INT          MPI_DOUBLE_INT
 #define sc_MPI_PACKED              MPI_PACKED
 
 #define sc_MPI_OP_NULL             MPI_OP_NULL
@@ -356,19 +354,16 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_DATATYPE_NULL       SC3_MPI_DATATYPE_NULL
 
 #define sc_MPI_CHAR                ((sc_MPI_Datatype) 0x4c000101)
-#define sc_MPI_SIGNED_CHAR         ((sc_MPI_Datatype) 0x4c000118)
 #define sc_MPI_UNSIGNED_CHAR       ((sc_MPI_Datatype) 0x4c000102)
 #define sc_MPI_BYTE                SC3_MPI_BYTE
 #define sc_MPI_SHORT               ((sc_MPI_Datatype) 0x4c000203)
 #define sc_MPI_UNSIGNED_SHORT      ((sc_MPI_Datatype) 0x4c000204)
 #define sc_MPI_INT                 SC3_MPI_INT
-#define sc_MPI_INT8_T              SC3_MPI_INT8_T
 #define sc_MPI_2INT                SC3_MPI_2INT
 #define sc_MPI_UNSIGNED            SC3_MPI_UNSIGNED
 #define sc_MPI_LONG                SC3_MPI_LONG
 #define sc_MPI_UNSIGNED_LONG       ((sc_MPI_Datatype) 0x4c000408)
 #define sc_MPI_LONG_LONG_INT       SC3_MPI_LONG_LONG
-#define sc_MPI_UNSIGNED_LONG_LONG  ((sc_MPI_Datatype) 0x4c000409)
 #define sc_MPI_FLOAT               SC3_MPI_FLOAT
 #define sc_MPI_DOUBLE              SC3_MPI_DOUBLE
 #define sc_MPI_DOUBLE_INT          SC3_MPI_DOUBLE_INT
