@@ -4,4 +4,4 @@
 
 # This file is included by src/Makefile.am and parsed by cmake/config.cmake.
 
-SC_SOVERSION = 2:0:0
+SC_SOVERSION = 3:0:0

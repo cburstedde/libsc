@@ -24,13 +24,15 @@ There have been breaking changes, very strictly speaking.
 
 ### Build system
 
+ - Bump library version according to libtool to 3:0:0.
  - No longer install getopt and puff original headers.
  - Make sc_getopt.h a purely internal header file.
  - Add a generic external library installation option.
  - Add script doc/p4est-build-wdeps.sh for autotools build.
  - Further align CMake with the autoconf build system.
  - Update CMake logic to configure zlib and jansson.
- - Add CMake option to run tests with Valgrind
+ - Add CMake option to run tests with Valgrind.
+ - Warn if configuring MPI on and MPI I/O off.
 
 ### Functionality
 
@@ -45,6 +47,7 @@ There have been breaking changes, very strictly speaking.
  - Add sc_io_file_load, save functions and test program.
  - Update sc_hash_array to hide much of internal state.
  - Update zlib and base64 encode/compression routines.
+ - Remove the MPI_UNSIGNED_LONG_LONG datatype wrapper.
 
 ## 2.8.5
 
