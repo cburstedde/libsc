@@ -63,6 +63,7 @@ typedef MPI_Op      sc3_MPI_Op_t;
 #define SC3_MPI_LONG_LONG MPI_LONG_LONG_INT
 #define SC3_MPI_FLOAT MPI_FLOAT
 #define SC3_MPI_DOUBLE MPI_DOUBLE
+#define SC3_MPI_DOUBLE_INT MPI_DOUBLE_INT
 
 #define SC3_MPI_OP_NULL MPI_OP_NULL
 #define SC3_MPI_MIN MPI_MIN
@@ -171,6 +172,7 @@ typedef enum sc3_MPI_Datatype
   SC3_MPI_LONG_LONG,    /**< Same as in original MPI.  System long long. */
   SC3_MPI_FLOAT,        /**< Same as in original MPI. */
   SC3_MPI_DOUBLE,       /**< Same as in original MPI. */
+  SC3_MPI_DOUBLE_INT    /**< Same as in original MPI.  Double and int. */
 }
 sc3_MPI_Datatype_t;
 

@@ -767,6 +767,8 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
     return sizeof (long double);
   if (t == sc_MPI_2INT)
     return 2 * sizeof (int);
+  if (t == sc_MPI_DOUBLE_INT)
+    return sizeof (double) + sizeof (int);
 
   SC_ABORT_NOT_REACHED ();
 }
