@@ -92,8 +92,8 @@ test_message_MPI_Pack (const test_message_t *messages, int incount,
     int                 mpiret;
 
     mpiret =
-      sc_MPI_Pack (&(messages[imessage].type), 1, sc_MPI_INT8_T, outbuf,
-                   outsize, position, comm);
+      sc_MPI_Pack (&(messages[imessage].type), sizeof (int8_t), sc_MPI_BYTE,
+                   outbuf, outsize, position, comm);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Pack (messages[imessage].values,
                           num_values[messages[imessage].type], sc_MPI_DOUBLE,
@@ -115,8 +115,8 @@ test_message_MPI_Unpack (const void *inbuf, int insize,
     int                 mpiret;
 
     mpiret =
-      sc_MPI_Unpack (inbuf, insize, position, &(messages[imessage].type), 1,
-                     sc_MPI_INT8_T, comm);
+      sc_MPI_Unpack (inbuf, insize, position, &(messages[imessage].type),
+                     sizeof (int8_t), sc_MPI_BYTE, comm);
     SC_CHECK_MPI (mpiret);
 
     messages[imessage].values =
@@ -143,7 +143,8 @@ test_message_MPI_Pack_size (int incount, const test_message_t *messages,
     int                 single_message_size = 0;
     int                 mpiret;
 
-    mpiret = sc_MPI_Pack_size (1, sc_MPI_INT8_T, comm, &pack_size);
+    mpiret =
+      sc_MPI_Pack_size (sizeof (int8_t), sc_MPI_BYTE, comm, &pack_size);
     SC_CHECK_MPI (mpiret);
     single_message_size += pack_size;
 

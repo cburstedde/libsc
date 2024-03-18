@@ -747,7 +747,7 @@ sc_MPI_Error_string (int errorcode, char *string, int *resultlen)
 size_t
 sc_mpi_sizeof (sc_MPI_Datatype t)
 {
-  if (t == sc_MPI_BYTE || t == sc_MPI_INT8_T)
+  if (t == sc_MPI_BYTE)
     return 1;
   if (t == sc_MPI_CHAR || t == sc_MPI_UNSIGNED_CHAR)
     return sizeof (char);
