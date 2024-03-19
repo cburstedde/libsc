@@ -1,6 +1,10 @@
 
 # Release notes for the sc software library
 
+## Link to latest version DOI
+
+[![DOI](https://zenodo.org/badge/3974693.svg)](https://zenodo.org/doi/10.5281/zenodo.10838739)
+
 ## General
 
  - We have been reminded, for good reason, to maintain release notes.
@@ -10,8 +14,6 @@
    extensions, in which case we'll bump the libtool minor version.
 
 ## 2.8.6
-
-[![DOI](https://zenodo.org/badge/3974693.svg)](https://zenodo.org/doi/10.5281/zenodo.10838739)
 
 There have been breaking changes, very strictly speaking.
 
