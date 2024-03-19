@@ -11,6 +11,8 @@
 
 ## 2.8.6
 
+[![DOI](https://zenodo.org/badge/3974693.svg)](https://zenodo.org/doi/10.5281/zenodo.10838739)
+
 There have been breaking changes, very strictly speaking.
 
 ### Documentation
