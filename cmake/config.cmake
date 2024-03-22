@@ -49,11 +49,16 @@ endif()
 
 find_package(Threads)
 
-find_package(jansson CONFIG)
-if(TARGET jansson::jansson)
-  set(SC_HAVE_JSON 1 CACHE BOOL "JSON features enabled")
+if(json)
+  message(STATUS "Using builtin jansson")
+  include(${CMAKE_CURRENT_LIST_DIR}/jansson.cmake)
 else()
-  set(SC_HAVE_JSON 0 CACHE BOOL "JSON features disabled")
+  find_package(jansson CONFIG)
+  if(TARGET jansson::jansson)
+    set(SC_HAVE_JSON 1 CACHE BOOL "JSON features enabled")
+  else()
+    set(SC_HAVE_JSON 0 CACHE BOOL "JSON features disabled")
+  endif()
 endif()
 # --- set global compile environment
 
@@ -74,6 +79,7 @@ if(mpi)
   set(SC_CC \"${MPI_C_COMPILER}\")
   set(SC_CPP ${MPI_C_COMPILER})
 else()
+  set(SC_ENABLE_MPI 0)
   set(SC_CC \"${CMAKE_C_COMPILER}\")
   set(SC_CPP ${CMAKE_C_COMPILER})
 endif()
@@ -104,7 +110,16 @@ endif()
 set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
 set(SC_ENABLE_MEMALIGN 1)
 
-if(mpi)
+if(NOT SC_ENABLE_MPI EQUAL CACHE{SC_ENABLE_MPI})
+  # user has requested a different MPI setting, so we need to clear these cache variables to recheck
+  unset(SC_ENABLE_MPICOMMSHARED CACHE)
+  unset(SC_ENABLE_MPITHREAD CACHE)
+  unset(SC_ENABLE_MPIWINSHARED CACHE)
+  unset(SC_ENABLE_MPIIO CACHE)
+  unset(SC_ENABLE_MPI CACHE)
+endif()
+
+if(SC_ENABLE_MPI)
   check_symbol_exists(MPI_COMM_TYPE_SHARED mpi.h SC_ENABLE_MPICOMMSHARED)
   # perform check to set SC_ENABLE_MPIIO
   include(cmake/check_mpiio.cmake)
@@ -201,9 +216,8 @@ endif()
 check_type_size(int SC_SIZEOF_INT BUILTIN_TYPES_ONLY)
 check_type_size("unsigned int" SC_SIZEOF_UNSIGNED_INT BUILTIN_TYPES_ONLY)
 check_type_size(long SC_SIZEOF_LONG BUILTIN_TYPES_ONLY)
-check_type_size("long long" SC_SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
 check_type_size("unsigned long" SC_SIZEOF_UNSIGNED_LONG BUILTIN_TYPES_ONLY)
-check_type_size("unsigned long long" SC_SIZEOF_UNSIGNED_LONG_LONG BUILTIN_TYPES_ONLY)
+check_type_size("long long" SC_SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
 set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -213,6 +227,9 @@ else()
 endif()
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/sc_config.h.in ${PROJECT_BINARY_DIR}/include/sc_config.h)
+
+file(TIMESTAMP ${PROJECT_BINARY_DIR}/include/sc_config.h _t)
+message(VERBOSE "sc_config.h was last generated ${_t}")
 
 # --- sanity check of MPI sc_config.h
 
@@ -226,9 +243,17 @@ set(CMAKE_REQUIRED_LIBRARIES)
 set(CMAKE_REQUIRED_DEFINITIONS)
 
 # libsc and current project must both be compiled with/without MPI
-check_symbol_exists(SC_ENABLE_MPI ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPI)
-check_symbol_exists(SC_ENABLE_MPIIO ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPIIO)
+check_symbol_exists("SC_ENABLE_MPI" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPI)
+check_symbol_exists("SC_ENABLE_MPIIO" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPIIO)
 
+# check consistency of MPI configuration
 if(mpi AND NOT (SC_ENABLE_MPI AND SC_ENABLE_MPIIO))
   message(FATAL_ERROR "libsc MPI support was requested, but not configured in ${PROJECT_BINARY_DIR}/include/sc_config.h")
+endif()
+
+# check consistency of MPI I/O configuration
+if(mpi AND (SC_ENABLE_MPI AND NOT SC_ENABLE_MPIIO))
+  message(WARNING "libsc MPI configured but MPI I/O is not configured/found: DEPRECATED")
+  message(NOTICE "This configuration is DEPRECATED and will be disallowed in the future.")
+  message(NOTICE "If the MPI File API is not available, please disable MPI altogether.")
 endif()
