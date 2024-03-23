@@ -45,14 +45,6 @@ configure_file(options/sc_options_example.json sc_options_example.json COPYONLY)
 configure_file(options/sc_options_preload.ini sc_options_preload.ini COPYONLY)
 test_sc_example(options options/options.c)
 
-# The OpenMP example is disabled
-# We are likely removing the OpenMP configuration entirely
-#
-# if(OpenMP_FOUND)
-#   test_sc_example(openmp openmp/openmp.c)
-#   target_link_libraries(sc_openmp PRIVATE OpenMP::OpenMP_C)
-# endif()
-
 if(CMAKE_USE_PTHREADS_INIT)
   test_sc_example(pthread pthread/pthread.c)
   target_link_libraries(sc_pthread PRIVATE Threads::Threads)
