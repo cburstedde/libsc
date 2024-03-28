@@ -55,6 +55,7 @@ sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
                         char *output_data, size_t pad_len)
 {
   SC_ASSERT (input_data != NULL);
+  SC_ASSERT (output_data != NULL);
   SC_ASSERT (input_len <= pad_len - 4);
 
   void               *pointer;
@@ -194,8 +195,13 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
     sc_scda_pad_to_fix_len (user_string, *len,
                             &file_header_data[current_len],
                             SC_SCDA_USER_STRING_FILED);
+    current_len += SC_SCDA_USER_STRING_FILED;
 
     /* pad the file header section */
+    sc_scda_pad_to_mod (NULL, 0, &file_header_data[current_len]);
+    current_len += 32;
+
+    SC_ASSERT (current_len == SC_SCDA_HEADER_BYTES);
 
     /* write scda file header section */
     mpiret =
