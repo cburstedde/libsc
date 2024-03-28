@@ -36,6 +36,38 @@ struct sc_scda_fcontext
   sc_MPI_File         file;/**< file object */
 };
 
+/** Pad the input data to a fixed length.
+ *
+ * The result is written to \b output_data, which must be allocated.
+ *
+ */
+static char        *
+sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
+                        char *output_data, size_t pad_len)
+{
+  SC_ASSERT (input_data != NULL);
+  SC_ASSERT (input_len <= pad_len - 4);
+
+  void               *pointer;
+#if 0
+  uint8_t            *byte_arr;
+#endif
+
+  /* We assume that output_data has at least pad_len allocated bytes. */
+
+  /* copy input data into output_data */
+  pointer = memcpy (output_data, input_data, input_len);
+  SC_EXECUTE_ASSERT_TRUE (pointer == (void *) output_data);
+
+  /* append padding */
+#if 0
+  byte_arr = (uint8_t *) padded_data;
+#endif
+  output_data[input_len] = ' ';
+  memset (&output_data[input_len + 1], '-', pad_len - input_len - 2);
+  output_data[pad_len - 1] = '\n';
+}
+
 sc_scda_fcontext_t *
 sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                      const char *filename,
