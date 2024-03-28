@@ -30,7 +30,7 @@
 #define SC_SCDA_VENDOR_STRING "libsc" /**< implementation defined data */
 #define SC_SCDA_VENDOR_STRING_FIELD 24 /**< byte count for vendor string entry
                                             including the padding */
-#define SC_SCDA_USER_STRING_FILED 62   /**< byte count for user string entry
+#define SC_SCDA_USER_STRING_FIELD 62   /**< byte count for user string entry
                                             including the padding */
 #define SC_SCDA_PADDING_MOD 32  /**< divisor for variable lenght padding */
 
@@ -194,8 +194,8 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
     /* user string */
     sc_scda_pad_to_fix_len (user_string, *len,
                             &file_header_data[current_len],
-                            SC_SCDA_USER_STRING_FILED);
-    current_len += SC_SCDA_USER_STRING_FILED;
+                            SC_SCDA_USER_STRING_FIELD);
+    current_len += SC_SCDA_USER_STRING_FIELD;
 
     /* pad the file header section */
     sc_scda_pad_to_mod (NULL, 0, &file_header_data[current_len]);
