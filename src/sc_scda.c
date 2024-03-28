@@ -36,13 +36,12 @@
 /** The opaque file context for for scda files. */
 struct sc_scda_fcontext
 {
-  sc_MPI_Comm         mpicomm;
-                           /**< associated MPI communicator */
-  int                 mpisize;
-                           /**< number of MPI ranks */
-  int                 mpirank;
-                           /**< MPI rank */
-  sc_MPI_File         file;/**< file object */
+  /* *INDENT-OFF* */
+  sc_MPI_Comm         mpicomm; /**< associated MPI communicator */
+  int                 mpisize; /**< number of MPI ranks */
+  int                 mpirank; /**< MPI rank */
+  sc_MPI_File         file;    /**< file object */
+  /* *INDENT-ON* */
 };
 
 /** Pad the input data to a fixed length.
