@@ -33,21 +33,28 @@ main (int argc, char **argv)
   int                 mpiret;
   const char         *filename = SC_SCDA_TEST_FILE;
   const char         *file_user_string = "This is a test file";
-#if 0
-  char                read_user_string[SC_SCDA_USER_STRING_BYTES];
-#endif
+  char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
   sc_scda_fcontext_t *fc;
   sc_scda_ferror_t    errcode;
   size_t              len;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
-  sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (mpicomm, 1, 1, NULL, SC_LP_INFO);
 
   len = strlen (file_user_string);
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, &len,
                             NULL, &errcode);
   /* TODO: check errcode */
+
+  sc_scda_fclose (fc, &errcode);
+  /* TODO: check errcode and return value */
+
+  fc = sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, NULL,
+                           &errcode);
+  /* TODO: check errcode */
+
+  SC_INFOF ("File header user string: %s\n", read_user_string);
 
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */

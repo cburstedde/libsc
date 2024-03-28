@@ -186,7 +186,7 @@ sc_scda_examine_options (sc_scda_fopen_options_t * opt)
 }
 
 static void
-sc_scda_fill_mpic_data (sc_scda_fcontext_t * fc, sc_MPI_Comm mpicomm)
+sc_scda_fill_mpi_data (sc_scda_fcontext_t * fc, sc_MPI_Comm mpicomm)
 {
   SC_ASSERT (fc != NULL);
 
@@ -227,7 +227,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   info = sc_scda_examine_options (opt);
 
   /* fill convenience MPI information */
-  sc_scda_fill_mpic_data (fc, mpicomm);
+  sc_scda_fill_mpi_data (fc, mpicomm);
 
   /* open the file for writing */
   mpiret =
@@ -338,6 +338,57 @@ sc_scda_check_file_header (char *file_header_data, char *user_string,
   /* TODO: check the padding of zero data bytes */
 
   return 0;
+}
+
+sc_scda_fcontext_t *
+sc_scda_fopen_read (sc_MPI_Comm mpicomm,
+                    const char *filename,
+                    char *user_string, size_t *len,
+                    sc_scda_fopen_options_t * opt, sc_scda_ferror_t * errcode)
+{
+  SC_ASSERT (filename != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (len != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  int                 mpiret;
+  sc_MPI_Info         info;
+  sc_scda_fcontext_t *fc;
+
+  /* TODO: check filename */
+
+  /* examine options */
+  info = sc_scda_examine_options (opt);
+
+  /* allocate the file context */
+  fc = SC_ALLOC (sc_scda_fcontext_t, 1);
+
+  /* fill convenience MPI information */
+  sc_scda_fill_mpi_data (fc, mpicomm);
+
+  /* open the file in reading mode */
+  mpiret = sc_io_open (mpicomm, filename, SC_IO_READ, info, &fc->file);
+  /* TODO: check return value */
+
+  /* read file header section on rank 0 */
+  if (fc->mpirank == 0) {
+    int                 count;
+    char                file_header_data[SC_SCDA_HEADER_BYTES];
+
+    mpiret =
+      sc_io_read_at (fc->file, 0, file_header_data, SC_SCDA_HEADER_BYTES,
+                     sc_MPI_BYTE, &count);
+    /* TODO: check return value and count */
+
+    if (sc_scda_check_file_header (file_header_data, user_string, len)) {
+      /* invalid file header data */
+      /* TODO: clean up */
+      return NULL;
+    }
+  }
+  /* TODO: Bcast the user string */
+
+  return fc;
 }
 
 int
