@@ -78,6 +78,47 @@ sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
   output_data[pad_len - 1] = '\n';
 }
 
+/** This function checks if \b padded_data is actually padded to \b pad_len.
+ *
+ */
+static int
+sc_scda_get_pad_to_fix_len (char *padded_data, size_t pad_len, char *raw_data,
+                            size_t *raw_len)
+{
+  SC_ASSERT (padded_data != NULL);
+  SC_ASSERT (raw_data != NULL);
+  SC_ASSERT (raw_len != NULL);
+
+  size_t              si;
+  void               *pointer;
+
+  if (pad_len < 4) {
+    /* data too short to satisfy padding */
+    return -1;
+  }
+
+  if (padded_data[pad_len - 1] != '\n') {
+    /* wrong termination */
+    return -1;
+  }
+
+  for (si = pad_len - 2; si != 0; --si) {
+    if (padded_data[si] != '-') {
+      break;
+    }
+  }
+  if (padded_data[si] != ' ') {
+    return -1;
+  }
+
+  /* the padding was valid and the remaing data is the actual data */
+  *raw_len = si;
+  pointer = memcpy (raw_data, padded_data, *raw_len);
+  SC_EXECUTE_ASSERT_TRUE (pointer == (void *) raw_data);
+
+  return 0;
+}
+
 static void
 sc_scda_pad_to_mod (const char *input_data, size_t input_len,
                     char *output_data)
