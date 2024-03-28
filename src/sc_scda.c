@@ -30,6 +30,7 @@
 #define SC_SCDA_VENDOR_STRING "libsc" /**< implementation defined data */
 #define SC_SCDA_VENDOR_STRING_FIELD 24 /**< byte count for vendor string entry
                                             including the padding */
+#define SC_SCDA_VENDOR_STRING_BYTES 20 /**< maximal number of vendor string bytes */
 #define SC_SCDA_USER_STRING_FIELD 62   /**< byte count for user string entry
                                             including the padding */
 #define SC_SCDA_PADDING_MOD 32  /**< divisor for variable lenght padding */
@@ -277,6 +278,66 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   }
 
   return fc;
+}
+
+static int
+sc_scda_check_file_header (char *file_header_data, char *user_string,
+                           size_t *len)
+{
+  SC_ASSERT (file_header_data != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (len != NULL);
+
+  int                 current_pos;
+  char                vendor_string[SC_SCDA_VENDOR_STRING_BYTES];
+  size_t              vendor_len;
+
+  /* TODO: Add errcode as output parameter */
+
+  /* check structure that is not padding */
+  /* *INDENT-OFF* */
+  if (!(file_header_data[SC_SCDA_MAGIC_BYTES] == ' ' &&
+        file_header_data[SC_SCDA_MAGIC_BYTES + 1 +
+                         SC_SCDA_VENDOR_STRING_FIELD] == 'F' &&
+        file_header_data[SC_SCDA_MAGIC_BYTES + 1 +
+                         SC_SCDA_VENDOR_STRING_FIELD + 1] == ' ')) {
+    /* wrong file header structure */
+    return -1;
+  }
+  /* *INDENT-ON* */
+
+  /* check the entries of the file header */
+
+  /* check magic */
+  if (memcmp (SC_SCDA_MAGIC, file_header_data, SC_SCDA_MAGIC_BYTES)) {
+    /* wrong magic */
+    return -1;
+  }
+  current_pos = SC_SCDA_MAGIC_BYTES + 1;
+
+  /* check the padding of the vendor string */
+  if (sc_scda_get_pad_to_fix_len (&file_header_data[current_pos],
+                                  SC_SCDA_VENDOR_STRING_FIELD, vendor_string,
+                                  &vendor_len)) {
+    /* wrong padding format */
+    return -1;
+  }
+  /* vendor string content is not checked */
+
+  current_pos += SC_SCDA_VENDOR_STRING_FIELD + 2;
+  /* check the user string */
+  if (sc_scda_get_pad_to_fix_len
+      (&file_header_data
+       [current_pos], SC_SCDA_USER_STRING_FIELD, user_string, len)) {
+    /* wrong padding format */
+    return -1;
+  }
+  /* the user string content is not checked */
+  user_string[*len] = '\0';
+
+  /* TODO: check the padding of zero data bytes */
+
+  return 0;
 }
 
 int
