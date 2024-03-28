@@ -32,6 +32,7 @@
                                             including the padding */
 #define SC_SCDA_USER_STRING_FILED 62   /**< byte count for user string entry
                                             including the padding */
+#define SC_SCDA_PADDING_MOD 32  /**< divisor for variable lenght padding */
 
 /** The opaque file context for for scda files. */
 struct sc_scda_fcontext
@@ -74,6 +75,49 @@ sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
   output_data[input_len] = ' ';
   memset (&output_data[input_len + 1], '-', pad_len - input_len - 2);
   output_data[pad_len - 1] = '\n';
+}
+
+static void
+sc_scda_pad_to_mod (const char *input_data, size_t input_len,
+                    char *output_data)
+{
+  SC_ASSERT (input_len == 0 || input_data != NULL);
+  SC_ASSERT (output_data != NULL);
+
+  int                 num_pad_bytes;
+  void               *pointer;
+
+  /* compute the number of padding bytes */
+  num_pad_bytes =
+    (SC_SCDA_PADDING_MOD -
+     ((int) input_len % SC_SCDA_PADDING_MOD)) % SC_SCDA_PADDING_MOD;
+
+  if (num_pad_bytes < 7) {
+    /* not sufficient number of padding bytes for the padding format */
+    num_pad_bytes += SC_SCDA_PADDING_MOD;
+  }
+
+  SC_ASSERT (num_pad_bytes >= 6);
+  SC_ASSERT (num_pad_bytes <= SC_SCDA_PADDING_MOD + 6);
+
+  pointer = memcpy (output_data, input_data, input_len);
+  SC_EXECUTE_ASSERT_TRUE (pointer == (void *) output_data);
+
+  /* check for last byte to decide on padding format */
+  if (input_len > 0 && input_data[input_len - 1] == '\n') {
+    /* input data ends with a line break */
+    output_data[input_len] = '=';
+  }
+  else {
+    /* add a line break add the beginning of the padding */
+    output_data[input_len] = '\n';
+  }
+  output_data[input_len + 1] = '=';
+
+  /* append the remaining padding bytes */
+  memset (&output_data[input_len + 2], '=', num_pad_bytes - 4);
+  output_data[input_len + num_pad_bytes - 2] = '\n';
+  output_data[input_len + num_pad_bytes - 1] = '\n';
 }
 
 sc_scda_fcontext_t *
