@@ -121,6 +121,42 @@ sc_scda_pad_to_mod (const char *input_data, size_t input_len,
   output_data[input_len + num_pad_bytes - 1] = '\n';
 }
 
+/**
+ * This function is for creating and reading a file.
+ * TODO: We may want to add an error parameter in indicate if the options are
+ * invalid.
+ */
+static              sc_MPI_Info
+sc_scda_examine_options (sc_scda_fopen_options_t * opt)
+{
+  /* TODO: Check options if opt is valid? */
+
+  sc_MPI_Info         info;
+
+  if (opt != NULL) {
+    info = opt->info;
+  }
+  else {
+    info = sc_MPI_INFO_NULL;
+  }
+
+  return info;
+}
+
+static void
+sc_scda_fill_mpic_data (sc_scda_fcontext_t * fc, sc_MPI_Comm mpicomm)
+{
+  SC_ASSERT (fc != NULL);
+
+  int                 mpiret;
+
+  mpiret = sc_MPI_Comm_size (mpicomm, &fc->mpisize);
+  SC_CHECK_MPI (mpiret);
+
+  mpiret = sc_MPI_Comm_rank (mpicomm, &fc->mpirank);
+  SC_CHECK_MPI (mpiret);
+}
+
 sc_scda_fcontext_t *
 sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                      const char *filename,
@@ -142,25 +178,14 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
 
   /* TODO: check the user string; implement a helper function for this */
 
-  /* TODO: Check options if opt is valid? */
-
   /* allocate the file context */
   fc = SC_ALLOC (sc_scda_fcontext_t, 1);
 
   /* examine options */
-  if (opt != NULL) {
-    info = opt->info;
-  }
-  else {
-    info = sc_MPI_INFO_NULL;
-  }
+  info = sc_scda_examine_options (opt);
 
   /* fill convenience MPI information */
-  mpiret = sc_MPI_Comm_size (mpicomm, &fc->mpisize);
-  SC_CHECK_MPI (mpiret);
-
-  mpiret = sc_MPI_Comm_rank (mpicomm, &fc->mpirank);
-  SC_CHECK_MPI (mpiret);
+  sc_scda_fill_mpic_data (fc, mpicomm);
 
   /* open the file for writing */
   mpiret =
