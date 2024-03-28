@@ -23,42 +23,34 @@
 
 #include <sc_scda.h>
 
-/* WARNING: this file contains obsolete references to be removed */
-
-#if 0
 #define SC_SCDA_FILE_EXT "scd"
 #define SC_SCDA_TEST_FILE "sc_test_scda." SC_SCDA_FILE_EXT
-#endif
 
 int
 main (int argc, char **argv)
 {
+  sc_MPI_Comm         mpicomm = sc_MPI_COMM_WORLD;
   int                 mpiret;
-#if 0
-  int                 errcode;
   const char         *filename = SC_SCDA_TEST_FILE;
-  char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
-  sc_scda_fcontext_t *fc;
+  const char         *file_user_string = "This is a test file";
+#if 0
+  char                read_user_string[SC_SCDA_USER_STRING_BYTES];
 #endif
+  sc_scda_fcontext_t *fc;
+  sc_scda_ferror_t    errcode;
+  size_t              len;
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEFAULT);
+  sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
-#if 0
-  fc =
-    sc_scda_fopen_write (filename, sc_MPI_COMM_WORLD, "This is a test file",
-                        &errcode);
+  len = strlen (file_user_string);
+  fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, &len,
+                            NULL, &errcode);
   /* TODO: check errcode */
 
   sc_scda_fclose (fc, &errcode);
-
-  fc =
-    sc_scda_fopen_read (sc_MPI_COMM_WORLD, filename, read_user_string,
-                       &errcode);
-
-  sc_scda_fclose (fc, &errcode);
-#endif
+  /* TODO: check errcode and return value */
 
   sc_finalize ();
 
