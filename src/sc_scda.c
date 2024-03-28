@@ -24,6 +24,15 @@
 #include <sc_scda.h>
 #include <sc_io.h>
 
+/* file section header data */
+#define SC_SCDA_MAGIC "scdata0" /**< magic encoding format identifier and version */
+#define SC_SCDA_MAGIC_BYTES 7   /**< number of magic bytes */
+#define SC_SCDA_VENDOR_STRING "libsc" /**< implementation defined data */
+#define SC_SCDA_VENDOR_STRING_FIELD 24 /**< byte count for vendor string entry
+                                            including the padding */
+#define SC_SCDA_USER_STRING_FILED 62   /**< byte count for user string entry
+                                            including the padding */
+
 /** The opaque file context for for scda files. */
 struct sc_scda_fcontext
 {
@@ -102,7 +111,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
     info = sc_MPI_INFO_NULL;
   }
 
-  /* fill convience MPI information */
+  /* fill convenience MPI information */
   mpiret = sc_MPI_Comm_size (mpicomm, &fc->mpisize);
   SC_CHECK_MPI (mpiret);
 
@@ -115,8 +124,41 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   /* TODO: check return value */
 
   if (fc->mpirank == 0) {
-    /* scda file header section */
+    int                 count;
+    int                 current_len;
+    char                file_header_data[SC_SCDA_HEADER_BYTES];
 
+    /* get scda file header section */
+    /* magic */
+    memcpy (file_header_data, SC_SCDA_MAGIC, SC_SCDA_MAGIC_BYTES);
+    current_len = SC_SCDA_MAGIC_BYTES;
+    /* TODO: check return value */
+
+    file_header_data[current_len++] = ' ';
+
+    /* vendor string */
+    sc_scda_pad_to_fix_len (SC_SCDA_VENDOR_STRING,
+                            strlen (SC_SCDA_VENDOR_STRING),
+                            &file_header_data[current_len],
+                            SC_SCDA_VENDOR_STRING_FIELD);
+    current_len += SC_SCDA_VENDOR_STRING_FIELD;
+
+    /* file section specifying character */
+    file_header_data[current_len++] = 'F';
+    file_header_data[current_len++] = ' ';
+
+    /* user string */
+    sc_scda_pad_to_fix_len (user_string, *len,
+                            &file_header_data[current_len],
+                            SC_SCDA_USER_STRING_FILED);
+
+    /* pad the file header section */
+
+    /* write scda file header section */
+    mpiret =
+      sc_io_write_at (fc->file, 0, file_header_data, SC_SCDA_HEADER_BYTES,
+                      sc_MPI_BYTE, &count);
+    /* TODO: check return value and count */
   }
 
   return fc;
