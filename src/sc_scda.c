@@ -49,7 +49,7 @@ struct sc_scda_fcontext
  * The result is written to \b output_data, which must be allocated.
  *
  */
-static char        *
+static void
 sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
                         char *output_data, size_t pad_len)
 {
