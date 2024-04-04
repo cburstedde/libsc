@@ -120,6 +120,28 @@ sc_scda_get_pad_to_fix_len (char *padded_data, size_t pad_len, char *raw_data,
   return 0;
 }
 
+/** Get the number of padding bytes with respect to the padding of \ref
+ *  sc_scda_pad_to_mod.
+ *
+ */
+static size_t
+sc_scda_pad_to_mod_len (size_t input_len)
+{
+  size_t              num_pad_bytes;
+
+  /* compute the number of padding bytes */
+  num_pad_bytes =
+    (SC_SCDA_PADDING_MOD -
+     (input_len % SC_SCDA_PADDING_MOD)) % SC_SCDA_PADDING_MOD;
+
+  if (num_pad_bytes < 7) {
+    /* not sufficient number of padding bytes for the padding format */
+    num_pad_bytes += SC_SCDA_PADDING_MOD;
+  }
+
+  return num_pad_bytes;
+}
+
 static void
 sc_scda_pad_to_mod (const char *input_data, size_t input_len,
                     char *output_data)
@@ -127,18 +149,11 @@ sc_scda_pad_to_mod (const char *input_data, size_t input_len,
   SC_ASSERT (input_len == 0 || input_data != NULL);
   SC_ASSERT (output_data != NULL);
 
-  int                 num_pad_bytes;
+  size_t              num_pad_bytes;
   void               *pointer;
 
   /* compute the number of padding bytes */
-  num_pad_bytes =
-    (SC_SCDA_PADDING_MOD -
-     ((int) input_len % SC_SCDA_PADDING_MOD)) % SC_SCDA_PADDING_MOD;
-
-  if (num_pad_bytes < 7) {
-    /* not sufficient number of padding bytes for the padding format */
-    num_pad_bytes += SC_SCDA_PADDING_MOD;
-  }
+  num_pad_bytes = sc_scda_pad_to_mod_len (input_len);
 
   SC_ASSERT (num_pad_bytes >= 6);
   SC_ASSERT (num_pad_bytes <= SC_SCDA_PADDING_MOD + 6);
