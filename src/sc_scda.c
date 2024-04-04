@@ -33,7 +33,7 @@
 #define SC_SCDA_VENDOR_STRING_BYTES 20 /**< maximal number of vendor string bytes */
 #define SC_SCDA_USER_STRING_FIELD 62   /**< byte count for user string entry
                                             including the padding */
-#define SC_SCDA_PADDING_MOD 32  /**< divisor for variable lenght padding */
+#define SC_SCDA_PADDING_MOD 32  /**< divisor for variable length padding */
 
 /** The opaque file context for for scda files. */
 struct sc_scda_fcontext
@@ -112,7 +112,7 @@ sc_scda_get_pad_to_fix_len (char *padded_data, size_t pad_len, char *raw_data,
     return -1;
   }
 
-  /* the padding was valid and the remaing data is the actual data */
+  /* the padding was valid and the remaining data is the actual data */
   *raw_len = si;
   pointer = memcpy (raw_data, padded_data, *raw_len);
   SC_EXECUTE_ASSERT_TRUE (pointer == (void *) raw_data);
@@ -176,6 +176,36 @@ sc_scda_pad_to_mod (const char *input_data, size_t input_len,
   memset (&output_data[input_len + 2], '=', num_pad_bytes - 4);
   output_data[input_len + num_pad_bytes - 2] = '\n';
   output_data[input_len + num_pad_bytes - 1] = '\n';
+}
+
+/** Checks if \b padded_data is actually padded with respect to
+ *  \ref SC_SCDA_PADDING_MOD.
+ *
+ * Given the raw data length, this function checks if the padding format is
+ * correct and extracts the raw data.
+ */
+static int
+sc_scda_get_pad_to_mod (char *padded_data, size_t padded_len, size_t raw_len,
+                        char *raw_data)
+{
+  SC_ASSERT (padded_data != NULL);
+  SC_ASSERT (raw_data != NULL);
+  SC_ASSERT (raw_len != NULL);
+
+  size_t              si;
+  void               *pointer;
+
+  /* check if padding data length conforms to the padding format */
+  if (sc_scda_pad_to_mod_len (raw_len) + raw_len != padded_len) {
+    /* raw_len and padded_len are not consistent */
+    return -1;
+  }
+
+  /* TODO: check content of the padding bytes */
+
+  /* TODO: get the actual data */
+
+  return 0;
 }
 
 /**
