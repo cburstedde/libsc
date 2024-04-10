@@ -62,6 +62,14 @@ sc_scda_copy_bytes (char *dest, char *src, size_t n)
   SC_EXECUTE_ASSERT_TRUE (pointer == (void *) dest);
 }
 
+static void
+sc_scda_set_bytes (char *dest, int c, size_t n)
+{
+  SC_ASSERT (dest != NULL);
+
+  memset (dest, c, n);
+}
+
 /** Pad the input data to a fixed length.
  *
  * The result is written to \b output_data, which must be allocated.
@@ -89,7 +97,8 @@ sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
   byte_arr = (uint8_t *) padded_data;
 #endif
   output_data[input_len] = ' ';
-  memset (&output_data[input_len + 1], '-', pad_len - input_len - 2);
+  sc_scda_set_bytes (&output_data[input_len + 1], '-',
+                     pad_len - input_len - 2);
   output_data[pad_len - 1] = '\n';
 }
 
@@ -183,7 +192,7 @@ sc_scda_pad_to_mod (const char *input_data, size_t input_len,
   output_data[input_len + 1] = '=';
 
   /* append the remaining padding bytes */
-  memset (&output_data[input_len + 2], '=', num_pad_bytes - 4);
+  sc_scda_set_bytes (&output_data[input_len + 2], '=', num_pad_bytes - 4);
   output_data[input_len + num_pad_bytes - 2] = '\n';
   output_data[input_len + num_pad_bytes - 1] = '\n';
 }
