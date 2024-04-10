@@ -491,7 +491,10 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
       return NULL;
     }
   }
-  /* TODO: Bcast the user string */
+  /* Bcast the user string */
+  mpiret = sc_MPI_Bcast (user_string, SC_SCDA_USER_STRING_BYTES + 1,
+                         sc_MPI_BYTE, 0, mpicomm);
+  SC_CHECK_MPI (mpiret);
 
   return fc;
 }
