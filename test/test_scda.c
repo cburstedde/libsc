@@ -42,8 +42,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
   sc_init (mpicomm, 1, 1, NULL, SC_LP_INFO);
 
-  len = strlen (file_user_string);
-  fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, &len,
+  fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
                             NULL, &errcode);
   /* TODO: check errcode */
 

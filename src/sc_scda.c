@@ -47,7 +47,7 @@ struct sc_scda_fcontext
 };
 
 static void
-sc_scda_copy_bytes (char *dest, char *src, size_t n)
+sc_scda_copy_bytes (char *dest, const char *src, size_t n)
 {
   SC_ASSERT (dest != NULL);
   SC_ASSERT (n == 0 || src != NULL);
@@ -295,6 +295,64 @@ sc_scda_fill_mpi_data (sc_scda_fcontext_t * fc, sc_MPI_Comm mpicomm)
   SC_CHECK_MPI (mpiret);
 }
 
+/** Get the user string length for writing.
+ *
+ * This functions return -1 if the input user string is not
+ * compliant with the scda file format.
+ */
+static int
+sc_scda_get_user_string_len (const char *user_string,
+                             const size_t *in_len, size_t *out_len)
+{
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (out_len != NULL);
+
+  if (in_len != NULL) {
+    /* binary user string */
+    if (*in_len > SC_SCDA_USER_STRING_BYTES) {
+      /* binary user string is too long */
+      return -1;
+    }
+
+    if (user_string[*in_len] != '\0') {
+      /* missing nul-termination */
+      return -1;
+    }
+
+    *out_len = *in_len;
+    return 0;
+  }
+  else {
+    /* we expect a nul-terminated C string */
+    char                user_string_copy[SC_SCDA_USER_STRING_BYTES + 1];
+    size_t              len;
+
+    sc_strcopy (user_string_copy, SC_SCDA_USER_STRING_BYTES + 1, user_string);
+
+    /* user_string_copy is guaranteed to be nul-terminated */
+    len = strlen (user_string_copy);
+    if (len < SC_SCDA_USER_STRING_BYTES) {
+      /* user string is nul-terminated */
+      *out_len = len;
+      return 0;
+    }
+
+    SC_ASSERT (len == SC_SCDA_USER_STRING_BYTES);
+
+    /* check for nul at last byte position of user string */
+    if (user_string[SC_SCDA_USER_STRING_BYTES - 1] == '\0') {
+      *out_len = len;
+      return 0;
+    }
+
+    /* user string is not nul-terminated */
+    return -1;
+  }
+
+  /* unreachable */
+  SC_ABORT_NOT_REACHED ();
+}
+
 sc_scda_fcontext_t *
 sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                      const char *filename,
@@ -304,7 +362,6 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
 {
   SC_ASSERT (filename != NULL);
   SC_ASSERT (user_string != NULL);
-  SC_ASSERT (len != NULL);
   SC_ASSERT (errcode != NULL);
 
   int                 mpiret;
@@ -334,6 +391,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
     int                 count;
     int                 current_len;
     char                file_header_data[SC_SCDA_HEADER_BYTES];
+    size_t              user_string_len;
 
     /* get scda file header section */
     /* magic */
@@ -355,7 +413,12 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
     file_header_data[current_len++] = ' ';
 
     /* user string */
-    sc_scda_pad_to_fix_len (user_string, *len,
+    /* check the user string */
+    if (sc_scda_get_user_string_len (user_string, len, &user_string_len)) {
+      /* TODO: clean up and snyc */
+      return NULL;
+    }
+    sc_scda_pad_to_fix_len (user_string, user_string_len,
                             &file_header_data[current_len],
                             SC_SCDA_USER_STRING_FIELD);
     current_len += SC_SCDA_USER_STRING_FIELD;
