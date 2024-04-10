@@ -70,6 +70,14 @@ sc_scda_set_bytes (char *dest, int c, size_t n)
   memset (dest, c, n);
 }
 
+static void
+sc_scda_init_nul (char *dest, size_t len)
+{
+  SC_ASSERT (dest != NULL);
+
+  sc_scda_set_bytes (dest, '\0', len);
+}
+
 /** Pad the input data to a fixed length.
  *
  * The result is written to \b output_data, which must be allocated.
@@ -473,6 +481,9 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
       sc_io_read_at (fc->file, 0, file_header_data, SC_SCDA_HEADER_BYTES,
                      sc_MPI_BYTE, &count);
     /* TODO: check return value and count */
+
+    /* initialize user_string */
+    sc_scda_init_nul (user_string, SC_SCDA_USER_STRING_BYTES + 1);
 
     if (sc_scda_check_file_header (file_header_data, user_string, len)) {
       /* invalid file header data */
