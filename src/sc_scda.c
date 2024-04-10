@@ -46,6 +46,22 @@ struct sc_scda_fcontext
   /* *INDENT-ON* */
 };
 
+static void
+sc_scda_copy_bytes (char *dest, char *src, size_t n)
+{
+  SC_ASSERT (dest != NULL);
+  SC_ASSERT (n == 0 || src != NULL);
+
+  void               *pointer;
+
+  if (n == 0) {
+    return;
+  }
+
+  pointer = memcpy (dest, src, n);
+  SC_EXECUTE_ASSERT_TRUE (pointer == (void *) dest);
+}
+
 /** Pad the input data to a fixed length.
  *
  * The result is written to \b output_data, which must be allocated.
@@ -59,7 +75,6 @@ sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
   SC_ASSERT (output_data != NULL);
   SC_ASSERT (input_len <= pad_len - 4);
 
-  void               *pointer;
 #if 0
   uint8_t            *byte_arr;
 #endif
@@ -67,8 +82,7 @@ sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
   /* We assume that output_data has at least pad_len allocated bytes. */
 
   /* copy input data into output_data */
-  pointer = memcpy (output_data, input_data, input_len);
-  SC_EXECUTE_ASSERT_TRUE (pointer == (void *) output_data);
+  sc_scda_copy_bytes (output_data, input_data, input_len);
 
   /* append padding */
 #if 0
@@ -91,7 +105,6 @@ sc_scda_get_pad_to_fix_len (char *padded_data, size_t pad_len, char *raw_data,
   SC_ASSERT (raw_len != NULL);
 
   size_t              si;
-  void               *pointer;
 
   if (pad_len < 4) {
     /* data too short to satisfy padding */
@@ -114,8 +127,7 @@ sc_scda_get_pad_to_fix_len (char *padded_data, size_t pad_len, char *raw_data,
 
   /* the padding was valid and the remaining data is the actual data */
   *raw_len = si;
-  pointer = memcpy (raw_data, padded_data, *raw_len);
-  SC_EXECUTE_ASSERT_TRUE (pointer == (void *) raw_data);
+  sc_scda_copy_bytes (raw_data, padded_data, *raw_len);
 
   return 0;
 }
@@ -150,7 +162,6 @@ sc_scda_pad_to_mod (const char *input_data, size_t input_len,
   SC_ASSERT (output_data != NULL);
 
   size_t              num_pad_bytes;
-  void               *pointer;
 
   /* compute the number of padding bytes */
   num_pad_bytes = sc_scda_pad_to_mod_len (input_len);
@@ -158,8 +169,7 @@ sc_scda_pad_to_mod (const char *input_data, size_t input_len,
   SC_ASSERT (num_pad_bytes >= 6);
   SC_ASSERT (num_pad_bytes <= SC_SCDA_PADDING_MOD + 6);
 
-  pointer = memcpy (output_data, input_data, input_len);
-  SC_EXECUTE_ASSERT_TRUE (pointer == (void *) output_data);
+  sc_scda_copy_bytes (output_data, input_data, input_len);
 
   /* check for last byte to decide on padding format */
   if (input_len > 0 && input_data[input_len - 1] == '\n') {
@@ -193,7 +203,6 @@ sc_scda_get_pad_to_mod (char *padded_data, size_t padded_len, size_t raw_len,
 
   size_t              si;
   size_t              num_pad_bytes;
-  void               *pointer;
 
   num_pad_bytes = sc_scda_pad_to_mod_len (raw_len);
 
@@ -225,9 +234,10 @@ sc_scda_get_pad_to_mod (char *padded_data, size_t padded_len, size_t raw_len,
     return -1;
   }
 
-  /* get the raw data */
-  pointer = memcpy (raw_data, padded_data, raw_len);
-  SC_EXECUTE_ASSERT_TRUE (pointer == (void *) raw_data);
+  if (raw_len != 0) {
+    /* get the raw data if we required raw_data != NULL */
+    sc_scda_copy_bytes (raw_data, padded_data, raw_len);
+  }
 
   return 0;
 }
@@ -310,7 +320,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
 
     /* get scda file header section */
     /* magic */
-    memcpy (file_header_data, SC_SCDA_MAGIC, SC_SCDA_MAGIC_BYTES);
+    sc_scda_copy_bytes (file_header_data, SC_SCDA_MAGIC, SC_SCDA_MAGIC_BYTES);
     current_len = SC_SCDA_MAGIC_BYTES;
     /* TODO: check return value */
 
