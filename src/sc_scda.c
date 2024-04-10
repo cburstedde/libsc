@@ -189,21 +189,45 @@ sc_scda_get_pad_to_mod (char *padded_data, size_t padded_len, size_t raw_len,
                         char *raw_data)
 {
   SC_ASSERT (padded_data != NULL);
-  SC_ASSERT (raw_data != NULL);
-  SC_ASSERT (raw_len != NULL);
+  SC_ASSERT (raw_len == 0 || raw_data != NULL);
 
   size_t              si;
+  size_t              num_pad_bytes;
   void               *pointer;
 
+  num_pad_bytes = sc_scda_pad_to_mod_len (raw_len);
+
   /* check if padding data length conforms to the padding format */
-  if (sc_scda_pad_to_mod_len (raw_len) + raw_len != padded_len) {
+  if (num_pad_bytes + raw_len != padded_len) {
     /* raw_len and padded_len are not consistent */
     return -1;
   }
+  SC_ASSERT (padded_len >= 7);
 
-  /* TODO: check content of the padding bytes */
+  /* check the content of the padding bytes */
+  if (padded_data[padded_len - 1] != '\n' ||
+      padded_data[padded_len - 2] != '\n') {
+    /* terminating line breaks are missing */
+    return -1;
+  }
 
-  /* TODO: get the actual data */
+  for (si = padded_len - 3; si != padded_len - num_pad_bytes; --si) {
+    if (padded_data[si] != '=') {
+      /* wrong padding character */
+      return -1;
+    }
+  }
+  SC_ASSERT (si == raw_len);
+
+  if ((!((padded_data[si] == '=' && raw_len != 0 &&
+          padded_data[si - 1] == '\n') || padded_data[si] == '\n'))) {
+    /* wrong padding start */
+    return -1;
+  }
+
+  /* get the raw data */
+  pointer = memcpy (raw_data, padded_data, raw_len);
+  SC_EXECUTE_ASSERT_TRUE (pointer == (void *) raw_data);
 
   return 0;
 }
@@ -380,7 +404,13 @@ sc_scda_check_file_header (char *file_header_data, char *user_string,
   /* the user string content is not checked */
   user_string[*len] = '\0';
 
-  /* TODO: check the padding of zero data bytes */
+  current_pos += SC_SCDA_USER_STRING_FIELD;
+  /* check the padding of zero data bytes */
+  if (sc_scda_get_pad_to_mod
+      (&file_header_data[current_pos], SC_SCDA_PADDING_MOD, 0, NULL)) {
+    /* wrong padding format */
+    return -1;
+  }
 
   return 0;
 }
