@@ -18,11 +18,6 @@ add_executable(sc_${name} ${files})
 
 target_link_libraries(sc_${name} PRIVATE SC::SC)
 
-# it is not intended to run examples as tests in the top-level SC project
-if(NOT PROJECT_IS_TOP_LEVEL)
-  return()
-endif()
-
 if(SC_ENABLE_MPI)
   add_test(NAME sc:example:${name} COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} $<TARGET_FILE:sc_${name}>)
 else()
