@@ -34,6 +34,8 @@
 #define SC_SCDA_USER_STRING_FIELD 62   /**< byte count for user string entry
                                             including the padding */
 #define SC_SCDA_PADDING_MOD 32  /**< divisor for variable length padding */
+#define SC_SCDA_FUZZY_SEED 42   /**< seed for the fuzzy error return */
+#define SC_SCDA_FUZZY_FREQUENCY 3 /**< frequency for the fuzzy error return */
 
 /** The opaque file context for for scda files. */
 struct sc_scda_fcontext
@@ -42,6 +44,7 @@ struct sc_scda_fcontext
   sc_MPI_Comm         mpicomm; /**< associated MPI communicator */
   int                 mpisize; /**< number of MPI ranks */
   int                 mpirank; /**< MPI rank */
+  int                 fuzzy_errors; /**< boolean for fuzzy error return */
   sc_MPI_File         file;    /**< file object */
   /* *INDENT-ON* */
 };
@@ -265,7 +268,7 @@ sc_scda_get_pad_to_mod (char *padded_data, size_t padded_len, size_t raw_len,
  * invalid.
  */
 static              sc_MPI_Info
-sc_scda_examine_options (sc_scda_fopen_options_t * opt)
+sc_scda_examine_options (sc_scda_fopen_options_t * opt, int *fuzzy)
 {
   /* TODO: Check options if opt is valid? */
 
@@ -273,9 +276,12 @@ sc_scda_examine_options (sc_scda_fopen_options_t * opt)
 
   if (opt != NULL) {
     info = opt->info;
+    *fuzzy = opt->fuzzy_errors;
   }
   else {
     info = sc_MPI_INFO_NULL;
+    /* no fuzzy error return by default */
+    *fuzzy = 0;
   }
 
   return info;
@@ -353,11 +359,22 @@ sc_scda_get_user_string_len (const char *user_string,
   SC_ABORT_NOT_REACHED ();
 }
 
+/** Create a random but consistent scdaret.
+ */
+static void
+sc_scda_get_fuzzy_scdaret (sc_scda_ferror_t * scda_errorcode)
+{
+  /* TODO: Generate uniform sample from valid scdare values */
+  /* TODO: Do we want to get the actual scdaret to be able to draw
+   * a weighted sample?
+   */
+}
+
 /** Converts a scdaret error code into a sc_scda_ferror_t code.
  */
 static void
 sc_scda_scdaret_to_errcode (sc_scda_ret_t scda_ret,
-                            sc_scda_ferror_t * scda_errorcode)
+                            sc_scda_ferror_t * scda_errorcode, int fuzzy_errors)
 {
   SC_ASSERT (SC_SCDA_FERR_SUCCESS <= scda_ret &&
              scda_ret < SC_SCDA_FERR_LASTCODE);
@@ -366,25 +383,32 @@ sc_scda_scdaret_to_errcode (sc_scda_ret_t scda_ret,
   /* if we have an MPI error; we need \ref sc_scda_mpiret_to_errcode */
   SC_ASSERT (scda_ret != SC_SCDA_FERR_MPI);
 
-  scda_errorcode->scdaret = scda_ret;
-  scda_errorcode->mpiret = sc_MPI_SUCCESS;
-
-  /* TODO: fuzzy error testing */
+  if (fuzzy_errors) {
+    scda_errorcode->scdaret = scda_ret;
+    scda_errorcode->mpiret = sc_MPI_SUCCESS;
+  }
+  else {
+    /* TODO: fuzzy error testing */
+  }
 }
 
-/** Converts an MPI error code into a sc_scda_ferror_t code.
+/** Converts an MPI or libsc error code into a sc_scda_ferror_t code.
  */
 static void
-sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode)
+sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
+                           int fuzzy_errors)
 {
   SC_ASSERT ((sc_MPI_SUCCESS <= mpiret && mpiret < sc_MPI_ERR_LASTCODE));
   SC_ASSERT (scda_errorcode != NULL);
 
+  if (!fuzzy_errors) {
   scda_errorcode->scdaret =
     (mpiret == sc_MPI_SUCCESS) ? SC_SCDA_FERR_SUCCESS : SC_SCDA_FERR_MPI;
   scda_errorcode->mpiret = mpiret;
-
-  /* TODO: fuzzy error testing */
+  }
+  else {
+    /* TODO: fuzzy error testing */
+  }
 }
 
 static int
@@ -416,7 +440,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   fc = SC_ALLOC (sc_scda_fcontext_t, 1);
 
   /* examine options */
-  info = sc_scda_examine_options (opt);
+  info = sc_scda_examine_options (opt, &fc->fuzzy_errors);
   /* TODO: check if the options are valid */
 
   /* fill convenience MPI information */
@@ -425,7 +449,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   /* open the file for writing */
   mpiret =
     sc_io_open (mpicomm, filename, SC_IO_WRITE_CREATE, info, &fc->file);
-  sc_scda_mpiret_to_errcode (mpiret, errcode);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc->fuzzy_errors);
   if (!sc_scda_is_success (errcode)) {
     /* TODO: print error string with SC_GLOBAL_LERRORF */
     /* TODO: cleanup fc->file */
@@ -573,12 +597,12 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
 
   /* We assume the filename to be nul-terminated. */
 
-  /* examine options */
-  info = sc_scda_examine_options (opt);
-  /* TODO: check if options are valid */
-
   /* allocate the file context */
   fc = SC_ALLOC (sc_scda_fcontext_t, 1);
+
+  /* examine options */
+  info = sc_scda_examine_options (opt, &fc->fuzzy_errors);
+  /* TODO: check if options are valid */
 
   /* fill convenience MPI information */
   sc_scda_fill_mpi_data (fc, mpicomm);

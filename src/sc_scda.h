@@ -279,6 +279,7 @@ sc_scda_ferror_t;
 typedef struct sc_scda_fopen_options
 {
   sc_MPI_Info         info; /**< info that is passed to MPI_File_open */
+  int                 fuzzy_errors; /**< boolean for fuzzy error return */
 }
 sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
 
