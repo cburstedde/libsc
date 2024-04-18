@@ -368,7 +368,6 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   sc_MPI_Info         info;
   sc_scda_fcontext_t *fc;
 
-  /* TODO: check length of the filename */
   /* We assume the filename to be nul-terminated. */
 
   /* allocate the file context */
@@ -522,7 +521,7 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
   sc_MPI_Info         info;
   sc_scda_fcontext_t *fc;
 
-  /* TODO: check filename */
+  /* We assume the filename to be nul-terminated. */
 
   /* examine options */
   info = sc_scda_examine_options (opt);
