@@ -353,6 +353,48 @@ sc_scda_get_user_string_len (const char *user_string,
   SC_ABORT_NOT_REACHED ();
 }
 
+/** Converts a scdaret error code into a sc_scda_ferror_t code.
+ */
+static void
+sc_scda_scdaret_to_errcode (sc_scda_ret_t scda_ret,
+                            sc_scda_ferror_t * scda_errorcode)
+{
+  SC_ASSERT (SC_SCDA_FERR_SUCCESS <= scda_ret &&
+             scda_ret < SC_SCDA_FERR_LASTCODE);
+  SC_ASSERT (scda_errorcode != NULL);
+
+  /* if we have an MPI error; we need \ref sc_scda_mpiret_to_errcode */
+  SC_ASSERT (scda_ret != SC_SCDA_FERR_MPI);
+
+  scda_errorcode->scdaret = scda_ret;
+  scda_errorcode->mpiret = sc_MPI_SUCCESS;
+
+  /* TODO: fuzzy error testing */
+}
+
+/** Converts an MPI error code into a sc_scda_ferror_t code.
+ */
+static void
+sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode)
+{
+  SC_ASSERT ((sc_MPI_SUCCESS <= mpiret && mpiret < sc_MPI_ERR_LASTCODE));
+  SC_ASSERT (scda_errorcode != NULL);
+
+  scda_errorcode->scdaret =
+    (mpiret == sc_MPI_SUCCESS) ? SC_SCDA_FERR_SUCCESS : SC_SCDA_FERR_MPI;
+  scda_errorcode->mpiret = mpiret;
+
+  /* TODO: fuzzy error testing */
+}
+
+static int
+sc_scda_is_success (sc_scda_ferror_t * scda_errorcode)
+{
+  SC_ASSERT (scda_errorcode != NULL);
+
+  return !scda_errorcode->scdaret && !scda_errorcode->mpiret;
+}
+
 sc_scda_fcontext_t *
 sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                      const char *filename,
@@ -383,6 +425,13 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   /* open the file for writing */
   mpiret =
     sc_io_open (mpicomm, filename, SC_IO_WRITE_CREATE, info, &fc->file);
+  sc_scda_mpiret_to_errcode (mpiret, errcode);
+  if (!sc_scda_is_success (errcode)) {
+    /* TODO: print error string with SC_GLOBAL_LERRORF */
+    /* TODO: cleanup fc->file */
+    SC_FREE (fc);
+    return NULL;
+  }
   /* TODO: check return value */
 
   if (fc->mpirank == 0) {
@@ -412,10 +461,10 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
     /* user string */
     /* check the user string */
     /* According to 'A.2 Parameter conventions' in the scda specification
-    * it is an unchecked runtime error if the user string is not collective,
-    * and it leads to undefined behavior.
-    * Therefore, we just check the user string on rank 0.
-    */
+     * it is an unchecked runtime error if the user string is not collective,
+     * and it leads to undefined behavior.
+     * Therefore, we just check the user string on rank 0.
+     */
     if (sc_scda_get_user_string_len (user_string, len, &user_string_len)) {
       /* TODO: clean up and snyc */
       return NULL;
