@@ -371,8 +371,6 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   /* TODO: check length of the filename */
   /* We assume the filename to be nul-terminated. */
 
-  /* TODO: check the user string; implement a helper function for this */
-
   /* allocate the file context */
   fc = SC_ALLOC (sc_scda_fcontext_t, 1);
 
@@ -397,7 +395,6 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
     /* magic */
     sc_scda_copy_bytes (file_header_data, SC_SCDA_MAGIC, SC_SCDA_MAGIC_BYTES);
     current_len = SC_SCDA_MAGIC_BYTES;
-    /* TODO: check return value */
 
     file_header_data[current_len++] = ' ';
 
@@ -414,6 +411,11 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
 
     /* user string */
     /* check the user string */
+    /* According to 'A.2 Parameter conventions' in the scda specification
+    * it is an unchecked runtime error if the user string is not collective,
+    * and it leads to undefined behavior.
+    * Therefore, we just check the user string on rank 0.
+    */
     if (sc_scda_get_user_string_len (user_string, len, &user_string_len)) {
       /* TODO: clean up and snyc */
       return NULL;
