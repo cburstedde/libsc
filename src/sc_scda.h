@@ -251,7 +251,7 @@ sc_scda_ret_t;
 
 /** Error values for the scda functions.
  * An error value is a struct since the error can be related to the scda
- * file format or to MPI (I/O operations). The error code can be converted to a
+ * file format or to (MPI) I/O operations. The error code can be converted to a
  * string by \ref sc_scda_ferror_string and mapped to an error class by \ref
  * sc_scda_ferror_class.
  *

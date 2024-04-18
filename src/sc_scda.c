@@ -375,6 +375,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
 
   /* examine options */
   info = sc_scda_examine_options (opt);
+  /* TODO: check if the options are valid */
 
   /* fill convenience MPI information */
   sc_scda_fill_mpi_data (fc, mpicomm);
@@ -426,7 +427,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
 
     /* pad the file header section */
     sc_scda_pad_to_mod (NULL, 0, &file_header_data[current_len]);
-    current_len += 32;
+    current_len += SC_SCDA_PADDING_MOD;
 
     SC_ASSERT (current_len == SC_SCDA_HEADER_BYTES);
 
@@ -525,6 +526,7 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
 
   /* examine options */
   info = sc_scda_examine_options (opt);
+  /* TODO: check if options are valid */
 
   /* allocate the file context */
   fc = SC_ALLOC (sc_scda_fcontext_t, 1);
