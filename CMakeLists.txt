@@ -1,35 +1,20 @@
 cmake_minimum_required(VERSION 3.15...3.28)
+
 enable_testing()
 
 find_package( Git REQUIRED )
-execute_process( 
-  COMMAND ${GIT_EXECUTABLE} describe --tags 
-  COMMAND cut -c 2- 
-  COMMAND cut -d- -f1
-  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-  OUTPUT_VARIABLE SC_VERSION 
-  OUTPUT_STRIP_TRAILING_WHITESPACE 
-)
+execute_process( COMMAND ${GIT_EXECUTABLE} describe --tags 
+                 COMMAND cut -c 2- 
+                 COMMAND cut -d- -f1
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                 OUTPUT_VARIABLE SC_VERSION 
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
 
-find_program( GIT_VERSION_GEN NAMES git-version-gen PATHS ${CMAKE_CURRENT_SOURCE_DIR}/build-aux NO_DEFAULT_PATH )
-if( GIT_VERSION_GEN )
-  execute_process(
-    COMMAND ${GIT_VERSION_GEN} .tarball-version
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake
-    RESULT_VARIABLE _err
-    OUTPUT_VARIABLE git_version
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-endif()
-
-
-project( 
-  SC
-  LANGUAGES C
-  HOMEPAGE_URL https://www.p4est.org/
-  DESCRIPTION "The SC library supports parallel scientific applications."
-  VERSION ${SC_VERSION} 
-)
+project(SC
+LANGUAGES C
+HOMEPAGE_URL https://www.p4est.org/
+DESCRIPTION "The SC library supports parallel scientific applications."
+VERSION ${SC_VERSION})
 
 
 if( NOT CMAKE_BUILD_TYPE )
@@ -38,16 +23,18 @@ if( NOT CMAKE_BUILD_TYPE )
   set_property( CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo" )
 endif()
 
-set( CMAKE_C_STANDARD 99 )
 
-include( cmake/config.cmake )
-include( cmake/pkgconf.cmake )
-include( cmake/install.cmake )
+include(cmake/config.cmake)
+include(cmake/pkgconf.cmake)
+include(cmake/install.cmake)
 
-include( GNUInstallDirs )
-include( FeatureSummary )
+include(GNUInstallDirs)
+include(FeatureSummary)
 
-message( STATUS "libsc ${SC_VERSION} install prefix: ${CMAKE_INSTALL_PREFIX}" )
+
+set(CMAKE_C_STANDARD 99)
+message(STATUS "libsc ${SC_VERSION} "
+               "install prefix: ${CMAKE_INSTALL_PREFIX}")
 
 # --- iniparser
 add_library(iniparser OBJECT iniparser/inistring.c iniparser/dictionary.c iniparser/iniparser.c)
@@ -59,26 +46,22 @@ add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c)
 target_include_directories(libb64 PRIVATE libb64)
 
 # --- sc
-add_library( sc $<TARGET_OBJECTS:iniparser> $<TARGET_OBJECTS:libb64> )
-set_property( TARGET sc PROPERTY EXPORT_NAME SC )
-set_property( TARGET sc PROPERTY SOVERSION ${SC_SOVERSION} )
-target_include_directories(
-  sc
-  PRIVATE 
-    iniparser libb64
+add_library(sc $<TARGET_OBJECTS:iniparser> $<TARGET_OBJECTS:libb64>)
+set_property(TARGET sc PROPERTY EXPORT_NAME SC)
+set_property(TARGET sc PROPERTY SOVERSION ${SC_SOVERSION})
+target_include_directories(sc
+  PRIVATE iniparser libb64
   PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries( 
-  sc 
-  PUBLIC
-    $<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>
-    $<$<BOOL:${SC_HAVE_ZLIB}>:ZLIB::ZLIB>
-    $<$<BOOL:${SC_HAVE_JSON}>:jansson::jansson>
-    $<$<BOOL:${SC_NEED_M}>:m>
-    $<$<BOOL:${WIN32}>:${WINSOCK_LIBRARIES}>
+target_link_libraries(sc PUBLIC
+  $<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>
+  $<$<BOOL:${SC_HAVE_ZLIB}>:ZLIB::ZLIB>
+  $<$<BOOL:${SC_HAVE_JSON}>:jansson::jansson>
+  $<$<BOOL:${SC_NEED_M}>:m>
+  $<$<BOOL:${WIN32}>:${WINSOCK_LIBRARIES}>
 )
 
 # imported target, for use from parent project

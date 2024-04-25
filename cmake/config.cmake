@@ -1,8 +1,8 @@
-include( CheckIncludeFile )
-include( CheckSymbolExists )
-include( CheckTypeSize )
-include( CheckPrototypeDefinition )
-include( CheckCSourceCompiles )
+include(CheckIncludeFile)
+include(CheckSymbolExists)
+include(CheckTypeSize)
+include(CheckPrototypeDefinition)
+include(CheckCSourceCompiles)
 
 
 option( SC_ENABLE_MPI "use MPI library" OFF )
@@ -35,21 +35,22 @@ string(REGEX REPLACE ".*([0-9]+):([0-9]+):([0-9]+)" "\\1.\\2.\\3"
              SC_SOVERSION ${SC_SOVERSION_READ})
 message(STATUS "libsc SOVERSION configured as ${SC_SOVERSION}")
 
+# --- keep library finds in here so we don't forget to do them first
 
 if( SC_ENABLE_MPI )
-  find_package( MPI COMPONENTS C REQUIRED )
+  find_package(MPI COMPONENTS C REQUIRED)
 endif()
 
 if( SC_ENABLE_OPENMP )
-  find_package( OpenMP COMPONENTS C REQUIRED )
+  find_package(OpenMP COMPONENTS C REQUIRED)
 endif()
 
 find_package( ZLIB )
 
 if( NOT ZLIB_FOUND )
   set( SC_USE_INTERNAL_ZLIB ON )
-  message( STATUS "Using internal zlib" )
-  include( ${CMAKE_CURRENT_LIST_DIR}/zlib.cmake )
+  message(STATUS "Using builtin zlib")
+  include(${CMAKE_CURRENT_LIST_DIR}/zlib.cmake)
 else()
   set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
 
@@ -64,7 +65,7 @@ else()
   )
 endif()
 
-# find_package(Threads)
+find_package(Threads)
 
 if( SC_USE_INTERNAL_JSON )
   message(STATUS "Using builtin jansson")
