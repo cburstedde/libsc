@@ -58,17 +58,17 @@ jobs:
     - name: CMake configure
       run: >-
         cmake --preset default
-        -Dmpi:BOOL=${{ matrix.mpi }}
+        -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }}
         --install-prefix=${{ runner.temp }}
-        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+        -DSC_BUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake print debug find
       if: failure()
       run: >-
         cmake --preset default
-        -Dmpi:BOOL=${{ matrix.mpi }}
+        -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }}
         --install-prefix=${{ runner.temp }}
-        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+        -DSC_BUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
         --debug-find --fresh
 
     - name: CMake build
@@ -133,7 +133,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: CMake configure
-      run: cmake --preset default -Dmpi:BOOL=${{ matrix.mpi }} --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DTEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }}
+      run: cmake --preset default -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }} --install-prefix=${{ runner.temp }} -DSC_BUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DTEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }}
 
     - name: CMake build
       run: cmake --build --preset default --parallel
@@ -177,7 +177,7 @@ jobs:
       run: brew install open-mpi
 
     - name: CMake configure
-      run: cmake --preset default --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake --preset default --install-prefix=${{ runner.temp }} -DSC_BUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
       run: cmake --build --preset default --parallel
@@ -232,7 +232,7 @@ jobs:
       name: Checkout source code
 
     - name: CMake configure without MPI
-      run: cmake --preset default -Dmpi:BOOL=no --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      run: cmake --preset default -DSC_ENABLE_MPI:BOOL=no --install-prefix=${{ runner.temp }} -DSC_BUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
     - name: CMake build
       run: cmake --build --preset default --parallel

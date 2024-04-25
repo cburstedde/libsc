@@ -13,19 +13,19 @@ message(STATUS "libsc SOVERSION configured as ${SC_SOVERSION}")
 
 # --- keep library finds in here so we don't forget to do them first
 
-if(mpi)
+if( SC_ENABLE_MPI )
   find_package(MPI COMPONENTS C REQUIRED)
 endif()
 
-if(openmp)
+if( SC_ENABLE_OPENMP )
   find_package(OpenMP COMPONENTS C REQUIRED)
 endif()
 
-if(zlib)
+if( SC_USE_INTERNAL_ZLIB )
   message(STATUS "Using builtin zlib")
   include(${CMAKE_CURRENT_LIST_DIR}/zlib.cmake)
 else()
-  find_package(ZLIB)
+  find_package( ZLIB REQUIRED )
   # need to verify adler32_combine is available
   if(ZLIB_FOUND)
     set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
@@ -49,15 +49,15 @@ endif()
 
 find_package(Threads)
 
-if(json)
+if( SC_USE_INTERNAL_JSON )
   message(STATUS "Using builtin jansson")
   include(${CMAKE_CURRENT_LIST_DIR}/jansson.cmake)
 else()
   find_package(jansson CONFIG)
   if(TARGET jansson::jansson)
-    set(SC_HAVE_JSON 1 CACHE BOOL "JSON features enabled")
+    set(SC_HAVE_JSON ON CACHE BOOL "JSON features enabled")
   else()
-    set(SC_HAVE_JSON 0 CACHE BOOL "JSON features disabled")
+    set(SC_HAVE_JSON OFF CACHE BOOL "JSON features disabled")
   endif()
 endif()
 # --- set global compile environment
@@ -73,16 +73,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_REQUIRED_INCLUDES)
 set(CMAKE_REQUIRED_LIBRARIES)
 
-if(mpi)
-  set(SC_ENABLE_MPI 1)  # need this temporary for sc_config.h, we unset below
-  set(CMAKE_REQUIRED_LIBRARIES MPI::MPI_C)
-  set(SC_CC \"${MPI_C_COMPILER}\")
-  set(SC_CPP ${MPI_C_COMPILER})
-else()
-  set(SC_ENABLE_MPI 0)
-  set(SC_CC \"${CMAKE_C_COMPILER}\")
-  set(SC_CPP ${CMAKE_C_COMPILER})
-endif()
+set(SC_CC \"${CMAKE_C_COMPILER}\")
+set(SC_CPP ${CMAKE_C_COMPILER})
 
 check_symbol_exists(sqrt math.h SC_NONEED_M)
 
@@ -110,16 +102,16 @@ endif()
 set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
 set(SC_ENABLE_MEMALIGN 1)
 
-if(NOT SC_ENABLE_MPI EQUAL CACHE{SC_ENABLE_MPI})
-  # user has requested a different MPI setting, so we need to clear these cache variables to recheck
-  unset(SC_ENABLE_MPICOMMSHARED CACHE)
-  unset(SC_ENABLE_MPITHREAD CACHE)
-  unset(SC_ENABLE_MPIWINSHARED CACHE)
-  unset(SC_ENABLE_MPIIO CACHE)
-  unset(SC_ENABLE_MPI CACHE)
-endif()
+# if(NOT SC_ENABLE_MPI EQUAL CACHE{SC_ENABLE_MPI})
+#   # user has requested a different MPI setting, so we need to clear these cache variables to recheck
+#   unset(SC_ENABLE_MPICOMMSHARED CACHE)
+#   unset(SC_ENABLE_MPITHREAD CACHE)
+#   unset(SC_ENABLE_MPIWINSHARED CACHE)
+#   unset(SC_ENABLE_MPIIO CACHE)
+#   unset(SC_ENABLE_MPI CACHE)
+# endif()
 
-if(SC_ENABLE_MPI)
+if( SC_ENABLE_MPI )
   check_symbol_exists(MPI_COMM_TYPE_SHARED mpi.h SC_ENABLE_MPICOMMSHARED)
   # perform check to set SC_ENABLE_MPIIO
   include(cmake/check_mpiio.cmake)
@@ -247,13 +239,13 @@ check_symbol_exists("SC_ENABLE_MPI" ${PROJECT_BINARY_DIR}/include/sc_config.h SC
 check_symbol_exists("SC_ENABLE_MPIIO" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPIIO)
 
 # check consistency of MPI configuration
-if(mpi AND NOT (SC_ENABLE_MPI AND SC_ENABLE_MPIIO))
-  message(FATAL_ERROR "libsc MPI support was requested, but not configured in ${PROJECT_BINARY_DIR}/include/sc_config.h")
-endif()
+# if(mpi AND NOT (SC_ENABLE_MPI AND SC_ENABLE_MPIIO))
+#   message(FATAL_ERROR "libsc MPI support was requested, but not configured in ${PROJECT_BINARY_DIR}/include/sc_config.h")
+# endif()
 
-# check consistency of MPI I/O configuration
-if(mpi AND (SC_ENABLE_MPI AND NOT SC_ENABLE_MPIIO))
-  message(WARNING "libsc MPI configured but MPI I/O is not configured/found: DEPRECATED")
-  message(NOTICE "This configuration is DEPRECATED and will be disallowed in the future.")
-  message(NOTICE "If the MPI File API is not available, please disable MPI altogether.")
-endif()
+# # check consistency of MPI I/O configuration
+# if(mpi AND (SC_ENABLE_MPI AND NOT SC_ENABLE_MPIIO))
+#   message(WARNING "libsc MPI configured but MPI I/O is not configured/found: DEPRECATED")
+#   message(NOTICE "This configuration is DEPRECATED and will be disallowed in the future.")
+#   message(NOTICE "If the MPI File API is not available, please disable MPI altogether.")
+# endif()
