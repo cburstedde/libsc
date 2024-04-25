@@ -6,8 +6,8 @@
   "name": "default",
   "binaryDir": "${sourceDir}/build",
   "cacheVariables": {
-    "SC_ENABLE_MPI": true,
-    "SC_ENABLE_OPENMP": false,
+    "mpi": true,
+    "openmp": false,
     "CMAKE_COMPILE_WARNING_AS_ERROR": true
     }
 }

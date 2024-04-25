@@ -6,42 +6,7 @@ elseif(SC_HAVE_ZLIB)
   string(APPEND pc_req_private " zlib")
 endif()
 
-
-#
-# macro to convert a boolean variable (ON/OFF) to 0/1.
-#
-macro(convert_01 varin varout)
-
-  if(NOT DEFINED ${varin})
-    message(FATAL_ERROR "variable ${varin} not defined")
-  endif()
-
-  if(${varin})
-    set(${varout} 1)
-  else()
-    set(${varout} 0)
-  endif()
-
-endmacro()
-
-#
-# macro to convert a boolean variable (ON/OFF) to yes/no.
-#
-macro(convert_yn varin varout)
-
-  if(NOT DEFINED ${varin})
-    message(FATAL_ERROR "variable ${varin} not defined")
-  endif()
-
-  if(${varin})
-    set(${varout} yes)
-  else()
-    set(${varout} no)
-  endif()
-
-endmacro()
-
-
+include(cmake/utils.cmake)
 convert_yn(SC_ENABLE_MPI mpi_pc)
 convert_yn(SC_ENABLE_OPENMP openmp_pc)
 convert_yn(SC_HAVE_JSON sc_have_json_pc)
