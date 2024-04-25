@@ -22,7 +22,7 @@ if( SC_ENABLE_OPENMP )
 endif()
 
 
-find_package( ZLIB REQUIRED )
+find_package( ZLIB )
 
 if( SC_USE_INTERNAL_ZLIB OR NOT ZLIB_FOUND )
   set( SC_USE_INTERNAL_ZLIB ON )
