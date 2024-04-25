@@ -37,6 +37,9 @@
 #define SC_SCDA_FUZZY_SEED 42   /**< seed for the fuzzy error return */
 #define SC_SCDA_FUZZY_FREQUENCY 3 /**< frequency for the fuzzy error return */
 
+/** get a random int in the range [A,B] */
+#define SC_SCDA_RAND_RANGE(A,B) ((A) + rand() / (RAND_MAX / ((B) - (A) + 1) + 1))
+
 /** The opaque file context for for scda files. */
 struct sc_scda_fcontext
 {
@@ -361,20 +364,33 @@ sc_scda_get_user_string_len (const char *user_string,
 
 /** Create a random but consistent scdaret.
  */
-static void
-sc_scda_get_fuzzy_scdaret (sc_scda_ferror_t * scda_errorcode)
+static int
+sc_scda_get_fuzzy_scdaret (unsigned seed, unsigned freq)
 {
-  /* TODO: Generate uniform sample from valid scdare values */
-  /* TODO: Do we want to get the actual scdaret to be able to draw
-   * a weighted sample?
-   */
+  sc_scda_ret_t       sample;
+
+  /* TODO: we may want to seek depending on the rank */
+  srand (seed);
+
+  /* draw an error with the empirical probalilty of 1 / freq */
+  if (rand () < (RAND_MAX + 1U) / freq) {
+    /* draw an error  */
+    sample =
+      SC_SCDA_RAND_RANGE (SC_SCDA_FERR_FORMAT, SC_SCDA_FERR_LASTCODE - 1);
+  }
+  else {
+    sample = SC_SCDA_FERR_SUCCESS;
+  }
+
+  return sample;
 }
 
 /** Converts a scdaret error code into a sc_scda_ferror_t code.
  */
 static void
 sc_scda_scdaret_to_errcode (sc_scda_ret_t scda_ret,
-                            sc_scda_ferror_t * scda_errorcode, int fuzzy_errors)
+                            sc_scda_ferror_t * scda_errorcode,
+                            int fuzzy_errors)
 {
   SC_ASSERT (SC_SCDA_FERR_SUCCESS <= scda_ret &&
              scda_ret < SC_SCDA_FERR_LASTCODE);
@@ -383,13 +399,25 @@ sc_scda_scdaret_to_errcode (sc_scda_ret_t scda_ret,
   /* if we have an MPI error; we need \ref sc_scda_mpiret_to_errcode */
   SC_ASSERT (scda_ret != SC_SCDA_FERR_MPI);
 
-  if (fuzzy_errors) {
-    scda_errorcode->scdaret = scda_ret;
-    scda_errorcode->mpiret = sc_MPI_SUCCESS;
+  sc_scda_ret_t       scda_ret_internal;
+
+  if (scda_ret != SC_SCDA_FERR_SUCCESS) {
+    /* an error happend and we do not return fuzzy in any case */
+    scda_ret_internal = scda_ret;
   }
   else {
-    /* TODO: fuzzy error testing */
+    /* no error occured, we may return fuzzy */
+    scda_ret_internal =
+      (!fuzzy_errors) ? scda_ret :
+      sc_scda_get_fuzzy_scdaret (SC_SCDA_FUZZY_SEED, SC_SCDA_FUZZY_FREQUENCY);
   }
+
+  if (fuzzy_errors && scda_ret_internal == SC_SCDA_FERR_MPI) {
+    /* we must draw an MPI error */
+  }
+
+  scda_errorcode->scdaret = scda_ret_internal;
+  scda_errorcode->mpiret = sc_MPI_SUCCESS;
 }
 
 /** Converts an MPI or libsc error code into a sc_scda_ferror_t code.
@@ -402,9 +430,9 @@ sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
   SC_ASSERT (scda_errorcode != NULL);
 
   if (!fuzzy_errors) {
-  scda_errorcode->scdaret =
-    (mpiret == sc_MPI_SUCCESS) ? SC_SCDA_FERR_SUCCESS : SC_SCDA_FERR_MPI;
-  scda_errorcode->mpiret = mpiret;
+    scda_errorcode->scdaret =
+      (mpiret == sc_MPI_SUCCESS) ? SC_SCDA_FERR_SUCCESS : SC_SCDA_FERR_MPI;
+    scda_errorcode->mpiret = mpiret;
   }
   else {
     /* TODO: fuzzy error testing */
