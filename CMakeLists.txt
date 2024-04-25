@@ -2,73 +2,27 @@ cmake_minimum_required(VERSION 3.15...3.28)
 
 enable_testing()
 
-
-
-# --- extract version from Git
-
-set(PROJECT_MAJOR 0)
-set(PROJECT_MINOR 0)
-set(PROJECT_PATCH 0)
-set(PROJECT_VERSION 0.0.0)
-find_program(GIT_VERSION_GEN NAMES git-version-gen
-             PATHS ${PROJECT_SOURCE_DIR}/build-aux NO_DEFAULT_PATH)
-if(GIT_VERSION_GEN)
-  execute_process(COMMAND ${GIT_VERSION_GEN} .tarball-version
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    RESULT_VARIABLE _err
-    OUTPUT_VARIABLE git_version
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-endif()
-if(_err EQUAL 0)
-  if(git_version MATCHES
-                 "^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.].*")
-    set(PROJECT_MAJOR "${CMAKE_MATCH_1}")
-    set(PROJECT_MINOR "${CMAKE_MATCH_2}")
-    set(PROJECT_PATCH "${CMAKE_MATCH_3}")
-    set(PROJECT_VERSION ${PROJECT_MAJOR}.${PROJECT_MINOR}.${PROJECT_PATCH}.999)
-  elseif(git_version MATCHES
-                 "^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)")
-    set(PROJECT_MAJOR "${CMAKE_MATCH_1}")
-    set(PROJECT_MINOR "${CMAKE_MATCH_2}")
-    set(PROJECT_PATCH "${CMAKE_MATCH_3}")
-    set(PROJECT_VERSION ${PROJECT_MAJOR}.${PROJECT_MINOR}.${PROJECT_PATCH})
-  elseif(git_version MATCHES
-                 "^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)")
-    set(PROJECT_MAJOR "${CMAKE_MATCH_1}")
-    set(PROJECT_MINOR "${CMAKE_MATCH_2}")
-    set(PROJECT_VERSION ${PROJECT_MAJOR}.${PROJECT_MINOR})
-  elseif(git_version MATCHES
-                 "^(0|[1-9][0-9]*)")
-    set(PROJECT_MAJOR "${CMAKE_MATCH_1}")
-    set(PROJECT_VERSION ${PROJECT_MAJOR})
-  endif()
-endif()
-
-
-
-
-set(sc_default_build_type "RelWithDebInfo")
-
-if(NOT CMAKE_BUILD_TYPE)
-  if(DEFINED ENV{CMAKE_BUILD_TYPE})
-    set(CMAKE_BUILD_TYPE $ENV{CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of build." FORCE)
-  endif()
-endif()
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "${sc_default_build_type}" CACHE STRING "Choose the type of build." FORCE)
-  message(STATUS "Set build type to '${CMAKE_BUILD_TYPE}' as none was specified.")
-  # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-    "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
-
+find_package( Git REQUIRED )
+execute_process( COMMAND ${GIT_EXECUTABLE} describe --tags 
+                 COMMAND cut -c 2- 
+                 COMMAND cut -d- -f1
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                 OUTPUT_VARIABLE SC_VERSION 
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 project(SC
 LANGUAGES C
 HOMEPAGE_URL https://www.p4est.org/
 DESCRIPTION "The SC library supports parallel scientific applications."
-VERSION ${PROJECT_VERSION})
+VERSION ${SC_VERSION})
+
+
+if( NOT CMAKE_BUILD_TYPE )
+  set( CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build." FORCE )
+  message( STATUS "Set build type to '${CMAKE_BUILD_TYPE}' as none was specified." )
+  set_property( CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo" )
+endif()
+
 
 include(cmake/config.cmake)
 include(cmake/pkgconf.cmake)
@@ -77,8 +31,9 @@ include(cmake/install.cmake)
 include(GNUInstallDirs)
 include(FeatureSummary)
 
+
 set(CMAKE_C_STANDARD 99)
-message(STATUS "libsc ${PROJECT_VERSION} "
+message(STATUS "libsc ${SC_VERSION} "
                "install prefix: ${CMAKE_INSTALL_PREFIX}")
 
 # --- iniparser
