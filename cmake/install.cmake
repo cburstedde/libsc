@@ -1,57 +1,57 @@
 # --- BOILERPLATE: install / packaging
-
 include(CMakePackageConfigHelpers)
+include(CPack)
 
-configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/config.cmake.in
-${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake
-INSTALL_DESTINATION cmake
+configure_package_config_file(
+    ${CMAKE_CURRENT_LIST_DIR}/config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake
+    INSTALL_DESTINATION cmake
 )
 
 write_basic_package_version_file(
-${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake
-COMPATIBILITY SameMajorVersion
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake
+    COMPATIBILITY SameMajorVersion
 )
 
-install(EXPORT ${PROJECT_NAME}-targets
-NAMESPACE ${PROJECT_NAME}::
-DESTINATION cmake
+install(
+    EXPORT ${PROJECT_NAME}-targets
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION cmake
 )
 
-install(FILES
-${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake
-${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake
-DESTINATION cmake
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}Config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}ConfigVersion.cmake
+    DESTINATION cmake
 )
 
-export(EXPORT ${PROJECT_NAME}-targets
-FILE ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-targets.cmake
-NAMESPACE ${PROJECT_NAME}::
+export(
+    EXPORT ${PROJECT_NAME}-targets
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-targets.cmake
+    NAMESPACE ${PROJECT_NAME}::
 )
 
 # --- CPack
-set(CPACK_GENERATOR "TBZ2")
-set(CPACK_SOURCE_GENERATOR "TBZ2")
-set(CPACK_PACKAGE_VENDOR "Carsten Burstedde")
-set(CPACK_PACKAGE_CONTACT "Carsten Burstedde")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README")
-set(CPACK_PACKAGE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/package)
-string(TOLOWER ${CMAKE_SYSTEM_NAME} _sys)
-set(CPACK_PACKAGE_FILE_NAME "libsc-${git_version}-${_sys}")
-set(CPACK_SOURCE_PACKAGE_FILE_NAME "libsc-${git_version}")
+set( CPACK_GENERATOR "TBZ2" )
+set( CPACK_SOURCE_GENERATOR "TBZ2" )
+set( CPACK_PACKAGE_VENDOR "Carsten Burstedde" )
+set( CPACK_PACKAGE_CONTACT "Carsten Burstedde" )
+set( CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING" )
+set( CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README" )
+set( CPACK_PACKAGE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/package )
+string( TOLOWER ${CMAKE_SYSTEM_NAME} _sys )
+set( CPACK_PACKAGE_FILE_NAME "libsc-${git_version}-${_sys}" )
+set( CPACK_SOURCE_PACKAGE_FILE_NAME "libsc-${git_version}" )
 
 # not .gitignore as its regex syntax is more advanced than CMake
-set(CPACK_SOURCE_IGNORE_FILES .git/ .github/ .vscode/ _CPack_Packages/
-${CMAKE_BINARY_DIR}/ ${PROJECT_BINARY_DIR}/
-Makefile.in
-aclocal.m4
-autom4te.cache/
-build/
-configure
+set( 
+    CPACK_SOURCE_IGNORE_FILES .git/ .github/ .vscode/ _CPack_Packages/
+    ${CMAKE_BINARY_DIR}/ ${PROJECT_BINARY_DIR}/ autom4te.cache/ build/
+    Makefile.in aclocal.m4 configure
 )
 
-install(FILES ${CPACK_RESOURCE_FILE_README} ${CPACK_RESOURCE_FILE_LICENSE}
-DESTINATION share/docs/${PROJECT_NAME}
+install(
+    FILES ${CPACK_RESOURCE_FILE_README} ${CPACK_RESOURCE_FILE_LICENSE}
+    DESTINATION share/docs/${PROJECT_NAME}
 )
-
-include(CPack)
