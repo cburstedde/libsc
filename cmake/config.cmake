@@ -45,24 +45,30 @@ if( SC_ENABLE_OPENMP )
   find_package(OpenMP COMPONENTS C REQUIRED)
 endif()
 
-find_package( ZLIB )
-
-if( NOT ZLIB_FOUND )
-  set( SC_USE_INTERNAL_ZLIB ON )
+if( SC_USE_INTERNAL_ZLIB )
   message(STATUS "Using builtin zlib")
   include(${CMAKE_CURRENT_LIST_DIR}/zlib.cmake)
 else()
-  set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
+  find_package( ZLIB REQUIRED )
+  # need to verify adler32_combine is available
+  if(ZLIB_FOUND)
+    set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
 
-  check_c_source_compiles("#include <zlib.h>
-  int main(void)
-  {
-    z_off_t len = 3000; uLong a = 1, b = 2;
-    a == adler32_combine (a, b, len);
-    return 0;
-  }"
-  SC_HAVE_ZLIB
-  )
+    check_c_source_compiles("#include <zlib.h>
+    int main(void)
+    {
+      z_off_t len = 3000; uLong a = 1, b = 2;
+      a == adler32_combine (a, b, len);
+      return 0;
+    }"
+    SC_HAVE_ZLIB
+    )
+  else()
+    set(SC_HAVE_ZLIB 0 CACHE BOOL "Zlib not found or built")
+  endif()
+  if(NOT SC_HAVE_ZLIB)
+    message(STATUS "Zlib disabled (not found). Consider using cmake \"-Dzlib=ON\" to turn on builtin zlib.")
+  endif()
 endif()
 
 find_package(Threads)
