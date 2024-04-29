@@ -21,20 +21,22 @@ if( SC_ENABLE_OPENMP )
   find_package(OpenMP COMPONENTS C REQUIRED)
 endif()
 
-
-find_package( ZLIB )
-
-if( SC_USE_INTERNAL_ZLIB OR NOT ZLIB_FOUND )
-  set( SC_USE_INTERNAL_ZLIB ON )
+if( SC_USE_INTERNAL_ZLIB )
   message( STATUS "Using internal zlib" )
   include( ${CMAKE_CURRENT_LIST_DIR}/zlib.cmake )
 else()
+  find_package( ZLIB )
+  if( NOT ZLIB_FOUND )
+    set( SC_USE_INTERNAL_ZLIB ON )
+    message( STATUS "Using internal zlib" )
+    include( ${CMAKE_CURRENT_LIST_DIR}/zlib.cmake )
+  endif()
+  
   set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
-
+  
   check_c_source_compiles(
     "#include <zlib.h>
-    int main(void)
-    {
+    int main(){
       z_off_t len = 3000; uLong a = 1, b = 2;
       a == adler32_combine (a, b, len);
       return 0;
