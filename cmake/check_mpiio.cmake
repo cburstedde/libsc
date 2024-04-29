@@ -42,6 +42,11 @@ function(check_mpiio)
     "
     SC_ENABLE_MPIIO)
 
+    if( NOT SC_ENABLE_MPIIO )
+        message(WARNING "libsc MPI configured but MPI I/O is not configured/found: DEPRECATED")
+        message(NOTICE "This configuration is DEPRECATED and will be disallowed in the future.")
+        message(NOTICE "If the MPI File API is not available, please disable MPI altogether.")
+    endif()
 endfunction()
 
 check_mpiio()
