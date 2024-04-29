@@ -221,9 +221,6 @@ message(VERBOSE "sc_config.h was last generated ${_t}")
 
 # --- sanity check of MPI sc_config.h
 
-unset(SC_ENABLE_MPI)
-# so we don't override cache var check below that's propagated to parent projects
-
 # check if libsc was configured properly
 set(CMAKE_REQUIRED_FLAGS)
 set(CMAKE_REQUIRED_INCLUDES)
@@ -233,15 +230,3 @@ set(CMAKE_REQUIRED_DEFINITIONS)
 # libsc and current project must both be compiled with/without MPI
 check_symbol_exists("SC_ENABLE_MPI" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPI)
 check_symbol_exists("SC_ENABLE_MPIIO" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPIIO)
-
-# check consistency of MPI configuration
-# if(mpi AND NOT (SC_ENABLE_MPI AND SC_ENABLE_MPIIO))
-#   message(FATAL_ERROR "libsc MPI support was requested, but not configured in ${PROJECT_BINARY_DIR}/include/sc_config.h")
-# endif()
-
-# # check consistency of MPI I/O configuration
-# if(mpi AND (SC_ENABLE_MPI AND NOT SC_ENABLE_MPIIO))
-#   message(WARNING "libsc MPI configured but MPI I/O is not configured/found: DEPRECATED")
-#   message(NOTICE "This configuration is DEPRECATED and will be disallowed in the future.")
-#   message(NOTICE "If the MPI File API is not available, please disable MPI altogether.")
-# endif()
