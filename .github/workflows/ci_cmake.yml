@@ -133,7 +133,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: CMake configure
-      run: cmake --preset default -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }} --install-prefix=${{ runner.temp }} -DSC_BUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DTEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }}
+      run: cmake --preset default -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }} --install-prefix=${{ runner.temp }} -DSC_BUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DSC_TEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }}
 
     - name: CMake build
       run: cmake --build --preset default --parallel
