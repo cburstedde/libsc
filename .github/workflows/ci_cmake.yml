@@ -16,6 +16,8 @@ on:
 
 env:
   CTEST_NO_TESTS_ACTION: "error"
+  CMAKE_BUILD_PARALLEL_LEVEL: 4
+  CTEST_PARALLEL_LEVEL: 0
 
 jobs:
 
@@ -55,56 +57,9 @@ jobs:
         sudo apt-get install --no-install-recommends \
             libmpich-dev mpich
 
-    - name: CMake configure
-      run: >-
-        cmake --preset default
-        -Dmpi:BOOL=${{ matrix.mpi }}
-        --install-prefix=${{ runner.temp }}
-        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+    - name: CMake composite steps (build, test, install, examples)
+      uses: ./.github/workflows/composite-cmake
 
-    - name: CMake print debug find
-      if: failure()
-      run: >-
-        cmake --preset default
-        -Dmpi:BOOL=${{ matrix.mpi }}
-        --install-prefix=${{ runner.temp }}
-        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
-        --debug-find --fresh
-
-    - name: CMake build
-      run: cmake --build --preset default --parallel
-
-    - name: CMake Test
-      run: ctest --preset default
-
-    - name: CMake install (for examples)
-      run: cmake --install build
-
-    - name: CMake configure examples
-      run: cmake -B example/build -S example -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
-
-    - name: CMake build examples
-      run: cmake --build example/build --parallel
-
-    - name: Create package
-      if: github.event.action == 'published'
-      run: cpack --config build/CPackConfig.cmake
-
-    - name: Upload package
-      if: github.event.action == 'published'
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux-binary-archive-${{ matrix.cc }}-${{ matrix.mpi }}-shared-${{ matrix.shared }}
-        path: build/package
-
-    - name: Upload log files
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux_cmake_log-${{ matrix.cc }}-${{ matrix.mpi }}-shared-${{ matrix.shared }}
-        path: |
-          ./build/CMakeFiles/CMakeConfigureLog.yaml
-          ./build/Testing/Temporary/LastTest.log
 
   linux-valgrind:
     needs: linux
@@ -136,7 +91,7 @@ jobs:
       run: cmake --preset default -Dmpi:BOOL=${{ matrix.mpi }} --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DTEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }}
 
     - name: CMake build
-      run: cmake --build --preset default --parallel
+      run: cmake --build --preset default
 
     - name: CMake Test
       run: ctest --preset default
@@ -160,6 +115,7 @@ jobs:
     strategy:
       matrix:
         cc: [clang, gcc-13]
+        mpi: [true]
         shared: [false]
         include:
         - shared: true
@@ -176,43 +132,8 @@ jobs:
     - name: Install system dependencies
       run: brew install open-mpi
 
-    - name: CMake configure
-      run: cmake --preset default --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
-
-    - name: CMake build
-      run: cmake --build --preset default --parallel
-
-    - name: CMake Test
-      run: ctest --preset default
-
-    - name: CMake install (for examples)
-      run: cmake --install build
-
-    - name: CMake configure examples
-      run: cmake -B example/build -S example -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
-
-    - name: CMake build examples
-      run: cmake --build example/build --parallel
-
-    - name: Create package
-      if: github.event.action == 'published'
-      run: cpack --config build/CPackConfig.cmake
-
-    - name: Upload package
-      if: github.event.action == 'published'
-      uses: actions/upload-artifact@v4
-      with:
-        name: mac-binary-archive-${{ matrix.cc }}-shared-${{ matrix.shared }}
-        path: build/package
-
-    - name: Upload log files
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: mac_cmake_log-${{ matrix.cc }}-shared-${{ matrix.shared }}
-        path: |
-          ./build/CMakeFiles/CMakeConfigureLog.yaml
-          ./build/Testing/Temporary/LastTest.log
+    - name: CMake composite steps (build, test, install, examples)
+      uses: ./.github/workflows/composite-cmake
 
   windows:
     runs-on: windows-latest
