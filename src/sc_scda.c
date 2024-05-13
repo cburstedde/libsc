@@ -314,6 +314,8 @@ sc_scda_fill_mpi_data (sc_scda_fcontext_t * fc, sc_MPI_Comm mpicomm)
 
   mpiret = sc_MPI_Comm_rank (mpicomm, &fc->mpirank);
   SC_CHECK_MPI (mpiret);
+
+  fc->mpicomm = mpicomm;
 }
 
 /** Get the user string length for writing.
