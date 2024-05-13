@@ -717,7 +717,8 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
     mpiret =
       sc_io_write_at (fc->file, 0, file_header_data, SC_SCDA_HEADER_BYTES,
                       sc_MPI_BYTE, &count);
-    /* TODO: check return value and count */
+    sc_scda_mpiret_to_errcode (mpiret, errcode, fc->fuzzy_errors);
+    SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing the file header section");
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
 
@@ -829,22 +830,26 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
   /* read file header section on rank 0 */
   if (fc->mpirank == 0) {
     int                 count;
+    int                 invalid_file_header;
     char                file_header_data[SC_SCDA_HEADER_BYTES];
 
     mpiret =
       sc_io_read_at (fc->file, 0, file_header_data, SC_SCDA_HEADER_BYTES,
                      sc_MPI_BYTE, &count);
-    /* TODO: check return value and count */
+    sc_scda_mpiret_to_errcode (mpiret, errcode, fc->fuzzy_errors);
+    SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read the file header section");
 
     /* initialize user_string */
     sc_scda_init_nul (user_string, SC_SCDA_USER_STRING_BYTES + 1);
 
-    if (sc_scda_check_file_header (file_header_data, user_string, len)) {
-      /* invalid file header data */
-      /* TODO: clean up */
-      return NULL;
-    }
+    invalid_file_header =
+      sc_scda_check_file_header (file_header_data, user_string, len);
+    sc_scda_scdaret_to_errcode (invalid_file_header ? SC_SCDA_FERR_FORMAT :
+                                SC_SCDA_FERR_SUCCESS, errcode,
+                                fc->fuzzy_errors);
+    SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid file header");
   }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
   /* Bcast the user string */
   mpiret = sc_MPI_Bcast (user_string, SC_SCDA_USER_STRING_BYTES + 1,
                          sc_MPI_BYTE, 0, mpicomm);
@@ -859,14 +864,12 @@ sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
   SC_ASSERT (fc != NULL);
   SC_ASSERT (errcode != NULL);
 
-  int                 retval;
+  int                 mpiret;
 
-  /* TODO: further checks before calling sc_io_close? */
-
-  retval = sc_io_close (&fc->file);
-  /* TODO: handle return value */
+  mpiret = sc_io_close (&fc->file);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc->fuzzy_errors);
 
   SC_FREE (fc);
 
-  return 0;
+  return sc_scda_is_success (errcode) ? 0 : -1;
 }

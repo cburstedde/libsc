@@ -1078,8 +1078,8 @@ int                 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str,
  * \note
  * All parameters are collective.
  *
- * This function returns NULL on I/O errors.
- *
+ * This function returns -1 on I/O errors.
+ * In case of an error this function still frees the file context.
  * \param [in,out]  fc        File context previously created by
  *                            \ref sc_scda_fopen_write or \ref
  *                            sc_scda_fopen_read. This file context is freed
