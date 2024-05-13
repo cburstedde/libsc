@@ -530,7 +530,7 @@ sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
 }
 
 int
-sc_scda_is_success (sc_scda_ferror_t * errorcode)
+sc_scda_is_success (const sc_scda_ferror_t * errorcode)
 {
   SC_ASSERT (errorcode != NULL);
 

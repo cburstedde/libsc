@@ -1054,7 +1054,7 @@ int                 sc_scda_ferror_class (sc_scda_ferror_t errcode,
  * \param [in]    errcode       An errcode that is output by a sc_scda function.
  * \return                      1 if \b errcode encodes success and 0 otherwise.
  */
-int sc_scda_is_success (sc_scda_ferror_t * errorcode);
+int sc_scda_is_success (const sc_scda_ferror_t * errorcode);
 
 /** Translate a sc_scda error code/class to an error string.
  *
