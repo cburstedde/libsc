@@ -529,12 +529,12 @@ sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
   scda_errorcode->mpiret = mpiret_internal;
 }
 
-static int
-sc_scda_is_success (sc_scda_ferror_t * scda_errorcode)
+int
+sc_scda_is_success (sc_scda_ferror_t * errorcode)
 {
-  SC_ASSERT (scda_errorcode != NULL);
+  SC_ASSERT (errorcode != NULL);
 
-  return !scda_errorcode->scdaret && !scda_errorcode->mpiret;
+  return !errorcode->scdaret && !errorcode->mpiret;
 }
 
 static void

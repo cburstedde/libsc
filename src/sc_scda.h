@@ -1049,6 +1049,13 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
 int                 sc_scda_ferror_class (sc_scda_ferror_t errcode,
                                           sc_scda_ferror_t *errclass);
 
+/** Check if a scda_errorcode_t encodes success.
+ *
+ * \param [in]    errcode       An errcode that is output by a sc_scda function.
+ * \return                      1 if \b errcode encodes success and 0 otherwise.
+ */
+int sc_scda_is_success (sc_scda_ferror_t * errorcode);
+
 /** Translate a sc_scda error code/class to an error string.
  *
  * This is a non-collective function.
