@@ -35,6 +35,7 @@ main (int argc, char **argv)
   const char         *file_user_string = "This is a test file";
   char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
   sc_scda_fcontext_t *fc;
+  sc_scda_fopen_options_t opt;
   sc_scda_ferror_t    errcode;
   size_t              len;
 
@@ -49,9 +50,17 @@ main (int argc, char **argv)
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
 
-  fc = sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, NULL,
+  /* set the options to actiavate fuzzy error testing */
+  /* WARNING: Fuzzy error testing means that the code randomly produces
+   * errors.
+   */
+  opt.info = sc_MPI_INFO_NULL;
+  opt.fuzzy_errors = 1;
+
+  fc = sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &opt,
                            &errcode);
   /* TODO: check errcode */
+  SC_CHECK_ABORT (sc_scda_is_success (&errcode), "fopen_read failed");
 
   SC_INFOF ("File header user string: %s\n", read_user_string);
 
