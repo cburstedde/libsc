@@ -545,6 +545,34 @@ sc_scda_init_fuzzy_seed (int mpirank, unsigned seed)
   srand (seed * (mpirank + 1));
 }
 
+/** Close an MPI file or its libsc-internal replacement in case of an error.
+ * \param [in,out]  file    A sc_MPI_file
+ * \return                  Always -1 since this function is only called
+ *                          if an error already occurred.
+ */
+static int
+sc_scda_file_error_cleanup (sc_MPI_File * file)
+{
+  /* no error checking since we are called under an error condition */
+  SC_ASSERT (file != NULL);
+  if (*file != sc_MPI_FILE_NULL) {
+    /* We do not use here the libsc closing function since we do not perform
+     * error checking in this function that is only called if we had already
+     * an error.
+     */
+#ifdef SC_ENABLE_MPIIO
+    MPI_File_close (file);
+#else
+    fclose ((*file)->file);
+    (*file)->file = NULL;
+#endif
+  }
+#ifndef SC_ENABLE_MPIIO
+  SC_FREE (*file);
+#endif
+  return -1;
+}
+
 sc_scda_fcontext_t *
 sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                      const char *filename,
@@ -708,34 +736,6 @@ sc_scda_check_file_header (char *file_header_data, char *user_string,
   }
 
   return 0;
-}
-
-/** Close an MPI file or its libsc-internal replacement in case of an error.
- * \param [in,out]  file    A sc_MPI_file
- * \return                  Always -1 since this function is only called
- *                          if an error already occurred.
- */
-static int
-sc_scda_file_error_cleanup (sc_MPI_File * file)
-{
-  /* no error checking since we are called under an error condition */
-  SC_ASSERT (file != NULL);
-  if (*file != sc_MPI_FILE_NULL) {
-    /* We do not use here the libsc closing function since we do not perform
-     * error checking in this function that is only called if we had already
-     * an error.
-     */
-#ifdef SC_ENABLE_MPIIO
-    MPI_File_close (file);
-#else
-    fclose ((*file)->file);
-    (*file)->file = NULL;
-#endif
-  }
-#ifndef SC_ENABLE_MPIIO
-  SC_FREE (*file);
-#endif
-  return -1;
 }
 
 sc_scda_fcontext_t *
