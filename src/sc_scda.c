@@ -52,6 +52,36 @@
                                     SC_FREE (fc);                            \
                                     return NULL;}} while (0)
 
+/* This macro is suitable to be called after a non-collective operation.
+ * It is only valid to be called once per function.
+ * For a correct error handling it is required to skip the rest
+ * of the non-collective code and then broadcast the error flag.
+ * The macro can be used multiple times in a function but will always jump to
+ * the same label. This leads to the intended error handling.
+ * TODO: Call check verbose.
+ */
+#define SC_SCDA_CHECK_NONCOLL_ERR(errcode, user_msg) do {                    \
+                                    if (!sc_scda_is_success (errcode)) {     \
+                                    goto sc_scda_read_write_error;}} while (0)
+
+/** Handle a non-collective error.
+ * Use this macro after \ref SC_SCDA_CHECK_NONCOLL_ERR *directly* after the end
+ * of non-collective statements.
+ * Can be only used once in a function.
+ */
+#define SC_SCDA_HANDLE_NONCOLL_ERR(errcode, fc) do{                            \
+                                    sc_scda_read_write_error: ;                \
+                                    SC_CHECK_MPI(sc_MPI_Bcast(&errcode->scdaret,\
+                                                  1, sc_MPI_INT, 0,           \
+                                                  fc->mpicomm));               \
+                                    SC_CHECK_MPI(sc_MPI_Bcast(&errcode->mpiret,\
+                                                  1, sc_MPI_INT, 0,            \
+                                                  fc->mpicomm));               \
+                                    if (!sc_scda_is_success (errcode)) {       \
+                                    sc_scda_file_error_cleanup (&fc->file);    \
+                                    SC_FREE (fc);                              \
+                                    return NULL;}} while (0)
+
 /** The opaque file context for for scda files. */
 struct sc_scda_fcontext
 {
@@ -473,6 +503,9 @@ sc_scda_get_fuzzy_mpiret (unsigned freq)
 }
 
 /** Converts a scdaret error code into a sc_scda_ferror_t code.
+ *
+ * This function must be used in the case of success as well to ensure full
+ * coverage for the fuzzy error testing.
  */
 static void
 sc_scda_scdaret_to_errcode (sc_scda_ret_t scda_ret,
@@ -515,6 +548,9 @@ sc_scda_scdaret_to_errcode (sc_scda_ret_t scda_ret,
 }
 
 /** Converts an MPI or libsc error code into a sc_scda_ferror_t code.
+ *
+ * This function must be used in the case of success as well to ensure full
+ * coverage for the fuzzy error testing.
  */
 static void
 sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
@@ -627,6 +663,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   if (fc->mpirank == 0) {
     int                 count;
     int                 current_len;
+    int                 invalid_user_string;
     char                file_header_data[SC_SCDA_HEADER_BYTES];
     size_t              user_string_len;
 
@@ -655,10 +692,16 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
      * and it leads to undefined behavior.
      * Therefore, we just check the user string on rank 0.
      */
-    if (sc_scda_get_user_string_len (user_string, len, &user_string_len)) {
-      /* TODO: clean up and sync */
-      return NULL;
-    }
+    invalid_user_string =
+      sc_scda_get_user_string_len (user_string, len, &user_string_len);
+    /* We always translate the error code to have full coverage for the fuzzy
+     * error testing.
+     */
+    sc_scda_scdaret_to_errcode (invalid_user_string ? SC_SCDA_FERR_ARG :
+                                SC_SCDA_FERR_SUCCESS, errcode,
+                                fc->fuzzy_errors);
+    SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
+
     sc_scda_pad_to_fix_len (user_string, user_string_len,
                             &file_header_data[current_len],
                             SC_SCDA_USER_STRING_FIELD);
@@ -676,6 +719,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                       sc_MPI_BYTE, &count);
     /* TODO: check return value and count */
   }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
 
   return fc;
 }
