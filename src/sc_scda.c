@@ -365,12 +365,9 @@ sc_scda_get_user_string_len (const char *user_string,
 /** Create a random but consistent scdaret.
  */
 static int
-sc_scda_get_fuzzy_scdaret (unsigned seed, unsigned freq)
+sc_scda_get_fuzzy_scdaret (unsigned freq)
 {
   sc_scda_ret_t       sample;
-
-  /* TODO: we may want to seek depending on the rank */
-  srand (seed);
 
   /* draw an error with the empirical probalilty of 1 / freq */
   if (rand () < (RAND_MAX + 1U) / freq) {
@@ -476,24 +473,31 @@ sc_scda_scdaret_to_errcode (sc_scda_ret_t scda_ret,
   SC_ASSERT (scda_ret != SC_SCDA_FERR_MPI);
 
   sc_scda_ret_t       scda_ret_internal;
+  int                 mpiret_internal;
 
   if (scda_ret != SC_SCDA_FERR_SUCCESS) {
-    /* an error happend and we do not return fuzzy in any case */
+    /* an error happened and we do not return fuzzy in any case */
     scda_ret_internal = scda_ret;
+    mpiret_internal = sc_MPI_SUCCESS;
   }
   else {
-    /* no error occured, we may return fuzzy */
+    /* no error occurred, we may return fuzzy */
     scda_ret_internal =
       (!fuzzy_errors) ? scda_ret :
-      sc_scda_get_fuzzy_scdaret (SC_SCDA_FUZZY_SEED, SC_SCDA_FUZZY_FREQUENCY);
-  }
-
-  if (fuzzy_errors && scda_ret_internal == SC_SCDA_FERR_MPI) {
-    /* we must draw an MPI error */
+      sc_scda_get_fuzzy_scdaret (SC_SCDA_FUZZY_FREQUENCY);
+    if (scda_ret_internal == SC_SCDA_FERR_MPI) {
+      SC_ASSERT (fuzzy_errors);
+      /* we must draw an MPI error */
+      /* frequency 1 since we need mpiret != sc_MPI_SUCCESS */
+      mpiret_internal = sc_scda_get_fuzzy_mpiret (1);
+    }
+    else {
+      mpiret_internal = sc_MPI_SUCCESS;
+    }
   }
 
   scda_errorcode->scdaret = scda_ret_internal;
-  scda_errorcode->mpiret = sc_MPI_SUCCESS;
+  scda_errorcode->mpiret = mpiret_internal;
 }
 
 /** Converts an MPI or libsc error code into a sc_scda_ferror_t code.
@@ -505,14 +509,24 @@ sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
   SC_ASSERT ((sc_MPI_SUCCESS <= mpiret && mpiret < sc_MPI_ERR_LASTCODE));
   SC_ASSERT (scda_errorcode != NULL);
 
+  sc_scda_ret_t       scda_ret_internal;
+  int                 mpiret_internal;
+
   if (!fuzzy_errors) {
-    scda_errorcode->scdaret =
+    scda_ret_internal =
       (mpiret == sc_MPI_SUCCESS) ? SC_SCDA_FERR_SUCCESS : SC_SCDA_FERR_MPI;
-    scda_errorcode->mpiret = mpiret;
+    mpiret_internal = mpiret;
   }
   else {
-    /* TODO: fuzzy error testing */
+    /* fuzzy error testing */
+    mpiret_internal = sc_scda_get_fuzzy_mpiret (SC_SCDA_FUZZY_FREQUENCY);
+    scda_ret_internal =
+      (mpiret_internal ==
+       sc_MPI_SUCCESS) ? SC_SCDA_FERR_SUCCESS : SC_SCDA_FERR_MPI;
   }
+
+  scda_errorcode->scdaret = scda_ret_internal;
+  scda_errorcode->mpiret = mpiret_internal;
 }
 
 static int
@@ -521,6 +535,14 @@ sc_scda_is_success (sc_scda_ferror_t * scda_errorcode)
   SC_ASSERT (scda_errorcode != NULL);
 
   return !scda_errorcode->scdaret && !scda_errorcode->mpiret;
+}
+
+static void
+sc_scda_init_fuzzy_seed (int mpirank, unsigned seed)
+{
+  SC_ASSERT (mpirank >= 0);
+
+  srand (seed * (mpirank + 1));
 }
 
 sc_scda_fcontext_t *
@@ -549,6 +571,10 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
 
   /* fill convenience MPI information */
   sc_scda_fill_mpi_data (fc, mpicomm);
+
+  if (fc->fuzzy_errors) {
+    sc_scda_init_fuzzy_seed (fc->mpirank, SC_SCDA_FUZZY_SEED);
+  }
 
   /* open the file for writing */
   mpiret =
@@ -594,7 +620,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
      * Therefore, we just check the user string on rank 0.
      */
     if (sc_scda_get_user_string_len (user_string, len, &user_string_len)) {
-      /* TODO: clean up and snyc */
+      /* TODO: clean up and sync */
       return NULL;
     }
     sc_scda_pad_to_fix_len (user_string, user_string_len,
@@ -711,9 +737,14 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
   /* fill convenience MPI information */
   sc_scda_fill_mpi_data (fc, mpicomm);
 
+  if (fc->fuzzy_errors) {
+    sc_scda_init_fuzzy_seed (fc->mpirank, SC_SCDA_FUZZY_SEED);
+  }
+
   /* open the file in reading mode */
   mpiret = sc_io_open (mpicomm, filename, SC_IO_READ, info, &fc->file);
   /* TODO: check return value */
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc->fuzzy_errors);
 
   /* read file header section on rank 0 */
   if (fc->mpirank == 0) {
