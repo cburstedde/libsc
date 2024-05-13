@@ -22,17 +22,16 @@ jobs:
     steps:
      - run: echo "This job is running on a ${{ runner.os }} server hosted by GitHub"
 
-     - uses: actions/checkout@v3
+     - uses: actions/checkout@v4
        name: Checkout source code
 
      - name: Install system dependencies
-       run: brew install open-mpi ninja automake
+       run: brew install open-mpi libtool automake
 
      - name: Run bootstrap script
        run: ./bootstrap
 
      - name: Make check without MPI, with debug
-       shell: bash
        run: |
           DIR="checkdebug" && mkdir -p "$DIR" && cd "$DIR"
           ../configure --enable-debug \
@@ -41,7 +40,6 @@ jobs:
           make -j check V=0
 
      - name: Make check with MPI and debug
-       shell: bash
        run: |
           DIR="checkMPIdebug" && mkdir -p "$DIR" && cd "$DIR"
           ../configure --enable-mpi --enable-debug \
@@ -50,7 +48,6 @@ jobs:
           make -j check V=0
 
      - name: Make check with MPI, debug and C++ compiler
-       shell: bash
        run: |
           DIR="checkMPIdebugCXX" && mkdir -p "$DIR" && cd "$DIR"
           ../configure --enable-mpi --enable-debug CC=mpicxx \
@@ -60,7 +57,7 @@ jobs:
 
      - name: Upload log files
        if: always()
-       uses: actions/upload-artifact@v3
+       uses: actions/upload-artifact@v4
        with:
          name: darwin_log
          path: |
