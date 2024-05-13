@@ -40,6 +40,18 @@
 /** get a random int in the range [A,B] */
 #define SC_SCDA_RAND_RANGE(A,B) ((A) + rand() / (RAND_MAX / ((B) - (A) + 1) + 1))
 
+/** Collectivly check a given errorcode.
+ * This macro assumes that errcode is a collective
+ * variable and that the macro is called collectivly.
+ * The calling function must return NULL in case of an error.
+ * TODO: Introduce and call check verbose
+ */
+#define SC_SCDA_CHECK_COLL_ERR(errcode, fc, user_msg) do {                   \
+                                    if (!sc_scda_is_success (errcode)) {     \
+                                    sc_scda_file_error_cleanup (&fc->file);  \
+                                    SC_FREE (fc);                            \
+                                    return NULL;}} while (0)
+
 /** The opaque file context for for scda files. */
 struct sc_scda_fcontext
 {
@@ -608,13 +620,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   mpiret =
     sc_io_open (mpicomm, filename, SC_IO_WRITE_CREATE, info, &fc->file);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc->fuzzy_errors);
-  if (!sc_scda_is_success (errcode)) {
-    /* TODO: print error string with SC_GLOBAL_LERRORF */
-    /* TODO: cleanup fc->file */
-    SC_FREE (fc);
-    return NULL;
-  }
-  /* TODO: check return value */
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "File open write");
 
   if (fc->mpirank == 0) {
     int                 count;
@@ -771,8 +777,8 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
 
   /* open the file in reading mode */
   mpiret = sc_io_open (mpicomm, filename, SC_IO_READ, info, &fc->file);
-  /* TODO: check return value */
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc->fuzzy_errors);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "File open read");
 
   /* read file header section on rank 0 */
   if (fc->mpirank == 0) {
