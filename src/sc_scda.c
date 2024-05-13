@@ -385,6 +385,82 @@ sc_scda_get_fuzzy_scdaret (unsigned seed, unsigned freq)
   return sample;
 }
 
+static int
+sc_scda_get_fuzzy_mpiret (unsigned freq)
+{
+  int                 index_sample, sample;
+
+  /* draw an error with the empirical probalilty of 1 / freq */
+  if (rand () < (RAND_MAX + 1U) / freq) {
+    /* draw an MPI 2.0 I/O error */
+    /* The MPI standard does not guarantee that the MPI error codes
+     * are contiguous. Hence, take the minimal available error code set and
+     * draw an index into this set.
+     */
+    index_sample = SC_SCDA_RAND_RANGE (0, 15);
+
+    /* map int 0...15 to an MPI 2.0 I/O error code */
+    switch (index_sample) {
+    case 0:
+      sample = sc_MPI_ERR_FILE;
+      break;
+    case 1:
+      sample = sc_MPI_ERR_NOT_SAME;
+      break;
+    case 2:
+      sample = sc_MPI_ERR_AMODE;
+      break;
+    case 3:
+      sample = sc_MPI_ERR_UNSUPPORTED_DATAREP;
+      break;
+    case 4:
+      sample = sc_MPI_ERR_UNSUPPORTED_OPERATION;
+      break;
+    case 5:
+      sample = sc_MPI_ERR_NO_SUCH_FILE;
+      break;
+    case 6:
+      sample = sc_MPI_ERR_FILE_EXISTS;
+      break;
+    case 7:
+      sample = sc_MPI_ERR_BAD_FILE;
+      break;
+    case 8:
+      sample = sc_MPI_ERR_ACCESS;
+      break;
+    case 9:
+      sample = sc_MPI_ERR_NO_SPACE;
+      break;
+    case 10:
+      sample = sc_MPI_ERR_QUOTA;
+      break;
+    case 11:
+      sample = sc_MPI_ERR_READ_ONLY;
+      break;
+    case 12:
+      sample = sc_MPI_ERR_FILE_IN_USE;
+      break;
+    case 13:
+      sample = sc_MPI_ERR_DUP_DATAREP;
+      break;
+    case 14:
+      sample = sc_MPI_ERR_CONVERSION;
+      break;
+    case 15:
+      sample = sc_MPI_ERR_IO;
+      break;
+    default:
+      SC_ABORT_NOT_REACHED ();
+      break;
+    }
+  }
+  else {
+    sample = sc_MPI_SUCCESS;
+  }
+
+  return sample;
+}
+
 /** Converts a scdaret error code into a sc_scda_ferror_t code.
  */
 static void
