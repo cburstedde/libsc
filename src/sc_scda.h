@@ -265,21 +265,42 @@ sc_scda_ret_t;
  */
 typedef struct sc_scda_ferror
 {
+  /* *INDENT-OFF* */
   int mpiret;            /**< MPI function return value; without MPI
                               this variable can get filled by other I/O operation
                               error codes, which are still interpretable by
                               the error \b scda examination functions */
   sc_scda_ret_t scdaret; /**< scda file format related return value */
+  /* *INDENT-ON* */
 }
 sc_scda_ferror_t;
 
 /** An options struct for the functions \ref sc_scda_fopen_write and
  * \ref sc_scda_fopen_read. The struct may be extended in the future.
+ *
+ * The option struct is a collective structure. If the options structure that
+ * is passed to a function is not the same on all processes, the whole
+ * following scda workflow has undefined behavior.
  */
 typedef struct sc_scda_fopen_options
 {
   sc_MPI_Info         info; /**< info that is passed to MPI_File_open */
   int                 fuzzy_errors; /**< boolean for fuzzy error return */
+  /* The following variables are ignored if fuzzy_errors is false. */
+  int                 fuzzy_seed; /**< seed for fuzzy error return;
+                                       < 0 means that time (NULL) is the base
+                                       seed. The base seed is used to compute
+                                       a rank dependent seed. */
+  int                 fuzzy_freq; /**< Frequency of the fuzzy error return,
+                                       i.e. for each possible error origin
+                                       we return a random error with the
+                                       empirical probability of 1 / fuzzy_freq
+                                       but only if the respective possible error
+                                       origin did not already caused an error
+                                       without the fuzzy error return. In such a
+                                       case, the actual error is returned.
+                                       < 0 means that the default frequency 3
+                                       is used. */
 }
 sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
 
@@ -1047,14 +1068,14 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
  *                              something else on invalid arguments.
  */
 int                 sc_scda_ferror_class (sc_scda_ferror_t errcode,
-                                          sc_scda_ferror_t *errclass);
+                                          sc_scda_ferror_t * errclass);
 
 /** Check if a scda_errorcode_t encodes success.
  *
  * \param [in]    errcode       An errcode that is output by a sc_scda function.
  * \return                      1 if \b errcode encodes success and 0 otherwise.
  */
-int sc_scda_is_success (const sc_scda_ferror_t * errorcode);
+int                 sc_scda_is_success (const sc_scda_ferror_t * errorcode);
 
 /** Translate a sc_scda error code/class to an error string.
  *
@@ -1066,8 +1087,8 @@ int sc_scda_is_success (const sc_scda_ferror_t * errorcode);
  * \return                      \ref SC_SCDA_FERR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
-int                 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str,
-                                           int *len);
+int                 sc_scda_ferror_string (sc_scda_ferror_t errcode,
+                                           char *str, int *len);
 
 /** Close a file opened for parallel write/read and the free the file context.
  *
