@@ -46,9 +46,11 @@ main (int argc, char **argv)
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
                             NULL, &errcode);
   /* TODO: check errcode */
+  SC_CHECK_ABORT (sc_scda_is_success (&errcode), "fopen_write failed");
 
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
+  SC_CHECK_ABORT (sc_scda_is_success (&errcode), "fclose after write failed");
 
   /* set the options to actiavate fuzzy error testing */
   /* WARNING: Fuzzy error testing means that the code randomly produces
@@ -66,6 +68,7 @@ main (int argc, char **argv)
 
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
+  SC_CHECK_ABORT (sc_scda_is_success (&errcode), "fclose after read failed");
 
   sc_finalize ();
 
