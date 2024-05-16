@@ -18,3 +18,11 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS true)
 if(NOT PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   file(GENERATE OUTPUT .gitignore CONTENT "*")
 endif()
+
+if (DEFINED mpi)
+  set (SC_ENABLE_MPI ${mpi} CACHE BOOL "" FORCE)
+endif()
+
+if (DEFINED debug)
+  set (CMAKE_BUILD_TYPE "Debug" CACHE STRING "" FORCE)
+endif()
