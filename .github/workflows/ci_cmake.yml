@@ -16,30 +16,29 @@ on:
 
 env:
   CTEST_NO_TESTS_ACTION: "error"
+  CMAKE_BUILD_PARALLEL_LEVEL: 4
+  CTEST_PARALLEL_LEVEL: 0
 
 jobs:
 
-  linux:
-    runs-on: ubuntu-22.04
-    name: CMake build on Linux
+  linux-gcc14:
+    runs-on: ubuntu-24.04
+    name: Linux mpi=${{ matrix.mpi }} CC=${{ matrix.cc }} shared=${{ matrix.shared }}
     timeout-minutes: 60
 
     strategy:
       matrix:
-        cc: [gcc-9, gcc-10, gcc-11, gcc-12, gcc-13]
+        cc: [gcc-12, gcc-13, gcc-14]
         shared: [false]
         mpi: [true]
         include:
-        - shared: true
-          cc: gcc
+        - cc: gcc
+          shared: true
           mpi: true
-        - cc: clang-14
+        - cc: gcc
           mpi: false
-          shared: false
-        - cc: clang-15
-          mpi: false
-          shared: false
-# Clang is ABI-incompatible with the libmpich on the CI Ubuntu images.
+        - cc: clang-18
+          mpi: true
 
     env:
       CC: ${{ matrix.cc }}
@@ -55,61 +54,43 @@ jobs:
         sudo apt-get install --no-install-recommends \
             libmpich-dev mpich
 
-    - name: CMake configure
-      run: >-
-        cmake --preset default
-        -Dmpi:BOOL=${{ matrix.mpi }}
-        --install-prefix=${{ runner.temp }}
-        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+    - name: CMake composite steps (build, test, install, examples)
+      uses: ./.github/workflows/composite-cmake
 
-    - name: CMake print debug find
-      if: failure()
-      run: >-
-        cmake --preset default
-        -Dmpi:BOOL=${{ matrix.mpi }}
-        --install-prefix=${{ runner.temp }}
-        -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
-        --debug-find --fresh
 
-    - name: CMake build
-      run: cmake --build --preset default --parallel
+  linux-gcc9:
+    runs-on: ubuntu-22.04
+    name: Linux mpi=${{ matrix.mpi }} CC=${{ matrix.cc }} shared=${{ matrix.shared }}
+    timeout-minutes: 60
 
-    - name: CMake Test
-      run: ctest --preset default
+    strategy:
+      matrix:
+        cc: [gcc-9, gcc-10, gcc-11]
+        shared: [false]
+        mpi: [true]
 
-    - name: CMake install (for examples)
-      run: cmake --install build
+    env:
+      CC: ${{ matrix.cc }}
 
-    - name: CMake configure examples
-      run: cmake -B example/build -S example -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
+    steps:
+    - uses: actions/checkout@v4
+      name: Checkout source code
 
-    - name: CMake build examples
-      run: cmake --build example/build --parallel
+    - name: Install system dependencies
+      if: ${{ matrix.mpi }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install --no-install-recommends \
+            libmpich-dev mpich
 
-    - name: Create package
-      if: github.event.action == 'published'
-      run: cpack --config build/CPackConfig.cmake
+    - name: CMake composite steps (build, test, install, examples)
+      uses: ./.github/workflows/composite-cmake
 
-    - name: Upload package
-      if: github.event.action == 'published'
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux-binary-archive-${{ matrix.cc }}-${{ matrix.mpi }}-shared-${{ matrix.shared }}
-        path: build/package
-
-    - name: Upload log files
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux_cmake_log-${{ matrix.cc }}-${{ matrix.mpi }}-shared-${{ matrix.shared }}
-        path: |
-          ./build/CMakeFiles/CMakeConfigureLog.yaml
-          ./build/Testing/Temporary/LastTest.log
 
   linux-valgrind:
-    needs: linux
-    runs-on: ubuntu-22.04
-    name: CMake with Valgrind
+    needs: linux-gcc14
+    runs-on: ubuntu-24.04
+    name: Valgrind Linux mpi=${{ matrix.mpi }} CC=${{ matrix.cc }} shared=${{ matrix.shared }}
     timeout-minutes: 60
 
     strategy:
@@ -136,7 +117,7 @@ jobs:
       run: cmake --preset default -Dmpi:BOOL=${{ matrix.mpi }} --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} -DTEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }}
 
     - name: CMake build
-      run: cmake --build --preset default --parallel
+      run: cmake --build --preset default
 
     - name: CMake Test
       run: ctest --preset default
@@ -154,12 +135,13 @@ jobs:
     # macos-14 is to use Apple Silicon hardware as most Apple users nowadays would have
     # https://github.blog/changelog/2024-01-30-github-actions-introducing-the-new-m1-macos-runner-available-to-open-source/
     runs-on: macos-14
-    name: CMake build on MacOS
+    name: macOS mpi=${{ matrix.mpi }} CC=${{ matrix.cc }} shared=${{ matrix.shared }}
     timeout-minutes: 60
 
     strategy:
       matrix:
         cc: [clang, gcc-13]
+        mpi: [true]
         shared: [false]
         include:
         - shared: true
@@ -176,47 +158,12 @@ jobs:
     - name: Install system dependencies
       run: brew install open-mpi
 
-    - name: CMake configure
-      run: cmake --preset default --install-prefix=${{ runner.temp }} -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
-
-    - name: CMake build
-      run: cmake --build --preset default --parallel
-
-    - name: CMake Test
-      run: ctest --preset default
-
-    - name: CMake install (for examples)
-      run: cmake --install build
-
-    - name: CMake configure examples
-      run: cmake -B example/build -S example -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
-
-    - name: CMake build examples
-      run: cmake --build example/build --parallel
-
-    - name: Create package
-      if: github.event.action == 'published'
-      run: cpack --config build/CPackConfig.cmake
-
-    - name: Upload package
-      if: github.event.action == 'published'
-      uses: actions/upload-artifact@v4
-      with:
-        name: mac-binary-archive-${{ matrix.cc }}-shared-${{ matrix.shared }}
-        path: build/package
-
-    - name: Upload log files
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: mac_cmake_log-${{ matrix.cc }}-shared-${{ matrix.shared }}
-        path: |
-          ./build/CMakeFiles/CMakeConfigureLog.yaml
-          ./build/Testing/Temporary/LastTest.log
+    - name: CMake composite steps (build, test, install, examples)
+      uses: ./.github/workflows/composite-cmake
 
   windows:
     runs-on: windows-latest
-    name: CMake build on Windows
+    name: Windows
     timeout-minutes: 60
 
     strategy:
