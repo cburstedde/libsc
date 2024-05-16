@@ -101,14 +101,13 @@ endif()
 set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
 set(SC_ENABLE_MEMALIGN 1)
 
-# if(NOT SC_ENABLE_MPI EQUAL CACHE{SC_ENABLE_MPI})
-#   # user has requested a different MPI setting, so we need to clear these cache variables to recheck
-#   unset(SC_ENABLE_MPICOMMSHARED CACHE)
-#   unset(SC_ENABLE_MPITHREAD CACHE)
-#   unset(SC_ENABLE_MPIWINSHARED CACHE)
-#   unset(SC_ENABLE_MPIIO CACHE)
-#   unset(SC_ENABLE_MPI CACHE)
-# endif()
+# user has requested a different MPI setting, so we need to clear these cache variables to recheck
+if(NOT SC_ENABLE_MPI EQUAL CACHE{SC_ENABLE_MPI})
+  unset(SC_ENABLE_MPICOMMSHARED CACHE)
+  unset(SC_ENABLE_MPITHREAD CACHE)
+  unset(SC_ENABLE_MPIWINSHARED CACHE)
+  unset(SC_ENABLE_MPIIO CACHE)
+endif()
 
 if( SC_ENABLE_MPI )
   check_symbol_exists(MPI_COMM_TYPE_SHARED mpi.h SC_ENABLE_MPICOMMSHARED)
