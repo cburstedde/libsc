@@ -21,27 +21,53 @@ env:
 
 jobs:
 
-  linux:
-    runs-on: ubuntu-22.04
-    name: CMake build on Linux
+  linux-gcc14:
+    runs-on: ubuntu-24.04
+    name: Linux mpi=${{ matrix.mpi }} CC=${{ matrix.cc }} shared=${{ matrix.shared }}
     timeout-minutes: 60
 
     strategy:
       matrix:
-        cc: [gcc-9, gcc-10, gcc-11, gcc-12, gcc-13]
+        cc: [gcc-12, gcc-13, gcc-14]
         shared: [false]
         mpi: [true]
         include:
-        - shared: true
-          cc: gcc
+        - cc: gcc
+          shared: true
           mpi: true
-        - cc: clang-14
+        - cc: gcc
           mpi: false
-          shared: false
-        - cc: clang-15
-          mpi: false
-          shared: false
-# Clang is ABI-incompatible with the libmpich on the CI Ubuntu images.
+        - cc: clang-18
+          mpi: true
+
+    env:
+      CC: ${{ matrix.cc }}
+
+    steps:
+    - uses: actions/checkout@v4
+      name: Checkout source code
+
+    - name: Install system dependencies
+      if: ${{ matrix.mpi }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install --no-install-recommends \
+            libmpich-dev mpich
+
+    - name: CMake composite steps (build, test, install, examples)
+      uses: ./.github/workflows/composite-cmake
+
+
+  linux-gcc9:
+    runs-on: ubuntu-22.04
+    name: Linux mpi=${{ matrix.mpi }} CC=${{ matrix.cc }} shared=${{ matrix.shared }}
+    timeout-minutes: 60
+
+    strategy:
+      matrix:
+        cc: [gcc-9, gcc-10, gcc-11]
+        shared: [false]
+        mpi: [true]
 
     env:
       CC: ${{ matrix.cc }}
@@ -62,9 +88,9 @@ jobs:
 
 
   linux-valgrind:
-    needs: linux
-    runs-on: ubuntu-22.04
-    name: CMake with Valgrind
+    needs: linux-gcc14
+    runs-on: ubuntu-24.04
+    name: Valgrind Linux mpi=${{ matrix.mpi }} CC=${{ matrix.cc }} shared=${{ matrix.shared }}
     timeout-minutes: 60
 
     strategy:
@@ -109,7 +135,7 @@ jobs:
     # macos-14 is to use Apple Silicon hardware as most Apple users nowadays would have
     # https://github.blog/changelog/2024-01-30-github-actions-introducing-the-new-m1-macos-runner-available-to-open-source/
     runs-on: macos-14
-    name: CMake build on MacOS
+    name: macOS mpi=${{ matrix.mpi }} CC=${{ matrix.cc }} shared=${{ matrix.shared }}
     timeout-minutes: 60
 
     strategy:
@@ -137,7 +163,7 @@ jobs:
 
   windows:
     runs-on: windows-latest
-    name: CMake build on Windows
+    name: Windows
     timeout-minutes: 60
 
     strategy:
