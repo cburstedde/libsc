@@ -542,6 +542,7 @@ sc_scda_scdaret_to_errcode (sc_scda_ret_t scda_ret,
   SC_ASSERT (SC_SCDA_FERR_SUCCESS <= scda_ret &&
              scda_ret < SC_SCDA_FERR_LASTCODE);
   SC_ASSERT (scda_errorcode != NULL);
+  SC_ASSERT (!fc->fuzzy_errors || fc->fuzzy_freq > 0);
 
   /* if we have an MPI error; we need \ref sc_scda_mpiret_to_errcode */
   SC_ASSERT (scda_ret != SC_SCDA_FERR_MPI);
@@ -585,6 +586,7 @@ sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
 {
   SC_ASSERT ((sc_MPI_SUCCESS <= mpiret && mpiret < sc_MPI_ERR_LASTCODE));
   SC_ASSERT (scda_errorcode != NULL);
+  SC_ASSERT (!fc->fuzzy_errors || fc->fuzzy_freq > 0);
 
   sc_scda_ret_t       scda_ret_internal;
   int                 mpiret_internal;
