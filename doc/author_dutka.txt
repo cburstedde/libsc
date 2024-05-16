@@ -1,1 +1,1 @@
-I hereby place my contributions to libsc into the public domain under FreeBSD license.  Alexandre Dutka.
+I hereby place my contributions to libsc under FreeBSD license.  Alexandre Dutka.
