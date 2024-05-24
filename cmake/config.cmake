@@ -22,14 +22,14 @@ if( SC_USE_INTERNAL_ZLIB )
   include( ${CMAKE_CURRENT_LIST_DIR}/zlib.cmake )
 else()
   find_package( ZLIB )
-  
+
   if( NOT ZLIB_FOUND )
     set( SC_USE_INTERNAL_ZLIB ON )
     message( STATUS "Using internal zlib" )
     include( ${CMAKE_CURRENT_LIST_DIR}/zlib.cmake )
   else()
     set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
-  
+
     check_c_source_compiles(
       "#include <zlib.h>
       int main(){

@@ -23,6 +23,7 @@
 ### Build system
 
  - Streamline CMake configuration
+ - Make sure to use SC_ENABLE_* CMake variables
  - Adapt CMake CI to matrix of latest compilers
 
 ## 2.8.6
