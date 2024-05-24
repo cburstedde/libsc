@@ -17,10 +17,6 @@ if( SC_ENABLE_MPI )
   find_package(MPI COMPONENTS C REQUIRED)
 endif()
 
-if( SC_ENABLE_OPENMP )
-  find_package(OpenMP COMPONENTS C REQUIRED)
-endif()
-
 if( SC_USE_INTERNAL_ZLIB )
   message( STATUS "Using internal zlib" )
   include( ${CMAKE_CURRENT_LIST_DIR}/zlib.cmake )
