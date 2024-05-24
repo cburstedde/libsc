@@ -25,7 +25,6 @@ set_target_properties(sc_${name}
 
 endfunction(sc_example)
 
-
 sc_example(function function/function.c)
 sc_example(logging logging/logging.c)
 sc_example(test_shmem testing/sc_test_shmem.c)
@@ -34,14 +33,6 @@ configure_file(options/sc_options_example.ini sc_options_example.ini COPYONLY)
 configure_file(options/sc_options_example.json sc_options_example.json COPYONLY)
 configure_file(options/sc_options_preload.ini sc_options_preload.ini COPYONLY)
 sc_example(options options/options.c)
-
-# The OpenMP example is disabled
-# We are likely removing the OpenMP configuration entirely
-#
-# if(OpenMP_FOUND)
-#   sc_example(openmp openmp/openmp.c)
-#   target_link_libraries(sc_openmp PRIVATE OpenMP::OpenMP_C)
-# endif()
 
 if(CMAKE_USE_PTHREADS_INIT)
   sc_example(pthread pthread/pthread.c)
