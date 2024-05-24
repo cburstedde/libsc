@@ -212,9 +212,8 @@ endif()
 check_type_size(int SC_SIZEOF_INT BUILTIN_TYPES_ONLY)
 check_type_size("unsigned int" SC_SIZEOF_UNSIGNED_INT BUILTIN_TYPES_ONLY)
 check_type_size(long SC_SIZEOF_LONG BUILTIN_TYPES_ONLY)
-check_type_size("long long" SC_SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
 check_type_size("unsigned long" SC_SIZEOF_UNSIGNED_LONG BUILTIN_TYPES_ONLY)
-check_type_size("unsigned long long" SC_SIZEOF_UNSIGNED_LONG_LONG BUILTIN_TYPES_ONLY)
+check_type_size("long long" SC_SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
 set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -243,6 +242,14 @@ set(CMAKE_REQUIRED_DEFINITIONS)
 check_symbol_exists("SC_ENABLE_MPI" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPI)
 check_symbol_exists("SC_ENABLE_MPIIO" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPIIO)
 
+# check consistency of MPI configuration
 if(mpi AND NOT (SC_ENABLE_MPI AND SC_ENABLE_MPIIO))
   message(FATAL_ERROR "libsc MPI support was requested, but not configured in ${PROJECT_BINARY_DIR}/include/sc_config.h")
+endif()
+
+# check consistency of MPI I/O configuration
+if(mpi AND (SC_ENABLE_MPI AND NOT SC_ENABLE_MPIIO))
+  message(WARNING "libsc MPI configured but MPI I/O is not configured/found: DEPRECATED")
+  message(NOTICE "This configuration is DEPRECATED and will be disallowed in the future.")
+  message(NOTICE "If the MPI File API is not available, please disable MPI altogether.")
 endif()

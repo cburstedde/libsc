@@ -1,6 +1,10 @@
 
 # Release notes for the sc software library
 
+## Link to latest version DOI
+
+[![DOI](https://zenodo.org/badge/3974693.svg)](https://zenodo.org/doi/10.5281/zenodo.10838739)
+
 ## General
 
  - We have been reminded, for good reason, to maintain release notes.
@@ -8,6 +12,18 @@
    software API or ABI.  In this case, we'll bump the libtool version with
    the next release version.  Please also note if there have been A*I
    extensions, in which case we'll bump the libtool minor version.
+ - Please add an item with every contribution under *Next release* below.
+
+## Next release
+
+### Functionality
+
+ - Fix extern "C" macro for using C++ compilers with libsc .c files
+
+### Build system
+
+ - Streamline CMake configuration
+ - Adapt CMake CI to matrix of latest compilers
 
 ## 2.8.6
 
@@ -15,33 +31,39 @@ There have been breaking changes, very strictly speaking.
 
 ### Documentation
 
-- Begin maintaining a release notes file.
-- Add to documentation of sc_containers.h.
-- Completion and some polishing of the doxygen documentation in sc_io.h.
-- Add the scda (file-oriented data format suitable for parallel,
-  partition-independent disk I/O) API including its documentation in sc_scda.h.
-- Restructure the I/O module in the doxygen documentation.
+ - Begin maintaining a release notes file.
+ - Add to documentation of sc_containers.h.
+ - Completion and some polishing of the doxygen documentation in sc_io.h.
+ - Add file-oriented data format, API and documentation, suitable for
+   parallel, partition-independent disk I/O, in sc_scda.h.
+ - Restructure the I/O module in the doxygen documentation.
 
 ### Build system
 
+ - Bump library version according to libtool to 3:0:0.
  - No longer install getopt and puff original headers.
  - Make sc_getopt.h a purely internal header file.
  - Add a generic external library installation option.
  - Add script doc/p4est-build-wdeps.sh for autotools build.
  - Further align CMake with the autoconf build system.
  - Update CMake logic to configure zlib and jansson.
- - Add CMake option to run tests with Valgrind
+ - Add CMake option to run tests with Valgrind.
+ - Warn if configuring MPI on and MPI I/O off.
 
 ### Functionality
 
- - Further align I/O wrappers with and without MPI I/O.
+ - Further align I/O wrappers with and without MPI.
+ - Change the semantic of sc_io_open to always truncate a newly created file.
  - Simplify the replacements for MPI_{read,write}_at*.
  - Further updates to the MPI I/O wrapper code.
+ - Deprecate the configuration with MPI but without MPI I/O.
+ - Remove sc_io_{write,read}_all.
  - Add sc_io_source, sink_destroy_null functions.
  - Make sure not to sc_io_source_read an array beyond its length.
  - Add sc_io_file_load, save functions and test program.
  - Update sc_hash_array to hide much of internal state.
  - Update zlib and base64 encode/compression routines.
+ - Remove the MPI_UNSIGNED_LONG_LONG datatype wrapper.
 
 ## 2.8.5
 

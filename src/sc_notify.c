@@ -2396,7 +2396,7 @@ sc_notify_payload_superset (sc_array_t * receivers, sc_array_t * senders,
                             sc_array_t * in_payload, sc_array_t * out_payload,
                             int sorted, sc_notify_t * notify)
 {
-  int                 num_receivers, num_senders = 0;
+  int                 num_receivers;
   int                 num_extra_receivers;
   int                 num_super_senders;
   int                *ireceivers, i, j;
@@ -2516,7 +2516,6 @@ sc_notify_payload_superset (sc_array_t * receivers, sc_array_t * senders,
                      comm, sc_MPI_STATUS_IGNORE);
       SC_CHECK_MPI (mpiret);
       queue--;
-      num_senders++;
       continue;
     }
     mpiret =

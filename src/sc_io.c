@@ -563,7 +563,6 @@ sc_io_file_load (const char *filename, sc_array_t * buffer)
   /* fixed window size for reading a usually small file */
   const size_t        bwins = 1 << 14;
   size_t              bpos, bout;
-  int                 i;
 
   SC_ASSERT (filename != NULL);
   SC_ASSERT (buffer != NULL);
@@ -579,7 +578,7 @@ sc_io_file_load (const char *filename, sc_array_t * buffer)
 
   /* perform reading in a loop */
   bpos = 0;
-  for (i = 0;; ++i) {
+  for (;;) {
     /* make room in read buffer */
     sc_array_resize (buffer, bpos + bwins);
 
@@ -1640,6 +1639,7 @@ sc_io_open (sc_MPI_Comm mpicomm, const char *filename,
 
   return errcode;
 #else
+  /* WARNING: This code with activated MPI (SC_ENABLE_MPI) is deprecated. */
   /* allocate internal file context */
   *mpifile = (sc_MPI_File) SC_ALLOC (struct sc_no_mpiio_file, 1);
   (*mpifile)->filename = filename;
@@ -1703,16 +1703,6 @@ sc_io_read (sc_MPI_File mpifile, void *ptr, size_t zcount,
 }
 
 int
-sc_io_read_at_legal (void)
-{
-#ifdef SC_ENABLE_MPIIO
-  return 1;
-#else
-  return 0;
-#endif
-}
-
-int
 sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
                int count, sc_MPI_Datatype t, int *ocount)
 {
@@ -1739,6 +1729,8 @@ sc_io_read_at (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   SC_CHECK_MPI (retval);
   return errcode;
 #else
+
+  /* WARNING: This code with activated MPI (SC_ENABLE_MPI) is deprecated. */
 
   /* The value count > 0 is only legal on rank 0.
    * On all other ranks the code is only legal for count == 0.
@@ -1823,6 +1815,9 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
   return errcode;
 #elif defined SC_ENABLE_MPI
   /* MPI but no MPI IO */
+
+  /* WARNING: This code and configuration case is deprecated. */
+
   {
     int                 mpisize, rank, count, size;
     int                 active, errval;
@@ -1965,13 +1960,6 @@ sc_io_read_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset, void *ptr,
 #endif
 }
 
-int
-sc_io_read_all (sc_MPI_File mpifile, void *ptr, int count, sc_MPI_Datatype t,
-                int *ocount)
-{
-  return sc_io_read_at_all (mpifile, 0, ptr, count, t, ocount);
-}
-
 void
 sc_io_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
              sc_MPI_Datatype t, const char *errmsg)
@@ -1996,12 +1984,6 @@ sc_io_write (sc_MPI_File mpifile, const void *ptr, size_t zcount,
   /* we do not provide a non-MPI I/O implementation of sc_io_write */
   SC_ABORT ("no non-MPI I/O implementation of sc_io_write/sc_mpi_write");
 #endif
-}
-
-int
-sc_io_write_at_legal (void)
-{
-  return sc_io_read_at_legal ();
 }
 
 int
@@ -2032,6 +2014,8 @@ sc_io_write_at (sc_MPI_File mpifile, sc_MPI_Offset offset,
   SC_CHECK_MPI (retval);
   return errcode;
 #else
+
+  /* WARNING: This code with activated MPI (SC_ENABLE_MPI) is deprecated. */
 
   /* The value count > 0 is only legal on rank 0.
    * On all other ranks the code is only legal for count == 0.
@@ -2116,6 +2100,9 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
   return errcode;
 #elif defined SC_ENABLE_MPI
   /* MPI but no MPI IO */
+
+  /* WARNING: This code and configuration case is deprecated. */
+
   /* offset is ignored and we use here the append mode.
    * This is the case since the C-standard open mode
    * "wb" would earse the existing file and create a
@@ -2263,13 +2250,6 @@ sc_io_write_at_all (sc_MPI_File mpifile, sc_MPI_Offset offset,
 }
 
 int
-sc_io_write_all (sc_MPI_File mpifile, const void *ptr, int count,
-                 sc_MPI_Datatype t, int *ocount)
-{
-  return sc_io_write_at_all (mpifile, 0, ptr, count, t, ocount);
-}
-
-int
 sc_io_close (sc_MPI_File * mpifile)
 {
   SC_ASSERT (mpifile != NULL);
@@ -2282,6 +2262,9 @@ sc_io_close (sc_MPI_File * mpifile)
   mpiret = sc_io_error_class (mpiret, &eclass);
   SC_CHECK_MPI (mpiret);
 #else
+
+  /* WARNING: This code with activated MPI (SC_ENABLE_MPI) is deprecated. */
+
   int                 retval;
 
   eclass = sc_MPI_SUCCESS;
