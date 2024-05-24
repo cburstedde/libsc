@@ -20,9 +20,5 @@ if(NOT PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 endif()
 
 if (DEFINED mpi)
-  set (SC_ENABLE_MPI ${mpi} CACHE BOOL "" FORCE)
-endif()
-
-if (DEFINED debug)
-  set (CMAKE_BUILD_TYPE "Debug" CACHE STRING "" FORCE)
+  set_property(CACHE SC_ENABLE_MPI PROPERTY VALUE "${mpi}")
 endif()
