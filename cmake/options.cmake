@@ -19,6 +19,8 @@ if(NOT PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   file(GENERATE OUTPUT .gitignore CONTENT "*")
 endif()
 
+# We are enabling this shortcut even though we recommend to
+# use -DSC_ENABLE_MPI:BOOL=... on the cmake command line.
 if (DEFINED mpi)
   set_property(CACHE SC_ENABLE_MPI PROPERTY VALUE "${mpi}")
 endif()
