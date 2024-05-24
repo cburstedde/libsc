@@ -197,11 +197,11 @@ typedef SSIZE_T     ssize_t;
  * and also take care of the different semantics of () / (...) */
 #ifdef __cplusplus
 #define SC_EXTERN_C_BEGIN       extern "C" { void sc_extern_c_hack_1 (void)
-#define SC_EXTERN_C_END                    } void sc_extern_c_hack_2 (void)
+#define SC_EXTERN_C_END                    } extern "C" void sc_extern_c_hack_2 (void)
 #define SC_NOARGS               ...
 #else
-#define SC_EXTERN_C_BEGIN                    void sc_extern_c_hack_3 (void)
-#define SC_EXTERN_C_END                      void sc_extern_c_hack_4 (void)
+#define SC_EXTERN_C_BEGIN                    void sc_extern_c_hack_1 (void)
+#define SC_EXTERN_C_END                      void sc_extern_c_hack_2 (void)
 /** For compatibility of varargs with C++ */
 #define SC_NOARGS
 #endif

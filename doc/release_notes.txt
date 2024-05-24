@@ -16,6 +16,10 @@
 
 ## Next release
 
+### Functionality
+
+ - Fix extern "C" macro for using C++ compilers with libsc .c files
+
 ### Build system
 
  - Streamline CMake configuration

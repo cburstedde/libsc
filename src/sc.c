@@ -124,6 +124,22 @@ static int          sc_num_packages = 0;
 static int          sc_num_packages_alloc = 0;
 static sc_package_t *sc_packages = NULL;
 
+void
+sc_extern_c_hack_1 (void)
+{
+  /* Completing the hack in sc.h on providing the prototype.
+     We use the macro SC_EXTER_C_BEGIN; after including all headers
+     and before declaring functions to ensure C linkage. */
+}
+
+void
+sc_extern_c_hack_2 (void)
+{
+  /* Completing the hack in sc.h on providing the prototype.
+     We use the macro SC_EXTER_C_END; after declaring all functions,
+     just before the final include-once check, to ensure C linkage. */
+}
+
 #ifdef SC_ENABLE_PTHREAD
 
 static pthread_mutex_t sc_default_mutex = PTHREAD_MUTEX_INITIALIZER;
