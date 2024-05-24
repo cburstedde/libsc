@@ -6,7 +6,7 @@
   "name": "default",
   "binaryDir": "${sourceDir}/build",
   "cacheVariables": {
-    "mpi": true,
+    "SC_ENABLE_MPI": true,
     "CMAKE_COMPILE_WARNING_AS_ERROR": true
     }
 }
