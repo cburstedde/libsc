@@ -6,7 +6,7 @@ runs:
     shell: bash
     run: >-
       cmake --preset default
-      -Dmpi:BOOL=${{ matrix.mpi }}
+      -Dmpi=${{ matrix.mpi }}
       --install-prefix=${{ runner.temp }}
       -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
@@ -15,7 +15,7 @@ runs:
     if: failure()
     run: >-
       cmake --preset default
-      -Dmpi:BOOL=${{ matrix.mpi }}
+      -Dmpi=${{ matrix.mpi }}
       --install-prefix=${{ runner.temp }}
       -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
       --debug-find --fresh
