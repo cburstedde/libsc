@@ -7,9 +7,10 @@ elseif(SC_HAVE_ZLIB)
 endif()
 
 include(cmake/utils.cmake)
-convert_yn(mpi mpi_pc)
+convert_yn(SC_ENABLE_MPI mpi_pc)
+convert_yn(SC_ENABLE_OPENMP openmp_pc)
 convert_yn(SC_HAVE_JSON sc_have_json_pc)
-convert_yn(zlib zlib_pc)
+convert_yn(SC_USE_INTERNAL_ZLIB zlib_pc)
 convert_yn(SC_ENABLE_DEBUG debug_build_pc)
 
 set(pc_filename libsc-${git_version}.pc)

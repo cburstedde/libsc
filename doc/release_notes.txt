@@ -23,6 +23,7 @@
 ### Build system
 
  - Streamline CMake configuration
+ - Make sure to use SC_ENABLE_* CMake variables
  - Adapt CMake CI to matrix of latest compilers
 
 ## 2.8.6
@@ -49,6 +50,7 @@ There have been breaking changes, very strictly speaking.
  - Update CMake logic to configure zlib and jansson.
  - Add CMake option to run tests with Valgrind.
  - Warn if configuring MPI on and MPI I/O off.
+ - Renaming of CMake build system variables
 
 ### Functionality
 
