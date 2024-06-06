@@ -45,14 +45,22 @@
  */
 #define SC_SCDA_CHECK_VERBOSE(errcode, msg) do {                              \
                                     char sc_scda_msg[sc_MPI_MAX_ERROR_STRING];\
-                                    int sc_scda_len;                          \
+                                    int sc_scda_len, sc_scda_retval;          \
                                     if (!sc_scda_is_success (errcode)) {      \
+                                    sc_scda_retval =                          \
                                     sc_scda_ferror_string (errcode, sc_scda_msg,\
                                                            &sc_scda_len);     \
+                                    if (sc_scda_retval == SC_SCDA_FERR_SUCCESS){\
                                     SC_GLOBAL_LERRORF ("%s at %s:%d: %*.*s\n",\
                                                        msg,  __FILE__, __LINE__,\
                                                        sc_scda_len, sc_scda_len,\
-                                                       sc_scda_msg);}} while (0)
+                                                       sc_scda_msg);}         \
+                                    else {                                    \
+                                    SC_GLOBAL_LERRORF ("%s at %s:%d: %s\n",\
+                                                       msg, __FILE__, __LINE__,\
+                                                       "An error occurred but "\
+                                                       "ferror_string failed");\
+                                    }}} while (0)
 
 /** Collectivly check a given errorcode.
  * This macro assumes that errcode is a collective
