@@ -40,6 +40,20 @@
 /** get a random int in the range [A,B] */
 #define SC_SCDA_RAND_RANGE(A,B) ((A) + rand() / (RAND_MAX / ((B) - (A) + 1) + 1))
 
+/** Examine scda file return value and print an error message in case of error.
+ * The parameter msg is prepended to the file, line and error information.
+ */
+#define SC_SCDA_CHECK_VERBOSE(errcode, msg) do {                              \
+                                    char sc_scda_msg[sc_MPI_MAX_ERROR_STRING];\
+                                    int sc_scda_len;                          \
+                                    if (!sc_scda_is_success (errcode)) {      \
+                                    sc_scda_ferror_string (errcode, sc_scda_msg,\
+                                                           &sc_scda_len);     \
+                                    SC_GLOBAL_LERRORF ("%s at %s:%d: %*.*s\n",\
+                                                       msg,  __FILE__, __LINE__,\
+                                                       sc_scda_len, sc_scda_len,\
+                                                       sc_scda_msg);}} while (0)
+
 /** Collectivly check a given errorcode.
  * This macro assumes that errcode is a collective
  * variable and that the macro is called collectivly.
