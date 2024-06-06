@@ -47,7 +47,7 @@
  * TODO: Introduce and call check verbose
  */
 #define SC_SCDA_CHECK_COLL_ERR(errcode, fc, user_msg) do {                   \
-                                    if (!sc_scda_is_success (errcode)) {     \
+                                    if (!sc_scda_is_success (*errcode)) {    \
                                     sc_scda_file_error_cleanup (&fc->file);  \
                                     SC_FREE (fc);                            \
                                     return NULL;}} while (0)
@@ -61,7 +61,7 @@
  * TODO: Call check verbose.
  */
 #define SC_SCDA_CHECK_NONCOLL_ERR(errcode, user_msg) do {                    \
-                                    if (!sc_scda_is_success (errcode)) {     \
+                                    if (!sc_scda_is_success (*errcode)) {    \
                                     goto scda_err_lbl;}} while (0)
 
 /** Handle a non-collective error.
@@ -77,7 +77,7 @@
                                     SC_CHECK_MPI(sc_MPI_Bcast(&errcode->mpiret,\
                                                   1, sc_MPI_INT, 0,            \
                                                   fc->mpicomm));               \
-                                    if (!sc_scda_is_success (errcode)) {       \
+                                    if (!sc_scda_is_success (*errcode)) {      \
                                     sc_scda_file_error_cleanup (&fc->file);    \
                                     SC_FREE (fc);                              \
                                     return NULL;}} while (0)
@@ -652,11 +652,9 @@ sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
 }
 
 int
-sc_scda_is_success (const sc_scda_ferror_t * errorcode)
+sc_scda_is_success (sc_scda_ferror_t errorcode)
 {
-  SC_ASSERT (errorcode != NULL);
-
-  return !errorcode->scdaret && !errorcode->mpiret;
+  return !errorcode.scdaret && !errorcode.mpiret;
 }
 
 static void
@@ -949,7 +947,7 @@ sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
 
   SC_FREE (fc);
 
-  return sc_scda_is_success (errcode) ? 0 : -1;
+  return sc_scda_is_success (*errcode) ? 0 : -1;
 }
 
 /** Check if an error code is valid. */
