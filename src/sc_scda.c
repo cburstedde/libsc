@@ -62,7 +62,7 @@
  */
 #define SC_SCDA_CHECK_NONCOLL_ERR(errcode, user_msg) do {                    \
                                     if (!sc_scda_is_success (errcode)) {     \
-                                    goto sc_scda_read_write_error;}} while (0)
+                                    goto scda_err_lbl;}} while (0)
 
 /** Handle a non-collective error.
  * Use this macro after \ref SC_SCDA_CHECK_NONCOLL_ERR *directly* after the end
@@ -70,7 +70,7 @@
  * Can be only used once in a function.
  */
 #define SC_SCDA_HANDLE_NONCOLL_ERR(errcode, fc) do{                            \
-                                    sc_scda_read_write_error: ;                \
+                                    scda_err_lbl: ;                            \
                                     SC_CHECK_MPI(sc_MPI_Bcast(&errcode->scdaret,\
                                                   1, sc_MPI_INT, 0,           \
                                                   fc->mpicomm));               \
@@ -81,6 +81,50 @@
                                     sc_scda_file_error_cleanup (&fc->file);    \
                                     SC_FREE (fc);                              \
                                     return NULL;}} while (0)
+
+/** Declare variable for the count error synchronization.
+ * Since we must synchronize the count error, we declare a variable for the
+ * count error that is true if a count occurred.
+ * We use this macro to have a fixed name of the variable that then can be used
+ * in the macros \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR and \ref
+ * SC_SCDA_HANDLE_NONCOLL_COUNT_ERR without explicitly passing the error count
+ * variable.
+ */
+#define SC_SCDA_DECLARE_COUNT_VAR int scda_count_err
+
+/** Check for a count error of a serial (rank 0) I/O operation.
+ * This macro is only valid to use after checking that there was not I/O error.
+ * It is only valid to be called once per function.
+ * For a correct error handling it is required to skip the rest
+ * of the non-collective code and then broadcast the count  error flag.
+ * The macro can be used multiple times in a function but will always jump to
+ * the same label. This leads to the intended error handling.
+ */
+#define SC_SCDA_CHECK_NONCOLL_COUNT_ERR(icount, ocount) do {                   \
+                                    scda_count_err = ((int) icount) != ocount; \
+                                    if (scda_count_err) {                      \
+                                    SC_LERRORF ("Count error on rank 0 at "    \
+                                                "%s:%d.\n", __FILE__, __LINE__);\
+                                    goto scda_err_lbl;}} while (0)
+
+/** Handle a non-collective count error.
+ * Use this macro after \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR *directly* after
+ * the end of the non-collective statements.
+ * Can be used only once in a function.
+ */
+#define SC_SCDA_HANDLE_NONCOLL_COUNT_ERR(errorcode, fc) do{                    \
+                                    SC_CHECK_MPI (sc_MPI_Bcast (&scda_count_err,\
+                                                  1, sc_MPI_INT, 0,            \
+                                                  fc->mpicomm));               \
+                                    sc_scda_scdaret_to_errcode (               \
+                                        scda_count_err ? SC_SCDA_FERR_COUNT :  \
+                                                         SC_SCDA_FERR_SUCCESS, \
+                                        errorcode, fc);                        \
+                                    if (scda_count_err) {                      \
+                                    sc_scda_file_error_cleanup (&fc->file);    \
+                                    SC_FREE (fc);                              \
+                                    return NULL;}} while (0)
+
 
 /** The opaque file context for for scda files. */
 struct sc_scda_fcontext
@@ -665,6 +709,8 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   sc_MPI_Info         info;
   sc_scda_fcontext_t *fc;
 
+  SC_SCDA_DECLARE_COUNT_VAR;
+
   /* We assume the filename to be nul-terminated. */
 
   /* allocate the file context */
@@ -746,8 +792,10 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                       sc_MPI_BYTE, &count);
     sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
     SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing the file header section");
+    SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_HEADER_BYTES, count);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, fc);
 
   return fc;
 }
