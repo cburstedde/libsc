@@ -881,6 +881,8 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
   sc_MPI_Info         info;
   sc_scda_fcontext_t *fc;
 
+  SC_SCDA_DECLARE_COUNT_VAR;
+
   /* We assume the filename to be nul-terminated. */
 
   /* allocate the file context */
@@ -914,6 +916,7 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
                      sc_MPI_BYTE, &count);
     sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
     SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read the file header section");
+    SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_HEADER_BYTES, count);
 
     /* initialize user_string */
     sc_scda_init_nul (user_string, SC_SCDA_USER_STRING_BYTES + 1);
@@ -925,6 +928,7 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
     SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid file header");
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, fc);
   /* Bcast the user string */
   mpiret = sc_MPI_Bcast (user_string, SC_SCDA_USER_STRING_BYTES + 1,
                          sc_MPI_BYTE, 0, mpicomm);
