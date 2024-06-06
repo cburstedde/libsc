@@ -58,9 +58,9 @@
  * This macro assumes that errcode is a collective
  * variable and that the macro is called collectivly.
  * The calling function must return NULL in case of an error.
- * TODO: Introduce and call check verbose
  */
 #define SC_SCDA_CHECK_COLL_ERR(errcode, fc, user_msg) do {                   \
+                                    SC_SCDA_CHECK_VERBOSE (*errcode, user_msg);\
                                     if (!sc_scda_is_success (*errcode)) {    \
                                     sc_scda_file_error_cleanup (&fc->file);  \
                                     SC_FREE (fc);                            \
@@ -72,9 +72,9 @@
  * of the non-collective code and then broadcast the error flag.
  * The macro can be used multiple times in a function but will always jump to
  * the same label. This leads to the intended error handling.
- * TODO: Call check verbose.
  */
 #define SC_SCDA_CHECK_NONCOLL_ERR(errcode, user_msg) do {                    \
+                                    SC_SCDA_CHECK_VERBOSE (*errcode, user_msg);\
                                     if (!sc_scda_is_success (*errcode)) {    \
                                     goto scda_err_lbl;}} while (0)
 
@@ -134,6 +134,8 @@
                                         scda_count_err ? SC_SCDA_FERR_COUNT :  \
                                                          SC_SCDA_FERR_SUCCESS, \
                                         errorcode, fc);                        \
+                                    SC_SCDA_CHECK_VERBOSE (*errorcode,         \
+                                                    "Read/write count check"); \
                                     if (scda_count_err) {                      \
                                     sc_scda_file_error_cleanup (&fc->file);    \
                                     SC_FREE (fc);                              \
@@ -958,6 +960,7 @@ sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
 
   mpiret = sc_io_close (&fc->file);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_VERBOSE (*errcode, "File close");
 
   SC_FREE (fc);
 
@@ -1020,7 +1023,7 @@ sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str, int *len)
     return sc_MPI_Error_string (errcode.mpiret, str, len);
   }
 
-  /* no MPI error occured; use scdaret for the error string */
+  /* no MPI error occurred; use scdaret for the error string */
   switch (errcode.scdaret) {
   case SC_SCDA_FERR_SUCCESS:
     tstr = "Success";
