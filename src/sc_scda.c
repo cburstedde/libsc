@@ -987,3 +987,65 @@ sc_scda_errcode_is_valid (sc_scda_ferror_t errcode)
 
   return 1;
 }
+
+int
+sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str, int *len)
+{
+  SC_EXECUTE_ASSERT_TRUE (sc_scda_errcode_is_valid (errcode));
+  SC_ASSERT (str != NULL);
+  SC_ASSERT (len != NULL);
+
+  int                 retval;
+  const char         *tstr = NULL;
+
+  if (str == NULL || len == NULL) {
+    return sc_MPI_ERR_ARG;
+  }
+
+  /* check if an MPI error occurred */
+  if (errcode.scdaret == SC_SCDA_FERR_MPI) {
+    /* use mpiret for the error string */
+    return sc_MPI_Error_string (errcode.mpiret, str, len);
+  }
+
+  /* no MPI error occured; use scdaret for the error string */
+  switch (errcode.scdaret) {
+  case SC_SCDA_FERR_SUCCESS:
+    tstr = "Success";
+    break;
+  case SC_SCDA_FERR_FORMAT:
+    tstr = "Wrong file format";
+    break;
+  case SC_SCDA_FERR_USAGE:
+    tstr = "Incorrect workflow for scda reading function";
+    break;
+  case SC_SCDA_FERR_DECODE:
+    tstr = "Not conforming to scda encoding convention";
+    break;
+  case SC_SCDA_FERR_ARG:
+    tstr = "Invalid argument to scda file function";
+    break;
+  case SC_SCDA_FERR_COUNT:
+    tstr =
+      "Read or write count error that is not classified as an other error";
+    break;
+
+  default:
+    /* not a valid scdaret value or SC_SCDA_FERR_MPI */
+    SC_ABORT_NOT_REACHED ();
+  }
+  SC_ASSERT (tstr != NULL);
+
+  /* print into the output string */
+  if ((retval = snprintf (str, sc_MPI_MAX_ERROR_STRING, "%s", tstr)) < 0) {
+    /* unless something goes against the current standard of snprintf */
+    return sc_MPI_ERR_NO_MEM;
+  }
+  if (retval >= sc_MPI_MAX_ERROR_STRING) {
+    retval = sc_MPI_MAX_ERROR_STRING - 1;
+  }
+  *len = retval;
+
+  /* we have successfully placed a string in the output variables */
+  return sc_MPI_SUCCESS;
+}
