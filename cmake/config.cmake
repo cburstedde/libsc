@@ -13,51 +13,46 @@ message(STATUS "libsc SOVERSION configured as ${SC_SOVERSION}")
 
 # --- keep library finds in here so we don't forget to do them first
 
-if(mpi)
+if( SC_ENABLE_MPI )
   find_package(MPI COMPONENTS C REQUIRED)
 endif()
 
-if(openmp)
-  find_package(OpenMP COMPONENTS C REQUIRED)
-endif()
-
-if(zlib)
-  message(STATUS "Using builtin zlib")
-  include(${CMAKE_CURRENT_LIST_DIR}/zlib.cmake)
+if( SC_USE_INTERNAL_ZLIB )
+  message( STATUS "Using internal zlib" )
+  include( ${CMAKE_CURRENT_LIST_DIR}/zlib.cmake )
 else()
-  find_package(ZLIB)
-  # need to verify adler32_combine is available
-  if(ZLIB_FOUND)
+  find_package( ZLIB )
+
+  if( NOT ZLIB_FOUND )
+    set( SC_USE_INTERNAL_ZLIB ON )
+    message( STATUS "Using internal zlib" )
+    include( ${CMAKE_CURRENT_LIST_DIR}/zlib.cmake )
+  else()
     set(CMAKE_REQUIRED_LIBRARIES ZLIB::ZLIB)
 
-    check_c_source_compiles("#include <zlib.h>
-    int main(void)
-    {
-      z_off_t len = 3000; uLong a = 1, b = 2;
-      a == adler32_combine (a, b, len);
-      return 0;
-    }"
-    SC_HAVE_ZLIB
+    check_c_source_compiles(
+      "#include <zlib.h>
+      int main(){
+        z_off_t len = 3000; uLong a = 1, b = 2;
+        a == adler32_combine (a, b, len);
+        return 0;
+      }"
+      SC_HAVE_ZLIB
     )
-  else()
-    set(SC_HAVE_ZLIB 0 CACHE BOOL "Zlib not found or built")
-  endif()
-  if(NOT SC_HAVE_ZLIB)
-    message(STATUS "Zlib disabled (not found). Consider using cmake \"-Dzlib=ON\" to turn on builtin zlib.")
   endif()
 endif()
 
 find_package(Threads)
 
-if(json)
+if( SC_USE_INTERNAL_JSON )
   message(STATUS "Using builtin jansson")
   include(${CMAKE_CURRENT_LIST_DIR}/jansson.cmake)
 else()
   find_package(jansson CONFIG)
   if(TARGET jansson::jansson)
-    set(SC_HAVE_JSON 1 CACHE BOOL "JSON features enabled")
+    set(SC_HAVE_JSON ON CACHE BOOL "JSON features enabled")
   else()
-    set(SC_HAVE_JSON 0 CACHE BOOL "JSON features disabled")
+    set(SC_HAVE_JSON OFF CACHE BOOL "JSON features disabled")
   endif()
 endif()
 # --- set global compile environment
@@ -73,16 +68,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_REQUIRED_INCLUDES)
 set(CMAKE_REQUIRED_LIBRARIES)
 
-if(mpi)
-  set(SC_ENABLE_MPI 1)  # need this temporary for sc_config.h, we unset below
-  set(CMAKE_REQUIRED_LIBRARIES MPI::MPI_C)
-  set(SC_CC \"${MPI_C_COMPILER}\")
-  set(SC_CPP ${MPI_C_COMPILER})
-else()
-  set(SC_ENABLE_MPI 0)
-  set(SC_CC \"${CMAKE_C_COMPILER}\")
-  set(SC_CPP ${CMAKE_C_COMPILER})
-endif()
+set(SC_CC \"${CMAKE_C_COMPILER}\")
+set(SC_CPP ${CMAKE_C_COMPILER})
 
 check_symbol_exists(sqrt math.h SC_NONEED_M)
 
@@ -110,16 +97,15 @@ endif()
 set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
 set(SC_ENABLE_MEMALIGN 1)
 
+# user has requested a different MPI setting, so we need to clear these cache variables to recheck
 if(NOT SC_ENABLE_MPI EQUAL CACHE{SC_ENABLE_MPI})
-  # user has requested a different MPI setting, so we need to clear these cache variables to recheck
   unset(SC_ENABLE_MPICOMMSHARED CACHE)
   unset(SC_ENABLE_MPITHREAD CACHE)
   unset(SC_ENABLE_MPIWINSHARED CACHE)
   unset(SC_ENABLE_MPIIO CACHE)
-  unset(SC_ENABLE_MPI CACHE)
 endif()
 
-if(SC_ENABLE_MPI)
+if( SC_ENABLE_MPI )
   check_symbol_exists(MPI_COMM_TYPE_SHARED mpi.h SC_ENABLE_MPICOMMSHARED)
   # perform check to set SC_ENABLE_MPIIO
   include(cmake/check_mpiio.cmake)
@@ -233,9 +219,6 @@ message(VERBOSE "sc_config.h was last generated ${_t}")
 
 # --- sanity check of MPI sc_config.h
 
-unset(SC_ENABLE_MPI)
-# so we don't override cache var check below that's propagated to parent projects
-
 # check if libsc was configured properly
 set(CMAKE_REQUIRED_FLAGS)
 set(CMAKE_REQUIRED_INCLUDES)
@@ -245,15 +228,3 @@ set(CMAKE_REQUIRED_DEFINITIONS)
 # libsc and current project must both be compiled with/without MPI
 check_symbol_exists("SC_ENABLE_MPI" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPI)
 check_symbol_exists("SC_ENABLE_MPIIO" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPIIO)
-
-# check consistency of MPI configuration
-if(mpi AND NOT (SC_ENABLE_MPI AND SC_ENABLE_MPIIO))
-  message(FATAL_ERROR "libsc MPI support was requested, but not configured in ${PROJECT_BINARY_DIR}/include/sc_config.h")
-endif()
-
-# check consistency of MPI I/O configuration
-if(mpi AND (SC_ENABLE_MPI AND NOT SC_ENABLE_MPIIO))
-  message(WARNING "libsc MPI configured but MPI I/O is not configured/found: DEPRECATED")
-  message(NOTICE "This configuration is DEPRECATED and will be disallowed in the future.")
-  message(NOTICE "If the MPI File API is not available, please disable MPI altogether.")
-endif()
