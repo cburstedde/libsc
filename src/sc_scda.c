@@ -125,7 +125,6 @@
                                     SC_FREE (fc);                              \
                                     return NULL;}} while (0)
 
-
 /** The opaque file context for for scda files. */
 struct sc_scda_fcontext
 {
@@ -951,4 +950,40 @@ sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
   SC_FREE (fc);
 
   return sc_scda_is_success (errcode) ? 0 : -1;
+}
+
+/** Check if an error code is valid. */
+static int
+sc_scda_errcode_is_valid (sc_scda_ferror_t errcode)
+{
+  /* check the value ranges */
+  if (!(SC_SCDA_FERR_SUCCESS <= errcode.scdaret
+        && errcode.scdaret < SC_SCDA_FERR_LASTCODE)) {
+    return 0;
+  }
+
+  if (!(sc_MPI_SUCCESS <= errcode.mpiret
+        && errcode.mpiret < sc_MPI_ERR_LASTCODE)) {
+    return 0;
+  }
+
+  /* check case of no MPI/MPI-replacement error */
+  if (!(errcode.scdaret == SC_SCDA_FERR_MPI
+        || errcode.mpiret == sc_MPI_SUCCESS)) {
+    return 0;
+  }
+
+  /* check case of an MPI/MPI-replacement error */
+  if (!(errcode.scdaret != SC_SCDA_FERR_MPI
+        || errcode.mpiret != sc_MPI_SUCCESS)) {
+    return 0;
+  }
+
+  /* check case of no scdaret error */
+  if (!(errcode.scdaret != SC_SCDA_FERR_SUCCESS
+        || errcode.mpiret == sc_MPI_SUCCESS)) {
+    return 0;
+  }
+
+  return 1;
 }
