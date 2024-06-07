@@ -50,7 +50,8 @@
                                     sc_scda_retval =                          \
                                     sc_scda_ferror_string (errcode, sc_scda_msg,\
                                                            &sc_scda_len);     \
-                                    SC_ASSERT(sc_scda_retval != sc_MPI_ERR_ARG);\
+                                    SC_ASSERT(sc_scda_retval !=               \
+                                              SC_SCDA_FERR_ARG);\
                                     if (sc_scda_retval == SC_SCDA_FERR_SUCCESS){\
                                     SC_GLOBAL_LERRORF ("%s at %s:%d: %*.*s\n",\
                                                        msg,  __FILE__, __LINE__,\
@@ -1025,7 +1026,7 @@ sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str, int *len)
   const char         *tstr = NULL;
 
   if (str == NULL || len == NULL || !sc_scda_errcode_is_valid (errcode)) {
-    return sc_MPI_ERR_ARG;
+    return SC_SCDA_FERR_ARG;
   }
 
   /* check if an MPI error occurred */
@@ -1073,5 +1074,5 @@ sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str, int *len)
   *len = retval;
 
   /* we have successfully placed a string in the output variables */
-  return sc_MPI_SUCCESS;
+  return SC_SCDA_FERR_SUCCESS;
 }
