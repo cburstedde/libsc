@@ -50,6 +50,7 @@
                                     sc_scda_retval =                          \
                                     sc_scda_ferror_string (errcode, sc_scda_msg,\
                                                            &sc_scda_len);     \
+                                    SC_ASSERT(sc_scda_retval != sc_MPI_ERR_ARG);\
                                     if (sc_scda_retval == SC_SCDA_FERR_SUCCESS){\
                                     SC_GLOBAL_LERRORF ("%s at %s:%d: %*.*s\n",\
                                                        msg,  __FILE__, __LINE__,\
@@ -675,9 +676,47 @@ sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
   scda_errorcode->mpiret = mpiret_internal;
 }
 
+/** Check if an error code is valid. */
+static int
+sc_scda_errcode_is_valid (sc_scda_ferror_t errcode)
+{
+  /* check the value ranges */
+  if (!(SC_SCDA_FERR_SUCCESS <= errcode.scdaret
+        && errcode.scdaret < SC_SCDA_FERR_LASTCODE)) {
+    return 0;
+  }
+
+  if (!(sc_MPI_SUCCESS <= errcode.mpiret
+        && errcode.mpiret < sc_MPI_ERR_LASTCODE)) {
+    return 0;
+  }
+
+  /* check case of no MPI/MPI-replacement error */
+  if (!(errcode.scdaret == SC_SCDA_FERR_MPI
+        || errcode.mpiret == sc_MPI_SUCCESS)) {
+    return 0;
+  }
+
+  /* check case of an MPI/MPI-replacement error */
+  if (!(errcode.scdaret != SC_SCDA_FERR_MPI
+        || errcode.mpiret != sc_MPI_SUCCESS)) {
+    return 0;
+  }
+
+  /* check case of no scdaret error */
+  if (!(errcode.scdaret != SC_SCDA_FERR_SUCCESS
+        || errcode.mpiret == sc_MPI_SUCCESS)) {
+    return 0;
+  }
+
+  return 1;
+}
+
 int
 sc_scda_is_success (sc_scda_ferror_t errorcode)
 {
+  SC_ASSERT (sc_scda_errcode_is_valid (errorcode));
+
   return !errorcode.scdaret && !errorcode.mpiret;
 }
 
@@ -975,53 +1014,17 @@ sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
   return sc_scda_is_success (*errcode) ? 0 : -1;
 }
 
-/** Check if an error code is valid. */
-static int
-sc_scda_errcode_is_valid (sc_scda_ferror_t errcode)
-{
-  /* check the value ranges */
-  if (!(SC_SCDA_FERR_SUCCESS <= errcode.scdaret
-        && errcode.scdaret < SC_SCDA_FERR_LASTCODE)) {
-    return 0;
-  }
-
-  if (!(sc_MPI_SUCCESS <= errcode.mpiret
-        && errcode.mpiret < sc_MPI_ERR_LASTCODE)) {
-    return 0;
-  }
-
-  /* check case of no MPI/MPI-replacement error */
-  if (!(errcode.scdaret == SC_SCDA_FERR_MPI
-        || errcode.mpiret == sc_MPI_SUCCESS)) {
-    return 0;
-  }
-
-  /* check case of an MPI/MPI-replacement error */
-  if (!(errcode.scdaret != SC_SCDA_FERR_MPI
-        || errcode.mpiret != sc_MPI_SUCCESS)) {
-    return 0;
-  }
-
-  /* check case of no scdaret error */
-  if (!(errcode.scdaret != SC_SCDA_FERR_SUCCESS
-        || errcode.mpiret == sc_MPI_SUCCESS)) {
-    return 0;
-  }
-
-  return 1;
-}
-
 int
 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str, int *len)
 {
-  SC_EXECUTE_ASSERT_TRUE (sc_scda_errcode_is_valid (errcode));
   SC_ASSERT (str != NULL);
   SC_ASSERT (len != NULL);
+  SC_ASSERT (sc_scda_errcode_is_valid (errcode));
 
   int                 retval;
   const char         *tstr = NULL;
 
-  if (str == NULL || len == NULL) {
+  if (str == NULL || len == NULL || !sc_scda_errcode_is_valid (errcode)) {
     return sc_MPI_ERR_ARG;
   }
 
