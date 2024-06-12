@@ -405,8 +405,8 @@ sc_scda_examine_options (sc_scda_fopen_options_t * opt, int *fuzzy,
   if (opt != NULL) {
     info = opt->info;
     *fuzzy = opt->fuzzy_errors;
-    *fuzzy_seed =
-      (opt->fuzzy_seed < 0) ? ((unsigned) time (NULL)) : opt->fuzzy_seed;
+    *fuzzy_seed = (opt->fuzzy_seed < 0) ? ((unsigned) time (NULL)) :
+      (unsigned) opt->fuzzy_seed;
     if (opt->fuzzy_seed < 0) {
       /* Rank dependent returns for functions that return a snychronized 
        * error value do not make sense. However, time (NULL) may differ between
@@ -504,15 +504,15 @@ sc_scda_get_user_string_len (const char *user_string,
 
 /** Create a random but consistent scdaret.
  */
-static int
+static sc_scda_ret_t
 sc_scda_get_fuzzy_scdaret (unsigned freq)
 {
   sc_scda_ret_t       sample;
 
   /* draw an error with the empirical probalilty of 1 / freq */
-  if (rand () < (RAND_MAX + 1U) / freq) {
+  if ((unsigned) rand () < (RAND_MAX + 1U) / freq) {
     /* draw an error  */
-    sample =
+    sample = (sc_scda_ret_t)
       SC_SCDA_RAND_RANGE (SC_SCDA_FERR_FORMAT, SC_SCDA_FERR_LASTCODE - 1);
   }
   else {
@@ -528,7 +528,7 @@ sc_scda_get_fuzzy_mpiret (unsigned freq)
   int                 index_sample, sample;
 
   /* draw an error with the empirical probalilty of 1 / freq */
-  if (rand () < (RAND_MAX + 1U) / freq) {
+  if ((unsigned) rand () < (RAND_MAX + 1U) / freq) {
     /* draw an MPI 2.0 I/O error */
     /* The MPI standard does not guarantee that the MPI error codes
      * are contiguous. Hence, take the minimal available error code set and
