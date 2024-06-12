@@ -57,7 +57,7 @@ EXTRA_DIST += \
         example/linksc/linksc.c
 
 DISTCLEANFILES += \
-        _configs.sed config/sc_config.h config/sc_autotools.pc
+        _configs.sed config/sc_config.h config/sc_autotools.pc sc_test_scda.scd
 
 .PHONY: ChangeLog
 
