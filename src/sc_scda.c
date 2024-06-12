@@ -388,7 +388,7 @@ sc_scda_get_pad_to_mod (char *padded_data, size_t padded_len, size_t raw_len,
 
 /**
  * This function is for creating and reading a file.
- * TODO: We may want to add an error parameter in indicate if the options are
+ * TODO: We may want to add an error parameter to indicate if the options are
  * invalid.
  */
 static              sc_MPI_Info
@@ -396,7 +396,7 @@ sc_scda_examine_options (sc_scda_fopen_options_t * opt, int *fuzzy,
                          unsigned *fuzzy_seed, int *fuzzy_freq,
                          sc_MPI_Comm mpicomm)
 {
-  /* TODO: Check options if opt is valid? */
+  /* TODO: Check if opt is valid? */
 
   sc_MPI_Info         info;
   int                 mpiret;
@@ -873,7 +873,7 @@ sc_scda_check_file_header (char *file_header_data, char *user_string,
   char                vendor_string[SC_SCDA_VENDOR_STRING_BYTES];
   size_t              vendor_len;
 
-  /* TODO: Add errcode as output parameter */
+  /* TODO: Add errcode as output parameter if we want to add more detailed errors */
 
   /* check structure that is not padding */
   /* *INDENT-OFF* */
