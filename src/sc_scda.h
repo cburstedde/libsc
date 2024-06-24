@@ -1072,8 +1072,9 @@ int                 sc_scda_ferror_class (sc_scda_ferror_t errcode,
 
 /** Check if a scda_errorcode_t encodes success.
  *
- * \param [in]    errcode       An errcode that is output by a sc_scda function.
- * \return                      1 if \b errcode encodes success and 0 otherwise.
+ * \param [in]    errorcode     An errcode that is output by a sc_scda function.
+ * \return                      True if \b errcode encodes success and
+ *                              false otherwise.
  */
 int                 sc_scda_is_success (sc_scda_ferror_t errorcode);
 
