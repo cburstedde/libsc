@@ -69,13 +69,13 @@ main (int argc, char **argv)
   /* TODO: check that int_inv_freq >= 0 */
   scda_opt.fuzzy_inv_freq = (unsigned) int_inv_freq;
   if (int_seed < 0) {
-    scda_opt.fuzzy_seed = (unsigned) sc_MPI_Wtime ();
+    scda_opt.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
     mpiret =
       sc_MPI_Bcast (&scda_opt.fuzzy_seed, 1, sc_MPI_UNSIGNED, 0, mpicomm);
     SC_CHECK_MPI (mpiret);
   }
   else {
-    scda_opt.fuzzy_seed = (unsigned) int_seed;
+    scda_opt.fuzzy_seed = (sc_rand_state_t) int_seed;
   }
 
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,

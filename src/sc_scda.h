@@ -194,6 +194,7 @@
 #define SC_SCDA_H
 
 #include <sc_containers.h>
+#include <sc_random.h>
 
 SC_EXTERN_C_BEGIN;
 
@@ -295,7 +296,7 @@ typedef struct sc_scda_fopen_options
                                        error return. In such a case, the actual
                                        error is returned. 0 means that there no
                                        fuzzy error returns. */
-  unsigned            fuzzy_seed; /**< seed for fuzzy error return;
+  sc_rand_state_t     fuzzy_seed; /**< seed for fuzzy error return;
                                        this value is ignored if
                                        fuzzy_inv_freq == 0 */
 }
