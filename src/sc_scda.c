@@ -178,14 +178,11 @@ sc_scda_copy_bytes (char *dest, const char *src, size_t n)
   SC_ASSERT (dest != NULL);
   SC_ASSERT (n == 0 || src != NULL);
 
-  void               *pointer;
-
   if (n == 0) {
     return;
   }
 
-  pointer = memcpy (dest, src, n);
-  SC_EXECUTE_ASSERT_TRUE (pointer == (void *) dest);
+  (void) memcpy (dest, src, n);
 }
 
 static void
@@ -193,7 +190,7 @@ sc_scda_set_bytes (char *dest, int c, size_t n)
 {
   SC_ASSERT (dest != NULL);
 
-  memset (dest, c, n);
+  (void) memset (dest, c, n);
 }
 
 static void
