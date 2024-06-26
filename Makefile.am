@@ -57,7 +57,7 @@ EXTRA_DIST += \
         example/linksc/linksc.c
 
 DISTCLEANFILES += \
-        _configs.sed config/sc_config.h config/sc_autotools.pc sc_test_scda.scd
+        _configs.sed config/sc_config.h config/sc_autotools.pc
 
 .PHONY: ChangeLog
 
@@ -114,7 +114,7 @@ uninstall-hook:
 ## (for instance, a .o file), then mostlyclean should delete it.
 ## Otherwise, if make built it, then clean should delete it.
 clean-local:
-	rm -f ChangeLog sc_test_io_file.*
+	rm -f ChangeLog sc_test_io_file.* sc_test_scda.scd
 
 ## If configure built it, then distclean should delete it.
 distclean-local:
