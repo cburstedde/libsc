@@ -761,7 +761,7 @@ sc_scda_file_error_cleanup (sc_MPI_File * file)
  * \param [out]  info       On output the MPI info object as defined by \b opt.
  * \return                  A pointer to a file context containing the fuzzy
  *                          error parameters as encoded in \b opt and the
- *                          MPI rank and size according to \b mpicomm.  
+ *                          MPI rank and size according to \b mpicomm.
  */
 static sc_scda_fcontext_t*
 sc_scda_fopen_start_up (sc_scda_fopen_options_t *opt, sc_MPI_Comm mpicomm,
