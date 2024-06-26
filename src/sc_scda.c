@@ -41,8 +41,9 @@
 
 /** Examine scda file return value and print an error message in case of error.
  * The parameter msg is prepended to the file, line and error information.
+ * This is a general macro that gets the log handler as a parameter.
  */
-#define SC_SCDA_CHECK_VERBOSE(errcode, msg) do {                              \
+#define SC_SCDA_CHECK_VERBOSE_GEN(errcode, msg, sc_scda_log) do {             \
                                     char sc_scda_msg[sc_MPI_MAX_ERROR_STRING];\
                                     int sc_scda_len, sc_scda_retval;          \
                                     if (!sc_scda_is_success (errcode)) {      \
@@ -50,18 +51,28 @@
                                     sc_scda_ferror_string (errcode, sc_scda_msg,\
                                                            &sc_scda_len);     \
                                     SC_ASSERT(sc_scda_retval !=               \
-                                              SC_SCDA_FERR_ARG);\
+                                              SC_SCDA_FERR_ARG);              \
                                     if (sc_scda_retval == SC_SCDA_FERR_SUCCESS){\
-                                    SC_GLOBAL_LERRORF ("%s at %s:%d: %*.*s\n",\
-                                                       msg,  __FILE__, __LINE__,\
-                                                       sc_scda_len, sc_scda_len,\
-                                                       sc_scda_msg);}         \
+                                    sc_scda_log ("%s at %s:%d: %*.*s\n",      \
+                                                 msg,  __FILE__, __LINE__,    \
+                                                 sc_scda_len, sc_scda_len,    \
+                                                 sc_scda_msg);}               \
                                     else {                                    \
-                                    SC_GLOBAL_LERRORF ("%s at %s:%d: %s\n",\
-                                                       msg, __FILE__, __LINE__,\
-                                                       "An error occurred but "\
-                                                       "ferror_string failed");\
+                                    sc_scda_log ("%s at %s:%d: %s\n",         \
+                                                 msg, __FILE__, __LINE__,     \
+                                                 "An error occurred but "     \
+                                                 "ferror_string failed");     \
                                     }}} while (0)
+
+/** For collective calls. Cf. \ref SC_SCDA_CHECK_VERBOSE_GEN.
+ */
+#define SC_SCDA_CHECK_VERBOSE_COLL(errcode, msg) SC_SCDA_CHECK_VERBOSE_GEN ( \
+                                    errcode, msg, SC_GLOBAL_LERRORF)
+
+/** For non-collective calls. Cf. \ref SC_SCDA_CHECK_VERBOSE_GEN.
+ */
+#define SC_SCDA_CHECK_VERBOSE_NONCOLL(errcode, msg) SC_SCDA_CHECK_VERBOSE_GEN (\
+                                    errcode, msg, SC_LERRORF)
 
 /** Collectivly check a given errorcode.
  * This macro assumes that errcode is a collective
@@ -69,7 +80,8 @@
  * The calling function must return NULL in case of an error.
  */
 #define SC_SCDA_CHECK_COLL_ERR(errcode, fc, user_msg) do {                   \
-                                    SC_SCDA_CHECK_VERBOSE (*errcode, user_msg);\
+                                    SC_SCDA_CHECK_VERBOSE_COLL (*errcode,    \
+                                                                user_msg);   \
                                     if (!sc_scda_is_success (*errcode)) {    \
                                     sc_scda_file_error_cleanup (&fc->file);  \
                                     SC_FREE (fc);                            \
@@ -83,7 +95,8 @@
  * the same label. This leads to the intended error handling.
  */
 #define SC_SCDA_CHECK_NONCOLL_ERR(errcode, user_msg) do {                    \
-                                    SC_SCDA_CHECK_VERBOSE (*errcode, user_msg);\
+                                    SC_SCDA_CHECK_VERBOSE_NONCOLL (*errcode, \
+                                                                   user_msg);\
                                     if (!sc_scda_is_success (*errcode)) {    \
                                     goto scda_err_lbl;}} while (0)
 
@@ -143,7 +156,7 @@
                                         scda_count_err ? SC_SCDA_FERR_COUNT :  \
                                                          SC_SCDA_FERR_SUCCESS, \
                                         errorcode, fc);                        \
-                                    SC_SCDA_CHECK_VERBOSE (*errorcode,         \
+                                    SC_SCDA_CHECK_VERBOSE_NONCOLL (*errorcode, \
                                                     "Read/write count check"); \
                                     if (scda_count_err) {                      \
                                     sc_scda_file_error_cleanup (&fc->file);    \
@@ -1068,7 +1081,7 @@ sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
 
   mpiret = sc_io_close (&fc->file);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_VERBOSE (*errcode, "File close");
+  SC_SCDA_CHECK_VERBOSE_COLL (*errcode, "File close");
 
   SC_FREE (fc);
 
