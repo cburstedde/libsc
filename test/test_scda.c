@@ -51,7 +51,8 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
 
   sc_options_add_int (opt, 'I', "fuzzy-inv-frequency", &int_inv_freq, 0,
-                      "inverse fuzzy frequency; 0 means no fuzzy returns");
+                      "inverse fuzzy frequency; 0 means no fuzzy returns "
+                      "and must be >= 0");
   sc_options_add_int (opt, 'S', "fuzzy-seed", &int_seed, -1,
                       "seed "
                       "for fuzzy error return of scda functions; ignored for "
@@ -66,7 +67,12 @@ main (int argc, char **argv)
 
   sc_options_print_summary (sc_package_id, SC_LP_PRODUCTION, opt);
 
-  /* TODO: check that int_inv_freq >= 0 */
+  if (int_inv_freq < 0) {
+    SC_GLOBAL_LERROR ("Usage error: fuzzy-inv-frequency must be >= 0\n");
+    sc_options_print_usage (sc_package_id, SC_LP_ERROR, opt, NULL);
+    return 1;
+  }
+
   scda_opt.fuzzy_inv_freq = (unsigned) int_inv_freq;
   if (int_seed < 0) {
     scda_opt.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
