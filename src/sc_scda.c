@@ -35,7 +35,6 @@
 #define SC_SCDA_USER_STRING_FIELD 62   /**< byte count for user string entry
                                             including the padding */
 #define SC_SCDA_PADDING_MOD 32  /**< divisor for variable length padding */
-#define SC_SCDA_FUZZY_FREQUENCY 3 /**< default frequency for fuzzy error return */
 
 /** get a random int in the range [A,B] */
 #define SC_SCDA_RAND_RANGE(A,B, state) ((A) + sc_rand(state) * ((B) - (A)))
