@@ -735,9 +735,11 @@ sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
     mpiret_internal = mpiret;
   }
   else {
-    /* fuzzy error testing */
-    mpiret_internal = sc_scda_get_fuzzy_mpiret (fc->fuzzy_inv_freq,
-                                                &fc->fuzzy_seed);
+    /* fuzzy error testing but only if the actual call was successful */
+    mpiret_internal =
+      (mpiret ==
+       sc_MPI_SUCCESS) ? sc_scda_get_fuzzy_mpiret (fc->fuzzy_inv_freq,
+                                                   &fc->fuzzy_seed) : mpiret;
     scda_ret_internal =
       (mpiret_internal ==
        sc_MPI_SUCCESS) ? SC_SCDA_FERR_SUCCESS : SC_SCDA_FERR_MPI;
