@@ -741,6 +741,39 @@ sc_scda_file_error_cleanup (sc_MPI_File * file)
   return -1;
 }
 
+/** This function peforms the start up for both scda fopen functions.
+ *
+ * \param [in]   opt        The sc_scda_fopen_options_t structure that is
+ *                          passed to the scda fopen function. \b opt may be
+ *                          NULL.
+ * \param [in]   mpicomm    The MPI communicator of the scda fopen function.
+ * \param [out]  info       On output the MPI info object as defined by \b opt.
+ * \return                  A pointer to a file context containing the fuzzy
+ *                          error parameters as encoded in \b opt and the
+ *                          MPI rank and size according to \b mpicomm.  
+ */
+static sc_scda_fcontext_t*
+sc_scda_fopen_start_up (sc_scda_fopen_options_t *opt, sc_MPI_Comm mpicomm,
+                        sc_MPI_Info *info)
+{
+  sc_scda_fcontext_t *fc;
+
+  SC_ASSERT (info != NULL);
+
+  /* allocate the file context */
+  fc = SC_ALLOC (sc_scda_fcontext_t, 1);
+
+  /* examine options */
+  *info = sc_scda_examine_options (opt, &fc->fuzzy_inv_freq, &fc->fuzzy_seed,
+                                   mpicomm);
+  /* TODO: check if the options are valid */
+
+  /* fill convenience MPI information */
+  sc_scda_fill_mpi_data (fc, mpicomm);
+
+  return fc;
+}
+
 sc_scda_fcontext_t *
 sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                      const char *filename,
@@ -760,16 +793,8 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
 
   /* We assume the filename to be nul-terminated. */
 
-  /* allocate the file context */
-  fc = SC_ALLOC (sc_scda_fcontext_t, 1);
-
-  /* examine options */
-  info = sc_scda_examine_options (opt, &fc->fuzzy_inv_freq, &fc->fuzzy_seed,
-                                  mpicomm);
-  /* TODO: check if the options are valid */
-
-  /* fill convenience MPI information */
-  sc_scda_fill_mpi_data (fc, mpicomm);
+  /* get MPI info and parse opt */
+  fc = sc_scda_fopen_start_up (opt, mpicomm, &info);
 
   /* open the file for writing */
   mpiret =
@@ -928,16 +953,8 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
 
   /* We assume the filename to be nul-terminated. */
 
-  /* allocate the file context */
-  fc = SC_ALLOC (sc_scda_fcontext_t, 1);
-
-  /* examine options */
-  info = sc_scda_examine_options (opt, &fc->fuzzy_inv_freq, &fc->fuzzy_seed,
-                                  mpicomm);
-  /* TODO: check if options are valid */
-
-  /* fill convenience MPI information */
-  sc_scda_fill_mpi_data (fc, mpicomm);
+  /* get MPI info and parse opt */
+  fc = sc_scda_fopen_start_up (opt, mpicomm, &info);
 
   /* open the file in reading mode */
   mpiret = sc_io_open (mpicomm, filename, SC_IO_READ, info, &fc->file);
