@@ -36,8 +36,12 @@
                                             including the padding */
 #define SC_SCDA_PADDING_MOD 32  /**< divisor for variable length padding */
 
-/** get a random int in the range [A,B] */
-#define SC_SCDA_RAND_RANGE(A,B, state) ((A) + sc_rand(state) * ((B) - (A)))
+/** get a random double in the range [A,B) */
+#define SC_SCDA_RAND_RANGE(A, B, state) ((A) + sc_rand (state) * ((B) - (A)))
+
+/** get a random int in the range [A,B) */
+#define SC_SCDA_RAND_RANGE_INT(A, B, state) ((int) SC_SCDA_RAND_RANGE (A, B,  \
+                                                                       state))
 
 /** Examine scda file return value and print an error message in case of error.
  * The parameter msg is prepended to the file, line and error information.
@@ -579,8 +583,8 @@ sc_scda_get_fuzzy_scdaret (unsigned inv_freq, sc_rand_state_t *state)
   if (sc_scda_sample_inv_freq (inv_freq, state)) {
     /* draw an error  */
     sample = (sc_scda_ret_t)
-      SC_SCDA_RAND_RANGE (SC_SCDA_FERR_FORMAT, SC_SCDA_FERR_LASTCODE - 1,
-                          state);
+      SC_SCDA_RAND_RANGE_INT (SC_SCDA_FERR_FORMAT, SC_SCDA_FERR_LASTCODE,
+                              state);
   }
   else {
     sample = SC_SCDA_FERR_SUCCESS;
@@ -604,7 +608,7 @@ sc_scda_get_fuzzy_mpiret (unsigned inv_freq, sc_rand_state_t *state)
      * are contiguous. Hence, take the minimal available error code set and
      * draw an index into this set.
      */
-    index_sample = (int) SC_SCDA_RAND_RANGE (0, 15, state);
+    index_sample = SC_SCDA_RAND_RANGE_INT (0, 16, state);
 
     /* map int 0...15 to an MPI 2.0 I/O error code */
     switch (index_sample) {
