@@ -489,6 +489,16 @@ sc_scda_get_user_string_len (const char *user_string,
   SC_ABORT_NOT_REACHED ();
 }
 
+/** Draw a sample for the proability 1/ \b inv_freq.
+ */
+static int
+sc_scda_sample_inv_freq (unsigned inv_freq, sc_rand_state_t *state)
+{
+  SC_ASSERT (state != NULL);
+
+  return sc_rand (state) < 1. / (double) inv_freq;
+}
+
 /** Create a random but consistent scdaret.
  */
 static sc_scda_ret_t
@@ -499,7 +509,7 @@ sc_scda_get_fuzzy_scdaret (unsigned inv_freq, sc_rand_state_t *state)
   SC_ASSERT (inv_freq != 0);
 
   /* draw an error with the empirical probalilty of 1 / freq */
-  if (sc_rand (state) < 1. / (double) inv_freq) {
+  if (sc_scda_sample_inv_freq (inv_freq, state)) {
     /* draw an error  */
     sample = (sc_scda_ret_t)
       SC_SCDA_RAND_RANGE (SC_SCDA_FERR_FORMAT, SC_SCDA_FERR_LASTCODE - 1,
@@ -518,9 +528,10 @@ sc_scda_get_fuzzy_mpiret (unsigned inv_freq, sc_rand_state_t *state)
   int                 index_sample, sample;
 
   SC_ASSERT (inv_freq != 0);
+  SC_ASSERT (state != NULL);
 
-  /* draw an error with the empirical probalilty of 1 / freq */
-  if (sc_rand (state) < 1. / (double) inv_freq) {
+  /* draw an error with the empirical probalilty of 1 / inv_freq */
+  if (sc_scda_sample_inv_freq (inv_freq, state)) {
     /* draw an MPI 2.0 I/O error */
     /* The MPI standard does not guarantee that the MPI error codes
      * are contiguous. Hence, take the minimal available error code set and
