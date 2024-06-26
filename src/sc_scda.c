@@ -172,6 +172,9 @@ struct sc_scda_fcontext
   /* *INDENT-ON* */
 };
 
+/** Copy \b src to \b dest.
+ * \b dest must have at least \b n bytes.
+ */
 static void
 sc_scda_copy_bytes (char *dest, const char *src, size_t n)
 {
@@ -185,6 +188,9 @@ sc_scda_copy_bytes (char *dest, const char *src, size_t n)
   (void) memcpy (dest, src, n);
 }
 
+/** Set \b n bytes in \b dest to \b c.
+ * \b dest must have at least \b n bytes.
+ */
 static void
 sc_scda_set_bytes (char *dest, int c, size_t n)
 {
@@ -193,6 +199,8 @@ sc_scda_set_bytes (char *dest, int c, size_t n)
   (void) memset (dest, c, n);
 }
 
+/** A convenience function that calls \ref sc_scda_set_bytes with c = '\0'.
+ */
 static void
 sc_scda_init_nul (char *dest, size_t len)
 {
@@ -203,8 +211,13 @@ sc_scda_init_nul (char *dest, size_t len)
 
 /** Pad the input data to a fixed length.
  *
- * The result is written to \b output_data, which must be allocated.
- *
+ * \param [in]  input_data    The data that is padded. \b input_len many bytes.
+ * \param [in]  input_len     The length of \b input_len in number of bytes.
+ *                            \b input_len must be less or equal to
+ *                            \b pad_len - 4.
+ * \param [out] output_data   On output the padded data. \b pad_len many bytes.
+ * \param [in]  pad_len       The target padding length and hence the length of
+ *                            \b output_data in number of bytes.
  */
 static void
 sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
@@ -234,7 +247,20 @@ sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
 }
 
 /** This function checks if \b padded_data is actually padded to \b pad_len.
+ * Moreover, the raw data is extracted.
  *
+ * \param [in]  padded_data   The padded data.
+ * \param [in]  pad_len       The length of \b padded_data in number of bytes.
+ * \param [out] raw_data      On output the raw data extracted from
+ *                            \b padded_data. The byte count of \b raw_data
+ *                            is \b raw_len. \b raw_data must be at least
+ *                            \b pad_len - 4. Undefined data if the function
+ *                            returns true.
+ * \param [out] raw_len       The length of \b raw_data in number of bytes.
+ *                            Undefined if the function returns true.
+ * \return                    True if \b padded_data does not satisfy the
+ *                            scda padding convention for fixed-length paddding.
+ *                            False, otherwise.
  */
 static int
 sc_scda_get_pad_to_fix_len (char *padded_data, size_t pad_len, char *raw_data,
@@ -294,6 +320,13 @@ sc_scda_pad_to_mod_len (size_t input_len)
   return num_pad_bytes;
 }
 
+/** Pad data to a length that is congurent to 0 modulo \ref SC_SCDA_PADDING_MOD.
+ *
+ * \param [in]  input_data  The input data. At least \b input_len bytes.
+ * \param [in]  input_len   The length of \b input_data in number of bytes.
+ * \param [out] output_data On output the padded input data. Must be at least
+ *                          \ref sc_scda_pad_to_mod_len (\b input_len) bytes.
+ */
 static void
 sc_scda_pad_to_mod (const char *input_data, size_t input_len,
                     char *output_data)
@@ -333,6 +366,18 @@ sc_scda_pad_to_mod (const char *input_data, size_t input_len,
  *
  * Given the raw data length, this function checks if the padding format is
  * correct and extracts the raw data.
+ *
+ * \param [in]  padded_data   The padded data with byte count \b padded_len.
+ * \param [in]  padded_len    The length of \b padded_data in number of bytes.
+ *                            Must be at least 7.
+ * \param [in]  raw_len       The length of the raw data in \b padded_data
+ *                            in number of bytes. This value must be known by
+ *                            the user.
+ * \param [out] raw_data      On output the raw data from \b padded_data if
+ *                            the function returns true and undefined otherwise.
+ * \return                    True if \b padded_data does not satisfy the scda
+ *                            padding convention for padding to a modulo
+ *                            condition. False, otherwise.
  */
 static int
 sc_scda_get_pad_to_mod (char *padded_data, size_t padded_len, size_t raw_len,
@@ -429,8 +474,21 @@ sc_scda_fill_mpi_data (sc_scda_fcontext_t * fc, sc_MPI_Comm mpicomm)
 
 /** Get the user string length for writing.
  *
- * This functions return -1 if the input user string is not
- * compliant with the scda file format.
+ * \param [in]  user_string  A user string that can be a C string or a binary
+ *                           user string.
+ * \param [in]  in_len       Must be NULL for \b user_string being a C string
+ *                           and must point to the number of bytes of
+ *                           \b user_string excluding the terminating nul for a
+ *                           binary user string. If \b len is greater than
+ *                           \b SC_SCDA_USER_STRING_BYTES, this function returns
+ *                           true.
+ * \param [out] out_len      On output the length of \b user_string in number
+ *                           of bytes excluding the terminating nul if the
+ *                           function returns false. Otherwise \b out_len is
+ *                           undefined.
+ * \return                   True if \b user_string is not compliant with the
+ *                           scda file format, i.e. too long or missing nul
+ *                           termination. False, otherwise.
  */
 static int
 sc_scda_get_user_string_len (const char *user_string,
