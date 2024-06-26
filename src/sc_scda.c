@@ -240,13 +240,13 @@ static void
 sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
                         char *output_data, size_t pad_len)
 {
-  SC_ASSERT (input_data != NULL);
-  SC_ASSERT (output_data != NULL);
-  SC_ASSERT (input_len <= pad_len - 4);
-
 #if 0
   uint8_t            *byte_arr;
 #endif
+
+  SC_ASSERT (input_data != NULL);
+  SC_ASSERT (output_data != NULL);
+  SC_ASSERT (input_len <= pad_len - 4);
 
   /* We assume that output_data has at least pad_len allocated bytes. */
 
@@ -283,11 +283,11 @@ static int
 sc_scda_get_pad_to_fix_len (char *padded_data, size_t pad_len, char *raw_data,
                             size_t *raw_len)
 {
+  size_t              si;
+
   SC_ASSERT (padded_data != NULL);
   SC_ASSERT (raw_data != NULL);
   SC_ASSERT (raw_len != NULL);
-
-  size_t              si;
 
   if (pad_len < 4) {
     /* data too short to satisfy padding */
@@ -348,10 +348,10 @@ static void
 sc_scda_pad_to_mod (const char *input_data, size_t input_len,
                     char *output_data)
 {
+  size_t              num_pad_bytes;
+
   SC_ASSERT (input_len == 0 || input_data != NULL);
   SC_ASSERT (output_data != NULL);
-
-  size_t              num_pad_bytes;
 
   /* compute the number of padding bytes */
   num_pad_bytes = sc_scda_pad_to_mod_len (input_len);
@@ -400,11 +400,11 @@ static int
 sc_scda_get_pad_to_mod (char *padded_data, size_t padded_len, size_t raw_len,
                         char *raw_data)
 {
-  SC_ASSERT (padded_data != NULL);
-  SC_ASSERT (raw_len == 0 || raw_data != NULL);
-
   size_t              si;
   size_t              num_pad_bytes;
+
+  SC_ASSERT (padded_data != NULL);
+  SC_ASSERT (raw_len == 0 || raw_data != NULL);
 
   num_pad_bytes = sc_scda_pad_to_mod_len (raw_len);
 
@@ -476,9 +476,9 @@ sc_scda_examine_options (sc_scda_fopen_options_t * opt,
 static void
 sc_scda_fill_mpi_data (sc_scda_fcontext_t * fc, sc_MPI_Comm mpicomm)
 {
-  SC_ASSERT (fc != NULL);
-
   int                 mpiret;
+
+  SC_ASSERT (fc != NULL);
 
   mpiret = sc_MPI_Comm_size (mpicomm, &fc->mpisize);
   SC_CHECK_MPI (mpiret);
@@ -682,15 +682,15 @@ sc_scda_scdaret_to_errcode (sc_scda_ret_t scda_ret,
                             sc_scda_ferror_t * scda_errorcode,
                             sc_scda_fcontext_t * fc)
 {
+  sc_scda_ret_t       scda_ret_internal;
+  int                 mpiret_internal;
+
   SC_ASSERT (SC_SCDA_FERR_SUCCESS <= scda_ret &&
              scda_ret < SC_SCDA_FERR_LASTCODE);
   SC_ASSERT (scda_errorcode != NULL);
 
   /* if we have an MPI error; we need \ref sc_scda_mpiret_to_errcode */
   SC_ASSERT (scda_ret != SC_SCDA_FERR_MPI);
-
-  sc_scda_ret_t       scda_ret_internal;
-  int                 mpiret_internal;
 
   if (scda_ret != SC_SCDA_FERR_SUCCESS) {
     /* an error happened and we do not return fuzzy in any case */
@@ -726,11 +726,11 @@ static void
 sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
                            sc_scda_fcontext_t * fc)
 {
-  SC_ASSERT ((sc_MPI_SUCCESS <= mpiret && mpiret < sc_MPI_ERR_LASTCODE));
-  SC_ASSERT (scda_errorcode != NULL);
-
   sc_scda_ret_t       scda_ret_internal;
   int                 mpiret_internal;
+
+  SC_ASSERT ((sc_MPI_SUCCESS <= mpiret && mpiret < sc_MPI_ERR_LASTCODE));
+  SC_ASSERT (scda_errorcode != NULL);
 
   if (fc->fuzzy_inv_freq == 0) {
     /* no fuzzy errors */
@@ -865,15 +865,15 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                      sc_scda_fopen_options_t * opt,
                      sc_scda_ferror_t * errcode)
 {
-  SC_ASSERT (filename != NULL);
-  SC_ASSERT (user_string != NULL);
-  SC_ASSERT (errcode != NULL);
-
   int                 mpiret;
   sc_MPI_Info         info;
   sc_scda_fcontext_t *fc;
 
   SC_SCDA_DECLARE_COUNT_VAR;
+
+  SC_ASSERT (filename != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (errcode != NULL);
 
   /* We assume the filename to be nul-terminated. */
 
@@ -956,13 +956,13 @@ static int
 sc_scda_check_file_header (char *file_header_data, char *user_string,
                            size_t *len)
 {
-  SC_ASSERT (file_header_data != NULL);
-  SC_ASSERT (user_string != NULL);
-  SC_ASSERT (len != NULL);
-
   int                 current_pos;
   char                vendor_string[SC_SCDA_VENDOR_STRING_BYTES];
   size_t              vendor_len;
+
+  SC_ASSERT (file_header_data != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (len != NULL);
 
   /* TODO: Add errcode as output parameter if we want to add more detailed errors */
 
@@ -1024,16 +1024,16 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
                     char *user_string, size_t *len,
                     sc_scda_fopen_options_t * opt, sc_scda_ferror_t * errcode)
 {
-  SC_ASSERT (filename != NULL);
-  SC_ASSERT (user_string != NULL);
-  SC_ASSERT (len != NULL);
-  SC_ASSERT (errcode != NULL);
-
   int                 mpiret;
   sc_MPI_Info         info;
   sc_scda_fcontext_t *fc;
 
   SC_SCDA_DECLARE_COUNT_VAR;
+
+  SC_ASSERT (filename != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (len != NULL);
+  SC_ASSERT (errcode != NULL);
 
   /* We assume the filename to be nul-terminated. */
 
@@ -1080,10 +1080,10 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
 int
 sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
 {
+  int                 mpiret;
+
   SC_ASSERT (fc != NULL);
   SC_ASSERT (errcode != NULL);
-
-  int                 mpiret;
 
   mpiret = sc_io_close (&fc->file);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
@@ -1097,12 +1097,12 @@ sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
 int
 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str, int *len)
 {
+  int                 retval;
+  const char         *tstr = NULL;
+
   SC_ASSERT (str != NULL);
   SC_ASSERT (len != NULL);
   SC_ASSERT (sc_scda_errcode_is_valid (errcode));
-
-  int                 retval;
-  const char         *tstr = NULL;
 
   if (str == NULL || len == NULL || !sc_scda_errcode_is_valid (errcode)) {
     return SC_SCDA_FERR_ARG;
