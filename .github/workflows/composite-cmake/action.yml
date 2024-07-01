@@ -7,7 +7,6 @@ runs:
     run: >-
       cmake --preset default
       -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }}
-      --install-prefix=${{ runner.temp }}
       -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
 
   - name: CMake print debug find
@@ -16,7 +15,6 @@ runs:
     run: >-
       cmake --preset default
       -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }}
-      --install-prefix=${{ runner.temp }}
       -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
       --debug-find --fresh
 
@@ -34,7 +32,7 @@ runs:
 
   - name: CMake configure examples
     shell: bash
-    run: cmake -B example/build -S example -DCMAKE_PREFIX_PATH:PATH=${{ runner.temp }}
+    run: cmake -B example/build -S example
 
   - name: CMake build examples
     shell: bash
@@ -49,14 +47,14 @@ runs:
     if: github.event.action == 'published'
     uses: actions/upload-artifact@v4
     with:
-      name: ${{ runner.os }}-binary-archive-${{ matrix.cc }}-${{ matrix.mpi }}-shared-${{ matrix.shared }}
+      name: ${{ github.job }}-binary-archive-${{ matrix.cc }}-mpi-${{ matrix.mpi }}-shared-${{ matrix.shared }}
       path: build/package
 
   - name: Upload log files
     if: always()
     uses: actions/upload-artifact@v4
     with:
-      name: ${{ runner.os }}_cmake_log-${{ matrix.cc }}-${{ matrix.mpi }}-shared-${{ matrix.shared }}
+      name: ${{ github.job }}_cmake_log-${{ matrix.cc }}-mpi-${{ matrix.mpi }}-shared-${{ matrix.shared }}
       path: |
         ./build/CMakeFiles/CMakeConfigureLog.yaml
         ./build/Testing/Temporary/LastTest.log
