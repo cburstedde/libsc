@@ -23,7 +23,6 @@
 
 #include <sc_scda.h>
 #include <sc_io.h>
-#include <time.h>
 
 /* file section header data */
 #define SC_SCDA_MAGIC "scdata0" /**< magic encoding format identifier and version */
