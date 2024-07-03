@@ -33,7 +33,7 @@ main (int argc, char **argv)
   sc_MPI_Comm         mpicomm = sc_MPI_COMM_WORLD;
   int                 mpiret;
   int                 first_argc;
-  int                 int_inv_freq, int_seed;
+  int                 int_everyn, int_seed;
   const char         *filename = SC_SCDA_TEST_FILE;
   const char         *file_user_string = "This is a test file";
   char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
@@ -50,13 +50,13 @@ main (int argc, char **argv)
   /* parse command line options */
   opt = sc_options_new (argv[0]);
 
-  sc_options_add_int (opt, 'I', "fuzzy-inv-frequency", &int_inv_freq, 0,
-                      "inverse fuzzy frequency; 0 means no fuzzy returns "
+  sc_options_add_int (opt, 'N', "fuzzy-everyn", &int_everyn, 0,
+                      "average fuzzy error return; 0 means no fuzzy returns "
                       "and must be >= 0");
   sc_options_add_int (opt, 'S', "fuzzy-seed", &int_seed, -1,
                       "seed "
                       "for fuzzy error return of scda functions; ignored for "
-                      "fuzzy-inv-frequency == 0");
+                      "fuzzy-everyn == 0");
 
   first_argc =
     sc_options_parse (sc_package_id, SC_LP_DEFAULT, opt, argc, argv);
@@ -67,13 +67,13 @@ main (int argc, char **argv)
 
   sc_options_print_summary (sc_package_id, SC_LP_PRODUCTION, opt);
 
-  if (int_inv_freq < 0) {
-    SC_GLOBAL_LERROR ("Usage error: fuzzy-inv-frequency must be >= 0\n");
+  if (int_everyn < 0) {
+    SC_GLOBAL_LERROR ("Usage error: fuzzy-everyn must be >= 0\n");
     sc_options_print_usage (sc_package_id, SC_LP_ERROR, opt, NULL);
     return 1;
   }
 
-  scda_opt.fuzzy_inv_freq = (unsigned) int_inv_freq;
+  scda_opt.fuzzy_everyn = (unsigned) int_everyn;
   if (int_seed < 0) {
     scda_opt.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
     mpiret =

@@ -175,17 +175,25 @@ struct sc_scda_fcontext
   int                 mpisize; /**< number of MPI ranks */
   int                 mpirank; /**< MPI rank */
   sc_MPI_File         file;    /**< file object */
-  unsigned            fuzzy_inv_freq; /**< Inverse Frequency of the fuzzy error
-                                       return, i.e. for each possible error
-                                       origin we return a random error with the
-                                       empirical probability of
-                                       1 / fuzzy_inv_freq but only if the
-                                       respective possible error origin did not
-                                       already caused an error without the fuzzy
-                                       error return. In such a case, the actual
-                                       error is returned. 0 means that there no
-                                       fuzzy error returns. */
-  sc_rand_state_t    fuzzy_seed; /**< seed for fuzzy error return */
+  unsigned            fuzzy_everyn; /**< In average every n-th possible error
+                                       origin returns a fuzzy error. There may
+                                       be multiple possible error origins in
+                                       one top-level scda function.
+                                       We return for each possible error origin
+                                       a random error with the empirical
+                                       probability of 1 / fuzzy_everyn but only
+                                       if the respective possible error origin
+                                       did not already cause an error without
+                                       the fuzzy error return. In such a case,
+                                       the actual error is returned. 0 means
+                                       that there are no fuzzy error returns. */
+  sc_rand_state_t     fuzzy_seed; /**< The seed for the fuzzy error return.
+                                       This value is ignored if
+                                       fuzzy_everyn == 0. It is important to
+                                       notice that fuzzy_seed is initialized by
+                                       the user-defined seed but is adjusted
+                                       to the state after each call of
+                                       \ref sc_rand. */
   /* *INDENT-ON* */
 };
 
@@ -451,7 +459,7 @@ sc_scda_get_pad_to_mod (char *padded_data, size_t padded_len, size_t raw_len,
  */
 static              sc_MPI_Info
 sc_scda_examine_options (sc_scda_fopen_options_t * opt,
-                         unsigned *fuzzy_inv_freq, sc_rand_state_t *fuzzy_seed,
+                         unsigned *fuzzy_everyn, sc_rand_state_t *fuzzy_seed,
                          sc_MPI_Comm mpicomm)
 {
   /* TODO: Check if opt is valid? */
@@ -460,13 +468,13 @@ sc_scda_examine_options (sc_scda_fopen_options_t * opt,
 
   if (opt != NULL) {
     info = opt->info;
-    *fuzzy_inv_freq = opt->fuzzy_inv_freq;
+    *fuzzy_everyn = opt->fuzzy_everyn;
     *fuzzy_seed = opt->fuzzy_seed;
   }
   else {
     info = sc_MPI_INFO_NULL;
     /* no fuzzy error return by default */
-    *fuzzy_inv_freq = 0;
+    *fuzzy_everyn = 0;
     *fuzzy_seed = 0;
   }
 
@@ -560,27 +568,27 @@ sc_scda_get_user_string_len (const char *user_string,
   SC_ABORT_NOT_REACHED ();
 }
 
-/** Draw a sample for the proability 1/ \b inv_freq.
+/** Draw a sample for the proability 1/ \b everyn.
  */
 static int
-sc_scda_sample_inv_freq (unsigned inv_freq, sc_rand_state_t *state)
+sc_scda_sample_everyn (unsigned everyn, sc_rand_state_t *state)
 {
   SC_ASSERT (state != NULL);
 
-  return sc_rand (state) < 1. / (double) inv_freq;
+  return sc_rand (state) < 1. / (double) everyn;
 }
 
 /** Create a random but consistent scdaret.
  */
 static sc_scda_ret_t
-sc_scda_get_fuzzy_scdaret (unsigned inv_freq, sc_rand_state_t *state)
+sc_scda_get_fuzzy_scdaret (unsigned everyn, sc_rand_state_t *state)
 {
   sc_scda_ret_t       sample;
 
-  SC_ASSERT (inv_freq != 0);
+  SC_ASSERT (everyn != 0);
 
   /* draw an error with the empirical probalilty of 1 / freq */
-  if (sc_scda_sample_inv_freq (inv_freq, state)) {
+  if (sc_scda_sample_everyn (everyn, state)) {
     /* draw an error  */
     sample = (sc_scda_ret_t)
       SC_SCDA_RAND_RANGE_INT (SC_SCDA_FERR_FORMAT, SC_SCDA_FERR_LASTCODE,
@@ -594,15 +602,15 @@ sc_scda_get_fuzzy_scdaret (unsigned inv_freq, sc_rand_state_t *state)
 }
 
 static int
-sc_scda_get_fuzzy_mpiret (unsigned inv_freq, sc_rand_state_t *state)
+sc_scda_get_fuzzy_mpiret (unsigned everyn, sc_rand_state_t *state)
 {
   int                 index_sample, sample;
 
-  SC_ASSERT (inv_freq != 0);
+  SC_ASSERT (everyn != 0);
   SC_ASSERT (state != NULL);
 
-  /* draw an error with the empirical probalilty of 1 / inv_freq */
-  if (sc_scda_sample_inv_freq (inv_freq, state)) {
+  /* draw an error with the empirical probalilty of 1 / everyn */
+  if (sc_scda_sample_everyn (everyn, state)) {
     /* draw an MPI 2.0 I/O error */
     /* The MPI standard does not guarantee that the MPI error codes
      * are contiguous. Hence, take the minimal available error code set and
@@ -700,10 +708,10 @@ sc_scda_scdaret_to_errcode (sc_scda_ret_t scda_ret,
   else {
     /* no error occurred, we may return fuzzy */
     scda_ret_internal =
-      (fc->fuzzy_inv_freq == 0) ? scda_ret :
-      sc_scda_get_fuzzy_scdaret (fc->fuzzy_inv_freq, &fc->fuzzy_seed);
+      (fc->fuzzy_everyn == 0) ? scda_ret :
+      sc_scda_get_fuzzy_scdaret (fc->fuzzy_everyn, &fc->fuzzy_seed);
     if (scda_ret_internal == SC_SCDA_FERR_MPI) {
-      SC_ASSERT (fc->fuzzy_inv_freq > 0);
+      SC_ASSERT (fc->fuzzy_everyn > 0);
       /* we must draw an MPI error */
       /* frequency 1 since we need mpiret != sc_MPI_SUCCESS */
       mpiret_internal = sc_scda_get_fuzzy_mpiret (1, &fc->fuzzy_seed);
@@ -732,7 +740,7 @@ sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
   SC_ASSERT ((sc_MPI_SUCCESS <= mpiret && mpiret < sc_MPI_ERR_LASTCODE));
   SC_ASSERT (scda_errorcode != NULL);
 
-  if (fc->fuzzy_inv_freq == 0) {
+  if (fc->fuzzy_everyn == 0) {
     /* no fuzzy errors */
     scda_ret_internal =
       (mpiret == sc_MPI_SUCCESS) ? SC_SCDA_FERR_SUCCESS : SC_SCDA_FERR_MPI;
@@ -742,7 +750,7 @@ sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
     /* fuzzy error testing but only if the actual call was successful */
     mpiret_internal =
       (mpiret ==
-       sc_MPI_SUCCESS) ? sc_scda_get_fuzzy_mpiret (fc->fuzzy_inv_freq,
+       sc_MPI_SUCCESS) ? sc_scda_get_fuzzy_mpiret (fc->fuzzy_everyn,
                                                    &fc->fuzzy_seed) : mpiret;
     scda_ret_internal =
       (mpiret_internal ==
@@ -848,7 +856,7 @@ sc_scda_fopen_start_up (sc_scda_fopen_options_t *opt, sc_MPI_Comm mpicomm,
   fc = SC_ALLOC (sc_scda_fcontext_t, 1);
 
   /* examine options */
-  *info = sc_scda_examine_options (opt, &fc->fuzzy_inv_freq, &fc->fuzzy_seed,
+  *info = sc_scda_examine_options (opt, &fc->fuzzy_everyn, &fc->fuzzy_seed,
                                    mpicomm);
   /* TODO: check if the options are valid */
 

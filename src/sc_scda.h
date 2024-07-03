@@ -286,19 +286,22 @@ sc_scda_ferror_t;
 typedef struct sc_scda_fopen_options
 {
   sc_MPI_Info         info; /**< info that is passed to MPI_File_open */
-  unsigned            fuzzy_inv_freq; /**< Inverse Frequency of the fuzzy error
-                                       return, i.e. for each possible error
-                                       origin we return a random error with the
-                                       empirical probability of
-                                       1 / fuzzy_inv_freq but only if the
-                                       respective possible error origin did not
-                                       already caused an error without the fuzzy
-                                       error return. In such a case, the actual
-                                       error is returned. 0 means that there no
-                                       fuzzy error returns. */
-  sc_rand_state_t     fuzzy_seed; /**< seed for fuzzy error return;
-                                       this value is ignored if
-                                       fuzzy_inv_freq == 0 */
+  unsigned            fuzzy_everyn; /**< In average every n-th possible error
+                                       origin returns a fuzzy error. There may
+                                       be multiple possible error origins in
+                                       one top-level scda function.
+                                       We return for each possible error origin
+                                       a random error with the empirical
+                                       probability of 1 / fuzzy_everyn but only
+                                       if the respective possible error origin
+                                       did not already cause an error without
+                                       the fuzzy error return. In such a case,
+                                       the actual error is returned. 0 means
+                                       that there are no fuzzy error returns. */
+  sc_rand_state_t     fuzzy_seed; /**< The seed for the fuzzy error return.
+                                       This value is ignored if
+                                       fuzzy_everyn == 0. When in doubt use
+                                       fuzzy_seed = 0. */
 }
 sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
 
