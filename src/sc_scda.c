@@ -92,7 +92,6 @@
                                     return NULL;}} while (0)
 
 /* This macro is suitable to be called after a non-collective operation.
- * It is only valid to be called once per function.
  * For a correct error handling it is required to skip the rest
  * of the non-collective code and then broadcast the error flag.
  * The macro can be used multiple times in a function but will always jump to
@@ -134,7 +133,6 @@
 
 /** Check for a count error of a serial (rank 0) I/O operation.
  * This macro is only valid to use after checking that there was not I/O error.
- * It is only valid to be called once per function.
  * For a correct error handling it is required to skip the rest
  * of the non-collective code and then broadcast the count  error flag.
  * The macro can be used multiple times in a function but will always jump to
@@ -149,7 +147,8 @@
 
 /** Handle a non-collective count error.
  * Use this macro after \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR *directly* after
- * the end of the non-collective statements.
+ * the end of the non-collective statements but after \ref
+ * SC_SCDA_HANDLE_NONCOLL_ERR, which sets the required label.
  * Can be used only once in a function.
  */
 #define SC_SCDA_HANDLE_NONCOLL_COUNT_ERR(errorcode, fc) do{                    \
@@ -961,6 +960,10 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   mpiret =
     sc_io_open (mpicomm, filename, SC_IO_WRITE_CREATE, info, &fc->file);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  /* We call a macro for checking an error that occurs collectivly.
+   * In case of an error the macro prints an error message using \ref
+   * SC_GLOBAL_LERRORF, closes the file and frees fc.
+   */
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "File open write");
 
   if (fc->mpirank == 0) {
@@ -1002,6 +1005,14 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
      */
     sc_scda_scdaret_to_errcode (invalid_user_string ? SC_SCDA_FERR_ARG :
                                 SC_SCDA_FERR_SUCCESS, errcode, fc);
+    /* We call the macro to check for a non-collectiv error.
+     * The macro can only handle non-collective errors that occur on rank 0.
+     * If errcode encodes success, the macro has no effect. Otherwise,
+     * the macro prints the error using \ref SC_LERRORF and jumps to the
+     * label set by \ref SC_SCDA_HANDLE_NONCOLL_ERR. This macro is only valid
+     * in pair with a call of \ref SC_SCDA_HANDLE_NONCOLL_ERR directly after
+     * the non-collective code part.
+     */
     SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
 
     sc_scda_pad_to_fix_len (user_string, user_string_len,
@@ -1020,10 +1031,37 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
       sc_io_write_at (fc->file, 0, file_header_data, SC_SCDA_HEADER_BYTES,
                       sc_MPI_BYTE, &count);
     sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+    /* See the first appearance of this macro in this function for more
+     * information. They both use the same associated \ref
+     * SC_SCDA_HANDLE_NONCOLL_ERR call that sets the label.
+     * */
     SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing the file header section");
+    /* The macro to check non-collective for count errors.
+     * If SC_SCDA_HEADER_BYTES == count, i.e. no count error occurred, the macro
+     * has no effect. This macro is only valid after calling \ref
+     * SC_SCDA_CHECK_NONCOLL_ERR. If a count error occurred, the macro jumps to
+     * the label set by \ref SC_SCDA_HANDLE_NONCOLL_ERR, which must be followed
+     * by a call of SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
+     */
     SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_HEADER_BYTES, count);
   }
+  /* This macro sets the label to jump to from \ref SC_SCDA_CHECK_NONCOLL_ERR
+   * and \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR. It handles the non-collective
+   * error, i.e. it broadcasts the errcode, which may encode success, from
+   * rank 0 to all other ranks and in case of an error it closes the file,
+   * frees the file context and returns NULL. Since this macro contains a
+   * a label it is only valid to be called once in a function and this
+   * macro is only valid to be called directly after a non-collective code part
+   * that contains at least one call \ref SC_SCDA_CHECK_NONCOLL_ERR.
+   */
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
+  /* The macro to check potential non-collective count errors. It is only valid
+   * to be called directly after \ref SC_SCDA_HANDLE_NONCOLL_ERR and only
+   * if the preceding non-collective code block contains at least one call of
+   * \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR. The macro is only valid to be called
+   * once per function. The count error status is broadcasted and the macro
+   * prints an error message using \ref SC_LERRORF.
+   */
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, fc);
 
   return fc;
@@ -1129,6 +1167,10 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
   /* open the file in reading mode */
   mpiret = sc_io_open (mpicomm, filename, SC_IO_READ, info, &fc->file);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  /* The macro to check errcode after a collective function call.
+   * More information can be found in the comments in \ref sc_scda_fopen_write
+   * and in the documentation of the \ref SC_SCDA_CHECK_COLL_ERR.
+   */
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "File open read");
 
   /* read file header section on rank 0 */
@@ -1141,7 +1183,15 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
       sc_io_read_at (fc->file, 0, file_header_data, SC_SCDA_HEADER_BYTES,
                      sc_MPI_BYTE, &count);
     sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+    /* The macro to check errcode after a non-collective function call.
+    * More information can be found in the comments in \ref sc_scda_fopen_write
+    * and in the documentation of the \ref SC_SCDA_CHECK_NONCOLL_ERR.
+    */
     SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read the file header section");
+    /* The macro to check for a count error after a non-collective function call.
+    * More information can be found in the comments in \ref sc_scda_fopen_write
+    * and in the documentation of the \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR.
+    */
     SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_HEADER_BYTES, count);
 
     /* initialize user_string */
@@ -1151,9 +1201,20 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
       sc_scda_check_file_header (file_header_data, user_string, len);
     sc_scda_scdaret_to_errcode (invalid_file_header ? SC_SCDA_FERR_FORMAT :
                                 SC_SCDA_FERR_SUCCESS, errcode, fc);
+    /* cf. the comment on the first call of this macro in this function */
     SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid file header");
   }
+  /* The macro to handle a non-collective error that is associated to a
+   * preceding call of \ref SC_SCDA_CHECK_NONCOLL_ERR.
+   * More information can be found in the comments in \ref sc_scda_fopen_write
+   * and in the documentation of the \ref SC_SCDA_HANDLE_NONCOLL_ERR.
+   */
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
+  /* The macro to handle a non-collective count error that is associated to a
+   * preceding call of \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR.
+   * More information can be found in the comments in \ref sc_scda_fopen_write
+   * and in the documentation of the \ref SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
+   */
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, fc);
   /* Bcast the user string */
   mpiret = sc_MPI_Bcast (user_string, SC_SCDA_USER_STRING_BYTES + 1,
@@ -1173,6 +1234,11 @@ sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
 
   mpiret = sc_io_close (&fc->file);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  /* Since this function does not return NULL in case of an error, closes the
+   * file and frees file context in any case, we can not use one of our
+   * standard error macros but we call \ref SC_SCDA_CHECK_VERBOSE_COLL to print
+   * an error message in case of an error.
+   */
   SC_SCDA_CHECK_VERBOSE_COLL (*errcode, "File close");
 
   SC_FREE (fc);
