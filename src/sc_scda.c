@@ -1049,10 +1049,11 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * and \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR. It handles the non-collective
    * error, i.e. it broadcasts the errcode, which may encode success, from
    * rank 0 to all other ranks and in case of an error it closes the file,
-   * frees the file context and returns NULL. Since this macro contains a
-   * a label it is only valid to be called once in a function and this
-   * macro is only valid to be called directly after a non-collective code part
-   * that contains at least one call \ref SC_SCDA_CHECK_NONCOLL_ERR.
+   * frees the file context and returns NULL. Hence, it is valid that errcode
+   * is only initialized on rank 0 before calling this macro. Since this
+   * macro contains a a label it is only valid to be called once in a function
+   * and this macro is only valid to be called directly after a non-collective
+   * code part that contains at least one call \ref SC_SCDA_CHECK_NONCOLL_ERR.
    */
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
   /* The macro to check potential non-collective count errors. It is only valid
@@ -1060,7 +1061,9 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * if the preceding non-collective code block contains at least one call of
    * \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR. The macro is only valid to be called
    * once per function. The count error status is broadcasted and the macro
-   * prints an error message using \ref SC_LERRORF.
+   * prints an error message using \ref SC_LERRORF. This means in particular
+   * that it is valid that errcode is only initialized on rank 0 before calling
+   * this macro.
    */
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, fc);
 
