@@ -221,6 +221,10 @@ sc_scda_set_bytes (char *dest, int c, size_t n)
 {
   SC_ASSERT (dest != NULL);
 
+  if (n == 0) {
+    return;
+  }
+
   (void) memset (dest, c, n);
 }
 
