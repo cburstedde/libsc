@@ -458,31 +458,71 @@ sc_scda_get_pad_to_mod (char *padded_data, size_t padded_len, size_t raw_len,
 
 /**
  * This function is for creating and reading a file.
- * TODO: We may want to add an error parameter to indicate if the options are
- * invalid.
+ * The passed \b fc must have filled MPI information (cf. \ref
+ * sc_scda_fill_mpi_data).
+ * The function returns \ref SC_SCDA_FERR_ARG if everyn and/or seed in opt are
+ * not collective. Otherwise, the function returns \ref SC_SCDA_FERR_SUCCESS.
  */
-static              sc_MPI_Info
-sc_scda_examine_options (sc_scda_fopen_options_t * opt,
-                         unsigned *fuzzy_everyn, sc_rand_state_t *fuzzy_seed,
-                         sc_MPI_Comm mpicomm)
+static sc_scda_ret_t
+sc_scda_examine_options (sc_scda_fopen_options_t * opt, sc_scda_fcontext_t *fc,
+                         sc_MPI_Info *info)
 {
-  /* TODO: Check if opt is valid? */
-
-  sc_MPI_Info         info;
+  SC_ASSERT (fc != NULL);
 
   if (opt != NULL) {
-    info = opt->info;
-    *fuzzy_everyn = opt->fuzzy_everyn;
-    *fuzzy_seed = opt->fuzzy_seed;
+    int                 mpiret;
+    int                 local_fuzzy_params_cmp, collective_fuzzy_params;
+    /* byte buffer since it is not clear which data type is larger */
+    /* we use a char array as a byte buffer, cf. \ref sc_array_index */
+    char                buf[sizeof (unsigned) + sizeof (sc_rand_state_t)];
+    unsigned            bcast_everyn;
+    sc_rand_state_t     bcast_seed;
+
+    /* check if fuzzy_everyn and fuzzy_seed are collective */
+
+    /* copy fuzzy parameters to byte buffer */
+    sc_scda_copy_bytes (buf, (char *) &opt->fuzzy_everyn, sizeof (unsigned));
+    sc_scda_copy_bytes (&buf[sizeof (unsigned)], (char *) &opt->fuzzy_seed,
+                        sizeof (sc_rand_state_t));
+
+    mpiret = sc_MPI_Bcast (buf, sizeof (unsigned) + sizeof (sc_rand_state_t),
+                           sc_MPI_BYTE, 0, fc->mpicomm);
+    SC_CHECK_MPI (mpiret);
+
+    /* get actual data from the byte buffer */
+    bcast_everyn = *((unsigned *) buf);
+    bcast_seed = *((sc_rand_state_t *) & buf[sizeof (unsigned)]);
+
+    /* compare fuzzy parameters */
+    local_fuzzy_params_cmp = bcast_everyn != opt->fuzzy_everyn
+      || bcast_seed != opt->fuzzy_seed;
+
+    /* synchronize comparison results */
+    mpiret = sc_MPI_Allreduce (&local_fuzzy_params_cmp,
+                               &collective_fuzzy_params, 1, sc_MPI_INT,
+                               sc_MPI_LOR, fc->mpicomm);
+    SC_CHECK_MPI (mpiret);
+
+    if (collective_fuzzy_params) {
+      /* non-collective fuzzy parameters */
+      /* no fuzzy error testing in case of an error */
+      fc->fuzzy_everyn = 0;
+      fc->fuzzy_seed = 0;
+      return SC_SCDA_FERR_ARG;
+    }
+
+    *info = opt->info;
+    fc->fuzzy_everyn = opt->fuzzy_everyn;
+    fc->fuzzy_seed = opt->fuzzy_seed;
   }
   else {
-    info = sc_MPI_INFO_NULL;
+    *info = sc_MPI_INFO_NULL;
     /* no fuzzy error return by default */
-    *fuzzy_everyn = 0;
-    *fuzzy_seed = 0;
+    fc->fuzzy_everyn = 0;
+    fc->fuzzy_seed = 0;
   }
 
-  return info;
+  return SC_SCDA_FERR_SUCCESS;
 }
 
 static void
@@ -844,28 +884,41 @@ sc_scda_file_error_cleanup (sc_MPI_File * file)
  *                          NULL.
  * \param [in]   mpicomm    The MPI communicator of the scda fopen function.
  * \param [out]  info       On output the MPI info object as defined by \b opt.
+ * \param [out]  errcode    An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class.
+ *                          by \ref sc_scda_ferror_class.
  * \return                  A pointer to a file context containing the fuzzy
  *                          error parameters as encoded in \b opt and the
  *                          MPI rank and size according to \b mpicomm.
+ *                          In case of an error NULL, see also \b errcode.
  */
 static sc_scda_fcontext_t*
 sc_scda_fopen_start_up (sc_scda_fopen_options_t *opt, sc_MPI_Comm mpicomm,
-                        sc_MPI_Info *info)
+                        sc_MPI_Info *info, sc_scda_ferror_t *errcode)
 {
   sc_scda_fcontext_t *fc;
+  sc_scda_ret_t       scdaret;
 
   SC_ASSERT (info != NULL);
 
   /* allocate the file context */
   fc = SC_ALLOC (sc_scda_fcontext_t, 1);
 
-  /* examine options */
-  *info = sc_scda_examine_options (opt, &fc->fuzzy_everyn, &fc->fuzzy_seed,
-                                   mpicomm);
-  /* TODO: check if the options are valid */
-
   /* fill convenience MPI information */
   sc_scda_fill_mpi_data (fc, mpicomm);
+
+  /* examine options */
+  scdaret = sc_scda_examine_options (opt, fc, info);
+  /* It is guaranteed by sc_scda_examine_options that fuzzy error testing is
+   * deactivated in fc if scdaret does not encode success.
+   */
+  sc_scda_scdaret_to_errcode (scdaret, errcode, fc);
+
+  if (!sc_scda_is_success (*errcode)) {
+    /* an error occurred and the file was not yet open */
+    SC_FREE (fc);
+    return NULL;
+  }
 
   return fc;
 }
@@ -890,7 +943,16 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   /* We assume the filename to be nul-terminated. */
 
   /* get MPI info and parse opt */
-  fc = sc_scda_fopen_start_up (opt, mpicomm, &info);
+  fc = sc_scda_fopen_start_up (opt, mpicomm, &info, errcode);
+  if (fc == NULL) {
+    /* start up failed; see errcode */
+    /* This is a special case of an error in a scda top-level function before
+     * the file is opened. Hence, we do not use the standard error macros but
+     * just print the error by the following macro.
+     */
+    SC_SCDA_CHECK_VERBOSE_COLL (*errcode, "Parse options");
+    return NULL;
+  }
 
   /* open the file for writing */
   mpiret =
@@ -1050,7 +1112,16 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
   /* We assume the filename to be nul-terminated. */
 
   /* get MPI info and parse opt */
-  fc = sc_scda_fopen_start_up (opt, mpicomm, &info);
+  fc = sc_scda_fopen_start_up (opt, mpicomm, &info, errcode);
+  if (fc == NULL) {
+    /* start up failed; see errcode */
+    /* This is a special case of an error in a scda top-level function before
+     * the file is opened. Hence, we do not use the standard error macros but
+     * just print the error by the following macro.
+     */
+    SC_SCDA_CHECK_VERBOSE_COLL (*errcode, "Parse options");
+    return NULL;
+  }
 
   /* open the file in reading mode */
   mpiret = sc_io_open (mpicomm, filename, SC_IO_READ, info, &fc->file);
