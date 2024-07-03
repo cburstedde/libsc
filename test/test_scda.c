@@ -31,14 +31,14 @@ int
 main (int argc, char **argv)
 {
   sc_MPI_Comm         mpicomm = sc_MPI_COMM_WORLD;
-  int                 mpiret;
+  int                 mpiret, mpirank, mpisize;
   int                 first_argc;
   int                 int_everyn, int_seed;
   const char         *filename = SC_SCDA_TEST_FILE;
   const char         *file_user_string = "This is a test file";
   char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
   sc_scda_fcontext_t *fc;
-  sc_scda_fopen_options_t scda_opt;
+  sc_scda_fopen_options_t scda_opt, scda_opt_err;
   sc_scda_ferror_t    errcode;
   size_t              len;
   sc_options_t       *opt;
@@ -73,6 +73,59 @@ main (int argc, char **argv)
     return 1;
   }
 
+  /* Test checking of non-collective fuzzy parameters. */
+  mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
+  SC_CHECK_MPI (mpiret);
+  scda_opt_err.info = sc_MPI_INFO_NULL;
+  if (mpirank == 0) {
+    scda_opt_err.fuzzy_everyn = 0;
+    scda_opt_err.fuzzy_seed = 0;
+  }
+  else {
+    scda_opt_err.fuzzy_everyn = 1;
+    scda_opt_err.fuzzy_seed = 0;
+  }
+  if (mpisize > 1) {
+    SC_GLOBAL_ESSENTIAL
+      ("We expect two invalid scda function parameter errors."
+       " This is just for testing purposes and do not imply"
+       " erroneous code behavior.\n");
+  }
+  /* fopen_write with non-collective fuzzy error parameters */
+  fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
+                            &scda_opt_err, &errcode);
+  if (mpisize > 1) {
+    SC_CHECK_ABORT (fc == NULL && errcode.scdaret == SC_SCDA_FERR_ARG,
+                    "Test fuzzy error parameters check");
+  }
+  else {
+    /* we can not provoke non-collective parameter error in serial */
+    SC_CHECK_ABORT (fc != NULL && sc_scda_is_success (errcode),
+                    "Test fuzzy error parameters check in serial");
+    sc_scda_fclose (fc, &errcode);
+    SC_CHECK_ABORT (sc_scda_is_success (errcode),
+                    "scda_fclose after read failed");
+  }
+  /* fopen_read with non-collective fuzzy error parameters */
+  fc =
+    sc_scda_fopen_read (mpicomm, filename, read_user_string, &len,
+                        &scda_opt_err, &errcode);
+  if (mpisize > 1) {
+    SC_CHECK_ABORT (fc == NULL && errcode.scdaret == SC_SCDA_FERR_ARG,
+                    "Test fuzzy error parameters check");
+  }
+  else {
+    /* we can not provoke non-collective parameter error in serial */
+    SC_CHECK_ABORT (fc != NULL && sc_scda_is_success (errcode),
+                    "Test fuzzy error parameters check in serial");
+    sc_scda_fclose (fc, &errcode);
+    SC_CHECK_ABORT (sc_scda_is_success (errcode),
+                    "scda_fclose after read failed");
+  }
+
+  /* Create valid scda options structure. */
   scda_opt.fuzzy_everyn = (unsigned) int_everyn;
   if (int_seed < 0) {
     scda_opt.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
@@ -83,6 +136,7 @@ main (int argc, char **argv)
   else {
     scda_opt.fuzzy_seed = (sc_rand_state_t) int_seed;
   }
+  scda_opt.info = sc_MPI_INFO_NULL;
 
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
                             NULL, &errcode);
@@ -98,7 +152,6 @@ main (int argc, char **argv)
   /* WARNING: Fuzzy error testing means that the code randomly produces
    * errors.
    */
-  scda_opt.info = sc_MPI_INFO_NULL;
 
   fc =
     sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
