@@ -485,6 +485,9 @@ sc_scda_examine_options (sc_scda_fopen_options_t * opt, sc_scda_fcontext_t *fc,
     sc_scda_copy_bytes (&buf[sizeof (unsigned)], (char *) &opt->fuzzy_seed,
                         sizeof (sc_rand_state_t));
 
+    /* For the sake of simplicity, we use a Bcast followed by an Allreduce
+     * instead of one Allreduce call with a custom reduction function.
+     */
     mpiret = sc_MPI_Bcast (buf, sizeof (unsigned) + sizeof (sc_rand_state_t),
                            sc_MPI_BYTE, 0, fc->mpicomm);
     SC_CHECK_MPI (mpiret);
