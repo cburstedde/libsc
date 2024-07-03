@@ -200,7 +200,6 @@ SC_EXTERN_C_BEGIN;
 
 #define SC_SCDA_HEADER_BYTES 128 /**< number of file header bytes */
 #define SC_SCDA_USER_STRING_BYTES 58 /**< number of user string bytes */
-#define SC_SCDA_FILENAME_BYTES BUFSIZ /**< maximal number of filename bytes */
 
 /** Opaque context for writing and reading a libsc data file, i.e. a scda file. */
 typedef struct sc_scda_fcontext sc_scda_fcontext_t;
