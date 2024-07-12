@@ -23,7 +23,7 @@ jobs:
     steps:
      - run: echo "This job is running on a ${{ runner.os }} server hosted by GitHub"
 
-     - uses: actions/checkout@v4
+     - uses: actions/checkout@main
        name: Checkout source code
 
      - name: Install system dependencies
@@ -58,7 +58,7 @@ jobs:
 
      - name: Upload log files
        if: always()
-       uses: actions/upload-artifact@v4
+       uses: actions/upload-artifact@main
        with:
          name: darwin_log
          path: |
