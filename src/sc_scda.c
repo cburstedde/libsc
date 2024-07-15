@@ -49,7 +49,7 @@
 #define SC_SCDA_CHECK_VERBOSE_GEN(errcode, msg, sc_scda_log) do {             \
                                     char sc_scda_msg[sc_MPI_MAX_ERROR_STRING];\
                                     int sc_scda_len, sc_scda_retval;          \
-                                    if (!sc_scda_is_success (errcode)) {      \
+                                    if (!sc_scda_ferror_is_success (errcode)) {\
                                     sc_scda_retval =                          \
                                     sc_scda_ferror_string (errcode, sc_scda_msg,\
                                                            &sc_scda_len);     \
@@ -85,7 +85,7 @@
 #define SC_SCDA_CHECK_COLL_ERR(errcode, fc, user_msg) do {                   \
                                     SC_SCDA_CHECK_VERBOSE_COLL (*errcode,    \
                                                                 user_msg);   \
-                                    if (!sc_scda_is_success (*errcode)) {    \
+                                    if (!sc_scda_ferror_is_success (*errcode)) {\
                                     sc_scda_file_error_cleanup (&fc->file);  \
                                     SC_FREE (fc);                            \
                                     return NULL;}} while (0)
@@ -99,7 +99,7 @@
 #define SC_SCDA_CHECK_NONCOLL_ERR(errcode, user_msg) do {                    \
                                     SC_SCDA_CHECK_VERBOSE_NONCOLL (*errcode, \
                                                                    user_msg);\
-                                    if (!sc_scda_is_success (*errcode)) {    \
+                                    if (!sc_scda_ferror_is_success (*errcode)) {\
                                     goto scda_err_lbl;}} while (0)
 
 /** Handle a non-collective error.
@@ -115,7 +115,7 @@
                                     SC_CHECK_MPI(sc_MPI_Bcast(&errcode->mpiret,\
                                                   1, sc_MPI_INT, 0,            \
                                                   fc->mpicomm));               \
-                                    if (!sc_scda_is_success (*errcode)) {      \
+                                    if (!sc_scda_ferror_is_success (*errcode)) {\
                                     sc_scda_file_error_cleanup (&fc->file);    \
                                     SC_FREE (fc);                              \
                                     return NULL;}} while (0)
@@ -843,7 +843,7 @@ sc_scda_errcode_is_valid (sc_scda_ferror_t errcode)
 }
 
 int
-sc_scda_is_success (sc_scda_ferror_t errorcode)
+sc_scda_ferror_is_success (sc_scda_ferror_t errorcode)
 {
   SC_ASSERT (sc_scda_errcode_is_valid (errorcode));
 
@@ -915,7 +915,7 @@ sc_scda_fopen_start_up (sc_scda_fopen_options_t *opt, sc_MPI_Comm mpicomm,
    */
   sc_scda_scdaret_to_errcode (scdaret, errcode, fc);
 
-  if (!sc_scda_is_success (*errcode)) {
+  if (!sc_scda_ferror_is_success (*errcode)) {
     /* an error occurred and the file was not yet open */
     SC_FREE (fc);
     return NULL;
@@ -1186,14 +1186,14 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
                      sc_MPI_BYTE, &count);
     sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
     /* The macro to check errcode after a non-collective function call.
-    * More information can be found in the comments in \ref sc_scda_fopen_write
-    * and in the documentation of the \ref SC_SCDA_CHECK_NONCOLL_ERR.
-    */
+     * More information can be found in the comments in \ref sc_scda_fopen_write
+     * and in the documentation of the \ref SC_SCDA_CHECK_NONCOLL_ERR.
+     */
     SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read the file header section");
     /* The macro to check for a count error after a non-collective function call.
-    * More information can be found in the comments in \ref sc_scda_fopen_write
-    * and in the documentation of the \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR.
-    */
+     * More information can be found in the comments in \ref sc_scda_fopen_write
+     * and in the documentation of the \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR.
+     */
     SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_HEADER_BYTES, count);
 
     /* initialize user_string */
@@ -1245,7 +1245,7 @@ sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
 
   SC_FREE (fc);
 
-  return sc_scda_is_success (*errcode) ? 0 : -1;
+  return sc_scda_ferror_is_success (*errcode) ? 0 : -1;
 }
 
 int

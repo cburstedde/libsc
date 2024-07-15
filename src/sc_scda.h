@@ -1076,7 +1076,7 @@ int                 sc_scda_ferror_class (sc_scda_ferror_t errcode,
  * \return                      True if \b errcode encodes success and
  *                              false otherwise.
  */
-int                 sc_scda_is_success (sc_scda_ferror_t errorcode);
+int                 sc_scda_ferror_is_success (sc_scda_ferror_t errorcode);
 
 /** Translate a sc_scda error code/class to an error string.
  *
