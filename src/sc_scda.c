@@ -976,10 +976,10 @@ sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
   /* We call the macro to check for a non-collectiv error.
    * The macro can only handle non-collective errors that occur on rank 0.
    * If errcode encodes success, the macro has no effect. Otherwise,
-   * the macro prints the error using \ref SC_LERRORF and jumps to the
-   * label set by \ref SC_SCDA_HANDLE_NONCOLL_ERR. This macro is only valid
-   * in pair with a call of \ref SC_SCDA_HANDLE_NONCOLL_ERR directly after
-   * the non-collective code part.
+   * the macro prints the error using \ref SC_LERRORF and returns from this
+   * function, i.e. jump to \ref SC_SCDA_HANDLE_NONCOLL_ERR. Hence, this macro
+   * is only valid in pair with a call of \ref SC_SCDA_HANDLE_NONCOLL_ERR
+   * directly after the non-collective code part.
    */
   SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
 
@@ -1001,15 +1001,17 @@ sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
   /* See the first appearance of this macro in this function for more
    * information. They both use the same associated \ref
-   * SC_SCDA_HANDLE_NONCOLL_ERR call that sets the label.
+   * SC_SCDA_HANDLE_NONCOLL_ERR call.
    */
   SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing the file header section");
   /* The macro to check non-collective for count errors.
    * If SC_SCDA_HEADER_BYTES == count, i.e. no count error occurred, the macro
    * has no effect. This macro is only valid after calling \ref
-   * SC_SCDA_CHECK_NONCOLL_ERR. If a count error occurred, the macro jumps to
-   * the label set by \ref SC_SCDA_HANDLE_NONCOLL_ERR, which must be followed
-   * by a call of SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
+   * SC_SCDA_CHECK_NONCOLL_ERR. If a count error occurred, the macro returns
+   * from this function, i.e. jump to \ref SC_SCDA_HANDLE_NONCOLL_ERR, which
+   * must be followed by a call of SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
+   * The macro argument count_err must point to the count error Boolean that is
+   * an output parameter of this function.
    */
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_HEADER_BYTES, count, count_err);
 }
@@ -1058,15 +1060,17 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
     sc_scda_fopen_write_serial_internal (fc, user_string, len, &count_err,
                                          errcode);
   }
-  /* This macro sets the label to jump to from \ref SC_SCDA_CHECK_NONCOLL_ERR
-   * and \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR. It handles the non-collective
+  /* This macro must be the first expression after the non-collective code part
+   * since it must be the point where \ref SC_SCDA_CHECK_NONCOLL_ERR and \ref
+   * SC_SCDA_CHECK_NONCOLL_COUNT_ERR can jump to, which are called in \ref
+   * sc_scda_fopen_write_serial_internal. The macro handles the non-collective
    * error, i.e. it broadcasts the errcode, which may encode success, from
    * rank 0 to all other ranks and in case of an error it closes the file,
    * frees the file context and returns NULL. Hence, it is valid that errcode
-   * is only initialized on rank 0 before calling this macro. Since this
-   * macro contains a a label it is only valid to be called once in a function
-   * and this macro is only valid to be called directly after a non-collective
-   * code part that contains at least one call \ref SC_SCDA_CHECK_NONCOLL_ERR.
+   * is only initialized on rank 0 before calling this macro. This macro is only
+   * valid to be called once in a function and this macro is only valid to be
+   * called directly after a non-collective code part that contains at least one
+   * call \ref SC_SCDA_CHECK_NONCOLL_ERR.
    */
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
   /* The macro to check potential non-collective count errors. It is only valid
@@ -1076,7 +1080,8 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * once per function. The count error status is broadcasted and the macro
    * prints an error message using \ref SC_LERRORF. This means in particular
    * that it is valid that errcode is only initialized on rank 0 before calling
-   * this macro.
+   * this macro. The macro argument count_err must point to the count error
+   * Boolean that was set on rank 0 by \ref sc_scda_fopen_write_serial_internal.
    */
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, fc);
 
