@@ -284,8 +284,8 @@ sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
  *                            False, otherwise.
  */
 static int
-sc_scda_get_pad_to_fix_len (char *padded_data, size_t pad_len, char *raw_data,
-                            size_t *raw_len)
+sc_scda_get_pad_to_fix_len (const char *padded_data, size_t pad_len,
+                            char *raw_data, size_t *raw_len)
 {
   size_t              si;
 
@@ -401,8 +401,8 @@ sc_scda_pad_to_mod (const char *input_data, size_t input_len,
  *                            condition. False, otherwise.
  */
 static int
-sc_scda_get_pad_to_mod (char *padded_data, size_t padded_len, size_t raw_len,
-                        char *raw_data)
+sc_scda_get_pad_to_mod (const char *padded_data, size_t padded_len,
+                        size_t raw_len, char *raw_data)
 {
   size_t              si;
   size_t              num_pad_bytes;
@@ -1091,7 +1091,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
 /**
  */
 static int
-sc_scda_check_file_header (char *file_header_data, char *user_string,
+sc_scda_check_file_header (const char *file_header_data, char *user_string,
                            size_t *len)
 {
   int                 current_pos;
