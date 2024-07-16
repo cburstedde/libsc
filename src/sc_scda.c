@@ -94,7 +94,7 @@
  * For a correct error handling it is required to skip the rest
  * of the non-collective code and then broadcast the error flag.
  * The macro can be used multiple times in a function but will always jump to
- * the same label. This leads to the intended error handling.
+ * the end of the calling function that must be a void function.
  */
 #define SC_SCDA_CHECK_NONCOLL_ERR(errcode, user_msg) do {                    \
                                     SC_SCDA_CHECK_VERBOSE_NONCOLL (*errcode, \
@@ -124,9 +124,9 @@
  * For a correct error handling it is required to skip the rest
  * of the non-collective code and then broadcast the count  error flag.
  * The macro can be used multiple times in a function but will always jump to
- * the same label. This leads to the intended error handling.
- * cerror must be a pointer to an int that is passed to \ref
- * SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
+ * the end of the calling function that must be a void function.
+ * \b cerror must be a pointer to an int that is passed to the subsequent call
+ * \ref SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
  */
 #define SC_SCDA_CHECK_NONCOLL_COUNT_ERR(icount, ocount, cerror) do {                   \
                                     *cerror = ((int) icount) != ocount; \
@@ -138,7 +138,7 @@
 /** Handle a non-collective count error.
  * Use this macro after \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR *directly* after
  * the end of the non-collective statements but after \ref
- * SC_SCDA_HANDLE_NONCOLL_ERR, which sets the required label.
+ * SC_SCDA_HANDLE_NONCOLL_ERR, which must be executed first.
  * Can be used only once in a function.
  * On rank 0 \b cerror must point to the int that was set by \ref
  * SC_SCDA_CHECK_NONCOLL_COUNT_ERR. On all other ranks \b cerror is set by this
