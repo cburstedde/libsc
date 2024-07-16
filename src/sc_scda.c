@@ -918,7 +918,16 @@ sc_scda_fopen_start_up (sc_scda_fopen_options_t *opt, sc_MPI_Comm mpicomm,
   return fc;
 }
 
-/** 
+/** Internal function to run the serial code part in \ref sc_scda_fopen_write.
+ *
+ * \param [in] fc           The file context as in \ref sc_scda_fopen_write
+ *                          before running the serial code part.
+ * \param [in] user_string  As in the documentation of \ref sc_scda_fopen_write.
+ * \param [in] len          As in the documentation of \ref sc_scda_fopen_write.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
  */
 static void
 sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
@@ -1142,13 +1151,21 @@ sc_scda_check_file_header (char *file_header_data, char *user_string,
   return 0;
 }
 
-/**
+/** Internal function to run the serial code part in \ref sc_scda_fopen_read.
+ *
+ * \param [in] fc           The file context as in \ref sc_scda_fopen_read
+ *                          before running the serial code part.
+ * \param [out] user_string As in the documentation of \ref sc_scda_fopen_read.
+ * \param [out] len         As in the documentation of \ref sc_scda_fopen_read.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
  */
 static void
 sc_scda_fopen_read_serial_internal (sc_scda_fcontext_t * fc,
                                     char *user_string, size_t *len,
-                                    int *count_err,
-                                    sc_scda_ferror_t * errcode)
+                                    int *count_err, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
