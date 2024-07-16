@@ -1088,7 +1088,18 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   return fc;
 }
 
-/**
+/** Check a read file header section and extract the user string.
+ *
+ * \param [in] file_header_data The read file header data as a byte buffer.
+ * \param [out] user_string     On output the read user string including
+ *                              nul-termination. At least \ref
+ *                              SC_SCDA_USER_STRING_BYTES + 1 bytes.
+ * \param [out] len             On output \b len is set to the number of bytes
+ *                              written to \b user_string excluding the
+ *                              terminating nul.
+ * \return                      -1 for an invalid header and 0 for a valid
+ *                              file header. In the first case the output
+ *                              parameters are undefined.
  */
 static int
 sc_scda_check_file_header (const char *file_header_data, char *user_string,
