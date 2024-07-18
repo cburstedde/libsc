@@ -541,8 +541,9 @@ sc_MPI_Waitsome (int incount, sc_MPI_Request * array_of_requests,
 {
 #ifdef SC_ENABLE_MPI
   /* we do this to avoid warnings when the prototype uses [] */
-  return MPI_Waitsome (incount, array_of_requests, outcount,
-                       array_of_indices, array_of_statuses);
+  return incount == 0 ? (*outcount = 0, sc_MPI_SUCCESS) :
+    MPI_Waitsome (incount, array_of_requests, outcount,
+                  array_of_indices, array_of_statuses);
 #else
   int                 i;
 
@@ -562,7 +563,8 @@ sc_MPI_Waitall (int count, sc_MPI_Request * array_of_requests,
 {
 #ifdef SC_ENABLE_MPI
   /* we do this to avoid warnings when the prototype uses [] */
-  return MPI_Waitall (count, array_of_requests, array_of_statuses);
+  return count == 0 ? sc_MPI_SUCCESS :
+    MPI_Waitall (count, array_of_requests, array_of_statuses);
 #else
   int                 i;
 
@@ -580,7 +582,8 @@ sc_MPI_Testall (int count, sc_MPI_Request * array_of_requests, int *flag,
 {
 #ifdef SC_ENABLE_MPI
   /* we do this to avoid warnings when the prototype uses [] */
-  return MPI_Testall (count, array_of_requests, flag, array_of_statuses);
+  return count == 0 ? (*flag = 1, sc_MPI_SUCCESS) :
+    MPI_Testall (count, array_of_requests, flag, array_of_statuses);
 #else
   int                 i;
 
