@@ -106,11 +106,14 @@ if(NOT SC_ENABLE_MPI EQUAL CACHE{SC_ENABLE_MPI})
 endif()
 
 if( SC_ENABLE_MPI )
-  check_symbol_exists(MPI_COMM_TYPE_SHARED mpi.h SC_ENABLE_MPICOMMSHARED)
+  # perform check to set SC_ENABLE_MPICOMMSHARED
+  include(cmake/check_mpicommshared.cmake)
   # perform check to set SC_ENABLE_MPIIO
   include(cmake/check_mpiio.cmake)
-  check_symbol_exists(MPI_Init_thread mpi.h SC_ENABLE_MPITHREAD)
-  check_symbol_exists(MPI_Win_allocate_shared mpi.h SC_ENABLE_MPIWINSHARED)
+  # perform check to set SC_ENABLE_MPITHREAD
+  include(cmake/check_mpithread.cmake)
+  # perform check to set SC_ENABLE_MPIWINSHARED
+  include(cmake/check_mpiwinshared.cmake)
 endif()
 
 
