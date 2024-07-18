@@ -102,10 +102,10 @@ main (int argc, char **argv)
   }
   else {
     /* we can not provoke non-collective parameter error in serial */
-    SC_CHECK_ABORT (fc != NULL && sc_scda_is_success (errcode),
+    SC_CHECK_ABORT (fc != NULL && sc_scda_ferror_is_success (errcode),
                     "Test fuzzy error parameters check in serial");
     sc_scda_fclose (fc, &errcode);
-    SC_CHECK_ABORT (sc_scda_is_success (errcode),
+    SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                     "scda_fclose after read failed");
   }
   /* fopen_read with non-collective fuzzy error parameters */
@@ -118,10 +118,10 @@ main (int argc, char **argv)
   }
   else {
     /* we can not provoke non-collective parameter error in serial */
-    SC_CHECK_ABORT (fc != NULL && sc_scda_is_success (errcode),
+    SC_CHECK_ABORT (fc != NULL && sc_scda_ferror_is_success (errcode),
                     "Test fuzzy error parameters check in serial");
     sc_scda_fclose (fc, &errcode);
-    SC_CHECK_ABORT (sc_scda_is_success (errcode),
+    SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                     "scda_fclose after read failed");
   }
 
@@ -141,12 +141,13 @@ main (int argc, char **argv)
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
                             NULL, &errcode);
   /* TODO: check errcode */
-  SC_CHECK_ABORT (sc_scda_is_success (errcode), "scda_fopen_write failed");
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fopen_write failed");
 
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
-  SC_CHECK_ABORT (sc_scda_is_success (errcode), "scda_fclose after write"
-                  " failed");
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fclose after write" " failed");
 
   /* set the options to actiavate fuzzy error testing */
   /* WARNING: Fuzzy error testing means that the code randomly produces
@@ -157,13 +158,14 @@ main (int argc, char **argv)
     sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
                         &errcode);
   /* TODO: check errcode */
-  SC_CHECK_ABORT (sc_scda_is_success (errcode), "scda_fopen_read failed");
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fopen_read failed");
 
   SC_INFOF ("File header user string: %s\n", read_user_string);
 
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
-  SC_CHECK_ABORT (sc_scda_is_success (errcode),
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fclose after read failed");
 
   sc_options_destroy (opt);
