@@ -59,7 +59,7 @@ sc_MPI_Abort (sc_MPI_Comm comm, int exitcode)
 }
 
 int
-sc_MPI_Comm_dup (sc_MPI_Comm comm, sc_MPI_Comm * newcomm)
+sc_MPI_Comm_dup (sc_MPI_Comm comm, sc_MPI_Comm *newcomm)
 {
   *newcomm = comm;
 
@@ -68,7 +68,7 @@ sc_MPI_Comm_dup (sc_MPI_Comm comm, sc_MPI_Comm * newcomm)
 
 int
 sc_MPI_Comm_create (sc_MPI_Comm comm, sc_MPI_Group group,
-                    sc_MPI_Comm * newcomm)
+                    sc_MPI_Comm *newcomm)
 {
   *newcomm = sc_MPI_COMM_NULL;
 
@@ -77,7 +77,7 @@ sc_MPI_Comm_create (sc_MPI_Comm comm, sc_MPI_Group group,
 
 int
 sc_MPI_Comm_split (sc_MPI_Comm comm, int color, int key,
-                   sc_MPI_Comm * newcomm)
+                   sc_MPI_Comm *newcomm)
 {
   *newcomm = comm;
 
@@ -85,7 +85,7 @@ sc_MPI_Comm_split (sc_MPI_Comm comm, int color, int key,
 }
 
 int
-sc_MPI_Comm_free (sc_MPI_Comm * comm)
+sc_MPI_Comm_free (sc_MPI_Comm *comm)
 {
   *comm = sc_MPI_COMM_NULL;
 
@@ -125,7 +125,7 @@ sc_MPI_Comm_compare (sc_MPI_Comm comm1, sc_MPI_Comm comm2, int *result)
 }
 
 int
-sc_MPI_Comm_group (sc_MPI_Comm comm, sc_MPI_Group * group)
+sc_MPI_Comm_group (sc_MPI_Comm comm, sc_MPI_Group *group)
 {
   *group = sc_MPI_GROUP_NULL;
 
@@ -133,7 +133,7 @@ sc_MPI_Comm_group (sc_MPI_Comm comm, sc_MPI_Group * group)
 }
 
 int
-sc_MPI_Group_free (sc_MPI_Group * group)
+sc_MPI_Group_free (sc_MPI_Group *group)
 {
   *group = sc_MPI_GROUP_NULL;
 
@@ -179,7 +179,7 @@ sc_MPI_Group_compare (sc_MPI_Group group1, sc_MPI_Group group2, int *result)
 
 int
 sc_MPI_Group_union (sc_MPI_Group group1, sc_MPI_Group group2,
-                    sc_MPI_Group * newgroup)
+                    sc_MPI_Group *newgroup)
 {
   *newgroup = sc_MPI_GROUP_NULL;
 
@@ -188,7 +188,7 @@ sc_MPI_Group_union (sc_MPI_Group group1, sc_MPI_Group group2,
 
 int
 sc_MPI_Group_intersection (sc_MPI_Group group1, sc_MPI_Group group2,
-                           sc_MPI_Group * newgroup)
+                           sc_MPI_Group *newgroup)
 {
   *newgroup = sc_MPI_GROUP_NULL;
 
@@ -197,7 +197,7 @@ sc_MPI_Group_intersection (sc_MPI_Group group1, sc_MPI_Group group2,
 
 int
 sc_MPI_Group_difference (sc_MPI_Group group1, sc_MPI_Group group2,
-                         sc_MPI_Group * newgroup)
+                         sc_MPI_Group *newgroup)
 {
   *newgroup = sc_MPI_GROUP_NULL;
 
@@ -206,7 +206,7 @@ sc_MPI_Group_difference (sc_MPI_Group group1, sc_MPI_Group group2,
 
 int
 sc_MPI_Group_incl (sc_MPI_Group group, int n, int *ranks,
-                   sc_MPI_Group * newgroup)
+                   sc_MPI_Group *newgroup)
 {
   *newgroup = sc_MPI_GROUP_NULL;
 
@@ -215,7 +215,7 @@ sc_MPI_Group_incl (sc_MPI_Group group, int n, int *ranks,
 
 int
 sc_MPI_Group_excl (sc_MPI_Group group, int n, int *ranks,
-                   sc_MPI_Group * newgroup)
+                   sc_MPI_Group *newgroup)
 {
   *newgroup = sc_MPI_GROUP_NULL;
 
@@ -224,7 +224,7 @@ sc_MPI_Group_excl (sc_MPI_Group group, int n, int *ranks,
 
 int
 sc_MPI_Group_range_incl (sc_MPI_Group group, int n, int ranges[][3],
-                         sc_MPI_Group * newgroup)
+                         sc_MPI_Group *newgroup)
 {
   *newgroup = sc_MPI_GROUP_NULL;
 
@@ -233,7 +233,7 @@ sc_MPI_Group_range_incl (sc_MPI_Group group, int n, int ranges[][3],
 
 int
 sc_MPI_Group_range_excl (sc_MPI_Group group, int n, int ranges[][3],
-                         sc_MPI_Group * newgroup)
+                         sc_MPI_Group *newgroup)
 {
   *newgroup = sc_MPI_GROUP_NULL;
 
@@ -377,7 +377,7 @@ sc_MPI_Exscan (void *sendbuf, void *recvbf, int count,
 
 int
 sc_MPI_Recv (void *buf, int count, sc_MPI_Datatype datatype, int source,
-             int tag, sc_MPI_Comm comm, sc_MPI_Status * status)
+             int tag, sc_MPI_Comm comm, sc_MPI_Status *status)
 {
   SC_ABORT ("non-MPI MPI_Recv is not implemented");
   return sc_MPI_SUCCESS;
@@ -385,7 +385,7 @@ sc_MPI_Recv (void *buf, int count, sc_MPI_Datatype datatype, int source,
 
 int
 sc_MPI_Irecv (void *buf, int count, sc_MPI_Datatype datatype, int source,
-              int tag, sc_MPI_Comm comm, sc_MPI_Request * request)
+              int tag, sc_MPI_Comm comm, sc_MPI_Request *request)
 {
   SC_ABORT ("non-MPI MPI_Irecv is not implemented");
   return sc_MPI_SUCCESS;
@@ -401,14 +401,14 @@ sc_MPI_Send (void *buf, int count, sc_MPI_Datatype datatype,
 
 int
 sc_MPI_Isend (void *buf, int count, sc_MPI_Datatype datatype, int dest,
-              int tag, sc_MPI_Comm comm, sc_MPI_Request * request)
+              int tag, sc_MPI_Comm comm, sc_MPI_Request *request)
 {
   SC_ABORT ("non-MPI MPI_Isend is not implemented");
   return sc_MPI_SUCCESS;
 }
 
 int
-sc_MPI_Probe (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status * status)
+sc_MPI_Probe (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status *status)
 {
   SC_ABORT ("non-MPI MPI_Probe is not implemented");
   return sc_MPI_SUCCESS;
@@ -416,14 +416,14 @@ sc_MPI_Probe (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status * status)
 
 int
 sc_MPI_Iprobe (int source, int tag, sc_MPI_Comm comm, int *flag,
-               sc_MPI_Status * status)
+               sc_MPI_Status *status)
 {
   SC_ABORT ("non-MPI MPI_Iprobe is not implemented");
   return sc_MPI_SUCCESS;
 }
 
 int
-sc_MPI_Get_count (sc_MPI_Status * status, sc_MPI_Datatype datatype,
+sc_MPI_Get_count (sc_MPI_Status *status, sc_MPI_Datatype datatype,
                   int *count)
 {
   SC_ABORT ("non-MPI MPI_Get_count is not implemented");
@@ -431,7 +431,7 @@ sc_MPI_Get_count (sc_MPI_Status * status, sc_MPI_Datatype datatype,
 }
 
 int
-sc_MPI_Wait (sc_MPI_Request * request, sc_MPI_Status * status)
+sc_MPI_Wait (sc_MPI_Request *request, sc_MPI_Status *status)
 {
   SC_CHECK_ABORT (*request == sc_MPI_REQUEST_NULL,
                   "non-MPI MPI_Wait handles NULL request only");
@@ -535,9 +535,9 @@ sc_MPI_Init_thread (int *argc, char ***argv, int required, int *provided)
 #endif /* SC_ENABLE_MPI */
 
 int
-sc_MPI_Waitsome (int incount, sc_MPI_Request * array_of_requests,
+sc_MPI_Waitsome (int incount, sc_MPI_Request *array_of_requests,
                  int *outcount, int *array_of_indices,
-                 sc_MPI_Status * array_of_statuses)
+                 sc_MPI_Status *array_of_statuses)
 {
 #ifdef SC_ENABLE_MPI
   /* we do this to avoid warnings when the prototype uses [] */
@@ -558,8 +558,8 @@ sc_MPI_Waitsome (int incount, sc_MPI_Request * array_of_requests,
 }
 
 int
-sc_MPI_Waitall (int count, sc_MPI_Request * array_of_requests,
-                sc_MPI_Status * array_of_statuses)
+sc_MPI_Waitall (int count, sc_MPI_Request *array_of_requests,
+                sc_MPI_Status *array_of_statuses)
 {
 #ifdef SC_ENABLE_MPI
   /* we do this to avoid warnings when the prototype uses [] */
@@ -939,7 +939,7 @@ sc_mpi_comm_detach_node_comms (sc_MPI_Comm comm)
 
 void
 sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
-                            sc_MPI_Comm * intranode, sc_MPI_Comm * internode)
+                            sc_MPI_Comm *intranode, sc_MPI_Comm *internode)
 {
 #if defined SC_ENABLE_MPI && defined SC_ENABLE_MPICOMMSHARED
   int                 mpiret, flag;
