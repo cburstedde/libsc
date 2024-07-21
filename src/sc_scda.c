@@ -561,6 +561,9 @@ sc_scda_get_user_string_len (const char *user_string,
   SC_ASSERT (user_string != NULL);
   SC_ASSERT (out_len != NULL);
 
+  /* initialize output: otherwise we get compiler warnings */
+  *out_len = 0;
+
   if (in_len != NULL) {
     /* binary user string */
     if (*in_len > SC_SCDA_USER_STRING_BYTES) {
