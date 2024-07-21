@@ -296,7 +296,10 @@ sc_MPI_Gather (void *p, int np, sc_MPI_Datatype tp,
 /* *INDENT-ON* */
 
   SC_ASSERT (lp == lq);
-  memcpy (q, p, lp);
+  if (lp > 0) {
+    SC_ASSERT (p != NULL && q != NULL);
+    memcpy (q, p, lp);
+  }
 
   return sc_MPI_SUCCESS;
 }
@@ -324,7 +327,11 @@ sc_MPI_Gatherv (void *p, int np, sc_MPI_Datatype tp,
 /* *INDENT-ON* */
 
   SC_ASSERT (lp == lq);
-  memcpy ((char *) q + displ[0] * sc_mpi_sizeof (tq), p, lp);
+  if (lp > 0) {
+    SC_ASSERT (p != NULL && q != NULL);
+    SC_ASSERT (displ != NULL);
+    memcpy ((char *) q + displ[0] * sc_mpi_sizeof (tq), p, lp);
+  }
 
   return sc_MPI_SUCCESS;
 }
@@ -364,7 +371,10 @@ sc_MPI_Reduce (void *p, void *q, int n, sc_MPI_Datatype t,
   l = (size_t) n * sc_mpi_sizeof (t);
 /* *INDENT-ON* */
 
-  memcpy (q, p, l);
+  if (l > 0) {
+    SC_ASSERT (p != NULL && q != NULL);
+    memcpy (q, p, l);
+  }
 
   return sc_MPI_SUCCESS;
 }
@@ -492,8 +502,12 @@ sc_MPI_Pack (const void *inbuf, int incount, sc_MPI_Datatype datatype,
   }
 
   /* Copy the contiguous memory */
-  memcpy ((char *) outbuf + *position, inbuf, size);
-  *position += size;
+  if (size > 0) {
+    SC_ASSERT (outbuf != NULL);
+    SC_ASSERT (inbuf !=  NULL);
+    memcpy ((char *) outbuf + *position, inbuf, size);
+    *position += size;
+  }
 
   return sc_MPI_SUCCESS;
 }
@@ -518,8 +532,12 @@ sc_MPI_Unpack (const void *inbuf, int insize, int *position,
   }
 
   /* Copy the contiguous memory */
-  memcpy (outbuf, (char *) inbuf + *position, size);
-  *position += size;
+  if (size > 0) {
+    SC_ASSERT (outbuf != NULL);
+    SC_ASSERT (inbuf != NULL);
+    memcpy (outbuf, (char *) inbuf + *position, size);
+    *position += size;
+  }
 
   return sc_MPI_SUCCESS;
 }
