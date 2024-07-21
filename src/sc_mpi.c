@@ -590,7 +590,7 @@ sc_MPI_Waitsome (int incount, sc_MPI_Request *array_of_requests,
   int                 i;
 
   SC_ASSERT (outcount != NULL);
-  SC_ASSERT (array_of_requests != NULL);
+  SC_ASSERT (incount == 0 || array_of_requests != NULL);
   for (i = 0; i < incount; ++i) {
     SC_CHECK_ABORT (array_of_requests[i] == sc_MPI_REQUEST_NULL,
                     "non-MPI MPI_Waitsome handles NULL requests only");
@@ -612,7 +612,7 @@ sc_MPI_Waitall (int count, sc_MPI_Request *array_of_requests,
 #else
   int                 i;
 
-  SC_ASSERT (array_of_requests != NULL);
+  SC_ASSERT (count == 0 || array_of_requests != NULL);
   for (i = 0; i < count; ++i) {
     SC_CHECK_ABORT (array_of_requests[i] == sc_MPI_REQUEST_NULL,
                     "non-MPI MPI_Waitall handles NULL requests only");
@@ -622,8 +622,8 @@ sc_MPI_Waitall (int count, sc_MPI_Request *array_of_requests,
 }
 
 int
-sc_MPI_Testall (int count, sc_MPI_Request * array_of_requests, int *flag,
-                sc_MPI_Status * array_of_statuses)
+sc_MPI_Testall (int count, sc_MPI_Request *array_of_requests, int *flag,
+                sc_MPI_Status *array_of_statuses)
 {
 #ifdef SC_ENABLE_MPI
   /* we do this to avoid warnings when the prototype uses [] */
@@ -633,7 +633,7 @@ sc_MPI_Testall (int count, sc_MPI_Request * array_of_requests, int *flag,
 #else
   int                 i;
 
-  SC_ASSERT (array_of_requests != NULL);
+  SC_ASSERT (count == 0 || array_of_requests != NULL);
   for (i = 0; i < count; ++i) {
     SC_CHECK_ABORT (array_of_requests[i] == sc_MPI_REQUEST_NULL,
                     "non-MPI MPI_Testall handles NULL requests only");
