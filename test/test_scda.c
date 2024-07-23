@@ -42,6 +42,8 @@ main (int argc, char **argv)
   sc_scda_ferror_t    errcode;
   size_t              len;
   sc_options_t       *opt;
+  sc_array_t          data;
+  const char         *inline_data = "Test inline data               \n";
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -143,6 +145,13 @@ main (int argc, char **argv)
   /* TODO: check errcode */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fopen_write failed");
+
+  /* write an inline section to the file */
+  sc_array_init_data (&data, (void *) inline_data, 32, 1);
+  fc = sc_scda_fwrite_inline (fc, "Inline section test without user-defined "
+                              "padding", NULL, &data, mpisize - 1, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fwrite_inline failed");
 
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
