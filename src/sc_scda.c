@@ -163,29 +163,30 @@
 struct sc_scda_fcontext
 {
   /* *INDENT-OFF* */
-  sc_MPI_Comm         mpicomm; /**< associated MPI communicator */
-  int                 mpisize; /**< number of MPI ranks */
-  int                 mpirank; /**< MPI rank */
-  sc_MPI_File         file;    /**< file object */
-  unsigned            fuzzy_everyn; /**< In average every n-th possible error
-                                       origin returns a fuzzy error. There may
-                                       be multiple possible error origins in
-                                       one top-level scda function.
-                                       We return for each possible error origin
-                                       a random error with the empirical
-                                       probability of 1 / fuzzy_everyn but only
-                                       if the respective possible error origin
-                                       did not already cause an error without
-                                       the fuzzy error return. In such a case,
-                                       the actual error is returned. 0 means
-                                       that there are no fuzzy error returns. */
-  sc_rand_state_t     fuzzy_seed; /**< The seed for the fuzzy error return.
-                                       This value is ignored if
-                                       fuzzy_everyn == 0. It is important to
-                                       notice that fuzzy_seed is initialized by
-                                       the user-defined seed but is adjusted
-                                       to the state after each call of
-                                       \ref sc_rand. */
+  sc_MPI_Comm         mpicomm;        /**< associated MPI communicator */
+  int                 mpisize;        /**< number of MPI ranks */
+  int                 mpirank;        /**< MPI rank */
+  sc_MPI_File         file;           /**< file object */
+  sc_MPI_Offset       accessed_bytes; /**< number of written/read bytes */
+  unsigned            fuzzy_everyn;   /**< In average every n-th possible error
+                                        origin returns a fuzzy error. There may
+                                        be multiple possible error origins in
+                                        one top-level scda function.
+                                        We return for each possible error origin
+                                        a random error with the empirical
+                                        probability of 1 / fuzzy_everyn but only
+                                        if the respective possible error origin
+                                        did not already cause an error without
+                                        the fuzzy error return. In such a case,
+                                        the actual error is returned. 0 means
+                                        that there are no fuzzy error returns.*/
+  sc_rand_state_t     fuzzy_seed;     /**< The seed for the fuzzy error return.
+                                        This value is ignored if
+                                        fuzzy_everyn == 0. It is important to
+                                        notice that fuzzy_seed is initialized by
+                                        the user-defined seed but is adjusted
+                                        to the state after each call of
+                                        \ref sc_rand. */
   /* *INDENT-ON* */
 };
 
@@ -1088,6 +1089,9 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    */
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, fc);
 
+  /* store number of written bytes */
+  fc->accessed_bytes = SC_SCDA_HEADER_BYTES;
+
   return fc;
 }
 
@@ -1277,6 +1281,9 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
   mpiret = sc_MPI_Bcast (user_string, SC_SCDA_USER_STRING_BYTES + 1,
                          sc_MPI_BYTE, 0, mpicomm);
   SC_CHECK_MPI (mpiret);
+
+  /* store the number of read bytes */
+  fc->accessed_bytes = SC_SCDA_HEADER_BYTES;
 
   return fc;
 }
