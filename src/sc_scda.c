@@ -928,6 +928,58 @@ sc_scda_fopen_start_up (sc_scda_fopen_options_t *opt, sc_MPI_Comm mpicomm,
   return fc;
 }
 
+/** Write common section data to \b output.
+ *
+ * All section headers in the scda format contain a part with a
+ * section-identifying character followed by the user string. Therefore,
+ * we have one internal function to get this data given a \b section_char and
+ * a \b user_string.
+ *
+ * \param [in]  section_char       The section-identifying character.
+ * \param [in]  user_string        As in the documentation of \ref
+ *                                 sc_scda_fopen_write or any other scda writing
+ *                                 function.
+ * \param [in]  len                As in the documentation of \ref
+ *                                 sc_scda_fopen_write or any other scda writing
+ *                                 function.
+ * \param [out] output             At least \ref SC_SCDA_COMMON_FIELD bytes.
+ *                                 If the function returns false, \b output is
+ *                                 filled with the common section header data.
+ *                                 Otherwise, it stays untouched.
+ * \return                         True if \b user_string is not compliant with
+ *                                 the scda file format, i.e. too long or
+ *                                 missing nul termination. False, otherwise.
+ */
+static int
+sc_scda_get_common_section_header (char section_char, const char* user_string,
+                                   size_t *len, char *output)
+{
+  int                 invalid_user_string;
+  size_t              user_string_len;
+
+  SC_ASSERT (output != NULL);
+
+  /* check the user string */
+  invalid_user_string = sc_scda_get_user_string_len (user_string, len,
+                                                     &user_string_len);
+  if (invalid_user_string) {
+    return invalid_user_string;
+  }
+
+  /* user string is valid */
+  SC_ASSERT (!invalid_user_string);
+
+  /* write the section char */
+  output[0] = section_char;
+  output[1] = ' ';
+
+  /* write \b user_string to \b output including padding */
+  sc_scda_pad_to_fix_len (user_string, user_string_len,
+                          &output[2], SC_SCDA_USER_STRING_FIELD);
+
+  return invalid_user_string;
+}
+
 /** Internal function to run the serial code part in \ref sc_scda_fopen_write.
  *
  * \param [in] fc           The file context as in \ref sc_scda_fopen_write
@@ -949,7 +1001,6 @@ sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
   int                 current_len;
   int                 invalid_user_string;
   char                file_header_data[SC_SCDA_HEADER_BYTES];
-  size_t              user_string_len;
 
   /* get scda file header section */
   /* magic */
@@ -965,11 +1016,7 @@ sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
                           SC_SCDA_VENDOR_STRING_FIELD);
   current_len += SC_SCDA_VENDOR_STRING_FIELD;
 
-  /* file section specifying character */
-  file_header_data[current_len++] = 'F';
-  file_header_data[current_len++] = ' ';
-
-  /* user string */
+  /* get common file section header part */
   /* check the user string */
   /* According to 'A.2 Parameter conventions' in the scda specification
    * it is an unchecked runtime error if the user string is not collective,
@@ -977,7 +1024,8 @@ sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
    * Therefore, we just check the user string on rank 0.
    */
   invalid_user_string =
-    sc_scda_get_user_string_len (user_string, len, &user_string_len);
+    sc_scda_get_common_section_header ('F', user_string, len,
+                                       &file_header_data[current_len]);
   /* We always translate the error code to have full coverage for the fuzzy
    * error testing.
    */
@@ -993,10 +1041,7 @@ sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
    */
   SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
 
-  sc_scda_pad_to_fix_len (user_string, user_string_len,
-                          &file_header_data[current_len],
-                          SC_SCDA_USER_STRING_FIELD);
-  current_len += SC_SCDA_USER_STRING_FIELD;
+  current_len += SC_SCDA_COMMON_FIELD;
 
   /* pad the file header section */
   sc_scda_pad_to_mod (NULL, 0, &file_header_data[current_len]);
@@ -1126,22 +1171,15 @@ sc_scda_fwrite_inline_header_internal (sc_scda_fcontext_t *fc,
   int                 count;
   int                 current_len;
   int                 invalid_user_string;
-  /* TODO: Introdcue a function to write the associated data given the file
-   * section type.
-   */
   char                header_data[SC_SCDA_COMMON_FIELD];
-  size_t              user_string_len;
 
   /* get inline file section header */
 
   /* section-identifying character */
   current_len = 0;
-  header_data[current_len++] = 'I';
-  header_data[current_len++] = ' ';
 
-  /* check the passed user string */
-  invalid_user_string = sc_scda_get_user_string_len (user_string, len,
-                                                     &user_string_len);
+  invalid_user_string =
+    sc_scda_get_common_section_header ('I', user_string, len, header_data);
   /* We always translate the error code to have full coverage for the fuzzy
    * error testing.
    */
@@ -1149,11 +1187,7 @@ sc_scda_fwrite_inline_header_internal (sc_scda_fcontext_t *fc,
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
   SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
 
-  /* write the user string including its padding */
-  sc_scda_pad_to_fix_len (user_string, user_string_len,
-                          &header_data[current_len],
-                          SC_SCDA_USER_STRING_FIELD);
-  current_len += SC_SCDA_USER_STRING_FIELD;
+  current_len += SC_SCDA_COMMON_FIELD;
 
   SC_ASSERT (current_len == SC_SCDA_COMMON_FIELD);
 
