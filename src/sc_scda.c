@@ -33,6 +33,12 @@
 #define SC_SCDA_VENDOR_STRING_BYTES 20 /**< maximal number of vendor string bytes */
 #define SC_SCDA_USER_STRING_FIELD 62   /**< byte count for user string entry
                                             including the padding */
+#define SC_SCDA_COMMON_FIELD (2 + SC_SCDA_USER_STRING_FIELD) /**< byte count for
+                                                                  common part of
+                                                                  the file
+                                                                  section
+                                                                  headers */
+#define SC_SCDA_INLINE_FIELD 32 /**< byte count of inline data */
 #define SC_SCDA_PADDING_MOD 32  /**< divisor for variable length padding */
 
 /** get a random double in the range [A,B) */
@@ -1091,6 +1097,137 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
 
   /* store number of written bytes */
   fc->accessed_bytes = SC_SCDA_HEADER_BYTES;
+
+  return fc;
+}
+
+/** Internal function to write the inline section header.
+ *
+ * This function is dedicated to be called in \ref sc_scda_fwrite_inline.
+ *
+ * \param [in] fc           The file context as in \ref sc_scda_fwrite_inline
+ *                          before running the first serial code part.
+ * \param [in] user_string  As in the documentation of \ref
+ *                          sc_scda_fwrite_inline.
+ * \param [in] len          As in the documentation of \ref
+ *                          sc_scda_fwrite_inline.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fwrite_inline_header_internal (sc_scda_fcontext_t *fc,
+                                       const char *user_string, size_t *len,
+                                       int *count_err,
+                                       sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 current_len;
+  int                 invalid_user_string;
+  /* TODO: Introdcue a function to write the associated data given the file
+   * section type.
+   */
+  char                header_data[SC_SCDA_COMMON_FIELD];
+  size_t              user_string_len;
+
+  /* get inline file section header */
+
+  /* section-identifying character */
+  current_len = 0;
+  header_data[current_len++] = 'I';
+  header_data[current_len++] = ' ';
+
+  /* check the passed user string */
+  invalid_user_string = sc_scda_get_user_string_len (user_string, len,
+                                                     &user_string_len);
+  /* We always translate the error code to have full coverage for the fuzzy
+   * error testing.
+   */
+  sc_scda_scdaret_to_errcode (invalid_user_string ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
+
+  /* write the user string including its padding */
+  sc_scda_pad_to_fix_len (user_string, user_string_len,
+                          &header_data[current_len],
+                          SC_SCDA_USER_STRING_FIELD);
+  current_len += SC_SCDA_USER_STRING_FIELD;
+
+  SC_ASSERT (current_len == SC_SCDA_COMMON_FIELD);
+
+  /* write inline section header */
+  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, header_data,
+                           SC_SCDA_COMMON_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing inline section header");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COMMON_FIELD, count, count_err);
+}
+
+/** Internal function to write the inline section data.
+ *
+ * This function is dedicated to be called in \ref sc_scda_fwrite_inline.
+ *
+ * \param [in] fc           The file context as in \ref sc_scda_fwrite_inline
+ *                          before running the first serial code part.
+ * \param [in] inline_data  As in the documentation of \ref
+ *                          sc_scda_fwrite_inline.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fwrite_inline_data_internal (sc_scda_fcontext_t *fc,
+                                     sc_array_t * inline_data, int *count_err,
+                                     sc_scda_ferror_t * errcode)
+{
+  int                 mpiret;
+  int                 count;
+
+  /* write the inline data to the file section */
+  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, inline_data->array,
+                           SC_SCDA_INLINE_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing inline data");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_INLINE_FIELD, count, count_err);
+}
+
+sc_scda_fcontext_t *
+sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
+                       size_t *len, sc_array_t * inline_data, int root,
+                       sc_scda_ferror_t * errcode)
+{
+  int                 count_err;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (root >= 0);
+  /* inline_data is ignored on all ranks except of root */
+  SC_ASSERT (fc->mpirank != root || inline_data != NULL);
+  SC_ASSERT (fc->mpirank != root || (inline_data->elem_count == 1 &&
+                                     inline_data->elem_size == 32));
+  SC_ASSERT (errcode != NULL);
+
+  /* The file header section is always written and read on rank 0. */
+  if (fc->mpirank == 0) {
+    sc_scda_fwrite_inline_header_internal (fc, user_string, len, &count_err,
+                                           errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, fc);
+
+  /* add number of written bytes */
+  fc->accessed_bytes += SC_SCDA_COMMON_FIELD;
+
+  /* The inline data is written on the the user-defined rank root. */
+  if (fc->mpirank == root) {
+    sc_scda_fwrite_inline_data_internal (fc, inline_data, &count_err,
+                                         errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, fc);
 
   return fc;
 }
