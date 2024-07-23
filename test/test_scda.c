@@ -139,7 +139,7 @@ main (int argc, char **argv)
   scda_opt.info = sc_MPI_INFO_NULL;
 
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
-                            NULL, &errcode);
+                            &scda_opt, &errcode);
   /* TODO: check errcode */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fopen_write failed");
