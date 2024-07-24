@@ -128,6 +128,10 @@ main (int argc, char **argv)
   }
 
   /* Create valid scda options structure. */
+  /* set the options to actiavate fuzzy error testing */
+  /* WARNING: Fuzzy error testing means that the code randomly produces
+   * errors.
+   */
   scda_opt.fuzzy_everyn = (unsigned) int_everyn;
   if (int_seed < 0) {
     scda_opt.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
@@ -157,11 +161,6 @@ main (int argc, char **argv)
   /* TODO: check errcode and return value */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fclose after write" " failed");
-
-  /* set the options to actiavate fuzzy error testing */
-  /* WARNING: Fuzzy error testing means that the code randomly produces
-   * errors.
-   */
 
   fc =
     sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
