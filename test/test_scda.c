@@ -34,13 +34,16 @@ main (int argc, char **argv)
   int                 mpiret, mpirank, mpisize;
   int                 first_argc;
   int                 int_everyn, int_seed;
+  int                 decode;
   const char         *filename = SC_SCDA_TEST_FILE;
   const char         *file_user_string = "This is a test file";
   char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
+  char                section_type;
   sc_scda_fcontext_t *fc;
   sc_scda_fopen_options_t scda_opt, scda_opt_err;
   sc_scda_ferror_t    errcode;
   size_t              len;
+  size_t              elem_count, elem_size;
   sc_options_t       *opt;
   sc_array_t          data;
   const char         *inline_data = "Test inline data               \n";
@@ -160,7 +163,7 @@ main (int argc, char **argv)
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
-                  "scda_fclose after write" " failed");
+                  "scda_fclose after write failed");
 
   fc =
     sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
@@ -171,10 +174,22 @@ main (int argc, char **argv)
 
   SC_INFOF ("File header user string: %s\n", read_user_string);
 
+  /* read first section header */
+  fc = sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                     &elem_count, &elem_size, &decode,
+                                     &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'I' && elem_count == 0 && elem_size == 0,
+                  "Identifying section type");
+
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fclose after read failed");
+
+  SC_INFOF ("Read file section header of type %c with user string: %s\n",
+            section_type, read_user_string);
 
   sc_options_destroy (opt);
 
