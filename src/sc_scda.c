@@ -1591,6 +1591,52 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
   return fc;
 }
 
+static void
+sc_scda_fread_inline_data_serial_internal (sc_scda_fcontext_t *fc,
+                                           sc_array_t *data, int *count_err,
+                                           sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 invalid_array;
+
+  /* check the passed sc_array */
+  invalid_array = !(data->elem_count == 1 && data->elem_size == 32);
+  sc_scda_scdaret_to_errcode (invalid_array ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+
+  /* read inline data  */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, data->array,
+                          SC_SCDA_INLINE_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read inline data");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_INLINE_FIELD, count, count_err);
+  /* there are no conditions on the inline data and hence no checks */
+}
+
+sc_scda_fcontext_t *
+sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
+                           sc_scda_ferror_t *errcode)
+{
+  int                 count_err;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (root >= 0);
+  SC_ASSERT (errcode != NULL);
+
+  if (fc->mpirank == root && data != NULL) {
+    /* the data is not skipped */
+    sc_scda_fread_inline_data_serial_internal (fc, data, &count_err, errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
+
+  /* if no error occurred, we move the internal file pointer */
+  fc->accessed_bytes += SC_SCDA_INLINE_FIELD;
+
+  return fc;
+}
+
 int
 sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
 {
