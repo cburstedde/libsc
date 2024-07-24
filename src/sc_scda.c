@@ -1221,6 +1221,14 @@ sc_scda_fwrite_inline_data_internal (sc_scda_fcontext_t *fc,
 {
   int                 mpiret;
   int                 count;
+  int                 invalid_inline_data;
+
+  /* check inline data */
+  invalid_inline_data = !(inline_data->elem_size == 32 &&
+                          inline_data->elem_count == 1);
+  sc_scda_scdaret_to_errcode (invalid_inline_data ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid inline data");
 
   /* write the inline data to the file section */
   mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, inline_data->array,
@@ -1242,8 +1250,6 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
   SC_ASSERT (root >= 0);
   /* inline_data is ignored on all ranks except of root */
   SC_ASSERT (fc->mpirank != root || inline_data != NULL);
-  SC_ASSERT (fc->mpirank != root || (inline_data->elem_count == 1 &&
-                                     inline_data->elem_size == 32));
   SC_ASSERT (errcode != NULL);
 
   /* The file header section is always written and read on rank 0. */
