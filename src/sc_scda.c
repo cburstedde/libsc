@@ -1263,6 +1263,8 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, fc);
 
+  fc->accessed_bytes += SC_SCDA_INLINE_FIELD;
+
   return fc;
 }
 
