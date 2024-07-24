@@ -211,6 +211,22 @@ main (int argc, char **argv)
   SC_INFOF ("Read file section header of type %c with user string: %s\n",
             section_type, read_user_string);
 
+  fc =
+    sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
+                        &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fopen_read failed");
+
+  /* provoke error for invalid scda workflow */
+  SC_GLOBAL_ESSENTIAL ("We expect an error for incorrect workflow for scda"
+                       " reading function, which is triggered on purpose to"
+                       " test the error checking.\n");
+  fc = sc_scda_fread_inline_data (fc, &data, 0, &errcode);
+  SC_CHECK_ABORT (!sc_scda_ferror_is_success (errcode) &&
+                  errcode.scdaret == SC_SCDA_FERR_USAGE && fc == NULL,
+                  "sc_scda_fread_section_header failed");
+  /* fc is closed and deallocated due to the occurred error  */
+
   sc_options_destroy (opt);
 
   sc_finalize ();
