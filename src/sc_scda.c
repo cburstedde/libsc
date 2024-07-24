@@ -1469,6 +1469,22 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
   return fc;
 }
 
+/** Internal function to read and check the common part of file section header.
+ *
+ * \param [in] fc           The file context as in \ref
+ *                          sc_scda_fread_section_header before running the
+ *                          first serial code part.
+ * \param [out] type        As in the documentation of \ref
+ *                          sc_scda_fread_section_header.
+ * \param [out] user_string As in the documentation of \ref
+ *                          sc_scda_fread_section_header.
+ * \param [out] len         As in the documentation of \ref
+ *                          sc_scda_fread_section_header.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
 static void
 sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
                                               char *type, char *user_string,
