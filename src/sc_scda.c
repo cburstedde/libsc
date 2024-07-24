@@ -1281,7 +1281,8 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
  * \param [in] file_header_data The read file header data as a byte buffer.
  * \param [out] user_string     On output the read user string including
  *                              nul-termination. At least \ref
- *                              SC_SCDA_USER_STRING_BYTES + 1 bytes.
+ *                              SC_SCDA_USER_STRING_BYTES + 1 bytes. Must be
+ *                              initialized with '\0'.
  * \param [out] len             On output \b len is set to the number of bytes
  *                              written to \b user_string excluding the
  *                              terminating nul.
@@ -1342,7 +1343,6 @@ sc_scda_check_file_header (const char *file_header_data, char *user_string,
     return -1;
   }
   /* the user string content is not checked */
-  user_string[*len] = '\0';
 
   current_pos += SC_SCDA_USER_STRING_FIELD;
   /* check the padding of zero data bytes */
