@@ -1591,6 +1591,18 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
   return fc;
 }
 
+/** Internal function to read the inline data.
+ *
+ * \param [in] fc           The file context as in \ref
+ *                          sc_scda_fread_inline_data before running the
+ *                          serial code part.
+ * \param [out] data        As in the documentation of \ref
+ *                          sc_scda_fread_inline_data.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
 static void
 sc_scda_fread_inline_data_serial_internal (sc_scda_fcontext_t *fc,
                                            sc_array_t *data, int *count_err,
