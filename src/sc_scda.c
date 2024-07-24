@@ -1676,6 +1676,9 @@ sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
   /* if no error occurred, we move the internal file pointer */
   fc->accessed_bytes += SC_SCDA_INLINE_FIELD;
 
+  /* last function call can not be \ref sc_scda_fread_section_header anymore */
+  fc->header_before = 0;
+
   return fc;
 }
 

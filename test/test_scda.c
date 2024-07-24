@@ -199,6 +199,14 @@ main (int argc, char **argv)
                                SC_SCDA_INLINE_FIELD), "inline data mismatch");
 
   /* skip the next inline section */
+  /* reading the section header can not be skipped */
+  fc = sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                     &elem_count, &elem_size, &decode,
+                                     &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'I' && elem_count == 0 && elem_size == 0,
+                  "Identifying section type");
   fc = sc_scda_fread_inline_data (fc, NULL, mpisize - 1, &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "sc_scda_fread_inline_data skip failed");
