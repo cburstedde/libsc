@@ -110,15 +110,16 @@
 
 /** Handle a non-collective error.
  * Use this macro after \ref SC_SCDA_CHECK_NONCOLL_ERR *directly* after the end
- * of non-collective statements.
+ * of non-collective statements. The parameter root is the rank on that the
+ * non-collective code runs.
  * Can be only used once in a function.
  */
-#define SC_SCDA_HANDLE_NONCOLL_ERR(errcode, fc) do{                            \
+#define SC_SCDA_HANDLE_NONCOLL_ERR(errcode, root, fc) do{                      \
                                     SC_CHECK_MPI(sc_MPI_Bcast(&errcode->scdaret,\
-                                                  1, sc_MPI_INT, 0,           \
+                                                  1, sc_MPI_INT, root,         \
                                                   fc->mpicomm));               \
                                     SC_CHECK_MPI(sc_MPI_Bcast(&errcode->mpiret,\
-                                                  1, sc_MPI_INT, 0,            \
+                                                  1, sc_MPI_INT, root,         \
                                                   fc->mpicomm));               \
                                     if (!sc_scda_ferror_is_success (*errcode)) {\
                                     sc_scda_file_error_cleanup (&fc->file);    \
@@ -134,10 +135,10 @@
  * \b cerror must be a pointer to an int that is passed to the subsequent call
  * \ref SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
  */
-#define SC_SCDA_CHECK_NONCOLL_COUNT_ERR(icount, ocount, cerror) do {                   \
-                                    *cerror = ((int) icount) != ocount; \
-                                    if (*cerror) {                      \
-                                    SC_LERRORF ("Count error on rank 0 at "    \
+#define SC_SCDA_CHECK_NONCOLL_COUNT_ERR(icount, ocount, cerror) do {           \
+                                    *cerror = ((int) icount) != ocount;        \
+                                    if (*cerror) {                             \
+                                    SC_LERRORF ("Count error at "              \
                                                 "%s:%d.\n", __FILE__, __LINE__);\
                                     return;}} while (0)
 
@@ -146,13 +147,14 @@
  * the end of the non-collective statements but after \ref
  * SC_SCDA_HANDLE_NONCOLL_ERR, which must be executed first.
  * Can be used only once in a function.
- * On rank 0 \b cerror must point to the int that was set by \ref
+ * The parameter root is the rank on that the non-collective code runs.
+ * On rank root \b cerror must point to the int that was set by \ref
  * SC_SCDA_CHECK_NONCOLL_COUNT_ERR. On all other ranks \b cerror is set by this
  * macro.
  */
-#define SC_SCDA_HANDLE_NONCOLL_COUNT_ERR(errorcode, cerror, fc) do{            \
+#define SC_SCDA_HANDLE_NONCOLL_COUNT_ERR(errorcode, cerror, root, fc) do{      \
                                     SC_CHECK_MPI (sc_MPI_Bcast (cerror,        \
-                                                  1, sc_MPI_INT, 0,            \
+                                                  1, sc_MPI_INT, root,         \
                                                   fc->mpicomm));               \
                                     sc_scda_scdaret_to_errcode (               \
                                         *cerror ? SC_SCDA_FERR_COUNT :         \
@@ -1127,7 +1129,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * called directly after a non-collective code part that contains at least one
    * call \ref SC_SCDA_CHECK_NONCOLL_ERR.
    */
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
   /* The macro to check potential non-collective count errors. It is only valid
    * to be called directly after \ref SC_SCDA_HANDLE_NONCOLL_ERR and only
    * if the preceding non-collective code block contains at least one call of
@@ -1138,7 +1140,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * this macro. The macro argument count_err must point to the count error
    * Boolean that was set on rank 0 by \ref sc_scda_fopen_write_serial_internal.
    */
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
 
   /* store number of written bytes */
   fc->accessed_bytes = SC_SCDA_HEADER_BYTES;
@@ -1249,8 +1251,8 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
     sc_scda_fwrite_inline_header_internal (fc, user_string, len, &count_err,
                                            errcode);
   }
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
 
   /* add number of written bytes */
   fc->accessed_bytes += SC_SCDA_COMMON_FIELD;
@@ -1260,8 +1262,8 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
     sc_scda_fwrite_inline_data_internal (fc, inline_data, &count_err,
                                          errcode);
   }
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
 
   fc->accessed_bytes += SC_SCDA_INLINE_FIELD;
 
@@ -1443,13 +1445,13 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
    * More information can be found in the comments in \ref sc_scda_fopen_write
    * and in the documentation of the \ref SC_SCDA_HANDLE_NONCOLL_ERR.
    */
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
   /* The macro to handle a non-collective count error that is associated to a
    * preceding call of \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR.
    * More information can be found in the comments in \ref sc_scda_fopen_write
    * and in the documentation of the \ref SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
    */
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
   /* Bcast the user string */
   mpiret = sc_MPI_Bcast (user_string, SC_SCDA_USER_STRING_BYTES + 1,
                          sc_MPI_BYTE, 0, mpicomm);
