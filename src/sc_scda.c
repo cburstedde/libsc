@@ -1636,12 +1636,14 @@ sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
   SC_ASSERT (root >= 0);
   SC_ASSERT (errcode != NULL);
 
-  if (fc->mpirank == root && data != NULL) {
+  if (data != NULL) {
     /* the data is not skipped */
-    sc_scda_fread_inline_data_serial_internal (fc, data, &count_err, errcode);
+    if (fc->mpirank == root) {
+      sc_scda_fread_inline_data_serial_internal (fc, data, &count_err, errcode);
+    }
+    SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
+    SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
   }
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
 
   /* if no error occurred, we move the internal file pointer */
   fc->accessed_bytes += SC_SCDA_INLINE_FIELD;
