@@ -1469,6 +1469,113 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
   return fc;
 }
 
+static void
+sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
+                                              char *type, char *user_string,
+                                              size_t *len, int *count_err,
+                                              sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 wrong_format;
+  char                common[SC_SCDA_COMMON_FIELD];
+
+  /* read common file section header */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, common,
+                          SC_SCDA_COMMON_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read common file section header part");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COMMON_FIELD, count, count_err);
+
+  wrong_format = 0;
+  /* check file section type */
+  switch (common[0]) {
+  case 'I':
+    *type = 'I';
+    break;
+  default:
+    /* an invalid/unsupported format */
+    wrong_format = 1;
+  }
+  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid file section type");
+
+  /* check common file section header format */
+  if (common[1] != ' ') {
+    /* wrong format */
+    wrong_format = 1;
+  }
+  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Missing space in file section header");
+
+  /* initialize user_string */
+  sc_scda_init_nul (user_string, SC_SCDA_USER_STRING_BYTES + 1);
+
+  /* check and extract the user string */
+  if (sc_scda_get_pad_to_fix_len
+      (&common[2], SC_SCDA_USER_STRING_FIELD, user_string, len)) {
+    /* wrong padding format */
+    wrong_format = 1;
+  }
+  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode,
+                             "Invalid user string in section header");
+}
+
+sc_scda_fcontext_t *
+sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
+                              size_t *len, char *type, size_t *elem_count,
+                              size_t *elem_size, int *decode,
+                              sc_scda_ferror_t *errcode)
+{
+  int                 count_err;
+  int                 mpiret;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (type != NULL);
+  SC_ASSERT (elem_count != NULL);
+  SC_ASSERT (elem_size != NULL);
+  SC_ASSERT (decode != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  /* read the common section header part first */
+  if (fc->mpirank == 0) {
+    sc_scda_fread_section_header_common_internal (fc, type, user_string, len,
+                                                  &count_err, errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
+
+  fc->accessed_bytes += SC_SCDA_COMMON_FIELD;
+
+  /* Bcast type and user string */
+  mpiret = sc_MPI_Bcast (type, 1, sc_MPI_CHAR, 0, fc->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Bcast (user_string, SC_SCDA_USER_STRING_BYTES + 1,
+                         sc_MPI_BYTE, 0, fc->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  /* further code flow depends on the file section type */
+  switch (*type) {
+  case 'I':
+    /* inline */
+    /* set elem_count and elem_size according to the scda convention */
+    *elem_count = 0;
+    *elem_size = 0;
+    /* TODO: Handle decode parameter */
+    break;
+  default:
+    /* rank 0 already checked if type is valid/supported */
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  return fc;
+}
+
 int
 sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
 {
