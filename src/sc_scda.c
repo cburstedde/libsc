@@ -175,6 +175,13 @@ struct sc_scda_fcontext
   int                 mpirank;        /**< MPI rank */
   sc_MPI_File         file;           /**< file object */
   sc_MPI_Offset       accessed_bytes; /**< number of written/read bytes */
+  int                 header_before;  /**< True if the last call was \ref
+                                        sc_scda_fread_section_header,
+                                        otherwise, false. */
+  char                last_type;      /**< If header_before is true, the file
+                                        section type of the last \ref
+                                        sc_scda_fread_section_header call,
+                                        otherwise undefined. */
   unsigned            fuzzy_everyn;   /**< In average every n-th possible error
                                         origin returns a fuzzy error. There may
                                         be multiple possible error origins in
@@ -1144,6 +1151,10 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   /* store number of written bytes */
   fc->accessed_bytes = SC_SCDA_HEADER_BYTES;
 
+  /* initialize remaining file context variables; stay untouched for writing */
+  fc->header_before = 0;
+  fc->last_type = '\0';
+
   return fc;
 }
 
@@ -1465,6 +1476,10 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
   /* store the number of read bytes */
   fc->accessed_bytes = SC_SCDA_HEADER_BYTES;
 
+  /* initialize remaining file context variables */
+  fc->header_before = 0;
+  fc->last_type = '\0';
+
   return fc;
 }
 
@@ -1588,6 +1603,10 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
     SC_ABORT_NOT_REACHED ();
   }
 
+  /* this is to check if the scda workflow is respected */
+  fc->header_before = 1;
+  fc->last_type = *type;
+
   return fc;
 }
 
@@ -1631,10 +1650,19 @@ sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
                            sc_scda_ferror_t *errcode)
 {
   int                 count_err;
+  int                 wrong_usage;
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (root >= 0);
   SC_ASSERT (errcode != NULL);
+
+  /* It is necessary that sc_scda_fread_section_header was called as last
+   * function call on fc and that it returned the inline section type.
+   */
+  wrong_usage = !(fc->header_before && fc->last_type == 'I');
+  sc_scda_scdaret_to_errcode (wrong_usage ? SC_SCDA_FERR_USAGE :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Wrong usage of scda functions");
 
   if (data != NULL) {
     /* the data is not skipped */
