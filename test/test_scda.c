@@ -47,6 +47,7 @@ main (int argc, char **argv)
   sc_options_t       *opt;
   sc_array_t          data;
   const char         *inline_data = "Test inline data               \n";
+  char                read_inline_data[SC_SCDA_INLINE_FIELD];
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -154,11 +155,16 @@ main (int argc, char **argv)
                   "scda_fopen_write failed");
 
   /* write an inline section to the file */
-  sc_array_init_data (&data, (void *) inline_data, 32, 1);
+  sc_array_init_data (&data, (void *) inline_data, SC_SCDA_INLINE_FIELD, 1);
   fc = sc_scda_fwrite_inline (fc, "Inline section test without user-defined "
                               "padding", NULL, &data, mpisize - 1, &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fwrite_inline failed");
+
+  /* write an inline section with an empty user string */
+  fc = sc_scda_fwrite_inline (fc, "", NULL, &data, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fwrite_inline with empty user string failed");
 
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
@@ -182,6 +188,20 @@ main (int argc, char **argv)
                   "sc_scda_fread_section_header failed");
   SC_CHECK_ABORT (section_type == 'I' && elem_count == 0 && elem_size == 0,
                   "Identifying section type");
+
+  /* read inline data */
+  sc_array_init_data (&data, read_inline_data, SC_SCDA_INLINE_FIELD, 1);
+  fc = sc_scda_fread_inline_data (fc, &data, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_inline_data failed");
+  SC_CHECK_ABORT (mpirank != 0
+                  || !strncmp (read_inline_data, inline_data,
+                               SC_SCDA_INLINE_FIELD), "inline data mismatch");
+
+  /* skip the next inline section */
+  fc = sc_scda_fread_inline_data (fc, NULL, mpisize - 1, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_inline_data skip failed");
 
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
