@@ -38,7 +38,6 @@
                                                                   the file
                                                                   section
                                                                   headers */
-#define SC_SCDA_INLINE_FIELD 32 /**< byte count of inline data */
 #define SC_SCDA_PADDING_MOD 32  /**< divisor for variable length padding */
 
 /** get a random double in the range [A,B) */
