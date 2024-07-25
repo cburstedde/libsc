@@ -156,6 +156,8 @@
  * errors with an error string for an other error.
  */
 #define SC_SCDA_HANDLE_NONCOLL_COUNT_ERR(errorcode, cerror, root, fc) do{      \
+                                    SC_ASSERT (                                \
+                                        sc_scda_ferror_is_success (*errcode)); \
                                     SC_CHECK_MPI (sc_MPI_Bcast (cerror,        \
                                                   1, sc_MPI_INT, root,         \
                                                   fc->mpicomm));               \
