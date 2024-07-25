@@ -1016,6 +1016,8 @@ sc_scda_fopen_write_header_internal (sc_scda_fcontext_t *fc,
   int                 invalid_user_string;
   char                file_header_data[SC_SCDA_HEADER_BYTES];
 
+  *count_err = 0;
+
   /* get scda file header section */
   /* magic */
   sc_scda_copy_bytes (file_header_data, SC_SCDA_MAGIC, SC_SCDA_MAGIC_BYTES);
@@ -1191,6 +1193,8 @@ sc_scda_fwrite_inline_header_internal (sc_scda_fcontext_t *fc,
   int                 invalid_user_string;
   char                header_data[SC_SCDA_COMMON_FIELD];
 
+  *count_err = 0;
+
   /* get inline file section header */
 
   /* section-identifying character */
@@ -1238,6 +1242,8 @@ sc_scda_fwrite_inline_data_internal (sc_scda_fcontext_t *fc,
   int                 mpiret;
   int                 count;
   int                 invalid_inline_data;
+
+  *count_err = 0;
 
   /* check inline data */
   invalid_inline_data = !(inline_data->elem_size == 32 &&
@@ -1392,6 +1398,8 @@ sc_scda_fopen_read_header_internal (sc_scda_fcontext_t * fc,
   int                 invalid_file_header;
   char                file_header_data[SC_SCDA_HEADER_BYTES];
 
+  *count_err = 0;
+
   mpiret =
     sc_io_read_at (fc->file, 0, file_header_data, SC_SCDA_HEADER_BYTES,
                    sc_MPI_BYTE, &count);
@@ -1516,6 +1524,8 @@ sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
   int                 wrong_format;
   char                common[SC_SCDA_COMMON_FIELD];
 
+  *count_err = 0;
+
   /* read common file section header */
   mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, common,
                           SC_SCDA_COMMON_FIELD, sc_MPI_BYTE, &count);
@@ -1636,6 +1646,8 @@ sc_scda_fread_inline_data_serial_internal (sc_scda_fcontext_t *fc,
   int                 mpiret;
   int                 count;
   int                 invalid_array;
+
+  *count_err = 0;
 
   /* check the passed sc_array */
   invalid_array = !(data->elem_count == 1 && data->elem_size == 32);
