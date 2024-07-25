@@ -1006,7 +1006,7 @@ sc_scda_get_common_section_header (char section_char, const char* user_string,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
+sc_scda_fopen_write_header_internal (sc_scda_fcontext_t *fc,
                                      const char *user_string, size_t *len,
                                      int *count_err, sc_scda_ferror_t *errcode)
 {
@@ -1126,13 +1126,13 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "File open write");
 
   if (fc->mpirank == 0) {
-    sc_scda_fopen_write_serial_internal (fc, user_string, len, &count_err,
+    sc_scda_fopen_write_header_internal (fc, user_string, len, &count_err,
                                          errcode);
   }
   /* This macro must be the first expression after the non-collective code part
    * since it must be the point where \ref SC_SCDA_CHECK_NONCOLL_ERR and \ref
    * SC_SCDA_CHECK_NONCOLL_COUNT_ERR can jump to, which are called in \ref
-   * sc_scda_fopen_write_serial_internal. The macro handles the non-collective
+   * sc_scda_fopen_write_header_internal. The macro handles the non-collective
    * error, i.e. it broadcasts the errcode, which may encode success, from
    * rank 0 to all other ranks and in case of an error it closes the file,
    * frees the file context and returns NULL. Hence, it is valid that errcode
@@ -1150,7 +1150,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * prints an error message using \ref SC_LERRORF. This means in particular
    * that it is valid that errcode is only initialized on rank 0 before calling
    * this macro. The macro argument count_err must point to the count error
-   * Boolean that was set on rank 0 by \ref sc_scda_fopen_write_serial_internal.
+   * Boolean that was set on rank 0 by \ref sc_scda_fopen_write_header_internal.
    */
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
 
@@ -1383,7 +1383,7 @@ sc_scda_check_file_header (const char *file_header_data, char *user_string,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fopen_read_serial_internal (sc_scda_fcontext_t * fc,
+sc_scda_fopen_read_header_internal (sc_scda_fcontext_t * fc,
                                     char *user_string, size_t *len,
                                     int *count_err, sc_scda_ferror_t *errcode)
 {
@@ -1459,7 +1459,7 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
 
   /* read file header section on rank 0 */
   if (fc->mpirank == 0) {
-    sc_scda_fopen_read_serial_internal (fc, user_string, len, &count_err,
+    sc_scda_fopen_read_header_internal (fc, user_string, len, &count_err,
                                         errcode);
   }
   /* The macro to handle a non-collective error that is associated to a
