@@ -134,7 +134,10 @@ main (int argc, char **argv)
   /* Create valid scda options structure. */
   /* set the options to actiavate fuzzy error testing */
   /* WARNING: Fuzzy error testing means that the code randomly produces
-   * errors.
+   * errors. Random errors mean in particular that error codes may arise from
+   * code places, which can not produce such particular error codes without
+   * fuzzy error testing. Nonetheless, our implementation is designed to be
+   * able to handle this situations properly.
    */
   scda_opt.fuzzy_everyn = (unsigned) int_everyn;
   if (int_seed < 0) {

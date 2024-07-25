@@ -150,6 +150,10 @@
  * On rank root \b cerror must point to the int that was set by \ref
  * SC_SCDA_CHECK_NONCOLL_COUNT_ERR. On all other ranks \b cerror is set by this
  * macro.
+ * In case of activated fuzzy error testing it is important to notice that this
+ * macro calls \ref sc_scda_scdaret_to_errcode, which may output fuzzy errors.
+ * Hence, for activated fuzzy error testing one may observe reported count
+ * errors with an error string for an other error.
  */
 #define SC_SCDA_HANDLE_NONCOLL_COUNT_ERR(errorcode, cerror, root, fc) do{      \
                                     SC_CHECK_MPI (sc_MPI_Bcast (cerror,        \
