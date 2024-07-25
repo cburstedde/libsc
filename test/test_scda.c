@@ -235,7 +235,7 @@ main (int argc, char **argv)
   fc = sc_scda_fread_inline_data (fc, &data, 0, &errcode);
   SC_CHECK_ABORT (!sc_scda_ferror_is_success (errcode) &&
                   errcode.scdaret == SC_SCDA_FERR_USAGE && fc == NULL,
-                  "sc_scda_fread_section_header failed");
+                  "sc_scda_fread_section_header error detection failed");
   /* fc is closed and deallocated due to the occurred error  */
 
   sc_options_destroy (opt);
