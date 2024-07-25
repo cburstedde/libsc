@@ -198,6 +198,9 @@ main (int argc, char **argv)
                   || !strncmp (read_inline_data, inline_data,
                                SC_SCDA_INLINE_FIELD), "inline data mismatch");
 
+  SC_INFOF ("Read file section header of type %c with user string: %s\n",
+            section_type, read_user_string);
+
   /* skip the next inline section */
   /* reading the section header can not be skipped */
   fc = sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
@@ -215,9 +218,6 @@ main (int argc, char **argv)
   /* TODO: check errcode and return value */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fclose after read failed");
-
-  SC_INFOF ("Read file section header of type %c with user string: %s\n",
-            section_type, read_user_string);
 
   fc =
     sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
