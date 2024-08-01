@@ -33,6 +33,11 @@
 #define SC_SCDA_VENDOR_STRING_BYTES 20 /**< maximal number of vendor string bytes */
 #define SC_SCDA_USER_STRING_FIELD 62   /**< byte count for user string entry
                                             including the padding */
+#define SC_SCDA_COMMON_FIELD (2 + SC_SCDA_USER_STRING_FIELD) /**< byte count for
+                                                                  common part of
+                                                                  the file
+                                                                  section
+                                                                  headers */
 #define SC_SCDA_PADDING_MOD 32  /**< divisor for variable length padding */
 
 /** get a random double in the range [A,B) */
@@ -104,15 +109,16 @@
 
 /** Handle a non-collective error.
  * Use this macro after \ref SC_SCDA_CHECK_NONCOLL_ERR *directly* after the end
- * of non-collective statements.
+ * of non-collective statements. The parameter root is the rank on that the
+ * non-collective code runs.
  * Can be only used once in a function.
  */
-#define SC_SCDA_HANDLE_NONCOLL_ERR(errcode, fc) do{                            \
+#define SC_SCDA_HANDLE_NONCOLL_ERR(errcode, root, fc) do{                      \
                                     SC_CHECK_MPI(sc_MPI_Bcast(&errcode->scdaret,\
-                                                  1, sc_MPI_INT, 0,           \
+                                                  1, sc_MPI_INT, root,         \
                                                   fc->mpicomm));               \
                                     SC_CHECK_MPI(sc_MPI_Bcast(&errcode->mpiret,\
-                                                  1, sc_MPI_INT, 0,            \
+                                                  1, sc_MPI_INT, root,         \
                                                   fc->mpicomm));               \
                                     if (!sc_scda_ferror_is_success (*errcode)) {\
                                     sc_scda_file_error_cleanup (&fc->file);    \
@@ -128,10 +134,10 @@
  * \b cerror must be a pointer to an int that is passed to the subsequent call
  * \ref SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
  */
-#define SC_SCDA_CHECK_NONCOLL_COUNT_ERR(icount, ocount, cerror) do {                   \
-                                    *cerror = ((int) icount) != ocount; \
-                                    if (*cerror) {                      \
-                                    SC_LERRORF ("Count error on rank 0 at "    \
+#define SC_SCDA_CHECK_NONCOLL_COUNT_ERR(icount, ocount, cerror) do {           \
+                                    *cerror = ((int) icount) != ocount;        \
+                                    if (*cerror) {                             \
+                                    SC_LERRORF ("Count error at "              \
                                                 "%s:%d.\n", __FILE__, __LINE__);\
                                     return;}} while (0)
 
@@ -140,13 +146,20 @@
  * the end of the non-collective statements but after \ref
  * SC_SCDA_HANDLE_NONCOLL_ERR, which must be executed first.
  * Can be used only once in a function.
- * On rank 0 \b cerror must point to the int that was set by \ref
+ * The parameter root is the rank on that the non-collective code runs.
+ * On rank root \b cerror must point to the int that was set by \ref
  * SC_SCDA_CHECK_NONCOLL_COUNT_ERR. On all other ranks \b cerror is set by this
  * macro.
+ * In case of activated fuzzy error testing it is important to notice that this
+ * macro calls \ref sc_scda_scdaret_to_errcode, which may output fuzzy errors.
+ * Hence, for activated fuzzy error testing one may observe reported count
+ * errors with an error string for an other error.
  */
-#define SC_SCDA_HANDLE_NONCOLL_COUNT_ERR(errorcode, cerror, fc) do{            \
+#define SC_SCDA_HANDLE_NONCOLL_COUNT_ERR(errorcode, cerror, root, fc) do{      \
+                                    SC_ASSERT (                                \
+                                        sc_scda_ferror_is_success (*errcode)); \
                                     SC_CHECK_MPI (sc_MPI_Bcast (cerror,        \
-                                                  1, sc_MPI_INT, 0,            \
+                                                  1, sc_MPI_INT, root,         \
                                                   fc->mpicomm));               \
                                     sc_scda_scdaret_to_errcode (               \
                                         *cerror ? SC_SCDA_FERR_COUNT :         \
@@ -163,29 +176,37 @@
 struct sc_scda_fcontext
 {
   /* *INDENT-OFF* */
-  sc_MPI_Comm         mpicomm; /**< associated MPI communicator */
-  int                 mpisize; /**< number of MPI ranks */
-  int                 mpirank; /**< MPI rank */
-  sc_MPI_File         file;    /**< file object */
-  unsigned            fuzzy_everyn; /**< In average every n-th possible error
-                                       origin returns a fuzzy error. There may
-                                       be multiple possible error origins in
-                                       one top-level scda function.
-                                       We return for each possible error origin
-                                       a random error with the empirical
-                                       probability of 1 / fuzzy_everyn but only
-                                       if the respective possible error origin
-                                       did not already cause an error without
-                                       the fuzzy error return. In such a case,
-                                       the actual error is returned. 0 means
-                                       that there are no fuzzy error returns. */
-  sc_rand_state_t     fuzzy_seed; /**< The seed for the fuzzy error return.
-                                       This value is ignored if
-                                       fuzzy_everyn == 0. It is important to
-                                       notice that fuzzy_seed is initialized by
-                                       the user-defined seed but is adjusted
-                                       to the state after each call of
-                                       \ref sc_rand. */
+  sc_MPI_Comm         mpicomm;        /**< associated MPI communicator */
+  int                 mpisize;        /**< number of MPI ranks */
+  int                 mpirank;        /**< MPI rank */
+  sc_MPI_File         file;           /**< file object */
+  sc_MPI_Offset       accessed_bytes; /**< number of written/read bytes */
+  int                 header_before;  /**< True if the last call was \ref
+                                        sc_scda_fread_section_header,
+                                        otherwise, false. */
+  char                last_type;      /**< If header_before is true, the file
+                                        section type of the last \ref
+                                        sc_scda_fread_section_header call,
+                                        otherwise undefined. */
+  unsigned            fuzzy_everyn;   /**< In average every n-th possible error
+                                        origin returns a fuzzy error. There may
+                                        be multiple possible error origins in
+                                        one top-level scda function.
+                                        We return for each possible error origin
+                                        a random error with the empirical
+                                        probability of 1 / fuzzy_everyn but only
+                                        if the respective possible error origin
+                                        did not already cause an error without
+                                        the fuzzy error return. In such a case,
+                                        the actual error is returned. 0 means
+                                        that there are no fuzzy error returns.*/
+  sc_rand_state_t     fuzzy_seed;     /**< The seed for the fuzzy error return.
+                                        This value is ignored if
+                                        fuzzy_everyn == 0. It is important to
+                                        notice that fuzzy_seed is initialized by
+                                        the user-defined seed but is adjusted
+                                        to the state after each call of
+                                        \ref sc_rand. */
   /* *INDENT-ON* */
 };
 
@@ -921,6 +942,58 @@ sc_scda_fopen_start_up (sc_scda_fopen_options_t *opt, sc_MPI_Comm mpicomm,
   return fc;
 }
 
+/** Write common section data to \b output.
+ *
+ * All section headers in the scda format contain a part with a
+ * section-identifying character followed by the user string. Therefore,
+ * we have one internal function to get this data given a \b section_char and
+ * a \b user_string.
+ *
+ * \param [in]  section_char       The section-identifying character.
+ * \param [in]  user_string        As in the documentation of \ref
+ *                                 sc_scda_fopen_write or any other scda writing
+ *                                 function.
+ * \param [in]  len                As in the documentation of \ref
+ *                                 sc_scda_fopen_write or any other scda writing
+ *                                 function.
+ * \param [out] output             At least \ref SC_SCDA_COMMON_FIELD bytes.
+ *                                 If the function returns false, \b output is
+ *                                 filled with the common section header data.
+ *                                 Otherwise, it stays untouched.
+ * \return                         True if \b user_string is not compliant with
+ *                                 the scda file format, i.e. too long or
+ *                                 missing nul termination. False, otherwise.
+ */
+static int
+sc_scda_get_common_section_header (char section_char, const char* user_string,
+                                   size_t *len, char *output)
+{
+  int                 invalid_user_string;
+  size_t              user_string_len;
+
+  SC_ASSERT (output != NULL);
+
+  /* check the user string */
+  invalid_user_string = sc_scda_get_user_string_len (user_string, len,
+                                                     &user_string_len);
+  if (invalid_user_string) {
+    return invalid_user_string;
+  }
+
+  /* user string is valid */
+  SC_ASSERT (!invalid_user_string);
+
+  /* write the section char */
+  output[0] = section_char;
+  output[1] = ' ';
+
+  /* write \b user_string to \b output including padding */
+  sc_scda_pad_to_fix_len (user_string, user_string_len,
+                          &output[2], SC_SCDA_USER_STRING_FIELD);
+
+  return invalid_user_string;
+}
+
 /** Internal function to run the serial code part in \ref sc_scda_fopen_write.
  *
  * \param [in] fc           The file context as in \ref sc_scda_fopen_write
@@ -933,7 +1006,7 @@ sc_scda_fopen_start_up (sc_scda_fopen_options_t *opt, sc_MPI_Comm mpicomm,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
+sc_scda_fopen_write_header_internal (sc_scda_fcontext_t *fc,
                                      const char *user_string, size_t *len,
                                      int *count_err, sc_scda_ferror_t *errcode)
 {
@@ -942,7 +1015,8 @@ sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
   int                 current_len;
   int                 invalid_user_string;
   char                file_header_data[SC_SCDA_HEADER_BYTES];
-  size_t              user_string_len;
+
+  *count_err = 0;
 
   /* get scda file header section */
   /* magic */
@@ -958,11 +1032,7 @@ sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
                           SC_SCDA_VENDOR_STRING_FIELD);
   current_len += SC_SCDA_VENDOR_STRING_FIELD;
 
-  /* file section specifying character */
-  file_header_data[current_len++] = 'F';
-  file_header_data[current_len++] = ' ';
-
-  /* user string */
+  /* get common file section header part */
   /* check the user string */
   /* According to 'A.2 Parameter conventions' in the scda specification
    * it is an unchecked runtime error if the user string is not collective,
@@ -970,7 +1040,8 @@ sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
    * Therefore, we just check the user string on rank 0.
    */
   invalid_user_string =
-    sc_scda_get_user_string_len (user_string, len, &user_string_len);
+    sc_scda_get_common_section_header ('F', user_string, len,
+                                       &file_header_data[current_len]);
   /* We always translate the error code to have full coverage for the fuzzy
    * error testing.
    */
@@ -986,10 +1057,7 @@ sc_scda_fopen_write_serial_internal (sc_scda_fcontext_t *fc,
    */
   SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
 
-  sc_scda_pad_to_fix_len (user_string, user_string_len,
-                          &file_header_data[current_len],
-                          SC_SCDA_USER_STRING_FIELD);
-  current_len += SC_SCDA_USER_STRING_FIELD;
+  current_len += SC_SCDA_COMMON_FIELD;
 
   /* pad the file header section */
   sc_scda_pad_to_mod (NULL, 0, &file_header_data[current_len]);
@@ -1060,13 +1128,13 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "File open write");
 
   if (fc->mpirank == 0) {
-    sc_scda_fopen_write_serial_internal (fc, user_string, len, &count_err,
+    sc_scda_fopen_write_header_internal (fc, user_string, len, &count_err,
                                          errcode);
   }
   /* This macro must be the first expression after the non-collective code part
    * since it must be the point where \ref SC_SCDA_CHECK_NONCOLL_ERR and \ref
    * SC_SCDA_CHECK_NONCOLL_COUNT_ERR can jump to, which are called in \ref
-   * sc_scda_fopen_write_serial_internal. The macro handles the non-collective
+   * sc_scda_fopen_write_header_internal. The macro handles the non-collective
    * error, i.e. it broadcasts the errcode, which may encode success, from
    * rank 0 to all other ranks and in case of an error it closes the file,
    * frees the file context and returns NULL. Hence, it is valid that errcode
@@ -1075,7 +1143,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * called directly after a non-collective code part that contains at least one
    * call \ref SC_SCDA_CHECK_NONCOLL_ERR.
    */
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
   /* The macro to check potential non-collective count errors. It is only valid
    * to be called directly after \ref SC_SCDA_HANDLE_NONCOLL_ERR and only
    * if the preceding non-collective code block contains at least one call of
@@ -1084,9 +1152,148 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * prints an error message using \ref SC_LERRORF. This means in particular
    * that it is valid that errcode is only initialized on rank 0 before calling
    * this macro. The macro argument count_err must point to the count error
-   * Boolean that was set on rank 0 by \ref sc_scda_fopen_write_serial_internal.
+   * Boolean that was set on rank 0 by \ref sc_scda_fopen_write_header_internal.
    */
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
+
+  /* store number of written bytes */
+  fc->accessed_bytes = SC_SCDA_HEADER_BYTES;
+
+  /* initialize remaining file context variables; stay untouched for writing */
+  fc->header_before = 0;
+  fc->last_type = '\0';
+
+  return fc;
+}
+
+/** Internal function to write the inline section header.
+ *
+ * This function is dedicated to be called in \ref sc_scda_fwrite_inline.
+ *
+ * \param [in] fc           The file context as in \ref sc_scda_fwrite_inline
+ *                          before running the first serial code part.
+ * \param [in] user_string  As in the documentation of \ref
+ *                          sc_scda_fwrite_inline.
+ * \param [in] len          As in the documentation of \ref
+ *                          sc_scda_fwrite_inline.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fwrite_inline_header_internal (sc_scda_fcontext_t *fc,
+                                       const char *user_string, size_t *len,
+                                       int *count_err,
+                                       sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 current_len;
+  int                 invalid_user_string;
+  char                header_data[SC_SCDA_COMMON_FIELD];
+
+  *count_err = 0;
+
+  /* get inline file section header */
+
+  /* section-identifying character */
+  current_len = 0;
+
+  invalid_user_string =
+    sc_scda_get_common_section_header ('I', user_string, len, header_data);
+  /* We always translate the error code to have full coverage for the fuzzy
+   * error testing.
+   */
+  sc_scda_scdaret_to_errcode (invalid_user_string ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
+
+  current_len += SC_SCDA_COMMON_FIELD;
+
+  SC_ASSERT (current_len == SC_SCDA_COMMON_FIELD);
+
+  /* write inline section header */
+  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, header_data,
+                           SC_SCDA_COMMON_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing inline section header");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COMMON_FIELD, count, count_err);
+}
+
+/** Internal function to write the inline section data.
+ *
+ * This function is dedicated to be called in \ref sc_scda_fwrite_inline.
+ *
+ * \param [in] fc           The file context as in \ref sc_scda_fwrite_inline
+ *                          before running the first serial code part.
+ * \param [in] inline_data  As in the documentation of \ref
+ *                          sc_scda_fwrite_inline.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fwrite_inline_data_internal (sc_scda_fcontext_t *fc,
+                                     sc_array_t * inline_data, int *count_err,
+                                     sc_scda_ferror_t * errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 invalid_inline_data;
+
+  *count_err = 0;
+
+  /* check inline data */
+  invalid_inline_data = !(inline_data->elem_size == 32 &&
+                          inline_data->elem_count == 1);
+  sc_scda_scdaret_to_errcode (invalid_inline_data ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid inline data");
+
+  /* write the inline data to the file section */
+  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, inline_data->array,
+                           SC_SCDA_INLINE_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing inline data");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_INLINE_FIELD, count, count_err);
+}
+
+sc_scda_fcontext_t *
+sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
+                       size_t *len, sc_array_t * inline_data, int root,
+                       sc_scda_ferror_t * errcode)
+{
+  int                 count_err;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (root >= 0);
+  /* inline_data is ignored on all ranks except of root */
+  SC_ASSERT (fc->mpirank != root || inline_data != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  /* The file header section is always written and read on rank 0. */
+  if (fc->mpirank == 0) {
+    sc_scda_fwrite_inline_header_internal (fc, user_string, len, &count_err,
+                                           errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
+
+  /* add number of written bytes */
+  fc->accessed_bytes += SC_SCDA_COMMON_FIELD;
+
+  /* The inline data is written on the the user-defined rank root. */
+  if (fc->mpirank == root) {
+    sc_scda_fwrite_inline_data_internal (fc, inline_data, &count_err,
+                                         errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
+
+  fc->accessed_bytes += SC_SCDA_INLINE_FIELD;
 
   return fc;
 }
@@ -1096,7 +1303,8 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  * \param [in] file_header_data The read file header data as a byte buffer.
  * \param [out] user_string     On output the read user string including
  *                              nul-termination. At least \ref
- *                              SC_SCDA_USER_STRING_BYTES + 1 bytes.
+ *                              SC_SCDA_USER_STRING_BYTES + 1 bytes. Must be
+ *                              initialized with '\0'.
  * \param [out] len             On output \b len is set to the number of bytes
  *                              written to \b user_string excluding the
  *                              terminating nul.
@@ -1157,7 +1365,6 @@ sc_scda_check_file_header (const char *file_header_data, char *user_string,
     return -1;
   }
   /* the user string content is not checked */
-  user_string[*len] = '\0';
 
   current_pos += SC_SCDA_USER_STRING_FIELD;
   /* check the padding of zero data bytes */
@@ -1182,7 +1389,7 @@ sc_scda_check_file_header (const char *file_header_data, char *user_string,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fopen_read_serial_internal (sc_scda_fcontext_t * fc,
+sc_scda_fopen_read_header_internal (sc_scda_fcontext_t * fc,
                                     char *user_string, size_t *len,
                                     int *count_err, sc_scda_ferror_t *errcode)
 {
@@ -1190,6 +1397,8 @@ sc_scda_fopen_read_serial_internal (sc_scda_fcontext_t * fc,
   int                 count;
   int                 invalid_file_header;
   char                file_header_data[SC_SCDA_HEADER_BYTES];
+
+  *count_err = 0;
 
   mpiret =
     sc_io_read_at (fc->file, 0, file_header_data, SC_SCDA_HEADER_BYTES,
@@ -1258,7 +1467,7 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
 
   /* read file header section on rank 0 */
   if (fc->mpirank == 0) {
-    sc_scda_fopen_read_serial_internal (fc, user_string, len, &count_err,
+    sc_scda_fopen_read_header_internal (fc, user_string, len, &count_err,
                                         errcode);
   }
   /* The macro to handle a non-collective error that is associated to a
@@ -1266,17 +1475,227 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
    * More information can be found in the comments in \ref sc_scda_fopen_write
    * and in the documentation of the \ref SC_SCDA_HANDLE_NONCOLL_ERR.
    */
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
   /* The macro to handle a non-collective count error that is associated to a
    * preceding call of \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR.
    * More information can be found in the comments in \ref sc_scda_fopen_write
    * and in the documentation of the \ref SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
    */
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
   /* Bcast the user string */
   mpiret = sc_MPI_Bcast (user_string, SC_SCDA_USER_STRING_BYTES + 1,
                          sc_MPI_BYTE, 0, mpicomm);
   SC_CHECK_MPI (mpiret);
+
+  /* store the number of read bytes */
+  fc->accessed_bytes = SC_SCDA_HEADER_BYTES;
+
+  /* initialize remaining file context variables */
+  fc->header_before = 0;
+  fc->last_type = '\0';
+
+  return fc;
+}
+
+/** Internal function to read and check the common part of file section header.
+ *
+ * \param [in] fc           The file context as in \ref
+ *                          sc_scda_fread_section_header before running the
+ *                          first serial code part.
+ * \param [out] type        As in the documentation of \ref
+ *                          sc_scda_fread_section_header.
+ * \param [out] user_string As in the documentation of \ref
+ *                          sc_scda_fread_section_header.
+ * \param [out] len         As in the documentation of \ref
+ *                          sc_scda_fread_section_header.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
+                                              char *type, char *user_string,
+                                              size_t *len, int *count_err,
+                                              sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 wrong_format;
+  char                common[SC_SCDA_COMMON_FIELD];
+
+  *count_err = 0;
+
+  /* read common file section header */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, common,
+                          SC_SCDA_COMMON_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read common file section header part");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COMMON_FIELD, count, count_err);
+
+  wrong_format = 0;
+  /* check file section type */
+  switch (common[0]) {
+  case 'I':
+    *type = 'I';
+    break;
+  default:
+    /* an invalid/unsupported format */
+    wrong_format = 1;
+  }
+  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid file section type");
+
+  /* check common file section header format */
+  if (common[1] != ' ') {
+    /* wrong format */
+    wrong_format = 1;
+  }
+  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Missing space in file section header");
+
+  /* initialize user_string */
+  sc_scda_init_nul (user_string, SC_SCDA_USER_STRING_BYTES + 1);
+
+  /* check and extract the user string */
+  if (sc_scda_get_pad_to_fix_len
+      (&common[2], SC_SCDA_USER_STRING_FIELD, user_string, len)) {
+    /* wrong padding format */
+    wrong_format = 1;
+  }
+  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode,
+                             "Invalid user string in section header");
+}
+
+sc_scda_fcontext_t *
+sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
+                              size_t *len, char *type, size_t *elem_count,
+                              size_t *elem_size, int *decode,
+                              sc_scda_ferror_t *errcode)
+{
+  int                 count_err;
+  int                 mpiret;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (type != NULL);
+  SC_ASSERT (elem_count != NULL);
+  SC_ASSERT (elem_size != NULL);
+  SC_ASSERT (decode != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  /* read the common section header part first */
+  if (fc->mpirank == 0) {
+    sc_scda_fread_section_header_common_internal (fc, type, user_string, len,
+                                                  &count_err, errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
+
+  fc->accessed_bytes += SC_SCDA_COMMON_FIELD;
+
+  /* Bcast type and user string */
+  mpiret = sc_MPI_Bcast (type, 1, sc_MPI_CHAR, 0, fc->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  mpiret = sc_MPI_Bcast (user_string, SC_SCDA_USER_STRING_BYTES + 1,
+                         sc_MPI_BYTE, 0, fc->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  /* further code flow depends on the file section type */
+  switch (*type) {
+  case 'I':
+    /* inline */
+    /* set elem_count and elem_size according to the scda convention */
+    *elem_count = 0;
+    *elem_size = 0;
+    /* TODO: Handle decode parameter */
+    break;
+  default:
+    /* rank 0 already checked if type is valid/supported */
+    SC_ABORT_NOT_REACHED ();
+  }
+
+  /* this is to check if the scda workflow is respected */
+  fc->header_before = 1;
+  fc->last_type = *type;
+
+  return fc;
+}
+
+/** Internal function to read the inline data.
+ *
+ * \param [in] fc           The file context as in \ref
+ *                          sc_scda_fread_inline_data before running the
+ *                          serial code part.
+ * \param [out] data        As in the documentation of \ref
+ *                          sc_scda_fread_inline_data.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fread_inline_data_serial_internal (sc_scda_fcontext_t *fc,
+                                           sc_array_t *data, int *count_err,
+                                           sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 invalid_array;
+
+  *count_err = 0;
+
+  /* check the passed sc_array */
+  invalid_array = !(data->elem_count == 1 && data->elem_size == 32);
+  sc_scda_scdaret_to_errcode (invalid_array ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+
+  /* read inline data  */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, data->array,
+                          SC_SCDA_INLINE_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read inline data");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_INLINE_FIELD, count, count_err);
+  /* there are no conditions on the inline data and hence no checks */
+}
+
+sc_scda_fcontext_t *
+sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
+                           sc_scda_ferror_t *errcode)
+{
+  int                 count_err;
+  int                 wrong_usage;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (root >= 0);
+  SC_ASSERT (errcode != NULL);
+
+  /* It is necessary that sc_scda_fread_section_header was called as last
+   * function call on fc and that it returned the inline section type.
+   */
+  wrong_usage = !(fc->header_before && fc->last_type == 'I');
+  sc_scda_scdaret_to_errcode (wrong_usage ? SC_SCDA_FERR_USAGE :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Wrong usage of scda functions");
+
+  if (data != NULL) {
+    /* the data is not skipped */
+    if (fc->mpirank == root) {
+      sc_scda_fread_inline_data_serial_internal (fc, data, &count_err, errcode);
+    }
+    SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
+    SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
+  }
+
+  /* if no error occurred, we move the internal file pointer */
+  fc->accessed_bytes += SC_SCDA_INLINE_FIELD;
+
+  /* last function call can not be \ref sc_scda_fread_section_header anymore */
+  fc->header_before = 0;
 
   return fc;
 }

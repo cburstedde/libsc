@@ -200,6 +200,7 @@ SC_EXTERN_C_BEGIN;
 
 #define SC_SCDA_HEADER_BYTES 128 /**< number of file header bytes */
 #define SC_SCDA_USER_STRING_BYTES 58 /**< number of user string bytes */
+#define SC_SCDA_INLINE_FIELD 32 /**< byte count of inline data */
 
 /** Opaque context for writing and reading a libsc data file, i.e. a scda file. */
 typedef struct sc_scda_fcontext sc_scda_fcontext_t;
@@ -800,8 +801,10 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_read.
  * \param [out]     data        Exactly 32 bytes on the rank \b root or NULL
- *                              on \b root to not read the bytes. The parameter
- *                              is ignored on all ranks unequal to \b root.
+ *                              on \b root to not read the bytes. In the first
+ *                              case the sc_array must have an element count
+ *                              of 1 and an element size 32. The parameter is
+ *                              ignored on all ranks unequal to \b root.
  * \param [in]      root        An integer between 0 and mpisize exclusive of
  *                              the MPI communicator that was used to create
  *                              \b fc. \b root indicates the MPI rank on that

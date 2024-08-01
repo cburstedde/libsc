@@ -34,14 +34,20 @@ main (int argc, char **argv)
   int                 mpiret, mpirank, mpisize;
   int                 first_argc;
   int                 int_everyn, int_seed;
+  int                 decode;
   const char         *filename = SC_SCDA_TEST_FILE;
   const char         *file_user_string = "This is a test file";
   char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
+  char                section_type;
   sc_scda_fcontext_t *fc;
   sc_scda_fopen_options_t scda_opt, scda_opt_err;
   sc_scda_ferror_t    errcode;
   size_t              len;
+  size_t              elem_count, elem_size;
   sc_options_t       *opt;
+  sc_array_t          data;
+  const char         *inline_data = "Test inline data               \n";
+  char                read_inline_data[SC_SCDA_INLINE_FIELD];
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -126,6 +132,13 @@ main (int argc, char **argv)
   }
 
   /* Create valid scda options structure. */
+  /* set the options to actiavate fuzzy error testing */
+  /* WARNING: Fuzzy error testing means that the code randomly produces
+   * errors. Random errors mean in particular that error codes may arise from
+   * code places, which can not produce such particular error codes without
+   * fuzzy error testing. Nonetheless, our implementation is designed to be
+   * able to handle this situations properly.
+   */
   scda_opt.fuzzy_everyn = (unsigned) int_everyn;
   if (int_seed < 0) {
     scda_opt.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
@@ -139,20 +152,27 @@ main (int argc, char **argv)
   scda_opt.info = sc_MPI_INFO_NULL;
 
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
-                            NULL, &errcode);
+                            &scda_opt, &errcode);
   /* TODO: check errcode */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fopen_write failed");
 
+  /* write an inline section to the file */
+  sc_array_init_data (&data, (void *) inline_data, SC_SCDA_INLINE_FIELD, 1);
+  fc = sc_scda_fwrite_inline (fc, "Inline section test without user-defined "
+                              "padding", NULL, &data, mpisize - 1, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fwrite_inline failed");
+
+  /* write an inline section with an empty user string */
+  fc = sc_scda_fwrite_inline (fc, "", NULL, &data, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fwrite_inline with empty user string failed");
+
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
-                  "scda_fclose after write" " failed");
-
-  /* set the options to actiavate fuzzy error testing */
-  /* WARNING: Fuzzy error testing means that the code randomly produces
-   * errors.
-   */
+                  "scda_fclose after write failed");
 
   fc =
     sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
@@ -163,10 +183,60 @@ main (int argc, char **argv)
 
   SC_INFOF ("File header user string: %s\n", read_user_string);
 
+  /* read first section header */
+  fc = sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                     &elem_count, &elem_size, &decode,
+                                     &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'I' && elem_count == 0 && elem_size == 0,
+                  "Identifying section type");
+
+  /* read inline data */
+  sc_array_init_data (&data, read_inline_data, SC_SCDA_INLINE_FIELD, 1);
+  fc = sc_scda_fread_inline_data (fc, &data, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_inline_data failed");
+  SC_CHECK_ABORT (mpirank != 0
+                  || !strncmp (read_inline_data, inline_data,
+                               SC_SCDA_INLINE_FIELD), "inline data mismatch");
+
+  SC_INFOF ("Read file section header of type %c with user string: %s\n",
+            section_type, read_user_string);
+
+  /* skip the next inline section */
+  /* reading the section header can not be skipped */
+  fc = sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                     &elem_count, &elem_size, &decode,
+                                     &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'I' && elem_count == 0 && elem_size == 0,
+                  "Identifying section type");
+  fc = sc_scda_fread_inline_data (fc, NULL, mpisize - 1, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_inline_data skip failed");
+
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fclose after read failed");
+
+  fc =
+    sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
+                        &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fopen_read failed");
+
+  /* provoke error for invalid scda workflow */
+  SC_GLOBAL_ESSENTIAL ("We expect an error for incorrect workflow for scda"
+                       " reading function, which is triggered on purpose to"
+                       " test the error checking.\n");
+  fc = sc_scda_fread_inline_data (fc, &data, 0, &errcode);
+  SC_CHECK_ABORT (!sc_scda_ferror_is_success (errcode) &&
+                  errcode.scdaret == SC_SCDA_FERR_USAGE && fc == NULL,
+                  "sc_scda_fread_section_header error detection failed");
+  /* fc is closed and deallocated due to the occurred error  */
 
   sc_options_destroy (opt);
 
