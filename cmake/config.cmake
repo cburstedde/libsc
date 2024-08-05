@@ -98,7 +98,7 @@ set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
 set(SC_ENABLE_MEMALIGN 1)
 
 # user has requested a different MPI setting, so we need to clear these cache variables to recheck
-if(NOT SC_ENABLE_MPI EQUAL CACHE{SC_ENABLE_MPI})
+if(NOT "${SC_ENABLE_MPI}" STREQUAL "$CACHE{SC_ENABLE_MPI}")
   unset(SC_ENABLE_MPICOMMSHARED CACHE)
   unset(SC_ENABLE_MPITHREAD CACHE)
   unset(SC_ENABLE_MPIWINSHARED CACHE)
