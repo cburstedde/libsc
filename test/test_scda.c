@@ -169,6 +169,13 @@ main (int argc, char **argv)
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fwrite_inline with empty user string failed");
 
+  /* write a block section */
+  fc = sc_scda_fwrite_block (fc, "A block section", NULL, &data, 32,
+                             mpisize - 1, 0, &errcode);
+  /* TODO: check errcode */
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fwrite_block failed");
+
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),

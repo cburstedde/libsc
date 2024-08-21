@@ -1341,6 +1341,215 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
   return fc;
 }
 
+/** Write the specified count field to \b output.
+ *
+ * Since this function is dedicated to be executed in serial we assume that
+ * the length of the variable is collectively checked before this function is
+ * called.
+ *
+ * \param [in]  ident       The char that identifies the count variable.
+ * \param [in]  var         The count variable, which must be representable by
+ *                          at most \ref SC_SCDA_COUNT_MAX_DIGITS decimal
+ *                          digits.
+ * \param [out] output      The specified count field. Must be at least \ref
+ *                          SC_SCDA_COUNT_FIELD bytes.
+ */
+static void
+sc_scda_get_section_header_entry (char ident, size_t var, char *output)
+{
+  char                var_str[SC_SCDA_COUNT_MAX_DIGITS + 1];    /* + 1 for trailing nul */
+#ifdef SC_ENABLE_DEBUG
+  long long unsigned  cmp;
+#endif
+
+  SC_ASSERT (output != NULL);
+
+  /* write the identifier */
+  output[0] = ident;
+  output[1] = ' ';
+
+  /* get var as string */
+  snprintf (var_str, SC_SCDA_COUNT_MAX_DIGITS + 1, "%llu",
+            (long long unsigned) var);
+
+  SC_ASSERT (strlen (var_str) > 0);
+  SC_ASSERT (strlen (var_str) <= SC_SCDA_COUNT_MAX_DIGITS);
+
+#ifdef SC_ENABLE_DEBUG
+  /* verify content of var_str */
+  SC_ASSERT (sscanf (var_str, "%llu", &cmp) == 1);
+  SC_ASSERT (cmp == (unsigned long long) var);
+#endif
+
+  /* pad var_str */
+  sc_scda_pad_to_fix_len_inplace (var_str, strlen (var_str), &output[2],
+                                  SC_SCDA_COUNT_ENTRY);
+}
+
+/** Internal function to write the block section header.
+ *
+ * This function is dedicated to be called in \ref sc_scda_fwrite_block.
+ *
+ * \param [in] fc           The file context as in \ref sc_scda_fwrite_block
+ *                          before running the first serial code part.
+ * \param [in] user_string  As in the documentation of \ref
+ *                          sc_scda_fwrite_block.
+ * \param [in] len          As in the documentation of \ref
+ *                          sc_scda_fwrite_block.
+ * \param [in] block_size   As in the documentation of \ref
+ *                          sc_scda_fwrite_block.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fwrite_block_header_internal (sc_scda_fcontext_t *fc,
+                                      const char *user_string, size_t *len,
+                                      size_t block_size, int *count_err,
+                                      sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 current_len;
+  int                 invalid_user_string;
+  int                 header_len;
+  char                header_data[SC_SCDA_COMMON_FIELD + SC_SCDA_COUNT_FIELD];
+
+  *count_err = 0;
+
+  header_len = SC_SCDA_COMMON_FIELD + SC_SCDA_COUNT_FIELD;
+
+  /* get block file section header */
+
+  /* section-identifying character */
+  current_len = 0;
+
+  invalid_user_string =
+    sc_scda_get_common_section_header ('B', user_string, len, header_data);
+  /* We always translate the error code to have full coverage for the fuzzy
+   * error testing.
+   */
+  sc_scda_scdaret_to_errcode (invalid_user_string ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
+
+  current_len += SC_SCDA_COMMON_FIELD;
+
+  /* get count variable entry */
+  sc_scda_get_section_header_entry ('E', block_size,
+                                    &header_data[current_len]);
+  current_len += SC_SCDA_COUNT_FIELD;
+
+  SC_ASSERT (current_len == header_len);
+
+  /* write block section header */
+  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, header_data,
+                           header_len, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing block section header");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (header_len, count, count_err);
+}
+
+/** Internal function to write the block section data.
+ *
+ * This function is dedicated to be called in \ref sc_scda_fwrite_block.
+ *
+ * \param [in] fc           The file context as in \ref sc_scda_fwrite_block
+ *                          before running the first serial code part.
+ * \param [in] block_data   As in the documentation of \ref
+ *                          sc_scda_fwrite_block.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fwrite_block_data_internal (sc_scda_fcontext_t *fc,
+                                     sc_array_t * block_data, size_t block_size,
+                                     int *count_err, sc_scda_ferror_t * errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 invalid_block_data;
+  size_t              num_pad_bytes;
+  /* \ref SC_SCDA_PADDING_MOD + 6 is the maximum number of mod padding bytes */
+  char                padding[SC_SCDA_PADDING_MOD + 6];
+
+  *count_err = 0;
+
+  /* check block data */
+  invalid_block_data = !(block_data->elem_size == block_size &&
+                         block_data->elem_count == 1);
+  sc_scda_scdaret_to_errcode (invalid_block_data ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid block data");
+
+  /* write the block data to the file section */
+  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, block_data->array,
+                           block_size, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing block data");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (block_size, count, count_err);
+
+  /* get the padding bytes */
+  num_pad_bytes = sc_scda_pad_to_mod_len (block_size);
+  sc_scda_pad_to_mod (block_data->array, block_size, padding);
+
+  /* write the padding bytes */
+  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes + block_size,
+                           padding, (int) num_pad_bytes, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing block data padding");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (block_size, count, count_err);
+}
+
+sc_scda_fcontext_t *
+sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
+                       size_t *len, sc_array_t * block_data, size_t block_size,
+                       int root, int encode, sc_scda_ferror_t * errcode)
+{
+  int                 count_err;
+  size_t              num_pad_bytes;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (root >= 0);
+  /* block_data is ignored on all ranks except of root */
+  SC_ASSERT (fc->mpirank != root || block_data != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  /* TODO: Check if block_size is collective. */
+
+  /* TODO: respect encode parameter */
+
+  /* The file header section is always written and read on rank 0. */
+  if (fc->mpirank == 0) {
+    sc_scda_fwrite_block_header_internal (fc, user_string, len, block_size,
+                                          &count_err, errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
+
+  /* add number of written bytes */
+  fc->accessed_bytes += SC_SCDA_COMMON_FIELD + SC_SCDA_COUNT_FIELD;
+
+  /* The block data is written on the the user-defined rank root. */
+  if (fc->mpirank == root) {
+    sc_scda_fwrite_block_data_internal (fc, block_data, block_size,
+                                        &count_err, errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
+
+  /* get number of padding bytes to update internal file pointer */
+  num_pad_bytes = sc_scda_pad_to_mod_len (block_size);
+
+  fc->accessed_bytes += (sc_MPI_Offset) (block_size + num_pad_bytes);
+
+  return fc;
+}
+
 /** Check a read file header section and extract the user string.
  *
  * \param [in] file_header_data The read file header data as a byte buffer.
