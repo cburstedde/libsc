@@ -373,18 +373,20 @@ sc_scda_pad_to_mod_len (size_t input_len)
 /** Pad data to a length that is congurent to 0 modulo \ref SC_SCDA_PADDING_MOD.
  *
  * \param [in]  input_data  The input data. At least \b input_len bytes.
+ *                          The input data is required since the padding byte
+ *                          content dependt on the trailing input data byte.
  * \param [in]  input_len   The length of \b input_data in number of bytes.
- * \param [out] output_data On output the padded input data. Must be at least
+ * \param [out] padding     On output the padding bytes. Must be at least
  *                          \ref sc_scda_pad_to_mod_len (\b input_len) bytes.
  */
 static void
 sc_scda_pad_to_mod (const char *input_data, size_t input_len,
-                    char *output_data)
+                    char *padding)
 {
   size_t              num_pad_bytes;
 
   SC_ASSERT (input_len == 0 || input_data != NULL);
-  SC_ASSERT (output_data != NULL);
+  SC_ASSERT (padding != NULL);
 
   /* compute the number of padding bytes */
   num_pad_bytes = sc_scda_pad_to_mod_len (input_len);
@@ -392,23 +394,43 @@ sc_scda_pad_to_mod (const char *input_data, size_t input_len,
   SC_ASSERT (num_pad_bytes >= 6);
   SC_ASSERT (num_pad_bytes <= SC_SCDA_PADDING_MOD + 6);
 
-  sc_scda_copy_bytes (output_data, input_data, input_len);
-
   /* check for last byte to decide on padding format */
   if (input_len > 0 && input_data[input_len - 1] == '\n') {
     /* input data ends with a line break */
-    output_data[input_len] = '=';
+    padding[input_len] = '=';
   }
   else {
     /* add a line break add the beginning of the padding */
-    output_data[input_len] = '\n';
+    padding[input_len] = '\n';
   }
-  output_data[input_len + 1] = '=';
+  padding[input_len + 1] = '=';
 
   /* append the remaining padding bytes */
-  sc_scda_set_bytes (&output_data[input_len + 2], '=', num_pad_bytes - 4);
-  output_data[input_len + num_pad_bytes - 2] = '\n';
-  output_data[input_len + num_pad_bytes - 1] = '\n';
+  sc_scda_set_bytes (&padding[2], '=', num_pad_bytes - 4);
+  padding[num_pad_bytes - 2] = '\n';
+  padding[num_pad_bytes - 1] = '\n';
+}
+
+/** Pad data inplace to a len. that is cong. to 0 mod. \ref SC_SCDA_PADDING_MOD.
+ *
+ * \param [in]  input_data  The input data. At least \b input_len bytes.
+ * \param [in]  input_len   The length of \b input_data in number of bytes.
+ * \param [out] output_data On output the padded input data. Must be at least
+ *                          \ref sc_scda_pad_to_mod_len (\b input_len) +
+ *                          \b input_len bytes.
+ */
+static void
+sc_scda_pad_to_mod_inplace (const char *input_data, size_t input_len,
+                            char *output_data)
+{
+  SC_ASSERT (input_len == 0 || input_data != NULL);
+  SC_ASSERT (output_data != NULL);
+
+  /* copy the input data */
+  sc_scda_copy_bytes (output_data, input_data, input_len);
+
+  /* append the padding */
+  sc_scda_pad_to_mod (input_data, input_len, &output_data[input_len]);
 }
 
 /** Checks if \b padded_data is actually padded with respect to
@@ -1068,7 +1090,7 @@ sc_scda_fopen_write_header_internal (sc_scda_fcontext_t *fc,
   current_len += SC_SCDA_COMMON_FIELD;
 
   /* pad the file header section */
-  sc_scda_pad_to_mod (NULL, 0, &file_header_data[current_len]);
+  sc_scda_pad_to_mod_inplace (NULL, 0, &file_header_data[current_len]);
   current_len += SC_SCDA_PADDING_MOD;
 
   SC_ASSERT (current_len == SC_SCDA_HEADER_BYTES);
