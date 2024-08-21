@@ -410,13 +410,13 @@ sc_scda_pad_to_mod (const char *input_data, size_t input_len,
   /* check for last byte to decide on padding format */
   if (input_len > 0 && input_data[input_len - 1] == '\n') {
     /* input data ends with a line break */
-    padding[input_len] = '=';
+    padding[0] = '=';
   }
   else {
     /* add a line break add the beginning of the padding */
-    padding[input_len] = '\n';
+    padding[0] = '\n';
   }
-  padding[input_len + 1] = '=';
+  padding[1] = '=';
 
   /* append the remaining padding bytes */
   sc_scda_set_bytes (&padding[2], '=', num_pad_bytes - 4);
