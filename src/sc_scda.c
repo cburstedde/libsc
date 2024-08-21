@@ -33,11 +33,19 @@
 #define SC_SCDA_VENDOR_STRING_BYTES 20 /**< maximal number of vendor string bytes */
 #define SC_SCDA_USER_STRING_FIELD 62   /**< byte count for user string entry
                                             including the padding */
+#define SC_SCDA_COUNT_ENTRY 30 /**< byte count of the count variable entry in
+                                    the section header including padding */
 #define SC_SCDA_COMMON_FIELD (2 + SC_SCDA_USER_STRING_FIELD) /**< byte count for
                                                                   common part of
                                                                   the file
                                                                   section
                                                                   headers */
+#define SC_SCDA_COUNT_FIELD (2 + SC_SCDA_COUNT_ENTRY) /**< byte count of the
+                                                           complete count
+                                                           variable entry in
+                                                           the section header */
+#define SC_SCDA_COUNT_MAX_DIGITS 26 /**< maximal decimal digits count of a count
+                                         variable in a section header */
 #define SC_SCDA_PADDING_MOD 32  /**< divisor for variable length padding */
 
 /** get a random double in the range [A,B) */
