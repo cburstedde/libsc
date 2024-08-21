@@ -261,6 +261,29 @@ sc_scda_init_nul (char *dest, size_t len)
 
 /** Pad the input data to a fixed length.
  *
+ * \param [in]  input_len     The length of \b input_len in number of bytes.
+ *                            \b input_len must be less or equal to
+ *                            \b pad_len - 4.
+ * \param [in]  pad_len       The target padding length.
+ * \param [out] padding       On output the padded bytes.
+ *                            \b pad_len - \b input_len many bytes.
+ */
+static void
+sc_scda_pad_to_fix_len (size_t input_len, size_t pad_len, char *padding)
+{
+  SC_ASSERT (padding != NULL);
+  SC_ASSERT (input_len <= pad_len - 4);
+
+  /* We assume that padding has at least pad_len - input_len allocated bytes. */
+
+  /* set padding */
+  padding[0] = ' ';
+  sc_scda_set_bytes (&padding[1], '-', pad_len - input_len - 2);
+  padding[pad_len - input_len - 1] = '\n';
+}
+
+/** Pad the input data inplace to a fixed length.
+ *
  * \param [in]  input_data    The data that is padded. \b input_len many bytes.
  * \param [in]  input_len     The length of \b input_len in number of bytes.
  *                            \b input_len must be less or equal to
@@ -270,13 +293,9 @@ sc_scda_init_nul (char *dest, size_t len)
  *                            \b output_data in number of bytes.
  */
 static void
-sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
-                        char *output_data, size_t pad_len)
+sc_scda_pad_to_fix_len_inplace (const char *input_data, size_t input_len,
+                                char *output_data, size_t pad_len)
 {
-#if 0
-  uint8_t            *byte_arr;
-#endif
-
   SC_ASSERT (input_data != NULL);
   SC_ASSERT (output_data != NULL);
   SC_ASSERT (input_len <= pad_len - 4);
@@ -287,13 +306,7 @@ sc_scda_pad_to_fix_len (const char *input_data, size_t input_len,
   sc_scda_copy_bytes (output_data, input_data, input_len);
 
   /* append padding */
-#if 0
-  byte_arr = (uint8_t *) padded_data;
-#endif
-  output_data[input_len] = ' ';
-  sc_scda_set_bytes (&output_data[input_len + 1], '-',
-                     pad_len - input_len - 2);
-  output_data[pad_len - 1] = '\n';
+  sc_scda_pad_to_fix_len (input_len, pad_len, &output_data[input_len]);
 }
 
 /** This function checks if \b padded_data is actually padded to \b pad_len.
@@ -1018,8 +1031,8 @@ sc_scda_get_common_section_header (char section_char, const char* user_string,
   output[1] = ' ';
 
   /* write \b user_string to \b output including padding */
-  sc_scda_pad_to_fix_len (user_string, user_string_len,
-                          &output[2], SC_SCDA_USER_STRING_FIELD);
+  sc_scda_pad_to_fix_len_inplace (user_string, user_string_len, &output[2],
+                                  SC_SCDA_USER_STRING_FIELD);
 
   return invalid_user_string;
 }
@@ -1056,10 +1069,10 @@ sc_scda_fopen_write_header_internal (sc_scda_fcontext_t *fc,
   file_header_data[current_len++] = ' ';
 
   /* vendor string */
-  sc_scda_pad_to_fix_len (SC_SCDA_VENDOR_STRING,
-                          strlen (SC_SCDA_VENDOR_STRING),
-                          &file_header_data[current_len],
-                          SC_SCDA_VENDOR_STRING_FIELD);
+  sc_scda_pad_to_fix_len_inplace (SC_SCDA_VENDOR_STRING,
+                                  strlen (SC_SCDA_VENDOR_STRING),
+                                  &file_header_data[current_len],
+                                  SC_SCDA_VENDOR_STRING_FIELD);
   current_len += SC_SCDA_VENDOR_STRING_FIELD;
 
   /* get common file section header part */
