@@ -1343,9 +1343,9 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
 
 /** Write the specified count field to \b output.
  *
- * Since this function is dedicated to be executed in serial we assume that
- * the length of the variable is collectively checked before this function is
- * called.
+ * The number of decimal digits is checked in this function. This function is
+ * only called in serial code places but we assume that it was checked in
+ * advance if the count variable is collective.
  *
  * \param [in]  ident       The char that identifies the count variable.
  * \param [in]  var         The count variable, which must be representable by
@@ -1353,11 +1353,13 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
  *                          digits.
  * \param [out] output      The specified count field. Must be at least \ref
  *                          SC_SCDA_COUNT_FIELD bytes.
+ * \return                  True if count is too large and false otherwise.
  */
-static void
+static int
 sc_scda_get_section_header_entry (char ident, size_t var, char *output)
 {
-  char                var_str[SC_SCDA_COUNT_MAX_DIGITS + 1];    /* + 1 for trailing nul */
+  char                var_str[BUFSIZ];
+  size_t              len;
 #ifdef SC_ENABLE_DEBUG
   long long unsigned  cmp;
 #endif
@@ -1369,11 +1371,18 @@ sc_scda_get_section_header_entry (char ident, size_t var, char *output)
   output[1] = ' ';
 
   /* get var as string */
-  snprintf (var_str, SC_SCDA_COUNT_MAX_DIGITS + 1, "%llu",
-            (long long unsigned) var);
+  /* BUFSIZ must be larger than \ref SC_SCDA_COUNT_MAX_DIGITS + 1 to ensure that
+   * this code is working.
+   * According to C89 section 4.9.2 BUFSIZ shall be at least 256.
+   */
+  snprintf (var_str, BUFSIZ, "%llu", (long long unsigned) var);
+  len = strlen (var_str);
 
-  SC_ASSERT (strlen (var_str) > 0);
-  SC_ASSERT (strlen (var_str) <= SC_SCDA_COUNT_MAX_DIGITS);
+  SC_ASSERT (len > 0);
+  if (len > SC_SCDA_COUNT_MAX_DIGITS) {
+    /* count value is too large */
+    return -1;
+  }
 
 #ifdef SC_ENABLE_DEBUG
   /* verify content of var_str */
@@ -1382,8 +1391,10 @@ sc_scda_get_section_header_entry (char ident, size_t var, char *output)
 #endif
 
   /* pad var_str */
-  sc_scda_pad_to_fix_len_inplace (var_str, strlen (var_str), &output[2],
+  sc_scda_pad_to_fix_len_inplace (var_str, len, &output[2],
                                   SC_SCDA_COUNT_ENTRY);
+
+  return 0;
 }
 
 /** Internal function to write the block section header.
@@ -1412,7 +1423,7 @@ sc_scda_fwrite_block_header_internal (sc_scda_fcontext_t *fc,
   int                 mpiret;
   int                 count;
   int                 current_len;
-  int                 invalid_user_string;
+  int                 invalid_user_string, invalid_count;
   int                 header_len;
   char                header_data[SC_SCDA_COMMON_FIELD + SC_SCDA_COUNT_FIELD];
 
@@ -1437,8 +1448,12 @@ sc_scda_fwrite_block_header_internal (sc_scda_fcontext_t *fc,
   current_len += SC_SCDA_COMMON_FIELD;
 
   /* get count variable entry */
-  sc_scda_get_section_header_entry ('E', block_size,
-                                    &header_data[current_len]);
+  invalid_count = sc_scda_get_section_header_entry ('E', block_size,
+                                                    &header_data[current_len]);
+  sc_scda_scdaret_to_errcode (invalid_count ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count");
+
   current_len += SC_SCDA_COUNT_FIELD;
 
   SC_ASSERT (current_len == header_len);
