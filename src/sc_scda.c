@@ -2122,6 +2122,88 @@ sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
   return fc;
 }
 
+/** Internal function to read the block data.
+ *
+ * \param [in] fc           The file context as in \ref
+ *                          sc_scda_fread_block_data before running the
+ *                          serial code part.
+ * \param [out] data        As in the documentation of \ref
+ *                          sc_scda_fread_block_data.
+ * \param [in]  block_size  As in the documentation of \ref
+ *                          sc_scda_fread_block_data.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fread_block_data_serial_internal (sc_scda_fcontext_t *fc,
+                                          sc_array_t *data, size_t block_size,
+                                          int *count_err,
+                                          sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 invalid_array, invalid_padding;
+  size_t              num_pad_bytes;
+
+  *count_err = 0;
+
+  /* check the passed sc_array */
+  invalid_array = !(data->elem_count == 1 && data->elem_size == block_size);
+  sc_scda_scdaret_to_errcode (invalid_array ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+
+  /* TODO: Check the padding before reading the data */
+  /* to this end we need a function that checks this given the padding length */
+
+  /* read block data  */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, data->array,
+                          (int) block_size, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read inline data");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (block_size, count, count_err);
+}
+
+sc_scda_fcontext_t *
+sc_scda_fread_block_data (sc_scda_fcontext_t *fc, sc_array_t *block_data,
+                          size_t block_size, int root,
+                          sc_scda_ferror_t *errcode)
+{
+  int                 count_err;
+  int                 wrong_usage;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (root >= 0);
+  SC_ASSERT (errcode != NULL);
+
+  /* It is necessary that sc_scda_fread_section_header was called as last
+   * function call on fc and that it returned the block section type.
+   */
+  wrong_usage = !(fc->header_before && fc->last_type == 'B');
+  sc_scda_scdaret_to_errcode (wrong_usage ? SC_SCDA_FERR_USAGE :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Wrong usage of scda functions");
+
+  if (block_data != NULL) {
+    /* the data is not skipped */
+    if (fc->mpirank == root) {
+      sc_scda_fread_block_data_serial_internal (fc, block_data, block_size,
+                                                &count_err, errcode);
+    }
+    SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
+    SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
+  }
+
+  /* if no error occurred, we move the internal file pointer */
+  fc->accessed_bytes += (sc_MPI_Offset) block_size;
+
+  /* last function call can not be \ref sc_scda_fread_section_header anymore */
+  fc->header_before = 0;
+
+  return fc;
+}
+
 int
 sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
 {
