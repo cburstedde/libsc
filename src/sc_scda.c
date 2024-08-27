@@ -580,6 +580,86 @@ sc_scda_get_pad_to_mod (const char *padded_data, size_t padded_len,
   return 0;
 }
 
+/** Check if the given parameters are collective.
+ *
+ * This function assumes that the parameters \b len1, \b len2 and \b len3 are
+ * collective.
+ *
+ * \param [in] fc           A file context with filled MPI data.
+ * \param [in] param1       Pointer to the first parameter to check.
+ *                          Must be not NULL.
+ * \param [in] len1         The byte count of \b param1.
+ * \param [in] param2       Pointer to the second parameter to check.
+ *                          May be NULL.
+ * \param [in] len2         The byte count of \b param2. If \b param2 is NULL,
+ *                          \b len2 must be 0.
+ * \param [in] param3       Pointer to the third parameter to check.
+ *                          May be NULL and must be NULL if \b param2 is NULL.
+ * \param [in] len3         The byte count of \b param3. If \b param3 is NULL,
+ *                          \b len3 must be 0.
+ * \return                  \ref SC_SCDA_FERR_ARG if the at least one parameter
+ *                          does not match in parallel. Otherwise, \ref
+ *                          SC_SCDA_FERR_SUCCESS.
+ */
+static sc_scda_ret_t
+sc_scda_check_coll_params (sc_scda_fcontext_t *fc, const char *param1,
+                           size_t len1, const char *param2, size_t len2,
+                           const char *param3, size_t len3)
+{
+  int                 mpiret;
+  int                 mismatch, collective_mismatch;
+  char               *buffer, *recv_buf = NULL;
+  size_t              len;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (param1 != NULL);
+  SC_ASSERT (param2 != NULL || len2 == 0);
+  SC_ASSERT (param3 != NULL || len3 == 0);
+
+  len = len1 + len2 + len3;
+
+  /* allocate contiguous buffer */
+  buffer = (char *) SC_ALLOC (char, len);
+
+  /* get buffer with parameter data */
+  sc_scda_merge_data_to_buf (param1, len1, param2, len2, param3, len3, buffer);
+
+  /* For the sake of simplicity, we use a Bcast followed by an Allreduce
+  * instead of one Allreduce call with a custom reduction function.
+  */
+  /* In the future we may want to use a checksum on the buffer data if the data
+  * is large.
+  */
+  if (fc->mpirank == 0) {
+    mpiret = sc_MPI_Bcast (buffer, (int) len, sc_MPI_BYTE, 0, fc->mpicomm);
+  }
+  else {
+    recv_buf = (char *) SC_ALLOC (char, len);
+    mpiret = sc_MPI_Bcast (recv_buf, (int) len, sc_MPI_BYTE, 0, fc->mpicomm);
+  }
+  SC_CHECK_MPI (mpiret);
+
+  if (fc->mpirank > 0) {
+    /* compare data */
+    mismatch = memcmp (recv_buf, buffer, len);
+
+    /* free data buffer */
+    SC_FREE (buffer);
+    SC_FREE (recv_buf);
+  }
+  else {
+    mismatch = 0;
+    SC_FREE (buffer);
+  }
+
+  /* synchronize comparison results */
+  mpiret = sc_MPI_Allreduce (&mismatch, &collective_mismatch, 1, sc_MPI_INT,
+                             sc_MPI_LOR, fc->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  return collective_mismatch ? SC_SCDA_FERR_ARG : SC_SCDA_FERR_SUCCESS;
+}
+
 /**
  * This function is for creating and reading a file.
  * The passed \b fc must have filled MPI information (cf. \ref
