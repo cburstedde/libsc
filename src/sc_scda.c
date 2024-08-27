@@ -674,43 +674,16 @@ sc_scda_examine_options (sc_scda_fopen_options_t * opt, sc_scda_fcontext_t *fc,
   SC_ASSERT (fc != NULL);
 
   if (opt != NULL) {
-    int                 mpiret;
-    int                 local_fuzzy_params_cmp, collective_fuzzy_params;
-    /* byte buffer since it is not clear which data type is larger */
-    /* we use a char array as a byte buffer, cf. \ref sc_array_index */
-    char                buf[sizeof (unsigned) + sizeof (sc_rand_state_t)];
-    unsigned            bcast_everyn;
-    sc_rand_state_t     bcast_seed;
+    sc_scda_ret_t       ret;
 
     /* check if fuzzy_everyn and fuzzy_seed are collective */
+    ret = sc_scda_check_coll_params (fc, (const char *) &opt->fuzzy_everyn,
+                                     sizeof (unsigned),
+                                     (const char *) &opt->fuzzy_seed,
+                                     sizeof (sc_rand_state_t), NULL, 0);
+    SC_ASSERT (ret == SC_SCDA_FERR_SUCCESS || ret == SC_SCDA_FERR_ARG);
 
-    /* copy fuzzy parameters to byte buffer */
-    sc_scda_copy_bytes (buf, (char *) &opt->fuzzy_everyn, sizeof (unsigned));
-    sc_scda_copy_bytes (&buf[sizeof (unsigned)], (char *) &opt->fuzzy_seed,
-                        sizeof (sc_rand_state_t));
-
-    /* For the sake of simplicity, we use a Bcast followed by an Allreduce
-     * instead of one Allreduce call with a custom reduction function.
-     */
-    mpiret = sc_MPI_Bcast (buf, sizeof (unsigned) + sizeof (sc_rand_state_t),
-                           sc_MPI_BYTE, 0, fc->mpicomm);
-    SC_CHECK_MPI (mpiret);
-
-    /* get actual data from the byte buffer */
-    bcast_everyn = *((unsigned *) buf);
-    bcast_seed = *((sc_rand_state_t *) & buf[sizeof (unsigned)]);
-
-    /* compare fuzzy parameters */
-    local_fuzzy_params_cmp = bcast_everyn != opt->fuzzy_everyn
-      || bcast_seed != opt->fuzzy_seed;
-
-    /* synchronize comparison results */
-    mpiret = sc_MPI_Allreduce (&local_fuzzy_params_cmp,
-                               &collective_fuzzy_params, 1, sc_MPI_INT,
-                               sc_MPI_LOR, fc->mpicomm);
-    SC_CHECK_MPI (mpiret);
-
-    if (collective_fuzzy_params) {
+    if (ret == SC_SCDA_FERR_ARG) {
       /* non-collective fuzzy parameters */
       /* no fuzzy error testing in case of an error */
       fc->fuzzy_everyn = 0;
@@ -1677,6 +1650,7 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
 {
   int                 count_err;
   size_t              num_pad_bytes;
+  sc_scda_ret_t       ret;
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (user_string != NULL);
@@ -1685,7 +1659,12 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
   SC_ASSERT (fc->mpirank != root || block_data != NULL);
   SC_ASSERT (errcode != NULL);
 
-  /* TODO: Check if block_size is collective. */
+  /* check if block_size is collective */
+  ret = sc_scda_check_coll_params (fc, (const char*) &block_size,
+                                   sizeof (size_t), NULL, 0, NULL, 0);
+  sc_scda_scdaret_to_errcode (ret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fwrite_block: block_size not "
+                          "collective");
 
   /* TODO: respect encode parameter */
 
