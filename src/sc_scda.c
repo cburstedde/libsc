@@ -237,6 +237,36 @@ sc_scda_copy_bytes (char *dest, const char *src, size_t n)
   (void) memcpy (dest, src, n);
 }
 
+/** Merge up to three buffers into one contiguous buffer.
+ *
+ * \param [in] d1           The first buffer. Must be not NULL.
+ * \param [in] len1         The byte count of the first buffer.
+ * \param [in] d2           The second buffer. May be NULL.
+ * \param [in] len2         The byte count of the second buffer. Must be 0 if
+ *                          \b d2 is NULL.
+ * \param [in] d3           The third buffer. May be NULL and must be NULL if
+ *                          \b d2 is NULL.
+ * \param [in] len3         The byte count of the third buffer. Must be 0 if
+ *                          \b d3 is NULL.
+ * \param [out] out         At least \b len1 + \b len2 + \b len3 bytes.
+ */
+static void
+sc_scda_merge_data_to_buf (const char *d1, size_t len1, const char *d2,
+                           size_t len2, const char *d3, size_t len3,
+                           char *out)
+{
+  SC_ASSERT (d1 != NULL);
+
+  sc_scda_copy_bytes (out, d1, len1);
+  if (d2 != NULL) {
+    sc_scda_copy_bytes (&out[len1], d2, len2);
+  }
+  if (d3 != NULL) {
+    SC_ASSERT (d2 != NULL);
+    sc_scda_copy_bytes (&out[len2], d3, len3);
+  }
+}
+
 /** Set \b n bytes in \b dest to \b c.
  * \b dest must have at least \b n bytes.
  */
