@@ -176,10 +176,30 @@ main (int argc, char **argv)
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fwrite_block failed");
 
-  sc_scda_fclose (fc, &errcode);
-  /* TODO: check errcode and return value */
-  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
-                  "scda_fclose after write failed");
+  /* intentionally try to write with non-collective block size */
+  if (mpisize > 1) {
+    SC_GLOBAL_ESSENTIAL
+      ("We expect an invalid scda function parameter error."
+       " This is just for testing purposes and do not imply"
+       " erroneous code behavior.\n");
+  }
+  fc = sc_scda_fwrite_block (fc, "A block section", NULL, &data,
+                             (mpirank == 0) ? 32 : 33, mpisize - 1, 0,
+                             &errcode);
+  SC_CHECK_ABORT (mpisize == 1 || (!sc_scda_ferror_is_success (errcode) &&
+                  errcode.scdaret == SC_SCDA_FERR_ARG), "scda_fwrite_block "
+                  "check catch non-collective block size");
+
+  if (mpisize == 1) {
+    sc_scda_fclose (fc, &errcode);
+    /* TODO: check errcode and return value */
+    SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                    "scda_fclose after write failed");
+  }
+  else {
+    /* fc was closed due to an intentionally triggered error */
+    SC_CHECK_ABORT (fc == NULL, "fc closed after error in fwrite_block");
+  }
 
   fc =
     sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
