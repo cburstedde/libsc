@@ -2183,6 +2183,7 @@ sc_scda_fread_block_data_serial_internal (sc_scda_fcontext_t *fc,
   int                 count;
   int                 invalid_array, invalid_padding;
   size_t              num_pad_bytes;
+  char                paddding[SC_SCDA_PADDING_MOD_MAX];
 
   *count_err = 0;
 
@@ -2190,9 +2191,7 @@ sc_scda_fread_block_data_serial_internal (sc_scda_fcontext_t *fc,
   invalid_array = !(data->elem_count == 1 && data->elem_size == block_size);
   sc_scda_scdaret_to_errcode (invalid_array ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-
-  /* TODO: Check the padding before reading the data */
-  /* to this end we need a function that checks this given the padding length */
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid block array during reading");
 
   /* read block data  */
   mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, data->array,
@@ -2200,6 +2199,24 @@ sc_scda_fread_block_data_serial_internal (sc_scda_fcontext_t *fc,
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
   SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read inline data");
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (block_size, count, count_err);
+
+  num_pad_bytes = sc_scda_pad_to_mod_len (block_size);
+
+  /* read the padding the bytes */
+  /* the padding depends on the trailing byte of the data */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes +
+                          (sc_MPI_Offset) block_size, paddding,
+                          (int) num_pad_bytes, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read inline data padding");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_pad_bytes, count, count_err);
+
+  /* check the padding */
+  invalid_padding = sc_scda_check_pad_to_mod (data->array, block_size, paddding,
+                                              num_pad_bytes);
+  sc_scda_scdaret_to_errcode (invalid_padding ? SC_SCDA_FERR_FORMAT :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid block data padding");
 }
 
 sc_scda_fcontext_t *
