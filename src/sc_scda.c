@@ -47,6 +47,8 @@
 #define SC_SCDA_COUNT_MAX_DIGITS 26 /**< maximal decimal digits count of a count
                                          variable in a section header */
 #define SC_SCDA_PADDING_MOD 32  /**< divisor for variable length padding */
+#define SC_SCDA_PADDING_MOD_MAX (6 + SC_SCDA_PADDING_MOD) /**< maximal count of
+                                                              mod padding bytes */
 
 /** get a random double in the range [A,B) */
 #define SC_SCDA_RAND_RANGE(A, B, state) ((A) + sc_rand (state) * ((B) - (A)))
@@ -404,8 +406,8 @@ sc_scda_pad_to_mod (const char *input_data, size_t input_len,
   /* compute the number of padding bytes */
   num_pad_bytes = sc_scda_pad_to_mod_len (input_len);
 
-  SC_ASSERT (num_pad_bytes >= 6);
-  SC_ASSERT (num_pad_bytes <= SC_SCDA_PADDING_MOD + 6);
+  SC_ASSERT (num_pad_bytes >= 7);
+  SC_ASSERT (num_pad_bytes <= SC_SCDA_PADDING_MOD_MAX);
 
   /* check for last byte to decide on padding format */
   if (input_len > 0 && input_data[input_len - 1] == '\n') {
