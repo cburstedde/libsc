@@ -145,6 +145,8 @@ main (int argc, char **argv)
     mpiret =
       sc_MPI_Bcast (&scda_opt.fuzzy_seed, 1, sc_MPI_UNSIGNED, 0, mpicomm);
     SC_CHECK_MPI (mpiret);
+    SC_GLOBAL_INFOF ("Fuzzy error return with time-dependent seed activated. "
+                     "The seed is %lld.\n", (long long) scda_opt.fuzzy_seed);
   }
   else {
     scda_opt.fuzzy_seed = (sc_rand_state_t) int_seed;
