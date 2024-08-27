@@ -448,6 +448,63 @@ sc_scda_pad_to_mod_inplace (const char *input_data, size_t input_len,
   sc_scda_pad_to_mod (input_data, input_len, &output_data[input_len]);
 }
 
+/** Check if the padding bytes are correct w.r.t. \ref SC_SCDA_PADDING_MOD.
+ *
+ * Since the mod padding depends on the trailing data byte this function also
+ * requires the raw data.
+ *
+ * \param [in]  data          The raw data with byte count \b data_len.
+ * \param [in]  data_len      The length of \b data in number of bytes.
+ * \param [in]  pad           The padding bytes with byte count \b pad_len.
+ * \param [in]  pad_len       The length of \b pad in number of bytes.
+ *                            Must be at least 7.
+ * \return                    True if \b pad does not satisfy the scda
+ *                            padding convention for padding to a modulo
+ *                            condition. False, otherwise.
+ */
+static int
+sc_scda_check_pad_to_mod (const char* data, size_t data_len, const char *pad,
+                          size_t pad_len)
+{
+  size_t              si;
+  size_t              num_pad_bytes;
+
+  SC_ASSERT (pad != NULL);
+
+  num_pad_bytes = sc_scda_pad_to_mod_len (data_len);
+
+  /* check if padding data length conforms to the padding format */
+  if (num_pad_bytes != pad_len) {
+    /* data_len and pad_len are not consistent */
+    return -1;
+  }
+  SC_ASSERT (pad_len >= 7);
+
+  /* check the content of the padding bytes */
+  if (pad[pad_len - 1] != '\n' ||
+      pad[pad_len - 2] != '\n') {
+    /* terminating line breaks are missing */
+    return -1;
+  }
+
+  for (si = pad_len - 3; si != 0; --si) {
+    if (pad[si] != '=') {
+      /* wrong padding character */
+      return -1;
+    }
+  }
+
+  /* padding depends on the trailing data byte */
+  if ((!((pad[si] == '=' && data_len != 0 &&
+          data[data_len - 1] == '\n') || pad[si] == '\n'))) {
+    /* wrong padding start */
+    return -1;
+  }
+
+  /* correct padding bytes */
+  return 0;
+}
+
 /** Checks if \b padded_data is actually padded with respect to
  *  \ref SC_SCDA_PADDING_MOD.
  *
@@ -470,39 +527,17 @@ static int
 sc_scda_get_pad_to_mod (const char *padded_data, size_t padded_len,
                         size_t raw_len, char *raw_data)
 {
-  size_t              si;
-  size_t              num_pad_bytes;
-
   SC_ASSERT (padded_data != NULL);
   SC_ASSERT (raw_len == 0 || raw_data != NULL);
 
-  num_pad_bytes = sc_scda_pad_to_mod_len (raw_len);
-
-  /* check if padding data length conforms to the padding format */
-  if (num_pad_bytes + raw_len != padded_len) {
-    /* raw_len and padded_len are not consistent */
-    return -1;
-  }
-  SC_ASSERT (padded_len >= 7);
-
-  /* check the content of the padding bytes */
-  if (padded_data[padded_len - 1] != '\n' ||
-      padded_data[padded_len - 2] != '\n') {
-    /* terminating line breaks are missing */
+  if (padded_len < raw_len || padded_len - raw_len < 7) {
+    /* invalid lengths */
     return -1;
   }
 
-  for (si = padded_len - 3; si != padded_len - num_pad_bytes; --si) {
-    if (padded_data[si] != '=') {
-      /* wrong padding character */
-      return -1;
-    }
-  }
-  SC_ASSERT (si == raw_len);
-
-  if ((!((padded_data[si] == '=' && raw_len != 0 &&
-          padded_data[si - 1] == '\n') || padded_data[si] == '\n'))) {
-    /* wrong padding start */
+  if (sc_scda_check_pad_to_mod (padded_data, raw_len, &padded_data[raw_len],
+                                padded_len - raw_len)) {
+    /* invalid padding bytes */
     return -1;
   }
 
