@@ -1663,7 +1663,7 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
   ret = sc_scda_check_coll_params (fc, (const char*) &block_size,
                                    sizeof (size_t), NULL, 0, NULL, 0);
   sc_scda_scdaret_to_errcode (ret, errcode, fc);
-  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fwrite_block: block_size not "
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fwrite_block: block_size is not "
                           "collective");
 
   /* TODO: respect encode parameter */
@@ -2018,7 +2018,7 @@ sc_scda_fread_count_entry_internal (sc_scda_fcontext_t *fc, char *ident,
   int                 count;
   int                 wrong_format, wrong_ident;
   long long unsigned  read_count;
-  size_t              len;
+  size_t              len = 0;
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (ident != NULL);
@@ -2323,10 +2323,18 @@ sc_scda_fread_block_data (sc_scda_fcontext_t *fc, sc_array_t *block_data,
 {
   int                 count_err;
   int                 wrong_usage;
+  sc_scda_ret_t       ret;
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (root >= 0);
   SC_ASSERT (errcode != NULL);
+
+  /* check if block_size is collective */
+  ret = sc_scda_check_coll_params (fc, (const char*) &block_size,
+                                   sizeof (size_t), NULL, 0, NULL, 0);
+  sc_scda_scdaret_to_errcode (ret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fread_block_data: block_size is not "
+                          "collective");
 
   /* It is necessary that sc_scda_fread_section_header was called as last
    * function call on fc and that it returned the block section type.
