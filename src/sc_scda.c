@@ -49,6 +49,7 @@
 #define SC_SCDA_PADDING_MOD 32  /**< divisor for variable length padding */
 #define SC_SCDA_PADDING_MOD_MAX (6 + SC_SCDA_PADDING_MOD) /**< maximal count of
                                                               mod padding bytes */
+#define SC_SCDA_HEADER_ROOT 0 /**< root rank for header I/O operations */
 
 /** get a random double in the range [A,B) */
 #define SC_SCDA_RAND_RANGE(A, B, state) ((A) + sc_rand (state) * ((B) - (A)))
@@ -1207,7 +1208,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    */
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "File open write");
 
-  if (fc->mpirank == 0) {
+  if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
     sc_scda_fopen_write_header_internal (fc, user_string, len, &count_err,
                                          errcode);
   }
@@ -1218,12 +1219,12 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * error, i.e. it broadcasts the errcode, which may encode success, from
    * rank 0 to all other ranks and in case of an error it closes the file,
    * frees the file context and returns NULL. Hence, it is valid that errcode
-   * is only initialized on rank 0 before calling this macro. This macro is only
-   * valid to be called once in a function and this macro is only valid to be
-   * called directly after a non-collective code part that contains at least one
-   * call \ref SC_SCDA_CHECK_NONCOLL_ERR.
+   * is only initialized on rank SC_SCDA_HEADER_ROOT before calling this macro.
+   * This macro is only valid to be called once in a function and this macro is
+   * only valid to be called directly after a non-collective code part that
+   * contains at least one call \ref SC_SCDA_CHECK_NONCOLL_ERR.
    */
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
   /* The macro to check potential non-collective count errors. It is only valid
    * to be called directly after \ref SC_SCDA_HANDLE_NONCOLL_ERR and only
    * if the preceding non-collective code block contains at least one call of
@@ -1232,9 +1233,11 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * prints an error message using \ref SC_LERRORF. This means in particular
    * that it is valid that errcode is only initialized on rank 0 before calling
    * this macro. The macro argument count_err must point to the count error
-   * Boolean that was set on rank 0 by \ref sc_scda_fopen_write_header_internal.
+   * Boolean that was set on rank SC_SCDA_HEADER_ROOT by \ref
+   * sc_scda_fopen_write_header_internal.
    */
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
+                                    fc);
 
   /* store number of written bytes */
   fc->accessed_bytes = SC_SCDA_HEADER_BYTES;
@@ -1355,12 +1358,13 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
   SC_ASSERT (errcode != NULL);
 
   /* The file header section is always written and read on rank 0. */
-  if (fc->mpirank == 0) {
+  if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
     sc_scda_fwrite_inline_header_internal (fc, user_string, len, &count_err,
                                            errcode);
   }
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
+                                    fc);
 
   /* add number of written bytes */
   fc->accessed_bytes += SC_SCDA_COMMON_FIELD;
@@ -1575,13 +1579,14 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* TODO: respect encode parameter */
 
-  /* The file header section is always written and read on rank 0. */
-  if (fc->mpirank == 0) {
+  /* file header section is always written and read on rank SC_SCDA_HEADER_ROOT */
+  if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
     sc_scda_fwrite_block_header_internal (fc, user_string, len, block_size,
                                           &count_err, errcode);
   }
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
+                                    fc);
 
   /* add number of written bytes */
   fc->accessed_bytes += SC_SCDA_COMMON_FIELD + SC_SCDA_COUNT_FIELD;
@@ -1769,8 +1774,8 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
    */
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "File open read");
 
-  /* read file header section on rank 0 */
-  if (fc->mpirank == 0) {
+  /* read file header section on rank SC_SCDA_HEADER_ROOT */
+  if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
     sc_scda_fopen_read_header_internal (fc, user_string, len, &count_err,
                                         errcode);
   }
@@ -1779,16 +1784,17 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
    * More information can be found in the comments in \ref sc_scda_fopen_write
    * and in the documentation of the \ref SC_SCDA_HANDLE_NONCOLL_ERR.
    */
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, 0, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
   /* The macro to handle a non-collective count error that is associated to a
    * preceding call of \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR.
    * More information can be found in the comments in \ref sc_scda_fopen_write
    * and in the documentation of the \ref SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
    */
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, 0, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
+                                    fc);
   /* Bcast the user string */
   mpiret = sc_MPI_Bcast (user_string, SC_SCDA_USER_STRING_BYTES + 1,
-                         sc_MPI_BYTE, 0, mpicomm);
+                         sc_MPI_BYTE, SC_SCDA_HEADER_ROOT, mpicomm);
   SC_CHECK_MPI (mpiret);
 
   /* store the number of read bytes */
@@ -2006,7 +2012,6 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
 {
   int                 count_err;
   int                 mpiret;
-  const int           header_root = 0;
   char                var_ident;
 
   SC_ASSERT (fc != NULL);
@@ -2018,16 +2023,17 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
   SC_ASSERT (errcode != NULL);
 
   /* read the common section header part first */
-  if (fc->mpirank == header_root) {
+  if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
     sc_scda_fread_section_header_common_internal (fc, type, user_string, len,
                                                   &count_err, errcode);
   }
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, header_root, fc);
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, header_root, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
+                                    fc);
 
   fc->accessed_bytes += SC_SCDA_COMMON_FIELD;
 
-  if (fc->mpirank == header_root) {
+  if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
     /* read count entries */
     switch (*type)
     {
@@ -2040,18 +2046,20 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
                                           &count_err, errcode);
       break;
     default:
-      /* rank header_root already checked if type is valid/supported */
+      /* rank SC_SCDA_HEADER_ROOT already checked if type is valid/supported */
       SC_ABORT_NOT_REACHED ();
     }
   }
-  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, header_root, fc);
-  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, header_root, fc);
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
+                                    fc);
 
   /* Bcast type and user string */
-  mpiret = sc_MPI_Bcast (type, 1, sc_MPI_CHAR, header_root, fc->mpicomm);
+  mpiret = sc_MPI_Bcast (type, 1, sc_MPI_CHAR, SC_SCDA_HEADER_ROOT,
+                         fc->mpicomm);
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Bcast (user_string, SC_SCDA_USER_STRING_BYTES + 1,
-                         sc_MPI_BYTE, header_root, fc->mpicomm);
+                         sc_MPI_BYTE, SC_SCDA_HEADER_ROOT, fc->mpicomm);
   SC_CHECK_MPI (mpiret);
 
   /* set global outputs and Bcast the counts if it is necessary */
@@ -2066,15 +2074,15 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
   case 'B':
     /* block */
     *elem_count = 0;
-    /* elem_size was read on rank header_root */
-    mpiret = sc_MPI_Bcast (elem_size, sizeof (size_t), sc_MPI_BYTE, header_root,
-                           fc->mpicomm);
+    /* elem_size was read on rank SC_SCDA_HEADER_ROOT */
+    mpiret = sc_MPI_Bcast (elem_size, sizeof (size_t), sc_MPI_BYTE,
+                           SC_SCDA_HEADER_ROOT, fc->mpicomm);
     SC_CHECK_MPI (mpiret);
     /* one count entry was read */
     fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
     break;
   default:
-    /* rank header_root already checked if type is valid/supported */
+    /* rank SC_SCDA_HEADER_ROOT already checked if type is valid/supported */
     SC_ABORT_NOT_REACHED ();
   }
 
