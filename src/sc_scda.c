@@ -1643,13 +1643,13 @@ sc_scda_fwrite_block_data_internal (sc_scda_fcontext_t *fc,
                            padding, (int) num_pad_bytes, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
   SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing block data padding");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (block_size, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_pad_bytes, count, count_err);
 }
 
 sc_scda_fcontext_t *
 sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
-                       size_t *len, sc_array_t * block_data, size_t block_size,
-                       int root, int encode, sc_scda_ferror_t * errcode)
+                      size_t *len, sc_array_t * block_data, size_t block_size,
+                      int root, int encode, sc_scda_ferror_t * errcode)
 {
   int                 count_err;
   size_t              num_pad_bytes;
@@ -2358,7 +2358,8 @@ sc_scda_fread_block_data (sc_scda_fcontext_t *fc, sc_array_t *block_data,
   }
 
   /* if no error occurred, we move the internal file pointer */
-  fc->accessed_bytes += (sc_MPI_Offset) block_size;
+  fc->accessed_bytes += (sc_MPI_Offset) (block_size +
+                                          sc_scda_pad_to_mod_len (block_size));
 
   /* last function call can not be \ref sc_scda_fread_section_header anymore */
   fc->header_before = 0;

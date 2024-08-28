@@ -44,9 +44,11 @@ main (int argc, char **argv)
   sc_scda_ferror_t    errcode;
   size_t              len;
   size_t              elem_count, elem_size;
+  size_t              block_size;
   sc_options_t       *opt;
   sc_array_t          data;
   const char         *inline_data = "Test inline data               \n";
+  const char         *block_data = "Test block data";
   char                read_data[SC_SCDA_INLINE_FIELD];
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -159,6 +161,14 @@ main (int argc, char **argv)
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fopen_write failed");
 
+  /* write a block section to the file */
+  block_size = strlen (block_data);
+  sc_array_init_data (&data, (void *) block_data, block_size, 1);
+  fc = sc_scda_fwrite_block (fc, "Block section test", NULL, &data, block_size,
+                             mpisize - 1, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fwrite_block failed");
+
   /* write an inline section to the file */
   sc_array_init_data (&data, (void *) inline_data, SC_SCDA_INLINE_FIELD, 1);
   fc = sc_scda_fwrite_inline (fc, "Inline section test without user-defined "
@@ -172,8 +182,8 @@ main (int argc, char **argv)
                   "scda_fwrite_inline with empty user string failed");
 
   /* write a block section */
-  fc = sc_scda_fwrite_block (fc, "A block section", NULL, &data, 32,
-                             mpisize - 1, 0, &errcode);
+  fc = sc_scda_fwrite_block (fc, "A block section with the inline data", NULL,
+                             &data, 32, mpisize - 1, 0, &errcode);
   /* TODO: check errcode */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fwrite_block failed");
@@ -184,13 +194,13 @@ main (int argc, char **argv)
       ("We expect an invalid scda function parameter error."
        " This is just for testing purposes and do not imply"
        " erroneous code behavior.\n");
+    fc = sc_scda_fwrite_block (fc, "A block section", NULL, &data,
+                              (mpirank == 0) ? 32 : 33, mpisize - 1, 0,
+                              &errcode);
+    SC_CHECK_ABORT (!sc_scda_ferror_is_success (errcode) &&
+                    errcode.scdaret == SC_SCDA_FERR_ARG, "scda_fwrite_block "
+                    "check catch non-collective block size");
   }
-  fc = sc_scda_fwrite_block (fc, "A block section", NULL, &data,
-                             (mpirank == 0) ? 32 : 33, mpisize - 1, 0,
-                             &errcode);
-  SC_CHECK_ABORT (mpisize == 1 || (!sc_scda_ferror_is_success (errcode) &&
-                  errcode.scdaret == SC_SCDA_FERR_ARG), "scda_fwrite_block "
-                  "check catch non-collective block size");
 
   if (mpisize == 1) {
     sc_scda_fclose (fc, &errcode);
@@ -213,6 +223,27 @@ main (int argc, char **argv)
   SC_INFOF ("File header user string: %s\n", read_user_string);
 
   /* read first section header */
+  fc = sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                     &elem_count, &elem_size, &decode,
+                                     &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'B' && elem_count == 0 &&
+                  elem_size == block_size, "Identifying section type");
+
+  /* read block data */
+  sc_array_init_data (&data, read_data, block_size, 1);
+  fc = sc_scda_fread_block_data (fc, &data, block_size, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_block_data failed");
+  SC_CHECK_ABORT (mpirank != 0
+                  || !strncmp (read_data, block_data, block_size),
+                  "inline data mismatch");
+
+  SC_INFOF ("Read file section header of type %c with user string: %s\n",
+            section_type, read_user_string);
+
+  /* read second section header */
   fc = sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
                                      &elem_count, &elem_size, &decode,
                                      &errcode);
