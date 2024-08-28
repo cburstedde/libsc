@@ -140,7 +140,7 @@ main (int argc, char **argv)
    * able to handle this situations properly.
    */
   scda_opt.fuzzy_everyn = (unsigned) int_everyn;
-  if (int_seed < 0) {
+  if (scda_opt.fuzzy_everyn > 0 && int_seed < 0) {
     scda_opt.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
     mpiret =
       sc_MPI_Bcast (&scda_opt.fuzzy_seed, 1, sc_MPI_UNSIGNED, 0, mpicomm);
