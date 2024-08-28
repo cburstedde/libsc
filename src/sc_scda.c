@@ -2027,8 +2027,9 @@ sc_scda_fread_count_entry_internal (sc_scda_fcontext_t *fc, char *ident,
   SC_ASSERT (ident != NULL);
   SC_ASSERT (count_var != NULL);
 
-  *count_err = 0;
+  *ident = ' ';
   *count_var = 0;
+  *count_err = 0;
 
   /* read a count entry */
   mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
@@ -2113,6 +2114,9 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
   SC_ASSERT (elem_size != NULL);
   SC_ASSERT (decode != NULL);
   SC_ASSERT (errcode != NULL);
+
+  *elem_count = 0;
+  *elem_size = 0;
 
   /* read the common section header part first */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
