@@ -410,8 +410,11 @@ sc_scda_pad_to_mod_len (size_t input_len)
 
   if (num_pad_bytes < 7) {
     /* not sufficient number of padding bytes for the padding format */
-    num_pad_bytes += SC_SCDA_PADDING_MOD;
+    num_pad_bytes += SC_SCDA_PADDING_MOD *
+      (size_t) ceil (((7. - num_pad_bytes) / ((double) SC_SCDA_PADDING_MOD)));
+    /* The factor is necessary for the case that SC_SCDA_PADDING_MOD < 7. */
   }
+  SC_ASSERT (num_pad_bytes >= 7);
 
   return num_pad_bytes;
 }
