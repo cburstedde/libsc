@@ -830,7 +830,7 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  * sc_scda_fread_section_header. This preceding call gives also the required
  * \b block_size.
  * \note
- * All parameters except of \b data_block are collective.
+ * All parameters except of \b block_data are collective.
  *
  * This function returns NULL on I/O errors.
  *

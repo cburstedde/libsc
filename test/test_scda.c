@@ -44,10 +44,12 @@ main (int argc, char **argv)
   sc_scda_ferror_t    errcode;
   size_t              len;
   size_t              elem_count, elem_size;
+  size_t              block_size;
   sc_options_t       *opt;
   sc_array_t          data;
   const char         *inline_data = "Test inline data               \n";
-  char                read_inline_data[SC_SCDA_INLINE_FIELD];
+  const char         *block_data = "Test block data";
+  char                read_data[SC_SCDA_INLINE_FIELD];
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
@@ -140,11 +142,13 @@ main (int argc, char **argv)
    * able to handle this situations properly.
    */
   scda_opt.fuzzy_everyn = (unsigned) int_everyn;
-  if (int_seed < 0) {
+  if (scda_opt.fuzzy_everyn > 0 && int_seed < 0) {
     scda_opt.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
     mpiret =
       sc_MPI_Bcast (&scda_opt.fuzzy_seed, 1, sc_MPI_UNSIGNED, 0, mpicomm);
     SC_CHECK_MPI (mpiret);
+    SC_GLOBAL_INFOF ("Fuzzy error return with time-dependent seed activated. "
+                     "The seed is %lld.\n", (long long) scda_opt.fuzzy_seed);
   }
   else {
     scda_opt.fuzzy_seed = (sc_rand_state_t) int_seed;
@@ -156,6 +160,14 @@ main (int argc, char **argv)
   /* TODO: check errcode */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fopen_write failed");
+
+  /* write a block section to the file */
+  block_size = strlen (block_data);
+  sc_array_init_data (&data, (void *) block_data, block_size, 1);
+  fc = sc_scda_fwrite_block (fc, "Block section test", NULL, &data, block_size,
+                             mpisize - 1, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fwrite_block failed");
 
   /* write an inline section to the file */
   sc_array_init_data (&data, (void *) inline_data, SC_SCDA_INLINE_FIELD, 1);
@@ -169,10 +181,37 @@ main (int argc, char **argv)
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fwrite_inline with empty user string failed");
 
-  sc_scda_fclose (fc, &errcode);
-  /* TODO: check errcode and return value */
+  /* write a block section */
+  fc = sc_scda_fwrite_block (fc, "A block section with the inline data", NULL,
+                             &data, 32, mpisize - 1, 0, &errcode);
+  /* TODO: check errcode */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
-                  "scda_fclose after write failed");
+                  "scda_fwrite_block failed");
+
+  /* intentionally try to write with non-collective block size */
+  if (mpisize > 1) {
+    SC_GLOBAL_ESSENTIAL
+      ("We expect an invalid scda function parameter error."
+       " This is just for testing purposes and do not imply"
+       " erroneous code behavior.\n");
+    fc = sc_scda_fwrite_block (fc, "A block section", NULL, &data,
+                              (mpirank == 0) ? 32 : 33, mpisize - 1, 0,
+                              &errcode);
+    SC_CHECK_ABORT (!sc_scda_ferror_is_success (errcode) &&
+                    errcode.scdaret == SC_SCDA_FERR_ARG, "scda_fwrite_block "
+                    "check catch non-collective block size");
+  }
+
+  if (mpisize == 1) {
+    sc_scda_fclose (fc, &errcode);
+    /* TODO: check errcode and return value */
+    SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                    "scda_fclose after write failed");
+  }
+  else {
+    /* fc was closed due to an intentionally triggered error */
+    SC_CHECK_ABORT (fc == NULL, "fc closed after error in fwrite_block");
+  }
 
   fc =
     sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
@@ -189,16 +228,37 @@ main (int argc, char **argv)
                                      &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'B' && elem_count == 0 &&
+                  elem_size == block_size, "Identifying section type");
+
+  /* read block data */
+  sc_array_init_data (&data, read_data, block_size, 1);
+  fc = sc_scda_fread_block_data (fc, &data, block_size, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_block_data failed");
+  SC_CHECK_ABORT (mpirank != 0
+                  || !strncmp (read_data, block_data, block_size),
+                  "inline data mismatch");
+
+  SC_INFOF ("Read file section header of type %c with user string: %s\n",
+            section_type, read_user_string);
+
+  /* read second section header */
+  fc = sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                     &elem_count, &elem_size, &decode,
+                                     &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
   SC_CHECK_ABORT (section_type == 'I' && elem_count == 0 && elem_size == 0,
                   "Identifying section type");
 
   /* read inline data */
-  sc_array_init_data (&data, read_inline_data, SC_SCDA_INLINE_FIELD, 1);
+  sc_array_init_data (&data, read_data, SC_SCDA_INLINE_FIELD, 1);
   fc = sc_scda_fread_inline_data (fc, &data, 0, &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "sc_scda_fread_inline_data failed");
   SC_CHECK_ABORT (mpirank != 0
-                  || !strncmp (read_inline_data, inline_data,
+                  || !strncmp (read_data, inline_data,
                                SC_SCDA_INLINE_FIELD), "inline data mismatch");
 
   SC_INFOF ("Read file section header of type %c with user string: %s\n",
@@ -210,12 +270,31 @@ main (int argc, char **argv)
                                      &elem_count, &elem_size, &decode,
                                      &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
-                  "sc_scda_fread_section_header failed");
+                  "sc_scda_fread_section_header for inline failed");
   SC_CHECK_ABORT (section_type == 'I' && elem_count == 0 && elem_size == 0,
                   "Identifying section type");
   fc = sc_scda_fread_inline_data (fc, NULL, mpisize - 1, &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "sc_scda_fread_inline_data skip failed");
+
+  /* read the block section header */
+  fc = sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                     &elem_count, &elem_size, &decode,
+                                     &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header for block failed");
+  SC_CHECK_ABORT (section_type == 'B' && elem_count == 0 && elem_size == 32,
+                  "Identifying section type");
+
+  /* read the block data */
+  (void) memset (read_data, '\0', SC_SCDA_INLINE_FIELD);
+  fc = sc_scda_fread_block_data (fc, &data, SC_SCDA_INLINE_FIELD, mpisize - 1,
+                                 &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_block_data failed");
+  SC_CHECK_ABORT (mpirank != mpisize - 1
+                  || !strncmp (read_data, inline_data,
+                               SC_SCDA_INLINE_FIELD), "block data mismatch");
 
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
