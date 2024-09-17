@@ -344,15 +344,9 @@ sc_scda_pad_to_fix_len_inplace (const char *input_data, size_t input_len,
 }
 
 /** This function checks if \b padded_data is actually padded to \b pad_len.
- * Moreover, the raw data is extracted.
  *
  * \param [in]  padded_data   The padded data.
  * \param [in]  pad_len       The length of \b padded_data in number of bytes.
- * \param [out] raw_data      On output the raw data extracted from
- *                            \b padded_data. The byte count of \b raw_data
- *                            is \b raw_len. \b raw_data must be at least
- *                            \b pad_len - 4. Undefined data if the function
- *                            returns true.
  * \param [out] raw_len       The length of \b raw_data in number of bytes.
  *                            Undefined if the function returns true.
  * \return                    True if \b padded_data does not satisfy the
@@ -360,13 +354,14 @@ sc_scda_pad_to_fix_len_inplace (const char *input_data, size_t input_len,
  *                            False, otherwise.
  */
 static int
-sc_scda_get_pad_to_fix_len (const char *padded_data, size_t pad_len,
-                            char *raw_data, size_t *raw_len)
+sc_scda_check_pad_to_fix_len (const char *padded_data, size_t pad_len,
+                              size_t *raw_len)
 {
   size_t              si;
 
+  *raw_len = 0;
+
   SC_ASSERT (padded_data != NULL);
-  SC_ASSERT (raw_data != NULL);
   SC_ASSERT (raw_len != NULL);
 
   if (pad_len < 4) {
@@ -388,8 +383,44 @@ sc_scda_get_pad_to_fix_len (const char *padded_data, size_t pad_len,
     return -1;
   }
 
-  /* the padding was valid and the remaining data is the actual data */
+  /* the padding is valid */
   *raw_len = si;
+
+  return 0;
+}
+
+/** Checks the padding convention and extracts the data in case of success.
+ *
+ * In more concrete terms, the function checks if \b padded_data is actually
+ * padded to \b pad_len and extracts the raw data in case of success.
+ *
+ * \param [in]  padded_data   The padded data.
+ * \param [in]  pad_len       The length of \b padded_data in number of bytes.
+ * \param [out] raw_data      On output the raw data extracted from
+ *                            \b padded_data. The byte count of \b raw_data
+ *                            is \b raw_len. \b raw_data must be at least
+ *                            \b pad_len - 4. Undefined data if the function
+ *                            returns true.
+ * \param [out] raw_len       The length of \b raw_data in number of bytes.
+ *                            Undefined if the function returns true.
+ * \return                    True if \b padded_data does not satisfy the
+ *                            scda padding convention for fixed-length paddding.
+ *                            False, otherwise.
+ */
+static int
+sc_scda_get_pad_to_fix_len (const char *padded_data, size_t pad_len,
+                            char *raw_data, size_t *raw_len)
+{
+  SC_ASSERT (padded_data != NULL);
+  SC_ASSERT (raw_data != NULL);
+  SC_ASSERT (raw_len != NULL);
+
+  if (sc_scda_check_pad_to_fix_len (padded_data, pad_len, raw_len)) {
+    /* invalid padding */
+    return -1;
+  }
+
+  /* the padding is valid and the remaining data is the actual data */
   sc_scda_copy_bytes (raw_data, padded_data, *raw_len);
 
   return 0;
@@ -1752,7 +1783,6 @@ sc_scda_check_file_header (const char *file_header_data, char *user_string,
                            size_t *len)
 {
   int                 current_pos;
-  char                vendor_string[SC_SCDA_VENDOR_STRING_BYTES];
   size_t              vendor_len;
 
   SC_ASSERT (file_header_data != NULL);
@@ -1783,13 +1813,12 @@ sc_scda_check_file_header (const char *file_header_data, char *user_string,
   current_pos = SC_SCDA_MAGIC_BYTES + 1;
 
   /* check the padding of the vendor string */
-  if (sc_scda_get_pad_to_fix_len (&file_header_data[current_pos],
-                                  SC_SCDA_VENDOR_STRING_FIELD, vendor_string,
-                                  &vendor_len)) {
+  if (sc_scda_check_pad_to_fix_len (&file_header_data[current_pos],
+                                    SC_SCDA_VENDOR_STRING_FIELD, &vendor_len)) {
     /* wrong padding format */
     return -1;
   }
-  /* vendor string content is not checked */
+  /* vendor string content is not checked and hence not read */
 
   current_pos += SC_SCDA_VENDOR_STRING_FIELD + 2;
   /* check the user string */
