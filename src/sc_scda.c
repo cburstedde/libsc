@@ -131,6 +131,7 @@
                                     SC_CHECK_MPI(sc_MPI_Bcast(&errcode->mpiret,\
                                                   1, sc_MPI_INT, root,         \
                                                   fc->mpicomm));               \
+                                    sc_scda_fuzzy_sync_state (fc);             \
                                     if (!sc_scda_ferror_is_success (*errcode)) {\
                                     sc_scda_file_error_cleanup (&fc->file);    \
                                     SC_FREE (fc);                              \
@@ -989,6 +990,39 @@ sc_scda_mpiret_to_errcode (int mpiret, sc_scda_ferror_t * scda_errorcode,
 
   scda_errorcode->scdaret = scda_ret_internal;
   scda_errorcode->mpiret = mpiret_internal;
+}
+
+/** Synchronize the random state.
+ *
+ * This function is required since the fuzzy error state (cf. fuzzy_seed in
+ * \ref sc_scda_fcontext) may become unsynchronized due to a different number
+ * of samples on different MPI ranks, which is due to non-collective code
+ * paths.
+ *
+ * \param [in, out]  fc      The file context used in the last \ref
+ *                           sc_scda_scdaret_to_errcode or \ref
+ *                           sc_scda_mpiret_to_errcode call.
+ *                           On output \b fuzzy_seed is set to the global
+ *                           maximum of all local \b fuzzy_seed values.
+ */
+static void
+sc_scda_fuzzy_sync_state (sc_scda_fcontext_t *fc)
+{
+  int                 mpiret;
+  unsigned long       fuzzy_state, global_state;
+
+  SC_ASSERT (fc != NULL);
+
+  /* get local fuzzy_state */
+  fuzzy_state = (unsigned long) fc->fuzzy_seed;
+
+  /* determine maximal state */
+  mpiret = sc_MPI_Allreduce (&fuzzy_state, &global_state, 1,
+                             sc_MPI_UNSIGNED_LONG, sc_MPI_MAX, fc->mpicomm);
+  SC_CHECK_MPI (mpiret);
+
+  /* assign global state */
+  fc->fuzzy_seed = (sc_rand_state_t) global_state;
 }
 
 /** Check if an error code is valid. */
