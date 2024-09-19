@@ -4,6 +4,7 @@ option(zlib "build ZLIB" off)
 option(json "build Jansson" off)
 
 option(SC_BUILD_TESTING "build libsc self-tests" on)
+option(SC_BUILD_EXAMPLES "build libsc examples" on)
 option(TEST_WITH_VALGRIND "run self-tests with valgrind" OFF)
 option(BUILD_SHARED_LIBS "build shared libsc")
 option(CMAKE_TLS_VERIFY "verify TLS certificate" on)
