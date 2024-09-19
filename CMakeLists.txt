@@ -69,12 +69,11 @@ add_subdirectory(src)
 
 if(SC_BUILD_TESTING)
   include(cmake/valgrind.cmake)
-
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
-    add_subdirectory(example)
-  endif()
-
   add_subdirectory(test)
+endif()
+
+if(SC_BUILD_EXAMPLES AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
+  add_subdirectory(example)
 endif()
 
 # --- packaging
