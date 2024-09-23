@@ -27,6 +27,31 @@
 #define SC_SCDA_FILE_EXT "scd"
 #define SC_SCDA_TEST_FILE "sc_test_scda." SC_SCDA_FILE_EXT
 
+static void
+test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpisize)
+{
+  int                 indirect = 0;
+  int                 i;
+  size_t              elem_size = 3;
+  sc_array_t          elem_counts;
+  sc_scda_ferror_t    errcode;
+
+  sc_array_init_count (&elem_counts, sizeof (sc_scda_ulong), mpisize);
+
+  /* set elem_counts */
+  for (i = 0; i < mpisize; ++i) {
+    /* partition dependent */
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = 5;
+  }
+
+  fc = sc_scda_fwrite_array (fc, "A fixed-len array section", NULL, NULL,
+                             &elem_counts, elem_size, indirect, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fwrite_array failed");
+
+  sc_array_reset (&elem_counts);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -187,6 +212,9 @@ main (int argc, char **argv)
   /* TODO: check errcode */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fwrite_block failed");
+
+  /* write a fixed-size array section */
+  test_scda_write_fixed_size_array (fc, mpisize);
 
   /* intentionally try to write with non-collective block size */
   if (mpisize > 1) {

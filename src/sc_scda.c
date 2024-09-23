@@ -1736,7 +1736,7 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* TODO: respect encode parameter */
 
-  /* file header section is always written and read on rank SC_SCDA_HEADER_ROOT */
+  /* section header is always written and read on rank SC_SCDA_HEADER_ROOT */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
     sc_scda_fwrite_block_header_internal (fc, user_string, len, block_size,
                                           &count_err, errcode);
@@ -1760,6 +1760,161 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
   num_pad_bytes = sc_scda_pad_to_mod_len (block_size);
 
   fc->accessed_bytes += (sc_MPI_Offset) (block_size + num_pad_bytes);
+
+  return fc;
+}
+
+/** Internal function to write the array section header.
+ *
+ * This function is dedicated to be called in \ref sc_scda_fwrite_array.
+ *
+ * \param [in] fc           The file context as in \ref sc_scda_fwrite_array
+ *                          before running the first serial code part.
+ * \param [in] user_string  As in the documentation of \ref
+ *                          sc_scda_fwrite_array.
+ * \param [in] len          As in the documentation of \ref
+ *                          sc_scda_fwrite_array.
+ * TODO
+ * \param [in] elem_size    As in the documentation of \ref
+ *                          sc_scda_fwrite_array.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fwrite_array_header_internal (sc_scda_fcontext_t *fc,
+                                      const char *user_string, size_t *len,
+                                      size_t elem_count, size_t elem_size,
+                                      int *count_err, sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 current_len;
+  int                 invalid_user_string, invalid_count;
+  int                 header_len;
+  char                header_data[SC_SCDA_COMMON_FIELD + 2 * SC_SCDA_COUNT_FIELD];
+
+  *count_err = 0;
+
+  header_len = SC_SCDA_COMMON_FIELD + 2 * SC_SCDA_COUNT_FIELD;
+
+  /* get array file section header */
+
+  /* section-identifying character */
+  current_len = 0;
+
+  invalid_user_string =
+    sc_scda_get_common_section_header ('A', user_string, len, header_data);
+  /* We always translate the error code to have full coverage for the fuzzy
+   * error testing.
+   */
+  sc_scda_scdaret_to_errcode (invalid_user_string ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
+
+  current_len += SC_SCDA_COMMON_FIELD;
+
+  /* get count variable entry */
+  /* element count */
+  invalid_count = sc_scda_get_section_header_entry ('N', elem_count,
+                                                    &header_data[current_len]);
+  sc_scda_scdaret_to_errcode (invalid_count ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count");
+
+  current_len += SC_SCDA_COUNT_FIELD;
+
+  /* element size */
+  invalid_count = sc_scda_get_section_header_entry ('E', elem_size,
+                                                    &header_data[current_len]);
+  sc_scda_scdaret_to_errcode (invalid_count ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count");
+
+  current_len += SC_SCDA_COUNT_FIELD;
+
+  SC_ASSERT (current_len == header_len);
+
+  /* write array section header */
+  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, header_data,
+                           header_len, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing array section header");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (header_len, count, count_err);
+}
+
+sc_scda_fcontext_t *
+sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
+                      size_t *len, sc_array_t *array_data,
+                      sc_array_t *elem_counts, size_t elem_size, int indirect,
+                      int encode, sc_scda_ferror_t *errcode)
+{
+  int                 invalid_elem_counts;
+  int                 ret, count_err;
+  size_t              elem_count, si;
+#if 0
+  const void         *local_array_data;
+#endif
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (user_string != NULL);
+#if 0
+  SC_ASSERT (array_data != NULL);
+#endif
+  SC_ASSERT (elem_counts != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  /* TODO: Also check elem_counts and/or indirect? */
+  /* check if elem_size is collective */
+  ret = sc_scda_check_coll_params (fc, (const char*) &elem_size,
+                                   sizeof (size_t), NULL, 0, NULL, 0);
+  sc_scda_scdaret_to_errcode (ret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fwrite_array: elem_size is not "
+                          "collective");
+
+  /* TODO: respect encode parameter */
+
+  /* compute the global element count */
+  /* TODO: only required on rank SC_SCDA_HEADER_ROOT */
+  elem_count = 0;
+  for (si = 0; si < elem_counts->elem_count; ++si) {
+    elem_count += *((size_t *) sc_array_index (elem_counts, si));
+  }
+
+  /* check elem_counts array */
+  invalid_elem_counts = !(elem_counts->elem_size == sizeof (sc_scda_ulong) &&
+                         elem_counts->elem_count == fc->mpisize);
+  sc_scda_scdaret_to_errcode (invalid_elem_counts ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Invalid elem_counts array");
+
+  /* TODO: check array_data; depends on indirect parameter */
+  /* Call Alreduce to synchronize on check of array_data */
+
+  /* section header is always written and read on rank SC_SCDA_HEADER_ROOT */
+  if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
+    sc_scda_fwrite_array_header_internal (fc, user_string, len, elem_count,
+                                          elem_size, &count_err, errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
+                                    fc);
+
+#if 0
+  /* get pointer to local array data */
+  if (indirect) {
+    /* indirect adressing */
+    /* TODO: copy the data or use muliple write calls; maybe in batches? */
+  }
+  else {
+    /* direct adressig */
+    local_array_data = (const void *) array_data->array;
+  }
+
+  /* write array data in parallel */
+#endif
+
 
   return fc;
 }
