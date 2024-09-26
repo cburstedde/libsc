@@ -1851,24 +1851,26 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                       int encode, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
+  int                 i;
   int                 invalid_elem_counts, global_invalid_elem_counts;
   int                 ret, count_err;
+  int                 num_local_elements, bytes_to_write;
+  int                 count;
   size_t              elem_count, si;
+  sc_MPI_Offset       offset;
 #if 0
   const void         *local_array_data;
 #endif
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (user_string != NULL);
-#if 0
   SC_ASSERT (array_data != NULL);
-#endif
   SC_ASSERT (elem_counts != NULL);
   SC_ASSERT (errcode != NULL);
 
   /* TODO: Also check elem_counts and/or indirect? */
   /* check if elem_size is collective */
-  ret = sc_scda_check_coll_params (fc, (const char*) &elem_size,
+  ret = sc_scda_check_coll_params (fc, (const char *) &elem_size,
                                    sizeof (size_t), NULL, 0, NULL, 0);
   sc_scda_scdaret_to_errcode (ret, errcode, fc);
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fwrite_array: elem_size is not "
@@ -1878,10 +1880,11 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* check elem_counts array */
   invalid_elem_counts = !(elem_counts->elem_size == sizeof (sc_scda_ulong) &&
-                         elem_counts->elem_count == fc->mpisize);
+                          elem_counts->elem_count == fc->mpisize);
   /* synchronize */
-  mpiret = sc_MPI_Allreduce (&invalid_elem_counts, &global_invalid_elem_counts,
-                             1, sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
+  mpiret =
+    sc_MPI_Allreduce (&invalid_elem_counts, &global_invalid_elem_counts, 1,
+                      sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
   SC_CHECK_MPI (mpiret);
   sc_scda_scdaret_to_errcode (invalid_elem_counts ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
@@ -1895,15 +1898,16 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
     elem_count += *((size_t *) sc_array_index (elem_counts, si));
   }
 
-  ret = sc_scda_check_coll_params (fc, (const char*) &elem_count,
-                                   sizeof (size_t), (const char*) &elem_size,
+  ret = sc_scda_check_coll_params (fc, (const char *) &elem_count,
+                                   sizeof (size_t), (const char *) &elem_size,
                                    sizeof (size_t), NULL, 0);
   sc_scda_scdaret_to_errcode (ret, errcode, fc);
-  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fwrite_array: elem_counts or elem_size"
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc,
+                          "fwrite_array: elem_counts or elem_size"
                           " is not collective");
 
   /* TODO: check array_data; depends on indirect parameter */
-  /* Call Allreduce to synchronize on check of array_data or collective test?*/
+  /* Call Allreduce to synchronize on check of array_data or collective test? */
 
   /* section header is always written and read on rank SC_SCDA_HEADER_ROOT */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
@@ -1913,6 +1917,9 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
                                     fc);
+
+  /* add number of written bytes */
+  fc->accessed_bytes += SC_SCDA_COMMON_FIELD + 2 * SC_SCDA_COUNT_FIELD;
 
 #if 0
   /* get pointer to local array data */
@@ -1928,6 +1935,37 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   /* write array data in parallel */
 #endif
 
+  /* temporary */
+  SC_ASSERT (!indirect);
+
+  /* compute rank-dependent offset */
+  offset = 0;
+  /* sum all element counts on previous processes */
+  for (i = 0; i < fc->mpirank; ++i) {
+    offset +=
+      (sc_MPI_Offset) *
+      ((sc_scda_ulong *) sc_array_index_int (elem_counts, i));
+  }
+  offset *= (sc_MPI_Offset) elem_size;
+
+  /* computer number of array data bytes that are locally written */
+  num_local_elements =
+    (int) *((sc_scda_ulong *) sc_array_index_int (elem_counts, fc->mpirank));
+  bytes_to_write = (int) elem_size *num_local_elements;
+
+  mpiret = sc_io_write_at_all (fc->file, fc->accessed_bytes + offset,
+                               array_data->array, bytes_to_write, sc_MPI_BYTE,
+                               &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Writing block data padding");
+  /* TODO: Implement collective count check macro */
+  //SC_SCDA_CHECK_COLL_COUNT_ERR (bytes_to_write, count, count_err);
+
+  /* TODO: update global number of written bytes */
+
+  /* TODO: get and write padding bytes in serial */
+
+  /* TODO: update global number of written bytes */
 
   return fc;
 }
