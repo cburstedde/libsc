@@ -28,14 +28,18 @@
 #define SC_SCDA_TEST_FILE "sc_test_scda." SC_SCDA_FILE_EXT
 
 static void
-test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpisize)
+test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
+                                  int mpisize)
 {
   int                 indirect = 0;
   int                 i;
+  char               *data_ptr;
+  size_t              si;
   size_t              elem_size = 3;
+  size_t              local_elem_count;
   const sc_scda_ulong global_elem_count = 12;
   sc_scda_ulong       per_proc_count, remainder_count;
-  sc_array_t          elem_counts;
+  sc_array_t          elem_counts, data;
   sc_scda_ferror_t    errcode;
 
   sc_array_init_count (&elem_counts, sizeof (sc_scda_ulong), mpisize);
@@ -46,18 +50,29 @@ test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpisize)
 
   /* set elem_counts */
   for (i = 0; i < mpisize - 1; ++i) {
-    /* partition dependent */
     *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = per_proc_count;
   }
   *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpisize - 1)) =
                       (remainder_count == 0) ? per_proc_count : remainder_count;
 
-  fc = sc_scda_fwrite_array (fc, "A fixed-length array section", NULL, NULL,
+  /* create local data */
+  local_elem_count =
+    (size_t) *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpirank));
+  sc_array_init_size (&data, elem_size, local_elem_count);
+  for (si = 0; si < local_elem_count; ++si) {
+    data_ptr = (char *) sc_array_index (&data, si);
+    data_ptr[0] = 'a';
+    data_ptr[1] = 'b';
+    data_ptr[2] = 'c';
+  }
+
+  fc = sc_scda_fwrite_array (fc, "A fixed-length array section", NULL, &data,
                              &elem_counts, elem_size, indirect, 0, &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "sc_scda_fwrite_array failed");
 
   sc_array_reset (&elem_counts);
+  sc_array_reset (&data);
 }
 
 int
@@ -222,7 +237,7 @@ main (int argc, char **argv)
                   "scda_fwrite_block failed");
 
   /* write a fixed-size array section */
-  test_scda_write_fixed_size_array (fc, mpisize);
+  test_scda_write_fixed_size_array (fc, mpirank, mpisize);
 
   /* intentionally try to write with non-collective block size */
   if (mpisize > 1) {
