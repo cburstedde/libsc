@@ -33,18 +33,26 @@ test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpisize)
   int                 indirect = 0;
   int                 i;
   size_t              elem_size = 3;
+  const sc_scda_ulong global_elem_count = 12;
+  sc_scda_ulong       per_proc_count, remainder_count;
   sc_array_t          elem_counts;
   sc_scda_ferror_t    errcode;
 
   sc_array_init_count (&elem_counts, sizeof (sc_scda_ulong), mpisize);
 
-  /* set elem_counts */
-  for (i = 0; i < mpisize; ++i) {
-    /* partition dependent */
-    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = 5;
-  }
+  /* get the counts per process */
+  per_proc_count = global_elem_count / (sc_scda_ulong) mpisize;
+  remainder_count = global_elem_count % (sc_scda_ulong) mpisize;
 
-  fc = sc_scda_fwrite_array (fc, "A fixed-len array section", NULL, NULL,
+  /* set elem_counts */
+  for (i = 0; i < mpisize - 1; ++i) {
+    /* partition dependent */
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = per_proc_count;
+  }
+  *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpisize - 1)) =
+                      (remainder_count == 0) ? per_proc_count : remainder_count;
+
+  fc = sc_scda_fwrite_array (fc, "A fixed-length array section", NULL, NULL,
                              &elem_counts, elem_size, indirect, 0, &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "sc_scda_fwrite_array failed");
