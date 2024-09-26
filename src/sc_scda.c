@@ -1850,7 +1850,8 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                       sc_array_t *elem_counts, size_t elem_size, int indirect,
                       int encode, sc_scda_ferror_t *errcode)
 {
-  int                 invalid_elem_counts;
+  int                 mpiret;
+  int                 invalid_elem_counts, global_invalid_elem_counts;
   int                 ret, count_err;
   size_t              elem_count, si;
 #if 0
@@ -1875,22 +1876,34 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* TODO: respect encode parameter */
 
+  /* check elem_counts array */
+  invalid_elem_counts = !(elem_counts->elem_size == sizeof (sc_scda_ulong) &&
+                         elem_counts->elem_count == fc->mpisize);
+  /* synchronize */
+  mpiret = sc_MPI_Allreduce (&invalid_elem_counts, &global_invalid_elem_counts,
+                             1, sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  sc_scda_scdaret_to_errcode (invalid_elem_counts ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Invalid elem_counts array");
+
   /* compute the global element count */
-  /* TODO: only required on rank SC_SCDA_HEADER_ROOT */
+  /* the global count is only used on rank SC_SCDA_HEADER_ROOT */
+  /* TODO: Compute this locally and use a checksum for the colletivness test? */
   elem_count = 0;
   for (si = 0; si < elem_counts->elem_count; ++si) {
     elem_count += *((size_t *) sc_array_index (elem_counts, si));
   }
 
-  /* check elem_counts array */
-  invalid_elem_counts = !(elem_counts->elem_size == sizeof (sc_scda_ulong) &&
-                         elem_counts->elem_count == fc->mpisize);
-  sc_scda_scdaret_to_errcode (invalid_elem_counts ? SC_SCDA_FERR_ARG :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Invalid elem_counts array");
+  ret = sc_scda_check_coll_params (fc, (const char*) &elem_count,
+                                   sizeof (size_t), (const char*) &elem_size,
+                                   sizeof (size_t), NULL, 0);
+  sc_scda_scdaret_to_errcode (ret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fwrite_array: elem_counts or elem_size"
+                          " is not collective");
 
   /* TODO: check array_data; depends on indirect parameter */
-  /* Call Alreduce to synchronize on check of array_data */
+  /* Call Allreduce to synchronize on check of array_data or collective test?*/
 
   /* section header is always written and read on rank SC_SCDA_HEADER_ROOT */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
@@ -1904,11 +1917,11 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
 #if 0
   /* get pointer to local array data */
   if (indirect) {
-    /* indirect adressing */
+    /* indirect addressing */
     /* TODO: copy the data or use muliple write calls; maybe in batches? */
   }
   else {
-    /* direct adressig */
+    /* direct addressing */
     local_array_data = (const void *) array_data->array;
   }
 
