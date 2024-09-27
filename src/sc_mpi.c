@@ -59,8 +59,9 @@ sc_MPI_Abort (sc_MPI_Comm comm, int exitcode)
 }
 
 int
-sc_MPI_Comm_dup (sc_MPI_Comm comm, sc_MPI_Comm * newcomm)
+sc_MPI_Comm_dup (sc_MPI_Comm comm, sc_MPI_Comm *newcomm)
 {
+  SC_ASSERT (newcomm != NULL);
   *newcomm = comm;
 
   return sc_MPI_SUCCESS;
@@ -68,8 +69,9 @@ sc_MPI_Comm_dup (sc_MPI_Comm comm, sc_MPI_Comm * newcomm)
 
 int
 sc_MPI_Comm_create (sc_MPI_Comm comm, sc_MPI_Group group,
-                    sc_MPI_Comm * newcomm)
+                    sc_MPI_Comm *newcomm)
 {
+  SC_ASSERT (newcomm != NULL);
   *newcomm = sc_MPI_COMM_NULL;
 
   return sc_MPI_SUCCESS;
@@ -77,16 +79,18 @@ sc_MPI_Comm_create (sc_MPI_Comm comm, sc_MPI_Group group,
 
 int
 sc_MPI_Comm_split (sc_MPI_Comm comm, int color, int key,
-                   sc_MPI_Comm * newcomm)
+                   sc_MPI_Comm *newcomm)
 {
+  SC_ASSERT (newcomm != NULL);
   *newcomm = comm;
 
   return sc_MPI_SUCCESS;
 }
 
 int
-sc_MPI_Comm_free (sc_MPI_Comm * comm)
+sc_MPI_Comm_free (sc_MPI_Comm *comm)
 {
+  SC_ASSERT (comm != NULL);
   *comm = sc_MPI_COMM_NULL;
 
   return sc_MPI_SUCCESS;
@@ -95,6 +99,7 @@ sc_MPI_Comm_free (sc_MPI_Comm * comm)
 int
 sc_MPI_Type_size (sc_MPI_Datatype datatype, int *size)
 {
+  SC_ASSERT (size != NULL);
   *size = sc_mpi_sizeof (datatype);
 
   return sc_MPI_SUCCESS;
@@ -103,6 +108,7 @@ sc_MPI_Type_size (sc_MPI_Datatype datatype, int *size)
 int
 sc_MPI_Comm_size (sc_MPI_Comm comm, int *size)
 {
+  SC_ASSERT (size != NULL);
   *size = 1;
 
   return sc_MPI_SUCCESS;
@@ -111,6 +117,7 @@ sc_MPI_Comm_size (sc_MPI_Comm comm, int *size)
 int
 sc_MPI_Comm_rank (sc_MPI_Comm comm, int *rank)
 {
+  SC_ASSERT (rank != NULL);
   *rank = 0;
 
   return sc_MPI_SUCCESS;
@@ -119,22 +126,25 @@ sc_MPI_Comm_rank (sc_MPI_Comm comm, int *rank)
 int
 sc_MPI_Comm_compare (sc_MPI_Comm comm1, sc_MPI_Comm comm2, int *result)
 {
+  SC_ASSERT (result != NULL);
   *result = sc_MPI_IDENT;
 
   return sc_MPI_SUCCESS;
 }
 
 int
-sc_MPI_Comm_group (sc_MPI_Comm comm, sc_MPI_Group * group)
+sc_MPI_Comm_group (sc_MPI_Comm comm, sc_MPI_Group *group)
 {
+  SC_ASSERT (group != NULL);
   *group = sc_MPI_GROUP_NULL;
 
   return sc_MPI_SUCCESS;
 }
 
 int
-sc_MPI_Group_free (sc_MPI_Group * group)
+sc_MPI_Group_free (sc_MPI_Group *group)
 {
+  SC_ASSERT (group != NULL);
   *group = sc_MPI_GROUP_NULL;
 
   return sc_MPI_SUCCESS;
@@ -143,6 +153,7 @@ sc_MPI_Group_free (sc_MPI_Group * group)
 int
 sc_MPI_Group_size (sc_MPI_Group group, int *size)
 {
+  SC_ASSERT (size != NULL);
   *size = 1;
 
   return sc_MPI_SUCCESS;
@@ -151,6 +162,7 @@ sc_MPI_Group_size (sc_MPI_Group group, int *size)
 int
 sc_MPI_Group_rank (sc_MPI_Group group, int *rank)
 {
+  SC_ASSERT (rank != NULL);
   *rank = 0;
 
   return sc_MPI_SUCCESS;
@@ -162,6 +174,8 @@ sc_MPI_Group_translate_ranks (sc_MPI_Group group1, int n, int *ranks1,
 {
   int                 i;
 
+  SC_ASSERT (ranks2 != NULL);
+
   for (i = 0; i < n; i++) {
     ranks2[i] = sc_MPI_UNDEFINED;
   }
@@ -172,6 +186,7 @@ sc_MPI_Group_translate_ranks (sc_MPI_Group group1, int n, int *ranks1,
 int
 sc_MPI_Group_compare (sc_MPI_Group group1, sc_MPI_Group group2, int *result)
 {
+  SC_ASSERT (result != NULL);
   *result = sc_MPI_IDENT;
 
   return sc_MPI_SUCCESS;
@@ -179,8 +194,9 @@ sc_MPI_Group_compare (sc_MPI_Group group1, sc_MPI_Group group2, int *result)
 
 int
 sc_MPI_Group_union (sc_MPI_Group group1, sc_MPI_Group group2,
-                    sc_MPI_Group * newgroup)
+                    sc_MPI_Group *newgroup)
 {
+  SC_ASSERT (newgroup != NULL);
   *newgroup = sc_MPI_GROUP_NULL;
 
   return sc_MPI_SUCCESS;
@@ -188,8 +204,9 @@ sc_MPI_Group_union (sc_MPI_Group group1, sc_MPI_Group group2,
 
 int
 sc_MPI_Group_intersection (sc_MPI_Group group1, sc_MPI_Group group2,
-                           sc_MPI_Group * newgroup)
+                           sc_MPI_Group *newgroup)
 {
+  SC_ASSERT (newgroup != NULL);
   *newgroup = sc_MPI_GROUP_NULL;
 
   return sc_MPI_SUCCESS;
@@ -197,8 +214,9 @@ sc_MPI_Group_intersection (sc_MPI_Group group1, sc_MPI_Group group2,
 
 int
 sc_MPI_Group_difference (sc_MPI_Group group1, sc_MPI_Group group2,
-                         sc_MPI_Group * newgroup)
+                         sc_MPI_Group *newgroup)
 {
+  SC_ASSERT (newgroup != NULL);
   *newgroup = sc_MPI_GROUP_NULL;
 
   return sc_MPI_SUCCESS;
@@ -206,8 +224,9 @@ sc_MPI_Group_difference (sc_MPI_Group group1, sc_MPI_Group group2,
 
 int
 sc_MPI_Group_incl (sc_MPI_Group group, int n, int *ranks,
-                   sc_MPI_Group * newgroup)
+                   sc_MPI_Group *newgroup)
 {
+  SC_ASSERT (newgroup != NULL);
   *newgroup = sc_MPI_GROUP_NULL;
 
   return sc_MPI_SUCCESS;
@@ -215,8 +234,9 @@ sc_MPI_Group_incl (sc_MPI_Group group, int n, int *ranks,
 
 int
 sc_MPI_Group_excl (sc_MPI_Group group, int n, int *ranks,
-                   sc_MPI_Group * newgroup)
+                   sc_MPI_Group *newgroup)
 {
+  SC_ASSERT (newgroup != NULL);
   *newgroup = sc_MPI_GROUP_NULL;
 
   return sc_MPI_SUCCESS;
@@ -224,8 +244,9 @@ sc_MPI_Group_excl (sc_MPI_Group group, int n, int *ranks,
 
 int
 sc_MPI_Group_range_incl (sc_MPI_Group group, int n, int ranges[][3],
-                         sc_MPI_Group * newgroup)
+                         sc_MPI_Group *newgroup)
 {
+  SC_ASSERT (newgroup != NULL);
   *newgroup = sc_MPI_GROUP_NULL;
 
   return sc_MPI_SUCCESS;
@@ -233,8 +254,9 @@ sc_MPI_Group_range_incl (sc_MPI_Group group, int n, int ranges[][3],
 
 int
 sc_MPI_Group_range_excl (sc_MPI_Group group, int n, int ranges[][3],
-                         sc_MPI_Group * newgroup)
+                         sc_MPI_Group *newgroup)
 {
+  SC_ASSERT (newgroup != NULL);
   *newgroup = sc_MPI_GROUP_NULL;
 
   return sc_MPI_SUCCESS;
@@ -274,7 +296,10 @@ sc_MPI_Gather (void *p, int np, sc_MPI_Datatype tp,
 /* *INDENT-ON* */
 
   SC_ASSERT (lp == lq);
-  memcpy (q, p, lp);
+  if (lp > 0) {
+    SC_ASSERT (p != NULL && q != NULL);
+    memcpy (q, p, lp);
+  }
 
   return sc_MPI_SUCCESS;
 }
@@ -289,9 +314,10 @@ sc_MPI_Gatherv (void *p, int np, sc_MPI_Datatype tp,
   size_t              lq;
   int                 nq;
 
+  SC_ASSERT (recvc != NULL);
   nq = recvc[0];
-#endif
   SC_ASSERT (rank == 0 && np >= 0 && nq >= 0);
+#endif
 
 /* *INDENT-OFF* horrible indent bug */
   lp = (size_t) np * sc_mpi_sizeof (tp);
@@ -301,7 +327,11 @@ sc_MPI_Gatherv (void *p, int np, sc_MPI_Datatype tp,
 /* *INDENT-ON* */
 
   SC_ASSERT (lp == lq);
-  memcpy ((char *) q + displ[0] * sc_mpi_sizeof (tq), p, lp);
+  if (lp > 0) {
+    SC_ASSERT (p != NULL && q != NULL);
+    SC_ASSERT (displ != NULL);
+    memcpy ((char *) q + displ[0] * sc_mpi_sizeof (tq), p, lp);
+  }
 
   return sc_MPI_SUCCESS;
 }
@@ -341,7 +371,10 @@ sc_MPI_Reduce (void *p, void *q, int n, sc_MPI_Datatype t,
   l = (size_t) n * sc_mpi_sizeof (t);
 /* *INDENT-ON* */
 
-  memcpy (q, p, l);
+  if (l > 0) {
+    SC_ASSERT (p != NULL && q != NULL);
+    memcpy (q, p, l);
+  }
 
   return sc_MPI_SUCCESS;
 }
@@ -377,7 +410,7 @@ sc_MPI_Exscan (void *sendbuf, void *recvbf, int count,
 
 int
 sc_MPI_Recv (void *buf, int count, sc_MPI_Datatype datatype, int source,
-             int tag, sc_MPI_Comm comm, sc_MPI_Status * status)
+             int tag, sc_MPI_Comm comm, sc_MPI_Status *status)
 {
   SC_ABORT ("non-MPI MPI_Recv is not implemented");
   return sc_MPI_SUCCESS;
@@ -385,7 +418,7 @@ sc_MPI_Recv (void *buf, int count, sc_MPI_Datatype datatype, int source,
 
 int
 sc_MPI_Irecv (void *buf, int count, sc_MPI_Datatype datatype, int source,
-              int tag, sc_MPI_Comm comm, sc_MPI_Request * request)
+              int tag, sc_MPI_Comm comm, sc_MPI_Request *request)
 {
   SC_ABORT ("non-MPI MPI_Irecv is not implemented");
   return sc_MPI_SUCCESS;
@@ -401,14 +434,14 @@ sc_MPI_Send (void *buf, int count, sc_MPI_Datatype datatype,
 
 int
 sc_MPI_Isend (void *buf, int count, sc_MPI_Datatype datatype, int dest,
-              int tag, sc_MPI_Comm comm, sc_MPI_Request * request)
+              int tag, sc_MPI_Comm comm, sc_MPI_Request *request)
 {
   SC_ABORT ("non-MPI MPI_Isend is not implemented");
   return sc_MPI_SUCCESS;
 }
 
 int
-sc_MPI_Probe (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status * status)
+sc_MPI_Probe (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status *status)
 {
   SC_ABORT ("non-MPI MPI_Probe is not implemented");
   return sc_MPI_SUCCESS;
@@ -416,14 +449,14 @@ sc_MPI_Probe (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status * status)
 
 int
 sc_MPI_Iprobe (int source, int tag, sc_MPI_Comm comm, int *flag,
-               sc_MPI_Status * status)
+               sc_MPI_Status *status)
 {
   SC_ABORT ("non-MPI MPI_Iprobe is not implemented");
   return sc_MPI_SUCCESS;
 }
 
 int
-sc_MPI_Get_count (sc_MPI_Status * status, sc_MPI_Datatype datatype,
+sc_MPI_Get_count (sc_MPI_Status *status, sc_MPI_Datatype datatype,
                   int *count)
 {
   SC_ABORT ("non-MPI MPI_Get_count is not implemented");
@@ -431,7 +464,7 @@ sc_MPI_Get_count (sc_MPI_Status * status, sc_MPI_Datatype datatype,
 }
 
 int
-sc_MPI_Wait (sc_MPI_Request * request, sc_MPI_Status * status)
+sc_MPI_Wait (sc_MPI_Request *request, sc_MPI_Status *status)
 {
   SC_CHECK_ABORT (*request == sc_MPI_REQUEST_NULL,
                   "non-MPI MPI_Wait handles NULL request only");
@@ -469,8 +502,12 @@ sc_MPI_Pack (const void *inbuf, int incount, sc_MPI_Datatype datatype,
   }
 
   /* Copy the contiguous memory */
-  memcpy ((char *) outbuf + *position, inbuf, size);
-  *position += size;
+  if (size > 0) {
+    SC_ASSERT (outbuf != NULL);
+    SC_ASSERT (inbuf !=  NULL);
+    memcpy ((char *) outbuf + *position, inbuf, size);
+    *position += size;
+  }
 
   return sc_MPI_SUCCESS;
 }
@@ -495,8 +532,12 @@ sc_MPI_Unpack (const void *inbuf, int insize, int *position,
   }
 
   /* Copy the contiguous memory */
-  memcpy (outbuf, (char *) inbuf + *position, size);
-  *position += size;
+  if (size > 0) {
+    SC_ASSERT (outbuf != NULL);
+    SC_ASSERT (inbuf != NULL);
+    memcpy (outbuf, (char *) inbuf + *position, size);
+    *position += size;
+  }
 
   return sc_MPI_SUCCESS;
 }
@@ -535,17 +576,21 @@ sc_MPI_Init_thread (int *argc, char ***argv, int required, int *provided)
 #endif /* SC_ENABLE_MPI */
 
 int
-sc_MPI_Waitsome (int incount, sc_MPI_Request * array_of_requests,
+sc_MPI_Waitsome (int incount, sc_MPI_Request *array_of_requests,
                  int *outcount, int *array_of_indices,
-                 sc_MPI_Status * array_of_statuses)
+                 sc_MPI_Status *array_of_statuses)
 {
 #ifdef SC_ENABLE_MPI
   /* we do this to avoid warnings when the prototype uses [] */
-  return MPI_Waitsome (incount, array_of_requests, outcount,
-                       array_of_indices, array_of_statuses);
+  SC_ASSERT (outcount != NULL);
+  return incount == 0 ? (*outcount = 0, sc_MPI_SUCCESS) :
+    MPI_Waitsome (incount, array_of_requests, outcount,
+                  array_of_indices, array_of_statuses);
 #else
   int                 i;
 
+  SC_ASSERT (outcount != NULL);
+  SC_ASSERT (incount == 0 || array_of_requests != NULL);
   for (i = 0; i < incount; ++i) {
     SC_CHECK_ABORT (array_of_requests[i] == sc_MPI_REQUEST_NULL,
                     "non-MPI MPI_Waitsome handles NULL requests only");
@@ -557,15 +602,17 @@ sc_MPI_Waitsome (int incount, sc_MPI_Request * array_of_requests,
 }
 
 int
-sc_MPI_Waitall (int count, sc_MPI_Request * array_of_requests,
-                sc_MPI_Status * array_of_statuses)
+sc_MPI_Waitall (int count, sc_MPI_Request *array_of_requests,
+                sc_MPI_Status *array_of_statuses)
 {
 #ifdef SC_ENABLE_MPI
   /* we do this to avoid warnings when the prototype uses [] */
-  return MPI_Waitall (count, array_of_requests, array_of_statuses);
+  return count == 0 ? sc_MPI_SUCCESS :
+    MPI_Waitall (count, array_of_requests, array_of_statuses);
 #else
   int                 i;
 
+  SC_ASSERT (count == 0 || array_of_requests != NULL);
   for (i = 0; i < count; ++i) {
     SC_CHECK_ABORT (array_of_requests[i] == sc_MPI_REQUEST_NULL,
                     "non-MPI MPI_Waitall handles NULL requests only");
@@ -575,15 +622,18 @@ sc_MPI_Waitall (int count, sc_MPI_Request * array_of_requests,
 }
 
 int
-sc_MPI_Testall (int count, sc_MPI_Request * array_of_requests, int *flag,
-                sc_MPI_Status * array_of_statuses)
+sc_MPI_Testall (int count, sc_MPI_Request *array_of_requests, int *flag,
+                sc_MPI_Status *array_of_statuses)
 {
 #ifdef SC_ENABLE_MPI
   /* we do this to avoid warnings when the prototype uses [] */
-  return MPI_Testall (count, array_of_requests, flag, array_of_statuses);
+  SC_ASSERT (flag != NULL);
+  return count == 0 ? (*flag = 1, sc_MPI_SUCCESS) :
+    MPI_Testall (count, array_of_requests, flag, array_of_statuses);
 #else
   int                 i;
 
+  SC_ASSERT (count == 0 || array_of_requests != NULL);
   for (i = 0; i < count; ++i) {
     SC_CHECK_ABORT (array_of_requests[i] == sc_MPI_REQUEST_NULL,
                     "non-MPI MPI_Testall handles NULL requests only");
@@ -785,6 +835,8 @@ sc_mpi_node_comms_destroy (sc_MPI_Comm comm, int comm_keyval,
   int                 mpiret;
   sc_MPI_Comm        *node_comms = (sc_MPI_Comm *) attribute_val;
 
+  SC_ASSERT (attribute_val != NULL);
+
   mpiret = sc_MPI_Comm_free (&node_comms[0]);
   if (mpiret != sc_MPI_SUCCESS) {
     return mpiret;
@@ -808,6 +860,8 @@ sc_mpi_node_comms_copy (sc_MPI_Comm oldcomm, int comm_keyval,
   sc_MPI_Comm        *node_comms_out;
   int                 mpiret;
 
+  SC_ASSERT (attribute_val_in != NULL);
+
   /* We can't used SC_ALLOC because these might be destroyed after
    * sc finalizes */
   mpiret =
@@ -825,6 +879,10 @@ sc_mpi_node_comms_copy (sc_MPI_Comm oldcomm, int comm_keyval,
   if (mpiret != sc_MPI_SUCCESS) {
     return mpiret;
   }
+
+  /* assign outputs */
+  SC_ASSERT (attribute_val_out != NULL);
+  SC_ASSERT (flag != NULL);
 
   *((sc_MPI_Comm **) attribute_val_out) = node_comms_out;
   *flag = 1;
@@ -936,7 +994,7 @@ sc_mpi_comm_detach_node_comms (sc_MPI_Comm comm)
 
 void
 sc_mpi_comm_get_node_comms (sc_MPI_Comm comm,
-                            sc_MPI_Comm * intranode, sc_MPI_Comm * internode)
+                            sc_MPI_Comm *intranode, sc_MPI_Comm *internode)
 {
 #if defined SC_ENABLE_MPI && defined SC_ENABLE_MPICOMMSHARED
   int                 mpiret, flag;

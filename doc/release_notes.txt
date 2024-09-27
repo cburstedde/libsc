@@ -1,6 +1,10 @@
 
 # Release notes for the sc software library
 
+## Link to latest version DOI
+
+[![DOI](https://zenodo.org/badge/3974693.svg)](https://zenodo.org/doi/10.5281/zenodo.10838739)
+
 ## General
 
  - We have been reminded, for good reason, to maintain release notes.
@@ -8,6 +12,19 @@
    software API or ABI.  In this case, we'll bump the libtool version with
    the next release version.  Please also note if there have been A*I
    extensions, in which case we'll bump the libtool minor version.
+ - Please add an item with every contribution under *Next release* below.
+
+## Next release
+
+### Functionality
+
+ - Fix extern "C" macro for using C++ compilers with libsc .c files
+
+### Build system
+
+ - Streamline CMake configuration
+ - Make sure to use SC_ENABLE_* CMake variables
+ - Adapt CMake CI to matrix of latest compilers
 
 ## 2.8.6
 
@@ -15,12 +32,12 @@ There have been breaking changes, very strictly speaking.
 
 ### Documentation
 
-- Begin maintaining a release notes file.
-- Add to documentation of sc_containers.h.
-- Completion and some polishing of the doxygen documentation in sc_io.h.
-- Add the scda (file-oriented data format suitable for parallel,
-  partition-independent disk I/O) API including its documentation in sc_scda.h.
-- Restructure the I/O module in the doxygen documentation.
+ - Begin maintaining a release notes file.
+ - Add to documentation of sc_containers.h.
+ - Completion and some polishing of the doxygen documentation in sc_io.h.
+ - Add file-oriented data format, API and documentation, suitable for
+   parallel, partition-independent disk I/O, in sc_scda.h.
+ - Restructure the I/O module in the doxygen documentation.
 
 ### Build system
 
@@ -33,6 +50,8 @@ There have been breaking changes, very strictly speaking.
  - Update CMake logic to configure zlib and jansson.
  - Add CMake option to run tests with Valgrind.
  - Warn if configuring MPI on and MPI I/O off.
+ - Renaming of CMake build system variables
+ - Make MPI checking functionality more robust in CMake.
 
 ### Functionality
 

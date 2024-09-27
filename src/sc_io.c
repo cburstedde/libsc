@@ -563,7 +563,6 @@ sc_io_file_load (const char *filename, sc_array_t * buffer)
   /* fixed window size for reading a usually small file */
   const size_t        bwins = 1 << 14;
   size_t              bpos, bout;
-  int                 i;
 
   SC_ASSERT (filename != NULL);
   SC_ASSERT (buffer != NULL);
@@ -579,7 +578,7 @@ sc_io_file_load (const char *filename, sc_array_t * buffer)
 
   /* perform reading in a loop */
   bpos = 0;
-  for (i = 0;; ++i) {
+  for (;;) {
     /* make room in read buffer */
     sc_array_resize (buffer, bpos + bwins);
 

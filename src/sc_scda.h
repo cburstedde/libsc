@@ -194,13 +194,15 @@
 #define SC_SCDA_H
 
 #include <sc_containers.h>
+#include <sc_random.h>
 
 SC_EXTERN_C_BEGIN;
 
 #define SC_SCDA_HEADER_BYTES 128 /**< number of file header bytes */
 #define SC_SCDA_USER_STRING_BYTES 58 /**< number of user string bytes */
+#define SC_SCDA_INLINE_FIELD 32 /**< byte count of inline data */
 
-/** Opaque context used for writing a libsc data file. */
+/** Opaque context for writing and reading a libsc data file, i.e. a scda file. */
 typedef struct sc_scda_fcontext sc_scda_fcontext_t;
 
 /** Type for element counts and sizes. */
@@ -250,7 +252,7 @@ sc_scda_ret_t;
 
 /** Error values for the scda functions.
  * An error value is a struct since the error can be related to the scda
- * file format or to MPI (I/O operations). The error code can be converted to a
+ * file format or to (MPI) I/O operations. The error code can be converted to a
  * string by \ref sc_scda_ferror_string and mapped to an error class by \ref
  * sc_scda_ferror_class.
  *
@@ -264,20 +266,42 @@ sc_scda_ret_t;
  */
 typedef struct sc_scda_ferror
 {
+  /* *INDENT-OFF* */
   int mpiret;            /**< MPI function return value; without MPI
                               this variable can get filled by other I/O operation
                               error codes, which are still interpretable by
                               the error \b scda examination functions */
   sc_scda_ret_t scdaret; /**< scda file format related return value */
+  /* *INDENT-ON* */
 }
 sc_scda_ferror_t;
 
 /** An options struct for the functions \ref sc_scda_fopen_write and
  * \ref sc_scda_fopen_read. The struct may be extended in the future.
+ *
+ * The option struct is a collective structure. If the options structure that
+ * is passed to a function is not the same on all processes, the whole
+ * following scda workflow has undefined behavior.
  */
 typedef struct sc_scda_fopen_options
 {
   sc_MPI_Info         info; /**< info that is passed to MPI_File_open */
+  unsigned            fuzzy_everyn; /**< In average every n-th possible error
+                                       origin returns a fuzzy error. There may
+                                       be multiple possible error origins in
+                                       one top-level scda function.
+                                       We return for each possible error origin
+                                       a random error with the empirical
+                                       probability of 1 / fuzzy_everyn but only
+                                       if the respective possible error origin
+                                       did not already cause an error without
+                                       the fuzzy error return. In such a case,
+                                       the actual error is returned. 0 means
+                                       that there are no fuzzy error returns. */
+  sc_rand_state_t     fuzzy_seed; /**< The seed for the fuzzy error return.
+                                       This value is ignored if
+                                       fuzzy_everyn == 0. When in doubt use
+                                       fuzzy_seed = 0. */
 }
 sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
 
@@ -777,8 +801,10 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  * \param [in,out]  fc          File context previously opened by \ref
  *                              sc_scda_fopen_read.
  * \param [out]     data        Exactly 32 bytes on the rank \b root or NULL
- *                              on \b root to not read the bytes. The parameter
- *                              is ignored on all ranks unequal to \b root.
+ *                              on \b root to not read the bytes. In the first
+ *                              case the sc_array must have an element count
+ *                              of 1 and an element size 32. The parameter is
+ *                              ignored on all ranks unequal to \b root.
  * \param [in]      root        An integer between 0 and mpisize exclusive of
  *                              the MPI communicator that was used to create
  *                              \b fc. \b root indicates the MPI rank on that
@@ -804,7 +830,7 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  * sc_scda_fread_section_header. This preceding call gives also the required
  * \b block_size.
  * \note
- * All parameters except of \b data_block are collective.
+ * All parameters except of \b block_data are collective.
  *
  * This function returns NULL on I/O errors.
  *
@@ -1045,7 +1071,15 @@ sc_scda_fcontext_t *sc_scda_fread_varray_data (sc_scda_fcontext_t * fc,
  *                              something else on invalid arguments.
  */
 int                 sc_scda_ferror_class (sc_scda_ferror_t errcode,
-                                          sc_scda_ferror_t *errclass);
+                                          sc_scda_ferror_t * errclass);
+
+/** Check if a scda_errorcode_t encodes success.
+ *
+ * \param [in]    errorcode     An errcode that is output by a sc_scda function.
+ * \return                      True if \b errcode encodes success and
+ *                              false otherwise.
+ */
+int                 sc_scda_ferror_is_success (sc_scda_ferror_t errorcode);
 
 /** Translate a sc_scda error code/class to an error string.
  *
@@ -1057,8 +1091,8 @@ int                 sc_scda_ferror_class (sc_scda_ferror_t errcode,
  * \return                      \ref SC_SCDA_FERR_SUCCESS on success or
  *                              something else on invalid arguments.
  */
-int                 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str,
-                                           int *len);
+int                 sc_scda_ferror_string (sc_scda_ferror_t errcode,
+                                           char *str, int *len);
 
 /** Close a file opened for parallel write/read and the free the file context.
  *
@@ -1069,8 +1103,8 @@ int                 sc_scda_ferror_string (sc_scda_ferror_t errcode, char *str,
  * \note
  * All parameters are collective.
  *
- * This function returns NULL on I/O errors.
- *
+ * This function returns -1 on I/O errors.
+ * This function always frees the file context -- also in case of an error.
  * \param [in,out]  fc        File context previously created by
  *                            \ref sc_scda_fopen_write or \ref
  *                            sc_scda_fopen_read. This file context is freed

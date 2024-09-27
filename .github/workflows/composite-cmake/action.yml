@@ -1,0 +1,60 @@
+runs:
+  using: "composite"
+
+  steps:
+  - name: CMake configure
+    shell: bash
+    run: >-
+      cmake --preset default
+      -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }}
+      -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+
+  - name: CMake print debug find
+    shell: bash
+    if: failure()
+    run: >-
+      cmake --preset default
+      -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }}
+      -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      --debug-find --fresh
+
+  - name: CMake build
+    shell: bash
+    run: cmake --build --preset default
+
+  - name: CMake Test
+    shell: bash
+    run: ctest --preset default
+
+  - name: CMake install (for examples)
+    shell: bash
+    run: cmake --install build
+
+  - name: CMake configure examples
+    shell: bash
+    run: cmake -B example/build -S example
+
+  - name: CMake build examples
+    shell: bash
+    run: cmake --build example/build
+
+  - name: Create package
+    shell: bash
+    if: github.event.action == 'published'
+    run: cpack --config build/CPackConfig.cmake
+
+  - name: Upload package
+    if: github.event.action == 'published'
+    uses: actions/upload-artifact@v4
+    with:
+      name: ${{ github.job }}-binary-archive-${{ matrix.cc }}-mpi-${{ matrix.mpi }}-shared-${{ matrix.shared }}
+      path: build/package
+
+  - name: Upload log files
+    if: always()
+    uses: actions/upload-artifact@v4
+    with:
+      name: ${{ github.job }}_cmake_log-${{ matrix.cc }}-mpi-${{ matrix.mpi }}-shared-${{ matrix.shared }}
+      path: |
+        ./build/CMakeFiles/CMakeConfigureLog.yaml
+        ./build/Testing/Temporary/LastTest.log
