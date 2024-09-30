@@ -1888,6 +1888,47 @@ sc_scda_fwrite_array_header_internal (sc_scda_fcontext_t *fc,
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (header_len, count, count_err);
 }
 
+/** Internal function to write the fixed-length array padding.
+ *
+ * This function is dedicated to be called in \ref sc_scda_fwrite_array.
+ * This function is only valid to be called on the maximal not empty rank.
+ *
+ * \param [in] fc           The file context as in \ref sc_scda_fwrite_array
+ *                          after running the collective write part.
+ * \param [in] last_byte    A pointer to the last global data byte.
+ * \param [in] byte_count   Number of collectively written bytes in the function
+ *                          \ref sc_scda_fwrite_array.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fwrite_padding_internal (sc_scda_fcontext_t *fc, const char *last_byte,
+                                 size_t byte_count, int *count_err,
+                                 sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  size_t              num_pad_bytes;
+  /* \ref SC_SCDA_PADDING_MOD + 6 is the maximum number of mod padding bytes */
+  char                padding[SC_SCDA_PADDING_MOD + 6];
+
+  *count_err = 0;
+
+  /* get the padding bytes */
+  num_pad_bytes = sc_scda_pad_to_mod_len (byte_count);
+  sc_scda_pad_to_mod (last_byte, byte_count, padding);
+
+  /* write the padding bytes */
+  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, padding,
+                           (int) num_pad_bytes, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing fixed-len. array data padding");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_pad_bytes, count, count_err);
+}
+
+
 sc_scda_fcontext_t *
 sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                       size_t *len, sc_array_t *array_data,
@@ -1900,7 +1941,10 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   int                 ret, count_err;
   int                 num_local_elements, bytes_to_write;
   int                 count;
+  int                 last_byte_owner;
   size_t              elem_count, si;
+  size_t              collective_byte_count;
+  size_t              num_pad_bytes;
   sc_MPI_Offset       offset;
 #if 0
   const void         *local_array_data;
@@ -1935,8 +1979,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Invalid elem_counts array");
 
   /* compute the global element count */
-  /* the global count is only used on rank SC_SCDA_HEADER_ROOT */
-  /* TODO: Compute this locally and use a checksum for the colletivness test? */
+  /* TODO: Use a checksum for the colletivness test? */
   elem_count = 0;
   for (si = 0; si < elem_counts->elem_count; ++si) {
     elem_count += *((size_t *) sc_array_index (elem_counts, si));
@@ -1995,7 +2038,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   /* computer number of array data bytes that are locally written */
   num_local_elements =
     (int) *((sc_scda_ulong *) sc_array_index_int (elem_counts, fc->mpirank));
-  bytes_to_write = (int) elem_size *num_local_elements;
+  bytes_to_write = (int) elem_size * num_local_elements;
 
   mpiret = sc_io_write_at_all (fc->file, fc->accessed_bytes + offset,
                                array_data->array, bytes_to_write, sc_MPI_BYTE,
@@ -2005,11 +2048,39 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   /* check for count error of the collective I/O operation */
   SC_SCDA_CHECK_COLL_COUNT_ERR (bytes_to_write, count, fc, errcode);
 
-  /* TODO: update global number of written bytes */
+  /* update global number of written bytes */
+  collective_byte_count = elem_count * elem_size;
+  fc->accessed_bytes += (sc_MPI_Offset) collective_byte_count;
 
-  /* TODO: get and write padding bytes in serial */
+  /* determine the rank that holds the last byte */
+  /* TODO: Move this to a separate function? */
+  last_byte_owner = 0;
+  for (i = fc->mpisize - 1; i >= 0; --i) {
+    if (*((sc_scda_ulong *)sc_array_index_int (elem_counts, i)) != 0) {
+      /* found maximal rank that is not empty */
+      last_byte_owner = i;
+      break;
+    }
+  }
 
-  /* TODO: update global number of written bytes */
+  /* get and write padding bytes in serial */
+  if (fc->mpirank == last_byte_owner) {
+    const char       *last_byte;
+
+    /* get last local/global byte */
+    SC_ASSERT (elem_count == 0 || bytes_to_write > 0);
+    last_byte = (elem_count > 0) ?
+                              &array_data->array[bytes_to_write - 1] : NULL;
+    /* the padding depends on the last data byte */
+    sc_scda_fwrite_padding_internal (fc, last_byte, collective_byte_count,
+                                     &count_err, errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, last_byte_owner, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, last_byte_owner, fc);
+
+  /* update global number of written bytes */
+  num_pad_bytes = sc_scda_pad_to_mod_len (collective_byte_count);
+  fc->accessed_bytes += (sc_MPI_Offset) num_pad_bytes;
 
   return fc;
 }
