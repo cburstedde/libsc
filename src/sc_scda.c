@@ -137,7 +137,45 @@
                                     SC_FREE (fc);                              \
                                     return NULL;}} while (0)
 
-/** Check for a count error of a serial (rank 0) I/O operation.
+/** Check for a count error of a collective I/O operation.
+ * This macro is only valid to use after checking that there was not I/O error.
+ * The macro must be called collectively with \b fc and \b errcode being
+ * collective parameters. \b icount and \b ocount may depend on the MPI rank.
+ * The calling function must return NULL in case of an error.
+ */
+#define SC_SCDA_CHECK_COLL_COUNT_ERR(icount, ocount, fc, errcode) do {       \
+                                    int sc_scda_global_cerr;                 \
+                                    int sc_scda_local_cerr;                  \
+                                    int sc_scda_mpiret;                      \
+                                    SC_ASSERT (                              \
+                                      sc_scda_ferror_is_success (*errcode)); \
+                                    sc_scda_local_cerr =                     \
+                                                  ((int) icount != ocount);  \
+                                    sc_scda_mpiret = sc_MPI_Allreduce (      \
+                                                        &sc_scda_local_cerr, \
+                                                        &sc_scda_global_cerr,\
+                                                        1, sc_MPI_INT,       \
+                                                        sc_MPI_LOR,          \
+                                                        fc->mpicomm);        \
+                                    SC_CHECK_MPI (sc_scda_mpiret);           \
+                                    sc_scda_scdaret_to_errcode (             \
+                                      sc_scda_global_cerr ? SC_SCDA_FERR_COUNT :\
+                                                        SC_SCDA_FERR_SUCCESS,\
+                                      errcode, fc);                          \
+                                    SC_SCDA_CHECK_VERBOSE_COLL (*errcode,    \
+                                                  "Read/write count check"); \
+                                    if (sc_scda_global_cerr) {               \
+                                    SC_ASSERT (                              \
+                                      !sc_scda_ferror_is_success (*errcode));\
+                                    SC_GLOBAL_LERRORF ("Count error for "    \
+                                                "collective I/O at %s:%d.\n",\
+                                                __FILE__, __LINE__);         \
+                                    sc_scda_file_error_cleanup (&fc->file);  \
+                                    SC_FREE (fc);                            \
+                                    return NULL;                             \
+                                    }} while (0)                             \
+
+/** Check for a count error of a serial I/O operation.
  * This macro is only valid to use after checking that there was not I/O error.
  * For a correct error handling it is required to skip the rest
  * of the non-collective code and then broadcast the count  error flag.
@@ -1958,8 +1996,8 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                                &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Writing block data padding");
-  /* TODO: Implement collective count check macro */
-  //SC_SCDA_CHECK_COLL_COUNT_ERR (bytes_to_write, count, count_err);
+  /* check for count error of the collective I/O operation */
+  SC_SCDA_CHECK_COLL_COUNT_ERR (bytes_to_write, count, fc, errcode);
 
   /* TODO: update global number of written bytes */
 
