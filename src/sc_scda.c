@@ -491,30 +491,32 @@ sc_scda_pad_to_mod_len (size_t input_len)
 
 /** Pad data to a length that is congurent to 0 modulo \ref SC_SCDA_PADDING_MOD.
  *
- * \param [in]  input_data  The input data. At least \b input_len bytes.
- *                          The input data is required since the padding byte
- *                          content dependt on the trailing input data byte.
- * \param [in]  input_len   The length of \b input_data in number of bytes.
+ * \param [in]  last_byte   Pointer to the last data byte.
+ *                          This byte is required since the padding byte
+ *                          content depends on the trailing data byte.
+ *                          Must be NULL if \b data_len equals 0.
+ * \param [in]  data_len    The length of the data in number of bytes.
  * \param [out] padding     On output the padding bytes. Must be at least
- *                          \ref sc_scda_pad_to_mod_len (\b input_len) bytes.
+ *                          \ref sc_scda_pad_to_mod_len (\b data_len) bytes.
  */
 static void
-sc_scda_pad_to_mod (const char *input_data, size_t input_len,
+sc_scda_pad_to_mod (const char *last_byte, size_t data_len,
                     char *padding)
 {
   size_t              num_pad_bytes;
 
-  SC_ASSERT (input_len == 0 || input_data != NULL);
+  SC_ASSERT (data_len == 0 || last_byte != NULL);
+  SC_ASSERT (data_len != 0 || last_byte == NULL);
   SC_ASSERT (padding != NULL);
 
   /* compute the number of padding bytes */
-  num_pad_bytes = sc_scda_pad_to_mod_len (input_len);
+  num_pad_bytes = sc_scda_pad_to_mod_len (data_len);
 
   SC_ASSERT (num_pad_bytes >= 7);
   SC_ASSERT (num_pad_bytes <= SC_SCDA_PADDING_MOD_MAX);
 
   /* check for last byte to decide on padding format */
-  if (input_len > 0 && input_data[input_len - 1] == '\n') {
+  if (data_len > 0 && *last_byte == '\n') {
     /* input data ends with a line break */
     padding[0] = '=';
   }
@@ -545,11 +547,14 @@ sc_scda_pad_to_mod_inplace (const char *input_data, size_t input_len,
   SC_ASSERT (input_len == 0 || input_data != NULL);
   SC_ASSERT (output_data != NULL);
 
+  const char         *last_byte;
+
   /* copy the input data */
   sc_scda_copy_bytes (output_data, input_data, input_len);
 
   /* append the padding */
-  sc_scda_pad_to_mod (input_data, input_len, &output_data[input_len]);
+  last_byte = (input_len > 0) ? &input_data[input_len - 1] : NULL;
+  sc_scda_pad_to_mod (last_byte, input_len, &output_data[input_len]);
 }
 
 /** Check if the padding bytes are correct w.r.t. \ref SC_SCDA_PADDING_MOD.
@@ -1739,7 +1744,7 @@ sc_scda_fwrite_block_data_internal (sc_scda_fcontext_t *fc,
 
   /* get the padding bytes */
   num_pad_bytes = sc_scda_pad_to_mod_len (block_size);
-  sc_scda_pad_to_mod (block_data->array, block_size, padding);
+  sc_scda_pad_to_mod (&block_data->array[block_size - 1], block_size, padding);
 
   /* write the padding bytes */
   mpiret = sc_io_write_at (fc->file, fc->accessed_bytes + block_size,
