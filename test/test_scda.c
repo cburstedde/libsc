@@ -27,6 +27,9 @@
 #define SC_SCDA_FILE_EXT "scd"
 #define SC_SCDA_TEST_FILE "sc_test_scda." SC_SCDA_FILE_EXT
 
+#define SC_SCDA_GLOBAL_ARRAY_COUNT 12
+#define SC_SCDA_ARRAY_SIZE 3
+
 static void
 test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
                                   int mpisize)
@@ -35,9 +38,9 @@ test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
   int                 i;
   char               *data_ptr;
   size_t              si;
-  const size_t        elem_size = 3;
+  const size_t        elem_size = SC_SCDA_ARRAY_SIZE;
   size_t              local_elem_count;
-  const sc_scda_ulong global_elem_count = 12;
+  const sc_scda_ulong global_elem_count = SC_SCDA_GLOBAL_ARRAY_COUNT;
   sc_scda_ulong       per_proc_count, remainder_count;
   sc_array_t          elem_counts, data;
   sc_scda_ferror_t    errcode;
@@ -87,6 +90,29 @@ test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
 
   sc_array_reset (&elem_counts);
   sc_array_reset (&data);
+}
+
+static void
+test_scda_read_fixed_size_array (sc_scda_fcontext_t *fc)
+{
+  const int           indirect = 0;
+  int                 decode;
+  char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
+  char                section_type;
+  size_t              len;
+  size_t              elem_count, elem_size;
+  sc_scda_ferror_t    errcode;
+
+  fc = sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                     &elem_count, &elem_size, &decode,
+                                    &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'A' &&
+                  elem_count == SC_SCDA_GLOBAL_ARRAY_COUNT &&
+                  elem_size == SC_SCDA_ARRAY_SIZE, "Identifying section type");
+
+  /* TODO: read the empty array */
 }
 
 int
@@ -360,6 +386,8 @@ main (int argc, char **argv)
   SC_CHECK_ABORT (mpirank != mpisize - 1
                   || !strncmp (read_data, inline_data,
                                SC_SCDA_INLINE_FIELD), "block data mismatch");
+
+  test_scda_read_fixed_size_array (fc);
 
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
