@@ -31,11 +31,11 @@ static void
 test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
                                   int mpisize)
 {
-  int                 indirect = 0;
+  const int           indirect = 0;
   int                 i;
   char               *data_ptr;
   size_t              si;
-  size_t              elem_size = 3;
+  const size_t        elem_size = 3;
   size_t              local_elem_count;
   const sc_scda_ulong global_elem_count = 12;
   sc_scda_ulong       per_proc_count, remainder_count;
@@ -70,6 +70,20 @@ test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
                              &elem_counts, elem_size, indirect, 0, &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "sc_scda_fwrite_array failed");
+
+  /* write an empty array */
+
+  /* set elem_counts */
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = 0;
+  }
+
+  sc_array_resize (&data, 0);
+
+  fc = sc_scda_fwrite_array (fc, "An empty array", NULL, &data,
+                             &elem_counts, elem_size, indirect, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fwrite_array empty array failed");
 
   sc_array_reset (&elem_counts);
   sc_array_reset (&data);
@@ -146,7 +160,7 @@ main (int argc, char **argv)
   if (mpisize > 1) {
     SC_GLOBAL_ESSENTIAL
       ("We expect two invalid scda function parameter errors."
-       " This is just for testing purposes and do not imply"
+       " This is just for testing purposes and does not imply"
        " erroneous code behavior.\n");
   }
   /* fopen_write with non-collective fuzzy error parameters */
