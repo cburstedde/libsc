@@ -1812,7 +1812,8 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
  *                          sc_scda_fwrite_array.
  * \param [in] len          As in the documentation of \ref
  *                          sc_scda_fwrite_array.
- * TODO
+ * \param [in] elem_count   As in the documentation of \ref
+ *                          sc_scda_fwrite_array.
  * \param [in] elem_size    As in the documentation of \ref
  *                          sc_scda_fwrite_array.
  * \param [out] count_err   A Boolean indicating if a count error occurred.
