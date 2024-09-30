@@ -2052,7 +2052,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   /* write array data in parallel */
 #endif
 
-  /* temporary */
+  /* TODO: temporary */
   SC_ASSERT (!indirect);
 
   /* compute rank-dependent offset */
@@ -2074,7 +2074,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                                array_data->array, bytes_to_write, sc_MPI_BYTE,
                                &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Writing block data padding");
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Writing fixed-length array padding");
   /* check for count error of the collective I/O operation */
   SC_SCDA_CHECK_COLL_COUNT_ERR (bytes_to_write, count, fc, errcode);
 
@@ -2350,6 +2350,9 @@ sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
   case 'B':
     *type = 'B';
     break;
+  case 'A':
+    *type = 'A';
+    break;
   default:
     /* an invalid/unsupported format */
     wrong_format = 1;
@@ -2382,18 +2385,9 @@ sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
                              "Invalid user string in section header");
 }
 
-/** Internal function to read a count entry in a section header.
+/** Internal function to check a count entry in a section header.
  *
- * This code is only valid to be run in serial. It is crucial that
- * fc->accessed_bytes is not updated inside of this function. Therefore,
- * fc->accessed_bytes must be updated accordingly (and collectivly) afterwards.
- *
- * This function is already prepared to be adjusted in the future to read a
- * specified number of count entries. This will change the interface of this
- * function. The reason that we will read multiple count entries in one function
- * call instead of calling one function multiple times is that the error
- * management for serial code parts relies on having one function that executes
- * the serial code.
+ * This code is only valid to be run in serial.
  *
  * \param [in] fc           The file context as in \ref
  *                          sc_scda_fread_section_header before running the
@@ -2403,77 +2397,67 @@ sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
  *                          convention, the function call is not completed and
  *                          results in \ref SC_SCDA_FERR_FORMAT as error,
  *                          cf. \b errcode.
- * \param [in] expc_ident   The expected count entry identifier. If the \b ident
- *                          is not as expected the error \ref
- *                          SC_SCDA_FERR_FORMAT is set and the function flow is
- *                          not completed.
+ * \param [in] expc_ident   The expected count entry identifier. If the read
+ *                          identifier is not as expected the function returns
+ *                          false.
  * \param [out] count_var   The count variable read from the count entry.
  * \param [out] count_err   A Boolean indicating if a count error occurred.
  *                          For this parameter the term count refers to the
  *                          expected byte count for reading count (different
  *                          count) entry.
- * \param [out] errcode     An errcode that can be interpreted by \ref
- *                          sc_scda_ferror_string or mapped to an error class
- *                          by \ref sc_scda_ferror_class.
+ * \return                  True if the count entry is valid and has the
+ *                          expected identifier.
  */
-static void
-sc_scda_fread_count_entry_internal (sc_scda_fcontext_t *fc, char *ident,
-                                    char expc_ident, size_t *count_var,
-                                    int *count_err, sc_scda_ferror_t *errcode)
+static int
+sc_scda_check_count_entry_internal (const char *count_entry, char expc_ident,
+                                    size_t *count_var)
 {
-  char                count_entry[SC_SCDA_COUNT_FIELD];
   char                var_str[SC_SCDA_COUNT_MAX_DIGITS + 1];
-  int                 mpiret;
-  int                 count;
+  char                ident;
   int                 wrong_format, wrong_ident;
   long long unsigned  read_count;
   size_t              len = 0;
 
-  SC_ASSERT (fc != NULL);
-  SC_ASSERT (ident != NULL);
   SC_ASSERT (count_var != NULL);
 
-  *ident = ' ';
   *count_var = 0;
-  *count_err = 0;
-
-  /* read a count entry */
-  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
-                          SC_SCDA_COUNT_FIELD, sc_MPI_BYTE, &count);
-  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read a count entry in a section header");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
 
   wrong_format = 0;
   /* check and get the count variable identifier */
   switch (count_entry[0])
   {
   case 'E':
-    *ident = 'E';
+    ident = 'E';
+    break;
+  case 'N':
+    ident = 'N';
     break;
   default:
     /* invalid/unsupported count identifier */
     wrong_format = 1;
     break;
   }
-  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count identifier");
+  if (wrong_format) {
+    /* invalid count identifier */
+    return -1;
+  }
 
   /* compare read count identifier to the expected count identifier  */
-  wrong_ident = (*ident != expc_ident);
-  sc_scda_scdaret_to_errcode (wrong_ident ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Wrong count identifier in count entry");
+  wrong_ident = (ident != expc_ident);
+  if (wrong_ident) {
+    /* Wrong count identifier in count entry */
+    return -1;
+  }
 
   /* check count entry format */
   if (count_entry[1] != ' ') {
     /* wrong format */
     wrong_format = 1;
   }
-  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Missing space in count entry");
+  if (wrong_format) {
+    /* Missing space in count entry */
+    return -1;
+  }
 
   /* check padding and extract count variable string */
   sc_scda_init_nul (var_str, SC_SCDA_COUNT_MAX_DIGITS + 1);
@@ -2481,9 +2465,10 @@ sc_scda_fread_count_entry_internal (sc_scda_fcontext_t *fc, char *ident,
                                   &len)) {
     wrong_format = 1;
   }
-  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count variable padding");
+  if (wrong_format) {
+    /* Invalid count variable padding */
+    return -1;
+  }
 
   /* If the padding to the length \ref SC_SCDA_COUNT_ENTRY was valid this
    * assertion must hold.
@@ -2496,11 +2481,133 @@ sc_scda_fread_count_entry_internal (sc_scda_fcontext_t *fc, char *ident,
     /* conversion failed or is not possible */
     wrong_format = 1;
   }
-  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Extraction of count value failed");
+  if (wrong_format) {
+    /* Extraction of count value failed */
+    return -1;
+  }
 
   *count_var = (size_t) read_count;
+
+  return 0;
+}
+
+/** An internal function to read and check the block section header.
+ *
+ * This function is only valid to be called in serial.
+ * This function updates \b fc->accessed_bytes. Hence, it is crucial that
+ * \b fc->accessed_bytes is set collectivley afterwards.
+ *
+ * \param [in]  fc          The file context as in \ref
+ *                          sc_scda_fread_section_header before running the
+ *                          serial code part.
+ * \param [in]  elem_size   The read element size.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fread_block_header_internal (sc_scda_fcontext_t *fc, size_t *elem_size,
+                                     int *count_err, sc_scda_ferror_t *errcode)
+{
+  char                count_entry[SC_SCDA_COUNT_FIELD];
+  int                 mpiret;
+  int                 count;
+  int                 invalid_count_entry;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (count_err != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  *count_err = 0;
+
+  /* read the count entry */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
+                          SC_SCDA_COUNT_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block section header count entry");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
+
+  /* check read count entry */
+  invalid_count_entry = sc_scda_check_count_entry_internal (count_entry, 'E',
+                                                            elem_size);
+  sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
+                                                    SC_SCDA_FERR_SUCCESS,
+                              errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid block count entry");
+
+  /* update the internal file pointer; only in serial */
+  fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
+}
+
+/** An internal function to read and check the fixed-len array section header.
+ *
+ * This function is only valid to be called in serial.
+ * This function updates \b fc->accessed_bytes. Hence, it is crucial that
+ * \b fc->accessed_bytes is set collectivley afterwards.
+ *
+ * \param [in]  fc          The file context as in \ref
+ *                          sc_scda_fread_section_header before running the
+ *                          serial code part.
+ * \param [in]  elem_size   The read element size.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fread_array_header_internal (sc_scda_fcontext_t *fc, size_t *elem_count,
+                                     size_t *elem_size, int *count_err,
+                                     sc_scda_ferror_t *errcode)
+{
+  char                count_entry[SC_SCDA_COUNT_FIELD];
+  int                 mpiret;
+  int                 count;
+  int                 invalid_count_entry;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (count_err != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  *count_err = 0;
+
+  /* read the first count entry */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
+                          SC_SCDA_COUNT_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block section header count entry");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
+
+  /* check read count entry */
+  invalid_count_entry = sc_scda_check_count_entry_internal (count_entry,'N',
+                                                            elem_count);
+  sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
+                                                    SC_SCDA_FERR_SUCCESS,
+                              errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid first fixed-length array count "
+                             "entry");
+
+  /* update the internal file pointer; only in serial */
+  fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
+
+  /* read the second count entry */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
+                          SC_SCDA_COUNT_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block section header count entry");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
+
+  /* check read count entry */
+  invalid_count_entry = sc_scda_check_count_entry_internal (count_entry, 'E',
+                                                            elem_size);
+  sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
+                                                    SC_SCDA_FERR_SUCCESS,
+                              errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid second fixed-length array count "
+                             "entry");
+
+  /* update the internal file pointer; only in serial */
+  fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
 }
 
 sc_scda_fcontext_t *
@@ -2511,7 +2618,6 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
 {
   int                 count_err;
   int                 mpiret;
-  char                var_ident;
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (user_string != NULL);
@@ -2543,9 +2649,11 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
       /* no count entries to read */
       break;
     case 'B':
-      /* one count entry to read */
-      sc_scda_fread_count_entry_internal (fc, &var_ident, 'E', elem_size,
-                                          &count_err, errcode);
+      sc_scda_fread_block_header_internal (fc, elem_size, &count_err, errcode);
+      break;
+    case 'A':
+      sc_scda_fread_array_header_internal (fc, elem_count, elem_size,
+                                           &count_err, errcode);
       break;
     default:
       /* rank SC_SCDA_HEADER_ROOT already checked if type is valid/supported */
@@ -2580,8 +2688,24 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
     mpiret = sc_MPI_Bcast (elem_size, sizeof (size_t), sc_MPI_BYTE,
                            SC_SCDA_HEADER_ROOT, fc->mpicomm);
     SC_CHECK_MPI (mpiret);
-    /* one count entry was read */
-    fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
+    if (fc->mpirank != SC_SCDA_HEADER_ROOT) {
+      /* update internal file pointer */
+      fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
+    }
+    break;
+  case 'A':
+    /* fixed-length array */
+    /* elem_count and elem_size were read on rank SC_SCDA_HEADER_ROOT */
+    mpiret = sc_MPI_Bcast (elem_count, sizeof (size_t), sc_MPI_BYTE,
+                           SC_SCDA_HEADER_ROOT, fc->mpicomm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Bcast (elem_size, sizeof (size_t), sc_MPI_BYTE,
+                           SC_SCDA_HEADER_ROOT, fc->mpicomm);
+    SC_CHECK_MPI (mpiret);
+    if (fc->mpirank != SC_SCDA_HEADER_ROOT) {
+      /* update internal file pointer */
+      fc->accessed_bytes += 2 * SC_SCDA_COUNT_FIELD;
+    }
     break;
   default:
     /* rank SC_SCDA_HEADER_ROOT already checked if type is valid/supported */
