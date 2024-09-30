@@ -1928,6 +1928,36 @@ sc_scda_fwrite_padding_internal (sc_scda_fcontext_t *fc, const char *last_byte,
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_pad_bytes, count, count_err);
 }
 
+/** Determine the maximal rank that is not empty.
+ *
+ * \param [in] fc           A file context with filled MPI data.
+ * \param [in] elem_counts  As the parameter \b elem_counts in \ref
+ *                          sc_scda_fwrite_array or \ref sc_scda_fwrite_varray.
+ *                          This array stores the number of elements per rank.
+ * \return                  The maximal rank that is not empty. If all ranks
+ *                          are empty, 0 is returned.
+ */
+static int
+sc_scda_get_last_byte_owner (sc_scda_fcontext_t *fc, sc_array_t *elem_counts)
+{
+  int                 i;
+  int                 last_byte_owner;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (elem_counts != NULL);
+
+  /* determine the rank that holds the last byte */
+  last_byte_owner = 0;
+  for (i = fc->mpisize - 1; i >= 0; --i) {
+    if (*((sc_scda_ulong *)sc_array_index_int (elem_counts, i)) != 0) {
+      /* found maximal rank that is not empty */
+      last_byte_owner = i;
+      break;
+    }
+  }
+
+  return last_byte_owner;
+}
 
 sc_scda_fcontext_t *
 sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
@@ -2053,15 +2083,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   fc->accessed_bytes += (sc_MPI_Offset) collective_byte_count;
 
   /* determine the rank that holds the last byte */
-  /* TODO: Move this to a separate function? */
-  last_byte_owner = 0;
-  for (i = fc->mpisize - 1; i >= 0; --i) {
-    if (*((sc_scda_ulong *)sc_array_index_int (elem_counts, i)) != 0) {
-      /* found maximal rank that is not empty */
-      last_byte_owner = i;
-      break;
-    }
-  }
+  last_byte_owner = sc_scda_get_last_byte_owner (fc, elem_counts);
 
   /* get and write padding bytes in serial */
   if (fc->mpirank == last_byte_owner) {
