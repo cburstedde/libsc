@@ -1281,9 +1281,9 @@ sc_scda_get_common_section_header (char section_char, const char* user_string,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fopen_write_header_internal (sc_scda_fcontext_t *fc,
-                                     const char *user_string, size_t *len,
-                                     int *count_err, sc_scda_ferror_t *errcode)
+sc_scda_fopen_write_header_serial (sc_scda_fcontext_t *fc,
+                                   const char *user_string, size_t *len,
+                                   int *count_err, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1403,13 +1403,13 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "File open write");
 
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
-    sc_scda_fopen_write_header_internal (fc, user_string, len, &count_err,
-                                         errcode);
+    sc_scda_fopen_write_header_serial (fc, user_string, len, &count_err,
+                                       errcode);
   }
   /* This macro must be the first expression after the non-collective code part
    * since it must be the point where \ref SC_SCDA_CHECK_NONCOLL_ERR and \ref
    * SC_SCDA_CHECK_NONCOLL_COUNT_ERR can jump to, which are called in \ref
-   * sc_scda_fopen_write_header_internal. The macro handles the non-collective
+   * sc_scda_fopen_write_header_serial. The macro handles the non-collective
    * error, i.e. it broadcasts the errcode, which may encode success, from
    * rank 0 to all other ranks and in case of an error it closes the file,
    * frees the file context and returns NULL. Hence, it is valid that errcode
@@ -1428,7 +1428,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * that it is valid that errcode is only initialized on rank 0 before calling
    * this macro. The macro argument count_err must point to the count error
    * Boolean that was set on rank SC_SCDA_HEADER_ROOT by \ref
-   * sc_scda_fopen_write_header_internal.
+   * sc_scda_fopen_write_header_serial.
    */
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
                                     fc);
@@ -1459,10 +1459,9 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fwrite_inline_header_internal (sc_scda_fcontext_t *fc,
-                                       const char *user_string, size_t *len,
-                                       int *count_err,
-                                       sc_scda_ferror_t *errcode)
+sc_scda_fwrite_inline_header_serial (sc_scda_fcontext_t *fc,
+                                     const char *user_string, size_t *len,
+                                     int *count_err, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1512,9 +1511,9 @@ sc_scda_fwrite_inline_header_internal (sc_scda_fcontext_t *fc,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fwrite_inline_data_internal (sc_scda_fcontext_t *fc,
-                                     sc_array_t * inline_data, int *count_err,
-                                     sc_scda_ferror_t * errcode)
+sc_scda_fwrite_inline_data_serial (sc_scda_fcontext_t *fc,
+                                   sc_array_t * inline_data, int *count_err,
+                                   sc_scda_ferror_t * errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1553,8 +1552,8 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* The file header section is always written and read on rank 0. */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
-    sc_scda_fwrite_inline_header_internal (fc, user_string, len, &count_err,
-                                           errcode);
+    sc_scda_fwrite_inline_header_serial (fc, user_string, len, &count_err,
+                                         errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
@@ -1565,8 +1564,8 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* The inline data is written on the the user-defined rank root. */
   if (fc->mpirank == root) {
-    sc_scda_fwrite_inline_data_internal (fc, inline_data, &count_err,
-                                         errcode);
+    sc_scda_fwrite_inline_data_serial (fc, inline_data, &count_err,
+                                       errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
@@ -1650,10 +1649,10 @@ sc_scda_get_section_header_entry (char ident, size_t var, char *output)
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fwrite_block_header_internal (sc_scda_fcontext_t *fc,
-                                      const char *user_string, size_t *len,
-                                      size_t block_size, int *count_err,
-                                      sc_scda_ferror_t *errcode)
+sc_scda_fwrite_block_header_serial (sc_scda_fcontext_t *fc,
+                                    const char *user_string, size_t *len,
+                                    size_t block_size, int *count_err,
+                                    sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1715,9 +1714,9 @@ sc_scda_fwrite_block_header_internal (sc_scda_fcontext_t *fc,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fwrite_block_data_internal (sc_scda_fcontext_t *fc,
-                                     sc_array_t * block_data, size_t block_size,
-                                     int *count_err, sc_scda_ferror_t * errcode)
+sc_scda_fwrite_block_data_serial (sc_scda_fcontext_t *fc,
+                                  sc_array_t * block_data, size_t block_size,
+                                  int *count_err, sc_scda_ferror_t * errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1781,8 +1780,8 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* section header is always written and read on rank SC_SCDA_HEADER_ROOT */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
-    sc_scda_fwrite_block_header_internal (fc, user_string, len, block_size,
-                                          &count_err, errcode);
+    sc_scda_fwrite_block_header_serial (fc, user_string, len, block_size,
+                                        &count_err, errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
@@ -1793,8 +1792,8 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* The block data is written on the the user-defined rank root. */
   if (fc->mpirank == root) {
-    sc_scda_fwrite_block_data_internal (fc, block_data, block_size,
-                                        &count_err, errcode);
+    sc_scda_fwrite_block_data_serial (fc, block_data, block_size,
+                                      &count_err, errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
@@ -1827,10 +1826,10 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fwrite_array_header_internal (sc_scda_fcontext_t *fc,
-                                      const char *user_string, size_t *len,
-                                      size_t elem_count, size_t elem_size,
-                                      int *count_err, sc_scda_ferror_t *errcode)
+sc_scda_fwrite_array_header_serial (sc_scda_fcontext_t *fc,
+                                    const char *user_string, size_t *len,
+                                    size_t elem_count, size_t elem_size,
+                                    int *count_err, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1904,9 +1903,9 @@ sc_scda_fwrite_array_header_internal (sc_scda_fcontext_t *fc,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fwrite_padding_internal (sc_scda_fcontext_t *fc, const char *last_byte,
-                                 size_t byte_count, int *count_err,
-                                 sc_scda_ferror_t *errcode)
+sc_scda_fwrite_padding_serial (sc_scda_fcontext_t *fc, const char *last_byte,
+                               size_t byte_count, int *count_err,
+                               sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -2028,8 +2027,8 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* section header is always written and read on rank SC_SCDA_HEADER_ROOT */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
-    sc_scda_fwrite_array_header_internal (fc, user_string, len, elem_count,
-                                          elem_size, &count_err, errcode);
+    sc_scda_fwrite_array_header_serial (fc, user_string, len, elem_count,
+                                        elem_size, &count_err, errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
@@ -2094,8 +2093,8 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
     last_byte = (elem_count > 0) ?
                               &array_data->array[bytes_to_write - 1] : NULL;
     /* the padding depends on the last data byte */
-    sc_scda_fwrite_padding_internal (fc, last_byte, collective_byte_count,
-                                     &count_err, errcode);
+    sc_scda_fwrite_padding_serial (fc, last_byte, collective_byte_count,
+                                   &count_err, errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, last_byte_owner, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, last_byte_owner, fc);
@@ -2196,9 +2195,9 @@ sc_scda_check_file_header (const char *file_header_data, char *user_string,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fopen_read_header_internal (sc_scda_fcontext_t * fc,
-                                    char *user_string, size_t *len,
-                                    int *count_err, sc_scda_ferror_t *errcode)
+sc_scda_fopen_read_header_serial (sc_scda_fcontext_t * fc,
+                                  char *user_string, size_t *len,
+                                  int *count_err, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -2274,8 +2273,8 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
 
   /* read file header section on rank SC_SCDA_HEADER_ROOT */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
-    sc_scda_fopen_read_header_internal (fc, user_string, len, &count_err,
-                                        errcode);
+    sc_scda_fopen_read_header_serial (fc, user_string, len, &count_err,
+                                      errcode);
   }
   /* The macro to handle a non-collective error that is associated to a
    * preceding call of \ref SC_SCDA_CHECK_NONCOLL_ERR.
@@ -2322,10 +2321,10 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
-                                              char *type, char *user_string,
-                                              size_t *len, int *count_err,
-                                              sc_scda_ferror_t *errcode)
+sc_scda_fread_section_header_common_serial (sc_scda_fcontext_t *fc,
+                                            char *type, char *user_string,
+                                            size_t *len, int *count_err,
+                                            sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -2506,8 +2505,8 @@ sc_scda_check_count_entry_internal (const char *count_entry, char expc_ident,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fread_block_header_internal (sc_scda_fcontext_t *fc, size_t *elem_size,
-                                     int *count_err, sc_scda_ferror_t *errcode)
+sc_scda_fread_block_header_serial (sc_scda_fcontext_t *fc, size_t *elem_size,
+                                   int *count_err, sc_scda_ferror_t *errcode)
 {
   char                count_entry[SC_SCDA_COUNT_FIELD];
   int                 mpiret;
@@ -2556,9 +2555,9 @@ sc_scda_fread_block_header_internal (sc_scda_fcontext_t *fc, size_t *elem_size,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fread_array_header_internal (sc_scda_fcontext_t *fc, size_t *elem_count,
-                                     size_t *elem_size, int *count_err,
-                                     sc_scda_ferror_t *errcode)
+sc_scda_fread_array_header_serial (sc_scda_fcontext_t *fc, size_t *elem_count,
+                                   size_t *elem_size, int *count_err,
+                                   sc_scda_ferror_t *errcode)
 {
   char                count_entry[SC_SCDA_COUNT_FIELD];
   int                 mpiret;
@@ -2632,8 +2631,8 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
 
   /* read the common section header part first */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
-    sc_scda_fread_section_header_common_internal (fc, type, user_string, len,
-                                                  &count_err, errcode);
+    sc_scda_fread_section_header_common_serial (fc, type, user_string, len,
+                                                &count_err, errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
@@ -2649,11 +2648,11 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
       /* no count entries to read */
       break;
     case 'B':
-      sc_scda_fread_block_header_internal (fc, elem_size, &count_err, errcode);
+      sc_scda_fread_block_header_serial (fc, elem_size, &count_err, errcode);
       break;
     case 'A':
-      sc_scda_fread_array_header_internal (fc, elem_count, elem_size,
-                                           &count_err, errcode);
+      sc_scda_fread_array_header_serial (fc, elem_count, elem_size,
+                                         &count_err, errcode);
       break;
     default:
       /* rank SC_SCDA_HEADER_ROOT already checked if type is valid/supported */
@@ -2732,9 +2731,8 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fread_inline_data_serial_internal (sc_scda_fcontext_t *fc,
-                                           sc_array_t *data, int *count_err,
-                                           sc_scda_ferror_t *errcode)
+sc_scda_fread_inline_data_serial (sc_scda_fcontext_t *fc, sc_array_t *data,
+                                  int *count_err, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -2778,7 +2776,7 @@ sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
   if (data != NULL) {
     /* the data is not skipped */
     if (fc->mpirank == root) {
-      sc_scda_fread_inline_data_serial_internal (fc, data, &count_err, errcode);
+      sc_scda_fread_inline_data_serial (fc, data, &count_err, errcode);
     }
     SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
     SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
@@ -2808,10 +2806,9 @@ sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fread_block_data_serial_internal (sc_scda_fcontext_t *fc,
-                                          sc_array_t *data, size_t block_size,
-                                          int *count_err,
-                                          sc_scda_ferror_t *errcode)
+sc_scda_fread_block_data_serial (sc_scda_fcontext_t *fc, sc_array_t *data,
+                                 size_t block_size, int *count_err,
+                                 sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -2884,8 +2881,8 @@ sc_scda_fread_block_data (sc_scda_fcontext_t *fc, sc_array_t *block_data,
   if (block_data != NULL) {
     /* the data is not skipped */
     if (fc->mpirank == root) {
-      sc_scda_fread_block_data_serial_internal (fc, block_data, block_size,
-                                                &count_err, errcode);
+      sc_scda_fread_block_data_serial(fc, block_data, block_size, &count_err,
+                                      errcode);
     }
     SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
     SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
