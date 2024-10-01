@@ -2387,8 +2387,6 @@ sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
 
 /** Internal function to check a count entry in a section header.
  *
- * This code is only valid to be run in serial.
- *
  * \param [in] fc           The file context as in \ref
  *                          sc_scda_fread_section_header before running the
  *                          second serial code part.
@@ -2495,7 +2493,8 @@ sc_scda_check_count_entry_internal (const char *count_entry, char expc_ident,
  *
  * This function is only valid to be called in serial.
  * This function updates \b fc->accessed_bytes. Hence, it is crucial that
- * \b fc->accessed_bytes is set collectivley afterwards.
+ * \b fc->accessed_bytes is set on all other ranks afterwards to ensure
+ * a collective internal file pointer.
  *
  * \param [in]  fc          The file context as in \ref
  *                          sc_scda_fread_section_header before running the
@@ -2544,7 +2543,8 @@ sc_scda_fread_block_header_internal (sc_scda_fcontext_t *fc, size_t *elem_size,
  *
  * This function is only valid to be called in serial.
  * This function updates \b fc->accessed_bytes. Hence, it is crucial that
- * \b fc->accessed_bytes is set collectivley afterwards.
+ * \b fc->accessed_bytes is set on all other ranks afterwards to ensure
+ * a collective internal file pointer.
  *
  * \param [in]  fc          The file context as in \ref
  *                          sc_scda_fread_section_header before running the
