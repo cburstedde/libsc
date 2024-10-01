@@ -1724,6 +1724,7 @@ sc_scda_fwrite_block_data_serial (sc_scda_fcontext_t *fc,
   size_t              num_pad_bytes;
   /* \ref SC_SCDA_PADDING_MOD + 6 is the maximum number of mod padding bytes */
   char                padding[SC_SCDA_PADDING_MOD + 6];
+  const char         *last_byte;
 
   *count_err = 0;
 
@@ -1743,7 +1744,8 @@ sc_scda_fwrite_block_data_serial (sc_scda_fcontext_t *fc,
 
   /* get the padding bytes */
   num_pad_bytes = sc_scda_pad_to_mod_len (block_size);
-  sc_scda_pad_to_mod (&block_data->array[block_size - 1], block_size, padding);
+  last_byte = (block_size > 0) ? &block_data->array[block_size - 1] : NULL;
+  sc_scda_pad_to_mod (last_byte, block_size, padding);
 
   /* write the padding bytes */
   mpiret = sc_io_write_at (fc->file, fc->accessed_bytes + block_size,
@@ -2073,7 +2075,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                                array_data->array, bytes_to_write, sc_MPI_BYTE,
                                &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Writing fixed-length array padding");
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Writing fixed-length array data");
   /* check for count error of the collective I/O operation */
   SC_SCDA_CHECK_COLL_COUNT_ERR (bytes_to_write, count, fc, errcode);
 
