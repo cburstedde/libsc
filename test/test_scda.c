@@ -95,7 +95,9 @@ test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
 static void
 test_scda_read_fixed_size_array (sc_scda_fcontext_t *fc)
 {
+#if 0
   const int           indirect = 0;
+#endif
   int                 decode;
   char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
   char                section_type;
