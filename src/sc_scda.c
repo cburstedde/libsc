@@ -1794,6 +1794,7 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* The block data is written on the the user-defined rank root. */
   if (fc->mpirank == root) {
+    /* This function includes writing the padding. */
     sc_scda_fwrite_block_data_serial (fc, block_data, block_size,
                                       &count_err, errcode);
   }
@@ -1889,9 +1890,10 @@ sc_scda_fwrite_array_header_serial (sc_scda_fcontext_t *fc,
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (header_len, count, count_err);
 }
 
-/** Internal function to write the fixed-length array padding.
+/** Internal function to write array padding.
  *
- * This function is dedicated to be called in \ref sc_scda_fwrite_array.
+ * This function is dedicated to be called in \ref sc_scda_fwrite_array
+ * or in \ref sc_scda_fwrite_varray.
  * This function is only valid to be called on the maximal not empty rank.
  *
  * \param [in] fc           The file context as in \ref sc_scda_fwrite_array
@@ -1905,9 +1907,9 @@ sc_scda_fwrite_array_header_serial (sc_scda_fcontext_t *fc,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fwrite_padding_serial (sc_scda_fcontext_t *fc, const char *last_byte,
-                               size_t byte_count, int *count_err,
-                               sc_scda_ferror_t *errcode)
+sc_scda_fwrite_array_padding_serial (sc_scda_fcontext_t *fc,
+                                     const char *last_byte, size_t byte_count,
+                                     int *count_err, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1925,7 +1927,7 @@ sc_scda_fwrite_padding_serial (sc_scda_fcontext_t *fc, const char *last_byte,
   mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, padding,
                            (int) num_pad_bytes, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing fixed-len. array data padding");
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing array data padding");
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_pad_bytes, count, count_err);
 }
 
@@ -2095,8 +2097,8 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
     last_byte = (elem_count > 0) ?
                               &array_data->array[bytes_to_write - 1] : NULL;
     /* the padding depends on the last data byte */
-    sc_scda_fwrite_padding_serial (fc, last_byte, collective_byte_count,
-                                   &count_err, errcode);
+    sc_scda_fwrite_array_padding_serial (fc, last_byte, collective_byte_count,
+                                         &count_err, errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, last_byte_owner, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, last_byte_owner, fc);
