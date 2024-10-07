@@ -560,10 +560,12 @@ sc_scda_pad_to_mod_inplace (const char *input_data, size_t input_len,
 /** Check if the padding bytes are correct w.r.t. \ref SC_SCDA_PADDING_MOD.
  *
  * Since the mod padding depends on the trailing data byte this function also
- * requires the raw data.
+ * requires this byte.
  *
- * \param [in]  data          The raw data with byte count \b data_len.
- * \param [in]  data_len      The length of \b data in number of bytes.
+ * \param [in]  last_byte     Pointer to the last data byte.
+ *                            This byte is required since the padding byte
+ *                            content depends on the trailing data byte.
+ * \param [in]  data_len      The raw data length in number of bytes.
  * \param [in]  pad           The padding bytes with byte count \b pad_len.
  * \param [in]  pad_len       The length of \b pad in number of bytes.
  *                            Must be at least 7.
@@ -572,8 +574,8 @@ sc_scda_pad_to_mod_inplace (const char *input_data, size_t input_len,
  *                            condition. False, otherwise.
  */
 static int
-sc_scda_check_pad_to_mod (const char* data, size_t data_len, const char *pad,
-                          size_t pad_len)
+sc_scda_check_pad_to_mod (const char* last_byte, size_t data_len,
+                          const char *pad, size_t pad_len)
 {
   size_t              si;
   size_t              num_pad_bytes;
@@ -605,7 +607,7 @@ sc_scda_check_pad_to_mod (const char* data, size_t data_len, const char *pad,
 
   /* padding depends on the trailing data byte */
   if ((!((pad[si] == '=' && data_len != 0 &&
-          data[data_len - 1] == '\n') || pad[si] == '\n'))) {
+          *last_byte == '\n') || pad[si] == '\n'))) {
     /* wrong padding start */
     return -1;
   }
@@ -644,8 +646,8 @@ sc_scda_get_pad_to_mod (const char *padded_data, size_t padded_len,
     return -1;
   }
 
-  if (sc_scda_check_pad_to_mod (padded_data, raw_len, &padded_data[raw_len],
-                                padded_len - raw_len)) {
+  if (sc_scda_check_pad_to_mod (&padded_data[raw_len - 1], raw_len,
+                                &padded_data[raw_len], padded_len - raw_len)) {
     /* invalid padding bytes */
     return -1;
   }
