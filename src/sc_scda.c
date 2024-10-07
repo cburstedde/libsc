@@ -2926,9 +2926,7 @@ sc_scda_fread_block_data_serial (sc_scda_fcontext_t *fc, sc_array_t *data,
 {
   int                 mpiret;
   int                 count;
-  int                 invalid_array, invalid_padding;
-  size_t              num_pad_bytes;
-  char                paddding[SC_SCDA_PADDING_MOD_MAX];
+  int                 invalid_array;
 
   *count_err = 0;
 
@@ -2942,26 +2940,8 @@ sc_scda_fread_block_data_serial (sc_scda_fcontext_t *fc, sc_array_t *data,
   mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, data->array,
                           (int) block_size, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read inline data");
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block data");
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (block_size, count, count_err);
-
-  num_pad_bytes = sc_scda_pad_to_mod_len (block_size);
-
-  /* read the padding the bytes */
-  /* the padding depends on the trailing byte of the data */
-  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes +
-                          (sc_MPI_Offset) block_size, paddding,
-                          (int) num_pad_bytes, sc_MPI_BYTE, &count);
-  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read inline data padding");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_pad_bytes, count, count_err);
-
-  /* check the padding */
-  invalid_padding = sc_scda_check_pad_to_mod (data->array, block_size, paddding,
-                                              num_pad_bytes);
-  sc_scda_scdaret_to_errcode (invalid_padding ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid block data padding");
 }
 
 sc_scda_fcontext_t *
@@ -3003,8 +2983,20 @@ sc_scda_fread_block_data (sc_scda_fcontext_t *fc, sc_array_t *block_data,
   }
 
   /* if no error occurred, we move the internal file pointer */
-  fc->accessed_bytes += (sc_MPI_Offset) (block_size +
-                                          sc_scda_pad_to_mod_len (block_size));
+  fc->accessed_bytes += (sc_MPI_Offset) block_size;
+
+  /* read and check the data padding */
+  if (fc->mpirank == root) {
+    const char         *last_byte = (block_size > 0) ? &block_data->array[block_size - 1] : NULL;
+
+    sc_scda_fread_mod_padding_serial (fc, last_byte, block_size, &count_err,
+                                      errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
+
+  /* update internal file pointer */
+  fc->accessed_bytes += (sc_MPI_Offset) sc_scda_pad_to_mod_len (block_size);
 
   /* last function call can not be \ref sc_scda_fread_section_header anymore */
   fc->header_before = 0;
