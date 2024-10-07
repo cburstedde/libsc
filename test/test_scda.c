@@ -95,28 +95,92 @@ test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
 }
 
 static void
-test_scda_read_fixed_size_array (sc_scda_fcontext_t *fc)
+test_scda_read_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
+                                 int mpisize)
 {
-#if 0
   const int           indirect = 0;
-#endif
+  int                 i;
   int                 decode;
   char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
   char                section_type;
+  char               *data_ptr;
   size_t              len;
-  size_t              elem_count, elem_size;
+  size_t              elem_count, elem_size, si;
+  size_t              num_local_elements;
   sc_scda_ferror_t    errcode;
+  sc_array_t          array_data, elem_counts;
+  sc_scda_ulong       per_proc_count, remainder_count;
 
-  fc = sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
-                                     &elem_count, &elem_size, &decode,
-                                    &errcode);
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "sc_scda_fread_section_header failed");
-  SC_CHECK_ABORT (section_type == 'A' &&
-                  elem_count == SC_SCDA_GLOBAL_ARRAY_COUNT &&
-                  elem_size == SC_SCDA_ARRAY_SIZE, "Identifying section type");
+  SC_CHECK_ABORT (section_type == 'A'
+                  && elem_count == SC_SCDA_GLOBAL_ARRAY_COUNT
+                  && elem_size == SC_SCDA_ARRAY_SIZE,
+                  "Identifying section type");
 
-  /* TODO: read the empty array */
+  /* read array data */
+  sc_array_init (&array_data, elem_size);
+  sc_array_init_size (&elem_counts, sizeof (sc_scda_ulong), (size_t) mpisize);
+
+  /* get the counts per process */
+  per_proc_count = elem_count / (sc_scda_ulong) mpisize;
+  remainder_count = elem_count % (sc_scda_ulong) mpisize;
+
+  /* set elem_counts, i.e. the reading partition */
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) =
+      per_proc_count;
+  }
+  *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpisize - 1)) +=
+    remainder_count;
+
+  /* allocate space for data that will be read */
+  num_local_elements =
+    (size_t) *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpirank));
+  sc_array_resize (&array_data, num_local_elements);
+
+  /* read the array data */
+  fc = sc_scda_fread_array_data (fc, &array_data, &elem_counts, elem_size,
+                                 indirect, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_array_data failed");
+
+  /* check read data */
+  for (si = 0; si < num_local_elements; ++si) {
+    data_ptr = (char *) sc_array_index (&array_data, si);
+    SC_CHECK_ABORT (data_ptr[0] == 'a' && data_ptr[1] == 'b' &&
+                    data_ptr[2] == 'c', "sc_scda_fread_array_data data "
+                    "mismatch");
+  }
+
+  sc_array_reset (&array_data);
+  sc_array_reset (&elem_counts);
+
+  /* read the empty array */
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'A' && elem_count == 0
+                  && elem_size == SC_SCDA_ARRAY_SIZE,
+                  "Identifying section type");
+
+  /* define trivial partition; a partition is always required */
+  sc_array_init_count (&elem_counts, sizeof (sc_scda_ulong), (size_t) mpisize);
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = 0;
+  }
+
+  fc = sc_scda_fread_array_data (fc, NULL, &elem_counts, elem_size, indirect,
+                                 &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_array_data skip empty array failed");
+
+  sc_array_reset (&elem_counts);
 }
 
 int
@@ -391,7 +455,7 @@ main (int argc, char **argv)
                   || !strncmp (read_data, inline_data,
                                SC_SCDA_INLINE_FIELD), "block data mismatch");
 
-  test_scda_read_fixed_size_array (fc);
+  test_scda_read_fixed_size_array (fc, mpirank, mpisize);
 
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
