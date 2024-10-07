@@ -45,18 +45,20 @@ test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
   sc_array_t          elem_counts, data;
   sc_scda_ferror_t    errcode;
 
-  sc_array_init_count (&elem_counts, sizeof (sc_scda_ulong), mpisize);
+  sc_array_init_count (&elem_counts, sizeof (sc_scda_ulong),
+                       (size_t) mpisize);
 
   /* get the counts per process */
   per_proc_count = global_elem_count / (sc_scda_ulong) mpisize;
   remainder_count = global_elem_count % (sc_scda_ulong) mpisize;
 
   /* set elem_counts */
-  for (i = 0; i < mpisize - 1; ++i) {
-    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = per_proc_count;
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) =
+      per_proc_count;
   }
-  *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpisize - 1)) =
-                      (remainder_count == 0) ? per_proc_count : remainder_count;
+  *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpisize - 1)) +=
+    remainder_count;
 
   /* create local data */
   local_elem_count =
