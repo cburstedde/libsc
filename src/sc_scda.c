@@ -2830,6 +2830,81 @@ sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
   return fc;
 }
 
+/** TODO: Documentation
+ * @brief
+ *
+ * @param fc
+ * @param last_byte   If \b last_byte is NULL and byte_count > 0 the last data
+ *                    byte is read from file.
+ * @param byte_count
+ * @param count_err
+ * @param errcode
+ */
+static void
+sc_scda_fread_mod_padding_serial (sc_scda_fcontext_t *fc,
+                                  const char *last_byte, size_t byte_count,
+                                  int *count_err, sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 read_last_byte;
+  sc_MPI_Offset       offset;
+  int                 num_bytes;
+  int                 invalid_padding;
+  size_t              num_pad_bytes;
+  /* \ref SC_SCDA_PADDING_MOD + 6 is the maximum number of mod padding bytes */
+  char                padding[SC_SCDA_PADDING_MOD + 6];
+  const char         *last_byte_internal;
+  char               *padding_internal;
+
+  *count_err = 0;
+
+  num_pad_bytes = sc_scda_pad_to_mod_len (byte_count);
+
+  /* Do we read the last data byte if there is one? */
+  read_last_byte = last_byte == NULL && byte_count > 0;
+
+  if (read_last_byte) {
+    offset = fc->accessed_bytes - 1;
+    num_bytes = (int) num_pad_bytes + 1;
+  }
+  else {
+    offset = fc->accessed_bytes;
+    num_bytes = (int) num_pad_bytes;
+  }
+
+  mpiret = sc_io_read_at (fc->file, offset, padding, num_bytes, sc_MPI_BYTE,
+                          &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read modulo data padding");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_bytes, count, count_err);
+
+  /* check the padding */
+  /* data padding depends the last data byte */
+  if (byte_count == 0) {
+    /* there is no last byte */
+    SC_ASSERT (last_byte == NULL);
+    last_byte_internal = NULL;
+    padding_internal = padding;
+  }
+  else if (read_last_byte) {
+    /* there is a last byte and it was read from file */
+    last_byte_internal = &padding[0];
+    padding_internal = &padding[1];
+  }
+  else {
+    /* there is a last byte and it was passed to this function */
+    last_byte_internal = last_byte;
+    padding_internal = padding;
+  }
+
+  invalid_padding = sc_scda_check_pad_to_mod (last_byte_internal, byte_count,
+                                              padding_internal, num_pad_bytes);
+  sc_scda_scdaret_to_errcode (invalid_padding ? SC_SCDA_FERR_FORMAT :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid modulo data padding");
+}
+
 /** Internal function to read the block data.
  *
  * \param [in] fc           The file context as in \ref
