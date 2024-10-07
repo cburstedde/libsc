@@ -3004,6 +3004,94 @@ sc_scda_fread_block_data (sc_scda_fcontext_t *fc, sc_array_t *block_data,
   return fc;
 }
 
+sc_scda_fcontext_t *
+sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
+                          sc_array_t *elem_counts, size_t elem_size,
+                          int indirect, sc_scda_ferror_t *errcode)
+{
+  int                 wrong_usage;
+  size_t              elem_count, si;
+  size_t              collective_byte_count;
+  sc_MPI_Offset       offset;
+  int                 bytes_to_read;
+  int                 mpiret;
+  int                 count;
+  int                 count_err;
+  void               *data;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (elem_counts != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  /* TODO: Temporary */
+  SC_ASSERT (!indirect);
+
+  /* check array_data; depends on indirect parameter */
+
+  /* check elem_counts */
+  elem_count = 0;
+  for (si = 0; si < elem_counts->elem_count; ++si) {
+    elem_count += *((size_t *) sc_array_index (elem_counts, si));
+  }
+
+  /* check elem_size */
+
+  /* It is necessary that sc_scda_fread_section_header was called as last
+   * function call on fc and that it returned the array (A) section type.
+   */
+  wrong_usage = !(fc->header_before && fc->last_type == 'A');
+  sc_scda_scdaret_to_errcode (wrong_usage ? SC_SCDA_FERR_USAGE :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Wrong usage of scda functions");
+
+  if (array_data != NULL) {
+    /* on this rank the array data is not skipped */
+    sc_scda_get_local_partition_index (fc, elem_counts, elem_size, &offset,
+                                       &bytes_to_read);
+    data = (void *) array_data->array;
+  }
+  else {
+    /* on this rank the array data is skipped */
+    offset = 0;
+    bytes_to_read = 0;
+    /* By MPI standard 2.0 section 9.4.1 (cf. Data Access Conventions) the read
+     * buffer behaves as for the MPI 1.1 communication.
+     */
+    data = NULL;
+  }
+
+  /* collective read */
+  mpiret = sc_io_read_at_all (fc->file, fc->accessed_bytes + offset,
+                              data, bytes_to_read, sc_MPI_BYTE,
+                              &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Reading fixed-length array data");
+  /* check for count error of the collective I/O operation */
+  SC_SCDA_CHECK_COLL_COUNT_ERR (bytes_to_read, count, fc, errcode);
+
+  /* update internal file pointer */
+  collective_byte_count = elem_count * elem_size;
+  fc->accessed_bytes += (sc_MPI_Offset) collective_byte_count;
+
+  /* padding is always read and checked */
+  if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
+    /* last data byte is read from the file if collective_byte_count > 0 */
+    sc_scda_fread_mod_padding_serial (fc, NULL, collective_byte_count,
+                                      &count_err, errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
+                                    fc);
+
+  /* update internal file pointer */
+  fc->accessed_bytes += (sc_MPI_Offset) sc_scda_pad_to_mod_len (collective_byte_count);
+
+  /* last function call can not be \ref sc_scda_fread_section_header anymore */
+  fc->header_before = 0;
+
+  return fc;
+}
+
 int
 sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
 {
