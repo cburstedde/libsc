@@ -1962,6 +1962,52 @@ sc_scda_get_last_byte_owner (sc_scda_fcontext_t *fc, sc_array_t *elem_counts)
   return last_byte_owner;
 }
 
+/** Get local partition byte offset and byte length.
+ *
+ * \param [in] fc           A valid file context.
+ * \param [in] elem_counts  As in the documentation of \ref
+ *                          sc_array_fwrite_array_data or \ref
+ *                          sc_array_fwrite_varray_data.
+ *                          Encodes the partition and must be conforming to
+ *                          \b fc. Cf. the documentation of the referenced
+ *                          functions for more information.
+ * \param [in] elem_size    As in the documentation of \ref
+ *                          sc_array_fwrite_array_data or \ref
+ *                          sc_array_fwrite_varray_data.
+ * \param [out] offset      On output filled with the local byte offset
+ *                          according to the given partition.
+ * \param [out] num_bytes   On output filled with the number of local byte
+ *                          offset according to the given partition.
+ */
+static void
+sc_scda_get_local_partition_index (sc_scda_fcontext_t *fc,
+                                   sc_array_t *elem_counts, size_t elem_size,
+                                   sc_MPI_Offset *offset, int *num_bytes)
+{
+  int                 i;
+  int                 num_local_elements;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (elem_counts != NULL);
+  SC_ASSERT (elem_counts->elem_size == sizeof (sc_scda_ulong));
+  SC_ASSERT ((int) elem_counts->elem_count == fc->mpisize);
+
+  /* compute rank-dependent offset */
+  *offset = 0;
+  /* sum all element counts on previous processes */
+  for (i = 0; i < fc->mpirank; ++i) {
+    *offset +=
+      (sc_MPI_Offset) *
+      ((sc_scda_ulong *) sc_array_index_int (elem_counts, i));
+  }
+  *offset *= (sc_MPI_Offset) elem_size;
+
+  /* computer number of local array data bytes */
+  num_local_elements =
+    (int) *((sc_scda_ulong *) sc_array_index_int (elem_counts, fc->mpirank));
+  *num_bytes = (int) elem_size * num_local_elements;
+}
+
 sc_scda_fcontext_t *
 sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                       size_t *len, sc_array_t *array_data,
@@ -1969,10 +2015,9 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                       int encode, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
-  int                 i;
   int                 invalid_elem_counts, global_invalid_elem_counts;
   int                 ret, count_err;
-  int                 num_local_elements, bytes_to_write;
+  int                 bytes_to_write;
   int                 count;
   int                 last_byte_owner;
   size_t              elem_count, si;
@@ -2058,20 +2103,8 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   /* TODO: temporary */
   SC_ASSERT (!indirect);
 
-  /* compute rank-dependent offset */
-  offset = 0;
-  /* sum all element counts on previous processes */
-  for (i = 0; i < fc->mpirank; ++i) {
-    offset +=
-      (sc_MPI_Offset) *
-      ((sc_scda_ulong *) sc_array_index_int (elem_counts, i));
-  }
-  offset *= (sc_MPI_Offset) elem_size;
-
-  /* computer number of array data bytes that are locally written */
-  num_local_elements =
-    (int) *((sc_scda_ulong *) sc_array_index_int (elem_counts, fc->mpirank));
-  bytes_to_write = (int) elem_size * num_local_elements;
+  sc_scda_get_local_partition_index (fc, elem_counts, elem_size, &offset,
+                                     &bytes_to_write);
 
   mpiret = sc_io_write_at_all (fc->file, fc->accessed_bytes + offset,
                                array_data->array, bytes_to_write, sc_MPI_BYTE,
