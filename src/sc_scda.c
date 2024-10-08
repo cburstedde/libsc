@@ -638,6 +638,8 @@ static int
 sc_scda_get_pad_to_mod (const char *padded_data, size_t padded_len,
                         size_t raw_len, char *raw_data)
 {
+  const char         *last_byte;
+
   SC_ASSERT (padded_data != NULL);
   SC_ASSERT (raw_len == 0 || raw_data != NULL);
 
@@ -646,8 +648,9 @@ sc_scda_get_pad_to_mod (const char *padded_data, size_t padded_len,
     return -1;
   }
 
-  if (sc_scda_check_pad_to_mod (&padded_data[raw_len - 1], raw_len,
-                                &padded_data[raw_len], padded_len - raw_len)) {
+  last_byte = (raw_len > 0) ? &padded_data[raw_len - 1] : NULL;
+  if (sc_scda_check_pad_to_mod (last_byte, raw_len, &padded_data[raw_len],
+                                padded_len - raw_len)) {
     /* invalid padding bytes */
     return -1;
   }
