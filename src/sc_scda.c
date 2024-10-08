@@ -3063,13 +3063,11 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   int                 count;
   int                 count_err;
   void               *data;
+  sc_array_t          conti_arr;
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (elem_counts != NULL);
   SC_ASSERT (errcode != NULL);
-
-  /* TODO: Temporary */
-  SC_ASSERT (!indirect);
 
   /* check array_data; depends on indirect parameter */
 
@@ -3105,10 +3103,19 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
     data = NULL;
   }
 
+  if (indirect) {
+    /* TODO: batches */
+    /* read to contiguous temporary buffer */
+    sc_array_init_size (&conti_arr, elem_size, elem_count);
+    data = (void *) conti_arr.array;
+  }
+  else {
+    /* read to passed data buffer, i.e. data stays unchanged */
+  }
+
   /* collective read */
   mpiret = sc_io_read_at_all (fc->file, fc->accessed_bytes + offset,
-                              data, bytes_to_read, sc_MPI_BYTE,
-                              &count);
+                              data, bytes_to_read, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Reading fixed-length array data");
   /* check for count error of the collective I/O operation */
@@ -3129,7 +3136,24 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
                                     fc);
 
   /* update internal file pointer */
-  fc->accessed_bytes += (sc_MPI_Offset) sc_scda_pad_to_mod_len (collective_byte_count);
+  fc->accessed_bytes +=
+    (sc_MPI_Offset) sc_scda_pad_to_mod_len (collective_byte_count);
+
+  if (indirect) {
+    sc_array_t         *curr;
+    const char         *src;
+    char               *dest;
+
+    /* copy contiguous data to indirect array */
+    for (si = 0; si < array_data->elem_count; ++si) {
+      src = (const char *) sc_array_index (&conti_arr, si);
+      curr = (sc_array_t *) sc_array_index (array_data, si);
+      dest = (char *) sc_array_index (curr, 0);
+
+      sc_scda_copy_bytes (dest, src, elem_size);
+    }
+    sc_array_reset (&conti_arr);
+  }
 
   /* last function call can not be \ref sc_scda_fread_section_header anymore */
   fc->header_before = 0;
