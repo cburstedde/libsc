@@ -1744,7 +1744,7 @@ sc_scda_fwrite_block_data_serial (sc_scda_fcontext_t *fc,
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (block_size, count, count_err);
 }
 
-/** Internal function to write mod data padding.
+/** Internal function to write mod data padding in serial.
  *
  * This function is intended to be called on a rank that stores the global
  * last data byte. For block sections, this is the root rank and for (v)array
@@ -2831,15 +2831,25 @@ sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
   return fc;
 }
 
-/** TODO: Documentation
- * @brief
+/** Internal function to read mod data padding in serial.
  *
- * @param fc
- * @param last_byte   If \b last_byte is NULL and byte_count > 0 the last data
- *                    byte is read from file.
- * @param byte_count
- * @param count_err
- * @param errcode
+ * The recommended usage of this function is that for (v)array sections one
+ * passes NULL for \b last_byte to read the last global data byte.
+ * For block sections, we can read on the root rank and explicitly pass the
+ * last global byte.
+ *
+ * \param [in] fc           The file context after reading the data that is
+ *                          padded.
+ * \param [in] last_byte    A pointer to the last global data byte. For
+ *                          \b byte_count = 0 \b last_byte must be NULL.
+ *                          If \b last_byte is NULL and \b byte_count > 0,
+ *                          the function reads the last data byte from the file.
+ * \param [in] byte_count   Number of (collectively) read bytes in the
+ *                          preceding data read I/O operation.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
  */
 static void
 sc_scda_fread_mod_padding_serial (sc_scda_fcontext_t *fc,
@@ -2988,8 +2998,9 @@ sc_scda_fread_block_data (sc_scda_fcontext_t *fc, sc_array_t *block_data,
 
   /* read and check the data padding */
   if (fc->mpirank == root) {
-    const char         *last_byte = (block_size > 0) ? &block_data->array[block_size - 1] : NULL;
+    const char         *last_byte;
 
+    last_byte = (block_size > 0) ? &block_data->array[block_size - 1] : NULL;
     sc_scda_fread_mod_padding_serial (fc, last_byte, block_size, &count_err,
                                       errcode);
   }
