@@ -95,6 +95,64 @@ test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
 }
 
 static void
+test_scda_write_indirect_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
+                                           int mpisize)
+{
+  int                 i;
+  const int           indirect = 1;
+  const size_t        elem_size = SC_SCDA_ARRAY_SIZE;
+  const sc_scda_ulong global_elem_count = SC_SCDA_GLOBAL_ARRAY_COUNT;
+  char               *data_ptr;
+  size_t              si;
+  size_t              local_elem_count;
+  sc_scda_ulong       per_proc_count, remainder_count;
+  sc_array_t          elem_counts, data, *curr;
+  sc_scda_ferror_t    errcode;
+
+  sc_array_init_count (&elem_counts, sizeof (sc_scda_ulong),
+                       (size_t) mpisize);
+
+  /* get the counts per process */
+  per_proc_count = global_elem_count / (sc_scda_ulong) mpisize;
+  remainder_count = global_elem_count % (sc_scda_ulong) mpisize;
+
+  /* set elem_counts */
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) =
+      per_proc_count;
+  }
+  *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpisize - 1)) +=
+    remainder_count;
+
+  /* create local data */
+  local_elem_count =
+    (size_t) *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpirank));
+  sc_array_init_size (&data, sizeof (sc_array_t), local_elem_count);
+  for (si = 0; si < local_elem_count; ++si) {
+    curr = (sc_array_t *) sc_array_index (&data, si);
+    sc_array_init_size (curr, elem_size, 1);
+    data_ptr = (char *) sc_array_index (curr, 0);
+    data_ptr[0] = 'c';
+    data_ptr[1] = 'b';
+    data_ptr[2] = 'a';
+  }
+
+  fc = sc_scda_fwrite_array (fc, "Another fixed-length array section", NULL,
+                             &data, &elem_counts, elem_size, indirect, 0,
+                             &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fwrite_array failed");
+
+  /* free memory */
+  for (si = 0; si < local_elem_count; ++si) {
+    curr = (sc_array_t *) sc_array_index (&data, si);
+    sc_array_reset (curr);
+  }
+  sc_array_reset (&data);
+  sc_array_reset (&elem_counts);
+}
+
+static void
 test_scda_read_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
                                  int mpisize)
 {
@@ -346,6 +404,8 @@ main (int argc, char **argv)
 
   /* write a fixed-size array section */
   test_scda_write_fixed_size_array (fc, mpirank, mpisize);
+
+  test_scda_write_indirect_fixed_size_array (fc, mpirank, mpisize);
 
   /* intentionally try to write with non-collective block size */
   if (mpisize > 1) {
