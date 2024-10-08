@@ -1746,14 +1746,14 @@ sc_scda_fwrite_block_data_serial (sc_scda_fcontext_t *fc,
 
 /** Internal function to write mod data padding.
  *
- * This function is only valid to be called on a rank that stores the global
+ * This function is intended to be called on a rank that stores the global
  * last data byte. For block sections, this is the root rank and for (v)array
  * sections the maximal not empty rank.
  *
  * \param [in] fc           The file context after writing the data that is
  *                          intended to be padded.
  * \param [in] last_byte    A pointer to the last global data byte. For
- *                          \b byte_count = 0 NULL is valid.
+ *                          \b byte_count = 0 \b last_byte must be NULL.
  * \param [in] byte_count   Number of (collectively) written bytes in the
  *                          preceding data writing I/O operation.
  * \param [out] count_err   A Boolean indicating if a count error occurred.
@@ -1771,6 +1771,8 @@ sc_scda_fwrite_mod_padding_serial (sc_scda_fcontext_t *fc,
   size_t              num_pad_bytes;
   /* \ref SC_SCDA_PADDING_MOD + 6 is the maximum number of mod padding bytes */
   char                padding[SC_SCDA_PADDING_MOD + 6];
+
+  SC_ASSERT (byte_count != 0 || last_byte == NULL);
 
   *count_err = 0;
 
