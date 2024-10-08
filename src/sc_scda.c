@@ -2019,17 +2019,18 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
 {
   int                 mpiret;
   int                 invalid_elem_counts, global_invalid_elem_counts;
+  int                 invalid_array_data, global_invalid_array_data;
   int                 ret, count_err;
   int                 bytes_to_write;
   int                 count;
   int                 last_byte_owner;
   size_t              elem_count, si;
+  size_t              local_elem_count;
   size_t              collective_byte_count;
   size_t              num_pad_bytes;
   sc_MPI_Offset       offset;
-#if 0
+  sc_array_t          contig_arr;
   const void         *local_array_data;
-#endif
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (user_string != NULL);
@@ -2055,7 +2056,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
     sc_MPI_Allreduce (&invalid_elem_counts, &global_invalid_elem_counts, 1,
                       sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
   SC_CHECK_MPI (mpiret);
-  sc_scda_scdaret_to_errcode (invalid_elem_counts ? SC_SCDA_FERR_ARG :
+  sc_scda_scdaret_to_errcode (global_invalid_elem_counts ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Invalid elem_counts array");
 
@@ -2074,8 +2075,27 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                           "fwrite_array: elem_counts or elem_size"
                           " is not collective");
 
-  /* TODO: check array_data; depends on indirect parameter */
-  /* Call Allreduce to synchronize on check of array_data or collective test? */
+  /* check array_data; depends on indirect parameter */
+  local_elem_count =
+    (size_t) *((sc_scda_ulong *)
+               sc_array_index_int (elem_counts, fc->mpirank));
+  if (indirect) {
+    invalid_array_data = !(array_data->elem_count == local_elem_count &&
+                           array_data->elem_size == sizeof (sc_array_t));
+    /* The arrays with the actual data are checked in an asserttion below. */
+  }
+  else {
+    invalid_array_data = !(array_data->elem_count == local_elem_count &&
+                           array_data->elem_size == elem_size);
+  }
+  /* synchronize */
+  mpiret =
+    sc_MPI_Allreduce (&invalid_array_data, &global_invalid_array_data, 1,
+                      sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  sc_scda_scdaret_to_errcode (global_invalid_array_data ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Invalid array_data array");
 
   /* section header is always written and read on rank SC_SCDA_HEADER_ROOT */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
@@ -2089,11 +2109,24 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   /* add number of written bytes */
   fc->accessed_bytes += SC_SCDA_COMMON_FIELD + 2 * SC_SCDA_COUNT_FIELD;
 
-#if 0
   /* get pointer to local array data */
   if (indirect) {
+    sc_array_t         *data_arr;
+    char               *data_src, *data_dest;
+
     /* indirect addressing */
-    /* TODO: copy the data or use muliple write calls; maybe in batches? */
+    /* TODO: Use batches */
+    sc_array_init_size (&contig_arr, elem_size, elem_count);
+    for (si = 0; si < array_data->elem_count; ++si) {
+      data_arr = (sc_array_t *) sc_array_index (array_data, si);
+      SC_ASSERT (data_arr->elem_size == elem_size
+                 && data_arr->elem_count == 1);
+      data_src = (char *) sc_array_index (data_arr, 0);
+      data_dest = (char *) sc_array_index (&contig_arr, si);
+
+      sc_scda_copy_bytes (data_dest, data_src, elem_size);
+    }
+    local_array_data = (const void *) contig_arr.array;
   }
   else {
     /* direct addressing */
@@ -2101,17 +2134,17 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   }
 
   /* write array data in parallel */
-#endif
 
-  /* TODO: temporary */
-  SC_ASSERT (!indirect);
-
+  /* retrieve partition information */
   sc_scda_get_local_partition_index (fc, elem_counts, elem_size, &offset,
                                      &bytes_to_write);
 
   mpiret = sc_io_write_at_all (fc->file, fc->accessed_bytes + offset,
-                               array_data->array, bytes_to_write, sc_MPI_BYTE,
+                               local_array_data, bytes_to_write, sc_MPI_BYTE,
                                &count);
+  if (indirect) {
+    sc_array_reset (&contig_arr);
+  }
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Writing fixed-length array data");
   /* check for count error of the collective I/O operation */
@@ -2126,12 +2159,12 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* get and write padding bytes in serial */
   if (fc->mpirank == last_byte_owner) {
-    const char       *last_byte;
+    const char         *last_byte;
 
     /* get last local/global byte */
     SC_ASSERT (elem_count == 0 || bytes_to_write > 0);
     last_byte = (elem_count > 0) ?
-                              &array_data->array[bytes_to_write - 1] : NULL;
+      &array_data->array[bytes_to_write - 1] : NULL;
     /* the padding depends on the last data byte */
     sc_scda_fwrite_mod_padding_serial (fc, last_byte, collective_byte_count,
                                        &count_err, errcode);
