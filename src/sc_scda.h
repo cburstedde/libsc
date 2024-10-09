@@ -429,6 +429,10 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  * \param [in]      block_data  On rank \b root a sc_array with one element and
  *                              element size equals to \b block_size. On all
  *                              other ranks the parameter is ignored.
+ *                              Since \ref sc_array_init and the other \ref
+ *                              sc_array_t initialization functions do not allow
+ *                              an element size of 0, block sections can not be
+ *                              empty.
  * \param [in]      block_size  The size of the data block in bytes. Must be
  *                              less or equal than 10^{26} - 1.
  * \param [in]      root        An integer between 0 and mpisize of the MPI
