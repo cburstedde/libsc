@@ -3151,7 +3151,7 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
     data = NULL;
   }
 
-  if (indirect) {
+  if (indirect && array_data != NULL) {
     /* TODO: batches */
     /* read to contiguous temporary buffer */
     sc_array_init_size (&conti_arr, elem_size, elem_count);
@@ -3187,7 +3187,7 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   fc->accessed_bytes +=
     (sc_MPI_Offset) sc_scda_pad_to_mod_len (collective_byte_count);
 
-  if (indirect) {
+  if (indirect && array_data != NULL) {
     sc_array_t         *curr;
     const char         *src;
     char               *dest;
