@@ -302,7 +302,7 @@ sc_scda_merge_data_to_buf (const char *d1, size_t len1, const char *d2,
   }
   if (d3 != NULL) {
     SC_ASSERT (d2 != NULL);
-    sc_scda_copy_bytes (&out[len2], d3, len3);
+    sc_scda_copy_bytes (&out[len1 + len2], d3, len3);
   }
 }
 
