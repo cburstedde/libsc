@@ -3083,7 +3083,9 @@ sc_scda_fread_block_data (sc_scda_fcontext_t *fc, sc_array_t *block_data,
   if (fc->mpirank == root) {
     const char         *last_byte;
 
-    last_byte = (block_size > 0) ? &block_data->array[block_size - 1] : NULL;
+    last_byte = (block_size > 0
+                 && block_data !=
+                 NULL) ? &block_data->array[block_size - 1] : NULL;
     sc_scda_fread_mod_padding_serial (fc, last_byte, block_size, &count_err,
                                       errcode);
   }
