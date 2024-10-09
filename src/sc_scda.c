@@ -2011,6 +2011,109 @@ sc_scda_get_local_partition_index (sc_scda_fcontext_t *fc,
   *num_bytes = (int) elem_size * num_local_elements;
 }
 
+/** Collective check of array function parameters.
+ *
+ * This function is dedicated to be called in \ref sc_scda_fwrite_array and
+ * \ref sc_scda_fread_array_data.
+ *
+ * \param [in] fc           The file context as passed to \ref
+ *                          sc_scda_fwrite_array or \ref
+ *                          sc_scda_fread_array_data.
+ * \param [in] array_data   As passed to \ref sc_scda_fwrite_array
+ *                          \ref sc_scda_fread_array_data, respectively.
+ * \param [in] indirect     As passed to \ref sc_scda_fwrite_array
+ *                          \ref sc_scda_fread_array_data, respectively.
+ * \param [in] elem_size    As passed to \ref sc_scda_fwrite_array
+ *                          \ref sc_scda_fread_array_data, respectively.
+ * \param [out] elem_count  On successful output the global element count.
+ * \return                  \ref SC_SCDA_FERR_ARG if the parameters are not
+ *                          valid, and \ref SC_SCDA_FERR_SUCCESS otherwise.
+ */
+static sc_scda_ret_t
+sc_scda_check_array_params (sc_scda_fcontext_t *fc, sc_array_t *array_data,
+                            int indirect, sc_array_t *elem_counts,
+                            size_t elem_size, size_t *elem_count)
+{
+  int                 mpiret;
+  int                 invalid_elem_counts, global_invalid_elem_counts;
+  int                 invalid_array_data, global_invalid_array_data;
+  int                 ret;
+  int                 skip_data;
+  size_t              si, local_elem_count;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (elem_counts != NULL);
+
+  *elem_count = 0;
+
+  /* check if array_data is skipped */
+  skip_data = array_data == NULL;
+
+  /* check elem_counts array */
+  invalid_elem_counts = !(elem_counts->elem_size == sizeof (sc_scda_ulong) &&
+                          elem_counts->elem_count == fc->mpisize);
+  /* synchronize */
+  mpiret =
+    sc_MPI_Allreduce (&invalid_elem_counts, &global_invalid_elem_counts, 1,
+                      sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  if (global_invalid_elem_counts) {
+    /* invalid elem_counts array */
+    return SC_SCDA_FERR_ARG;
+  }
+
+  /* compute the global element count */
+  /* TODO: Use a checksum for the colletivness test? */
+  for (si = 0; si < elem_counts->elem_count; ++si) {
+    *elem_count += *((size_t *) sc_array_index (elem_counts, si));
+  }
+
+  /* check if elem_count, elem_size and indirect are collective */
+  ret = sc_scda_check_coll_params (fc, (const char *) elem_count,
+                                   sizeof (size_t), (const char *) &elem_size,
+                                   sizeof (size_t), (const char *) &indirect,
+                                   sizeof (int));
+  if (ret != SC_SCDA_FERR_SUCCESS) {
+    return SC_SCDA_FERR_ARG;
+  }
+
+  if (!skip_data) {
+    /* check array_data; depends on indirect parameter */
+    local_elem_count =
+      (size_t) *((sc_scda_ulong *)
+                sc_array_index_int (elem_counts, fc->mpirank));
+    if (indirect) {
+      invalid_array_data = !(array_data->elem_count == local_elem_count &&
+                            array_data->elem_size == sizeof (sc_array_t));
+      /* The arrays with the actual data are checked later in an assertion. */
+    }
+    else {
+      invalid_array_data = !(array_data->elem_count == local_elem_count &&
+                            array_data->elem_size == elem_size);
+    }
+    /* synchronize */
+    mpiret =
+      sc_MPI_Allreduce (&invalid_array_data, &global_invalid_array_data, 1,
+                        sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
+    SC_CHECK_MPI (mpiret);
+    if (global_invalid_array_data) {
+      /* invalid array_data array */
+      return SC_SCDA_FERR_ARG;
+    }
+  }
+  else {
+    /* no data is read on this rank and hence there is no array_data array */
+    /* never causes invalid array_data */
+    invalid_array_data = 0;
+    mpiret =
+    sc_MPI_Allreduce (&invalid_array_data, &global_invalid_array_data, 1,
+                      sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  return SC_SCDA_FERR_SUCCESS;
+}
+
 sc_scda_fcontext_t *
 sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                       size_t *len, sc_array_t *array_data,
@@ -2018,14 +2121,12 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                       int encode, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
-  int                 invalid_elem_counts, global_invalid_elem_counts;
-  int                 invalid_array_data, global_invalid_array_data;
-  int                 ret, count_err;
+  int                 count_err;
   int                 bytes_to_write;
   int                 count;
   int                 last_byte_owner;
+  sc_scda_ret_t       scdaret;
   size_t              elem_count, si;
-  size_t              local_elem_count;
   size_t              collective_byte_count;
   size_t              num_pad_bytes;
   sc_MPI_Offset       offset;
@@ -2038,64 +2139,13 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   SC_ASSERT (elem_counts != NULL);
   SC_ASSERT (errcode != NULL);
 
-  /* TODO: Also check elem_counts and/or indirect? */
-  /* check if elem_size is collective */
-  ret = sc_scda_check_coll_params (fc, (const char *) &elem_size,
-                                   sizeof (size_t), NULL, 0, NULL, 0);
-  sc_scda_scdaret_to_errcode (ret, errcode, fc);
-  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fwrite_array: elem_size is not "
-                          "collective");
-
   /* TODO: respect encode parameter */
 
-  /* check elem_counts array */
-  invalid_elem_counts = !(elem_counts->elem_size == sizeof (sc_scda_ulong) &&
-                          elem_counts->elem_count == fc->mpisize);
-  /* synchronize */
-  mpiret =
-    sc_MPI_Allreduce (&invalid_elem_counts, &global_invalid_elem_counts, 1,
-                      sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
-  SC_CHECK_MPI (mpiret);
-  sc_scda_scdaret_to_errcode (global_invalid_elem_counts ? SC_SCDA_FERR_ARG :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Invalid elem_counts array");
-
-  /* compute the global element count */
-  /* TODO: Use a checksum for the colletivness test? */
-  elem_count = 0;
-  for (si = 0; si < elem_counts->elem_count; ++si) {
-    elem_count += *((size_t *) sc_array_index (elem_counts, si));
-  }
-
-  ret = sc_scda_check_coll_params (fc, (const char *) &elem_count,
-                                   sizeof (size_t), (const char *) &elem_size,
-                                   sizeof (size_t), NULL, 0);
-  sc_scda_scdaret_to_errcode (ret, errcode, fc);
-  SC_SCDA_CHECK_COLL_ERR (errcode, fc,
-                          "fwrite_array: elem_counts or elem_size"
-                          " is not collective");
-
-  /* check array_data; depends on indirect parameter */
-  local_elem_count =
-    (size_t) *((sc_scda_ulong *)
-               sc_array_index_int (elem_counts, fc->mpirank));
-  if (indirect) {
-    invalid_array_data = !(array_data->elem_count == local_elem_count &&
-                           array_data->elem_size == sizeof (sc_array_t));
-    /* The arrays with the actual data are checked in an asserttion below. */
-  }
-  else {
-    invalid_array_data = !(array_data->elem_count == local_elem_count &&
-                           array_data->elem_size == elem_size);
-  }
-  /* synchronize */
-  mpiret =
-    sc_MPI_Allreduce (&invalid_array_data, &global_invalid_array_data, 1,
-                      sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
-  SC_CHECK_MPI (mpiret);
-  sc_scda_scdaret_to_errcode (global_invalid_array_data ? SC_SCDA_FERR_ARG :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Invalid array_data array");
+  /* check function parameters */
+  scdaret = sc_scda_check_array_params (fc, array_data, indirect, elem_counts,
+                                        elem_size, &elem_count);
+  sc_scda_scdaret_to_errcode (scdaret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fwrite_array: Invalid parameters");
 
   /* section header is always written and read on rank SC_SCDA_HEADER_ROOT */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
@@ -3058,6 +3108,7 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   size_t              elem_count, si;
   size_t              collective_byte_count;
   sc_MPI_Offset       offset;
+  sc_scda_ret_t       scdaret;
   int                 bytes_to_read;
   int                 mpiret;
   int                 count;
@@ -3069,15 +3120,10 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   SC_ASSERT (elem_counts != NULL);
   SC_ASSERT (errcode != NULL);
 
-  /* check array_data; depends on indirect parameter */
-
-  /* check elem_counts */
-  elem_count = 0;
-  for (si = 0; si < elem_counts->elem_count; ++si) {
-    elem_count += *((size_t *) sc_array_index (elem_counts, si));
-  }
-
-  /* check elem_size */
+  scdaret = sc_scda_check_array_params (fc, array_data, indirect, elem_counts,
+                                        elem_size, &elem_count);
+  sc_scda_scdaret_to_errcode (scdaret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fread_array: Invalid parameters");
 
   /* It is necessary that sc_scda_fread_section_header was called as last
    * function call on fc and that it returned the array (A) section type.
