@@ -1940,6 +1940,8 @@ sc_scda_fwrite_array_header_serial (sc_scda_fcontext_t *fc,
  * \param [in] elem_counts  As the parameter \b elem_counts in \ref
  *                          sc_scda_fwrite_array or \ref sc_scda_fwrite_varray.
  *                          This array stores the number of elements per rank.
+ *                          The element count of \b elem_counts must be equal
+ *                          to \b fc->mpisize.
  * \return                  The maximal rank that is not empty. If all ranks
  *                          are empty, 0 is returned.
  */
@@ -1951,6 +1953,8 @@ sc_scda_get_last_byte_owner (sc_scda_fcontext_t *fc, sc_array_t *elem_counts)
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (elem_counts != NULL);
+  SC_ASSERT (elem_counts->elem_size == sizeof (sc_scda_ulong));
+  SC_ASSERT ((size_t) fc->mpisize == elem_counts->elem_count);
 
   /* determine the rank that holds the last byte */
   last_byte_owner = 0;
@@ -1993,7 +1997,7 @@ sc_scda_get_local_partition_index (sc_scda_fcontext_t *fc,
   SC_ASSERT (fc != NULL);
   SC_ASSERT (elem_counts != NULL);
   SC_ASSERT (elem_counts->elem_size == sizeof (sc_scda_ulong));
-  SC_ASSERT ((int) elem_counts->elem_count == fc->mpisize);
+  SC_ASSERT ((size_t) fc->mpisize == elem_counts->elem_count);
 
   /* compute rank-dependent offset */
   *offset = 0;
@@ -2005,7 +2009,7 @@ sc_scda_get_local_partition_index (sc_scda_fcontext_t *fc,
   }
   *offset *= (sc_MPI_Offset) elem_size;
 
-  /* computer number of local array data bytes */
+  /* compute the number of local array data bytes */
   num_local_elements =
     (int) *((sc_scda_ulong *) sc_array_index_int (elem_counts, fc->mpirank));
   *num_bytes = (int) elem_size * num_local_elements;
