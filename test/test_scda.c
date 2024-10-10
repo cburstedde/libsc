@@ -27,6 +27,462 @@
 #define SC_SCDA_FILE_EXT "scd"
 #define SC_SCDA_TEST_FILE "sc_test_scda." SC_SCDA_FILE_EXT
 
+#define SC_SCDA_GLOBAL_ARRAY_COUNT 12
+#define SC_SCDA_ARRAY_SIZE 3
+
+static void
+test_scda_skip_through_file (sc_MPI_Comm mpicomm, const char *filename,
+                             sc_scda_fopen_options_t *opt, int mpirank,
+                             int mpisize)
+{
+  sc_scda_fcontext_t *fc;
+  char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
+  char                section_type;
+  size_t              len;
+  size_t              elem_count, elem_size;
+  int                 i;
+  int                 decode;
+  sc_scda_ferror_t    errcode;
+  sc_array_t          elem_counts, data;
+
+  /* open the file for reading */
+  fc = sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, opt,
+                           &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode), "sc_scda_fopen_read "
+                  "failed");
+
+  /* skip first file section */
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'B' && elem_count == 0
+                  && elem_size == 15, "Identifying section type");
+
+  /* skip block data */
+  fc = sc_scda_fread_block_data (fc, NULL, elem_size, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_block_data failed");
+
+  /* skip second file section */
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'I' && elem_count == 0
+                  && elem_size == 0, "Identifying section type");
+
+  fc = sc_scda_fread_inline_data (fc, NULL, mpisize - 1, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_inline_data failed");
+
+  /* skip third file section */
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'I' && elem_count == 0
+                  && elem_size == 0, "Identifying section type");
+
+  fc = sc_scda_fread_inline_data (fc, NULL, mpisize - 1, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_inline_data failed");
+
+  /* skip fourth file section */
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'B' && elem_count == 0
+                  && elem_size == 32, "Identifying section type");
+
+  fc = sc_scda_fread_block_data (fc, NULL, elem_size, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_block_data failed");
+
+  /* skip fifth file section */
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'A' && elem_count == 12
+                  && elem_size == 3, "Identifying section type");
+
+  /* define reading partition */
+  sc_array_init_size (&elem_counts, sizeof (sc_scda_ulong), (size_t) mpisize);
+  SC_ASSERT (elem_count > 2);
+  *((sc_scda_ulong *) sc_array_index_int (&elem_counts, 0)) =
+    (mpisize > 1) ? elem_count - 2 : elem_count;
+  if (mpisize > 1) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, 1)) = 2;
+  }
+  for (i = 2; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = 0;
+  }
+
+  /* non-collective skipping */
+  if (mpirank == 1) {
+    sc_array_init_size (&data, elem_size, 2);
+  }
+  fc = sc_scda_fread_array_data (fc, (mpirank == 1) ? &data : NULL,
+                                 &elem_counts, elem_size, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_block_data failed");
+
+  /* check data on rank 1 */
+  if (mpirank == 1) {
+    size_t              si;
+    char               *data_ptr;
+
+    for (si = 0; si < data.elem_count; ++si) {
+      data_ptr = (char *) sc_array_index (&data, si);
+      SC_CHECK_ABORT (data_ptr[0] == 'a' && data_ptr[1] == 'b' &&
+                      data_ptr[2] == 'c', "data mismatch for non-collective"
+                      " skipping");
+    }
+    sc_array_reset (&data);
+  }
+
+  /* skip sixth file section */
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'A' && elem_count == 0
+                  && elem_size == 3, "Identifying section type");
+
+  /* define reading partition */
+  /* Even if all array data is skipped, a valid reading partition is required. */
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = 0;
+  }
+
+  fc = sc_scda_fread_array_data (fc, NULL, &elem_counts, elem_size, 1,
+                                 &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_array_data failed");
+
+  /* skip sixth file section */
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'A' && elem_count == 12
+                  && elem_size == 3, "Identifying section type");
+
+  /* define reading partition */
+  *((sc_scda_ulong *) sc_array_index_int (&elem_counts, 0)) =
+    (sc_scda_ulong) elem_count;
+  for (i = 1; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = 0;
+  }
+
+  fc = sc_scda_fread_array_data (fc, NULL, &elem_counts, elem_size, 1,
+                                 &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_array_data failed");
+
+  sc_array_reset (&elem_counts);
+
+  sc_scda_fclose (fc, &errcode);
+  /* TODO: check errcode and return value */
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "scda_fclose after read failed");
+}
+
+static void
+test_scda_write_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
+                                  int mpisize)
+{
+  const int           indirect = 0;
+  int                 i;
+  char               *data_ptr;
+  size_t              si;
+  const size_t        elem_size = SC_SCDA_ARRAY_SIZE;
+  size_t              local_elem_count;
+  const sc_scda_ulong global_elem_count = SC_SCDA_GLOBAL_ARRAY_COUNT;
+  sc_scda_ulong       per_proc_count, remainder_count;
+  sc_array_t          elem_counts, data;
+  sc_scda_ferror_t    errcode;
+
+  sc_array_init_count (&elem_counts, sizeof (sc_scda_ulong),
+                       (size_t) mpisize);
+
+  /* get the counts per process */
+  per_proc_count = global_elem_count / (sc_scda_ulong) mpisize;
+  remainder_count = global_elem_count % (sc_scda_ulong) mpisize;
+
+  /* set elem_counts */
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) =
+      per_proc_count;
+  }
+  *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpisize - 1)) +=
+    remainder_count;
+
+  /* create local data */
+  local_elem_count =
+    (size_t) *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpirank));
+  sc_array_init_size (&data, elem_size, local_elem_count);
+  for (si = 0; si < local_elem_count; ++si) {
+    data_ptr = (char *) sc_array_index (&data, si);
+    data_ptr[0] = 'a';
+    data_ptr[1] = 'b';
+    data_ptr[2] = 'c';
+  }
+
+  fc = sc_scda_fwrite_array (fc, "A fixed-length array section", NULL, &data,
+                             &elem_counts, elem_size, indirect, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fwrite_array failed");
+
+  /* write an empty array */
+
+  /* set elem_counts */
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = 0;
+  }
+
+  sc_array_resize (&data, 0);
+
+  fc = sc_scda_fwrite_array (fc, "An empty array", NULL, &data,
+                             &elem_counts, elem_size, indirect, 0, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fwrite_array empty array failed");
+
+  sc_array_reset (&elem_counts);
+  sc_array_reset (&data);
+}
+
+static void
+test_scda_write_indirect_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
+                                           int mpisize)
+{
+  int                 i;
+  const int           indirect = 1;
+  const size_t        elem_size = SC_SCDA_ARRAY_SIZE;
+  const sc_scda_ulong global_elem_count = SC_SCDA_GLOBAL_ARRAY_COUNT;
+  char               *data_ptr;
+  size_t              si;
+  size_t              local_elem_count;
+  sc_scda_ulong       per_proc_count, remainder_count;
+  sc_array_t          elem_counts, data, *curr;
+  sc_scda_ferror_t    errcode;
+
+  sc_array_init_count (&elem_counts, sizeof (sc_scda_ulong),
+                       (size_t) mpisize);
+
+  /* get the counts per process */
+  per_proc_count = global_elem_count / (sc_scda_ulong) mpisize;
+  remainder_count = global_elem_count % (sc_scda_ulong) mpisize;
+
+  /* set elem_counts */
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) =
+      per_proc_count;
+  }
+  *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpisize - 1)) +=
+    remainder_count;
+
+  /* create local data */
+  local_elem_count =
+    (size_t) *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpirank));
+  sc_array_init_size (&data, sizeof (sc_array_t), local_elem_count);
+  for (si = 0; si < local_elem_count; ++si) {
+    curr = (sc_array_t *) sc_array_index (&data, si);
+    sc_array_init_size (curr, elem_size, 1);
+    data_ptr = (char *) sc_array_index (curr, 0);
+    data_ptr[0] = 'c';
+    data_ptr[1] = 'b';
+    data_ptr[2] = 'a';
+  }
+
+  fc = sc_scda_fwrite_array (fc, "Another fixed-length array section", NULL,
+                             &data, &elem_counts, elem_size, indirect, 0,
+                             &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fwrite_array failed");
+
+  /* free memory */
+  for (si = 0; si < local_elem_count; ++si) {
+    curr = (sc_array_t *) sc_array_index (&data, si);
+    sc_array_reset (curr);
+  }
+  sc_array_reset (&data);
+  sc_array_reset (&elem_counts);
+}
+
+static void
+test_scda_read_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
+                                 int mpisize)
+{
+  const int           indirect = 0;
+  int                 i;
+  int                 decode;
+  char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
+  char                section_type;
+  char               *data_ptr;
+  size_t              len;
+  size_t              elem_count, elem_size, si;
+  size_t              num_local_elements;
+  sc_scda_ferror_t    errcode;
+  sc_array_t          array_data, elem_counts;
+  sc_scda_ulong       per_proc_count, remainder_count;
+
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'A'
+                  && elem_count == SC_SCDA_GLOBAL_ARRAY_COUNT
+                  && elem_size == SC_SCDA_ARRAY_SIZE,
+                  "Identifying section type");
+
+  /* read array data */
+  sc_array_init (&array_data, elem_size);
+  sc_array_init_size (&elem_counts, sizeof (sc_scda_ulong), (size_t) mpisize);
+
+  /* get the counts per process */
+  per_proc_count = elem_count / (sc_scda_ulong) mpisize;
+  remainder_count = elem_count % (sc_scda_ulong) mpisize;
+
+  /* set elem_counts, i.e. the reading partition */
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) =
+      per_proc_count;
+  }
+  *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpisize - 1)) +=
+    remainder_count;
+
+  /* allocate space for data that will be read */
+  num_local_elements =
+    (size_t) *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpirank));
+  sc_array_resize (&array_data, num_local_elements);
+
+  /* read the array data */
+  fc = sc_scda_fread_array_data (fc, &array_data, &elem_counts, elem_size,
+                                 indirect, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_array_data failed");
+
+  /* check read data */
+  for (si = 0; si < num_local_elements; ++si) {
+    data_ptr = (char *) sc_array_index (&array_data, si);
+    SC_CHECK_ABORT (data_ptr[0] == 'a' && data_ptr[1] == 'b' &&
+                    data_ptr[2] == 'c', "sc_scda_fread_array_data data "
+                    "mismatch");
+  }
+
+  sc_array_reset (&array_data);
+  sc_array_reset (&elem_counts);
+
+  /* read the empty array */
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'A' && elem_count == 0
+                  && elem_size == SC_SCDA_ARRAY_SIZE,
+                  "Identifying section type");
+
+  /* define trivial partition; a partition is always required */
+  sc_array_init_count (&elem_counts, sizeof (sc_scda_ulong), (size_t) mpisize);
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = 0;
+  }
+
+  fc = sc_scda_fread_array_data (fc, NULL, &elem_counts, elem_size, indirect,
+                                 &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_array_data skip empty array failed");
+
+  sc_array_reset (&elem_counts);
+}
+
+static void
+test_scda_read_indirect_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
+                                          int mpisize)
+{
+  const int           indirect = 1;
+  int                 i;
+  int                 decode;
+  char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
+  char                section_type;
+  char               *data_ptr;
+  size_t              len;
+  size_t              elem_count, elem_size, si;
+  size_t              num_local_elements;
+  sc_array_t          array_data, elem_counts, *curr;
+  sc_scda_ulong       per_proc_count, remainder_count;
+  sc_scda_ferror_t    errcode;
+
+  fc =
+    sc_scda_fread_section_header (fc, read_user_string, &len, &section_type,
+                                  &elem_count, &elem_size, &decode, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_section_header failed");
+  SC_CHECK_ABORT (section_type == 'A'
+                  && elem_count == SC_SCDA_GLOBAL_ARRAY_COUNT
+                  && elem_size == SC_SCDA_ARRAY_SIZE,
+                  "Identifying section type");
+
+  /* read array data */
+  sc_array_init (&array_data, sizeof (sc_array_t));
+  sc_array_init_size (&elem_counts, sizeof (sc_scda_ulong), (size_t) mpisize);
+
+  /* get the counts per process */
+  per_proc_count = elem_count / (sc_scda_ulong) mpisize;
+  remainder_count = elem_count % (sc_scda_ulong) mpisize;
+
+  /* set elem_counts, i.e. the reading partition */
+  for (i = 0; i < mpisize; ++i) {
+    *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) =
+      per_proc_count;
+  }
+  *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpisize - 1)) +=
+    remainder_count;
+
+  /* allocate space for data that will be read */
+  num_local_elements =
+    (size_t) *((sc_scda_ulong *) sc_array_index_int (&elem_counts, mpirank));
+  sc_array_resize (&array_data, num_local_elements);
+  for (si = 0; si < num_local_elements; ++si) {
+    curr = (sc_array_t *) sc_array_index (&array_data, si);
+    sc_array_init_size (curr, elem_size, 1);
+  }
+
+  fc = sc_scda_fread_array_data (fc, &array_data, &elem_counts, elem_size,
+                                 indirect, &errcode);
+  SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
+                  "sc_scda_fread_array_data skip empty array failed");
+
+  /* check read data */
+  for (si = 0; si < num_local_elements; ++si) {
+    curr = (sc_array_t *) sc_array_index (&array_data, si);
+    data_ptr = (char *) sc_array_index (curr, 0);
+    SC_CHECK_ABORT (data_ptr[0] == 'c' && data_ptr[1] == 'b' &&
+                    data_ptr[2] == 'a',
+                    "sc_scda_fread_array_data indirect data mismatch");
+  }
+
+  /* free memory */
+  for (si = 0; si < num_local_elements; ++si) {
+    curr = (sc_array_t *) sc_array_index (&array_data, si);
+    sc_array_reset (curr);
+  }
+  sc_array_reset (&array_data);
+  sc_array_reset (&elem_counts);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -98,7 +554,7 @@ main (int argc, char **argv)
   if (mpisize > 1) {
     SC_GLOBAL_ESSENTIAL
       ("We expect two invalid scda function parameter errors."
-       " This is just for testing purposes and do not imply"
+       " This is just for testing purposes and does not imply"
        " erroneous code behavior.\n");
   }
   /* fopen_write with non-collective fuzzy error parameters */
@@ -164,8 +620,9 @@ main (int argc, char **argv)
   /* write a block section to the file */
   block_size = strlen (block_data);
   sc_array_init_data (&data, (void *) block_data, block_size, 1);
-  fc = sc_scda_fwrite_block (fc, "Block section test", NULL, &data, block_size,
-                             mpisize - 1, 0, &errcode);
+  fc =
+    sc_scda_fwrite_block (fc, "Block section test", NULL, &data, block_size,
+                          mpisize - 1, 0, &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fwrite_block failed");
 
@@ -188,6 +645,11 @@ main (int argc, char **argv)
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fwrite_block failed");
 
+  /* write a fixed-size array section */
+  test_scda_write_fixed_size_array (fc, mpirank, mpisize);
+
+  test_scda_write_indirect_fixed_size_array (fc, mpirank, mpisize);
+
   /* intentionally try to write with non-collective block size */
   if (mpisize > 1) {
     SC_GLOBAL_ESSENTIAL
@@ -195,8 +657,8 @@ main (int argc, char **argv)
        " This is just for testing purposes and do not imply"
        " erroneous code behavior.\n");
     fc = sc_scda_fwrite_block (fc, "A block section", NULL, &data,
-                              (mpirank == 0) ? 32 : 33, mpisize - 1, 0,
-                              &errcode);
+                               (mpirank == 0) ? 32 : 33, mpisize - 1, 0,
+                               &errcode);
     SC_CHECK_ABORT (!sc_scda_ferror_is_success (errcode) &&
                     errcode.scdaret == SC_SCDA_FERR_ARG, "scda_fwrite_block "
                     "check catch non-collective block size");
@@ -296,6 +758,10 @@ main (int argc, char **argv)
                   || !strncmp (read_data, inline_data,
                                SC_SCDA_INLINE_FIELD), "block data mismatch");
 
+  test_scda_read_fixed_size_array (fc, mpirank, mpisize);
+
+  test_scda_read_indirect_fixed_size_array (fc, mpirank, mpisize);
+
   sc_scda_fclose (fc, &errcode);
   /* TODO: check errcode and return value */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
@@ -316,6 +782,10 @@ main (int argc, char **argv)
                   errcode.scdaret == SC_SCDA_FERR_USAGE && fc == NULL,
                   "sc_scda_fread_section_header error detection failed");
   /* fc is closed and deallocated due to the occurred error  */
+
+  /* skip through file and test non-collective skipping */
+  test_scda_skip_through_file (mpicomm, filename, &scda_opt, mpirank,
+                               mpisize);
 
   sc_options_destroy (opt);
 

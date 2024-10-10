@@ -137,7 +137,45 @@
                                     SC_FREE (fc);                              \
                                     return NULL;}} while (0)
 
-/** Check for a count error of a serial (rank 0) I/O operation.
+/** Check for a count error of a collective I/O operation.
+ * This macro is only valid to use after checking that there was not I/O error.
+ * The macro must be called collectively with \b fc and \b errcode being
+ * collective parameters. \b icount and \b ocount may depend on the MPI rank.
+ * The calling function must return NULL in case of an error.
+ */
+#define SC_SCDA_CHECK_COLL_COUNT_ERR(icount, ocount, fc, errcode) do {       \
+                                    int sc_scda_global_cerr;                 \
+                                    int sc_scda_local_cerr;                  \
+                                    int sc_scda_mpiret;                      \
+                                    SC_ASSERT (                              \
+                                      sc_scda_ferror_is_success (*errcode)); \
+                                    sc_scda_local_cerr =                     \
+                                                  ((int) icount != ocount);  \
+                                    sc_scda_mpiret = sc_MPI_Allreduce (      \
+                                                        &sc_scda_local_cerr, \
+                                                        &sc_scda_global_cerr,\
+                                                        1, sc_MPI_INT,       \
+                                                        sc_MPI_LOR,          \
+                                                        fc->mpicomm);        \
+                                    SC_CHECK_MPI (sc_scda_mpiret);           \
+                                    sc_scda_scdaret_to_errcode (             \
+                                      sc_scda_global_cerr ? SC_SCDA_FERR_COUNT :\
+                                                        SC_SCDA_FERR_SUCCESS,\
+                                      errcode, fc);                          \
+                                    SC_SCDA_CHECK_VERBOSE_COLL (*errcode,    \
+                                                  "Read/write count check"); \
+                                    if (sc_scda_global_cerr) {               \
+                                    SC_ASSERT (                              \
+                                      !sc_scda_ferror_is_success (*errcode));\
+                                    SC_GLOBAL_LERRORF ("Count error for "    \
+                                                "collective I/O at %s:%d.\n",\
+                                                __FILE__, __LINE__);         \
+                                    sc_scda_file_error_cleanup (&fc->file);  \
+                                    SC_FREE (fc);                            \
+                                    return NULL;                             \
+                                    }} while (0)                             \
+
+/** Check for a count error of a serial I/O operation.
  * This macro is only valid to use after checking that there was not I/O error.
  * For a correct error handling it is required to skip the rest
  * of the non-collective code and then broadcast the count  error flag.
@@ -264,7 +302,7 @@ sc_scda_merge_data_to_buf (const char *d1, size_t len1, const char *d2,
   }
   if (d3 != NULL) {
     SC_ASSERT (d2 != NULL);
-    sc_scda_copy_bytes (&out[len2], d3, len3);
+    sc_scda_copy_bytes (&out[len1 + len2], d3, len3);
   }
 }
 
@@ -453,30 +491,32 @@ sc_scda_pad_to_mod_len (size_t input_len)
 
 /** Pad data to a length that is congurent to 0 modulo \ref SC_SCDA_PADDING_MOD.
  *
- * \param [in]  input_data  The input data. At least \b input_len bytes.
- *                          The input data is required since the padding byte
- *                          content dependt on the trailing input data byte.
- * \param [in]  input_len   The length of \b input_data in number of bytes.
+ * \param [in]  last_byte   Pointer to the last data byte.
+ *                          This byte is required since the padding byte
+ *                          content depends on the trailing data byte.
+ *                          Must be NULL if \b data_len equals 0.
+ * \param [in]  data_len    The length of the data in number of bytes.
  * \param [out] padding     On output the padding bytes. Must be at least
- *                          \ref sc_scda_pad_to_mod_len (\b input_len) bytes.
+ *                          \ref sc_scda_pad_to_mod_len (\b data_len) bytes.
  */
 static void
-sc_scda_pad_to_mod (const char *input_data, size_t input_len,
+sc_scda_pad_to_mod (const char *last_byte, size_t data_len,
                     char *padding)
 {
   size_t              num_pad_bytes;
 
-  SC_ASSERT (input_len == 0 || input_data != NULL);
+  SC_ASSERT (data_len == 0 || last_byte != NULL);
+  SC_ASSERT (data_len != 0 || last_byte == NULL);
   SC_ASSERT (padding != NULL);
 
   /* compute the number of padding bytes */
-  num_pad_bytes = sc_scda_pad_to_mod_len (input_len);
+  num_pad_bytes = sc_scda_pad_to_mod_len (data_len);
 
   SC_ASSERT (num_pad_bytes >= 7);
   SC_ASSERT (num_pad_bytes <= SC_SCDA_PADDING_MOD_MAX);
 
   /* check for last byte to decide on padding format */
-  if (input_len > 0 && input_data[input_len - 1] == '\n') {
+  if (data_len > 0 && *last_byte == '\n') {
     /* input data ends with a line break */
     padding[0] = '=';
   }
@@ -507,20 +547,25 @@ sc_scda_pad_to_mod_inplace (const char *input_data, size_t input_len,
   SC_ASSERT (input_len == 0 || input_data != NULL);
   SC_ASSERT (output_data != NULL);
 
+  const char         *last_byte;
+
   /* copy the input data */
   sc_scda_copy_bytes (output_data, input_data, input_len);
 
   /* append the padding */
-  sc_scda_pad_to_mod (input_data, input_len, &output_data[input_len]);
+  last_byte = (input_len > 0) ? &input_data[input_len - 1] : NULL;
+  sc_scda_pad_to_mod (last_byte, input_len, &output_data[input_len]);
 }
 
 /** Check if the padding bytes are correct w.r.t. \ref SC_SCDA_PADDING_MOD.
  *
  * Since the mod padding depends on the trailing data byte this function also
- * requires the raw data.
+ * requires this byte.
  *
- * \param [in]  data          The raw data with byte count \b data_len.
- * \param [in]  data_len      The length of \b data in number of bytes.
+ * \param [in]  last_byte     Pointer to the last data byte.
+ *                            This byte is required since the padding
+ *                            content depends on the trailing data byte.
+ * \param [in]  data_len      The raw data length in number of bytes.
  * \param [in]  pad           The padding bytes with byte count \b pad_len.
  * \param [in]  pad_len       The length of \b pad in number of bytes.
  *                            Must be at least 7.
@@ -529,8 +574,8 @@ sc_scda_pad_to_mod_inplace (const char *input_data, size_t input_len,
  *                            condition. False, otherwise.
  */
 static int
-sc_scda_check_pad_to_mod (const char* data, size_t data_len, const char *pad,
-                          size_t pad_len)
+sc_scda_check_pad_to_mod (const char* last_byte, size_t data_len,
+                          const char *pad, size_t pad_len)
 {
   size_t              si;
   size_t              num_pad_bytes;
@@ -562,7 +607,7 @@ sc_scda_check_pad_to_mod (const char* data, size_t data_len, const char *pad,
 
   /* padding depends on the trailing data byte */
   if ((!((pad[si] == '=' && data_len != 0 &&
-          data[data_len - 1] == '\n') || pad[si] == '\n'))) {
+          *last_byte == '\n') || pad[si] == '\n'))) {
     /* wrong padding start */
     return -1;
   }
@@ -593,6 +638,8 @@ static int
 sc_scda_get_pad_to_mod (const char *padded_data, size_t padded_len,
                         size_t raw_len, char *raw_data)
 {
+  const char         *last_byte;
+
   SC_ASSERT (padded_data != NULL);
   SC_ASSERT (raw_len == 0 || raw_data != NULL);
 
@@ -601,7 +648,8 @@ sc_scda_get_pad_to_mod (const char *padded_data, size_t padded_len,
     return -1;
   }
 
-  if (sc_scda_check_pad_to_mod (padded_data, raw_len, &padded_data[raw_len],
+  last_byte = (raw_len > 0) ? &padded_data[raw_len - 1] : NULL;
+  if (sc_scda_check_pad_to_mod (last_byte, raw_len, &padded_data[raw_len],
                                 padded_len - raw_len)) {
     /* invalid padding bytes */
     return -1;
@@ -1238,9 +1286,9 @@ sc_scda_get_common_section_header (char section_char, const char* user_string,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fopen_write_header_internal (sc_scda_fcontext_t *fc,
-                                     const char *user_string, size_t *len,
-                                     int *count_err, sc_scda_ferror_t *errcode)
+sc_scda_fopen_write_header_serial (sc_scda_fcontext_t *fc,
+                                   const char *user_string, size_t *len,
+                                   int *count_err, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1360,13 +1408,13 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "File open write");
 
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
-    sc_scda_fopen_write_header_internal (fc, user_string, len, &count_err,
-                                         errcode);
+    sc_scda_fopen_write_header_serial (fc, user_string, len, &count_err,
+                                       errcode);
   }
   /* This macro must be the first expression after the non-collective code part
    * since it must be the point where \ref SC_SCDA_CHECK_NONCOLL_ERR and \ref
    * SC_SCDA_CHECK_NONCOLL_COUNT_ERR can jump to, which are called in \ref
-   * sc_scda_fopen_write_header_internal. The macro handles the non-collective
+   * sc_scda_fopen_write_header_serial. The macro handles the non-collective
    * error, i.e. it broadcasts the errcode, which may encode success, from
    * rank 0 to all other ranks and in case of an error it closes the file,
    * frees the file context and returns NULL. Hence, it is valid that errcode
@@ -1385,7 +1433,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
    * that it is valid that errcode is only initialized on rank 0 before calling
    * this macro. The macro argument count_err must point to the count error
    * Boolean that was set on rank SC_SCDA_HEADER_ROOT by \ref
-   * sc_scda_fopen_write_header_internal.
+   * sc_scda_fopen_write_header_serial.
    */
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
                                     fc);
@@ -1416,10 +1464,9 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fwrite_inline_header_internal (sc_scda_fcontext_t *fc,
-                                       const char *user_string, size_t *len,
-                                       int *count_err,
-                                       sc_scda_ferror_t *errcode)
+sc_scda_fwrite_inline_header_serial (sc_scda_fcontext_t *fc,
+                                     const char *user_string, size_t *len,
+                                     int *count_err, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1469,9 +1516,9 @@ sc_scda_fwrite_inline_header_internal (sc_scda_fcontext_t *fc,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fwrite_inline_data_internal (sc_scda_fcontext_t *fc,
-                                     sc_array_t * inline_data, int *count_err,
-                                     sc_scda_ferror_t * errcode)
+sc_scda_fwrite_inline_data_serial (sc_scda_fcontext_t *fc,
+                                   sc_array_t * inline_data, int *count_err,
+                                   sc_scda_ferror_t * errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1510,8 +1557,8 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* The file header section is always written and read on rank 0. */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
-    sc_scda_fwrite_inline_header_internal (fc, user_string, len, &count_err,
-                                           errcode);
+    sc_scda_fwrite_inline_header_serial (fc, user_string, len, &count_err,
+                                         errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
@@ -1522,8 +1569,8 @@ sc_scda_fwrite_inline (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* The inline data is written on the the user-defined rank root. */
   if (fc->mpirank == root) {
-    sc_scda_fwrite_inline_data_internal (fc, inline_data, &count_err,
-                                         errcode);
+    sc_scda_fwrite_inline_data_serial (fc, inline_data, &count_err,
+                                       errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
@@ -1607,10 +1654,10 @@ sc_scda_get_section_header_entry (char ident, size_t var, char *output)
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fwrite_block_header_internal (sc_scda_fcontext_t *fc,
-                                      const char *user_string, size_t *len,
-                                      size_t block_size, int *count_err,
-                                      sc_scda_ferror_t *errcode)
+sc_scda_fwrite_block_header_serial (sc_scda_fcontext_t *fc,
+                                    const char *user_string, size_t *len,
+                                    size_t block_size, int *count_err,
+                                    sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1672,16 +1719,13 @@ sc_scda_fwrite_block_header_internal (sc_scda_fcontext_t *fc,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fwrite_block_data_internal (sc_scda_fcontext_t *fc,
-                                     sc_array_t * block_data, size_t block_size,
-                                     int *count_err, sc_scda_ferror_t * errcode)
+sc_scda_fwrite_block_data_serial (sc_scda_fcontext_t *fc,
+                                  sc_array_t * block_data, size_t block_size,
+                                  int *count_err, sc_scda_ferror_t * errcode)
 {
   int                 mpiret;
   int                 count;
   int                 invalid_block_data;
-  size_t              num_pad_bytes;
-  /* \ref SC_SCDA_PADDING_MOD + 6 is the maximum number of mod padding bytes */
-  char                padding[SC_SCDA_PADDING_MOD + 6];
 
   *count_err = 0;
 
@@ -1698,16 +1742,49 @@ sc_scda_fwrite_block_data_internal (sc_scda_fcontext_t *fc,
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
   SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing block data");
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (block_size, count, count_err);
+}
+
+/** Internal function to write mod data padding in serial.
+ *
+ * This function is intended to be called on a rank that stores the global
+ * last data byte. For block sections, this is the root rank and for (v)array
+ * sections the maximal not empty rank.
+ *
+ * \param [in] fc           The file context after writing the data that is
+ *                          intended to be padded.
+ * \param [in] last_byte    A pointer to the last global data byte. For
+ *                          \b byte_count = 0 \b last_byte must be NULL.
+ * \param [in] byte_count   Number of (collectively) written bytes in the
+ *                          preceding data writing I/O operation.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fwrite_mod_padding_serial (sc_scda_fcontext_t *fc,
+                                   const char *last_byte, size_t byte_count,
+                                   int *count_err, sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  size_t              num_pad_bytes;
+  /* \ref SC_SCDA_PADDING_MOD + 6 is the maximum number of mod padding bytes */
+  char                padding[SC_SCDA_PADDING_MOD + 6];
+
+  SC_ASSERT (byte_count != 0 || last_byte == NULL);
+
+  *count_err = 0;
 
   /* get the padding bytes */
-  num_pad_bytes = sc_scda_pad_to_mod_len (block_size);
-  sc_scda_pad_to_mod (block_data->array, block_size, padding);
+  num_pad_bytes = sc_scda_pad_to_mod_len (byte_count);
+  sc_scda_pad_to_mod (last_byte, byte_count, padding);
 
   /* write the padding bytes */
-  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes + block_size,
-                           padding, (int) num_pad_bytes, sc_MPI_BYTE, &count);
+  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, padding,
+                           (int) num_pad_bytes, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing block data padding");
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing array data padding");
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_pad_bytes, count, count_err);
 }
 
@@ -1717,7 +1794,6 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
                       int root, int encode, sc_scda_ferror_t * errcode)
 {
   int                 count_err;
-  size_t              num_pad_bytes;
   sc_scda_ret_t       ret;
 
   SC_ASSERT (fc != NULL);
@@ -1736,10 +1812,10 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* TODO: respect encode parameter */
 
-  /* file header section is always written and read on rank SC_SCDA_HEADER_ROOT */
+  /* section header is always written and read on rank SC_SCDA_HEADER_ROOT */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
-    sc_scda_fwrite_block_header_internal (fc, user_string, len, block_size,
-                                          &count_err, errcode);
+    sc_scda_fwrite_block_header_serial (fc, user_string, len, block_size,
+                                        &count_err, errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
@@ -1750,16 +1826,409 @@ sc_scda_fwrite_block (sc_scda_fcontext_t *fc, const char *user_string,
 
   /* The block data is written on the the user-defined rank root. */
   if (fc->mpirank == root) {
-    sc_scda_fwrite_block_data_internal (fc, block_data, block_size,
-                                        &count_err, errcode);
+    sc_scda_fwrite_block_data_serial (fc, block_data, block_size,
+                                      &count_err, errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
 
-  /* get number of padding bytes to update internal file pointer */
-  num_pad_bytes = sc_scda_pad_to_mod_len (block_size);
+  /* update internal file pointer */
+  fc->accessed_bytes += (sc_MPI_Offset) block_size;
 
-  fc->accessed_bytes += (sc_MPI_Offset) (block_size + num_pad_bytes);
+  /* write the padding */
+  if (fc->mpirank == root) {
+    const char         *last_byte;
+
+    last_byte = (block_size > 0) ? &block_data->array[block_size - 1] : NULL;
+    sc_scda_fwrite_mod_padding_serial (fc, last_byte, block_size, &count_err,
+                                       errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
+
+
+  /* get number of padding bytes to update internal file pointer */
+  fc->accessed_bytes += (sc_MPI_Offset) sc_scda_pad_to_mod_len (block_size);
+
+  return fc;
+}
+
+/** Internal function to write the array section header.
+ *
+ * This function is dedicated to be called in \ref sc_scda_fwrite_array.
+ *
+ * \param [in] fc           The file context as in \ref sc_scda_fwrite_array
+ *                          before running the first serial code part.
+ * \param [in] user_string  As in the documentation of \ref
+ *                          sc_scda_fwrite_array.
+ * \param [in] len          As in the documentation of \ref
+ *                          sc_scda_fwrite_array.
+ * \param [in] elem_count   As in the documentation of \ref
+ *                          sc_scda_fwrite_array.
+ * \param [in] elem_size    As in the documentation of \ref
+ *                          sc_scda_fwrite_array.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fwrite_array_header_serial (sc_scda_fcontext_t *fc,
+                                    const char *user_string, size_t *len,
+                                    size_t elem_count, size_t elem_size,
+                                    int *count_err, sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 current_len;
+  int                 invalid_user_string, invalid_count;
+  int                 header_len;
+  char                header_data[SC_SCDA_COMMON_FIELD + 2 * SC_SCDA_COUNT_FIELD];
+
+  *count_err = 0;
+
+  header_len = SC_SCDA_COMMON_FIELD + 2 * SC_SCDA_COUNT_FIELD;
+
+  /* get array file section header */
+
+  /* section-identifying character */
+  current_len = 0;
+
+  invalid_user_string =
+    sc_scda_get_common_section_header ('A', user_string, len, header_data);
+  /* We always translate the error code to have full coverage for the fuzzy
+   * error testing.
+   */
+  sc_scda_scdaret_to_errcode (invalid_user_string ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
+
+  current_len += SC_SCDA_COMMON_FIELD;
+
+  /* get count variable entry */
+  /* element count */
+  invalid_count = sc_scda_get_section_header_entry ('N', elem_count,
+                                                    &header_data[current_len]);
+  sc_scda_scdaret_to_errcode (invalid_count ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count");
+
+  current_len += SC_SCDA_COUNT_FIELD;
+
+  /* element size */
+  invalid_count = sc_scda_get_section_header_entry ('E', elem_size,
+                                                    &header_data[current_len]);
+  sc_scda_scdaret_to_errcode (invalid_count ? SC_SCDA_FERR_ARG :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count");
+
+  current_len += SC_SCDA_COUNT_FIELD;
+
+  SC_ASSERT (current_len == header_len);
+
+  /* write array section header */
+  mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, header_data,
+                           header_len, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing array section header");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (header_len, count, count_err);
+}
+
+/** Determine the maximal rank that is not empty.
+ *
+ * \param [in] fc           A file context with filled MPI data.
+ * \param [in] elem_counts  As the parameter \b elem_counts in \ref
+ *                          sc_scda_fwrite_array or \ref sc_scda_fwrite_varray.
+ *                          This array stores the number of elements per rank.
+ *                          The element count of \b elem_counts must be equal
+ *                          to \b fc->mpisize.
+ * \return                  The maximal rank that is not empty. If all ranks
+ *                          are empty, 0 is returned.
+ */
+static int
+sc_scda_get_last_byte_owner (sc_scda_fcontext_t *fc, sc_array_t *elem_counts)
+{
+  int                 i;
+  int                 last_byte_owner;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (elem_counts != NULL);
+  SC_ASSERT (elem_counts->elem_size == sizeof (sc_scda_ulong));
+  SC_ASSERT ((size_t) fc->mpisize == elem_counts->elem_count);
+
+  /* determine the rank that holds the last byte */
+  last_byte_owner = 0;
+  for (i = fc->mpisize - 1; i >= 0; --i) {
+    if (*((sc_scda_ulong *)sc_array_index_int (elem_counts, i)) != 0) {
+      /* found maximal rank that is not empty */
+      last_byte_owner = i;
+      break;
+    }
+  }
+
+  return last_byte_owner;
+}
+
+/** Get local partition byte offset and byte length.
+ *
+ * \param [in] fc           A valid file context.
+ * \param [in] elem_counts  As in the documentation of \ref
+ *                          sc_array_fwrite_array_data or \ref
+ *                          sc_array_fwrite_varray_data.
+ *                          Encodes the partition and must be conforming to
+ *                          \b fc. Cf. the documentation of the referenced
+ *                          functions for more information.
+ * \param [in] elem_size    As in the documentation of \ref
+ *                          sc_array_fwrite_array_data or \ref
+ *                          sc_array_fwrite_varray_data.
+ * \param [out] offset      On output filled with the local byte offset
+ *                          according to the given partition.
+ * \param [out] num_bytes   On output filled with the number of local byte
+ *                          offset according to the given partition.
+ */
+static void
+sc_scda_get_local_partition_index (sc_scda_fcontext_t *fc,
+                                   sc_array_t *elem_counts, size_t elem_size,
+                                   sc_MPI_Offset *offset, int *num_bytes)
+{
+  int                 i;
+  int                 num_local_elements;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (elem_counts != NULL);
+  SC_ASSERT (elem_counts->elem_size == sizeof (sc_scda_ulong));
+  SC_ASSERT ((size_t) fc->mpisize == elem_counts->elem_count);
+
+  /* compute rank-dependent offset */
+  *offset = 0;
+  /* sum all element counts on previous processes */
+  for (i = 0; i < fc->mpirank; ++i) {
+    *offset +=
+      (sc_MPI_Offset) *
+      ((sc_scda_ulong *) sc_array_index_int (elem_counts, i));
+  }
+  *offset *= (sc_MPI_Offset) elem_size;
+
+  /* compute the number of local array data bytes */
+  num_local_elements =
+    (int) *((sc_scda_ulong *) sc_array_index_int (elem_counts, fc->mpirank));
+  *num_bytes = (int) elem_size * num_local_elements;
+}
+
+/** Collective check of array function parameters.
+ *
+ * This function is dedicated to be called in \ref sc_scda_fwrite_array and
+ * \ref sc_scda_fread_array_data.
+ *
+ * \param [in] fc           The file context as passed to \ref
+ *                          sc_scda_fwrite_array or \ref
+ *                          sc_scda_fread_array_data.
+ * \param [in] array_data   As passed to \ref sc_scda_fwrite_array
+ *                          \ref sc_scda_fread_array_data, respectively.
+ * \param [in] indirect     As passed to \ref sc_scda_fwrite_array
+ *                          \ref sc_scda_fread_array_data, respectively.
+ * \param [in] elem_size    As passed to \ref sc_scda_fwrite_array
+ *                          \ref sc_scda_fread_array_data, respectively.
+ * \param [out] elem_count  On successful output the global element count.
+ * \return                  \ref SC_SCDA_FERR_ARG if the parameters are not
+ *                          valid, and \ref SC_SCDA_FERR_SUCCESS otherwise.
+ */
+static sc_scda_ret_t
+sc_scda_check_array_params (sc_scda_fcontext_t *fc, sc_array_t *array_data,
+                            int indirect, sc_array_t *elem_counts,
+                            size_t elem_size, size_t *elem_count)
+{
+  int                 mpiret;
+  int                 invalid_elem_counts, global_invalid_elem_counts;
+  int                 invalid_array_data, global_invalid_array_data;
+  int                 ret;
+  int                 skip_data;
+  size_t              si, local_elem_count;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (elem_counts != NULL);
+
+  *elem_count = 0;
+
+  /* check if array_data is skipped */
+  skip_data = array_data == NULL;
+
+  /* check elem_counts array */
+  invalid_elem_counts = !(elem_counts->elem_size == sizeof (sc_scda_ulong) &&
+                          elem_counts->elem_count == (size_t) fc->mpisize);
+  /* synchronize */
+  mpiret =
+    sc_MPI_Allreduce (&invalid_elem_counts, &global_invalid_elem_counts, 1,
+                      sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
+  SC_CHECK_MPI (mpiret);
+  if (global_invalid_elem_counts) {
+    /* invalid elem_counts array */
+    return SC_SCDA_FERR_ARG;
+  }
+
+  /* compute the global element count */
+  /* TODO: Use a checksum for the colletivness test? */
+  for (si = 0; si < elem_counts->elem_count; ++si) {
+    *elem_count += *((size_t *) sc_array_index (elem_counts, si));
+  }
+
+  /* check if elem_count, elem_size and indirect are collective */
+  ret = sc_scda_check_coll_params (fc, (const char *) elem_count,
+                                   sizeof (size_t), (const char *) &elem_size,
+                                   sizeof (size_t), (const char *) &indirect,
+                                   sizeof (int));
+  if (ret != SC_SCDA_FERR_SUCCESS) {
+    return SC_SCDA_FERR_ARG;
+  }
+
+  if (!skip_data) {
+    /* check array_data; depends on indirect parameter */
+    local_elem_count =
+      (size_t) *((sc_scda_ulong *)
+                sc_array_index_int (elem_counts, fc->mpirank));
+    if (indirect) {
+      invalid_array_data = !(array_data->elem_count == local_elem_count &&
+                            array_data->elem_size == sizeof (sc_array_t));
+      /* The arrays with the actual data are checked later in an assertion. */
+    }
+    else {
+      invalid_array_data = !(array_data->elem_count == local_elem_count &&
+                            array_data->elem_size == elem_size);
+    }
+    /* synchronize */
+    mpiret =
+      sc_MPI_Allreduce (&invalid_array_data, &global_invalid_array_data, 1,
+                        sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
+    SC_CHECK_MPI (mpiret);
+    if (global_invalid_array_data) {
+      /* invalid array_data array */
+      return SC_SCDA_FERR_ARG;
+    }
+  }
+  else {
+    /* no data is read on this rank and hence there is no array_data array */
+    /* never causes invalid array_data */
+    invalid_array_data = 0;
+    mpiret =
+    sc_MPI_Allreduce (&invalid_array_data, &global_invalid_array_data, 1,
+                      sc_MPI_INT, sc_MPI_LOR, fc->mpicomm);
+    SC_CHECK_MPI (mpiret);
+  }
+
+  return SC_SCDA_FERR_SUCCESS;
+}
+
+sc_scda_fcontext_t *
+sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
+                      size_t *len, sc_array_t *array_data,
+                      sc_array_t *elem_counts, size_t elem_size, int indirect,
+                      int encode, sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count_err;
+  int                 bytes_to_write;
+  int                 count;
+  int                 last_byte_owner;
+  sc_scda_ret_t       scdaret;
+  size_t              elem_count, si;
+  size_t              collective_byte_count;
+  size_t              num_pad_bytes;
+  sc_MPI_Offset       offset;
+  sc_array_t          contig_arr;
+  const void         *local_array_data;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (user_string != NULL);
+  SC_ASSERT (array_data != NULL);
+  SC_ASSERT (elem_counts != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  /* TODO: respect encode parameter */
+
+  /* check function parameters */
+  scdaret = sc_scda_check_array_params (fc, array_data, indirect, elem_counts,
+                                        elem_size, &elem_count);
+  sc_scda_scdaret_to_errcode (scdaret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fwrite_array: Invalid parameters");
+
+  /* section header is always written and read on rank SC_SCDA_HEADER_ROOT */
+  if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
+    sc_scda_fwrite_array_header_serial (fc, user_string, len, elem_count,
+                                        elem_size, &count_err, errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
+                                    fc);
+
+  /* add number of written bytes */
+  fc->accessed_bytes += SC_SCDA_COMMON_FIELD + 2 * SC_SCDA_COUNT_FIELD;
+
+  /* get pointer to local array data */
+  if (indirect) {
+    sc_array_t         *data_arr;
+    char               *data_src, *data_dest;
+
+    /* indirect addressing */
+    /* TODO: Use batches */
+    sc_array_init_size (&contig_arr, elem_size, elem_count);
+    for (si = 0; si < array_data->elem_count; ++si) {
+      data_arr = (sc_array_t *) sc_array_index (array_data, si);
+      SC_ASSERT (data_arr->elem_size == elem_size
+                 && data_arr->elem_count == 1);
+      data_src = (char *) sc_array_index (data_arr, 0);
+      data_dest = (char *) sc_array_index (&contig_arr, si);
+
+      sc_scda_copy_bytes (data_dest, data_src, elem_size);
+    }
+    local_array_data = (const void *) contig_arr.array;
+  }
+  else {
+    /* direct addressing */
+    local_array_data = (const void *) array_data->array;
+  }
+
+  /* write array data in parallel */
+
+  /* retrieve partition information */
+  sc_scda_get_local_partition_index (fc, elem_counts, elem_size, &offset,
+                                     &bytes_to_write);
+
+  mpiret = sc_io_write_at_all (fc->file, fc->accessed_bytes + offset,
+                               local_array_data, bytes_to_write, sc_MPI_BYTE,
+                               &count);
+  if (indirect) {
+    sc_array_reset (&contig_arr);
+  }
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Writing fixed-length array data");
+  /* check for count error of the collective I/O operation */
+  SC_SCDA_CHECK_COLL_COUNT_ERR (bytes_to_write, count, fc, errcode);
+
+  /* update global number of written bytes */
+  collective_byte_count = elem_count * elem_size;
+  fc->accessed_bytes += (sc_MPI_Offset) collective_byte_count;
+
+  /* determine the rank that holds the last byte */
+  last_byte_owner = sc_scda_get_last_byte_owner (fc, elem_counts);
+
+  /* get and write padding bytes in serial */
+  if (fc->mpirank == last_byte_owner) {
+    const char         *last_byte;
+
+    /* get last local/global byte */
+    SC_ASSERT (elem_count == 0 || bytes_to_write > 0);
+    last_byte = (elem_count > 0) ?
+      &array_data->array[bytes_to_write - 1] : NULL;
+    /* the padding depends on the last data byte */
+    sc_scda_fwrite_mod_padding_serial (fc, last_byte, collective_byte_count,
+                                       &count_err, errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, last_byte_owner, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, last_byte_owner, fc);
+
+  /* update global number of written bytes */
+  num_pad_bytes = sc_scda_pad_to_mod_len (collective_byte_count);
+  fc->accessed_bytes += (sc_MPI_Offset) num_pad_bytes;
 
   return fc;
 }
@@ -1853,9 +2322,9 @@ sc_scda_check_file_header (const char *file_header_data, char *user_string,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fopen_read_header_internal (sc_scda_fcontext_t * fc,
-                                    char *user_string, size_t *len,
-                                    int *count_err, sc_scda_ferror_t *errcode)
+sc_scda_fopen_read_header_serial (sc_scda_fcontext_t * fc,
+                                  char *user_string, size_t *len,
+                                  int *count_err, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -1931,8 +2400,8 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
 
   /* read file header section on rank SC_SCDA_HEADER_ROOT */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
-    sc_scda_fopen_read_header_internal (fc, user_string, len, &count_err,
-                                        errcode);
+    sc_scda_fopen_read_header_serial (fc, user_string, len, &count_err,
+                                      errcode);
   }
   /* The macro to handle a non-collective error that is associated to a
    * preceding call of \ref SC_SCDA_CHECK_NONCOLL_ERR.
@@ -1979,10 +2448,10 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
-                                              char *type, char *user_string,
-                                              size_t *len, int *count_err,
-                                              sc_scda_ferror_t *errcode)
+sc_scda_fread_section_header_common_serial (sc_scda_fcontext_t *fc,
+                                            char *type, char *user_string,
+                                            size_t *len, int *count_err,
+                                            sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -2006,6 +2475,9 @@ sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
     break;
   case 'B':
     *type = 'B';
+    break;
+  case 'A':
+    *type = 'A';
     break;
   default:
     /* an invalid/unsupported format */
@@ -2039,98 +2511,73 @@ sc_scda_fread_section_header_common_internal (sc_scda_fcontext_t *fc,
                              "Invalid user string in section header");
 }
 
-/** Internal function to read a count entry in a section header.
+/** Internal function to check a count entry in a section header.
  *
- * This code is only valid to be run in serial. It is crucial that
- * fc->accessed_bytes is not updated inside of this function. Therefore,
- * fc->accessed_bytes must be updated accordingly (and collectivly) afterwards.
+ * This function checks if the count entry is conforming to the scda format.
  *
- * This function is already prepared to be adjusted in the future to read a
- * specified number of count entries. This will change the interface of this
- * function. The reason that we will read multiple count entries in one function
- * call instead of calling one function multiple times is that the error
- * management for serial code parts relies on having one function that executes
- * the serial code.
- *
- * \param [in] fc           The file context as in \ref
- *                          sc_scda_fread_section_header before running the
- *                          second serial code part.
- * \param [out] ident       The character that identifies the count entry.
- *                          If this character is not conforming to the scda
- *                          convention, the function call is not completed and
- *                          results in \ref SC_SCDA_FERR_FORMAT as error,
- *                          cf. \b errcode.
- * \param [in] expc_ident   The expected count entry identifier. If the \b ident
- *                          is not as expected the error \ref
- *                          SC_SCDA_FERR_FORMAT is set and the function flow is
- *                          not completed.
+ * \param [in] count_entry  A pointer to a count entry that was read from file.
+ *                          The count entry has exactly \ref SC_SCDA_COUNT_FIELD
+ *                          bytes.
+ * \param [in] expc_ident   The expected count entry identifier. If the read
+ *                          identifier is not as expected the function returns
+ *                          true. Note that the function also returns true if
+ *                          the count entry identifier coincides with
+ *                          \b expc_ident but is not in the list of supported
+ *                          count identifiers (currently 'E' and 'N').
  * \param [out] count_var   The count variable read from the count entry.
- * \param [out] count_err   A Boolean indicating if a count error occurred.
- *                          For this parameter the term count refers to the
- *                          expected byte count for reading count (different
- *                          count) entry.
- * \param [out] errcode     An errcode that can be interpreted by \ref
- *                          sc_scda_ferror_string or mapped to an error class
- *                          by \ref sc_scda_ferror_class.
+ * \return                  False if the count entry is valid and has the
+ *                          expected identifier. True, otherwise.
  */
-static void
-sc_scda_fread_count_entry_internal (sc_scda_fcontext_t *fc, char *ident,
-                                    char expc_ident, size_t *count_var,
-                                    int *count_err, sc_scda_ferror_t *errcode)
+static int
+sc_scda_check_count_entry (const char *count_entry, char expc_ident,
+                           size_t *count_var)
 {
-  char                count_entry[SC_SCDA_COUNT_FIELD];
   char                var_str[SC_SCDA_COUNT_MAX_DIGITS + 1];
-  int                 mpiret;
-  int                 count;
+  char                ident;
   int                 wrong_format, wrong_ident;
   long long unsigned  read_count;
   size_t              len = 0;
 
-  SC_ASSERT (fc != NULL);
-  SC_ASSERT (ident != NULL);
   SC_ASSERT (count_var != NULL);
 
-  *ident = ' ';
   *count_var = 0;
-  *count_err = 0;
-
-  /* read a count entry */
-  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
-                          SC_SCDA_COUNT_FIELD, sc_MPI_BYTE, &count);
-  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read a count entry in a section header");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
 
   wrong_format = 0;
   /* check and get the count variable identifier */
   switch (count_entry[0])
   {
   case 'E':
-    *ident = 'E';
+    ident = 'E';
+    break;
+  case 'N':
+    ident = 'N';
     break;
   default:
     /* invalid/unsupported count identifier */
     wrong_format = 1;
     break;
   }
-  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count identifier");
+  if (wrong_format) {
+    /* invalid count identifier */
+    return -1;
+  }
 
   /* compare read count identifier to the expected count identifier  */
-  wrong_ident = (*ident != expc_ident);
-  sc_scda_scdaret_to_errcode (wrong_ident ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Wrong count identifier in count entry");
+  wrong_ident = (ident != expc_ident);
+  if (wrong_ident) {
+    /* Wrong count identifier in count entry */
+    return -1;
+  }
 
   /* check count entry format */
   if (count_entry[1] != ' ') {
     /* wrong format */
     wrong_format = 1;
   }
-  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Missing space in count entry");
+  if (wrong_format) {
+    /* Missing space in count entry */
+    return -1;
+  }
 
   /* check padding and extract count variable string */
   sc_scda_init_nul (var_str, SC_SCDA_COUNT_MAX_DIGITS + 1);
@@ -2138,9 +2585,10 @@ sc_scda_fread_count_entry_internal (sc_scda_fcontext_t *fc, char *ident,
                                   &len)) {
     wrong_format = 1;
   }
-  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count variable padding");
+  if (wrong_format) {
+    /* Invalid count variable padding */
+    return -1;
+  }
 
   /* If the padding to the length \ref SC_SCDA_COUNT_ENTRY was valid this
    * assertion must hold.
@@ -2153,11 +2601,135 @@ sc_scda_fread_count_entry_internal (sc_scda_fcontext_t *fc, char *ident,
     /* conversion failed or is not possible */
     wrong_format = 1;
   }
-  sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Extraction of count value failed");
+  if (wrong_format) {
+    /* Extraction of count value failed */
+    return -1;
+  }
 
   *count_var = (size_t) read_count;
+
+  return 0;
+}
+
+/** An internal function to read and check the block section header.
+ *
+ * This function is only valid to be called in serial.
+ * This function updates \b fc->accessed_bytes. Hence, it is crucial that
+ * \b fc->accessed_bytes is set on all other ranks afterwards to ensure
+ * a collective internal file pointer.
+ *
+ * \param [in]  fc          The file context as in \ref
+ *                          sc_scda_fread_section_header before running the
+ *                          serial code part.
+ * \param [in]  elem_size   The read element size.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fread_block_header_serial (sc_scda_fcontext_t *fc, size_t *elem_size,
+                                   int *count_err, sc_scda_ferror_t *errcode)
+{
+  char                count_entry[SC_SCDA_COUNT_FIELD];
+  int                 mpiret;
+  int                 count;
+  int                 invalid_count_entry;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (count_err != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  *count_err = 0;
+
+  /* read the count entry */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
+                          SC_SCDA_COUNT_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block section header count entry");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
+
+  /* check read count entry */
+  invalid_count_entry = sc_scda_check_count_entry (count_entry, 'E',
+                                                   elem_size);
+  sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
+                                                    SC_SCDA_FERR_SUCCESS,
+                              errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid block count entry");
+
+  /* update the internal file pointer; only in serial */
+  fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
+}
+
+/** An internal function to read and check the fixed-len array section header.
+ *
+ * This function is only valid to be called in serial.
+ * This function updates \b fc->accessed_bytes. Hence, it is crucial that
+ * \b fc->accessed_bytes is set on all other ranks afterwards to ensure
+ * a collective internal file pointer.
+ *
+ * \param [in]  fc          The file context as in \ref
+ *                          sc_scda_fread_section_header before running the
+ *                          serial code part.
+ * \param [in]  elem_size   The read element size.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fread_array_header_serial (sc_scda_fcontext_t *fc, size_t *elem_count,
+                                   size_t *elem_size, int *count_err,
+                                   sc_scda_ferror_t *errcode)
+{
+  char                count_entry[SC_SCDA_COUNT_FIELD];
+  int                 mpiret;
+  int                 count;
+  int                 invalid_count_entry;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (count_err != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  *count_err = 0;
+
+  /* read the first count entry */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
+                          SC_SCDA_COUNT_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block section header count entry");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
+
+  /* check read count entry */
+  invalid_count_entry = sc_scda_check_count_entry (count_entry,'N',
+                                                   elem_count);
+  sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
+                                                    SC_SCDA_FERR_SUCCESS,
+                              errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid first fixed-length array count "
+                             "entry");
+
+  /* update the internal file pointer; only in serial */
+  fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
+
+  /* read the second count entry */
+  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
+                          SC_SCDA_COUNT_FIELD, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block section header count entry");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
+
+  /* check read count entry */
+  invalid_count_entry = sc_scda_check_count_entry (count_entry, 'E',
+                                                   elem_size);
+  sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
+                                                    SC_SCDA_FERR_SUCCESS,
+                              errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid second fixed-length array count "
+                             "entry");
+
+  /* update the internal file pointer; only in serial */
+  fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
 }
 
 sc_scda_fcontext_t *
@@ -2168,7 +2740,6 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
 {
   int                 count_err;
   int                 mpiret;
-  char                var_ident;
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (user_string != NULL);
@@ -2183,8 +2754,8 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
 
   /* read the common section header part first */
   if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
-    sc_scda_fread_section_header_common_internal (fc, type, user_string, len,
-                                                  &count_err, errcode);
+    sc_scda_fread_section_header_common_serial (fc, type, user_string, len,
+                                                &count_err, errcode);
   }
   SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
   SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
@@ -2200,9 +2771,11 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
       /* no count entries to read */
       break;
     case 'B':
-      /* one count entry to read */
-      sc_scda_fread_count_entry_internal (fc, &var_ident, 'E', elem_size,
-                                          &count_err, errcode);
+      sc_scda_fread_block_header_serial (fc, elem_size, &count_err, errcode);
+      break;
+    case 'A':
+      sc_scda_fread_array_header_serial (fc, elem_count, elem_size,
+                                         &count_err, errcode);
       break;
     default:
       /* rank SC_SCDA_HEADER_ROOT already checked if type is valid/supported */
@@ -2237,8 +2810,24 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
     mpiret = sc_MPI_Bcast (elem_size, sizeof (size_t), sc_MPI_BYTE,
                            SC_SCDA_HEADER_ROOT, fc->mpicomm);
     SC_CHECK_MPI (mpiret);
-    /* one count entry was read */
-    fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
+    if (fc->mpirank != SC_SCDA_HEADER_ROOT) {
+      /* update internal file pointer */
+      fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
+    }
+    break;
+  case 'A':
+    /* fixed-length array */
+    /* elem_count and elem_size were read on rank SC_SCDA_HEADER_ROOT */
+    mpiret = sc_MPI_Bcast (elem_count, sizeof (size_t), sc_MPI_BYTE,
+                           SC_SCDA_HEADER_ROOT, fc->mpicomm);
+    SC_CHECK_MPI (mpiret);
+    mpiret = sc_MPI_Bcast (elem_size, sizeof (size_t), sc_MPI_BYTE,
+                           SC_SCDA_HEADER_ROOT, fc->mpicomm);
+    SC_CHECK_MPI (mpiret);
+    if (fc->mpirank != SC_SCDA_HEADER_ROOT) {
+      /* update internal file pointer */
+      fc->accessed_bytes += 2 * SC_SCDA_COUNT_FIELD;
+    }
     break;
   default:
     /* rank SC_SCDA_HEADER_ROOT already checked if type is valid/supported */
@@ -2265,9 +2854,8 @@ sc_scda_fread_section_header (sc_scda_fcontext_t *fc, char *user_string,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fread_inline_data_serial_internal (sc_scda_fcontext_t *fc,
-                                           sc_array_t *data, int *count_err,
-                                           sc_scda_ferror_t *errcode)
+sc_scda_fread_inline_data_serial (sc_scda_fcontext_t *fc, sc_array_t *data,
+                                  int *count_err, sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
@@ -2311,7 +2899,7 @@ sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
   if (data != NULL) {
     /* the data is not skipped */
     if (fc->mpirank == root) {
-      sc_scda_fread_inline_data_serial_internal (fc, data, &count_err, errcode);
+      sc_scda_fread_inline_data_serial (fc, data, &count_err, errcode);
     }
     SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
     SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
@@ -2324,6 +2912,91 @@ sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
   fc->header_before = 0;
 
   return fc;
+}
+
+/** Internal function to read mod data padding in serial.
+ *
+ * The recommended usage of this function is that for (v)array sections one
+ * passes NULL for \b last_byte to read the last global data byte.
+ * For block sections, we can read on the root rank and explicitly pass the
+ * last global byte.
+ *
+ * \param [in] fc           The file context after reading the data that is
+ *                          padded.
+ * \param [in] last_byte    A pointer to the last global data byte. For
+ *                          \b byte_count = 0 \b last_byte must be NULL.
+ *                          If \b last_byte is NULL and \b byte_count > 0,
+ *                          the function reads the last data byte from the file.
+ * \param [in] byte_count   Number of (collectively) read bytes in the
+ *                          preceding data read I/O operation.
+ * \param [out] count_err   A Boolean indicating if a count error occurred.
+ * \param [out] errcode     An errcode that can be interpreted by \ref
+ *                          sc_scda_ferror_string or mapped to an error class
+ *                          by \ref sc_scda_ferror_class.
+ */
+static void
+sc_scda_fread_mod_padding_serial (sc_scda_fcontext_t *fc,
+                                  const char *last_byte, size_t byte_count,
+                                  int *count_err, sc_scda_ferror_t *errcode)
+{
+  int                 mpiret;
+  int                 count;
+  int                 read_last_byte;
+  sc_MPI_Offset       offset;
+  int                 num_bytes;
+  int                 invalid_padding;
+  size_t              num_pad_bytes;
+  /* \ref SC_SCDA_PADDING_MOD + 6 is the maximum number of mod padding bytes */
+  char                padding[SC_SCDA_PADDING_MOD + 6];
+  const char         *last_byte_internal;
+  char               *padding_internal;
+
+  *count_err = 0;
+
+  num_pad_bytes = sc_scda_pad_to_mod_len (byte_count);
+
+  /* Do we read the last data byte if there is one? */
+  read_last_byte = last_byte == NULL && byte_count > 0;
+
+  if (read_last_byte) {
+    offset = fc->accessed_bytes - 1;
+    num_bytes = (int) num_pad_bytes + 1;
+  }
+  else {
+    offset = fc->accessed_bytes;
+    num_bytes = (int) num_pad_bytes;
+  }
+
+  mpiret = sc_io_read_at (fc->file, offset, padding, num_bytes, sc_MPI_BYTE,
+                          &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read modulo data padding");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_bytes, count, count_err);
+
+  /* check the padding */
+  /* data padding depends the last data byte */
+  if (byte_count == 0) {
+    /* there is no last byte */
+    SC_ASSERT (last_byte == NULL);
+    last_byte_internal = NULL;
+    padding_internal = padding;
+  }
+  else if (read_last_byte) {
+    /* there is a last byte and it was read from file */
+    last_byte_internal = &padding[0];
+    padding_internal = &padding[1];
+  }
+  else {
+    /* there is a last byte and it was passed to this function */
+    last_byte_internal = last_byte;
+    padding_internal = padding;
+  }
+
+  invalid_padding = sc_scda_check_pad_to_mod (last_byte_internal, byte_count,
+                                              padding_internal, num_pad_bytes);
+  sc_scda_scdaret_to_errcode (invalid_padding ? SC_SCDA_FERR_FORMAT :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid modulo data padding");
 }
 
 /** Internal function to read the block data.
@@ -2341,16 +3014,13 @@ sc_scda_fread_inline_data (sc_scda_fcontext_t *fc, sc_array_t *data, int root,
  *                          by \ref sc_scda_ferror_class.
  */
 static void
-sc_scda_fread_block_data_serial_internal (sc_scda_fcontext_t *fc,
-                                          sc_array_t *data, size_t block_size,
-                                          int *count_err,
-                                          sc_scda_ferror_t *errcode)
+sc_scda_fread_block_data_serial (sc_scda_fcontext_t *fc, sc_array_t *data,
+                                 size_t block_size, int *count_err,
+                                 sc_scda_ferror_t *errcode)
 {
   int                 mpiret;
   int                 count;
-  int                 invalid_array, invalid_padding;
-  size_t              num_pad_bytes;
-  char                paddding[SC_SCDA_PADDING_MOD_MAX];
+  int                 invalid_array;
 
   *count_err = 0;
 
@@ -2364,26 +3034,8 @@ sc_scda_fread_block_data_serial_internal (sc_scda_fcontext_t *fc,
   mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, data->array,
                           (int) block_size, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read inline data");
+  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block data");
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (block_size, count, count_err);
-
-  num_pad_bytes = sc_scda_pad_to_mod_len (block_size);
-
-  /* read the padding the bytes */
-  /* the padding depends on the trailing byte of the data */
-  mpiret = sc_io_read_at (fc->file, fc->accessed_bytes +
-                          (sc_MPI_Offset) block_size, paddding,
-                          (int) num_pad_bytes, sc_MPI_BYTE, &count);
-  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read inline data padding");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_pad_bytes, count, count_err);
-
-  /* check the padding */
-  invalid_padding = sc_scda_check_pad_to_mod (data->array, block_size, paddding,
-                                              num_pad_bytes);
-  sc_scda_scdaret_to_errcode (invalid_padding ? SC_SCDA_FERR_FORMAT :
-                              SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid block data padding");
 }
 
 sc_scda_fcontext_t *
@@ -2417,16 +3069,139 @@ sc_scda_fread_block_data (sc_scda_fcontext_t *fc, sc_array_t *block_data,
   if (block_data != NULL) {
     /* the data is not skipped */
     if (fc->mpirank == root) {
-      sc_scda_fread_block_data_serial_internal (fc, block_data, block_size,
-                                                &count_err, errcode);
+      sc_scda_fread_block_data_serial(fc, block_data, block_size, &count_err,
+                                      errcode);
     }
     SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
     SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
   }
 
   /* if no error occurred, we move the internal file pointer */
-  fc->accessed_bytes += (sc_MPI_Offset) (block_size +
-                                          sc_scda_pad_to_mod_len (block_size));
+  fc->accessed_bytes += (sc_MPI_Offset) block_size;
+
+  /* read and check the data padding */
+  if (fc->mpirank == root) {
+    const char         *last_byte;
+
+    last_byte = (block_size > 0
+                 && block_data !=
+                 NULL) ? &block_data->array[block_size - 1] : NULL;
+    sc_scda_fread_mod_padding_serial (fc, last_byte, block_size, &count_err,
+                                      errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, root, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, root, fc);
+
+  /* update internal file pointer */
+  fc->accessed_bytes += (sc_MPI_Offset) sc_scda_pad_to_mod_len (block_size);
+
+  /* last function call can not be \ref sc_scda_fread_section_header anymore */
+  fc->header_before = 0;
+
+  return fc;
+}
+
+sc_scda_fcontext_t *
+sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
+                          sc_array_t *elem_counts, size_t elem_size,
+                          int indirect, sc_scda_ferror_t *errcode)
+{
+  int                 wrong_usage;
+  size_t              elem_count, si;
+  size_t              collective_byte_count;
+  sc_MPI_Offset       offset;
+  sc_scda_ret_t       scdaret;
+  int                 bytes_to_read;
+  int                 mpiret;
+  int                 count;
+  int                 count_err;
+  void               *data;
+  sc_array_t          conti_arr;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (elem_counts != NULL);
+  SC_ASSERT (errcode != NULL);
+
+  scdaret = sc_scda_check_array_params (fc, array_data, indirect, elem_counts,
+                                        elem_size, &elem_count);
+  sc_scda_scdaret_to_errcode (scdaret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "fread_array: Invalid parameters");
+
+  /* It is necessary that sc_scda_fread_section_header was called as last
+   * function call on fc and that it returned the array (A) section type.
+   */
+  wrong_usage = !(fc->header_before && fc->last_type == 'A');
+  sc_scda_scdaret_to_errcode (wrong_usage ? SC_SCDA_FERR_USAGE :
+                              SC_SCDA_FERR_SUCCESS, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Wrong usage of scda functions");
+
+  if (array_data != NULL) {
+    /* on this rank the array data is not skipped */
+    sc_scda_get_local_partition_index (fc, elem_counts, elem_size, &offset,
+                                       &bytes_to_read);
+    data = (void *) array_data->array;
+  }
+  else {
+    /* on this rank the array data is skipped */
+    offset = 0;
+    bytes_to_read = 0;
+    /* By MPI standard 2.0 section 9.4.1 (cf. Data Access Conventions) the read
+     * buffer behaves as for the MPI 1.1 communication.
+     */
+    data = NULL;
+  }
+
+  if (indirect && array_data != NULL) {
+    /* TODO: batches? */
+    /* read to contiguous temporary buffer */
+    sc_array_init_size (&conti_arr, elem_size, elem_count);
+    data = (void *) conti_arr.array;
+  }
+  else {
+    /* read to passed data buffer, i.e. data stays unchanged */
+  }
+
+  /* collective read */
+  mpiret = sc_io_read_at_all (fc->file, fc->accessed_bytes + offset,
+                              data, bytes_to_read, sc_MPI_BYTE, &count);
+  sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
+  SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Reading fixed-length array data");
+  /* check for count error of the collective I/O operation */
+  SC_SCDA_CHECK_COLL_COUNT_ERR (bytes_to_read, count, fc, errcode);
+
+  /* update internal file pointer */
+  collective_byte_count = elem_count * elem_size;
+  fc->accessed_bytes += (sc_MPI_Offset) collective_byte_count;
+
+  /* padding is always read and checked */
+  if (fc->mpirank == SC_SCDA_HEADER_ROOT) {
+    /* last data byte is read from the file if collective_byte_count > 0 */
+    sc_scda_fread_mod_padding_serial (fc, NULL, collective_byte_count,
+                                      &count_err, errcode);
+  }
+  SC_SCDA_HANDLE_NONCOLL_ERR (errcode, SC_SCDA_HEADER_ROOT, fc);
+  SC_SCDA_HANDLE_NONCOLL_COUNT_ERR (errcode, &count_err, SC_SCDA_HEADER_ROOT,
+                                    fc);
+
+  /* update internal file pointer */
+  fc->accessed_bytes +=
+    (sc_MPI_Offset) sc_scda_pad_to_mod_len (collective_byte_count);
+
+  if (indirect && array_data != NULL) {
+    sc_array_t         *curr;
+    const char         *src;
+    char               *dest;
+
+    /* copy contiguous data to indirect array */
+    for (si = 0; si < array_data->elem_count; ++si) {
+      src = (const char *) sc_array_index (&conti_arr, si);
+      curr = (sc_array_t *) sc_array_index (array_data, si);
+      dest = (char *) sc_array_index (curr, 0);
+
+      sc_scda_copy_bytes (dest, src, elem_size);
+    }
+    sc_array_reset (&conti_arr);
+  }
 
   /* last function call can not be \ref sc_scda_fread_section_header anymore */
   fc->header_before = 0;
