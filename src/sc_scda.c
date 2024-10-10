@@ -3152,7 +3152,7 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   }
 
   if (indirect && array_data != NULL) {
-    /* TODO: batches */
+    /* TODO: batches? */
     /* read to contiguous temporary buffer */
     sc_array_init_size (&conti_arr, elem_size, elem_count);
     data = (void *) conti_arr.array;

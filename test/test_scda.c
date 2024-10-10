@@ -45,7 +45,6 @@ test_scda_skip_through_file (sc_MPI_Comm mpicomm, const char *filename,
   sc_scda_ferror_t    errcode;
   sc_array_t          elem_counts, data;
 
-  /* TODO, also non-collective skip */
   /* open the file for reading */
   fc = sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, opt,
                            &errcode);
@@ -159,6 +158,7 @@ test_scda_skip_through_file (sc_MPI_Comm mpicomm, const char *filename,
                   && elem_size == 3, "Identifying section type");
 
   /* define reading partition */
+  /* Even if all array data is skipped, a valid reading partition is required. */
   for (i = 0; i < mpisize; ++i) {
     *((sc_scda_ulong *) sc_array_index_int (&elem_counts, i)) = 0;
   }
