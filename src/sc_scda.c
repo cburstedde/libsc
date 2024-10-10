@@ -2513,28 +2513,24 @@ sc_scda_fread_section_header_common_serial (sc_scda_fcontext_t *fc,
 
 /** Internal function to check a count entry in a section header.
  *
- * \param [in] fc           The file context as in \ref
- *                          sc_scda_fread_section_header before running the
- *                          second serial code part.
- * \param [out] ident       The character that identifies the count entry.
- *                          If this character is not conforming to the scda
- *                          convention, the function call is not completed and
- *                          results in \ref SC_SCDA_FERR_FORMAT as error,
- *                          cf. \b errcode.
+ * This function checks if the count entry is conforming to the scda format.
+ *
+ * \param [in] count_entry  A pointer to a count entry that was read from file.
+ *                          The count entry has exactly \ref SC_SCDA_COUNT_FIELD
+ *                          bytes.
  * \param [in] expc_ident   The expected count entry identifier. If the read
  *                          identifier is not as expected the function returns
- *                          false.
+ *                          true. Note that the function also returns true if
+ *                          the count entry identifier coincides with
+ *                          \b expc_ident but is not in the list of supported
+ *                          count identifiers (currently 'E' and 'N').
  * \param [out] count_var   The count variable read from the count entry.
- * \param [out] count_err   A Boolean indicating if a count error occurred.
- *                          For this parameter the term count refers to the
- *                          expected byte count for reading count (different
- *                          count) entry.
- * \return                  True if the count entry is valid and has the
- *                          expected identifier.
+ * \return                  False if the count entry is valid and has the
+ *                          expected identifier. True, otherwise.
  */
 static int
-sc_scda_check_count_entry_internal (const char *count_entry, char expc_ident,
-                                    size_t *count_var)
+sc_scda_check_count_entry (const char *count_entry, char expc_ident,
+                           size_t *count_var)
 {
   char                var_str[SC_SCDA_COUNT_MAX_DIGITS + 1];
   char                ident;
@@ -2654,8 +2650,8 @@ sc_scda_fread_block_header_serial (sc_scda_fcontext_t *fc, size_t *elem_size,
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
 
   /* check read count entry */
-  invalid_count_entry = sc_scda_check_count_entry_internal (count_entry, 'E',
-                                                            elem_size);
+  invalid_count_entry = sc_scda_check_count_entry (count_entry, 'E',
+                                                   elem_size);
   sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
                                                     SC_SCDA_FERR_SUCCESS,
                               errcode, fc);
@@ -2705,8 +2701,8 @@ sc_scda_fread_array_header_serial (sc_scda_fcontext_t *fc, size_t *elem_count,
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
 
   /* check read count entry */
-  invalid_count_entry = sc_scda_check_count_entry_internal (count_entry,'N',
-                                                            elem_count);
+  invalid_count_entry = sc_scda_check_count_entry (count_entry,'N',
+                                                   elem_count);
   sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
                                                     SC_SCDA_FERR_SUCCESS,
                               errcode, fc);
@@ -2724,8 +2720,8 @@ sc_scda_fread_array_header_serial (sc_scda_fcontext_t *fc, size_t *elem_count,
   SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
 
   /* check read count entry */
-  invalid_count_entry = sc_scda_check_count_entry_internal (count_entry, 'E',
-                                                            elem_size);
+  invalid_count_entry = sc_scda_check_count_entry (count_entry, 'E',
+                                                   elem_size);
   sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
                                                     SC_SCDA_FERR_SUCCESS,
                               errcode, fc);
