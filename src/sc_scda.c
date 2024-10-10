@@ -563,7 +563,7 @@ sc_scda_pad_to_mod_inplace (const char *input_data, size_t input_len,
  * requires this byte.
  *
  * \param [in]  last_byte     Pointer to the last data byte.
- *                            This byte is required since the padding byte
+ *                            This byte is required since the padding
  *                            content depends on the trailing data byte.
  * \param [in]  data_len      The raw data length in number of bytes.
  * \param [in]  pad           The padding bytes with byte count \b pad_len.
@@ -2051,7 +2051,7 @@ sc_scda_check_array_params (sc_scda_fcontext_t *fc, sc_array_t *array_data,
 
   /* check elem_counts array */
   invalid_elem_counts = !(elem_counts->elem_size == sizeof (sc_scda_ulong) &&
-                          elem_counts->elem_count == fc->mpisize);
+                          elem_counts->elem_count == (size_t) fc->mpisize);
   /* synchronize */
   mpiret =
     sc_MPI_Allreduce (&invalid_elem_counts, &global_invalid_elem_counts, 1,
