@@ -2190,6 +2190,9 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   SC_FREE (displacements);
   SC_FREE (block_lens);
   SC_FREE (types);
+
+  mpiret = MPI_Type_commit (type);
+  SC_CHECK_MPI (mpiret);
 }
 #endif
 
