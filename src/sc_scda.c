@@ -2118,6 +2118,81 @@ sc_scda_check_array_params (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   return SC_SCDA_FERR_SUCCESS;
 }
 
+#ifdef SC_ENABLE_MPI
+/* The optimization for writing and reading indirect data is based on defining
+ * a custom MPI data type and hence we can only use such a data type if MPI is
+ * available. Without MPI all functionalities are still available but writing
+ * indirect data arrays is less optimized, i.e. we use an internal contigous
+ * buffer.
+ */
+
+static void
+sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
+                           sc_array_t* elem_counts, MPI_Datatype *type)
+{
+  size_t              num_blocks;
+  size_t              si;
+  int                *block_lens;
+  int                 mpiret;
+  MPI_Aint           *displacements, base;
+  /* TODO: Use wrapper? */
+  MPI_Datatype       *types;
+  sc_array_t         *curr_arr;
+
+  SC_ASSERT (fc != NULL);
+  SC_ASSERT (array_data != NULL);
+  SC_ASSERT (array_data->elem_size == sizeof (sc_array_t));
+  SC_ASSERT (elem_counts != NULL);
+  SC_ASSERT (type != NULL);
+
+  /* get the number contiguous data blocks */
+  num_blocks = (size_t) *((sc_scda_ulong *) sc_array_index_int (elem_counts,
+                                                                fc->mpirank));
+  SC_ASSERT (num_blocks == array_data->elem_count);
+
+  /* allocate arrays for displacements and block lengths */
+  displacements = SC_ALLOC (MPI_Aint, num_blocks);
+  block_lens = SC_ALLOC (int, num_blocks);
+
+  /* allocate type array */
+  types = SC_ALLOC (MPI_Datatype, num_blocks);
+
+  /* loop over data pointers to determine the displacements */
+  for (si = 0; si < num_blocks; ++si) {
+    curr_arr = (sc_array_t *) sc_array_index (array_data, si);
+
+    /* get the address of the current data chunk */
+    mpiret = MPI_Get_address (curr_arr->array, &displacements[si]);
+    SC_CHECK_MPI (mpiret);
+
+    /* TOOD: use an if statement */
+    base = (si == 0) ? displacements[0] : base;
+
+    /* update base address */
+    base = SC_MIN (displacements[si], base);
+
+    /* store block size in number of bytes */
+    block_lens[si] = (int) curr_arr->elem_size;
+
+    /* set the block type */
+    types[si] = MPI_BYTE;
+  }
+
+  /* get displacements with respect to the base address */
+  for (si = 0; si < num_blocks; ++si) {
+    /* TODO: Is this fine with the MPI 2.0 standard? */
+    displacements[si] = MPI_Aint_diff (displacements[si], base);
+  }
+
+  mpiret = MPI_Type_create_struct (1, block_lens, displacements, types, type);
+  SC_CHECK_MPI (mpiret);
+
+  SC_FREE (displacements);
+  SC_FREE (block_lens);
+  SC_FREE (types);
+}
+#endif
+
 sc_scda_fcontext_t *
 sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
                       size_t *len, sc_array_t *array_data,
