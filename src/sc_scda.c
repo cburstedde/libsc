@@ -2122,16 +2122,17 @@ sc_scda_check_array_params (sc_scda_fcontext_t *fc, sc_array_t *array_data,
 /* The optimization for writing and reading indirect data is based on defining
  * a custom MPI data type and hence we can only use such a data type if MPI is
  * available. Without MPI all functionalities are still available but writing
- * indirect data arrays is less optimized, i.e. we use an internal contigous
+ * indirect data arrays is less optimized, i.e. we use an internal contiguous
  * buffer.
  */
 
-static void
+static int
 sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
                            sc_array_t* elem_counts, MPI_Datatype *type)
 {
   size_t              num_blocks;
   size_t              si;
+  int                 base_index;
   int                *block_lens;
   int                 mpiret;
   MPI_Aint           *displacements, base;
@@ -2144,6 +2145,8 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   SC_ASSERT (array_data->elem_size == sizeof (sc_array_t));
   SC_ASSERT (elem_counts != NULL);
   SC_ASSERT (type != NULL);
+
+  base_index = -1;
 
   /* get the number contiguous data blocks */
   num_blocks = (size_t) *((sc_scda_ulong *) sc_array_index_int (elem_counts,
@@ -2165,11 +2168,17 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
     mpiret = MPI_Get_address (curr_arr->array, &displacements[si]);
     SC_CHECK_MPI (mpiret);
 
-    /* TOOD: use an if statement */
-    base = (si == 0) ? displacements[0] : base;
+    if (si == 0) {
+      /* initialize base address */
+      base = displacements[0];
+      base_index = 0;
+    }
 
     /* update base address */
-    base = SC_MIN (displacements[si], base);
+    if (displacements[si] < base) {
+      base = displacements[si];
+      base_index = (int) si;
+    }
 
     /* store block size in number of bytes */
     block_lens[si] = (int) curr_arr->elem_size;
@@ -2184,7 +2193,8 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
     displacements[si] = MPI_Aint_diff (displacements[si], base);
   }
 
-  mpiret = MPI_Type_create_struct (1, block_lens, displacements, types, type);
+  mpiret = MPI_Type_create_struct ((int) num_blocks, block_lens, displacements,
+                                   types, type);
   SC_CHECK_MPI (mpiret);
 
   SC_FREE (displacements);
