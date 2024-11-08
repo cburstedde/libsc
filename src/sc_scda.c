@@ -2118,23 +2118,44 @@ sc_scda_check_array_params (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   return SC_SCDA_FERR_SUCCESS;
 }
 
-#ifdef SC_ENABLE_MPI
 /* The optimization for writing and reading indirect data is based on defining
  * a custom MPI data type and hence we can only use such a data type if MPI is
  * available. Without MPI all functionalities are still available but writing
  * indirect data arrays is less optimized, i.e. we use an internal contiguous
  * buffer.
  */
-
+#ifdef SC_ENABLE_MPI
+/** Create a custom MPI data type for a potentially discontiguous data layout.
+ *
+ * \param [in] fc           The file context used for the I/O operation that
+ *                          one wants to perform using the created data type.
+ *                          This function only uses the MPI rank encoded in
+ *                          \b fc.
+ * \param [in] array_data   The array data in the indirect case as documented
+ *                          for \ref sc_scda_fwrite_array, \ref
+ *                          sc_scda_fwrite_varray, \ref sc_scda_fread_array_data
+ *                          and \ref sc_scda_fread_varray_data.
+ * \param [in] elem_counts  The element counts as documented for \ref
+ *                          sc_scda_fwrite_array, \ref sc_scda_fwrite_varray,
+ *                          \ref sc_scda_fread_array_data and \ref
+ *                          sc_scda_fread_varray_data.
+ * \param [out] base_address On output the base address for the created data
+ *                          type, i.e. the address of the element of
+ *                          \b array_data with the minimal address.
+ * \param [out] type        On output the created custom MPI data type that
+ *                          encodes the potentially discontiguous data layout
+ *                          defined by \b array_data and \b elem_counts.
+ */
 static void
 sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
-                           sc_array_t* elem_counts, int *base_index,
+                           sc_array_t* elem_counts, void **base_address,
                            MPI_Datatype *type)
 {
   size_t              num_blocks;
   size_t              si;
   int                *block_lens;
   int                 mpiret;
+  int                 base_index;
 #ifdef SC_ENABLE_DEBUG
   int                 size, size_cmp;
 #endif
@@ -2149,9 +2170,11 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   SC_ASSERT (elem_counts != NULL);
   SC_ASSERT (type != NULL);
 
+  base_index = -1;
+
   /* initialize output */
   *type = MPI_DATATYPE_NULL;
-  *base_index = -1;
+  *base_address = NULL;
 
   /* get the number contiguous data blocks */
   num_blocks = (size_t) *((sc_scda_ulong *) sc_array_index_int (elem_counts,
@@ -2176,13 +2199,13 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
     if (si == 0) {
       /* initialize base address */
       base = displacements[0];
-      *base_index = 0;
+      base_index = 0;
     }
 
     /* update base address */
     if (displacements[si] < base) {
       base = displacements[si];
-      *base_index = (int) si;
+      base_index = (int) si;
     }
 
     /* store block size in number of bytes */
@@ -2222,6 +2245,13 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
 
   mpiret = MPI_Type_commit (type);
   SC_CHECK_MPI (mpiret);
+
+  /* get the base address */
+  SC_ASSERT (num_blocks == 0 || base_index > -1);
+  /**INDENT-OFF**/
+  *base_address = (num_blocks > 0) ? (void *) ((sc_array_t *)
+                  sc_array_index_int (array_data, base_index))->array : NULL;
+  /**INDENT-ON**/
 }
 #endif
 
@@ -2244,7 +2274,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
 #ifndef SC_ENABLE_MPI
   sc_array_t          contig_arr;
 #else
-  int                 base_index;
+  void               *base_address;
 #endif
   const void         *local_array_data;
   sc_MPI_Datatype     type;
@@ -2283,7 +2313,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   if (indirect) {
 #ifdef SC_ENABLE_MPI
     /* get MPI datatype for potentially discontiguous data */
-    sc_scda_get_indirect_type (fc, array_data, elem_counts, &base_index,
+    sc_scda_get_indirect_type (fc, array_data, elem_counts, &base_address,
                                &type);
     /* one entity of the custom MPI data type represents the local data */
     write_count = (bytes_to_write > 0) ? 1 : 0;
@@ -2322,12 +2352,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
     local_array_data = (const void *) contig_arr.array;
 #else
     /* get pointer to the local base array element if there are local elements */
-    /**INDENT-OFF**/
-    local_array_data = (bytes_to_write > 0) ?
-                       (const void *) ((sc_array_t *)
-                       sc_array_index_int (array_data, base_index))->array :
-                       NULL;
-    /**INDENT-ON**/
+    local_array_data = (const void *) base_address;
 #endif
   }
   else {
