@@ -2126,15 +2126,18 @@ sc_scda_check_array_params (sc_scda_fcontext_t *fc, sc_array_t *array_data,
  * buffer.
  */
 
-static int
+static void
 sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
-                           sc_array_t* elem_counts, MPI_Datatype *type)
+                           sc_array_t* elem_counts, int *base_index,
+                           MPI_Datatype *type)
 {
   size_t              num_blocks;
   size_t              si;
-  int                 base_index;
   int                *block_lens;
   int                 mpiret;
+#ifdef SC_ENABLE_DEBUG
+  int                 size, size_cmp;
+#endif
   MPI_Aint           *displacements, base;
   /* TODO: Use wrapper? */
   MPI_Datatype       *types;
@@ -2146,7 +2149,9 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   SC_ASSERT (elem_counts != NULL);
   SC_ASSERT (type != NULL);
 
-  base_index = -1;
+  /* initialize output */
+  *type = MPI_DATATYPE_NULL;
+  *base_index = -1;
 
   /* get the number contiguous data blocks */
   num_blocks = (size_t) *((sc_scda_ulong *) sc_array_index_int (elem_counts,
@@ -2171,13 +2176,13 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
     if (si == 0) {
       /* initialize base address */
       base = displacements[0];
-      base_index = 0;
+      *base_index = 0;
     }
 
     /* update base address */
     if (displacements[si] < base) {
       base = displacements[si];
-      base_index = (int) si;
+      *base_index = (int) si;
     }
 
     /* store block size in number of bytes */
@@ -2196,6 +2201,19 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   mpiret = MPI_Type_create_struct ((int) num_blocks, block_lens, displacements,
                                    types, type);
   SC_CHECK_MPI (mpiret);
+
+#ifdef SC_ENABLE_DEBUG
+  /* check the size of the created type */
+
+  mpiret = MPI_Type_size (*type, &size);
+  SC_CHECK_MPI (mpiret);
+
+  size_cmp = 0;
+  for (si = 0; si < num_blocks; ++si) {
+    size_cmp += block_lens[si];
+  }
+  SC_ASSERT (size == size_cmp);
+#endif
 
   SC_FREE (displacements);
   SC_FREE (block_lens);
