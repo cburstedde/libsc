@@ -2375,6 +2375,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
     /* perform clean up in the indirect case */
 #ifndef SC_ENABLE_MPI
     /* indirect data is copied to a contiguous buffer if MPI is not available */
+    SC_ASSERT (type == sc_MPI_BYTE);
     sc_array_reset (&contig_arr);
 #else
     /* free the custom MPI data type */
@@ -3291,16 +3292,21 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
                           int indirect, sc_scda_ferror_t *errcode)
 {
   int                 wrong_usage;
-  size_t              elem_count, si;
+  size_t              elem_count;
   size_t              collective_byte_count;
   sc_MPI_Offset       offset;
   sc_scda_ret_t       scdaret;
-  int                 bytes_to_read;
+  int                 bytes_to_read, read_count;
   int                 mpiret;
   int                 count;
   int                 count_err;
   void               *data;
+#ifndef SC_ENABLE_MPI
   sc_array_t          conti_arr;
+#else
+  void               *base_address;
+#endif
+  sc_MPI_Datatype     type;
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (elem_counts != NULL);
@@ -3335,23 +3341,36 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
     data = NULL;
   }
 
+  /* set used MPI data type depending on MPI status and indirect parameter */
   if (indirect && array_data != NULL) {
+#ifdef SC_ENABLE_MPI
+    /* get MPI datatype for potentially discontiguous data */
+    sc_scda_get_indirect_type (fc, array_data, elem_counts, &base_address,
+                               &type);
+    data = base_address;
+    read_count = (bytes_to_read > 0) ? 1 : 0;
+#else
     /* TODO: batches? */
     /* read to contiguous temporary buffer */
     sc_array_init_size (&conti_arr, elem_size, elem_count);
     data = (void *) conti_arr.array;
+    type = sc_MPI_BYTE;
+    read_count = bytes_to_read;
+#endif
   }
   else {
     /* read to passed data buffer, i.e. data stays unchanged */
+    type = sc_MPI_BYTE;
+    read_count = bytes_to_read;
   }
 
   /* collective read */
   mpiret = sc_io_read_at_all (fc->file, fc->accessed_bytes + offset,
-                              data, bytes_to_read, sc_MPI_BYTE, &count);
+                              data, read_count, type, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Reading fixed-length array data");
   /* check for count error of the collective I/O operation */
-  SC_SCDA_CHECK_COLL_COUNT_ERR (bytes_to_read, count, fc, errcode);
+  SC_SCDA_CHECK_COLL_COUNT_ERR (read_count, count, fc, errcode);
 
   /* update internal file pointer */
   collective_byte_count = elem_count * elem_size;
@@ -3372,9 +3391,15 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
     (sc_MPI_Offset) sc_scda_pad_to_mod_len (collective_byte_count);
 
   if (indirect && array_data != NULL) {
+  /* indirect addressing and data was not skipped on this rank */
+#ifndef SC_ENABLE_MPI
+    /* data was read to a contiguous buffer */
+    size_t              si;
     sc_array_t         *curr;
     const char         *src;
     char               *dest;
+
+    SC_ASSERT (type == sc_MPI_BYTE);
 
     /* copy contiguous data to indirect array */
     for (si = 0; si < array_data->elem_count; ++si) {
@@ -3385,6 +3410,12 @@ sc_scda_fread_array_data (sc_scda_fcontext_t *fc, sc_array_t *array_data,
       sc_scda_copy_bytes (dest, src, elem_size);
     }
     sc_array_reset (&conti_arr);
+#else
+    /* data was read using a custom MPI data type */
+    SC_ASSERT (type != sc_MPI_BYTE);
+    mpiret = MPI_Type_free (&type);
+    SC_CHECK_MPI (mpiret);
+#endif
   }
 
   /* last function call can not be \ref sc_scda_fread_section_header anymore */
