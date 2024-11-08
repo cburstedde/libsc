@@ -2221,6 +2221,10 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
     displacements[si] = MPI_Aint_diff (displacements[si], base);
   }
 
+  /* Since MPI_File_write_at_all works with int for the count we can assume here
+   * that casting num_blocks to int does not lead to an overflow since it is
+   * smaller than the byte count of the associated I/O operation.
+   */
   mpiret =
     MPI_Type_create_struct ((int) num_blocks, block_lens, displacements,
                             types, type);
@@ -2338,7 +2342,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
     char               *data_src, *data_dest;
 
     /* indirect addressing */
-    /* TODO: Use batches */
+    /* TODO: Use batches? */
     sc_array_init_size (&contig_arr, elem_size, elem_count);
     for (si = 0; si < array_data->elem_count; ++si) {
       data_arr = (sc_array_t *) sc_array_index (array_data, si);
@@ -2368,6 +2372,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   mpiret = sc_io_write_at_all (fc->file, fc->accessed_bytes + offset,
                                local_array_data, write_count, type, &count);
   if (indirect) {
+    /* perform clean up in the indirect case */
 #ifndef SC_ENABLE_MPI
     /* indirect data is copied to a contiguous buffer if MPI is not available */
     sc_array_reset (&contig_arr);
