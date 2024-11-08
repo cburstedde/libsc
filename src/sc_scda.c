@@ -2198,8 +2198,9 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
     displacements[si] = MPI_Aint_diff (displacements[si], base);
   }
 
-  mpiret = MPI_Type_create_struct ((int) num_blocks, block_lens, displacements,
-                                   types, type);
+  mpiret =
+    MPI_Type_create_struct ((int) num_blocks, block_lens, displacements,
+                            types, type);
   SC_CHECK_MPI (mpiret);
 
 #ifdef SC_ENABLE_DEBUG
@@ -2232,16 +2233,21 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
 {
   int                 mpiret;
   int                 count_err;
-  int                 bytes_to_write;
+  int                 bytes_to_write, write_count;
   int                 count;
   int                 last_byte_owner;
   sc_scda_ret_t       scdaret;
-  size_t              elem_count, si;
+  size_t              elem_count;
   size_t              collective_byte_count;
   size_t              num_pad_bytes;
   sc_MPI_Offset       offset;
+#ifndef SC_ENABLE_MPI
   sc_array_t          contig_arr;
+#else
+  int                 base_index;
+#endif
   const void         *local_array_data;
+  sc_MPI_Datatype     type;
 
   SC_ASSERT (fc != NULL);
   SC_ASSERT (user_string != NULL);
@@ -2269,8 +2275,35 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   /* add number of written bytes */
   fc->accessed_bytes += SC_SCDA_COMMON_FIELD + 2 * SC_SCDA_COUNT_FIELD;
 
-  /* get pointer to local array data */
+  /* retrieve partition information */
+  sc_scda_get_local_partition_index (fc, elem_counts, elem_size, &offset,
+                                     &bytes_to_write);
+
+  /* set used MPI data type depending on MPI status and indirect parameter */
   if (indirect) {
+#ifdef SC_ENABLE_MPI
+    /* get MPI datatype for potentially discontiguous data */
+    sc_scda_get_indirect_type (fc, array_data, elem_counts, &base_index,
+                               &type);
+    /* one entity of the custom MPI data type represents the local data */
+    write_count = (bytes_to_write > 0) ? 1 : 0;
+#else
+    /* without MPI we can not use custom MPI data types */
+    type = sc_MPI_BYTE;
+    write_count = bytes_to_write;
+#endif
+  }
+  else {
+    /* we use the given contiguous byte array */
+    type = sc_MPI_BYTE;
+    write_count = bytes_to_write;
+  }
+
+  /* get (base) pointer to local array data */
+  if (indirect) {
+#ifndef SC_ENABLE_MPI
+    /* TODO: Put this in a separate function? */
+    size_t              si;
     sc_array_t         *data_arr;
     char               *data_src, *data_dest;
 
@@ -2287,28 +2320,43 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
       sc_scda_copy_bytes (data_dest, data_src, elem_size);
     }
     local_array_data = (const void *) contig_arr.array;
+#else
+    /* get pointer to the local base array element if there are local elements */
+    /**INDENT-OFF**/
+    local_array_data = (bytes_to_write > 0) ?
+                       (const void *) ((sc_array_t *)
+                       sc_array_index_int (array_data, base_index))->array :
+                       NULL;
+    /**INDENT-ON**/
+#endif
   }
   else {
     /* direct addressing */
     local_array_data = (const void *) array_data->array;
   }
 
+  /* local_array_data == NULL must be sufficient for write_count == 0 */
+  SC_ASSERT (local_array_data != NULL || write_count == 0);
+
   /* write array data in parallel */
 
-  /* retrieve partition information */
-  sc_scda_get_local_partition_index (fc, elem_counts, elem_size, &offset,
-                                     &bytes_to_write);
-
   mpiret = sc_io_write_at_all (fc->file, fc->accessed_bytes + offset,
-                               local_array_data, bytes_to_write, sc_MPI_BYTE,
-                               &count);
+                               local_array_data, write_count, type, &count);
   if (indirect) {
+#ifndef SC_ENABLE_MPI
+    /* indirect data is copied to a contiguous buffer if MPI is not available */
     sc_array_reset (&contig_arr);
+#else
+    /* free the custom MPI data type */
+    SC_ASSERT (type != sc_MPI_BYTE);
+    mpiret = MPI_Type_free (&type);
+    SC_CHECK_MPI (mpiret);
+#endif
   }
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
   SC_SCDA_CHECK_COLL_ERR (errcode, fc, "Writing fixed-length array data");
   /* check for count error of the collective I/O operation */
-  SC_SCDA_CHECK_COLL_COUNT_ERR (bytes_to_write, count, fc, errcode);
+  SC_SCDA_CHECK_COLL_COUNT_ERR (write_count, count, fc, errcode);
 
   /* update global number of written bytes */
   collective_byte_count = elem_count * elem_size;
