@@ -2313,27 +2313,7 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
   sc_scda_get_local_partition_index (fc, elem_counts, elem_size, &offset,
                                      &bytes_to_write);
 
-  /* set used MPI data type depending on MPI status and indirect parameter */
-  if (indirect) {
-#ifdef SC_ENABLE_MPI
-    /* get MPI datatype for potentially discontiguous data */
-    sc_scda_get_indirect_type (fc, array_data, elem_counts, &base_address,
-                               &type);
-    /* one entity of the custom MPI data type represents the local data */
-    write_count = (bytes_to_write > 0) ? 1 : 0;
-#else
-    /* without MPI we can not use custom MPI data types */
-    type = sc_MPI_BYTE;
-    write_count = bytes_to_write;
-#endif
-  }
-  else {
-    /* we use the given contiguous byte array */
-    type = sc_MPI_BYTE;
-    write_count = bytes_to_write;
-  }
-
-  /* get (base) pointer to local array data */
+  /* get data type and (base) pointer to local array data */
   if (indirect) {
 #ifndef SC_ENABLE_MPI
     /* TODO: Put this in a separate function? */
@@ -2354,14 +2334,26 @@ sc_scda_fwrite_array (sc_scda_fcontext_t *fc, const char *user_string,
       sc_scda_copy_bytes (data_dest, data_src, elem_size);
     }
     local_array_data = (const void *) contig_arr.array;
+
+    /* without MPI we can not use custom MPI data types */
+    type = sc_MPI_BYTE;
+    write_count = bytes_to_write;
 #else
-    /* get pointer to the local base array element if there are local elements */
+    /* get MPI datatype for potentially discontiguous data */
+    sc_scda_get_indirect_type (fc, array_data, elem_counts, &base_address,
+                               &type);
+    /* set pointer to the local base array element if there are local elements */
     local_array_data = (const void *) base_address;
+    /* one entity of the custom MPI data type represents the local data */
+    write_count = (bytes_to_write > 0) ? 1 : 0;
 #endif
   }
   else {
     /* direct addressing */
     local_array_data = (const void *) array_data->array;
+    /* we use the given contiguous byte array */
+    type = sc_MPI_BYTE;
+    write_count = bytes_to_write;
   }
 
   /* local_array_data == NULL must be sufficient for write_count == 0 */
