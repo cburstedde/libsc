@@ -134,6 +134,9 @@ sc_tag_t;
 
 #define sc_MPI_ERR_LASTCODE               MPI_ERR_LASTCODE
 
+/* MPI 2.0 type */
+#define sc_MPI_Aint                MPI_Aint
+
 #else /* !SC_ENABLE_MPIIO */
 
 typedef enum sc_MPI_IO_Errorcode
@@ -161,6 +164,8 @@ typedef enum sc_MPI_IO_Errorcode
   sc_MPI_ERR_LASTCODE
 }
 sc_MPI_IO_Errorcode_t;
+
+#define sc_MPI_Aint                sc3_MPI_Aint_t
 
 #endif /* !SC_ENABLE_MPIIO */
 
@@ -369,6 +374,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_DOUBLE_INT          SC3_MPI_DOUBLE_INT
 #define sc_MPI_LONG_DOUBLE         ((sc_MPI_Datatype) 0x4c000c0c)
 #define sc_MPI_PACKED              ((sc_MPI_Datatype) 0x4c001001)
+#define sc_MPI_Aint                sc3_MPI_Aint_t
 
 #define sc_MPI_OP_NULL             SC3_MPI_OP_NULL
 #define sc_MPI_MINLOC              SC3_MPI_MINLOC
