@@ -2217,8 +2217,8 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
 
   /* get displacements with respect to the base address */
   for (si = 0; si < num_blocks; ++si) {
-    /* TODO: Is this fine with the MPI 2.0 standard? */
-    displacements[si] = MPI_Aint_diff (displacements[si], base);
+    /* Without MPI 3.0 MPI_Aint_diff is replaced by standard subtraction */
+    displacements[si] = sc_MPI_Aint_diff (displacements[si], base);
   }
 
   /* Since MPI_File_write_at_all works with int for the count we can assume here
