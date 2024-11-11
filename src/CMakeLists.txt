@@ -10,6 +10,7 @@ sc_allgather.c sc_reduce.c sc_notify.c
 sc_uint128.c sc_v4l2.c
 sc_puff.c
 sc_options.c sc_getopt.c sc_getopt1.c
+sc_scda.c
 )
 
 if(MSVC AND NOT SC_HAVE_GETTIMEOFDAY)
