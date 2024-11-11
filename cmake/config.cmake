@@ -102,6 +102,7 @@ if(NOT "${SC_ENABLE_MPI}" STREQUAL "$CACHE{SC_ENABLE_MPI}")
   unset(SC_ENABLE_MPICOMMSHARED CACHE)
   unset(SC_ENABLE_MPITHREAD CACHE)
   unset(SC_ENABLE_MPIWINSHARED CACHE)
+  unset (SC_HAVE_AINT_DIFF CACHE)
   unset(SC_ENABLE_MPIIO CACHE)
 endif()
 
@@ -114,6 +115,8 @@ if( SC_ENABLE_MPI )
   include(cmake/check_mpithread.cmake)
   # perform check to set SC_ENABLE_MPIWINSHARED
   include(cmake/check_mpiwinshared.cmake)
+  # perform check to set SC_HAVE_AINT_DIFF
+  include(cmake/check_mpiaintdiff.cmake)
 endif()
 
 
