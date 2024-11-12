@@ -1379,6 +1379,15 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   sc_MPI_Info         info;
   sc_scda_fcontext_t *fc;
 
+#if defined(SC_ENABLE_MPI) && !defined(SC_ENABLE_MPIIO)
+  /* MPI without MPI I/O is not supported. */
+  SC_ABORT ("The configuration with enabled MPI but disabled MPI I/O "
+            "is deprecated. Please enable MPI I/O as well or disable MPI.\n"
+            "The scda file functions do not support the deprecated "
+            "configuration and hence we abort for this case in the scda fopen "
+            "functions.");
+#endif
+
   SC_ASSERT (filename != NULL);
   SC_ASSERT (user_string != NULL);
   SC_ASSERT (errcode != NULL);
@@ -2123,6 +2132,9 @@ sc_scda_check_array_params (sc_scda_fcontext_t *fc, sc_array_t *array_data,
  * available. Without MPI all functionalities are still available but writing
  * indirect data arrays is less optimized, i.e. we use an internal contiguous
  * buffer.
+ * Moreover, we assume that MPI I/O is available. This is equivalent to MPI 2.0
+ * being available (cf. the abort in \ref sc_scda_fopen_write and \ref
+ * sc_scda_fopen_write).
  */
 #ifdef SC_ENABLE_MPI
 /** Create a custom MPI data type for a potentially discontiguous data layout.
@@ -2159,8 +2171,8 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
 #ifdef SC_ENABLE_DEBUG
   int                 size, size_cmp;
 #endif
+  /* MPI_Aint is a MPI 2.0 type */
   MPI_Aint           *displacements, base;
-  /* TODO: Use wrapper? */
   MPI_Datatype       *types;
   sc_array_t         *curr_arr;
 
@@ -2192,7 +2204,7 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   for (si = 0; si < num_blocks; ++si) {
     curr_arr = (sc_array_t *) sc_array_index (array_data, si);
 
-    /* get the address of the current data chunk */
+    /* get the address of the current data chunk; MPI 2.0 function */
     mpiret = MPI_Get_address (curr_arr->array, &displacements[si]);
     SC_CHECK_MPI (mpiret);
 
@@ -2224,6 +2236,7 @@ sc_scda_get_indirect_type (sc_scda_fcontext_t *fc, sc_array_t *array_data,
   /* Since MPI_File_write_at_all works with int for the count we can assume here
    * that casting num_blocks to int does not lead to an overflow since it is
    * smaller than the byte count of the associated I/O operation.
+   * MPI_Type_create_struct is a MPI 2.0 function.
    */
   mpiret =
     MPI_Type_create_struct ((int) num_blocks, block_lens, displacements,
@@ -2546,6 +2559,15 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
   int                 count_err;
   sc_MPI_Info         info;
   sc_scda_fcontext_t *fc;
+
+#if defined(SC_ENABLE_MPI) && !defined(SC_ENABLE_MPIIO)
+  /* MPI without MPI I/O is not supported. */
+  SC_ABORT ("The configuration with enabled MPI but disabled MPI I/O "
+            "is deprecated. Please enable MPI I/O as well or disable MPI.\n"
+            "The scda file functions do not support the deprecated "
+            "configuration and hence we abort for this case in the scda fopen "
+            "functions.");
+#endif
 
   SC_ASSERT (filename != NULL);
   SC_ASSERT (user_string != NULL);

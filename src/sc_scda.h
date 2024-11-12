@@ -54,7 +54,12 @@
  * The main purpose of \b scda is to enable the user to implement parallel I/O
  * for numerical appliations, e.g. simulation checkpoint/restart.
  *
- * We elaborate further on the workflow in \ref scda_workflow .
+ * We elaborate further on the workflow in \ref scda_workflow.
+ *
+ * The \b scda functions do not support the deprecated configuration case of
+ * MPI being enabled but MPI I/O being disabled. The functions \ref
+ * sc_scda_fopen_write and \ref sc_scda_fopen_read abort in this case. All other
+ * valid configurations are supported.
  *
  * ### User Strings
  *
@@ -322,6 +327,9 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  * sc_scda_fread_section_header and skipping the respective data bytes using the
  * respective read functions sc_scda_fread_*_data to parse the structure
  * of a given file and some metadata that is written by sc_scda.
+ *
+ * This function aborts on the deprecated configuration of enabled MPI and
+ * disabled MPI I/O. All other valid configurations are supported.
  *
  * This function differs from the one opening function for writing and reading
  * introduced in this \b scda
@@ -686,6 +694,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * causes \ref SC_SCDA_FERR_FORMAT as \b errcode.
  * \note
  * All parameters are collective.
+ *
+ * This function aborts on the deprecated configuration of enabled MPI and
+ * disabled MPI I/O. All other valid configurations are supported.
  *
  * This function differs from the one opening function for writing and reading
  * introduced in this \b scda
