@@ -234,3 +234,12 @@ set(CMAKE_REQUIRED_DEFINITIONS)
 # libsc and current project must both be compiled with/without MPI
 check_symbol_exists("SC_ENABLE_MPI" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPI)
 check_symbol_exists("SC_ENABLE_MPIIO" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPIIO)
+
+# Check for deprecated MPI and MPI I/O configuration.
+# This is done at the end of config.cmake to ensure that the warning is visible
+# without scrolling.
+if (SC_ENABLE_MPI AND NOT SC_ENABLE_MPIIO)
+  message(WARNING "libsc MPI configured but MPI I/O is not configured/found: DEPRECATED")
+  message(NOTICE "This configuration is DEPRECATED and will be disallowed in the future.")
+  message(NOTICE "If the MPI File API is not available, please disable MPI altogether.")
+endif()
