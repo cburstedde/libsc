@@ -24,3 +24,6 @@ endif()
 if (DEFINED mpi)
   set_property(CACHE SC_ENABLE_MPI PROPERTY VALUE "${mpi}")
 endif()
+
+# Store the MPI setting for the case the user changes the value
+set(CACHED_SC_ENABLE_MPI "${SC_ENABLE_MPI}" CACHE STRING "Cached value of SC_ENABLE_MPI")
