@@ -134,6 +134,9 @@ sc_tag_t;
 
 #define sc_MPI_ERR_LASTCODE               MPI_ERR_LASTCODE
 
+/* MPI 2.0 type */
+#define sc_MPI_Aint                MPI_Aint
+
 #else /* !SC_ENABLE_MPIIO */
 
 typedef enum sc_MPI_IO_Errorcode
@@ -161,6 +164,8 @@ typedef enum sc_MPI_IO_Errorcode
   sc_MPI_ERR_LASTCODE
 }
 sc_MPI_IO_Errorcode_t;
+
+#define sc_MPI_Aint                sc3_MPI_Aint_t
 
 #endif /* !SC_ENABLE_MPIIO */
 
@@ -294,6 +299,21 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_Pack                MPI_Pack
 #define sc_MPI_Unpack              MPI_Unpack
 #define sc_MPI_Pack_size           MPI_Pack_size
+#ifdef SC_HAVE_AINT_DIFF
+/* MPI 3.0 function */
+#define sc_MPI_Aint_diff           MPI_Aint_diff
+#else
+/* Replacement by standard subtraction.
+ *
+ * MPI 2.0 supports MPI_Aint but does not support MPI_Aint_diff.
+ * In the MPI 2.0 standard document
+ * (https://www.mpi-forum.org/docs/mpi-2.0/mpi2-report.pdf) on page 283 is
+ * an example of calculating MPI_Aint displacements by standard subtraction.
+ * Therefore, we also use standard subtraction in the case MPI_Aint_diff is
+ * not available.
+ */
+sc_MPI_Aint         sc_MPI_Aint_diff (sc_MPI_Aint a, sc_MPI_Aint b);
+#endif
 
 #else /* !SC_ENABLE_MPI */
 #include <sc3_mpi_types.h>
@@ -369,6 +389,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_DOUBLE_INT          SC3_MPI_DOUBLE_INT
 #define sc_MPI_LONG_DOUBLE         ((sc_MPI_Datatype) 0x4c000c0c)
 #define sc_MPI_PACKED              ((sc_MPI_Datatype) 0x4c001001)
+#define sc_MPI_Aint                sc3_MPI_Aint_t
 
 #define sc_MPI_OP_NULL             SC3_MPI_OP_NULL
 #define sc_MPI_MINLOC              SC3_MPI_MINLOC
@@ -563,6 +584,17 @@ int                 sc_MPI_Scan (void *, void *, int, sc_MPI_Datatype,
 /** Execute the MPI_Exscan algorithm. */
 int                 sc_MPI_Exscan (void *, void *, int, sc_MPI_Datatype,
                                    sc_MPI_Op, sc_MPI_Comm);
+
+/* Replacement by standard subtraction.
+ *
+ * MPI 2.0 supports MPI_Aint but does not support MPI_Aint_diff.
+ * In the MPI 2.0 standard document
+ * (https://www.mpi-forum.org/docs/mpi-2.0/mpi2-report.pdf) on page 283 is
+ * an example of calculating MPI_Aint displacements by standard subtraction.
+ * Therefore, we also use standard subtraction in the case MPI_Aint_diff is
+ * not available.
+ */
+sc_MPI_Aint         sc_MPI_Aint_diff (sc_MPI_Aint a, sc_MPI_Aint b);
 
 /** Execute the MPI_Wtime function.
  * \return          Number of seconds since the epoch. */

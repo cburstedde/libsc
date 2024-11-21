@@ -316,6 +316,30 @@ MPI_Finalize ();
  $2])
 ])
 
+dnl SC_MPI_Aint_Diff_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI_Aint_diff test program.
+dnl
+AC_DEFUN([SC_MPI_Aint_Diff_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for MPI_Aint_diff C program])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+MPI_Aint a, b, res;
+a = 42;
+b = 12;
+MPI_Init ((int *) 0, (char ***) 0);
+res = MPI_Aint_diff (a, b);
+MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $1],
+[AC_MSG_RESULT([failed])
+ $2])
+])
+
 dnl SC_MPIIO_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
 dnl Compile and link an MPI I/O test program
 dnl
@@ -520,6 +544,14 @@ dnl  ])
   if test "x$HAVE_PKG_MPITHREAD" = xyes ; then
     SC_MPITHREAD_C_COMPILE_AND_LINK(,
       [AC_MSG_ERROR([MPI_Init_thread not found; you may try --disable-mpithread])])
+  fi
+
+  dnl Run test to check availability of MPI_Aint_diff
+  $1_HAVE_AINT_DIFF=yes
+  SC_MPI_Aint_Diff_C_COMPILE_AND_LINK(,[$1_HAVE_AINT_DIFF=no])
+  if test "x$$1_HAVE_AINT_DIFF" = xyes ; then
+    AC_DEFINE([HAVE_AINT_DIFF], 1,
+              [Define to 1 if we have MPI_Aint_diff])
   fi
 
   dnl Run test to check availability of MPI window

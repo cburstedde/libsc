@@ -19,12 +19,14 @@
 ### Functionality
 
  - Fix extern "C" macro for using C++ compilers with libsc .c files
+ - Add sc_MPI_Aint and sc_MPI_Aint_diff
 
 ### Build system
 
  - Streamline CMake configuration
  - Make sure to use SC_ENABLE_* CMake variables
  - Adapt CMake CI to matrix of latest compilers
+ - Check for MPI_Aint_diff in CMake and Autoconf
 
 ## 2.8.6
 

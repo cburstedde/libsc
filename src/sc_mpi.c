@@ -24,6 +24,26 @@
 /* including sc_mpi.h does not work here since sc_mpi.h is included by sc.h */
 #include <sc.h>
 
+#if (defined(SC_ENABLE_MPI) && !defined(SC_HAVE_AINT_DIFF)) ||\
+    !defined (SC_ENABLE_MPI)
+/** This function is defined for two different configurations.
+ * For the case of MPI being enabled but MPI_Aint_diff is not available and
+ * for the case of MPI being disabled.
+ */
+sc_MPI_Aint
+sc_MPI_Aint_diff (sc_MPI_Aint a, sc_MPI_Aint b)
+{
+  /* MPI 2.0 supports MPI_Aint but does not support MPI_Aint_diff.
+   * In the MPI 2.0 standard document
+   * (https://www.mpi-forum.org/docs/mpi-2.0/mpi2-report.pdf) on page 283 is
+   * an example of calculating MPI_Aint displacements by standard subtraction.
+   * Therefore, we also use standard subtraction in the case MPI_Aint_diff is
+   * not available.
+   */
+  return a - b;
+}
+#endif
+
 #ifndef SC_ENABLE_MPI
 
 /* time.h is already included by sc.h */

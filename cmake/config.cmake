@@ -102,6 +102,7 @@ if(NOT "${SC_ENABLE_MPI}" STREQUAL "${CACHED_SC_ENABLE_MPI}")
   unset(SC_ENABLE_MPICOMMSHARED CACHE)
   unset(SC_ENABLE_MPITHREAD CACHE)
   unset(SC_ENABLE_MPIWINSHARED CACHE)
+  unset (SC_HAVE_AINT_DIFF CACHE)
   unset(SC_ENABLE_MPIIO CACHE)
   # Update cached variable
   set(CACHED_SC_ENABLE_MPI "${SC_ENABLE_MPI}" CACHE STRING "Cached value of SC_ENABLE_MPI")
@@ -116,6 +117,8 @@ if( SC_ENABLE_MPI )
   include(cmake/check_mpithread.cmake)
   # perform check to set SC_ENABLE_MPIWINSHARED
   include(cmake/check_mpiwinshared.cmake)
+  # perform check to set SC_HAVE_AINT_DIFF
+  include(cmake/check_mpiaintdiff.cmake)
 endif()
 
 
@@ -233,3 +236,12 @@ set(CMAKE_REQUIRED_DEFINITIONS)
 # libsc and current project must both be compiled with/without MPI
 check_symbol_exists("SC_ENABLE_MPI" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPI)
 check_symbol_exists("SC_ENABLE_MPIIO" ${PROJECT_BINARY_DIR}/include/sc_config.h SC_ENABLE_MPIIO)
+
+# Check for deprecated MPI and MPI I/O configuration.
+# This is done at the end of config.cmake to ensure that the warning is visible
+# without scrolling.
+if (SC_ENABLE_MPI AND NOT SC_ENABLE_MPIIO)
+  message(WARNING "libsc MPI configured but MPI I/O is not configured/found: DEPRECATED")
+  message(NOTICE "This configuration is DEPRECATED and will be disallowed in the future.")
+  message(NOTICE "If the MPI File API is not available, please disable MPI altogether.")
+endif()

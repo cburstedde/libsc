@@ -41,6 +41,9 @@
 /* Define to 1 if we are using MPI I/O */
 #cmakedefine SC_ENABLE_MPIIO 1
 
+/* Define to 1 if we have MPI_Aint_diff */
+#cmakedefine SC_HAVE_AINT_DIFF 1
+
 /* Define to 1 if we are using MPI_Init_thread */
 #cmakedefine SC_ENABLE_MPITHREAD 1
 
