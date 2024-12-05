@@ -199,6 +199,27 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_UNSIGNED            MPI_UNSIGNED
 #define sc_MPI_LONG                MPI_LONG
 #define sc_MPI_UNSIGNED_LONG       MPI_UNSIGNED_LONG
+/* Not an MPI 1.3 data type */
+#ifdef SC_HAVE_MPI_UNSIGNED_LONG_LONG
+#define sc_MPI_UNSIGNED_LONG_LONG  MPI_UNSIGNED_LONG_LONG
+#else
+/* MPI data type is not supported */
+#define sc_MPI_UNSIGNED_LONG_LONG  MPI_DATATYPE_NULL
+#endif
+/* Not an MPI 1.3 data type */
+#ifdef SC_HAVE_MPI_SIGNED_CHAR
+#define sc_MPI_SIGNED_CHAR         MPI_SIGNED_CHAR
+#else
+/* MPI data type is not supported */
+#define sc_MPI_SIGNED_CHAR         MPI_DATATYPE_NULL
+#endif
+/* Not an MPI 1.3 data type */
+#ifdef SC_HAVE_MPI_INT8_T
+#define sc_MPI_INT8_T              MPI_INT8_T
+#else
+/* MPI data type is not supported */
+#define sc_MPI_INT8_T              MPI_DATATYPE_NULL
+#endif
 #define sc_MPI_LONG_LONG_INT       MPI_LONG_LONG_INT
 #define sc_MPI_FLOAT               MPI_FLOAT
 #define sc_MPI_DOUBLE              MPI_DOUBLE
@@ -374,16 +395,19 @@ sc_MPI_Aint         sc_MPI_Aint_diff (sc_MPI_Aint a, sc_MPI_Aint b);
 #define sc_MPI_DATATYPE_NULL       SC3_MPI_DATATYPE_NULL
 
 #define sc_MPI_CHAR                ((sc_MPI_Datatype) 0x4c000101)
+#define sc_MPI_SIGNED_CHAR         ((sc_MPI_Datatype) 0x4c000118)
 #define sc_MPI_UNSIGNED_CHAR       ((sc_MPI_Datatype) 0x4c000102)
 #define sc_MPI_BYTE                SC3_MPI_BYTE
 #define sc_MPI_SHORT               ((sc_MPI_Datatype) 0x4c000203)
 #define sc_MPI_UNSIGNED_SHORT      ((sc_MPI_Datatype) 0x4c000204)
 #define sc_MPI_INT                 SC3_MPI_INT
+#define sc_MPI_INT8_T              ((sc_MPI_Datatype) 0x4c000205)
 #define sc_MPI_2INT                SC3_MPI_2INT
 #define sc_MPI_UNSIGNED            SC3_MPI_UNSIGNED
 #define sc_MPI_LONG                SC3_MPI_LONG
 #define sc_MPI_UNSIGNED_LONG       ((sc_MPI_Datatype) 0x4c000408)
 #define sc_MPI_LONG_LONG_INT       SC3_MPI_LONG_LONG
+#define sc_MPI_UNSIGNED_LONG_LONG  ((sc_MPI_Datatype) 0x4c000409)
 #define sc_MPI_FLOAT               SC3_MPI_FLOAT
 #define sc_MPI_DOUBLE              SC3_MPI_DOUBLE
 #define sc_MPI_DOUBLE_INT          SC3_MPI_DOUBLE_INT
