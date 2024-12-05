@@ -340,6 +340,30 @@ MPI_Finalize ();
  $2])
 ])
 
+dnl SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([data-type], [action-if-successful],
+dnl                                     [action-if-failed])
+dnl Compile and link an MPI data type test program.
+dnl
+AC_DEFUN([SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for the MPI data type $1])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+int size;
+MPI_Init ((int *) 0, (char ***) 0);
+/* check if $1 is defined */
+MPI_Type_size ($1, &size);
+MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $2],
+[AC_MSG_RESULT([failed])
+ $3])
+])
+
 dnl SC_MPIIO_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
 dnl Compile and link an MPI I/O test program
 dnl
@@ -552,6 +576,33 @@ dnl  ])
   if test "x$$1_HAVE_AINT_DIFF" = xyes ; then
     AC_DEFINE([HAVE_AINT_DIFF], 1,
               [Define to 1 if we have MPI_Aint_diff])
+  fi
+
+  dnl Run test to check availability of MPI_UNSIGNED_LONG_LONG
+  $1_HAVE_MPI_UNSIGNED_LONG_LONG=yes
+  SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([MPI_UNSIGNED_LONG_LONG], ,
+                                      [$1_HAVE_MPI_UNSIGNED_LONG_LONG=no])
+  if test "x$$1_HAVE_MPI_UNSIGNED_LONG_LONG" = xyes ; then
+    AC_DEFINE([HAVE_MPI_UNSIGNED_LONG_LONG], 1,
+              [Define to 1 if we have MPI_UNSIGNED_LONG_LONG])
+  fi
+
+  dnl Run test to check availability of MPI_SIGNED_CHAR
+  $1_HAVE_MPI_SIGNED_CHAR=yes
+  SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([MPI_SIGNED_CHAR], ,
+                                      [$1_HAVE_MPI_SIGNED_CHAR=no])
+  if test "x$$1_HAVE_MPI_SIGNED_CHAR" = xyes ; then
+    AC_DEFINE([HAVE_MPI_SIGNED_CHAR], 1,
+              [Define to 1 if we have MPI_SIGNED_CHAR])
+  fi
+
+  dnl Run test to check availability of MPI_INT8_T
+  $1_HAVE_MPI_INT8_T=yes
+  SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([MPI_INT8_T], ,
+                                      [$1_HAVE_MPI_INT8_T=no])
+  if test "x$$1_HAVE_MPI_INT8_T" = xyes ; then
+    AC_DEFINE([HAVE_MPI_INT8_T], 1,
+              [Define to 1 if we have MPI_INT8_T])
   fi
 
   dnl Run test to check availability of MPI window
