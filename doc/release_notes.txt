@@ -20,6 +20,7 @@
 
  - Fix extern "C" macro for using C++ compilers with libsc .c files
  - Add sc_MPI_Aint and sc_MPI_Aint_diff
+ - Add sc_MPI_UNSIGNED_LONG_LONG, sc_MPI_SIGNED_CHAR and sc_MPI_INT8_T
 
 ### Build system
 
@@ -27,6 +28,7 @@
  - Make sure to use SC_ENABLE_* CMake variables
  - Adapt CMake CI to matrix of latest compilers
  - Check for MPI_Aint_diff in CMake and Autoconf
+ - Check if MPI_UNSIGNED_LONG_LONG, MPI_SIGNED_CHAR and MPI_INT8_T are available
 
 ## 2.8.6
 
