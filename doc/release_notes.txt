@@ -27,6 +27,7 @@
  - Make sure to use SC_ENABLE_* CMake variables
  - Adapt CMake CI to matrix of latest compilers
  - Check for MPI_Aint_diff in CMake and Autoconf
+ - Fix tarball naming and add a CMake target to generate .tarball-version file
 
 ## 2.8.6
 
