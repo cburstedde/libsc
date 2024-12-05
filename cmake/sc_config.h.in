@@ -44,6 +44,15 @@
 /* Define to 1 if we have MPI_Aint_diff */
 #cmakedefine SC_HAVE_AINT_DIFF 1
 
+/* Define to 1 if we have MPI_UNSIGNED_LONG_LONG */
+#cmakedefine SC_HAVE_MPI_UNSIGNED_LONG_LONG 1
+
+/* Define to 1 if we have MPI_SIGNED_CHAR */
+#cmakedefine SC_HAVE_MPI_SIGNED_CHAR 1
+
+/* Define to 1 if we have MPI_INT8_T */
+#cmakedefine SC_HAVE_MPI_INT8_T 1
+
 /* Define to 1 if we are using MPI_Init_thread */
 #cmakedefine SC_ENABLE_MPITHREAD 1
 

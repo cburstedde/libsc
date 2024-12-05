@@ -103,6 +103,9 @@ if(NOT "${SC_ENABLE_MPI}" STREQUAL "${CACHED_SC_ENABLE_MPI}")
   unset(SC_ENABLE_MPITHREAD CACHE)
   unset(SC_ENABLE_MPIWINSHARED CACHE)
   unset (SC_HAVE_AINT_DIFF CACHE)
+  unset (SC_HAVE_MPI_UNSIGNED_LONG_LONG CACHE)
+  unset (SC_HAVE_MPI_SIGNED_CHAR CACHE)
+  unset (SC_HAVE_MPI_INT8_T CACHE)
   unset(SC_ENABLE_MPIIO CACHE)
   # Update cached variable
   set(CACHED_SC_ENABLE_MPI "${SC_ENABLE_MPI}" CACHE STRING "Cached value of SC_ENABLE_MPI")
@@ -119,6 +122,8 @@ if( SC_ENABLE_MPI )
   include(cmake/check_mpiwinshared.cmake)
   # perform check to set SC_HAVE_AINT_DIFF
   include(cmake/check_mpiaintdiff.cmake)
+  # perform check of newer MPI data types
+  include(cmake/check_mpitype.cmake)
 endif()
 
 
