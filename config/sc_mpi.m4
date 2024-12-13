@@ -364,6 +364,16 @@ MPI_Finalize ();
  $3])
 ])
 
+dnl SC_MPI_CHECK_TYPE([prefix], [data-type])
+dnl Checks if an MPI data type is available.
+AC_DEFUN([SC_MPI_CHECK_TYPE], [
+  $1_HAVE_$2=yes
+  SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([$2], , [$1_HAVE_$2=no])
+  if test "x$$1_HAVE_$2" = xyes; then
+    AC_DEFINE([HAVE_$2], 1, [Define to 1 if we have $2])
+  fi
+])
+
 dnl SC_MPIIO_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
 dnl Compile and link an MPI I/O test program
 dnl
@@ -578,32 +588,10 @@ dnl  ])
               [Define to 1 if we have MPI_Aint_diff])
   fi
 
-  dnl Run test to check availability of MPI_UNSIGNED_LONG_LONG
-  $1_HAVE_MPI_UNSIGNED_LONG_LONG=yes
-  SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([MPI_UNSIGNED_LONG_LONG], ,
-                                      [$1_HAVE_MPI_UNSIGNED_LONG_LONG=no])
-  if test "x$$1_HAVE_MPI_UNSIGNED_LONG_LONG" = xyes ; then
-    AC_DEFINE([HAVE_MPI_UNSIGNED_LONG_LONG], 1,
-              [Define to 1 if we have MPI_UNSIGNED_LONG_LONG])
-  fi
-
-  dnl Run test to check availability of MPI_SIGNED_CHAR
-  $1_HAVE_MPI_SIGNED_CHAR=yes
-  SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([MPI_SIGNED_CHAR], ,
-                                      [$1_HAVE_MPI_SIGNED_CHAR=no])
-  if test "x$$1_HAVE_MPI_SIGNED_CHAR" = xyes ; then
-    AC_DEFINE([HAVE_MPI_SIGNED_CHAR], 1,
-              [Define to 1 if we have MPI_SIGNED_CHAR])
-  fi
-
-  dnl Run test to check availability of MPI_INT8_T
-  $1_HAVE_MPI_INT8_T=yes
-  SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([MPI_INT8_T], ,
-                                      [$1_HAVE_MPI_INT8_T=no])
-  if test "x$$1_HAVE_MPI_INT8_T" = xyes ; then
-    AC_DEFINE([HAVE_MPI_INT8_T], 1,
-              [Define to 1 if we have MPI_INT8_T])
-  fi
+  dnl Run tests to check availability of newer MPI data types
+  SC_MPI_CHECK_TYPE([$1], [MPI_UNSIGNED_LONG_LONG])
+  SC_MPI_CHECK_TYPE([$1], [MPI_SIGNED_CHAR])
+  SC_MPI_CHECK_TYPE([$1], [MPI_INT8_T])
 
   dnl Run test to check availability of MPI window
   $1_ENABLE_MPIWINSHARED=yes
