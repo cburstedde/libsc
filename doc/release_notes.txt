@@ -30,6 +30,7 @@
  - Adapt CMake CI to matrix of latest compilers
  - Check for MPI_Aint_diff in CMake and Autoconf
  - Check if MPI_UNSIGNED_LONG_LONG, MPI_SIGNED_CHAR and MPI_INT8_T are available
+ - Fix tarball naming and add a CMake target to generate .tarball-version file
 
 ## 2.8.6
 
