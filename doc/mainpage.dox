@@ -35,15 +35,16 @@
  *    reside in the config/ subdirectory.  These are used in sc but also
  *    available to other projects for convenience.  It is possible to nest
  *    packages this way.
+ *  * CMake support has been added and is still in development.
  *  * The library provides MPI wrappers in case it is configured without
- *    MPI.  They implement initialize/finalize and collective calls as
- *    noops, which means that these do not have to be protected with the
- *    \#ifdef SC_MPI construct in the code.
+ *    MPI (the default).  They implement initialize/finalize and collective
+ *    calls as noops, which means that these do not have to be protected
+ *    with the \#ifdef SC_MPI construct in the code.
  *  * The library provides a logging framework that can be adapted by other
  *    packages.  Multiple log levels are available, as well as options to
- *    output on just one or all MPI processes.
+ *    output on just one or all MPI processes and to customize the style.
  *  * The library provides a set of data containers, such as dynamically
- *    resizable arrays.
+ *    resizable arrays and memory pools.
  *
  * To build the sc library from a tar distribution, use the standard
  * procedure of the GNU autotools.  The configure script takes the following
@@ -52,17 +53,18 @@
  * * `--enable-debug`   lowers the log level for increased verbosity and
  *                    activates the `SC_ASSERT` macro for consistency checks.
  * * `--enable-mpi`     pulls in the mpi.h include file and activates the MPI
- *                    compiler wrappers.  If this option is not given, wrappers
- *                    for MPI routines are used instead and the code is compiled
- *                    in serial only.
+ *                    compiler wrappers.  If this option is not given, trivial
+ *                    wrappers for MPI routines are activated and the code
+ *                    is expected to be executed in serial only.
  * * `--disable-mpiio`  may be used to avoid using `MPI_File` based calls. The
-                      usage of `--disable-mpiio` is deprecated and should not be
-                      used anymore.
+ *                    usage of `--disable-mpiio` is deprecated and should not be
+ *                    used anymore.
  *
  * A typical development configure line looks as follows:
  * > `relative/path/to/configure CFLAGS="-Wall -O0 -g" --enable-mpi --enable-debug`
  * A typical production configure line looks as follows:
  * > `relative/path/to/configure CFLAGS="-Wall -O2" --enable-mpi`
+ * To specify a path for `make install` add a `--prefix=<installdir>` option.
  *
  * \see https://www.p4est.org/
  * \see https://www.gnu.org/licenses/licenses.html

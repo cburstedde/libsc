@@ -165,18 +165,18 @@
  * All workflows start with \ref sc_scda_fopen_write or \ref sc_scda_fopen_read
  * that creates a file context \ref sc_scda_fcontext_t that never moves backwards.
  *
- * Then the user can call a sequence of functions out of:
+ * Then the user may call any combination of functions out of:
  *
  * - \ref sc_scda_fwrite_inline,
  * - \ref sc_scda_fwrite_block,
  * - \ref sc_scda_fwrite_array and
  * - \ref sc_scda_fwrite_varray,
  *
- * for the case of using \ref sc_scda_fopen_write.
+ * for a context obtained from \ref sc_scda_fopen_write.
  *
- * Alternatively, for using \ref sc_scda_fopen_read the user must call
+ * Alternatively, after using \ref sc_scda_fopen_read the user must call
  * \ref sc_scda_fread_section_header that examines the current file section
- * and then call accordingly to the retrieved file section type
+ * and then call accordingly to the retrieved file section type one of
  *
  * - \ref sc_scda_fread_inline_data,
  * - \ref sc_scda_fread_block_data,
@@ -188,11 +188,11 @@
  * sc_scda_fclose.
  *
  * All above mentioned sc_scda functions are collective and output an
- * error code (cf. \ref sc_scda_ferror_t) that can be examined by \ref
+ * error code (cf. \ref sc_scda_ferror_t) that can be translated by \ref
  * sc_scda_ferror_string.
  *
- * For more details and the option for encoded data see the functions
- * in \ref sc_scda.h.
+ * For more details and the option for encoding metadata and data see the
+ * functions in \ref sc_scda.h.
  */
 
 #ifndef SC_SCDA_H
