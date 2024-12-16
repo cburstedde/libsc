@@ -340,6 +340,40 @@ MPI_Finalize ();
  $2])
 ])
 
+dnl SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([data-type], [action-if-successful],
+dnl                                     [action-if-failed])
+dnl Compile and link an MPI data type test program.
+dnl
+AC_DEFUN([SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for the MPI data type $1])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+int size;
+MPI_Init ((int *) 0, (char ***) 0);
+/* check if $1 is defined */
+MPI_Type_size ($1, &size);
+MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $2],
+[AC_MSG_RESULT([failed])
+ $3])
+])
+
+dnl SC_MPI_CHECK_TYPE([prefix], [data-type])
+dnl Checks if an MPI data type is available.
+AC_DEFUN([SC_MPI_CHECK_TYPE], [
+  $1_HAVE_$2=yes
+  SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([$2], , [$1_HAVE_$2=no])
+  if test "x$$1_HAVE_$2" = xyes; then
+    AC_DEFINE([HAVE_$2], 1, [Define to 1 if we have $2])
+  fi
+])
+
 dnl SC_MPIIO_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
 dnl Compile and link an MPI I/O test program
 dnl
@@ -553,6 +587,11 @@ dnl  ])
     AC_DEFINE([HAVE_AINT_DIFF], 1,
               [Define to 1 if we have MPI_Aint_diff])
   fi
+
+  dnl Run tests to check availability of newer MPI data types
+  SC_MPI_CHECK_TYPE([$1], [MPI_UNSIGNED_LONG_LONG])
+  SC_MPI_CHECK_TYPE([$1], [MPI_SIGNED_CHAR])
+  SC_MPI_CHECK_TYPE([$1], [MPI_INT8_T])
 
   dnl Run test to check availability of MPI window
   $1_ENABLE_MPIWINSHARED=yes

@@ -817,6 +817,8 @@ sc_MPI_Error_string (int errorcode, char *string, int *resultlen)
 size_t
 sc_mpi_sizeof (sc_MPI_Datatype t)
 {
+  if (t == sc_MPI_DATATYPE_NULL)
+    SC_ABORT ("sc_mpi_sizeof was called with sc_MPI_DATATYPE_NULL");
   if (t == sc_MPI_BYTE)
     return 1;
   if (t == sc_MPI_CHAR || t == sc_MPI_UNSIGNED_CHAR)
@@ -829,6 +831,12 @@ sc_mpi_sizeof (sc_MPI_Datatype t)
     return sizeof (long);
   if (t == sc_MPI_LONG_LONG_INT)
     return sizeof (long long);
+  if (t == sc_MPI_UNSIGNED_LONG_LONG)
+    return sizeof (unsigned long long);
+  if (t == sc_MPI_INT8_T)
+    return sizeof (int8_t);
+  if (t == sc_MPI_SIGNED_CHAR)
+    return sizeof (char);
   if (t == sc_MPI_FLOAT)
     return sizeof (float);
   if (t == sc_MPI_DOUBLE)
