@@ -197,7 +197,7 @@ sc3_error_t        *sc3_array_set_elem_size (sc3_array_t * a, size_t esize);
  * \param [in] ecount   Element count on setup.  Zero is legal and default.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_set_elem_count (sc3_array_t * a, int ecount);
+sc3_error_t        *sc3_array_set_elem_count (sc3_array_t * a, size_t ecount);
 
 /** Set the minimum required number of array elements to allocate on setup.
  * This may be useful to grow an array avoiding frequent reallocation.
@@ -208,7 +208,7 @@ sc3_error_t        *sc3_array_set_elem_count (sc3_array_t * a, int ecount);
  *                      Must be non-negative; default is 8.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_set_elem_alloc (sc3_array_t * a, int ealloc);
+sc3_error_t        *sc3_array_set_elem_alloc (sc3_array_t * a, size_t ealloc);
 
 /** Set the initzero property of an array.
  * If set to true, array memory for initial count is zeroed during setup.
@@ -282,7 +282,7 @@ sc3_error_t        *sc3_array_destroy (sc3_array_t ** ap);
  * \param [in] new_ecount   The new element count.  0 is legal.
  * \return                  NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
+sc3_error_t        *sc3_array_resize (sc3_array_t * a, size_t new_ecount);
 
 /** Function to determine the enumerable type of an object in an array.
  * \param [in] array   Array containing the object.
@@ -292,7 +292,7 @@ sc3_error_t        *sc3_array_resize (sc3_array_t * a, int new_ecount);
  * \return             NULL on success, error object otherwise.
  */
 typedef sc3_error_t *(*sc3_array_type_t) (sc3_array_t * array,
-                                          int index, void *data, int *type);
+                                          size_t index, void *data, size_t *type);
 
 /** Compute the offsets of groups of enumerable types in an array.
  * \param [in] a             Array that is sorted in ascending order by type.
@@ -312,7 +312,7 @@ typedef sc3_error_t *(*sc3_array_type_t) (sc3_array_t * array,
  * \return                   NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
-                                     int num_types, sc3_array_type_t type_fn,
+                                     size_t num_types, sc3_array_type_t type_fn,
                                      void *data);
 
 /** Enlarge an array by a number of elements.
@@ -325,7 +325,7 @@ sc3_error_t        *sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
  *                      This argument may be NULL for no assignment.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_push_count (sc3_array_t * a, int n, void *ptr);
+sc3_error_t        *sc3_array_push_count (sc3_array_t * a, size_t n, void *ptr);
 
 /** Enlarge an array by one element.
  * The output points to the beginning of the memory for the new element.
@@ -360,7 +360,7 @@ sc3_error_t        *sc3_array_freeze (sc3_array_t * a);
  *                      must not be dereferenced.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
+sc3_error_t        *sc3_array_index (sc3_array_t * a, size_t i, void *ptr);
 
 /** Index an array element without returning an error object.
  * This function is optimized for speed, not safety, thus risky.
@@ -376,7 +376,7 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, int i, void *ptr);
  *                      passing a non-setup array or invalid indices is
  *                      undefined.
  */
-const void         *sc3_array_index_noerr (const sc3_array_t * a, int i);
+const void         *sc3_array_index_noerr (const sc3_array_t * a, size_t i);
 
 /** Create a view array pointing into the same memory as a given array.
  * Inherit the data element size from the given array.  The view refs the
@@ -401,7 +401,7 @@ const void         *sc3_array_index_noerr (const sc3_array_t * a, int i);
 sc3_error_t        *sc3_array_new_view (sc3_allocator_t * alloc,
                                         sc3_array_t ** view,
                                         sc3_array_t * a,
-                                        int offset, int length);
+                                        size_t offset, size_t length);
 
 /** Create a view array pointing to some given memory fragment.
  * We have no means to verify that the fragment exists and stays alive.
@@ -427,7 +427,7 @@ sc3_error_t        *sc3_array_new_view (sc3_allocator_t * alloc,
 sc3_error_t        *sc3_array_new_data (sc3_allocator_t * alloc,
                                         sc3_array_t ** view,
                                         void *data, size_t esize,
-                                        int offset, int length);
+                                        size_t offset, size_t length);
 
 /** Adjust an existing view array for a different window and/or viewed array.
  * Inherit the data element size from the given array.  The view unrefs the
@@ -448,7 +448,7 @@ sc3_error_t        *sc3_array_new_data (sc3_allocator_t * alloc,
  */
 sc3_error_t        *sc3_array_renew_view (sc3_array_t ** view,
                                           sc3_array_t * a,
-                                          int offset, int length);
+                                          size_t offset, size_t length);
 
 /** Adjust an existing view on data for tracking some given memory fragment.
  * We have no means to verify that the fragment exists and stays alive.
@@ -467,8 +467,8 @@ sc3_error_t        *sc3_array_renew_view (sc3_array_t ** view,
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_renew_data (sc3_array_t ** view, void *data,
-                                          size_t esize, int offset,
-                                          int length);
+                                          size_t esize, size_t offset,
+                                          size_t length);
 
 /** Return element size of an array that is setup.
  * \param [in] a        Array must be setup.
@@ -486,7 +486,7 @@ sc3_error_t        *sc3_array_get_elem_size (const sc3_array_t * a,
  * \return              NULL on success, error object otherwise.
  */
 sc3_error_t        *sc3_array_get_elem_count (const sc3_array_t * a,
-                                              int *ecount);
+                                              size_t *ecount);
 
 /** Return the array's element count without creating error objects.
  * \param [in] a        The array must be setup.  Otherwise, return 0

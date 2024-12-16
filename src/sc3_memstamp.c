@@ -208,8 +208,8 @@ sc3_mstamp_ref (sc3_mstamp_t * mst)
 sc3_error_t        *
 sc3_mstamp_unref (sc3_mstamp_t ** mstp)
 {
-  int                 waslast, i;
-  int                 ecount;
+  int                 waslast;
+  size_t              ecount, i;
   void               *item;
   sc3_allocator_t    *aator;
   sc3_mstamp_t       *mst;
@@ -258,7 +258,7 @@ sc3_error_t        *
 sc3_mstamp_alloc (sc3_mstamp_t * mst, void *ptr)
 {
   sc3_array_t        *freed = mst->freed;
-  int                 fcount;
+  size_t              fcount;
 
   SC3A_IS (sc3_mstamp_is_setup, mst);
 
