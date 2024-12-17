@@ -59,7 +59,7 @@ if ( SC_NEED_M )
 endif()
 
 if ( WIN32 )
-  target_link_libraries(sc PUBLIC ws2_32)
+  target_link_libraries(sc PUBLIC ${WINSOCK_LIBRARIES})
 endif()
 
 # imported target, for use from parent project
