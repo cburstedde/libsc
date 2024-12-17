@@ -40,7 +40,6 @@ target_include_directories(sc
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(sc PUBLIC
-  $<$<BOOL:${SC_HAVE_JSON}>:jansson::jansson>
   $<$<BOOL:${SC_NEED_M}>:m>
   $<$<BOOL:${WIN32}>:${WINSOCK_LIBRARIES}>
 )
@@ -51,6 +50,11 @@ endif()
 
 if ( SC_HAVE_ZLIB )
   target_link_libraries(sc PUBLIC ZLIB::ZLIB)
+endif()
+
+
+if( SC_HAVE_JSON )
+  target_link_libraries(sc PUBLIC jansson::jansson)
 endif()
 
 # imported target, for use from parent project
