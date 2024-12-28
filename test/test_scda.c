@@ -776,12 +776,13 @@ main (int argc, char **argv)
   /* provoke error for invalid scda workflow */
   SC_GLOBAL_ESSENTIAL ("We expect an error for incorrect workflow for scda"
                        " reading function, which is triggered on purpose to"
-                       " test the error checking.\n");
+                       " test the error checking\n");
   fc = sc_scda_fread_inline_data (fc, &data, 0, &errcode);
   SC_CHECK_ABORT (!sc_scda_ferror_is_success (errcode) &&
                   errcode.scdaret == SC_SCDA_FERR_USAGE && fc == NULL,
                   "sc_scda_fread_section_header error detection failed");
   /* fc is closed and deallocated due to the occurred error  */
+  SC_GLOBAL_ESSENTIAL ("End of expected error path: test successful\n");
 
   /* skip through file and test non-collective skipping */
   test_scda_skip_through_file (mpicomm, filename, &scda_opt, mpirank,
