@@ -54,9 +54,9 @@
  * proceed as described next (building from a tar distribution).
  * The `bootstrap` script usually does not need to be re-executed!
  *
- * To build the sc library from a tar distribution, use the standard
- * procedure of the GNU autotools.  The configure script is best called
- * from a new empty directory with a relative path to the source.
+ * To build the <tt>sc</tt> library from a tar distribution, use the
+ * standard procedure of the GNU autotools.  The configure script is best
+ * called from a new empty directory with a relative path to the source.
  * It takes the following options:
  *
  * * `--enable-debug`   (recommended for development) lowers the log level
