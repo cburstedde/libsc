@@ -39,13 +39,28 @@ target_include_directories(sc
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(sc PUBLIC
-  $<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>
-  $<$<BOOL:${SC_HAVE_ZLIB}>:ZLIB::ZLIB>
-  $<$<BOOL:${SC_HAVE_JSON}>:jansson::jansson>
-  $<$<BOOL:${SC_NEED_M}>:m>
-  $<$<BOOL:${WIN32}>:${WINSOCK_LIBRARIES}>
-)
+
+# optionally link with external libraries
+if ( SC_ENABLE_MPI )
+  target_link_libraries(sc PUBLIC MPI::MPI_C)
+endif()
+
+if ( SC_HAVE_ZLIB )
+  target_link_libraries(sc PUBLIC ZLIB::ZLIB)
+endif()
+
+
+if( SC_HAVE_JSON )
+  target_link_libraries(sc PUBLIC jansson::jansson)
+endif()
+
+if ( SC_NEED_M )
+  target_link_libraries(sc PUBLIC m)
+endif()
+
+if ( WIN32 )
+  target_link_libraries(sc PUBLIC ${WINSOCK_LIBRARIES})
+endif()
 
 # imported target, for use from parent project
 add_library(SC::SC INTERFACE IMPORTED GLOBAL)
