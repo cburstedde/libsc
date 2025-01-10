@@ -1,28 +1,29 @@
+option( SC_ENABLE_MPI "use MPI library" OFF )
+option( SC_ENABLE_OPENMP "use OpenMP" OFF )
 
-include(GNUInstallDirs)
+option( SC_USE_INTERNAL_ZLIB "build ZLIB" OFF )
+option( SC_USE_INTERNAL_JSON "build Jansson" OFF )
 
-option(mpi "use MPI library" off)
-option(openmp "use OpenMP" off)
-option(zlib "build ZLIB" on)
-option(BUILD_TESTING "build libsc self-tests" on)
-option(BUILD_SHARED_LIBS "build shared libsc")
+option( SC_BUILD_SHARED_LIBS "build shared libsc" OFF )
+option( SC_BUILD_EXAMPLES "build libsc examples" ON )
+option( SC_BUILD_TESTING "build libsc self-tests" ON )
+option( SC_TEST_WITH_VALGRIND "run self-tests with valgrind" OFF )
 
-# --- default install directory under build/local
-# users can specify like "cmake -B build -DCMAKE_INSTALL_PREFIX=~/mydir"
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  # will not take effect without FORCE
-  set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/local" CACHE PATH "Install top-level directory" FORCE)
-endif()
-
-# Rpath options necessary for shared library install to work correctly in user projects
-set(CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_FULL_LIBDIR})
-set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR})
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
+set_property(DIRECTORY PROPERTY EP_UPDATE_DISCONNECTED true)
 
 # Necessary for shared library with Visual Studio / Windows oneAPI
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS true)
 
 # --- auto-ignore build directory
-if(NOT EXISTS ${PROJECT_BINARY_DIR}/.gitignore)
-  file(WRITE ${PROJECT_BINARY_DIR}/.gitignore "*")
+if(NOT PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+  file(GENERATE OUTPUT .gitignore CONTENT "*")
 endif()
+
+# We are enabling this shortcut even though we recommend to
+# use -DSC_ENABLE_MPI:BOOL=... on the cmake command line.
+if (DEFINED mpi)
+  set_property(CACHE SC_ENABLE_MPI PROPERTY VALUE "${mpi}")
+endif()
+
+# Store the MPI setting for the case the user changes the value
+set(CACHED_SC_ENABLE_MPI "${SC_ENABLE_MPI}" CACHE STRING "Cached value of SC_ENABLE_MPI")

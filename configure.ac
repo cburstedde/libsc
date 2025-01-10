@@ -53,8 +53,6 @@ SC_MPI_CONFIG([SC], [], [])
 SC_MPI_ENGAGE([SC])
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
-dnl SC_PROG_LINT
-dnl SC_C_VERSION
 LT_INIT
 
 echo "o---------------------------------------"
@@ -68,9 +66,8 @@ AC_C_RESTRICT
 AC_CHECK_SIZEOF([int])
 AC_CHECK_SIZEOF([unsigned int])
 AC_CHECK_SIZEOF([long])
-AC_CHECK_SIZEOF([long long])
 AC_CHECK_SIZEOF([unsigned long])
-AC_CHECK_SIZEOF([unsigned long long])
+AC_CHECK_SIZEOF([long long])
 AC_CHECK_SIZEOF([void *])
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
@@ -92,6 +89,7 @@ AC_CHECK_FUNCS([basename dirname])
 AC_CHECK_FUNCS([strtol strtoll strtok_r])
 AC_CHECK_FUNCS([fsync])
 AC_CHECK_FUNCS([qsort_r])
+AC_CHECK_FUNCS([gettimeofday])
 
 echo "o---------------------------------------"
 echo "| Checking libraries"

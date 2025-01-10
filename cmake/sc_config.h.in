@@ -21,6 +21,8 @@
 #define SC_CPPFLAGS @SC_CPPFLAGS@
 #endif
 
+#cmakedefine SC_HAVE_ZLIB 1
+
 /* Define to 1 if we are using threads */
 #cmakedefine SC_ENABLE_PTHREAD 1
 
@@ -38,6 +40,18 @@
 
 /* Define to 1 if we are using MPI I/O */
 #cmakedefine SC_ENABLE_MPIIO 1
+
+/* Define to 1 if we have MPI_Aint_diff */
+#cmakedefine SC_HAVE_AINT_DIFF 1
+
+/* Define to 1 if we have MPI_UNSIGNED_LONG_LONG */
+#cmakedefine SC_HAVE_MPI_UNSIGNED_LONG_LONG 1
+
+/* Define to 1 if we have MPI_SIGNED_CHAR */
+#cmakedefine SC_HAVE_MPI_SIGNED_CHAR 1
+
+/* Define to 1 if we have MPI_INT8_T */
+#cmakedefine SC_HAVE_MPI_INT8_T 1
 
 /* Define to 1 if we are using MPI_Init_thread */
 #cmakedefine SC_ENABLE_MPITHREAD 1
@@ -141,8 +155,8 @@
 /* Define to 1 if you have the <time.h> header file. */
 #cmakedefine SC_HAVE_TIME_H 1
 
-/* Define to 1 if you have the <winsock2.h> header file. */
-#cmakedefine SC_HAVE_WINSOCK2_H 1
+/* Define to 1 'gettimeofday' is available */
+#cmakedefine SC_HAVE_GETTIMEOFDAY 1
 
 /* desired alignment of allocations in bytes */
 #define SC_MEMALIGN_BYTES (SC_SIZEOF_VOID_P)
@@ -211,14 +225,11 @@
 #ifndef SC_SIZEOF_LONG
 #define SC_SIZEOF_LONG @SC_SIZEOF_LONG@
 #endif
-#ifndef SC_SIZEOF_LONG_LONG
-#define SC_SIZEOF_LONG_LONG @SC_SIZEOF_LONG_LONG@
-#endif
 #ifndef SC_SIZEOF_UNSIGNED_LONG
 #define SC_SIZEOF_UNSIGNED_LONG @SC_SIZEOF_UNSIGNED_LONG@
 #endif
-#ifndef SC_SIZEOF_UNSIGNED_LONG_LONG
-#define SC_SIZEOF_UNSIGNED_LONG_LONG @SC_SIZEOF_UNSIGNED_LONG_LONG@
+#ifndef SC_SIZEOF_LONG_LONG
+#define SC_SIZEOF_LONG_LONG @SC_SIZEOF_LONG_LONG@
 #endif
 
 /* The size of `void *', as computed by sizeof. */

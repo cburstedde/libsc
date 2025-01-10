@@ -107,6 +107,7 @@ sc_tag_t;
 /* constants */
 #define sc_MPI_SUCCESS             MPI_SUCCESS
 #define sc_MPI_ERR_ARG             MPI_ERR_ARG
+#define sc_MPI_ERR_COUNT           MPI_ERR_COUNT
 #define sc_MPI_ERR_UNKNOWN         MPI_ERR_UNKNOWN
 #define sc_MPI_ERR_OTHER           MPI_ERR_OTHER
 #define sc_MPI_ERR_NO_MEM          MPI_ERR_NO_MEM
@@ -133,11 +134,17 @@ sc_tag_t;
 
 #define sc_MPI_ERR_LASTCODE               MPI_ERR_LASTCODE
 
+/* MPI 2.0 type */
+#define sc_MPI_Aint                MPI_Aint
+
 #else /* !SC_ENABLE_MPIIO */
 
 typedef enum sc_MPI_IO_Errorcode
 {
   /* only MPI I/O error classes */
+  /* WARNING: This enum is only used in the deprecated case of activated MPI but
+   * deactivated MPI I/O.
+   */
   sc_MPI_ERR_FILE = MPI_ERR_LASTCODE,
   sc_MPI_ERR_NOT_SAME,
   sc_MPI_ERR_AMODE,
@@ -153,11 +160,12 @@ typedef enum sc_MPI_IO_Errorcode
   sc_MPI_ERR_FILE_IN_USE,
   sc_MPI_ERR_DUP_DATAREP,
   sc_MPI_ERR_CONVERSION,
-  sc_MPI_ERR_COUNT,
   sc_MPI_ERR_IO,
   sc_MPI_ERR_LASTCODE
 }
 sc_MPI_IO_Errorcode_t;
+
+#define sc_MPI_Aint                sc3_MPI_Aint_t
 
 #endif /* !SC_ENABLE_MPIIO */
 
@@ -182,22 +190,43 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_REQUEST_NULL        MPI_REQUEST_NULL
 
 #define sc_MPI_DATATYPE_NULL       MPI_DATATYPE_NULL
-#define sc_MPI_CHAR                MPI_CHAR
-#define sc_MPI_SIGNED_CHAR         MPI_SIGNED_CHAR
-#define sc_MPI_UNSIGNED_CHAR       MPI_UNSIGNED_CHAR
 #define sc_MPI_BYTE                MPI_BYTE
+#define sc_MPI_CHAR                MPI_CHAR
+#define sc_MPI_UNSIGNED_CHAR       MPI_UNSIGNED_CHAR
 #define sc_MPI_SHORT               MPI_SHORT
 #define sc_MPI_UNSIGNED_SHORT      MPI_UNSIGNED_SHORT
 #define sc_MPI_INT                 MPI_INT
-#define sc_MPI_2INT                MPI_2INT
 #define sc_MPI_UNSIGNED            MPI_UNSIGNED
 #define sc_MPI_LONG                MPI_LONG
 #define sc_MPI_UNSIGNED_LONG       MPI_UNSIGNED_LONG
-#define sc_MPI_LONG_LONG_INT       MPI_LONG_LONG_INT
+/* Not an MPI 1.3 data type */
+#ifdef SC_HAVE_MPI_UNSIGNED_LONG_LONG
 #define sc_MPI_UNSIGNED_LONG_LONG  MPI_UNSIGNED_LONG_LONG
+#else
+/* MPI data type is not supported */
+#define sc_MPI_UNSIGNED_LONG_LONG  MPI_DATATYPE_NULL
+#endif
+/* Not an MPI 1.3 data type */
+#ifdef SC_HAVE_MPI_SIGNED_CHAR
+#define sc_MPI_SIGNED_CHAR         MPI_SIGNED_CHAR
+#else
+/* MPI data type is not supported */
+#define sc_MPI_SIGNED_CHAR         MPI_DATATYPE_NULL
+#endif
+/* Not an MPI 1.3 data type */
+#ifdef SC_HAVE_MPI_INT8_T
+#define sc_MPI_INT8_T              MPI_INT8_T
+#else
+/* MPI data type is not supported */
+#define sc_MPI_INT8_T              MPI_DATATYPE_NULL
+#endif
+#define sc_MPI_LONG_LONG_INT       MPI_LONG_LONG_INT
 #define sc_MPI_FLOAT               MPI_FLOAT
 #define sc_MPI_DOUBLE              MPI_DOUBLE
 #define sc_MPI_LONG_DOUBLE         MPI_LONG_DOUBLE
+#define sc_MPI_2INT                MPI_2INT
+#define sc_MPI_DOUBLE_INT          MPI_DOUBLE_INT
+#define sc_MPI_PACKED              MPI_PACKED
 
 #define sc_MPI_OP_NULL             MPI_OP_NULL
 #define sc_MPI_MAX                 MPI_MAX
@@ -288,6 +317,24 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_Wait                MPI_Wait
 /* The MPI_Waitsome, MPI_Waitall and MPI_Testall functions are wrapped. */
 #define sc_MPI_Type_size           MPI_Type_size
+#define sc_MPI_Pack                MPI_Pack
+#define sc_MPI_Unpack              MPI_Unpack
+#define sc_MPI_Pack_size           MPI_Pack_size
+#ifdef SC_HAVE_AINT_DIFF
+/* MPI 3.0 function */
+#define sc_MPI_Aint_diff           MPI_Aint_diff
+#else
+/* Replacement by standard subtraction.
+ *
+ * MPI 2.0 supports MPI_Aint but does not support MPI_Aint_diff.
+ * In the MPI 2.0 standard document
+ * (https://www.mpi-forum.org/docs/mpi-2.0/mpi2-report.pdf) on page 283 is
+ * an example of calculating MPI_Aint displacements by standard subtraction.
+ * Therefore, we also use standard subtraction in the case MPI_Aint_diff is
+ * not available.
+ */
+sc_MPI_Aint         sc_MPI_Aint_diff (sc_MPI_Aint a, sc_MPI_Aint b);
+#endif
 
 #else /* !SC_ENABLE_MPI */
 #include <sc3_mpi_types.h>
@@ -296,6 +343,7 @@ sc_MPI_IO_Errorcode_t;
 
 #define sc_MPI_SUCCESS          SC3_MPI_SUCCESS         /**< Emulate \c SC_MPI_SUCCESS. */
 #define sc_MPI_ERR_ARG          SC3_MPI_ERR_ARG         /**< Emulate \c SC_MPI_ERR_ARG. */
+#define sc_MPI_ERR_COUNT        SC3_MPI_ERR_COUNT       /**< Emulate \c SC_MPI_ERR_COUNT. */
 #define sc_MPI_ERR_UNKNOWN      SC3_MPI_ERR_UNKNOWN     /**< Emulate \c SC_MPI_ERR_UNKNOWN. */
 #define sc_MPI_ERR_OTHER        SC3_MPI_ERR_OTHER       /**< Emulate \c SC_MPI_ERR_OTHER. */
 #define sc_MPI_ERR_NO_MEM       SC3_MPI_ERR_NO_MEM      /**< Emulate \c SC_MPI_ERR_NO_MEM. */
@@ -353,6 +401,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_SHORT               ((sc_MPI_Datatype) 0x4c000203)
 #define sc_MPI_UNSIGNED_SHORT      ((sc_MPI_Datatype) 0x4c000204)
 #define sc_MPI_INT                 SC3_MPI_INT
+#define sc_MPI_INT8_T              ((sc_MPI_Datatype) 0x4c000205)
 #define sc_MPI_2INT                SC3_MPI_2INT
 #define sc_MPI_UNSIGNED            SC3_MPI_UNSIGNED
 #define sc_MPI_LONG                SC3_MPI_LONG
@@ -363,6 +412,8 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_DOUBLE              SC3_MPI_DOUBLE
 #define sc_MPI_DOUBLE_INT          SC3_MPI_DOUBLE_INT
 #define sc_MPI_LONG_DOUBLE         ((sc_MPI_Datatype) 0x4c000c0c)
+#define sc_MPI_PACKED              ((sc_MPI_Datatype) 0x4c001001)
+#define sc_MPI_Aint                sc3_MPI_Aint_t
 
 #define sc_MPI_OP_NULL             SC3_MPI_OP_NULL
 #define sc_MPI_MINLOC              SC3_MPI_MINLOC
@@ -445,6 +496,47 @@ int                 sc_MPI_Comm_free (sc_MPI_Comm *freecomm);
  */
 int                 sc_MPI_Type_size (sc_MPI_Datatype datatype, int *size);
 
+/** Pack several instances of the same datatype into contiguous memory.
+ * \param [in] inbuf          Buffer of elements of type \b datatype.
+ * \param [in] incount        Number of elements in \b inbuf.
+ * \param [in] datatype       Datatype of elements in \b inbuf.
+ * \param [out] outbuf        Output buffer in which elements are packed.
+ * \param [in] outsize        Size of output buffer in bytes.
+ * \param [in, out] position  The current position in the output buffer.
+ * \param [in] comm           Valid MPI communicator.
+ * \return                    MPI_SUCCESS on success.
+ */
+int                 sc_MPI_Pack (const void *inbuf, int incount,
+                                 sc_MPI_Datatype datatype, void *outbuf,
+                                 int outsize, int *position,
+                                 sc_MPI_Comm comm);
+
+/** Unpack contiguous memory into several instances of the same datatype.
+ * \param [in] inbuf          Buffer of packed data.
+ * \param [in] insize         Number of bytes in \b inbuf
+ * \param [in, out] position  The current position in the input buffer.
+ * \param [out] outbuf        Output buffer in which elements are unpacked.
+ * \param [in] outcount       Number of elements to unpack.
+ * \param [in] datatype       Datatype of elements to be unpacked.
+ * \param [in] comm           Valid MPI communicator.
+ * \return                    MPI_SUCCESS on success.
+ */
+int                 sc_MPI_Unpack (const void *inbuf, int insize,
+                                   int *position, void *outbuf, int outcount,
+                                   sc_MPI_Datatype datatype,
+                                   sc_MPI_Comm comm);
+
+/** Determine space needed to pack several instances of the same datatype.
+ * \param [in] incount        Number of elements to pack.
+ * \param [in] datatype       Datatype of elements to pack.
+ * \param [in] comm           Valid MPI communicator.
+ * \param [out] size          Number of bytes needed to packed \b incount
+ *                            instances of \b datatype.
+ * \return                    MPI_SUCCESS on success.
+ */
+int                 sc_MPI_Pack_size (int incount, sc_MPI_Datatype datatype,
+                                      sc_MPI_Comm comm, int *size);
+
 /** Query size of an MPI communicator.
  * \param [in] mpicomm      Valid MPI communicator.
  * \param [out] mpisize     Without MPI this is always 1.
@@ -516,6 +608,17 @@ int                 sc_MPI_Scan (void *, void *, int, sc_MPI_Datatype,
 /** Execute the MPI_Exscan algorithm. */
 int                 sc_MPI_Exscan (void *, void *, int, sc_MPI_Datatype,
                                    sc_MPI_Op, sc_MPI_Comm);
+
+/* Replacement by standard subtraction.
+ *
+ * MPI 2.0 supports MPI_Aint but does not support MPI_Aint_diff.
+ * In the MPI 2.0 standard document
+ * (https://www.mpi-forum.org/docs/mpi-2.0/mpi2-report.pdf) on page 283 is
+ * an example of calculating MPI_Aint displacements by standard subtraction.
+ * Therefore, we also use standard subtraction in the case MPI_Aint_diff is
+ * not available.
+ */
+sc_MPI_Aint         sc_MPI_Aint_diff (sc_MPI_Aint a, sc_MPI_Aint b);
 
 /** Execute the MPI_Wtime function.
  * \return          Number of seconds since the epoch. */
@@ -656,11 +759,11 @@ typedef long        sc_MPI_Offset;      /**< Emulate the MPI offset type. */
  */
 struct sc_no_mpiio_file
 {
+  sc_MPI_Comm         mpicomm;          /**< The MPI communicator. */
   const char         *filename;         /**< Name of the file. */
   FILE               *file;             /**< Underlying file object. */
-#ifdef SC_ENABLE_MPI
-  sc_MPI_Comm         mpicomm;
-#endif
+  int                 mpisize;          /**< Ranks in communicator. */
+  int                 mpirank;          /**< Rank of this process. */
 };
 
 /** Replacement object for an MPI file. */
@@ -694,8 +797,8 @@ int                 sc_MPI_Error_class (int errorcode, int *errorclass);
 int                 sc_MPI_Error_string (int errorcode, char *string,
                                          int *resultlen);
 
-/** Return the size of MPI data types.
- * \param [in] t    MPI data type.
+/** Return the size of MPI datatypes.
+ * \param [in] t    MPI datatype.
  * \return          Returns the size in bytes.
  */
 size_t              sc_mpi_sizeof (sc_MPI_Datatype t);

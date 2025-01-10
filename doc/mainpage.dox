@@ -20,48 +20,100 @@
   02110-1301, USA.
 */
 
-/** \mainpage The sc Auxiliary Library
+/** \mainpage The <tt>sc</tt> Auxiliary Library
  *
  * \author Carsten Burstedde, Lucas C. Wilcox, Tobin Isaac et.al.
  * \copyright GNU Lesser General Public License version 2.1
  * (or, at your option, any later version)
  *
- * The sc library provides functions and data types that can be useful
- * in scientific computing.  It is part of the p4est project, which uses
- * it extensively.  Consequently, it is also a dependency of all projects
- * that use p4est.  Some of the more important features are the following:
+ * The <tt>sc</tt> library provides functions and data types that can be
+ * useful in scientific computing.  It is part of the <tt>p4est</tt>
+ * project, which uses it extensively.  Consequently, it is also a
+ * dependency of all projects that use <tt>p4est</tt>.  Some of the more
+ * important features are the following:
  *
- *  * The build system is based on the GNU autotools.  Several macro files
- *    reside in the config/ subdirectory.  These are used in sc but also
- *    available to other projects for convenience.  It is possible to nest
- *    packages this way.
- *  * The library provides MPI wrappers in case it is configured without
- *    MPI.  They implement initialize/finalize and collective calls as
- *    noops, which means that these do not have to be protected with the
- *    \#ifdef SC_MPI construct in the code.
+ *  * The primary **build system** is based on the GNU autotools.  Several
+ *    macro files reside in the config/ subdirectory.  These are used in
+ *    <tt>sc</tt> but also available to other projects for convenience.  It
+ *    is possible to nest packages this way, conveniently via git
+ *    sumbodules.
+ *  * CMake support has been added and is still in development.
+ *  * The library provides **MPI** wrappers named `sc_mpi_*`.  With MPI
+ *    enabled, they just call the corresponding MPI function.  In case
+ *    <tt>sc</tt> is configured without MPI (the conservative default),
+ *    they implement initialize/finalize and collective calls as noops,
+ *    which means that the `sc_mpi_*` calls do not have to be protected with
+ *    the `#ifdef SC_MPI` construct in the code.
  *  * The library provides a logging framework that can be adapted by other
  *    packages.  Multiple log levels are available, as well as options to
- *    output on just one or all MPI processes.
- *  * The library provides a set of data containers, such as dynamically
- *    resizable arrays.
+ *    output on just one or all MPI processes and to customize the style.
+ *  * The library provides a set of data **containers**, such as dynamically
+ *    resizable arrays and memory pools, which are thin and lightweight.
  *
- * To build the sc library from a tar distribution, use the standard
- * procedure of the GNU autotools.  The configure script takes the following
- * options:
+ * To **build** from a fresh checkout, call `./bootstrap` first.  Then
+ * proceed as described next (building from a tar distribution).
+ * The `bootstrap` script usually does not need to be re-executed!
  *
- * * `--enable-debug`   lowers the log level for increased verbosity and
- *                    activates the `SC_ASSERT` macro for consistency checks.
- * * `--enable-mpi`     pulls in the mpi.h include file and activates the MPI
- *                    compiler wrappers.  If this option is not given, wrappers
- *                    for MPI routines are used instead and the code is compiled
- *                    in serial only.
- * * `--disable-mpiio`  may be used to avoid using `MPI_File` based calls.
+ * To build the <tt>sc</tt> library from a tar distribution, use the
+ * standard procedure of the GNU autotools.  The configure script is best
+ * called from a new empty directory with a relative path to the source.
+ * It takes the following options:
+ *
+ * * `--enable-debug`   (recommended for development) lowers the log level
+ *                    for increased verbosity and activates the `SC_ASSERT`
+ *                    macro for consistency checks.
+ * * `--enable-mpi`     (**recommended** in general) expects a working MPI
+ *                    build environment, pulls in the mpi.h include file and
+ *                    activates the MPI compiler wrappers.  If this option
+ *                    is not given, trivial wrappers for MPI routines are
+ *                    activated and the code is expected to be executed
+ *                    in serial only.  Without this option, point-to-point
+ *                    messages to self will crash.
+ * * `--disable-mpiio`  may be used to avoid using `MPI_File` based calls. The
+ *                    usage of `--disable-mpiio` is deprecated and should not be
+ *                    used anymore.  We check for all relevant file functions.
  *
  * A typical development configure line looks as follows:
  * > `relative/path/to/configure CFLAGS="-Wall -O0 -g" --enable-mpi --enable-debug`
- * A typical production configure line looks as follows:
+ * A typical production **configure line** looks as follows:
  * > `relative/path/to/configure CFLAGS="-Wall -O2" --enable-mpi`
+ * To specify a target path for `make install` add a `--prefix=<installdir>`
+ * option.
+ *
+ * The **CMake** build works as usual with that system.  There are analogous
+ * options to enable the MPI compile and debug mode.
  *
  * \see https://www.p4est.org/
  * \see https://www.gnu.org/licenses/licenses.html
+ */
+
+/** \defgroup io I/O
+ *
+ * Functionality specific to file/data input/output.
+ *
+ * Generic I/O support: \ref sc_io.h
+ *
+ * The I/O support provides functions to
+ * read and write data based on C-standard functions
+ * and also an other set of functions to read and write
+ * based on MPI I/O if it is enabled.
+ * Furthermore, there are functions to encode and decode
+ * based on zlib and to write VTK files.
+ *
+ * Parallel file format: \ref sc_scda.h
+ *
+ * This file contains routines for parallel I/O format.
+ * In particular there are functions to write and read data in parallel according
+ * to a user prescribed partition of contigously indexed potentially
+ * variable-sized elements. In addition, the user can also write and read
+ * data in serial and the data can be stored element-wise compressed.
+ *
+ * If MPI I/O is available, it is used to write and read in
+ * parallel. The configuration case of MPI without MPI I/O is deprecated.
+ * Without MPI this module still enables the user to write and read equivalent
+ * files but only in serial.
+ *
+ * We elaborate further on the workflow in \ref scda_workflow .
+ *
+ * \ingroup sc
  */

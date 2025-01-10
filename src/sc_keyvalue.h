@@ -25,6 +25,8 @@
 #define SC_KEYVALUE_H
 
 /** \file sc_keyvalue.h
+ * \ingroup sc_containers
+ *
  * This file provides a lookup structure for key-value pairs.
  */
 

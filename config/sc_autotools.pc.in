@@ -9,8 +9,8 @@ libsc_CFLAGS=@CPPFLAGS@ @CFLAGS@
 
 have_mpi=@HAVE_PKG_MPI@
 have_json=@SC_HAVE_JSON@
-build_zlib=no
 debug_build=@SC_ENABLE_DEBUG@
+build_zlib=no
 
 Name: libsc
 Description: The SC library supports parallel scientific applications.
