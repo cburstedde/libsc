@@ -48,6 +48,12 @@ typedef void        (*sc_sig_t) (int);
 #include <Windows.h>
 #endif
 
+#if _POSIX_C_SOURCE >= 199309L
+#include <time.h>
+#else
+#include <unistd.h>
+#endif
+
 typedef struct sc_package
 {
   int                 is_registered;
@@ -1624,5 +1630,27 @@ sc_have_json (void)
   return 0;
 #else
   return 1;
+#endif
+}
+
+void
+sc_sleep (unsigned milliseconds){
+#if _POSIX_C_SOURCE >= 199309L
+  struct timespec ts;
+  /* full seconds */
+  ts.tv_sec = milliseconds / 1000;
+  /* nanoseconds */
+  ts.tv_nsec = (milliseconds % 1000) * 1000000;
+  nanosleep (&ts, NULL);
+#elif defined(_POSIX_C_SOURCE)
+  /* older POSIX */
+  if (milliseconds >= 1000) {
+    sleep (milliseconds / 1000);
+  }
+  usleep ((milliseconds % 1000) * 1000);
+#elif _MSC_VER
+  Sleep (milliseconds);
+#else
+  SC_ABORT ("No suitable sleep function available.");
 #endif
 }

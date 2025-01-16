@@ -878,6 +878,12 @@ int                 sc_have_zlib (void);
  */
 int                 sc_have_json (void);
 
+/** Portable function to sleep a prescribed amount of milliseconds.
+ *
+ * \param [in] milliseconds The number of milliseconds to sleep.
+ */
+void                sc_sleep (unsigned milliseconds);
+
 SC_EXTERN_C_END;
 
 #endif /* SC_H */
