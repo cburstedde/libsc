@@ -172,7 +172,11 @@
 #include <sys/time.h>
 #elif defined(_MSC_VER) && !defined(SC_HAVE_GETTIMEOFDAY)
 #define WIN32_LEAN_AND_MEAN
-#include <Winsock2.h>
+struct timeval {
+        long    tv_sec;
+        long    tv_usec;
+};
+
 struct timezone
 {
   int                 tz_minuteswest;

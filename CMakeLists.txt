@@ -58,10 +58,6 @@ if ( SC_NEED_M )
   target_link_libraries(sc PUBLIC m)
 endif()
 
-if ( WIN32 )
-  target_link_libraries(sc PUBLIC ${WINSOCK_LIBRARIES})
-endif()
-
 # imported target, for use from parent project
 add_library(SC::SC INTERFACE IMPORTED GLOBAL)
 target_link_libraries(SC::SC INTERFACE sc)
