@@ -798,7 +798,11 @@ main (int argc, char **argv)
   sc_options_destroy (opt);
 
 #else
-  SC_GLOBAL_INFO ("The file checks were deactivated during the configuration.\n");
+  SC_GLOBAL_INFO ("The file checks were deactivated during the configuration."
+                  "\n");
+  SC_GLOBAL_INFO ("The file checks can be activated by not passing\n");
+  SC_GLOBAL_INFO ("--disable-file-checks to the Autoconf configure script and"
+                  " for CMake you must set disable-file-checks to OFF.\n");
 #endif /* !SC_ENABLE_FILE_CHECKS */
 
   sc_finalize ();
