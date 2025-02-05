@@ -116,7 +116,10 @@ jobs:
       uses: actions/checkout@v4
 
     - name: CMake configure
-      run: cmake --preset default -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }} -DSC_TEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }} $SC_CI_CONFIG_OPT
+      run: |
+        cmake --preset default -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }} \
+              -DSC_TEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }} \
+              $SC_CI_CONFIG_OPT
 
     - name: CMake build
       run: cmake --build --preset default
@@ -187,7 +190,9 @@ jobs:
     - name: CMake configure without MPI
       # We must use $env:SC_CI_CONFIG_OPT instead of $SC_CI_CONFIG_OPT
       # due to Windows PowerShell.
-      run: cmake --preset default -DSC_ENABLE_MPI:BOOL=no -DSC_BUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} $env:SC_CI_CONFIG_OPT
+      run: cmake --preset default -DSC_ENABLE_MPI:BOOL=no `
+                 -DSC_BUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} `
+                 $env:SC_CI_CONFIG_OPT
 
     - name: CMake build
       run: cmake --build --preset default --parallel
