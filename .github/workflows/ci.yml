@@ -16,7 +16,7 @@ on:
 env:
   # Due to busy file system problems on the CI runners, we deactivate the file
   # checks in the CI.
-  CMAKE_CONFIGURE_OPT: --disable-file-checks
+  SC_CI_CONFIG_OPT: --disable-file-checks
 
 jobs:
 
@@ -43,7 +43,7 @@ jobs:
         DIR="checkMPIdebug_shared" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug --disable-shared \
             CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
-            $CMAKE_CONFIGURE_OPT
+            $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -51,7 +51,7 @@ jobs:
       shell: bash
       run: |
         DIR="checkMPI" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-mpi CFLAGS="-O2" $CMAKE_CONFIGURE_OPT
+        ../configure --enable-mpi CFLAGS="-O2" $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -60,7 +60,7 @@ jobs:
       run: |
         DIR="checkdebug" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-debug CFLAGS="-O0 -g -Wall -Wno-uninitialized"\
-            $CMAKE_CONFIGURE_OPT
+            $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -74,7 +74,7 @@ jobs:
       run: |
         DIR="checkMPIdebugCXX" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug CFLAGS="-O0" CC=mpicxx \
-            $CMAKE_CONFIGURE_OPT
+            $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -83,7 +83,7 @@ jobs:
       run: |
         DIR="checkOpenMPMPIdebug" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-openmp="-fopenmp" --enable-mpi \
-            --enable-debug CFLAGS="-O0" $CMAKE_CONFIGURE_OPT
+            --enable-debug CFLAGS="-O0" $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -91,7 +91,7 @@ jobs:
       shell: bash
       run: |
         DIR="distcheck" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure $CMAKE_CONFIGURE_OPT
+        ../configure $SC_CI_CONFIG_OPT
         make -j distcheck V=0
 
     - name: Upload log files
@@ -128,7 +128,7 @@ jobs:
         ../configure --enable-mpi --enable-debug \
                      --disable-shared --enable-valgrind \
           CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
-          $CMAKE_CONFIGURE_OPT
+          $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -174,7 +174,7 @@ jobs:
         ../configure --enable-mpi --enable-debug \
             CFLAGS="-O0 -g -pedantic -Wall -Wextra -Werror \
                 -Wno-unused-parameter -Wno-builtin-declaration-mismatch \
-                -Wno-implicit-fallthrough" $CMAKE_CONFIGURE_OPT
+                -Wno-implicit-fallthrough" $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
         make -j distcheck V=0
