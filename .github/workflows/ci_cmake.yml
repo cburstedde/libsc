@@ -20,6 +20,8 @@ env:
   CTEST_PARALLEL_LEVEL: 0
   CMAKE_INSTALL_PREFIX: ~/local
   CMAKE_PREFIX_PATH: ~/local
+  # Due to busy file system problems on the CI runners, we deactivate the file
+  # checks in the CI.
   CMAKE_CONFIGURE_OPT: -Ddisable-file-checks=ON
 
 jobs:
