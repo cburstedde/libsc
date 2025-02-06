@@ -6,18 +6,19 @@ runs:
     shell: bash
     run: >-
       cmake --preset default
-      -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }}
-      -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
-      $SC_CI_CONFIG_OPT
+            -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }}
+            -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+            $SC_CI_CONFIG_OPT
 
   - name: CMake print debug find
     shell: bash
     if: failure()
     run: >-
       cmake --preset default
-      -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }}
-      -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
-      --debug-find --fresh
+            -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }}
+            -DBUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+            $SC_CI_CONFIG_OPT
+            --debug-find --fresh
 
   - name: CMake build
     shell: bash
