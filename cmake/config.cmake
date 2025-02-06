@@ -126,11 +126,6 @@ if( SC_ENABLE_MPI )
   include(cmake/check_mpitype.cmake)
 endif()
 
-if(disable-file-checks)
-    set(SC_ENABLE_FILE_CHECKS OFF)
-else()
-    set(SC_ENABLE_FILE_CHECKS ON)
-endif()
 
 check_symbol_exists(realloc stdlib.h SC_ENABLE_USE_REALLOC)
 

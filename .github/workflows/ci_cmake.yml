@@ -22,7 +22,7 @@ env:
   CMAKE_PREFIX_PATH: ~/local
   # Due to busy file system problems on the CI runners, we deactivate the file
   # checks in the CI.
-  SC_CI_CONFIG_OPT: -Ddisable-file-checks=ON
+  SC_CI_CONFIG_OPT: -DSC_ENABLE_FILE_CHECKS=OFF
 
 jobs:
 

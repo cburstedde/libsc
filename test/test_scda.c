@@ -802,7 +802,8 @@ main (int argc, char **argv)
                   "\n");
   SC_GLOBAL_INFO ("The file checks can be activated by not passing\n");
   SC_GLOBAL_INFO ("--disable-file-checks to the Autoconf configure script and"
-                  " for CMake you must set disable-file-checks to OFF.\n");
+                  " for CMake you must set the option SC_ENABLE_FILE_CHECKS to"
+                  " ON.\n");
 #endif /* !SC_ENABLE_FILE_CHECKS */
 
   sc_finalize ();
