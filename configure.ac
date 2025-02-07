@@ -13,7 +13,7 @@ AC_CONFIG_MACRO_DIR([config])
 AC_PREFIX_DEFAULT([$PWD/local])
 AX_PREFIX_CONFIG_H([config/sc_config.h], [SC])
 AM_INIT_AUTOMAKE([parallel-tests subdir-objects])
-AM_SILENT_RULES
+AM_SILENT_RULES([yes])
 AM_EXTRA_RECURSIVE_TARGETS([justlibs doxygen])
 PKG_INSTALLDIR
 SC_VERSION([SC])
@@ -38,11 +38,11 @@ See sc.h for possible log priorities in --enable-logging=PRIO])
 SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
 AC_SUBST([SC_ENABLE_DEBUG])
-SC_ARG_DISABLE([realloc], [replace array/dmatrix resize with malloc/copy/free],
+SC_ARG_DISABLE([realloc], [resize arrays with malloc/copy/free (HISTORIC)],
                [USE_REALLOC])
 SC_ARG_DISABLE([counters], [disable non-thread-safe internal debug counters],
                [USE_COUNTERS])
-SC_ARG_DISABLE([file-checks], [disable tests that use file functions],
+SC_ARG_DISABLE([file-checks], [disable tests that use file i/o functions],
                [FILE_CHECKS])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 
