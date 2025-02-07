@@ -1,6 +1,8 @@
 option( SC_ENABLE_MPI "use MPI library" OFF )
 option( SC_ENABLE_OPENMP "use OpenMP" OFF )
 
+option( SC_ENABLE_FILE_CHECKS "activate tests that use file functions" ON)
+
 option( SC_USE_INTERNAL_ZLIB "build ZLIB" OFF )
 option( SC_USE_INTERNAL_JSON "build Jansson" OFF )
 

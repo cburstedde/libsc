@@ -23,6 +23,7 @@
  - Add sc_MPI_UNSIGNED_LONG_LONG, sc_MPI_SIGNED_CHAR and sc_MPI_INT8_T
  - Implement a functional subset of the scda API for parallel I/O
  - Intremental documentation updates
+ - Add a portable sleep function
 
 ### Build system
 
@@ -32,6 +33,7 @@
  - Check for MPI_Aint_diff in CMake and Autoconf
  - Check if MPI_UNSIGNED_LONG_LONG, MPI_SIGNED_CHAR and MPI_INT8_T are available
  - Fix tarball naming and add a CMake target to generate .tarball-version file
+ - Add an option to disable the file checks; affects sc_test_scda
 
 ## 2.8.6
 

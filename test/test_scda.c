@@ -24,6 +24,7 @@
 #include <sc_scda.h>
 #include <sc_options.h>
 
+#ifdef SC_ENABLE_FILE_CHECKS
 #define SC_SCDA_FILE_EXT "scd"
 #define SC_SCDA_TEST_FILE "sc_test_scda." SC_SCDA_FILE_EXT
 
@@ -482,12 +483,15 @@ test_scda_read_indirect_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
   sc_array_reset (&array_data);
   sc_array_reset (&elem_counts);
 }
+#endif /* SC_ENABLE_FILE_CHECKS */
 
 int
 main (int argc, char **argv)
 {
   sc_MPI_Comm         mpicomm = sc_MPI_COMM_WORLD;
-  int                 mpiret, mpirank, mpisize;
+  int                 mpiret;
+#ifdef SC_ENABLE_FILE_CHECKS
+  int                 mpirank, mpisize;
   int                 first_argc;
   int                 int_everyn, int_seed;
   int                 decode;
@@ -506,10 +510,13 @@ main (int argc, char **argv)
   const char         *inline_data = "Test inline data               \n";
   const char         *block_data = "Test block data";
   char                read_data[SC_SCDA_INLINE_FIELD];
+#endif /* SC_ENABLE_FILE_CHECKS */
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
   sc_init (mpicomm, 1, 1, NULL, SC_LP_INFO);
+
+#ifdef SC_ENABLE_FILE_CHECKS
 
   /* parse command line options */
   opt = sc_options_new (argv[0]);
@@ -789,6 +796,15 @@ main (int argc, char **argv)
                                mpisize);
 
   sc_options_destroy (opt);
+
+#else
+  SC_GLOBAL_INFO ("The file checks were deactivated during the configuration."
+                  "\n");
+  SC_GLOBAL_INFO ("The file checks can be activated by not passing\n");
+  SC_GLOBAL_INFO ("--disable-file-checks to the Autoconf configure script and"
+                  " for CMake you must set the option SC_ENABLE_FILE_CHECKS to"
+                  " ON.\n");
+#endif /* !SC_ENABLE_FILE_CHECKS */
 
   sc_finalize ();
 

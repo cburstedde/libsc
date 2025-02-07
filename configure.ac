@@ -42,6 +42,8 @@ SC_ARG_DISABLE([realloc], [replace array/dmatrix resize with malloc/copy/free],
                [USE_REALLOC])
 SC_ARG_DISABLE([counters], [disable non-thread-safe internal debug counters],
                [USE_COUNTERS])
+SC_ARG_DISABLE([file-checks], [disable tests that use file functions],
+               [FILE_CHECKS])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 
 echo "o---------------------------------------"

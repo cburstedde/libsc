@@ -20,6 +20,9 @@ env:
   CTEST_PARALLEL_LEVEL: 0
   CMAKE_INSTALL_PREFIX: ~/local
   CMAKE_PREFIX_PATH: ~/local
+  # Due to busy file system problems on the CI runners, we deactivate the file
+  # checks in the CI.
+  SC_CI_CONFIG_OPT: -DSC_ENABLE_FILE_CHECKS=OFF
 
 jobs:
 
@@ -113,7 +116,10 @@ jobs:
       uses: actions/checkout@v4
 
     - name: CMake configure
-      run: cmake --preset default -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }} -DSC_TEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }}
+      run: |
+        cmake --preset default -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }} \
+              -DSC_TEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }} \
+              $SC_CI_CONFIG_OPT
 
     - name: CMake build
       run: cmake --build --preset default
@@ -182,7 +188,11 @@ jobs:
     - run: echo "CMAKE_PREFIX_PATH=$HOME/local" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: CMake configure without MPI
-      run: cmake --preset default -DSC_ENABLE_MPI:BOOL=no -DSC_BUILD_SHARED_LIBS:BOOL=${{ matrix.shared }}
+      # We must use $env:SC_CI_CONFIG_OPT instead of $SC_CI_CONFIG_OPT
+      # due to Windows PowerShell.
+      run: cmake --preset default -DSC_ENABLE_MPI:BOOL=no `
+                 -DSC_BUILD_SHARED_LIBS:BOOL=${{ matrix.shared }} `
+                 $env:SC_CI_CONFIG_OPT
 
     - name: CMake build
       run: cmake --build --preset default --parallel
@@ -194,7 +204,7 @@ jobs:
       run: cmake --install build
 
     - name: CMake configure examples without MPI
-      run: cmake -B example/build -S example
+      run: cmake -B example/build -S example $env:SC_CI_CONFIG_OPT
 
     - name: CMake build examples
       run: cmake --build example/build --parallel
