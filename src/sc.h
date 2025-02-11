@@ -417,21 +417,24 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_LP_INFO        4     /**< Most relevant things a function is doing. */
 #define SC_LP_STATISTICS  5     /**< Important for consistency/performance. */
 #define SC_LP_PRODUCTION  6     /**< A few lines at most for a major api function. */
-#define SC_LP_ESSENTIAL   7     /**< Log a few lines max per program. */
+#define SC_LP_ESSENTIAL   7     /**< Log a few lines max (version info) per program. */
 #define SC_LP_ERROR       8     /**< Log errors only.  This is suggested over \ref SC_LP_SILENT. */
 #define SC_LP_SILENT      9     /**< Never log anything.  Instead suggesting \ref SC_LP_ERROR. */
 /** @} */
 
-/** The log priority for the sc package.
- *
- */
+/* The default log priority may be overridded by this preprocessor define. */
 #ifdef SC_LOG_PRIORITY
 #define SC_LP_THRESHOLD SC_LOG_PRIORITY
+#define SC_LP_APPLICATION SC_LOG_PRIORITY
 #else
 #ifdef SC_ENABLE_DEBUG
 #define SC_LP_THRESHOLD SC_LP_TRACE
+#define SC_LP_APPLICATION SC_LP_STATISTICS
 #else
+/** The log threshold chosen by \ref SC_LP_DEFAULT. */
 #define SC_LP_THRESHOLD SC_LP_INFO
+/** This threshold is intended for applications with conservative logging. */
+#define SC_LP_APPLICATION SC_LP_PRODUCTION
 #endif
 #endif
 

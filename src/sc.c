@@ -1364,8 +1364,8 @@ sc_init (sc_MPI_Comm mpicomm,
 #if 0
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "F77", SC_F77);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FFLAGS", SC_FFLAGS);
-#endif
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPP", SC_CPP);
+#endif
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPPFLAGS", SC_CPPFLAGS);
   SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CC", SC_CC);
 #if 0
