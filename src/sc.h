@@ -429,12 +429,12 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #else
 #ifdef SC_ENABLE_DEBUG
 #define SC_LP_THRESHOLD SC_LP_TRACE
-#define SC_LP_APPLICATION SC_LP_STATISTICS
+#define SC_LP_APPLICATION SC_LP_DEBUG
 #else
 /** The log threshold chosen by \ref SC_LP_DEFAULT. */
 #define SC_LP_THRESHOLD SC_LP_INFO
 /** This threshold is intended for applications with conservative logging. */
-#define SC_LP_APPLICATION SC_LP_PRODUCTION
+#define SC_LP_APPLICATION SC_LP_STATISTICS
 #endif
 #endif
 
