@@ -161,8 +161,8 @@
 /* Define to 1 'gettimeofday' is available */
 #cmakedefine SC_HAVE_GETTIMEOFDAY 1
 
-/* desired alignment of allocations in bytes */
-#define SC_MEMALIGN_BYTES (SC_SIZEOF_VOID_P)
+/* Desired alignment of allocations in bytes */
+#define SC_MEMALIGN_BYTES (8)
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine SC_HAVE_UNISTD_H 1
@@ -216,28 +216,6 @@
 /* Define to the version of this package. */
 #ifndef SC_PACKAGE_VERSION
 #define SC_PACKAGE_VERSION "@PROJECT_VERSION@"
-#endif
-
-/* Byte sizes of standard types */
-#ifndef SC_SIZEOF_INT
-#define SC_SIZEOF_INT @SC_SIZEOF_INT@
-#endif
-#ifndef SC_SIZEOF_UNSIGNED_INT
-#define SC_SIZEOF_UNSIGNED_INT @SC_SIZEOF_UNSIGNED_INT@
-#endif
-#ifndef SC_SIZEOF_LONG
-#define SC_SIZEOF_LONG @SC_SIZEOF_LONG@
-#endif
-#ifndef SC_SIZEOF_UNSIGNED_LONG
-#define SC_SIZEOF_UNSIGNED_LONG @SC_SIZEOF_UNSIGNED_LONG@
-#endif
-#ifndef SC_SIZEOF_LONG_LONG
-#define SC_SIZEOF_LONG_LONG @SC_SIZEOF_LONG_LONG@
-#endif
-
-/* The size of `void *', as computed by sizeof. */
-#ifndef SC_SIZEOF_VOID_P
-#define SC_SIZEOF_VOID_P @SC_SIZEOF_VOID_P@
 #endif
 
 /* Version number of package */

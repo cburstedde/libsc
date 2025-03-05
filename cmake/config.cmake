@@ -212,13 +212,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   endif()
 endif()
 
-check_type_size(int SC_SIZEOF_INT BUILTIN_TYPES_ONLY)
-check_type_size("unsigned int" SC_SIZEOF_UNSIGNED_INT BUILTIN_TYPES_ONLY)
-check_type_size(long SC_SIZEOF_LONG BUILTIN_TYPES_ONLY)
-check_type_size("unsigned long" SC_SIZEOF_UNSIGNED_LONG BUILTIN_TYPES_ONLY)
-check_type_size("long long" SC_SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
-set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
-
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(SC_ENABLE_DEBUG 1)
 else()

@@ -339,7 +339,7 @@ main (int argc, char **argv)
   /* test integer conversion functions */
   num_failed_tests = 0;
   num_failed_tests += TH (SC_TEST_TOOLONG, "too long", 0, 0);
-  num_failed_tests += TH (SC_TEST_LONG, "long", 0, 1);
+  num_failed_tests += TH (SC_TEST_LONG, "long", 0, sizeof (long) >= 8);
   num_failed_tests += TH (SC_TEST_INT, "int", 1, 1);
 
   /* test encode and decode functions */
