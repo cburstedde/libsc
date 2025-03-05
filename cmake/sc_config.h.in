@@ -1,26 +1,6 @@
 #ifndef _SRC_SC_CONFIG_H
 #define _SRC_SC_CONFIG_H 1
 
-/* C compiler */
-#ifndef SC_CC
-#define SC_CC @SC_CC@
-#endif
-
-/* C compiler flags */
-#ifndef SC_CFLAGS
-#define SC_CFLAGS @SC_CFLAGS@
-#endif
-
-/* C preprocessor */
-#ifndef SC_CPP
-#define SC_CPP @SC_CPP@
-#endif
-
-/* C preprocessor flags */
-#ifndef SC_CPPFLAGS
-#define SC_CPPFLAGS @SC_CPPFLAGS@
-#endif
-
 #cmakedefine SC_HAVE_ZLIB 1
 
 /* Define to 1 if we are using threads */
@@ -172,16 +152,6 @@
 
 /* Use builtin getopt */
 #cmakedefine SC_PROVIDE_GETOPT 1
-
-/* Linker flags */
-#ifndef SC_LDFLAGS
-#define SC_LDFLAGS @SC_LDFLAGS@
-#endif
-
-/* Libraries */
-#ifndef SC_LIBS
-#define SC_LIBS @SC_LIBS@
-#endif
 
 /* Name of package */
 #ifndef SC_PACKAGE
