@@ -70,30 +70,11 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_REQUIRED_INCLUDES)
 set(CMAKE_REQUIRED_LIBRARIES)
 
-set(SC_CC \"${CMAKE_C_COMPILER}\")
-set(SC_CPP ${CMAKE_C_COMPILER})
-
 check_symbol_exists(sqrt math.h SC_NONEED_M)
 
 if(NOT SC_NONEED_M)
   set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} m)
   check_symbol_exists(sqrt math.h SC_NEED_M)
-endif()
-
-string(APPEND SC_CPP " -E")
-set(SC_CPP \"${SC_CPP}\")
-
-set(SC_CFLAGS "${CMAKE_C_FLAGS}\ ${MPI_C_COMPILE_OPTIONS}")
-set(SC_CFLAGS \"${SC_CFLAGS}\")
-
-set(SC_CPPFLAGS \"\")
-
-set(SC_LDFLAGS \"${MPI_C_LINK_FLAGS}\")
-
-if(SC_HAVE_ZLIB)
-  set(SC_LIBS \"${ZLIB_LIBRARIES}\ m\")
-else()
-  set(SC_LIBS \"m\")
 endif()
 
 set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
