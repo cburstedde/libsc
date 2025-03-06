@@ -5,6 +5,7 @@ include(CheckPrototypeDefinition)
 include(CheckCSourceCompiles)
 
 # --- retrieve library interface version from configuration file
+
 file(STRINGS config/sc_soversion.in SC_SOVERSION_READ
              REGEX "^[ \t]*SC_SOVERSION *= *[0-9:]+")
 string(REGEX REPLACE ".*([0-9]+):([0-9]+):([0-9]+)" "\\1.\\2.\\3"
@@ -55,6 +56,7 @@ else()
     set(SC_HAVE_JSON OFF CACHE BOOL "JSON features disabled")
   endif()
 endif()
+
 # --- set global compile environment
 
 # Build all targets with -fPIC so that libsc itself can be linked as a
@@ -102,10 +104,10 @@ if(NOT "${SC_ENABLE_MPI}" STREQUAL "${CACHED_SC_ENABLE_MPI}")
   unset(SC_ENABLE_MPICOMMSHARED CACHE)
   unset(SC_ENABLE_MPITHREAD CACHE)
   unset(SC_ENABLE_MPIWINSHARED CACHE)
-  unset (SC_HAVE_AINT_DIFF CACHE)
-  unset (SC_HAVE_MPI_UNSIGNED_LONG_LONG CACHE)
-  unset (SC_HAVE_MPI_SIGNED_CHAR CACHE)
-  unset (SC_HAVE_MPI_INT8_T CACHE)
+  unset(SC_HAVE_AINT_DIFF CACHE)
+  unset(SC_HAVE_MPI_UNSIGNED_LONG_LONG CACHE)
+  unset(SC_HAVE_MPI_SIGNED_CHAR CACHE)
+  unset(SC_HAVE_MPI_INT8_T CACHE)
   unset(SC_ENABLE_MPIIO CACHE)
   # Update cached variable
   set(CACHED_SC_ENABLE_MPI "${SC_ENABLE_MPI}" CACHE STRING "Cached value of SC_ENABLE_MPI")
@@ -125,7 +127,6 @@ if( SC_ENABLE_MPI )
   # perform check of newer MPI data types
   include(cmake/check_mpitype.cmake)
 endif()
-
 
 check_symbol_exists(realloc stdlib.h SC_ENABLE_USE_REALLOC)
 
