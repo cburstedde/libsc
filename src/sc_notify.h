@@ -384,7 +384,7 @@ void                sc_notify_superset_set_callback
  *                              notifying ranks, which it contains in order.
  *                              Thus, it must not be a view.
  * \param [in,out] in_payload   This array pointer may be NULL.
- *                              If not NULL, it msut have \b num_reivers
+ *                              If not NULL, it must have \b num_receivers
  *                              entries that are the same size on every
  *                              process.  If not NULL and \b out_payload is
  *                              NULL, it must not be a view, and it will
