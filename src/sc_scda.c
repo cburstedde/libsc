@@ -747,22 +747,22 @@ sc_scda_check_coll_params (sc_scda_fcontext_t *fc, const char *param1,
  * This function is for creating and reading a file.
  * The passed \b fc must have filled MPI information (cf. \ref
  * sc_scda_fill_mpi_data).
- * The function returns \ref SC_SCDA_FERR_ARG if everyn and/or seed in opt are
- * not collective. Otherwise, the function returns \ref SC_SCDA_FERR_SUCCESS.
+ * The function returns \ref SC_SCDA_FERR_ARG if everyn and/or seed in params
+ * are not collective. Otherwise, the function returns \ref SC_SCDA_FERR_SUCCESS.
  */
 static sc_scda_ret_t
-sc_scda_examine_options (sc_scda_fopen_options_t * opt, sc_scda_fcontext_t *fc,
-                         sc_MPI_Info *info)
+sc_scda_examine_params (sc_scda_params_t * params, sc_scda_fcontext_t *fc,
+                        sc_MPI_Info *info)
 {
   SC_ASSERT (fc != NULL);
 
-  if (opt != NULL) {
+  if (params != NULL) {
     sc_scda_ret_t       ret;
 
     /* check if fuzzy_everyn and fuzzy_seed are collective */
-    ret = sc_scda_check_coll_params (fc, (const char *) &opt->fuzzy_everyn,
+    ret = sc_scda_check_coll_params (fc, (const char *) &params->fuzzy_everyn,
                                      sizeof (unsigned),
-                                     (const char *) &opt->fuzzy_seed,
+                                     (const char *) &params->fuzzy_seed,
                                      sizeof (sc_rand_state_t), NULL, 0);
     SC_ASSERT (ret == SC_SCDA_FERR_SUCCESS || ret == SC_SCDA_FERR_ARG);
 
@@ -774,9 +774,9 @@ sc_scda_examine_options (sc_scda_fopen_options_t * opt, sc_scda_fcontext_t *fc,
       return SC_SCDA_FERR_ARG;
     }
 
-    *info = opt->info;
-    fc->fuzzy_everyn = opt->fuzzy_everyn;
-    fc->fuzzy_seed = opt->fuzzy_seed;
+    *info = params->info;
+    fc->fuzzy_everyn = params->fuzzy_everyn;
+    fc->fuzzy_seed = params->fuzzy_seed;
   }
   else {
     *info = sc_MPI_INFO_NULL;
@@ -1178,21 +1178,21 @@ sc_scda_file_error_cleanup (sc_MPI_File * file)
 
 /** This function peforms the start up for both scda fopen functions.
  *
- * \param [in]   opt        The sc_scda_fopen_options_t structure that is
- *                          passed to the scda fopen function. \b opt may be
+ * \param [in]   params        The sc_scda_params_t structure that is
+ *                          passed to the scda fopen function. \b params may be
  *                          NULL.
  * \param [in]   mpicomm    The MPI communicator of the scda fopen function.
- * \param [out]  info       On output the MPI info object as defined by \b opt.
+ * \param [out]  info       On output the MPI info object as defined by \b params.
  * \param [out]  errcode    An errcode that can be interpreted by \ref
  *                          sc_scda_ferror_string or mapped to an error class.
  *                          by \ref sc_scda_ferror_class.
  * \return                  A pointer to a file context containing the fuzzy
- *                          error parameters as encoded in \b opt and the
+ *                          error parameters as encoded in \b params and the
  *                          MPI rank and size according to \b mpicomm.
  *                          In case of an error NULL, see also \b errcode.
  */
 static sc_scda_fcontext_t*
-sc_scda_fopen_start_up (sc_scda_fopen_options_t *opt, sc_MPI_Comm mpicomm,
+sc_scda_fopen_start_up (sc_scda_params_t *params, sc_MPI_Comm mpicomm,
                         sc_MPI_Info *info, sc_scda_ferror_t *errcode)
 {
   sc_scda_fcontext_t *fc;
@@ -1206,9 +1206,9 @@ sc_scda_fopen_start_up (sc_scda_fopen_options_t *opt, sc_MPI_Comm mpicomm,
   /* fill convenience MPI information */
   sc_scda_fill_mpi_data (fc, mpicomm);
 
-  /* examine options */
-  scdaret = sc_scda_examine_options (opt, fc, info);
-  /* It is guaranteed by sc_scda_examine_options that fuzzy error testing is
+  /* examine parameter */
+  scdaret = sc_scda_examine_params (params, fc, info);
+  /* It is guaranteed by sc_scda_examine_params that fuzzy error testing is
    * deactivated in fc if scdaret does not encode success.
    */
   sc_scda_scdaret_to_errcode (scdaret, errcode, fc);
@@ -1371,7 +1371,7 @@ sc_scda_fcontext_t *
 sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                      const char *filename,
                      const char *user_string, size_t *len,
-                     sc_scda_fopen_options_t * opt,
+                     sc_scda_params_t * params,
                      sc_scda_ferror_t * errcode)
 {
   int                 mpiret;
@@ -1394,15 +1394,15 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
 
   /* We assume the filename to be nul-terminated. */
 
-  /* get MPI info and parse opt */
-  fc = sc_scda_fopen_start_up (opt, mpicomm, &info, errcode);
+  /* get MPI info and parse params */
+  fc = sc_scda_fopen_start_up (params, mpicomm, &info, errcode);
   if (fc == NULL) {
     /* start up failed; see errcode */
     /* This is a special case of an error in a scda top-level function before
      * the file is opened. Hence, we do not use the standard error macros but
      * just print the error by the following macro.
      */
-    SC_SCDA_CHECK_VERBOSE_COLL (*errcode, "Parse options");
+    SC_SCDA_CHECK_VERBOSE_COLL (*errcode, "Parse parameters");
     return NULL;
   }
 
@@ -2553,7 +2553,7 @@ sc_scda_fcontext_t *
 sc_scda_fopen_read (sc_MPI_Comm mpicomm,
                     const char *filename,
                     char *user_string, size_t *len,
-                    sc_scda_fopen_options_t * opt, sc_scda_ferror_t * errcode)
+                    sc_scda_params_t * params, sc_scda_ferror_t * errcode)
 {
   int                 mpiret;
   int                 count_err;
@@ -2576,15 +2576,15 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
 
   /* We assume the filename to be nul-terminated. */
 
-  /* get MPI info and parse opt */
-  fc = sc_scda_fopen_start_up (opt, mpicomm, &info, errcode);
+  /* get MPI info and parse params */
+  fc = sc_scda_fopen_start_up (params, mpicomm, &info, errcode);
   if (fc == NULL) {
     /* start up failed; see errcode */
     /* This is a special case of an error in a scda top-level function before
      * the file is opened. Hence, we do not use the standard error macros but
      * just print the error by the following macro.
      */
-    SC_SCDA_CHECK_VERBOSE_COLL (*errcode, "Parse options");
+    SC_SCDA_CHECK_VERBOSE_COLL (*errcode, "Parse parameters");
     return NULL;
   }
 

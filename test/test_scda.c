@@ -33,7 +33,7 @@
 
 static void
 test_scda_skip_through_file (sc_MPI_Comm mpicomm, const char *filename,
-                             sc_scda_fopen_options_t *opt, int mpirank,
+                             sc_scda_params_t *params, int mpirank,
                              int mpisize)
 {
   sc_scda_fcontext_t *fc;
@@ -47,7 +47,7 @@ test_scda_skip_through_file (sc_MPI_Comm mpicomm, const char *filename,
   sc_array_t          elem_counts, data;
 
   /* open the file for reading */
-  fc = sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, opt,
+  fc = sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, params,
                            &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode), "sc_scda_fopen_read "
                   "failed");
@@ -500,7 +500,7 @@ main (int argc, char **argv)
   char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
   char                section_type;
   sc_scda_fcontext_t *fc;
-  sc_scda_fopen_options_t scda_opt, scda_opt_err;
+  sc_scda_params_t    scda_params, scda_params_err;
   sc_scda_ferror_t    errcode;
   size_t              len;
   size_t              elem_count, elem_size;
@@ -549,14 +549,14 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
-  scda_opt_err.info = sc_MPI_INFO_NULL;
+  scda_params_err.info = sc_MPI_INFO_NULL;
   if (mpirank == 0) {
-    scda_opt_err.fuzzy_everyn = 0;
-    scda_opt_err.fuzzy_seed = 0;
+    scda_params_err.fuzzy_everyn = 0;
+    scda_params_err.fuzzy_seed = 0;
   }
   else {
-    scda_opt_err.fuzzy_everyn = 1;
-    scda_opt_err.fuzzy_seed = 0;
+    scda_params_err.fuzzy_everyn = 1;
+    scda_params_err.fuzzy_seed = 0;
   }
   if (mpisize > 1) {
     SC_GLOBAL_ESSENTIAL
@@ -566,7 +566,7 @@ main (int argc, char **argv)
   }
   /* fopen_write with non-collective fuzzy error parameters */
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
-                            &scda_opt_err, &errcode);
+                            &scda_params_err, &errcode);
   if (mpisize > 1) {
     SC_CHECK_ABORT (fc == NULL && errcode.scdaret == SC_SCDA_FERR_ARG,
                     "Test fuzzy error parameters check");
@@ -582,7 +582,7 @@ main (int argc, char **argv)
   /* fopen_read with non-collective fuzzy error parameters */
   fc =
     sc_scda_fopen_read (mpicomm, filename, read_user_string, &len,
-                        &scda_opt_err, &errcode);
+                        &scda_params_err, &errcode);
   if (mpisize > 1) {
     SC_CHECK_ABORT (fc == NULL && errcode.scdaret == SC_SCDA_FERR_ARG,
                     "Test fuzzy error parameters check");
@@ -596,30 +596,30 @@ main (int argc, char **argv)
                     "scda_fclose after read failed");
   }
 
-  /* Create valid scda options structure. */
-  /* set the options to actiavate fuzzy error testing */
+  /* Create valid scda parameters structure. */
+  /* set the parameters to actiavate fuzzy error testing */
   /* WARNING: Fuzzy error testing means that the code randomly produces
    * errors. Random errors mean in particular that error codes may arise from
    * code places, which can not produce such particular error codes without
    * fuzzy error testing. Nonetheless, our implementation is designed to be
    * able to handle this situations properly.
    */
-  scda_opt.fuzzy_everyn = (unsigned) int_everyn;
-  if (scda_opt.fuzzy_everyn > 0 && int_seed < 0) {
-    scda_opt.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
+  scda_params.fuzzy_everyn = (unsigned) int_everyn;
+  if (scda_params.fuzzy_everyn > 0 && int_seed < 0) {
+    scda_params.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
     mpiret =
-      sc_MPI_Bcast (&scda_opt.fuzzy_seed, 1, sc_MPI_UNSIGNED, 0, mpicomm);
+      sc_MPI_Bcast (&scda_params.fuzzy_seed, 1, sc_MPI_UNSIGNED, 0, mpicomm);
     SC_CHECK_MPI (mpiret);
     SC_GLOBAL_INFOF ("Fuzzy error return with time-dependent seed activated. "
-                     "The seed is %lld.\n", (long long) scda_opt.fuzzy_seed);
+                     "The seed is %lld.\n", (long long) scda_params.fuzzy_seed);
   }
   else {
-    scda_opt.fuzzy_seed = (sc_rand_state_t) int_seed;
+    scda_params.fuzzy_seed = (sc_rand_state_t) int_seed;
   }
-  scda_opt.info = sc_MPI_INFO_NULL;
+  scda_params.info = sc_MPI_INFO_NULL;
 
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
-                            &scda_opt, &errcode);
+                            &scda_params, &errcode);
   /* TODO: check errcode */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fopen_write failed");
@@ -683,7 +683,7 @@ main (int argc, char **argv)
   }
 
   fc =
-    sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
+    sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_params,
                         &errcode);
   /* TODO: check errcode */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
@@ -775,7 +775,7 @@ main (int argc, char **argv)
                   "scda_fclose after read failed");
 
   fc =
-    sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
+    sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_params,
                         &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fopen_read failed");
@@ -792,7 +792,7 @@ main (int argc, char **argv)
   SC_GLOBAL_ESSENTIAL ("End of expected error path: test successful\n");
 
   /* skip through file and test non-collective skipping */
-  test_scda_skip_through_file (mpicomm, filename, &scda_opt, mpirank,
+  test_scda_skip_through_file (mpicomm, filename, &scda_params, mpirank,
                                mpisize);
 
   sc_options_destroy (opt);

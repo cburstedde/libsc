@@ -39,7 +39,7 @@
  * and reading.
  *
  * In addition, we add in this file the options structure \ref
- * sc_scda_fopen_options as parameter for opening files.
+ * sc_scda_params as parameter for opening files.
  *
  * The file format includes
  * metadata in ASCII and therefore enables the human eye to parse the
@@ -281,14 +281,14 @@ typedef struct sc_scda_ferror
 }
 sc_scda_ferror_t;
 
-/** An options struct for the functions \ref sc_scda_fopen_write and
+/** A parameter struct for the functions \ref sc_scda_fopen_write and
  * \ref sc_scda_fopen_read. The struct may be extended in the future.
  *
  * The option struct is a collective structure. If the options structure that
  * is passed to a function is not the same on all processes, the whole
  * following scda workflow has undefined behavior.
  */
-typedef struct sc_scda_fopen_options
+typedef struct sc_scda_params
 {
   sc_MPI_Info         info; /**< info that is passed to MPI_File_open */
   unsigned            fuzzy_everyn; /**< In average every n-th possible error
@@ -308,7 +308,7 @@ typedef struct sc_scda_fopen_options
                                        fuzzy_everyn == 0. When in doubt use
                                        fuzzy_seed = 0. */
 }
-sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
+sc_scda_params_t; /**< type for \ref sc_scda_params */
 
 /** Open a file for writing and write the file header to the file.
  *
@@ -349,10 +349,10 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  *                           terminating nul.
  *                           On NULL as input \b user_string is expected to be a
  *                           nul-terminated C string.
- * \param [in]     opt       An options structure that provides the possibility
+ * \param [in]     params    A parameter structure that provides the possibility
  *                           to pass further options. See \ref
- *                           sc_scda_fopen_options for more details.
- *                           It is valid to pass NULL for \b opt.
+ *                           sc_scda_params for more details.
+ *                           It is valid to pass NULL for \b params.
  * \param [out]    errcode   An errcode that can be interpreted by \ref
  *                           sc_scda_ferror_string or mapped to an error class
  *                           by \ref sc_scda_ferror_class.
@@ -364,7 +364,7 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
 sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                                          const char *filename,
                                          const char *user_string, size_t *len,
-                                         sc_scda_fopen_options_t * opt,
+                                         sc_scda_params_t * params,
                                          sc_scda_ferror_t * errcode);
 
 /** Write an inline data section.
@@ -714,10 +714,10 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * \param [out]    len       On output \b len is set to the number of bytes
  *                           written to \b user_string excluding the terminating
  *                           nul.
- * \param [in]     opt       An options structure that provides the possibility
+ * \param [in]     params    A parameter structure that provides the possibility
  *                           to pass further options. See \ref
- *                           sc_scda_fopen_options for more details.
- *                           It is valid to pass NULL for \b opt.
+ *                           sc_scda_params for more details.
+ *                           It is valid to pass NULL for \b params.
  * \param [out]    errcode   An errcode that can be interpreted by \ref
  *                           sc_scda_ferror_string or mapped to an error class
  *                           by \ref sc_scda_ferror_class.
@@ -729,7 +729,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
 sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
                                         const char *filename,
                                         char *user_string, size_t *len,
-                                        sc_scda_fopen_options_t * opt,
+                                        sc_scda_params_t * params,
                                         sc_scda_ferror_t * errcode);
 
 /** Read the next file section header.
