@@ -1493,6 +1493,12 @@ sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
       if (senders != NULL) {
         *(int *) sc_array_push (senders) = 0;
       }
+      if (out_payload != NULL) {
+        /* if out_payload is defined, copy single entry from in_payload */
+        SC_ASSERT (in_payload != NULL && in_payload->elem_count == 1);
+        *(int *) sc_array_push (out_payload) =
+          *(int *) sc_array_index (in_payload, 0);
+      }
     }
 
     /* we return if there is only one process */
