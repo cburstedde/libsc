@@ -1178,7 +1178,7 @@ sc_scda_file_error_cleanup (sc_MPI_File * file)
 
 /** This function peforms the start up for both scda fopen functions.
  *
- * \param [in]   params        The sc_scda_params_t structure that is
+ * \param [in]   params     The sc_scda_params_t structure that is
  *                          passed to the scda fopen function. \b params may be
  *                          NULL.
  * \param [in]   mpicomm    The MPI communicator of the scda fopen function.

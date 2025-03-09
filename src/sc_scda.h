@@ -258,8 +258,11 @@ sc_scda_ret_t;
 /** Error values for the scda functions.
  * An error value is a struct since the error can be related to the scda
  * file format or to (MPI) I/O operations. The error code can be converted to a
- * string by \ref sc_scda_ferror_string and mapped to an error class by \ref
- * sc_scda_ferror_class.
+ * string by \ref sc_scda_ferror_string, mapped to an error class by \ref
+ * sc_scda_ferror_class and checked for success by \ref
+ * sc_scda_ferror_is_success. The user can rely on these functions to
+ * parse sc_scda_ferror and does not need to access the members of this
+ * structure.
  *
  * The parsing logic of \ref sc_scda_ferror_t is that first \b scdaret is examined
  * and if \b scdaret != \ref SC_SCDA_FERR_MPI, we know that \b mpiret = 0.
