@@ -257,6 +257,9 @@ struct sc_scda_fcontext
                                         the user-defined seed but is adjusted
                                         to the state after each call of
                                         \ref sc_rand. */
+  int                 log_level;      /**< The log level for the scda functions.
+                                        The possible values are documented in
+                                        \ref sc.h; cf. SC_LP_* macros. */
   /* *INDENT-ON* */
 };
 
@@ -771,18 +774,32 @@ sc_scda_examine_params (sc_scda_params_t * params, sc_scda_fcontext_t *fc,
       /* no fuzzy error testing in case of an error */
       fc->fuzzy_everyn = 0;
       fc->fuzzy_seed = 0;
+      /* in case of an error we use the default log level */
+#ifdef SC_ENABLE_DEBUG
+      fc->log_level = SC_LP_ERROR;
+#else
+      fc->log_level = SC_LP_SILENT;
+#endif
       return SC_SCDA_FERR_ARG;
     }
 
     *info = params->info;
     fc->fuzzy_everyn = params->fuzzy_everyn;
     fc->fuzzy_seed = params->fuzzy_seed;
+
+    fc->log_level = params->log_level;
   }
   else {
     *info = sc_MPI_INFO_NULL;
     /* no fuzzy error return by default */
     fc->fuzzy_everyn = 0;
     fc->fuzzy_seed = 0;
+    /* set default log level */
+#ifdef SC_ENABLE_DEBUG
+    fc->log_level = SC_LP_ERROR;
+#else
+    fc->log_level = SC_LP_SILENT;
+#endif
   }
 
   return SC_SCDA_FERR_SUCCESS;
@@ -1174,6 +1191,22 @@ sc_scda_file_error_cleanup (sc_MPI_File * file)
   SC_FREE (*file);
 #endif
   return -1;
+}
+
+void
+sc_scda_params_init (sc_scda_params_t *params)
+{
+  SC_ASSERT (params != NULL);
+
+  /* set the defaults for the scda parameters/options */
+  params->info = sc_MPI_INFO_NULL;
+  params->fuzzy_everyn = 0;
+  params->fuzzy_seed = 0;
+#ifdef SC_ENABLE_DEBUG
+  params->log_level = SC_LP_ERROR;
+#else
+  params->log_level = SC_LP_SILENT;
+#endif
 }
 
 /** This function peforms the start up for both scda fopen functions.

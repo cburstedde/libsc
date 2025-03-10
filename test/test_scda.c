@@ -549,6 +549,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
+  sc_scda_params_init (&scda_params_err);
   scda_params_err.info = sc_MPI_INFO_NULL;
   if (mpirank == 0) {
     scda_params_err.fuzzy_everyn = 0;
@@ -604,6 +605,7 @@ main (int argc, char **argv)
    * fuzzy error testing. Nonetheless, our implementation is designed to be
    * able to handle this situations properly.
    */
+  sc_scda_params_init (&scda_params);
   scda_params.fuzzy_everyn = (unsigned) int_everyn;
   if (scda_params.fuzzy_everyn > 0 && int_seed < 0) {
     scda_params.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();

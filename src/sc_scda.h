@@ -310,8 +310,18 @@ typedef struct sc_scda_params
                                        This value is ignored if
                                        fuzzy_everyn == 0. When in doubt use
                                        fuzzy_seed = 0. */
+  int                 log_level;  /**< The log level for the scda functions.
+                                       The possible values are documented in
+                                       \ref sc.h; cf. SC_LP_* macros. */
 }
 sc_scda_params_t; /**< type for \ref sc_scda_params */
+
+/** Initialize a scda parameter structure to the defaults.
+ *
+ * \param [out]    params    \ref sc_scda_params structure that is filled with
+ *                            the default parameters.
+ */
+void sc_scda_params_init (sc_scda_params_t *params);
 
 /** Open a file for writing and write the file header to the file.
  *
