@@ -42,6 +42,11 @@
 /* Define to 1 if we can use MPI_Win_allocate_shared */
 #cmakedefine SC_ENABLE_MPIWINSHARED 1
 
+/* This definition is a convenience */
+#if defined SC_ENABLE_MPIWINSHARED && defined SC_ENABLE_MPICOMMSHARED
+#define SC_ENABLE_MPISHARED 1
+#endif
+
 /* Undefine if: disable non-thread-safe internal debug counters */
 #define SC_ENABLE_USE_COUNTERS 1
 
