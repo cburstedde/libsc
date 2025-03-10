@@ -368,7 +368,9 @@ void sc_scda_params_init (sc_scda_params_t *params);
  *                           It is valid to pass NULL for \b params.
  * \param [out]    errcode   An errcode that can be interpreted by \ref
  *                           sc_scda_ferror_string or mapped to an error class
- *                           by \ref sc_scda_ferror_class.
+ *                           by \ref sc_scda_ferror_class. \b errcode encodes
+ *                           success if and only if the function does not
+ *                           return NULL.
  * \return                   Newly allocated context to continue writing
  *                           and eventually closing the file. NULL in
  *                           case of error, i.e. errcode != \ref
@@ -412,7 +414,9 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *                              \b inline_data is written to the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -474,7 +478,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -555,7 +561,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -594,7 +602,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              filled with the number bytes per process.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      0 in case of success and -1 otherwise.
  */
 int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
@@ -679,7 +689,9 @@ int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -733,7 +745,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  *                           It is valid to pass NULL for \b params.
  * \param [out]    errcode   An errcode that can be interpreted by \ref
  *                           sc_scda_ferror_string or mapped to an error class
- *                           by \ref sc_scda_ferror_class.
+ *                           by \ref sc_scda_ferror_class. \b errcode encodes
+ *                           success if and only if the function does not
+ *                           return NULL.
  * \return                   Newly allocated context to continue reading
  *                           and eventually closing the file. NULL in
  *                           case of error, i.e. errcode != \ref
@@ -800,7 +814,9 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -839,7 +855,9 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  *                              \b data is read from the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -877,7 +895,9 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  *                              \b block_data is read from the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -937,7 +957,9 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -987,7 +1009,9 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  *                              \ref sc_scda_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -1062,7 +1086,9 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -1139,7 +1165,9 @@ int                 sc_scda_ferror_string (sc_scda_ferror_t errcode,
  *                            after a call of this function.
  * \param [out]     errcode   An errcode that can be interpreted by \ref
  *                            sc_scda_ferror_string or mapped to an error class
- *                            by \ref sc_scda_ferror_class.
+ *                            by \ref sc_scda_ferror_class. \b errcode encodes
+ *                            success if and only if the function returns
+ *                            return 0.
  * \return                    \ref SC_SCDA_FERR_SUCCESS for a successful call
  *                            and -1 in case a of an error.
  *                            See also \b errcode argument.
