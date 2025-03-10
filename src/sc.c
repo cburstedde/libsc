@@ -1293,9 +1293,6 @@ sc_init (sc_MPI_Comm mpicomm,
          int catch_signals, int print_backtrace,
          sc_log_handler_t log_handler, int log_threshold)
 {
-#if 0
-  const int           w = 24;
-#endif
   const char         *trace_file_name;
   const char         *trace_file_prio;
 
@@ -1361,22 +1358,8 @@ sc_init (sc_MPI_Comm mpicomm,
     }
   }
 
+  /* one line of logging if the threshold is not SC_LP_SILENT */
   SC_GLOBAL_ESSENTIALF ("This is %s\n", SC_PACKAGE_STRING);
-#if 0
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "F77", SC_F77);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FFLAGS", SC_FFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPP", SC_CPP);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPPFLAGS", SC_CPPFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CC", SC_CC);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "C_VERSION", SC_C_VERSION);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CFLAGS", SC_CFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LDFLAGS", SC_LDFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LIBS", SC_LIBS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "BLAS_LIBS", SC_BLAS_LIBS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LAPACK_LIBS", SC_LAPACK_LIBS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FLIBS", SC_FLIBS);
-#endif
-
   sc_initialized = 1;
 }
 
