@@ -770,7 +770,8 @@ sc_scda_examine_params (sc_scda_params_t * params, sc_scda_fcontext_t *fc,
     ret = sc_scda_check_coll_params (fc, (const char *) &params->fuzzy_everyn,
                                      sizeof (unsigned),
                                      (const char *) &params->fuzzy_seed,
-                                     sizeof (sc_rand_state_t), NULL, 0);
+                                     sizeof (sc_rand_state_t),
+                                     (const char *) &params->log_level, sizeof (int));
     SC_ASSERT (ret == SC_SCDA_FERR_SUCCESS || ret == SC_SCDA_FERR_ARG);
 
     if (ret == SC_SCDA_FERR_ARG) {
