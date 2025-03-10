@@ -435,6 +435,9 @@ sc_MPI_Aint         sc_MPI_Aint_diff (sc_MPI_Aint a, sc_MPI_Aint b);
 /** Emulate \c MPI_UNDEFINED. */
 #define sc_MPI_UNDEFINED           SC3_MPI_UNDEFINED
 
+/** We do not support communicator sharing */
+#define sc_MPI_COMM_TYPE_SHARED    SC3_MPI_UNDEFINED
+
 /* types */
 
 typedef int         sc_MPI_Group;       /**< Emulate an MPI group. */
