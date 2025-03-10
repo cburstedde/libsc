@@ -62,7 +62,7 @@
  * The parameter msg is prepended to the file, line and error information.
  * This is a general macro that gets the log handler as a parameter.
  */
-#define SC_SCDA_CHECK_VERBOSE_GEN(errcode, msg, sc_scda_log) do {             \
+#define SC_SCDA_CHECK_VERBOSE_GEN(errcode, msg, sc_scda_log, lp) do {         \
                                     char sc_scda_msg[sc_MPI_MAX_ERROR_STRING];\
                                     int sc_scda_len, sc_scda_retval;          \
                                     if (!sc_scda_ferror_is_success (errcode)) {\
@@ -72,12 +72,12 @@
                                     SC_ASSERT(sc_scda_retval !=               \
                                               SC_SCDA_FERR_ARG);              \
                                     if (sc_scda_retval == SC_SCDA_FERR_SUCCESS){\
-                                    sc_scda_log ("%s at %s:%d: %*.*s\n",      \
+                                    sc_scda_log (lp, "%s at %s:%d: %*.*s\n",  \
                                                  msg,  __FILE__, __LINE__,    \
                                                  sc_scda_len, sc_scda_len,    \
                                                  sc_scda_msg);}               \
                                     else {                                    \
-                                    sc_scda_log ("%s at %s:%d: %s\n",         \
+                                    sc_scda_log (lp, "%s at %s:%d: %s\n",     \
                                                  msg, __FILE__, __LINE__,     \
                                                  "An error occurred but "     \
                                                  "ferror_string failed");     \
@@ -85,13 +85,13 @@
 
 /** For collective calls. Cf. \ref SC_SCDA_CHECK_VERBOSE_GEN.
  */
-#define SC_SCDA_CHECK_VERBOSE_COLL(errcode, msg) SC_SCDA_CHECK_VERBOSE_GEN ( \
-                                    errcode, msg, SC_GLOBAL_LERRORF)
+#define SC_SCDA_CHECK_VERBOSE_COLL(lp, errcode, msg) SC_SCDA_CHECK_VERBOSE_GEN ( \
+                                    errcode, msg, SC_GLOBAL_LOGF, lp)
 
 /** For non-collective calls. Cf. \ref SC_SCDA_CHECK_VERBOSE_GEN.
  */
-#define SC_SCDA_CHECK_VERBOSE_NONCOLL(errcode, msg) SC_SCDA_CHECK_VERBOSE_GEN (\
-                                    errcode, msg, SC_LERRORF)
+#define SC_SCDA_CHECK_VERBOSE_NONCOLL(lp, errcode, msg) SC_SCDA_CHECK_VERBOSE_GEN (\
+                                    errcode, msg, SC_LOGF, lp)
 
 /** Collectivly check a given errorcode.
  * This macro assumes that errcode is a collective
@@ -99,7 +99,8 @@
  * The calling function must return NULL in case of an error.
  */
 #define SC_SCDA_CHECK_COLL_ERR(errcode, fc, user_msg) do {                   \
-                                    SC_SCDA_CHECK_VERBOSE_COLL (*errcode,    \
+                                    SC_SCDA_CHECK_VERBOSE_COLL (fc->log_level,\
+                                                                *errcode,    \
                                                                 user_msg);   \
                                     if (!sc_scda_ferror_is_success (*errcode)) {\
                                     sc_scda_file_error_cleanup (&fc->file);  \
@@ -112,8 +113,9 @@
  * The macro can be used multiple times in a function but will always jump to
  * the end of the calling function that must be a void function.
  */
-#define SC_SCDA_CHECK_NONCOLL_ERR(errcode, user_msg) do {                    \
-                                    SC_SCDA_CHECK_VERBOSE_NONCOLL (*errcode, \
+#define SC_SCDA_CHECK_NONCOLL_ERR(lp, errcode, user_msg) do {                \
+                                    SC_SCDA_CHECK_VERBOSE_NONCOLL (lp,       \
+                                                                   *errcode, \
                                                                    user_msg);\
                                     if (!sc_scda_ferror_is_success (*errcode)) {\
                                     return;}} while (0)
@@ -162,7 +164,8 @@
                                       sc_scda_global_cerr ? SC_SCDA_FERR_COUNT :\
                                                         SC_SCDA_FERR_SUCCESS,\
                                       errcode, fc);                          \
-                                    SC_SCDA_CHECK_VERBOSE_COLL (*errcode,    \
+                                    SC_SCDA_CHECK_VERBOSE_COLL (fc->log_level,\
+                                                                *errcode,    \
                                                   "Read/write count check"); \
                                     if (sc_scda_global_cerr) {               \
                                     SC_ASSERT (                              \
@@ -184,11 +187,11 @@
  * \b cerror must be a pointer to an int that is passed to the subsequent call
  * \ref SC_SCDA_HANDLE_NONCOLL_COUNT_ERR.
  */
-#define SC_SCDA_CHECK_NONCOLL_COUNT_ERR(icount, ocount, cerror) do {           \
+#define SC_SCDA_CHECK_NONCOLL_COUNT_ERR(lp, icount, ocount, cerror) do {       \
                                     *cerror = ((int) icount) != ocount;        \
                                     if (*cerror) {                             \
-                                    SC_LERRORF ("Count error at "              \
-                                                "%s:%d.\n", __FILE__, __LINE__);\
+                                    SC_LOGF (lp, "Count error at "             \
+                                             "%s:%d.\n", __FILE__, __LINE__);  \
                                     return;}} while (0)
 
 /** Handle a non-collective count error.
@@ -215,7 +218,8 @@
                                         *cerror ? SC_SCDA_FERR_COUNT :         \
                                                          SC_SCDA_FERR_SUCCESS, \
                                         errorcode, fc);                        \
-                                    SC_SCDA_CHECK_VERBOSE_NONCOLL (*errorcode, \
+                                    SC_SCDA_CHECK_VERBOSE_NONCOLL (fc->log_level,\
+                                                                   *errorcode, \
                                                     "Read/write count check"); \
                                     if (*cerror) {                             \
                                     sc_scda_file_error_cleanup (&fc->file);    \
@@ -1368,7 +1372,7 @@ sc_scda_fopen_write_header_serial (sc_scda_fcontext_t *fc,
    * is only valid in pair with a call of \ref SC_SCDA_HANDLE_NONCOLL_ERR
    * directly after the non-collective code part.
    */
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid user string");
 
   current_len += SC_SCDA_COMMON_FIELD;
 
@@ -1387,7 +1391,8 @@ sc_scda_fopen_write_header_serial (sc_scda_fcontext_t *fc,
    * information. They both use the same associated \ref
    * SC_SCDA_HANDLE_NONCOLL_ERR call.
    */
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing the file header section");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Writing the file header"
+                             " section");
   /* The macro to check non-collective for count errors.
    * If SC_SCDA_HEADER_BYTES == count, i.e. no count error occurred, the macro
    * has no effect. This macro is only valid after calling \ref
@@ -1397,7 +1402,8 @@ sc_scda_fopen_write_header_serial (sc_scda_fcontext_t *fc,
    * The macro argument count_err must point to the count error Boolean that is
    * an output parameter of this function.
    */
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_HEADER_BYTES, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, SC_SCDA_HEADER_BYTES, count,
+                                   count_err);
 }
 
 sc_scda_fcontext_t *
@@ -1433,9 +1439,11 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
     /* start up failed; see errcode */
     /* This is a special case of an error in a scda top-level function before
      * the file is opened. Hence, we do not use the standard error macros but
-     * just print the error by the following macro.
+     * just print the error by the following macro. The log level is the default
+     * log level since we do not have any other reliable information.
      */
-    SC_SCDA_CHECK_VERBOSE_COLL (*errcode, "Parse parameters");
+    SC_SCDA_CHECK_VERBOSE_COLL (params->log_level, *errcode,
+                                "Parse parameters");
     return NULL;
   }
 
@@ -1530,7 +1538,7 @@ sc_scda_fwrite_inline_header_serial (sc_scda_fcontext_t *fc,
    */
   sc_scda_scdaret_to_errcode (invalid_user_string ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid user string");
 
   current_len += SC_SCDA_COMMON_FIELD;
 
@@ -1540,8 +1548,10 @@ sc_scda_fwrite_inline_header_serial (sc_scda_fcontext_t *fc,
   mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, header_data,
                            SC_SCDA_COMMON_FIELD, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing inline section header");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COMMON_FIELD, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Writing inline section header");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, SC_SCDA_COMMON_FIELD, count,
+                                   count_err);
 }
 
 /** Internal function to write the inline section data.
@@ -1573,14 +1583,15 @@ sc_scda_fwrite_inline_data_serial (sc_scda_fcontext_t *fc,
                           inline_data->elem_count == 1);
   sc_scda_scdaret_to_errcode (invalid_inline_data ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid inline data");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid inline data");
 
   /* write the inline data to the file section */
   mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, inline_data->array,
                            SC_SCDA_INLINE_FIELD, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing inline data");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_INLINE_FIELD, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Writing inline data");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, SC_SCDA_INLINE_FIELD, count,
+                                   count_err);
 }
 
 sc_scda_fcontext_t *
@@ -1724,7 +1735,7 @@ sc_scda_fwrite_block_header_serial (sc_scda_fcontext_t *fc,
    */
   sc_scda_scdaret_to_errcode (invalid_user_string ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid user string");
 
   current_len += SC_SCDA_COMMON_FIELD;
 
@@ -1733,7 +1744,7 @@ sc_scda_fwrite_block_header_serial (sc_scda_fcontext_t *fc,
                                                     &header_data[current_len]);
   sc_scda_scdaret_to_errcode (invalid_count ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid count");
 
   current_len += SC_SCDA_COUNT_FIELD;
 
@@ -1743,8 +1754,10 @@ sc_scda_fwrite_block_header_serial (sc_scda_fcontext_t *fc,
   mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, header_data,
                            header_len, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing block section header");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (header_len, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Writing block section header");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, header_len, count,
+                                   count_err);
 }
 
 /** Internal function to write the block section data.
@@ -1776,14 +1789,15 @@ sc_scda_fwrite_block_data_serial (sc_scda_fcontext_t *fc,
                          block_data->elem_count == 1);
   sc_scda_scdaret_to_errcode (invalid_block_data ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid block data");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid block data");
 
   /* write the block data to the file section */
   mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, block_data->array,
                            block_size, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing block data");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (block_size, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Writing block data");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, block_size, count,
+                                   count_err);
 }
 
 /** Internal function to write mod data padding in serial.
@@ -1826,8 +1840,10 @@ sc_scda_fwrite_mod_padding_serial (sc_scda_fcontext_t *fc,
   mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, padding,
                            (int) num_pad_bytes, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing array data padding");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_pad_bytes, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Writing array data padding");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, num_pad_bytes, count,
+                                   count_err);
 }
 
 sc_scda_fcontext_t *
@@ -1943,7 +1959,7 @@ sc_scda_fwrite_array_header_serial (sc_scda_fcontext_t *fc,
    */
   sc_scda_scdaret_to_errcode (invalid_user_string ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid user string");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid user string");
 
   current_len += SC_SCDA_COMMON_FIELD;
 
@@ -1953,7 +1969,7 @@ sc_scda_fwrite_array_header_serial (sc_scda_fcontext_t *fc,
                                                     &header_data[current_len]);
   sc_scda_scdaret_to_errcode (invalid_count ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid count");
 
   current_len += SC_SCDA_COUNT_FIELD;
 
@@ -1962,7 +1978,7 @@ sc_scda_fwrite_array_header_serial (sc_scda_fcontext_t *fc,
                                                     &header_data[current_len]);
   sc_scda_scdaret_to_errcode (invalid_count ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid count");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid count");
 
   current_len += SC_SCDA_COUNT_FIELD;
 
@@ -1972,8 +1988,10 @@ sc_scda_fwrite_array_header_serial (sc_scda_fcontext_t *fc,
   mpiret = sc_io_write_at (fc->file, fc->accessed_bytes, header_data,
                            header_len, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Writing array section header");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (header_len, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Writing array section header");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, header_len, count,
+                                   count_err);
 }
 
 /** Determine the maximal rank that is not empty.
@@ -2564,12 +2582,14 @@ sc_scda_fopen_read_header_serial (sc_scda_fcontext_t * fc,
    * More information can be found in the comments in \ref sc_scda_fopen_write
    * and in the documentation of the \ref SC_SCDA_CHECK_NONCOLL_ERR.
    */
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read the file header section");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Read the file header section");
   /* The macro to check for a count error after a non-collective function call.
    * More information can be found in the comments in \ref sc_scda_fopen_write
    * and in the documentation of the \ref SC_SCDA_CHECK_NONCOLL_COUNT_ERR.
    */
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_HEADER_BYTES, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, SC_SCDA_HEADER_BYTES, count,
+                                   count_err);
 
   /* initialize user_string */
   sc_scda_init_nul (user_string, SC_SCDA_USER_STRING_BYTES + 1);
@@ -2579,7 +2599,7 @@ sc_scda_fopen_read_header_serial (sc_scda_fcontext_t * fc,
   sc_scda_scdaret_to_errcode (invalid_file_header ? SC_SCDA_FERR_FORMAT :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
   /* cf. the comment on the first call of this macro in this function */
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid file header");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid file header");
 }
 
 sc_scda_fcontext_t *
@@ -2615,9 +2635,11 @@ sc_scda_fopen_read (sc_MPI_Comm mpicomm,
     /* start up failed; see errcode */
     /* This is a special case of an error in a scda top-level function before
      * the file is opened. Hence, we do not use the standard error macros but
-     * just print the error by the following macro.
+     * just print the error by the following macro. The log level is the default
+     * log level since we do not have any other reliable information.
      */
-    SC_SCDA_CHECK_VERBOSE_COLL (*errcode, "Parse parameters");
+    SC_SCDA_CHECK_VERBOSE_COLL (params->log_level, *errcode,
+                                "Parse parameters");
     return NULL;
   }
 
@@ -2696,8 +2718,10 @@ sc_scda_fread_section_header_common_serial (sc_scda_fcontext_t *fc,
   mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, common,
                           SC_SCDA_COMMON_FIELD, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read common file section header part");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COMMON_FIELD, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Read common file section header part");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, SC_SCDA_COMMON_FIELD, count,
+                                   count_err);
 
   wrong_format = 0;
   /* check file section type */
@@ -2717,7 +2741,8 @@ sc_scda_fread_section_header_common_serial (sc_scda_fcontext_t *fc,
   }
   sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid file section type");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Invalid file section type");
 
   /* check common file section header format */
   if (common[1] != ' ') {
@@ -2726,7 +2751,8 @@ sc_scda_fread_section_header_common_serial (sc_scda_fcontext_t *fc,
   }
   sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Missing space in file section header");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Missing space in file section header");
 
   /* initialize user_string */
   sc_scda_init_nul (user_string, SC_SCDA_USER_STRING_BYTES + 1);
@@ -2739,7 +2765,7 @@ sc_scda_fread_section_header_common_serial (sc_scda_fcontext_t *fc,
   }
   sc_scda_scdaret_to_errcode (wrong_format ? SC_SCDA_FERR_FORMAT :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode,
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
                              "Invalid user string in section header");
 }
 
@@ -2878,8 +2904,10 @@ sc_scda_fread_block_header_serial (sc_scda_fcontext_t *fc, size_t *elem_size,
   mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
                           SC_SCDA_COUNT_FIELD, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block section header count entry");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Read block section header count entry");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, SC_SCDA_COUNT_FIELD, count,
+                                   count_err);
 
   /* check read count entry */
   invalid_count_entry = sc_scda_check_count_entry (count_entry, 'E',
@@ -2887,7 +2915,8 @@ sc_scda_fread_block_header_serial (sc_scda_fcontext_t *fc, size_t *elem_size,
   sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
                                                     SC_SCDA_FERR_SUCCESS,
                               errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid block count entry");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Invalid block count entry");
 
   /* update the internal file pointer; only in serial */
   fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
@@ -2929,8 +2958,10 @@ sc_scda_fread_array_header_serial (sc_scda_fcontext_t *fc, size_t *elem_count,
   mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
                           SC_SCDA_COUNT_FIELD, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block section header count entry");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Read block section header count entry");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, SC_SCDA_COUNT_FIELD, count,
+                                   count_err);
 
   /* check read count entry */
   invalid_count_entry = sc_scda_check_count_entry (count_entry,'N',
@@ -2938,8 +2969,8 @@ sc_scda_fread_array_header_serial (sc_scda_fcontext_t *fc, size_t *elem_count,
   sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
                                                     SC_SCDA_FERR_SUCCESS,
                               errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid first fixed-length array count "
-                             "entry");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Invalid first fixed-length array count entry");
 
   /* update the internal file pointer; only in serial */
   fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
@@ -2948,8 +2979,10 @@ sc_scda_fread_array_header_serial (sc_scda_fcontext_t *fc, size_t *elem_count,
   mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, count_entry,
                           SC_SCDA_COUNT_FIELD, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block section header count entry");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_COUNT_FIELD, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Read block section"
+                             " header count entry");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, SC_SCDA_COUNT_FIELD, count,
+                                   count_err);
 
   /* check read count entry */
   invalid_count_entry = sc_scda_check_count_entry (count_entry, 'E',
@@ -2957,8 +2990,8 @@ sc_scda_fread_array_header_serial (sc_scda_fcontext_t *fc, size_t *elem_count,
   sc_scda_scdaret_to_errcode (invalid_count_entry ? SC_SCDA_FERR_FORMAT :
                                                     SC_SCDA_FERR_SUCCESS,
                               errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid second fixed-length array count "
-                             "entry");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid second"
+                             " fixed-length array count entry");
 
   /* update the internal file pointer; only in serial */
   fc->accessed_bytes += SC_SCDA_COUNT_FIELD;
@@ -3104,8 +3137,9 @@ sc_scda_fread_inline_data_serial (sc_scda_fcontext_t *fc, sc_array_t *data,
   mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, data->array,
                           SC_SCDA_INLINE_FIELD, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read inline data");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (SC_SCDA_INLINE_FIELD, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Read inline data");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, SC_SCDA_INLINE_FIELD, count,
+                                   count_err);
   /* there are no conditions on the inline data and hence no checks */
 }
 
@@ -3202,8 +3236,10 @@ sc_scda_fread_mod_padding_serial (sc_scda_fcontext_t *fc,
   mpiret = sc_io_read_at (fc->file, offset, padding, num_bytes, sc_MPI_BYTE,
                           &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read modulo data padding");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (num_bytes, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Read modulo data"
+                             " padding");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, num_bytes, count,
+                                   count_err);
 
   /* check the padding */
   /* data padding depends the last data byte */
@@ -3225,10 +3261,12 @@ sc_scda_fread_mod_padding_serial (sc_scda_fcontext_t *fc,
   }
 
   invalid_padding = sc_scda_check_pad_to_mod (last_byte_internal, byte_count,
-                                              padding_internal, num_pad_bytes);
+                                              padding_internal,
+                                              num_pad_bytes);
   sc_scda_scdaret_to_errcode (invalid_padding ? SC_SCDA_FERR_FORMAT :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid modulo data padding");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode,
+                             "Invalid modulo data padding");
 }
 
 /** Internal function to read the block data.
@@ -3260,14 +3298,15 @@ sc_scda_fread_block_data_serial (sc_scda_fcontext_t *fc, sc_array_t *data,
   invalid_array = !(data->elem_count == 1 && data->elem_size == block_size);
   sc_scda_scdaret_to_errcode (invalid_array ? SC_SCDA_FERR_ARG :
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Invalid block array during reading");
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid block array"
+                             " during reading");
 
   /* read block data  */
   mpiret = sc_io_read_at (fc->file, fc->accessed_bytes, data->array,
                           (int) block_size, sc_MPI_BYTE, &count);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  SC_SCDA_CHECK_NONCOLL_ERR (errcode, "Read block data");
-  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (block_size, count, count_err);
+  SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Read block data");
+  SC_SCDA_CHECK_NONCOLL_COUNT_ERR (fc->log_level, block_size, count, count_err);
 }
 
 sc_scda_fcontext_t *
@@ -3486,7 +3525,7 @@ sc_scda_fclose (sc_scda_fcontext_t * fc, sc_scda_ferror_t * errcode)
    * standard error macros but we call \ref SC_SCDA_CHECK_VERBOSE_COLL to print
    * an error message in case of an error.
    */
-  SC_SCDA_CHECK_VERBOSE_COLL (*errcode, "File close");
+  SC_SCDA_CHECK_VERBOSE_COLL (fc->log_level, *errcode, "File close");
 
   SC_FREE (fc);
 
