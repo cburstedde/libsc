@@ -1611,6 +1611,13 @@ sc_version_point (void)
 #endif
 
 int
+sc_is_littleendian (void)
+{
+  const uint32_t      uint = 1;
+  return *(char *) &uint == 1;
+}
+
+int
 sc_have_zlib (void)
 {
 #ifndef SC_HAVE_ZLIB
