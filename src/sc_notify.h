@@ -117,8 +117,8 @@ int                 sc_notify (int *receivers, int num_receivers,
  *                              arbitrary data to be transmitted to senders.
  *                              If \a out_payload is NULL, repurposed as output.
  *                              Both payload arrays may be NULL altogether.
- *                              If \a out_payload is not NULL, \a in_payload may
- *                              not be NULL either.
+ *                              If \a out_payload is not NULL, \a in_payload
+ *                              must not be NULL either.
  * \param [in,out] out_payload  Of same type as \a in_payload, resized on output.
  *                              If NULL, the result is placed in \a in_payload.
  * \param [in] mpicomm          MPI communicator to use.
