@@ -1493,9 +1493,9 @@ sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
         *(int *) sc_array_push (senders) = 0;
       }
     }
-    if (in_payload != NULL && out_payload != NULL) {
+    if (out_payload != NULL) {
       /* if out_payload is defined, copy single entry from in_payload */
-      SC_ASSERT (in_payload->elem_count == 1);
+      SC_ASSERT (in_payload != NULL && in_payload->elem_count == 1);
       SC_ASSERT (in_payload->elem_size == out_payload->elem_size);
       sc_array_copy (out_payload, in_payload);
     }
