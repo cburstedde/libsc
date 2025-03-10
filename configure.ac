@@ -61,16 +61,9 @@ echo "o---------------------------------------"
 echo "| Checking keywords and types"
 echo "o---------------------------------------"
 
-AC_C_BIGENDIAN([AC_DEFINE([IS_BIGENDIAN], 1, [Define to 1 on a bigendian machine])])
 AC_C_CONST
 AC_C_INLINE
 AC_C_RESTRICT
-AC_CHECK_SIZEOF([int])
-AC_CHECK_SIZEOF([unsigned int])
-AC_CHECK_SIZEOF([long])
-AC_CHECK_SIZEOF([unsigned long])
-AC_CHECK_SIZEOF([long long])
-AC_CHECK_SIZEOF([void *])
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 
@@ -100,30 +93,6 @@ echo "o---------------------------------------"
 SC_CHECK_LIBRARIES([SC])
 
 # Print summary.
-
-m4_ifset([SC_CHECK_MPI_F77], [
-AC_DEFINE_UNQUOTED(F77,         ["${F77}"],         [F77 compiler])
-AC_DEFINE_UNQUOTED(FFLAGS,      ["${FFLAGS}"],      [F77 compiler flags])
-])
-m4_ifset([SC_CHECK_MPI_FC], [
-AC_DEFINE_UNQUOTED(FC,          ["${FC}"],          [FC compiler])
-AC_DEFINE_UNQUOTED(FCFLAGS,     ["${FCFLAGS}"],     [FC compiler flags])
-])
-AC_DEFINE_UNQUOTED(CPP,         ["${CPP}"],         [C preprocessor])
-AC_DEFINE_UNQUOTED(CPPFLAGS,    ["${CPPFLAGS}"],    [C preprocessor flags])
-AC_DEFINE_UNQUOTED(CC,          ["${CC}"],          [C compiler])
-dnl AC_DEFINE_UNQUOTED(C_VERSION,   ["${C_VERSION}"],   [C compiler version])
-AC_DEFINE_UNQUOTED(CFLAGS,      ["${CFLAGS}"],      [C compiler flags])
-m4_ifset([SC_CHECK_MPI_CXX], [
-AC_DEFINE_UNQUOTED(CXX,         ["${CXX}"],         [CXX compiler])
-AC_DEFINE_UNQUOTED(CXXFLAGS,    ["${CXXFLAGS}"],    [CXX compiler flags])
-])
-AC_DEFINE_UNQUOTED(LDFLAGS,     ["${LDFLAGS}"],     [Linker flags])
-AC_DEFINE_UNQUOTED(LIBS,        ["${LIBS}"],        [Libraries])
-dnl AC_DEFINE_UNQUOTED(BLAS_LIBS,   ["${BLAS_LIBS}"],   [BLAS libraries])
-dnl AC_DEFINE_UNQUOTED(LAPACK_LIBS, ["${LAPACK_LIBS}"], [LAPACK libraries])
-dnl AC_DEFINE_UNQUOTED(FLIBS,       ["${FLIBS}"],       [Fortran libraries])
-
 echo "o----------------------------------"
 echo "| Results for libsc are"
 echo "o----------------------------------"

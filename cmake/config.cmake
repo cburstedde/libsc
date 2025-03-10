@@ -5,6 +5,7 @@ include(CheckPrototypeDefinition)
 include(CheckCSourceCompiles)
 
 # --- retrieve library interface version from configuration file
+
 file(STRINGS config/sc_soversion.in SC_SOVERSION_READ
              REGEX "^[ \t]*SC_SOVERSION *= *[0-9:]+")
 string(REGEX REPLACE ".*([0-9]+):([0-9]+):([0-9]+)" "\\1.\\2.\\3"
@@ -55,6 +56,7 @@ else()
     set(SC_HAVE_JSON OFF CACHE BOOL "JSON features disabled")
   endif()
 endif()
+
 # --- set global compile environment
 
 # Build all targets with -fPIC so that libsc itself can be linked as a
@@ -68,30 +70,11 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_REQUIRED_INCLUDES)
 set(CMAKE_REQUIRED_LIBRARIES)
 
-set(SC_CC \"${CMAKE_C_COMPILER}\")
-set(SC_CPP ${CMAKE_C_COMPILER})
-
 check_symbol_exists(sqrt math.h SC_NONEED_M)
 
 if(NOT SC_NONEED_M)
   set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} m)
   check_symbol_exists(sqrt math.h SC_NEED_M)
-endif()
-
-string(APPEND SC_CPP " -E")
-set(SC_CPP \"${SC_CPP}\")
-
-set(SC_CFLAGS "${CMAKE_C_FLAGS}\ ${MPI_C_COMPILE_OPTIONS}")
-set(SC_CFLAGS \"${SC_CFLAGS}\")
-
-set(SC_CPPFLAGS \"\")
-
-set(SC_LDFLAGS \"${MPI_C_LINK_FLAGS}\")
-
-if(SC_HAVE_ZLIB)
-  set(SC_LIBS \"${ZLIB_LIBRARIES}\ m\")
-else()
-  set(SC_LIBS \"m\")
 endif()
 
 set(SC_ENABLE_PTHREAD ${CMAKE_USE_PTHREADS_INIT})
@@ -102,10 +85,10 @@ if(NOT "${SC_ENABLE_MPI}" STREQUAL "${CACHED_SC_ENABLE_MPI}")
   unset(SC_ENABLE_MPICOMMSHARED CACHE)
   unset(SC_ENABLE_MPITHREAD CACHE)
   unset(SC_ENABLE_MPIWINSHARED CACHE)
-  unset (SC_HAVE_AINT_DIFF CACHE)
-  unset (SC_HAVE_MPI_UNSIGNED_LONG_LONG CACHE)
-  unset (SC_HAVE_MPI_SIGNED_CHAR CACHE)
-  unset (SC_HAVE_MPI_INT8_T CACHE)
+  unset(SC_HAVE_AINT_DIFF CACHE)
+  unset(SC_HAVE_MPI_UNSIGNED_LONG_LONG CACHE)
+  unset(SC_HAVE_MPI_SIGNED_CHAR CACHE)
+  unset(SC_HAVE_MPI_INT8_T CACHE)
   unset(SC_ENABLE_MPIIO CACHE)
   # Update cached variable
   set(CACHED_SC_ENABLE_MPI "${SC_ENABLE_MPI}" CACHE STRING "Cached value of SC_ENABLE_MPI")
@@ -125,7 +108,6 @@ if( SC_ENABLE_MPI )
   # perform check of newer MPI data types
   include(cmake/check_mpitype.cmake)
 endif()
-
 
 check_symbol_exists(realloc stdlib.h SC_ENABLE_USE_REALLOC)
 
@@ -211,13 +193,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     check_c_source_compiles([=[${check_v4l2_src}]=] SC_ENABLE_V4L2)
   endif()
 endif()
-
-check_type_size(int SC_SIZEOF_INT BUILTIN_TYPES_ONLY)
-check_type_size("unsigned int" SC_SIZEOF_UNSIGNED_INT BUILTIN_TYPES_ONLY)
-check_type_size(long SC_SIZEOF_LONG BUILTIN_TYPES_ONLY)
-check_type_size("unsigned long" SC_SIZEOF_UNSIGNED_LONG BUILTIN_TYPES_ONLY)
-check_type_size("long long" SC_SIZEOF_LONG_LONG BUILTIN_TYPES_ONLY)
-set(SC_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(SC_ENABLE_DEBUG 1)
