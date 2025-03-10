@@ -1613,7 +1613,10 @@ sc_version_point (void)
 int
 sc_is_littleendian (void)
 {
-  const uint32_t      uint = 1;
+  /* We use the volatile keyword to deactivate compiler optimizations related
+   * to the variable uint.
+   */
+  const volatile uint32_t uint = 1;
   return *(char *) &uint == 1;
 }
 
