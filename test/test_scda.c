@@ -560,10 +560,10 @@ main (int argc, char **argv)
     scda_params_err.fuzzy_seed = 0;
   }
   if (mpisize > 1) {
-    SC_GLOBAL_ESSENTIAL
-      ("We expect two invalid scda function parameter errors."
-       " This is just for testing purposes and does not imply"
-       " erroneous code behavior.\n");
+    SC_GLOBAL_LOG
+      (scda_params_err.log_level, "We expect two invalid scda function"
+       " parameter errors. This is just for testing purposes and does not"
+       " imply erroneous code behavior.\n");
   }
   /* fopen_write with non-collective fuzzy error parameters */
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
@@ -661,9 +661,9 @@ main (int argc, char **argv)
 
   /* intentionally try to write with non-collective block size */
   if (mpisize > 1) {
-    SC_GLOBAL_ESSENTIAL
-      ("We expect an invalid scda function parameter error."
-       " This is just for testing purposes and do not imply"
+    SC_GLOBAL_LOG
+      (scda_params.log_level, "We expect an invalid scda function parameter"
+       " error. This is just for testing purposes and does not imply"
        " erroneous code behavior.\n");
     fc = sc_scda_fwrite_block (fc, "A block section", NULL, &data,
                                (mpirank == 0) ? 32 : 33, mpisize - 1, 0,
@@ -783,15 +783,16 @@ main (int argc, char **argv)
                   "scda_fopen_read failed");
 
   /* provoke error for invalid scda workflow */
-  SC_GLOBAL_ESSENTIAL ("We expect an error for incorrect workflow for scda"
-                       " reading function, which is triggered on purpose to"
-                       " test the error checking\n");
+  SC_GLOBAL_LOG (scda_params.log_level, "We expect an error for incorrect"
+                 " workflow for scda reading function, which is"
+                 " triggered on purpose to test the error checking\n");
   fc = sc_scda_fread_inline_data (fc, &data, 0, &errcode);
   SC_CHECK_ABORT (!sc_scda_ferror_is_success (errcode) &&
                   errcode.scdaret == SC_SCDA_FERR_USAGE && fc == NULL,
                   "sc_scda_fread_section_header error detection failed");
   /* fc is closed and deallocated due to the occurred error  */
-  SC_GLOBAL_ESSENTIAL ("End of expected error path: test successful\n");
+  SC_GLOBAL_LOG (scda_params.log_level, "End of expected error path: test"
+                                        " successful\n");
 
   /* skip through file and test non-collective skipping */
   test_scda_skip_through_file (mpicomm, filename, &scda_params, mpirank,
