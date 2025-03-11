@@ -22,6 +22,7 @@
  - Add sc_MPI_Aint and sc_MPI_Aint_diff
  - Add sc_MPI_UNSIGNED_LONG_LONG, sc_MPI_SIGNED_CHAR and sc_MPI_INT8_T
  - Implement a functional subset of the scda API for parallel I/O
+ - Flag the scda API to be changed in the next release
  - Intremental documentation updates
  - Add a portable sleep function
 
