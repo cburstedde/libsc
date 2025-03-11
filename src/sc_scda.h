@@ -25,6 +25,8 @@
  *
  * Routines for parallel I/O with the \b scda format.
  *
+ * \warning This API will change in the next libsc version!
+ *
  * Functionality to write and read in parallel using a prescribed
  * serial-equivalent file format called \b scda.
  *
@@ -193,6 +195,8 @@
  *
  * For more details and the option for encoding metadata and data see the
  * functions in \ref sc_scda.h.
+ *
+ * \warning The scda API will change in the next libsc version!
  */
 
 #ifndef SC_SCDA_H
@@ -439,6 +443,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  * \note
  * All parameters except of \b block_data are collective.
  *
+ * \warning The API of this function will change in the next libsc version!
+ *
  * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -504,6 +510,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  * element global count and a fixed element size.
  * \note
  * All parameters except of \b array_data are collective.
+ *
+ * \warning The API of this function will change in the next libsc version!
  *
  * This function returns NULL on I/O errors.
  *
@@ -590,6 +598,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  * \note
  * All parameters are collective.
  *
+ * \warning The API of this function will change in the next libsc version!
+ *
  * \param [in]    elem_sizes    The \b elem_sizes array as retrieved by \ref
  *                              sc_scda_fread_varray_sizes or passed to \ref
  *                              sc_scda_fwrite_varray.
@@ -619,6 +629,8 @@ int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
  * elements do not have a constant element size in bytes.
  * \note
  * All parameters except of \b array_data and \b elem_sizes are collective.
+ *
+ * \warning The API of this function will change in the next libsc version!
  *
  * This function returns NULL on I/O errors.
  *
@@ -878,6 +890,8 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  * \note
  * All parameters except of \b block_data are collective.
  *
+ * \warning The API of this function will change in the next libsc version!
+ *
  * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -919,6 +933,8 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  * a parallel partition of the array elements by \b elem_counts.
  * \note
  * All parameters except of \b array_data are collective.
+ *
+ * \warning The API of this function will change in the next libsc version!
  *
  * This function returns NULL on I/O errors.
  *
@@ -984,6 +1000,8 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  * \note
  * All parameters except of \b elem_sizes are collective.
  *
+ * \warning The API of this function will change in the next libsc version!
+ *
  * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -1032,6 +1050,8 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  * \b elem_sizes.
  * \note
  * All parameters except of \b array_data and \b elem_sizes are collective.
+ *
+ * \warning The API of this function will change in the next libsc version!
  *
  * This function returns NULL on I/O errors.
  *
