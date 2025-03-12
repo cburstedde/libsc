@@ -667,9 +667,16 @@ sc_MPI_Comm_split_type (sc_MPI_Comm mpicomm, int split_type, int key,
                         sc_MPI_Info info, sc_MPI_Comm *newcomm)
 {
 #if defined SC_ENABLE_MPI && defined SC_ENABLE_MPICOMMSHARED
-   return MPI_Comm_split_type (mpicomm, split_type, key, info, newcomm);
+  return MPI_Comm_split_type (mpicomm, split_type, key, info, newcomm);
 #else
-   return sc_MPI_Comm_dup (mpicomm, newcomm);
+  /* split communicator into single processes */
+  int                 mpiret;
+  int                 mpirank;
+
+  if ((mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank)) != sc_MPI_SUCCESS) {
+    return mpiret;
+  }
+  return sc_MPI_Comm_split (mpicomm, mpirank, mpirank, newcomm);
 #endif
 }
 

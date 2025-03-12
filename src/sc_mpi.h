@@ -690,6 +690,11 @@ int                 sc_MPI_Testall (int, sc_MPI_Request *, int *,
 #define sc_MPI_COMM_TYPE_SHARED    sc_MPI_UNDEFINED
 #endif
 
+/** Wrapper to split an MPI communicator by shared node type.
+ * With MPI and MPICOMMSHARED enabled, call MPI_Comm_split type.
+ * Otherwise, call sc_MPI_Comm_split with the rank as color and key.
+ * Without MPI, the latter falls back to duplicate the communicator.
+ */
 int                 sc_MPI_Comm_split_type (sc_MPI_Comm mpicomm,
                                             int split_type, int key,
                                             sc_MPI_Info info,
