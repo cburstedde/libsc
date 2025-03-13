@@ -86,6 +86,36 @@
 #define SC_NOCOUNT_LOGINDENT
 #endif
 
+/* implement the default visibility attribute */
+
+#if defined _WIN32 || defined __CYGWIN__
+#if 0
+  /* this is currently not properly tested */
+  #ifdef BUILDING_DLL
+    #ifdef __GNUC__
+      #define SC_DLL_PUBLIC __attribute__ ((dllexport))
+    #else
+      #define SC_DLL_PUBLIC __declspec(dllexport)
+    #endif
+  #else
+    #ifdef __GNUC__
+      #define SC_DLL_PUBLIC __attribute__ ((dllimport))
+    #else
+      #define SC_DLL_PUBLIC __declspec(dllimport)
+    #endif
+  #endif
+#else
+  /* while disabling the above definitions */
+  #define SC_DLL_PUBLIC
+#endif
+#else
+  #if __GNUC__ >= 4
+    #define SC_DLL_PUBLIC __attribute__ ((visibility ("default")))
+  #else
+    #define SC_DLL_PUBLIC
+  #endif
+#endif
+
 /* use this in case mpi.h includes stdint.h */
 
 #ifndef __STDC_LIMIT_MACROS
@@ -221,14 +251,14 @@ extern const int    sc_log2_lookup_table[256];
  * It starts out with a value of -1, which is fine by itself.
  * It is set to a non-negative value by the (optional) \ref sc_init.
  */
-extern int          sc_package_id;
+extern SC_DLL_PUBLIC int sc_package_id;
 
 /** Optional trace file for logging (see \ref sc_init).
  * Initialized to NULL. */
-extern FILE        *sc_trace_file;
+extern SC_DLL_PUBLIC FILE *sc_trace_file;
 
 /** Optional minimum log priority for messages that go into the trace file. */
-extern int          sc_trace_prio;
+extern SC_DLL_PUBLIC int sc_trace_prio;
 
 /** Define machine epsilon for the double type. */
 #define SC_EPS               2.220446049250313e-16
