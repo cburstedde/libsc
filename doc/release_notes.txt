@@ -26,6 +26,7 @@
  - Flag the scda API to be changed in the next release
  - Intremental documentation updates
  - Add a portable sleep function
+ - Remove unused sc_handler_t
 
 ### Build system
 

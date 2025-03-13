@@ -590,7 +590,6 @@ void                SC_LERRORF (const char *fmt, ...)
 
 /* callback typedefs */
 
-typedef void        (*sc_handler_t) (void *data);
 typedef void        (*sc_log_handler_t) (FILE * log_stream,
                                          const char *filename, int lineno,
                                          int package, int category,
