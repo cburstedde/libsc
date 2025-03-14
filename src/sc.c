@@ -146,6 +146,26 @@ sc_extern_c_hack_2 (void)
      just before the final include-once check, to ensure C linkage. */
 }
 
+int
+sc_mpi_is_enabled (void)
+{
+#ifdef SC_ENABLE_MPI
+  return 1;
+#else
+  return 0;
+#endif
+}
+
+int
+sc_mpi_is_shared (void)
+{
+#ifdef SC_ENABLE_MPISHARED
+  return 1;
+#else
+  return 0;
+#endif
+}
+
 #ifdef SC_ENABLE_PTHREAD
 
 static pthread_mutex_t sc_default_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -1360,6 +1380,8 @@ sc_init (sc_MPI_Comm mpicomm,
 
   /* one line of logging if the threshold is not SC_LP_SILENT */
   SC_GLOBAL_ESSENTIALF ("This is %s\n", SC_PACKAGE_STRING);
+  SC_GLOBAL_INFOF ("MPI is enabled %d shared %d\n",
+                   sc_mpi_is_enabled (), sc_mpi_is_shared ());
   sc_initialized = 1;
 }
 

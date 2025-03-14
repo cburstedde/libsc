@@ -74,6 +74,16 @@
 
 SC_EXTERN_C_BEGIN;
 
+/** Return whether MPI is configured.
+ * \return          Boolean corresponding to define SC_ENABLE_MPI.
+ */
+int                 sc_mpi_is_enabled (void);
+
+/** Return whether MPI supports type split and shared windows.
+ * \return          Boolean corresponding to #define SC_ENABLE_MPISHARED.
+ */
+int                 sc_mpi_is_shared (void);
+
 /** Enumerate all MPI tags used internally to the sc library. */
 typedef enum
 {
