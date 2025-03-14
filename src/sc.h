@@ -86,6 +86,36 @@
 #define SC_NOCOUNT_LOGINDENT
 #endif
 
+/* implement the default visibility attribute */
+
+#if defined _WIN32 || defined __CYGWIN__
+#if 0
+  /* this is currently not properly tested */
+  #ifdef BUILDING_DLL
+    #ifdef __GNUC__
+      #define SC_DLL_PUBLIC __attribute__ ((dllexport))
+    #else
+      #define SC_DLL_PUBLIC __declspec(dllexport)
+    #endif
+  #else
+    #ifdef __GNUC__
+      #define SC_DLL_PUBLIC __attribute__ ((dllimport))
+    #else
+      #define SC_DLL_PUBLIC __declspec(dllimport)
+    #endif
+  #endif
+#else
+  /* while disabling the above definitions */
+  #define SC_DLL_PUBLIC
+#endif
+#else
+  #if __GNUC__ >= 4
+    #define SC_DLL_PUBLIC __attribute__ ((visibility ("default")))
+  #else
+    #define SC_DLL_PUBLIC
+  #endif
+#endif
+
 /* use this in case mpi.h includes stdint.h */
 
 #ifndef __STDC_LIMIT_MACROS
@@ -217,18 +247,21 @@ SC_EXTERN_C_BEGIN;
 extern const int    sc_log2_lookup_table[256];
 
 /** libsc allows for multiple packages to use their own log priorities etc.
- * This is the package id for core sc functions, which is meant to be read only.
- * It starts out with a value of -1, which is fine by itself.
+ * Logging priorities, callbacks, and memory balance counters go by package.
+ * This is the package id for core sc functions and is meant to be read only.
+ * The variable starts out with a value of -1, which is fine by itself.
  * It is set to a non-negative value by the (optional) \ref sc_init.
+ * Calling the (also optional) \ref sc_finalize resets it to -1.  There is
+ * no need to access this variable directly; use \ref sc_get_package_id.
  */
-extern int          sc_package_id;
+extern SC_DLL_PUBLIC int sc_package_id;
 
 /** Optional trace file for logging (see \ref sc_init).
  * Initialized to NULL. */
-extern FILE        *sc_trace_file;
+extern SC_DLL_PUBLIC FILE *sc_trace_file;
 
 /** Optional minimum log priority for messages that go into the trace file. */
-extern int          sc_trace_prio;
+extern SC_DLL_PUBLIC int sc_trace_prio;
 
 /** Define machine epsilon for the double type. */
 #define SC_EPS               2.220446049250313e-16
@@ -558,9 +591,7 @@ void                SC_LERRORF (const char *fmt, ...)
  * or some other numerical literal to a string. */
 #define SC_TOSTRING(x) _SC_TOSTRING(x)
 
-/* callback typedefs */
-
-typedef void        (*sc_handler_t) (void *data);
+/** Type of the log handler function. */
 typedef void        (*sc_log_handler_t) (FILE * log_stream,
                                          const char *filename, int lineno,
                                          int package, int category,
@@ -623,17 +654,41 @@ void                sc_set_abort_handler (sc_abort_handler_t abort_handler);
 
 /** The central log function to be called by all packages.
  * Dispatches the log calls by package and filters by category and priority.
+ * \param [in] filename  Usually used with a __FILE__ argument.
+ * \param [in] lineno    Usually used with a __LINE__ argument.
  * \param [in] package   Must be a registered package id or -1.
  * \param [in] category  Must be SC_LC_NORMAL or SC_LC_GLOBAL.
  * \param [in] priority  Must be > SC_LP_ALWAYS and < SC_LP_SILENT.
+ * \param [in] msg       Nul-terminated string to print.
  */
 void                sc_log (const char *filename, int lineno,
                             int package, int category, int priority,
                             const char *msg);
+
+/** The printf-style log function to be called by all packages.
+ * Dispatches the log calls by package and filters by category and priority.
+ * \param [in] filename  Usually used with a __FILE__ argument.
+ * \param [in] lineno    Usually used with a __LINE__ argument.
+ * \param [in] package   Must be a registered package id or -1.
+ * \param [in] category  Must be SC_LC_NORMAL or SC_LC_GLOBAL.
+ * \param [in] priority  Must be > SC_LP_ALWAYS and < SC_LP_SILENT.
+ * \param [in] fmt       String of printf convention to log.
+ */
 void                sc_logf (const char *filename, int lineno,
                              int package, int category, int priority,
                              const char *fmt, ...)
   __attribute__ ((format (printf, 6, 7)));
+
+/** The vprintf-style log function to be called by all packages.
+ * Dispatches the log calls by package and filters by category and priority.
+ * \param [in] filename  Usually used with a __FILE__ argument.
+ * \param [in] lineno    Usually used with a __LINE__ argument.
+ * \param [in] package   Must be a registered package id or -1.
+ * \param [in] category  Must be SC_LC_NORMAL or SC_LC_GLOBAL.
+ * \param [in] priority  Must be > SC_LP_ALWAYS and < SC_LP_SILENT.
+ * \param [in] fmt       String of vprintf convention to log.
+ * \param [in] ap        Must be initialized by va_start.
+ */
 void                sc_logv (const char *filename, int lineno,
                              int package, int category, int priority,
                              const char *fmt, va_list ap);
@@ -716,6 +771,7 @@ void                sc_package_unlock (int package_id);
  * This can be called at any point in the program, any number of times.
  * It can only lower the verbosity at and below the value of SC_LP_THRESHOLD.
  * \param [in] package_id       Must be a registered package identifier.
+ * \param [in] log_priority     The minimum priority required to output.
  */
 void                sc_package_set_verbosity (int package_id,
                                               int log_priority);
