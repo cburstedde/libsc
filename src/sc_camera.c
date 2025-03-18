@@ -262,6 +262,7 @@ static void print_vec(const sc_camera_coords_t *vec, size_t size)
 /* TODO : the sqrt function used is only for double */
 /* the code is from http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
     with some modifications to fit in this context */
+/* See also https://d3cw3dd2w32x2b.cloudfront.net/wp-content/uploads/2015/01/matrix-to-quat.pdf */
 /* matrix to quaternion */
 static inline void sc_camera_mat3x3_to_quaternion(const sc_camera_mat3x3_t a, 
     sc_camera_vec4_t q)
@@ -436,7 +437,10 @@ void sc_camera_get_projection(sc_camera_t *camera, sc_camera_mat4x4_t proj_matri
 
 /* points of form sc_camera_vec3_t? */
 void sc_camera_view_transform(sc_camera_t *camera, sc_array_t *points_in,
-     sc_array_t *points_out);
+     sc_array_t *points_out)
+{
+    
+}
 
 /* the idea is to return the indices of points that are in the camera view */
 /* the function does not easily know if the points are already in camera space */
@@ -462,7 +466,7 @@ void sc_camera_transform(sc_camera_t *camera, sc_array_t *points_in,
 /* what format should planes have? (currently vec4 = (a,b,c,d) -> ax + by + cz + d = 0) */
 void sc_camera_get_frustum(sc_camera_t *camera, sc_camera_vec4_t near, 
     sc_camera_vec4_t far, sc_camera_vec4_t left,
-    sc_camera_vec4_t right, sc_camera_vec4_t up, sc_camera_vec4_t down)
+    sc_camera_vec4_t right, sc_camera_vec4_t top, sc_camera_vec4_t bottom)
 {
     sc_camera_mat4x4_t view;
     sc_camera_get_view(camera, view);
@@ -480,9 +484,9 @@ void sc_camera_get_frustum(sc_camera_t *camera, sc_camera_vec4_t near,
     near = (0, 0, -1, -1)
     far = (0, 0, 1, -1)
     left = (-1, 0, 0, -1)
-    right = (1, 0, 0, 1)
-    up = (1, 0, 0, -1)
-    down = (-1, 0, 0, -1) 
+    right = (1, 0, 0, -1)
+    up = (0, 1, 0, -1)
+    down = (0, -1, 0, -1) 
     */
 
     near[0] = 0.;
@@ -503,17 +507,17 @@ void sc_camera_get_frustum(sc_camera_t *camera, sc_camera_vec4_t near,
     right[0] = 1.;
     right[1] = 0.;
     right[2] = 0.;
-    right[3] = 1.;
+    right[3] = -1.;
 
-    up[0] = 1.;
-    up[1] = 0.;
-    up[2] = 0.;
-    up[3] = -1.;
+    top[0] = 0.;
+    top[1] = 1.;
+    top[2] = 0.;
+    top[3] = -1.;
 
-    down[0] = -1.;
-    down[1] = 0.;
-    down[2] = 0.;
-    down[3] = -1.;
+    bottom[0] = 0.;
+    bottom[1] = -1.;
+    bottom[2] = 0.;
+    bottom[3] = -1.;
 
     print_mat(transform, 4);
 
@@ -521,8 +525,8 @@ void sc_camera_get_frustum(sc_camera_t *camera, sc_camera_vec4_t near,
     sc_camera_mult_v4_4x4(far, transform, far);
     sc_camera_mult_v4_4x4(left, transform, left);
     sc_camera_mult_v4_4x4(right, transform, right);
-    sc_camera_mult_v4_4x4(up, transform, up);
-    sc_camera_mult_v4_4x4(down, transform, down);
+    sc_camera_mult_v4_4x4(top, transform, top);
+    sc_camera_mult_v4_4x4(bottom, transform, bottom);
 }
 
 void sc_camera_get_frustum_corners(sc_camera_t *camera, sc_camera_vec3_t lbn, 
