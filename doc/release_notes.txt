@@ -18,6 +18,8 @@
 
 ### Functionality
 
+ - Prefer calling sc_get_package_id () over accessing global variable.
+
 ## 2.8.7
 
 We expect this to be a drop-in replacement for most use cases, but there are

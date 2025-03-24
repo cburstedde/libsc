@@ -344,13 +344,14 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 
 /* macros for memory allocation, will abort if out of memory */
 
-#define SC_ALLOC(t,n)         (t *) sc_malloc (sc_package_id, (n) * sizeof(t))
-#define SC_ALLOC_ZERO(t,n)    (t *) sc_calloc (sc_package_id, \
+#define SC_ALLOC(t,n)         (t *) sc_malloc (sc_get_package_id (),    \
+                                               (n) * sizeof(t))
+#define SC_ALLOC_ZERO(t,n)    (t *) sc_calloc (sc_get_package_id (),    \
                                                (size_t) (n), sizeof(t))
-#define SC_REALLOC(p,t,n)     (t *) sc_realloc (sc_package_id,          \
+#define SC_REALLOC(p,t,n)     (t *) sc_realloc (sc_get_package_id (),   \
                                              (p), (n) * sizeof(t))
-#define SC_STRDUP(s)                sc_strdup (sc_package_id, (s))
-#define SC_FREE(p)                  sc_free (sc_package_id, (p))
+#define SC_STRDUP(s)                sc_strdup (sc_get_package_id (), (s))
+#define SC_FREE(p)                  sc_free (sc_get_package_id (), (p))
 
 /* macros for memory alignment */
 /* some copied from bfam: https://github.com/bfam/bfam */
@@ -475,8 +476,9 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #define SC_GEN_LOG(package,category,priority,s)                         \
   ((priority) < SC_LP_THRESHOLD ? (void) 0 :                            \
    sc_log (__FILE__, __LINE__, (package), (category), (priority), (s)))
-#define SC_GLOBAL_LOG(p,s) SC_GEN_LOG (sc_package_id, SC_LC_GLOBAL, (p), (s))
-#define SC_LOG(p,s) SC_GEN_LOG (sc_package_id, SC_LC_NORMAL, (p), (s))
+#define SC_GLOBAL_LOG(p,s) SC_GEN_LOG (sc_get_package_id (),            \
+                                       SC_LC_GLOBAL, (p), (s))
+#define SC_LOG(p,s) SC_GEN_LOG (sc_get_package_id (), SC_LC_NORMAL, (p), (s))
 void                SC_GEN_LOGF (int package, int category, int priority,
                                  const char *fmt, ...)
   __attribute__ ((format (printf, 4, 5)));
@@ -490,9 +492,9 @@ void                SC_LOGF (int priority, const char *fmt, ...)
    sc_logf (__FILE__, __LINE__, (package), (category), (priority),      \
             (fmt), __VA_ARGS__))
 #define SC_GLOBAL_LOGF(p,fmt,...)                                       \
-  SC_GEN_LOGF (sc_package_id, SC_LC_GLOBAL, (p), (fmt), __VA_ARGS__)
+  SC_GEN_LOGF (sc_get_package_id (), SC_LC_GLOBAL, (p), (fmt), __VA_ARGS__)
 #define SC_LOGF(p,fmt,...)                                              \
-  SC_GEN_LOGF (sc_package_id, SC_LC_NORMAL, (p), (fmt), __VA_ARGS__)
+  SC_GEN_LOGF (sc_get_package_id (), SC_LC_NORMAL, (p), (fmt), __VA_ARGS__)
 #endif
 
 /* convenience global log macros will only output if identifier <= 0 */
@@ -821,7 +823,6 @@ void                sc_init (sc_MPI_Comm mpicomm,
  * \return          True if libsc has been initialized with a call to
  *                  \ref sc_init and false otherwise.
  *                  After \ref sc_finalize the result resets to false.
- * \note            This routine is not thread-safe.
  */
 int                 sc_is_initialized (void);
 
@@ -829,7 +830,6 @@ int                 sc_is_initialized (void);
  * \return          This is -1 before \ref sc_init has been called
  *                  and a proper package identifier (>= 0) afterwards.
  *                  After \ref sc_finalize the identifier resets to -1.
- * \note            This routine is not thread-safe.
  */
 int                 sc_get_package_id (void);
 
