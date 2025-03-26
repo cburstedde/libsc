@@ -325,6 +325,11 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
   mpicomm = sc_MPI_COMM_WORLD;
 
+  /* testing redundancy tolerance of sc_finalize */
+  sc_finalize ();
+  sc_finalize ();
+
+  /* initialization must be called only once */
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
 #ifndef SC_HAVE_ZLIB
@@ -345,9 +350,11 @@ main (int argc, char **argv)
   /* test encode and decode functions */
   num_failed_tests += test_encode_decode ();
 
-  /* clean up and exit */
+  /* clean up and exit (testing redundancy) */
+  sc_finalize ();
   sc_finalize ();
 
+  /* this must be called exactly once at the end */
   mpiret = sc_MPI_Finalize ();
   SC_CHECK_MPI (mpiret);
 
