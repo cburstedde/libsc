@@ -444,6 +444,9 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
  * Recommended for those who generally prefer to see absolutely no output
  * from the libraries they use.
  *
+ * A suggested setting for applications that expect sub-libraries to
+ * be rather quiet is \ref SC_LP_APPLICATION.
+ *
  * \ingroup sc
  *
  * @{ */
@@ -471,7 +474,9 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #else
 /** The log threshold chosen by \ref SC_LP_DEFAULT. */
 #define SC_LP_THRESHOLD SC_LP_INFO
-/** This threshold is intended for applications with conservative logging. */
+/** This threshold is intended for applications with conservative logging.
+ * When the library is configured in debug mode, this becomes \ref SC_LP_DEBUG
+ * which is very verbose and sensible for debugging the sc library itself. */
 #define SC_LP_APPLICATION SC_LP_STATISTICS
 #endif
 #endif
@@ -804,26 +809,39 @@ void                sc_package_unregister (int package_id);
  */
 void                sc_package_print_summary (int log_priority);
 
-/** Sets the global program identifier (e.g. the MPI rank) and some flags.
- * This function is optional.
- * This function must only be called before additional threads are created.
+/** Set the global program identifier (the MPI rank) and some flags.
+ *
+ * This function is optional and may not be called twice without calling
+ * \ref sc_finalize in between.  Status is queried by \ref sc_is_initialized.
+ *
+ * This function must only be called before additional threads are created
+ * since it sets internal static variables.
+ *
  * If this function is not called or called with log_handler == NULL,
  * the default SC log handler will be used.
- * If this function is not called or called with log_threshold == SC_LP_DEFAULT,
- * the default SC log threshold will be used.
+ * If this function is not called or called with log_threshold == \ref
+ * SC_LP_DEFAULT, the default SC log threshold will be used.
  * The default SC log settings can be changed with sc_set_log_defaults ().
+ *
  * \param [in] mpicomm          MPI communicator, can be sc_MPI_COMM_NULL.
  *                              If sc_MPI_COMM_NULL, the identifier is set to -1.
  *                              Otherwise, sc_MPI_Init must have been called.
  *                              Effectively, we just query size and rank.
- * \param [in] catch_signals    If true, signals INT and SEGV are caught.
+ * \param [in] catch_signals    If true, signals INT and SEGV are caught, which
+ *                              helps with standalone programs.  For use
+ *                              from a larger framework or library, better
+ *                              left at 0 since that library my handle signals.
  * \param [in] print_backtrace  If true, sc_abort prints a backtrace.
+ *                              This is better set to 0 when the calling program
+ *                              has its own means to handle abort and errors.
  */
 void                sc_init (sc_MPI_Comm mpicomm,
                              int catch_signals, int print_backtrace,
                              sc_log_handler_t log_handler, int log_threshold);
 
 /** Return whether SC has been initialized or not.
+ * The result is equal to \ref sc_get_package_id () >= 0.
+ *
  * \return          True if libsc has been initialized with a call to
  *                  \ref sc_init and false otherwise.
  *                  After \ref sc_finalize the result resets to false.
@@ -831,28 +849,35 @@ void                sc_init (sc_MPI_Comm mpicomm,
 int                 sc_is_initialized (void);
 
 /** Query SC's own package identity.
+ * Returns non-negative if and only if \ref sc_is_initialized returns true.
+ *
  * \return          This is -1 before \ref sc_init has been called
  *                  and a proper package identifier (>= 0) afterwards.
  *                  After \ref sc_finalize the identifier resets to -1.
  */
 int                 sc_get_package_id (void);
 
-/** Unregisters all packages, runs the memory check, removes the
- * signal handlers and resets sc_identifier and sc_root_*.
+/** Unregister all packages, run the memory check, remove the
+ * signal handlers and reset sc_identifier and sc_root_*.
  * This function aborts on any inconsistency found unless
  * the global variable default_abort_mismatch is false.
- * Function is optional if memory cleanliness is no concern.
- * This function does not require sc_init to be called first.
- * In any case it makes \ref sc_is_initialized return false.
+ * The function is optional if memory cleanliness is no concern.
+ *
+ * This function does not require \ref sc_init to be called first.
+ * In contrast to the latter it may be called any number of times in a row.
+ * In any case it makes \ref sc_is_initialized return false afterwards.
  */
 void                sc_finalize (void);
 
-/** Unregisters all packages, runs the memory check, removes the
- * signal handlers and resets sc_identifier and sc_root_*.
- * This function never aborts but returns the number of errors encountered.
- * Function is optional if memory cleanliness is no concern.
- * This function does not require sc_init to be called first.
- * In any case it makes \ref sc_is_initialized return false.
+/** Unregister all packages, run the memory check, remove the
+ * signal handlers and reset sc_identifier and sc_root_*.
+ * This function never aborts but returns the number of errors
+ * encountered.  It is optional if memory cleanliness is no concern.
+ *
+ * This function does not require \ref sc_init to be called first.
+ * In contrast to the latter it may be called any number of times in a row.
+ * In any case it makes \ref sc_is_initialized return false afterwards.
+ *
  * \return          0 when everything is consistent, nonzero otherwise.
  */
 int                 sc_finalize_noabort (void);

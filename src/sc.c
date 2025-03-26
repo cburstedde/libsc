@@ -104,8 +104,6 @@ int                 sc_package_id = -1;
 FILE               *sc_trace_file = NULL;
 int                 sc_trace_prio = SC_LP_STATISTICS;
 
-static int          sc_initialized = 0;
-
 static int          default_malloc_count = 0;
 static int          default_free_count = 0;
 static int          default_rc_active = 0;
@@ -1176,13 +1174,16 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
 
   /* realloc if the space in sc_packages is used up */
   if (i == sc_num_packages_alloc) {
+    const int         new_num_packages_alloc =
+      2 * sc_num_packages_alloc + 1;
+
     sc_packages = (sc_package_t *) realloc (sc_packages,
-                                            (2 * sc_num_packages_alloc +
-                                             1) * sizeof (sc_package_t));
+                                            new_num_packages_alloc *
+                                            sizeof (sc_package_t));
     SC_CHECK_ABORT (sc_packages, "Failed to allocate memory");
     new_package = sc_packages + i;
     new_package_id = i;
-    sc_num_packages_alloc = 2 * sc_num_packages_alloc + 1;
+    sc_num_packages_alloc = new_num_packages_alloc;
 
     /* initialize new packages */
     for (; i < sc_num_packages_alloc; i++) {
@@ -1317,7 +1318,9 @@ sc_init (sc_MPI_Comm mpicomm,
   const char         *trace_file_name;
   const char         *trace_file_prio;
 
-  sc_identifier = -1;
+  SC_ASSERT (!sc_is_initialized ());
+  SC_ASSERT (sc_identifier == -1);
+
   sc_mpicomm = sc_MPI_COMM_NULL;
   sc_print_backtrace = print_backtrace;
 
@@ -1379,17 +1382,19 @@ sc_init (sc_MPI_Comm mpicomm,
     }
   }
 
+  /* we guarantee initialization */
+  SC_ASSERT (sc_is_initialized ());
+
   /* one line of logging if the threshold is not SC_LP_SILENT */
   SC_GLOBAL_ESSENTIALF ("This is %s\n", SC_PACKAGE_STRING);
   SC_GLOBAL_INFOF ("MPI is enabled %d shared %d\n",
                    sc_mpi_is_enabled (), sc_mpi_is_shared ());
-  sc_initialized = 1;
 }
 
 int
 sc_is_initialized (void)
 {
-  return sc_initialized;
+  return sc_get_package_id () >= 0;
 }
 
 int
@@ -1399,9 +1404,11 @@ sc_finalize_noabort (void)
   int                 num_errors = 0;
 
   /* sc_packages is static and thus initialized to all zeros */
-  for (i = sc_num_packages_alloc - 1; i >= 0; --i)
-    if (sc_packages[i].is_registered)
+  for (i = sc_num_packages_alloc - 1; i >= 0; --i) {
+    if (sc_packages[i].is_registered) {
       num_errors += sc_package_unregister_noabort (i);
+    }
+  }
 
   SC_ASSERT (sc_num_packages == 0);
   num_errors += sc_memory_check_noabort (-1);
@@ -1426,8 +1433,9 @@ sc_finalize_noabort (void)
     sc_trace_file = NULL;
   }
 
+  /* generally reset the package id */
   sc_package_id = -1;
-  sc_initialized = 0;
+  SC_ASSERT (!sc_is_initialized ());
 
   return num_errors;
 }

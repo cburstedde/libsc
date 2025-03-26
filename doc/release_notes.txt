@@ -19,6 +19,7 @@
 ### Functionality
 
  - Prefer calling sc_get_package_id () over accessing global variable.
+ - Remove redundancy and clarify libsc's init/finalize process.
 
 ## 2.8.7
 
