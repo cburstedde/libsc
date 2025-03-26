@@ -338,12 +338,19 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
   do { int _sc_i = (int) (expression);                                  \
        SC_CHECK_ABORT (_sc_i, "Expected true: '" #expression "'");      \
   } while (0)
+#define SC_EXECUTE_ASSIGN(r,expression) do { (r) = (expression); } while (0)
 #else
+/** Outside debug mode, the assertion does nothing. */
 #define SC_ASSERT(c) SC_NOOP ()
+/** Outside debug mode, evaluate the expression and discard the result. */
 #define SC_EXECUTE_ASSERT_FALSE(expression) \
   do { (void) (expression); } while (0)
+/** Outside debug mode, evaluate the expression and discard the result. */
 #define SC_EXECUTE_ASSERT_TRUE(expression) \
   do { (void) (expression); } while (0)
+/** Outside debug mode, evaluate the expression and discard the result.
+ * In debug mode, assign it to the output argument \a r. */
+#define SC_EXECUTE_ASSIGN(r,expression) do { (void) (expression); } while (0)
 #endif
 
 /* macros for memory allocation, will abort if out of memory */
@@ -742,12 +749,51 @@ void                sc_abort_collective (const char *msg)
 
 /** Register a software package with SC.
  * This function must only be called before additional threads are created.
- * The logging parameters are as in sc_set_log_defaults.
- * \return                   Returns a unique package id.
+ * The logging parameters are as in \ref sc_set_log_defaults.
+ *
+ * \param [in] log_handler   Set default SC log handler (NULL selects builtin).
+ * \param [in] log_threshold Set default SC log threshold (or \ref
+ *                                SC_LP_DEFAULT).  May be \ref SC_LP_ALWAYS,
+ *                                \ref SC_LP_SILENT, or any other.
+ * \param [in] name          Short identifier string for the package.
+ * \param [in] full          Free-form string describing the package.
+ *
+ * \return                   A non-negative unique package id.
  */
 int                 sc_package_register (sc_log_handler_t log_handler,
                                          int log_threshold,
                                          const char *name, const char *full);
+
+/** Register a software package with SC, in-place version.
+ * It keeps the package identifier as a persistent live variable.
+ *
+ * This function must only be called before additional threads are created.
+ * The logging parameters are as in \ref sc_set_log_defaults.
+ *
+ * \param [in,out] package_id     Non-NULL pointer.  Value on input -1.
+ *                                On output, non-negative unique package id.
+ *                                The pointer is remembered until the
+ *                                corresponding \ref sc_package_unregister
+ *                                (possibly via \ref sc_finalize), so the
+ *                                pointed-to variable **must** stay alive
+ *                                until then.
+ * \param [in] log_handler   Set default SC log handler (NULL selects builtin).
+ * \param [in] log_threshold Set default SC log threshold (or \ref
+ *                                SC_LP_DEFAULT).  May be \ref SC_LP_ALWAYS,
+ *                                \ref SC_LP_SILENT, or any other.
+ * \param [in] name          Short identifier string for the package.
+ * \param [in] full          Free-form string describing the package.
+ *
+ * \return                   Returns a unique package id.
+ *                           If \a package_id is not NULL, it
+ *                           dereferences to the equal value.
+ */
+int                 sc_package_register_variable (int *package_id,
+                                                  sc_log_handler_t
+                                                  log_handler,
+                                                  int log_threshold,
+                                                  const char *name,
+                                                  const char *full);
 
 /** Query whether an identifier matches a registered package.
  * \param [in] package_id       Only a non-negative id can be registered.
@@ -787,7 +833,7 @@ void                sc_package_unlock (int package_id);
 void                sc_package_set_verbosity (int package_id,
                                               int log_priority);
 
-/** Set the unregister behavior of sc_package_unregister().
+/** Set the behavior selected on future \ref sc_package_unregister call.
  *
  * \param[in] package_id    Must be -1 for the default package or
  *                          the identifier of a registered package.
@@ -800,6 +846,7 @@ void                sc_package_set_abort_alloc_mismatch (int package_id,
 
 /** Unregister a software package with SC.
  * This function must only be called after additional threads are finished.
+ * \param [in] package_id   Valid package id.
  */
 void                sc_package_unregister (int package_id);
 

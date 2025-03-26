@@ -64,6 +64,7 @@ typedef struct sc_package
   int                 free_count;
   int                 rc_active;
   int                 abort_mismatch;
+  int                *package_variable;
   const char         *name;
   const char         *full;
 #ifdef SC_ENABLE_PTHREAD
@@ -1139,14 +1140,20 @@ sc_abort_collective (const char *msg)
 }
 
 int
-sc_package_register (sc_log_handler_t log_handler, int log_threshold,
-                     const char *name, const char *full)
+sc_package_register_variable (int *package_id,
+                              sc_log_handler_t log_handler,
+                              int log_threshold,
+                              const char *name, const char *full)
 {
   int                 i;
   sc_package_t       *p;
   sc_package_t       *new_package = NULL;
   int                 new_package_id = -1;
 
+  /* check input status of input/output variable */
+  SC_ASSERT (package_id == NULL || *package_id == -1);
+
+  /* hard checks for preconditions */
   SC_CHECK_ABORT (log_threshold == SC_LP_DEFAULT ||
                   (log_threshold >= SC_LP_ALWAYS &&
                    log_threshold <= SC_LP_SILENT),
@@ -1195,6 +1202,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
       p->malloc_count = 0;
       p->free_count = 0;
       p->rc_active = 0;
+      p->package_variable = NULL;
       p->name = NULL;
       p->full = NULL;
     }
@@ -1208,6 +1216,7 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   new_package->free_count = 0;
   new_package->rc_active = 0;
   new_package->abort_mismatch = 1;
+  new_package->package_variable = package_id;
   new_package->name = name;
   new_package->full = full;
 #ifdef SC_ENABLE_PTHREAD
@@ -1219,7 +1228,19 @@ sc_package_register (sc_log_handler_t log_handler, int log_threshold,
   SC_ASSERT (sc_num_packages <= sc_num_packages_alloc);
   SC_ASSERT (0 <= new_package_id && new_package_id < sc_num_packages);
 
+  /* set persistent package id variable */
+  if (package_id != NULL) {
+    *package_id = new_package_id;
+  }
   return new_package_id;
+}
+
+int
+sc_package_register (sc_log_handler_t log_handler, int log_threshold,
+                     const char *name, const char *full)
+{
+  return sc_package_register_variable
+    (NULL, log_handler, log_threshold, name, full);
 }
 
 int
@@ -1269,6 +1290,14 @@ sc_package_unregister_noabort (int package_id)
     p->log_threshold = SC_LP_DEFAULT;
     p->malloc_count = p->free_count = 0;
     p->rc_active = 0;
+    if (p->package_variable != NULL) {
+      if (*p->package_variable != package_id) {
+        SC_LERRORF ("Package %d variable mismatch with %d",
+                    package_id, *p->package_variable);
+        ++num_errors;
+      }
+      *p->package_variable = -1;
+    }
 #ifdef SC_ENABLE_PTHREAD
     if (pthread_mutex_destroy (&p->mutex)) {
       SC_LERRORF ("Mutex destroy failed for package %s", p->name);
@@ -1315,6 +1344,9 @@ sc_init (sc_MPI_Comm mpicomm,
          int catch_signals, int print_backtrace,
          sc_log_handler_t log_handler, int log_threshold)
 {
+#ifdef SC_ENABLE_DEBUG
+  int                 new_package_id;
+#endif
   const char         *trace_file_name;
   const char         *trace_file_prio;
 
@@ -1333,8 +1365,10 @@ sc_init (sc_MPI_Comm mpicomm,
   }
 
   sc_set_signal_handler (catch_signals);
-  sc_package_id = sc_package_register (log_handler, log_threshold,
-                                       "libsc", "The SC Library");
+  SC_EXECUTE_ASSIGN (new_package_id, sc_package_register_variable
+    (&sc_package_id, log_handler, log_threshold, "libsc", "The SC Library"));
+  SC_ASSERT (new_package_id == sc_get_package_id ());
+  SC_ASSERT (sc_is_initialized ());
 
   trace_file_name = getenv ("SC_TRACE_FILE");
   if (trace_file_name != NULL) {
@@ -1433,8 +1467,7 @@ sc_finalize_noabort (void)
     sc_trace_file = NULL;
   }
 
-  /* generally reset the package id */
-  sc_package_id = -1;
+  /* the package id has been reset */
   SC_ASSERT (!sc_is_initialized ());
 
   return num_errors;

@@ -20,6 +20,8 @@
 
  - Prefer calling sc_get_package_id () over accessing global variable.
  - Remove redundancy and clarify libsc's init/finalize process.
+ - Provide for a persistent package identifier variable.
+ - add SC_EXECUTE_ASSIGN macro to facilitate debugging.
 
 ## 2.8.7
 
