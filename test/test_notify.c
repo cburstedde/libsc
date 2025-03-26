@@ -327,7 +327,7 @@ main (int argc, char **argv)
   SC_FREE (senders3);
 
   sc_stats_compute (mpicomm, 3 * SC_NOTIFY_NUM_TYPES + 2, stats);
-  sc_stats_print (sc_package_id, SC_LP_STATISTICS,
+  sc_stats_print (sc_get_package_id (), SC_LP_STATISTICS,
                   3 * SC_NOTIFY_NUM_TYPES + 2, stats, 1, 1);
 
   sc_finalize ();

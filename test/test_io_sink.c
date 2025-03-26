@@ -77,9 +77,11 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_string (opt, 'f', "filename", &filename, NULL,
                          "File to write");
-  first = sc_options_parse (sc_package_id, SC_LP_INFO, opt, argc, argv);
+  first = sc_options_parse (sc_get_package_id (), SC_LP_INFO,
+                            opt, argc, argv);
   if (first < 0) {
-    sc_options_print_usage (sc_package_id, SC_LP_INFO, opt, NULL);
+    sc_options_print_usage (sc_get_package_id (), SC_LP_INFO,
+                            opt, NULL);
     sc_abort_collective ("Usage error");
   }
 

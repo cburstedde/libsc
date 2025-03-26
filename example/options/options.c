@@ -103,7 +103,7 @@ main (int argc, char **argv)
   sc_options_add_suboptions (opt, subopt, "Subset");
 
   /* this is just to show off the load function */
-  if (!sc_options_load (sc_package_id, SC_LP_INFO, opt,
+  if (!sc_options_load (sc_get_package_id (), SC_LP_INFO, opt,
                         "sc_options_preload.ini")) {
     SC_GLOBAL_INFO ("Preload successful\n");
   }
@@ -111,30 +111,32 @@ main (int argc, char **argv)
     SC_GLOBAL_INFO ("Preload not found or failed\n");
   }
 
-  first_arg = sc_options_parse (sc_package_id, SC_LP_INFO, opt, argc, argv);
+  first_arg = sc_options_parse (sc_get_package_id (),
+                                SC_LP_INFO, opt, argc, argv);
   if (first_arg < 0) {
-    sc_options_print_usage (sc_package_id, SC_LP_INFO, opt,
+    sc_options_print_usage (sc_get_package_id (), SC_LP_INFO, opt,
                             "Usage for arg 1\nand for arg 2");
     SC_GLOBAL_INFO ("Option parsing failed\n");
   }
   else {
     SC_GLOBAL_INFO ("Option parsing successful\n");
-    sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
+    sc_options_print_summary (sc_get_package_id (), SC_LP_INFO, opt);
     SC_GLOBAL_INFOF ("Keyvalue number is now %d\n", kvint);
 
     if (rank == 0) {
-      retval = sc_options_save (sc_package_id, SC_LP_INFO, opt, "output.ini");
+      retval = sc_options_save (sc_get_package_id (), SC_LP_INFO, opt,
+                                "output.ini");
       if (retval) {
         SC_GLOBAL_INFO ("Option file output failed\n");
       }
       else {
-        retval = sc_options_load_args (sc_package_id, SC_LP_INFO, opt,
-                                       "output.ini");
+        retval = sc_options_load_args (sc_get_package_id (), SC_LP_INFO,
+                                       opt, "output.ini");
         if (retval) {
           SC_GLOBAL_INFO ("Argument file input failed\n");
         }
         else {
-          sc_options_print_summary (sc_package_id, SC_LP_INFO, opt);
+          sc_options_print_summary (sc_get_package_id (), SC_LP_INFO, opt);
           SC_GLOBAL_INFO ("Argument save load successful\n");
         }
       }

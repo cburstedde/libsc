@@ -2169,7 +2169,7 @@ static void
 sc_notify_ranges_init (sc_notify_t * notify)
 {
   notify->data.ranges.num_ranges = sc_notify_ranges_num_ranges_default;
-  notify->data.ranges.package_id = sc_package_id;
+  notify->data.ranges.package_id = sc_get_package_id ();
 }
 
 static void

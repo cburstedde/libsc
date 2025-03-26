@@ -249,10 +249,14 @@ extern const int    sc_log2_lookup_table[256];
 /** libsc allows for multiple packages to use their own log priorities etc.
  * Logging priorities, callbacks, and memory balance counters go by package.
  * This is the package id for core sc functions and is meant to be read only.
+ *
  * The variable starts out with a value of -1, which is fine by itself.
  * It is set to a non-negative value by the (optional) \ref sc_init.
- * Calling the (also optional) \ref sc_finalize resets it to -1.  There is
- * no need to access this variable directly; use \ref sc_get_package_id.
+ * Calling the (also optional) \ref sc_finalize resets it to -1.
+ * The initalization status is queried by \ref sc_is_initialized.
+ *
+ * It is no longer necessary to access this variable directly!
+ * \deprecated Use \ref sc_get_package_id instead.
  */
 extern SC_DLL_PUBLIC int sc_package_id;
 

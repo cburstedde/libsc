@@ -134,9 +134,11 @@ main (int argc, char **argv)
   opt = sc_options_new (argv[0]);
   sc_options_add_string (opt, 'f', "filepref", &filepref, "sc_test_io_file",
                          "File to write");
-  first = sc_options_parse (sc_package_id, SC_LP_ERROR, opt, argc, argv);
+  first = sc_options_parse (sc_get_package_id (), SC_LP_ERROR,
+                            opt, argc, argv);
   if (first < argc) {
-    sc_options_print_usage (sc_package_id, SC_LP_PRODUCTION, opt, NULL);
+    sc_options_print_usage (sc_get_package_id (), SC_LP_PRODUCTION,
+                            opt, NULL);
     iserr = 1;
   }
 

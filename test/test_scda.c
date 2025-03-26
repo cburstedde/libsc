@@ -530,17 +530,18 @@ main (int argc, char **argv)
                       "fuzzy-everyn == 0");
 
   first_argc =
-    sc_options_parse (sc_package_id, SC_LP_DEFAULT, opt, argc, argv);
+    sc_options_parse (sc_get_package_id (), SC_LP_DEFAULT,
+                      opt, argc, argv);
 
   if (first_argc < 0 || first_argc != argc) {
-    sc_options_print_usage (sc_package_id, SC_LP_ERROR, opt, NULL);
+    sc_options_print_usage (sc_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
 
-  sc_options_print_summary (sc_package_id, SC_LP_PRODUCTION, opt);
+  sc_options_print_summary (sc_get_package_id (), SC_LP_PRODUCTION, opt);
 
   if (int_everyn < 0) {
     SC_GLOBAL_LERROR ("Usage error: fuzzy-everyn must be >= 0\n");
-    sc_options_print_usage (sc_package_id, SC_LP_ERROR, opt, NULL);
+    sc_options_print_usage (sc_get_package_id (), SC_LP_ERROR, opt, NULL);
     return 1;
   }
 

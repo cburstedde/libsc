@@ -62,16 +62,17 @@ main (int argc, char **argv)
                            priorities, "Choose the log level");
 
   /* parse command line options */
-  first_arg = sc_options_parse (sc_package_id, SC_LP_ERROR, opt, argc, argv);
+  first_arg = sc_options_parse (sc_get_package_id (), SC_LP_ERROR,
+                                opt, argc, argv);
   if (first_arg < 0) {
     SC_GLOBAL_LERROR ("Option parsing failed\n");
   }
   else {
     SC_GLOBAL_INFO ("Option parsing successful\n");
-    sc_options_print_summary (sc_package_id, SC_LP_PRODUCTION, opt);
+    sc_options_print_summary (sc_get_package_id (), SC_LP_PRODUCTION, opt);
 
     /* set verbosity level */
-    sc_package_set_verbosity (sc_package_id, verbosity);
+    sc_package_set_verbosity (sc_get_package_id (), verbosity);
 
     /* go to work */
     run_program ();
