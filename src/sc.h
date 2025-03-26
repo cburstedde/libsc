@@ -81,8 +81,11 @@
 
 /* disable global counters that are not thread-safe (say when using TBB) */
 #ifndef SC_ENABLE_USE_COUNTERS
+/** If defined, do not use static global allocation counters. */
 #define SC_NOCOUNT_MALLOC
+/** If defined, do not use static global reference counters. */
 #define SC_NOCOUNT_REFCOUNT
+/** If defined, do not use static global indent counters. */
 #define SC_NOCOUNT_LOGINDENT
 #endif
 
@@ -489,26 +492,61 @@ void                SC_CHECK_ABORTF (int success, const char *fmt, ...)
 #endif
 
 /* generic log macros */
+
+/** Pass a generic log call of sufficient priority to the library. */
 #define SC_GEN_LOG(package,category,priority,s)                         \
   ((priority) < SC_LP_THRESHOLD ? (void) 0 :                            \
    sc_log (__FILE__, __LINE__, (package), (category), (priority), (s)))
+
+/** Pass a root-only log of sufficient priority into the sc package. */
 #define SC_GLOBAL_LOG(p,s) SC_GEN_LOG (sc_get_package_id (),            \
                                        SC_LC_GLOBAL, (p), (s))
+
+/** Pass any-rank log of sufficient priority into the sc package. */
 #define SC_LOG(p,s) SC_GEN_LOG (sc_get_package_id (), SC_LC_NORMAL, (p), (s))
+
+/** Generic log function for printf-style arguments.
+ * Used with C++ compilers, otherwise replaced with a vararg macro.
+ * \param [in] package      Valid id from \ref sc_package_register.
+ * \param [in] category     Either \ref SC_LC_GLOBAL or \ref SC_LC_NORMAL.
+ * \param [in] priority     Anything between \ref SC_LP_ALWAYS and
+ *                          \ref SC_LP_SILENT (inclusive).
+ * \param [in] fmt          Printf-style format string
+ *                          with arguments to follow.
+ */
 void                SC_GEN_LOGF (int package, int category, int priority,
                                  const char *fmt, ...)
   __attribute__ ((format (printf, 4, 5)));
+
+/** Function logs only on root within the sc package.
+ * Used with C++ compilers, otherwise replaced with a vararg macro.
+ * \param [in] priority     Anything between \ref SC_LP_ALWAYS and
+ *                          \ref SC_LP_SILENT (inclusive).
+ * \param [in] fmt          Printf-style format string
+ *                          with arguments to follow.
+ */
 void                SC_GLOBAL_LOGF (int priority, const char *fmt, ...)
   __attribute__ ((format (printf, 2, 3)));
+
+/** Function logs only on every rank within the sc package.
+ * Used with C++ compilers, otherwise replaced with a vararg macro.
+ * \param [in] priority     Anything between \ref SC_LP_ALWAYS and
+ *                          \ref SC_LP_SILENT (inclusive).
+ * \param [in] fmt          Printf-style format string
+ *                          with arguments to follow.
+ */
 void                SC_LOGF (int priority, const char *fmt, ...)
   __attribute__ ((format (printf, 2, 3)));
 #ifndef __cplusplus
+/** Pass generic vararg log of sufficient priority to the library. */
 #define SC_GEN_LOGF(package,category,priority,fmt,...)                  \
   ((priority) < SC_LP_THRESHOLD ? (void) 0 :                            \
    sc_logf (__FILE__, __LINE__, (package), (category), (priority),      \
             (fmt), __VA_ARGS__))
+/** Pass a root-only log of sufficient priority into the sc package. */
 #define SC_GLOBAL_LOGF(p,fmt,...)                                       \
   SC_GEN_LOGF (sc_get_package_id (), SC_LC_GLOBAL, (p), (fmt), __VA_ARGS__)
+/** Pass any-rank log of sufficient priority into the sc package. */
 #define SC_LOGF(p,fmt,...)                                              \
   SC_GEN_LOGF (sc_get_package_id (), SC_LC_NORMAL, (p), (fmt), __VA_ARGS__)
 #endif

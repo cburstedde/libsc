@@ -26,9 +26,13 @@
 
 #include <sc_containers.h>
 
+/** Public object representing a counter factory. */
 typedef struct sc_unique_counter
 {
+  /** First counter value created by this object. */
   int                 start_value;
+
+  /** Memory pool for internal management. */
   sc_mempool_t       *mempool;
 }
 sc_unique_counter_t;
