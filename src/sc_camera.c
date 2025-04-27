@@ -1,5 +1,7 @@
 #include <math.h>
 
+#include <sc_containers.h>
+
 #include <sc_camera.h>
 
 /* hier erstmal das ganze mathe zeug */
@@ -301,10 +303,27 @@ static inline void sc_camera_mat3x3_to_quaternion(const sc_camera_mat3x3_t a,
 /* quaternion zu matrix */
 
 
-/*TODO: missing defaults*/
 sc_camera_t *sc_camera_new()
 {
     sc_camera_t *camera = SC_ALLOC (sc_camera_t, 1);
+
+    camera->position[0] = 0.0;
+    camera->position[1] = 0.0;
+    camera->position[2] = 1.0;
+
+    camera->rotation[0] = 0.0;
+    camera->rotation[1] = 0.0;
+    camera->rotation[2] = 0.0;
+    camera->rotation[3] = 1.0;
+
+    camera->FOV = 1.57079632679;
+
+    camera->width = 1000;
+    camera->height = 1000;
+
+    camera->near = 0.01;
+    camera->far = 100.0;
+
     return camera;
 } 
 
@@ -313,7 +332,7 @@ void sc_camera_init(sc_camera_t *camera, sc_camera_vec3_t position,
     sc_camera_coords_t near, sc_camera_coords_t far)
 {
     memcpy(camera->position, position, sizeof (camera->position));
-    memcpy(camera->orientation, orientation, sizeof (camera->orientation));
+    memcpy(camera->rotation, orientation, sizeof (camera->rotation));
     camera->FOV = FOV;
     camera->width = width;
     camera->height = height;
@@ -330,12 +349,11 @@ void sc_camera_destroy(sc_camera_t *camera)
 /* TODO hier fehlen noch assertion zu degenerierten fällen */
 void sc_camera_look_at(sc_camera_t *camera, const sc_camera_vec3_t eye, 
     const sc_camera_vec3_t center, const sc_camera_vec3_t up)
-{
-    
+{ 
     memcpy(camera->position, eye, sizeof (camera->position));
 
     sc_camera_vec3_t z_new;
-    sc_camera_subtract(center, eye, z_new);
+    sc_camera_subtract(eye, center, z_new);
     sc_camera_scalar(1.0/sc_camera_norm(z_new), z_new, z_new);
 
     sc_camera_vec3_t x_new;
@@ -354,7 +372,37 @@ void sc_camera_look_at(sc_camera_t *camera, const sc_camera_vec3_t eye,
     sc_camera_vec4_t q;
     sc_camera_mat3x3_to_quaternion(rotation, q);
 
-    memcpy(camera->orientation, q, sizeof (camera->orientation));
+    memcpy(camera->rotation, q, sizeof (camera->rotation));
+}
+
+int sc_camera_transform(sc_camera_t *camera, sc_camera_vec3_t point_in, 
+    sc_camera_vec3_t point_out)
+{
+    sc_camera_vec4_t p = {point_in[0], point_in[1], point_in[2], 1.0};
+
+    sc_camera_mat4x4_t transformation;
+    sc_camera_get_view(camera, transformation);
+    sc_camera_mult_4x4_v4(transformation, p, p);
+
+    sc_camera_get_projection(camera, transformation);
+    sc_camera_mult_4x4_v4(transformation, p, p);
+
+    if (p[0] <= -p[3] || p[0] >= p[3])
+    {
+        return 0;
+    }
+    if (p[1] <= -p[3] || p[1] >= p[3])
+    {
+        return 0;
+    }
+    if (p[2] <= -p[3] || p[2] >= p[3])
+    {
+        return 0;
+    }
+
+    sc_camera_scalar(1./p[3], p, point_out);
+
+    return 1;
 }
 
 /* also transformations for single points */
@@ -364,15 +412,15 @@ void sc_camera_look_at(sc_camera_t *camera, const sc_camera_vec3_t eye,
 void sc_camera_get_view(sc_camera_t *camera, sc_camera_mat4x4_t view_matrix)
 {
     /* calculate rotation matrix from the quaternion and write it in upper left block*/
-    sc_camera_coords_t xx = camera->orientation[0] * camera->orientation[0];
-    sc_camera_coords_t yy = camera->orientation[1] * camera->orientation[1];
-    sc_camera_coords_t zz = camera->orientation[2] * camera->orientation[2];
-    sc_camera_coords_t wx = camera->orientation[3] * camera->orientation[0];
-    sc_camera_coords_t wy = camera->orientation[3] * camera->orientation[1];
-    sc_camera_coords_t wz = camera->orientation[3] * camera->orientation[2];
-    sc_camera_coords_t xy = camera->orientation[0] * camera->orientation[1];
-    sc_camera_coords_t xz = camera->orientation[0] * camera->orientation[2];
-    sc_camera_coords_t yz = camera->orientation[1] * camera->orientation[2];
+    sc_camera_coords_t xx = camera->rotation[0] * camera->rotation[0];
+    sc_camera_coords_t yy = camera->rotation[1] * camera->rotation[1];
+    sc_camera_coords_t zz = camera->rotation[2] * camera->rotation[2];
+    sc_camera_coords_t wx = camera->rotation[3] * camera->rotation[0];
+    sc_camera_coords_t wy = camera->rotation[3] * camera->rotation[1];
+    sc_camera_coords_t wz = camera->rotation[3] * camera->rotation[2];
+    sc_camera_coords_t xy = camera->rotation[0] * camera->rotation[1];
+    sc_camera_coords_t xz = camera->rotation[0] * camera->rotation[2];
+    sc_camera_coords_t yz = camera->rotation[1] * camera->rotation[2];
 
     view_matrix[0] = 1.0 - 2.0 * (yy + zz);
     view_matrix[1] = 2.0 * (xy + wz);
@@ -424,44 +472,129 @@ void sc_camera_get_projection(sc_camera_t *camera, sc_camera_mat4x4_t proj_matri
 
     proj_matrix[8] = 0.0;
     proj_matrix[9] = 0.0;
-    proj_matrix[10] = (camera->near + camera->far) / s_z;
-    proj_matrix[11] = 1.0;
+    proj_matrix[10] = -(camera->near + camera->far) / s_z;
+    proj_matrix[11] = -1.0;
 
     proj_matrix[12] = 0.0;
     proj_matrix[13] = 0.0;
-    proj_matrix[14] = (-2.0 * camera->near * camera->far) / s_z;
+    proj_matrix[14] = -(2.0 * camera->near * camera->far) / s_z;
     proj_matrix[15] = 0.0;
 }
 
-/* How the points should be passed to the function below and how to discard points */
+static void sc_camera_mult_4x4_v4_for_each(sc_camera_mat4x4_t mat, sc_array_t *in, 
+    sc_array_t *out)
+{
+    SC_ASSERT(points_in->elem_count == points_out->elem_count);
+    SC_ASSERT(points_in->elem_size == 4 * sizeof(sc_camera_coords_t));
+    SC_ASSERT(points_out->elem_size == 4 * sizeof(sc_camera_coords_t));
 
-/* points of form sc_camera_vec3_t? */
+    for (size_t i = 0; i < points_in->elem_count; ++i)
+    {
+        sc_camera_coords_t *in = (sc_camera_coords_t *) sc_array_index(points_in, i);
+        sc_camera_coords_t *out = (sc_camera_coords_t *) sc_array_index(points_out, i);
+
+        sc_camera_mult_4x4_v4(mat, in, out);
+    }
+}
+/**
+ * i could make this less redundant by creating a function that applies the transform
+ */
 void sc_camera_view_transform(sc_camera_t *camera, sc_array_t *points_in,
      sc_array_t *points_out)
 {
-    
+    sc_camera_mat4x4_t transformation;
+    sc_camera_get_view(camera, transformation);
+
+    sc_camera_mult_4x4_v4_for_each(transformation, points_in, points_out);
 }
 
-/* the idea is to return the indices of points that are in the camera view */
-/* the function does not easily know if the points are already in camera space */
-void sc_camera_clipping_pre(sc_camera_t *camera, sc_array_t *points, 
-    sc_array_t *indices);
-
-/* probably no clipping in this function but what is with points that have z=0? */
-/* transform to canonical view volume [-1,1]^3 */
-/* what is if user wants to only transorm points with certain indices 
-(because he called clipping_pre before)? */
 void sc_camera_projection_transform(sc_camera_t *camera, sc_array_t *points_in, 
-    sc_array_t *points_out);
+    sc_array_t *points_out)
+{
+    sc_camera_mat4x4_t transformation;
+    sc_camera_get_projection(camera, transformation);
 
-/* clipping post has nothing to do with the camera itself so the carameter 
-    parameter is not needed */
-void sc_camera_clipping_post(sc_camera_t *camera, sc_array_t *points, 
-    sc_array_t *indices);
+    sc_camera_mult_4x4_v4_for_each(transformation, points_in, points_out);
+}
 
-/* does all steps in one go (world -> view -> canonical view volume (with clipping) */
-void sc_camera_transform(sc_camera_t *camera, sc_array_t *points_in, 
-    sc_array_t *points_out, sc_array_t *indices);
+void sc_camera_clipping_post(sc_array_t *points, 
+    sc_array_t *indices)
+{
+    SC_ASSERT(points->elem_size == 4 * sizeof(sc_camera_coords_t));
+    SC_ASSERT(indices->elem_size == sizeof(size_t));
+
+    sc_array_reset(indices);
+
+    for (size_t i = 0; i < points->elem_count; ++i)
+    {
+        sc_camera_coords_t *p = sc_array_index(points, i);
+
+        if (p[0] <= -p[3] || p[0] >= p[3])
+        {
+            continue;
+        }
+        if (p[1] <= -p[3] || p[1] >= p[3])
+        {
+            continue;
+        }
+        if (p[2] <= -p[3] || p[2] >= p[3])
+        {
+            continue;
+        }
+
+        sc_array_push(indices, i);
+    }
+}
+
+void sc_camera_transform_arr(sc_camera_t *camera, sc_array_t *points_in, 
+    sc_array_t *points_out, sc_array_t *indices)
+{
+    sc_camera_mat4x4_t view;
+    sc_camera_get_view(camera, view);
+
+    sc_camera_mat4x4_t projection;
+    sc_camera_get_projection(camera, projection);
+
+    sc_camera_mat4x4_t transformation;
+    sc_camera_mult_4x4_4x4(projection, view, transformation);
+
+    sc_camera_mult_4x4_v4_for_each(transformation, points_in, points_out);
+
+    sc_camera_clipping_post(points_out, indices);
+
+    // perspective division
+    for (size_t i = 0; i < indices->elem_count; ++i)
+    {
+        size_t j = *((size_t *) sc_array_index(indices, i));
+
+        sc_camera_coords_t *p = (sc_camera_coords_t *) sc_array_index(points_out, j);
+        
+        p[0] /= p[3];
+        p[1] /= p[3];
+        p[2] /= p[3];
+    }
+}
+
+// /* the idea is to return the indices of points that are in the camera view */
+// /* the function does not easily know if the points are already in camera space */
+// void sc_camera_clipping_pre(sc_camera_t *camera, sc_array_t *points, 
+//     sc_array_t *indices);
+
+// /* probably no clipping in this function but what is with points that have z=0? */
+// /* transform to canonical view volume [-1,1]^3 */
+// /* what is if user wants to only transorm points with certain indices 
+// (because he called clipping_pre before)? */
+// void sc_camera_projection_transform(sc_camera_t *camera, sc_array_t *points_in, 
+//     sc_array_t *points_out);
+
+// /* clipping post has nothing to do with the camera itself so the carameter 
+//     parameter is not needed */
+// void sc_camera_clipping_post(sc_camera_t *camera, sc_array_t *points, 
+//     sc_array_t *indices);
+
+// /* does all steps in one go (world -> view -> canonical view volume (with clipping) */
+// void sc_camera_transform(sc_camera_t *camera, sc_array_t *points_in, 
+//     sc_array_t *points_out, sc_array_t *indices);
 
 /* what format should planes have? (currently vec4 = (a,b,c,d) -> ax + by + cz + d = 0) */
 void sc_camera_get_frustum(sc_camera_t *camera, sc_camera_vec4_t near, 
@@ -518,8 +651,6 @@ void sc_camera_get_frustum(sc_camera_t *camera, sc_camera_vec4_t near,
     bottom[1] = -1.;
     bottom[2] = 0.;
     bottom[3] = -1.;
-
-    print_mat(transform, 4);
 
     sc_camera_mult_v4_4x4(near, transform, near);
     sc_camera_mult_v4_4x4(far, transform, far);
@@ -582,3 +713,9 @@ void sc_camera_get_frustum_corners(sc_camera_t *camera, sc_camera_vec3_t lbn,
     sc_camera_scalar(1. / ltf_w[3], ltf_w, ltf);
     sc_camera_scalar(1. / rtf_w[3], rtf_w, rtf);
 }
+
+// void sc_camera_transform(sc_camera_t *camera, sc_array_t *points_in, 
+//     sc_array_t *points_out, sc_array_t *indices)
+// {
+
+// }

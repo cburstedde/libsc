@@ -73,7 +73,7 @@ typedef struct sc_camera {
      * p' = qpq^{-1}
      * \]
      */
-    sc_camera_vec4_t orientation;  
+    sc_camera_vec4_t rotation;  
 
     double FOV; /**< The horizontal field of view in radians, 
                    defining the frustum's opening angle in the horizontal direction. */
@@ -91,8 +91,17 @@ void sc_camera_mult_4x4_v4(const sc_camera_mat4x4_t mat,
     const sc_camera_vec4_t vec, sc_camera_vec4_t out);
 
 /** Creates a new camera structure with default values
- * The Default values are:
- * -
+ * As default the camera is positioned at (0, 0, 1) and looking at (0, 0, 0) 
+ * with the upwards direction (0, 1, 0). The default horizontal field of view is
+ * Pi/2, the image has aspect ratio 1 (width = height) and near is set at 1/100
+ * far at 100. The default is realised by the following values.
+ * position : (0, 0, 1)
+ * rotation : (0, 0, 0, 1) 
+ * FOV : Pi / 2 = 1.57079632679
+ * width : 1000
+ * height : 1000
+ * near : 0.01
+ * far : 100.0
  * 
  * \return Camera with default values
  */
@@ -133,29 +142,7 @@ void sc_camera_look_at(sc_camera_t *camera, const sc_camera_vec3_t eye,
 
 /** Calculates the view transformation matrix.
  * The matrix transforms a homogeneus point in world space p = (xw,yw,zw,w) to the 
- * translated and rotated point p' = (x'w,y'w,z'w,w) in camera space.
- * 
- * \param [in] camera Camera used for the view transformation.
- * \param [out] matrix The view transformation matrix.
- */
-void sc_camera_get_view(sc_camera_t *camera, sc_camera_mat4x4_t matrix);
-
-/** Calculates the projection tranformation matrix.
- * The matrix transforms a homogeneus point p = (xw,yw,zw,w) to the point 
- * p' = (x'v,y'v,z'v,v) after the perspective projection (different real component).
- * Points inside the view frustum are mapped to the canonical view volume [-1,1]^3.
- * \param [in] camera Camera used for the perspective projection.
- * \param [in] matrix The projection matrix.
- */
-void sc_camera_get_projection(sc_camera_t *camera, sc_camera_mat4x4_t matrix);
-
-/* How the points should be passed to the function below and how to discard points */
-
-/* points of form sc_camera_vec3_t? */
-void sc_camera_view_transform(sc_camera_t *camera, sc_array_t *points_in,
-     sc_array_t *points_out);
-
-/* the idea is to return the indices of points that are in the camera view */
+ * translated and rotated point p' = (x'w,y'w,z'w,w) in camera space.Wie soll ich den erstennts that are in the camera view */
 /* the function does not easily know if the points are already in camera space */
 void sc_camera_clipping_pre(sc_camera_t *camera, sc_array_t *points, 
     sc_array_t *indices);
@@ -169,13 +156,33 @@ void sc_camera_projection_transform(sc_camera_t *camera, sc_array_t *points_in,
 
 /* clipping post has nothing to do with the camera itself so the carameter 
     parameter is not needed */
-void sc_camera_clipping_post(sc_camera_t *camera, sc_array_t *points, 
+void sc_camera_clipping_post(sc_array_t *points, 
     sc_array_t *indices);
 
 /* does all steps in one go world -> view -> canonical view volume (with clipping) */
-void sc_camera_transform(sc_camera_t *camera, sc_array_t *points_in, 
+void sc_camera_transform_arr(sc_camera_t *camera, sc_array_t *points_in, 
     sc_array_t *points_out, sc_array_t *indices);
 
+int sc_camera_transform(sc_camera_t *camera, sc_camera_vec3_t point_in, 
+    sc_camera_vec3_t point_out);
+
+/**
+ * input and output are 4-dimensional
+ */
+void sc_camera_view_transform(sc_camera_t *camera, sc_array_t *points_in, 
+    sc_array_t *points_out);
+
+/**
+ * input and output are 4-dimensional
+ */
+void sc_camera_projection_transform(sc_camera_t *camera, sc_array_t *points_in, 
+    sc_array_t *points_out);
+
+
+
+void sc_camera_get_view(sc_camera_t *camera, sc_camera_mat4x4_t view_matrix);
+
+void sc_camera_get_projection(sc_camera_t *camera, sc_camera_mat4x4_t proj_matrix);
 
 /* what format should planes have? (currently vec4 = (a,b,c,d) -> ax + by + cz + d = 0) */
 
