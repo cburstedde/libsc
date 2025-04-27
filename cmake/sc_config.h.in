@@ -1,26 +1,6 @@
 #ifndef _SRC_SC_CONFIG_H
 #define _SRC_SC_CONFIG_H 1
 
-/* C compiler */
-#ifndef SC_CC
-#define SC_CC @SC_CC@
-#endif
-
-/* C compiler flags */
-#ifndef SC_CFLAGS
-#define SC_CFLAGS @SC_CFLAGS@
-#endif
-
-/* C preprocessor */
-#ifndef SC_CPP
-#define SC_CPP @SC_CPP@
-#endif
-
-/* C preprocessor flags */
-#ifndef SC_CPPFLAGS
-#define SC_CPPFLAGS @SC_CPPFLAGS@
-#endif
-
 #cmakedefine SC_HAVE_ZLIB 1
 
 /* Define to 1 if we are using threads */
@@ -41,6 +21,9 @@
 /* Define to 1 if we are using MPI I/O */
 #cmakedefine SC_ENABLE_MPIIO 1
 
+/* Define to 1 if we compile the file checks */
+#cmakedefine SC_ENABLE_FILE_CHECKS 1
+
 /* Define to 1 if we have MPI_Aint_diff */
 #cmakedefine SC_HAVE_AINT_DIFF 1
 
@@ -58,6 +41,11 @@
 
 /* Define to 1 if we can use MPI_Win_allocate_shared */
 #cmakedefine SC_ENABLE_MPIWINSHARED 1
+
+/* This definition is a convenience */
+#if defined SC_ENABLE_MPIWINSHARED && defined SC_ENABLE_MPICOMMSHARED
+#define SC_ENABLE_MPISHARED 1
+#endif
 
 /* Undefine if: disable non-thread-safe internal debug counters */
 #define SC_ENABLE_USE_COUNTERS 1
@@ -158,8 +146,8 @@
 /* Define to 1 'gettimeofday' is available */
 #cmakedefine SC_HAVE_GETTIMEOFDAY 1
 
-/* desired alignment of allocations in bytes */
-#define SC_MEMALIGN_BYTES (SC_SIZEOF_VOID_P)
+/* Desired alignment of allocations in bytes */
+#define SC_MEMALIGN_BYTES (8)
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine SC_HAVE_UNISTD_H 1
@@ -169,16 +157,6 @@
 
 /* Use builtin getopt */
 #cmakedefine SC_PROVIDE_GETOPT 1
-
-/* Linker flags */
-#ifndef SC_LDFLAGS
-#define SC_LDFLAGS @SC_LDFLAGS@
-#endif
-
-/* Libraries */
-#ifndef SC_LIBS
-#define SC_LIBS @SC_LIBS@
-#endif
 
 /* Name of package */
 #ifndef SC_PACKAGE
@@ -213,28 +191,6 @@
 /* Define to the version of this package. */
 #ifndef SC_PACKAGE_VERSION
 #define SC_PACKAGE_VERSION "@PROJECT_VERSION@"
-#endif
-
-/* Byte sizes of standard types */
-#ifndef SC_SIZEOF_INT
-#define SC_SIZEOF_INT @SC_SIZEOF_INT@
-#endif
-#ifndef SC_SIZEOF_UNSIGNED_INT
-#define SC_SIZEOF_UNSIGNED_INT @SC_SIZEOF_UNSIGNED_INT@
-#endif
-#ifndef SC_SIZEOF_LONG
-#define SC_SIZEOF_LONG @SC_SIZEOF_LONG@
-#endif
-#ifndef SC_SIZEOF_UNSIGNED_LONG
-#define SC_SIZEOF_UNSIGNED_LONG @SC_SIZEOF_UNSIGNED_LONG@
-#endif
-#ifndef SC_SIZEOF_LONG_LONG
-#define SC_SIZEOF_LONG_LONG @SC_SIZEOF_LONG_LONG@
-#endif
-
-/* The size of `void *', as computed by sizeof. */
-#ifndef SC_SIZEOF_VOID_P
-#define SC_SIZEOF_VOID_P @SC_SIZEOF_VOID_P@
 #endif
 
 /* Version number of package */

@@ -663,6 +663,24 @@ sc_MPI_Testall (int count, sc_MPI_Request *array_of_requests, int *flag,
 }
 
 int
+sc_MPI_Comm_split_type (sc_MPI_Comm mpicomm, int split_type, int key,
+                        sc_MPI_Info info, sc_MPI_Comm *newcomm)
+{
+#if defined SC_ENABLE_MPI && defined SC_ENABLE_MPICOMMSHARED
+  return MPI_Comm_split_type (mpicomm, split_type, key, info, newcomm);
+#else
+  /* split communicator into single processes */
+  int                 mpiret;
+  int                 mpirank;
+
+  if ((mpiret = sc_MPI_Comm_rank (mpicomm, &mpirank)) != sc_MPI_SUCCESS) {
+    return mpiret;
+  }
+  return sc_MPI_Comm_split (mpicomm, mpirank, mpirank, newcomm);
+#endif
+}
+
+int
 sc_MPI_Error_class (int errorcode, int *errorclass)
 {
 #ifdef SC_ENABLE_MPIIO

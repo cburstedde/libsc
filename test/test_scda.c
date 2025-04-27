@@ -24,6 +24,7 @@
 #include <sc_scda.h>
 #include <sc_options.h>
 
+#ifdef SC_ENABLE_FILE_CHECKS
 #define SC_SCDA_FILE_EXT "scd"
 #define SC_SCDA_TEST_FILE "sc_test_scda." SC_SCDA_FILE_EXT
 
@@ -32,7 +33,7 @@
 
 static void
 test_scda_skip_through_file (sc_MPI_Comm mpicomm, const char *filename,
-                             sc_scda_fopen_options_t *opt, int mpirank,
+                             sc_scda_params_t *params, int mpirank,
                              int mpisize)
 {
   sc_scda_fcontext_t *fc;
@@ -46,7 +47,7 @@ test_scda_skip_through_file (sc_MPI_Comm mpicomm, const char *filename,
   sc_array_t          elem_counts, data;
 
   /* open the file for reading */
-  fc = sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, opt,
+  fc = sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, params,
                            &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode), "sc_scda_fopen_read "
                   "failed");
@@ -482,12 +483,15 @@ test_scda_read_indirect_fixed_size_array (sc_scda_fcontext_t *fc, int mpirank,
   sc_array_reset (&array_data);
   sc_array_reset (&elem_counts);
 }
+#endif /* SC_ENABLE_FILE_CHECKS */
 
 int
 main (int argc, char **argv)
 {
   sc_MPI_Comm         mpicomm = sc_MPI_COMM_WORLD;
-  int                 mpiret, mpirank, mpisize;
+  int                 mpiret;
+#ifdef SC_ENABLE_FILE_CHECKS
+  int                 mpirank, mpisize;
   int                 first_argc;
   int                 int_everyn, int_seed;
   int                 decode;
@@ -496,7 +500,7 @@ main (int argc, char **argv)
   char                read_user_string[SC_SCDA_USER_STRING_BYTES + 1];
   char                section_type;
   sc_scda_fcontext_t *fc;
-  sc_scda_fopen_options_t scda_opt, scda_opt_err;
+  sc_scda_params_t    scda_params, scda_params_err;
   sc_scda_ferror_t    errcode;
   size_t              len;
   size_t              elem_count, elem_size;
@@ -506,10 +510,13 @@ main (int argc, char **argv)
   const char         *inline_data = "Test inline data               \n";
   const char         *block_data = "Test block data";
   char                read_data[SC_SCDA_INLINE_FIELD];
+#endif /* SC_ENABLE_FILE_CHECKS */
 
   mpiret = sc_MPI_Init (&argc, &argv);
   SC_CHECK_MPI (mpiret);
   sc_init (mpicomm, 1, 1, NULL, SC_LP_INFO);
+
+#ifdef SC_ENABLE_FILE_CHECKS
 
   /* parse command line options */
   opt = sc_options_new (argv[0]);
@@ -542,24 +549,25 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
   mpiret = sc_MPI_Comm_size (mpicomm, &mpisize);
   SC_CHECK_MPI (mpiret);
-  scda_opt_err.info = sc_MPI_INFO_NULL;
+  sc_scda_params_init (&scda_params_err);
+  scda_params_err.info = sc_MPI_INFO_NULL;
   if (mpirank == 0) {
-    scda_opt_err.fuzzy_everyn = 0;
-    scda_opt_err.fuzzy_seed = 0;
+    scda_params_err.fuzzy_everyn = 0;
+    scda_params_err.fuzzy_seed = 0;
   }
   else {
-    scda_opt_err.fuzzy_everyn = 1;
-    scda_opt_err.fuzzy_seed = 0;
+    scda_params_err.fuzzy_everyn = 1;
+    scda_params_err.fuzzy_seed = 0;
   }
   if (mpisize > 1) {
-    SC_GLOBAL_ESSENTIAL
-      ("We expect two invalid scda function parameter errors."
-       " This is just for testing purposes and does not imply"
-       " erroneous code behavior.\n");
+    SC_GLOBAL_LOG
+      (scda_params_err.log_level, "We expect two invalid scda function"
+       " parameter errors. This is just for testing purposes and does not"
+       " imply erroneous code behavior.\n");
   }
   /* fopen_write with non-collective fuzzy error parameters */
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
-                            &scda_opt_err, &errcode);
+                            &scda_params_err, &errcode);
   if (mpisize > 1) {
     SC_CHECK_ABORT (fc == NULL && errcode.scdaret == SC_SCDA_FERR_ARG,
                     "Test fuzzy error parameters check");
@@ -575,7 +583,7 @@ main (int argc, char **argv)
   /* fopen_read with non-collective fuzzy error parameters */
   fc =
     sc_scda_fopen_read (mpicomm, filename, read_user_string, &len,
-                        &scda_opt_err, &errcode);
+                        &scda_params_err, &errcode);
   if (mpisize > 1) {
     SC_CHECK_ABORT (fc == NULL && errcode.scdaret == SC_SCDA_FERR_ARG,
                     "Test fuzzy error parameters check");
@@ -589,30 +597,31 @@ main (int argc, char **argv)
                     "scda_fclose after read failed");
   }
 
-  /* Create valid scda options structure. */
-  /* set the options to actiavate fuzzy error testing */
+  /* Create valid scda parameters structure. */
+  /* set the parameters to actiavate fuzzy error testing */
   /* WARNING: Fuzzy error testing means that the code randomly produces
    * errors. Random errors mean in particular that error codes may arise from
    * code places, which can not produce such particular error codes without
    * fuzzy error testing. Nonetheless, our implementation is designed to be
    * able to handle this situations properly.
    */
-  scda_opt.fuzzy_everyn = (unsigned) int_everyn;
-  if (scda_opt.fuzzy_everyn > 0 && int_seed < 0) {
-    scda_opt.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
+  sc_scda_params_init (&scda_params);
+  scda_params.fuzzy_everyn = (unsigned) int_everyn;
+  if (scda_params.fuzzy_everyn > 0 && int_seed < 0) {
+    scda_params.fuzzy_seed = (sc_rand_state_t) sc_MPI_Wtime ();
     mpiret =
-      sc_MPI_Bcast (&scda_opt.fuzzy_seed, 1, sc_MPI_UNSIGNED, 0, mpicomm);
+      sc_MPI_Bcast (&scda_params.fuzzy_seed, 1, sc_MPI_UNSIGNED, 0, mpicomm);
     SC_CHECK_MPI (mpiret);
     SC_GLOBAL_INFOF ("Fuzzy error return with time-dependent seed activated. "
-                     "The seed is %lld.\n", (long long) scda_opt.fuzzy_seed);
+                     "The seed is %lld.\n", (long long) scda_params.fuzzy_seed);
   }
   else {
-    scda_opt.fuzzy_seed = (sc_rand_state_t) int_seed;
+    scda_params.fuzzy_seed = (sc_rand_state_t) int_seed;
   }
-  scda_opt.info = sc_MPI_INFO_NULL;
+  scda_params.info = sc_MPI_INFO_NULL;
 
   fc = sc_scda_fopen_write (mpicomm, filename, file_user_string, NULL,
-                            &scda_opt, &errcode);
+                            &scda_params, &errcode);
   /* TODO: check errcode */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fopen_write failed");
@@ -652,9 +661,9 @@ main (int argc, char **argv)
 
   /* intentionally try to write with non-collective block size */
   if (mpisize > 1) {
-    SC_GLOBAL_ESSENTIAL
-      ("We expect an invalid scda function parameter error."
-       " This is just for testing purposes and do not imply"
+    SC_GLOBAL_LOG
+      (scda_params.log_level, "We expect an invalid scda function parameter"
+       " error. This is just for testing purposes and does not imply"
        " erroneous code behavior.\n");
     fc = sc_scda_fwrite_block (fc, "A block section", NULL, &data,
                                (mpirank == 0) ? 32 : 33, mpisize - 1, 0,
@@ -676,7 +685,7 @@ main (int argc, char **argv)
   }
 
   fc =
-    sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
+    sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_params,
                         &errcode);
   /* TODO: check errcode */
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
@@ -768,27 +777,37 @@ main (int argc, char **argv)
                   "scda_fclose after read failed");
 
   fc =
-    sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_opt,
+    sc_scda_fopen_read (mpicomm, filename, read_user_string, &len, &scda_params,
                         &errcode);
   SC_CHECK_ABORT (sc_scda_ferror_is_success (errcode),
                   "scda_fopen_read failed");
 
   /* provoke error for invalid scda workflow */
-  SC_GLOBAL_ESSENTIAL ("We expect an error for incorrect workflow for scda"
-                       " reading function, which is triggered on purpose to"
-                       " test the error checking\n");
+  SC_GLOBAL_LOG (scda_params.log_level, "We expect an error for incorrect"
+                 " workflow for scda reading function, which is"
+                 " triggered on purpose to test the error checking\n");
   fc = sc_scda_fread_inline_data (fc, &data, 0, &errcode);
   SC_CHECK_ABORT (!sc_scda_ferror_is_success (errcode) &&
                   errcode.scdaret == SC_SCDA_FERR_USAGE && fc == NULL,
                   "sc_scda_fread_section_header error detection failed");
   /* fc is closed and deallocated due to the occurred error  */
-  SC_GLOBAL_ESSENTIAL ("End of expected error path: test successful\n");
+  SC_GLOBAL_LOG (scda_params.log_level, "End of expected error path: test"
+                                        " successful\n");
 
   /* skip through file and test non-collective skipping */
-  test_scda_skip_through_file (mpicomm, filename, &scda_opt, mpirank,
+  test_scda_skip_through_file (mpicomm, filename, &scda_params, mpirank,
                                mpisize);
 
   sc_options_destroy (opt);
+
+#else
+  SC_GLOBAL_INFO ("The file checks were deactivated during the configuration."
+                  "\n");
+  SC_GLOBAL_INFO ("The file checks can be activated by not passing\n");
+  SC_GLOBAL_INFO ("--disable-file-checks to the Autoconf configure script and"
+                  " for CMake you must set the option SC_ENABLE_FILE_CHECKS to"
+                  " ON.\n");
+#endif /* !SC_ENABLE_FILE_CHECKS */
 
   sc_finalize ();
 

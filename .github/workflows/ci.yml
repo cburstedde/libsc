@@ -13,6 +13,11 @@ on:
       - ".github/workflows/composite-cmake/**"
   pull_request:
 
+env:
+  # Due to busy file system problems on the CI runners, we deactivate the file
+  # checks in the CI.
+  SC_CI_CONFIG_OPT: --disable-file-checks
+
 jobs:
 
   linux-multi:
@@ -37,7 +42,8 @@ jobs:
       run: |
         DIR="checkMPIdebug_shared" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug --disable-shared \
-            CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
+                     CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
+                     $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -45,7 +51,7 @@ jobs:
       shell: bash
       run: |
         DIR="checkMPI" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-mpi CFLAGS="-O2"
+        ../configure --enable-mpi CFLAGS="-O2" $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -53,7 +59,8 @@ jobs:
       shell: bash
       run: |
         DIR="checkdebug" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-debug CFLAGS="-O0 -g -Wall -Wno-uninitialized"
+        ../configure --enable-debug CFLAGS="-O0 -g -Wall -Wno-uninitialized" \
+                     $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -66,7 +73,8 @@ jobs:
       shell: bash
       run: |
         DIR="checkMPIdebugCXX" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-mpi --enable-debug CFLAGS="-O0" CC=mpicxx
+        ../configure --enable-mpi --enable-debug CFLAGS="-O0" CC=mpicxx \
+                     $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -75,7 +83,7 @@ jobs:
       run: |
         DIR="checkOpenMPMPIdebug" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-openmp="-fopenmp" --enable-mpi \
-            --enable-debug CFLAGS="-O0"
+                     --enable-debug CFLAGS="-O0" $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -83,7 +91,7 @@ jobs:
       shell: bash
       run: |
         DIR="distcheck" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure
+        ../configure $SC_CI_CONFIG_OPT
         make -j distcheck V=0
 
     - name: Upload log files
@@ -119,7 +127,8 @@ jobs:
         DIR="checkMPIdebug_valgrind" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug \
                      --disable-shared --enable-valgrind \
-          CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
+                     CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
+                     $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -163,9 +172,9 @@ jobs:
       run: |
         DIR="tarball" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug \
-            CFLAGS="-O0 -g -pedantic -Wall -Wextra -Werror \
-                -Wno-unused-parameter -Wno-builtin-declaration-mismatch \
-                -Wno-implicit-fallthrough"
+                     CFLAGS="-O0 -g -pedantic -Wall -Wextra -Werror \
+                     -Wno-unused-parameter -Wno-builtin-declaration-mismatch \
+                     -Wno-implicit-fallthrough" $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
         make -j distcheck V=0

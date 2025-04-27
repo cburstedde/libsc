@@ -25,6 +25,8 @@
  *
  * Routines for parallel I/O with the \b scda format.
  *
+ * \warning This API will change in the next libsc version!
+ *
  * Functionality to write and read in parallel using a prescribed
  * serial-equivalent file format called \b scda.
  *
@@ -39,7 +41,7 @@
  * and reading.
  *
  * In addition, we add in this file the options structure \ref
- * sc_scda_fopen_options as parameter for opening files.
+ * sc_scda_params as parameter for opening files.
  *
  * The file format includes
  * metadata in ASCII and therefore enables the human eye to parse the
@@ -193,6 +195,8 @@
  *
  * For more details and the option for encoding metadata and data see the
  * functions in \ref sc_scda.h.
+ *
+ * \warning The scda API will change in the next libsc version!
  */
 
 #ifndef SC_SCDA_H
@@ -258,8 +262,11 @@ sc_scda_ret_t;
 /** Error values for the scda functions.
  * An error value is a struct since the error can be related to the scda
  * file format or to (MPI) I/O operations. The error code can be converted to a
- * string by \ref sc_scda_ferror_string and mapped to an error class by \ref
- * sc_scda_ferror_class.
+ * string by \ref sc_scda_ferror_string, mapped to an error class by \ref
+ * sc_scda_ferror_class and checked for success by \ref
+ * sc_scda_ferror_is_success. The user can rely on these functions to
+ * parse sc_scda_ferror and does not need to access the members of this
+ * structure.
  *
  * The parsing logic of \ref sc_scda_ferror_t is that first \b scdaret is examined
  * and if \b scdaret != \ref SC_SCDA_FERR_MPI, we know that \b mpiret = 0.
@@ -281,14 +288,14 @@ typedef struct sc_scda_ferror
 }
 sc_scda_ferror_t;
 
-/** An options struct for the functions \ref sc_scda_fopen_write and
+/** A parameter struct for the functions \ref sc_scda_fopen_write and
  * \ref sc_scda_fopen_read. The struct may be extended in the future.
  *
  * The option struct is a collective structure. If the options structure that
  * is passed to a function is not the same on all processes, the whole
  * following scda workflow has undefined behavior.
  */
-typedef struct sc_scda_fopen_options
+typedef struct sc_scda_params
 {
   sc_MPI_Info         info; /**< info that is passed to MPI_File_open */
   unsigned            fuzzy_everyn; /**< In average every n-th possible error
@@ -307,8 +314,18 @@ typedef struct sc_scda_fopen_options
                                        This value is ignored if
                                        fuzzy_everyn == 0. When in doubt use
                                        fuzzy_seed = 0. */
+  int                 log_level;  /**< The log level for the scda functions.
+                                       The possible values are documented in
+                                       \ref sc.h; cf. SC_LP_* macros. */
 }
-sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
+sc_scda_params_t; /**< type for \ref sc_scda_params */
+
+/** Initialize a scda parameter structure to the defaults.
+ *
+ * \param [out]    params    \ref sc_scda_params structure that is filled with
+ *                            the default parameters.
+ */
+void sc_scda_params_init (sc_scda_params_t *params);
 
 /** Open a file for writing and write the file header to the file.
  *
@@ -349,13 +366,15 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
  *                           terminating nul.
  *                           On NULL as input \b user_string is expected to be a
  *                           nul-terminated C string.
- * \param [in]     opt       An options structure that provides the possibility
+ * \param [in]     params    A parameter structure that provides the possibility
  *                           to pass further options. See \ref
- *                           sc_scda_fopen_options for more details.
- *                           It is valid to pass NULL for \b opt.
+ *                           sc_scda_params for more details.
+ *                           It is valid to pass NULL for \b params.
  * \param [out]    errcode   An errcode that can be interpreted by \ref
  *                           sc_scda_ferror_string or mapped to an error class
- *                           by \ref sc_scda_ferror_class.
+ *                           by \ref sc_scda_ferror_class. \b errcode encodes
+ *                           success if and only if the function does not
+ *                           return NULL.
  * \return                   Newly allocated context to continue writing
  *                           and eventually closing the file. NULL in
  *                           case of error, i.e. errcode != \ref
@@ -364,7 +383,7 @@ sc_scda_fopen_options_t; /**< type for \ref sc_scda_fopen_options */
 sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
                                          const char *filename,
                                          const char *user_string, size_t *len,
-                                         sc_scda_fopen_options_t * opt,
+                                         sc_scda_params_t * params,
                                          sc_scda_ferror_t * errcode);
 
 /** Write an inline data section.
@@ -399,7 +418,9 @@ sc_scda_fcontext_t *sc_scda_fopen_write (sc_MPI_Comm mpicomm,
  *                              \b inline_data is written to the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -421,6 +442,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  * The number of block bytes must be less or equal 10^{26} - 1.
  * \note
  * All parameters except of \b block_data are collective.
+ *
+ * \warning The API of this function will change in the next libsc version!
  *
  * This function returns NULL on I/O errors.
  *
@@ -461,7 +484,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_inline (sc_scda_fcontext_t * fc,
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -485,6 +510,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  * element global count and a fixed element size.
  * \note
  * All parameters except of \b array_data are collective.
+ *
+ * \warning The API of this function will change in the next libsc version!
  *
  * This function returns NULL on I/O errors.
  *
@@ -542,7 +569,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -569,6 +598,8 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  * \note
  * All parameters are collective.
  *
+ * \warning The API of this function will change in the next libsc version!
+ *
  * \param [in]    elem_sizes    The \b elem_sizes array as retrieved by \ref
  *                              sc_scda_fread_varray_sizes or passed to \ref
  *                              sc_scda_fwrite_varray.
@@ -581,7 +612,9 @@ sc_scda_fcontext_t *sc_scda_fwrite_array (sc_scda_fcontext_t * fc,
  *                              filled with the number bytes per process.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      0 in case of success and -1 otherwise.
  */
 int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
@@ -596,6 +629,8 @@ int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
  * elements do not have a constant element size in bytes.
  * \note
  * All parameters except of \b array_data and \b elem_sizes are collective.
+ *
+ * \warning The API of this function will change in the next libsc version!
  *
  * This function returns NULL on I/O errors.
  *
@@ -666,7 +701,9 @@ int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -714,13 +751,15 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
  * \param [out]    len       On output \b len is set to the number of bytes
  *                           written to \b user_string excluding the terminating
  *                           nul.
- * \param [in]     opt       An options structure that provides the possibility
+ * \param [in]     params    A parameter structure that provides the possibility
  *                           to pass further options. See \ref
- *                           sc_scda_fopen_options for more details.
- *                           It is valid to pass NULL for \b opt.
+ *                           sc_scda_params for more details.
+ *                           It is valid to pass NULL for \b params.
  * \param [out]    errcode   An errcode that can be interpreted by \ref
  *                           sc_scda_ferror_string or mapped to an error class
- *                           by \ref sc_scda_ferror_class.
+ *                           by \ref sc_scda_ferror_class. \b errcode encodes
+ *                           success if and only if the function does not
+ *                           return NULL.
  * \return                   Newly allocated context to continue reading
  *                           and eventually closing the file. NULL in
  *                           case of error, i.e. errcode != \ref
@@ -729,7 +768,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_varray (sc_scda_fcontext_t * fc,
 sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
                                         const char *filename,
                                         char *user_string, size_t *len,
-                                        sc_scda_fopen_options_t * opt,
+                                        sc_scda_params_t * params,
                                         sc_scda_ferror_t * errcode);
 
 /** Read the next file section header.
@@ -787,7 +826,9 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  *                              description in this file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -826,7 +867,9 @@ sc_scda_fcontext_t *sc_scda_fread_section_header (sc_scda_fcontext_t * fc,
  *                              \b data is read from the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -847,6 +890,8 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  * \note
  * All parameters except of \b block_data are collective.
  *
+ * \warning The API of this function will change in the next libsc version!
+ *
  * This function returns NULL on I/O errors.
  *
  * \param [in,out]  fc          File context previously opened by \ref
@@ -864,7 +909,9 @@ sc_scda_fcontext_t *sc_scda_fread_inline_data (sc_scda_fcontext_t * fc,
  *                              \b block_data is read from the file.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -886,6 +933,8 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  * a parallel partition of the array elements by \b elem_counts.
  * \note
  * All parameters except of \b array_data are collective.
+ *
+ * \warning The API of this function will change in the next libsc version!
  *
  * This function returns NULL on I/O errors.
  *
@@ -924,7 +973,9 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -948,6 +999,8 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  * a parallel partition of the array elements by \b elem_counts.
  * \note
  * All parameters except of \b elem_sizes are collective.
+ *
+ * \warning The API of this function will change in the next libsc version!
  *
  * This function returns NULL on I/O errors.
  *
@@ -974,7 +1027,9 @@ sc_scda_fcontext_t *sc_scda_fread_array_data (sc_scda_fcontext_t * fc,
  *                              \ref sc_scda_fread_section_header.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -995,6 +1050,8 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  * \b elem_sizes.
  * \note
  * All parameters except of \b array_data and \b elem_sizes are collective.
+ *
+ * \warning The API of this function will change in the next libsc version!
  *
  * This function returns NULL on I/O errors.
  *
@@ -1049,7 +1106,9 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
- *                              by \ref sc_scda_ferror_class.
+ *                              by \ref sc_scda_ferror_class. \b errcode encodes
+ *                              success if and only if the function does not
+ *                              return NULL.
  * \return                      Return a pointer to the input
  *                              context \b fc on success.
  *                              The context is used to continue
@@ -1126,7 +1185,9 @@ int                 sc_scda_ferror_string (sc_scda_ferror_t errcode,
  *                            after a call of this function.
  * \param [out]     errcode   An errcode that can be interpreted by \ref
  *                            sc_scda_ferror_string or mapped to an error class
- *                            by \ref sc_scda_ferror_class.
+ *                            by \ref sc_scda_ferror_class. \b errcode encodes
+ *                            success if and only if the function returns
+ *                            return 0.
  * \return                    \ref SC_SCDA_FERR_SUCCESS for a successful call
  *                            and -1 in case a of an error.
  *                            See also \b errcode argument.

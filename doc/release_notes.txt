@@ -18,20 +18,37 @@
 
 ### Functionality
 
+## 2.8.7
+
+We expect this to be a drop-in replacement for most use cases, but there are
+tiny bits of interface breakage around the fringes.  Thus bump ABI release.
+
+### Functionality
+
  - Fix extern "C" macro for using C++ compilers with libsc .c files
+ - Add compiler argument for visibility of extern variables
  - Add sc_MPI_Aint and sc_MPI_Aint_diff
  - Add sc_MPI_UNSIGNED_LONG_LONG, sc_MPI_SIGNED_CHAR and sc_MPI_INT8_T
+ - Add to MPI-3 wrappers
  - Implement a functional subset of the scda API for parallel I/O
+ - Flag the scda API to be changed in the next release
  - Intremental documentation updates
+ - Add a portable sleep function
+ - Remove unused sc_handler_t
 
 ### Build system
 
+ - Bump library version according to libtool to 4:0:0.
  - Streamline CMake configuration
  - Make sure to use SC_ENABLE_* CMake variables
  - Adapt CMake CI to matrix of latest compilers
  - Check for MPI_Aint_diff in CMake and Autoconf
  - Check if MPI_UNSIGNED_LONG_LONG, MPI_SIGNED_CHAR and MPI_INT8_T are available
  - Fix tarball naming and add a CMake target to generate .tarball-version file
+ - Add an option to disable the file checks; affects sc_test_scda
+ - Minor updates to autoconf/automake for simplification
+ - Remove OpenMP configure option (code moved to attic)
+ - Remove unnecessary content from pkgconfig files
 
 ## 2.8.6
 
