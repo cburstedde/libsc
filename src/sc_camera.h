@@ -68,44 +68,45 @@ typedef sc_camera_coords_t sc_camera_mat3x3_t[9];
  * including its position, rotation, field of view, viewport dimensions, 
  * and clipping planes. These parameters define how the camera projects 
  * the 3D world onto the 2D image plane.
- * 
- * **Example: Rendering a point p with sc_camera**
+ *
+ * ## Example Workflow: Rendering a point p with sc_camera
  * 
  * 1. **World Space:**  
- *    Initially, p lies in the right-handed world coordinate system.
+ *    Initially, \b p lies in the right-handed world coordinate system.
  * 
  * 2. **View Transformation:**  
- *    p is transformed into the right-handed view coordinate system.
+ *    \b p is transformed into the right-handed view coordinate system.
  *    In this system:
  *    - The camera is at the origin, looking down the negative z-axis.
  *    - The x-axis points to the right, and the y-axis points upwards.
  * 
  *    Transformation steps:
  *    - Translate p by the camera position.
- *    - Rotate p by the camera rotation.
+ *    - Rotate \b p by the camera rotation.
  * 
  *    The camera rotation is stored as a unit quaternion q = (q_x, q_y, q_z, q_w),
  *    where (q_x, q_y, q_z) are the imaginary parts (i, j, k) and q_w is the real part.
 
- *    To rotate a point p = (p_x, p_y, p_z), treat it as a pure quaternion (p_x i + p_y j + p_z k),
+ *    To rotate a point \b p = (p_x, p_y, p_z), treat it as a pure quaternion (p_x i + p_y j + p_z k),
  *    and compute the conjugation:
  *      p' = q * p * q^{-1}
  * 
  *    Explicitly:
  *      p' = (q_x i + q_y j + q_z k + q_w) * (p_x i + p_y j + p_z k) * (-q_x i - q_y j - q_z k + q_w)
- *    where quaternion multiplication rules apply (i.e., i^2 = j^2 = k^2 = ijk = -1 ).
+ *    where quaternion multiplication rules apply (i.e., i^2 = j^2 = k^2 = ijk = -1).
  *    The camera rotation is defined such that it rotates the world space so that the camera
- *    looks along the negative z-axis. It is the **inverse** of the rotation that would align
+ *    looks along the negative z-axis. It is the \b inverse of the rotation that would align
  *    the default camera orientation with the preferred camera direction.
  * 
  *    In summary, the view transformation is:
  *    
- *      p_view = q * (p - camera->position) * q^-1
+ *      p_view = q * (\b p - camera->position) * q^-1
  * 
  * 3. **Projection to Normalized Device Coordinates (NDC):**  
- *    After the view transformation, p is projected into normalized device coordinates (NDC):
+ *    After the view transformation, \b p is projected into normalized device coordinates (NDC):
  *    - The x- and y-coordinates represent the 2D position of the point in the image.
- *    - The z-coordinate represents depth information for visibility and rendering order.
+ *    - The z-coordinate represents depth information, which is used for
+ *      visibility and rendering order.
  * 
  *    The NDC space is left-handed, as in OpenGL:
  *    - The visible region is the cube [-1, 1]^3.
