@@ -27,21 +27,21 @@
 /** \file sc_camera.h 
  * \ingroup sc_camera
  * 
- *  Camera datastructure for graphics.
+ *  Camera data structure for computer graphic applications.
  */
 
 /** \defgroup sc_camera Camera
  * \ingroup sc
  * 
- * A camera datastructure for maintaining the position, orientation and 
+ * A camera data structure for maintaining the position, orientation and
  * view frustum of the camera.
  */
 
 #include <sc_containers.h>
 
-/* p4est uses double most compoter graphics (GPU) float*/
-/** The datatype of the coordinates for sc_camera 
+/** The data type of the coordinates for sc_camera
  */
+/* p4est uses double, most computer graphic applications float on GPU. */
 typedef double sc_camera_coords_t; 
 
 /** Points in R^3 for sc_camera
@@ -57,18 +57,17 @@ typedef sc_camera_coords_t sc_camera_vec4_t[4];
  */
 typedef sc_camera_coords_t sc_camera_mat4x4_t[16];
 
-/** 4 times 4 matrix for sc_camera
+/** 3 times 3 matrix for sc_camera
  * The entries of the matrix are in column-major order.
  */
 typedef sc_camera_coords_t sc_camera_mat3x3_t[9]; 
 
-/**
- * @brief Represents a camera with parameters for rendering a 3D scene.
+/** Represents a camera with parameters for rendering a 3D scene.
  * 
- * The `sc_camera` object stores essential properties of a camera,
+ * The sc_camera object stores essential properties of a camera,
  * including its position, rotation, field of view, viewport dimensions, 
  * and clipping planes. These parameters define how the camera projects 
- * the 3D world onto a 2D image.
+ * the 3D world onto the 2D image plane.
  * 
  * **Example: Rendering a point p with sc_camera**
  * 
@@ -76,7 +75,8 @@ typedef sc_camera_coords_t sc_camera_mat3x3_t[9];
  *    Initially, p lies in the right-handed world coordinate system.
  * 
  * 2. **View Transformation:**  
- *    p is transformed into the right-handed view coordinate system. In this system:
+ *    p is transformed into the right-handed view coordinate system.
+ *    In this system:
  *    - The camera is at the origin, looking down the negative z-axis.
  *    - The x-axis points to the right, and the y-axis points upwards.
  * 
