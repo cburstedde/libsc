@@ -139,4 +139,31 @@ typedef struct sc_camera {
 
 } sc_camera_t;
 
+/** Creates a new camera structure with default values
+ * As default the camera is positioned at (0, 0, 1) and looking at (0, 0, 0) 
+ * with the upwards direction (0, 1, 0). The default horizontal field of view is
+ * Pi/2, the image has aspect ratio 1 (width = height) and near is set at 1/100
+ * far at 100. The default is realised by the following values.
+ * position : (0, 0, 1)
+ * rotation : (0, 0, 0, 1) 
+ * FOV : Pi / 2 = 1.57079632679
+ * width : 1000
+ * height : 1000
+ * near : 0.01
+ * far : 100.0
+ * 
+ * \return Camera with default values
+ */
+sc_camera_t *sc_camera_new(); 
+
+/** Resets a camera to the default state (see sc_camera_new)
+ * \param [out] camera Camera that is reseted.
+ */
+void sc_camera_reset(sc_camera_t *camera);
+
+/** Destroys a camera structure.
+ * \param [in] camera The camera to be destroyed.
+ */
+void sc_camera_destroy(sc_camera_t *camera);
+
 #endif

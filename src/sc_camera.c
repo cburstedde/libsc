@@ -20,3 +20,54 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
   02110-1301, USA.
 */
+
+#include <sc_camera.h>
+
+sc_camera_t *sc_camera_new()
+{
+    sc_camera_t *camera = SC_ALLOC (sc_camera_t, 1);
+
+    camera->position[0] = 0.0;
+    camera->position[1] = 0.0;
+    camera->position[2] = 1.0;
+
+    camera->rotation[0] = 0.0;
+    camera->rotation[1] = 0.0;
+    camera->rotation[2] = 0.0;
+    camera->rotation[3] = 1.0;
+
+    camera->FOV = 1.57079632679;
+
+    camera->width = 1000;
+    camera->height = 1000;
+
+    camera->near = 0.01;
+    camera->far = 100.0;
+
+    return camera;
+} 
+
+void sc_camera_reset(sc_camera_t *camera)
+{
+    camera->position[0] = 0.0;
+    camera->position[1] = 0.0;
+    camera->position[2] = 1.0;
+
+    camera->rotation[0] = 0.0;
+    camera->rotation[1] = 0.0;
+    camera->rotation[2] = 0.0;
+    camera->rotation[3] = 1.0;
+
+    camera->FOV = 1.57079632679;
+
+    camera->width = 1000;
+    camera->height = 1000;
+
+    camera->near = 0.01;
+    camera->far = 100.0;
+}
+
+void sc_camera_destroy(sc_camera_t *camera)
+{
+    SC_FREE (camera);
+}
