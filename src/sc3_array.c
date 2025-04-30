@@ -113,7 +113,7 @@ sc3_array_is_sorted (const sc3_array_t * a,
                      void *user, char *reason)
 {
   int                 j;
-  size_t              i;
+  size_t              iz;
   const void         *vold, *vnew;
 
   SC3E_TEST (compar != NULL, reason);
@@ -124,8 +124,8 @@ sc3_array_is_sorted (const sc3_array_t * a,
   }
 
   vold = sc3_array_index_noerr (a, 0);
-  for (i = 1; i < a->ecount; ++i) {
-    vnew = sc3_array_index_noerr (a, i);
+  for (iz = 1; iz < a->ecount; ++iz) {
+    vnew = sc3_array_index_noerr (a, iz);
     SC3E_DO (compar (vold, vnew, user, &j), reason);
     SC3E_TEST (j <= 0, reason);
     vold = vnew;
@@ -519,26 +519,26 @@ sc3_array_freeze (sc3_array_t * a)
 }
 
 sc3_error_t        *
-sc3_array_index (sc3_array_t * a, size_t i, void *ptr)
+sc3_array_index (sc3_array_t * a, size_t iz, void *ptr)
 {
   SC3A_IS (sc3_array_is_setup, a);
-  SC3A_CHECK (i < a->ecount);
+  SC3A_CHECK (iz < a->ecount);
   SC3A_CHECK (ptr != NULL);
 
-  *(void **) ptr = a->mem + i * a->esize;
+  *(void **) ptr = a->mem + iz * a->esize;
   return NULL;
 }
 
 const void         *
-sc3_array_index_noerr (const sc3_array_t * a, size_t i)
+sc3_array_index_noerr (const sc3_array_t * a, size_t iz)
 {
 #ifdef SC_ENABLE_DEBUG
   if (!sc3_array_is_setup (a, NULL) || a->esize == 0 ||
-      i >= a->ecount) {
+      iz >= a->ecount) {
     return NULL;
   }
 #endif
-  return a->mem + i * a->esize;
+  return a->mem + iz * a->esize;
 }
 
 sc3_error_t        *

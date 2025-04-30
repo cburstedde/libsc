@@ -209,7 +209,7 @@ sc3_error_t        *
 sc3_mstamp_unref (sc3_mstamp_t ** mstp)
 {
   int                 waslast;
-  size_t              ecount, i;
+  size_t              ecount, iz;
   void               *item;
   sc3_allocator_t    *aator;
   sc3_mstamp_t       *mst;
@@ -225,8 +225,8 @@ sc3_mstamp_unref (sc3_mstamp_t ** mstp)
     if (mst->setup) {
       /* deallocate element storage */
       SC3E (sc3_array_get_elem_count (mst->remember, &ecount));
-      for (i = 0; i < ecount; ++i) {
-        SC3E (sc3_array_index (mst->remember, i, &item));
+      for (iz = 0; iz < ecount; ++iz) {
+        SC3E (sc3_array_index (mst->remember, iz, &item));
         SC3E (sc3_allocator_free (aator, *(void **) item));
       }
 

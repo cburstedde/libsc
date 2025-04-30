@@ -353,14 +353,14 @@ sc3_error_t        *sc3_array_freeze (sc3_array_t * a);
 
 /** Index an array element.
  * \param [in] a        The array must be setup.
- * \param [in] i        Index must be in [0, element count).
+ * \param [in] iz       Index must be in [0, element count).
  * \param [out] ptr     Address of a pointer.
- *                      Assigned address of array element at index \b i.
+ *                      Assigned address of array element at index \b iz.
  *                      If the array element size is zero, the pointer
  *                      must not be dereferenced.
  * \return              NULL on success, error object otherwise.
  */
-sc3_error_t        *sc3_array_index (sc3_array_t * a, size_t i, void *ptr);
+sc3_error_t        *sc3_array_index (sc3_array_t * a, size_t iz, void *ptr);
 
 /** Index an array element without returning an error object.
  * This function is optimized for speed, not safety, thus risky.
@@ -368,15 +368,15 @@ sc3_error_t        *sc3_array_index (sc3_array_t * a, size_t i, void *ptr);
  * The idea is not to verify its return pointer at all.
  * If you feel any such need, use \ref sc3_array_index.
  * \param [in] a        Const pointer to the array, must be setup.
- * \param [in] i        Index must be in [0, element count).
- * \return              Address of array element at index \b i.
+ * \param [in] iz       Index must be in [0, element count).
+ * \return              Address of array element at index \b iz.
  *                      When configured with --enable-debug, returns NULL
  *                      if index is out of bounds, element size is zero,
  *                      or the array is not setup.  Without --enable-debug,
  *                      passing a non-setup array or invalid indices is
  *                      undefined.
  */
-const void         *sc3_array_index_noerr (const sc3_array_t * a, size_t i);
+const void         *sc3_array_index_noerr (const sc3_array_t * a, size_t iz);
 
 /** Create a view array pointing into the same memory as a given array.
  * Inherit the data element size from the given array.  The view refs the
