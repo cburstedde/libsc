@@ -60,7 +60,7 @@ typedef sc_camera_coords_t sc_camera_mat4x4_t[16];
 /** 3 times 3 matrix for sc_camera
  * The entries of the matrix are in column-major order.
  */
-typedef sc_camera_coords_t sc_camera_mat3x3_t[9]; 
+typedef sc_camera_coords_t sc_camera_mat3x3_t[9];
 
 /** Represents a camera with parameters for rendering a 3D scene.
  * 
@@ -125,18 +125,24 @@ typedef sc_camera_coords_t sc_camera_mat3x3_t[9];
  *    Points closer than the near plane or farther than the far plane are clipped, 
  *    meaning they are not mapped inside the visible cube [-1, 1]^3.
  */
-typedef struct sc_camera {
-  sc_camera_vec3_t position; /**< The position of the camera in world coordinates. */
+typedef struct sc_camera
+{
+  sc_camera_vec3_t    position;
+                             /**< The position of the camera in world coordinates. */
 
-  sc_camera_vec4_t rotation;  /**< Rotation from world space to view space, represented as a unit quaternion. */
+  sc_camera_vec4_t    rotation;
+                              /**< Rotation from world space to view space, represented as a unit quaternion. */
 
-  double FOV; /**< Horizontal field of view (in radians), defining the frustum's opening angle horizontally. */
+  double              FOV;
+              /**< Horizontal field of view (in radians), defining the frustum's opening angle horizontally. */
 
-  int width;  /**< Image width in pixels, used to determine the aspect ratio. */
-  int height; /**< Image height in pixels, used to determine the aspect ratio. */
+  int                 width;
+              /**< Image width in pixels, used to determine the aspect ratio. */
+  int                 height;
+              /**< Image height in pixels, used to determine the aspect ratio. */
 
-  sc_camera_coords_t near; /**< Distance to the near clipping plane. */
-  sc_camera_coords_t far;  /**< Distance to the far clipping plane. */
+  sc_camera_coords_t  near;/**< Distance to the near clipping plane. */
+  sc_camera_coords_t  far; /**< Distance to the far clipping plane. */
 
 } sc_camera_t;
 
@@ -156,16 +162,37 @@ typedef struct sc_camera {
  * 
  * \return Camera with default values.
  */
-sc_camera_t *sc_camera_new(); 
+sc_camera_t        *sc_camera_new ();
 
-/** Resets a camera to the default state (see \ref sc_camera_new).
- * \param [out] camera Camera that is reset.
+/** Initializes a camera with the default parameters (see sc_camera_new).
+ * \param [out] camera Camera that is initialized.
  */
-void sc_camera_reset(sc_camera_t *camera);
+void                sc_camera_init (sc_camera_t * camera);
 
 /** Destroys a camera structure.
  * \param [in] camera The camera to be destroyed.
  */
-void sc_camera_destroy(sc_camera_t *camera);
+void                sc_camera_destroy (sc_camera_t * camera);
+
+void sc_camera_position (sc_camera_t * camera, sc_camera_vec3_t position);
+
+/* TODO : i have to specify axis and angle direction (right hand rule?) */
+
+void sc_camera_yaw (sc_camera_t * camera, double angle);
+
+void sc_camera_pitch (sc_camera_t * camera, double angle);
+
+void sc_camera_roll (sc_camera_t * camera, double angle);
+
+void sc_camera_fov (sc_camera_t * camera, double angle);
+
+/* TODO : here comes the look_at */
+
+void sc_camera_aspect_ratio (sc_camera_t * camera, int width, int height);
+
+void sc_camera_clipping_dist(sc_camera_t * camera, sc_camera_coords_t near, 
+  sc_camera_coords_t far);
+
+/* void sc_camera_view_transform(); */
 
 #endif
