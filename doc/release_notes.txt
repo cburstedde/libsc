@@ -18,10 +18,10 @@
 
 ### Functionality
 
- - Prefer calling sc_get_package_id () over accessing global variable.
- - Remove redundancy and clarify libsc's init/finalize process.
- - Provide for a persistent package identifier variable.
- - add SC_EXECUTE_ASSIGN macro to facilitate debugging.
+ - Prefer calling `sc_get_package_id ()` over accessing global variable
+ - Remove redundancy and clarify libsc's init/finalize process
+ - Provide for a persistent package identifier variable
+ - add `SC_EXECUTE_ASSIGN` macro to facilitate debugging
 
 ## 2.8.7
 
@@ -30,27 +30,27 @@ tiny bits of interface breakage around the fringes.  Thus bump ABI release.
 
 ### Functionality
 
- - Fix extern "C" macro for using C++ compilers with libsc .c files
+ - Fix `extern "C"` macro for using C++ compilers with libsc `.c` files
  - Add compiler argument for visibility of extern variables
- - Add sc_MPI_Aint and sc_MPI_Aint_diff
- - Add sc_MPI_UNSIGNED_LONG_LONG, sc_MPI_SIGNED_CHAR and sc_MPI_INT8_T
+ - Add `sc_MPI_Aint` and `sc_MPI_Aint_diff`
+ - Add `sc_MPI_UNSIGNED_LONG_LONG`, `sc_MPI_SIGNED_CHAR` and `sc_MPI_INT8_T`
  - Add to MPI-3 wrappers
  - Implement a functional subset of the scda API for parallel I/O
  - Flag the scda API to be changed in the next release
  - Intremental documentation updates
  - Add a portable sleep function
- - Remove unused sc_handler_t
+ - Remove unused `sc_handler_t`
 
 ### Build system
 
- - Bump library version according to libtool to 4:0:0.
+ - Bump library version according to libtool to 4:0:0
  - Streamline CMake configuration
- - Make sure to use SC_ENABLE_* CMake variables
+ - Make sure to use `SC_ENABLE_*` CMake variables
  - Adapt CMake CI to matrix of latest compilers
- - Check for MPI_Aint_diff in CMake and Autoconf
- - Check if MPI_UNSIGNED_LONG_LONG, MPI_SIGNED_CHAR and MPI_INT8_T are available
+ - Check for `MPI_Aint_diff` in CMake and Autoconf
+ - Check if `MPI_UNSIGNED_LONG_LONG`, `MPI_SIGNED_CHAR` and `MPI_INT8_T` are available
  - Fix tarball naming and add a CMake target to generate .tarball-version file
- - Add an option to disable the file checks; affects sc_test_scda
+ - Add an option to disable the file checks; affects `sc_test_scda`
  - Minor updates to autoconf/automake for simplification
  - Remove OpenMP configure option (code moved to attic)
  - Remove unnecessary content from pkgconfig files
@@ -61,41 +61,41 @@ There have been breaking changes, very strictly speaking.
 
 ### Documentation
 
- - Begin maintaining a release notes file.
- - Add to documentation of sc_containers.h.
- - Completion and some polishing of the doxygen documentation in sc_io.h.
+ - Begin maintaining a release notes file
+ - Add to documentation of `sc_containers.h`
+ - Completion and some polishing of the doxygen documentation in `sc_io.h`
  - Add file-oriented data format, API and documentation, suitable for
-   parallel, partition-independent disk I/O, in sc_scda.h.
- - Restructure the I/O module in the doxygen documentation.
+   parallel, partition-independent disk I/O, in `sc_scda.h`
+ - Restructure the I/O module in the doxygen documentation
 
 ### Build system
 
- - Bump library version according to libtool to 3:0:0.
- - No longer install getopt and puff original headers.
- - Make sc_getopt.h a purely internal header file.
- - Add a generic external library installation option.
- - Add script doc/p4est-build-wdeps.sh for autotools build.
- - Further align CMake with the autoconf build system.
- - Update CMake logic to configure zlib and jansson.
- - Add CMake option to run tests with Valgrind.
- - Warn if configuring MPI on and MPI I/O off.
+ - Bump library version according to libtool to 3:0:0
+ - No longer install getopt and puff original headers
+ - Make `sc_getopt.h` a purely internal header file
+ - Add a generic external library installation option
+ - Add script doc/p4est-build-wdeps.sh for autotools build
+ - Further align CMake with the autoconf build system
+ - Update CMake logic to configure zlib and jansson
+ - Add CMake option to run tests with Valgrind
+ - Warn if configuring MPI on and MPI I/O off
  - Renaming of CMake build system variables
- - Make MPI checking functionality more robust in CMake.
+ - Make MPI checking functionality more robust in CMake
 
 ### Functionality
 
- - Further align I/O wrappers with and without MPI.
- - Change the semantic of sc_io_open to always truncate a newly created file.
- - Simplify the replacements for MPI_{read,write}_at*.
- - Further updates to the MPI I/O wrapper code.
- - Deprecate the configuration with MPI but without MPI I/O.
- - Remove sc_io_{write,read}_all.
- - Add sc_io_source, sink_destroy_null functions.
- - Make sure not to sc_io_source_read an array beyond its length.
- - Add sc_io_file_load, save functions and test program.
- - Update sc_hash_array to hide much of internal state.
- - Update zlib and base64 encode/compression routines.
- - Remove the MPI_UNSIGNED_LONG_LONG datatype wrapper.
+ - Further align I/O wrappers with and without MPI
+ - Change the semantic of `sc_io_open` to always truncate a newly created file
+ - Simplify the replacements for `MPI_{read,write}_at*`
+ - Further updates to the MPI I/O wrapper code
+ - Deprecate the configuration with MPI but without MPI I/O
+ - Remove `sc_io_{write,read}_all`
+ - Add `sc_io_source`, `sink_destroy_null` functions
+ - Make sure not to `sc_io_source_read` an array beyond its length
+ - Add `sc_io_file_load`, `save` functions and test program
+ - Update `sc_hash_array` to hide much of internal state
+ - Update zlib and base64 encode/compression routines
+ - Remove the `MPI_UNSIGNED_LONG_LONG` datatype wrapper
 
 ## 2.8.5
 
