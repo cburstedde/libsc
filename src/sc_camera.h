@@ -44,20 +44,20 @@
 /* p4est uses double, most computer graphic applications float on GPU. */
 typedef double sc_camera_coords_t; 
 
-/** Points in R^3 for sc_camera
+/** Points in R^3 for sc_camera.
  */
 typedef sc_camera_coords_t sc_camera_vec3_t[3];
 
-/** Points in R^4 for sc_camera
+/** Points in R^4 for sc_camera.
  */
 typedef sc_camera_coords_t sc_camera_vec4_t[4];
 
-/** 4 times 4 matrix for sc_camera
+/** 4 times 4 matrix for sc_camera.
  * The entries of the matrix are in column-major order.
  */
 typedef sc_camera_coords_t sc_camera_mat4x4_t[16];
 
-/** 3 times 3 matrix for sc_camera
+/** 3 times 3 matrix for sc_camera.
  * The entries of the matrix are in column-major order.
  */
 typedef sc_camera_coords_t sc_camera_mat3x3_t[9];
