@@ -12,6 +12,7 @@ dnl                   on the configure command line.
 dnl                   Likewise for F77, FC and CXX if enabled in SC_MPI_CONFIG.
 dnl --disable-mpiio   Only effective if --enable-mpi is given.  In this case,
 dnl                   do not use MPI I/O in sc and skip the compile-and-link test.
+dnl                   DEPRECATED: we will disallow this combination in the future.
 dnl --disable-mpithread Only effective if --enable-mpi is given.  In this case,
 dnl                   do not use MPI_Init_thread () and skip compile-and-link test.
 dnl --disable-mpishared Only effective if --enable-mpi is given.  In this case,
@@ -72,14 +73,14 @@ dnl The shell variable SC_ENABLE_MPIIO is set if --disable-mpiio is not given.
 dnl If not disabled, MPI I/O will be verified by a compile/link test below.
 AC_ARG_ENABLE([mpiio],
               [AS_HELP_STRING([--disable-mpiio],
-               [do not use MPI I/O (even if MPI is enabled)])],,
+               [do not use MPI I/O (this option is DEPRECATED)])],,
               [enableval=yes])
 if test "x$enableval" = xyes ; then
   if test "x$HAVE_PKG_MPI" = xyes ; then
     HAVE_PKG_MPIIO=yes
   fi
 elif test "x$enableval" != xno ; then
-  AC_MSG_WARN([Ignoring --enable-mpiio with unsupported argument])
+  AC_MSG_ERROR([use --disable-mpiio without an argument (option DEPRECATED)])
 fi
 AC_MSG_CHECKING([whether we are using MPI I/O])
 AC_MSG_RESULT([$HAVE_PKG_MPIIO])
@@ -280,6 +281,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM(
 int mpiret =
 MPI_Init ((int *) 0, (char ***) 0);
 if (mpiret == MPI_ERR_ARG ||
+    mpiret == MPI_ERR_COUNT ||
     mpiret == MPI_ERR_UNKNOWN ||
     mpiret == MPI_ERR_OTHER ||
     mpiret == MPI_ERR_NO_MEM) {
@@ -313,6 +315,64 @@ MPI_Finalize ();
  $1],
 [AC_MSG_RESULT([failed])
  $2])
+])
+
+dnl SC_MPI_Aint_Diff_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI_Aint_diff test program.
+dnl
+AC_DEFUN([SC_MPI_Aint_Diff_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for MPI_Aint_diff C program])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+MPI_Aint a, b, res;
+a = 42;
+b = 12;
+MPI_Init ((int *) 0, (char ***) 0);
+res = MPI_Aint_diff (a, b);
+MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $1],
+[AC_MSG_RESULT([failed])
+ $2])
+])
+
+dnl SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([data-type], [action-if-successful],
+dnl                                     [action-if-failed])
+dnl Compile and link an MPI data type test program.
+dnl
+AC_DEFUN([SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for the MPI data type $1])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+int size;
+MPI_Init ((int *) 0, (char ***) 0);
+/* check if $1 is defined */
+MPI_Type_size ($1, &size);
+MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $2],
+[AC_MSG_RESULT([failed])
+ $3])
+])
+
+dnl SC_MPI_CHECK_TYPE([prefix], [data-type])
+dnl Checks if an MPI data type is available.
+AC_DEFUN([SC_MPI_CHECK_TYPE], [
+  $1_HAVE_$2=yes
+  SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([$2], , [$1_HAVE_$2=no])
+  if test "x$$1_HAVE_$2" = xyes; then
+    AC_DEFINE([HAVE_$2], 1, [Define to 1 if we have $2])
+  fi
 ])
 
 dnl SC_MPIIO_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
@@ -536,12 +596,25 @@ dnl  ])
   ])
   if test "x$HAVE_PKG_MPIIO" = xyes ; then
     SC_MPIIO_C_COMPILE_AND_LINK(,
-      [AC_MSG_ERROR([MPI I/O not found; you may try --disable-mpiio])])
+      [AC_MSG_ERROR([MPI I/O not found; you may --disable-mpi altogether])])
   fi
   if test "x$HAVE_PKG_MPITHREAD" = xyes ; then
     SC_MPITHREAD_C_COMPILE_AND_LINK(,
       [AC_MSG_ERROR([MPI_Init_thread not found; you may try --disable-mpithread])])
   fi
+
+  dnl Run test to check availability of MPI_Aint_diff
+  $1_HAVE_AINT_DIFF=yes
+  SC_MPI_Aint_Diff_C_COMPILE_AND_LINK(,[$1_HAVE_AINT_DIFF=no])
+  if test "x$$1_HAVE_AINT_DIFF" = xyes ; then
+    AC_DEFINE([HAVE_AINT_DIFF], 1,
+              [Define to 1 if we have MPI_Aint_diff])
+  fi
+
+  dnl Run tests to check availability of newer MPI data types
+  SC_MPI_CHECK_TYPE([$1], [MPI_UNSIGNED_LONG_LONG])
+  SC_MPI_CHECK_TYPE([$1], [MPI_SIGNED_CHAR])
+  SC_MPI_CHECK_TYPE([$1], [MPI_INT8_T])
 
   dnl Run test to check availability of MPI window
   $1_ENABLE_MPIWINSHARED=yes

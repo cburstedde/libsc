@@ -43,6 +43,17 @@ typedef void        (*sc_sig_t) (int);
 #include <pthread.h>
 #endif
 
+#ifdef _MSC_VER
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
+
+#if _POSIX_C_SOURCE >= 199309L
+#include <time.h>
+#else
+#include <unistd.h>
+#endif
+
 typedef struct sc_package
 {
   int                 is_registered;
@@ -118,6 +129,42 @@ static int          sc_print_backtrace = 0;
 static int          sc_num_packages = 0;
 static int          sc_num_packages_alloc = 0;
 static sc_package_t *sc_packages = NULL;
+
+void
+sc_extern_c_hack_1 (void)
+{
+  /* Completing the hack in sc.h on providing the prototype.
+     We use the macro SC_EXTER_C_BEGIN; after including all headers
+     and before declaring functions to ensure C linkage. */
+}
+
+void
+sc_extern_c_hack_2 (void)
+{
+  /* Completing the hack in sc.h on providing the prototype.
+     We use the macro SC_EXTER_C_END; after declaring all functions,
+     just before the final include-once check, to ensure C linkage. */
+}
+
+int
+sc_mpi_is_enabled (void)
+{
+#ifdef SC_ENABLE_MPI
+  return 1;
+#else
+  return 0;
+#endif
+}
+
+int
+sc_mpi_is_shared (void)
+{
+#ifdef SC_ENABLE_MPISHARED
+  return 1;
+#else
+  return 0;
+#endif
+}
 
 #ifdef SC_ENABLE_PTHREAD
 
@@ -287,10 +334,10 @@ sc_log_handler (FILE * log_stream, const char *filename, int lineno,
     char                bn[BUFSIZ], *bp;
 
     snprintf (bn, BUFSIZ, "%s", filename);
-#ifdef _MSC_VER
-    bp = bn;
-#else
+#ifdef SC_HAVE_LIBGEN_H
     bp = basename (bn);
+#else
+    bp = bn;
 #endif
     fprintf (log_stream, "%s:%d ", bp, lineno);
   }
@@ -359,7 +406,7 @@ sc_malloc_aligned (size_t alignment, size_t size)
                     "Returned NULL from aligned_alloc");
     return data;
   }
-#elif defined (SC_HAVE_ANY_MEMALIGN) && defined (SC_HAVE_ALIGNED_MALLOC)
+#elif defined SC_HAVE_ANY_MEMALIGN && defined SC_HAVE_ALIGNED_MALLOC
   /* MinGW, MSVC */
   {
     void               *data = _aligned_malloc (size, alignment);
@@ -538,7 +585,7 @@ sc_malloc (int package, size_t size)
 #endif
 
   /* allocate memory */
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
   ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, size);
 #else
   ret = malloc (size);
@@ -578,7 +625,7 @@ sc_calloc (int package, size_t nmemb, size_t size)
 #endif
 
   /* allocate memory */
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
   ret = sc_malloc_aligned (SC_MEMALIGN_BYTES, nmemb * size);
   memset (ret, 0, nmemb * size);
 #else
@@ -623,7 +670,7 @@ sc_realloc (int package, void *ptr, size_t size)
   else {
     void               *ret;
 
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
     ret = sc_realloc_aligned (ptr, SC_MEMALIGN_BYTES, size);
 #else
     ret = realloc (ptr, size);
@@ -678,7 +725,7 @@ sc_free (int package, void *ptr)
   }
 
   /* free memory */
-#if defined SC_ENABLE_MEMALIGN
+#ifdef SC_ENABLE_MEMALIGN
   sc_free_aligned (ptr, SC_MEMALIGN_BYTES);
 #else
   free (ptr);
@@ -1030,7 +1077,9 @@ sc_abort_handler (void)
 
   fflush (stdout);
   fflush (stderr);
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+  Sleep (1);
+#else
   sleep (1);                    /* allow time for pending output */
 #endif
   if (sc_mpicomm != sc_MPI_COMM_NULL) {
@@ -1081,7 +1130,9 @@ sc_abort_collective (const char *msg)
     SC_ABORT (msg);
   }
   else {
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+    Sleep (3);
+#else
     sleep (3);                  /* wait for root rank's sc_MPI_Abort ()... */
 #endif
     abort ();                   /* ... otherwise this may call sc_MPI_Abort () */
@@ -1262,7 +1313,6 @@ sc_init (sc_MPI_Comm mpicomm,
          int catch_signals, int print_backtrace,
          sc_log_handler_t log_handler, int log_threshold)
 {
-  int                 w;
   const char         *trace_file_name;
   const char         *trace_file_prio;
 
@@ -1328,27 +1378,10 @@ sc_init (sc_MPI_Comm mpicomm,
     }
   }
 
-  w = 24;
+  /* one line of logging if the threshold is not SC_LP_SILENT */
   SC_GLOBAL_ESSENTIALF ("This is %s\n", SC_PACKAGE_STRING);
-#if 0
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "F77", SC_F77);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FFLAGS", SC_FFLAGS);
-#endif
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPP", SC_CPP);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CPPFLAGS", SC_CPPFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CC", SC_CC);
-#if 0
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "C_VERSION", SC_C_VERSION);
-#endif
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "CFLAGS", SC_CFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LDFLAGS", SC_LDFLAGS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LIBS", SC_LIBS);
-#if 0
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "BLAS_LIBS", SC_BLAS_LIBS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "LAPACK_LIBS", SC_LAPACK_LIBS);
-  SC_GLOBAL_PRODUCTIONF ("%-*s %s\n", w, "FLIBS", SC_FLIBS);
-#endif
-
+  SC_GLOBAL_INFOF ("MPI is enabled %d shared %d\n",
+                   sc_mpi_is_enabled (), sc_mpi_is_shared ());
   sc_initialized = 1;
 }
 
@@ -1583,6 +1616,16 @@ sc_version_point (void)
 #endif
 
 int
+sc_is_littleendian (void)
+{
+  /* We use the volatile keyword to deactivate compiler optimizations related
+   * to the variable uint.
+   */
+  const volatile uint32_t uint = 1;
+  return *(char *) &uint == 1;
+}
+
+int
 sc_have_zlib (void)
 {
 #ifndef SC_HAVE_ZLIB
@@ -1599,5 +1642,27 @@ sc_have_json (void)
   return 0;
 #else
   return 1;
+#endif
+}
+
+void
+sc_sleep (unsigned milliseconds){
+#if _POSIX_C_SOURCE >= 199309L
+  struct timespec ts;
+  /* full seconds */
+  ts.tv_sec = milliseconds / 1000;
+  /* nanoseconds */
+  ts.tv_nsec = (milliseconds % 1000) * 1000000;
+  nanosleep (&ts, NULL);
+#elif defined(_POSIX_C_SOURCE)
+  /* older POSIX */
+  if (milliseconds >= 1000) {
+    sleep (milliseconds / 1000);
+  }
+  usleep ((milliseconds % 1000) * 1000);
+#elif _MSC_VER
+  Sleep (milliseconds);
+#else
+  SC_ABORT ("No suitable sleep function available.");
 #endif
 }

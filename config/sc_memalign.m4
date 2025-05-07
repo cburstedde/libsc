@@ -15,9 +15,6 @@ dnl use the aligned version, relying on posix_memalign if it exists.
 dnl
 AC_DEFUN([SC_CHECK_MEMALIGN], [
 
-dnl check for size of types
-AC_CHECK_SIZEOF([void *])
-
 dnl check for presence of functions
 AC_CHECK_FUNCS([aligned_alloc posix_memalign])
 
@@ -35,13 +32,11 @@ if test "x$$1_ENABLE_MEMALIGN" != xno ; then
 
     dnl make sure the alignment is a number
     $1_MEMALIGN_BYTES=`echo "$$1_ENABLE_MEMALIGN" | tr -c -d '[[:digit:]]'`
-    $1_MEMALIGN_BYTES_LINK="$$1_MEMALIGN_BYTES"
     if test "x$$1_MEMALIGN_BYTES" = x ; then
       AC_MSG_ERROR([please provide --enable-memalign with a numeric value or nothing])
     fi
   else
-    $1_MEMALIGN_BYTES_LINK="SIZEOF_VOID_P"
-    $1_MEMALIGN_BYTES="$1_$$1_MEMALIGN_BYTES_LINK"
+    $1_MEMALIGN_BYTES=8
   fi
   AC_DEFINE_UNQUOTED([MEMALIGN_BYTES], [($$1_MEMALIGN_BYTES)],
                      [desired alignment of allocations in bytes])
@@ -57,7 +52,7 @@ extern "C" void* aligned_alloc(size_t, size_t);
 #endif
 ]],
 [[
-int *a = (int *) aligned_alloc ($$1_MEMALIGN_BYTES_LINK, 3 * sizeof(*a));
+int *a = (int *) aligned_alloc ($$1_MEMALIGN_BYTES, 3 * sizeof(*a));
 free(a);
 ]])],
                    [], [AC_MSG_ERROR([linking aligned_alloc failed])])
@@ -72,7 +67,7 @@ dnl verify that posix_memalign can be linked against
 ]],
 [[
 int *a;
-posix_memalign((void **) &a, $$1_MEMALIGN_BYTES_LINK, 3 * sizeof(*a));
+posix_memalign((void **) &a, $$1_MEMALIGN_BYTES, 3 * sizeof(*a));
 free(a);
 ]])],
                    [], [AC_MSG_ERROR([linking posix_memalign failed])])

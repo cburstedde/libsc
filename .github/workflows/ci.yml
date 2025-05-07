@@ -10,7 +10,13 @@ on:
       - "CMake*"
       - ".github/workflows/ci_cmake.yml"
       - ".github/workflows/ci_darwin.yml"
+      - ".github/workflows/composite-cmake/**"
   pull_request:
+
+env:
+  # Due to busy file system problems on the CI runners, we deactivate the file
+  # checks in the CI.
+  SC_CI_CONFIG_OPT: --disable-file-checks
 
 jobs:
 
@@ -26,7 +32,7 @@ jobs:
             zlib1g-dev libmpich-dev mpich
 
     - name: Checkout source code
-      uses: actions/checkout@v3
+      uses: actions/checkout@main
 
     - name: Run bootstrap script
       run: ./bootstrap
@@ -36,7 +42,8 @@ jobs:
       run: |
         DIR="checkMPIdebug_shared" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug --disable-shared \
-            CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
+                     CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
+                     $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -44,7 +51,7 @@ jobs:
       shell: bash
       run: |
         DIR="checkMPI" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-mpi CFLAGS="-O2"
+        ../configure --enable-mpi CFLAGS="-O2" $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -52,7 +59,8 @@ jobs:
       shell: bash
       run: |
         DIR="checkdebug" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-debug CFLAGS="-O0 -g -Wall -Wno-uninitialized"
+        ../configure --enable-debug CFLAGS="-O0 -g -Wall -Wno-uninitialized" \
+                     $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -65,7 +73,8 @@ jobs:
       shell: bash
       run: |
         DIR="checkMPIdebugCXX" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-mpi --enable-debug CFLAGS="-O0" CC=mpicxx
+        ../configure --enable-mpi --enable-debug CFLAGS="-O0" CC=mpicxx \
+                     $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -74,7 +83,7 @@ jobs:
       run: |
         DIR="checkOpenMPMPIdebug" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-openmp="-fopenmp" --enable-mpi \
-            --enable-debug CFLAGS="-O0"
+                     --enable-debug CFLAGS="-O0" $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
@@ -82,12 +91,12 @@ jobs:
       shell: bash
       run: |
         DIR="distcheck" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure
+        ../configure $SC_CI_CONFIG_OPT
         make -j distcheck V=0
 
     - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@main
       with:
         name: linux_multi_log
         path: |
@@ -107,7 +116,7 @@ jobs:
             zlib1g-dev libmpich-dev mpich valgrind
 
     - name: Checkout source code
-      uses: actions/checkout@v3
+      uses: actions/checkout@main
 
     - name: Run bootstrap script
       run: ./bootstrap
@@ -118,13 +127,14 @@ jobs:
         DIR="checkMPIdebug_valgrind" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug \
                      --disable-shared --enable-valgrind \
-          CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
+                     CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
+                     $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 
     - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@main
       with:
         name: linux_valgrind_log
         path: |
@@ -144,7 +154,7 @@ jobs:
             zlib1g-dev libmpich-dev mpich
 
     - name: Checkout source code
-      uses: actions/checkout@v3
+      uses: actions/checkout@main
       with:
         fetch-depth: 0
 
@@ -162,23 +172,23 @@ jobs:
       run: |
         DIR="tarball" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug \
-            CFLAGS="-O0 -g -pedantic -Wall -Wextra -Werror \
-                -Wno-unused-parameter -Wno-builtin-declaration-mismatch \
-                -Wno-implicit-fallthrough"
+                     CFLAGS="-O0 -g -pedantic -Wall -Wextra -Werror \
+                     -Wno-unused-parameter -Wno-builtin-declaration-mismatch \
+                     -Wno-implicit-fallthrough" $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
         make -j distcheck V=0
         mv libsc-*.tar.gz ..
 
     - name: Upload tarball
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@main
       with:
         name: libsc_tarball
         path: ./libsc-*.tar.gz
 
     - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@main
       with:
         name: linux_tarball_log
         path: |

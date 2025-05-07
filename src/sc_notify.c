@@ -898,7 +898,6 @@ sc_notify_reset_output (sc_array_t * output, int *senders, int *num_senders,
     npay = 0;
   }
   multi = 1 + npay;
-  SC_ASSERT (payload == NULL || (int) payload->elem_count == 0);
 
   found_num_senders = 0;
   if (output->elem_count > 0) {
@@ -1494,6 +1493,12 @@ sc_notify_payload_nary (sc_array_t * receivers, sc_array_t * senders,
         *(int *) sc_array_push (senders) = 0;
       }
     }
+    if (out_payload != NULL) {
+      /* if out_payload is defined, copy single entry from in_payload */
+      SC_ASSERT (in_payload != NULL && in_payload->elem_count == 1);
+      SC_ASSERT (in_payload->elem_size == out_payload->elem_size);
+      sc_array_copy (out_payload, in_payload);
+    }
 
     /* we return if there is only one process */
     SC_NOTIFY_FUNC_SHOT (notify, &snap);
@@ -1655,7 +1660,8 @@ sc_notify_payload_pex (sc_array_t * receivers, sc_array_t * senders,
 static int
 sc_notify_census_pcx (sc_array_t * receivers, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && (MPI_VERSION > 2 || (MPI_VERSION == 2 && MPI_SUBVERSION >= 2))
+#if defined SC_ENABLE_MPI && \
+    (MPI_VERSION > 2 || (MPI_VERSION == 2 && MPI_SUBVERSION >= 2))
   int                 i;
   int                 num_senders, num_receivers;
   int                 mpiret;
@@ -1700,7 +1706,8 @@ static void
 sc_notify_censusv_pcx (sc_array_t * receivers, sc_array_t * in_offsets,
                        int *num_senders_size, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && (MPI_VERSION > 2 || (MPI_VERSION == 2 && MPI_SUBVERSION >= 2))
+#if defined SC_ENABLE_MPI && \
+    (MPI_VERSION > 2 || (MPI_VERSION == 2 && MPI_SUBVERSION >= 2))
   int                 i;
   int                 num_receivers;
   int                 mpiret;
@@ -1748,7 +1755,7 @@ sc_notify_censusv_pcx (sc_array_t * receivers, sc_array_t * in_offsets,
 static int
 sc_notify_census_rsx (sc_array_t * receivers, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && MPI_VERSION >= 2
+#if defined SC_ENABLE_MPI && MPI_VERSION >= 2
   int                 i;
   int                 num_senders, *inum_senders, num_receivers;
   int                 mpiret;
@@ -1809,7 +1816,7 @@ static void
 sc_notify_censusv_rsx (sc_array_t * receivers, sc_array_t * in_offsets,
                        int *num_senders_size, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && MPI_VERSION >= 2
+#if defined SC_ENABLE_MPI && MPI_VERSION >= 2
   int                 i;
   int                *inum_senders_size, num_receivers;
   int                 mpiret;
@@ -1880,7 +1887,7 @@ sc_notify_payload_nbx (sc_array_t * receivers, sc_array_t * senders,
                        sc_array_t * in_payload, sc_array_t * out_payload,
                        int sorted, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && MPI_VERSION >= 3
+#if defined SC_ENABLE_MPI && MPI_VERSION >= 3
   int                 num_receivers;
   int                *ireceivers, i;
   int                 mpiret, rank, size;
@@ -1999,7 +2006,7 @@ sc_notify_payloadv_nbx (sc_array_t * receivers, sc_array_t * senders,
                         sc_array_t * in_offsets, sc_array_t * out_offsets,
                         int sorted, sc_notify_t * notify)
 {
-#if defined(SC_ENABLE_MPI) && MPI_VERSION >= 3
+#if defined SC_ENABLE_MPI && MPI_VERSION >= 3
   int                 num_receivers;
   int                *ireceivers, i;
   int                *inoff;
@@ -2394,7 +2401,7 @@ sc_notify_payload_superset (sc_array_t * receivers, sc_array_t * senders,
                             sc_array_t * in_payload, sc_array_t * out_payload,
                             int sorted, sc_notify_t * notify)
 {
-  int                 num_receivers, num_senders = 0;
+  int                 num_receivers;
   int                 num_extra_receivers;
   int                 num_super_senders;
   int                *ireceivers, i, j;
@@ -2514,7 +2521,6 @@ sc_notify_payload_superset (sc_array_t * receivers, sc_array_t * senders,
                      comm, sc_MPI_STATUS_IGNORE);
       SC_CHECK_MPI (mpiret);
       queue--;
-      num_senders++;
       continue;
     }
     mpiret =
