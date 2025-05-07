@@ -109,6 +109,7 @@ if( SC_ENABLE_MPI )
   include(cmake/check_mpitype.cmake)
 
   # Note: Rewrite this test in the form of the above.
+  set(CMAKE_REQUIRED_LIBRARIES MPI::MPI_C)
   check_c_source_compiles("
   #include <mpi.h>
   int main (void) {
