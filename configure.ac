@@ -13,7 +13,7 @@ AC_CONFIG_MACRO_DIR([config])
 AC_PREFIX_DEFAULT([$PWD/local])
 AX_PREFIX_CONFIG_H([config/sc_config.h], [SC])
 AM_INIT_AUTOMAKE([parallel-tests subdir-objects])
-AM_SILENT_RULES
+AM_SILENT_RULES([yes])
 AM_EXTRA_RECURSIVE_TARGETS([justlibs doxygen])
 PKG_INSTALLDIR
 SC_VERSION([SC])
@@ -38,10 +38,12 @@ See sc.h for possible log priorities in --enable-logging=PRIO])
 SC_ARG_ENABLE([debug], [enable debug mode (assertions and extra checks)],
               [DEBUG])
 AC_SUBST([SC_ENABLE_DEBUG])
-SC_ARG_DISABLE([realloc], [replace array/dmatrix resize with malloc/copy/free],
+SC_ARG_DISABLE([realloc], [resize arrays with malloc/copy/free (HISTORIC)],
                [USE_REALLOC])
 SC_ARG_DISABLE([counters], [disable non-thread-safe internal debug counters],
                [USE_COUNTERS])
+SC_ARG_DISABLE([file-checks], [disable tests that use file i/o functions],
+               [FILE_CHECKS])
 SC_ARG_WITH([papi], [enable Flop counting with papi], [PAPI])
 
 echo "o---------------------------------------"
@@ -53,25 +55,15 @@ SC_MPI_CONFIG([SC], [], [])
 SC_MPI_ENGAGE([SC])
 # This is needed for compatibility with automake >= 1.12
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
-dnl SC_PROG_LINT
-dnl SC_C_VERSION
 LT_INIT
 
 echo "o---------------------------------------"
 echo "| Checking keywords and types"
 echo "o---------------------------------------"
 
-AC_C_BIGENDIAN([AC_DEFINE([IS_BIGENDIAN], 1, [Define to 1 on a bigendian machine])])
 AC_C_CONST
 AC_C_INLINE
 AC_C_RESTRICT
-AC_CHECK_SIZEOF([int])
-AC_CHECK_SIZEOF([unsigned int])
-AC_CHECK_SIZEOF([long])
-AC_CHECK_SIZEOF([long long])
-AC_CHECK_SIZEOF([unsigned long])
-AC_CHECK_SIZEOF([unsigned long long])
-AC_CHECK_SIZEOF([void *])
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 
@@ -92,6 +84,7 @@ AC_CHECK_FUNCS([basename dirname])
 AC_CHECK_FUNCS([strtol strtoll strtok_r])
 AC_CHECK_FUNCS([fsync])
 AC_CHECK_FUNCS([qsort_r])
+AC_CHECK_FUNCS([gettimeofday])
 
 echo "o---------------------------------------"
 echo "| Checking libraries"
@@ -100,30 +93,6 @@ echo "o---------------------------------------"
 SC_CHECK_LIBRARIES([SC])
 
 # Print summary.
-
-m4_ifset([SC_CHECK_MPI_F77], [
-AC_DEFINE_UNQUOTED(F77,         ["${F77}"],         [F77 compiler])
-AC_DEFINE_UNQUOTED(FFLAGS,      ["${FFLAGS}"],      [F77 compiler flags])
-])
-m4_ifset([SC_CHECK_MPI_FC], [
-AC_DEFINE_UNQUOTED(FC,          ["${FC}"],          [FC compiler])
-AC_DEFINE_UNQUOTED(FCFLAGS,     ["${FCFLAGS}"],     [FC compiler flags])
-])
-AC_DEFINE_UNQUOTED(CPP,         ["${CPP}"],         [C preprocessor])
-AC_DEFINE_UNQUOTED(CPPFLAGS,    ["${CPPFLAGS}"],    [C preprocessor flags])
-AC_DEFINE_UNQUOTED(CC,          ["${CC}"],          [C compiler])
-dnl AC_DEFINE_UNQUOTED(C_VERSION,   ["${C_VERSION}"],   [C compiler version])
-AC_DEFINE_UNQUOTED(CFLAGS,      ["${CFLAGS}"],      [C compiler flags])
-m4_ifset([SC_CHECK_MPI_CXX], [
-AC_DEFINE_UNQUOTED(CXX,         ["${CXX}"],         [CXX compiler])
-AC_DEFINE_UNQUOTED(CXXFLAGS,    ["${CXXFLAGS}"],    [CXX compiler flags])
-])
-AC_DEFINE_UNQUOTED(LDFLAGS,     ["${LDFLAGS}"],     [Linker flags])
-AC_DEFINE_UNQUOTED(LIBS,        ["${LIBS}"],        [Libraries])
-dnl AC_DEFINE_UNQUOTED(BLAS_LIBS,   ["${BLAS_LIBS}"],   [BLAS libraries])
-dnl AC_DEFINE_UNQUOTED(LAPACK_LIBS, ["${LAPACK_LIBS}"], [LAPACK libraries])
-dnl AC_DEFINE_UNQUOTED(FLIBS,       ["${FLIBS}"],       [Fortran libraries])
-
 echo "o----------------------------------"
 echo "| Results for libsc are"
 echo "o----------------------------------"

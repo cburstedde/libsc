@@ -164,8 +164,6 @@
 #elif SC_SIZEOF_UNSIGNED_LONG_LONG == 8
 #define SC_UINT64_0 (0ULL)
 #define SC_UINT64_1 (1ULL)
-#else
-#error "Neither unsigned long nor unsigned long long are 8 bytes long"
 #endif
 #else
 /* workaround due to a cmake version not setting defines right */
@@ -178,7 +176,7 @@
 
 /** The number of bits in an int variable on this architecture. */
 #ifdef SC_USING_AUTOCONF
-#define SC3_INT_BITS (8 * SC_SIZEOF_INT)
+#define SC3_INT_BITS (8 * sizeof (int))
 #else
 /* workaround due to a cmake version not setting defines right */
 #define SC3_INT_BITS (8 * 4)

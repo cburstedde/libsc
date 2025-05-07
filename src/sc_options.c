@@ -255,10 +255,10 @@ sc_options_new (const char *program_path)
   opt = SC_ALLOC_ZERO (sc_options_t, 1);
 
   snprintf (opt->program_path, BUFSIZ, "%s", program_path);
-#ifdef _MSC_VER
-  opt->program_name = opt->program_path;
-#else
+#ifdef SC_HAVE_LIBGEN_H
   opt->program_name = basename (opt->program_path);
+#else
+  opt->program_name = opt->program_path;
 #endif
   opt->option_items = sc_array_new (sizeof (sc_option_item_t));
   opt->subopt_names = sc_array_new (sizeof (char *));
