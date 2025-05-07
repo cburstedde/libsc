@@ -9,9 +9,6 @@ endif()
 include(cmake/utils.cmake)
 convert_yn(SC_ENABLE_MPI mpi_pc)
 
-# The OpenMP code has been moved to the attic
-# convert_yn(SC_ENABLE_OPENMP openmp_pc)
-
 convert_yn(SC_HAVE_JSON sc_have_json_pc)
 convert_yn(SC_USE_INTERNAL_ZLIB zlib_pc)
 convert_yn(SC_ENABLE_DEBUG debug_build_pc)
