@@ -38,7 +38,7 @@ struct sc3_array
 
   /* parameters fixed after setup call */
   int                 initzero, resizable, tighten;
-  int                 ecount, ealloc;
+  size_t              ecount, ealloc;
   size_t              esize;
 
   /* member variables initialized in setup call */
@@ -57,7 +57,6 @@ sc3_array_is_valid (const sc3_array_t * a, char *reason)
   SC3E_TEST (a != NULL, reason);
   SC3E_IS (sc3_refcount_is_valid, &a->rc, reason);
   SC3E_IS (sc3_allocator_is_setup, a->aator, reason);
-  SC3E_TEST (a->ecount >= 0 && a->ealloc >= 0, reason);
 
   /* check internal allocation logic depending on setup status */
   if (!a->setup) {
@@ -113,7 +112,8 @@ sc3_array_is_sorted (const sc3_array_t * a,
                                               void *, int *),
                      void *user, char *reason)
 {
-  int                 i, j;
+  int                 j;
+  size_t              iz;
   const void         *vold, *vnew;
 
   SC3E_TEST (compar != NULL, reason);
@@ -124,8 +124,8 @@ sc3_array_is_sorted (const sc3_array_t * a,
   }
 
   vold = sc3_array_index_noerr (a, 0);
-  for (i = 1; i < a->ecount; ++i) {
-    vnew = sc3_array_index_noerr (a, i);
+  for (iz = 1; iz < a->ecount; ++iz) {
+    vnew = sc3_array_index_noerr (a, iz);
     SC3E_DO (compar (vold, vnew, user, &j), reason);
     SC3E_TEST (j <= 0, reason);
     vold = vnew;
@@ -195,19 +195,17 @@ sc3_array_set_elem_size (sc3_array_t * a, size_t esize)
 }
 
 sc3_error_t        *
-sc3_array_set_elem_count (sc3_array_t * a, int ecount)
+sc3_array_set_elem_count (sc3_array_t * a, size_t ecount)
 {
   SC3A_IS (sc3_array_is_new, a);
-  SC3A_CHECK (0 <= ecount && ecount <= SC3_INT_HPOW);
   a->ecount = ecount;
   return NULL;
 }
 
 sc3_error_t        *
-sc3_array_set_elem_alloc (sc3_array_t * a, int ealloc)
+sc3_array_set_elem_alloc (sc3_array_t * a, size_t ealloc)
 {
   SC3A_IS (sc3_array_is_new, a);
-  SC3A_CHECK (0 <= ealloc && ealloc <= SC3_INT_HPOW);
   a->ealloc = ealloc;
   return NULL;
 }
@@ -248,9 +246,9 @@ sc3_array_setup (sc3_array_t * a)
   /* set a->ealloc to a fitting power of 2 */
   lg = sc3_log2_ceil (SC3_MAX (a->ealloc, a->ecount), ib - 1);
   SC3A_CHECK (0 <= lg && lg < ib - 1);
-  SC3A_CHECK (a->ecount <= (1 << lg));
-  SC3A_CHECK (a->ealloc <= (1 << lg));
-  abytes = (a->ealloc = 1 << lg) * a->esize;
+  SC3A_CHECK (a->ecount <= (((size_t) 1) << lg));
+  SC3A_CHECK (a->ealloc <= (((size_t) 1) << lg));
+  abytes = (a->ealloc = ((size_t) 1) << lg) * a->esize;
 
   /* allocate array storage */
   if (!a->initzero) {
@@ -320,11 +318,10 @@ sc3_array_destroy (sc3_array_t ** ap)
 }
 
 sc3_error_t        *
-sc3_array_resize (sc3_array_t * a, int new_ecount)
+sc3_array_resize (sc3_array_t * a, size_t new_ecount)
 {
   SC3A_IS (sc3_array_is_alloced, a);
   SC3A_IS (sc3_array_is_resizable, a);
-  SC3A_CHECK (0 <= new_ecount && new_ecount <= SC3_INT_HPOW);
 
   /* query whether the allocation is sufficient */
   if (new_ecount > a->ealloc) {
@@ -340,7 +337,7 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
     SC3E (sc3_allocator_realloc (a->aator, a->ealloc * a->esize, &a->mem));
   }
   else if (a->tighten && new_ecount < a->ealloc) {
-    int                 newalloc;
+    size_t              newalloc;
 
     /* we shall try to reduce memory usage */
     if (new_ecount == 0) {
@@ -367,11 +364,10 @@ sc3_array_resize (sc3_array_t * a, int new_ecount)
 
 sc3_error_t        *
 sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
-                 int num_types, sc3_array_type_t type_fn, void *data)
+                 size_t num_types, sc3_array_type_t type_fn, void *data)
 {
-  int                 count;
-  int                 zi, *zp;
-  int                 guess, low, high, type, step;
+  size_t              zi, *zp, count;
+  size_t              guess, low, high, type, step;
 #ifdef SC_ENABLE_DEBUG
   size_t              elem_size;
 
@@ -379,7 +375,7 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
   SC3A_IS (sc3_array_is_resizable, offsets);
 
   SC3E (sc3_array_get_elem_size (offsets, &elem_size));
-  SC3A_CHECK (elem_size == sizeof (int));
+  SC3A_CHECK (elem_size == sizeof (size_t));
 #endif /* SC_ENABLE_DEBUG */
 
   SC3E (sc3_array_resize (offsets, num_types + 1));
@@ -470,10 +466,9 @@ sc3_array_split (sc3_array_t * a, sc3_array_t * offsets,
 }
 
 sc3_error_t        *
-sc3_array_push_count (sc3_array_t * a, int n, void *ptr)
+sc3_array_push_count (sc3_array_t * a, size_t n, void *ptr)
 {
   SC3A_IS (sc3_array_is_resizable, a);
-  SC3A_CHECK (0 <= n && a->ecount + n <= SC3_INT_HPOW);
 
   /* preinitialize output variable */
   if (ptr != NULL) {
@@ -524,31 +519,31 @@ sc3_array_freeze (sc3_array_t * a)
 }
 
 sc3_error_t        *
-sc3_array_index (sc3_array_t * a, int i, void *ptr)
+sc3_array_index (sc3_array_t * a, size_t iz, void *ptr)
 {
   SC3A_IS (sc3_array_is_setup, a);
-  SC3A_CHECK (0 <= i && i < a->ecount);
+  SC3A_CHECK (iz < a->ecount);
   SC3A_CHECK (ptr != NULL);
 
-  *(void **) ptr = a->mem + i * a->esize;
+  *(void **) ptr = a->mem + iz * a->esize;
   return NULL;
 }
 
 const void         *
-sc3_array_index_noerr (const sc3_array_t * a, int i)
+sc3_array_index_noerr (const sc3_array_t * a, size_t iz)
 {
 #ifdef SC_ENABLE_DEBUG
   if (!sc3_array_is_setup (a, NULL) || a->esize == 0 ||
-      i < 0 || i >= a->ecount) {
+      iz >= a->ecount) {
     return NULL;
   }
 #endif
-  return a->mem + i * a->esize;
+  return a->mem + iz * a->esize;
 }
 
 sc3_error_t        *
 sc3_array_new_view (sc3_allocator_t * alloc, sc3_array_t ** view,
-                    sc3_array_t * a, int offset, int length)
+                    sc3_array_t * a, size_t offset, size_t length)
 {
   /* default error output */
   SC3E_RETVAL (view, NULL);
@@ -556,7 +551,6 @@ sc3_array_new_view (sc3_allocator_t * alloc, sc3_array_t ** view,
   /* verify input parametrs */
   SC3A_IS (sc3_allocator_is_setup, alloc);
   SC3A_IS (sc3_array_is_unresizable, a);
-  SC3A_CHECK (offset >= 0 && length >= 0);
   SC3A_CHECK (offset + length <= a->ecount);
 
   /* create array and adjust for being an array view */
@@ -576,14 +570,13 @@ sc3_array_new_view (sc3_allocator_t * alloc, sc3_array_t ** view,
 
 sc3_error_t        *
 sc3_array_new_data (sc3_allocator_t * alloc, sc3_array_t ** view,
-                    void *data, size_t esize, int offset, int length)
+                    void *data, size_t esize, size_t offset, size_t length)
 {
   /* default error output */
   SC3E_RETVAL (view, NULL);
 
   /* verify input parametrs */
   SC3A_IS (sc3_allocator_is_setup, alloc);
-  SC3A_CHECK (offset >= 0 && length >= 0);
   SC3A_CHECK (data != NULL || esize * length == 0);
 
   /* create array and adjust for being a view on data */
@@ -601,8 +594,8 @@ sc3_array_new_data (sc3_allocator_t * alloc, sc3_array_t ** view,
 }
 
 sc3_error_t        *
-sc3_array_renew_view (sc3_array_t ** view, sc3_array_t * a, int offset,
-                      int length)
+sc3_array_renew_view (sc3_array_t ** view, sc3_array_t * a, size_t offset,
+                      size_t length)
 {
   /* verify input parametrs */
   SC3A_CHECK (view != NULL);
@@ -610,7 +603,6 @@ sc3_array_renew_view (sc3_array_t ** view, sc3_array_t * a, int offset,
   SC3A_IS (sc3_array_is_resizable, *view);
   SC3A_IS (sc3_array_is_unresizable, a);
   SC3A_CHECK ((*view)->esize == a->esize);
-  SC3A_CHECK (offset >= 0 && length >= 0);
   SC3A_CHECK (offset + length <= a->ecount);
 
   /* adjust array for being an array view */
@@ -630,14 +622,13 @@ sc3_array_renew_view (sc3_array_t ** view, sc3_array_t * a, int offset,
 
 sc3_error_t        *
 sc3_array_renew_data (sc3_array_t ** view, void *data, size_t esize,
-                      int offset, int length)
+                      size_t offset, size_t length)
 {
   /* verify input parametrs */
   SC3A_CHECK (view != NULL);
   SC3A_IS (sc3_array_is_data, *view);
   SC3A_IS (sc3_array_is_resizable, *view);
   SC3A_CHECK ((*view)->esize == esize);
-  SC3A_CHECK (offset >= 0 && length >= 0);
   SC3A_CHECK (data != NULL || esize * length == 0);
 
   /* adjust array for being a view on data */
@@ -659,7 +650,7 @@ sc3_array_get_elem_size (const sc3_array_t * a, size_t *esize)
 }
 
 sc3_error_t        *
-sc3_array_get_elem_count (const sc3_array_t * a, int *ecount)
+sc3_array_get_elem_count (const sc3_array_t * a, size_t *ecount)
 {
   SC3E_RETVAL (ecount, 0);
   SC3A_IS (sc3_array_is_setup, a);
