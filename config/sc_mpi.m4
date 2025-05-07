@@ -631,10 +631,10 @@ dnl  ])
               [Define to 1 if we can use MPI_COMM_TYPE_SHARED])
   fi
   dnl Run test to check availability of MPI split socket communicator
-  $1_ENABLE_MPICOMMSOCKET=yes
-  SC_OMPICOMMSOCKET_C_COMPILE_AND_LINK(,[$1_ENABLE_MPICOMMSOCKET=no])
-  if test "x$$1_ENABLE_MPICOMMSOCKET" = xyes ; then
-    AC_DEFINE([ENABLE_MPICOMMSOCKET], 1,
+  $1_ENABLE_OMPICOMMSOCKET=yes
+  SC_OMPICOMMSOCKET_C_COMPILE_AND_LINK(,[$1_ENABLE_OMPICOMMSOCKET=no])
+  if test "x$$1_ENABLE_OMPICOMMSOCKET" = xyes ; then
+    AC_DEFINE([ENABLE_OMPICOMMSOCKET], 1,
               [Define to 1 if we can use OMPI_COMM_TYPE_SOCKET])
   fi
   dnl Deactivate overall MPI 3 code when not available or not configured
