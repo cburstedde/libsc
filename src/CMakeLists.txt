@@ -12,13 +12,9 @@ sc_puff.c
 sc3_base.c sc3_alloc.c sc3_error.c sc3_refcount.c sc3_omp.c sc3_mpi.c
 sc3_array.c sc3_log.c sc3_trace.c sc3_memstamp.c sc3_mpienv.c
 sc_options.c sc_getopt.c sc_getopt1.c
+sc_scda.c
 )
 
-if(SC_HAVE_WINSOCK2_H)
+if(MSVC AND NOT SC_HAVE_GETTIMEOFDAY)
   target_sources(sc PRIVATE sc_builtin/gettimeofday.c)
-  target_link_libraries(sc PRIVATE ${WINSOCK_LIBRARIES})
-endif()
-
-if(SC_HAVE_JSON)
-  target_link_libraries(sc PRIVATE jansson::jansson)
 endif()

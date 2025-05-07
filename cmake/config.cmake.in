@@ -21,4 +21,8 @@ if(SC_ENABLE_MPI)
   find_dependency(MPI COMPONENTS C)
 endif()
 
+if(SC_HAVE_JSON)
+  find_dependency(jansson CONFIG)
+endif()
+
 check_required_components(@PROJECT_NAME@)

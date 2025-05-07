@@ -33,7 +33,13 @@
 /** \defgroup sc_containers Containers
  * \ingroup sc
  *
- * Provide dynamic containers such as lists, arrays, and hash tables.
+ * The library provides dynamic containers such as lists, arrays, and hash
+ * tables.
+ *
+ * The \ref sc_array structure serves as lightweight resizable array.
+ * Based on this array, we implement the \ref sc_hash table and
+ * the \ref sc_hash_array.
+ * We also add a string implementation in \ref sc_string.h.
  */
 
 #include <sc.h>
@@ -41,7 +47,19 @@
 SC_EXTERN_C_BEGIN;
 
 /* Hash macros from lookup3.c by Bob Jenkins, May 2006, public domain. */
+
+/** Bijective bit rotation as building block for hash functions.
+ * \param [in] x            Input value (32-bit integer).
+ * \param [in] k            Bit shift amount (<= 32).
+ * \return                  Circular shifted integer.
+ */
 #define sc_hash_rot(x,k) (((x) << (k)) | ((x) >> (32 - (k))))
+
+/** Integer bit mixer as building block for hash functions.
+ * \param [in,out] a        First in/out value (32-bit integer).
+ * \param [in,out] b        Second in/out value (32-bit integer).
+ * \param [in,out] c        Third in/out value (32-bit integer).
+ */
 #define sc_hash_mix(a,b,c) ((void)                                      \
                             (a -= c, a ^= sc_hash_rot(c, 4), c += b,    \
                              b -= a, b ^= sc_hash_rot(a, 6), a += c,    \
@@ -49,6 +67,12 @@ SC_EXTERN_C_BEGIN;
                              a -= c, a ^= sc_hash_rot(c,16), c += b,    \
                              b -= a, b ^= sc_hash_rot(a,19), a += c,    \
                              c -= b, c ^= sc_hash_rot(b, 4), b += a))
+
+/** Integer bit operations as building block for hash functions.
+ * \param [in,out] a        First in/out value (32-bit integer).
+ * \param [in,out] b        Second in/out value (32-bit integer).
+ * \param [in,out] c        Third in/out value (32-bit integer).
+ */
 #define sc_hash_final(a,b,c) ((void)                            \
                               (c ^= b, c -= sc_hash_rot(b,14),  \
                                a ^= c, a -= sc_hash_rot(c,11),  \
@@ -66,13 +90,15 @@ SC_EXTERN_C_BEGIN;
 typedef unsigned int (*sc_hash_function_t) (const void *v, const void *u);
 
 /** Function to check equality of two objects.
+ * \param [in] v1  Pointer to first object checked for equality.
+ * \param [in] v2  Pointer to second object checked for equality.
  * \param [in] u   Arbitrary user data.
- * \return Returns false if *v1 is unequal *v2 and true otherwise.
+ * \return         False if *v1 is unequal *v2 and true otherwise.
  */
 typedef int         (*sc_equal_function_t) (const void *v1,
                                             const void *v2, const void *u);
 
-/** Function to call on every data item of a hash table.
+/** Function to call on every data item of a hash table or hash array.
  * \param [in] v   The address of the pointer to the current object.
  * \param [in] u   Arbitrary user data.
  * \return Return true if the traversal should continue, false to stop.
@@ -81,7 +107,7 @@ typedef int         (*sc_hash_foreach_t) (void **v, const void *u);
 
 /** The sc_array object provides a dynamic array of equal-size elements.
  * Elements are accessed by their 0-based index.  Their address may change.
- * The number of elements (== elem_count) of the array can be changed by 
+ * The number of elements (== elem_count) of the array can be changed by
  * \ref sc_array_resize and \ref sc_array_rewind.
  * Elements can be sorted with \ref sc_array_sort.
  * If the array is sorted, it can be searched with \ref sc_array_bsearch.
@@ -103,9 +129,10 @@ typedef struct sc_array
 }
 sc_array_t;
 
-/** test whether the sc_array_t owns its \a array */
+/** Test whether the sc_array_t owns its \a array. */
 #define SC_ARRAY_IS_OWNER(a) ((a)->byte_alloc >= 0)
-/** the allocated size of the array */
+
+/** Return the allocated size of the array */
 #define SC_ARRAY_BYTE_ALLOC(a) ((size_t) \
          (SC_ARRAY_IS_OWNER (a) ? (a)->byte_alloc : -((a)->byte_alloc + 1)))
 
@@ -426,12 +453,13 @@ void                sc_array_permute (sc_array_t * array,
 unsigned int        sc_array_checksum (sc_array_t * array);
 
 /** Adds an element to a priority queue.
- * PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
+ * \note PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
  * This function is not allowed for views.
  * The priority queue is implemented as a heap in ascending order.
  * A heap is a binary tree where the children are not less than their parent.
  * Assumes that elements [0]..[elem_count-2] form a valid heap.
  * Then propagates [elem_count-1] upward by swapping if necessary.
+ * \param [in,out] array    Valid priority queue object.
  * \param [in] temp    Pointer to unused allocated memory of elem_size.
  * \param [in] compar  The comparison function to be used.
  * \return Returns the number of swap operations.
@@ -444,9 +472,10 @@ size_t              sc_array_pqueue_add (sc_array_t * array,
                                                         const void *));
 
 /** Pops the smallest element from a priority queue.
- * PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
+ * \note PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
  * This function is not allowed for views.
  * This function assumes that the array forms a valid heap in ascending order.
+ * \param [in,out] array    Valid priority queue object.
  * \param [out] result  Pointer to unused allocated memory of elem_size.
  * \param [in]  compar  The comparison function to be used.
  * \return Returns the number of swap operations.
@@ -716,7 +745,10 @@ sc_mempool_t       *sc_mempool_new (size_t elem_size);
  */
 sc_mempool_t       *sc_mempool_new_zero_and_persist (size_t elem_size);
 
-/** Same as sc_mempool_new, but for an already allocated sc_mempool_t pointer. */
+/** Same as sc_mempool_new, but for an already allocated object.
+ * \param [out] mempool   Allocated memory is overwritten and initialized.
+ * \param [in] elem_size  Size of one element in bytes.
+ */
 void                sc_mempool_init (sc_mempool_t * mempool,
                                      size_t elem_size);
 
@@ -733,10 +765,14 @@ void                sc_mempool_destroy (sc_mempool_t * mempool);
  */
 void                sc_mempool_destroy_null (sc_mempool_t ** pmempool);
 
-/** Same as sc_mempool_destroy, but does not free the pointer */
+/** Same as sc_mempool_destroy, but does not free the pointer.
+ * \param [in,out] mempool      Valid mempool object is deallocated.
+ *                              The structure memory itself stays alive.
+ */
 void                sc_mempool_reset (sc_mempool_t * mempool);
 
 /** Invalidates all previously returned pointers, resets count to 0.
+ * \param [in,out] mempool      Valid mempool is truncated.
  */
 void                sc_mempool_truncate (sc_mempool_t * mempool);
 
@@ -798,8 +834,8 @@ sc_mempool_free (sc_mempool_t * mempool, void *elem)
  */
 typedef struct sc_link
 {
-  void               *data;
-  struct sc_link     *next;
+  void               *data;     /**< Arbitrary payload. */
+  struct sc_link     *next;     /**< Pointer to list successor element. */
 }
 sc_link_t;
 
@@ -808,13 +844,13 @@ sc_link_t;
 typedef struct sc_list
 {
   /* interface variables */
-  size_t              elem_count;
-  sc_link_t          *first;
-  sc_link_t          *last;
+  size_t              elem_count;       /**< Number of elements in this list. */
+  sc_link_t          *first;            /**< Pointer to first element in list. */
+  sc_link_t          *last;             /**< Pointer to last element in list. */
 
   /* implementation variables */
-  int                 allocator_owned;
-  sc_mempool_t       *allocator;        /* must allocate sc_link_t */
+  int                 allocator_owned;  /**< Boolean to designate owned allocator. */
+  sc_mempool_t       *allocator;        /**< Must allocate objects of sc_link_t. */
 }
 sc_list_t;
 
@@ -904,15 +940,16 @@ typedef struct sc_hash
 {
   /* interface variables */
   size_t              elem_count;       /**< total number of objects contained */
+  void               *user_data;        /**< User data passed to hash function. */
 
   /* implementation variables */
-  sc_array_t         *slots;    /**< the slot count is slots->elem_count */
-  void               *user_data;        /**< user data passed to hash function */
-  sc_hash_function_t  hash_fn;
-  sc_equal_function_t equal_fn;
-  size_t              resize_checks, resize_actions;
-  int                 allocator_owned;
-  sc_mempool_t       *allocator;        /**< must allocate sc_link_t */
+  sc_array_t         *slots;    /**< The slot count is slots->elem_count. */
+  sc_hash_function_t  hash_fn;  /**< Function called to compute the hash value. */
+  sc_equal_function_t equal_fn; /**< Function called to check objects for equality. */
+  size_t              resize_checks;    /**< Running count of resize checks. */
+  size_t              resize_actions;   /**< Running count of resize actions. */
+  int                 allocator_owned;  /**< Boolean designating allocator ownership. */
+  sc_mempool_t       *allocator;        /**< Must allocate sc_link_t objects. */
 }
 sc_hash_t;
 
@@ -977,6 +1014,7 @@ void                sc_hash_unlink (sc_hash_t * hash);
 void                sc_hash_unlink_destroy (sc_hash_t * hash);
 
 /** Check if an object is contained in the hash table.
+ * \param [in] hash    Valid hash table.
  * \param [in]  v      The object to be looked up.
  * \param [out] found  If found != NULL, *found is set to the address of the
  *                     pointer to the already contained object if the object
@@ -986,6 +1024,7 @@ void                sc_hash_unlink_destroy (sc_hash_t * hash);
 int                 sc_hash_lookup (sc_hash_t * hash, void *v, void ***found);
 
 /** Insert an object into a hash table if it is not contained already.
+ * \param [in,out] hash     Valid hash table.
  * \param [in]  v      The object to be inserted.
  * \param [out] found  If found != NULL, *found is set to the address of the
  *                     pointer to the already contained, or if not present,
@@ -996,6 +1035,7 @@ int                 sc_hash_insert_unique (sc_hash_t * hash, void *v,
                                            void ***found);
 
 /** Remove an object from a hash table.
+ * \param [in,out] hash     Valid hash table.
  * \param [in]  v      The object to be removed.
  * \param [out] found  If found != NULL, *found is set to the object
                        that is removed if that exists.
@@ -1004,35 +1044,36 @@ int                 sc_hash_insert_unique (sc_hash_t * hash, void *v,
 int                 sc_hash_remove (sc_hash_t * hash, void *v, void **found);
 
 /** Invoke a callback for every member of the hash table.
- * The functions hash_fn and equal_fn are not called by this function.
+ * The hashing and equality functions are not called from within this function.
+ * \param [in,out] hash     Valid hash table.
+ * \param [in] fn           Callback executed on every hash table element.
  */
 void                sc_hash_foreach (sc_hash_t * hash, sc_hash_foreach_t fn);
 
 /** Compute and print statistical information about the occupancy.
+ * \param [in] package_id   Library package id for logging.
+ * \param [in] log_priority Priority for logging; see \ref sc_log.
+ * \param [in] hash     Valid hash table.
  */
 void                sc_hash_print_statistics (int package_id,
                                               int log_priority,
                                               sc_hash_t * hash);
 
-typedef struct sc_hash_array_data
-{
-  sc_array_t         *pa;
-  sc_hash_function_t  hash_fn;
-  sc_equal_function_t equal_fn;
-  void               *user_data;
-  void               *current_item;
-}
-sc_hash_array_data_t;
+/** Internal context structure for \ref sc_hash_array. */
+typedef struct sc_hash_array_data sc_hash_array_data_t;
 
 /** The sc_hash_array implements an array backed up by a hash table.
  * This enables O(1) access for array elements.
  */
 typedef struct sc_hash_array
 {
+  /* interface variables */
+  void               *user_data;        /**< Context passed by the user. */
+
   /* implementation variables */
-  sc_array_t          a;
-  sc_hash_array_data_t internal_data;
-  sc_hash_t          *h;
+  sc_array_t          a;        /**< Array storing the elements. */
+  sc_hash_t          *h;        /**< Hash map pointing into element array. */
+  sc_hash_array_data_t *internal_data;  /**< Private context data. */
 }
 sc_hash_array_t;
 
@@ -1046,6 +1087,7 @@ size_t              sc_hash_array_memory_used (sc_hash_array_t * ha);
  * \param [in] elem_size   Size of one array element in bytes.
  * \param [in] hash_fn     Function to compute the hash value.
  * \param [in] equal_fn    Function to test two objects for equality.
+ * \param [in] user_data   Anonymous context data stored in the hash array.
  */
 sc_hash_array_t    *sc_hash_array_new (size_t elem_size,
                                        sc_hash_function_t hash_fn,
@@ -1053,10 +1095,13 @@ sc_hash_array_t    *sc_hash_array_new (size_t elem_size,
                                        void *user_data);
 
 /** Destroy a hash array.
+ * \param [in,out] hash_array   Valid hash array is deallocated.
  */
 void                sc_hash_array_destroy (sc_hash_array_t * hash_array);
 
 /** Check the internal consistency of a hash array.
+ * \param [in] hash_array       Hash array structure is checked for validity.
+ * \return                      True if and only if \a hash_array is valid.
  */
 int                 sc_hash_array_is_valid (sc_hash_array_t * hash_array);
 
@@ -1067,11 +1112,12 @@ void                sc_hash_array_truncate (sc_hash_array_t * hash_array);
 
 /** Check if an object is contained in a hash array.
  *
+ * \param [in,out] hash_array   Valid hash array.
  * \param [in]  v          A pointer to the object.
  * \param [out] position   If position != NULL, *position is set to the
  *                         array position of the already contained object
  *                         if found.
- * \return                 Returns true if object is found, false otherwise.
+ * \return                 True if object is found, false otherwise.
  */
 int                 sc_hash_array_lookup (sc_hash_array_t * hash_array,
                                           void *v, size_t *position);
@@ -1080,6 +1126,7 @@ int                 sc_hash_array_lookup (sc_hash_array_t * hash_array,
  * The object is not copied into the array.  Use the return value for that.
  * New objects are guaranteed to be added at the end of the array.
  *
+ * \param [in,out] hash_array   Valid hash array.
  * \param [in]  v          A pointer to the object.  Used for search only.
  * \param [out] position   If position != NULL, *position is set to the
  *                         array position of the already contained, or if
@@ -1089,6 +1136,13 @@ int                 sc_hash_array_lookup (sc_hash_array_t * hash_array,
  */
 void               *sc_hash_array_insert_unique (sc_hash_array_t * hash_array,
                                                  void *v, size_t *position);
+
+/** Invoke a callback for every member of the hash array.
+ * \param [in,out] hash_array   Valid hash array.
+ * \param [in] fn               Callback executed on every hash array element.
+ */
+void                sc_hash_array_foreach (sc_hash_array_t * hash_array,
+                                           sc_hash_foreach_t fn);
 
 /** Extract the array data from a hash array and destroy everything else.
  * \param [in] hash_array   The hash array is destroyed after extraction.
@@ -1107,16 +1161,17 @@ void                sc_hash_array_rip (sc_hash_array_t * hash_array,
 typedef struct sc_recycle_array
 {
   /* interface variables */
-  size_t              elem_count;       /* number of valid entries */
+  size_t              elem_count;       /**< Number of valid entries. */
 
   /* implementation variables */
-  sc_array_t          a;
-  sc_array_t          f;
+  sc_array_t          a;                /**< Array of objects contained. */
+  sc_array_t          f;                /**< Cache of freed objects. */
 }
 sc_recycle_array_t;
 
 /** Initialize a recycle array.
  *
+ * \param [out] rec_array       Uninitialized turned into a recycle array.
  * \param [in] elem_size   Size of the objects to be stored in the array.
  */
 void                sc_recycle_array_init (sc_recycle_array_t * rec_array,
@@ -1132,15 +1187,17 @@ void                sc_recycle_array_reset (sc_recycle_array_t * rec_array);
 /** Insert an object into the recycle array.
  * The object is not copied into the array.  Use the return value for that.
  *
+ * \param [in,out] rec_array    Valid recycle array.
  * \param [out] position   If position != NULL, *position is set to the
  *                         array position of the inserted object.
- * \return                 Returns the new address of the object in the array.
+ * \return                 The new address of the object in the array.
  */
 void               *sc_recycle_array_insert (sc_recycle_array_t * rec_array,
                                              size_t *position);
 
 /** Remove an object from the recycle array.  It must be valid.
  *
+ * \param [in,out] rec_array    Valid recycle array.
  * \param [in] position   Index into the array for the object to remove.
  * \return                The pointer to the removed object.  Will be valid
  *                        as long as no other function is called

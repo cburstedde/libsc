@@ -318,6 +318,7 @@ main (int argc, char **argv)
   int                 mpiret;
   sc_MPI_Comm         mpicomm;
   int                 num_failed_tests;
+  int                 have_zlib, conf_zlib;
 
   /* standard initialization */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -326,10 +327,19 @@ main (int argc, char **argv)
 
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
+#ifndef SC_HAVE_ZLIB
+  conf_zlib = 0;
+#else
+  conf_zlib = 1;
+#endif
+  have_zlib = sc_have_zlib ();
+  SC_GLOBAL_PRODUCTIONF ("Is zlib configured %d available %d\n",
+                         conf_zlib, have_zlib);
+
   /* test integer conversion functions */
   num_failed_tests = 0;
   num_failed_tests += TH (SC_TEST_TOOLONG, "too long", 0, 0);
-  num_failed_tests += TH (SC_TEST_LONG, "long", 0, 1);
+  num_failed_tests += TH (SC_TEST_LONG, "long", 0, sizeof (long) >= 8);
   num_failed_tests += TH (SC_TEST_INT, "int", 1, 1);
 
   /* test encode and decode functions */

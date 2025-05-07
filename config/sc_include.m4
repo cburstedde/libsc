@@ -1,4 +1,4 @@
-
+dnl
 dnl sc_include.m4 - general custom macros
 dnl
 dnl This file is part of the SC Library.
@@ -7,6 +7,18 @@ dnl
 dnl Copyright (C) 2008,2009 Carsten Burstedde, Lucas Wilcox.
 
 dnl Documentation for macro names: brackets indicate optional arguments
+
+dnl SC_SINGLE_LINE
+dnl Print 72 characters '-' without any trailing newline.
+AC_DEFUN([SC_SINGLE_LINE],[dnl
+------------------------------------------------------------------------dnl
+])
+
+dnl SC_DOUBLE_LINE
+dnl Print 72 characters '=' without any trailing newline.
+AC_DEFUN([SC_DOUBLE_LINE],[dnl
+========================================================================dnl
+])
 
 dnl SC_VERSION(PREFIX)
 dnl Expose major, minor, and point version numbers as CPP defines.
@@ -204,6 +216,7 @@ if (jreal == json_real (.5)) { json_decref (jreal); }
              [Define to 1 if json_integer and json_real link])
    $1_HAVE_JSON="yes"],
   [$1_HAVE_JSON=])
+  AC_SUBST([$1_HAVE_JSON])
 ])
 
 dnl SC_CHECK_LIB(LIBRARY LIST, FUNCTION, TOKEN, PREFIX)
@@ -380,13 +393,12 @@ AC_CHECK_PROG([$1_HAVE_DOT], [dot], [YES], [NO])
 SC_CHECK_MATH([$1])
 SC_CHECK_ZLIB([$1])
 SC_CHECK_JSON([$1])
-AC_SUBST([SC_HAVE_JSON])
 dnl SC_CHECK_LIB([lua53 lua5.3 lua52 lua5.2 lua51 lua5.1 lua5 lua],
 dnl              [lua_createtable], [LUA], [$1])
 dnl SC_CHECK_BLAS_LAPACK([$1])
 SC_BUILTIN_ALL_PREFIX([$1])
 SC_CHECK_PTHREAD([$1])
-SC_CHECK_OPENMP([$1])
+dnl SC_CHECK_OPENMP([$1])
 SC_CHECK_MEMALIGN([$1])
 SC_CHECK_QSORT_R([$1])
 SC_CHECK_V4L2([$1])
@@ -406,9 +418,15 @@ dnl This macro prints messages at the end of the configure run.
 dnl
 AC_DEFUN([SC_FINAL_MESSAGES],
 [
+if test "x$HAVE_PKG_MPI" = xyes && test "x$HAVE_PKG_MPIIO" != xyes ; then
+AC_MSG_NOTICE([SC_SINGLE_LINE
+$1 has been configured --enable-mpi and --disable-mpiio.
+This configuration is DEPRECATED and will be disallowed in the future.
+If the MPI File API is not available, please configure to --disable-mpi.])
+fi
 if test "x$$1_HAVE_ZLIB" = x ; then
-AC_MSG_NOTICE([- $1 ----------------------------------------------------
-We did not find a recent zlib containing the function adler32_combine.
+AC_MSG_NOTICE([SC_SINGLE_LINE
+$1 did not find a recent zlib containing the function adler32_combine.
 This is OK if the following does not matter to you:
  - Calling some functions that rely on zlib will abort your program.
    These include sc_array_checksum and sc_vtk_write_compressed.
@@ -417,9 +435,10 @@ This is OK if the following does not matter to you:
 You can fix this by compiling a recent zlib and pointing LIBS to it.])
 fi
 if test "x$$1_HAVE_JSON" = x ; then
-AC_MSG_NOTICE([- $1 ----------------------------------------------------
-We did not find a JSON library containing json_integer and json_real.
+AC_MSG_NOTICE([SC_SINGLE_LINE
+$1 did not find a JSON library containing json_integer and json_real.
 This means that loading JSON files for option values will fail.
 You can fix this by installing the jansson development library.])
 fi
+AC_MSG_NOTICE([SC_SINGLE_LINE])
 ])
