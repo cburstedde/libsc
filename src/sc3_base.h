@@ -154,33 +154,11 @@
 #include <unistd.h>
 #endif
 
-#if SC_USING_AUTOCONF
-#if SC_SIZEOF_UNSIGNED_INT == 8
-#define SC_UINT64_0 (0U)
-#define SC_UINT64_1 (1U)
-#elif SC_SIZEOF_UNSIGNED_LONG == 8
-#define SC_UINT64_0 (0UL)
-#define SC_UINT64_1 (1UL)
-#elif SC_SIZEOF_UNSIGNED_LONG_LONG == 8
-#define SC_UINT64_0 (0ULL)
-#define SC_UINT64_1 (1ULL)
-#endif
-#else
-/* workaround due to a cmake version not setting defines right */
-#define SC_UINT64_0 (0UL)
-#define SC_UINT64_1 (1UL)
-#endif
-
 /** This macro is usable as a no-operation statement. */
 #define SC3_NOOP do { ; } while (0)
 
 /** The number of bits in an int variable on this architecture. */
-#ifdef SC_USING_AUTOCONF
 #define SC3_INT_BITS (8 * sizeof (int))
-#else
-/* workaround due to a cmake version not setting defines right */
-#define SC3_INT_BITS (8 * 4)
-#endif
 
 /** The highest power of two representable in an int variable. */
 #define SC3_INT_HPOW (1 << (SC3_INT_BITS - 2))

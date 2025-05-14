@@ -107,18 +107,8 @@ if( SC_ENABLE_MPI )
   include(cmake/check_mpiaintdiff.cmake)
   # perform check of newer MPI data types
   include(cmake/check_mpitype.cmake)
-
-  # Note: Rewrite this test in the form of the above.
-  set(CMAKE_REQUIRED_LIBRARIES MPI::MPI_C)
-  check_c_source_compiles("
-  #include <mpi.h>
-  int main (void) {
-    MPI_Comm subcomm;
-    MPI_Init ((int *) 0, (char ***) 0);
-    MPI_Comm_split_type(MPI_COMM_WORLD,OMPI_COMM_TYPE_SOCKET,0,MPI_INFO_NULL,&subcomm);
-    MPI_Finalize ();
-    return 0;
-  }" SC_ENABLE_OMPICOMMSOCKET)
+  # perform check to set SC_ENABLE_OMPICOMMSOCKET
+  include(cmake/check_ompicommsocket.cmake)
 endif()
 
 check_symbol_exists(realloc stdlib.h SC_ENABLE_USE_REALLOC)
