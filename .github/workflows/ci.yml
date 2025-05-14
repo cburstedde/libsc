@@ -78,12 +78,11 @@ jobs:
         make -j V=0
         make -j check V=0
 
-    - name: Make check with OpenMP, MPI, debug
+    - name: Make check with MPI, debug
       shell: bash
       run: |
-        DIR="checkOpenMPMPIdebug" && mkdir -p "$DIR" && cd "$DIR"
-        ../configure --enable-openmp="-fopenmp" --enable-mpi \
-                     --enable-debug CFLAGS="-O0" $SC_CI_CONFIG_OPT
+        DIR="checkMPIdebug" && mkdir -p "$DIR" && cd "$DIR"
+        ../configure --enable-mpi --enable-debug CFLAGS="-O0" $SC_CI_CONFIG_OPT
         make -j V=0
         make -j check V=0
 

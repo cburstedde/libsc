@@ -29,7 +29,6 @@
 
 #include <sc3_array.h>
 #include <sc3_log.h>
-#include <sc3_omp.h>
 #include <sc3_refcount.h>
 
 struct sc3_log
@@ -277,8 +276,6 @@ void
 sc3_log (sc3_log_t * log, int depth,
          sc3_log_role_t role, sc3_log_level_t level, const char *msg)
 {
-  int                 tid;
-
   /* survive NULL message */
   if (msg == NULL) {
     msg = "NULL message";
@@ -297,19 +294,18 @@ sc3_log (sc3_log_t * log, int depth,
     return;
   }
 
-  tid = sc3_omp_thread_num ();
-  if (role == SC3_LOG_PROCESS0 && (log->rank != 0 || tid != 0)) {
+  if (role == SC3_LOG_PROCESS0) {
     /* only log for the master thread in master process */
     return;
   }
-  if (role == SC3_LOG_THREAD0 && tid != 0) {
+  if (role == SC3_LOG_THREAD0) {
     /* only log for the master thread */
     return;
   }
 
   /* output message */
   if (log->func != NULL) {
-    log->func (log->user, msg, role, log->rank, tid, level,
+    log->func (log->user, msg, role, log->rank, 0, level,
                depth >= 0 ? depth * log->indent : 0,
                log->file != NULL ? log->file : stderr);
   }
