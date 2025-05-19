@@ -28,6 +28,7 @@ endfunction(sc_example)
 sc_example(function function/function.c)
 sc_example(logging logging/logging.c)
 sc_example(test_shmem testing/sc_test_shmem.c)
+sc_example(camera camera/camera.c)
 
 configure_file(options/sc_options_example.ini sc_options_example.ini COPYONLY)
 configure_file(options/sc_options_example.json sc_options_example.json COPYONLY)
