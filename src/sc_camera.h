@@ -104,7 +104,8 @@
 
 /** The data type of the coordinates for sc_camera
  */
-/* p4est uses double, most computer graphic applications float on GPU. */
+/* p4est uses double, most computer graphic applications float on GPU.*/
+/* Using float here would result in implicit conversions. */
 typedef double      sc_camera_coords_t;
 
 /** Points in R^3 for sc_camera.
@@ -190,7 +191,8 @@ void sc_camera_position (sc_camera_t * camera, sc_camera_vec3_t position);
 
 /* TODO : i have to specify axis and angle direction (right hand rule?) */
 
-/* All rotation are in the right handed direction */
+/* All rotation are in the right handed direction (meaning the camera rotates righthanded and 
+  the objects rotate the other way i.e. left handed)*/
 
 /* yaw is rotating around the up driection in our case the y-axis */
 void sc_camera_yaw (sc_camera_t * camera, double angle);

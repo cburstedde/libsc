@@ -67,6 +67,7 @@ sc_camera_destroy (sc_camera_t * camera)
 void sc_camera_position (sc_camera_t * camera, sc_camera_vec3_t position)
 {
   SC_ASSERT (camera != NULL);
+  SC_ASSERT (position != NULL);
 
   memcpy(camera->position, position, sizeof(camera->position));
 }
@@ -83,13 +84,15 @@ static void sc_camera_q_mult(const sc_camera_vec4_t q1, const sc_camera_vec4_t q
   out[3] = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2; // real part
 }
 
+/* because the camera should rotate right handed we have to rotate the points
+  the other way around */
 void sc_camera_yaw (sc_camera_t *camera, double angle)
 {
   SC_ASSERT (camera != NULL);
 
   sc_camera_vec4_t q;
   q[0] = 0.0;
-  q[1] = sin(angle/2.0);
+  q[1] = -sin(angle/2.0);
   q[2] = 0.0;
   q[3] = cos(angle/2.0);
 
@@ -101,7 +104,7 @@ void sc_camera_pitch (sc_camera_t * camera, double angle)
   SC_ASSERT (camera != NULL);
 
   sc_camera_vec4_t q;
-  q[0] = sin(angle/2.0);
+  q[0] = -sin(angle/2.0);
   q[1] = 0.0;
   q[2] = 0.0;
   q[3] = cos(angle/2.0);
@@ -116,7 +119,7 @@ void sc_camera_roll (sc_camera_t * camera, double angle)
   sc_camera_vec4_t q;
   q[0] = 0.0;
   q[1] = 0.0;
-  q[2] = -sin(angle/2.0);
+  q[2] = sin(angle/2.0);
   q[3] = cos(angle/2.0);
 
   sc_camera_q_mult (q, camera->rotation, camera->rotation);
@@ -195,31 +198,73 @@ static void sc_camera_mat_to_q(const sc_camera_mat3x3_t A, sc_camera_vec4_t q)
   }
 }
 
-/* TODO hier fehlen noch assertion zu degenerierten fällen */
+static inline void sc_camera_cross_prod(const sc_camera_vec3_t a, 
+  const sc_camera_vec3_t b, sc_camera_vec3_t out)
+{
+  sc_camera_coords_t s1, s2, s3;
+  s1 = a[1] * b[2] - a[2] * b[1];
+  s2 = a[2] * b[0] - a[0] * b[2];
+  s3 = a[0] * b[1] - a[1] * b[0];
+  
+  out[0] = s1;
+  out[1] = s2;
+  out[2] = s3;
+}
+
+/* out = a - b*/
+static inline void sc_camera_vec3_minus(const sc_camera_vec3_t a, 
+  const sc_camera_vec3_t b, sc_camera_vec3_t out)
+{
+  out[0] = a[0] - b[0];
+  out[1] = a[1] - b[1];
+  out[2] = a[2] - b[2];
+}
+
+static inline sc_camera_coords_t sc_camera_vec3_norm(const sc_camera_vec3_t x)
+{
+    return sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
+}
+
+/* scalar out = alpha * x */
+static inline void sc_camera_vec3_scale(sc_camera_coords_t alpha, 
+  const sc_camera_vec3_t x, sc_camera_vec3_t out)
+{
+  out[0] = alpha * x[0];
+  out[1] = alpha * x[1];
+  out[2] = alpha * x[2];
+}
+
 void sc_camera_look_at(sc_camera_t *camera, const sc_camera_vec3_t eye, 
   const sc_camera_vec3_t center, const sc_camera_vec3_t up)
 { 
-  // memcpy(camera->position, eye, sizeof (camera->position));
+  SC_ASSERT (camera != NULL):
+  SC_ASSERT (eye != NULL && center != NULL && up != NULL);
 
-  // sc_camera_vec3_t z_new;
-  // sc_camera_subtract(eye, center, z_new);
-  // sc_camera_scalar(1.0/sc_camera_norm(z_new), z_new, z_new);
+  memcpy(camera->position, eye, sizeof (camera->position));
 
-  // sc_camera_vec3_t x_new;
-  // sc_camera_cross_prod(up, z_new, x_new);
-  // sc_camera_scalar(1.0/sc_camera_norm(x_new), x_new, x_new);
+  sc_camera_vec3_t z_new;
+  sc_camera_vec3_minus(eye, center, z_new);
+  sc_camera_coords_t z_new_norm = sc_camera_vec3_norm(z_new);
+  SC_ASSERT(z_new_norm > 0);
+  sc_camera_vec3_scale(1.0 / z_new_norm, z_new, z_new);
 
-  // sc_camera_vec3_t y_new;
-  // sc_camera_cross_prod(z_new, x_new, y_new);
+  sc_camera_vec3_t x_new;
+  sc_camera_cross_prod(up, z_new, x_new);
+  sc_camera_coords_t x_new_norm = sc_camera_vec3_norm(x_new);
+  SC_ASSERT(x_new_norm > 0);
+  sc_camera_vec3_scale(1.0 / x_new_norm, x_new, x_new);
 
-  // sc_camera_mat3x3_t rotation = {
-  //     x_new[0], y_new[0], z_new[0],
-  //     x_new[1], y_new[1], z_new[1],
-  //     x_new[2], y_new[2], z_new[2]
-  // };
+  sc_camera_vec3_t y_new;
+  sc_camera_cross_prod(z_new, x_new, y_new);
 
-  // sc_camera_vec4_t q;
-  // sc_camera_mat3x3_to_quaternion(rotation, q);
+  sc_camera_mat3x3_t rotation = {
+      x_new[0], y_new[0], z_new[0],
+      x_new[1], y_new[1], z_new[1],
+      x_new[2], y_new[2], z_new[2]
+  };
 
-  // memcpy(camera->rotation, q, sizeof (camera->rotation));
+  sc_camera_vec4_t q;
+  sc_camera_mat_to_q(rotation, q);
+
+  memcpy(camera->rotation, q, sizeof (camera->rotation));
 }
