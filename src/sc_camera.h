@@ -225,4 +225,8 @@ void sc_camera_clipping_dist(sc_camera_t * camera, sc_camera_coords_t near,
 void sc_camera_look_at(sc_camera_t *camera, const sc_camera_vec3_t eye, 
   const sc_camera_vec3_t center, const sc_camera_vec3_t up);
 
+/* 3D -> 3D */
+void sc_camera_view_transform(sc_camera_t *camera, sc_array_t *points_in, 
+  sc_array_t *points_out);
+
 #endif

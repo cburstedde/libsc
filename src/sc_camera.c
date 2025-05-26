@@ -268,3 +268,72 @@ void sc_camera_look_at(sc_camera_t *camera, const sc_camera_vec3_t eye,
 
   memcpy(camera->rotation, q, sizeof (camera->rotation));
 }
+
+
+static void sc_camera_get_view(sc_camera_t *camera, sc_camera_mat4x4_t view_matrix)
+{
+    /* calculate rotation matrix from the quaternion and write it in upper left block*/
+    sc_camera_coords_t xx = camera->rotation[0] * camera->rotation[0];
+    sc_camera_coords_t yy = camera->rotation[1] * camera->rotation[1];
+    sc_camera_coords_t zz = camera->rotation[2] * camera->rotation[2];
+    sc_camera_coords_t wx = camera->rotation[3] * camera->rotation[0];
+    sc_camera_coords_t wy = camera->rotation[3] * camera->rotation[1];
+    sc_camera_coords_t wz = camera->rotation[3] * camera->rotation[2];
+    sc_camera_coords_t xy = camera->rotation[0] * camera->rotation[1];
+    sc_camera_coords_t xz = camera->rotation[0] * camera->rotation[2];
+    sc_camera_coords_t yz = camera->rotation[1] * camera->rotation[2];
+
+    view_matrix[0] = 1.0 - 2.0 * (yy + zz);
+    view_matrix[1] = 2.0 * (xy + wz);
+    view_matrix[2] = 2.0 * (xz - wy);
+    view_matrix[3] = 0.0;
+
+    view_matrix[4] = 2.0 * (xy - wz);
+    view_matrix[5] = 1.0 - 2.0 * (xx + zz);
+    view_matrix[6] = 2.0 * (yz + wx);
+    view_matrix[7] = 0.0;
+
+    view_matrix[8] = 2.0 * (xz + wy);
+    view_matrix[9] = 2.0 * (yz - wx);
+    view_matrix[10] = 1.0 - 2.0 * (xx + yy);
+    view_matrix[11] = 0.0;
+
+    view_matrix[12] = 0.0;
+    view_matrix[13] = 0.0;
+    view_matrix[14] = 0.0;
+    view_matrix[15] = 1.0;
+
+    sc_camera_mat4x4_t translation_matrix = {
+        1., 0., 0., 0.,
+        0., 1., 0., 0.,
+        0., 0., 1., 0.,
+        -camera->position[0], -camera->position[1], -camera->position[2], 1. 
+    };
+
+    sc_camera_mult_4x4_4x4(view_matrix, translation_matrix, view_matrix);
+}
+
+static void sc_camera_mult_4x4_v4_for_each(sc_camera_mat4x4_t mat, sc_array_t *in, 
+  sc_array_t *out)
+{
+  SC_ASSERT(points_in->elem_count == points_out->elem_count);
+  SC_ASSERT(points_in->elem_size == 4 * sizeof(sc_camera_coords_t));
+  SC_ASSERT(points_out->elem_size == 4 * sizeof(sc_camera_coords_t));
+
+  for (size_t i = 0; i < points_in->elem_count; ++i)
+  {
+      sc_camera_coords_t *in = (sc_camera_coords_t *) sc_array_index(points_in, i);
+      sc_camera_coords_t *out = (sc_camera_coords_t *) sc_array_index(points_out, i);
+
+      sc_camera_mult_4x4_v4(mat, in, out);
+  }
+}
+
+void sc_camera_view_transform(sc_camera_t *camera, sc_array_t *points_in,
+  sc_array_t *points_out)
+{
+ sc_camera_mat4x4_t transformation;
+ sc_camera_get_view(camera, transformation);
+
+ sc_camera_mult_4x4_v4_for_each(transformation, points_in, points_out);
+}
