@@ -28,6 +28,9 @@
  * \ingroup sc_camera
  * 
  *  Camera data structure for computer graphic applications.
+ *
+ *  The [camera module page](\ref sc_camera) provides a detailed example of
+ *  the rendering workflow.
  */
 
 /** \defgroup sc_camera Camera
