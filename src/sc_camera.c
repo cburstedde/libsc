@@ -224,7 +224,7 @@ sc_camera_look_at (sc_camera_t * camera, const sc_camera_vec3_t eye,
 }
 
 static void
-sc_camera_get_view (sc_camera_t * camera, sc_camera_mat4x4_t view_matrix)
+sc_camera_get_view_mat (sc_camera_t * camera, sc_camera_mat4x4_t view_matrix)
 {
   /* calculate rotation matrix from the quaternion and write it in upper left block */
   sc_camera_coords_t  xx = camera->rotation[0] * camera->rotation[0];
@@ -288,7 +288,7 @@ sc_camera_view_transform (sc_camera_t * camera, sc_array_t * points_in,
                           sc_array_t * points_out)
 {
   sc_camera_mat4x4_t  transformation;
-  sc_camera_get_view (camera, transformation);
+  sc_camera_get_view_mat (camera, transformation);
 
   /* TODO: i dont like that these assertions are here the structure of the implementation is not optimal*/
   SC_ASSERT (points_in->elem_size == sizeof (sc_camera_coords_t) * 3);
