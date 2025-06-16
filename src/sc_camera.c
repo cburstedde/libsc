@@ -106,7 +106,7 @@ sc_camera_destroy (sc_camera_t * camera)
 }
 
 void
-sc_camera_position (sc_camera_t * camera, sc_camera_vec3_t position)
+sc_camera_position (sc_camera_t * camera, const sc_camera_vec3_t position)
 {
   SC_ASSERT (camera != NULL);
   SC_ASSERT (position != NULL);
@@ -290,6 +290,9 @@ sc_camera_view_transform (sc_camera_t * camera, sc_array_t * points_in,
   sc_camera_mat4x4_t  transformation;
   sc_camera_get_view (camera, transformation);
 
+  /* TODO: i dont like that these assertions are here the structure of the implementation is not optimal*/
+  SC_ASSERT (points_in->elem_size == sizeof (sc_camera_coords_t) * 3);
+  SC_ASSERT (points_out->elem_size == sizeof (sc_camera_coords_t) * 3);
   sc_camera_apply_mat (sc_camera_mat4_mul_v3_to_v3, transformation, points_in,
                        points_out);
 }
@@ -404,7 +407,6 @@ sc_camera_apply_mat (void (*funct)
   SC_ASSERT (points_in != NULL);
   SC_ASSERT (points_out != NULL);
   SC_ASSERT (points_in->elem_count == points_out->elem_count);
-  /* TODO: i have to somehow assert that in and out have right size */
 
   for (size_t i = 0; i < points_in->elem_count; ++i) {
     sc_camera_coords_t *in =

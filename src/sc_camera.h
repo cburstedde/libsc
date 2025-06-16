@@ -189,8 +189,13 @@ void                sc_camera_init (sc_camera_t * camera);
  */
 void                sc_camera_destroy (sc_camera_t * camera);
 
-
-void sc_camera_position (sc_camera_t * camera, sc_camera_vec3_t position);
+/** Sets the position.
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] position The new position of the camera object in world space.
+ */
+void                sc_camera_position (sc_camera_t * camera,
+                                        const sc_camera_vec3_t position);
 
 /* TODO : i have to specify axis and angle direction (right hand rule?) */
 
@@ -198,10 +203,18 @@ void sc_camera_position (sc_camera_t * camera, sc_camera_vec3_t position);
   the objects rotate the other way i.e. left handed)*/
 
 /* yaw is rotating around the up driection in our case the y-axis */
-void sc_camera_yaw (sc_camera_t * camera, double angle);
+
+/** Rotating the camera from right to left.
+ * 
+ */
+void                sc_camera_yaw (sc_camera_t * camera, double angle);
 
 /* pitch is the rotation around the right axis in our case the x-axis */
-void sc_camera_pitch (sc_camera_t * camera, double angle);
+
+/** Rotating the camera from down to up.
+ * 
+ */
+void                sc_camera_pitch (sc_camera_t * camera, double angle);
 
 /**
  *  roll is the rotation around the forward direction in our case the -z-axis 
@@ -209,14 +222,22 @@ void sc_camera_pitch (sc_camera_t * camera, double angle);
  *  This means that we are rotating left-handed around the z-axis!!! 
  *  this is not the typical convention for euler angles
  */
-void sc_camera_roll (sc_camera_t * camera, double angle);
+void                sc_camera_roll (sc_camera_t * camera, double angle);
 
-void sc_camera_fov (sc_camera_t * camera, double angle);
+/** Sets the horizontal field of view.
+ * 
+ */
+void                sc_camera_fov (sc_camera_t * camera, double angle);
 
-void sc_camera_aspect_ratio (sc_camera_t * camera, int width, int height);
-
-void sc_camera_clipping_dist(sc_camera_t * camera, sc_camera_coords_t near, 
-  sc_camera_coords_t far);
+/** Sets the aspect ratio. 
+ * 
+ */
+void                sc_camera_aspect_ratio (sc_camera_t * camera, int width,
+                                            int height);
+/** Sets the clipping distances. */
+void                sc_camera_clipping_dist (sc_camera_t * camera,
+                                             sc_camera_coords_t near,
+                                             sc_camera_coords_t far);
 
 /** Sets the position and rotation of the camera object.
  * The vectors (eye - center) and up have to be linear independent (thus also not zero).
@@ -225,11 +246,17 @@ void sc_camera_clipping_dist(sc_camera_t * camera, sc_camera_coords_t near,
  * \param [in] center Point that is in the center of the image.
  * \param [in] up Upward direction of the camera.
  */
-void sc_camera_look_at(sc_camera_t *camera, const sc_camera_vec3_t eye, 
-  const sc_camera_vec3_t center, const sc_camera_vec3_t up);
+void                sc_camera_look_at (sc_camera_t * camera,
+                                       const sc_camera_vec3_t eye,
+                                       const sc_camera_vec3_t center,
+                                       const sc_camera_vec3_t up);
 
 /* 3D -> 3D */
-void sc_camera_view_transform(sc_camera_t *camera, sc_array_t *points_in, 
-  sc_array_t *points_out);
+/** Does the view transformation from world to view space.
+ * 
+ */
+void                sc_camera_view_transform (sc_camera_t * camera,
+                                              sc_array_t * points_in,
+                                              sc_array_t * points_out);
 
 #endif
