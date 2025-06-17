@@ -62,6 +62,9 @@ static void         sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
                                                  const sc_camera_vec3_t in,
                                                  sc_camera_vec3_t out);
 
+static void sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
+  const sc_camera_vec3_t in, sc_camera_vec3_t out);
+
 /* out = A * B */
 static void         sc_camera_mult_4x4_4x4 (const sc_camera_mat4x4_t A,
                                             const sc_camera_mat4x4_t B,
@@ -297,6 +300,56 @@ sc_camera_view_transform (sc_camera_t * camera, sc_array_t * points_in,
                        points_out);
 }
 
+static void sc_camera_get_projection_mat(sc_camera_t *camera, sc_camera_mat4x4_t proj_matrix)
+{
+    /* the factor 2 * camera->near could be reduced */
+    sc_camera_coords_t s_x = 2.0 * camera->near * tan(camera->FOV / 2.0);
+    sc_camera_coords_t s_y = s_x * ((sc_camera_coords_t) camera->height / 
+        (sc_camera_coords_t) camera->width); 
+    sc_camera_coords_t s_z = camera->far - camera->near;
+
+    proj_matrix[0] = 2.0 * camera->near / s_x;
+    proj_matrix[1] = 0.0;
+    proj_matrix[2] = 0.0;
+    proj_matrix[3] = 0.0;
+
+    proj_matrix[4] = 0.0;
+    proj_matrix[5] = 2.0 * camera->near / s_y;
+    proj_matrix[6] = 0.0;
+    proj_matrix[7] = 0.0;
+
+    proj_matrix[8] = 0.0;
+    proj_matrix[9] = 0.0;
+    proj_matrix[10] = -(camera->near + camera->far) / s_z;
+    proj_matrix[11] = -1.0;
+
+    proj_matrix[12] = 0.0;
+    proj_matrix[13] = 0.0;
+    proj_matrix[14] = -(2.0 * camera->near * camera->far) / s_z;
+    proj_matrix[15] = 0.0;
+}
+
+void 
+sc_camera_projection_transform (sc_camera_t *camera, sc_array_t *points_in, 
+  sc_array_t *points_out)
+{
+  sc_camera_mat4x4_t transformation;
+  sc_camera_get_projection_mat (camera, transformation);
+
+  for (size_t i = 0; i < 4; ++i)
+  {
+    for (size_t j = 0; j < 4; ++j)
+    {
+      printf("%lf ", transformation[i + 4 * j]);
+    }
+    printf("\n");
+  }
+
+  SC_ASSERT(points_in->elem_size == sizeof(sc_camera_coords_t) * 3);
+  SC_ASSERT(points_out->elem_size == sizeof(sc_camera_coords_t) * 4);
+  sc_camera_apply_mat(sc_camera_mat4_mul_v3_to_v4, transformation, points_in, points_out);
+}
+
 /** The mathematics are for example described here: 
  * https://en.wikipedia.org/wiki/Rotation_matrix#Quaternion */
 static void
@@ -425,6 +478,20 @@ sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
   sc_camera_vec4_t    x = { in[0], in[1], in[2], 1.0 };
 
   for (size_t i = 0; i < 3; ++i) {
+    out[i] = 0.;
+
+    for (size_t j = 0; j < 4; ++j) {
+      out[i] += mat[i + j * 4] * x[j];
+    }
+  }
+}
+
+static void sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
+  const sc_camera_vec3_t in, sc_camera_vec3_t out)
+{
+  sc_camera_vec4_t    x = { in[0], in[1], in[2], 1.0 };
+
+  for (size_t i = 0; i < 4; ++i) {
     out[i] = 0.;
 
     for (size_t j = 0; j < 4; ++j) {

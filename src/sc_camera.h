@@ -259,4 +259,8 @@ void                sc_camera_view_transform (sc_camera_t * camera,
                                               sc_array_t * points_in,
                                               sc_array_t * points_out);
 
+/* 3D -> 4D */
+void sc_camera_projection_transform (sc_camera_t *camera, sc_array_t *points_in, 
+  sc_array_t *points_out);
+
 #endif

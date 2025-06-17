@@ -26,11 +26,11 @@
 #include <sc_camera.h>
 #include <sc_random.h>
 
-static void print_vec3(sc_camera_vec3_t vec)
+static void print_vec(sc_camera_coords_t *vec, size_t d)
 {
   size_t i;
 
-  for (i = 0; i < 3; ++i)
+  for (i = 0; i < d; ++i)
   {
     printf("%lf ", vec[i]);
   }
@@ -44,38 +44,43 @@ main(int argc, char **argv)
   size_t num_points = 4;
   sc_rand_state_t seed = 0;
   size_t i, j;
-  sc_array_t *points_in, *points_out;
-  sc_camera_coords_t *p_in, *p_out;
+  sc_array_t *points_world, *points_camera, *points_clipping;
+  sc_camera_coords_t *p;
   sc_camera_vec3_t eye = {2.0, 1.0, 3.0};
   sc_camera_vec3_t center = {0.0, 0.0, 0.0};
   sc_camera_vec3_t up = {0.0, 1.0, 0.0};
 
-  points_in = sc_array_new_count(sizeof(sc_camera_coords_t) * 3, num_points);
-  points_out = sc_array_new_count(sizeof(sc_camera_coords_t) * 3, num_points);
+  points_world = sc_array_new_count(sizeof(sc_camera_coords_t) * 3, num_points);
+  points_camera = sc_array_new_count(sizeof(sc_camera_coords_t) * 3, num_points);
+  points_clipping = sc_array_new_count(sizeof(sc_camera_coords_t) * 4, num_points);
 
   camera = sc_camera_new();
 
   for (i = 0; i < num_points; ++i)
   {
-    p_in = (sc_camera_coords_t *) sc_array_index(points_in, i);
+    p = (sc_camera_coords_t *) sc_array_index(points_world, i);
 
     for (j = 0; j < 3; ++j)
     {
-      p_in[j] = sc_rand(&seed);
+      p[j] = sc_rand(&seed);
     }
   }
 
   sc_camera_look_at(camera, eye, center, up);
-  sc_camera_view_transform(camera, points_in, points_out);
+  sc_camera_view_transform(camera, points_world, points_camera);
+  sc_camera_projection_transform(camera, points_camera, points_clipping);
 
   for (size_t i = 0; i < num_points; ++i)
   {
-    p_in = (sc_camera_coords_t *) sc_array_index(points_in, i);
-    printf("IN: ");
-    print_vec3(p_in);
-    p_out = (sc_camera_coords_t *) sc_array_index(points_out, i);
-    printf("OUT: ");
-    print_vec3(p_out);
+    p = (sc_camera_coords_t *) sc_array_index(points_world, i);
+    printf("World: ");
+    print_vec(p, 3);
+    p = (sc_camera_coords_t *) sc_array_index(points_camera, i);
+    printf("Camera: ");
+    print_vec(p, 3);
+    p = (sc_camera_coords_t *) sc_array_index(points_clipping, i);
+    printf("Clipping: ");
+    print_vec(p, 4);
   }
 
   sc_camera_destroy(camera);
