@@ -43,18 +43,20 @@ main(int argc, char **argv)
   sc_camera_t *camera;
   size_t num_points = 4;
   sc_rand_state_t seed = 0;
-  size_t i, j;
+  size_t i, j, point_index;
   sc_array_t *points_world, *points_camera, *points_clipping;
+  sc_array_t *indices_inside;
   sc_camera_coords_t *p;
-  sc_camera_vec3_t eye = {2.0, 1.0, 3.0};
+  sc_camera_vec3_t eye = {0.5, 0.5, 0.5};
   sc_camera_vec3_t center = {0.0, 0.0, 0.0};
   sc_camera_vec3_t up = {0.0, 1.0, 0.0};
 
-  points_world = sc_array_new_count(sizeof(sc_camera_coords_t) * 3, num_points);
-  points_camera = sc_array_new_count(sizeof(sc_camera_coords_t) * 3, num_points);
-  points_clipping = sc_array_new_count(sizeof(sc_camera_coords_t) * 4, num_points);
+  points_world = sc_array_new_count(sizeof(sc_camera_vec3_t), num_points);
+  points_camera = sc_array_new_count(sizeof(sc_camera_vec3_t), num_points);
+  points_clipping = sc_array_new_count(sizeof(sc_camera_vec4_t), num_points);
 
   camera = sc_camera_new();
+  sc_camera_look_at(camera, eye, center, up);
 
   for (i = 0; i < num_points; ++i)
   {
@@ -66,7 +68,17 @@ main(int argc, char **argv)
     }
   }
 
-  sc_camera_look_at(camera, eye, center, up);
+  indices_inside = sc_array_new(sizeof(size_t));
+
+  sc_camera_clipping_pre(camera, points_world, indices_inside);
+
+  for (i = 0; i < indices_inside->elem_count; ++i)
+  {
+    point_index = *((size_t *) sc_array_index(indices_inside, i));
+    printf("%lu ", (unsigned long) point_index);
+  }
+  printf("\n");
+
   sc_camera_view_transform(camera, points_world, points_camera);
   sc_camera_projection_transform(camera, points_camera, points_clipping);
 

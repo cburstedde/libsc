@@ -26,6 +26,30 @@
 
 #include <sc_camera.h>
 
+/* TODO : remove */
+// static void print_vec(sc_camera_coords_t *vec, size_t d)
+// {
+//   size_t i;
+
+//   for (i = 0; i < d; ++i)
+//   {
+//     printf("%lf ", vec[i]);
+//   }
+//   printf("\n");
+// }
+
+// static void print_mat(sc_camera_coords_t *mat, size_t d)
+// {
+//   for (size_t i = 0; i < d; ++i)
+//   {
+//     for (size_t j = 0; j < d; ++j)
+//     {
+//       printf("%lf ", mat[i + d * j]);
+//     }
+//     printf("\n");
+//   }
+// }
+
 /* math utility functions needed in this file */
 
 static void         sc_camera_mat_to_q (const sc_camera_mat3x3_t A,
@@ -52,6 +76,9 @@ static void         sc_camera_q_mult (const sc_camera_vec4_t q1,
                                       const sc_camera_vec4_t q2,
                                       sc_camera_vec4_t out);
 
+static void sc_camera_mat4_transpose(const sc_camera_mat4x4_t in, 
+  sc_camera_mat4x4_t out);
+
 static void        
 sc_camera_apply_mat (void (*funct)
                      (const sc_camera_mat4x4_t, const sc_camera_coords_t *,
@@ -63,6 +90,9 @@ static void         sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
                                                  sc_camera_vec3_t out);
 
 static void sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
+  const sc_camera_vec3_t in, sc_camera_vec3_t out);
+
+static void sc_camera_mat4_mul_v4_to_v4(const sc_camera_mat4x4_t mat, 
   const sc_camera_vec3_t in, sc_camera_vec3_t out);
 
 /* out = A * B */
@@ -229,6 +259,8 @@ sc_camera_look_at (sc_camera_t * camera, const sc_camera_vec3_t eye,
 static void
 sc_camera_get_view_mat (sc_camera_t * camera, sc_camera_mat4x4_t view_matrix)
 {
+  SC_ASSERT (camera != NULL);
+
   /* calculate rotation matrix from the quaternion and write it in upper left block */
   sc_camera_coords_t  xx = camera->rotation[0] * camera->rotation[0];
   sc_camera_coords_t  yy = camera->rotation[1] * camera->rotation[1];
@@ -302,31 +334,33 @@ sc_camera_view_transform (sc_camera_t * camera, sc_array_t * points_in,
 
 static void sc_camera_get_projection_mat(sc_camera_t *camera, sc_camera_mat4x4_t proj_matrix)
 {
-    /* the factor 2 * camera->near could be reduced */
-    sc_camera_coords_t s_x = 2.0 * camera->near * tan(camera->FOV / 2.0);
-    sc_camera_coords_t s_y = s_x * ((sc_camera_coords_t) camera->height / 
-        (sc_camera_coords_t) camera->width); 
-    sc_camera_coords_t s_z = camera->far - camera->near;
+  SC_ASSERT (camera != NULL);
 
-    proj_matrix[0] = 2.0 * camera->near / s_x;
-    proj_matrix[1] = 0.0;
-    proj_matrix[2] = 0.0;
-    proj_matrix[3] = 0.0;
+  /* the factor 2 * camera->near could be reduced */
+  sc_camera_coords_t s_x = 2.0 * camera->near * tan(camera->FOV / 2.0);
+  sc_camera_coords_t s_y = s_x * ((sc_camera_coords_t) camera->height / 
+      (sc_camera_coords_t) camera->width); 
+  sc_camera_coords_t s_z = camera->far - camera->near;
 
-    proj_matrix[4] = 0.0;
-    proj_matrix[5] = 2.0 * camera->near / s_y;
-    proj_matrix[6] = 0.0;
-    proj_matrix[7] = 0.0;
+  proj_matrix[0] = 2.0 * camera->near / s_x;
+  proj_matrix[1] = 0.0;
+  proj_matrix[2] = 0.0;
+  proj_matrix[3] = 0.0;
 
-    proj_matrix[8] = 0.0;
-    proj_matrix[9] = 0.0;
-    proj_matrix[10] = -(camera->near + camera->far) / s_z;
-    proj_matrix[11] = -1.0;
+  proj_matrix[4] = 0.0;
+  proj_matrix[5] = 2.0 * camera->near / s_y;
+  proj_matrix[6] = 0.0;
+  proj_matrix[7] = 0.0;
 
-    proj_matrix[12] = 0.0;
-    proj_matrix[13] = 0.0;
-    proj_matrix[14] = -(2.0 * camera->near * camera->far) / s_z;
-    proj_matrix[15] = 0.0;
+  proj_matrix[8] = 0.0;
+  proj_matrix[9] = 0.0;
+  proj_matrix[10] = -(camera->near + camera->far) / s_z;
+  proj_matrix[11] = -1.0;
+
+  proj_matrix[12] = 0.0;
+  proj_matrix[13] = 0.0;
+  proj_matrix[14] = -(2.0 * camera->near * camera->far) / s_z;
+  proj_matrix[15] = 0.0;
 }
 
 void 
@@ -336,18 +370,122 @@ sc_camera_projection_transform (sc_camera_t *camera, sc_array_t *points_in,
   sc_camera_mat4x4_t transformation;
   sc_camera_get_projection_mat (camera, transformation);
 
-  for (size_t i = 0; i < 4; ++i)
-  {
-    for (size_t j = 0; j < 4; ++j)
-    {
-      printf("%lf ", transformation[i + 4 * j]);
-    }
-    printf("\n");
-  }
-
-  SC_ASSERT(points_in->elem_size == sizeof(sc_camera_coords_t) * 3);
-  SC_ASSERT(points_out->elem_size == sizeof(sc_camera_coords_t) * 4);
+  SC_ASSERT(points_in->elem_size == sizeof(sc_camera_vec3_t));
+  SC_ASSERT(points_out->elem_size == sizeof(sc_camera_vec4_t));
   sc_camera_apply_mat(sc_camera_mat4_mul_v3_to_v4, transformation, points_in, points_out);
+}
+
+/* TODO: i have to check if the orientation of the palens are still right */
+void sc_camera_get_frustum(sc_camera_t *camera, sc_array_t *planes)
+{
+  SC_ASSERT (planes->elem_size == sizeof (sc_camera_vec4_t));
+
+  sc_array_resize(planes, 6);
+
+  sc_camera_mat4x4_t view;
+  sc_camera_get_view_mat(camera, view);
+
+  sc_camera_mat4x4_t projection;
+  sc_camera_get_projection_mat(camera, projection);
+
+  /* TODO : maybe i want to use only 2 matrices and not 3 */
+  sc_camera_mat4x4_t transform;
+  sc_camera_mult_4x4_4x4(projection, view, transform);
+
+  sc_camera_mat4_transpose(transform, transform);
+
+  /* 
+  near = (0, 0, -1, -1)
+  far = (0, 0, 1, -1)
+  left = (-1, 0, 0, -1)
+  right = (1, 0, 0, -1)
+  up = (0, 1, 0, -1)
+  down = (0, -1, 0, -1) 
+  */
+
+  sc_camera_coords_t *near = (sc_camera_coords_t *) sc_array_index(planes, 0);
+  near[0] = 0.;
+  near[1] = 0.;
+  near[2] = -1.;
+  near[3] = -1.;
+
+  sc_camera_coords_t *far = (sc_camera_coords_t *) sc_array_index(planes, 1);
+  far[0] = 0.;
+  far[1] = 0.;
+  far[2] = 1.;
+  far[3] = -1.;
+
+  sc_camera_coords_t *left = (sc_camera_coords_t *) sc_array_index(planes, 2);
+  left[0] = -1.;
+  left[1] = 0.;
+  left[2] = 0.;
+  left[3] = -1.;
+
+  sc_camera_coords_t *right = (sc_camera_coords_t *) sc_array_index(planes, 3);
+  right[0] = 1.;
+  right[1] = 0.;
+  right[2] = 0.;
+  right[3] = -1.;
+
+  sc_camera_coords_t *top = (sc_camera_coords_t *) sc_array_index(planes, 4);
+  top[0] = 0.;
+  top[1] = 1.;
+  top[2] = 0.;
+  top[3] = -1.;
+
+  sc_camera_coords_t *bottom = (sc_camera_coords_t *) sc_array_index(planes, 5);
+  bottom[0] = 0.;
+  bottom[1] = -1.;
+  bottom[2] = 0.;
+  bottom[3] = -1.;
+
+  /* TODO: because of consistency i should also use the apply mat function here*/
+  for (size_t i = 0; i < 6; ++i)
+  {
+    sc_camera_coords_t *plane = sc_array_index(planes, i);
+    sc_camera_mat4_mul_v4_to_v4(transform, plane, plane);
+  }
+}
+
+
+void sc_camera_clipping_pre(sc_camera_t *camera, sc_array_t *points, 
+  sc_array_t *indices)
+{
+  SC_ASSERT(camera != NULL);
+  SC_ASSERT(points != NULL);
+  SC_ASSERT(points->elem_size == sizeof(sc_camera_vec3_t));
+  SC_ASSERT(indices != NULL);
+  SC_ASSERT(indices->elem_size == sizeof(size_t));
+
+  sc_array_t *planes = sc_array_new(sizeof(sc_camera_vec4_t));
+  sc_camera_get_frustum(camera, planes);
+
+  sc_array_reset(indices);
+
+  for (size_t i = 0; i < points->elem_count; ++i)
+  {
+    sc_camera_coords_t *point = (sc_camera_coords_t *) sc_array_index(points, i);
+    int is_inside = 1; 
+
+    for (size_t j = 0; j < 6; ++j)
+    {
+      sc_camera_coords_t *plane = (sc_camera_coords_t *) sc_array_index(planes, j);
+      sc_camera_coords_t s = point[0] * plane[0] + point[1] * plane[1] + 
+        point[2] * plane[2] + plane[3];
+
+      if (s > 0)
+      {
+        is_inside = 0;
+        continue;
+      }
+    }
+
+    if (is_inside)
+    {
+      size_t *elem = (size_t *) sc_array_push(indices);
+      *elem = i;
+    }
+  }
 }
 
 /** The mathematics are for example described here: 
@@ -449,7 +587,25 @@ sc_camera_q_mult (const sc_camera_vec4_t q1, const sc_camera_vec4_t q2,
   out[3] = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2;       // real part
 }
 
-/** this could theoretically be genralized to just apply a function to an array
+static void sc_camera_mat4_transpose(const sc_camera_mat4x4_t in, 
+  sc_camera_mat4x4_t out)
+{
+  for (size_t i = 1; i < 4; ++i)
+  {
+    for (size_t j = 0; j < i; ++j)
+    {
+      sc_camera_coords_t temp = in[i + 4 * j];
+      out[i + 4 * j] = in[j + 4 * i];
+      out[j + 4 * i] = temp;
+    }
+  }
+}
+
+/**
+ * -this whole structure of code is not optimal because i have to define all 
+ *  these different matrix multiplication functions
+ * -the function pointer i could typedef for readability
+ * -this could theoretically be genralized to just apply a function to an array
  *  using void pointers but this specific version should be enough*/
 static void
 sc_camera_apply_mat (void (*funct)
@@ -471,6 +627,9 @@ sc_camera_apply_mat (void (*funct)
   }
 }
 
+/** TODO : maybe it would be better to do mat4_mul, homogenize 
+ * and dehomogenize in seperate functions
+*/
 static void
 sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
                              const sc_camera_vec3_t in, sc_camera_vec3_t out)
@@ -499,6 +658,21 @@ static void sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
     }
   }
 }
+
+static void sc_camera_mat4_mul_v4_to_v4(const sc_camera_mat4x4_t mat, 
+  const sc_camera_vec3_t in, sc_camera_vec3_t out)
+{
+  sc_camera_vec4_t x = {in[0], in[1], in[2], in[3]};
+
+  for (size_t i = 0; i < 4; ++i) {
+    out[i] = 0.;
+
+    for (size_t j = 0; j < 4; ++j) {
+      out[i] += mat[i + j * 4] * x[j];
+    }
+  }
+}
+
 
 static void
 sc_camera_mult_4x4_4x4 (const sc_camera_mat4x4_t A,
