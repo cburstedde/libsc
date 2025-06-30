@@ -152,7 +152,7 @@ sc_camera_roll (sc_camera_t * camera, double angle)
   sc_camera_vec4_t    q;
   q[0] = 0.0;
   q[1] = 0.0;
-  q[2] = sin (angle / 2.0);
+  q[2] = -sin (angle / 2.0);
   q[3] = cos (angle / 2.0);
 
   sc_camera_q_mult (q, camera->rotation, camera->rotation);
@@ -406,7 +406,8 @@ sc_camera_apply_mat (void (*funct)
 {
   SC_ASSERT (points_in != NULL);
   SC_ASSERT (points_out != NULL);
-  SC_ASSERT (points_in->elem_count == points_out->elem_count);
+  
+  sc_array_resize(points_out, points_in->elem_count);
 
   for (size_t i = 0; i < points_in->elem_count; ++i) {
     sc_camera_coords_t *in =

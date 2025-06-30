@@ -26,22 +26,17 @@
 #include <sc_camera.h>
 #include <sc_random.h>
 
-static void print_vec3(sc_camera_vec3_t vec)
+static void print_vec3(const char *label, sc_camera_vec3_t vec)
 {
-  size_t i;
-
-  for (i = 0; i < 3; ++i)
-  {
-    printf("%lf ", vec[i]);
-  }
-  printf("\n");
+  SC_STATISTICSF("%s %lf %lf %lf\n", label, vec[0], vec[1], vec[2]);
 }
 
 int
 main(int argc, char **argv)
 {
+  int mpiret;
   sc_camera_t *camera;
-  size_t num_points = 4;
+  size_t num_points = 10;
   sc_rand_state_t seed = 0;
   size_t i, j;
   sc_array_t *points_in, *points_out;
@@ -49,6 +44,11 @@ main(int argc, char **argv)
   sc_camera_vec3_t eye = {2.0, 1.0, 3.0};
   sc_camera_vec3_t center = {0.0, 0.0, 0.0};
   sc_camera_vec3_t up = {0.0, 1.0, 0.0};
+
+  mpiret = sc_MPI_Init (&argc, &argv);
+  SC_CHECK_MPI (mpiret);
+
+  sc_init (sc_MPI_COMM_WORLD, 0, 1, NULL, SC_LP_DEFAULT);
 
   points_in = sc_array_new_count(sizeof(sc_camera_coords_t) * 3, num_points);
   points_out = sc_array_new_count(sizeof(sc_camera_coords_t) * 3, num_points);
@@ -68,17 +68,22 @@ main(int argc, char **argv)
   sc_camera_look_at(camera, eye, center, up);
   sc_camera_view_transform(camera, points_in, points_out);
 
-  for (size_t i = 0; i < num_points; ++i)
+  for (i = 0; i < num_points; ++i)
   {
     p_in = (sc_camera_coords_t *) sc_array_index(points_in, i);
-    printf("IN: ");
-    print_vec3(p_in);
+    print_vec3("IN : ", p_in);
     p_out = (sc_camera_coords_t *) sc_array_index(points_out, i);
-    printf("OUT: ");
-    print_vec3(p_out);
+    print_vec3("OUT :", p_out);
   }
 
   sc_camera_destroy(camera);
+  sc_array_destroy(points_in);
+  sc_array_destroy(points_out);
+
+  sc_finalize ();
+
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
 
   return 0;
 }
