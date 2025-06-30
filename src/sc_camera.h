@@ -197,44 +197,60 @@ void                sc_camera_destroy (sc_camera_t * camera);
 void                sc_camera_position (sc_camera_t * camera,
                                         const sc_camera_vec3_t position);
 
-/* TODO : i have to specify axis and angle direction (right hand rule?) */
-
-/* All rotation are in the right handed direction (meaning the camera rotates righthanded and 
-  the objects rotate the other way i.e. left handed)*/
-
-/* yaw is rotating around the up driection in our case the y-axis */
-
-/** Rotating the camera from right to left.
+/** Rotating the camera around the y-axis.
  * 
+ * The camera is rotated around the y-axis (up direction). The function rotates 
+ * the camera about angle (radians) amount by the right hand rule. 
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] angle The angle the camera is rotated.
  */
 void                sc_camera_yaw (sc_camera_t * camera, double angle);
 
 /* pitch is the rotation around the right axis in our case the x-axis */
 
-/** Rotating the camera from down to up.
+/** Rotating the camera around the x-axis.
  * 
+ * The camera is rotated around the x-axis (right direction). The function rotates 
+ * the camera about angle (radians) amount by the right hand rule. 
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] angle The angle the camera is rotated.
  */
 void                sc_camera_pitch (sc_camera_t * camera, double angle);
 
-/**
- *  roll is the rotation around the forward direction in our case the -z-axis 
- *  
- *  This means that we are rotating left-handed around the z-axis!!! 
- *  this is not the typical convention for euler angles
+/** Rotating the camera around the z-axis.
+ * 
+ * The camera is rotated around the z-axis (backwards direction). The function 
+ * rotates the camera about angle (radians) amount by the right hand rule. 
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] angle The angle the camera is rotated.
  */
 void                sc_camera_roll (sc_camera_t * camera, double angle);
 
 /** Sets the horizontal field of view.
  * 
+ * \param [out] camera The camera object.
+ * \param [in] angle The new horizontal field of view angle of the camera.
  */
 void                sc_camera_fov (sc_camera_t * camera, double angle);
 
 /** Sets the aspect ratio. 
  * 
+ * The aspect ratio is determined by the ratio of a width and a height value.
+ * \param [out] camera The camera object.
+ * \param [in] width A width value for the view.
+ * \param [in] height A height value for the view.
  */
 void                sc_camera_aspect_ratio (sc_camera_t * camera, int width,
                                             int height);
-/** Sets the clipping distances. */
+/** Sets the clipping distances. 
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] near The new distance from the camera to the near clipping plane.
+ * \param [in] far The new distance from the camera to the far clipping plane.
+ */
 void                sc_camera_clipping_dist (sc_camera_t * camera,
                                              sc_camera_coords_t near,
                                              sc_camera_coords_t far);
@@ -251,9 +267,19 @@ void                sc_camera_look_at (sc_camera_t * camera,
                                        const sc_camera_vec3_t center,
                                        const sc_camera_vec3_t up);
 
-/* 3D -> 3D */
 /** Does the view transformation from world to view space.
  * 
+ * Does the transformation from world space to camera camera space for an array
+ * points as described in the example. The input array must store the points
+ * as an array of the coordinates x,y,z in each element of the array. The points
+ * are returned in the same way. Explicetly it has to be  
+ * points_in/out->elem_size == 3 * sizeof(sc_camera_coords_t).
+ * 
+ * \param [in] camera The camera object.
+ * \param [in] points_in An array of points each represented by 3 coordinates to 
+ *                       be transformed.
+ * \param [out] points_out This array stores the transformed points after the 
+ *                         transformation.
  */
 void                sc_camera_view_transform (sc_camera_t * camera,
                                               sc_array_t * points_in,
