@@ -444,6 +444,12 @@ void sc_camera_get_frustum(sc_camera_t *camera, sc_array_t *planes)
   {
     sc_camera_coords_t *plane = sc_array_index(planes, i);
     sc_camera_mat4_mul_v4_to_v4(transform, plane, plane);
+
+    sc_camera_coords_t norm = sc_camera_vec3_norm(plane);
+    plane[0] /= norm;
+    plane[1] /= norm;
+    plane[2] /= norm;
+    plane[3] /= norm; 
   }
 }
 
