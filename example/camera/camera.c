@@ -87,12 +87,13 @@ main(int argc, char **argv)
     SC_INFOF("Camera : %lf %lf %lf\n", p[0], p[1], p[2]);
 
     p = (sc_camera_coords_t *) sc_array_index(points_clipping, i);
-    SC_INFOF("Clipping : %lf %lf %lf %lf\n", p[0], p[1], p[2], p[4]);
+    SC_INFOF("Clipping : %lf %lf %lf %lf\n", p[0], p[1], p[2], p[3]);
   }
 
   sc_camera_destroy(camera);
-  sc_array_destroy(points_in);
-  sc_array_destroy(points_out);
+  sc_array_destroy(points_world);
+  sc_array_destroy(points_camera);
+  sc_array_destroy(points_clipping);
 
   sc_finalize ();
 
