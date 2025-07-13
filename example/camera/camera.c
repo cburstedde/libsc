@@ -71,9 +71,9 @@ main(int argc, char **argv)
   for (i = 0; i < indices_inside->elem_count; ++i)
   {
     point_index = *((size_t *) sc_array_index(indices_inside, i));
-    printf("%lu ", (unsigned long) point_index);
+    
+    SC_INFOF("Point inside : %lu\n", (unsigned long) point_index);
   }
-  printf("\n");
 
   sc_camera_view_transform(camera, points_world, points_camera);
   sc_camera_projection_transform(camera, points_camera, points_clipping);

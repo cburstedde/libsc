@@ -164,7 +164,7 @@ typedef struct sc_camera
  *
  * \return Camera with default values.
  */
-sc_camera_t        *sc_camera_new ();
+sc_camera_t        *sc_camera_new (void);
 
 /** Initializes a camera with the default parameters.
  * 
