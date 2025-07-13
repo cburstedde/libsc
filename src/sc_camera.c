@@ -52,24 +52,29 @@ static void         sc_camera_q_mult (const sc_camera_vec4_t q1,
                                       const sc_camera_vec4_t q2,
                                       sc_camera_vec4_t out);
 
-static void sc_camera_mat4_transpose(const sc_camera_mat4x4_t in, 
-  sc_camera_mat4x4_t out);
+static void         sc_camera_mat4_transpose (const sc_camera_mat4x4_t in,
+                                              sc_camera_mat4x4_t out);
 
-static void        
-sc_camera_apply_mat (void (*funct)
-                     (const sc_camera_mat4x4_t, const sc_camera_coords_t *,
-                      sc_camera_coords_t *), const sc_camera_mat4x4_t mat,
-                     sc_array_t * points_in, sc_array_t * points_out);
+typedef void        (*sc_camera_mat_mul_t) (const sc_camera_mat4x4_t,
+                                            const sc_camera_coords_t *,
+                                            sc_camera_coords_t *);
+
+static void         sc_camera_apply_mat (sc_camera_mat_mul_t funct,
+                                         const sc_camera_mat4x4_t mat,
+                                         sc_array_t * points_in,
+                                         sc_array_t * points_out);
 
 static void         sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
                                                  const sc_camera_vec3_t in,
                                                  sc_camera_vec3_t out);
 
-static void sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
-  const sc_camera_vec3_t in, sc_camera_vec3_t out);
+static void         sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
+                                                 const sc_camera_vec3_t in,
+                                                 sc_camera_vec3_t out);
 
-static void sc_camera_mat4_mul_v4_to_v4(const sc_camera_mat4x4_t mat, 
-  const sc_camera_vec3_t in, sc_camera_vec3_t out);
+static void         sc_camera_mat4_mul_v4_to_v4 (const sc_camera_mat4x4_t mat,
+                                                 const sc_camera_vec3_t in,
+                                                 sc_camera_vec3_t out);
 
 /* out = A * B */
 static void         sc_camera_mult_4x4_4x4 (const sc_camera_mat4x4_t A,
@@ -204,9 +209,9 @@ sc_camera_look_at (sc_camera_t * camera, const sc_camera_vec3_t eye,
                    const sc_camera_vec3_t center, const sc_camera_vec3_t up)
 {
   sc_camera_vec3_t    z_new, x_new, y_new;
-  sc_camera_coords_t z_new_norm, x_new_norm;
-  sc_camera_mat3x3_t rotation;
-  sc_camera_vec4_t q;
+  sc_camera_coords_t  z_new_norm, x_new_norm;
+  sc_camera_mat3x3_t  rotation;
+  sc_camera_vec4_t    q;
 
   SC_ASSERT (camera != NULL);
   SC_ASSERT (eye != NULL && center != NULL && up != NULL);
@@ -243,8 +248,8 @@ sc_camera_look_at (sc_camera_t * camera, const sc_camera_vec3_t eye,
 static void
 sc_camera_get_view_mat (sc_camera_t * camera, sc_camera_mat4x4_t view_matrix)
 {
-  sc_camera_coords_t xx, yy, zz, wx, wy, wz, xy, xz, yz;
-  sc_camera_mat4x4_t translation_matrix = {
+  sc_camera_coords_t  xx, yy, zz, wx, wy, wz, xy, xz, yz;
+  sc_camera_mat4x4_t  translation_matrix = {
     1., 0., 0., 0.,
     0., 1., 0., 0.,
     0., 0., 1., 0.,
@@ -293,7 +298,7 @@ sc_camera_view_transform (sc_camera_t * camera, sc_array_t * points_in,
 {
   sc_camera_mat4x4_t  transformation;
 
-  /* TODO: i dont like that these assertions are here the structure of the implementation is not optimal*/
+  /* TODO: i dont like that these assertions are here the structure of the implementation is not optimal */
   SC_ASSERT (points_in->elem_size == sizeof (sc_camera_vec3_t));
   SC_ASSERT (points_out->elem_size == sizeof (sc_camera_vec3_t));
 
@@ -303,13 +308,15 @@ sc_camera_view_transform (sc_camera_t * camera, sc_array_t * points_in,
                        points_out);
 }
 
-static void sc_camera_get_projection_mat(sc_camera_t *camera, sc_camera_mat4x4_t proj_matrix)
+static void
+sc_camera_get_projection_mat (sc_camera_t * camera,
+                              sc_camera_mat4x4_t proj_matrix)
 {
   /* the factor 2 * camera->near could be reduced */
-  sc_camera_coords_t s_x = 2.0 * camera->near * tan(camera->FOV / 2.0);
-  sc_camera_coords_t s_y = s_x * ((sc_camera_coords_t) camera->height / 
-      (sc_camera_coords_t) camera->width); 
-  sc_camera_coords_t s_z = camera->far - camera->near;
+  sc_camera_coords_t  s_x = 2.0 * camera->near * tan (camera->FOV / 2.0);
+  sc_camera_coords_t  s_y = s_x * ((sc_camera_coords_t) camera->height /
+                                   (sc_camera_coords_t) camera->width);
+  sc_camera_coords_t  s_z = camera->far - camera->near;
 
   SC_ASSERT (camera != NULL);
 
@@ -334,138 +341,135 @@ static void sc_camera_get_projection_mat(sc_camera_t *camera, sc_camera_mat4x4_t
   proj_matrix[15] = 0.0;
 }
 
-void 
-sc_camera_projection_transform (sc_camera_t *camera, sc_array_t *points_in, 
-  sc_array_t *points_out)
+void
+sc_camera_projection_transform (sc_camera_t * camera, sc_array_t * points_in,
+                                sc_array_t * points_out)
 {
-  sc_camera_mat4x4_t transformation;
+  sc_camera_mat4x4_t  transformation;
 
-  SC_ASSERT(points_in->elem_size == sizeof(sc_camera_vec3_t));
-  SC_ASSERT(points_out->elem_size == sizeof(sc_camera_vec4_t));
+  SC_ASSERT (points_in->elem_size == sizeof (sc_camera_vec3_t));
+  SC_ASSERT (points_out->elem_size == sizeof (sc_camera_vec4_t));
 
   sc_camera_get_projection_mat (camera, transformation);
 
-  sc_camera_apply_mat(sc_camera_mat4_mul_v3_to_v4, transformation, points_in, points_out);
+  sc_camera_apply_mat (sc_camera_mat4_mul_v3_to_v4, transformation, points_in,
+                       points_out);
 }
 
 /* TODO: i have to check if the orientation of the palens are still right */
-void sc_camera_get_frustum(sc_camera_t *camera, sc_array_t *planes)
+void
+sc_camera_get_frustum (sc_camera_t * camera, sc_array_t * planes)
 {
-  sc_camera_mat4x4_t view, projection, transform;
+  sc_camera_mat4x4_t  view, projection, transform;
   sc_camera_coords_t *near, *far, *left, *right, *top, *bottom;
-  size_t i;
+  size_t              i;
   sc_camera_coords_t *plane, norm;
 
   SC_ASSERT (planes->elem_size == sizeof (sc_camera_vec4_t));
 
-  sc_array_resize(planes, 6);
+  sc_array_resize (planes, 6);
 
   /* TODO : maybe i want to use only 2 matrices and not 3 */
-  sc_camera_get_view_mat(camera, view);
-  sc_camera_get_projection_mat(camera, projection);
-  sc_camera_mult_4x4_4x4(projection, view, transform);
+  sc_camera_get_view_mat (camera, view);
+  sc_camera_get_projection_mat (camera, projection);
+  sc_camera_mult_4x4_4x4 (projection, view, transform);
 
-  sc_camera_mat4_transpose(transform, transform);
+  sc_camera_mat4_transpose (transform, transform);
 
   /* 
-  near = (0, 0, -1, -1)
-  far = (0, 0, 1, -1)
-  left = (-1, 0, 0, -1)
-  right = (1, 0, 0, -1)
-  up = (0, 1, 0, -1)
-  down = (0, -1, 0, -1) 
-  */
+     near = (0, 0, -1, -1)
+     far = (0, 0, 1, -1)
+     left = (-1, 0, 0, -1)
+     right = (1, 0, 0, -1)
+     up = (0, 1, 0, -1)
+     down = (0, -1, 0, -1) 
+   */
 
-  near = (sc_camera_coords_t *) sc_array_index(planes, 0);
+  near = (sc_camera_coords_t *) sc_array_index (planes, 0);
   near[0] = 0.;
   near[1] = 0.;
   near[2] = -1.;
   near[3] = -1.;
 
-  far = (sc_camera_coords_t *) sc_array_index(planes, 1);
+  far = (sc_camera_coords_t *) sc_array_index (planes, 1);
   far[0] = 0.;
   far[1] = 0.;
   far[2] = 1.;
   far[3] = -1.;
 
-  left = (sc_camera_coords_t *) sc_array_index(planes, 2);
+  left = (sc_camera_coords_t *) sc_array_index (planes, 2);
   left[0] = -1.;
   left[1] = 0.;
   left[2] = 0.;
   left[3] = -1.;
 
-  right = (sc_camera_coords_t *) sc_array_index(planes, 3);
+  right = (sc_camera_coords_t *) sc_array_index (planes, 3);
   right[0] = 1.;
   right[1] = 0.;
   right[2] = 0.;
   right[3] = -1.;
 
-  top = (sc_camera_coords_t *) sc_array_index(planes, 4);
+  top = (sc_camera_coords_t *) sc_array_index (planes, 4);
   top[0] = 0.;
   top[1] = 1.;
   top[2] = 0.;
   top[3] = -1.;
 
-  bottom = (sc_camera_coords_t *) sc_array_index(planes, 5);
+  bottom = (sc_camera_coords_t *) sc_array_index (planes, 5);
   bottom[0] = 0.;
   bottom[1] = -1.;
   bottom[2] = 0.;
   bottom[3] = -1.;
 
-  for (i = 0; i < 6; ++i)
-  {
-    plane = sc_array_index(planes, i);
-    sc_camera_mat4_mul_v4_to_v4(transform, plane, plane);
+  for (i = 0; i < 6; ++i) {
+    plane = sc_array_index (planes, i);
+    sc_camera_mat4_mul_v4_to_v4 (transform, plane, plane);
 
-    norm = sc_camera_vec3_norm(plane);
+    norm = sc_camera_vec3_norm (plane);
     plane[0] /= norm;
     plane[1] /= norm;
     plane[2] /= norm;
-    plane[3] /= norm; 
+    plane[3] /= norm;
   }
 }
 
-
-void sc_camera_clipping_pre(sc_camera_t *camera, sc_array_t *points, 
-  sc_array_t *indices)
+void
+sc_camera_clipping_pre (sc_camera_t * camera, sc_array_t * points,
+                        sc_array_t * indices)
 {
-  sc_array_t *planes;
-  size_t i, j;
+  sc_array_t         *planes;
+  size_t              i, j;
   sc_camera_coords_t *point, *plane, s;
-  size_t *elem;
+  size_t             *elem;
 
-  SC_ASSERT(camera != NULL);
-  SC_ASSERT(points != NULL);
-  SC_ASSERT(points->elem_size == sizeof(sc_camera_vec3_t));
-  SC_ASSERT(indices != NULL);
-  SC_ASSERT(indices->elem_size == sizeof(size_t));
+  SC_ASSERT (camera != NULL);
+  SC_ASSERT (points != NULL);
+  SC_ASSERT (points->elem_size == sizeof (sc_camera_vec3_t));
+  SC_ASSERT (indices != NULL);
+  SC_ASSERT (indices->elem_size == sizeof (size_t));
 
-  planes = sc_array_new(sizeof(sc_camera_vec4_t));
-  sc_camera_get_frustum(camera, planes);
+  planes = sc_array_new (sizeof (sc_camera_vec4_t));
+  sc_camera_get_frustum (camera, planes);
 
-  sc_array_reset(indices);
+  sc_array_reset (indices);
 
-  for (i = 0; i < points->elem_count; ++i)
-  {
-    point = (sc_camera_coords_t *) sc_array_index(points, i);
-    int is_inside = 1; 
+  for (i = 0; i < points->elem_count; ++i) {
+    point = (sc_camera_coords_t *) sc_array_index (points, i);
+    int                 is_inside = 1;
 
-    for (j = 0; j < 6; ++j)
-    {
-      plane = (sc_camera_coords_t *) sc_array_index(planes, j);
-      s = point[0] * plane[0] + point[1] * plane[1] + 
+    for (j = 0; j < 6; ++j) {
+      plane = (sc_camera_coords_t *) sc_array_index (planes, j);
+      s = point[0] * plane[0] + point[1] * plane[1] +
         point[2] * plane[2] + plane[3];
 
-      if (s > 0)
-      {
+      if (s > 0) {
         is_inside = 0;
         continue;
       }
     }
 
-    if (is_inside)
-    {
-      elem = (size_t *) sc_array_push(indices);
+    if (is_inside) {
+      elem = (size_t *) sc_array_push (indices);
       *elem = i;
     }
   }
@@ -477,7 +481,7 @@ static void
 sc_camera_mat_to_q (const sc_camera_mat3x3_t A, sc_camera_vec4_t q)
 {
   sc_camera_coords_t  t = A[0 + 3 * 0] + A[1 + 3 * 1] + A[2 + 3 * 2];
-  sc_camera_coords_t r, s;
+  sc_camera_coords_t  r, s;
 
   if (t >= 0) {
     r = sqrt (1 + t);
@@ -489,8 +493,7 @@ sc_camera_mat_to_q (const sc_camera_mat3x3_t A, sc_camera_vec4_t q)
   }
   else {
     if (A[0 + 3 * 0] >= A[1 + 3 * 1] && A[0 + 3 * 0] >= A[2 + 3 * 2]) {
-      r =
-        sqrt (1 + A[0 + 3 * 0] - A[1 + 3 * 1] - A[2 + 3 * 2]);
+      r = sqrt (1 + A[0 + 3 * 0] - A[1 + 3 * 1] - A[2 + 3 * 2]);
       s = 1.0 / (2.0 * r);
       q[3] = (A[2 + 3 * 1] - A[1 + 3 * 2]) * s;
       q[0] = r / 2.0;
@@ -498,8 +501,7 @@ sc_camera_mat_to_q (const sc_camera_mat3x3_t A, sc_camera_vec4_t q)
       q[2] = (A[2 + 3 * 0] + A[0 + 3 * 2]) * s;
     }
     else if (A[1 + 3 * 1] >= A[2 + 3 * 2]) {
-      r =
-        sqrt (1 - A[0 + 3 * 0] + A[1 + 3 * 1] - A[2 + 3 * 2]);
+      r = sqrt (1 - A[0 + 3 * 0] + A[1 + 3 * 1] - A[2 + 3 * 2]);
       s = 1.0 / (2.0 * r);
       q[3] = (A[0 + 3 * 2] - A[2 + 3 * 0]) * s;
       q[0] = (A[1 + 3 * 0] + A[0 + 3 * 1]) * s;
@@ -507,8 +509,7 @@ sc_camera_mat_to_q (const sc_camera_mat3x3_t A, sc_camera_vec4_t q)
       q[2] = (A[2 + 3 * 1] + A[1 + 3 * 2]) * s;
     }
     else {
-      r =
-        sqrt (1 - A[0 + 3 * 0] - A[1 + 3 * 1] + A[2 + 3 * 2]);
+      r = sqrt (1 - A[0 + 3 * 0] - A[1 + 3 * 1] + A[2 + 3 * 2]);
       s = 1.0 / (2.0 * r);
       q[3] = (A[1 + 3 * 0] - A[0 + 3 * 1]) * s;
       q[0] = (A[2 + 3 * 0] + A[0 + 3 * 2]) * s;
@@ -542,7 +543,7 @@ sc_camera_vec3_minus (const sc_camera_vec3_t a,
   out[2] = a[2] - b[2];
 }
 
-static inline sc_camera_coords_t
+static inline       sc_camera_coords_t
 sc_camera_vec3_norm (const sc_camera_vec3_t x)
 {
   return sqrt (x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
@@ -562,25 +563,23 @@ static void
 sc_camera_q_mult (const sc_camera_vec4_t q1, const sc_camera_vec4_t q2,
                   sc_camera_vec4_t out)
 {
-  sc_camera_coords_t  x1 = q1[0], y1 = q1[1], z1 = q1[2], w1 = q1[3];   
-  sc_camera_coords_t  x2 = q2[0], y2 = q2[1], z2 = q2[2], w2 = q2[3];   
+  sc_camera_coords_t  x1 = q1[0], y1 = q1[1], z1 = q1[2], w1 = q1[3];
+  sc_camera_coords_t  x2 = q2[0], y2 = q2[1], z2 = q2[2], w2 = q2[3];
 
-  out[0] = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2;       
-  out[1] = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2;      
-  out[2] = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2;      
-  out[3] = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2;       
+  out[0] = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2;
+  out[1] = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2;
+  out[2] = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2;
+  out[3] = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2;
 }
 
-static void sc_camera_mat4_transpose(const sc_camera_mat4x4_t in, 
-  sc_camera_mat4x4_t out)
+static void
+sc_camera_mat4_transpose (const sc_camera_mat4x4_t in, sc_camera_mat4x4_t out)
 {
-  size_t i, j;
-  sc_camera_coords_t temp;
+  size_t              i, j;
+  sc_camera_coords_t  temp;
 
-  for (i = 1; i < 4; ++i)
-  {
-    for (j = 0; j < i; ++j)
-    {
+  for (i = 1; i < 4; ++i) {
+    for (j = 0; j < i; ++j) {
       temp = in[i + 4 * j];
       out[i + 4 * j] = in[j + 4 * i];
       out[j + 4 * i] = temp;
@@ -595,24 +594,21 @@ static void sc_camera_mat4_transpose(const sc_camera_mat4x4_t in,
  * -this could theoretically be genralized to just apply a function to an array
  *  using void pointers but this specific version should be enough*/
 static void
-sc_camera_apply_mat (void (*funct)
-                     (const sc_camera_mat4x4_t, const sc_camera_coords_t *,
-                      sc_camera_coords_t *), const sc_camera_mat4x4_t mat,
+sc_camera_apply_mat (sc_camera_mat_mul_t funct,
+                     const sc_camera_mat4x4_t mat,
                      sc_array_t * points_in, sc_array_t * points_out)
 {
-  size_t i;
+  size_t              i;
   sc_camera_coords_t *in, *out;
 
   SC_ASSERT (points_in != NULL);
   SC_ASSERT (points_out != NULL);
-  
-  sc_array_resize(points_out, points_in->elem_count);
+
+  sc_array_resize (points_out, points_in->elem_count);
 
   for (i = 0; i < points_in->elem_count; ++i) {
-    in =
-      (sc_camera_coords_t *) sc_array_index (points_in, i);
-    out =
-      (sc_camera_coords_t *) sc_array_index (points_out, i);
+    in = (sc_camera_coords_t *) sc_array_index (points_in, i);
+    out = (sc_camera_coords_t *) sc_array_index (points_out, i);
 
     funct (mat, in, out);
   }
@@ -626,7 +622,7 @@ sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
                              const sc_camera_vec3_t in, sc_camera_vec3_t out)
 {
   sc_camera_vec4_t    x = { in[0], in[1], in[2], 1.0 };
-  size_t i, j;
+  size_t              i, j;
 
   for (i = 0; i < 3; ++i) {
     out[i] = 0.;
@@ -637,11 +633,12 @@ sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
   }
 }
 
-static void sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
-  const sc_camera_vec3_t in, sc_camera_vec3_t out)
+static void
+sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
+                             const sc_camera_vec3_t in, sc_camera_vec3_t out)
 {
   sc_camera_vec4_t    x = { in[0], in[1], in[2], 1.0 };
-  size_t i, j;
+  size_t              i, j;
 
   for (i = 0; i < 4; ++i) {
     out[i] = 0.;
@@ -652,11 +649,12 @@ static void sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
   }
 }
 
-static void sc_camera_mat4_mul_v4_to_v4(const sc_camera_mat4x4_t mat, 
-  const sc_camera_vec3_t in, sc_camera_vec3_t out)
+static void
+sc_camera_mat4_mul_v4_to_v4 (const sc_camera_mat4x4_t mat,
+                             const sc_camera_vec3_t in, sc_camera_vec3_t out)
 {
-  sc_camera_vec4_t x = {in[0], in[1], in[2], in[3]};
-  size_t i, j;
+  sc_camera_vec4_t    x = { in[0], in[1], in[2], in[3] };
+  size_t              i, j;
 
   for (i = 0; i < 4; ++i) {
     out[i] = 0.;
@@ -666,14 +664,13 @@ static void sc_camera_mat4_mul_v4_to_v4(const sc_camera_mat4x4_t mat,
     }
   }
 }
-
 
 static void
 sc_camera_mult_4x4_4x4 (const sc_camera_mat4x4_t A,
                         const sc_camera_mat4x4_t B, sc_camera_mat4x4_t out)
 {
   sc_camera_mat4x4_t  product;
-  size_t i, j, k;
+  size_t              i, j, k;
   /* i index of rows of product */
   for (i = 0; i < 4; ++i) {
     /* j index of columns of product */

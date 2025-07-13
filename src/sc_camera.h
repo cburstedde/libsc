@@ -286,14 +286,17 @@ void                sc_camera_view_transform (sc_camera_t * camera,
                                               sc_array_t * points_out);
 
 /* 3D -> 4D */
-void sc_camera_projection_transform (sc_camera_t *camera, sc_array_t *points_in, 
-  sc_array_t *points_out);
+void                sc_camera_projection_transform (sc_camera_t * camera,
+                                                    sc_array_t * points_in,
+                                                    sc_array_t * points_out);
 
 /* This are the planes in world space in the order near/far/left/right/top/bottom */
-void sc_camera_get_frustum(sc_camera_t *camera, sc_array_t *planes);
+void                sc_camera_get_frustum (sc_camera_t * camera,
+                                           sc_array_t * planes);
 
 /* This works with world coordinates (planes from get frustum) */
-void sc_camera_clipping_pre(sc_camera_t *camera, sc_array_t *points, 
-  sc_array_t *indices);
+void                sc_camera_clipping_pre (sc_camera_t * camera,
+                                            sc_array_t * points,
+                                            sc_array_t * indices);
 
 #endif
