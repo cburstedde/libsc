@@ -492,7 +492,7 @@ size_t              sc_array_pqueue_pop (sc_array_t * array,
  * \return           Pointer to the indexed array element.
  */
 /*@unused@*/
-static inline void *
+inline void *
 sc_array_index (sc_array_t * array, size_t iz)
 {
   SC_ASSERT (iz < array->elem_count);
@@ -507,7 +507,7 @@ sc_array_index (sc_array_t * array, size_t iz)
  *                   NULL if the specified index is elem_count.
  */
 /*@unused@*/
-static inline void *
+inline void *
 sc_array_index_null (sc_array_t * array, size_t iz)
 {
   SC_ASSERT (iz <= array->elem_count);
@@ -520,7 +520,7 @@ sc_array_index_null (sc_array_t * array, size_t iz)
  * \param [in] index needs to be in [0]..[elem_count-1].
  */
 /*@unused@*/
-static inline void *
+inline void *
 sc_array_index_int (sc_array_t * array, int i)
 {
   SC_ASSERT (i >= 0 && (size_t) i < array->elem_count);
@@ -532,7 +532,7 @@ sc_array_index_int (sc_array_t * array, int i)
  * \param [in] index needs to be in [0]..[elem_count-1].
  */
 /*@unused@*/
-static inline void *
+inline void *
 sc_array_index_long (sc_array_t * array, long l)
 {
   SC_ASSERT (l >= 0 && (size_t) l < array->elem_count);
@@ -544,7 +544,7 @@ sc_array_index_long (sc_array_t * array, long l)
  * \param [in] index needs to be in [0]..[elem_count-1].
  */
 /*@unused@*/
-static inline void *
+inline void *
 sc_array_index_ssize_t (sc_array_t * array, ssize_t is)
 {
   SC_ASSERT (is >= 0 && (size_t) is < array->elem_count);
@@ -556,7 +556,7 @@ sc_array_index_ssize_t (sc_array_t * array, ssize_t is)
  * \param [in] index needs to be in [0]..[elem_count-1].
  */
 /*@unused@*/
-static inline void *
+inline void *
 sc_array_index_int16 (sc_array_t * array, int16_t i16)
 {
   SC_ASSERT (i16 >= 0 && (size_t) i16 < array->elem_count);
@@ -568,7 +568,7 @@ sc_array_index_int16 (sc_array_t * array, int16_t i16)
  * \param [in] element needs to be the address of an element in array.
  */
 /*@unused@*/
-static inline size_t
+inline size_t
 sc_array_position (sc_array_t * array, void *element)
 {
   ptrdiff_t           position;
@@ -589,7 +589,7 @@ sc_array_position (sc_array_t * array, void *element)
  *                        as long as no other function is called on this array.
  */
 /*@unused@*/
-static inline void *
+inline void *
 sc_array_pop (sc_array_t * array)
 {
   SC_ASSERT (SC_ARRAY_IS_OWNER (array));
@@ -603,7 +603,7 @@ sc_array_pop (sc_array_t * array)
  * \return Returns a pointer to the uninitialized newly added elements.
  */
 /*@unused@*/
-static inline void *
+inline void *
 sc_array_push_count (sc_array_t * array, size_t add_count)
 {
   const size_t        old_count = array->elem_count;
@@ -626,7 +626,7 @@ sc_array_push_count (sc_array_t * array, size_t add_count)
  * \return Returns a pointer to the uninitialized newly added element.
  */
 /*@unused@*/
-static inline void *
+inline void *
 sc_array_push (sc_array_t * array)
 {
   return sc_array_push_count (array, 1);
@@ -781,7 +781,7 @@ void                sc_mempool_truncate (sc_mempool_t * mempool);
  * \return Returns a new or recycled element pointer.
  */
 /*@unused@*/
-static inline void *
+inline void *
 sc_mempool_alloc (sc_mempool_t * mempool)
 {
   void               *ret;
@@ -812,7 +812,7 @@ sc_mempool_alloc (sc_mempool_t * mempool)
  * \param [in] elem  The element to be returned to the pool.
  */
 /*@unused@*/
-static inline void
+inline void
 sc_mempool_free (sc_mempool_t * mempool, void *elem)
 {
   sc_array_t         *freed = &mempool->freed;
