@@ -26,10 +26,11 @@
 
 #include <sc_containers.h>
 
+/** Public structure defining a unique counter object. */
 typedef struct sc_unique_counter
 {
-  int                 start_value;
-  sc_mempool_t       *mempool;
+  int                 start_value;      /**< First value overall. */
+  sc_mempool_t       *mempool;          /**< Underlying storage. */
 }
 sc_unique_counter_t;
 
