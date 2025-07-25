@@ -129,6 +129,16 @@ typedef sc_camera_coords_t sc_camera_mat4x4_t[16];
  */
 typedef sc_camera_coords_t sc_camera_mat3x3_t[9];
 
+typedef enum sc_camera_plane
+{
+  SC_CAMERA_PLANE_NEAR,
+  SC_CAMERA_PLANE_FAR,
+  SC_CAMERA_PLANE_LEFT,
+  SC_CAMERA_PLANE_RIGHT,
+  SC_CAMERA_PLANE_TOP,
+  SC_CAMERA_PLANE_BOTTOM
+} sc_camera_plane_t;
+
 /** Represents a camera with parameters for rendering a 3D scene.
  * 
  * The sc_camera object stores essential properties of a camera,
@@ -158,6 +168,7 @@ typedef struct sc_camera
   sc_camera_coords_t  near;/**< Distance to the near clipping plane. */
   sc_camera_coords_t  far; /**< Distance to the far clipping plane. */
 
+  sc_camera_vec4_t frustum_planes[6]; /*Maybe store this as sc_array?*/
 } sc_camera_t;
 
 /** Creates a new camera structure with the default values (see sc_camera_init).
@@ -298,5 +309,10 @@ void                sc_camera_get_frustum (sc_camera_t * camera,
 void                sc_camera_clipping_pre (sc_camera_t * camera,
                                             sc_array_t * points,
                                             sc_array_t * indices);
+
+/*TODO: distances as coords_t[6] because of docu */
+/* signed orthogonal distances: near/far/left/right/top/bottom */
+void sc_camera_frustum_dist(sc_camera_t * camera, const sc_camera_vec3_t point,
+  sc_camera_coords_t distances[6]);
 
 #endif

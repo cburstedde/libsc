@@ -81,6 +81,11 @@ static void         sc_camera_mult_4x4_4x4 (const sc_camera_mat4x4_t A,
                                             const sc_camera_mat4x4_t B,
                                             sc_camera_mat4x4_t out);
 
+/* function for updating the planes */
+static void sc_camera_update_planes(sc_camera_t *camera);
+
+static sc_camera_coords_t sc_camera_signed_dist(const sc_camera_vec3_t point, const sc_camera_vec4_t plane);
+
 sc_camera_t        *
 sc_camera_new (void)
 {
@@ -111,6 +116,8 @@ sc_camera_init (sc_camera_t * camera)
 
   camera->near = 0.01;
   camera->far = 100.0;
+
+  sc_camera_update_planes(camera);
 }
 
 void
@@ -126,6 +133,8 @@ sc_camera_position (sc_camera_t * camera, const sc_camera_vec3_t position)
   SC_ASSERT (position != NULL);
 
   (void) memcpy (camera->position, position, sizeof (camera->position));
+
+  sc_camera_update_planes(camera);
 }
 
 /* because the camera should rotate right handed we have to rotate the points
@@ -143,6 +152,8 @@ sc_camera_yaw (sc_camera_t * camera, double angle)
   q[3] = cos (angle / 2.0);
 
   sc_camera_q_mult (q, camera->rotation, camera->rotation);
+
+  sc_camera_update_planes(camera);
 }
 
 void
@@ -158,6 +169,8 @@ sc_camera_pitch (sc_camera_t * camera, double angle)
   q[3] = cos (angle / 2.0);
 
   sc_camera_q_mult (q, camera->rotation, camera->rotation);
+
+  sc_camera_update_planes(camera);
 }
 
 void
@@ -173,6 +186,8 @@ sc_camera_roll (sc_camera_t * camera, double angle)
   q[3] = cos (angle / 2.0);
 
   sc_camera_q_mult (q, camera->rotation, camera->rotation);
+
+  sc_camera_update_planes(camera);
 }
 
 void
@@ -181,6 +196,8 @@ sc_camera_fov (sc_camera_t * camera, double angle)
   SC_ASSERT (camera != NULL);
 
   camera->FOV = angle;
+
+  sc_camera_update_planes(camera);
 }
 
 void
@@ -190,6 +207,8 @@ sc_camera_aspect_ratio (sc_camera_t * camera, int width, int height)
 
   camera->width = width;
   camera->height = height;
+
+  sc_camera_update_planes(camera);
 }
 
 void
@@ -202,6 +221,8 @@ sc_camera_clipping_dist (sc_camera_t * camera, sc_camera_coords_t near,
 
   camera->near = near;
   camera->far = far;
+
+  sc_camera_update_planes(camera);
 }
 
 void
@@ -243,6 +264,8 @@ sc_camera_look_at (sc_camera_t * camera, const sc_camera_vec3_t eye,
   sc_camera_mat_to_q (rotation, q);
 
   (void) memcpy (camera->rotation, q, sizeof (camera->rotation));
+
+  sc_camera_update_planes(camera);
 }
 
 static void
@@ -341,12 +364,14 @@ sc_camera_get_projection_mat (sc_camera_t * camera,
   proj_matrix[15] = 0.0;
 }
 
+/* TODO: add camera != NULL assertion */
 void
 sc_camera_projection_transform (sc_camera_t * camera, sc_array_t * points_in,
                                 sc_array_t * points_out)
 {
   sc_camera_mat4x4_t  transformation;
 
+  SC_ASSERT ()
   SC_ASSERT (points_in->elem_size == sizeof (sc_camera_vec3_t));
   SC_ASSERT (points_out->elem_size == sizeof (sc_camera_vec4_t));
 
@@ -360,77 +385,9 @@ sc_camera_projection_transform (sc_camera_t * camera, sc_array_t * points_in,
 void
 sc_camera_get_frustum (sc_camera_t * camera, sc_array_t * planes)
 {
-  sc_camera_mat4x4_t  view, projection, transform;
-  sc_camera_coords_t *near, *far, *left, *right, *top, *bottom;
-  size_t              i;
-  sc_camera_coords_t *plane, norm;
+  SC_ASSERT (camera != NULL);
 
-  SC_ASSERT (planes->elem_size == sizeof (sc_camera_vec4_t));
-
-  sc_array_resize (planes, 6);
-
-  /* TODO : maybe i want to use only 2 matrices and not 3 */
-  sc_camera_get_view_mat (camera, view);
-  sc_camera_get_projection_mat (camera, projection);
-  sc_camera_mult_4x4_4x4 (projection, view, transform);
-
-  sc_camera_mat4_transpose (transform, transform);
-
-  /* 
-     near = (0, 0, -1, -1)
-     far = (0, 0, 1, -1)
-     left = (-1, 0, 0, -1)
-     right = (1, 0, 0, -1)
-     up = (0, 1, 0, -1)
-     down = (0, -1, 0, -1) 
-   */
-
-  near = (sc_camera_coords_t *) sc_array_index (planes, 0);
-  near[0] = 0.;
-  near[1] = 0.;
-  near[2] = -1.;
-  near[3] = -1.;
-
-  far = (sc_camera_coords_t *) sc_array_index (planes, 1);
-  far[0] = 0.;
-  far[1] = 0.;
-  far[2] = 1.;
-  far[3] = -1.;
-
-  left = (sc_camera_coords_t *) sc_array_index (planes, 2);
-  left[0] = -1.;
-  left[1] = 0.;
-  left[2] = 0.;
-  left[3] = -1.;
-
-  right = (sc_camera_coords_t *) sc_array_index (planes, 3);
-  right[0] = 1.;
-  right[1] = 0.;
-  right[2] = 0.;
-  right[3] = -1.;
-
-  top = (sc_camera_coords_t *) sc_array_index (planes, 4);
-  top[0] = 0.;
-  top[1] = 1.;
-  top[2] = 0.;
-  top[3] = -1.;
-
-  bottom = (sc_camera_coords_t *) sc_array_index (planes, 5);
-  bottom[0] = 0.;
-  bottom[1] = -1.;
-  bottom[2] = 0.;
-  bottom[3] = -1.;
-
-  for (i = 0; i < 6; ++i) {
-    plane = sc_array_index (planes, i);
-    sc_camera_mat4_mul_v4_to_v4 (transform, plane, plane);
-
-    norm = sc_camera_vec3_norm (plane);
-    plane[0] /= norm;
-    plane[1] /= norm;
-    plane[2] /= norm;
-    plane[3] /= norm;
-  }
+  sc_array_init_data(planes, camera->frustum_planes, sizeof(sc_camera_vec4_t), 6);
 }
 
 void
@@ -448,8 +405,10 @@ sc_camera_clipping_pre (sc_camera_t * camera, sc_array_t * points,
   SC_ASSERT (indices != NULL);
   SC_ASSERT (indices->elem_size == sizeof (size_t));
 
+  /*
   planes = sc_array_new (sizeof (sc_camera_vec4_t));
   sc_camera_get_frustum (camera, planes);
+  */
 
   sc_array_reset (indices);
 
@@ -458,11 +417,9 @@ sc_camera_clipping_pre (sc_camera_t * camera, sc_array_t * points,
     int                 is_inside = 1;
 
     for (j = 0; j < 6; ++j) {
-      plane = (sc_camera_coords_t *) sc_array_index (planes, j);
-      s = point[0] * plane[0] + point[1] * plane[1] +
-        point[2] * plane[2] + plane[3];
-
-      if (s > 0) {
+      /*plane = (sc_camera_coords_t *) sc_array_index (planes, j);*/
+      
+      if (sc_camera_signed_dist(point, camera->frustum_planes[j]) > 0) {
         is_inside = 0;
         continue;
       }
@@ -474,6 +431,22 @@ sc_camera_clipping_pre (sc_camera_t * camera, sc_array_t * points,
     }
   }
 }
+
+void sc_camera_frustum_dist(sc_camera_t * camera, const sc_camera_vec3_t point,
+  sc_camera_coords_t distances[6])
+{
+  size_t i;
+
+  SC_ASSERT(camera != NULL);
+  SC_ASSERT(distances != NULL);
+
+  for (i = 0; i < 6; ++i)
+  {
+    distances[i] = sc_camera_signed_dist(point, camera->frustum_planes[i]);
+  }
+}
+
+
 
 /** The mathematics are for example described here: 
  * https://en.wikipedia.org/wiki/Rotation_matrix#Quaternion */
@@ -683,4 +656,74 @@ sc_camera_mult_4x4_4x4 (const sc_camera_mat4x4_t A,
   }
 
   (void) memcpy (out, product, 16 * sizeof (sc_camera_coords_t));
+}
+
+static void sc_camera_update_planes(sc_camera_t *camera)
+{
+  sc_camera_mat4x4_t  view, projection, transform;
+  size_t              i;
+  sc_camera_coords_t norm;
+
+  /* TODO : maybe i want to use only 2 matrices and not 3 */
+  sc_camera_get_view_mat (camera, view);
+  sc_camera_get_projection_mat (camera, projection);
+  sc_camera_mult_4x4_4x4 (projection, view, transform);
+
+  sc_camera_mat4_transpose (transform, transform);
+
+  /* 
+     near = (0, 0, -1, -1)
+     far = (0, 0, 1, -1)
+     left = (-1, 0, 0, -1)
+     right = (1, 0, 0, -1)
+     up = (0, 1, 0, -1)
+     down = (0, -1, 0, -1) 
+   */
+
+  camera->frustum_planes[SC_CAMERA_PLANE_NEAR][0] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_NEAR][1] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_NEAR][2] = -1.;
+  camera->frustum_planes[SC_CAMERA_PLANE_NEAR][3] = -1.;
+
+  camera->frustum_planes[SC_CAMERA_PLANE_FAR][0] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_FAR][1] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_FAR][2] = 1.;
+  camera->frustum_planes[SC_CAMERA_PLANE_FAR][3] = -1.;
+
+  camera->frustum_planes[SC_CAMERA_PLANE_LEFT][0] = -1.;
+  camera->frustum_planes[SC_CAMERA_PLANE_LEFT][1] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_LEFT][2] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_LEFT][3] = -1.;
+
+  camera->frustum_planes[SC_CAMERA_PLANE_RIGHT][0] = 1.;
+  camera->frustum_planes[SC_CAMERA_PLANE_RIGHT][1] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_RIGHT][2] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_RIGHT][3] = -1.;
+
+  camera->frustum_planes[SC_CAMERA_PLANE_TOP][0] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_TOP][1] = 1.;
+  camera->frustum_planes[SC_CAMERA_PLANE_TOP][2] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_TOP][3] = -1.;
+
+  camera->frustum_planes[SC_CAMERA_PLANE_BOTTOM][0] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_BOTTOM][1] = -1.;
+  camera->frustum_planes[SC_CAMERA_PLANE_BOTTOM][2] = 0.;
+  camera->frustum_planes[SC_CAMERA_PLANE_BOTTOM][3] = -1.;
+
+  for (i = 0; i < 6; ++i) {
+    sc_camera_mat4_mul_v4_to_v4 (transform, camera->frustum_planes[i], camera->frustum_planes[i]);
+
+    norm = sc_camera_vec3_norm (camera->frustum_planes[i]);
+    camera->frustum_planes[i][0] /= norm;
+    camera->frustum_planes[i][1] /= norm;
+    camera->frustum_planes[i][2] /= norm;
+    camera->frustum_planes[i][3] /= norm;
+  }
+}
+
+static sc_camera_coords_t sc_camera_signed_dist(const sc_camera_vec3_t point, 
+  const sc_camera_vec4_t plane)
+{
+  return point[0] * plane[0] + point[1] * plane[1] +
+        point[2] * plane[2] + plane[3];
 }
