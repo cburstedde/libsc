@@ -107,7 +107,8 @@
 
 /** The data type of the coordinates for sc_camera
  */
-/* p4est uses double, most computer graphic applications float on GPU. */
+/* p4est uses double, most computer graphic applications float on GPU.*/
+/* Using float here would result in implicit conversions. */
 typedef double      sc_camera_coords_t;
 
 /** Points in R^3 for sc_camera.
@@ -127,6 +128,16 @@ typedef sc_camera_coords_t sc_camera_mat4x4_t[16];
  * The entries of the matrix are in column-major order.
  */
 typedef sc_camera_coords_t sc_camera_mat3x3_t[9];
+
+typedef enum sc_camera_plane
+{
+  SC_CAMERA_PLANE_NEAR,
+  SC_CAMERA_PLANE_FAR,
+  SC_CAMERA_PLANE_LEFT,
+  SC_CAMERA_PLANE_RIGHT,
+  SC_CAMERA_PLANE_TOP,
+  SC_CAMERA_PLANE_BOTTOM
+} sc_camera_plane_t;
 
 /** Represents a camera with parameters for rendering a 3D scene.
  * 
@@ -157,13 +168,14 @@ typedef struct sc_camera
   sc_camera_coords_t  near;/**< Distance to the near clipping plane. */
   sc_camera_coords_t  far; /**< Distance to the far clipping plane. */
 
+  sc_camera_vec4_t frustum_planes[6]; /*Maybe store this as sc_array?*/
 } sc_camera_t;
 
 /** Creates a new camera structure with the default values (see sc_camera_init).
  *
  * \return Camera with default values.
  */
-sc_camera_t        *sc_camera_new ();
+sc_camera_t        *sc_camera_new (void);
 
 /** Initializes a camera with the default parameters.
  * 
@@ -187,5 +199,120 @@ void                sc_camera_init (sc_camera_t * camera);
  * \param [in] camera The camera to be destroyed.
  */
 void                sc_camera_destroy (sc_camera_t * camera);
+
+/** Sets the position.
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] position The new position of the camera object in world space.
+ */
+void                sc_camera_position (sc_camera_t * camera,
+                                        const sc_camera_vec3_t position);
+
+/** Rotating the camera around the y-axis.
+ * 
+ * The camera is rotated around the y-axis (up direction). The function rotates 
+ * the camera about angle (radians) amount by the right hand rule. 
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] angle The angle the camera is rotated.
+ */
+void                sc_camera_yaw (sc_camera_t * camera, double angle);
+
+/* pitch is the rotation around the right axis in our case the x-axis */
+
+/** Rotating the camera around the x-axis.
+ * 
+ * The camera is rotated around the x-axis (right direction). The function rotates 
+ * the camera about angle (radians) amount by the right hand rule. 
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] angle The angle the camera is rotated.
+ */
+void                sc_camera_pitch (sc_camera_t * camera, double angle);
+
+/** Rotating the camera around the z-axis.
+ * 
+ * The camera is rotated around the z-axis (backwards direction). The function 
+ * rotates the camera about angle (radians) amount by the right hand rule. 
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] angle The angle the camera is rotated.
+ */
+void                sc_camera_roll (sc_camera_t * camera, double angle);
+
+/** Sets the horizontal field of view.
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] angle The new horizontal field of view angle of the camera.
+ */
+void                sc_camera_fov (sc_camera_t * camera, double angle);
+
+/** Sets the aspect ratio. 
+ * 
+ * The aspect ratio is determined by the ratio of a width and a height value.
+ * \param [out] camera The camera object.
+ * \param [in] width A width value for the view.
+ * \param [in] height A height value for the view.
+ */
+void                sc_camera_aspect_ratio (sc_camera_t * camera, int width,
+                                            int height);
+/** Sets the clipping distances. 
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] near The new distance from the camera to the near clipping plane.
+ * \param [in] far The new distance from the camera to the far clipping plane.
+ */
+void                sc_camera_clipping_dist (sc_camera_t * camera,
+                                             sc_camera_coords_t near,
+                                             sc_camera_coords_t far);
+
+/** Sets the position and rotation of the camera object.
+ * The vectors (eye - center) and up have to be linear independent (thus also not zero).
+ * \param [out] camera Camera that is changed.
+ * \param [in] eye Position of the camera.
+ * \param [in] center Point that is in the center of the image.
+ * \param [in] up Upward direction of the camera.
+ */
+void                sc_camera_look_at (sc_camera_t * camera,
+                                       const sc_camera_vec3_t eye,
+                                       const sc_camera_vec3_t center,
+                                       const sc_camera_vec3_t up);
+
+/** Does the view transformation from world to view space.
+ * 
+ * Does the transformation from world space to camera camera space for an array
+ * points as described in the example. The input array must store the points
+ * as an array of the coordinates x,y,z in each element of the array. The points
+ * are returned in the same way. Explicetly it has to be  
+ * points_in/out->elem_size == 3 * sizeof(sc_camera_coords_t).
+ * 
+ * \param [in] camera The camera object.
+ * \param [in] points_in An array of points each represented by 3 coordinates to 
+ *                       be transformed.
+ * \param [out] points_out This array stores the transformed points after the 
+ *                         transformation.
+ */
+void                sc_camera_view_transform (sc_camera_t * camera,
+                                              sc_array_t * points_in,
+                                              sc_array_t * points_out);
+
+/* 3D -> 4D */
+void                sc_camera_projection_transform (sc_camera_t * camera,
+                                                    sc_array_t * points_in,
+                                                    sc_array_t * points_out);
+
+/* This are the planes in world space in the order near/far/left/right/top/bottom */
+void                sc_camera_get_frustum (sc_camera_t * camera,
+                                           sc_array_t * planes);
+
+/* This works with world coordinates (planes from get frustum) */
+void                sc_camera_clipping_pre (sc_camera_t * camera,
+                                            sc_array_t * points,
+                                            sc_array_t * indices);
+
+/*TODO: distances as coords_t[6] because of docu */
+/* signed orthogonal distances: near/far/left/right/top/bottom */
+void sc_camera_frustum_dist(sc_camera_t * camera, const sc_camera_vec3_t point,
+  sc_camera_coords_t distances[6]);
 
 #endif
