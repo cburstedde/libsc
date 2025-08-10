@@ -272,14 +272,10 @@ static void
 sc_camera_get_view_mat (sc_camera_t * camera, sc_camera_mat4x4_t view_matrix)
 {
   sc_camera_coords_t  xx, yy, zz, wx, wy, wz, xy, xz, yz;
-  sc_camera_mat4x4_t  translation_matrix = {
-    1., 0., 0., 0.,
-    0., 1., 0., 0.,
-    0., 0., 1., 0.,
-    -camera->position[0], -camera->position[1], -camera->position[2], 1.
-  };;
+  sc_camera_mat4x4_t  translation_matrix;
 
   SC_ASSERT (camera != NULL);
+  SC_ASSERT (view_matrix != NULL);
 
   /* calculate rotation matrix from the quaternion and write it in upper left block */
   xx = camera->rotation[0] * camera->rotation[0];
@@ -311,6 +307,27 @@ sc_camera_get_view_mat (sc_camera_t * camera, sc_camera_mat4x4_t view_matrix)
   view_matrix[13] = 0.0;
   view_matrix[14] = 0.0;
   view_matrix[15] = 1.0;
+  
+
+  translation_matrix[0]  = 1.0;  
+  translation_matrix[1]  = 0.0;
+  translation_matrix[2]  = 0.0;  
+  translation_matrix[3]  = 0.0;
+
+  translation_matrix[4]  = 0.0;  
+  translation_matrix[5]  = 1.0;
+  translation_matrix[6]  = 0.0;  
+  translation_matrix[7]  = 0.0;
+
+  translation_matrix[8]  = 0.0;  
+  translation_matrix[9]  = 0.0;
+  translation_matrix[10] = 1.0;  
+  translation_matrix[11] = 0.0;
+
+  translation_matrix[12] = -camera->position[0];
+  translation_matrix[13] = -camera->position[1];
+  translation_matrix[14] = -camera->position[2];
+  translation_matrix[15] = 1.0;
 
   sc_camera_mult_4x4_4x4 (view_matrix, translation_matrix, view_matrix);
 }
@@ -321,11 +338,12 @@ sc_camera_view_transform (sc_camera_t * camera, sc_array_t * points_in,
 {
   sc_camera_mat4x4_t  transformation;
 
+  sc_camera_get_view_mat (camera, transformation);
+
   /* TODO: i dont like that these assertions are here the structure of the implementation is not optimal */
+  SC_ASSERT (points_in != NULL && points_out != NULL);
   SC_ASSERT (points_in->elem_size == sizeof (sc_camera_vec3_t));
   SC_ASSERT (points_out->elem_size == sizeof (sc_camera_vec3_t));
-
-  sc_camera_get_view_mat (camera, transformation);
 
   sc_camera_apply_mat (sc_camera_mat4_mul_v3_to_v3, transformation, points_in,
                        points_out);
@@ -336,12 +354,16 @@ sc_camera_get_projection_mat (sc_camera_t * camera,
                               sc_camera_mat4x4_t proj_matrix)
 {
   /* the factor 2 * camera->near could be reduced */
-  sc_camera_coords_t  s_x = 2.0 * camera->near * tan (camera->FOV / 2.0);
-  sc_camera_coords_t  s_y = s_x * ((sc_camera_coords_t) camera->height /
-                                   (sc_camera_coords_t) camera->width);
-  sc_camera_coords_t  s_z = camera->far - camera->near;
+  sc_camera_coords_t s_x, s_y, s_z;
 
   SC_ASSERT (camera != NULL);
+
+  s_x = 2.0 * camera->near * tan (camera->FOV / 2.0);
+  s_y = s_x * ((sc_camera_coords_t) camera->height /
+             (sc_camera_coords_t) camera->width);
+  s_z = camera->far - camera->near;
+
+  SC_ASSERT( proj_matrix != NULL);
 
   proj_matrix[0] = 2.0 * camera->near / s_x;
   proj_matrix[1] = 0.0;
@@ -371,11 +393,13 @@ sc_camera_projection_transform (sc_camera_t * camera, sc_array_t * points_in,
 {
   sc_camera_mat4x4_t  transformation;
 
-  SC_ASSERT ()
-  SC_ASSERT (points_in->elem_size == sizeof (sc_camera_vec3_t));
-  SC_ASSERT (points_out->elem_size == sizeof (sc_camera_vec4_t));
+  SC_ASSERT (camera != NULL);
 
   sc_camera_get_projection_mat (camera, transformation);
+
+  SC_ASSERT (points_in != NULL && points_out != NULL);
+  SC_ASSERT (points_in->elem_size == sizeof (sc_camera_vec3_t));
+  SC_ASSERT (points_out->elem_size == sizeof (sc_camera_vec4_t));
 
   sc_camera_apply_mat (sc_camera_mat4_mul_v3_to_v4, transformation, points_in,
                        points_out);
@@ -386,6 +410,7 @@ void
 sc_camera_get_frustum (sc_camera_t * camera, sc_array_t * planes)
 {
   SC_ASSERT (camera != NULL);
+  SC_ASSERT (planes != NULL);
 
   sc_array_init_data(planes, camera->frustum_planes, sizeof(sc_camera_vec4_t), 6);
 }
@@ -438,6 +463,7 @@ void sc_camera_frustum_dist(sc_camera_t * camera, const sc_camera_vec3_t point,
   size_t i;
 
   SC_ASSERT(camera != NULL);
+  SC_ASSERT(point != NULL);
   SC_ASSERT(distances != NULL);
 
   for (i = 0; i < 6; ++i)
@@ -573,9 +599,6 @@ sc_camera_apply_mat (sc_camera_mat_mul_t funct,
 {
   size_t              i;
   sc_camera_coords_t *in, *out;
-
-  SC_ASSERT (points_in != NULL);
-  SC_ASSERT (points_out != NULL);
 
   sc_array_resize (points_out, points_in->elem_count);
 
