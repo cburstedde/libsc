@@ -419,9 +419,9 @@ void
 sc_camera_clipping_pre (sc_camera_t * camera, sc_array_t * points,
                         sc_array_t * indices)
 {
-  sc_array_t         *planes;
+  /* sc_array_t         *planes; */
   size_t              i, j;
-  sc_camera_coords_t *point, *plane, s;
+  sc_camera_coords_t *point; /* *plane, s; */ 
   size_t             *elem;
 
   SC_ASSERT (camera != NULL);
