@@ -90,6 +90,7 @@ main (int argc, char **argv)
   sc_array_destroy (points_world);
   sc_array_destroy (points_camera);
   sc_array_destroy (points_clipping);
+  sc_array_destroy (indices_inside);
 
   sc_finalize ();
 
