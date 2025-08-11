@@ -168,7 +168,7 @@ typedef struct sc_camera
   sc_camera_coords_t  near;/**< Distance to the near clipping plane. */
   sc_camera_coords_t  far; /**< Distance to the far clipping plane. */
 
-  sc_camera_vec4_t frustum_planes[6]; /*Maybe store this as sc_array?*/
+  sc_camera_vec4_t    frustum_planes[6];
 } sc_camera_t;
 
 /** Creates a new camera structure with the default values (see sc_camera_init).
@@ -312,7 +312,8 @@ void                sc_camera_clipping_pre (sc_camera_t * camera,
 
 /*TODO: distances as coords_t[6] because of docu */
 /* signed orthogonal distances: near/far/left/right/top/bottom */
-void sc_camera_frustum_dist(sc_camera_t * camera, const sc_camera_vec3_t point,
-  sc_camera_coords_t distances[6]);
+void                sc_camera_frustum_dist (sc_camera_t * camera,
+                                            const sc_camera_vec3_t point,
+                                            sc_camera_coords_t distances[6]);
 
 #endif
