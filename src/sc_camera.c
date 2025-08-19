@@ -274,7 +274,6 @@ static void
 sc_camera_get_view_mat (sc_camera_t * camera, sc_camera_mat4x4_t view_matrix)
 {
   sc_camera_coords_t  xx, yy, zz, wx, wy, wz, xy, xz, yz;
-  sc_camera_mat4x4_t  translation_matrix;
 
   SC_ASSERT (camera != NULL);
   SC_ASSERT (view_matrix != NULL);
@@ -305,33 +304,13 @@ sc_camera_get_view_mat (sc_camera_t * camera, sc_camera_mat4x4_t view_matrix)
   view_matrix[10] = 1.0 - 2.0 * (xx + yy);
   view_matrix[11] = 0.0;
 
-  view_matrix[12] = 0.0;
-  view_matrix[13] = 0.0;
-  view_matrix[14] = 0.0;
+  view_matrix[12] = -view_matrix[0] * camera->position[0] - 
+    view_matrix[4] * camera->position[1] - view_matrix[8] * camera->position[2];
+  view_matrix[13] = -view_matrix[1] * camera->position[0] - 
+    view_matrix[5] * camera->position[1] - view_matrix[9] * camera->position[2];
+  view_matrix[14] = -view_matrix[2] * camera->position[0] - 
+    view_matrix[6] * camera->position[1] - view_matrix[10] * camera->position[2];
   view_matrix[15] = 1.0;
-
-  translation_matrix[0] = 1.0;
-  translation_matrix[1] = 0.0;
-  translation_matrix[2] = 0.0;
-  translation_matrix[3] = 0.0;
-
-  translation_matrix[4] = 0.0;
-  translation_matrix[5] = 1.0;
-  translation_matrix[6] = 0.0;
-  translation_matrix[7] = 0.0;
-
-  translation_matrix[8] = 0.0;
-  translation_matrix[9] = 0.0;
-  translation_matrix[10] = 1.0;
-  translation_matrix[11] = 0.0;
-
-  translation_matrix[12] = -camera->position[0];
-  translation_matrix[13] = -camera->position[1];
-  translation_matrix[14] = -camera->position[2];
-  translation_matrix[15] = 1.0;
-
-  /* TODO : matric multiplication in one go for efficiency */
-  sc_camera_mult_4x4_4x4 (view_matrix, translation_matrix, view_matrix);
 }
 
 void
