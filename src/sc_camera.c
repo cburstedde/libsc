@@ -319,12 +319,11 @@ sc_camera_view_transform (sc_camera_t * camera, sc_array_t * points_in,
 {
   sc_camera_mat4x4_t  transformation;
 
-  sc_camera_get_view_mat (camera, transformation);
-
-  /* TODO: The assertions better at the beginning of the function. */
   SC_ASSERT (points_in != NULL && points_out != NULL);
   SC_ASSERT (points_in->elem_size == sizeof (sc_camera_vec3_t));
   SC_ASSERT (points_out->elem_size == sizeof (sc_camera_vec3_t));
+
+  sc_camera_get_view_mat (camera, transformation);
 
   sc_camera_apply_mat (sc_camera_mat4_mul_v3_to_v3, transformation, points_in,
                        points_out);
@@ -338,13 +337,12 @@ sc_camera_get_projection_mat (sc_camera_t * camera,
   sc_camera_coords_t  s_x, s_y, s_z;
 
   SC_ASSERT (camera != NULL);
+  SC_ASSERT (proj_matrix != NULL);
 
   s_x = 2.0 * camera->near * tan (camera->FOV / 2.0);
   s_y = s_x * ((sc_camera_coords_t) camera->height /
                (sc_camera_coords_t) camera->width);
   s_z = camera->far - camera->near;
-
-  SC_ASSERT (proj_matrix != NULL);
 
   proj_matrix[0] = 2.0 * camera->near / s_x;
   proj_matrix[1] = 0.0;
@@ -367,20 +365,17 @@ sc_camera_get_projection_mat (sc_camera_t * camera,
   proj_matrix[15] = 0.0;
 }
 
-/* TODO: add camera != NULL assertion */
 void
 sc_camera_projection_transform (sc_camera_t * camera, sc_array_t * points_in,
                                 sc_array_t * points_out)
 {
   sc_camera_mat4x4_t  transformation;
 
-  SC_ASSERT (camera != NULL);
-
-  sc_camera_get_projection_mat (camera, transformation);
-
   SC_ASSERT (points_in != NULL && points_out != NULL);
   SC_ASSERT (points_in->elem_size == sizeof (sc_camera_vec3_t));
   SC_ASSERT (points_out->elem_size == sizeof (sc_camera_vec4_t));
+
+  sc_camera_get_projection_mat (camera, transformation);
 
   sc_camera_apply_mat (sc_camera_mat4_mul_v3_to_v4, transformation, points_in,
                        points_out);
