@@ -51,7 +51,11 @@ typedef void        (*sc_sig_t) (int);
 #if _POSIX_C_SOURCE >= 199309L
 #include <time.h>
 #else
-#include <unistd.h>
+#ifdef _WIN32
+#   include <io.h>
+#else
+#   include <unistd.h>
+#endif
 #endif
 
 typedef struct sc_package
