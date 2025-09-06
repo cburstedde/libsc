@@ -54,7 +54,7 @@
  * the process count can differ between writing and reading.
  *
  * The main purpose of \b scda is to enable the user to implement parallel I/O
- * for numerical appliations, e.g. simulation checkpoint/restart.
+ * for numerical applications, e.g. simulation checkpoint/restart.
  *
  * We elaborate further on the workflow in \ref scda_workflow.
  *
@@ -271,7 +271,7 @@ sc_scda_ret_t;
  * The parsing logic of \ref sc_scda_ferror_t is that first \b scdaret is examined
  * and if \b scdaret != \ref SC_SCDA_FERR_MPI, we know that \b mpiret = 0.
  * If \b scdaret = \ref SC_SCDA_FERR_MPI, we know that an MPI error occurred and
- * we can examine \b mpiret for more informartion.
+ * we can examine \b mpiret for more information.
  *
  * Moreover, a valid sc_scda_ferror always satisfy that if \b scdaret = 0 then
  * \b mpiret = 0 and if \b scdaret = \ref SC_SCDA_FERR_MPI then \b mpiret !=0.
@@ -550,7 +550,7 @@ sc_scda_fcontext_t *sc_scda_fwrite_block (sc_scda_fcontext_t * fc,
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to write
  *                              indirectly and in particular from potentially
- *                              non-contigous memory. In the remaining case of
+ *                              non-contiguous memory. In the remaining case of
  *                              \b indirect being false \b array_data must be
  *                              a sc_array with element size equals to
  *                              \b elem_size that contains the actual array
@@ -682,7 +682,7 @@ int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to write
  *                              indirectly and in particular from potentially
- *                              non-contigous memory. In the remaining case of
+ *                              non-contiguous memory. In the remaining case of
  *                              \b indirect being false \b array_data must be
  *                              a sc_array with the actual array elements as
  *                              data as further explained in the documentation
@@ -810,7 +810,7 @@ sc_scda_fcontext_t *sc_scda_fopen_read (sc_MPI_Comm mpicomm,
  *                              true. For \b decode true as input the file
  *                              section is interpreted as a compressed file
  *                              section if the type and user string of the first
- *                              raw file section satisfiy the compression
+ *                              raw file section satisfy the compression
  *                              convention. If the compression convention is not
  *                              satisfied the data is read raw. For false as
  *                              input the data will be read raw by the
@@ -969,7 +969,7 @@ sc_scda_fcontext_t *sc_scda_fread_block_data (sc_scda_fcontext_t * fc,
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to read
  *                              indirectly and in particular to potentially
- *                              non-contigous memory. See the documentation of
+ *                              non-contiguous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class
@@ -1102,7 +1102,7 @@ sc_scda_fcontext_t *sc_scda_fread_varray_sizes (sc_scda_fcontext_t * fc,
  * \param [in]      indirect    A Boolean to determine whether \b array_data
  *                              must be a sc_array of sc_arrays to read
  *                              indirectly and in particular to potentially
- *                              non-contigous memory. See the documentation of
+ *                              non-contiguous memory. See the documentation of
  *                              the parameter \b array_data for more information.
  * \param [out]     errcode     An errcode that can be interpreted by \ref
  *                              sc_scda_ferror_string or mapped to an error class

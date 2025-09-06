@@ -93,9 +93,9 @@
 #define SC_SCDA_CHECK_VERBOSE_NONCOLL(lp, errcode, msg) SC_SCDA_CHECK_VERBOSE_GEN (\
                                     errcode, msg, SC_LOGF, lp)
 
-/** Collectivly check a given errorcode.
+/** Collectively check a given errorcode.
  * This macro assumes that errcode is a collective
- * variable and that the macro is called collectivly.
+ * variable and that the macro is called collectively.
  * The calling function must return NULL in case of an error.
  */
 #define SC_SCDA_CHECK_COLL_ERR(errcode, fc, user_msg) do {                   \
@@ -395,7 +395,7 @@ sc_scda_pad_to_fix_len_inplace (const char *input_data, size_t input_len,
  * \param [out] raw_len       The length of \b raw_data in number of bytes.
  *                            Undefined if the function returns true.
  * \return                    True if \b padded_data does not satisfy the
- *                            scda padding convention for fixed-length paddding.
+ *                            scda padding convention for fixed-length padding.
  *                            False, otherwise.
  */
 static int
@@ -449,7 +449,7 @@ sc_scda_check_pad_to_fix_len (const char *padded_data, size_t pad_len,
  * \param [out] raw_len       The length of \b raw_data in number of bytes.
  *                            Undefined if the function returns true.
  * \return                    True if \b padded_data does not satisfy the
- *                            scda padding convention for fixed-length paddding.
+ *                            scda padding convention for fixed-length padding.
  *                            False, otherwise.
  */
 static int
@@ -1214,7 +1214,7 @@ sc_scda_params_init (sc_scda_params_t *params)
 #endif
 }
 
-/** This function peforms the start up for both scda fopen functions.
+/** This function performs the start up for both scda fopen functions.
  *
  * \param [in]   params     The sc_scda_params_t structure that is
  *                          passed to the scda fopen function. \b params may be
@@ -1452,7 +1452,7 @@ sc_scda_fopen_write (sc_MPI_Comm mpicomm,
   mpiret =
     sc_io_open (mpicomm, filename, SC_IO_WRITE_CREATE, info, &fc->file);
   sc_scda_mpiret_to_errcode (mpiret, errcode, fc);
-  /* We call a macro for checking an error that occurs collectivly.
+  /* We call a macro for checking an error that occurs collectively.
    * In case of an error the macro prints an error message using \ref
    * SC_GLOBAL_LERRORF, closes the file and frees fc.
    */

@@ -18,4 +18,3 @@ perl -p -i \
 	-e 's,test\s+"\$,test "x\$,;' \
 	-e 's,=\s+"?x?(yes|no|unknown|disable)"?,= x\1,;' \
 	"$FILE"
-

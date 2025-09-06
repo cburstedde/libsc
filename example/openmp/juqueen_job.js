@@ -1,6 +1,6 @@
-# This jobscript can be submitted to the juqueen 
+# This jobscript can be submitted to the juqueen
 # job queue via llsubmit [script]
-# Do not forget to put your email adress in the 
+# Do not forget to put your email address in the
 # notify_user field.
 #
 # This script has to be executed within the folder of
