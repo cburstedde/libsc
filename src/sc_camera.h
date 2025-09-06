@@ -362,7 +362,7 @@ void                sc_camera_get_view_mat (const sc_camera_t * camera,
  * device coordinates (NDC).
  *
  * 1. Switch from right-handed to left-handed coordinate system by negating the z-axis.
- * 2. Apply the perpective projection into the cuboid
+ * 2. Apply the perspective projection into the cuboid
  *    [-2/s_x, 2/s_x] x [-2/s_y, 2/s_y] x [n,f] with use of homogeneous coordinates.
  *    Here s_x and s_y are width and height of the visible picture on the near plane.
  * 3. Map the cuboid to the NDC cube [-1, 1]^3.
