@@ -1,0 +1,8 @@
+#[default.extend-words]
+
+[default.extend-identifiers]
+sc_MPI_MODE_WRONLY = "sc_MPI_MODE_WRONLY"
+MPI_MODE_WRONLY = "MPI_MODE_WRONLY"
+PNGs = "PNGs"
+asend = "asend"
+nce = "nce"
