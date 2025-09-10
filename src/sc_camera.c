@@ -449,6 +449,33 @@ sc_camera_frustum_dist (sc_camera_t * camera, const sc_camera_vec3_t point,
   }
 }
 
+void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices)
+{
+  size_t i, *index;
+  sc_camera_coords_t *point;
+  int is_inside;
+
+  SC_ASSERT(points != NULL);
+  SC_ASSERT(points->elem_size == sizeof(sc_camera_vec4_t));
+  SC_ASSERT(indices != NULL);
+
+  sc_array_reset(indices);
+
+  for (i = 0; i < points->elem_count; ++i)
+  {
+    point = (sc_camera_coords_t *) sc_array_index(points, i);
+    is_inside = point[0] >= -point[3] && point[0] <= point[3] &&
+                point[1] >= -point[3] && point[1] <= point[3] &&
+                point[2] >= -point[3] && point[2] <= point[3];
+
+    if (is_inside)
+    {
+      index = (size_t *) sc_array_push(indices);
+      *index = i;
+    }
+  }
+}
+
 /** The mathematics are for example described here: 
  * https://en.wikipedia.org/wiki/Rotation_matrix#Quaternion */
 static void

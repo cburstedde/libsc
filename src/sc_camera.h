@@ -316,4 +316,13 @@ void                sc_camera_frustum_dist (sc_camera_t * camera,
                                             const sc_camera_vec3_t point,
                                             sc_camera_coords_t distances[6]);
 
+/* There is no camera parameter because this is not depending on the camera */
+/* points is an array of points with a homogeneous coordinate (4D) all points
+  inside  the cube [-1,1]^3 are listed by their indices in indices
+  The 4D point (0,0,0,0) does not make sense as a homogeneous coordinate.
+  TODO: add assertion for that */
+void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices);
+
+void sc_camera_perspective_division(sc_array_t *points_in, sc_array_t *points_out);
+
 #endif

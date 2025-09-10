@@ -37,8 +37,8 @@ main (int argc, char **argv)
   sc_array_t         *points_world, *points_camera, *points_clipping;
   sc_array_t         *indices_inside;
   sc_camera_coords_t *p;
-  sc_camera_vec3_t    eye = { 0.5, 0.5, 0.5 };
-  sc_camera_vec3_t    center = { 0.0, 0.0, 0.0 };
+  sc_camera_vec3_t    eye = { -0.5, 1.5, 0.5 };
+  sc_camera_vec3_t    center = { 0.0, 0.6, 0.0 };
   sc_camera_vec3_t    up = { 0.0, 1.0, 0.0 };
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -69,7 +69,7 @@ main (int argc, char **argv)
   for (i = 0; i < indices_inside->elem_count; ++i) {
     point_index = *((size_t *) sc_array_index (indices_inside, i));
 
-    SC_INFOF ("Point inside : %lu\n", (unsigned long) point_index);
+    SC_INFOF ("Point inside pre: %lu\n", (unsigned long) point_index);
   }
 
   sc_camera_view_transform (camera, points_world, points_camera);
@@ -84,6 +84,14 @@ main (int argc, char **argv)
 
     p = (sc_camera_coords_t *) sc_array_index (points_clipping, i);
     SC_INFOF ("Clipping : %lf %lf %lf %lf\n", p[0], p[1], p[2], p[3]);
+  }
+
+  sc_camera_clipping_post (points_clipping, indices_inside);
+
+  for (i = 0; i < indices_inside->elem_count; ++i) {
+    point_index = *((size_t *) sc_array_index (indices_inside, i));
+
+    SC_INFOF ("Point inside post: %lu\n", (unsigned long) point_index);
   }
 
   sc_camera_destroy (camera);
