@@ -129,6 +129,10 @@ typedef sc_camera_coords_t sc_camera_mat4x4_t[16];
  */
 typedef sc_camera_coords_t sc_camera_mat3x3_t[9];
 
+/**
+ * Defines the order of the 6 planes of the camera's view frustum.
+ * The planes are enumerated as: near, far, left, right, top, bottom.
+ */
 typedef enum sc_camera_plane
 {
   SC_CAMERA_PLANE_NEAR,
@@ -280,7 +284,7 @@ void                sc_camera_look_at (sc_camera_t * camera,
 
 /** Does the view transformation from world to view space.
  * 
- * Does the transformation from world space to camera camera space for an array
+ * Does the transformation from world space to camera space for an array
  * points as described in the example. The input array must store the points
  * as an array of the coordinates x,y,z in each element of the array. The points
  * are returned in the same way. Explicetly it has to be  
@@ -296,24 +300,98 @@ void                sc_camera_view_transform (sc_camera_t * camera,
                                               sc_array_t * points_in,
                                               sc_array_t * points_out);
 
-/* 3D -> 4D */
-void                sc_camera_projection_transform (sc_camera_t * camera,
-                                                    sc_array_t * points_in,
-                                                    sc_array_t * points_out);
+/**
+ * Performs the projection transformation from view space to normalized device 
+ * coordinates.
+ *
+ * This function transforms an array of points from view space into normalized 
+ * device coordinates (NDC) as described in the example. Each input point is a 
+ * 3D vector (x, y, z), and each output point is represented in homogeneous 
+ * coordinates (x, y, z, w).
+ *
+ * The input array must store points as triples of coordinates, i.e.:
+ *     points_in->elem_size = 3 * sizeof(sc_camera_coords_t)
+ *
+ * The output array stores points as quadruples of coordinates, i.e.:
+ *     points_out->elem_size = 4 * sizeof(sc_camera_coords_t)
+ *
+ * \param [in]  camera     The camera object defining the projection.
+ * \param [in]  points_in  An array of points, each represented by 3 coordinates 
+ *                         (x, y, z) to be transformed.
+ * \param [out] points_out An array that will contain the transformed points in 
+ *                         homogeneous coordinates (x, y, z, w).
+ */
+void sc_camera_projection_transform(sc_camera_t *camera,
+                                    sc_array_t *points_in,
+                                    sc_array_t *points_out);
 
-/* This are the planes in world space in the order near/far/left/right/top/bottom */
-void                sc_camera_get_frustum (sc_camera_t * camera,
-                                           sc_array_t * planes);
+/**
+ * Returns the 6 planes of the view frustum.
+ *
+ * This function returns the bounding planes of the visible world space (the 
+ * view frustum). The planes are ordered as: near, far, left, right, top, and 
+ * bottom (see enum sc_camera_plane). The naming is from the perspective of the 
+ * camera; for example, the left plane bounds the view to the left. The near and
+ * far planes bound the field of view so that objects that are too close or too 
+ * far are not visible. The distances to these planes are defined by the user 
+ * in the camera object.
+ *
+ * The array `planes` contains 6 entries, each consisting of 4 values (a, b, c, d):  
+ *     planes->elem_count = 6  
+ *     planes->elem_size  = 4 * sizeof(sc_camera_coords_t)  
+ *
+ * Each plane is represented by its outward-facing normal vector (a, b, c) and 
+ * offset d, such that the plane equation is:
+ *     a*x + b*y + c*z + d = 0
+ * Points (x, y, z) satisfying this equation lie on the plane.
+ *
+ * \param [in]  camera The camera object.
+ * \param [out] planes The 6 planes of the view frustum, in the order near, far, 
+ *                     left, right, top, and bottom (see enum sc_camera_plane).
+ */
+void sc_camera_get_frustum(sc_camera_t *camera,
+                           sc_array_t *planes);
 
-/* This works with world coordinates (planes from get frustum) */
-void                sc_camera_clipping_pre (sc_camera_t * camera,
-                                            sc_array_t * points,
-                                            sc_array_t * indices);
+/**
+ * Determines the indices of points that are visible within the camera's view frustum.
+ *
+ * This function takes an array of 3D points in world space (x, y, z) and performs
+ * clipping against the camera's view frustum. It returns the indices of the points
+ * that are inside the frustum and thus visible to the camera.
+ *
+ * The input array `points` must store the 3D coordinates of the points, i.e.:
+ *     points->elem_size = 3 * sizeof(sc_camera_coords_t)
+ *
+ * The output array `indices` stores the indices of the points from `points` that 
+ * are inside the view frustum. Each index is stored as a `size_t` value.
+ *
+ * \param [in]  camera  The camera object.
+ * \param [in]  points  An array of 3D points in world space (x, y, z).
+ * \param [out] indices The indices (as size_t) of the points that are visible 
+ *                      within the camera's view frustum.
+ */
+void sc_camera_clipping_pre(sc_camera_t *camera,
+                            sc_array_t *points,
+                            sc_array_t *indices);
 
-/*TODO: distances as coords_t[6] because of docu */
-/* signed orthogonal distances: near/far/left/right/top/bottom */
-void                sc_camera_frustum_dist (sc_camera_t * camera,
-                                            const sc_camera_vec3_t point,
-                                            sc_camera_coords_t distances[6]);
+/**
+ * Computes the signed distances of a point to the 6 planes of the camera's view 
+ * frustum.
+ *
+ * For a point in world space, this function calculates its signed orthogonal 
+ * distance to each frustum plane (near, far, left, right, top, bottom), stored 
+ * in `distances[0..5]` in this order.
+ *
+ * A positive distance means that a point lays on the outside side of this plane.
+ * If all values are negative the point lays in the view frustum.
+ *
+ * \param [in]  camera    The camera object.
+ * \param [in]  point     A 3D point in world space.
+ * \param [out] distances Six signed distances (sc_camera_coords_t) to the 
+ *                        frustum planes.
+ */
+void sc_camera_frustum_dist(sc_camera_t *camera,
+                            const sc_camera_vec3_t point,
+                            sc_camera_coords_t distances[6]);
 
 #endif
