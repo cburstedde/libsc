@@ -286,7 +286,7 @@ void                sc_camera_look_at (sc_camera_t * camera,
  * Does the transformation from world space to camera space for an array
  * points as described in the example. The input array must store the points
  * as an array of the coordinates x,y,z in each element of the array. The points
- * are returned in the same way. Explicetly it has to be  
+ * are returned in the same way. Explicitly it has to be  
  * points_in/out->elem_size == 3 * sizeof(sc_camera_coords_t).
  * 
  * \param [in] camera The camera object.

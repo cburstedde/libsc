@@ -565,7 +565,7 @@ sc_camera_mat4_transpose (const sc_camera_mat4x4_t in, sc_camera_mat4x4_t out)
  * -this whole structure of code is not optimal because i have to define all 
  *  these different matrix multiplication functions
  * -the function pointer i could typedef for readability
- * -this could theoretically be genralized to just apply a function to an array
+ * -this could theoretically be generalized to just apply a function to an array
  *  using void pointers but this specific version should be enough*/
 static void
 sc_camera_apply_mat (sc_camera_mat_mul_t funct,
@@ -586,7 +586,7 @@ sc_camera_apply_mat (sc_camera_mat_mul_t funct,
 }
 
 /** TODO : maybe it would be better to do mat4_mul, homogenize 
- * and dehomogenize in seperate functions
+ * and dehomogenize in separate functions
 */
 static void
 sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
