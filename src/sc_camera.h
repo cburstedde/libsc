@@ -382,8 +382,8 @@ void sc_camera_clipping_pre(sc_camera_t *camera,
  * distance to each frustum plane (near, far, left, right, top, bottom), stored 
  * in `distances[0..5]` in this order.
  *
- * A positive distance means that a point lays on the outside side of this plane.
- * If all values are negative the point lays in the view frustum.
+ * A positive distance means that a point lies on the outside side of this plane.
+ * If all values are negative the point lies in the view frustum.
  *
  * \param [in]  camera    The camera object.
  * \param [in]  point     A 3D point in world space.
