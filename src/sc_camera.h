@@ -329,11 +329,11 @@ void sc_camera_projection_transform(sc_camera_t *camera,
  *
  * This function returns the bounding planes of the visible world space (the 
  * view frustum). The planes are ordered as: near, far, left, right, top, and 
- * bottom (see enum sc_camera_plane). The naming is from the perspective of the 
- * camera; for example, the left plane bounds the view to the left. The near and
- * far planes bound the field of view so that objects that are too close or too 
- * far are not visible. The distances to these planes are defined by the user 
- * in the camera object.
+ * bottom (see enum \ref sc_camera_plane). The naming is from the perspective of
+ * the  camera; for example, the left plane bounds the view to the left.
+ * The near and far planes bound the field of view so that objects, that are too
+ * close or too far, are not visible. The distances to these planes are defined
+ * by the user in the camera object.
  *
  * The array `planes` contains 6 entries, each consisting of 4 values (a, b, c, d):  
  *     planes->elem_count = 6  
