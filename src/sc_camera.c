@@ -415,8 +415,8 @@ sc_camera_clipping_pre (sc_camera_t * camera, sc_array_t * points,
   sc_array_reset (indices);
 
   for (i = 0; i < points->elem_count; ++i) {
-    point = (sc_camera_coords_t *) sc_array_index (points, i);
     int                 is_inside = 1;
+    point = (sc_camera_coords_t *) sc_array_index (points, i);
 
     for (j = 0; j < 6; ++j) {
       /*plane = (sc_camera_coords_t *) sc_array_index (planes, j); */
