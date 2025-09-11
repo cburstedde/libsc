@@ -213,7 +213,7 @@ void                sc_camera_destroy (sc_camera_t * camera);
 void                sc_camera_position (sc_camera_t * camera,
                                         const sc_camera_vec3_t position);
 
-/** Rotating the camera around the y-axis.
+/** Rotating the camera around the up axis.
  * 
  * The camera is rotated around the y-axis (up direction). The function rotates 
  * the camera about angle (radians) amount by the right hand rule.
@@ -224,7 +224,7 @@ void                sc_camera_position (sc_camera_t * camera,
  */
 void                sc_camera_yaw (sc_camera_t * camera, double angle);
 
-/** Rotating the camera around the x-axis.
+/** Rotating the camera around the axis to the right.
  * 
  * The camera is rotated around the x-axis (right direction). The function rotates 
  * the camera about angle (radians) amount by the right hand rule.
@@ -235,7 +235,7 @@ void                sc_camera_yaw (sc_camera_t * camera, double angle);
  */
 void                sc_camera_pitch (sc_camera_t * camera, double angle);
 
-/** Rotating the camera around the z-axis.
+/** Rotating the camera around the backward axis.
  * 
  * The camera is rotated around the z-axis (backwards direction). The function 
  * rotates the camera about angle (radians) amount by the right hand rule.
