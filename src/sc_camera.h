@@ -346,7 +346,10 @@ void sc_camera_projection_transform(sc_camera_t *camera,
  *
  * \param [in]  camera The camera object.
  * \param [out] planes The 6 planes of the view frustum, in the order near, far, 
- *                     left, right, top, and bottom (see enum sc_camera_plane).
+ *                     left, right, top, and bottom (see enum \ref
+ *                     sc_camera_plane).
+ *                     This is a read-only view with the same lifetime as the
+ *                     camera object.
  */
 void sc_camera_get_frustum(sc_camera_t *camera,
                            sc_array_t *planes);
