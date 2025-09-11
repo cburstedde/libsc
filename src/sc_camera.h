@@ -175,7 +175,8 @@ typedef struct sc_camera
   sc_camera_vec4_t    frustum_planes[6];
 } sc_camera_t;
 
-/** Creates a new camera structure with the default values (see sc_camera_init).
+/** Creates a new camera structure with the default values (see \ref
+ * sc_camera_init).
  *
  * \return Camera with default values.
  */
@@ -221,8 +222,6 @@ void                sc_camera_position (sc_camera_t * camera,
  * \param [in] angle The angle the camera is rotated.
  */
 void                sc_camera_yaw (sc_camera_t * camera, double angle);
-
-/* pitch is the rotation around the right axis in our case the x-axis */
 
 /** Rotating the camera around the x-axis.
  * 
