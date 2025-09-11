@@ -385,7 +385,7 @@ void sc_camera_clipping_pre(sc_camera_t *camera,
  *
  * For a point in world space, this function calculates its signed orthogonal 
  * distance to each frustum plane (near, far, left, right, top, bottom), stored 
- * in `distances[0..5]` in this order.
+ * in `distances[0..5]` in this order, which must be allocated by the user.
  *
  * A positive distance means that a point lies on the outside side of this plane.
  * If all values are negative the point lies in the view frustum.
@@ -393,7 +393,7 @@ void sc_camera_clipping_pre(sc_camera_t *camera,
  * \param [in]  camera    The camera object.
  * \param [in]  point     A 3D point in world space.
  * \param [out] distances Six signed distances (sc_camera_coords_t) to the 
- *                        frustum planes.
+ *                        frustum planes. Must be allocated on input.
  */
 void sc_camera_frustum_dist(sc_camera_t *camera,
                             const sc_camera_vec3_t point,
