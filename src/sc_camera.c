@@ -423,7 +423,7 @@ sc_camera_clipping_pre (sc_camera_t * camera, sc_array_t * points,
 
       if (sc_camera_signed_dist (point, camera->frustum_planes[j]) > 0) {
         is_inside = 0;
-        continue;
+        break;
       }
     }
 
