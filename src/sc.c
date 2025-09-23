@@ -1034,7 +1034,7 @@ void
 sc_abort (void)
 {
   sc_default_abort_handler ();
-  abort ();                     /* if the user supplied callback incorrecty returns, abort */
+  abort ();                     /* if the user supplied callback incorrectly returns, abort */
 }
 
 static void

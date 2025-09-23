@@ -100,7 +100,7 @@
  *
  * This file contains routines for parallel I/O format.
  * In particular there are functions to write and read data in parallel according
- * to a user prescribed partition of contigously indexed potentially
+ * to a user prescribed partition of contiguously indexed potentially
  * variable-sized elements. In addition, the user can also write and read
  * data in serial and the data can be stored element-wise compressed.
  *

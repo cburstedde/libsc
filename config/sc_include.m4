@@ -127,7 +127,7 @@ dnl its INVOCATION is one valid statement of a C/C++ program.
 dnl It may require INCLUDE statements to compile and link ok.
 dnl On the inside we call AC_LANG_PROGRAM(INCLUDE, INVOCATION).
 dnl The SEARCH_LIBS are a white-space separated list or empty.
-dnl The OTHER_LIBS may be empty or a list of depency libraries.
+dnl The OTHER_LIBS may be empty or a list of dependency libraries.
 dnl
 dnl This macro is modified from AC_SEARCH_LIBS.  In particular,
 dnl we use a separate cache variable ac_cv_sc_search_FUNCTION.

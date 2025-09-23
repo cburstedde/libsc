@@ -28,7 +28,7 @@ main(int argc, char **argv)
 {
     sc_camera_t *camera = sc_camera_new();
 
-    
+
 
     sc_camera_destroy(camera);
 

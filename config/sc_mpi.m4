@@ -495,7 +495,7 @@ dnl This was only used for our lint code, which needs to be replaced.
 dnl
 dnl dnl SC_MPI_INCLUDES
 dnl dnl Call the compiler with various --show* options
-dnl dnl to figure out the MPI_INCLUDES and MPI_INCLUDE_PATH varables
+dnl dnl to figure out the MPI_INCLUDES and MPI_INCLUDE_PATH variables
 dnl dnl
 dnl AC_DEFUN([SC_MPI_INCLUDES],
 dnl [
