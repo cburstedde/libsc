@@ -15,21 +15,23 @@ include(GNUInstallDirs)
 include(cmake/config.cmake) # options.cmake before config.cmake to determine user intent
 include(cmake/compilers.cmake) # compilers.cmake must be AFTER find_package() calls in config.cmake in general
 
-set(CMAKE_C_STANDARD 99)
 message(STATUS "libsc ${PROJECT_VERSION} "
                "install prefix: ${CMAKE_INSTALL_PREFIX}")
 
 # --- iniparser
 add_library(iniparser OBJECT iniparser/inistring.c iniparser/dictionary.c iniparser/iniparser.c)
+target_compile_features(iniparser PUBLIC c_std_99)
 target_include_directories(iniparser PRIVATE iniparser src ${PROJECT_BINARY_DIR}/include)
 target_link_libraries(iniparser PRIVATE $<$<BOOL:${SC_ENABLE_MPI}>:MPI::MPI_C>)
 
 # --- libb64
 add_library(libb64 OBJECT libb64/cencode.c libb64/cdecode.c)
+target_compile_features(libb64 PUBLIC c_std_99)
 target_include_directories(libb64 PRIVATE libb64)
 
 # --- sc
 add_library(sc $<TARGET_OBJECTS:iniparser> $<TARGET_OBJECTS:libb64>)
+target_compile_features(sc PUBLIC c_std_99)
 set_property(TARGET sc PROPERTY EXPORT_NAME SC)
 set_property(TARGET sc PROPERTY SOVERSION ${SC_SOVERSION})
 target_include_directories(sc
