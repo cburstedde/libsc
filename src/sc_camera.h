@@ -105,13 +105,6 @@
 
 #include <sc_containers.h>
 
-#ifdef near
-#undef near
-#endif
-#ifdef far
-#undef far
-#endif
-
 /** The data type of the coordinates for sc_camera
  */
 /* p4est uses double, most computer graphic applications float on GPU. */
