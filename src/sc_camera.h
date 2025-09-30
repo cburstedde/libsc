@@ -316,13 +316,47 @@ void                sc_camera_frustum_dist (sc_camera_t * camera,
                                             const sc_camera_vec3_t point,
                                             sc_camera_coords_t distances[6]);
 
-/* There is no camera parameter because this is not depending on the camera */
-/* points is an array of points with a homogeneous coordinate (4D) all points
-  inside  the cube [-1,1]^3 are listed by their indices in indices
-  The 4D point (0,0,0,0) does not make sense as a homogeneous coordinate.
-  TODO: add assertion for that */
+/**
+ * Performs clipping in normalized device coordinates (NDC) space.
+ * 
+ * This function identifies points that lie within the NDC cube ([-1,1]^3).
+ * 
+ * The input array must store points in homogeneuos coordinates as quadruples of 
+ * coordinates, i.e.:
+ *     points_in->elem_size = 4 * sizeof(sc_camera_coords_t)
+ * 
+ * Checks if x, y, z \in [-w, w] for each point (x, y, z, w) in homogeneous 
+ * coordinates.
+ * 
+ * (x,y,z,w) = (0,0,0,0) is not a valid homogeneous coordinate and will 
+ * trigger an assertion failure.
+ * 
+ * \param [in] points An array of points in homogeneous coordinates (4D).
+ * \param [out] indices An array that will contain the indices of points that lie
+ *                     inside the NDC cube [-1, 1]^3.
+ */
 void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices);
 
+/**
+ * Performs perspective division.
+ * 
+ * This function converts points from homogeneous coordinates (4D) to
+ * normalized device coordinates (3D) by dividing the x, y, and z components
+ * by the w component. 
+ * 
+ * The input array must store points in homogeneuos coordinates as quadruples of
+ * coordinates, i.e.:
+ *     points_in->elem_size = 4 * sizeof(sc_camera_coords_t)
+ * 
+ * The output array will store points as triples of coordinates, i.e.:
+ *     points_out->elem_size = 3 * sizeof(sc_camera_coords_t) 
+ * 
+ * It must be != 0 for all points, otherwise an assertion failure is triggered.
+ * 
+ * \param [in] points_in An array of points in homogeneous coordinates (4D).
+ * \param [out] points_out An array that will contain the points in normalized
+ *                        device coordinates (3D) after perspective division. 
+ */
 void sc_camera_perspective_division(sc_array_t *points_in, sc_array_t *points_out);
 
 #endif
