@@ -285,19 +285,24 @@ void                sc_camera_look_at (sc_camera_t * camera,
                                        const sc_camera_vec3_t center,
                                        const sc_camera_vec3_t up);
 
-/** Does the view transformation from world to view space.
- * 
- * Does the transformation from world space to camera space for an array
- * points as described in the example. The input array must store the points
- * as an array of the coordinates x,y,z in each element of the array. The points
- * are returned in the same way. Explicitly it has to be  
- * points_in/out->elem_size == 3 * sizeof(sc_camera_coords_t).
- * 
- * \param [in] camera The camera object.
- * \param [in] points_in An array of points each represented by 3 coordinates to 
- *                       be transformed.
- * \param [out] points_out This array stores the transformed points after the 
- *                         transformation.
+/**
+ * Performs the view transformation from world space to view space.
+ *
+ * This function transforms an array of points from world coordinates into 
+ * view space as defined by the given camera. Each input point is a 3D vector 
+ * (x, y, z), and each output point is represented in the same way.
+ *
+ * The input array must store points as triples of coordinates, i.e.:
+ *     points_in->elem_size = 3 * sizeof(sc_camera_coords_t)
+ *
+ * The output array stores points in the same format:
+ *     points_out->elem_size = 3 * sizeof(sc_camera_coords_t)
+ *
+ * \param [in]  camera     The camera object defining the view transformation.
+ * \param [in]  points_in  An array of points, each represented by 3 coordinates 
+ *                         (x, y, z) in world space.
+ * \param [out] points_out An array that will contain the transformed points in 
+ *                         view space.
  */
 void                sc_camera_view_transform (sc_camera_t * camera,
                                               sc_array_t * points_in,
