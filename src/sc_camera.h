@@ -172,7 +172,8 @@ typedef struct sc_camera
   sc_camera_coords_t  near;/**< Distance to the near clipping plane. */
   sc_camera_coords_t  far; /**< Distance to the far clipping plane. */
 
-  sc_camera_vec4_t    frustum_planes[6];
+  sc_camera_vec4_t    frustum_planes[6]; 
+      /**< The bounding planes of the view frustum (see \ref sc_camera_get_frustum).*/
 } sc_camera_t;
 
 /** Creates a new camera structure with the default values (see \ref
