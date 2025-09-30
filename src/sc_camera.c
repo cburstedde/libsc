@@ -458,6 +458,7 @@ void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices)
   SC_ASSERT(points != NULL);
   SC_ASSERT(points->elem_size == sizeof(sc_camera_vec4_t));
   SC_ASSERT(indices != NULL);
+  SC_ASSERT(indices->elem_size == sizeof(size_t));
 
   sc_array_reset(indices);
 
@@ -476,6 +477,31 @@ void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices)
       index = (size_t *) sc_array_push(indices);
       *index = i;
     }
+  }
+}
+
+void sc_camera_perspective_division(sc_array_t *points_in, sc_array_t *points_out)
+{
+  size_t i;
+  sc_camera_coords_t *point_in, *point_out;
+
+  SC_ASSERT(points_in != NULL);
+  SC_ASSERT(points_in->elem_size == sizeof(sc_camera_vec4_t));
+  SC_ASSERT(points_out != NULL);
+  SC_ASSERT(points_out->elem_size == sizeof(sc_camera_vec3_t)); 
+
+  sc_array_resize(points_out, points_in->elem_count);
+
+  for (i = 0; i < points_in->elem_count; ++i)
+  {
+    point_in = (sc_camera_coords_t *) sc_array_index(points_in, i);
+    point_out = (sc_camera_coords_t *) sc_array_index(points_out, i);
+
+    SC_ASSERT (point_in[3] != 0.);
+
+    point_out[0] = point_in[0] / point_in[3];
+    point_out[1] = point_in[1] / point_in[3];
+    point_out[2] = point_in[2] / point_in[3];
   }
 }
 
