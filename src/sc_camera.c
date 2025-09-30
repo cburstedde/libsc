@@ -395,9 +395,8 @@ void
 sc_camera_clipping_pre (sc_camera_t * camera, sc_array_t * points,
                         sc_array_t * indices)
 {
-  /* sc_array_t         *planes; */
   size_t              i, j;
-  sc_camera_coords_t *point;    /* *plane, s; */
+  sc_camera_coords_t *point;
   size_t             *elem;
 
   SC_ASSERT (camera != NULL);
@@ -406,11 +405,6 @@ sc_camera_clipping_pre (sc_camera_t * camera, sc_array_t * points,
   SC_ASSERT (indices != NULL);
   SC_ASSERT (indices->elem_size == sizeof (size_t));
 
-  /*
-     planes = sc_array_new (sizeof (sc_camera_vec4_t));
-     sc_camera_get_frustum (camera, planes);
-   */
-
   sc_array_reset (indices);
 
   for (i = 0; i < points->elem_count; ++i) {
@@ -418,7 +412,6 @@ sc_camera_clipping_pre (sc_camera_t * camera, sc_array_t * points,
     point = (sc_camera_coords_t *) sc_array_index (points, i);
 
     for (j = 0; j < 6; ++j) {
-      /*plane = (sc_camera_coords_t *) sc_array_index (planes, j); */
 
       if (sc_camera_signed_dist (point, camera->frustum_planes[j]) > 0) {
         is_inside = 0;
