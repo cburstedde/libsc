@@ -464,6 +464,9 @@ void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices)
   for (i = 0; i < points->elem_count; ++i)
   {
     point = (sc_camera_coords_t *) sc_array_index(points, i);
+
+    SC_ASSERT (point[0] != 0. || point[1] != 0. || point[2] != 0. || point[3] != 0.);
+
     is_inside = point[0] >= -point[3] && point[0] <= point[3] &&
                 point[1] >= -point[3] && point[1] <= point[3] &&
                 point[2] >= -point[3] && point[2] <= point[3];
