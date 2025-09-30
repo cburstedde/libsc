@@ -304,12 +304,17 @@ sc_camera_get_view_mat (sc_camera_t * camera, sc_camera_mat4x4_t view_matrix)
   view_matrix[10] = 1.0 - 2.0 * (xx + yy);
   view_matrix[11] = 0.0;
 
-  view_matrix[12] = -view_matrix[0] * camera->position[0] - 
-    view_matrix[4] * camera->position[1] - view_matrix[8] * camera->position[2];
-  view_matrix[13] = -view_matrix[1] * camera->position[0] - 
-    view_matrix[5] * camera->position[1] - view_matrix[9] * camera->position[2];
-  view_matrix[14] = -view_matrix[2] * camera->position[0] - 
-    view_matrix[6] * camera->position[1] - view_matrix[10] * camera->position[2];
+  view_matrix[12] = -view_matrix[0] * camera->position[0] -
+    view_matrix[4] * camera->position[1] -
+    view_matrix[8] * camera->position[2];
+  view_matrix[13] =
+    -view_matrix[1] * camera->position[0] -
+    view_matrix[5] * camera->position[1] -
+    view_matrix[9] * camera->position[2];
+  view_matrix[14] =
+    -view_matrix[2] * camera->position[0] -
+    view_matrix[6] * camera->position[1] -
+    view_matrix[10] * camera->position[2];
   view_matrix[15] = 1.0;
 }
 
@@ -703,13 +708,13 @@ sc_camera_update_planes (sc_camera_t * camera)
                                  camera->frustum_planes[i]);
 
     /* 
-    norm is bigger 
-    min (1/tan(field of view/2), 1)
-    and smaller 
-    4 * max(1/tan(field of view/2), 1) + (2*(n + f + n*f) / (f - n))^2
+       norm is bigger 
+       min (1/tan(field of view/2), 1)
+       and smaller 
+       4 * max(1/tan(field of view/2), 1) + (2*(n + f + n*f) / (f - n))^2
 
-    => no numerical issues if field of view and near and far are reasonable
-    */
+       => no numerical issues if field of view and near and far are reasonable
+     */
     norm = sc_camera_vec3_norm (camera->frustum_planes[i]);
     camera->frustum_planes[i][0] /= norm;
     camera->frustum_planes[i][1] /= norm;
@@ -718,7 +723,7 @@ sc_camera_update_planes (sc_camera_t * camera)
   }
 }
 
-static sc_camera_coords_t
+static              sc_camera_coords_t
 sc_camera_signed_dist (const sc_camera_vec3_t point,
                        const sc_camera_vec4_t plane)
 {
