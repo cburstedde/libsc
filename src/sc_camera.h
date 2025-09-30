@@ -217,7 +217,7 @@ void                sc_camera_position (sc_camera_t * camera,
  * 
  * The camera is rotated around the y-axis (up direction). The function rotates 
  * the camera about angle (radians) amount by the right hand rule.
- * This means a positive angle rotates the camera to the right.
+ * This means a positive angle rotates the camera to the left.
  *
  * \param [out] camera The camera object.
  * \param [in] angle The angle the camera is rotated.
@@ -228,7 +228,7 @@ void                sc_camera_yaw (sc_camera_t * camera, double angle);
  * 
  * The camera is rotated around the x-axis (right direction). The function rotates 
  * the camera about angle (radians) amount by the right hand rule.
- * This means a positive angle rotates the camera down.
+ * This means a positive angle rotates the camera up.
  * 
  * \param [out] camera The camera object.
  * \param [in] angle The angle the camera is rotated.
@@ -239,7 +239,7 @@ void                sc_camera_pitch (sc_camera_t * camera, double angle);
  * 
  * The camera is rotated around the z-axis (backwards direction). The function 
  * rotates the camera about angle (radians) amount by the right hand rule.
- * This means a positive angle tilts the camera clockwise.
+ * This means a positive angle tilts the camera counter clockwise.
  * 
  * \param [out] camera The camera object.
  * \param [in] angle The angle the camera is rotated.
