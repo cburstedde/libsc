@@ -381,7 +381,6 @@ sc_camera_projection_transform (sc_camera_t * camera, sc_array_t * points_in,
                        points_out);
 }
 
-/* TODO: i have to check if the orientation of the palens are still right */
 void
 sc_camera_get_frustum (sc_camera_t * camera, sc_array_t * planes)
 {
@@ -562,11 +561,12 @@ sc_camera_mat4_transpose (const sc_camera_mat4x4_t in, sc_camera_mat4x4_t out)
 }
 
 /**
- * -this whole structure of code is not optimal because i have to define all 
- *  these different matrix multiplication functions
- * -the function pointer i could typedef for readability
- * -this could theoretically be generalized to just apply a function to an array
- *  using void pointers but this specific version should be enough*/
+ * - The current design requires defining multiple specialized matrix 
+ *   multiplication functions.
+ * - This approach basically just applies a function to an array with an extra 
+ *   matrix argument and could be generalized using void pointers, but the
+ *   current implementation should suffice.
+ */
 static void
 sc_camera_apply_mat (sc_camera_mat_mul_t funct,
                      const sc_camera_mat4x4_t mat,
@@ -585,9 +585,6 @@ sc_camera_apply_mat (sc_camera_mat_mul_t funct,
   }
 }
 
-/** TODO : maybe it would be better to do mat4_mul, homogenize 
- * and dehomogenize in separate functions
-*/
 static void
 sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
                              const sc_camera_vec3_t in, sc_camera_vec3_t out)
@@ -663,7 +660,6 @@ sc_camera_update_planes (sc_camera_t * camera)
   size_t              i;
   sc_camera_coords_t  norm;
 
-  /* TODO : maybe i want to use only 2 matrices and not 3 */
   sc_camera_get_view_mat (camera, view);
   sc_camera_get_projection_mat (camera, projection);
   sc_camera_mult_4x4_4x4 (projection, view, transform);
@@ -713,7 +709,14 @@ sc_camera_update_planes (sc_camera_t * camera)
     sc_camera_mat4_mul_v4_to_v4 (transform, camera->frustum_planes[i],
                                  camera->frustum_planes[i]);
 
-    /* TODO: how small/big can norm get? */
+    /* 
+    norm is bigger 
+    min (1/tan(field of view/2), 1)
+    and smaller 
+    4 * max(1/tan(field of view/2), 1) + (2*(n + f + n*f) / (f - n))^2
+
+    => no numerical issues if field of view and near and far are reasonable
+    */
     norm = sc_camera_vec3_norm (camera->frustum_planes[i]);
     camera->frustum_planes[i][0] /= norm;
     camera->frustum_planes[i][1] /= norm;
