@@ -51,7 +51,7 @@
  *    - The x-axis points to the right, and the y-axis points upwards.
  * 
  *    Transformation steps:
- *    - Translate p by the camera position.
+ *    - Translate \b p by the camera position.
  *    - Rotate \b p by the camera rotation.
  * 
  *    The camera rotation is stored as a unit quaternion q = (q_x, q_y, q_z, q_w),
