@@ -139,6 +139,8 @@ typedef enum sc_camera_plane
   SC_CAMERA_PLANE_BOTTOM
 } sc_camera_plane_t;
 
+#define SC_CAMERA_EPSILON 1e-5
+
 /** Represents a camera with parameters for rendering a 3D scene.
  * 
  * The sc_camera object stores essential properties of a camera,
@@ -351,7 +353,8 @@ void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices);
  * The output array will store points as triples of coordinates, i.e.:
  *     points_out->elem_size = 3 * sizeof(sc_camera_coords_t) 
  * 
- * It must be != 0 for all points, otherwise an assertion failure is triggered.
+ * It must be |w| > SC_CAMERA_EPSILON for all points, otherwise an assertion 
+ * failure is triggered.
  * 
  * \param [in] points_in An array of points in homogeneous coordinates (4D).
  * \param [out] points_out An array that will contain the points in normalized
