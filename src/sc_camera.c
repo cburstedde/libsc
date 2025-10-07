@@ -196,6 +196,7 @@ void
 sc_camera_fov (sc_camera_t * camera, double angle)
 {
   SC_ASSERT (camera != NULL);
+  SC_ASSERT (angle > 0 && angle < M_PI - SC_CAMERA_EPSILON);
 
   camera->FOV = angle;
 
@@ -206,6 +207,7 @@ void
 sc_camera_aspect_ratio (sc_camera_t * camera, int width, int height)
 {
   SC_ASSERT (camera != NULL);
+  SC_ASSERT (width > 0 && height > 0);
 
   camera->width = width;
   camera->height = height;
@@ -218,7 +220,7 @@ sc_camera_clipping_dist (sc_camera_t * camera, sc_camera_coords_t near,
                          sc_camera_coords_t far)
 {
   SC_ASSERT (camera != NULL);
-  SC_ASSERT (near > 0);
+  SC_ASSERT (near > SC_CAMERA_EPSILON);
   SC_ASSERT (far > near);
 
   camera->near = near;
