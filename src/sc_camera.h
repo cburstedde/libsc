@@ -145,7 +145,6 @@ typedef enum sc_camera_plane
 
 /**
  * A small epsilon value used for numerical stability in camera calculations.
- * This value helps avoid issues such as division by zero or invalid angles.
  */
 #define SC_CAMERA_EPSILON 1e-5
 

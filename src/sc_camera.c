@@ -70,11 +70,11 @@ static void         sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
 
 static void         sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
                                                  const sc_camera_vec3_t in,
-                                                 sc_camera_vec3_t out);
+                                                 sc_camera_vec4_t out);
 
 static void         sc_camera_mat4_mul_v4_to_v4 (const sc_camera_mat4x4_t mat,
-                                                 const sc_camera_vec3_t in,
-                                                 sc_camera_vec3_t out);
+                                                 const sc_camera_vec4_t in,
+                                                 sc_camera_vec4_t out);
 
 /* out = A * B */
 static void         sc_camera_mult_4x4_4x4 (const sc_camera_mat4x4_t A,
@@ -196,6 +196,7 @@ void
 sc_camera_fov (sc_camera_t * camera, double angle)
 {
   SC_ASSERT (camera != NULL);
+  /* Tangens at Pi/2 behaves like 1/(Pi/2 - x).*/
   SC_ASSERT (angle > 0 && angle < M_PI - SC_CAMERA_EPSILON);
 
   camera->FOV = angle;
@@ -221,7 +222,7 @@ sc_camera_clipping_dist (sc_camera_t * camera, sc_camera_coords_t near,
 {
   SC_ASSERT (camera != NULL);
   SC_ASSERT (near > SC_CAMERA_EPSILON);
-  SC_ASSERT (far > near);
+  SC_ASSERT (far > near + SC_CAMERA_EPSILON);
 
   camera->near = near;
   camera->far = far;
@@ -603,7 +604,7 @@ sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
 
 static void
 sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
-                             const sc_camera_vec3_t in, sc_camera_vec3_t out)
+                             const sc_camera_vec3_t in, sc_camera_vec4_t out)
 {
   sc_camera_vec4_t    x = { in[0], in[1], in[2], 1.0 };
   size_t              i, j;
@@ -619,7 +620,7 @@ sc_camera_mat4_mul_v3_to_v4 (const sc_camera_mat4x4_t mat,
 
 static void
 sc_camera_mat4_mul_v4_to_v4 (const sc_camera_mat4x4_t mat,
-                             const sc_camera_vec3_t in, sc_camera_vec3_t out)
+                             const sc_camera_vec4_t in, sc_camera_vec4_t out)
 {
   sc_camera_vec4_t    x = { in[0], in[1], in[2], in[3] };
   size_t              i, j;
