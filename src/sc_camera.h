@@ -309,8 +309,8 @@ void                sc_camera_look_at (sc_camera_t * camera,
  * \param [out] points_out An array that will contain the transformed points in 
  *                         view space.
  */
-void                sc_camera_view_transform (sc_camera_t * camera,
-                                              sc_array_t * points_in,
+void                sc_camera_view_transform (const sc_camera_t * camera,
+                                              const sc_array_t * points_in,
                                               sc_array_t * points_out);
 
 /**
@@ -334,8 +334,8 @@ void                sc_camera_view_transform (sc_camera_t * camera,
  * \param [out] points_out An array that will contain the transformed points in 
  *                         homogeneous coordinates (x, y, z, w).
  */
-void                sc_camera_projection_transform (sc_camera_t * camera,
-                                                    sc_array_t * points_in,
+void                sc_camera_projection_transform (const sc_camera_t * camera,
+                                                    const sc_array_t * points_in,
                                                     sc_array_t * points_out);
 
 /**
@@ -365,7 +365,7 @@ void                sc_camera_projection_transform (sc_camera_t * camera,
  *                     This is a read-only view with the same lifetime as the
  *                     camera object.
  */
-void                sc_camera_get_frustum (sc_camera_t * camera,
+void                sc_camera_get_frustum (const sc_camera_t * camera,
                                            sc_array_t * planes);
 
 /**
@@ -386,8 +386,8 @@ void                sc_camera_get_frustum (sc_camera_t * camera,
  * \param [out] indices The indices (as size_t) of the points that are visible 
  *                      within the camera's view frustum.
  */
-void                sc_camera_clipping_pre (sc_camera_t * camera,
-                                            sc_array_t * points,
+void                sc_camera_clipping_pre (const sc_camera_t * camera,
+                                            const sc_array_t * points,
                                             sc_array_t * indices);
 
 /**
@@ -406,7 +406,7 @@ void                sc_camera_clipping_pre (sc_camera_t * camera,
  * \param [out] distances Six signed distances (sc_camera_coords_t) to the 
  *                        frustum planes. Must be allocated on input.
  */
-void                sc_camera_frustum_dist (sc_camera_t * camera,
+void                sc_camera_frustum_dist (const sc_camera_t * camera,
                                             const sc_camera_vec3_t point,
                                             sc_camera_coords_t distances[6]);
 
