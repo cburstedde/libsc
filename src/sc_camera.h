@@ -51,7 +51,7 @@
  *    - The x-axis points to the right, and the y-axis points upwards.
  * 
  *    Transformation steps:
- *    - Translate p by the camera position.
+ *    - Translate \b p by the camera position.
  *    - Rotate \b p by the camera rotation.
  * 
  *    The camera rotation is stored as a unit quaternion q = (q_x, q_y, q_z, q_w),
@@ -107,7 +107,8 @@
 
 /** The data type of the coordinates for sc_camera
  */
-/* p4est uses double, most computer graphic applications float on GPU. */
+/* p4est uses double, most computer graphic applications float on GPU.*/
+/* Using float here would result in implicit conversions. */
 typedef double      sc_camera_coords_t;
 
 /** Points in R^3 for sc_camera.
@@ -127,6 +128,25 @@ typedef sc_camera_coords_t sc_camera_mat4x4_t[16];
  * The entries of the matrix are in column-major order.
  */
 typedef sc_camera_coords_t sc_camera_mat3x3_t[9];
+
+/**
+ * Defines the order of the 6 planes of the camera's view frustum.
+ * The planes are enumerated as: near, far, left, right, top, bottom.
+ */
+typedef enum sc_camera_plane
+{
+  SC_CAMERA_PLANE_NEAR,
+  SC_CAMERA_PLANE_FAR,
+  SC_CAMERA_PLANE_LEFT,
+  SC_CAMERA_PLANE_RIGHT,
+  SC_CAMERA_PLANE_TOP,
+  SC_CAMERA_PLANE_BOTTOM
+} sc_camera_plane_t;
+
+/**
+ * A small epsilon value used for numerical stability in camera calculations.
+ */
+#define SC_CAMERA_EPSILON 1e-5
 
 /** Represents a camera with parameters for rendering a 3D scene.
  * 
@@ -157,13 +177,16 @@ typedef struct sc_camera
   sc_camera_coords_t  near;/**< Distance to the near clipping plane. */
   sc_camera_coords_t  far; /**< Distance to the far clipping plane. */
 
+  sc_camera_vec4_t    frustum_planes[6];
+      /**< The bounding planes of the view frustum (see \ref sc_camera_get_frustum).*/
 } sc_camera_t;
 
-/** Creates a new camera structure with the default values (see sc_camera_init).
+/** Creates a new camera structure with the default values (see \ref
+ * sc_camera_init).
  *
  * \return Camera with default values.
  */
-sc_camera_t        *sc_camera_new ();
+sc_camera_t        *sc_camera_new (void);
 
 /** Initializes a camera with the default parameters.
  * 
@@ -187,5 +210,204 @@ void                sc_camera_init (sc_camera_t * camera);
  * \param [in] camera The camera to be destroyed.
  */
 void                sc_camera_destroy (sc_camera_t * camera);
+
+/** Sets the position.
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] position The new position of the camera object in world space.
+ */
+void                sc_camera_position (sc_camera_t * camera,
+                                        const sc_camera_vec3_t position);
+
+/** Rotating the camera around the up axis.
+ * 
+ * The camera is rotated around the y-axis (up direction). The function rotates 
+ * the camera about angle (radians) amount by the right hand rule.
+ * This means a positive angle rotates the camera to the left.
+ *
+ * \param [out] camera The camera object.
+ * \param [in] angle The angle the camera is rotated.
+ */
+void                sc_camera_yaw (sc_camera_t * camera, double angle);
+
+/** Rotating the camera around the axis to the right.
+ * 
+ * The camera is rotated around the x-axis (right direction). The function rotates 
+ * the camera about angle (radians) amount by the right hand rule.
+ * This means a positive angle rotates the camera up.
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] angle The angle the camera is rotated.
+ */
+void                sc_camera_pitch (sc_camera_t * camera, double angle);
+
+/** Rotating the camera around the backward axis.
+ * 
+ * The camera is rotated around the z-axis (backwards direction). The function 
+ * rotates the camera about angle (radians) amount by the right hand rule.
+ * This means a positive angle tilts the camera counter clockwise.
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] angle The angle the camera is rotated.
+ */
+void                sc_camera_roll (sc_camera_t * camera, double angle);
+
+/** Sets the horizontal field of view.
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] angle The new horizontal field of view angle of the camera.
+ */
+void                sc_camera_fov (sc_camera_t * camera, double angle);
+
+/** Sets the aspect ratio. 
+ * 
+ * The aspect ratio is determined by the ratio of a width and a height value.
+ * \param [out] camera The camera object.
+ * \param [in] width A width value for the view.
+ * \param [in] height A height value for the view.
+ */
+void                sc_camera_aspect_ratio (sc_camera_t * camera, int width,
+                                            int height);
+/** Sets the clipping distances. 
+ * 
+ * \param [out] camera The camera object.
+ * \param [in] near The new distance from the camera to the near clipping plane.
+ * \param [in] far The new distance from the camera to the far clipping plane.
+ */
+void                sc_camera_clipping_dist (sc_camera_t * camera,
+                                             sc_camera_coords_t near,
+                                             sc_camera_coords_t far);
+
+/** Sets the position and rotation of the camera object.
+ * The vectors (eye - center) and up have to be linear independent (thus also not zero).
+ * \param [out] camera Camera that is changed.
+ * \param [in] eye Position of the camera.
+ * \param [in] center Point that is in the center of the image.
+ * \param [in] up Upward direction of the camera.
+ */
+void                sc_camera_look_at (sc_camera_t * camera,
+                                       const sc_camera_vec3_t eye,
+                                       const sc_camera_vec3_t center,
+                                       const sc_camera_vec3_t up);
+
+/**
+ * Performs the view transformation from world space to view space.
+ *
+ * This function transforms an array of points from world coordinates into 
+ * view space as defined by the given camera. Each input point is a 3D vector 
+ * (x, y, z), and each output point is represented in the same way.
+ *
+ * The input array must store points as triples of coordinates, i.e.:
+ *     points_in->elem_size = 3 * sizeof(sc_camera_coords_t)
+ *
+ * The output array stores points in the same format:
+ *     points_out->elem_size = 3 * sizeof(sc_camera_coords_t)
+ *
+ * \param [in]  camera     The camera object defining the view transformation.
+ * \param [in]  points_in  An array of points, each represented by 3 coordinates 
+ *                         (x, y, z) in world space.
+ * \param [out] points_out An array that will contain the transformed points in 
+ *                         view space.
+ */
+void                sc_camera_view_transform (const sc_camera_t * camera,
+                                              const sc_array_t * points_in,
+                                              sc_array_t * points_out);
+
+/**
+ * Performs the projection transformation from view space to normalized device 
+ * coordinates.
+ *
+ * This function transforms an array of points from view space into normalized 
+ * device coordinates (NDC) as described in the example. Each input point is a 
+ * 3D vector (x, y, z), and each output point is represented in homogeneous 
+ * coordinates (x, y, z, w).
+ *
+ * The input array must store points as triples of coordinates, i.e.:
+ *     points_in->elem_size = 3 * sizeof(sc_camera_coords_t)
+ *
+ * The output array stores points as quadruples of coordinates, i.e.:
+ *     points_out->elem_size = 4 * sizeof(sc_camera_coords_t)
+ *
+ * \param [in]  camera     The camera object defining the projection.
+ * \param [in]  points_in  An array of points, each represented by 3 coordinates 
+ *                         (x, y, z) to be transformed.
+ * \param [out] points_out An array that will contain the transformed points in 
+ *                         homogeneous coordinates (x, y, z, w).
+ */
+void                sc_camera_projection_transform (const sc_camera_t * camera,
+                                                    const sc_array_t * points_in,
+                                                    sc_array_t * points_out);
+
+/**
+ * Returns the 6 planes of the view frustum.
+ *
+ * This function returns the bounding planes of the visible world space (the 
+ * view frustum). The planes are ordered as: near, far, left, right, top, and 
+ * bottom (see enum \ref sc_camera_plane). The naming is from the perspective of
+ * the  camera; for example, the left plane bounds the view to the left.
+ * The near and far planes bound the field of view so that objects, that are too
+ * close or too far, are not visible. The distances to these planes are defined
+ * by the user in the camera object.
+ *
+ * The array `planes` contains 6 entries, each consisting of 4 values (a, b, c, d):  
+ *     planes->elem_count = 6  
+ *     planes->elem_size  = 4 * sizeof(sc_camera_coords_t)  
+ *
+ * Each plane is represented by its outward-facing normal vector (a, b, c) and 
+ * offset d, such that the plane equation is:
+ *     a*x + b*y + c*z + d = 0
+ * Points (x, y, z) satisfying this equation lie on the plane.
+ *
+ * \param [in]  camera The camera object.
+ * \param [out] planes The 6 planes of the view frustum, in the order near, far, 
+ *                     left, right, top, and bottom (see enum \ref
+ *                     sc_camera_plane).
+ *                     This is a read-only view with the same lifetime as the
+ *                     camera object.
+ */
+void                sc_camera_get_frustum (const sc_camera_t * camera,
+                                           sc_array_t * planes);
+
+/**
+ * Determines the indices of points that are visible within the camera's view frustum.
+ *
+ * This function takes an array of 3D points in world space (x, y, z) and performs
+ * clipping against the camera's view frustum. It returns the indices of the points
+ * that are inside the frustum and thus visible to the camera.
+ *
+ * The input array `points` must store the 3D coordinates of the points, i.e.:
+ *     points->elem_size = 3 * sizeof(sc_camera_coords_t)
+ *
+ * The output array `indices` stores the indices of the points from `points` that 
+ * are inside the view frustum. Each index is stored as a `size_t` value.
+ *
+ * \param [in]  camera  The camera object.
+ * \param [in]  points  An array of 3D points in world space (x, y, z).
+ * \param [out] indices The indices (as size_t) of the points that are visible 
+ *                      within the camera's view frustum.
+ */
+void                sc_camera_clipping_pre (const sc_camera_t * camera,
+                                            const sc_array_t * points,
+                                            sc_array_t * indices);
+
+/**
+ * Computes the signed distances of a point to the 6 planes of the camera's view 
+ * frustum.
+ *
+ * For a point in world space, this function calculates its signed orthogonal 
+ * distance to each frustum plane (near, far, left, right, top, bottom), stored 
+ * in `distances[0..5]` in this order, which must be allocated by the user.
+ *
+ * A positive distance means that a point lies on the outside side of this plane.
+ * If all values are negative the point lies in the view frustum.
+ *
+ * \param [in]  camera    The camera object.
+ * \param [in]  point     A 3D point in world space.
+ * \param [out] distances Six signed distances (sc_camera_coords_t) to the 
+ *                        frustum planes. Must be allocated on input.
+ */
+void                sc_camera_frustum_dist (const sc_camera_t * camera,
+                                            const sc_camera_vec3_t point,
+                                            sc_camera_coords_t distances[6]);
 
 #endif
