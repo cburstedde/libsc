@@ -87,6 +87,8 @@ static sc_camera_coords_t sc_camera_signed_dist (const sc_camera_vec3_t point,
                                                  const sc_camera_vec4_t
                                                  plane);
 
+static inline void sc_camera_normalize_vec4(sc_camera_vec4_t vec);
+
 sc_camera_t        *
 sc_camera_new (void)
 {
@@ -154,6 +156,8 @@ sc_camera_yaw (sc_camera_t * camera, double angle)
 
   sc_camera_q_mult (q, camera->rotation, camera->rotation);
 
+  sc_camera_normalize_vec4(camera->rotation);
+
   sc_camera_update_planes (camera);
 }
 
@@ -171,6 +175,8 @@ sc_camera_pitch (sc_camera_t * camera, double angle)
 
   sc_camera_q_mult (q, camera->rotation, camera->rotation);
 
+  sc_camera_normalize_vec4(camera->rotation);
+
   sc_camera_update_planes (camera);
 }
 
@@ -187,6 +193,8 @@ sc_camera_roll (sc_camera_t * camera, double angle)
   q[3] = cos (angle / 2.0);
 
   sc_camera_q_mult (q, camera->rotation, camera->rotation);
+
+  sc_camera_normalize_vec4(camera->rotation);
 
   sc_camera_update_planes (camera);
 }
@@ -735,4 +743,27 @@ sc_camera_signed_dist (const sc_camera_vec3_t point,
 {
   return point[0] * plane[0] + point[1] * plane[1] +
     point[2] * plane[2] + plane[3];
+}
+
+
+static inline void sc_camera_normalize_vec4(sc_camera_vec4_t vec)
+{
+    sc_camera_coords_t x, y, z, w;
+    sc_camera_coords_t norm;
+    sc_camera_coords_t inv;
+
+    x = vec[0];
+    y = vec[1];
+    z = vec[2];
+    w = vec[3];
+
+    norm = (sc_camera_coords_t)sqrt(x * x + y * y + z * z + w * w);
+    SC_ASSERT(norm > 0);
+
+    inv = 1.0 / norm;
+
+    vec[0] = x * inv;
+    vec[1] = y * inv;
+    vec[2] = z * inv;
+    vec[3] = w * inv;
 }
