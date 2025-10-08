@@ -52,8 +52,7 @@ static void         sc_camera_q_mult (const sc_camera_vec4_t q1,
                                       const sc_camera_vec4_t q2,
                                       sc_camera_vec4_t out);
 
-static void         sc_camera_mat4_transpose (const sc_camera_mat4x4_t in,
-                                              sc_camera_mat4x4_t out);
+static void         sc_camera_mat4_transpose (sc_camera_mat4x4_t mat);
 
 typedef void        (*sc_camera_mat_mul_t) (const sc_camera_mat4x4_t,
                                             const sc_camera_coords_t *,
@@ -547,16 +546,16 @@ sc_camera_q_mult (const sc_camera_vec4_t q1, const sc_camera_vec4_t q2,
 }
 
 static void
-sc_camera_mat4_transpose (const sc_camera_mat4x4_t in, sc_camera_mat4x4_t out)
+sc_camera_mat4_transpose (sc_camera_mat4x4_t mat)
 {
   size_t              i, j;
   sc_camera_coords_t  temp;
 
   for (i = 1; i < 4; ++i) {
     for (j = 0; j < i; ++j) {
-      temp = in[i + 4 * j];
-      out[i + 4 * j] = in[j + 4 * i];
-      out[j + 4 * i] = temp;
+      temp = mat[i + 4 * j];
+      mat[i + 4 * j] = mat[j + 4 * i];
+      mat[j + 4 * i] = temp;
     }
   }
 }
@@ -665,7 +664,7 @@ sc_camera_update_planes (sc_camera_t * camera)
   sc_camera_get_projection_mat (camera, projection);
   sc_camera_mult_4x4_4x4 (projection, view, transform);
 
-  sc_camera_mat4_transpose (transform, transform);
+  sc_camera_mat4_transpose (transform);
 
   /* 
      near = (0, 0, -1, -1)
