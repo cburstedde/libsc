@@ -51,8 +51,8 @@ sc_camera_init (sc_camera_t * camera)
   camera->width = 1000;
   camera->height = 1000;
 
-  camera->near = 0.01;
-  camera->far = 100.0;
+  camera->near_plane = 0.01;
+  camera->far_plane = 100.0;
 }
 
 void
