@@ -96,8 +96,8 @@
  *      the x-direction.
  *    - The **aspect ratio**: the ratio of image width to height, which 
  *      determines the vertical field of view.
- *    - The **near** and **far** values: the positive distances from the camera 
- *      to the near and far clipping planes.
+ *    - The **near_plane** and **far_plane** values: the positive distances from 
+ *      the camera to the near and far clipping planes.
  * 
  *    Points closer than the near plane or farther than the far plane are clipped, 
  *    meaning they are not mapped inside the visible cube [-1, 1]^3.
@@ -154,8 +154,8 @@ typedef struct sc_camera
   int                 height;
               /**< Image height in pixels, used to determine the aspect ratio. */
 
-  sc_camera_coords_t  near;/**< Distance to the near clipping plane. */
-  sc_camera_coords_t  far; /**< Distance to the far clipping plane. */
+  sc_camera_coords_t  near_plane;/**< Distance to the near clipping plane. */
+  sc_camera_coords_t  far_plane; /**< Distance to the far clipping plane. */
 
 } sc_camera_t;
 
@@ -176,8 +176,8 @@ sc_camera_t        *sc_camera_new ();
  * - FOV : Pi / 2 = 1.57079632679
  * - width : 1000
  * - height : 1000
- * - near : 0.01
- * - far : 100.0.
+ * - near_plane : 0.01
+ * - far_plane : 100.0.
  * 
  * \param [out] camera Camera that is initialized.
  */
