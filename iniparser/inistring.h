@@ -1,4 +1,4 @@
-/*
+﻿/*
   This file is part of the SC Library, version 3.
   The SC Library provides support for parallel scientific applications.
 
@@ -38,6 +38,10 @@
 #endif
 #include <stdio.h>
 
+#ifdef _MSC_VER
+#include <sal.h> /* _Printf_format_string_ */
+#endif
+
 #ifdef __cplusplus
 extern              "C"
 {
@@ -66,9 +70,14 @@ void                ini_strcopy (char *dest, size_t size, const char *src);
  * \param [in] size     Allocation length of \a str.
  * \param [in] format   Format string as in man (3) snprintf.
  */
+#ifdef _MSC_VER
+void                ini_snprintf(char* str, size_t size,
+          _Printf_format_string_ const char* format, ...);
+#else
 void                ini_snprintf (char *str, size_t size,
                                   const char *format, ...)
   __attribute__((format (printf, 3, 4)));
+#endif
 
 #ifdef __cplusplus
 #if 0

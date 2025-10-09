@@ -83,8 +83,8 @@ int                 sc_string_puts (sc_string_t * scs, const char *s);
  * \return                      Zero if everything has been appended and a
  *                              negative value when the input was truncated.
  */
-int                 sc_string_putf (sc_string_t * scs, const char *fmt, ...)
-  __attribute__ ((format (printf, 2, 3)));
+int                 sc_string_putf (sc_string_t * scs, SC_PRINTF_FMT const char *fmt, ...)
+  SC_PRINTF_LIKE (2, 3);
 
 /** Append to the string object using a format string and a vararg pointer.
  * The maximum length will not be exceeded.

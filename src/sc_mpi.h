@@ -482,8 +482,12 @@ int                 sc_MPI_Finalize (void);
  * \param [in] mpicomm      Communicator across which to abort.
  * \param [in] ecode        Error code returned to the system.
  */
-int                 sc_MPI_Abort (sc_MPI_Comm mpicomm, int ecode)
-  __attribute__ ((noreturn));
+#ifdef _MSC_VER
+__declspec(noreturn)
+#else
+__attribute__((noreturn))
+#endif
+int                 sc_MPI_Abort (sc_MPI_Comm mpicomm, int ecode);
 
 /** Duplicate an MPI communicator.
  * \param [in] mpicomm      Communicator to duplicate.
