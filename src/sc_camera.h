@@ -310,7 +310,7 @@ void                sc_camera_look_at (sc_camera_t * camera,
  *                         view space.
  */
 void                sc_camera_view_transform (const sc_camera_t * camera,
-                                              const sc_array_t * points_in,
+                                              sc_array_t * points_in,
                                               sc_array_t * points_out);
 
 /**
@@ -335,7 +335,7 @@ void                sc_camera_view_transform (const sc_camera_t * camera,
  *                         homogeneous coordinates (x, y, z, w).
  */
 void                sc_camera_projection_transform (const sc_camera_t * camera,
-                                                    const sc_array_t * points_in,
+                                                    sc_array_t * points_in,
                                                     sc_array_t * points_out);
 
 /**
@@ -365,7 +365,7 @@ void                sc_camera_projection_transform (const sc_camera_t * camera,
  *                     This is a read-only view with the same lifetime as the
  *                     camera object.
  */
-void                sc_camera_get_frustum (const sc_camera_t * camera,
+void                sc_camera_get_frustum (sc_camera_t * camera,
                                            sc_array_t * planes);
 
 /**
@@ -387,7 +387,7 @@ void                sc_camera_get_frustum (const sc_camera_t * camera,
  *                      within the camera's view frustum.
  */
 void                sc_camera_clipping_pre (const sc_camera_t * camera,
-                                            const sc_array_t * points,
+                                            sc_array_t * points,
                                             sc_array_t * indices);
 
 /**

@@ -60,7 +60,7 @@ typedef void        (*sc_camera_mat_mul_t) (const sc_camera_mat4x4_t,
 
 static void         sc_camera_apply_mat (sc_camera_mat_mul_t funct,
                                          const sc_camera_mat4x4_t mat,
-                                         const sc_array_t * points_in,
+                                         sc_array_t * points_in,
                                          sc_array_t * points_out);
 
 static void         sc_camera_mat4_mul_v3_to_v3 (const sc_camera_mat4x4_t mat,
@@ -329,7 +329,7 @@ sc_camera_get_view_mat (const sc_camera_t * camera, sc_camera_mat4x4_t view_matr
 }
 
 void
-sc_camera_view_transform (const sc_camera_t * camera, const sc_array_t * points_in,
+sc_camera_view_transform (const sc_camera_t * camera, sc_array_t * points_in,
                           sc_array_t * points_out)
 {
   sc_camera_mat4x4_t  transformation;
@@ -381,7 +381,7 @@ sc_camera_get_projection_mat (const sc_camera_t * camera,
 }
 
 void
-sc_camera_projection_transform (const sc_camera_t * camera, const sc_array_t * points_in,
+sc_camera_projection_transform (const sc_camera_t * camera, sc_array_t * points_in,
                                 sc_array_t * points_out)
 {
   sc_camera_mat4x4_t  transformation;
@@ -397,18 +397,17 @@ sc_camera_projection_transform (const sc_camera_t * camera, const sc_array_t * p
 }
 
 void
-sc_camera_get_frustum (const sc_camera_t * camera, sc_array_t * planes)
+sc_camera_get_frustum (sc_camera_t * camera, sc_array_t * planes)
 {
   SC_ASSERT (camera != NULL);
   SC_ASSERT (planes != NULL);
 
-  /* Casting const to not const. */
-  sc_array_init_data (planes, (void *) camera->frustum_planes,
+  sc_array_init_data (planes, camera->frustum_planes,
                       sizeof (sc_camera_vec4_t), 6);
 }
 
 void
-sc_camera_clipping_pre (const sc_camera_t * camera, const sc_array_t * points,
+sc_camera_clipping_pre (const sc_camera_t * camera, sc_array_t * points,
                         sc_array_t * indices)
 {
   size_t              i, j;
@@ -426,8 +425,7 @@ sc_camera_clipping_pre (const sc_camera_t * camera, const sc_array_t * points,
 
   for (i = 0; i < points->elem_count; ++i) {
     is_inside = 1;
-    /* Casting const to not const. */
-    point = (sc_camera_coords_t *) sc_array_index ((sc_array_t *) points, i);
+    point = (sc_camera_coords_t *) sc_array_index (points, i);
 
     for (j = 0; j < 6; ++j) {
 
@@ -581,7 +579,7 @@ sc_camera_mat4_transpose (sc_camera_mat4x4_t mat)
 static void
 sc_camera_apply_mat (sc_camera_mat_mul_t funct,
                      const sc_camera_mat4x4_t mat,
-                     const sc_array_t * points_in, sc_array_t * points_out)
+                     sc_array_t * points_in, sc_array_t * points_out)
 {
   size_t              i;
   sc_camera_coords_t *in, *out;
@@ -589,8 +587,7 @@ sc_camera_apply_mat (sc_camera_mat_mul_t funct,
   sc_array_resize (points_out, points_in->elem_count);
 
   for (i = 0; i < points_in->elem_count; ++i) {
-    /* Casting const to not const. */
-    in = (sc_camera_coords_t *) sc_array_index ((sc_array_t * ) points_in, i);
+    in = (sc_camera_coords_t *) sc_array_index (points_in, i);
     out = (sc_camera_coords_t *) sc_array_index (points_out, i);
 
     funct (mat, in, out);
