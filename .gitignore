@@ -22,3 +22,4 @@ example/linksc/build-aux/
 example/linksc/config/
 example/linksc/linksc_config.h.in
 example/linksc/Makefile.in
+.tarball-version
