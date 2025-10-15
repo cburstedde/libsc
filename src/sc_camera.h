@@ -271,12 +271,12 @@ void                sc_camera_aspect_ratio (sc_camera_t * camera, int width,
 /** Sets the clipping distances. 
  * 
  * \param [out] camera The camera object.
- * \param [in] near The new distance from the camera to the near clipping plane.
- * \param [in] far The new distance from the camera to the far clipping plane.
+ * \param [in] near_plane The new distance from the camera to the near clipping plane.
+ * \param [in] far_plane The new distance from the camera to the far clipping plane.
  */
 void                sc_camera_clipping_dist (sc_camera_t * camera,
-                                             sc_camera_coords_t near,
-                                             sc_camera_coords_t far);
+                                             sc_camera_coords_t near_plane,
+                                             sc_camera_coords_t far_plane);
 
 /** Sets the position and rotation of the camera object.
  * The vectors (eye - center) and up have to be linear independent (thus also not zero).

@@ -224,15 +224,15 @@ sc_camera_aspect_ratio (sc_camera_t * camera, int width, int height)
 }
 
 void
-sc_camera_clipping_dist (sc_camera_t * camera, sc_camera_coords_t near,
-                         sc_camera_coords_t far)
+sc_camera_clipping_dist (sc_camera_t * camera, sc_camera_coords_t near_plane,
+                         sc_camera_coords_t far_plane)
 {
   SC_ASSERT (camera != NULL);
-  SC_ASSERT (near > SC_CAMERA_EPSILON);
-  SC_ASSERT (far > near + SC_CAMERA_EPSILON);
+  SC_ASSERT (near_plane > SC_CAMERA_EPSILON);
+  SC_ASSERT (far_plane > near_plane + SC_CAMERA_EPSILON);
 
-  camera->near = near;
-  camera->far = far;
+  camera->near_plane = near_plane;
+  camera->far_plane = far_plane;
 
   sc_camera_update_planes (camera);
 }
@@ -348,35 +348,35 @@ static void
 sc_camera_get_projection_mat (const sc_camera_t * camera,
                               sc_camera_mat4x4_t proj_matrix)
 {
-  /* the factor 2 * camera->near could be reduced */
+  /* the factor 2 * camera->near_plane could be reduced */
   sc_camera_coords_t  s_x, s_y, s_z;
 
   SC_ASSERT (camera != NULL);
   SC_ASSERT (proj_matrix != NULL);
 
-  s_x = 2.0 * camera->near * tan (camera->FOV / 2.0);
+  s_x = 2.0 * camera->near_plane * tan (camera->FOV / 2.0);
   s_y = s_x * ((sc_camera_coords_t) camera->height /
                (sc_camera_coords_t) camera->width);
-  s_z = camera->far - camera->near;
+  s_z = camera->far_plane - camera->near_plane;
 
-  proj_matrix[0] = 2.0 * camera->near / s_x;
+  proj_matrix[0] = 2.0 * camera->near_plane / s_x;
   proj_matrix[1] = 0.0;
   proj_matrix[2] = 0.0;
   proj_matrix[3] = 0.0;
 
   proj_matrix[4] = 0.0;
-  proj_matrix[5] = 2.0 * camera->near / s_y;
+  proj_matrix[5] = 2.0 * camera->near_plane / s_y;
   proj_matrix[6] = 0.0;
   proj_matrix[7] = 0.0;
 
   proj_matrix[8] = 0.0;
   proj_matrix[9] = 0.0;
-  proj_matrix[10] = -(camera->near + camera->far) / s_z;
+  proj_matrix[10] = -(camera->near_plane + camera->far_plane) / s_z;
   proj_matrix[11] = -1.0;
 
   proj_matrix[12] = 0.0;
   proj_matrix[13] = 0.0;
-  proj_matrix[14] = -(2.0 * camera->near * camera->far) / s_z;
+  proj_matrix[14] = -(2.0 * camera->near_plane * camera->far_plane) / s_z;
   proj_matrix[15] = 0.0;
 }
 
