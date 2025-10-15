@@ -380,6 +380,7 @@ void                sc_camera_get_frustum (sc_camera_t * camera,
  *
  * The output array `indices` stores the indices of the points from `points` that 
  * are inside the view frustum. Each index is stored as a `size_t` value.
+ * Thus \a indices must be initialized \ref sc_array with elem_size = sizeof(size_t).
  *
  * \param [in]  camera  The camera object.
  * \param [in]  points  An array of 3D points in world space (x, y, z).
