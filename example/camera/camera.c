@@ -26,6 +26,31 @@
 #include <sc_camera.h>
 #include <sc_random.h>
 
+sc_array_t * array_by_indices(sc_array_t *arr, sc_array_t *indices)
+{
+  size_t i;
+  sc_array_t *out;
+  size_t *index;
+  void *elem;
+
+  SC_ASSERT(arr != NULL);
+  SC_ASSERT(indices != NULL);
+  SC_ASSERT(indices->elem_size == sizeof(size_t));
+
+  out = sc_array_new_count(arr->elem_size, indices->elem_count);
+
+  for (i = 0; i < indices->elem_count; ++i)
+  {
+    index = (size_t *) sc_array_index(indices, i);
+    SC_ASSERT(*index < arr->elem_count);
+
+    elem = sc_array_index(arr, *index);
+    memcpy(sc_array_index(out, i), elem, arr->elem_size);
+  }
+
+  return out;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -34,7 +59,8 @@ main (int argc, char **argv)
   size_t              num_points = 10;
   sc_rand_state_t     seed = 0;
   size_t              i, j, point_index;
-  sc_array_t         *points_world, *points_camera, *points_clipping;
+  sc_array_t         *points_world, *points_camera, *points_clipping, 
+                     *points_inside_xyzw, *points_inside_xyz;
   sc_array_t         *indices_inside;
   sc_camera_coords_t *p;
   sc_camera_vec3_t    eye = { -0.5, 1.5, 0.5 };
@@ -94,10 +120,22 @@ main (int argc, char **argv)
     SC_INFOF ("Point inside post: %lu\n", (unsigned long) point_index);
   }
 
+  points_inside_xyzw = array_by_indices(points_clipping, indices_inside);
+
+  points_inside_xyz = sc_array_new (sizeof (sc_camera_vec3_t));
+  sc_camera_perspective_division(points_inside_xyzw, points_inside_xyz);
+
+  for (i = 0; i < points_inside_xyz->elem_count; ++i) {
+    p = (sc_camera_coords_t *) sc_array_index (points_inside_xyz, i);
+    SC_INFOF ("Point after perspective division : %lf %lf %lf\n", p[0], p[1], p[2]);
+  }
+
   sc_camera_destroy (camera);
   sc_array_destroy (points_world);
   sc_array_destroy (points_camera);
   sc_array_destroy (points_clipping);
+  sc_array_destroy (points_inside_xyz);
+  sc_array_destroy (points_inside_xyzw);
   sc_array_destroy (indices_inside);
 
   sc_finalize ();
