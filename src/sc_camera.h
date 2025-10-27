@@ -314,6 +314,58 @@ void                sc_camera_view_transform (const sc_camera_t * camera,
                                               sc_array_t * points_out);
 
 /**
+ * Returns the view transformation matrix.
+ *
+ * Let R ∈ ℝ^{3×3} be the rotation matrix corresponding to the camera's
+ * rotation quaternion, and p ∈ ℝ³ be the camera's position vector. Let I be
+ * the 3×3 identity matrix.
+ * \a view_matrix is defined as:
+ *
+ * \code
+ * [ R  -R*p ]   [ R  0 ]   [ I  -p ]
+ * [ 0    1  ] = [ 0  1 ] * [ 0   1 ]
+ * \endcode
+ *
+ * This matrix transforms coordinates from world space into the camera's
+ * local (view) coordinate system.
+ *
+ * \param[in]  camera       The camera object defining the view transformation.
+ * \param[out] view_matrix  The resulting 4×4 view transformation matrix in
+ *                          column-major order. Must be allocated by the user.
+ */
+void
+sc_camera_get_view_mat(const sc_camera_t *camera, sc_camera_mat4x4_t view_matrix);
+
+/**
+ * Returns the projection transformation matrix.
+ * 
+ * The projection matrix transforms coordinates from view space into normalized
+ * device coordinates (NDC). 
+ * 
+ * 1. Switch from right-handed to left-handed coordinate system by negating the z-axis.
+ * 2. Apply the perpective projection into the cuboid 
+ *    [-2/s_x, 2/s_x] x [-2/s_y, 2/s_y] x [n,f] with use of homogeneous coordinates.
+ *    Here s_x and s_y are width and height of the visble picture on the near plane.
+ * 3. Map the cuboid to the NDC cube [-1, 1]^3.
+ * 
+ * \code 
+ * 
+ * [ 2/s_x  0      0       0          ]   [ n   0   0      0   ]   [ 1  0  0  0 ]
+ * [ 0      2/s_y  0       0          ]   [ 0   n   0      0   ]   [ 0  1  0  0 ]
+ * [ 0      0      2/(f-n) -2nf/s_z-1 ] * [ 0   0   (f+n)  -fn ] * [ 0  0  -1 0 ]
+ * [ 0      0      0       1          ]   [ 0   0   1      0   ]   [ 0  0  0  1 ]
+ * 
+ * \endcode
+ * 
+ * \param [in] camera       The camera object defining the projection.
+ * \param [out] proj_matrix The resulting 4x4 projection transformation matrix
+ *                          in column-major order. Must be allocated by the user.
+ */
+void
+sc_camera_get_projection_mat (const sc_camera_t * camera,
+                              sc_camera_mat4x4_t proj_matrix);
+
+/**
  * Performs the projection transformation from view space to normalized device 
  * coordinates.
  *

@@ -280,7 +280,7 @@ sc_camera_look_at (sc_camera_t * camera, const sc_camera_vec3_t eye,
   sc_camera_update_planes (camera);
 }
 
-static void
+void
 sc_camera_get_view_mat (const sc_camera_t * camera, sc_camera_mat4x4_t view_matrix)
 {
   sc_camera_coords_t  xx, yy, zz, wx, wy, wz, xy, xz, yz;
@@ -344,7 +344,7 @@ sc_camera_view_transform (const sc_camera_t * camera, sc_array_t * points_in,
                        points_out);
 }
 
-static void
+void
 sc_camera_get_projection_mat (const sc_camera_t * camera,
                               sc_camera_mat4x4_t proj_matrix)
 {
