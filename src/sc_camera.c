@@ -397,13 +397,19 @@ sc_camera_projection_transform (const sc_camera_t * camera, sc_array_t * points_
 }
 
 void
-sc_camera_get_frustum (sc_camera_t * camera, sc_array_t * planes)
+sc_camera_get_frustum (const sc_camera_t * camera, sc_array_t * planes)
 {
+  sc_array_t *arr_view;
+
   SC_ASSERT (camera != NULL);
   SC_ASSERT (planes != NULL);
 
-  sc_array_init_data (planes, camera->frustum_planes,
+  /* const -> not const */
+  arr_view = sc_array_new_data ((void *) camera->frustum_planes,
                       sizeof (sc_camera_vec4_t), 6);
+
+  sc_array_copy (planes, arr_view);
+  sc_array_destroy (arr_view);
 }
 
 void

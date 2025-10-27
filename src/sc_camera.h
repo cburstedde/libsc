@@ -417,7 +417,7 @@ void                sc_camera_projection_transform (const sc_camera_t * camera,
  *                     This is a read-only view with the same lifetime as the
  *                     camera object.
  */
-void                sc_camera_get_frustum (sc_camera_t * camera,
+void                sc_camera_get_frustum (const sc_camera_t * camera,
                                            sc_array_t * planes);
 
 /**
