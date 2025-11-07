@@ -184,6 +184,8 @@ typedef struct sc_camera
 /** Creates a new camera structure with the default values (see \ref
  * sc_camera_init).
  *
+ * The returned pointer must be eventually freed with \ref sc_camera_destroy.
+ *
  * \return Camera with default values.
  */
 sc_camera_t        *sc_camera_new (void);
@@ -207,6 +209,10 @@ sc_camera_t        *sc_camera_new (void);
 void                sc_camera_init (sc_camera_t * camera);
 
 /** Destroys a camera structure.
+ *
+ * This function destroys a camera object allocated with \ref sc_camera_new.
+ * It is not valid to call this function on stack-allocated camera objects.
+ *
  * \param [in] camera The camera to be destroyed.
  */
 void                sc_camera_destroy (sc_camera_t * camera);
