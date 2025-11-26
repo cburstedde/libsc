@@ -204,7 +204,7 @@ sc_camera_fov (sc_camera_t * camera, double angle)
 {
   SC_ASSERT (camera != NULL);
   /* Tangens at Pi/2 behaves like 1/(Pi/2 - x).*/
-  SC_ASSERT (angle > 0 && angle < M_PI - SC_CAMERA_EPSILON);
+  SC_ASSERT (angle > 0. && angle < M_PI);
 
   camera->FOV = angle;
 
@@ -228,8 +228,8 @@ sc_camera_clipping_dist (sc_camera_t * camera, sc_camera_coords_t near_plane,
                          sc_camera_coords_t far_plane)
 {
   SC_ASSERT (camera != NULL);
-  SC_ASSERT (near_plane > SC_CAMERA_EPSILON);
-  SC_ASSERT (far_plane > near_plane + SC_CAMERA_EPSILON);
+  SC_ASSERT (near_plane > 0.);
+  SC_ASSERT (far_plane > near_plane);
 
   camera->near_plane = near_plane;
   camera->far_plane = far_plane;

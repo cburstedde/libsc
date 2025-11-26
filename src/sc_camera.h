@@ -143,10 +143,6 @@ typedef enum sc_camera_plane
   SC_CAMERA_PLANE_BOTTOM
 } sc_camera_plane_t;
 
-/**
- * A small epsilon value used for numerical stability in camera calculations.
- */
-#define SC_CAMERA_EPSILON 1e-5
 
 /** Represents a camera with parameters for rendering a 3D scene.
  *
