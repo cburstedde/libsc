@@ -24,9 +24,9 @@
 #ifndef SC_CAMERA_H
 #define SC_CAMERA_H
 
-/** \file sc_camera.h 
+/** \file sc_camera.h
  * \ingroup sc_camera
- * 
+ *
  *  Camera data structure for computer graphic applications.
  *
  *  The [camera module page](\ref sc_camera) provides a detailed example of
@@ -35,53 +35,53 @@
 
 /** \defgroup sc_camera Camera
  * \ingroup sc
- * 
+ *
  * A camera data structure for maintaining the position, orientation and
  * view frustum of the camera.
- * 
+ *
  * ## Example Workflow: Rendering a point p with sc_camera
- * 
- * 1. **World Space:**  
+ *
+ * 1. **World Space:**
  *    Initially, \b p lies in the right-handed world coordinate system.
- * 
- * 2. **View Transformation:**  
+ *
+ * 2. **View Transformation:**
  *    \b p is transformed into the right-handed view coordinate system.
  *    In this system:
  *    - The camera is at the origin, looking down the negative z-axis.
  *    - The x-axis points to the right, and the y-axis points upwards.
- * 
+ *
  *    Transformation steps:
  *    - Translate \b p by the camera position.
  *    - Rotate \b p by the camera rotation.
- * 
+ *
  *    The camera rotation is stored as a unit quaternion q = (q_x, q_y, q_z, q_w),
- *    where (q_x, q_y, q_z) are the imaginary parts (i, j, k) and q_w is the 
+ *    where (q_x, q_y, q_z) are the imaginary parts (i, j, k) and q_w is the
  *    real part.
  *
- *    To rotate a point \b p = (p_x, p_y, p_z), treat it as a pure quaternion 
+ *    To rotate a point \b p = (p_x, p_y, p_z), treat it as a pure quaternion
  *    (p_x i + p_y j + p_z k), and compute the conjugation:
  *      p' = q * p * q^{-1}
- * 
+ *
  *    Explicitly:
  *      p' = (q_x i + q_y j + q_z k + q_w) * (p_x i + p_y j + p_z k) * (-q_x i - q_y j - q_z k + q_w)
  *    where quaternion multiplication rules apply (i.e., i^2 = j^2 = k^2 = ijk = -1).
- *    The camera rotation is defined such that it rotates the world space so 
- *    that the camera looks along the negative z-axis. It is the \b inverse of 
- *    the rotation that would align the default camera orientation with the 
+ *    The camera rotation is defined such that it rotates the world space so
+ *    that the camera looks along the negative z-axis. It is the \b inverse of
+ *    the rotation that would align the default camera orientation with the
  *    preferred camera direction.
- * 
+ *
  *    In summary, the view transformation is:
- *    
+ *
  *      p_view = q * (\b p - camera->position) * q^-1
- * 
- * 3. **Projection to Normalized Device Coordinates (NDC):**  
- *    After the view transformation, \b p is projected into normalized device 
+ *
+ * 3. **Projection to Normalized Device Coordinates (NDC):**
+ *    After the view transformation, \b p is projected into normalized device
  *    coordinates (NDC):
- *    - The x- and y-coordinates represent the 2D position of the point in the 
+ *    - The x- and y-coordinates represent the 2D position of the point in the
  *      image.
  *    - The z-coordinate represents depth information, which is used for
  *      visibility and rendering order.
- * 
+ *
  *    The NDC space is left-handed, as in OpenGL:
  *    - The visible region is the cube [-1, 1]^3.
  *    - (x, y) = (-1, -1) is the bottom-left corner of the image.
@@ -90,16 +90,16 @@
  *    - For the z-axis:
  *        - z = -1  corresponds to the near clipping plane (closest to the camera),
  *        - z = 1 corresponds to the far clipping plane (farthest from the camera).
- * 
+ *
  *    The projection is defined by:
- *    - The **horizontal field of view (FOV)**: the opening angle in radians in 
+ *    - The **horizontal field of view (FOV)**: the opening angle in radians in
  *      the x-direction.
- *    - The **aspect ratio**: the ratio of image width to height, which 
+ *    - The **aspect ratio**: the ratio of image width to height, which
  *      determines the vertical field of view.
- *    - The **near_plane** and **far_plane** values: the positive distances from 
+ *    - The **near_plane** and **far_plane** values: the positive distances from
  *      the camera to the near and far clipping planes.
- * 
- *    Points closer than the near plane or farther than the far plane are clipped, 
+ *
+ *    Points closer than the near plane or farther than the far plane are clipped,
  *    meaning they are not mapped inside the visible cube [-1, 1]^3.
  */
 
@@ -149,10 +149,10 @@ typedef enum sc_camera_plane
 #define SC_CAMERA_EPSILON 1e-5
 
 /** Represents a camera with parameters for rendering a 3D scene.
- * 
+ *
  * The sc_camera object stores essential properties of a camera,
- * including its position, rotation, field of view, viewport dimensions, 
- * and clipping planes. These parameters define how the camera projects 
+ * including its position, rotation, field of view, viewport dimensions,
+ * and clipping planes. These parameters define how the camera projects
  * the 3D world onto the 2D image plane.
  *
  */
@@ -162,7 +162,7 @@ typedef struct sc_camera
                              /**< The position of the camera in world coordinates. */
 
   sc_camera_vec4_t    rotation;
-                              /**< Rotation from world space to view space, 
+                              /**< Rotation from world space to view space,
                                *   represented as a unit quaternion. */
 
   double              FOV;
@@ -191,19 +191,19 @@ typedef struct sc_camera
 sc_camera_t        *sc_camera_new (void);
 
 /** Initializes a camera with the default parameters.
- * 
- * As default the camera is positioned at (0, 0, 1) and looking at (0, 0, 0) 
+ *
+ * As default the camera is positioned at (0, 0, 1) and looking at (0, 0, 0)
  * with the upwards direction (0, 1, 0). The default horizontal field of view is
  * Pi/2, the image has aspect ratio 1 (width = height) and near is set at 1/100
  * far at 100. The default is realised by the following values.
  * - position : (0, 0, 1)
- * - rotation : (0, 0, 0, 1) 
+ * - rotation : (0, 0, 0, 1)
  * - FOV : Pi / 2 = 1.57079632679
  * - width : 1000
  * - height : 1000
  * - near_plane : 0.01
  * - far_plane : 100.0.
- * 
+ *
  * \param [out] camera Camera that is initialized.
  */
 void                sc_camera_init (sc_camera_t * camera);
@@ -218,7 +218,7 @@ void                sc_camera_init (sc_camera_t * camera);
 void                sc_camera_destroy (sc_camera_t * camera);
 
 /** Sets the position.
- * 
+ *
  * \param [out] camera The camera object.
  * \param [in] position The new position of the camera object in world space.
  */
@@ -226,8 +226,8 @@ void                sc_camera_position (sc_camera_t * camera,
                                         const sc_camera_vec3_t position);
 
 /** Rotating the camera around the up axis.
- * 
- * The camera is rotated around the y-axis (up direction). The function rotates 
+ *
+ * The camera is rotated around the y-axis (up direction). The function rotates
  * the camera about angle (radians) amount by the right hand rule.
  * This means a positive angle rotates the camera to the left.
  *
@@ -237,36 +237,36 @@ void                sc_camera_position (sc_camera_t * camera,
 void                sc_camera_yaw (sc_camera_t * camera, double angle);
 
 /** Rotating the camera around the axis to the right.
- * 
- * The camera is rotated around the x-axis (right direction). The function rotates 
+ *
+ * The camera is rotated around the x-axis (right direction). The function rotates
  * the camera about angle (radians) amount by the right hand rule.
  * This means a positive angle rotates the camera up.
- * 
+ *
  * \param [out] camera The camera object.
  * \param [in] angle The angle the camera is rotated.
  */
 void                sc_camera_pitch (sc_camera_t * camera, double angle);
 
 /** Rotating the camera around the backward axis.
- * 
- * The camera is rotated around the z-axis (backwards direction). The function 
+ *
+ * The camera is rotated around the z-axis (backwards direction). The function
  * rotates the camera about angle (radians) amount by the right hand rule.
  * This means a positive angle tilts the camera counter clockwise.
- * 
+ *
  * \param [out] camera The camera object.
  * \param [in] angle The angle the camera is rotated.
  */
 void                sc_camera_roll (sc_camera_t * camera, double angle);
 
 /** Sets the horizontal field of view.
- * 
+ *
  * \param [out] camera The camera object.
  * \param [in] angle The new horizontal field of view angle of the camera.
  */
 void                sc_camera_fov (sc_camera_t * camera, double angle);
 
-/** Sets the aspect ratio. 
- * 
+/** Sets the aspect ratio.
+ *
  * The aspect ratio is determined by the ratio of a width and a height value.
  * \param [out] camera The camera object.
  * \param [in] width A width value for the view.
@@ -274,8 +274,8 @@ void                sc_camera_fov (sc_camera_t * camera, double angle);
  */
 void                sc_camera_aspect_ratio (sc_camera_t * camera, int width,
                                             int height);
-/** Sets the clipping distances. 
- * 
+/** Sets the clipping distances.
+ *
  * \param [out] camera The camera object.
  * \param [in] near_plane The new distance from the camera to the near clipping plane.
  * \param [in] far_plane The new distance from the camera to the far clipping plane.
@@ -299,8 +299,8 @@ void                sc_camera_look_at (sc_camera_t * camera,
 /**
  * Performs the view transformation from world space to view space.
  *
- * This function transforms an array of points from world coordinates into 
- * view space as defined by the given camera. Each input point is a 3D vector 
+ * This function transforms an array of points from world coordinates into
+ * view space as defined by the given camera. Each input point is a 3D vector
  * (x, y, z), and each output point is represented in the same way.
  *
  * The input array must store points as triples of coordinates, i.e.:
@@ -310,9 +310,9 @@ void                sc_camera_look_at (sc_camera_t * camera,
  *     points_out->elem_size = 3 * sizeof(sc_camera_coords_t)
  *
  * \param [in]  camera     The camera object defining the view transformation.
- * \param [in]  points_in  An array of points, each represented by 3 coordinates 
+ * \param [in]  points_in  An array of points, each represented by 3 coordinates
  *                         (x, y, z) in world space.
- * \param [out] points_out An array that will contain the transformed points in 
+ * \param [out] points_out An array that will contain the transformed points in
  *                         view space.
  */
 void                sc_camera_view_transform (const sc_camera_t * camera,
@@ -344,25 +344,25 @@ sc_camera_get_view_mat(const sc_camera_t *camera, sc_camera_mat4x4_t view_matrix
 
 /**
  * Returns the projection transformation matrix.
- * 
+ *
  * The projection matrix transforms coordinates from view space into normalized
- * device coordinates (NDC). 
- * 
+ * device coordinates (NDC).
+ *
  * 1. Switch from right-handed to left-handed coordinate system by negating the z-axis.
- * 2. Apply the perpective projection into the cuboid 
+ * 2. Apply the perpective projection into the cuboid
  *    [-2/s_x, 2/s_x] x [-2/s_y, 2/s_y] x [n,f] with use of homogeneous coordinates.
  *    Here s_x and s_y are width and height of the visible picture on the near plane.
  * 3. Map the cuboid to the NDC cube [-1, 1]^3.
- * 
- * \code 
- * 
+ *
+ * \code
+ *
  * [ 2/s_x  0      0       0          ]   [ n   0   0      0   ]   [ 1  0  0  0 ]
  * [ 0      2/s_y  0       0          ]   [ 0   n   0      0   ]   [ 0  1  0  0 ]
  * [ 0      0      2/(f-n) -2nf/s_z-1 ] * [ 0   0   (f+n)  -fn ] * [ 0  0  -1 0 ]
  * [ 0      0      0       1          ]   [ 0   0   1      0   ]   [ 0  0  0  1 ]
- * 
+ *
  * \endcode
- * 
+ *
  * \param [in] camera       The camera object defining the projection.
  * \param [out] proj_matrix The resulting 4x4 projection transformation matrix
  *                          in column-major order. Must be allocated by the user.
@@ -372,12 +372,12 @@ sc_camera_get_projection_mat (const sc_camera_t * camera,
                               sc_camera_mat4x4_t proj_matrix);
 
 /**
- * Performs the projection transformation from view space to normalized device 
+ * Performs the projection transformation from view space to normalized device
  * coordinates.
  *
- * This function transforms an array of points from view space into normalized 
- * device coordinates (NDC) as described in the example. Each input point is a 
- * 3D vector (x, y, z), and each output point is represented in homogeneous 
+ * This function transforms an array of points from view space into normalized
+ * device coordinates (NDC) as described in the example. Each input point is a
+ * 3D vector (x, y, z), and each output point is represented in homogeneous
  * coordinates (x, y, z, w).
  *
  * The input array must store points as triples of coordinates, i.e.:
@@ -387,9 +387,9 @@ sc_camera_get_projection_mat (const sc_camera_t * camera,
  *     points_out->elem_size = 4 * sizeof(sc_camera_coords_t)
  *
  * \param [in]  camera     The camera object defining the projection.
- * \param [in]  points_in  An array of points, each represented by 3 coordinates 
+ * \param [in]  points_in  An array of points, each represented by 3 coordinates
  *                         (x, y, z) to be transformed.
- * \param [out] points_out An array that will contain the transformed points in 
+ * \param [out] points_out An array that will contain the transformed points in
  *                         homogeneous coordinates (x, y, z, w).
  */
 void                sc_camera_projection_transform (const sc_camera_t * camera,
@@ -399,25 +399,25 @@ void                sc_camera_projection_transform (const sc_camera_t * camera,
 /**
  * Returns the 6 planes of the view frustum.
  *
- * This function returns the bounding planes of the visible world space (the 
- * view frustum). The planes are ordered as: near, far, left, right, top, and 
+ * This function returns the bounding planes of the visible world space (the
+ * view frustum). The planes are ordered as: near, far, left, right, top, and
  * bottom (see enum \ref sc_camera_plane). The naming is from the perspective of
  * the  camera; for example, the left plane bounds the view to the left.
  * The near and far planes bound the field of view so that objects, that are too
  * close or too far, are not visible. The distances to these planes are defined
  * by the user in the camera object.
  *
- * The array `planes` contains 6 entries, each consisting of 4 values (a, b, c, d):  
- *     planes->elem_count = 6  
- *     planes->elem_size  = 4 * sizeof(sc_camera_coords_t)  
+ * The array `planes` contains 6 entries, each consisting of 4 values (a, b, c, d):
+ *     planes->elem_count = 6
+ *     planes->elem_size  = 4 * sizeof(sc_camera_coords_t)
  *
- * Each plane is represented by its outward-facing normal vector (a, b, c) and 
+ * Each plane is represented by its outward-facing normal vector (a, b, c) and
  * offset d, such that the plane equation is:
  *     a*x + b*y + c*z + d = 0
  * Points (x, y, z) satisfying this equation lie on the plane.
  *
  * \param [in]  camera The camera object.
- * \param [out] planes The 6 planes of the view frustum, in the order near, far, 
+ * \param [out] planes The 6 planes of the view frustum, in the order near, far,
  *                     left, right, top, and bottom (see enum \ref
  *                     sc_camera_plane).
  *                     This is a read-only view with the same lifetime as the
@@ -436,13 +436,13 @@ void                sc_camera_get_frustum (const sc_camera_t * camera,
  * The input array `points` must store the 3D coordinates of the points, i.e.:
  *     points->elem_size = 3 * sizeof(sc_camera_coords_t)
  *
- * The output array `indices` stores the indices of the points from `points` that 
+ * The output array `indices` stores the indices of the points from `points` that
  * are inside the view frustum. Each index is stored as a `size_t` value.
  * Thus \a indices must be initialized \ref sc_array with elem_size = sizeof(size_t).
  *
  * \param [in]  camera  The camera object.
  * \param [in]  points  An array of 3D points in world space (x, y, z).
- * \param [out] indices The indices (as size_t) of the points that are visible 
+ * \param [out] indices The indices (as size_t) of the points that are visible
  *                      within the camera's view frustum.
  */
 void                sc_camera_clipping_pre (const sc_camera_t * camera,
@@ -450,11 +450,11 @@ void                sc_camera_clipping_pre (const sc_camera_t * camera,
                                             sc_array_t * indices);
 
 /**
- * Computes the signed distances of a point to the 6 planes of the camera's view 
+ * Computes the signed distances of a point to the 6 planes of the camera's view
  * frustum.
  *
- * For a point in world space, this function calculates its signed orthogonal 
- * distance to each frustum plane (near, far, left, right, top, bottom), stored 
+ * For a point in world space, this function calculates its signed orthogonal
+ * distance to each frustum plane (near, far, left, right, top, bottom), stored
  * in `distances[0..5]` in this order, which must be allocated by the user.
  *
  * A positive distance means that a point lies on the outside side of this plane.
@@ -462,7 +462,7 @@ void                sc_camera_clipping_pre (const sc_camera_t * camera,
  *
  * \param [in]  camera    The camera object.
  * \param [in]  point     A 3D point in world space.
- * \param [out] distances Six signed distances (sc_camera_coords_t) to the 
+ * \param [out] distances Six signed distances (sc_camera_coords_t) to the
  *                        frustum planes. Must be allocated on input.
  */
 void                sc_camera_frustum_dist (const sc_camera_t * camera,

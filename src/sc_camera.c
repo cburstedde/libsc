@@ -463,7 +463,7 @@ sc_camera_frustum_dist (const sc_camera_t * camera, const sc_camera_vec3_t point
   }
 }
 
-/** The mathematics are for example described here: 
+/** The mathematics are for example described here:
  * https://en.wikipedia.org/wiki/Rotation_matrix#Quaternion */
 static void
 sc_camera_mat_to_q (const sc_camera_mat3x3_t A, sc_camera_vec4_t q)
@@ -576,9 +576,9 @@ sc_camera_mat4_transpose (sc_camera_mat4x4_t mat)
 }
 
 /**
- * - The current design requires defining multiple specialized matrix 
+ * - The current design requires defining multiple specialized matrix
  *   multiplication functions.
- * - This approach basically just applies a function to an array with an extra 
+ * - This approach basically just applies a function to an array with an extra
  *   matrix argument and could be generalized using void pointers, but the
  *   current implementation should suffice.
  */
@@ -681,13 +681,13 @@ sc_camera_update_planes (sc_camera_t * camera)
 
   sc_camera_mat4_transpose (transform);
 
-  /* 
+  /*
      near = (0, 0, -1, -1)
      far = (0, 0, 1, -1)
      left = (-1, 0, 0, -1)
      right = (1, 0, 0, -1)
      up = (0, 1, 0, -1)
-     down = (0, -1, 0, -1) 
+     down = (0, -1, 0, -1)
    */
 
   camera->frustum_planes[SC_CAMERA_PLANE_NEAR][0] = 0.;
@@ -724,10 +724,10 @@ sc_camera_update_planes (sc_camera_t * camera)
     sc_camera_mat4_mul_v4_to_v4 (transform, camera->frustum_planes[i],
                                  camera->frustum_planes[i]);
 
-    /* 
-       norm is bigger 
+    /*
+       norm is bigger
        min (1/tan(field of view/2), 1)
-       and smaller 
+       and smaller
        4 * max(1/tan(field of view/2), 1) + (2*(n + f + n*f) / (f - n))^2
 
        => no numerical issues if field of view and near and far are reasonable
