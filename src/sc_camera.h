@@ -305,6 +305,11 @@ void                sc_camera_look_at (sc_camera_t * camera,
  * The output array stores points in the same format:
  *     points_out->elem_size = 3 * sizeof(sc_camera_coords_t)
  *
+ * \note
+ * This function is provided for convenience and does not come with optimized
+ * linear algebra. Please use \ref sc_camera_get_view_mat for creating an
+ * optimized pipeline.
+ *
  * \param [in]  camera     The camera object defining the view transformation.
  * \param [in]  points_in  An array of points, each represented by 3 coordinates
  *                         (x, y, z) in world space.
@@ -381,6 +386,11 @@ sc_camera_get_projection_mat (const sc_camera_t * camera,
  *
  * The output array stores points as quadruples of coordinates, i.e.:
  *     points_out->elem_size = 4 * sizeof(sc_camera_coords_t)
+ *
+ * \note
+ * This function is provided for convenience and does not come with optimized
+ * linear algebra. Please use \ref sc_camera_get_projection_mat for creating an
+ * optimized pipeline.
  *
  * \param [in]  camera     The camera object defining the projection.
  * \param [in]  points_in  An array of points, each represented by 3 coordinates
