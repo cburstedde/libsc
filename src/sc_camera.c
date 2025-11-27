@@ -253,12 +253,12 @@ sc_camera_look_at (sc_camera_t * camera, const sc_camera_vec3_t eye,
 
   sc_camera_vec3_minus (eye, center, z_new);
   z_new_norm = sc_camera_vec3_norm (z_new);
-  SC_ASSERT (z_new_norm > 0);
+  SC_ASSERT (z_new_norm > 0.);
   sc_camera_vec3_scale (1.0 / z_new_norm, z_new, z_new);
 
   sc_camera_cross_prod (up, z_new, x_new);
   x_new_norm = sc_camera_vec3_norm (x_new);
-  SC_ASSERT (x_new_norm > 0);
+  SC_ASSERT (x_new_norm > 0.);
   sc_camera_vec3_scale (1.0 / x_new_norm, x_new, x_new);
 
   sc_camera_cross_prod (z_new, x_new, y_new);
@@ -435,7 +435,7 @@ sc_camera_clipping_pre (const sc_camera_t * camera, sc_array_t * points,
 
     for (j = 0; j < 6; ++j) {
 
-      if (sc_camera_signed_dist (point, camera->frustum_planes[j]) > 0) {
+      if (sc_camera_signed_dist (point, camera->frustum_planes[j]) > 0.) {
         is_inside = 0;
         break;
       }
