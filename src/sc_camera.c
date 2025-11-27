@@ -200,6 +200,21 @@ sc_camera_roll (sc_camera_t * camera, double angle)
 }
 
 void
+sc_camera_walk (sc_camera_t * camera, double distance)
+{
+  const sc_camera_coords_t *nearn =
+   camera->frustum_planes[SC_CAMERA_PLANE_NEAR];
+
+  /* the normal to the near plane is facing towards the camera */
+  camera->position[0] += distance * nearn[0];
+  camera->position[1] += distance * nearn[1];
+  camera->position[2] += distance * nearn[2];
+
+  /* technically, only the distances need to be recomputed */
+  sc_camera_update_planes (camera);
+}
+
+void
 sc_camera_fov (sc_camera_t * camera, double angle)
 {
   SC_ASSERT (camera != NULL);

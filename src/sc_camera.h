@@ -254,6 +254,18 @@ void                sc_camera_pitch (sc_camera_t * camera, double angle);
  */
 void                sc_camera_roll (sc_camera_t * camera, double angle);
 
+/** Move the camera backward/forward along the view direction.
+ *
+ * The camera position is translated parallel to the view direction.
+ * Since the camera looks down the negative z-axis, a positive
+ * walking distance moves the camera backwards.
+ *
+ * \param [out] camera  The camera object.
+ * \param [in] distance Distance to move the camera by.
+ *                      A positive value moves the camera backwards.
+ */
+void                sc_camera_walk (sc_camera_t * camera, double distance);
+
 /** Sets the horizontal field of view.
  *
  * \param [out] camera The camera object.
