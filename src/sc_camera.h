@@ -381,6 +381,12 @@ sc_camera_get_projection_mat (const sc_camera_t * camera,
  * 3D vector (x, y, z), and each output point is represented in homogeneous
  * coordinates (x, y, z, w).
  *
+ * Note that this function maps to 4D since performing the perspective division
+ * can lead to lose information about whether a point was behind or in front of
+ * the near plane. The perspective division is safe if points_in has been
+ * clipped against the near plane (cf. near plane from \ref
+ * sc_camera_get_frustum).
+ *
  * The input array must store points as triples of coordinates, i.e.:
  *     points_in->elem_size = 3 * sizeof(sc_camera_coords_t)
  *
