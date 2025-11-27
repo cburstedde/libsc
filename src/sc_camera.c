@@ -200,11 +200,26 @@ sc_camera_roll (sc_camera_t * camera, double angle)
 }
 
 void
+sc_camera_walk (sc_camera_t * camera, double distance)
+{
+  const sc_camera_coords_t *nearn =
+   camera->frustum_planes[SC_CAMERA_PLANE_NEAR];
+
+  /* the normal to the near plane is facing towards the camera */
+  camera->position[0] += distance * nearn[0];
+  camera->position[1] += distance * nearn[1];
+  camera->position[2] += distance * nearn[2];
+
+  /* technically, only the distances need to be recomputed */
+  sc_camera_update_planes (camera);
+}
+
+void
 sc_camera_fov (sc_camera_t * camera, double angle)
 {
   SC_ASSERT (camera != NULL);
   /* Tangens at Pi/2 behaves like 1/(Pi/2 - x).*/
-  SC_ASSERT (angle > 0 && angle < M_PI - SC_CAMERA_EPSILON);
+  SC_ASSERT (angle > 0. && angle < M_PI);
 
   camera->FOV = angle;
 
@@ -228,8 +243,8 @@ sc_camera_clipping_dist (sc_camera_t * camera, sc_camera_coords_t near_plane,
                          sc_camera_coords_t far_plane)
 {
   SC_ASSERT (camera != NULL);
-  SC_ASSERT (near_plane > SC_CAMERA_EPSILON);
-  SC_ASSERT (far_plane > near_plane + SC_CAMERA_EPSILON);
+  SC_ASSERT (near_plane > 0.);
+  SC_ASSERT (far_plane > near_plane);
 
   camera->near_plane = near_plane;
   camera->far_plane = far_plane;
@@ -253,12 +268,12 @@ sc_camera_look_at (sc_camera_t * camera, const sc_camera_vec3_t eye,
 
   sc_camera_vec3_minus (eye, center, z_new);
   z_new_norm = sc_camera_vec3_norm (z_new);
-  SC_ASSERT (z_new_norm > 0);
+  SC_ASSERT (z_new_norm > 0.);
   sc_camera_vec3_scale (1.0 / z_new_norm, z_new, z_new);
 
   sc_camera_cross_prod (up, z_new, x_new);
   x_new_norm = sc_camera_vec3_norm (x_new);
-  SC_ASSERT (x_new_norm > 0);
+  SC_ASSERT (x_new_norm > 0.);
   sc_camera_vec3_scale (1.0 / x_new_norm, x_new, x_new);
 
   sc_camera_cross_prod (z_new, x_new, y_new);
@@ -435,7 +450,7 @@ sc_camera_clipping_pre (const sc_camera_t * camera, sc_array_t * points,
 
     for (j = 0; j < 6; ++j) {
 
-      if (sc_camera_signed_dist (point, camera->frustum_planes[j]) > 0) {
+      if (sc_camera_signed_dist (point, camera->frustum_planes[j]) > 0.) {
         is_inside = 0;
         break;
       }
@@ -673,7 +688,7 @@ sc_camera_update_planes (sc_camera_t * camera)
 {
   sc_camera_mat4x4_t  view, projection, transform;
   size_t              i;
-  sc_camera_coords_t  norm;
+  sc_camera_coords_t  inorm;
 
   sc_camera_get_view_mat (camera, view);
   sc_camera_get_projection_mat (camera, projection);
@@ -732,11 +747,11 @@ sc_camera_update_planes (sc_camera_t * camera)
 
        => no numerical issues if field of view and near and far are reasonable
      */
-    norm = sc_camera_vec3_norm (camera->frustum_planes[i]);
-    camera->frustum_planes[i][0] /= norm;
-    camera->frustum_planes[i][1] /= norm;
-    camera->frustum_planes[i][2] /= norm;
-    camera->frustum_planes[i][3] /= norm;
+    inorm = 1. / sc_camera_vec3_norm (camera->frustum_planes[i]);
+    camera->frustum_planes[i][0] *= inorm;
+    camera->frustum_planes[i][1] *= inorm;
+    camera->frustum_planes[i][2] *= inorm;
+    camera->frustum_planes[i][3] *= inorm;
   }
 }
 

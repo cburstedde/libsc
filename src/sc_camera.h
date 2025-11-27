@@ -143,10 +143,6 @@ typedef enum sc_camera_plane
   SC_CAMERA_PLANE_BOTTOM
 } sc_camera_plane_t;
 
-/**
- * A small epsilon value used for numerical stability in camera calculations.
- */
-#define SC_CAMERA_EPSILON 1e-5
 
 /** Represents a camera with parameters for rendering a 3D scene.
  *
@@ -258,6 +254,18 @@ void                sc_camera_pitch (sc_camera_t * camera, double angle);
  */
 void                sc_camera_roll (sc_camera_t * camera, double angle);
 
+/** Move the camera backward/forward along the view direction.
+ *
+ * The camera position is translated parallel to the view direction.
+ * Since the camera looks down the negative z-axis, a positive
+ * walking distance moves the camera backwards.
+ *
+ * \param [out] camera  The camera object.
+ * \param [in] distance Distance to move the camera by.
+ *                      A positive value moves the camera backwards.
+ */
+void                sc_camera_walk (sc_camera_t * camera, double distance);
+
 /** Sets the horizontal field of view.
  *
  * \param [out] camera The camera object.
@@ -308,6 +316,11 @@ void                sc_camera_look_at (sc_camera_t * camera,
  *
  * The output array stores points in the same format:
  *     points_out->elem_size = 3 * sizeof(sc_camera_coords_t)
+ *
+ * \note
+ * This function is provided for convenience and does not come with optimized
+ * linear algebra. Please use \ref sc_camera_get_view_mat for creating an
+ * optimized pipeline.
  *
  * \param [in]  camera     The camera object defining the view transformation.
  * \param [in]  points_in  An array of points, each represented by 3 coordinates
@@ -380,11 +393,23 @@ sc_camera_get_projection_mat (const sc_camera_t * camera,
  * 3D vector (x, y, z), and each output point is represented in homogeneous
  * coordinates (x, y, z, w).
  *
+ * Note that this function maps to 4D since performing the perspective division
+ * can lead to lose information about whether a point was behind or in front of
+ * the near plane: this is indicated by w < 0 or w > 0, respectively.
+ * The perspective division is unambiguous if points_in has been clipped
+ * against the near plane (cf. near plane from \ref sc_camera_get_frustum)
+ * before, or the cases w < 0 have been excluded by different means.
+ *
  * The input array must store points as triples of coordinates, i.e.:
  *     points_in->elem_size = 3 * sizeof(sc_camera_coords_t)
  *
  * The output array stores points as quadruples of coordinates, i.e.:
  *     points_out->elem_size = 4 * sizeof(sc_camera_coords_t)
+ *
+ * \note
+ * This function is provided for convenience and does not come with optimized
+ * linear algebra. Please use \ref sc_camera_get_projection_mat for creating an
+ * optimized pipeline.
  *
  * \param [in]  camera     The camera object defining the projection.
  * \param [in]  points_in  An array of points, each represented by 3 coordinates
