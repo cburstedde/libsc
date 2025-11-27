@@ -673,7 +673,7 @@ sc_camera_update_planes (sc_camera_t * camera)
 {
   sc_camera_mat4x4_t  view, projection, transform;
   size_t              i;
-  sc_camera_coords_t  norm;
+  sc_camera_coords_t  inorm;
 
   sc_camera_get_view_mat (camera, view);
   sc_camera_get_projection_mat (camera, projection);
@@ -732,11 +732,11 @@ sc_camera_update_planes (sc_camera_t * camera)
 
        => no numerical issues if field of view and near and far are reasonable
      */
-    norm = sc_camera_vec3_norm (camera->frustum_planes[i]);
-    camera->frustum_planes[i][0] /= norm;
-    camera->frustum_planes[i][1] /= norm;
-    camera->frustum_planes[i][2] /= norm;
-    camera->frustum_planes[i][3] /= norm;
+    inorm = 1. / sc_camera_vec3_norm (camera->frustum_planes[i]);
+    camera->frustum_planes[i][0] *= inorm;
+    camera->frustum_planes[i][1] *= inorm;
+    camera->frustum_planes[i][2] *= inorm;
+    camera->frustum_planes[i][3] *= inorm;
   }
 }
 
