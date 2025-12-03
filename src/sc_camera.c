@@ -517,7 +517,7 @@ void sc_camera_perspective_division(sc_array_t *points_in, sc_array_t *points_ou
   SC_ASSERT(points_in != NULL);
   SC_ASSERT(points_in->elem_size == sizeof(sc_camera_vec4_t));
   SC_ASSERT(points_out != NULL);
-  SC_ASSERT(points_out->elem_size == sizeof(sc_camera_vec3_t)); 
+  SC_ASSERT(points_out->elem_size == sizeof(sc_camera_vec3_t));
 
   sc_array_resize(points_out, points_in->elem_count);
 
