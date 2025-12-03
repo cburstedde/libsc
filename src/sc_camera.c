@@ -526,7 +526,7 @@ void sc_camera_perspective_division(sc_array_t *points_in, sc_array_t *points_ou
     point_in = (sc_camera_coords_t *) sc_array_index(points_in, i);
     point_out = (sc_camera_coords_t *) sc_array_index(points_out, i);
 
-    SC_ASSERT (point_in[3] > SC_CAMERA_EPSILON || point_in[3] < -SC_CAMERA_EPSILON);
+    SC_ASSERT (point_in[3] != 0.);
 
     point_out[0] = point_in[0] / point_in[3];
     point_out[1] = point_in[1] / point_in[3];
