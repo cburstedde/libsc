@@ -513,6 +513,10 @@ void sc_camera_perspective_division(sc_array_t *points_in, sc_array_t *points_ou
 {
   size_t i;
   sc_camera_coords_t *point_in, *point_out;
+  double inv_p3;
+#ifdef SC_ENABLE_DEBUG
+  double max_norm;
+#endif
 
   SC_ASSERT(points_in != NULL);
   SC_ASSERT(points_in->elem_size == sizeof(sc_camera_vec4_t));
@@ -526,11 +530,18 @@ void sc_camera_perspective_division(sc_array_t *points_in, sc_array_t *points_ou
     point_in = (sc_camera_coords_t *) sc_array_index(points_in, i);
     point_out = (sc_camera_coords_t *) sc_array_index(points_out, i);
 
-    SC_ASSERT (point_in[3] != 0.);
+#ifdef SC_ENABLE_DEBUG
+    max_norm = SC_MAX (fabs (point_in[0]),
+               SC_MAX (fabs (point_in[1]),
+               SC_MAX (fabs (point_in[2]), fabs (point_in[3]))));
+    SC_ASSERT (fabs (point_in[3])  > SC_1000_EPS * max_norm);
+#endif
 
-    point_out[0] = point_in[0] / point_in[3];
-    point_out[1] = point_in[1] / point_in[3];
-    point_out[2] = point_in[2] / point_in[3];
+    inv_p3 = 1. / point_in[3];
+
+    point_out[0] = point_in[0] * inv_p3;
+    point_out[1] = point_in[1] * inv_p3;
+    point_out[2] = point_in[2] * inv_p3;
   }
 }
 
