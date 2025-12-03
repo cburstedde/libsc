@@ -87,7 +87,7 @@ static sc_camera_coords_t sc_camera_signed_dist (const sc_camera_vec3_t point,
                                                  const sc_camera_vec4_t
                                                  plane);
 
-static inline void sc_camera_normalize_vec4(sc_camera_vec4_t vec);
+static inline void  sc_camera_normalize_vec4 (sc_camera_vec4_t vec);
 
 sc_camera_t        *
 sc_camera_new (void)
@@ -156,7 +156,7 @@ sc_camera_yaw (sc_camera_t * camera, double angle)
 
   sc_camera_q_mult (q, camera->rotation, camera->rotation);
 
-  sc_camera_normalize_vec4(camera->rotation);
+  sc_camera_normalize_vec4 (camera->rotation);
 
   sc_camera_update_planes (camera);
 }
@@ -175,7 +175,7 @@ sc_camera_pitch (sc_camera_t * camera, double angle)
 
   sc_camera_q_mult (q, camera->rotation, camera->rotation);
 
-  sc_camera_normalize_vec4(camera->rotation);
+  sc_camera_normalize_vec4 (camera->rotation);
 
   sc_camera_update_planes (camera);
 }
@@ -194,7 +194,7 @@ sc_camera_roll (sc_camera_t * camera, double angle)
 
   sc_camera_q_mult (q, camera->rotation, camera->rotation);
 
-  sc_camera_normalize_vec4(camera->rotation);
+  sc_camera_normalize_vec4 (camera->rotation);
 
   sc_camera_update_planes (camera);
 }
@@ -203,7 +203,7 @@ void
 sc_camera_walk (sc_camera_t * camera, double distance)
 {
   const sc_camera_coords_t *nearn =
-   camera->frustum_planes[SC_CAMERA_PLANE_NEAR];
+    camera->frustum_planes[SC_CAMERA_PLANE_NEAR];
 
   /* the normal to the near plane is facing towards the camera */
   camera->position[0] += distance * nearn[0];
@@ -218,7 +218,7 @@ void
 sc_camera_fov (sc_camera_t * camera, double angle)
 {
   SC_ASSERT (camera != NULL);
-  /* Tangens at Pi/2 behaves like 1/(Pi/2 - x).*/
+  /* Tangens at Pi/2 behaves like 1/(Pi/2 - x). */
   SC_ASSERT (angle > 0. && angle < M_PI);
 
   camera->FOV = angle;
@@ -296,7 +296,8 @@ sc_camera_look_at (sc_camera_t * camera, const sc_camera_vec3_t eye,
 }
 
 void
-sc_camera_get_view_mat (const sc_camera_t * camera, sc_camera_mat4x4_t view_matrix)
+sc_camera_get_view_mat (const sc_camera_t * camera,
+                        sc_camera_mat4x4_t view_matrix)
 {
   sc_camera_coords_t  xx, yy, zz, wx, wy, wz, xy, xz, yz;
 
@@ -396,7 +397,8 @@ sc_camera_get_projection_mat (const sc_camera_t * camera,
 }
 
 void
-sc_camera_projection_transform (const sc_camera_t * camera, sc_array_t * points_in,
+sc_camera_projection_transform (const sc_camera_t * camera,
+                                sc_array_t * points_in,
                                 sc_array_t * points_out)
 {
   sc_camera_mat4x4_t  transformation;
@@ -414,14 +416,14 @@ sc_camera_projection_transform (const sc_camera_t * camera, sc_array_t * points_
 void
 sc_camera_get_frustum (const sc_camera_t * camera, sc_array_t * planes)
 {
-  sc_array_t *arr_view;
+  sc_array_t         *arr_view;
 
   SC_ASSERT (camera != NULL);
   SC_ASSERT (planes != NULL);
 
   /* const -> not const */
   arr_view = sc_array_new_data ((void *) camera->frustum_planes,
-                      sizeof (sc_camera_vec4_t), 6);
+                                sizeof (sc_camera_vec4_t), 6);
 
   sc_array_copy (planes, arr_view);
   sc_array_destroy (arr_view);
@@ -434,7 +436,7 @@ sc_camera_clipping_pre (const sc_camera_t * camera, sc_array_t * points,
   size_t              i, j;
   sc_camera_coords_t *point;
   size_t             *elem;
-  int                is_inside;
+  int                 is_inside;
 
   SC_ASSERT (camera != NULL);
   SC_ASSERT (points != NULL);
@@ -464,7 +466,8 @@ sc_camera_clipping_pre (const sc_camera_t * camera, sc_array_t * points,
 }
 
 void
-sc_camera_frustum_dist (const sc_camera_t * camera, const sc_camera_vec3_t point,
+sc_camera_frustum_dist (const sc_camera_t * camera,
+                        const sc_camera_vec3_t point,
                         sc_camera_coords_t distances[6])
 {
   size_t              i;
@@ -478,53 +481,54 @@ sc_camera_frustum_dist (const sc_camera_t * camera, const sc_camera_vec3_t point
   }
 }
 
-void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices)
+void
+sc_camera_clipping_post (sc_array_t * points, sc_array_t * indices)
 {
-  size_t i, *index;
+  size_t              i, *index;
   sc_camera_coords_t *point;
-  int is_inside;
+  int                 is_inside;
 
-  SC_ASSERT(points != NULL);
-  SC_ASSERT(points->elem_size == sizeof(sc_camera_vec4_t));
-  SC_ASSERT(indices != NULL);
-  SC_ASSERT(indices->elem_size == sizeof(size_t));
+  SC_ASSERT (points != NULL);
+  SC_ASSERT (points->elem_size == sizeof (sc_camera_vec4_t));
+  SC_ASSERT (indices != NULL);
+  SC_ASSERT (indices->elem_size == sizeof (size_t));
 
-  sc_array_reset(indices);
+  sc_array_reset (indices);
 
-  for (i = 0; i < points->elem_count; ++i)
-  {
-    point = (sc_camera_coords_t *) sc_array_index(points, i);
+  for (i = 0; i < points->elem_count; ++i) {
+    point = (sc_camera_coords_t *) sc_array_index (points, i);
 
-    SC_ASSERT (point[0] != 0. || point[1] != 0. || point[2] != 0. || point[3] != 0.);
+    SC_ASSERT (point[0] != 0. || point[1] != 0. || point[2] != 0.
+               || point[3] != 0.);
 
     is_inside = point[0] >= -point[3] && point[0] <= point[3] &&
-                point[1] >= -point[3] && point[1] <= point[3] &&
-                point[2] >= -point[3] && point[2] <= point[3];
+      point[1] >= -point[3] && point[1] <= point[3] &&
+      point[2] >= -point[3] && point[2] <= point[3];
 
-    if (is_inside)
-    {
-      index = (size_t *) sc_array_push(indices);
+    if (is_inside) {
+      index = (size_t *) sc_array_push (indices);
       *index = i;
     }
   }
 }
 
-void sc_camera_perspective_division(sc_array_t *points_in, sc_array_t *points_out)
+void
+sc_camera_perspective_division (sc_array_t * points_in,
+                                sc_array_t * points_out)
 {
-  size_t i;
+  size_t              i;
   sc_camera_coords_t *point_in, *point_out;
 
-  SC_ASSERT(points_in != NULL);
-  SC_ASSERT(points_in->elem_size == sizeof(sc_camera_vec4_t));
-  SC_ASSERT(points_out != NULL);
-  SC_ASSERT(points_out->elem_size == sizeof(sc_camera_vec3_t));
+  SC_ASSERT (points_in != NULL);
+  SC_ASSERT (points_in->elem_size == sizeof (sc_camera_vec4_t));
+  SC_ASSERT (points_out != NULL);
+  SC_ASSERT (points_out->elem_size == sizeof (sc_camera_vec3_t));
 
-  sc_array_resize(points_out, points_in->elem_count);
+  sc_array_resize (points_out, points_in->elem_count);
 
-  for (i = 0; i < points_in->elem_count; ++i)
-  {
-    point_in = (sc_camera_coords_t *) sc_array_index(points_in, i);
-    point_out = (sc_camera_coords_t *) sc_array_index(points_out, i);
+  for (i = 0; i < points_in->elem_count; ++i) {
+    point_in = (sc_camera_coords_t *) sc_array_index (points_in, i);
+    point_out = (sc_camera_coords_t *) sc_array_index (points_out, i);
 
     SC_ASSERT (point_in[3] != 0.);
 
@@ -819,25 +823,25 @@ sc_camera_signed_dist (const sc_camera_vec3_t point,
     point[2] * plane[2] + plane[3];
 }
 
-
-static inline void sc_camera_normalize_vec4(sc_camera_vec4_t vec)
+static inline void
+sc_camera_normalize_vec4 (sc_camera_vec4_t vec)
 {
-    sc_camera_coords_t x, y, z, w;
-    sc_camera_coords_t norm;
-    sc_camera_coords_t inv;
+  sc_camera_coords_t  x, y, z, w;
+  sc_camera_coords_t  norm;
+  sc_camera_coords_t  inv;
 
-    x = vec[0];
-    y = vec[1];
-    z = vec[2];
-    w = vec[3];
+  x = vec[0];
+  y = vec[1];
+  z = vec[2];
+  w = vec[3];
 
-    norm = (sc_camera_coords_t)sqrt(x * x + y * y + z * z + w * w);
-    SC_ASSERT(norm > 0);
+  norm = (sc_camera_coords_t) sqrt (x * x + y * y + z * z + w * w);
+  SC_ASSERT (norm > 0);
 
-    inv = 1.0 / norm;
+  inv = 1.0 / norm;
 
-    vec[0] = x * inv;
-    vec[1] = y * inv;
-    vec[2] = z * inv;
-    vec[3] = w * inv;
+  vec[0] = x * inv;
+  vec[1] = y * inv;
+  vec[2] = z * inv;
+  vec[3] = w * inv;
 }

@@ -143,7 +143,6 @@ typedef enum sc_camera_plane
   SC_CAMERA_PLANE_BOTTOM
 } sc_camera_plane_t;
 
-
 /** Represents a camera with parameters for rendering a 3D scene.
  *
  * The sc_camera object stores essential properties of a camera,
@@ -352,8 +351,8 @@ void                sc_camera_view_transform (const sc_camera_t * camera,
  * \param[out] view_matrix  The resulting 4×4 view transformation matrix in
  *                          column-major order. Must be allocated by the user.
  */
-void
-sc_camera_get_view_mat(const sc_camera_t *camera, sc_camera_mat4x4_t view_matrix);
+void                sc_camera_get_view_mat (const sc_camera_t * camera,
+                                            sc_camera_mat4x4_t view_matrix);
 
 /**
  * Returns the projection transformation matrix.
@@ -380,9 +379,9 @@ sc_camera_get_view_mat(const sc_camera_t *camera, sc_camera_mat4x4_t view_matrix
  * \param [out] proj_matrix The resulting 4x4 projection transformation matrix
  *                          in column-major order. Must be allocated by the user.
  */
-void
-sc_camera_get_projection_mat (const sc_camera_t * camera,
-                              sc_camera_mat4x4_t proj_matrix);
+void                sc_camera_get_projection_mat (const sc_camera_t * camera,
+                                                  sc_camera_mat4x4_t
+                                                  proj_matrix);
 
 /**
  * Performs the projection transformation from view space to normalized device
@@ -416,7 +415,8 @@ sc_camera_get_projection_mat (const sc_camera_t * camera,
  * \param [out] points_out An array that will contain the transformed points in
  *                         homogeneous coordinates (x, y, z, w).
  */
-void                sc_camera_projection_transform (const sc_camera_t * camera,
+void                sc_camera_projection_transform (const sc_camera_t *
+                                                    camera,
                                                     sc_array_t * points_in,
                                                     sc_array_t * points_out);
 
@@ -510,7 +510,8 @@ void                sc_camera_frustum_dist (const sc_camera_t * camera,
  * \param [out] indices An array that will contain the indices of points that lie
  *                     inside the NDC cube [-1, 1]^3.
  */
-void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices);
+void                sc_camera_clipping_post (sc_array_t * points,
+                                             sc_array_t * indices);
 
 /**
  * Performs perspective division.
@@ -532,6 +533,7 @@ void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices);
  * \param [out] points_out An array that will contain the points in normalized
  *                        device coordinates (3D) after perspective division.
  */
-void sc_camera_perspective_division(sc_array_t *points_in, sc_array_t *points_out);
+void                sc_camera_perspective_division (sc_array_t * points_in,
+                                                    sc_array_t * points_out);
 
 #endif
