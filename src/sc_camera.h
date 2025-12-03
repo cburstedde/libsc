@@ -143,7 +143,6 @@ typedef enum sc_camera_plane
   SC_CAMERA_PLANE_BOTTOM
 } sc_camera_plane_t;
 
-
 /** Represents a camera with parameters for rendering a 3D scene.
  *
  * The sc_camera object stores essential properties of a camera,
@@ -352,8 +351,8 @@ void                sc_camera_view_transform (const sc_camera_t * camera,
  * \param[out] view_matrix  The resulting 4×4 view transformation matrix in
  *                          column-major order. Must be allocated by the user.
  */
-void
-sc_camera_get_view_mat(const sc_camera_t *camera, sc_camera_mat4x4_t view_matrix);
+void                sc_camera_get_view_mat (const sc_camera_t * camera,
+                                            sc_camera_mat4x4_t view_matrix);
 
 /**
  * Returns the projection transformation matrix.
@@ -369,10 +368,10 @@ sc_camera_get_view_mat(const sc_camera_t *camera, sc_camera_mat4x4_t view_matrix
  *
  * \code
  *
- * [ 2/s_x  0      0       0          ]   [ n   0   0      0   ]   [ 1  0  0  0 ]
- * [ 0      2/s_y  0       0          ]   [ 0   n   0      0   ]   [ 0  1  0  0 ]
- * [ 0      0      2/(f-n) -2nf/s_z-1 ] * [ 0   0   (f+n)  -fn ] * [ 0  0  -1 0 ]
- * [ 0      0      0       1          ]   [ 0   0   1      0   ]   [ 0  0  0  1 ]
+ * [ 2/s_x  0      0       0           ]   [ n   0   0      0   ]   [ 1  0  0  0 ]
+ * [ 0      2/s_y  0       0           ]   [ 0   n   0      0   ]   [ 0  1  0  0 ]
+ * [ 0      0      2/(f-n) -2n/(f-n)-1 ] * [ 0   0   (f+n)  -fn ] * [ 0  0  -1 0 ]
+ * [ 0      0      0       1           ]   [ 0   0   1      0   ]   [ 0  0  0  1 ]
  *
  * \endcode
  *
@@ -380,9 +379,9 @@ sc_camera_get_view_mat(const sc_camera_t *camera, sc_camera_mat4x4_t view_matrix
  * \param [out] proj_matrix The resulting 4x4 projection transformation matrix
  *                          in column-major order. Must be allocated by the user.
  */
-void
-sc_camera_get_projection_mat (const sc_camera_t * camera,
-                              sc_camera_mat4x4_t proj_matrix);
+void                sc_camera_get_projection_mat (const sc_camera_t * camera,
+                                                  sc_camera_mat4x4_t
+                                                  proj_matrix);
 
 /**
  * Performs the projection transformation from view space to normalized device
@@ -394,11 +393,10 @@ sc_camera_get_projection_mat (const sc_camera_t * camera,
  * coordinates (x, y, z, w).
  *
  * Note that this function maps to 4D since performing the perspective division
- * can lead to lose information about whether a point was behind or in front of
- * the near plane: this is indicated by w < 0 or w > 0, respectively.
- * The perspective division is unambiguous if points_in has been clipped
- * against the near plane (cf. near plane from \ref sc_camera_get_frustum)
- * before, or the cases w < 0 have been excluded by different means.
+ * can lead to numerical instabilties if the mapped point was not clipped
+ * before (cf. \ref sc_camera_clipping_pre). Alternatively, one can apply
+ * \ref sc_camera_clipping_post to the result of this function and then
+ * perform a safe perspective division.
  *
  * The input array must store points as triples of coordinates, i.e.:
  *     points_in->elem_size = 3 * sizeof(sc_camera_coords_t)
@@ -417,7 +415,8 @@ sc_camera_get_projection_mat (const sc_camera_t * camera,
  * \param [out] points_out An array that will contain the transformed points in
  *                         homogeneous coordinates (x, y, z, w).
  */
-void                sc_camera_projection_transform (const sc_camera_t * camera,
+void                sc_camera_projection_transform (const sc_camera_t *
+                                                    camera,
                                                     sc_array_t * points_in,
                                                     sc_array_t * points_out);
 
@@ -445,8 +444,6 @@ void                sc_camera_projection_transform (const sc_camera_t * camera,
  * \param [out] planes The 6 planes of the view frustum, in the order near, far,
  *                     left, right, top, and bottom (see enum \ref
  *                     sc_camera_plane).
- *                     This is a read-only view with the same lifetime as the
- *                     camera object.
  */
 void                sc_camera_get_frustum (const sc_camera_t * camera,
                                            sc_array_t * planes);
@@ -493,5 +490,53 @@ void                sc_camera_clipping_pre (const sc_camera_t * camera,
 void                sc_camera_frustum_dist (const sc_camera_t * camera,
                                             const sc_camera_vec3_t point,
                                             sc_camera_coords_t distances[6]);
+
+/**
+ * Performs clipping in normalized device coordinates (NDC) space.
+ *
+ * This function identifies points that lie within the NDC cube ([-1,1]^3).
+ *
+ * The input array must store points in homogeneuos coordinates as quadruples of
+ * coordinates, i.e.:
+ *     points_in->elem_size = 4 * sizeof(sc_camera_coords_t)
+ *
+ * Checks if x, y, z in [-w, w] for each point (x, y, z, w) in homogeneous
+ * coordinates.
+ *
+ * (x,y,z,w) = (0,0,0,0) is not a valid homogeneous coordinate and will
+ * trigger an assertion failure.
+ *
+ * \param [in] points An array of points in homogeneous coordinates (4D).
+ * \param [out] indices An array that will contain the indices of points that lie
+ *                     inside the NDC cube [-1, 1]^3.
+ */
+void                sc_camera_clipping_post (sc_array_t * points,
+                                             sc_array_t * indices);
+
+/**
+ * Performs perspective division.
+ *
+ * This function converts points from homogeneous coordinates (4D) to
+ * normalized device coordinates (3D) by dividing the x, y, and z components
+ * by the w component.
+ *
+ * The input array must store points in homogeneuos coordinates as quadruples of
+ * coordinates, i.e.:
+ *     points_in->elem_size = 4 * sizeof(sc_camera_coords_t)
+ *
+ * The output array will store points as triples of coordinates, i.e.:
+ *     points_out->elem_size = 3 * sizeof(sc_camera_coords_t)
+ *
+ * For each input point, the homogeneous component w must be
+ * non-zero and not too small in magnitude relative to the maximum absolute
+ * component of the 4D vector. In debug builds, this is enforced
+ * by a scale-invariant assertion.
+ *
+ * \param [in] points_in An array of points in homogeneous coordinates (4D).
+ * \param [out] points_out An array that will contain the points in normalized
+ *                        device coordinates (3D) after perspective division.
+ */
+void                sc_camera_perspective_division (sc_array_t * points_in,
+                                                    sc_array_t * points_out);
 
 #endif
