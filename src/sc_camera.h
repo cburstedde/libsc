@@ -526,7 +526,10 @@ void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices);
  * The output array will store points as triples of coordinates, i.e.:
  *     points_out->elem_size = 3 * sizeof(sc_camera_coords_t)
  *
- * It must be w != 0 else an assertion failure is triggered.
+ * For each input point, the homogeneous component w must be
+ * non-zero and not too small in magnitude relative to the maximum absolute
+ * component of the 4D vector. In debug builds, this is enforced
+ * by a scale-invariant assertion.
  *
  * \param [in] points_in An array of points in homogeneous coordinates (4D).
  * \param [out] points_out An array that will contain the points in normalized
