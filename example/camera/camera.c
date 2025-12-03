@@ -79,6 +79,7 @@ main (int argc, char **argv)
 
   camera = sc_camera_new ();
   sc_camera_look_at (camera, eye, center, up);
+  sc_camera_pitch (camera, -M_PI / 4.0);
 
   for (i = 0; i < num_points; ++i) {
     p = (sc_camera_coords_t *) sc_array_index (points_world, i);

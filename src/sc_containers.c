@@ -1784,3 +1784,18 @@ sc_recycle_array_remove (sc_recycle_array_t * rec_array, size_t position)
 
   return sc_array_index (&rec_array->a, position);
 }
+
+/* definitions for inline functions */
+
+void *sc_array_index (sc_array_t * array, size_t iz);
+void *sc_array_index_null (sc_array_t * array, size_t iz);
+void *sc_array_index_int (sc_array_t * array, int i);
+void *sc_array_index_long (sc_array_t * array, long l);
+void *sc_array_index_ssize_t (sc_array_t * array, ssize_t is);
+void *sc_array_index_int16 (sc_array_t * array, int16_t i16);
+size_t sc_array_position (sc_array_t * array, void *element);
+void *sc_array_pop (sc_array_t * array);
+void *sc_array_push_count (sc_array_t * array, size_t add_count);
+void *sc_array_push (sc_array_t * array);
+void *sc_mempool_alloc (sc_mempool_t * mempool);
+void sc_mempool_free (sc_mempool_t * mempool, void *elem);
