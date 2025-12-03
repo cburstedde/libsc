@@ -501,7 +501,7 @@ void                sc_camera_frustum_dist (const sc_camera_t * camera,
  * coordinates, i.e.:
  *     points_in->elem_size = 4 * sizeof(sc_camera_coords_t)
  * 
- * Checks if x, y, z \in [-w, w] for each point (x, y, z, w) in homogeneous 
+ * Checks if x, y, z in [-w, w] for each point (x, y, z, w) in homogeneous
  * coordinates.
  * 
  * (x,y,z,w) = (0,0,0,0) is not a valid homogeneous coordinate and will 
