@@ -394,11 +394,10 @@ sc_camera_get_projection_mat (const sc_camera_t * camera,
  * coordinates (x, y, z, w).
  *
  * Note that this function maps to 4D since performing the perspective division
- * can lead to lose information about whether a point was behind or in front of
- * the near plane: this is indicated by w < 0 or w > 0, respectively.
- * The perspective division is unambiguous if points_in has been clipped
- * against the near plane (cf. near plane from \ref sc_camera_get_frustum)
- * before, or the cases w < 0 have been excluded by different means.
+ * can lead to numerical instabilties if the mapped point was not clipped
+ * before (cf. \ref sc_camera_clipping_pre). Alternatively, one can apply
+ * \ref sc_camera_clipping_post to the result of this function and then
+ * perform a safe perspective division.
  *
  * The input array must store points as triples of coordinates, i.e.:
  *     points_in->elem_size = 3 * sizeof(sc_camera_coords_t)
