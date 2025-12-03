@@ -371,7 +371,7 @@ sc_camera_get_view_mat(const sc_camera_t *camera, sc_camera_mat4x4_t view_matrix
  *
  * [ 2/s_x  0      0       0          ]   [ n   0   0      0   ]   [ 1  0  0  0 ]
  * [ 0      2/s_y  0       0          ]   [ 0   n   0      0   ]   [ 0  1  0  0 ]
- * [ 0      0      2/(f-n) -2nf/s_z-1 ] * [ 0   0   (f+n)  -fn ] * [ 0  0  -1 0 ]
+ * [ 0      0      2/(f-n) -2n/s_z-1 ] * [ 0   0   (f+n)  -fn ] * [ 0  0  -1 0 ]
  * [ 0      0      0       1          ]   [ 0   0   1      0   ]   [ 0  0  0  1 ]
  *
  * \endcode
@@ -445,8 +445,6 @@ void                sc_camera_projection_transform (const sc_camera_t * camera,
  * \param [out] planes The 6 planes of the view frustum, in the order near, far,
  *                     left, right, top, and bottom (see enum \ref
  *                     sc_camera_plane).
- *                     This is a read-only view with the same lifetime as the
- *                     camera object.
  */
 void                sc_camera_get_frustum (const sc_camera_t * camera,
                                            sc_array_t * planes);
