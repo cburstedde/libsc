@@ -369,10 +369,10 @@ sc_camera_get_view_mat(const sc_camera_t *camera, sc_camera_mat4x4_t view_matrix
  *
  * \code
  *
- * [ 2/s_x  0      0       0          ]   [ n   0   0      0   ]   [ 1  0  0  0 ]
- * [ 0      2/s_y  0       0          ]   [ 0   n   0      0   ]   [ 0  1  0  0 ]
- * [ 0      0      2/(f-n) -2n/s_z-1 ] * [ 0   0   (f+n)  -fn ] * [ 0  0  -1 0 ]
- * [ 0      0      0       1          ]   [ 0   0   1      0   ]   [ 0  0  0  1 ]
+ * [ 2/s_x  0      0       0           ]   [ n   0   0      0   ]   [ 1  0  0  0 ]
+ * [ 0      2/s_y  0       0           ]   [ 0   n   0      0   ]   [ 0  1  0  0 ]
+ * [ 0      0      2/(f-n) -2n/(f-n)-1 ] * [ 0   0   (f+n)  -fn ] * [ 0  0  -1 0 ]
+ * [ 0      0      0       1           ]   [ 0   0   1      0   ]   [ 0  0  0  1 ]
  *
  * \endcode
  *
@@ -527,8 +527,7 @@ void sc_camera_clipping_post(sc_array_t *points, sc_array_t *indices);
  * The output array will store points as triples of coordinates, i.e.:
  *     points_out->elem_size = 3 * sizeof(sc_camera_coords_t)
  *
- * It must be |w| > SC_CAMERA_EPSILON for all points, otherwise an assertion
- * failure is triggered.
+ * It must be w != 0 else an assertion failure is triggered.
  *
  * \param [in] points_in An array of points in homogeneous coordinates (4D).
  * \param [out] points_out An array that will contain the points in normalized
