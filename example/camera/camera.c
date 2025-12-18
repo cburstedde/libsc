@@ -21,12 +21,10 @@
   02110-1301, USA.
 */
 
-#include <stdio.h>
-
 #include <sc_camera.h>
 #include <sc_random.h>
 
-sc_array_t         *
+static sc_array_t  *
 array_by_indices (sc_array_t * arr, sc_array_t * indices)
 {
   size_t              i;

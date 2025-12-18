@@ -21,9 +21,6 @@
   02110-1301, USA.
 */
 
-#include <string.h>
-#include <math.h>
-
 #include <sc_camera.h>
 
 /* math utility functions needed in this file */

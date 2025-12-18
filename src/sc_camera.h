@@ -63,7 +63,8 @@
  *      p' = q * p * q^{-1}
  *
  *    Explicitly:
- *      p' = (q_x i + q_y j + q_z k + q_w) * (p_x i + p_y j + p_z k) * (-q_x i - q_y j - q_z k + q_w)
+ *      p' = (q_x i + q_y j + q_z k + q_w) * (p_x i + p_y j + p_z k) *
+             (-q_x i - q_y j - q_z k + q_w)
  *    where quaternion multiplication rules apply (i.e., i^2 = j^2 = k^2 = ijk = -1).
  *    The camera rotation is defined such that it rotates the world space so
  *    that the camera looks along the negative z-axis. It is the \b inverse of
