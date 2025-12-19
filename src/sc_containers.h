@@ -452,22 +452,35 @@ void                sc_array_permute (sc_array_t * array,
  */
 unsigned int        sc_array_checksum (sc_array_t * array);
 
-/** Adds an element to a priority queue.
- * \note PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
+/** Replace an element in a priority queue with another and sift up.
+ * The priority queue is implemented as a binary heap in ascending order.
+ * It is a minimum-heap: The smallest values have highest priority.
+ * The new element is inserted at a given position and must not
+ * be greater than the descendants below that position.
  * This function is not allowed for views.
- * The priority queue is implemented as a heap in ascending order.
- * A heap is a binary tree where the children are not less than their parent.
- * Assumes that elements [0]..[elem_count-2] form a valid heap.
- * Then propagates [elem_count-1] upward by swapping if necessary.
- * \param [in,out] array    Valid priority queue object.
- * \param [in] temp    Pointer to unused allocated memory of elem_size.
- * \param [in] compar  The comparison function to be used.
- * \return Returns the number of swap operations.
- * \note  If the return value is zero for all elements in an array,
- *        the array is sorted linearly and unchanged.
+ * \param [in,out] array    Valid priority queue, not a view.
+ * \param [in] pos          Valid position in priority queue.
+ * \param [in] newval       Read-only storage of the new value.
+ * \param [in] compar       A comparison function to be used.
+ * \return                  The number of swap operations.
  */
-size_t              sc_array_pqueue_add (sc_array_t * array,
-                                         void *temp,
+size_t              sc_array_pqueue_lessen (sc_array_t * array,
+                                            size_t pos, void *newval,
+                                            int (*compar) (const void *,
+                                                           const void *));
+
+/** Add an element to a priority queue.
+ * The priority queue is implemented as a heap in ascending order.
+ * It is a minimum-heap: The smallest values have highest priority.
+ * This function augments the priority queue by one element.
+ * This function is not allowed for views.
+ * \param [in,out] array    Valid priority queue, not a view.
+ *                          Enlarged by one element.
+ * \param [in] newval       Read-only storage of the new value.
+ * \param [in] compar       A comparison function to be used.
+ * \return                  The number of swap operations.
+ */
+size_t              sc_array_pqueue_add (sc_array_t * array, void *newval,
                                          int (*compar) (const void *,
                                                         const void *));
 

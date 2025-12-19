@@ -653,46 +653,50 @@ sc_array_checksum (sc_array_t * array)
 }
 
 size_t
-sc_array_pqueue_add (sc_array_t * array, void *temp,
+sc_array_pqueue_lessen (sc_array_t * array, size_t pos, void *newval,
+                        int (*compar) (const void *, const void *))
+{
+  size_t              esize;
+  size_t              swaps;
+  size_t              parent;
+  void               *Hparent;
+
+  SC_ASSERT (array != NULL);
+  SC_ASSERT (SC_ARRAY_IS_OWNER (array));
+  SC_ASSERT (pos < array->elem_count);
+  SC_ASSERT (newval != NULL);
+  SC_ASSERT (compar != NULL);
+
+  esize = array->elem_size;
+  swaps = 0;
+  while (pos > 0) {
+    parent = (pos - 1) >> 1;
+    Hparent = sc_array_index (array, parent);
+    if (compar (newval, Hparent) < 0) {
+      memcpy (sc_array_index (array, pos), Hparent, esize);
+      pos = parent;
+      ++swaps;
+    }
+    else break;
+  }
+  memcpy (sc_array_index (array, pos), newval, esize);
+  return swaps;
+}
+
+size_t
+sc_array_pqueue_add (sc_array_t * array, void *newval,
                      int (*compar) (const void *, const void *))
 {
-  int                 comp;
-  size_t              parent, child, swaps;
-  const size_t        size = array->elem_size;
-  void               *p, *c;
+  size_t              snn;
 
-  /* this works on a pre-allocated array that is not a view */
+  SC_ASSERT (array != NULL);
   SC_ASSERT (SC_ARRAY_IS_OWNER (array));
-  SC_ASSERT (array->elem_count > 0);
+  SC_ASSERT (newval != NULL);
+  SC_ASSERT (compar != NULL);
 
-  /* PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED. */
-  SC_ABORT_NOT_REACHED ();
-
-  swaps = 0;
-  child = array->elem_count - 1;
-  c = array->array + (size * child);
-  while (child > 0) {
-    parent = (child - 1) / 2;
-    p = array->array + (size * parent);
-
-    /* compare child to parent */
-    comp = compar (p, c);
-    if (comp <= 0) {
-      break;
-    }
-
-    /* swap child and parent */
-    memcpy (temp, c, size);
-    memcpy (c, p, size);
-    memcpy (p, temp, size);
-    ++swaps;
-
-    /* walk up the tree */
-    child = parent;
-    c = p;
-  }
-
-  return swaps;
+  snn = array->elem_count;
+  sc_array_push (array);
+  return sc_array_pqueue_lessen (array, snn, newval, compar);
 }
 
 size_t
