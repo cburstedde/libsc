@@ -484,18 +484,39 @@ size_t              sc_array_pqueue_add (sc_array_t * array, void *newval,
                                          int (*compar) (const void *,
                                                         const void *));
 
-/** Pops the smallest element from a priority queue.
- * \note PQUEUE FUNCTIONS ARE UNTESTED AND CURRENTLY DISABLED.
+/** Replace an element in a priority queue with another and sift down.
+ * The priority queue is implemented as a binary heap in ascending order.
+ * It is a minimum-heap: The smallest values have highest priority.
+ * The new element is inserted at a given position and must not be less
+ * than its ancestors above that position.
  * This function is not allowed for views.
- * This function assumes that the array forms a valid heap in ascending order.
- * \param [in,out] array    Valid priority queue object.
- * \param [out] result  Pointer to unused allocated memory of elem_size.
- * \param [in]  compar  The comparison function to be used.
- * \return Returns the number of swap operations.
- * \note This function resizes the array to elem_count-1.
+ * \param [in,out] array    Valid priority queue, not a view.
+ * \param [in] maxcount     Less or equal than \a array's element count.
+ *                          Work only with this amount of array elements.
+ * \param [in] pos          Valid position less than \a maxcount.
+ * \param [in] newval       Read-only storage of the new value.
+ * \param [in] compar       A comparison function to be used.
+ * \return                  The number of swap operations.
+ */
+size_t              sc_array_pqueue_greaten (sc_array_t * array,
+                                             size_t maxcount,
+                                             size_t pos, void *newval,
+                                             int (*compar) (const void *,
+                                                            const void *));
+
+/** Pop the smallest element from a priority queue.
+ * The priority queue is implemented as a binary heap in ascending order.
+ * It is a minimum-heap: The smallest values have highest priority.
+ * The root of the heap is removed and returned.
+ * This function is not allowed for views.
+ * \param [in,out] array    Valid priority queue, not a view.
+ *                          Shrunk by one element.
+ * \param [in] newval       Storage for the minimum value removed.
+ * \param [in] compar       A comparison function to be used.
+ * \return                  The number of swap operations.
  */
 size_t              sc_array_pqueue_pop (sc_array_t * array,
-                                         void *result,
+                                         void *newval,
                                          int (*compar) (const void *,
                                                         const void *));
 
