@@ -27,6 +27,7 @@
 
 #include <sc_options.h>
 #include <sc_random.h>
+#include <sc_sort.h>
 
 typedef struct sc_sort
 {
@@ -54,7 +55,7 @@ print_small (sc_sort_t *s, sc_array_t *a, const char *prefi)
   if (s->myn <= 10 && s->mpirank == 0) {
     for (i = 0; i < s->myn; ++i) {
       SC_INFOF ("%8s %d is %8.6f\n", prefi, i,
-                *(double *) sc_array_index_int (s->input, i));
+                *(double *) sc_array_index_int (a, i));
     }
   }
 }
@@ -79,15 +80,23 @@ run_sort (sc_sort_t *s)
   /* print for small output ranges */
   print_small (s, s->input, "Input");
 
+  /* initialize output array */
+  s->tosort = sc_array_new (sizeof (double));
+
   /* run quicksort for comparison */
-  sc_array_sort (s->input, sc_double_compare);
-  print_small (s, s->input, "Qsort");
+  sc_array_copy (s->tosort, s->input);
+  sc_array_sort (s->tosort, sc_double_compare);
+  print_small (s, s->tosort, "Qsort");
 
-#if 0
-  s->tosort = sc_array_new_count (sizeof (double), s->myn);
+  /* run parallel sort for comparison */
+  sc_array_copy (s->tosort, s->input);
+  sc_psort (sc_MPI_COMM_SELF,
+            s->tosort->array, &s->tosort->elem_count, s->tosort->elem_size,
+            sc_double_compare);
+  print_small (s, s->tosort, "Psort");
+
+  /* release memory */
   sc_array_destroy (s->tosort);
-#endif
-
   sc_array_destroy (s->input);
 }
 
