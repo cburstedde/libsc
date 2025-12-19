@@ -82,6 +82,7 @@ include example/v4l2/Makefile.am
 ## include example/warp/Makefile.am
 include example/testing/Makefile.am
 include example/camera/Makefile.am
+include example/sort/Makefile.am
 
 # revision control and ChangeLog
 ChangeLog:
