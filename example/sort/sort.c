@@ -30,15 +30,65 @@
 
 typedef struct sc_sort
 {
+  sc_rand_state_t     rstate;
   int                 mpirank;
   int                 mpisize;
   int                 n;
+  int                 myself, mynext, myn;
+  int                 roundn;
+  sc_array_t         *input;
+  sc_array_t         *tosort;
 }
 sc_sort_t;
 
 static void
+print_small (sc_sort_t *s, sc_array_t *a, const char *prefi)
+{
+  int                 i;
+
+  SC_ASSERT (s != NULL);
+  SC_ASSERT (a != NULL);
+  SC_ASSERT (a->elem_size == sizeof (double));
+  SC_ASSERT (a->elem_count == (size_t) s->myn);
+
+  if (s->myn <= 10 && s->mpirank == 0) {
+    for (i = 0; i < s->myn; ++i) {
+      SC_INFOF ("%8s %d is %8.6f\n", prefi, i,
+                *(double *) sc_array_index_int (s->input, i));
+    }
+  }
+}
+
+static void
 run_sort (sc_sort_t *s)
 {
+  int                 i;
+
+  /* compute offset and count of elements assigned to rank */
+  s->myself = (int) ((s->mpirank * (long) s->n) / s->mpisize);
+  s->mynext = (int) (((s->mpirank + 1) * (long) s->n) / s->mpisize);
+  s->myn = s->mynext - s->myself;
+
+  /* initialize storage for items to sort */
+  s->input = sc_array_new_count (sizeof (double), s->myn);
+  for (i = 0; i < s->myn; ++i) {
+    *(double *) sc_array_index_int (s->input, i) =
+      floor (s->roundn * sc_rand (&s->rstate)) / s->roundn;
+  }
+
+  /* print for small output ranges */
+  print_small (s, s->input, "Input");
+
+  /* run quicksort for comparison */
+  sc_array_sort (s->input, sc_double_compare);
+  print_small (s, s->input, "Qsort");
+
+#if 0
+  s->tosort = sc_array_new_count (sizeof (double), s->myn);
+  sc_array_destroy (s->tosort);
+#endif
+
+  sc_array_destroy (s->input);
 }
 
 int
@@ -49,6 +99,7 @@ main (int argc, char **argv)
   int                 mpiret;
   int                 help;
   int                 first_arg;
+  size_t              seed;
   sc_options_t       *opt;
 
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -62,8 +113,10 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   opt = sc_options_new (argv[0]);
-  sc_options_add_int (opt, 'n', NULL, &s->n, 0, "Total number of items");
-  sc_options_add_switch (opt, 'h', "help", &help, "Print help information");
+  sc_options_add_int (opt, 'n', NULL, &s->n, 10, "Total number of items");
+  sc_options_add_int (opt, 'r', NULL, &s->roundn, 1000, "Random rounded");
+  sc_options_add_size_t (opt, 's', "seed", &seed, 0, "Random number seed");
+  sc_options_add_switch (opt, 'h', "help", &help, "Show help information");
 
   /* process command line options */
   first_arg = sc_options_parse (sc_package_id, SC_LP_INFO, opt, argc, argv);
@@ -79,6 +132,11 @@ main (int argc, char **argv)
     SC_GLOBAL_LERROR ("Parameter n must be non-negative\n");
     fail = 1;
   }
+  if (!fail && s->roundn <= 0) {
+    SC_GLOBAL_LERROR ("Parameter r must be positive\n");
+    fail = 1;
+  }
+  s->rstate = (sc_rand_state_t) (seed ^ (size_t) s->mpirank);
 
   /* execute main program action */
   if (fail) {
