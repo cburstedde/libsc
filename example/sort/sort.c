@@ -61,6 +61,40 @@ print_small (sc_sort_t *s, sc_array_t *a, const char *prefi)
 }
 
 static void
+array_heapsort (sc_array_t *a, int (*compar) (const void *, const void *))
+{
+  size_t              esize;
+  size_t              snn;
+  size_t              sz, szmo;
+  sc_array_t         *heap;
+
+  SC_ASSERT (a != NULL);
+  esize = a->elem_size;
+  snn = a->elem_count;
+
+  /* allocate heap as temporary storage */
+  heap = sc_array_new_count (a->elem_size, snn);
+
+  /* insert input variables into heap */
+  for (sz = 0; sz < snn; ++sz) {
+    sc_array_pqueue_lessen (heap, sz, sc_array_index (a, sz), compar);
+  }
+
+  /* remove minimum value one at a time */
+  szmo = 0;
+  for (sz = snn; sz > 0; sz = szmo) {
+    memcpy (sc_array_index (a, snn - sz), sc_array_index (heap, 0), esize);
+    if ((szmo = sz - 1) > 0) {
+      sc_array_pqueue_greaten
+        (heap, szmo, 0, sc_array_index (heap, szmo), compar);
+    }
+  }
+
+  /* release temporary storage */
+  sc_array_destroy (heap);
+}
+
+static void
 run_sort (sc_sort_t *s)
 {
   int                 i;
@@ -88,12 +122,17 @@ run_sort (sc_sort_t *s)
   sc_array_sort (s->tosort, sc_double_compare);
   print_small (s, s->tosort, "Qsort");
 
-  /* run parallel sort for comparison */
+  /* run parallel sort in serial for comparison */
   sc_array_copy (s->tosort, s->input);
   sc_psort (sc_MPI_COMM_SELF,
             s->tosort->array, &s->tosort->elem_count, s->tosort->elem_size,
             sc_double_compare);
   print_small (s, s->tosort, "Psort");
+
+  /* run heapsort for comparison */
+  sc_array_copy (s->tosort, s->input);
+  array_heapsort (s->tosort, sc_double_compare);
+  print_small (s, s->tosort, "Hsort");
 
   /* release memory */
   sc_array_destroy (s->tosort);
