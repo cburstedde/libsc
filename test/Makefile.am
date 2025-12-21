@@ -16,13 +16,11 @@ sc_test_programs = \
         test/sc_test_search \
         test/sc_test_sort \
         test/sc_test_sortb \
+        test/sc_test_pqueue \
         test/sc_test_version \
         test/sc_test_helpers \
         test/sc_test_mpi_pack \
         test/sc_test_scda
-
-## Reenable and properly verify pqueue when it is actually used
-##      test/sc_test_pqueue \
 
 check_PROGRAMS += $(sc_test_programs)
 
@@ -34,12 +32,11 @@ test_sc_test_io_file_SOURCES = test/test_io_file.c
 test_sc_test_keyvalue_SOURCES = test/test_keyvalue.c
 test_sc_test_notify_SOURCES = test/test_notify.c
 test_sc_test_node_comm_SOURCES = test/test_node_comm.c
-## Reenable and properly verify pqueue when it is actually used
-## test_sc_test_pqueue_SOURCES = test/test_pqueue.c
 test_sc_test_reduce_SOURCES = test/test_reduce.c
 test_sc_test_search_SOURCES = test/test_search.c
 test_sc_test_sort_SOURCES = test/test_sort.c
 test_sc_test_sortb_SOURCES = test/test_sortb.c
+test_sc_test_pqueue_SOURCES = test/test_pqueue.c
 test_sc_test_version_SOURCES = test/test_version.c
 test_sc_test_helpers_SOURCES = test/test_helpers.c
 test_sc_test_mpi_pack_SOURCES = test/test_mpi_pack.c
