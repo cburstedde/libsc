@@ -677,7 +677,8 @@ sc_array_pqueue_siftup (sc_array_t * array, size_t pos, void *newval,
       pos = parent;
       ++swaps;
     }
-    else break;
+    else
+      break;
   }
   memcpy (sc_array_index (array, pos), newval, esize);
   return swaps;
@@ -735,9 +736,11 @@ sc_array_pqueue_siftdown (sc_array_t * array, size_t snn,
         pos = child;
         ++swaps;
       }
-      else break;
+      else
+        break;
     }
-    else break;
+    else
+      break;
   }
   memcpy (sc_array_index (array, pos), newval, esize);
   return swaps;
@@ -770,7 +773,7 @@ sc_array_pqueue_pop (sc_array_t * array, void *newval,
     /* move last leaf to root and sift down */
     --snn;
     swaps = sc_array_pqueue_siftdown
-        (array, snn, 0, sc_array_index (array, snn), compar);
+      (array, snn, 0, sc_array_index (array, snn), compar);
 
     /* circumvent calling sc_array_pop */
     array->elem_count = snn;
@@ -1801,15 +1804,16 @@ sc_recycle_array_remove (sc_recycle_array_t * rec_array, size_t position)
 
 /* definitions for inline functions */
 
-void *sc_array_index (sc_array_t * array, size_t iz);
-void *sc_array_index_null (sc_array_t * array, size_t iz);
-void *sc_array_index_int (sc_array_t * array, int i);
-void *sc_array_index_long (sc_array_t * array, long l);
-void *sc_array_index_ssize_t (sc_array_t * array, ssize_t is);
-void *sc_array_index_int16 (sc_array_t * array, int16_t i16);
-size_t sc_array_position (sc_array_t * array, void *element);
-void *sc_array_pop (sc_array_t * array);
-void *sc_array_push_count (sc_array_t * array, size_t add_count);
-void *sc_array_push (sc_array_t * array);
-void *sc_mempool_alloc (sc_mempool_t * mempool);
-void sc_mempool_free (sc_mempool_t * mempool, void *elem);
+void               *sc_array_index (sc_array_t * array, size_t iz);
+void               *sc_array_index_null (sc_array_t * array, size_t iz);
+void               *sc_array_index_int (sc_array_t * array, int i);
+void               *sc_array_index_long (sc_array_t * array, long l);
+void               *sc_array_index_ssize_t (sc_array_t * array, ssize_t is);
+void               *sc_array_index_int16 (sc_array_t * array, int16_t i16);
+size_t              sc_array_position (sc_array_t * array, void *element);
+void               *sc_array_pop (sc_array_t * array);
+void               *sc_array_push_count (sc_array_t * array,
+                                         size_t add_count);
+void               *sc_array_push (sc_array_t * array);
+void               *sc_mempool_alloc (sc_mempool_t * mempool);
+void                sc_mempool_free (sc_mempool_t * mempool, void *elem);
