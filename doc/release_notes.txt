@@ -18,6 +18,7 @@
 
 ### Functionality
 
+ - Rename, redesign and reactivate the priority queue functions.
  - Merge new code to define and modify a camera object for graphics.
 
 ## 2.8.7

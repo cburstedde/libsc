@@ -653,7 +653,7 @@ sc_array_checksum (sc_array_t * array)
 }
 
 size_t
-sc_array_pqueue_lessen (sc_array_t * array, size_t pos, void *newval,
+sc_array_pqueue_siftup (sc_array_t * array, size_t pos, void *newval,
                         int (*compar) (const void *, const void *))
 {
   size_t              esize;
@@ -672,7 +672,7 @@ sc_array_pqueue_lessen (sc_array_t * array, size_t pos, void *newval,
   while (pos > 0) {
     parent = (pos - 1) >> 1;
     Hparent = sc_array_index (array, parent);
-    if (compar (newval, Hparent) < 0) {
+    if (compar (newval, Hparent) > 0) {
       memcpy (sc_array_index (array, pos), Hparent, esize);
       pos = parent;
       ++swaps;
@@ -684,8 +684,8 @@ sc_array_pqueue_lessen (sc_array_t * array, size_t pos, void *newval,
 }
 
 size_t
-sc_array_pqueue_add (sc_array_t * array, void *newval,
-                     int (*compar) (const void *, const void *))
+sc_array_pqueue_insert (sc_array_t * array, void *newval,
+                        int (*compar) (const void *, const void *))
 {
   size_t              snn;
 
@@ -696,13 +696,13 @@ sc_array_pqueue_add (sc_array_t * array, void *newval,
 
   snn = array->elem_count;
   sc_array_push (array);
-  return sc_array_pqueue_lessen (array, snn, newval, compar);
+  return sc_array_pqueue_siftup (array, snn, newval, compar);
 }
 
 size_t
-sc_array_pqueue_greaten (sc_array_t * array, size_t snn,
-                         size_t pos, void *newval,
-                         int (*compar) (const void *, const void *))
+sc_array_pqueue_siftdown (sc_array_t * array, size_t snn,
+                          size_t pos, void *newval,
+                          int (*compar) (const void *, const void *))
 {
   size_t              esize;
   size_t              swaps;
@@ -725,12 +725,12 @@ sc_array_pqueue_greaten (sc_array_t * array, size_t snn,
       child2 = child + 1;
       if (child2 < snn) {
         Hchild2 = sc_array_index (array, child2);
-        if (compar (Hchild, Hchild2) >= 0) {
+        if (compar (Hchild, Hchild2) <= 0) {
           child = child2;
           Hchild = Hchild2;
         }
       }
-      if (compar (newval, Hchild) > 0) {
+      if (compar (newval, Hchild) < 0) {
         memcpy (sc_array_index (array, pos), Hchild, esize);
         pos = child;
         ++swaps;
@@ -769,7 +769,7 @@ sc_array_pqueue_pop (sc_array_t * array, void *newval,
   else {
     /* move last leaf to root and sift down */
     --snn;
-    swaps = sc_array_pqueue_greaten
+    swaps = sc_array_pqueue_siftdown
         (array, snn, 0, sc_array_index (array, snn), compar);
 
     /* circumvent calling sc_array_pop */

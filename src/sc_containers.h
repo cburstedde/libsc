@@ -111,7 +111,8 @@ typedef int         (*sc_hash_foreach_t) (void **v, const void *u);
  * \ref sc_array_resize and \ref sc_array_rewind.
  * Elements can be sorted with \ref sc_array_sort.
  * If the array is sorted, it can be searched with \ref sc_array_bsearch.
- * A priority queue is implemented with pqueue_add and pqueue_pop (untested).
+ * A maximum-first priority queue is implemented with \ref
+ * sc_array_pqueue_insert, \ref sc_array_pqueue_pop and further helpers.
  */
 typedef struct sc_array
 {
@@ -453,25 +454,26 @@ void                sc_array_permute (sc_array_t * array,
 unsigned int        sc_array_checksum (sc_array_t * array);
 
 /** Replace an element in a priority queue with another and sift up.
- * The priority queue is implemented as a binary heap in ascending order.
- * It is a minimum-heap: The smallest values have highest priority.
+ * The priority queue is implemented as a binary heap in descending order.
+ * It is a maximum heap: The largest values have highest priority.
  * The new element is inserted at a given position and must not
- * be greater than the descendants below that position.
+ * be less than the descendants below that position.
  * This function is not allowed for views.
  * \param [in,out] array    Valid priority queue, not a view.
  * \param [in] pos          Valid position in priority queue.
  * \param [in] newval       Read-only storage of the new value.
+ *                          Must reside outside of the array.
  * \param [in] compar       A comparison function to be used.
  * \return                  The number of swap operations.
  */
-size_t              sc_array_pqueue_lessen (sc_array_t * array,
+size_t              sc_array_pqueue_siftup (sc_array_t * array,
                                             size_t pos, void *newval,
                                             int (*compar) (const void *,
                                                            const void *));
 
 /** Add an element to a priority queue.
- * The priority queue is implemented as a heap in ascending order.
- * It is a minimum-heap: The smallest values have highest priority.
+ * The priority queue is implemented as a heap in descending order.
+ * It is a maximum heap: The largest values have highest priority.
  * This function augments the priority queue by one element.
  * This function is not allowed for views.
  * \param [in,out] array    Valid priority queue, not a view.
@@ -480,38 +482,39 @@ size_t              sc_array_pqueue_lessen (sc_array_t * array,
  * \param [in] compar       A comparison function to be used.
  * \return                  The number of swap operations.
  */
-size_t              sc_array_pqueue_add (sc_array_t * array, void *newval,
-                                         int (*compar) (const void *,
-                                                        const void *));
+size_t              sc_array_pqueue_insert (sc_array_t * array, void *newval,
+                                            int (*compar) (const void *,
+                                                           const void *));
 
 /** Replace an element in a priority queue with another and sift down.
- * The priority queue is implemented as a binary heap in ascending order.
- * It is a minimum-heap: The smallest values have highest priority.
- * The new element is inserted at a given position and must not be less
+ * The priority queue is implemented as a binary heap in descending order.
+ * It is a maximum heap: The largest values have highest priority.
+ * The new element is inserted at a given position and must not be greater
  * than its ancestors above that position.
  * This function is not allowed for views.
  * \param [in,out] array    Valid priority queue, not a view.
  * \param [in] maxcount     Less or equal than \a array's element count.
  *                          Work only with this amount of array elements.
  * \param [in] pos          Valid position less than \a maxcount.
- * \param [in] newval       Read-only storage of the new value.
+ * \param [in] newval       Read-only storage of the new value.  Must reside
+ *                          outside of the first maxcount array positions.
  * \param [in] compar       A comparison function to be used.
  * \return                  The number of swap operations.
  */
-size_t              sc_array_pqueue_greaten (sc_array_t * array,
-                                             size_t maxcount,
-                                             size_t pos, void *newval,
-                                             int (*compar) (const void *,
-                                                            const void *));
+size_t              sc_array_pqueue_siftdown (sc_array_t * array,
+                                              size_t maxcount,
+                                              size_t pos, void *newval,
+                                              int (*compar) (const void *,
+                                                             const void *));
 
-/** Pop the smallest element from a priority queue.
- * The priority queue is implemented as a binary heap in ascending order.
- * It is a minimum-heap: The smallest values have highest priority.
+/** Pop the largest element from a priority queue.
+ * The priority queue is implemented as a binary heap in descending order.
+ * It is a maximum heap: The largest values have highest priority.
  * The root of the heap is removed and returned.
  * This function is not allowed for views.
  * \param [in,out] array    Valid priority queue, not a view.
  *                          Shrunk by one element.
- * \param [in] newval       Storage for the minimum value removed.
+ * \param [in] newval       Storage for the maximum value removed.
  * \param [in] compar       A comparison function to be used.
  * \return                  The number of swap operations.
  */

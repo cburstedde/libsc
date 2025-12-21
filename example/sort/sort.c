@@ -65,33 +65,33 @@ array_heapsort (sc_array_t *a, int (*compar) (const void *, const void *))
 {
   size_t              esize;
   size_t              snn;
-  size_t              sz, szmo;
-  sc_array_t         *heap;
+  size_t              sz;
+  char               *temp;
 
   SC_ASSERT (a != NULL);
+  if ((snn = a->elem_count) <= 1) {
+    return;
+  }
   esize = a->elem_size;
-  snn = a->elem_count;
 
-  /* allocate heap as temporary storage */
-  heap = sc_array_new_count (a->elem_size, snn);
+  /* reserve temporary element storage */
+  temp = SC_ALLOC (char, esize);
 
   /* insert input variables into heap */
-  for (sz = 0; sz < snn; ++sz) {
-    sc_array_pqueue_lessen (heap, sz, sc_array_index (a, sz), compar);
+  for (sz = 1; sz < snn; ++sz) {
+    memcpy (temp, sc_array_index (a, sz), esize);
+    sc_array_pqueue_siftup (a, sz, temp, compar);
   }
 
-  /* remove minimum value one at a time */
-  szmo = 0;
-  for (sz = snn; sz > 0; sz = szmo) {
-    memcpy (sc_array_index (a, snn - sz), sc_array_index (heap, 0), esize);
-    if ((szmo = sz - 1) > 0) {
-      sc_array_pqueue_greaten
-        (heap, szmo, 0, sc_array_index (heap, szmo), compar);
-    }
+  /* remove maximum value one at a time */
+  for (sz = snn - 1; sz > 0; --sz) {
+    memcpy (temp, sc_array_index (a, sz), esize);
+    memcpy (sc_array_index (a, sz), sc_array_index (a, 0), esize);
+    sc_array_pqueue_siftdown (a, sz, 0, temp, compar);
   }
 
-  /* release temporary storage */
-  sc_array_destroy (heap);
+  /* free temporary element storage */
+  SC_FREE (temp);
 }
 
 static void
