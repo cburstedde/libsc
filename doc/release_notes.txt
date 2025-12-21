@@ -18,6 +18,8 @@
 
 ### Functionality
 
+ - Merge new code to define and modify a camera object for graphics.
+
 ## 2.8.7
 
 We expect this to be a drop-in replacement for most use cases, but there are
