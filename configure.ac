@@ -90,6 +90,12 @@ echo "o---------------------------------------"
 echo "| Checking libraries"
 echo "o---------------------------------------"
 
+dnl Some libsc example programs (e.g. the v4l2 example) use math functions
+dnl such as sin().  On many systems these reside in libm, while on others
+dnl they are provided by libc.  Detect and add the required math library
+dnl explicitly to avoid relying on transitive or toolchain-specific linking.
+AC_SEARCH_LIBS([sin], [m])
+
 SC_CHECK_LIBRARIES([SC])
 
 # Print summary.
