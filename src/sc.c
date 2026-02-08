@@ -45,7 +45,9 @@ typedef void        (*sc_sig_t) (int);
 
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <Windows.h>
+#include <malloc.h>
 #endif
 
 #if _POSIX_C_SOURCE >= 199309L
@@ -410,7 +412,7 @@ sc_malloc_aligned (size_t alignment, size_t size)
                     "Returned NULL from aligned_alloc");
     return data;
   }
-#elif defined SC_HAVE_ANY_MEMALIGN && defined SC_HAVE_ALIGNED_MALLOC
+#elif (defined SC_HAVE_ANY_MEMALIGN && defined SC_HAVE_ALIGNED_MALLOC) || defined(_MSC_VER)
   /* MinGW, MSVC */
   {
     void               *data = _aligned_malloc (size, alignment);
@@ -479,7 +481,9 @@ sc_free_aligned (void *ptr, size_t alignment)
   SC_ASSERT (sizeof (char **) >= sizeof (size_t));
   SC_ASSERT (alignment > 0 && alignment % sizeof (void *) == 0);
 
-#if defined SC_HAVE_ANY_MEMALIGN && \
+#ifdef _MSC_VER
+  _aligned_free(ptr);
+#elif defined SC_HAVE_ANY_MEMALIGN && \
    (defined SC_HAVE_POSIX_MEMALIGN || defined SC_HAVE_ALIGNED_ALLOC)
   free (ptr);
 #else
@@ -542,7 +546,11 @@ sc_realloc_aligned (void *ptr, size_t alignment, size_t size)
   SC_ASSERT (alignment > 0 && alignment % sizeof (void *) == 0);
   SC_ASSERT (alignment == SC_MEMALIGN_BYTES);
 
-#if defined SC_HAVE_ANY_MEMALIGN && \
+#ifdef _MSC_VER
+  /* alignment must be power of 2 */
+  SC_ASSERT((alignment > 0) && ((alignment & (alignment - 1)) == 0));
+  return _aligned_realloc(ptr, size, alignment);
+#elif defined SC_HAVE_ANY_MEMALIGN && \
    (defined SC_HAVE_POSIX_MEMALIGN || defined SC_HAVE_ALIGNED_ALLOC)
   /* the result is no longer aligned */
   return realloc (ptr, size);
