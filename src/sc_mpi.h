@@ -318,6 +318,7 @@ sc_MPI_IO_Errorcode_t;
 #define sc_MPI_Irecv               MPI_Irecv
 #define sc_MPI_Send                MPI_Send
 #define sc_MPI_Isend               MPI_Isend
+#define sc_MPI_Sendrecv            MPI_Sendrecv
 #define sc_MPI_Probe               MPI_Probe
 #define sc_MPI_Iprobe              MPI_Iprobe
 #define sc_MPI_Get_count           MPI_Get_count
@@ -673,6 +674,9 @@ int                 sc_MPI_Send (void *, int, sc_MPI_Datatype, int, int,
                                  sc_MPI_Comm);
 int                 sc_MPI_Isend (void *, int, sc_MPI_Datatype, int, int,
                                   sc_MPI_Comm, sc_MPI_Request *);
+int                 sc_MPI_Sendrecv (const void *, int, sc_MPI_Datatype, int,
+                                     int, void *, int, sc_MPI_Datatype, int,
+                                     int, sc_MPI_Comm, sc_MPI_Status *)
 int                 sc_MPI_Probe (int, int, sc_MPI_Comm, sc_MPI_Status *);
 int                 sc_MPI_Iprobe (int, int, sc_MPI_Comm, int *,
                                    sc_MPI_Status *);
