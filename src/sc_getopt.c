@@ -93,7 +93,7 @@ int optopt = '?';
 static struct _getopt_data getopt_data;
 
 
-#ifndef __GNU_LIBRARY__
+#if !defined(__GNU_LIBRARY__) && !defined(_MSC_VER)
 
 /* Avoid depending on library functions or files
    whose names are inconsistent.  */
