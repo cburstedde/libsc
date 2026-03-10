@@ -66,6 +66,15 @@
 #ifndef SC_MPI_H
 #define SC_MPI_H
 
+/** ​Platform-specific noreturn */
+#ifndef SC_NORETURN
+#ifdef _MSC_VER
+#define SC_NORETURN __declspec(noreturn)
+#else
+#define SC_NORETURN __attribute__((noreturn))
+#endif
+#endif
+
 /* this works both standalone and when included from sc.h */
 #include <sc_config.h>
 #ifdef SC_ENABLE_MPI
@@ -482,8 +491,8 @@ int                 sc_MPI_Finalize (void);
  * \param [in] mpicomm      Communicator across which to abort.
  * \param [in] ecode        Error code returned to the system.
  */
-int                 sc_MPI_Abort (sc_MPI_Comm mpicomm, int ecode)
-  __attribute__ ((noreturn));
+SC_NORETURN
+int                 sc_MPI_Abort (sc_MPI_Comm mpicomm, int ecode);
 
 /** Duplicate an MPI communicator.
  * \param [in] mpicomm      Communicator to duplicate.

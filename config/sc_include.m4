@@ -175,7 +175,8 @@ AC_DEFUN([SC_CHECK_MATH],
 [[
 /* make this so complex that the compiler cannot predict the result */
 double a = 3.14149;
-for (; sqrt (a) < a; a *= 1.000023) { putc ('1', stdout); }
+double (*volatile fp)(double) = sqrt;
+for (; fp (a) < a; a *= 1.000023) { putc ('1', stdout); }
 ]], [m],
   [AC_DEFINE([HAVE_MATH], [1], [Define to 1 if sqrt links successfully])],
   [AC_MSG_ERROR([unable to link with sqrt, cos, sin, both as is and with -lm])])
