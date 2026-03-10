@@ -36,6 +36,19 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE             /**< Enable additional functionality. */
 #endif
+
+/* ​Platform-specific printf format string checks​​ */
+#ifndef SC_PRINTF_LIKE
+#ifdef _MSC_VER
+#include <sal.h> /* _Printf_format_string_ */
+#define SC_PRINTF_LIKE(fmt_idx, first_arg)
+#define SC_PRINTF_FMT _Printf_format_string_
+#else
+#define SC_PRINTF_LIKE(fmt_idx, first_arg) __attribute__((format(printf, fmt_idx, first_arg)))
+#define SC_PRINTF_FMT
+#endif
+#endif
+
 #include <stdio.h>
 
 #ifdef __cplusplus
@@ -67,8 +80,8 @@ void                ini_strcopy (char *dest, size_t size, const char *src);
  * \param [in] format   Format string as in man (3) snprintf.
  */
 void                ini_snprintf (char *str, size_t size,
-                                  const char *format, ...)
-  __attribute__((format (printf, 3, 4)));
+                                  SC_PRINTF_FMT const char *format, ...)
+  SC_PRINTF_LIKE(3, 4);
 
 #ifdef __cplusplus
 #if 0

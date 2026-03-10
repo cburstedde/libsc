@@ -21,6 +21,12 @@
   02110-1301, USA.
 */
 
+#ifdef _MSC_VER
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#define sleep Sleep
+#endif
+
 #include <pthread.h>
 #include <sc_options.h>
 
