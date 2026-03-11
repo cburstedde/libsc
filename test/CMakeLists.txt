@@ -7,7 +7,7 @@ if(SC_HAVE_RANDOM AND SC_HAVE_SRANDOM)
 endif()
 
 if(SC_HAVE_UNISTD_H)
-  list(APPEND sc_tests sort)
+  list(APPEND sc_tests sort pqueue)
 endif()
 
 list(APPEND sc_tests builtin io_sink helpers)
