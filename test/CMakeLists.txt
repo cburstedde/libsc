@@ -1,6 +1,6 @@
 include(CTest)
 
-set(sc_tests allgather arrays keyvalue notify reduce search sortb version scda)
+set(sc_tests allgather arrays keyvalue mpi_pack notify reduce search sortb version scda)
 
 if(SC_HAVE_RANDOM AND SC_HAVE_SRANDOM)
   list(APPEND sc_tests node_comm)
@@ -10,7 +10,7 @@ if(SC_HAVE_UNISTD_H)
   list(APPEND sc_tests sort)
 endif()
 
-list(APPEND sc_tests builtin io_sink helpers)
+list(APPEND sc_tests builtin io_file io_sink helpers)
 
 set(MPI_WRAPPER)
 if(MPIEXEC_EXECUTABLE)
