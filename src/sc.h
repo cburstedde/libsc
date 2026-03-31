@@ -467,7 +467,7 @@ void                SC_CHECK_ABORTF (int success, SC_PRINTF_FMT const char *fmt,
 #define SC_LP_SILENT      9     /**< Never log anything.  Instead suggesting \ref SC_LP_ERROR. */
 /** @} */
 
-/* The default log priority may be overridded by this preprocessor define. */
+/* The default log priority may be overridden by this preprocessor define. */
 #ifdef SC_LOG_PRIORITY
 #define SC_LP_THRESHOLD SC_LOG_PRIORITY
 #define SC_LP_APPLICATION SC_LOG_PRIORITY

@@ -79,18 +79,16 @@ static int parse_ini_file(const char * ini_name)
     printf("Wine:\n");
     s = iniparser_getstring(ini, "wine:grape", NULL);
     printf("Grape:     [%s]\n", s ? s : "UNDEF");
-    
+
     i = iniparser_getint(ini, "wine:year", -1);
     printf("Year:      [%d]\n", i);
 
     s = iniparser_getstring(ini, "wine:country", NULL);
     printf("Country:   [%s]\n", s ? s : "UNDEF");
-    
+
     d = iniparser_getdouble(ini, "wine:alcohol", -1.0);
     printf("Alcohol:   [%g]\n", d);
 
     iniparser_freedict(ini);
     return 0 ;
 }
-
-

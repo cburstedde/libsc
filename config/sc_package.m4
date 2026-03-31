@@ -107,7 +107,7 @@ $1_$3_RPATH=
 $1_DISTCLEAN="$$1_DISTCLEAN $1_$3_SOURCE.log"
 
 SC_ARG_WITH_PREFIX([$4],
-  [specifiy how to depend on package $4 (optional).
+  [specify how to depend on package $4 (optional).
    If the option value is literal no or the option is not present, use the
    source subdirectory.  If the option value is the literal external, expect
    all necessary environment variables to be set to compile and link against
