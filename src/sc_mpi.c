@@ -461,6 +461,16 @@ sc_MPI_Isend (void *buf, int count, sc_MPI_Datatype datatype, int dest,
 }
 
 int
+sc_MPI_Sendrecv (const void *sendbuf, int sendcount, sc_MPI_Datatype sendtype,
+                 int dest, int sendtag,
+                 void *recvbuf, int recvcount, sc_MPI_Datatype recvtype,
+                 int source, int recvtag, sc_MPI_Comm comm, sc_MPI_Status * status)
+{
+  SC_ABORT ("non-MPI MPI_Sendrecv is not implemented");
+  return sc_MPI_SUCCESS;
+}
+
+int
 sc_MPI_Probe (int source, int tag, sc_MPI_Comm comm, sc_MPI_Status *status)
 {
   SC_ABORT ("non-MPI MPI_Probe is not implemented");
