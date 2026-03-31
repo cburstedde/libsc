@@ -23,15 +23,17 @@
 
 #include <sc_containers.h>
 
-/* #define THEBIGTEST */
+#if 0
+#define THEBIGTEST
+#endif
 
 static int
-compar (const void *p1, const void *p2)
+reverse_compare (const void *v1, const void *v2)
 {
-  int                 i1 = *(int *) p1;
-  int                 i2 = *(int *) p2;
+  const int           i1 = *(int *) v1;
+  const int           i2 = *(int *) v2;
 
-  return i1 - i2;
+  return i1 == i2 ? 0 : i1 < i2 ? +1 : -1;
 }
 
 int
@@ -67,28 +69,28 @@ main (int argc, char **argv)
   swaps1 = swaps2 = swaps3 = 0;
   total1 = total2 = total3 = 0;
   for (i = 0; i < count; ++i) {
-    *(int *) sc_array_push (a1) = i;
-    s = sc_array_pqueue_add (a1, &temp, compar);
+    i1 = i;
+    s = sc_array_pqueue_insert (a1, &i1, reverse_compare);
     swaps1 += ((s > 0) ? 1 : 0);
     total1 += s;
 
-    *(int *) sc_array_push (a2) = count - i - 1;
-    s = sc_array_pqueue_add (a2, &temp, compar);
+    i2 = count - i - 1;
+    s = sc_array_pqueue_insert (a2, &i2, reverse_compare);
     swaps2 += ((s > 0) ? 1 : 0);
     total2 += s;
 
-    *(int *) sc_array_push (a3) = (15 * i) % 172;
-    s = sc_array_pqueue_add (a3, &temp, compar);
+    i3 = (15 * i) % 172;
+    s = sc_array_pqueue_insert (a3, &i3, reverse_compare);
     swaps3 += ((s > 0) ? 1 : 0);
     total3 += s;
   }
-  SC_CHECK_ABORT (swaps1 == 0 && total1 == 0, "pqueue_add");
+  SC_CHECK_ABORT (swaps1 == 0 && total1 == 0, "pqueue_insert");
   SC_VERBOSEF ("   Swaps %lld %lld %lld Total %lld %lld %lld\n",
                (long long) swaps1, (long long) swaps2, (long long) swaps3,
                (long long) total1, (long long) total2, (long long) total3);
 
   temp = 52;
-  searched = sc_array_bsearch (a1, &temp, compar);
+  searched = sc_array_bsearch (a1, &temp, sc_int_compare);
   SC_CHECK_ABORT (searched != -1, "array_bsearch_index");
   pi = (int *) sc_array_index_ssize_t (a1, searched);
   SC_CHECK_ABORT (*pi == temp, "array_bsearch");
@@ -97,15 +99,15 @@ main (int argc, char **argv)
   swaps1 = swaps2 = swaps3 = 0;
   total1 = total2 = total3 = 0;
   for (i = 0; i < count; ++i) {
-    s = sc_array_pqueue_pop (a1, &i1, compar);
+    s = sc_array_pqueue_pop (a1, &i1, reverse_compare);
     swaps1 += ((s > 0) ? 1 : 0);
     total1 += s;
 
-    s = sc_array_pqueue_pop (a2, &i2, compar);
+    s = sc_array_pqueue_pop (a2, &i2, reverse_compare);
     swaps2 += ((s > 0) ? 1 : 0);
     total2 += s;
 
-    s = sc_array_pqueue_pop (a3, &i3, compar);
+    s = sc_array_pqueue_pop (a3, &i3, reverse_compare);
     swaps3 += ((s > 0) ? 1 : 0);
     total3 += s;
 
@@ -131,7 +133,7 @@ main (int argc, char **argv)
   for (i = 0; i < count; ++i) {
     *(int *) sc_array_push (a4) = (15 * i) % 172;
   }
-  sc_array_sort (a4, compar);
+  sc_array_sort (a4, sc_int_compare);
 
   i4last = -1;
   for (i = 0; i < count; ++i) {
