@@ -1209,7 +1209,10 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
   int                 lengthn;
   int                 mypart, topart, hipart;
   int                 remaining;
-  int                 nsent, nrecv;
+#ifdef SC_ENABLE_DEBUG
+  int                 nsent;
+#endif
+  int                 nrecv;
   int                 expon, power;
   int                 itemlen;
   sc_array_t          sendbufs, recvbufs;
@@ -1272,7 +1275,9 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
     sc_array_init_count (&recvbufs, sizeof (sc_array_t), nrecv + 1);
 
     /* prepare send buffers */
+#ifdef SC_ENABLE_DEBUG
     nsent = 0;
+#endif
     sc_array_init_count (&sendbufs, sizeof (sc_array_t), divn);
     sc_array_init_count (&sendreqs, sizeof (sc_MPI_Request), divn);
     for (j = 0; j < divn; ++j) {
@@ -1304,7 +1309,9 @@ sc_notify_recursive_nary (const sc_notify_nary_t * nary, int level,
         continue;
       }
 
+#ifdef SC_ENABLE_DEBUG
       ++nsent;
+#endif
     }
     SC_ASSERT (nsent < divn);
 
