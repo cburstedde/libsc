@@ -380,7 +380,10 @@ sc_array_is_equal (sc_array_t * array, sc_array_t * other)
 void
 sc_array_uniq (sc_array_t * array, int (*compar) (const void *, const void *))
 {
-  size_t              incount, dupcount;
+  size_t              incount;
+#ifdef SC_ENABLE_DEBUG
+  size_t              dupcount;
+#endif
   size_t              i, j;
   void               *elem1, *elem2, *temp;
 
@@ -391,14 +394,18 @@ sc_array_uniq (sc_array_t * array, int (*compar) (const void *, const void *))
     return;
   }
 
+#ifdef SC_ENABLE_DEBUG
   dupcount = 0;                 /* count duplicates */
+#endif
   i = 0;                        /* read counter */
   j = 0;                        /* write counter */
   elem1 = sc_array_index (array, 0);
   while (i < incount) {
     elem2 = ((i < incount - 1) ? sc_array_index (array, i + 1) : NULL);
     if (i < incount - 1 && compar (elem1, elem2) == 0) {
+#ifdef SC_ENABLE_DEBUG
       ++dupcount;
+#endif
       ++i;
     }
     else {
@@ -1214,7 +1221,10 @@ static void
 sc_hash_maybe_resize (sc_hash_t * hash)
 {
   size_t              i, j;
-  size_t              new_size, new_count;
+  size_t              new_size;
+#ifdef SC_ENABLE_DEBUG
+  size_t              new_count;
+#endif
   sc_list_t          *old_list, *new_list;
   sc_link_t          *lynk, *temp;
   sc_array_t         *new_slots;
@@ -1246,7 +1256,9 @@ sc_hash_maybe_resize (sc_hash_t * hash)
   }
 
   /* go through the old slots and move data to the new slots */
+#ifdef SC_ENABLE_DEBUG
   new_count = 0;
+#endif
   for (i = 0; i < old_slots->elem_count; ++i) {
     old_list = (sc_list_t *) sc_array_index (old_slots, i);
     lynk = old_list->first;
@@ -1255,7 +1267,9 @@ sc_hash_maybe_resize (sc_hash_t * hash)
       j = hash->hash_fn (lynk->data, hash->user_data) % new_size;
       new_list = (sc_list_t *) sc_array_index (new_slots, j);
       (void) sc_list_prepend (new_list, lynk->data);
+#ifdef SC_ENABLE_DEBUG
       ++new_count;
+#endif
 
       /* remove old list element */
       temp = lynk->next;
@@ -1341,7 +1355,9 @@ void
 sc_hash_truncate (sc_hash_t * hash)
 {
   size_t              i;
+#ifdef SC_ENABLE_DEBUG
   size_t              count;
+#endif
   sc_list_t          *list;
   sc_array_t         *slots = hash->slots;
 
@@ -1356,9 +1372,14 @@ sc_hash_truncate (sc_hash_t * hash)
   }
 
   /* return all list elements to the outside memory allocator */
-  for (i = 0, count = 0; i < slots->elem_count; ++i) {
+#ifdef SC_ENABLE_DEBUG
+  count = 0;
+#endif
+  for (i = 0; i < slots->elem_count; ++i) {
     list = (sc_list_t *) sc_array_index (slots, i);
+#ifdef SC_ENABLE_DEBUG
     count += list->elem_count;
+#endif
     sc_list_reset (list);
   }
   SC_ASSERT (count == hash->elem_count);
@@ -1369,13 +1390,21 @@ sc_hash_truncate (sc_hash_t * hash)
 void
 sc_hash_unlink (sc_hash_t * hash)
 {
-  size_t              i, count;
+  size_t              i;
+#ifdef SC_ENABLE_DEBUG
+  size_t              count;
+#endif
   sc_list_t          *list;
   sc_array_t         *slots = hash->slots;
 
-  for (i = 0, count = 0; i < slots->elem_count; ++i) {
+#ifdef SC_ENABLE_DEBUG
+  count = 0;
+#endif
+  for (i = 0; i < slots->elem_count; ++i) {
     list = (sc_list_t *) sc_array_index (slots, i);
+#ifdef SC_ENABLE_DEBUG
     count += list->elem_count;
+#endif
     sc_list_unlink (list);
   }
   SC_ASSERT (count == hash->elem_count);
