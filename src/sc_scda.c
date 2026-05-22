@@ -1521,7 +1521,9 @@ sc_scda_fwrite_inline_header_serial (sc_scda_fcontext_t *fc,
 {
   int                 mpiret;
   int                 count;
+#ifdef SC_ENABLE_DEBUG
   int                 current_len;
+#endif
   int                 invalid_user_string;
   char                header_data[SC_SCDA_COMMON_FIELD];
 
@@ -1530,7 +1532,9 @@ sc_scda_fwrite_inline_header_serial (sc_scda_fcontext_t *fc,
   /* get inline file section header */
 
   /* section-identifying character */
+#ifdef SC_ENABLE_DEBUG
   current_len = 0;
+#endif
 
   invalid_user_string =
     sc_scda_get_common_section_header ('I', user_string, len, header_data);
@@ -1541,7 +1545,9 @@ sc_scda_fwrite_inline_header_serial (sc_scda_fcontext_t *fc,
                               SC_SCDA_FERR_SUCCESS, errcode, fc);
   SC_SCDA_CHECK_NONCOLL_ERR (fc->log_level, errcode, "Invalid user string");
 
+#ifdef SC_ENABLE_DEBUG
   current_len += SC_SCDA_COMMON_FIELD;
+#endif
 
   SC_ASSERT (current_len == SC_SCDA_COMMON_FIELD);
 
