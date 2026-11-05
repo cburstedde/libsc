@@ -47,14 +47,14 @@ runs:
 
   - name: Upload package
     if: github.event.action == 'published'
-    uses: actions/upload-artifact@v4
+    uses: actions/upload-artifact@main
     with:
       name: ${{ github.job }}-binary-archive-${{ matrix.cc }}-mpi-${{ matrix.mpi }}-shared-${{ matrix.shared }}
       path: build/package
 
   - name: Upload log files
     if: always()
-    uses: actions/upload-artifact@v4
+    uses: actions/upload-artifact@main
     with:
       name: ${{ github.job }}_cmake_log-${{ matrix.cc }}-mpi-${{ matrix.mpi }}-shared-${{ matrix.shared }}
       path: |
