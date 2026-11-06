@@ -137,7 +137,7 @@ jobs:
           ./build/Testing/Temporary/LastTest.log
 
   mac:
-    runs-on: macos-14
+    runs-on: macos-latest
     name: macOS mpi=${{ matrix.mpi }} CC=${{ matrix.cc }} shared=${{ matrix.shared }}
     timeout-minutes: 60
 
