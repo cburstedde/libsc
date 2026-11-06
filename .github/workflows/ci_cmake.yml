@@ -47,7 +47,7 @@ jobs:
       CC: ${{ matrix.cc }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@main
       name: Checkout source code
 
     - name: Install system dependencies
@@ -76,7 +76,7 @@ jobs:
       CC: ${{ matrix.cc }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@main
       name: Checkout source code
 
     - name: Install system dependencies
@@ -113,7 +113,7 @@ jobs:
             libmpich-dev mpich valgrind
 
     - name: Checkout source code
-      uses: actions/checkout@v4
+      uses: actions/checkout@main
 
     - name: CMake configure
       run: |
@@ -129,7 +129,7 @@ jobs:
 
     - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@main
       with:
         name: linux_cmake_valgrind_log
         path: |
@@ -157,7 +157,7 @@ jobs:
       CC: ${{ matrix.cc }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@main
       name: Checkout source code
 
     - name: Install system dependencies
@@ -180,7 +180,7 @@ jobs:
       CMAKE_GENERATOR: "MinGW Makefiles"
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@main
       name: Checkout source code
 
     - run: echo "CMAKE_INSTALL_PREFIX=$HOME/local" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -215,14 +215,14 @@ jobs:
 
     - name: Upload package
       if: github.event.action == 'published'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@main
       with:
         name: windows-binary-archive
         path: build/package
 
     - name: Upload log files
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@main
       with:
         name: windows_cmake_log
         path: |
