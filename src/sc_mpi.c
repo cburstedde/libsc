@@ -44,9 +44,8 @@ sc_MPI_Aint_diff (sc_MPI_Aint a, sc_MPI_Aint b)
 }
 #endif
 
-#if (defined SC_ENABLE_MPI) && (MPI_VERSION >= 2)
-/* MPI_Type_create_struct is added to the MPI-Standard in 2.0, all other
- * used MPI functions are already available in 1.3 */
+#if SC_HAVE_DERIVED_DATATYPES
+/* above macro checks for MPI_Type_{contiguous,commit,free,create_struct} */
 static void
 sc_create_custom_datatype (size_t count, MPI_Datatype *custom)
 {
@@ -139,7 +138,7 @@ sc_wrap_Isend (const void *buf, size_t count, sc_MPI_Datatype datatype,
 {
   SC_ASSERT (datatype == sc_MPI_BYTE);
 
-#if (defined SC_ENABLE_MPI) && (MPI_VERSION >= 2)
+#if SC_HAVE_DERIVED_DATATYPES
   /* check if the message is to big to be send by standard MPI call */
   if (count > INT_MAX) {
     int                 mpiret, retval;
@@ -181,7 +180,7 @@ sc_wrap_Irecv (void *buf, size_t count, sc_MPI_Datatype datatype,
 {
   SC_ASSERT (datatype == sc_MPI_BYTE);
 
-#if (defined SC_ENABLE_MPI) && (MPI_VERSION >= 2)
+#if SC_HAVE_DERIVED_DATATYPES
   /* check if the message is to big to be send by standard MPI call */
   if (count > INT_MAX) {
     int                 mpiret, retval;

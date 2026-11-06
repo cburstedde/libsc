@@ -23,7 +23,7 @@
 
 #include <sc.h>
 
-#if (defined SC_ENABLE_MPI) && (MPI_VERSION >= 2)
+#if SC_HAVE_DERIVED_DATATYPES
 static void
 sc_test_wrap_non_blocking (sc_MPI_Comm mpicomm)
 {
@@ -96,7 +96,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
   sc_init (mpicomm, 1, 1, NULL, SC_LP_INFO);
 
-#if (defined SC_ENABLE_MPI) && (MPI_VERSION >= 2)
+#if SC_HAVE_DERIVED_DATATYPES
   sc_test_wrap_non_blocking (mpicomm);
 #endif
 
