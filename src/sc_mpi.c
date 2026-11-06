@@ -44,6 +44,178 @@ sc_MPI_Aint_diff (sc_MPI_Aint a, sc_MPI_Aint b)
 }
 #endif
 
+#if SC_HAVE_DERIVED_DATATYPES
+/* above macro checks for MPI_Type_{contiguous,commit,free,create_struct} */
+static void
+sc_create_custom_datatype (size_t count, MPI_Datatype *custom)
+{
+  int                 mpiret;
+#ifdef SC_ENABLE_DEBUG
+  int                 mpi_long_size;
+#endif
+  size_t              long_size;
+  size_t              num_longs, rest;
+  MPI_Datatype        multiple_longs, rest_bytes;
+
+  /* message is too big for an int count */
+  SC_ASSERT (count > INT_MAX);
+
+  /* get size of a long */
+  long_size = sizeof (long);
+#ifdef SC_ENABLE_DEBUG
+  mpiret = MPI_Type_size (MPI_LONG, &mpi_long_size);
+  SC_CHECK_MPI (mpiret);
+  SC_ASSERT (mpi_long_size == sizeof (long));
+#endif
+
+  num_longs = count / (long_size);
+  rest = count % (long_size);
+
+  /* INT_MAX should be more than sizeof (long) on all systems */
+  SC_ASSERT (num_longs > 0);
+
+  /* MPI_Type_contiguous can only be invoked for integer counts */
+  SC_ASSERT (num_longs < INT_MAX);
+
+  /* create a custom MPI datatype consisting of longs */
+  /* this call can throw an MPI_ERR_COUNT if num_longs can not be stored in an int */
+  mpiret = MPI_Type_contiguous ((int) num_longs, MPI_LONG, &multiple_longs);
+  SC_CHECK_MPI (mpiret);
+
+  mpiret = MPI_Type_commit (&multiple_longs);
+  SC_CHECK_MPI (mpiret);
+
+  if (rest > 0) {
+    int                 block_lens[2];
+    MPI_Aint            displacements[2];
+    MPI_Datatype        types[2];
+
+    /* create a datatype for the rest */
+    mpiret = MPI_Type_contiguous ((int) rest, MPI_BYTE, &rest_bytes);
+    SC_CHECK_MPI (mpiret);
+
+    mpiret = MPI_Type_commit (&rest_bytes);
+    SC_CHECK_MPI (mpiret);
+
+    /* combine the two types into one type */
+
+    /* two types that appear once each */
+    block_lens[0] = 1;
+    block_lens[1] = 1;
+
+    /* displacements in bytes */
+    displacements[0] = 0;
+    /* MPI_Aint is expected to larger than int */
+    displacements[1] = num_longs * long_size;
+
+    /* set the types that form the new type */
+    types[0] = multiple_longs;
+    types[1] = rest_bytes;
+
+    mpiret = MPI_Type_create_struct (2, block_lens, displacements, types,
+                                     custom);
+    SC_CHECK_MPI (mpiret);
+
+    /* According to the MPI standard it is safe to free the sub types. */
+    mpiret = MPI_Type_free (&multiple_longs);
+    SC_CHECK_MPI (mpiret);
+
+    if (rest > 0) {
+      mpiret = MPI_Type_free (&rest_bytes);
+      SC_CHECK_MPI (mpiret);
+    }
+  }
+  else {
+    /* we only need the type created from MPI_LONG */
+    *custom = multiple_longs;
+  }
+}
+#endif
+
+int
+sc_wrap_Isend (const void *buf, size_t count, sc_MPI_Datatype datatype,
+               int dest, int tag, sc_MPI_Comm comm, sc_MPI_Request *request)
+{
+  SC_ASSERT (datatype == sc_MPI_BYTE);
+
+#if SC_HAVE_DERIVED_DATATYPES
+  /* check if the message is to big to be send by standard MPI call */
+  if (count > INT_MAX) {
+    int                 mpiret, retval;
+    MPI_Datatype        custom;
+
+    /* check if the custom datatype can deal with this message size */
+    SC_CHECK_ABORTF (count <= INT_MAX * sizeof (long),
+                     "Message size of %ld bytes exceeds limit of %ld.\n",
+                     count, INT_MAX * sizeof (long));
+
+    /* create a custom MPI datatype to reduce the count parameter */
+    sc_create_custom_datatype (count, &custom);
+
+    /* send one element of the custom type */
+    retval = MPI_Isend (buf, 1, custom, dest, tag, comm, request);
+    /* error code will be not checked but returned by this function */
+
+    /* clean up */
+    mpiret = MPI_Type_free (&custom);
+    SC_CHECK_MPI (mpiret);
+
+    return retval;
+  }
+  else {
+    /* it is safe to cast the count to an int */
+    return sc_MPI_Isend ((void *) buf, (int) count, datatype, dest, tag, comm,
+                         request);
+  }
+#else
+  /* this may cause an MPI_ERR_COUNT; code behaves as without the wrapper */
+  return sc_MPI_Isend ((void *) buf, (int) count, datatype, dest, tag, comm,
+                       request);
+#endif
+}
+
+int
+sc_wrap_Irecv (void *buf, size_t count, sc_MPI_Datatype datatype,
+               int source, int tag, sc_MPI_Comm comm, sc_MPI_Request *request)
+{
+  SC_ASSERT (datatype == sc_MPI_BYTE);
+
+#if SC_HAVE_DERIVED_DATATYPES
+  /* check if the message is to big to be send by standard MPI call */
+  if (count > INT_MAX) {
+    int                 mpiret, retval;
+    MPI_Datatype        custom;
+
+    /* check if the custom datatype can deal with this message size */
+    SC_CHECK_ABORTF (count <= INT_MAX * sizeof (long),
+                     "Message size of %ld bytes exceeds limit of %ld.\n",
+                     count, INT_MAX * sizeof (long));
+
+    /* create a custom MPI datatype to reduce the count parameter */
+    sc_create_custom_datatype (count, &custom);
+
+    /* receive one element of the custom type */
+    retval = MPI_Irecv (buf, 1, custom, source, tag, comm, request);
+    /* error code will be not checked but returned by this function */
+
+    /* clean up */
+    mpiret = MPI_Type_free (&custom);
+    SC_CHECK_MPI (mpiret);
+
+    return retval;
+  }
+  else {
+    /* it is safe to cast the count to an int */
+    return sc_MPI_Irecv (buf, (int) count, datatype, source, tag, comm,
+                         request);
+  }
+#else
+  /* this may cause an MPI_ERR_COUNT; code behaves as without the wrapper */
+  return sc_MPI_Irecv (buf, (int) count, datatype, source, tag, comm,
+                       request);
+#endif
+}
+
 #ifndef SC_ENABLE_MPI
 
 /* time.h is already included by sc.h */
