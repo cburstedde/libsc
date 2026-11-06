@@ -340,12 +340,35 @@ MPI_Finalize ();
  $2])
 ])
 
+dnl SC_MPI_HAVE_TYPE_FREE_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI_Type_free test program.
+dnl
+AC_DEFUN([SC_MPI_HAVE_TYPE_FREE_C_COMPILE_AND_LINK],
+[
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+MPI_Datatype custom;
+MPI_Init ((int *) 0, (char ***) 0);
+MPI_Type_contiguous (2, MPI_BYTE, &custom);
+MPI_Type_commit (&custom);
+MPI_Type_free (&custom);
+MPI_Finalize ();
+]])],
+[$1],
+[AC_MSG_CHECKING([compile/link for MPI derived datatypes C program])
+ AC_MSG_RESULT([failed])
+ $2])
+])
+
 dnl SC_MPI_HAVE_DERIVED_DATATYPES_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
 dnl Compile and link an MPI_Type_* test program.
 dnl
 AC_DEFUN([SC_MPI_HAVE_DERIVED_DATATYPES_C_COMPILE_AND_LINK],
 [
-AC_MSG_CHECKING([compile/link for MPI_Type_* C program])
+AC_MSG_CHECKING([compile/link for MPI derived datatypes C program])
 AC_LINK_IFELSE([AC_LANG_PROGRAM(
 [[
 #undef MPI
@@ -617,11 +640,15 @@ dnl  ])
   fi
 
   dnl Run test to check availability of MPI_Type_* functions
-  $1_HAVE_DERIVED_DATATYPES=yes
-  SC_MPI_HAVE_DERIVED_DATATYPES_C_COMPILE_AND_LINK(,[$1_HAVE_DERIVED_DATATYPES=no])
-  if test "x$$1_HAVE_DERIVED_DATATYPES" = xyes ; then
-    AC_DEFINE([HAVE_DERIVED_DATATYPES], 1,
-              [Define to 1 if we have MPI_Type_* functions])
+  $1_HAVE_TYPE_FREE=yes
+  SC_MPI_HAVE_TYPE_FREE_C_COMPILE_AND_LINK(,[$1_HAVE_TYPE_FREE=no])
+  if test "x$$1_HAVE_TYPE_FREE" = xyes ; then
+    $1_HAVE_DERIVED_DATATYPES=yes
+    SC_MPI_HAVE_DERIVED_DATATYPES_C_COMPILE_AND_LINK(,[$1_HAVE_DERIVED_DATATYPES=no])
+    if test "x$$1_HAVE_DERIVED_DATATYPES" = xyes ; then
+      AC_DEFINE([HAVE_DERIVED_DATATYPES], 1,
+                [Define to 1 if we have MPI_Type_* functions])
+    fi
   fi
 
   dnl Run tests to check availability of newer MPI data types
