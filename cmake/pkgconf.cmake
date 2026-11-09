@@ -1,3 +1,8 @@
+
+# Suggestion thanks to @pkestene and @VictorEijkhout
+# gnu compatibility : https://cmake.org/cmake/help/latest/module/GNUInstallDirs.html
+include(GNUInstallDirs)
+
 # --- generate pkg-config .pc
 set(pc_req_private "")
 if(SC_ENABLE_MPI)
@@ -20,11 +25,9 @@ set(pc_filename libsc-${git_version}.pc)
 configure_file(${CMAKE_CURRENT_LIST_DIR}/pkgconf.pc.in ${pc_filename} @ONLY)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pc_filename}
-        DESTINATION lib/pkgconfig)
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 set(pc_target ${pc_filename})
-set(pc_link lib/pkgconfig/libsc.pc)
+set(pc_link ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/pkgconfig/libsc.pc)
 
-install(CODE "
-    file(CREATE_LINK ${pc_target} \${CMAKE_INSTALL_PREFIX}/${pc_link} SYMBOLIC)
-")
+install(CODE "file(CREATE_LINK ${pc_target} ${pc_link} SYMBOLIC)")
