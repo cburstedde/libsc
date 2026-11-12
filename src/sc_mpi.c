@@ -47,7 +47,7 @@ sc_MPI_Aint_diff (sc_MPI_Aint a, sc_MPI_Aint b)
 #ifdef SC_HAVE_DERIVED_DATATYPES
 /* above macro checks for MPI_Type_{contiguous,commit,free,create_struct} */
 static void
-sc_create_custom_datatype (size_t count, MPI_Datatype *custom)
+sc_create_custom_datatype (size_t byte_count, MPI_Datatype *custom)
 {
   int                 mpiret;
 #ifdef SC_ENABLE_DEBUG
@@ -58,7 +58,7 @@ sc_create_custom_datatype (size_t count, MPI_Datatype *custom)
   MPI_Datatype        multiple_longs, rest_bytes;
 
   /* message is too big for an int count */
-  SC_ASSERT (count > INT_MAX);
+  SC_ASSERT (byte_count > INT_MAX);
 
   /* get size of a long */
   long_size = sizeof (long);
@@ -68,8 +68,8 @@ sc_create_custom_datatype (size_t count, MPI_Datatype *custom)
   SC_ASSERT (mpi_long_size == sizeof (long));
 #endif
 
-  num_longs = count / (long_size);
-  rest = count % (long_size);
+  num_longs = byte_count / (long_size);
+  rest = byte_count % (long_size);
 
   /* INT_MAX should be more than sizeof (long) on all systems */
   SC_ASSERT (num_longs > 0);
@@ -133,24 +133,22 @@ sc_create_custom_datatype (size_t count, MPI_Datatype *custom)
 #endif
 
 int
-sc_wrap_Isend (const void *buf, size_t count, sc_MPI_Datatype datatype,
-               int dest, int tag, sc_MPI_Comm comm, sc_MPI_Request *request)
+sc_Isend_bytes (const void *buf, size_t byte_count, int dest, int tag,
+                sc_MPI_Comm comm, sc_MPI_Request *request)
 {
-  SC_ASSERT (datatype == sc_MPI_BYTE);
-
 #ifdef SC_HAVE_DERIVED_DATATYPES
   /* check if the message is to big to be send by standard MPI call */
-  if (count > INT_MAX) {
+  if (byte_count > INT_MAX) {
     int                 mpiret, retval;
     MPI_Datatype        custom;
 
     /* check if the custom datatype can deal with this message size */
-    SC_CHECK_ABORTF (count <= INT_MAX * sizeof (long),
+    SC_CHECK_ABORTF (byte_count <= INT_MAX * sizeof (long),
                      "Message size of %ld bytes exceeds limit of %ld.\n",
-                     count, INT_MAX * sizeof (long));
+                     byte_count, INT_MAX * sizeof (long));
 
     /* create a custom MPI datatype to reduce the count parameter */
-    sc_create_custom_datatype (count, &custom);
+    sc_create_custom_datatype (byte_count, &custom);
 
     /* send one element of the custom type */
     retval = MPI_Isend (buf, 1, custom, dest, tag, comm, request);
@@ -164,35 +162,33 @@ sc_wrap_Isend (const void *buf, size_t count, sc_MPI_Datatype datatype,
   }
   else {
     /* it is safe to cast the count to an int */
-    return sc_MPI_Isend ((void *) buf, (int) count, datatype, dest, tag, comm,
-                         request);
+    return sc_MPI_Isend ((void *) buf, (int) byte_count, sc_MPI_BYTE, dest,
+                         tag, comm, request);
   }
 #else
   /* this may cause an MPI_ERR_COUNT; code behaves as without the wrapper */
-  return sc_MPI_Isend ((void *) buf, (int) count, datatype, dest, tag, comm,
-                       request);
+  return sc_MPI_Isend ((void *) buf, (int) byte_count, sc_MPI_BYTE, dest, tag,
+                       comm, request);
 #endif
 }
 
 int
-sc_wrap_Irecv (void *buf, size_t count, sc_MPI_Datatype datatype,
-               int source, int tag, sc_MPI_Comm comm, sc_MPI_Request *request)
+sc_Irecv_bytes (void *buf, size_t byte_count, int source, int tag,
+                sc_MPI_Comm comm, sc_MPI_Request *request)
 {
-  SC_ASSERT (datatype == sc_MPI_BYTE);
-
 #ifdef SC_HAVE_DERIVED_DATATYPES
   /* check if the message is to big to be send by standard MPI call */
-  if (count > INT_MAX) {
+  if (byte_count > INT_MAX) {
     int                 mpiret, retval;
     MPI_Datatype        custom;
 
     /* check if the custom datatype can deal with this message size */
-    SC_CHECK_ABORTF (count <= INT_MAX * sizeof (long),
+    SC_CHECK_ABORTF (byte_count <= INT_MAX * sizeof (long),
                      "Message size of %ld bytes exceeds limit of %ld.\n",
-                     count, INT_MAX * sizeof (long));
+                     byte_count, INT_MAX * sizeof (long));
 
     /* create a custom MPI datatype to reduce the count parameter */
-    sc_create_custom_datatype (count, &custom);
+    sc_create_custom_datatype (byte_count, &custom);
 
     /* receive one element of the custom type */
     retval = MPI_Irecv (buf, 1, custom, source, tag, comm, request);
@@ -206,12 +202,12 @@ sc_wrap_Irecv (void *buf, size_t count, sc_MPI_Datatype datatype,
   }
   else {
     /* it is safe to cast the count to an int */
-    return sc_MPI_Irecv (buf, (int) count, datatype, source, tag, comm,
-                         request);
+    return sc_MPI_Irecv (buf, (int) byte_count, sc_MPI_BYTE, source, tag,
+                         comm, request);
   }
 #else
   /* this may cause an MPI_ERR_COUNT; code behaves as without the wrapper */
-  return sc_MPI_Irecv (buf, (int) count, datatype, source, tag, comm,
+  return sc_MPI_Irecv (buf, (int) byte_count, sc_MPI_BYTE, source, tag, comm,
                        request);
 #endif
 }

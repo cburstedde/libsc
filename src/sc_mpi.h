@@ -811,7 +811,7 @@ typedef struct sc_no_mpiio_file *sc_MPI_File;
 
 #endif /* !SC_ENABLE_MPIIO */
 
-/** MPI-Isend with increased message sizes.
+/** MPI-Isend for byte-messages with increased message sizes.
  * Send an MPI-message of sc_MPI_Bytes. In contrast to sc_MPI_Isend counts
  * larger than INT_MAX are also possible. In this case, the message is sent
  * using a custom datatype. This approach works for counts up to
@@ -820,21 +820,17 @@ typedef struct sc_no_mpiio_file *sc_MPI_File;
  * \param [in,out] buf          The send buffer.
  * \param [in] count            Number of sc_MPI_Bytes in the send buffer, may
  *                              exceed INT_MAX.
- * \param [in] datatype         Data type of the send buffer elements. Has
- *                              to be sc_MPI_Byte and is only included for
- *                              consistency with the sc_MPI_Isend parameters.
  * \param [in] source           Target rank of the outgoing message.
  * \param [in] tag              The tag of the message.
  * \param [in] comm             The communicator used for sending.
  * \param [out] request         The Communication request.
  * \return                      sc_MPI_SUCCESS on successful sending.
  */
-int                 sc_wrap_Isend (const void *buf, size_t count,
-                                   sc_MPI_Datatype datatype, int dest,
-                                   int tag, sc_MPI_Comm comm,
-                                   sc_MPI_Request *request);
+int                 sc_Isend_bytes (const void *buf, size_t byte_count,
+                                    int dest, int tag, sc_MPI_Comm comm,
+                                    sc_MPI_Request *request);
 
-/** MPI-Irecv with increased message sizes.
+/** MPI-Irecv for byte-messages with increased message sizes.
  * Receive an MPI-message of sc_MPI_Bytes. In contrast to sc_MPI_Irecv counts
  * larger than INT_MAX are also possible. In this case, the message is received
  * using a custom datatype. This approach works for counts up to
@@ -843,19 +839,15 @@ int                 sc_wrap_Isend (const void *buf, size_t count,
  * \param [in,out] buf          The receive buffer.
  * \param [in] count            Number of sc_MPI_Bytes in the receive buffer,
  *                              may exceed INT_MAX.
- * \param [in] datatype         Data type of the receive buffer elements. Has
- *                              to be sc_MPI_Byte and is only included for
- *                              consistency with the sc_MPI_Irecv parameters.
  * \param [in] source           Source rank of the incoming message.
  * \param [in] tag              The tag of the message.
  * \param [in] comm             The communicator used for sending.
  * \param [out] request         The Communication request.
  * \return                      sc_MPI_SUCCESS on successful receiving.
  */
-int                 sc_wrap_Irecv (void *buf, size_t count,
-                                   sc_MPI_Datatype datatype, int source,
-                                   int tag, sc_MPI_Comm comm,
-                                   sc_MPI_Request *request);
+int                 sc_Irecv_bytes (void *buf, size_t byte_count,
+                                    int source, int tag, sc_MPI_Comm comm,
+                                    sc_MPI_Request *request);
 
 /** Turn an MPI error code into its error class.
  * When MPI is enabled, we pass version 1.1 errors to MPI_Error_class.

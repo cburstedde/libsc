@@ -59,16 +59,14 @@ sc_test_wrap_non_blocking (sc_MPI_Comm mpicomm)
 
   /* use wrapper to ship the data */
   if (mpirank == 0) {
-    mpiret =
-      sc_wrap_Isend (data, count, sc_MPI_BYTE, 1, 0, mpicomm, &req_send);
+    mpiret = sc_Isend_bytes (data, count, 1, 0, mpicomm, &req_send);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Wait (&req_send, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
   }
 
   if (mpirank == 1) {
-    mpiret =
-      sc_wrap_Irecv (recv_buf, count, sc_MPI_BYTE, 0, 0, mpicomm, &req_recv);
+    mpiret = sc_Irecv_bytes (recv_buf, count, 0, 0, mpicomm, &req_recv);
     SC_CHECK_MPI (mpiret);
     mpiret = sc_MPI_Wait (&req_recv, sc_MPI_STATUS_IGNORE);
     SC_CHECK_MPI (mpiret);
