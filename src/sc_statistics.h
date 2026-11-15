@@ -152,7 +152,7 @@ void                sc_stats_accumulate (sc_statinfo_t * stats, double value);
  * Only updates dirty variables. Then removes the dirty flag.
  * \param [in]     mpicomm   MPI communicator to use.
  * \param [in]     nvars     Number of variables to be examined.
- * \param [in,out] stats     Set of statisics items for each variable.
+ * \param [in,out] stats     Set of statistics items for each variable.
  * On input, set the following fields for each variable separately.
  *    count         Number of values for each process.
  *    sum_values    Sum of values for each process.

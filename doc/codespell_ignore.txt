@@ -1,2 +1,4 @@
 alloced
+asend
 iff
+inout

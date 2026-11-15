@@ -132,7 +132,7 @@ extern avl_node_t *avl_insert(avl_tree_t *, void *item);
 extern avl_node_t *avl_insert_node(avl_tree_t *, avl_node_t *);
 
 /* Insert a node in an empty tree. If avlnode is NULL, the tree will be
- * cleared and ready for re-use.
+ * cleared and ready for reuse.
  * If the tree is not empty, the old nodes are left dangling.
  * O(1) */
 extern avl_node_t *avl_insert_top(avl_tree_t *, avl_node_t *avlnode);

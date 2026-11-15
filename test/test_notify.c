@@ -139,7 +139,7 @@ main (int argc, char **argv)
 
   sc_init (mpicomm, 1, 1, NULL, SC_LP_DEFAULT);
 
-  /* grap parameters for notify_nary from command line */
+  /* grab parameters for notify_nary from command line */
   ntop = sc_notify_nary_ntop_default;
   nint = sc_notify_nary_nint_default;
   nbot = sc_notify_nary_nbot_default;

@@ -661,7 +661,7 @@ int                 sc_scda_proc_sizes (sc_array_t * elem_sizes,
  *                              ranks. The element count of \b elem_counts
  *                              must be the mpisize of the MPI communicator
  *                              that was used to create \b fc. The element size
- *                              of the sc_array must be equal to sizeof (unint8_t).
+ *                              of the sc_array must be equal to sizeof (uint8_t).
  *                              The sc_array must contain the local array elements
  *                              counts. That is why it induces
  *                              the partition that is used to write the array
