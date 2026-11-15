@@ -51,6 +51,7 @@ Please look through our [coding standards](doc/coding_standards.txt) as well.
 If you have a recent `codespell` installed, please run the
 [scspell](scspell) script
 and fix any spelling errors that may have crept in.
+You may also run `pre-commit run --all-files`.
 
 When we're happy with the state of the pull request, and this may well depend
 not as much on you as on us addressing shortcomings that we identify on our

@@ -29,6 +29,7 @@ tiny bits of interface breakage around the fringes.  Thus bump ABI release.
 
 ### Build system
 
+ - Make V=0 the default for automake
  - Use configure-time variables in .pc file
  - Update CI tool version requirements
  - Add missing examples/tests to tarball
