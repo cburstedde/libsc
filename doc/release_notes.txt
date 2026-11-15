@@ -16,10 +16,24 @@
 
 ## Next release
 
+## 2.8.8
+
+We expect this to be a drop-in replacement for most use cases, but there may be
+tiny bits of interface breakage around the fringes.  Thus bump ABI release.
+
 ### Functionality
 
  - Rename, redesign and reactivate the priority queue functions.
  - Merge new code to define and modify a camera object for graphics.
+ - Eliminate various warnings
+
+### Build system
+
+ - Use configure-time variables in .pc file
+ - Update CI tool version requirements
+ - Add missing examples/tests to tarball
+ - Stricter configure tests for libraries
+ - Use source spell checking
 
 ## 2.8.7
 
