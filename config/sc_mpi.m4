@@ -340,6 +340,57 @@ MPI_Finalize ();
  $2])
 ])
 
+dnl SC_MPI_HAVE_TYPE_FREE_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI_Type_free test program.
+dnl
+AC_DEFUN([SC_MPI_HAVE_TYPE_FREE_C_COMPILE_AND_LINK],
+[
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+MPI_Datatype custom;
+MPI_Init ((int *) 0, (char ***) 0);
+MPI_Type_contiguous (2, MPI_BYTE, &custom);
+MPI_Type_commit (&custom);
+MPI_Type_free (&custom);
+MPI_Finalize ();
+]])],
+[$1],
+[AC_MSG_CHECKING([compile/link for MPI derived datatypes C program])
+ AC_MSG_RESULT([failed])
+ $2])
+])
+
+dnl SC_MPI_HAVE_DERIVED_DATATYPES_C_COMPILE_AND_LINK([action-if-successful], [action-if-failed])
+dnl Compile and link an MPI_Type_* test program.
+dnl
+AC_DEFUN([SC_MPI_HAVE_DERIVED_DATATYPES_C_COMPILE_AND_LINK],
+[
+AC_MSG_CHECKING([compile/link for MPI derived datatypes C program])
+AC_LINK_IFELSE([AC_LANG_PROGRAM(
+[[
+#undef MPI
+#include <mpi.h>
+]], [[
+int block_lens[1];
+MPI_Aint displacements[1];
+MPI_Datatype types[1], custom;
+block_lens[0] = 1;
+displacements[0] = 0;
+types[0] = MPI_BYTE;
+MPI_Init ((int *) 0, (char ***) 0);
+MPI_Type_create_struct (1, block_lens, displacements, types,
+                        &custom);
+MPI_Finalize ();
+]])],
+[AC_MSG_RESULT([successful])
+ $1],
+[AC_MSG_RESULT([failed])
+ $2])
+])
+
 dnl SC_MPI_DATA_TYPE_C_COMPILE_AND_LINK([data-type], [action-if-successful],
 dnl                                     [action-if-failed])
 dnl Compile and link an MPI data type test program.
@@ -586,6 +637,18 @@ dnl  ])
   if test "x$$1_HAVE_AINT_DIFF" = xyes ; then
     AC_DEFINE([HAVE_AINT_DIFF], 1,
               [Define to 1 if we have MPI_Aint_diff])
+  fi
+
+  dnl Run test to check availability of MPI_Type_* functions
+  $1_HAVE_TYPE_FREE=yes
+  SC_MPI_HAVE_TYPE_FREE_C_COMPILE_AND_LINK(,[$1_HAVE_TYPE_FREE=no])
+  if test "x$$1_HAVE_TYPE_FREE" = xyes ; then
+    $1_HAVE_DERIVED_DATATYPES=yes
+    SC_MPI_HAVE_DERIVED_DATATYPES_C_COMPILE_AND_LINK(,[$1_HAVE_DERIVED_DATATYPES=no])
+    if test "x$$1_HAVE_DERIVED_DATATYPES" = xyes ; then
+      AC_DEFINE([HAVE_DERIVED_DATATYPES], 1,
+                [Define to 1 if we have MPI_Type_* functions])
+    fi
   fi
 
   dnl Run tests to check availability of newer MPI data types

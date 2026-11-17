@@ -1,6 +1,6 @@
 include(CTest)
 
-set(sc_tests allgather arrays keyvalue mpi_pack notify reduce search sortb version scda)
+set(sc_tests allgather arrays keyvalue mpi_pack mpi_wrap notify reduce search sortb version scda)
 
 if(SC_HAVE_RANDOM AND SC_HAVE_SRANDOM)
   list(APPEND sc_tests node_comm)
