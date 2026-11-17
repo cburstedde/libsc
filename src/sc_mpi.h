@@ -826,9 +826,9 @@ typedef struct sc_no_mpiio_file *sc_MPI_File;
  * \param [out] request         The Communication request.
  * \return                      sc_MPI_SUCCESS on successful sending.
  */
-int                 sc_Isend_bytes (const void *buf, size_t byte_count,
-                                    int dest, int tag, sc_MPI_Comm comm,
-                                    sc_MPI_Request *request);
+int                 sc_MPI_Isend_bytes (const void *buf, size_t byte_count,
+                                        int dest, int tag, sc_MPI_Comm comm,
+                                        sc_MPI_Request *request);
 
 /** MPI-Irecv for byte-messages with increased message sizes.
  * Receive an MPI-message of sc_MPI_Bytes. In contrast to sc_MPI_Irecv counts
@@ -845,9 +845,9 @@ int                 sc_Isend_bytes (const void *buf, size_t byte_count,
  * \param [out] request         The Communication request.
  * \return                      sc_MPI_SUCCESS on successful receiving.
  */
-int                 sc_Irecv_bytes (void *buf, size_t byte_count,
-                                    int source, int tag, sc_MPI_Comm comm,
-                                    sc_MPI_Request *request);
+int                 sc_MPI_Irecv_bytes (void *buf, size_t byte_count,
+                                        int source, int tag, sc_MPI_Comm comm,
+                                        sc_MPI_Request *request);
 
 /** Turn an MPI error code into its error class.
  * When MPI is enabled, we pass version 1.1 errors to MPI_Error_class.

@@ -133,8 +133,8 @@ sc_create_custom_datatype (size_t byte_count, MPI_Datatype *custom)
 #endif
 
 int
-sc_Isend_bytes (const void *buf, size_t byte_count, int dest, int tag,
-                sc_MPI_Comm comm, sc_MPI_Request *request)
+sc_MPI_Isend_bytes (const void *buf, size_t byte_count, int dest, int tag,
+                    sc_MPI_Comm comm, sc_MPI_Request *request)
 {
 #ifdef SC_HAVE_DERIVED_DATATYPES
   /* check if the message is to big to be send by standard MPI call */
@@ -173,8 +173,8 @@ sc_Isend_bytes (const void *buf, size_t byte_count, int dest, int tag,
 }
 
 int
-sc_Irecv_bytes (void *buf, size_t byte_count, int source, int tag,
-                sc_MPI_Comm comm, sc_MPI_Request *request)
+sc_MPI_Irecv_bytes (void *buf, size_t byte_count, int source, int tag,
+                    sc_MPI_Comm comm, sc_MPI_Request *request)
 {
 #ifdef SC_HAVE_DERIVED_DATATYPES
   /* check if the message is to big to be send by standard MPI call */
