@@ -73,6 +73,12 @@ To configure and build from the source directory, run:
     cmake -B build
     cmake --build build --parallel
 
+To configure and build from an empty build directory, run:
+
+    cd empty/build/directory
+    cmake path/to/source
+    cmake --build . --parallel
+
 To enable JSON via jansson, first install
 [jansson CMake project](https://github.com/akheron/jansson), then specify path where you
 installed jansson to CMake, say ~/local:
