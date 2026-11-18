@@ -61,8 +61,8 @@ jobs:
       uses: ./.github/workflows/composite-cmake
 
 
-  ubuntu-22:
-    runs-on: ubuntu-22.04
+  ubuntu-26:
+    runs-on: ubuntu-26.04
     name: Linux mpi=${{ matrix.mpi }} CC=${{ matrix.cc }} shared=${{ matrix.shared }}
     timeout-minutes: 60
 
@@ -110,7 +110,7 @@ jobs:
       run: |
         sudo apt-get update -yq
         sudo apt-get install -yq --no-install-recommends \
-            libmpich-dev mpich valgrind
+            libmpich-dev mpich valgrind-mpi
 
     - name: Checkout source code
       uses: actions/checkout@main
