@@ -13,15 +13,16 @@ on:
       - ".github/workflows/composite-cmake/**"
   pull_request:
 
-env:
-  # Due to busy file system problems on the CI runners, we deactivate the file
-  # checks in the CI.
-  SC_CI_CONFIG_OPT: --disable-file-checks
+# Unclear whether this is still needed.
+#env:
+#  # Due to busy file system problems on the CI runners, we deactivate the file
+#  # checks in the CI.
+#  SC_CI_CONFIG_OPT: --disable-file-checks
 
 jobs:
 
   linux-multi:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Autotools build on Linux
     steps:
 
@@ -113,7 +114,7 @@ jobs:
       run: |
         sudo apt-get update -yq
         sudo apt-get install -yq --no-install-recommends \
-            zlib1g-dev libmpich-dev mpich valgrind
+            zlib1g-dev libmpich-dev mpich valgrind-mpi
 
     - name: Checkout source code
       uses: actions/checkout@main
@@ -143,7 +144,7 @@ jobs:
           ./**/test/*.log
 
   linux-tarball:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Pack tarball on Linux
     steps:
 
