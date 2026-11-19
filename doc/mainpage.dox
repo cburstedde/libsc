@@ -77,8 +77,8 @@
  * To specify a target path for `make install` add a `--prefix=<installdir>`
  * option.
  *
- * The other option to build from a tar distribution is **CMake**. The
- * configuration may be called in the source directory with `-B build` or in
+ * The other option to build from a tar distribution is **CMake**.
+ * CMake may be called in the source directory with `-B build` or in
  * a separate empty build directory. Among others, it takes the following
  * options
  * * `-DCMAKE_BUILD_TYPE=Debug` equivalent to `--enable-debug` in autotools
