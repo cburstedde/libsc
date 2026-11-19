@@ -44,7 +44,7 @@ jobs:
                        CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
                        $SC_CI_CONFIG_OPT
           make -j V=0
-          make -j check V=0
+          make -j8 check V=0
 
      - name: Make check with MPI and debug
        run: |
@@ -53,7 +53,7 @@ jobs:
                        CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
                        $SC_CI_CONFIG_OPT
           make -j V=0
-          make -j check V=0
+          make -j8 check V=0
 
      - name: Make check with MPI, debug and C++ compiler
        run: |
@@ -62,7 +62,7 @@ jobs:
                        CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
                        $SC_CI_CONFIG_OPT
           make -j V=0
-          make -j check V=0
+          make -j8 check V=0
 
      - name: Upload log files
        if: always()

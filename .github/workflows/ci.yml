@@ -46,7 +46,7 @@ jobs:
                      CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
                      $SC_CI_CONFIG_OPT
         make -j V=0
-        make -j check V=0
+        make -j8 check V=0
 
     - name: Make check with MPI, without debug
       shell: bash
@@ -54,7 +54,7 @@ jobs:
         DIR="checkMPI" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi CFLAGS="-O2" $SC_CI_CONFIG_OPT
         make -j V=0
-        make -j check V=0
+        make -j8 check V=0
 
     - name: Make check without MPI, with debug
       shell: bash
@@ -63,7 +63,7 @@ jobs:
         ../configure --enable-debug CFLAGS="-O0 -g -Wall -Wno-uninitialized" \
                      $SC_CI_CONFIG_OPT
         make -j V=0
-        make -j check V=0
+        make -j8 check V=0
 
     - name: Install JSON parser library halfway through CI run
       run: |
@@ -77,7 +77,7 @@ jobs:
         ../configure --enable-mpi --enable-debug CFLAGS="-O0" CC=mpicxx \
                      $SC_CI_CONFIG_OPT
         make -j V=0
-        make -j check V=0
+        make -j8 check V=0
 
     - name: Make check with OpenMP, MPI, debug
       shell: bash
@@ -86,7 +86,7 @@ jobs:
         ../configure --enable-openmp="-fopenmp" --enable-mpi \
                      --enable-debug CFLAGS="-O0" $SC_CI_CONFIG_OPT
         make -j V=0
-        make -j check V=0
+        make -j8 check V=0
 
     - name: Make distcheck
       shell: bash
@@ -106,7 +106,7 @@ jobs:
           ./**/test/*.log
 
   linux-valgrind:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     name: Autotools with valgrind
     steps:
 
@@ -131,7 +131,7 @@ jobs:
                      CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
                      $SC_CI_CONFIG_OPT
         make -j V=0
-        make -j check V=0
+        make -j8 check V=0
 
     - name: Upload log files
       if: always()
@@ -177,7 +177,7 @@ jobs:
                      -Wno-unused-parameter -Wno-builtin-declaration-mismatch \
                      -Wno-implicit-fallthrough" $SC_CI_CONFIG_OPT
         make -j V=0
-        make -j check V=0
+        make -j8 check V=0
         make -j distcheck V=0
         mv libsc-*.tar.gz ..
 
