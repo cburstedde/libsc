@@ -35,6 +35,7 @@ tiny bits of interface breakage around the fringes.  Thus bump ABI release.
  - Add missing examples/tests to tarball
  - Stricter configure tests for libraries
  - Use source spell checking
+ - Update build documentation
 
 ## 2.8.7
 

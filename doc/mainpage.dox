@@ -23,8 +23,7 @@
 /** \mainpage The <tt>sc</tt> Auxiliary Library
  *
  * \author Carsten Burstedde, Lucas C. Wilcox, Tobin Isaac et.al.
- * \copyright GNU Lesser General Public License version 2.1
- * (or, at your option, any later version)
+ * \copyright GNU Lesser General Public License version 2.1.
  *
  * The <tt>sc</tt> library provides functions and data types that can be
  * useful in scientific computing.  It is part of the <tt>p4est</tt>
@@ -54,10 +53,11 @@
  * proceed as described next (building from a tar distribution).
  * The `bootstrap` script usually does not need to be re-executed!
  *
- * To build the <tt>sc</tt> library from a tar distribution, use the
- * standard procedure of the GNU autotools.  The configure script is best
- * called from a new empty directory with a relative path to the source.
- * It takes the following options:
+ * There are **two ways** to build the <tt>sc</tt> library from a tar
+ * distribution:\n
+ * One is to use the standard procedure of the **GNU autotools**.  The configure
+ * script is best called from a new empty directory with a relative path to the
+ * source. It takes the following options:
  *
  * * `--enable-debug`   (recommended for development) lowers the log level
  *                    for increased verbosity and activates the `SC_ASSERT`
@@ -76,9 +76,19 @@
  * To specify a target path for `make install` add a `--prefix=<installdir>`
  * option.
  *
- * The **CMake** build works as usual with that system.  There are analogous
- * options to enable the MPI compile and debug mode.
+ * The other option to build from a tar distribution is **CMake**.
+ * CMake may be called in the source directory with `-B build` or in
+ * a separate empty build directory. Among others, it takes the following
+ * options
+ * * `-DCMAKE_BUILD_TYPE=Debug` equivalent to `--enable-debug` in autotools
+ * * `-Dmpi=on`                 equivalent to `--enable-mpi` in autotools
  *
+ * A typical development configuration line looks as follows:
+ * > `cmake -B build -DCMAKE_BUILD_TYPE=Debug -Dmpi=on`
+ * A typical production **configuration line** looks as follows:
+ * > `cmake -B build -Dmpi=on`
+ * To specify a target path for `cmake --install` add a
+ * `-DCMAKE_INSTALL_PREFIX=<installdir>` option.
  * \see https://www.p4est.org/
  * \see https://www.gnu.org/licenses/licenses.html
  */
