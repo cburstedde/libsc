@@ -114,7 +114,18 @@ jobs:
       run: |
         sudo apt-get update -yq
         sudo apt-get install -yq --no-install-recommends \
-            zlib1g-dev libmpich-dev mpich valgrind-mpi
+            zlib1g-dev valgrind-mpi
+
+    - name: Download and install custom MPI environment
+      shell: bash
+      run: |
+        MPIPREFIX="/usr/local/mpich"
+        wget https://www.mpich.org/static/downloads/3.4.3/mpich-3.4.3.tar.gz
+        tar -xvzf mpich-3.4.3.tar.gz && cd mpich-3.4.3
+        ./configure --enable-g=most,meminit --with-device=ch3 \
+                    --disable-fortran --disable-cxx --prefix="$MPIPREFIX"
+        make -j16
+        sudo make -j install
 
     - name: Checkout source code
       uses: actions/checkout@main
@@ -125,13 +136,16 @@ jobs:
     - name: Make check with MPI, debug and valgrind, without shared
       shell: bash
       run: |
+        MPIPREFIX=/usr/local/mpich
+        export PATH="$MPIPREFIX/bin:$PATH"
+        export LD_LIBRARY_PATH="$MPIPREFIX/lib"
+        mpirun --version
         DIR="checkMPIdebug_valgrind" && mkdir -p "$DIR" && cd "$DIR"
         ../configure --enable-mpi --enable-debug \
                      --disable-shared --enable-valgrind \
-                     CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter" \
-                     $SC_CI_CONFIG_OPT
+                     CFLAGS="-O0 -g -Wall -Wextra -Wno-unused-parameter"
         make -j V=0
-        make -j8 check V=0
+        make -j4 check V=0
 
     - name: Upload log files
       if: always()
