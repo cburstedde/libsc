@@ -11,7 +11,7 @@ The SC Library provides support for parallel scientific applications.
 others.  `libsc` is free software released under the GNU Lesser General
 Public Licence version 2.1.
 
-Please see doc/release_notes.txt for the latest updates.
+Please see `doc/release_notes.txt` for the latest updates.
 
 The official web page for source code and documentation is
 [p4est.org](https://www.p4est.org/).
