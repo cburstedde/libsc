@@ -132,4 +132,4 @@ Note that the tarball from CPack is structured differently from the one
 built using the autotools (see above).  Only the latter adheres to the GNU
 file system standards and is recommended for releases.
 
-On Windows above cpack command will yield .zip-Files.
+On Windows above cpack command will yield `.zip`-Files.
