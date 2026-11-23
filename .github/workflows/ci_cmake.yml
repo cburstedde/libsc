@@ -92,19 +92,14 @@ jobs:
 
 
   linux-valgrind:
-    needs: ubuntu-24
-    runs-on: ubuntu-24.04
-    name: Valgrind Linux mpi=${{ matrix.mpi }} CC=${{ matrix.cc }}
+    runs-on: ubuntu-latest
+    name: Valgrind Linux mpi=${{ matrix.mpi }}
     timeout-minutes: 60
 
     strategy:
       matrix:
-        cc: [gcc]
-        mpi: [true]
+        mpi: [yes]
         valgrind: [ON]
-
-    env:
-      CC: ${{ matrix.cc }}
 
     steps:
     - name: Install system dependencies
@@ -118,7 +113,7 @@ jobs:
 
     - name: CMake configure
       run: |
-        cmake --preset default -DSC_ENABLE_MPI:BOOL=${{ matrix.mpi }} \
+        cmake --preset default -Dmpi=${{ matrix.mpi }} \
               -DSC_TEST_WITH_VALGRIND:BOOL=${{ matrix.valgrind }} \
               $SC_CI_CONFIG_OPT
 
