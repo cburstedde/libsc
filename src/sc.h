@@ -28,7 +28,7 @@
 
 /** \defgroup sc The sc Library
  *
- * The SC Library provides support for parallel scientific applications.
+ * The sc library provides support for parallel scientific applications.
  */
 
 #ifndef SC_H
