@@ -1,6 +1,7 @@
 # The SC Library
 
 This is the `README` file for `libsc`.
+Please base PRs upon the branch `develop`.
 
 The SC Library provides support for parallel scientific applications.
 
